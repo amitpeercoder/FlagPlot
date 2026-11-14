@@ -1140,6 +1140,30 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .int("men", *men)
                 .num("fatigue", *fatigue),
         ),
+        EventKind::FieldworksChanged {
+            unit,
+            change,
+            fieldworks,
+        } => (
+            "fieldworks_changed",
+            d.id("unit", *unit)
+                .text("change", change.name())
+                .num("fieldworks", *fieldworks),
+        ),
+        EventKind::DefencesWorn {
+            base,
+            side,
+            hex,
+            hits,
+            defences,
+        } => (
+            "defences_worn",
+            d.text("side", names::side(*side))
+                .id("base", *base)
+                .hex("hex", *hex)
+                .int("hits", *hits)
+                .num("defences", *defences),
+        ),
         EventKind::FightDayCounted {
             unit,
             days,
@@ -1181,6 +1205,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                         LandFatigueChange::Marched => "marched",
                         LandFatigueChange::MarchedAndAttacked => "marched_and_attacked",
                         LandFatigueChange::Landed => "landed",
+                        LandFatigueChange::Strained => "strained",
                     },
                 )
                 .num("fatigue", *fatigue),

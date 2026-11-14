@@ -2753,6 +2753,7 @@ impl Day {
                             LandFatigueChange::Marched => "marched",
                             LandFatigueChange::MarchedAndAttacked => "marched_and_attacked",
                             LandFatigueChange::Landed => "landed",
+                            LandFatigueChange::Strained => "strained",
                         },
                         fatigue: Dec(*fatigue),
                         event: id,

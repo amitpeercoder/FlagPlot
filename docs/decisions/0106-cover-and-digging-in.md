@@ -13,7 +13,7 @@ Three more things are missing. Every defence is one kind, and full defences cost
 ### Cover
 
 1. **Cover is a number from 0 to 100 for a unit in a hex.** It is the higher of two things: the defences of its side's lowest-numbered base in the hex (decision 0099), and the unit's own fieldworks (decision 5). A unit that is marching, or on attack, has no cover: it is out of its holes.
-2. **Cover saves men from bombs and shells.** The men a hit on men removes (decision 0092) are cut for each unit by its cover: the men it would lose, times 1 less its cover over 100 times `cover_from_fire`, cut to a whole man.
+2. **Cover saves men from bombs and shells.** The men a hit on men removes (decision 0092) are cut for each unit by its cover: the men it would lose, times 1 less its cover over 100 times `cover_from_fire`, cut to a whole man. (Nov 14, 2026, as built: the call's loss is shared between units first, as before, and each unit's part is then taken hit by hit.)
 3. **Cover saves men in the fight.** The men a side's hits remove from a unit that defends (decision 0090) are cut in the same way by `cover_in_fight`. The defences' effect on the defender's own chance to hit stays as it is.
 4. **Cover does not shelter aircraft, supply or the airfield.** They are hit as now.
 

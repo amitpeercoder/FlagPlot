@@ -1196,6 +1196,44 @@ pub struct GroundFigures {
     /// beside the fatigue of a day's attack (decision 5 of 0105), from 0 to
     /// 100.
     pub failed_attack_fatigue: Fixed,
+    /// The share of the men lost to bombs and shells that full cover saves
+    /// (decision 2 of 0106), from 0 to 1. 0 switches the rule off.
+    pub cover_from_fire: Fixed,
+    /// The share of a defending unit's losses in the fight that full cover
+    /// saves (decision 3 of 0106), from 0 to 1.
+    pub cover_in_fight: Fixed,
+    /// Fieldworks a fighting unit on the defence digs in a day (decision 5
+    /// of 0106), from 0 to 100.
+    pub fieldworks_per_day: Fixed,
+    /// The most fieldworks a unit digs for itself (decisions 5 and 8 of
+    /// 0106), the top of the improvised grade: from 0 to `prepared_from`.
+    pub fieldworks_limit: Fixed,
+    /// The cover at which the prepared grade begins (decision 7 of 0106).
+    pub prepared_from: Fixed,
+    /// The cover at which the fortified grade begins (decision 7 of 0106),
+    /// from `prepared_from` to 100.
+    pub fortified_from: Fixed,
+    /// How many times dearer a point of defences is in the prepared grade
+    /// (decision 8 of 0106), 1 or more.
+    pub prepared_work_factor: Fixed,
+    /// How many times dearer than in the improvised grade a point is in the
+    /// fortified grade (decision 8 of 0106), 1 or more.
+    pub fortified_work_factor: Fixed,
+    /// Fatigue a unit gains for each hit on its side's men in its hex in a
+    /// day (decision 10 of 0106), from 0 to 100.
+    pub strain_per_hit: Fixed,
+    /// The most fatigue strain adds in a day (decision 10 of 0106), from 0
+    /// to 100.
+    pub strain_per_day: Fixed,
+    /// The fatigue above which strain adds nothing (decision 10 of 0106),
+    /// from 0 to 100.
+    pub strain_limit: Fixed,
+    /// The share of strain that full cover saves (decision 10 of 0106), from
+    /// 0 to 1.
+    pub cover_from_strain: Fixed,
+    /// The cover a hit on men wears away (decision 12 of 0106), from 0 to
+    /// 100.
+    pub cover_wear_per_hit: Fixed,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1257,6 +1295,19 @@ impl GroundFigures {
         beaten_fatigue: Fixed::from_int(30),
         engagement_ratio: Fixed::from_int(1_000_000),
         failed_attack_fatigue: Fixed::ZERO,
+        cover_from_fire: Fixed::ZERO,
+        cover_in_fight: Fixed::ZERO,
+        fieldworks_per_day: Fixed::ZERO,
+        fieldworks_limit: Fixed::ZERO,
+        prepared_from: Fixed::from_int(30),
+        fortified_from: Fixed::from_int(60),
+        prepared_work_factor: Fixed::ONE,
+        fortified_work_factor: Fixed::ONE,
+        strain_per_hit: Fixed::ZERO,
+        strain_per_day: Fixed::ZERO,
+        strain_limit: Fixed::from_int(60),
+        cover_from_strain: Fixed::ZERO,
+        cover_wear_per_hit: Fixed::ZERO,
     };
 
     /// Describes what is wrong with the figures, if anything. The weight of
@@ -1434,6 +1485,50 @@ impl GroundFigures {
                 "ground failed_attack_fatigue {} is not between 0 and 100",
                 self.failed_attack_fatigue
             ));
+        }
+        // Cover, fieldworks and strain (decision 0106).
+        for (label, share) in [
+            ("cover_from_fire", self.cover_from_fire),
+            ("cover_in_fight", self.cover_in_fight),
+            ("cover_from_strain", self.cover_from_strain),
+        ] {
+            if share.is_negative() || share > Fixed::ONE {
+                return Some(format!("ground {label} {share} is not between 0 and 1"));
+            }
+        }
+        for (label, value) in [
+            ("fieldworks_per_day", self.fieldworks_per_day),
+            ("strain_per_hit", self.strain_per_hit),
+            ("strain_per_day", self.strain_per_day),
+            ("strain_limit", self.strain_limit),
+            ("cover_wear_per_hit", self.cover_wear_per_hit),
+        ] {
+            if value.is_negative() || value > Fixed::from_int(100) {
+                return Some(format!("ground {label} {value} is not between 0 and 100"));
+            }
+        }
+        if self.prepared_from.is_negative()
+            || self.fortified_from < self.prepared_from
+            || self.fortified_from > Fixed::from_int(100)
+        {
+            return Some(format!(
+                "ground prepared_from {} and fortified_from {} are not 0 or more with the prepared not above the fortified and the fortified not above 100",
+                self.prepared_from, self.fortified_from
+            ));
+        }
+        if self.fieldworks_limit.is_negative() || self.fieldworks_limit > self.prepared_from {
+            return Some(format!(
+                "ground fieldworks_limit {} is not between 0 and prepared_from {}",
+                self.fieldworks_limit, self.prepared_from
+            ));
+        }
+        for (label, factor) in [
+            ("prepared_work_factor", self.prepared_work_factor),
+            ("fortified_work_factor", self.fortified_work_factor),
+        ] {
+            if factor < Fixed::ONE {
+                return Some(format!("ground {label} {factor} is below 1"));
+            }
         }
         // The airfield's damage (decision 0103).
         if self.airfield_damage_per_hit.is_negative() {

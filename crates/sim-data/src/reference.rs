@@ -827,6 +827,21 @@ struct GroundFile {
     /// like the older keys.
     engagement_ratio: Quantity,
     failed_attack_fatigue: Quantity,
+    /// Cover, fieldworks and strain (decision 0106). Required like the
+    /// older keys.
+    cover_from_fire: Quantity,
+    cover_in_fight: Quantity,
+    fieldworks_per_day: Quantity,
+    fieldworks_limit: Quantity,
+    prepared_from: Quantity,
+    fortified_from: Quantity,
+    prepared_work_factor: Quantity,
+    fortified_work_factor: Quantity,
+    strain_per_hit: Quantity,
+    strain_per_day: Quantity,
+    strain_limit: Quantity,
+    cover_from_strain: Quantity,
+    cover_wear_per_hit: Quantity,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -923,6 +938,19 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         beaten_fatigue: number("beaten_fatigue", &file.beaten_fatigue)?,
         engagement_ratio: number("engagement_ratio", &file.engagement_ratio)?,
         failed_attack_fatigue: number("failed_attack_fatigue", &file.failed_attack_fatigue)?,
+        cover_from_fire: number("cover_from_fire", &file.cover_from_fire)?,
+        cover_in_fight: number("cover_in_fight", &file.cover_in_fight)?,
+        fieldworks_per_day: number("fieldworks_per_day", &file.fieldworks_per_day)?,
+        fieldworks_limit: number("fieldworks_limit", &file.fieldworks_limit)?,
+        prepared_from: number("prepared_from", &file.prepared_from)?,
+        fortified_from: number("fortified_from", &file.fortified_from)?,
+        prepared_work_factor: number("prepared_work_factor", &file.prepared_work_factor)?,
+        fortified_work_factor: number("fortified_work_factor", &file.fortified_work_factor)?,
+        strain_per_hit: number("strain_per_hit", &file.strain_per_hit)?,
+        strain_per_day: number("strain_per_day", &file.strain_per_day)?,
+        strain_limit: number("strain_limit", &file.strain_limit)?,
+        cover_from_strain: number("cover_from_strain", &file.cover_from_strain)?,
+        cover_wear_per_hit: number("cover_wear_per_hit", &file.cover_wear_per_hit)?,
         work_per_airfield_damage_point: number(
             "work_per_airfield_damage_point",
             &file.work_per_airfield_damage_point,

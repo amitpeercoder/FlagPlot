@@ -172,3 +172,20 @@ beaten_fatigue = 30
 engagement_ratio = 1000000
 
 failed_attack_fatigue = 0
+
+# Cover, men who dig in, and a place under bombardment (decision 0106). The
+# frozen values switch the rule off: cover saves nobody, nobody digs, every
+# grade costs what a point cost before, and fire neither strains nor wears.
+cover_from_fire = 0
+cover_in_fight = 0
+fieldworks_per_day = 0
+fieldworks_limit = 0
+prepared_from = 30
+fortified_from = 60
+prepared_work_factor = 1
+fortified_work_factor = 1
+strain_per_hit = 0
+strain_per_day = 0
+strain_limit = 60
+cover_from_strain = 0
+cover_wear_per_hit = 0

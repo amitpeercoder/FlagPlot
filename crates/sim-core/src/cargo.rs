@@ -390,14 +390,20 @@ impl World {
             // counted, no activity, no roster (decision 6 of 0097, decision
             // 7 of 0098). A part of a working unit is a working unit, and
             // works at the default job (decision 1 of 0099, As built).
-            let (experience, skills, working) =
-                (land_unit.experience, land_unit.skills, land_unit.working);
+            let (experience, skills, working, fieldworks) = (
+                land_unit.experience,
+                land_unit.skills,
+                land_unit.working,
+                land_unit.fieldworks,
+            );
             self.truth.land_units.insert(
                 new_id,
                 LandUnit {
                     experience,
                     skills,
                     working,
+                    // With those of the unit it left (decision 6 of 0106).
+                    fieldworks,
                     activity: if working {
                         Activity::Work(None)
                     } else {
@@ -985,6 +991,10 @@ impl World {
         let event = self
             .events
             .record(day, Some(pulse), kind, causes, breakdown);
+        // A unit taken aboard leaves its fieldworks (decision 6 of 0106).
+        if loading {
+            self.lose_fieldworks(day, Some(pulse), unit, Cause::Event(event));
+        }
         if first_men {
             self.first_men_landed(day, pulse, p.hex, unit, event);
         }

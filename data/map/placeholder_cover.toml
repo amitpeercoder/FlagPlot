@@ -1,0 +1,52 @@
+# PLACEHOLDER MAP. A strip of open sea with five coast hexes on one row, far
+# apart and with no land link between them, used by scenario 34 (decision
+# 0106): A at (0,0), B at (10,0), C at (20,0), D at (30,0) and F at (40,0).
+# The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-3, 43]
+r = [-2, 2]
+
+# A: men who dig in, and a shelling on men who have dug.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# B: labour in the prepared grade.
+[[hex]]
+q = 10
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# C: labour crossing into the fortified grade.
+[[hex]]
+q = 20
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# D: cover in the fight.
+[[hex]]
+q = 30
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# F: strain, its limit, and wear on a base's defences.
+[[hex]]
+q = 40
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

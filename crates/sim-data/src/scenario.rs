@@ -285,6 +285,10 @@ struct LandUnitSpec {
     /// Marks a working unit (decision 1 of 0099): one whose men do not
     /// fight but work. Defaults to false. Not with `posture = "attack"`.
     working: Option<bool>,
+    /// The fieldworks the unit has dug at the start (decision 0106): from 0
+    /// to the ground figure `fieldworks_limit`, and 0 for a working unit,
+    /// one on attack or one with no men ashore. Defaults to 0.
+    fieldworks: Option<Quantity>,
 }
 
 /// A land unit's skills (decision 0098), each optional, defaulting to 2:
@@ -1527,6 +1531,30 @@ impl Scenario {
                     )));
                 }
                 unit.fatigue = fatigue;
+            }
+            if let Some(fieldworks) = &spec.fieldworks {
+                let fieldworks = fieldworks
+                    .to_fixed()
+                    .map_err(|e| fail(format!("{id} fieldworks {e}")))?;
+                let limit = ref_data
+                    .ground
+                    .as_ref()
+                    .map_or(Fixed::ZERO, |g| g.fieldworks_limit);
+                if fieldworks.is_negative() || fieldworks > limit {
+                    return Err(fail(format!(
+                        "{id} has fieldworks {fieldworks}, which is not between 0 and the fieldworks_limit {limit}"
+                    )));
+                }
+                if fieldworks > Fixed::ZERO
+                    && (unit.working
+                        || unit.posture == Posture::Attack
+                        || spec.task_force.is_some())
+                {
+                    return Err(fail(format!(
+                        "{id} has fieldworks but is a working unit, on attack or has no men ashore: only a fighting unit on defend with men ashore has fieldworks"
+                    )));
+                }
+                unit.fieldworks = fieldworks;
             }
             if let Some(experience) = spec.experience {
                 if experience > u32::from(LandUnit::MAX_EXPERIENCE) {

@@ -170,3 +170,41 @@ engagement_ratio = 3
 # of fire below the other side's), beside the fatigue of a day's attack, to
 # 100 at most. From 0 to 100.
 failed_attack_fatigue = 30
+
+# Cover, men who dig in, and a place under bombardment (decision 0106).
+# Placeholders set by the architect for decision 0106, resting on no source.
+# A unit's cover is the higher of its base's defences and its own fieldworks,
+# 0 to 100. The share of the men lost to bombs and shells that full cover
+# saves, and the share of a defender's losses in the fight, from 0 to 1.
+cover_from_fire = "0.9"
+cover_in_fight = "0.5"
+
+# Fieldworks a fighting unit on the defence digs in a day where it stands, and
+# the most it digs for itself: the top of the improvised grade, no more than
+# prepared_from.
+fieldworks_per_day = 10
+fieldworks_limit = 30
+
+# The grades of cover: improvised below prepared_from, prepared from there to
+# below fortified_from, fortified from there to 100. A point of a base's
+# defences costs work_per_defence_point in the improvised grade, that times
+# prepared_work_factor in the prepared grade and that times
+# fortified_work_factor in the fortified grade. Factors 1 or more.
+prepared_from = 30
+fortified_from = 60
+prepared_work_factor = 3
+fortified_work_factor = 10
+
+# Strain: on a day when bombs or shells landed on men of a unit's side in its
+# hex, the unit does not rest and gains strain_per_hit for each such hit, no
+# more than strain_per_day, cut by its cover times cover_from_strain; strain
+# alone raises no unit's fatigue above strain_limit. From 0 to 100, and the
+# share from 0 to 1.
+strain_per_hit = 1
+strain_per_day = 10
+strain_limit = 60
+cover_from_strain = "0.5"
+
+# The cover each hit on men wears from the side's base's defences in the hex
+# and from each of its units' fieldworks there, from 0 to 100.
+cover_wear_per_hit = "0.2"

@@ -32,8 +32,9 @@
 
 use crate::airstrike::{BaseHits, Stock};
 use crate::belief::{ApplyOutcome, BattleClaim, Report};
+use crate::cover::{after_cover, piece_of_part, unit_cover};
 use crate::damage::{raw_u64, roll_shots};
-use crate::events::{Breakdown, Cause, EventKind, Factor};
+use crate::events::{Breakdown, Cause, EventKind, Factor, FieldworksChange};
 use crate::fixed::Fixed;
 use crate::ground::take_in_proportion;
 use crate::hex::Hex;
@@ -228,11 +229,18 @@ impl World {
         );
     }
 
-    /// The men lost to `hits` on men at `base` (decision 9 of 0092): each
-    /// removes `men_lost_per_base_hit` men, no more than the base's side has
-    /// ashore in the hex, taken from its units there in proportion by the
-    /// rule of decision 20 of 0066. Each unit's loss is an event citing
-    /// `cause`; a unit with no man left anywhere is destroyed.
+    /// The men lost to `hits` on men at `base` (decision 9 of 0092, and
+    /// decisions 2, 10 and 12 of 0106): each removes `men_lost_per_base_hit`
+    /// men, no more than the base's side has ashore in the hex, shared
+    /// between its units there in proportion by the rule of decision 20 of
+    /// 0066. Each unit's part is then taken hit by hit, spread evenly over
+    /// the hits ([`piece_of_part`]), and each piece is cut by the cover the
+    /// unit has at that hit; after each hit the cover is worn: the defences
+    /// of the side's lowest-numbered base in the hex and the fieldworks of
+    /// each of its units there lose `cover_wear_per_hit`, not below 0. The
+    /// hits are counted for the day's strain of the side in the hex. Each
+    /// unit's loss is an event citing `cause`; a unit with no man left
+    /// anywhere is destroyed.
     pub(crate) fn apply_hits_on_men(
         &mut self,
         day: u32,
@@ -263,8 +271,59 @@ impl World {
         let per_hit = u32::try_from(figures.men_lost_per_base_hit.trunc()).unwrap_or(u32::MAX);
         let loss = hits.saturating_mul(per_hit).min(total);
         let parts = take_in_proportion(loss, &men);
-        for ((unit_id, unit_men), part) in units.into_iter().zip(parts) {
-            if part == 0 {
+
+        // The day's hits on the side's men in the hex (decision 10 of 0106).
+        let day_hits = self.truth.hits_on_men.entry((hex, side)).or_default();
+        day_hits.hits = day_hits.hits.saturating_add(hits);
+        if !day_hits.causes.contains(&cause) {
+            day_hits.causes.push(cause);
+        }
+
+        // Each part taken hit by hit, behind the cover of the moment, and the
+        // cover worn after each hit (decisions 2 and 12 of 0106).
+        let worn_base: Option<BaseId> = self
+            .truth
+            .bases
+            .values()
+            .find(|at| at.side == side && at.hex == hex)
+            .map(|at| at.id);
+        let defences_before = worn_base.map(|id| self.truth.bases[&id].defences);
+        let fieldworks_before: Vec<Fixed> = units
+            .iter()
+            .map(|(unit, _)| self.truth.land_units[unit].fieldworks)
+            .collect();
+        let wear = figures.cover_wear_per_hit;
+        let mut lost = vec![0u32; units.len()];
+        let mut first_cover: Vec<Option<Fixed>> = vec![None; units.len()];
+        for k in 1..=hits {
+            for (i, (unit_id, _)) in units.iter().enumerate() {
+                let piece = piece_of_part(parts[i], k, hits);
+                if piece == 0 {
+                    continue;
+                }
+                let cover = unit_cover(&self.truth, &self.truth.land_units[unit_id]);
+                first_cover[i].get_or_insert(cover);
+                lost[i] += after_cover(piece, cover, figures.cover_from_fire);
+            }
+            if wear > Fixed::ZERO {
+                if let Some(id) = worn_base {
+                    let at = self.truth.bases.get_mut(&id).expect("the base exists");
+                    at.defences = (at.defences - wear).max(Fixed::ZERO);
+                }
+                for (unit_id, _) in &units {
+                    let unit = self
+                        .truth
+                        .land_units
+                        .get_mut(unit_id)
+                        .expect("the land unit exists");
+                    unit.fieldworks = (unit.fieldworks - wear).max(Fixed::ZERO);
+                }
+            }
+        }
+
+        for (i, ((unit_id, unit_men), part)) in units.iter().copied().zip(parts).enumerate() {
+            let lost = lost[i];
+            if lost == 0 {
                 continue;
             }
             let unit = self
@@ -272,13 +331,15 @@ impl World {
                 .land_units
                 .get_mut(&unit_id)
                 .expect("the land unit exists");
-            unit.men_ashore -= part;
+            unit.men_ashore -= lost;
             if unit.men_ashore == 0 {
                 unit.hex = None;
             }
             let ashore = unit.men_ashore;
-            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                factors: vec![
+            let covered = first_cover[i]
+                .filter(|cover| figures.cover_from_fire > Fixed::ZERO && *cover > Fixed::ZERO);
+            let breakdown = self.config.record_breakdowns.then(|| {
+                let mut factors = vec![
                     Factor {
                         name: "hits_on_men",
                         value: Fixed::from_int(i64::from(hits)),
@@ -299,23 +360,118 @@ impl World {
                         name: "men_ashore_in_hex",
                         value: Fixed::from_int(i64::from(total)),
                     },
-                ],
-                result: Fixed::from_int(i64::from(part)),
+                ];
+                // Only where cover saves men (decision 2 of 0106).
+                if let Some(cover) = covered {
+                    factors.push(Factor {
+                        name: "men_before_cover",
+                        value: Fixed::from_int(i64::from(part)),
+                    });
+                    factors.push(Factor {
+                        name: "cover",
+                        value: cover,
+                    });
+                    factors.push(Factor {
+                        name: "cover_from_fire",
+                        value: figures.cover_from_fire,
+                    });
+                    if wear > Fixed::ZERO && hits > 1 {
+                        factors.push(Factor {
+                            name: "cover_wear_per_hit",
+                            value: wear,
+                        });
+                    }
+                }
+                Breakdown {
+                    factors,
+                    result: Fixed::from_int(i64::from(lost)),
+                }
             });
-            let lost = self.events.record(
+            let lost_event = self.events.record(
                 day,
                 pulse,
                 EventKind::MenLostToFire {
                     unit: unit_id,
                     base,
                     hex,
-                    lost: part,
+                    lost,
                     ashore,
                 },
                 vec![Cause::Event(cause)],
                 breakdown,
             );
-            self.destroy_if_no_men(day, pulse, unit_id, lost);
+            self.destroy_if_no_men(day, pulse, unit_id, lost_event);
+        }
+
+        // What the fire wore away (decision 12 of 0106), where it did.
+        if let (Some(id), Some(before)) = (worn_base, defences_before) {
+            let defences = self.truth.bases[&id].defences;
+            if defences != before {
+                let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                    factors: vec![
+                        Factor {
+                            name: "defences_before",
+                            value: before,
+                        },
+                        Factor {
+                            name: "hits_on_men",
+                            value: Fixed::from_int(i64::from(hits)),
+                        },
+                        Factor {
+                            name: "cover_wear_per_hit",
+                            value: wear,
+                        },
+                    ],
+                    result: defences,
+                });
+                self.events.record(
+                    day,
+                    pulse,
+                    EventKind::DefencesWorn {
+                        base: id,
+                        side,
+                        hex,
+                        hits,
+                        defences,
+                    },
+                    vec![Cause::Event(cause)],
+                    breakdown,
+                );
+            }
+        }
+        for ((unit_id, _), before) in units.iter().zip(fieldworks_before) {
+            let fieldworks = self.truth.land_units[unit_id].fieldworks;
+            if fieldworks == before {
+                continue;
+            }
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "fieldworks_before",
+                        value: before,
+                    },
+                    Factor {
+                        name: "hits_on_men",
+                        value: Fixed::from_int(i64::from(hits)),
+                    },
+                    Factor {
+                        name: "cover_wear_per_hit",
+                        value: wear,
+                    },
+                ],
+                result: fieldworks,
+            });
+            self.events.record(
+                day,
+                pulse,
+                EventKind::FieldworksChanged {
+                    unit: *unit_id,
+                    change: FieldworksChange::Worn,
+                    fieldworks,
+                },
+                vec![Cause::Event(cause)],
+                breakdown,
+            );
         }
     }
 

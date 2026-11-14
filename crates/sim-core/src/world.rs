@@ -96,10 +96,12 @@ impl Default for MadeIds {
 /// which changes scenario 24), 3 from decision 0104 (a beaten side falls
 /// back, which changes scenarios 23 and 30) and 4 from decision 0105 (who is
 /// engaged in a fight ashore and an attack that fails, which changes every
-/// live fight ashore). A pull request raises it by one when
+/// live fight ashore) and 5 from decision 0106 (cover, fieldworks and
+/// strain, which changes every live scenario with men ashore under fire or
+/// in a fight). A pull request raises it by one when
 /// it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 4;
+pub const RULES_VERSION: u32 = 5;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

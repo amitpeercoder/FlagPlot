@@ -1,0 +1,287 @@
+# Scenario 34: cover, men who dig in, and a place under bombardment
+# (decision 0106).
+#
+# Proves decision 0106 against a hand calculation, in five places on one row.
+# At A a battalion digs in, is shelled on men who have dug, leaves its holes
+# when set to attack and digs again from nothing. At B and C labour works on
+# defences in the prepared grade and across into the fortified one, each point
+# dearer. At D a battalion behind defences of 80 loses fewer men in the fight.
+# At F two units behind defences of 50 are shelled: neither rests, the strain
+# stops at its limit, and the shells wear the defences. The hand calculation is
+# in tests/scenario_34_cover.rs, which sets the rule's figures on the frozen
+# ones (the frozen figures switch the rule off).
+#
+# No air supply, wear or fatigue figures are named, so no base pays for
+# aircraft and nothing wears at sea. Each night the men's supply is the first
+# thing charged.
+#
+# PLACEHOLDER DATA. The units, bases, ships and map are invented.
+
+name = "Scenario 34: Cover, men who dig in, and a place under bombardment"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_cover.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base A, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 2
+name = "Placeholder base B, Allied"
+side = "allied"
+q = 10
+r = 0
+supply_t = 5000
+defences = 30
+
+[[base]]
+id = 3
+name = "Placeholder base C, Allied"
+side = "allied"
+q = 20
+r = 0
+supply_t = 5000
+defences = 59
+
+[[base]]
+id = 4
+name = "Placeholder base D, Allied"
+side = "allied"
+q = 30
+r = 0
+supply_t = 5000
+defences = 80
+
+[[base]]
+id = 5
+name = "Placeholder base D, Japanese"
+side = "japanese"
+q = 30
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 6
+name = "Placeholder base F, Allied"
+side = "allied"
+q = 40
+r = 0
+supply_t = 5000
+defences = 50
+
+[[land_unit]]
+id = 1
+name = "Placeholder Allied battalion at A"
+side = "allied"
+men = 1000
+q = 0
+r = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder Allied labour battalion at B"
+side = "allied"
+men = 1800
+q = 10
+r = 0
+working = true
+
+[[land_unit]]
+id = 3
+name = "Placeholder Allied labour battalion at C"
+side = "allied"
+men = 1500
+q = 20
+r = 0
+working = true
+
+[[land_unit]]
+id = 4
+name = "Placeholder Allied battalion at D"
+side = "allied"
+men = 1000
+q = 30
+r = 0
+
+[[land_unit]]
+id = 5
+name = "Placeholder Japanese battalion at D"
+side = "japanese"
+men = 1000
+q = 30
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 6
+name = "Placeholder Allied battalion at F"
+side = "allied"
+men = 1000
+q = 40
+r = 0
+fatigue = 58
+
+[[land_unit]]
+id = 7
+name = "Placeholder Allied company at F"
+side = "allied"
+men = 500
+q = 40
+r = 0
+fatigue = 70
+
+# Two bombarding forces built as scenario 24's is, each at sea 2 hexes from
+# the base it shells. Force 1 shells base 6 at F on the night of day 2 and
+# steams back out on the night of day 3; force 2 shells base 1 at A on the
+# night of day 3 and steams back out on the night of day 4.
+[[task_force]]
+id = 1
+name = "Placeholder bombardment force 1"
+side = "japanese"
+q = 38
+r = 0
+mission = "bombardment"
+
+[[task_force]]
+id = 2
+name = "Placeholder bombardment force 2"
+side = "japanese"
+q = 2
+r = 0
+mission = "bombardment"
+
+# Placeholder cruiser: 8 guns at 3 rounds a minute, gun damage 20.
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+gun_rounds = 800
+task_force = 1
+
+# Placeholder destroyer: 4 guns at 6 rounds a minute, gun damage 5.
+[[ship]]
+id = 2
+name = "Placeholder destroyer 1"
+class = 2
+side = "japanese"
+fuel_t = 500
+gun_rounds = 600
+task_force = 1
+
+# Placeholder cruiser: 8 guns at 3 rounds a minute, gun damage 20.
+[[ship]]
+id = 3
+name = "Placeholder cruiser 2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+gun_rounds = 800
+task_force = 2
+
+# Placeholder destroyer: 4 guns at 6 rounds a minute, gun damage 5.
+[[ship]]
+id = 4
+name = "Placeholder destroyer 2"
+class = 2
+side = "japanese"
+fuel_t = 500
+gun_rounds = 600
+task_force = 2
+
+# Day 1: the labour at B and C works on the defences.
+
+[[order]]
+day = 1
+side = "allied"
+land_unit = 2
+kind = "set_activity"
+activity = "work"
+job = "defences"
+
+[[order]]
+day = 1
+side = "allied"
+land_unit = 3
+kind = "set_activity"
+activity = "work"
+job = "defences"
+
+# Day 2: force 1 to F at cruise; it shells base 6 that night.
+
+[[order]]
+day = 2
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[40, 0]]
+
+[[order]]
+day = 2
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+# Day 3: force 1 back out; force 2 to A at cruise, and it shells base 1
+# that night.
+
+[[order]]
+day = 3
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[38, 0]]
+
+[[order]]
+day = 3
+side = "japanese"
+task_force = 2
+kind = "set_route"
+waypoints = [[0, 0]]
+
+[[order]]
+day = 3
+side = "japanese"
+task_force = 2
+kind = "set_speed"
+speed = "cruise"
+
+# Day 4: force 2 back out; unit 1 is set to attack, with no enemy at A.
+
+[[order]]
+day = 4
+side = "japanese"
+task_force = 2
+kind = "set_route"
+waypoints = [[2, 0]]
+
+[[order]]
+day = 4
+side = "allied"
+land_unit = 1
+kind = "set_posture"
+posture = "attack"
+
+# Day 5: unit 1 is set to defend again.
+
+[[order]]
+day = 5
+side = "allied"
+land_unit = 1
+kind = "set_posture"
+posture = "defend"

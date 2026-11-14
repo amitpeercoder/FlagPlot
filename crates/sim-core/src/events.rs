@@ -206,6 +206,43 @@ pub enum LandFatigueChange {
     /// The unit's first men landed from a ship (decision 6 of 0095): the
     /// fatigue of a landing, less for a rehearsal. Added at the end.
     Landed,
+    /// Bombs or shells landed on men of the unit's side in its hex that day,
+    /// so it did not rest, and it gained the strain (decision 10 of 0106).
+    /// Added at the end.
+    Strained,
+}
+
+/// How a land unit's fieldworks changed (decisions 5, 6 and 12 of 0106).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum FieldworksChange {
+    /// The unit dug in where it stands.
+    Dug,
+    /// Hits on men wore them down.
+    Worn,
+    /// The unit left them: it marched, fell back, was taken aboard or was
+    /// set to attack.
+    Lost,
+}
+
+impl FieldworksChange {
+    /// A stable number for the change. Never renumber it; add new changes
+    /// at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            FieldworksChange::Dug => 0,
+            FieldworksChange::Worn => 1,
+            FieldworksChange::Lost => 2,
+        }
+    }
+
+    /// The change as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            FieldworksChange::Dug => "dug",
+            FieldworksChange::Worn => "worn",
+            FieldworksChange::Lost => "lost",
+        }
+    }
 }
 
 /// Why a force lost loading (decision 0095, 5, 7, 8 and 10).
@@ -1601,6 +1638,23 @@ pub enum EventKind {
         men: u32,
         fatigue: Fixed,
     },
+    /// A land unit's fieldworks changed (decisions 5, 6 and 12 of 0106):
+    /// `fieldworks` is what it has afterwards. Added at the end.
+    FieldworksChanged {
+        unit: LandUnitId,
+        change: FieldworksChange,
+        fieldworks: Fixed,
+    },
+    /// Hits on men of `side` in `hex` wore down the defences of its base
+    /// there (decision 12 of 0106): `hits` hits, and `defences` is what the
+    /// base has afterwards. Added at the end.
+    DefencesWorn {
+        base: BaseId,
+        side: Side,
+        hex: Hex,
+        hits: u32,
+        defences: Fixed,
+    },
 }
 
 impl EventKind {
@@ -1927,7 +1981,9 @@ impl EventKind {
             | EventKind::SideBeatenAshore { .. }
             | EventKind::MenSurrenderedAshore { .. }
             | EventKind::GroundAttackFailed { .. } => Vec::new(),
-            EventKind::SpentUnitFellBack { unit, .. } => vec![EntityRef::LandUnit(*unit)],
+            EventKind::SpentUnitFellBack { unit, .. }
+            | EventKind::FieldworksChanged { unit, .. } => vec![EntityRef::LandUnit(*unit)],
+            EventKind::DefencesWorn { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
                 air_group, base, ..
@@ -3042,6 +3098,9 @@ impl fmt::Display for EventKind {
                 LandFatigueChange::MarchedAndAttacked => {
                     write!(f, "{unit} marched and attacked: fatigue {fatigue}")
                 }
+                LandFatigueChange::Strained => {
+                    write!(f, "{unit} was under fire and did not rest: fatigue {fatigue}")
+                }
             },
             EventKind::LandUnitBackToDefend { unit, fatigue } => write!(
                 f,
@@ -3449,6 +3508,29 @@ impl fmt::Display for EventKind {
             } => write!(
                 f,
                 "{unit} of the {} side, its attack spent, fell back from {from} toward {to} with {men} men: fatigue {fatigue}",
+                side.name()
+            ),
+            EventKind::FieldworksChanged {
+                unit,
+                change,
+                fieldworks,
+            } => match change {
+                FieldworksChange::Dug => write!(f, "{unit} dug in: fieldworks {fieldworks}"),
+                FieldworksChange::Worn => {
+                    write!(f, "{unit}'s fieldworks were worn by fire: {fieldworks}")
+                }
+                FieldworksChange::Lost => write!(f, "{unit} left its fieldworks"),
+            },
+            EventKind::DefencesWorn {
+                base,
+                side,
+                hex,
+                hits,
+                defences,
+            } => write!(
+                f,
+                "{hits} {} on men of the {} side at {hex} wore the defences of {base} to {defences}",
+                if *hits == 1 { "hit" } else { "hits" },
                 side.name()
             ),
         }

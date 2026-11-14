@@ -296,6 +296,10 @@ impl World {
         // The day's activity, once every hex is resolved (decision 3b of
         // 0099): loading, rehearsal and training, then the days of fighting.
         self.day_activity(day, &marched, &contested_hexes, &fired, &figures);
+        // The day's digging, after the day's fatigue and work (decision 5
+        // of 0106); then the day's hits on men are settled.
+        self.dig_in(day, &marched, &figures);
+        self.truth.hits_on_men.clear();
     }
 
     /// The day's activity, once every hex is resolved (decision 3b of 0099).
@@ -1077,18 +1081,26 @@ impl World {
                 if part == 0 {
                     continue;
                 }
+                // A defending unit's cover saves a share of its part
+                // (decision 3 of 0106); a unit on attack has none.
+                let cover = crate::cover::unit_cover(&self.truth, &self.truth.land_units[&unit_id]);
+                let lost = crate::cover::after_cover(part, cover, figures.cover_in_fight);
+                let covered = figures.cover_in_fight > Fixed::ZERO && cover > Fixed::ZERO;
+                if lost == 0 {
+                    continue;
+                }
                 let unit = self
                     .truth
                     .land_units
                     .get_mut(&unit_id)
                     .expect("the land unit exists");
-                unit.men_ashore -= part;
+                unit.men_ashore -= lost;
                 if unit.men_ashore == 0 {
                     unit.hex = None;
                 }
                 let left = unit.men_ashore;
-                let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                    factors: vec![
+                let breakdown = self.config.record_breakdowns.then(|| {
+                    let mut factors = vec![
                         Factor {
                             name: "loss_in_hex",
                             value: Fixed::from_int(i64::from(loss)),
@@ -1107,22 +1119,42 @@ impl World {
                                 i64::from(loss) * i64::from(unit_men) / i64::from(total),
                             ),
                         },
-                    ],
-                    result: Fixed::from_int(i64::from(part)),
+                    ];
+                    // Only where cover saves men (decision 3 of 0106).
+                    if covered {
+                        factors.extend([
+                            Factor {
+                                name: "men_before_cover",
+                                value: Fixed::from_int(i64::from(part)),
+                            },
+                            Factor {
+                                name: "cover",
+                                value: cover,
+                            },
+                            Factor {
+                                name: "cover_in_fight",
+                                value: figures.cover_in_fight,
+                            },
+                        ]);
+                    }
+                    Breakdown {
+                        factors,
+                        result: Fixed::from_int(i64::from(lost)),
+                    }
                 });
-                let lost = self.events.record(
+                let lost_event = self.events.record(
                     day,
                     None,
                     EventKind::MenLostInFight {
                         unit: unit_id,
                         hex,
-                        lost: part,
+                        lost,
                         ashore: left,
                     },
                     causes.clone(),
                     breakdown,
                 );
-                self.destroy_if_no_men(day, None, unit_id, lost);
+                self.destroy_if_no_men(day, None, unit_id, lost_event);
             }
         }
         FightOutcome {
@@ -1153,6 +1185,17 @@ impl World {
     ) -> Option<(EventId, Option<WhenSpent>)> {
         // Only a unit that fired on attack pays for its side's failure.
         let failed_event = failed_event.filter(|_| fire_event.is_some());
+        // The day's hits on men of its side in its hex, and its cover now,
+        // before the day's digging (decision 10 of 0106).
+        let (under_fire, cover) = {
+            let unit = &self.truth.land_units[&unit_id];
+            let under_fire = unit
+                .hex
+                .and_then(|hex| self.truth.hits_on_men.get(&(hex, unit.side)))
+                .filter(|hits| hits.hits > 0)
+                .cloned();
+            (under_fire, crate::cover::unit_cover(&self.truth, unit))
+        };
         let unit = self
             .truth
             .land_units
@@ -1171,6 +1214,8 @@ impl World {
             (true, false) => LandFatigueChange::Gained,
             (false, true) => LandFatigueChange::Marched,
             (true, true) => LandFatigueChange::MarchedAndAttacked,
+            // Men under fire do not rest (decision 10 of 0106).
+            (false, false) if under_fire.is_some() => LandFatigueChange::Strained,
             (false, false) => LandFatigueChange::Rested,
         };
         let after = if change == LandFatigueChange::Rested {
@@ -1203,6 +1248,45 @@ impl World {
                 });
                 gained += figures.failed_attack_fatigue;
             }
+            // The strain of a day under fire (decision 10 of 0106), counted
+            // on the fatigue before the day; named only where it adds.
+            if let Some(hits) = &under_fire {
+                let (strain, before_limit) =
+                    crate::cover::strain(hits.hits, cover, before, figures);
+                if before_limit > Fixed::ZERO {
+                    factors.extend([
+                        Factor {
+                            name: "hits_on_men",
+                            value: Fixed::from_int(i64::from(hits.hits)),
+                        },
+                        Factor {
+                            name: "strain_per_hit",
+                            value: figures.strain_per_hit,
+                        },
+                        Factor {
+                            name: "strain_per_day",
+                            value: figures.strain_per_day,
+                        },
+                        Factor {
+                            name: "cover",
+                            value: cover,
+                        },
+                        Factor {
+                            name: "cover_from_strain",
+                            value: figures.cover_from_strain,
+                        },
+                        Factor {
+                            name: "strain_limit",
+                            value: figures.strain_limit,
+                        },
+                        Factor {
+                            name: "strain",
+                            value: strain,
+                        },
+                    ]);
+                }
+                gained += strain;
+            }
             (before + gained).min(hundred)
         };
         unit.fatigue = after;
@@ -1216,6 +1300,11 @@ impl World {
                 .into_iter()
                 .chain(march_event)
                 .chain(failed_event)
+                .chain(
+                    under_fire
+                        .iter()
+                        .flat_map(|hits| hits.causes.iter().copied()),
+                )
                 .map(Cause::Event)
                 .collect();
             fatigue_event = Some(self.events.record(
@@ -1362,6 +1451,7 @@ impl World {
             vec![Cause::Event(back_event)],
             breakdown,
         );
+        self.lose_fieldworks(day, None, unit_id, Cause::Event(fell_back));
         self.truth
             .land_units
             .get_mut(&unit_id)
@@ -1465,6 +1555,7 @@ impl World {
                 vec![Cause::Event(beaten_event)],
                 breakdown,
             );
+            self.lose_fieldworks(day, None, *unit_id, Cause::Event(fell_back));
             self.truth
                 .land_units
                 .get_mut(unit_id)

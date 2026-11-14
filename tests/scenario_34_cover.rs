@@ -142,11 +142,14 @@
 //! Day 2, the shelling. Let g be the hits that land on men at F, in the
 //! order they land.
 //!
-//! - The k-th hit meets defences of 50 - 0.2 x (k - 1), which is the cover
-//!   of units 6 and 7 (their fieldworks are 10). The 10 men it would take
-//!   are shared between the two units in proportion to their men, by the
-//!   rule that serves every loss, and each unit's share is cut by its
-//!   cover: times 1 less cover/100 x 0.9, cut to a whole man.
+//! - The shelling would take 10 x g men. They are shared between units 6
+//!   and 7 in proportion to their men, by the rule that serves every loss,
+//!   as a shelling's men always were. Each unit's part P is then taken hit
+//!   by hit, spread evenly: the piece for the k-th hit is P x k / g, cut,
+//!   less P x (k - 1) / g, cut. The k-th hit meets defences of 50 - 0.2 x
+//!   (k - 1), which is the cover of both units (their fieldworks are 10),
+//!   and each piece is cut by it: times 1 less cover/100 x 0.9, cut to a
+//!   whole man.
 //! - Base 6's defences are 50 - 0.2 x g after the day. Nobody works on
 //!   them: they stay there to the end. The fieldworks of units 6 and 7 are
 //!   10 - 0.2 x g + 10 after the day's digging.
