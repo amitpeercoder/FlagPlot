@@ -222,6 +222,29 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::WorkingUnitWorks => {
             " (a unit shown as working only works: set_activity work, with a job if you want one, is the only activity it takes; it does not stand ready or train)"
         }
+        R::WeightNotAboveZero(_) => {
+            " (a load with weight_t names the tons of supply or fuel the whole force is to have aboard, above 0; leave weight_t out to fill the room)"
+        }
+        R::NoShipsToForm => {
+            " (form_task_force needs ships: a list of your ship numbers lying in port at the base in no force; the base's line in the briefing and get_entity lists them under ships_in_port)"
+        }
+        R::ShipNamedTwice(_) => " (name each ship once in a form_task_force order)",
+        R::ShipNotInPortHere(_) => {
+            " (form_task_force takes only your own ships lying in port at that base in no force: not a ship in a force, at sea, at another base, sunk or at the yard; the base's ships_in_port lists them)"
+        }
+        R::RouteToFollow => {
+            " (join and stand_down need the force stopped at its base with no route to follow: give a route order first on an earlier day, or let it arrive)"
+        }
+        R::NotAtSameBase(_) => {
+            " (join needs both forces stopped at the same base of your side; list_forces shows where each is)"
+        }
+        R::CannotJoinItself => " (join names another force, written into: task_force:N)",
+        R::ForceWasJoined { .. } => {
+            " (a force that was joined to another has ceased to be: it keeps its number but takes no order; give the order to the force it joined)"
+        }
+        R::ForceWasStoodDown => {
+            " (a force that was stood down has ceased to be: it keeps its number but takes no order; its ships lie in port in no force and form_task_force makes a new one)"
+        }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
         }
@@ -267,6 +290,20 @@ mod tests {
             mark.contains("is not one of the route's waypoints (act_at marks")
                 && mark.contains("the last waypoint needs no mark"),
             "{mark}"
+        );
+        let weight = refusal(&RejectReason::WeightNotAboveZero(
+            sim_core::fixed::Fixed::from_int(0),
+        ));
+        assert!(
+            weight.starts_with("weight 0 t is not above 0 (a load with weight_t"),
+            "{weight}"
+        );
+        let joined = refusal(&RejectReason::ForceWasJoined {
+            into: sim_core::ids::TaskForceId::new(2),
+        });
+        assert!(
+            joined.starts_with("the task force no longer exists: it was joined to task_force:2 ("),
+            "{joined}"
         );
         let lost = refusal(&RejectReason::AirGroupLostWithBase);
         assert!(

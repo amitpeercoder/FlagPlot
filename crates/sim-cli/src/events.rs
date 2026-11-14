@@ -263,6 +263,25 @@ fn list_unit(
                     membership.insert(*ship, *new_force);
                 }
             }
+            // Decision 0111: ships formed into a force, moved into another by a
+            // join, or left in port in no force by a stand-down.
+            EventKind::TaskForceFormed {
+                task_force, ships, ..
+            } => {
+                for ship in ships {
+                    membership.insert(*ship, *task_force);
+                }
+            }
+            EventKind::TaskForceJoined { into, ships, .. } => {
+                for ship in ships {
+                    membership.insert(*ship, *into);
+                }
+            }
+            EventKind::TaskForceStoodDownInPort { ships, .. } => {
+                for ship in ships {
+                    membership.remove(ship);
+                }
+            }
             EventKind::ShipSunk { ship, .. } => {
                 membership.remove(ship);
             }

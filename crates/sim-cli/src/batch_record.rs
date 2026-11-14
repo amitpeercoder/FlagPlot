@@ -705,6 +705,25 @@ pub fn count(
                     force_of.insert(*ship, *new_force);
                 }
             }
+            // Decision 0111: a force formed from ships in port, joined to
+            // another, or stood down, so that its ships are in no force.
+            EventKind::TaskForceFormed {
+                task_force, ships, ..
+            } => {
+                for ship in ships {
+                    force_of.insert(*ship, *task_force);
+                }
+            }
+            EventKind::TaskForceJoined { into, ships, .. } => {
+                for ship in ships {
+                    force_of.insert(*ship, *into);
+                }
+            }
+            EventKind::TaskForceStoodDownInPort { ships, .. } => {
+                for ship in ships {
+                    force_of.remove(ship);
+                }
+            }
             EventKind::Salvo {
                 firer,
                 target,

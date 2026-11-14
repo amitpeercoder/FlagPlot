@@ -112,8 +112,8 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Cargo, LandUnitOrder, Mission, OrderKind, OrderRequest, Origin,
-    Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
+    AirGroupOrder, AirMission, BaseOrder, Cargo, LandUnitOrder, Mission, OrderKind, OrderRequest,
+    Origin, Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::ShipKind;
 use support::play::{order_json, play_day, served_json, session_of, ByDay};
@@ -154,9 +154,12 @@ fn tf_index(order: &TaskForceOrder) -> usize {
         TaskForceOrder::SendToYard => 10,
         TaskForceOrder::LoadUnit { .. } => 11,
         TaskForceOrder::PrepareLanding { .. } => 12,
+        TaskForceOrder::LoadTo { .. } => 13,
+        TaskForceOrder::JoinTo(_) => 14,
+        TaskForceOrder::StandDown => 15,
     }
 }
-const TF_KINDS: usize = 13;
+const TF_KINDS: usize = 16;
 
 fn ag_index(order: &AirGroupOrder) -> usize {
     match order {
@@ -200,6 +203,23 @@ fn examples() -> Vec<OrderKind> {
         tf(TaskForceOrder::Load),
         tf(TaskForceOrder::LoadFuel),
         tf(TaskForceOrder::Unload),
+        // Decision 0111: a load up to a weight, a join and a stand down.
+        tf(TaskForceOrder::LoadTo {
+            cargo: Cargo::Supply,
+            weight_t: fx("250.5"),
+        }),
+        tf(TaskForceOrder::LoadTo {
+            cargo: Cargo::Fuel,
+            weight_t: fx("40"),
+        }),
+        tf(TaskForceOrder::JoinTo(TaskForceId::new(5))),
+        tf(TaskForceOrder::StandDown),
+        OrderKind::Base {
+            target: BaseId::new(2),
+            order: BaseOrder::FormTaskForce {
+                ships: vec![sim_core::ids::ShipId::new(5), sim_core::ids::ShipId::new(6)],
+            },
+        },
         tf(TaskForceOrder::SetRulesOfEngagement {
             stance: Stance::Avoid,
             break_off: fx("0.25"),
@@ -318,6 +338,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
     let schemas = schemas();
     let mut seen_tf = [false; TF_KINDS];
     let mut seen_ag = [false; AG_KINDS];
+    let mut seen_base = false;
     let mut seen_posture = false;
     let mut seen_march = false;
     let mut seen_activity = false;
@@ -325,6 +346,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
         match &kind {
             OrderKind::TaskForce { order, .. } => seen_tf[tf_index(order)] = true,
             OrderKind::AirGroup { order, .. } => seen_ag[ag_index(order)] = true,
+            OrderKind::Base { .. } => seen_base = true,
             OrderKind::LandUnit { order, .. } => match order {
                 LandUnitOrder::SetPosture { .. } => seen_posture = true,
                 LandUnitOrder::March(_) => seen_march = true,
@@ -346,6 +368,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
     }
     assert!(seen_tf.iter().all(|s| *s), "task force kinds: {seen_tf:?}");
     assert!(seen_ag.iter().all(|s| *s), "air group kinds: {seen_ag:?}");
+    assert!(seen_base, "the base order is in the examples");
     assert!(seen_posture, "the land unit order is in the examples");
     assert!(seen_march, "the march order is in the examples");
     assert!(seen_activity, "the activity order is in the examples");
@@ -502,7 +525,9 @@ fn an_order_for_an_enemy_unit_or_no_unit_is_refused_in_one_way() {
         ("air_group:0".to_string(), ag),
         (format!("ship:{}", units.enemy.2), tf.clone()),
         (format!("ship:{}", units.own.2), tf.clone()),
-        ("base:1".to_string(), tf.clone()),
+        // A base is a unit an order can be for since decision 0111 (a forming
+        // order); its refusals are tested in forming.rs.
+        ("base_1".to_string(), tf.clone()),
         ("banana".to_string(), tf.clone()),
         (String::new(), tf),
     ];

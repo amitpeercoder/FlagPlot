@@ -12,9 +12,9 @@ use sim_core::ids::{
 use sim_core::map::HexKind;
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
 use sim_core::orders::{
-    Activity, AirGroupOrder, AirMission, Cargo, Issuer, Job, LandUnitOrder, Mission, OrderKind,
-    OrderRequest, Origin, Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction,
-    TaskForceOrder, WhenSpent,
+    Activity, AirGroupOrder, AirMission, BaseOrder, Cargo, Issuer, Job, LandUnitOrder, Mission,
+    OrderKind, OrderRequest, Origin, Posture, Reach, Readiness, SpeedSetting, Stance,
+    StragglerInstruction, TaskForceOrder, WhenSpent,
 };
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
@@ -222,6 +222,12 @@ struct BaseSpec {
     /// Fuel stock for ships at the start, in tons (decision 0045). Defaults
     /// to 0. May not be negative.
     fuel_t: Option<Quantity>,
+    /// The supply the staff's own loads leave in the base (decision 0111).
+    /// Defaults to 0. May not be negative.
+    supply_reserve_t: Option<Quantity>,
+    /// The fuel refuelling leaves in the base (decision 0111). Defaults to
+    /// 0. May not be negative.
+    fuel_reserve_t: Option<Quantity>,
     /// Anti-aircraft shots at a raid on the base (decision 0034). Defaults
     /// to 0.
     anti_aircraft: Option<u32>,
@@ -436,10 +442,12 @@ struct OrderSpec {
     /// The day the order takes effect. Day 1 is the first day.
     day: u32,
     side: SideSpec,
-    /// Exactly one of `task_force`, `air_group` and `land_unit` must be
-    /// given.
+    /// Exactly one of `task_force`, `air_group`, `land_unit` and `base` must
+    /// be given.
     task_force: Option<u32>,
     air_group: Option<u32>,
+    /// A base, for a `form_task_force` order (decision 0111).
+    base: Option<u32>,
     /// A land unit, for a `set_posture`, `march` or `set_activity` order.
     land_unit: Option<u32>,
     #[serde(default)]
@@ -485,11 +493,26 @@ enum ActionSpec {
     },
     /// `cargo` is "supply" or "fuel" and defaults to supply (decision 0046).
     /// With a `unit` (decision 0066) it may also be "none".
+    /// With `weight_t` and no `unit` (decision 0111): load until the force
+    /// has that many tons aboard.
     Load {
         cargo: Option<CargoSpec>,
         unit: Option<u32>,
+        weight_t: Option<Quantity>,
     },
     Unload {},
+    /// Join the force to another of its side stopped at the same base
+    /// (decision 0111).
+    Join {
+        into: u32,
+    },
+    /// Stand the force down into port (decision 0111). No other key.
+    StandDown {},
+    /// An order to a base: form the ships, lying in port there in no force,
+    /// into a task force (decision 0111).
+    FormTaskForce {
+        ships: Vec<u32>,
+    },
     /// `target_base` is required for `base_strike` and given for no other
     /// mission (decision 0034).
     SetAirMission {
@@ -523,9 +546,9 @@ enum ActionSpec {
     },
     /// Move the air group to the named base of its side (decision 0091). A
     /// base that is not the side's, or out of reach, is refused at intake.
-    Rebase {
-        base: u32,
-    },
+    /// The base is the order's `base` key, which `OrderSpec` reads first
+    /// (decision 0111: it is also the target key of a base order).
+    Rebase {},
     SetRulesOfEngagement {
         stance: StanceSpec,
         break_off: Quantity,
@@ -533,9 +556,8 @@ enum ActionSpec {
         stragglers: StragglersSpec,
         keep_share: Option<Quantity>,
     },
-    SetHomePort {
-        base: u32,
-    },
+    /// The base is the order's `base` key, as for `Rebase`.
+    SetHomePort {},
     SetReadiness {
         readiness: ReadinessSpec,
     },
@@ -1218,6 +1240,30 @@ impl Scenario {
                             return Err(fail(format!("{id}: fuel_t is negative")));
                         }
                         fuel
+                    }
+                    None => Fixed::ZERO,
+                },
+                supply_reserve_t: match &spec.supply_reserve_t {
+                    Some(quantity) => {
+                        let reserve = quantity
+                            .to_fixed()
+                            .map_err(|e| fail(format!("{id}: supply_reserve_t {e}")))?;
+                        if reserve < Fixed::ZERO {
+                            return Err(fail(format!("{id}: supply_reserve_t is negative")));
+                        }
+                        reserve
+                    }
+                    None => Fixed::ZERO,
+                },
+                fuel_reserve_t: match &spec.fuel_reserve_t {
+                    Some(quantity) => {
+                        let reserve = quantity
+                            .to_fixed()
+                            .map_err(|e| fail(format!("{id}: fuel_reserve_t {e}")))?;
+                        if reserve < Fixed::ZERO {
+                            return Err(fail(format!("{id}: fuel_reserve_t is negative")));
+                        }
+                        reserve
                     }
                     None => Fixed::ZERO,
                 },
@@ -1906,8 +1952,28 @@ impl Scenario {
                     "the {kind} order on day {day} must be addressed to a {wanted}"
                 ))
             };
-            let kind = match (&spec.task_force, &spec.air_group, &spec.land_unit) {
-                (Some(raw), None, None) => {
+            // `base` names the target of a base order, but for a home port
+            // or a rebase it is the base the order names, not the target.
+            let names_a_base = matches!(
+                spec.action,
+                ActionSpec::SetHomePort {} | ActionSpec::Rebase {}
+            );
+            let (target_base, named_base) = if names_a_base {
+                (None, spec.base)
+            } else {
+                (spec.base, None)
+            };
+            let need_base = |kind: &str| {
+                named_base
+                    .ok_or_else(|| fail(format!("the {kind} order on day {day} needs a base")))
+            };
+            let kind = match (
+                &spec.task_force,
+                &spec.air_group,
+                &spec.land_unit,
+                &target_base,
+            ) {
+                (Some(raw), None, None, None) => {
                     let order = match &spec.action {
                         ActionSpec::SetRoute { waypoints, act_at } => TaskForceOrder::SetRoute {
                             waypoints: waypoints.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
@@ -1931,7 +1997,39 @@ impl Scenario {
                         ActionSpec::SetMission { mission } => {
                             TaskForceOrder::SetMission((*mission).into())
                         }
-                        ActionSpec::Load { cargo, unit } => match (unit, cargo) {
+                        ActionSpec::Load {
+                            cargo,
+                            unit,
+                            weight_t: Some(weight),
+                        } => {
+                            // A weight does not apply to men (decision 5 of
+                            // 0111). Its sign is for intake to refuse.
+                            if unit.is_some() {
+                                return Err(fail(format!(
+                                    "the load order on day {day} gives a weight_t and a unit: a weight does not apply to men"
+                                )));
+                            }
+                            let cargo = match cargo {
+                                None | Some(CargoSpec::Supply) => Cargo::Supply,
+                                Some(CargoSpec::Fuel) => Cargo::Fuel,
+                                Some(CargoSpec::NoCargo) => {
+                                    return Err(fail(format!(
+                                        "the load order on day {day} gives a weight_t with cargo none: a weight needs supply or fuel"
+                                    )))
+                                }
+                            };
+                            TaskForceOrder::LoadTo {
+                                cargo,
+                                weight_t: weight
+                                    .to_fixed()
+                                    .map_err(|e| fail(format!("weight_t on day {day} {e}")))?,
+                            }
+                        }
+                        ActionSpec::Load {
+                            cargo,
+                            unit,
+                            weight_t: None,
+                        } => match (unit, cargo) {
                             (None, None | Some(CargoSpec::Supply)) => TaskForceOrder::Load,
                             (None, Some(CargoSpec::Fuel)) => TaskForceOrder::LoadFuel,
                             (None, Some(CargoSpec::NoCargo)) => {
@@ -1949,6 +2047,13 @@ impl Scenario {
                             },
                         },
                         ActionSpec::Unload {} => TaskForceOrder::Unload,
+                        ActionSpec::Join { into } => {
+                            TaskForceOrder::JoinTo(TaskForceId::new(*into))
+                        }
+                        ActionSpec::StandDown {} => TaskForceOrder::StandDown,
+                        ActionSpec::FormTaskForce { .. } => {
+                            return Err(wrong_target("form_task_force", "base"))
+                        }
                         ActionSpec::SetRulesOfEngagement {
                             stance,
                             break_off,
@@ -1967,8 +2072,8 @@ impl Scenario {
                                 None => Fixed::ZERO,
                             },
                         },
-                        ActionSpec::SetHomePort { base } => {
-                            TaskForceOrder::SetHomePort(BaseId::new(*base))
+                        ActionSpec::SetHomePort {} => {
+                            TaskForceOrder::SetHomePort(BaseId::new(need_base("set_home_port")?))
                         }
                         ActionSpec::SetReadiness { readiness } => {
                             TaskForceOrder::SetReadiness((*readiness).into())
@@ -1995,7 +2100,7 @@ impl Scenario {
                         ActionSpec::SetTargetPriority { .. } => {
                             return Err(wrong_target("set_target_priority", "air_group"))
                         }
-                        ActionSpec::Rebase { .. } => {
+                        ActionSpec::Rebase {} => {
                             return Err(wrong_target("rebase", "air_group"))
                         }
                         ActionSpec::SetPosture { .. } => {
@@ -2017,7 +2122,7 @@ impl Scenario {
                         order,
                     }
                 }
-                (None, Some(raw), None) => {
+                (None, Some(raw), None, None) => {
                     let order = match &spec.action {
                         ActionSpec::SetAirMission {
                             mission,
@@ -2105,8 +2210,8 @@ impl Scenario {
                             }
                             AirGroupOrder::SetTargetPriority { kinds: parsed }
                         }
-                        ActionSpec::Rebase { base } => AirGroupOrder::Rebase {
-                            base: BaseId::new(*base),
+                        ActionSpec::Rebase {} => AirGroupOrder::Rebase {
+                            base: BaseId::new(need_base("rebase")?),
                         },
                         _ => {
                             return Err(fail(format!(
@@ -2119,7 +2224,7 @@ impl Scenario {
                         order,
                     }
                 }
-                (None, None, Some(raw)) => {
+                (None, None, Some(raw), None) => {
                     let order = match &spec.action {
                         ActionSpec::SetPosture {
                             posture,
@@ -2171,9 +2276,25 @@ impl Scenario {
                         order,
                     }
                 }
+                (None, None, None, Some(raw)) => {
+                    let order = match &spec.action {
+                        ActionSpec::FormTaskForce { ships } => BaseOrder::FormTaskForce {
+                            ships: ships.iter().map(|raw| ShipId::new(*raw)).collect(),
+                        },
+                        _ => {
+                            return Err(fail(format!(
+                                "an order on day {day} for a base must be form_task_force"
+                            )))
+                        }
+                    };
+                    OrderKind::Base {
+                        target: BaseId::new(*raw),
+                        order,
+                    }
+                }
                 _ => {
                     return Err(fail(format!(
-                        "the order on day {day} needs exactly one of task_force, air_group and land_unit"
+                        "the order on day {day} needs exactly one of task_force, air_group, land_unit and base"
                     )))
                 }
             };
@@ -2890,7 +3011,7 @@ r = 0
         assert!(error_of(&order("air_group = 1", "kind = \"load\"")).contains("air_group"));
         assert!(
             error_of(&order("task_force = 1\nair_group = 1", "kind = \"load\""))
-                .contains("exactly one of task_force, air_group and land_unit")
+                .contains("exactly one of task_force, air_group, land_unit and base")
         );
         assert!(error_of(&order("", "kind = \"load\"")).contains("exactly one"));
         let float = arc.replace("range_nm = 600", "range_nm = 600.5");
@@ -4671,6 +4792,165 @@ task_force = 3
             "{message}"
         );
         assert!(load_orders("cargo = \"gold\"").is_err());
+    }
+
+    #[test]
+    fn a_base_takes_optional_reserves_that_are_not_negative() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let base = |extra: &str| {
+            let head = HEAD.replace("q = 5\nr = 0\n", &format!("q = 5\nr = 0\n{extra}"));
+            Scenario::parse(&head, &path)
+        };
+        let reserves = |scenario: Scenario| {
+            let base = scenario.world.umpire().bases[&BaseId::new(2)].clone();
+            (base.supply_reserve_t, base.fuel_reserve_t)
+        };
+        assert_eq!(
+            reserves(base("").expect("loads")),
+            (Fixed::ZERO, Fixed::ZERO)
+        );
+        assert_eq!(
+            reserves(base("supply_reserve_t = 400\nfuel_reserve_t = 300\n").expect("loads")),
+            (Fixed::from_int(400), Fixed::from_int(300))
+        );
+        assert_eq!(
+            reserves(base("fuel_reserve_t = \"0.25\"\n").expect("loads")),
+            (Fixed::ZERO, Fixed::from_ratio(1, 4))
+        );
+        assert!(base("supply_reserve_t = -1\n").is_err());
+        assert!(base("fuel_reserve_t = \"-0.5\"\n").is_err());
+        assert!(base("supply_reserve_t = 1.5\n").is_err());
+        assert!(base("fuel_reserve_t = 1.5\n").is_err());
+    }
+
+    #[test]
+    fn a_load_order_may_name_a_weight_for_supply_or_fuel() {
+        let orders = loaded_orders("kind = \"load\"\nweight_t = 250").expect("loads");
+        assert_eq!(
+            orders,
+            vec![TaskForceOrder::LoadTo {
+                cargo: Cargo::Supply,
+                weight_t: Fixed::from_int(250)
+            }]
+        );
+        assert_eq!(
+            loaded_orders("kind = \"load\"\ncargo = \"supply\"\nweight_t = \"2.5\"")
+                .expect("loads"),
+            vec![TaskForceOrder::LoadTo {
+                cargo: Cargo::Supply,
+                weight_t: Fixed::from_ratio(5, 2)
+            }]
+        );
+        assert_eq!(
+            loaded_orders("kind = \"load\"\ncargo = \"fuel\"\nweight_t = 80").expect("loads"),
+            vec![TaskForceOrder::LoadTo {
+                cargo: Cargo::Fuel,
+                weight_t: Fixed::from_int(80)
+            }]
+        );
+        // The sign is for intake to refuse, as it is for knots.
+        assert_eq!(
+            loaded_orders("kind = \"load\"\nweight_t = 0").expect("loads"),
+            vec![TaskForceOrder::LoadTo {
+                cargo: Cargo::Supply,
+                weight_t: Fixed::ZERO
+            }]
+        );
+        assert!(loaded_orders("kind = \"load\"\nweight_t = -5").is_ok());
+        // A float is never a quantity; an unload takes no weight.
+        assert!(loaded_orders("kind = \"load\"\nweight_t = 2.5").is_err());
+        assert!(loaded_orders("kind = \"unload\"\nweight_t = 5").is_err());
+    }
+
+    #[test]
+    fn a_weight_does_not_apply_to_men_or_to_no_cargo() {
+        let message = loaded_orders("kind = \"load\"\nunit = 3\nweight_t = 100")
+            .expect_err("refused")
+            .to_string();
+        assert!(
+            message.contains("a weight does not apply to men"),
+            "{message}"
+        );
+        let message = loaded_orders("kind = \"load\"\nunit = 3\ncargo = \"fuel\"\nweight_t = 100")
+            .expect_err("refused")
+            .to_string();
+        assert!(
+            message.contains("a weight does not apply to men"),
+            "{message}"
+        );
+        let message = loaded_orders("kind = \"load\"\ncargo = \"none\"\nweight_t = 100")
+            .expect_err("refused")
+            .to_string();
+        assert!(
+            message.contains("a weight needs supply or fuel"),
+            "{message}"
+        );
+    }
+
+    #[test]
+    fn join_and_stand_down_orders_load_for_a_task_force() {
+        assert_eq!(
+            loaded_orders("kind = \"join\"\ninto = 7").expect("loads"),
+            vec![TaskForceOrder::JoinTo(TaskForceId::new(7))]
+        );
+        assert_eq!(
+            loaded_orders("kind = \"stand_down\"").expect("loads"),
+            vec![TaskForceOrder::StandDown]
+        );
+        // A join names the force it joins; neither takes another key.
+        assert!(loaded_orders("kind = \"join\"").is_err());
+        assert!(loaded_orders("kind = \"join\"\ninto = \"7\"").is_err());
+        assert!(loaded_orders("kind = \"join\"\ninto = 7\nother = 1").is_err());
+        assert!(loaded_orders("kind = \"stand_down\"\ninto = 7").is_err());
+        assert!(loaded_orders("kind = \"stand_down\"\nweight_t = 1").is_err());
+        // Both are addressed to a task force.
+        for body in ["kind = \"join\"\ninto = 7", "kind = \"stand_down\""] {
+            assert!(parse_with(&order("air_group = 1", body)).is_err());
+            assert!(parse_with(&order("land_unit = 1", body)).is_err());
+        }
+    }
+
+    #[test]
+    fn a_base_order_forms_a_task_force_and_takes_no_other_kind() {
+        let form = "kind = \"form_task_force\"\nships = [5, 6]";
+        let scenario = parse_with(&order("base = 1", form)).expect("loads");
+        let found: Vec<OrderKind> = scenario.scripted_orders()[&1]
+            .iter()
+            .map(|(_, request)| request.kind.clone())
+            .filter(|kind| matches!(kind, OrderKind::Base { .. }))
+            .collect();
+        assert_eq!(
+            found,
+            vec![OrderKind::Base {
+                target: BaseId::new(1),
+                order: BaseOrder::FormTaskForce {
+                    ships: vec![ShipId::new(5), ShipId::new(6)]
+                }
+            }]
+        );
+        // An empty list loads; intake refuses it (NoShipsToForm).
+        parse_with(&order("base = 1", "kind = \"form_task_force\"\nships = []")).expect("loads");
+        // The ships are a list; the kind is for a base only.
+        assert!(parse_with(&order("base = 1", "kind = \"form_task_force\"")).is_err());
+        assert!(parse_with(&order("base = 1", "kind = \"form_task_force\"\nships = 5")).is_err());
+        for target in ["task_force = 1", "air_group = 1", "land_unit = 1"] {
+            assert!(parse_with(&order(target, form)).is_err());
+        }
+        assert!(error_of(&order("task_force = 1", form)).contains("must be addressed to a base"));
+        // A base takes that kind and no other, and is the only target given.
+        for body in [
+            "kind = \"load\"",
+            "kind = \"unload\"",
+            "kind = \"join\"\ninto = 2",
+            "kind = \"stand_down\"",
+            "kind = \"set_posture\"\nposture = \"defend\"",
+        ] {
+            assert!(
+                error_of(&order("base = 1", body)).contains("for a base must be form_task_force")
+            );
+        }
+        assert!(error_of(&order("base = 1\ntask_force = 1", form))
+            .contains("exactly one of task_force, air_group, land_unit and base"));
     }
 
     #[test]
