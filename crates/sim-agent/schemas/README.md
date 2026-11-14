@@ -596,3 +596,20 @@ Fields added only, so `version` stays 3.
   taken), each left out when none and each with its `event`.
 - **What the enemy is told.** Of an enemy unit's falling back, nothing. Of its surrender, the hex
   and the men, never which unit.
+
+## Who is engaged, and an attack that fails (decision 0105)
+
+Fields added only, so `version` stays 3.
+
+- **A land unit line** has `when_spent` (`hold` or `fall_back`) when its standing attack order
+  carries the instruction, left out when none. **`march.falling_back`** has `reason`: `beaten`
+  (decision 0104) or `attack_spent`, a unit that fell back because its attack was spent.
+- **The briefing's `land_units`** has `attacks_failed_yesterday` (`place`, `event`: the side's own
+  attacks that failed, never the weights of fire), and each `fell_back_yesterday` line has `reason`
+  (`beaten` or `attack_spent`).
+- **Orders.** `set_posture` takes an optional `when_spent` (`hold` or `fall_back`) with posture
+  `attack`; with `defend` it is refused.
+- **`measure choices`** has a choice `attack_spent` (asked `{hex}`, answer `{"does": "hold" |
+  "fall_back"}`) for a unit on attack.
+- **What the enemy is told.** Nothing of a failed attack or of a spent unit's falling back, and
+  nothing of a unit's instruction.

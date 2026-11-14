@@ -619,4 +619,23 @@ mod tests {
         let bad: Value = serde_json::from_str(r#"{"kind":"load","cargo":"oil"}"#).expect("JSON");
         assert!(load_of(&bad).is_err());
     }
+
+    #[test]
+    fn a_posture_order_with_when_spent_round_trips() {
+        for text in [
+            r#"{"kind":"set_posture","posture":"attack","when_spent":"hold"}"#,
+            r#"{"kind":"set_posture","posture":"attack","when_spent":"fall_back"}"#,
+            r#"{"kind":"set_posture","posture":"attack"}"#,
+            r#"{"kind":"set_posture","posture":"defend"}"#,
+        ] {
+            let value: Value = serde_json::from_str(text).expect("JSON");
+            let kind = order_from_json("land_unit:3", &value).expect("parses");
+            assert_eq!(order_to_json(&kind), value);
+        }
+        let bad: Value = serde_json::from_str(
+            r#"{"kind":"set_posture","posture":"attack","when_spent":"flee"}"#,
+        )
+        .expect("JSON");
+        assert!(order_from_json("land_unit:3", &bad).is_err());
+    }
 }

@@ -459,6 +459,10 @@
             "posture": {
               "description": "defend or attack (decision 0090, 1, 2). A standing order: the unit keeps the posture until another order replaces it, or until a tired unit on attack goes back to defend and the order is spent. Refused for a unit that is not yours, a destroyed unit and a unit with no man ashore.",
               "enum": ["defend", "attack"]
+            },
+            "when_spent": {
+              "description": "With posture attack only (decision 0105, 6): what the unit does when its attack is spent, hold or fall_back. Left out for the default: hold if the unit's side has a base with supply in the hex, else fall back. Refused with posture defend.",
+              "enum": ["hold", "fall_back"]
             }
           }
         },

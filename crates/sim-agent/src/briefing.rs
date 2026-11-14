@@ -702,6 +702,11 @@ pub struct LandUnitsPart {
     /// 0104). Left out when none. The enemy's falling back is never told.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub fell_back_yesterday: Vec<FellBackLine>,
+    /// The side's own attacks that failed yesterday (decision 0105, 4 and
+    /// 9): the hex and the event, never the weights of fire. Left out when
+    /// none. The enemy is told nothing.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub attacks_failed_yesterday: Vec<AttackFailedLine>,
     /// The side's own units that surrendered yesterday (decision 0104). Left
     /// out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -799,11 +804,21 @@ pub struct MarchStoppedLine {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct FellBackLine {
     pub land_unit: Handle,
+    /// Why it fell back: "beaten" (its side was beaten in the hex, decision
+    /// 0104) or "attack_spent" (its attack was spent, decision 0105).
+    pub reason: &'static str,
     pub from: Place,
     pub to: Place,
     pub men: u32,
     /// The unit's fatigue after the defeat.
     pub fatigue: Dec,
+    pub event: u32,
+}
+
+/// An attack of the side failed in a hex (decision 0105, 4 and 9).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AttackFailedLine {
+    pub place: Place,
     pub event: u32,
 }
 
@@ -1631,6 +1646,7 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         bases_formed_by_march_yesterday: ground.march_bases_formed,
         marches_stopped_yesterday: ground.marches_stopped,
         fell_back_yesterday: ground.fell_back,
+        attacks_failed_yesterday: ground.attacks_failed,
         surrendered_yesterday: ground.surrendered,
         prisoners_taken_yesterday: ground.prisoners,
         loading_yesterday: ground.loading,
@@ -1709,6 +1725,7 @@ struct GroundDay {
     march_bases_formed: Vec<MarchBaseFormedLine>,
     marches_stopped: Vec<MarchStoppedLine>,
     fell_back: Vec<FellBackLine>,
+    attacks_failed: Vec<AttackFailedLine>,
     surrendered: Vec<SurrenderedLine>,
     prisoners: Vec<PrisonersLine>,
     loading: Vec<LoadingLine>,
@@ -2411,6 +2428,23 @@ impl Day {
                         ..
                     } => ground.fell_back.push(FellBackLine {
                         land_unit: ctx.land_unit(*unit),
+                        reason: "beaten",
+                        from: ctx.place(*from),
+                        to: ctx.place(*to),
+                        men: *men,
+                        fatigue: Dec(*fatigue),
+                        event: id,
+                    }),
+                    EventKind::SpentUnitFellBack {
+                        unit,
+                        from,
+                        to,
+                        men,
+                        fatigue,
+                        ..
+                    } => ground.fell_back.push(FellBackLine {
+                        land_unit: ctx.land_unit(*unit),
+                        reason: "attack_spent",
                         from: ctx.place(*from),
                         to: ctx.place(*to),
                         men: *men,
@@ -2832,8 +2866,12 @@ impl Day {
                         event: id,
                     })
                 }
-                // TODO(0105): the briefing's line for an attack that failed.
-                SideEventKind::GroundAttackFailed { .. } => {}
+                SideEventKind::GroundAttackFailed { hex } => {
+                    ground.attacks_failed.push(AttackFailedLine {
+                        place: ctx.place(*hex),
+                        event: id,
+                    })
+                }
                 SideEventKind::GroundFight { hex } => ground.fights.push(FightLine {
                     place: ctx.place(*hex),
                     event: id,

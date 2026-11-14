@@ -274,7 +274,7 @@
       "additionalProperties": false,
       "properties": {
         "choice": {
-          "enum": ["strike", "aircraft_able_to_fly", "base_strike", "fighter_split", "escort", "landing", "rest", "alert", "ready", "break_off", "stragglers", "head_home", "reroute", "halt", "steam_on", "back_to_defend", "unit_day"]
+          "enum": ["strike", "aircraft_able_to_fly", "base_strike", "fighter_split", "escort", "landing", "rest", "alert", "ready", "break_off", "stragglers", "head_home", "reroute", "halt", "steam_on", "back_to_defend", "attack_spent", "unit_day"]
         },
         "asked": { "description": "The parameters of the question; empty if it has none.", "type": "object" },
         "answer": { "description": "The answer's fields, which differ with the choice.", "type": "object" }

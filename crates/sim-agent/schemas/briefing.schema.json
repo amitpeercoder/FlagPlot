@@ -1096,15 +1096,29 @@
             }
           }
         },
-        "fell_back_yesterday": {
-          "description": "The side's own units that fell back yesterday after a defeat (decision 0104): from, to, the men and the fatigue after. Left out when none. An enemy unit's falling back is never told.",
+        "attacks_failed_yesterday": {
+          "description": "The side's own attacks that failed yesterday (decision 0105, 4 and 9): the hex and the event, never the weights of fire. Left out when none. The enemy is told nothing of it.",
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["land_unit", "from", "to", "men", "fatigue", "event"],
+            "required": ["place", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fell_back_yesterday": {
+          "description": "The side's own units that fell back yesterday, after a defeat (decision 0104) or with their attack spent (decision 0105): from, to, the men and the fatigue after. Left out when none. An enemy unit's falling back is never told.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "reason", "from", "to", "men", "fatigue", "event"],
             "additionalProperties": false,
             "properties": {
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "reason": { "description": "beaten (the side was beaten in the hex) or attack_spent (the unit's attack was spent and its order said fall_back, or its default did).", "enum": ["beaten", "attack_spent"] },
               "from": { "$ref": "defs.schema.json#/$defs/place" },
               "to": { "$ref": "defs.schema.json#/$defs/place" },
               "men": { "type": "integer" },
