@@ -230,6 +230,8 @@ A force with both waits for both. It records `TaskForceSteamedOn` (the hex, the 
 
 A new route order ends a halt, and records nothing of its own: the order accepted is the record. So does a force retiring after a fight or a trip to the yard. A force that halts where its fuel also runs out is halted, and when it steams on it has no fuel and is out of fuel by the rule above. A halted force with no ship left stays as it is. [0096]
 
+A side can ask this choice for its own forces before it is made (`measure`'s `choices`, `halt`): the answer is the marked waypoint on its route where the rule would halt the force now, or none, from what the side holds; and, for a halted force, whether it would steam on now (`steam_on`). [0100]
+
 A side sees: its own `TaskForceHalted` and `TaskForceSteamedOn`, whole. The enemy sees neither.
 
 ### Turning back and re-routing
@@ -241,6 +243,8 @@ A route order given to a force between two centres starts the new route from the
 - A tie goes ahead. If only one side can reach the waypoint, that side is taken. If neither can, the order is rejected. A route that ends at the hex ahead or the hex left is a real route.
 
 Turning back swaps the two hexes and sets progress to the leg's charge less its old value; the charge is kept. It happens when the order is taken in. The leg is then steamed as usual, and a re-route never gains distance. A force turned back at exactly 20 miles changes position, from the hex ahead to the hex it left, without steaming. A turn-back records `TaskForceTurnedBack` (the hex it now leaves from, the hex it now heads for, the progress and the position), citing the order and recorded just after the order's own event. A route order at a centre records none. [0005 item 5, 0017 item 14, 0044 item 7, 0058 item 7]
+
+A side can ask this choice for its own forces before it is made (`measure`'s `choices`, `reroute`): the side states the first waypoint of the route it is considering, and the answer is whether the force would turn back or go on, and the hex the new route steers from, from the force's own position on its leg and the map. [0100]
 
 A side sees: its own `TaskForceTurnedBack`.
 
@@ -356,9 +360,13 @@ The ships of the force are sorted by propulsion into sound (working), able to st
 - **Detach:** the ships dead in the water are left behind as above. The degraded ones go into a new force with escorts and head for the home port. The number of escorts is the sum over the degraded ships of the `straggler_escorts` figure of `surface_combat.toml` for each one's kind. Escorts are taken from sound ships that have main guns, the least important kind first and the lowest number on a tie. The importance of a kind is in chapter 3, What a report holds. If there are not enough, all of those are taken. If the parent would keep fewer than its share to keep of the sound ships it had, or none, the force retires instead. A ship with degraded propulsion is not an escort and does not count toward the share to keep.
 - **Retire:** the ships dead in the water are left, and the rest of the force, degraded ships included, heads for the home port together. The parent records `ForceRetired`, gets no route and idle status, and then takes the home-port order below. A force with no ship left to send home stays as it is.
 
+A side can ask this choice for its own forces before it is made (`measure`'s `choices`, `stragglers`): the answer is the step of this rule the force would take now with its stragglers, from what the side holds. [0100]
+
 A force made by the pass takes the side, mission, speed setting, home port and the rest from its parent as a split does, and is then set to the avoid stance with the straggler instruction keep and no share to keep, keeping the parent's break-off level. A force that retires is set the same way. Its name says whether it was sent home, left behind or detached.
 
 Heading for the home port is a set-route order to the home port's hex, issued by the local commander (chapter 1, Who can issue) and taken in at once, so it is checked and applied as any route order. Its acceptance cites the event that detached or retired the force, and movement then cites the order. A force with no home port, or one already at the centre of its home port's hex, gets no order and stays where it is. A force that is left behind has no route and stays where it is, idle, even part-way along a leg. A force with no ship afloat is never sent anywhere.
+
+A side can ask this choice for its own forces before it is made (`measure`'s `choices`, `head_home`): the answer is the hex a straggler force or a retiring force would head for, its home port, from what the side holds. [0100]
 
 Each decision records `ShipsDetached` (the parent, the new force, the ships, the escorts and the reason: ordered, sent home or left behind), with a breakdown of the sound ships, the escorts needed, the escorts taken and the share to keep.
 

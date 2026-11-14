@@ -239,6 +239,8 @@ For a force at normal readiness the rule reads the flag:
 | Set | Yes | Nothing changes and nothing is recorded |
 | Not set | No | Nothing changes and nothing is recorded |
 
+A side can ask this choice for its own task force before it is made (`measure`'s `choices`, `alert`): the answer is what the rule would choose now from the side's own contacts, alerted by a contact, stood down or no change. [0100]
+
 So the rule gives the same results whatever set the flag. A force alerted by a fight or an alarm stays alerted at the start of the next pulse only if its side then holds a fresh contact within the distance. The report a fight sends makes or refreshes a contact at the fight's hex (or at a neighbour of it, if the position error struck), at age 0, which the ageing at the end of the pulse skips once. So a force that sighted or was fired on in a fight stays alerted for as long as that contact is fresh and the force is within the distance of it, and stands down at the first pulse start where no contact qualifies. A force alerted only by an alarm has sent no report, and stands down at the next pulse's start unless a contact of its side qualifies. [0021, 0032]
 
 A force at battle readiness is alert by its readiness whatever its flag says, so the rule does not touch it. A flag set while the force was at normal readiness stays set while it is at battle readiness, and is read again by this rule once the force is back at normal readiness. [0021]

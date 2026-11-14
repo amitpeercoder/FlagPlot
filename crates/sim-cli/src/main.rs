@@ -47,8 +47,11 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
   run       Runs a scenario to its last day and prints the state hash of
             each day, then where every task force and ship ended up, and for a
             scenario with objectives (decision 0054) the result.
-  replay    Runs a saved game: loads the scenario the file names, refuses it if
-            the scenario file or any data file it names has changed, submits
+  replay    Runs a saved game: refuses it, before it runs, if it was saved
+            under another state layout or rules label, or before saved games
+            recorded them (decision 0100); loads the scenario the file names,
+            refuses it if the scenario file or any data file it names has
+            changed, submits
             the saved orders day by day in place of the scenario's own, prints
             each day's hash and compares it with the saved one. Exits with an
             error on the first day that differs.

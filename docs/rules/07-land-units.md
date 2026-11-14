@@ -298,6 +298,8 @@ A unit with no man ashore keeps its fatigue. `LandUnitFatigue` (gained, rested, 
 
 After the day's change, a unit on attack with men ashore whose fatigue is above `ground.toml: attack_fatigue_limit` goes back to defend, whether or not it fought. Its attack order is spent: the order that set its posture is no longer kept as the standing one, and the unit stays on defend until a new order sets it. `LandUnitBackToDefend` records it with the fatigue, citing the unit's fatigue event (or its fire event if the fatigue did not change). Its breakdown has the factors `fatigue` and `attack_fatigue_limit`. One figure serves every unit, and no order sets the limit. [0090 item 14]
 
+A side can ask this choice for its own land units before it is made (`measure`'s `choices`, `back_to_defend`): the side may state the fatigue to test, and the answer is whether the unit would go back to defend, from its posture and that fatigue. [0100]
+
 A side sees: `LandUnitFatigue`, `LandUnitBackToDefend` and its own units' postures, fatigue and fed shares, whole. The enemy sees none of it. [0090 item 29]
 
 ## A side beaten
@@ -357,6 +359,8 @@ A unit does one thing in a day, and this table says which. It is worked out once
 | Its activity is ready in any other case | Nothing |
 
 So rehearsal is what a rostered unit does when it is not told to train. A scenario or a staff schedules a raw unit to train first and to rehearse after by changing its activity. Its place on the roster does not change, so the force's loading is not cut for it. [0099 item 3b]
+
+A side can ask this choice for its own land units before it is made (`measure`'s `choices`, `unit_day`): the side states whether the unit marched and whether its hex is contested, which it cannot know for certain, and the answer is what the unit's day would be. [0100]
 
 A unit set to work, or a working unit, makes no training and no rehearsal that day. [0099 item 3a]
 
