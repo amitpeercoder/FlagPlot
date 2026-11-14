@@ -1192,7 +1192,10 @@ impl World {
             let under_fire = unit
                 .hex
                 .and_then(|hex| self.truth.hits_on_men.get(&(hex, unit.side)))
-                .filter(|hits| hits.hits > 0)
+                // With `strain_per_hit` at 0 the rule is off and a unit under
+                // fire rests as it always did (the architect's ruling on the
+                // frozen figures, Nov 14, 2026).
+                .filter(|hits| hits.hits > 0 && figures.strain_per_hit > Fixed::ZERO)
                 .cloned();
             (under_fire, crate::cover::unit_cover(&self.truth, unit))
         };

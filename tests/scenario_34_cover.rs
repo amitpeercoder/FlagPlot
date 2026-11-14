@@ -1045,10 +1045,11 @@ fn property_on_the_frozen_figures_the_rule_does_nothing() {
         })
         .sum();
     assert_eq!(lost_a, (10 * hits_a).min(1000));
-    // Fire still means no rest on the frozen figures, and strain adds none:
-    // unit 6 stays at 58 - 5 = 53 only on day 1; on day 2 it does not rest.
+    // With `strain_per_hit` at 0 the rule is off: a unit under fire rests as
+    // it always did (the architect's ruling, Nov 14, 2026). Unit 6 rests on
+    // day 1 and again on day 2, the day it is shelled.
     assert_eq!(days[1].land_units[&unit(6)].fatigue, n(53));
-    assert_eq!(days[2].land_units[&unit(6)].fatigue, n(53));
+    assert_eq!(days[2].land_units[&unit(6)].fatigue, n(48));
 }
 
 #[test]
