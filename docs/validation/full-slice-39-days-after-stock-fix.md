@@ -2,8 +2,8 @@
 
 Battle: rabaul-guadalcanal-air
 Scenario: data/scenarios/07_full_slice.toml
-Batch: label `after-stock-fix`, 1000 runs, seeds 1 to 1000, file hash 0a9bbc8dd141fbfb
-Inputs: state hash layout flagplot-state-v22, scenario file hash 42c7772ab5d0b379
+Batch: label `after-stock-fix`, 1000 runs, seeds 1 to 1000, file hash 83432e2139c2a716
+Inputs: state hash layout flagplot-state-v22, scenario file hash b3d47f3433ed4a0b
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../map/south_pacific_land_links.csv a17610478627687e
 - data/scenarios/../reference/ship_classes_eastern_solomons.csv 2716ae28c805274f
@@ -71,7 +71,7 @@ Seen from the Allied side, runs of each result:
 - major defeat: 0 of 1000
 - decisive defeat: 0 of 1000
 
-Allied margin over 1000 runs: 5th 94.037083, median 112.137083, 95th 125.907083
+Allied margin over 1000 runs: 5th 94.037083, median 112.237083, 95th 126.137083
 
 ## Notes
 
@@ -81,7 +81,7 @@ Allied margin over 1000 runs: 5th 94.037083, median 112.137083, 95th 125.907083
 
 ## Beside the three earlier reports
 
-Written by hand after the report above, for amendment 8 of decision 0101 (`docs/decisions/0101-the-data-of-the-august-landings.md`): the placeholder Japanese stock in (2,-5) is 143 t where it was 72 t, seven days for the 2,040 men of the garrison of Lunga and its two construction units who fall back there as well as for the 2,070 who land there. Nothing else in the scenario changed (a comment on the bases' defences changes no result), no figure was tuned and no rule changed. The earlier reports are the baseline (`full-slice-39-days-baseline.md`, state v20), the report after decision 0105 (`full-slice-39-days-after-0105.md`, v21) and the report after decision 0106 (`full-slice-39-days-after-0106.md`, v22). This batch is 1,000 runs, seeds 1 to 1,000, state v22.
+Written by hand after the report above, for amendments 8 and 9 of decision 0101 (`docs/decisions/0101-the-data-of-the-august-landings.md`): the placeholder Japanese stock in (2,-5) is 143 t where it was 72 t, seven days for the 2,040 men of the garrison of Lunga and its two construction units who fall back there as well as for the 2,070 who land there; and two scripted orders of day 1, with no row behind them, set those two construction units to work at the port, so that they do not build an airfield in the west by their default job. Nothing else in the scenario changed (a comment on the bases' defences changes no result), no figure was tuned and no rule changed. The earlier reports are the baseline (`full-slice-39-days-baseline.md`, state v20), the report after decision 0105 (`full-slice-39-days-after-0105.md`, v21) and the report after decision 0106 (`full-slice-39-days-after-0106.md`, v22). This batch is 1,000 runs, seeds 1 to 1,000, state v22.
 
 | Measure | Record | Baseline: 5th to 95th, median | After 0105 | After 0106 | After the stock fix | Verdict: baseline, 0105, 0106, fix |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -107,19 +107,19 @@ The men each side lost over the 39 days, by cause, from the batch (5th, median a
 | American men lost to bombs and shells | 20, 43, 67 | 20, 43, 67 |
 | American men lost in the fight ashore | 106, 178, 261 | 106, 178, 261 |
 | Japanese men lost in the fight | 2160, 2360, 2540 | 2160, 2360, 2540 |
-| Japanese men lost unfed | 2618, 2692, 2761 | 2391, 2474, 2549 |
+| Japanese men lost unfed | 2618, 2692, 2761 | 2391, 2467, 2537 |
 | Japanese men surrendered | 360, 400, 440 | 360, 400, 440 |
-| Allied margin | 96.33, 114.52, 128.38 | 94.04, 112.14, 125.91 |
+| Allied margin | 96.33, 114.52, 128.38 | 94.04, 112.24, 126.14 |
 
 ### The west, in plain words
 
 The figures below were read from the event logs of the same 1,000 seeds, run one by one with `sim-cli run --seed N --events`, on this scenario and, for "before", on the scenario as it was at the merge of pull request 297. A day's feeding is read from its night pulse.
 
-- **Who gathers there, and when.** The garrison of Lunga and the 11th and 13th Construction Units leave the airfield's hex on day 1 and reach (2,-5) on day 4, 10 August, in every run, with 1,679 of their 2,040 men (median; 1,626 to 1,732), the rest lost in the fight and unfed on days 1 to 3. The Yokosuka 5th Special Naval Landing Force's 200 join them on day 11, Ichiki's survivors on day 19 (2,460 men in the hex on day 20, median), the Tassafaronga force's 900 on day 24 (the most in the hex, 2,873 on day 25, median; it was 2,393 before), the Oka group's 333 on day 32 and the Aoba part's 637 on day 37. The Oka group leaves on day 37 for the field. At the end, on day 39, 2,255 men are in the hex (median), where 2,022 were.
-- **When the stock runs out.** It runs short on day 20, 26 August (day 19 to 21 over the batch; 5th to 95th, 20 to 21), and from day 21 (20 to 22) no man in the hex is fed, to the end. Before the fix it ran short on day 13, 19 August, and fed nobody from day 14, in every run. The stock feeds the garrison and the Yokosuka force, about 1,880 men, for the two weeks before Ichiki's survivors come; with them, on day 19, the hex holds about 2,460, and the stock is gone within two days.
-- **Men lost unfed.** In (2,-5) over the run, 2,193 men (median; 2,116 to 2,265), where 2,410 were lost before (2,343 to 2,477): 217 fewer, about one in eleven. The Japanese lose 2,474 unfed in all hexes (2,391 to 2,549), where they lost 2,692. Most of the west's men still starve: the stock buys them a week, and the men of the attacks who fall back there, and those who land after day 20, come to an empty dump, as amendment 8 says.
+- **Who gathers there, and when.** The garrison of Lunga and the 11th and 13th Construction Units leave the airfield's hex on day 1 and reach (2,-5) on day 4, 10 August, in every run, with 1,679 of their 2,040 men (median; 1,626 to 1,732), the rest lost in the fight and unfed on days 1 to 3. The Yokosuka 5th Special Naval Landing Force's 200 join them on day 11, Ichiki's survivors on day 19 (2,460 men in the hex on day 20, median), the Tassafaronga force's 900 on day 24 (the most in the hex, 2,881 on day 25, median; it was 2,393 before), the Oka group's 333 on day 32 and the Aoba part's 637 on day 37. The Oka group leaves on day 37 for the field. At the end, on day 39, 2,260 men are in the hex (median), where 2,022 were.
+- **When the stock runs out.** It runs short on day 20, 26 August (5th to 95th, day 20 to 21), and from day 21 (21 to 22) no man in the hex is fed, to the end. Before the fix it ran short on day 13, 19 August, and fed nobody from day 14, in every run. The stock feeds the garrison and the Yokosuka force, about 1,880 men, for the two weeks before Ichiki's survivors come; with them, on day 19, the hex holds about 2,460, and the stock is gone within two days.
+- **Men lost unfed.** In (2,-5) over the run, 2,184 men (median; 2,114 to 2,253), where 2,410 were lost before (2,343 to 2,477): 226 fewer, about one in eleven. The Japanese lose 2,467 unfed in all hexes (2,391 to 2,537), where they lost 2,692. Most of the west's men still starve: the stock buys them a week, and the men of the attacks who fall back there, and those who land after day 20, come to an empty dump, as amendment 8 says.
 - **The Oka group** reaches the field on day 39 with 236 of its 333 men (median, as before): it lands on day 32, after the stock has run out.
-- **New: an airfield in the west.** The 11th and 13th Construction Units, fed a week longer, finish the airfield they work at the placeholder stock (the baseline report's "the construction units in the west work an airfield", which none finished before): on day 18 in 968 runs, day 17 in 6 and day 19 in 26. In 407 runs the Ryujo's fighters, left with no deck after the carrier battle, land there (most on day 19) and form a Japanese air group at the base. No row has an airfield there; it is the rule that a working unit's default job is its base's airfield, on a placeholder base. It changes no measure; it is why the Allied side destroys fewer aircraft in some runs (the scenario's seed: 86 where it was 90) and part of why the margin falls.
+- **No airfield in the west.** Built with amendment 8 alone, the two construction units, fed a week longer, finished an airfield at the placeholder stock by their default job (day 17 to 19 in every run, with the Ryujo's fighters landing on it in 407); amendment 9 sets them to work at the port by a scripted order, and in this batch base 6 gets no airfield and no Japanese air group forms there in any run.
 
 ### For the tuning round
 
@@ -133,4 +133,4 @@ From the same event logs, each as the median and the middle 90 percent (5th to 9
 
 ### What did not move, and what the scenario's seed shows
 
-Everything east of the Matanikau is as it was: who holds Lunga and Tulagi, the airfield's day, the squadrons, the food at Lunga, the Tenaru and the ridge on both sides, and the American losses to bombs. On the scenario's seed, 1942, the garrison and the construction units reach the west on day 4 with 1,662 men and are fed until the night of day 20, when 2,070 of the 2,418 men there are fed and 348 are not; from day 21 none is. The west loses 2,152 men unfed over the run, and the airfield at base 6 is finished on day 18. The Allied margin is 106.05 where it was 108.51, the Japanese having lost 5,090 men where they lost 5,316.
+Everything east of the Matanikau is as it was: who holds Lunga and Tulagi, the airfield's day, the squadrons, the food at Lunga, the Tenaru and the ridge on both sides, and the American losses to bombs. On the scenario's seed, 1942, the garrison and the construction units reach the west on day 4 with 1,662 men and are fed until the night of day 20, when 2,070 of the 2,418 men there are fed and 348 are not; from day 21 none is. The west loses 2,152 men unfed over the run, and base 6 has no airfield. The Allied margin is 106.25 where it was 108.51, the Japanese having lost 5,090 men where they lost 5,316.

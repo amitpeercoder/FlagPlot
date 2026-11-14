@@ -3159,6 +3159,32 @@ task_force = 21
 kind = "set_route"
 waypoints = [[7, 6]]
 
+# The two construction units of Lunga are set to work at the port on day 1
+# (decision 0101, as amended, 9). These are scripted orders with no row behind
+# them, there only to stop a working unit's default job: with no job named, a
+# working unit at a base with no airfield builds one (decision 0099, 4), and
+# once fed in (2,-5) these two finished an airfield at the placeholder stock
+# there, which no row has. No row has them build anything after 7 August. The
+# order stands when they fall back, and the port work does nothing where no
+# ship unloads. The construction unit on Tulagi surrenders on day 1 and needs
+# none.
+
+[[order]]
+day = 1
+side = "japanese"
+land_unit = 12
+kind = "set_activity"
+activity = "work"
+job = "port"
+
+[[order]]
+day = 1
+side = "japanese"
+land_unit = 13
+kind = "set_activity"
+activity = "work"
+job = "port"
+
 # The Americans stand on the defence once the base is theirs (decision 0101,
 # 12): on the day after the record's, Lunga taken on 8 August (day 2) and
 # Tulagi secured by 9 August (day 3).

@@ -2,45 +2,45 @@ Scenario 7: The full slice, 7 August to 14 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5ac96825de768747  216 events
-day   2  hash d5e45180a6c15ee4  181 events
-day   3  hash 2c8e4d0ae90e7013  148 events
-day   4  hash 7b7326dde8e15ff5  152 events
-day   5  hash e1fc926f48a34cd0  72 events
-day   6  hash 889a1e2ad0575b7e  46 events
-day   7  hash 596389dd360f19ee  31 events
-day   8  hash 9edaaaecd81eb131  48 events
-day   9  hash e29a6e0cad4d7bad  54 events
-day  10  hash 21e4de04610680a3  56 events
-day  11  hash 4b8cd416eed5ff2e  79 events
-day  12  hash 02dc7a53056015c9  67 events
-day  13  hash 69c3bca659f3d741  106 events
-day  14  hash 42a94cd61c9e9116  83 events
-day  15  hash f338b46eb38bbb2f  100 events
-day  16  hash cfb0f1cd832c661a  94 events
-day  17  hash 2b9fce11288b08bc  53 events
-day  18  hash b219ce5678be1b4c  215 events
-day  19  hash c09b387f30bf7ea2  157 events
-day  20  hash f240a5d355008bb9  200 events
-day  21  hash 10005458d45d74cf  233 events
-day  22  hash 591b5f0b238354d3  117 events
-day  23  hash 17096712c8adca81  198 events
-day  24  hash be41bc7f43603432  207 events
-day  25  hash 1b0f72bfb5fddb09  223 events
-day  26  hash e7eba14293bb8d7f  165 events
-day  27  hash bab4bd926e6d5c7a  184 events
-day  28  hash 42051ca510f3f3da  138 events
-day  29  hash 12555bd1c4607b27  140 events
-day  30  hash 71e289c09a58ccf0  171 events
-day  31  hash 2490a1ea2eefcecf  173 events
-day  32  hash ec606abb838c6a46  154 events
-day  33  hash bd869a84f5048d71  119 events
-day  34  hash 60b23c05c4c7efce  147 events
-day  35  hash 568919f0c0e6e0bf  150 events
-day  36  hash 8daa5ca331afdd9a  146 events
-day  37  hash 2254d3433397f89b  213 events
-day  38  hash 5940c42ef8552696  150 events
-day  39  hash 18b74d18725e60fb  135 events
+day   1  hash 9b16017b82e2b2e4  218 events
+day   2  hash 3b2ca74734ba8737  181 events
+day   3  hash 0ffb9d845041427a  148 events
+day   4  hash c427cdd476db8776  152 events
+day   5  hash dafe97f8e120824b  72 events
+day   6  hash 7e47f2499a411dea  46 events
+day   7  hash d8c1ed7823083cb5  31 events
+day   8  hash 4263dcb5868eccfa  48 events
+day   9  hash 0f0d9c09214b909e  54 events
+day  10  hash afac4ad430467022  56 events
+day  11  hash 767f4ca440fd7162  79 events
+day  12  hash 40f77ffa16827bbb  67 events
+day  13  hash 5c19f6fea84321cd  106 events
+day  14  hash b4cc18c7b2147744  83 events
+day  15  hash 31f8f6fe043c0038  100 events
+day  16  hash 4257a076392b33e9  94 events
+day  17  hash 491b22f1381eb88d  53 events
+day  18  hash e5adfaa536981969  214 events
+day  19  hash 6a94e6f3484f5425  157 events
+day  20  hash 6f5483668c4140aa  197 events
+day  21  hash edf082018595c065  231 events
+day  22  hash 14b65aebb4c63bc2  115 events
+day  23  hash 8c1f0b6845ada06a  196 events
+day  24  hash f4ebcfc278db45fa  206 events
+day  25  hash b7950842af8c7fde  223 events
+day  26  hash 5cb498a11b3b6a59  165 events
+day  27  hash 90c8536459c1a987  184 events
+day  28  hash 766ef25a5259d30b  138 events
+day  29  hash 938c2f00fc2e451d  140 events
+day  30  hash ffa5cad48d955dbe  171 events
+day  31  hash 4c23a5ddc703f83e  173 events
+day  32  hash a013a35aedb78fb8  154 events
+day  33  hash 48effee4c7cc73eb  119 events
+day  34  hash ec35251bcf1e7207  147 events
+day  35  hash 3ed974798d3d0e97  150 events
+day  36  hash 3f1529f139fc22ec  146 events
+day  37  hash ca91f38c8b6a7888  213 events
+day  38  hash 5591f3919232d0f7  150 events
+day  39  hash 41ae09c7530b89f8  135 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -106,7 +106,6 @@ air_group:123 "Shokaku fighter unit, second wave escort" (Japanese) aboard ship:
 air_group:124 "Zuikaku fighter unit, second wave escort" (Japanese) aboard ship:20: 6 ready, mission Rest, no arc
 air_group:125 "VT-3, attack group" (Allied) aboard ship:1: 7 ready, mission Rest, no arc
 air_group:126 "VT-8, second group" (Allied) aboard ship:11: 5 ready, mission Rest, no arc
-air_group:2000001 "Ryujo fighter unit landed at base:6" (Japanese) at base:6: 4 ready, mission Rest, no arc
 ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
 ship:2 "USS North Carolina": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 5550 t of fuel, 0 t of supply
 ship:3 "USS Portland": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2614 t of fuel, 0 t of supply
@@ -245,7 +244,7 @@ base:2 "Rabaul" (Japanese) at (-5,-13): 8118.32 t of supply in stock, repairs 4 
 base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock, 0 t of fuel in stock
 base:4 "Tulagi" (Allied) at (3,-5): 771.65 t of supply in stock, no airfield
 base:5 "Placeholder Japanese stock at Taivu" (Japanese) at (3,-4): 6.01 t of supply in stock, no airfield, formed in play, on its own side's map only
-base:6 "Placeholder Japanese stock west of the Lunga" (Japanese) at (2,-5): 0 t of supply in stock, 20566 of work done on the airfield, formed in play, on its own side's map only
+base:6 "Placeholder Japanese stock west of the Lunga" (Japanese) at (2,-5): 0 t of supply in stock, no airfield, formed in play, on its own side's map only
 base:7 "Shortland" (Japanese) at (-2,-8): 0 t of supply in stock, no airfield
 base:8 "Landing at (2,-4)" (Allied) at (2,-4): 155.25 t of supply in stock, no airfield
 base:9 "Landing at (3,-5)" (Allied) at (3,-5): 147.15 t of supply in stock, no airfield, formed in play, on its own side's map only
@@ -321,5 +320,5 @@ Japanese claim over (2,-4): 2 aircraft shot down, day 38 morning
 Japanese estimate at (2,-4): 19308 enemy men ashore, reported day 39
 
 Result (the placeholder scale of decision 0054):
-Allied: 121.840416 points (ships_sunk 2 = 14; ships_crippled 0 = 0; aircraft_destroyed 86 = 4.3; cargo_landed at base:1 6194.75 = 30.97375; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 5090 = 50.9), margin 106.047083, decisive victory
-Japanese: 15.793333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 53 = 2.65; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 281 = 2.81), margin -106.047083, decisive defeat
+Allied: 122.040416 points (ships_sunk 2 = 14; ships_crippled 0 = 0; aircraft_destroyed 90 = 4.5; cargo_landed at base:1 6194.75 = 30.97375; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 5090 = 50.9), margin 106.247083, decisive victory
+Japanese: 15.793333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 53 = 2.65; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 281 = 2.81), margin -106.247083, decisive defeat
