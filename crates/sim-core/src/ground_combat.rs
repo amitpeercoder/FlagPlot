@@ -1854,6 +1854,58 @@ mod tests {
     }
 
     #[test]
+    fn shots_are_cut_in_proportion_only_above_the_engaged_men() {
+        // 6000 firing men against a limit of 3 x 1000: 60 shots to 30.
+        assert_eq!(
+            engaged_shots(Fixed::from_int(60), 6000, Fixed::from_int(3000)),
+            Fixed::from_int(30)
+        );
+        // At or below the limit nothing is cut.
+        assert_eq!(
+            engaged_shots(Fixed::from_int(40), 4000, Fixed::from_int(4800)),
+            Fixed::from_int(40)
+        );
+        assert_eq!(
+            engaged_shots(Fixed::from_int(30), 3000, Fixed::from_int(3000)),
+            Fixed::from_int(30)
+        );
+        // A unit's share of a side's cut.
+        assert_eq!(
+            engaged_shots(fx("12.5"), 5000, Fixed::from_int(2500)),
+            fx("6.25")
+        );
+    }
+
+    #[test]
+    fn an_attack_fails_when_its_weight_is_below_the_others() {
+        assert!(attack_failed(true, Fixed::from_int(3), Fixed::from_int(18)));
+        assert!(!attack_failed(true, Fixed::from_int(12), fx("9.6")));
+        // Equal weights: neither fails.
+        assert!(!attack_failed(true, Fixed::from_int(9), Fixed::from_int(9)));
+        // A side that did not attack never fails.
+        assert!(!attack_failed(false, Fixed::ZERO, Fixed::from_int(9)));
+        // A side with no weight that attacked fails if the other's is above 0.
+        assert!(attack_failed(true, Fixed::ZERO, fx("0.1")));
+        assert!(!attack_failed(true, Fixed::ZERO, Fixed::ZERO));
+    }
+
+    #[test]
+    fn a_spent_attacker_does_what_its_order_says_and_else_holds_where_it_is_fed() {
+        for fed in [true, false] {
+            assert_eq!(
+                when_attack_spent(Some(WhenSpent::Hold), fed),
+                WhenSpent::Hold
+            );
+            assert_eq!(
+                when_attack_spent(Some(WhenSpent::FallBack), fed),
+                WhenSpent::FallBack
+            );
+        }
+        assert_eq!(when_attack_spent(None, true), WhenSpent::Hold);
+        assert_eq!(when_attack_spent(None, false), WhenSpent::FallBack);
+    }
+
+    #[test]
     fn a_side_is_beaten_with_no_man_or_below_the_share_of_the_others_men() {
         let share = fx("0.2");
         assert!(is_beaten(0, 0, share));
@@ -2742,6 +2794,20 @@ mod tests {
             let Some(Answer::Ground(answer)) = allied.ask(&question) else {
                 panic!("a question the view lists has an answer: {question:?}");
             };
+            // The engine asks what a spent attacker does only with enemy
+            // fighting men in its hex, which there are not here: the view's
+            // answer is the rule's on what the side holds (decision 0105).
+            if let Question::Ground(GroundQuestion::AttackSpent { unit, hex }) = question {
+                let land_unit = &before.truth.land_units[&unit];
+                assert_eq!(
+                    answer,
+                    GroundAnswer::AttackSpent(when_attack_spent(
+                        land_unit.when_spent,
+                        fed_where_it_stands(&before.truth, land_unit.side, hex),
+                    ))
+                );
+                continue;
+            }
             assert!(
                 trace.iter().any(|entry| {
                     entry.answer == Answer::Ground(answer.clone())

@@ -3568,6 +3568,31 @@ mod tests {
                 Whole,
                 Cut("EnemySurrendered", &["side"]),
             )),
+            // An attack that failed is told to the side that attacked, where
+            // only, and to the enemy not at all (decision 9 of 0105).
+            sided(row(
+                EventKind::GroundAttackFailed {
+                    side: Side::Allied,
+                    hex: hex(),
+                    weight: fx(3),
+                    enemy_weight: fx(18),
+                },
+                Cut("GroundAttackFailed", &["side", "weight", "enemy_weight"]),
+                Nothing,
+            )),
+            // A spent attacker's falling back is its own side's alone.
+            sided(row(
+                EventKind::SpentUnitFellBack {
+                    unit: unit(1),
+                    side: Side::Allied,
+                    from: hex(),
+                    to: Hex::new(4, -2),
+                    men: 300,
+                    fatigue: fx(100),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3608,7 +3633,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 118, "the log has 118 kinds of event");
+        assert_eq!(all.len(), 120, "the log has 120 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

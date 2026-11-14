@@ -2506,6 +2506,38 @@ mod tests {
         }
     }
 
+    #[test]
+    fn the_engagement_figures_are_read_required_and_in_range() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.engagement_ratio, Fixed::from_int(3));
+        assert_eq!(figures.failed_attack_fatigue, Fixed::from_int(30));
+        for key in ["engagement_ratio", "failed_attack_fatigue"] {
+            let text = without_keys(&ground_text(), &[key]);
+            assert!(parse_ground_figures(&text, here())
+                .expect_err("a missing key is refused")
+                .message
+                .contains(key));
+        }
+        let bad = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("engagement_ratio", "\"0.5\"").contains("engagement_ratio"));
+        assert!(bad("engagement_ratio", "0").contains("engagement_ratio"));
+        assert!(bad("failed_attack_fatigue", "101").contains("failed_attack_fatigue"));
+        assert!(bad("failed_attack_fatigue", "-1").contains("failed_attack_fatigue"));
+        for (key, value) in [
+            ("engagement_ratio", "1"),
+            ("engagement_ratio", "\"2.5\""),
+            ("engagement_ratio", "1000000"),
+            ("failed_attack_fatigue", "0"),
+            ("failed_attack_fatigue", "100"),
+        ] {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here()).expect("loads");
+        }
+    }
+
     const AIRFIELD_KEYS: [&str; 3] = [
         "airfield_damage_per_hit",
         "work_per_airfield_damage_point",
