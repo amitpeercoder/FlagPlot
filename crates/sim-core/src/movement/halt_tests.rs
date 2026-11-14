@@ -620,11 +620,7 @@ fn a_force_with_cargo_to_load_at_its_own_base_would_halt_there() {
     );
     let task_force = world.truth.task_forces.get_mut(&force()).expect("force");
     task_force.mission = Mission::SurfaceCombat;
-    task_force.cargo_order = Some(CargoOrder {
-        action: CargoAction::Load,
-        order: OrderId::new(1),
-        unit: None,
-    });
+    task_force.cargo_order = Some(CargoOrder::new(CargoAction::Load, OrderId::new(1), None));
     assert_eq!(
         ask(
             &world,

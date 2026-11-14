@@ -71,6 +71,11 @@ pub struct Briefing {
     /// on (decision 0096, 7). Left out when there were none.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub halts: Option<HaltsPart>,
+    /// 6d. Yesterday's forces formed, joined and stood down, and the loads
+    /// and refuellings that stopped at a base's reserve (decision 0111). Left
+    /// out when there were none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub force_changes: Option<ForceChangesPart>,
     /// 7. Air groups.
     pub air_groups: Vec<AirGroupLine>,
     /// 8. Bases.
@@ -589,6 +594,13 @@ pub struct BriefingBase {
     /// is 0.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub airfield_damage: Option<crate::lines::AirfieldDamageLine>,
+    /// The base's reserves (decision 0111). Left out while both are 0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reserves: Option<crate::lines::BaseReservesLine>,
+    /// The side's ships in port at the base in no force, which a forming
+    /// order may take. Left out when there are none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub ships_in_port: Vec<Handle>,
     /// What yesterday's events of the side say of the base's airfield:
     /// hits, mending, arrivals held back (decision 0103). Left out when
     /// there were none.
@@ -1121,6 +1133,88 @@ impl HaltsPart {
     }
 }
 
+/// The side's forces formed, joined and stood down yesterday, and its loads
+/// and refuellings that stopped at a base's reserve (decision 0111).
+#[derive(Clone, PartialEq, Eq, Debug, Default, Serialize)]
+pub struct ForceChangesPart {
+    /// Ships in port in no force formed into a new force.
+    pub formed: Vec<FormedLine>,
+    /// Forces joined to another, which ceased to be.
+    pub joined: Vec<JoinedLine>,
+    /// Forces stood down in port, which ceased to be.
+    pub stood_down: Vec<StoodDownLine>,
+    /// Loads the commander ordered that may take a stock below its reserve.
+    pub loads_below_reserve: Vec<LoadReserveLine>,
+    /// Loads the staff ordered that stopped at a base's reserve.
+    pub loads_held_at_reserve: Vec<LoadReserveLine>,
+    /// Ships short of fuel because the fuel at their base was at its reserve.
+    pub refuelling_held_at_reserve: Vec<RefuellingHeldLine>,
+}
+
+impl ForceChangesPart {
+    fn is_empty(&self) -> bool {
+        self.formed.is_empty()
+            && self.joined.is_empty()
+            && self.stood_down.is_empty()
+            && self.loads_below_reserve.is_empty()
+            && self.loads_held_at_reserve.is_empty()
+            && self.refuelling_held_at_reserve.is_empty()
+    }
+}
+
+/// Ships formed into a new force at a base.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FormedLine {
+    pub task_force: Handle,
+    pub base: Handle,
+    pub ships: Vec<Handle>,
+    pub event: u32,
+}
+
+/// A force joined to another at a base; `joined` ceased to be.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct JoinedLine {
+    pub joined: Handle,
+    pub into: Handle,
+    pub base: Handle,
+    pub ships: Vec<Handle>,
+    pub event: u32,
+}
+
+/// A force stood down at a base; it ceased to be and its ships lie in port.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct StoodDownLine {
+    pub task_force: Handle,
+    pub base: Handle,
+    pub ships: Vec<Handle>,
+    pub event: u32,
+}
+
+/// A load and a base's reserve of its cargo. For a load that may go below
+/// the reserve, `tons` is the tons it may take below it; for a load held at
+/// the reserve, the tons aboard the force when it stopped.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct LoadReserveLine {
+    pub task_force: Handle,
+    pub base: Handle,
+    /// `supply` or `fuel`.
+    pub cargo: &'static str,
+    pub tons: Dec,
+    pub reserve_t: Dec,
+    pub event: u32,
+}
+
+/// A ship that lacks fuel because the base's fuel was at its reserve.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct RefuellingHeldLine {
+    pub ship: Handle,
+    pub task_force: Handle,
+    pub place: Place,
+    /// The tons the ship still lacks.
+    pub short_t: Dec,
+    pub event: u32,
+}
+
 /// A force halted at a marked waypoint to act there.
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct HaltedLine {
@@ -1479,6 +1573,13 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                 returned_yesterday: day.returned.get(&b.id).cloned().unwrap_or_default(),
                 works: crate::lines::base_works_line(&ctx, b),
                 airfield_damage: crate::lines::base_airfield_damage_line(&ctx, b),
+                reserves: crate::lines::base_reserves_line(b),
+                ships_in_port: ctx
+                    .ships
+                    .values()
+                    .filter(|s| s.location == ShipLocation::Port(b.id))
+                    .map(|s| ctx.ship(s.id))
+                    .collect(),
                 airfield_yesterday: day.airfield.get(&b.id).cloned(),
             }
         })
@@ -1487,6 +1588,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
     let land_units = land_units_part(&ctx, view, std::mem::take(&mut day.ground));
     let base_changes = Some(std::mem::take(&mut day.base_changes)).filter(|c| !c.is_empty());
     let halts = Some(std::mem::take(&mut day.halts)).filter(|h| !h.is_empty());
+    let force_changes = Some(std::mem::take(&mut day.force_changes)).filter(|c| !c.is_empty());
     let enemy_ashore = enemy_ashore_part(&ctx, view, std::mem::take(&mut day.bases_found));
 
     let arrivals = ArrivalsPart {
@@ -1548,6 +1650,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         task_forces,
         away_at_yard,
         halts,
+        force_changes,
         air_groups,
         bases,
         land_units,
@@ -1738,6 +1841,7 @@ struct Day {
     ground: GroundDay,
     base_changes: BaseChangesPart,
     halts: HaltsPart,
+    force_changes: ForceChangesPart,
     bases_found: Vec<BaseFoundLine>,
 }
 
@@ -1967,6 +2071,7 @@ impl Day {
         let mut ground = GroundDay::default();
         let mut base_changes = BaseChangesPart::default();
         let mut halts = HaltsPart::default();
+        let mut force_changes = ForceChangesPart::default();
         let mut bases_found: Vec<BaseFoundLine> = Vec::new();
         let mut bombardments: Vec<Bombardment> = Vec::new();
         let mut shell_fire: Vec<ShellFire> = Vec::new();
@@ -2912,6 +3017,81 @@ impl Day {
                             event: id,
                         });
                     }
+                    EventKind::TaskForceFormed {
+                        task_force,
+                        base,
+                        ships,
+                        ..
+                    } => force_changes.formed.push(FormedLine {
+                        task_force: ctx.force(*task_force),
+                        base: ctx.base(*base),
+                        ships: ships.iter().map(|s| ctx.ship(*s)).collect(),
+                        event: id,
+                    }),
+                    EventKind::TaskForceJoined {
+                        joined,
+                        into,
+                        base,
+                        ships,
+                    } => force_changes.joined.push(JoinedLine {
+                        joined: ctx.force(*joined),
+                        into: ctx.force(*into),
+                        base: ctx.base(*base),
+                        ships: ships.iter().map(|s| ctx.ship(*s)).collect(),
+                        event: id,
+                    }),
+                    EventKind::TaskForceStoodDownInPort {
+                        task_force,
+                        base,
+                        ships,
+                    } => force_changes.stood_down.push(StoodDownLine {
+                        task_force: ctx.force(*task_force),
+                        base: ctx.base(*base),
+                        ships: ships.iter().map(|s| ctx.ship(*s)).collect(),
+                        event: id,
+                    }),
+                    EventKind::LoadBelowReserve {
+                        task_force,
+                        base,
+                        cargo,
+                        below_t,
+                        reserve_t,
+                    } => force_changes.loads_below_reserve.push(LoadReserveLine {
+                        task_force: ctx.force(*task_force),
+                        base: ctx.base(*base),
+                        cargo: cargo.name(),
+                        tons: Dec(*below_t),
+                        reserve_t: Dec(*reserve_t),
+                        event: id,
+                    }),
+                    EventKind::LoadHeldAtReserve {
+                        task_force,
+                        base,
+                        cargo,
+                        aboard_t,
+                        reserve_t,
+                    } => force_changes.loads_held_at_reserve.push(LoadReserveLine {
+                        task_force: ctx.force(*task_force),
+                        base: ctx.base(*base),
+                        cargo: cargo.name(),
+                        tons: Dec(*aboard_t),
+                        reserve_t: Dec(*reserve_t),
+                        event: id,
+                    }),
+                    EventKind::RefuellingHeldAtReserve {
+                        ship,
+                        task_force,
+                        hex,
+                        short_t,
+                    } => force_changes
+                        .refuelling_held_at_reserve
+                        .push(RefuellingHeldLine {
+                            ship: ctx.ship(*ship),
+                            task_force: ctx.force(*task_force),
+                            place: ctx.place(*hex),
+                            short_t: Dec(*short_t),
+                            event: id,
+                        }),
                     EventKind::StrikeMissionCleared { air_group, base } => {
                         base_changes
                             .strike_missions_cleared
@@ -3200,6 +3380,7 @@ impl Day {
             ground,
             base_changes,
             halts,
+            force_changes,
             bases_found,
         }
     }

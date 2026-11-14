@@ -380,3 +380,103 @@ impl Saved {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sim_core::fixed::Fixed;
+    use sim_core::ids::{BaseId, ShipId, TaskForceId};
+    use sim_core::orders::{BaseOrder, Cargo, OrderKind, TaskForceOrder};
+
+    fn request(kind: OrderKind) -> OrderRequest {
+        OrderRequest {
+            kind,
+            origin: Origin {
+                issuer: Issuer::Staff,
+                intent: None,
+            },
+        }
+    }
+
+    /// Decision 0111: a load up to a weight (both cargos), a join, a stand
+    /// down and a forming order at a base are written and read back as the
+    /// same orders, with the weight exact to the millionth and the base as
+    /// the target.
+    #[test]
+    fn the_orders_of_decision_0111_round_trip_through_a_saved_game() {
+        let force = TaskForceId::new(3);
+        let other = TaskForceId::new(7);
+        let kinds = vec![
+            OrderKind::TaskForce {
+                target: force,
+                order: TaskForceOrder::LoadTo {
+                    cargo: Cargo::Supply,
+                    weight_t: Fixed::from_int(1200),
+                },
+            },
+            OrderKind::TaskForce {
+                target: force,
+                order: TaskForceOrder::LoadTo {
+                    cargo: Cargo::Fuel,
+                    weight_t: Fixed::from_raw(2_500_001),
+                },
+            },
+            OrderKind::TaskForce {
+                target: force,
+                order: TaskForceOrder::JoinTo(other),
+            },
+            OrderKind::TaskForce {
+                target: other,
+                order: TaskForceOrder::StandDown,
+            },
+            OrderKind::Base {
+                target: BaseId::new(2),
+                order: BaseOrder::FormTaskForce {
+                    ships: vec![ShipId::new(11), ShipId::new(4)],
+                },
+            },
+        ];
+        let mut script: Script = BTreeMap::new();
+        script.insert(
+            2,
+            kinds
+                .iter()
+                .cloned()
+                .map(|kind| (Side::Allied, request(kind)))
+                .collect(),
+        );
+        let dir = std::env::temp_dir().join(format!("flagplot-save-0111-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("make the folder");
+        let file = dir.join("game.save.json");
+        let file = file.to_string_lossy().into_owned();
+        // Any file will do as the scenario: only its hash is written.
+        let scenario = concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml");
+        let remembered = Remembered {
+            script: BTreeMap::new(),
+            files: Vec::new(),
+        };
+        write(
+            &file,
+            scenario,
+            9,
+            &remembered,
+            &script,
+            &script_seats(),
+            &[],
+        )
+        .expect("writes");
+        let saved = read(&file).expect("reads");
+        let back: Vec<OrderKind> = saved
+            .script
+            .get(&2)
+            .expect("day 2")
+            .iter()
+            .map(|(side, request)| {
+                assert_eq!(*side, Side::Allied);
+                request.kind.clone()
+            })
+            .collect();
+        assert_eq!(back, kinds);
+        fs::remove_dir_all(&dir).ok();
+    }
+}

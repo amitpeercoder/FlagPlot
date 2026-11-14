@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, LandUnitId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{OrderKind, OrderRequest, Origin, RejectReason, TaskForceOrder};
 use sim_core::state::Side;
 use sim_core::World;
@@ -76,7 +76,28 @@ fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32
         }
         return body;
     }
-    if body.get("kind").and_then(Value::as_str) != Some("detach") {
+    // A join names the force joined to by the side's number (decision
+    // 0111); a number that names none of the side's forces becomes the
+    // number no force has, so an enemy force and one that does not exist
+    // are refused alike.
+    if body.get("kind").and_then(Value::as_str) == Some("join") {
+        if let Some(number) = body
+            .get("into")
+            .and_then(Value::as_str)
+            .and_then(|handle| handle.strip_prefix("task_force:"))
+            .and_then(|number| number.parse::<u32>().ok())
+        {
+            let raw = ctx
+                .own_force(number)
+                .map_or(NO_SUCH_UNIT, |force| force.id.raw());
+            body["into"] = json!(format!("task_force:{raw}"));
+        }
+        return body;
+    }
+    if !matches!(
+        body.get("kind").and_then(Value::as_str),
+        Some("detach" | "form_task_force")
+    ) {
         return body;
     }
     if let Some(Value::Array(ships)) = body.get_mut("ships") {
@@ -408,6 +429,14 @@ impl Session {
                             result["returns"] = json!(day <= self.days);
                         }
                     }
+                    // A load the commander gives may take a stock below its
+                    // reserve; the answer says so (decision 9 of 0111).
+                    if let Some(below) = crate::orders::below_reserve(
+                        &Ctx::new(self.world.side_view(side)),
+                        &request.kind,
+                    ) {
+                        result["below_reserve"] = below;
+                    }
                     self.seats
                         .get_mut(&side)
                         .expect("both seats exist")
@@ -469,6 +498,11 @@ impl Session {
             .expect("an orderable unit is kind:number");
         let number: u32 = number.parse().expect("an orderable unit has a number");
         let raw = match kind_of_unit {
+            // A base keeps its number (decision 0086): the side's own only.
+            "base" => ctx
+                .bases
+                .contains_key(&BaseId::new(number))
+                .then_some(number),
             "task_force" => ctx.own_force(number).map(|f| f.id.raw()),
             "land_unit" => ctx.own_land_unit(number).map(|u| u.id.raw()),
             _ => ctx.own_group(number).map(|g| g.id.raw()),

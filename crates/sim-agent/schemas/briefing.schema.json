@@ -32,6 +32,10 @@
       "description": "Yesterday's halts at marked waypoints and the forces that steamed on (decision 0096, 7). Left out when there were none.",
       "$ref": "#/$defs/halts"
     },
+    "force_changes": {
+      "description": "Yesterday's forces formed, joined and stood down, and loads and refuellings stopped at a base's reserve (decision 0111). Left out when there were none.",
+      "$ref": "#/$defs/force_changes"
+    },
     "air_groups": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/air_group_line" } },
     "bases": { "type": "array", "items": { "$ref": "#/$defs/base" } },
     "land_units": {
@@ -722,6 +726,98 @@
         "event": { "type": "integer" }
       }
     },
+    "force_changes": {
+      "type": "object",
+      "required": ["formed", "joined", "stood_down", "loads_below_reserve", "loads_held_at_reserve", "refuelling_held_at_reserve"],
+      "additionalProperties": false,
+      "properties": {
+        "formed": {
+          "description": "Ships in port in no force formed into a new force.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "base", "ships", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "ships": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/handle" } },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "joined": {
+          "description": "Forces joined to another at a base; the joined force has ceased to be and keeps its number.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["joined", "into", "base", "ships", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "joined": { "$ref": "defs.schema.json#/$defs/handle" },
+              "into": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "ships": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/handle" } },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "stood_down": {
+          "description": "Forces stood down at a base: their ships lie in port in no force and the force has ceased to be.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "base", "ships", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "ships": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/handle" } },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "loads_below_reserve": {
+          "description": "Loads the commander ordered that may take tons of the stock below the base's reserve. tons is the tons below.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/load_reserve_line" }
+        },
+        "loads_held_at_reserve": {
+          "description": "Loads the staff ordered that stopped at the base's reserve. tons is the tons aboard the force.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/load_reserve_line" }
+        },
+        "refuelling_held_at_reserve": {
+          "description": "Ships still short of fuel because the fuel at their base was at its reserve.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "task_force", "place", "short_t", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "short_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "load_reserve_line": {
+      "type": "object",
+      "required": ["task_force", "base", "cargo", "tons", "reserve_t", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+        "base": { "$ref": "defs.schema.json#/$defs/handle" },
+        "cargo": { "enum": ["supply", "fuel"] },
+        "tons": { "$ref": "defs.schema.json#/$defs/dec" },
+        "reserve_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "event": { "type": "integer" }
+      }
+    },
     "halts": {
       "type": "object",
       "required": ["halted", "steamed_on"],
@@ -1383,6 +1479,12 @@
         "returned_yesterday": { "type": "array", "items": { "$ref": "#/$defs/returned_force" } },
         "works": { "$ref": "defs.schema.json#/$defs/base_works" },
         "airfield_damage": { "$ref": "defs.schema.json#/$defs/airfield_damage" },
+        "reserves": { "$ref": "defs.schema.json#/$defs/base_reserves" },
+        "ships_in_port": {
+          "description": "The side's ships in port at the base in no force (decision 0111): form_task_force takes ships from here. Left out when there are none.",
+          "type": "array",
+          "items": { "$ref": "defs.schema.json#/$defs/handle" }
+        },
         "airfield_yesterday": {
           "description": "What yesterday's events of the side say of the base's airfield (decision 0103): hits that added damage, work that mended it, arrivals held back. Left out when there were none.",
           "type": "object",

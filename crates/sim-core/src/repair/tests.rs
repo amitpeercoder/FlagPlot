@@ -636,11 +636,11 @@ fn a_force_leaves_for_the_yard_is_away_and_returns_repaired_refuelled_and_rearme
         force.home_port = Some(BaseId::new(1));
         force.mission = Mission::SurfaceCombat;
         force.alerted = true;
-        force.cargo_order = Some(CargoOrder {
-            action: crate::orders::CargoAction::Unload,
-            order: OrderId::new(77),
-            unit: None,
-        });
+        force.cargo_order = Some(CargoOrder::new(
+            crate::orders::CargoAction::Unload,
+            OrderId::new(77),
+            None,
+        ));
         force.rules_of_engagement.break_off = Fixed::from_ratio(1, 4);
     }
     world.submit_orders(Side::Allied, vec![request(1, TaskForceOrder::SendToYard)]);

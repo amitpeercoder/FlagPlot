@@ -76,9 +76,8 @@ pub(crate) fn landing_fatigue_gain(
 /// The preparation of two forces that join (decision 12 of 0095): the
 /// receiving force's hex and order, the roster of both, and the lower of the
 /// two loadings (the other force's counting only if it is for the same hex,
-/// else 0). `None` if the receiving force has none. Nothing in the game joins
-/// forces yet: this waits on the join order of step 3, stage 1.
-#[allow(dead_code)]
+/// else 0). `None` if the receiving force has none. The join order of
+/// decision 13 of 0111 uses it.
 pub(crate) fn joined(
     into: Option<&Preparation>,
     from: Option<&Preparation>,

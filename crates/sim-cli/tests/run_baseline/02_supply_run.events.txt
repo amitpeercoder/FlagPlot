@@ -2,14 +2,14 @@ Scenario 2: Supply run, Espiritu Santo to Guadalcanal
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8cc8e1e22a77802a  10 events
-day   2  hash 437a1b987462d7ec  17 events
-day   3  hash 8f7f35eb9edfba95  13 events
-day   4  hash 1b9bcd9a16d7890e  8 events
-day   5  hash 8e7f66bfe29f7b3d  8 events
-day   6  hash 69e5e44bf68494a6  5 events
-day   7  hash 09204acfc40fc52d  4 events
-day   8  hash 71c84d618ce1ddb2  2 events
+day   1  hash ae484d128a51bbc3  10 events
+day   2  hash 040f8f379c5121ed  17 events
+day   3  hash be967289508c1bc0  13 events
+day   4  hash 4593c9a723984ce3  8 events
+day   5  hash 6cc8d72ccab1e15c  8 events
+day   6  hash 07f5986a26d83c67  5 events
+day   7  hash f92c36ffb3a8ae50  4 events
+day   8  hash ec4962bb0fa23997  2 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 night     ship:1 loaded 1800 t from base:1, 1800 t aboard, 8200 t in stock  <- order:1

@@ -33,7 +33,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "b5c8dfa3dd97c9dc"
+      "hash": "b76ef59c6dc67a4d"
     }
   ],
   "orders": [
@@ -597,6 +597,6 @@
     "japanese": "script"
   },
   "seed": 1942,
-  "state_version": "flagplot-state-v22",
+  "state_version": "flagplot-state-v23",
   "version": 2
 }

@@ -273,5 +273,9 @@ name = "scenario_37_men_falling_back"
 path = "scenario_37_men_falling_back.rs"
 
 [[test]]
+name = "scenario_39_load_reserve_and_forces"
+path = "scenario_39_load_reserve_and_forces.rs"
+
+[[test]]
 name = "choices_asked_and_run"
 path = "choices_asked_and_run.rs"

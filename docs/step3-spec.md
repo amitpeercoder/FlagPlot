@@ -97,7 +97,7 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | The rules' choices inside a day as functions of belief | Decision 0100 (stage 0) | Built |
 | A rules version on a saved game | Decision 0100 (stage 0) | Built |
 | A force that acts at a place and steams on by itself | Decision 0096 | Built |
-| A load of a stated weight, and refuelling that leaves a reserve | Stage 1 | Not built |
+| A load of a stated weight, and refuelling that leaves a reserve | Decision 0111 (stage 1) | Built, with forces formed, joined and stood down (scenario 39) |
 | A day from which a force may be used | Stage 2 | Not built |
 | Preparing a landing: loading and rehearsal | Decision 0095 | Built |
 | The experience of a land unit, and training | Decision 0097 | Built |

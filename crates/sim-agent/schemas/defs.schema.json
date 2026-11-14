@@ -594,7 +594,18 @@
           "type": "integer"
         },
         "works": { "$ref": "#/$defs/base_works" },
-        "airfield_damage": { "$ref": "#/$defs/airfield_damage" }
+        "airfield_damage": { "$ref": "#/$defs/airfield_damage" },
+        "reserves": { "$ref": "#/$defs/base_reserves" }
+      }
+    },
+    "base_reserves": {
+      "description": "The tons of supply and of fuel the base keeps in reserve (decision 0111): refuelling and a load the staff orders never take the stock below it; a load the commander orders may. The side's own bases only; left out while both are 0.",
+      "type": "object",
+      "required": ["supply_reserve_t", "fuel_reserve_t"],
+      "additionalProperties": false,
+      "properties": {
+        "supply_reserve_t": { "$ref": "#/$defs/dec" },
+        "fuel_reserve_t": { "$ref": "#/$defs/dec" }
       }
     },
     "ground_estimate_line": {

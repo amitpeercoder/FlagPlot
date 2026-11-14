@@ -99,14 +99,30 @@ pub fn served_json(side: Side, request: &OrderRequest) -> Value {
             sim_core::orders::OrderKind::TaskForce { target, .. } => ("task_force", target.raw()),
             sim_core::orders::OrderKind::AirGroup { target, .. } => ("air_group", target.raw()),
             sim_core::orders::OrderKind::LandUnit { target, .. } => ("land_unit", target.raw()),
+            // A base keeps its number (decision 0086): the scenario's.
+            sim_core::orders::OrderKind::Base { target, .. } => ("base", target.raw()),
         };
         let (owner, number) = match kind {
+            "base" => (side, raw),
             "task_force" => n.forces[&raw],
             "land_unit" => n.land_units[&raw],
             _ => n.groups[&raw],
         };
         let number = if owner == side { number } else { 90_000 + raw };
         doc["unit"] = json!(format!("{kind}:{number}"));
+        // A join names the force joined to by the side's number too.
+        if let Some(into) = doc["order"]
+            .get("into")
+            .and_then(Value::as_str)
+            .and_then(|handle| handle.strip_prefix("task_force:"))
+            .and_then(|raw| raw.parse::<u32>().ok())
+        {
+            let (owner, number) = n.forces[&into];
+            doc["order"]["into"] = json!(format!(
+                "task_force:{}",
+                if owner == side { number } else { 90_000 + into }
+            ));
+        }
         if let Some(ships) = doc["order"].get_mut("ships").and_then(Value::as_array_mut) {
             for ship in ships {
                 let raw = ship.as_u64().expect("a ship number") as u32;

@@ -57,6 +57,9 @@ pub use briefing::{
     StrikeClearedLine, SunkShip, SupplyChange, SupplyWarning, SystemChange, TiredWarning,
     UnitDestroyedLine, UnitDividedLine, Warnings,
 };
+pub use briefing::{
+    ForceChangesPart, FormedLine, JoinedLine, LoadReserveLine, RefuellingHeldLine, StoodDownLine,
+};
 pub use choices::{ChoiceLine, Choices};
 pub use common::{Dec, Handle, Place};
 pub use explain::{

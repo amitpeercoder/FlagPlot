@@ -160,8 +160,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// (decision 0105);
 /// version 22 adds a land unit's `fieldworks` after its `when_spent`, and
 /// the day's hits on men by hex and side after the land units (decision
-/// 0106).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v22";
+/// 0106);
+/// version 23 adds a cargo order's `weight_t` and `heeds_reserve` after its
+/// `unit`, and a base's `supply_reserve_t` and `fuel_reserve_t` after its
+/// `airfield_damage` (decision 0111).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v23";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -313,6 +316,8 @@ fn name_every_field(world: &World) {
             action: _,
             order: _,
             unit: _,
+            weight_t: _,
+            heeds_reserve: _,
         }) = cargo_order
         {}
         if let Some(YardTrip {
@@ -340,6 +345,8 @@ fn name_every_field(world: &World) {
             defences: _,
             day_work,
             airfield_damage: _,
+            supply_reserve_t: _,
+            fuel_reserve_t: _,
         } = base;
         if let Some(DayWork {
             day: _,
@@ -587,6 +594,15 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.u32(cargo.order.raw());
                 // After the order (decision 0066).
                 h.optional_u32(cargo.unit.map(|unit| unit.raw()));
+                // After the unit (decision 0111).
+                match cargo.weight_t {
+                    Some(weight) => {
+                        h.u8(1);
+                        h.i64(weight.raw());
+                    }
+                    None => h.u8(0),
+                }
+                h.u8(u8::from(cargo.heeds_reserve));
             }
             None => h.u8(0),
         }
@@ -694,6 +710,9 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
         // After the base's day of work (decision 0103).
         h.i64(base.airfield_damage.raw());
+        // After the airfield's damage (decision 0111).
+        h.i64(base.supply_reserve_t.raw());
+        h.i64(base.fuel_reserve_t.raw());
     }
 
     h.count(truth.air_groups.len());
