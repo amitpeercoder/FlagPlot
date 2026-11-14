@@ -2,6 +2,10 @@
 
 Status: settled.
 
+Summary: Scenario tests live in a `tests` workspace member
+
+Standing: Settled
+
 ## The gap in the spec
 
 The spec's repo layout lists a top-level `tests` directory holding the scenarios as automated tests. In a Cargo workspace, a directory of tests needs a package to belong to.

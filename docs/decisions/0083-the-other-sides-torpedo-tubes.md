@@ -2,6 +2,10 @@
 
 Status: Decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). Built together with decision 0074, which was held for it. The hand calculation below was written before any code was delegated, and the architect checked it. Built on Nov 13, 2026: see "As built".
 
+Summary: The other side's torpedo tubes: a ship fires the tubes that bear on one side (0074) in her first torpedo round and the rest in the next round in which she has torpedo shots, in the same fight or a later one; each salvo takes the readiness share and its own target; no reloads. A ship flag and a new draw stream; state version 7. Where the two figures are equal nothing changes. Built (Nov 13, 2026)
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 In the rules a ship fires every one of her tubes at once, in the first round in which she fires torpedoes, and then her torpedoes are spent (`docs/rules/04`, "Torpedo shots"). At Savo Island every Japanese ship fights the southern group first (decision 0024, 4), so every Japanese torpedo goes into that fight.

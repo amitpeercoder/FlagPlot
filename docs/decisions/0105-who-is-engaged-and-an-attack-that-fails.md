@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026, after the first baseline of the lengthened slice (`docs/validation/full-slice-39-days-baseline.md`), and revised the same day on the designer's answers. He agreed the limit on engaged men (decision 1). He rejected the first draft's rule that an attack breaks on losing a fifth of its men in a day: an attack fails when it does not overcome the defence, and what follows is wear on the men, not a rule that calls them off (decisions 4 and 5). And he said that what men do when their attack is spent depends on the command and on whether they can stay (decisions 6 and 7). Confirmed as revised. Built Nov 14, 2026 (scenario 33); see "As built". Every figure is a placeholder.
 
+Summary: Who is engaged in a fight ashore, and an attack that fails: a side's fire counts no more men than a multiple of the enemy's in the hex; an attack whose weight of fire is the weaker fails that day and costs its men extra fatigue, so the tired stop sooner; the attack order says whether spent attackers hold or fall back, and with no instruction they hold where they can be fed and else fall back. Placeholder figures
+
+Standing: Confirmed by the designer as revised, Nov 14, 2026. Built Nov 14, 2026 (scenario 33)
+
 ## What the baseline showed
 
 Decision 0093 said before the run that two things would be wrong. The run shows how wrong:

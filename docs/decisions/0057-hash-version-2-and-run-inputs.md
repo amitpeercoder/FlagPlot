@@ -2,6 +2,10 @@
 
 Status: settled by the architect. Neither change affects play.
 
+Summary: The state hash at version 2 with no tag bytes, golden files remade; batch summaries and replays record the inputs they were run on, and `batch --label`
+
+Standing: Settled
+
 ## The gap
 
 Two things stood between step 1 and step 2, which compares thousands of runs with the record.

@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026. It is stage 3 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer answered its three questions on Nov 14, 2026: shells are weighed by the gun (decision 5), the estimate is daily (decision 14), and a claim follows a bombardment (decision 17). Built on Nov 14, 2026: see "As built" at the end. Every figure is a placeholder set by the architect. The hand calculation is written before any code is delegated.
 
+Summary: Shells and bombs on a base and its men, and what a side knows of the enemy ashore: shore bombardment by a force on the bombardment mission, in the night pulse, by the gun rule and the table of where a hit on a base lands; a share of that table for men; a side's estimate of enemy men in a hex, written only by a daily ground report with an error; an opening estimate from a scenario. Stage 3 of the ground combat plan. Placeholder figures
+
+Standing: Confirmed by the designer, Nov 14, 2026, with shells weighed by the gun and a claim after a bombardment. Built Nov 14, 2026 (stage 3, scenario 24)
+
 ## The gap
 
 - **The bombardment mission does nothing.** A force's guns cannot hurt a base, so the October bombardments of the airfield cannot be played (decision 0052, item 2).

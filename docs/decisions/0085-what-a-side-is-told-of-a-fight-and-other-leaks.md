@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation of Nov 13, 2026 ("Go ahead and decide all matters that need decisions"). It amends decision 0047 (items 5, 7 and 9, and its table of kinds) and decision 0061's rule that breakdowns follow the event.
 
+Summary: What a side is told of a fight, and other leaks an outside review found: a fight's ending is told as the side's own force made it, else "contact lost"; a fight is told from the round the side first knew of it, its hour and rounds counted from there; hidden causes are flagged by kind; no raw draw in a side's breakdown; `strike_choice` by number; no saved game to the player before the end; a day that cannot be resolved gets one fixed answer, and the loader refuses an arrival that overfills a ship. The escort shots and the claims are ruled unchanged; numbering per side is left to 0086. Built (Nov 13, 2026)
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 On Nov 13, 2026 a reviewer from outside the project was asked whether a side can learn what it should not. Pull request 213 reproduced each of its eight findings as a test, switched off, and looked for more. Every finding was true. Some reach a player through the served tools today. Others reach only a Rust caller holding a `SideView`, which the staff planner of step 3 will be. Two of the review's findings, and one of the team's own, change numbers that random draws are keyed on, so they change runs; they are left to decision 0086 (below). The rest change only what a side is given, and are decided here.

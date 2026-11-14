@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026. He approved the settlement sheet (`docs/research/oob/savo-island-settlement.md`) in the order-of-battle session and confirmed it to the architect the same day. How the tool carries the two things the sheet left to it, the designed-rate exception of decision 2 and the 9,999 marker of decision 3, is the architect's engineering choice.
 
+Summary: The Savo Island ships: weak rows read by exception, designed rates of fire by named exception, and ammunition not limiting for three ships
+
+Standing: Confirmed
+
 ## The gap
 
 Decision 0020 says the derivation tool reads only `preferred` fact rows, and that an exception has to be written down. After the settlement sheet was applied to the facts, the tool still refused all 20 ships, with 28 problems of three kinds:

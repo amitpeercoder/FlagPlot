@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026. The point values and the levels are placeholders set by the architect, to be set from the record in step 2.
 
+Summary: Objectives and results: a mission and counted objectives for each side, points, a margin and a level from decisive victory to decisive defeat; no rule reads them
+
+Standing: Confirmed
+
 ## The gap
 
 A scenario ends when its last day is resolved and says nothing more. No side has an aim and no game has a result. Two models that played a side each said so: neither could tell what it was meant to achieve. The staff planner of step 3 will need aims it can measure, and step 2 needs one scale on which a run and the record can be compared.

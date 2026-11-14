@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer agreed on Nov 12, 2026 to defer ground combat, land units and shore bombardment out of step 1. The smaller items below are settled by the architect.
 
+Summary: What step 1 leaves out: ground combat, land units, shore bombardment and base orders deferred; pilots as a count and weapons as figures recorded as choices
+
+Standing: Confirmed
+
 ## The gap
 
 A check of the spec against the code, made as step 1 closes, found things the spec lists that were never built and that no decision record had put off. Step 1 was built scenario by scenario, each adding the subsystem its scenario tests, and none of the spec's test scenarios uses any of them. So they were neither built nor decided. This record decides them.

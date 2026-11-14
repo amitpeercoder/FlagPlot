@@ -2,6 +2,10 @@
 
 Status: settled.
 
+Summary: State hash: FNV-1a over a hand-written walk, no dependencies in sim-core
+
+Standing: Settled
+
 ## The gap in the spec
 
 The spec asks for a state hash per day. It does not say which hash or what it covers.

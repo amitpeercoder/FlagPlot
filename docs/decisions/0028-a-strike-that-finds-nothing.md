@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 11, 2026.
 
+Summary: A strike that finds nothing drops the contact it was sent at
+
+Standing: Confirmed
+
 ## The gap
 
 Decision 0026 deferred "telling the side that a contact was not there". Stage 5d's two-day runs showed what that costs: a strike that found empty sea flew to the same hex again in the next pulse, because finding nothing taught its side nothing. The legibility test's reader called it a gap unprompted.

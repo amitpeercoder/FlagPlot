@@ -2,6 +2,10 @@
 
 Status: confirmed by the architect, within the plan for the agent interface the designer approved on Nov 11, 2026.
 
+Summary: Playing a side: seats, `issue_orders` and `end_day`, saved orders as handed in, the transcript, and `sim-cli serve`
+
+Standing: Confirmed
+
 ## The gap
 
 A side can be told its situation, ask for detail, ask why and measure (decisions 0047 to 0049). It cannot yet do anything. Every game so far ran from a scenario's scripted orders, start to finish, in one call. The spec asks that an agent play as a person will: read, give orders, end the day, and read again, through a server that holds the game open, with every order recorded so that the game replays.

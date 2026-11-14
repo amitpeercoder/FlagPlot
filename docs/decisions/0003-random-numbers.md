@@ -2,6 +2,10 @@
 
 Status: settled.
 
+Summary: Random numbers: SplitMix64 mixing, keyed per draw
+
+Standing: Settled
+
 ## The gap in the spec
 
 The spec asks for a counter-based generator keyed on seed, day, pulse, subsystem and entity ID. It does not name an algorithm.

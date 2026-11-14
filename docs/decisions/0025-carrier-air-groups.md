@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 11, 2026, with the plan for scenario 5 (stage 5a). The details below the plan's level are the architect's.
 
+Summary: Air groups aboard ships: aircraft capacity, position from the ship, search from a carrier, lost with the ship
+
+Standing: Confirmed
+
 ## The gap
 
 The spec says an air group is based at an airfield or on a carrier, and that every air group is at exactly one base or on one carrier. Until now an air group could only be at a base. Scenario 5 needs carriers.

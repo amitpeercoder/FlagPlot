@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its three questions. It is built: see "As built" at the end.
 
+Summary: Two objectives that could be gamed: cargo landed becomes tons unloaded less tons loaded back at that base; base open is counted by days and scored by the share of days, from a record of every base at the end of each day. Built Nov 12, 2026; the state hash of every scenario with a base changed, because the hash counts the log's events
+
+Standing: Confirmed
+
 ## The gap
 
 The rulebook review of Nov 12, 2026 found two objectives (decision 0054) that reward play their names do not describe. Both were checked against the code.

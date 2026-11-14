@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as stage 4b of scenario 4.
 
+Summary: The slice map generated from Natural Earth coastlines, and shortest-path movement
+
+Standing: Confirmed
+
 ## The gap in the spec
 
 The spec asks for a hex map of the slice at 40 nm per hex, with a stored latitude and longitude per hex, and says its size is "to be fixed when the map is drawn". It does not say how a hex gets its type, what projection puts a place in a hex, or how a route finds its way round land. Decision 0005 left pathfinding until the real map.

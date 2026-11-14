@@ -4,7 +4,11 @@ Design choices the spec left open, one short file each. A decision here can be o
 
 Files are numbered in the order the decisions were made. Add the next number for a new one.
 
+Every record begins with its title (`# NNNN: Title`), its `Status:` line, a `Summary:` line and a `Standing:` line, each a paragraph of its own. The table below is made from those lines by `sh scripts/decisions-index.sh` and is never edited by hand: to change a row, change the record's `Summary:` or `Standing:` line and run the command. CI fails when the committed table is not what the records give (decision 0108, item 9).
+
 A record that adds a rule to the simulation ends with a rule card: the state the rule reads and the state it writes. Records 0001 to 0010 predate this; 0001, 0005, 0006 and 0008 gained cards at the complexity review after scenario 5.
+
+<!-- The table is generated from the records by scripts/decisions-index.sh: do not edit it by hand. -->
 
 | # | Decision | Status |
 | --- | --- | --- |
@@ -117,5 +121,7 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0106 | Cover, men who dig in, and a place under bombardment: a unit's cover is the better of its base's defences and its own fieldworks; cover saves men from bombs and shells and in the fight; troops on the defence dig shallow fieldworks anywhere; defences have three grades, each dearer than the last; men under fire do not rest and tire, up to a limit; fire wears cover down slowly. Placeholder figures | Confirmed by the designer as revised, Nov 14, 2026. Built Nov 14, 2026 (scenario 34, state version 22, rules label 5) |
 | 0107 | Step 3, stage 1: the command contract as state changed by commands; the staff as code outside `sim-core`, passed in to the function that resolves a day and asked after the morning's refuelling; staff commands for the state the staff makes; a saved game keeps what was handed in and a check runs the staff again; four rules it needs (a load up to a weight, a reserve at a base, forming and joining forces, a scenario's commands); days of supply for a side in a hex; the doctrine for keeping a base supplied; the tools; built in four steps | Confirmed by the designer, Nov 14, 2026, after an independent review. Not built: the hand calculations come first |
 | 0108 | A refactoring session before stage 1: one command that remakes every generated file; a comparison of every scenario against the previous build; one table describing each kind of event; the replay export carrying the state so the viewer only draws it; the ground combat file split; the decisions index made from the records. No rule and no result changes | Settled by the architect, Nov 14, 2026, with the designer's approval to hold it. Not built |
+
+<!-- End of the generated table. -->
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play. "Decided by the architect on the designer's delegation" means the coordinating architect decided it under the designer's delegation of Nov 13, 2026 (`docs/step2-spec.md`, "Decided by the designer", 10), which is its authority and not the designer's approval of the rule.

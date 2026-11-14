@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as stage 4c2a of scenario 4. Every figure is a placeholder. It replaces decision 6 of decision 0014.
 
+Summary: Readiness by order, alertness from belief and events, and an alarm roll when a fight breaks out nearby
+
+Standing: Confirmed
+
 ## The gap
 
 Decision 0014 made a task force alert or not by a stored flag that the scenario set, and deferred how a force comes to be alert. A force that is not alert sights the enemy half as readily, which is most of what surprise is. Savo Island turned on it: the Allied groups were not expecting an attack, and the second group was surprised minutes after the first, a few miles away.

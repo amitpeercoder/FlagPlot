@@ -2,6 +2,10 @@
 
 Status: confirmed as to the need. The designer asked on Nov 14, 2026 for movement overland to be built before the scenario of the August landings (decision 0093), so that a force that landed along the coast marches to the airfield and is not set down beside it. The rule's details are the architect's, of the same date. Not built when written; built on Nov 14, 2026 (scenario 25, pull request 262; see "As built"). Its three figures are placeholders. The hand calculation is written before any code is delegated.
 
+Summary: Marching overland: a map lists the pairs of neighbouring hexes joined by land; a march order moves a unit's men ashore to a linked neighbour in a set number of days; a day's march tires the unit; it takes some days of supply with it into a base at the new hex, formed if need be. Placeholder figures
+
+Standing: Asked for by the designer, Nov 14, 2026; details by the architect. Built Nov 14, 2026 (scenario 25)
+
 ## The gap
 
 Men move only by sea (`docs/design/ground-combat.md`, answer 1). The Japanese who attacked the airfield in August and September 1942 landed a day's or a week's march from it. Without a march they must be landed in the airfield's own hex, and the days and the tiredness of the approach are lost.

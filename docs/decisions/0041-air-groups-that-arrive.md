@@ -2,6 +2,10 @@
 
 Status: confirmed by the architect, on the designer's standing word of Nov 11, 2026 to decide rule details inside an approved plan.
 
+Summary: Aircraft that arrive on a day: a scenario may deliver aircraft and pilots to an air group on a named day, raising its strength
+
+Standing: Confirmed
+
 ## The gap
 
 Replacements (decision 0038) top a group up to the strength it started with, by a steady daily number. Henderson Field was not reinforced that way. Whole squadrons flew in on known days: 19 fighters and 12 dive bombers on 20 August, 11 more dive bombers on the 24th, another two squadrons on the 30th, 24 fighters on 11 September. A scenario of those four weeks has to be able to say so.

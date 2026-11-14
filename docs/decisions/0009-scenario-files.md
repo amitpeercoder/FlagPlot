@@ -2,6 +2,10 @@
 
 Status: settled.
 
+Summary: A scenario file is also the saved-game format, for now
+
+Standing: Settled
+
 ## The gap in the spec
 
 The spec says a scenario is a TOML file with the starting state, scripted orders and seed, and that a saved game is the starting state, the seed and the orders per day. It gives no file layout.

@@ -2,6 +2,10 @@
 
 Status: settled by the architect on Nov 14, 2026, an engineering choice with no effect on play. The designer approved holding a bounded refactoring session after the cover build (decision 0106) and before stage 1 of step 3 is built. It changes no rule and no result. Not built.
 
+Summary: A refactoring session before stage 1: one command that remakes every generated file; a comparison of every scenario against the previous build; one table describing each kind of event; the replay export carrying the state so the viewer only draws it; the ground combat file split; the decisions index made from the records. No rule and no result changes
+
+Standing: Settled by the architect, Nov 14, 2026, with the designer's approval to hold it. Not built
+
 ## Why now
 
 Ten rules were built in a day. Each took an hour or more, and the last team timed where its hour and three quarters went (decision 0106, the build's report):

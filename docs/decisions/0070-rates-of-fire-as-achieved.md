@@ -2,6 +2,10 @@
 
 Status: settled by the architect, to be reviewed. Nov 13, 2026. Built; see "As built". A change to the derivation (`oob-derive` and `data/derivation/rules.toml`), by its written rule and from rows. No rule of the simulation changes, no figure of `surface_combat.toml` moves, and the frozen step 1 figures are untouched. The hand derivation below was written before any code was delegated.
 
+Summary: Rates of fire as achieved, in the derivation: a class fires at the lesser of its sourced rate and the median achieved rate of its kind of battery (salvo, destroyer, continuous), from named cases of shells over a stated span of five minutes or more. Tenryu no longer reads the twin-mount row 432. Built
+
+Standing: Settled by the architect, to be reviewed
+
 ## The gap
 
 A combat round is five minutes. In it a ship fires guns x rate x 5 shells (decision 0014), at the rate the derivation gives its class: the sourced practical rate of its main gun, or a designed rate read by exception (decisions 0020 and 0023). No ship fired like that in a night action. At Savo Island, on the figures of Nov 13, 2026, Tenryu and Yubari fire a median 900 shells a run against a record of 176 (Tenryu 80 and Yubari 96 of 5.5-inch, `engagement_outcomes` row 3). They were at battle readiness, so neither the readiness rule (decision 0068) nor experience (decision 0064) touches their count: what is wrong is under them. The step 2 spec puts this before any surface figure is tuned ("Tuning", item 6; "Rule work that comes before tuning").

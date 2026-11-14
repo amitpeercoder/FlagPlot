@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026. It is the "D" of the choice he made when air distance was settled (decision 0040): straight-line air distance then, ships later.
 
+Summary: Ships are charged straight-line miles: a step costs the miles it brings the force closer to its waypoint; 40 a hex only where land forces a detour
+
+Standing: Confirmed
+
 ## The gap
 
 A ship moves from hex centre to hex centre and is charged 40 miles for each step, in distance, time and fuel. Off the three axes of the grid a hex path is longer than the straight course: 11 in 100 on average on open water, 16 at most. On the routes the scenarios use it is 15 to 24 in 100 (Rabaul to Lunga is charged 640 miles for 556). Fuel endurance in the sources is in real miles, so ships are slower and shorter-legged than their own figures say. Step 2 compares ship movements with the record and cannot while this stands.

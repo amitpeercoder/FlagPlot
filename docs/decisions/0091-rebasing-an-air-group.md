@@ -2,6 +2,10 @@
 
 Status: confirmed as to the need. The designer asked on Nov 13, 2026 for rebasing to be built before the fight ashore (decision 0090), so that a player can fly aircraft out of a base that is about to fall. The rule's details are the architect's, of the same date. Built on Nov 14, 2026 (scenario 22). It has no figure of its own.
 
+Summary: Rebasing an air group by order: a one-day order that moves a land-based group to another base of its side within twice its type's longer range; made at acceptance; damaged aircraft are written off; the group flies nothing that day. No figure, no draw
+
+Standing: Asked for by the designer, Nov 13, 2026; details by the architect. Built Nov 14, 2026 (scenario 22)
+
 ## The gap
 
 An air group stays at the base its scenario gives it (decision 0052, item 7). When a base can fall, its groups would be lost with it and the player could do nothing about it.

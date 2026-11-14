@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan for the agent interface on Nov 11, 2026, with this rule as its first choice. The table of event kinds is the architect's working out of it. Amended by decision 0065 (no enemy unit named) and decision 0085 (a fight's ending and start as the side knew them, the rounds counted from there, hidden causes flagged by kind). *(Nov 14, 2026: also amended by decisions 0060, 0061 and 0086)*
 
+Summary: What a side may know of what happened: which events each side sees and what is cut from them. Amended by 0060, 0061, 0065, 0085 and 0086
+
+Standing: Confirmed
+
 ## The gap
 
 A side's belief is its own units, exactly, and the enemy as contacts (decision 0012). That is state. The spec also asks that a player can be told what happened and ask why, and the only record of what happened is the event log, which is the truth: it holds the enemy's orders, his rolls, his hits and his losses. Until now only the umpire read it. An agent or a person playing a side must be shown something, and it cannot be that.

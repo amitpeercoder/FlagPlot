@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer chose on Nov 11, 2026 that scenario 6 counts pilots only, that replacements fill seats at the same quality, and that replacements arrive at a set rate. Decisions 4, 8 and 10 are choices that answer did not state; the designer confirmed them on Nov 12, 2026, decision 4 as decision 0059 left it.
 
+Summary: Pilots and replacements: a pilot is lost with an aircraft shot down away from home, and aircraft and pilots arrive at a base at a daily rate
+
+Standing: Confirmed
+
 ## The gap
 
 An air group is a number of aircraft. A side that loses aircraft over its own field and one that loses them 500 miles from home lose the same thing. Nothing arrives to replace a loss, so every scenario longer than a few days ends with empty groups.

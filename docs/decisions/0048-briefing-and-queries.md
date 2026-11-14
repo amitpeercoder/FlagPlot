@@ -2,6 +2,10 @@
 
 Status: confirmed by the architect, within the plan for the agent interface the designer approved on Nov 11, 2026.
 
+Summary: The briefing and the queries: a daily situation report for a side, list and detail queries, and explain, built only on a side's view, as JSON with schemas
+
+Standing: Confirmed
+
 ## The gap
 
 A side can now be given its own events (decision 0047) and has always had its own state. Nothing turns them into something a player can read. The spec asks for a daily situation report for a side, queries that pull detail on demand, and a way to ask why something happened, all as JSON with published, versioned schemas. Every legibility test so far used a briefing the architect wrote by hand.

@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the five rule choices on Nov 11, 2026, with the plan for stage 5e (decisions 1, 5, 6, 8 and the scope in decision 0030). Everything else here is data, which the architect settles (CLAUDE.md, "Who settles data").
 
+Summary: Figures for carriers, anti-aircraft guns and aircraft from facts: gun weights, strike radius, protection, and ships whose guns are not modelled
+
+Standing: Confirmed
+
 ## The gap
 
 Decision 0020 derives a ship class's surface-combat figures from facts. Scenario 5 needs four more things for real ships and aircraft: how many aircraft a ship carries, how much anti-aircraft fire it puts up, what an aircraft type can do, and how hard it is to shoot down. It also meets ships whose guns and torpedoes no source read gives in full, in a battle where no ship fired at another.

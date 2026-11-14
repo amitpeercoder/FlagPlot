@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 11, 2026, with the plan for scenario 5 (stage 5b). The plan settled that strikes are decided by a simulated local commander on belief, resolve in the pulse they are launched in, use the hit mechanism of decision 0014, and that a damaged flight deck limits flying. The details below that level are the architect's, and decisions 4, 7 and 9 are marked for the complexity review.
 
+Summary: Air strikes on ships: decided on belief, resolved in the same pulse, one hit mechanism; the flight deck as a fifth system
+
+Standing: Confirmed
+
 ## The gap
 
 The spec's daylight pulse has three air steps: search, strike decisions by local commanders, and air combat. Only search existed. This decision adds the second and the simplest form of the third: a strike that nobody opposes. Fighters and anti-aircraft fire are stage 5c.

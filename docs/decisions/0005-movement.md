@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026. Decisions 1 and 5 were changed in that review.
 
+Summary: Movement: nearest-centre hex, turn back on a re-route. Pathfinding is in 0017
+
+Standing: Confirmed
+
 ## The gap in the spec
 
 The spec says a task force stores its hex plus progress toward the next one. It does not say when the task force changes hex, how it picks its path, or what happens when it is re-routed mid-hex.

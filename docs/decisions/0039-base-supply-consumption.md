@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved on Nov 11, 2026 that supply is spent for each sortie and each day, and that a base without supply neither flies nor repairs. Decisions 4, 6 and 8 are choices that answer did not state; the designer confirmed them on Nov 12, 2026.
 
+Summary: Base supply consumption: supply spent for each sortie, each aircraft a day and each repair, and a base out of supply flies nothing
+
+Standing: Confirmed
+
 ## The gap
 
 A base has a stock of supply, a convoy can add to it (scenario 2) and a raid can destroy some of it (decision 0034). Nothing uses it. The spec says base supply consumption arrives by scenario 6 at the latest, because an objective such as "30 days of supply" cannot be measured without it.

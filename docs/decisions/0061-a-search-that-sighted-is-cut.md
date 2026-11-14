@@ -2,6 +2,10 @@
 
 Status: decisions 1 to 4 are confirmed. The designer approved the change on Nov 12, 2026. It amends the table of kinds in decision 0047, and follows decision 0060. The question at the end was answered on Nov 12, 2026: the number is hidden, and decision 0065 does it. Since then the cut event holds the air group alone and reads "air_group:7 searched and sighted a force".
 
+Summary: A search that sighted is shown to its side cut: the group (and, until 0065, the force), without the distance or the chance, which are worked from the force's true position. Its open question, whether an event should name an enemy force by its number, is answered by 0065
+
+Standing: Confirmed
+
 ## The gap
 
 A sighting report can name the wrong hex: the position error moves it to a neighbouring hex (decision 0012). The side is meant to hold only the report.

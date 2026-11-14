@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026.
 
+Summary: A read-only replay viewer, as a debugging tool and not the game's interface
+
+Standing: Confirmed
+
 ## The gap
 
 Step 1 is headless by design, and the pillars say no real interface is built before the kill gate. But the only way to look at a map or a run was to read text: a grid of characters for the map, and an event log for a run. On Nov 10, 2026 the architect misjudged the generated map twice from that grid. A picture would have shown both problems at once.

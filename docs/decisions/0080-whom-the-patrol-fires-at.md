@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). The hand calculation's cases were worked and checked by the architect before any code. Two details of the rule are the build session's, accepted by the architect: the rest is split against the escorts not yet drawn off (E − D), which is what makes s = 1 today's rule when the patrol outnumbers the escort; and the cap, so that no more shots go at the escorts than there are escorts left. Built on Nov 13, 2026; see "As built".
 
+Summary: Whom the patrol fires at: the escorts draw off a share of the patrol one for one (`patrol_drawn_off_share`, 1 frozen, which is 0027's rule exactly, 0 live, a placeholder); the rest is split between the escorts not drawn off and the bombers in proportion to their numbers, never more at the escorts than are left. Support for the direction: 0042's own sentence, the forms' losses, row 271.
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 A raid's escorts draw the patrol off its bombers one for one: "The patrol fires as many shots at the escorts as there are escorts, or as there are patrol fighters if those are fewer. Any patrol fighters left over fire at the bombers" (decision 0027, item 6). Its reason was smallness: "One for one is the smallest rule that makes an escort worth sending and a patrol worth keeping" (0027, "Why"). No record was cited.

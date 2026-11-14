@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer answered the question of decision 0061 on Nov 12, 2026: a side's events stop naming an enemy task force by its number. The same day the designer confirmed carrying the rule to enemy ships and air groups (decision 2) and leaving a fight without labels (decision 6), which the architect had proposed. It replaces item 8 of decision 0047 and amends its table of kinds.
 
+Summary: A side's events name no enemy ship, task force or air group: the cut event has no field for it. A fight holds the side's own force; six kinds that were whole lose only the name. An enemy base and the target of a side's own order are still named. Replaces item 8 of 0047
+
+Standing: Confirmed
+
 ## The gap
 
 A side knows the enemy only as contacts and claims. Neither holds an identity: decision 0012 says a report holds no identity of the force seen, "so a side cannot tell two sightings are of one force".

@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer on Nov 12, 2026. Decisions 2 and 6 change what decision 0019 said would be in the scenario. *(Nov 14, 2026: the later changes to the scenario, Yunagi as a force of her own and the break-off levels read from the record, are in the notes of `docs/decisions/0024-scenario-4-savo-island.md`; where they differ from decisions 2, 3 and 9 below, the notes are later.)*
 
+Summary: The Savo Island scenario: one hex, three forces, the pickets and Jarvis left out; what the first runs show
+
+Standing: Confirmed
+
 ## The gap
 
 Decision 0019 says who was where. The facts give positions, readiness and what each side knew. Turning them into a scenario file needs choices the spec and the earlier decisions did not make, most of them because a hex is 40 nm across and the whole battle was fought inside one.

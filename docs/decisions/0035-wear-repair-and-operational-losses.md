@@ -2,6 +2,10 @@
 
 Status: confirmed by the architect, within the plan for scenario 6 the designer approved on Nov 11, 2026. Decisions 2, 9 and 12 are choices the plan did not state. The designer confirmed 9 and 12 on Nov 12, 2026. Decision 2 stays marked for review until the air figures are tuned: in the baseline fighters are lost far too fast over Guadalcanal, and a hit that always shoots an aircraft down may be part of it.
 
+Summary: Wear, repair and operational losses: damaged aircraft, a wear roll that rises with distance, a share written off, repairs a day at a base
+
+Standing: Confirmed; 2 needs review, after the air figures are tuned
+
 ## The gap
 
 An air group has ready aircraft and nothing else. An aircraft is either fit to fly or shot down. Flying costs nothing, so a group can fly every pulse for ever, and the distance to the target matters only to whether it can be reached. Scenario 6 has to show a force worn down by four weeks of flying 565 miles each way.

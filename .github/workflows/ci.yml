@@ -22,6 +22,12 @@ jobs:
         with:
           fetch-depth: 2
 
+      # The decisions index is made from the records' headers (decision
+      # 0108, item 9). It runs on every commit, documents alone included,
+      # since a new record changes nothing but Markdown.
+      - name: Check the decisions index is what the records give
+        run: sh scripts/decisions-index.sh --check
+
       # A change to documents alone cannot break the build: no test reads a
       # Markdown file. The job still runs and reports, because main requires
       # this check; it only skips the steps below.

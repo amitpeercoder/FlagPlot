@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation, Nov 13, 2026, as a rule of the derivation. Built on Nov 13, 2026 (see "As built"). It is the first step of the Savo Island tuning plan and is not a tuning round: no figure moves except `radar`.
 
+Summary: Which radar sets count for sighting ships at night: a derived class has the radar figure only for a surface-search set whose display has a plan position indicator; an air-search set, a set of type not stated or one with no display row does not count and is named. At Savo Island no ship has such a set; at Cape Esperance Helena and Boise do. A rule of the derivation; no figure moves except radar. Built (Nov 13, 2026); class rows are now pinned by id in the list file
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 A class has one figure for radar, `radar`, 0 or 1. The simulation reads it for one thing: a force with a ship that has it adds `radar_sighting_bonus` to its chance of sighting an enemy force in a night fight (`docs/rules/04`, "Sighting"; `crates/sim-core/src/surface.rs`). Nothing else reads it: not air search, not gunnery, not the briefing.

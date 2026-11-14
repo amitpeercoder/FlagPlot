@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers below. Nothing was built when this was written; built on Nov 13, 2026 (scenario 20a, pull request 235; `crates/sim-core/src/repair.rs`). The hand calculation is written before any code is delegated.
 
+Summary: Ship repair: light damage mended by the staff at a forward base with a repair figure; a force sent to a yard off the map returns whole on a day worked out from its damage and told beforehand. Built on Nov 13, 2026 (the designer decided at the close of step 2, "Reported only; repair first", that it is built first, with "out of the campaign")
+
+Standing: Confirmed
+
 Nov 13, 2026, at the close of step 2: **this is next.** The designer decided ("Reported only; repair first"; `docs/step2-spec.md`, "Decided by the designer", 16) that ship repair and "out of the campaign" are built next and the objectives scale set from the record, before step 3 begins; land units and basic ground combat follow those.
 
 Nov 13, 2026: not part of step 2's close, ruled by the coordinating architect on the designer's delegation. It adds an order and a briefing line, which the step 2 spec's scope leaves out, and it is in none of the lines of "Done means". It follows step 2, with land units and ground combat, before step 3; so does "out of the campaign" on the objectives scale, which reads it.

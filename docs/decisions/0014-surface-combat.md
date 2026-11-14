@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as stage 4a of the scenario 4 plan. Every figure is a placeholder. Decision 0016 replaces the system damage track described here with named systems.
 
+Summary: Surface combat: sight first, fire by expected hits, three damage tracks. Scenario 4 built in stages. Placeholder figures
+
+Standing: Confirmed
+
 ## The gap in the spec
 
 The spec lists "surface engagements where opposing forces meet" in each pulse and asks scenario 4 to prove "surface combat, surprise, night detection". It gives no rule for when a fight starts, who sees whom, how fire is resolved, what damage does, or when a fight ends.

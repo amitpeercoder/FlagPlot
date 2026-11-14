@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026. The figures are placeholders set by the architect, to be set from the record in step 2. It is built in stages (1, 1b, 2 and 3); this record is written before the first and gains an "As built" section with each.
 
+Summary: Aircraft that cannot land where they took off: extended reach by order with ditching for fuel, another deck or a field when the deck is lost, and the crew's fate by where it comes down. Built in stages 1, 1b, 2 and 3
+
+Standing: Confirmed
+
 ## The gap
 
 Four things the rules get wrong are one thing.

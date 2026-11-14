@@ -2,6 +2,10 @@
 
 Status: settled by the architect on Nov 13, 2026, on the designer's delegation ("Go ahead and decide all matters that need decisions"). A change to a derivation rule, not to a simulation rule: what the rules do with a search range is unchanged (`docs/rules/03-search-contacts-and-claims.md`, an order may name no more than the type's search range). Built Nov 13, 2026 (see "As built"). The five exceptions in "Disputes" were settled by the architect on Nov 13, 2026, with the reasons written there.
 
+Summary: An aircraft type has a search radius of its own: a sourced scouting radius, else a third of its range as a scout or at maximum fuel (the Bureau of Aeronautics' method), else the strike radius, listed as not settled; the strike radius is unchanged; a search order names the distance flown. Built; the frozen figures are unchanged
+
+Standing: Settled by the architect on the designer's delegation
+
 ## The gap
 
 `oob-derive` derives one radius for a type and writes it as both its strike range and its search range (`crates/oob-derive/src/aircraft.rs`, "radius, search and strike"; decision 0029, item 6: the sourced combat radius where exactly one can be read, else a third of the range with a normal load). A strike and a search are different flights. A strike radius allows for forming up, a fight over the target at full power and a heavy load; a scout carries a light load and flies out, across and back. So the search ranges the derivation gives are strike radii, and the record flew beyond them as a matter of routine:

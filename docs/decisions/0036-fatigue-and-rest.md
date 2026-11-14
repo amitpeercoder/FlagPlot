@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer chose on Nov 11, 2026 that fatigue cuts the number of ready aircraft that fly and does nothing else, and that the player sets one threshold for a group and the staff rests it. Decisions 4, 5 and 9 are choices that answer did not state; the designer confirmed them on Nov 12, 2026.
 
+Summary: Fatigue and rest: one number for an air group that cuts the aircraft that fly, and a rest threshold the staff applies
+
+Standing: Confirmed
+
 ## The gap
 
 Stage 6b made flying cost aircraft. It still costs the people nothing: a group flies as hard on the twentieth day as on the first. Nothing gives the player a reason to hold a group back, and nothing wears a force that is never hit.

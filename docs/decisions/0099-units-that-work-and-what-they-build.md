@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026, after the designer said that not every man ashore does the same job: construction battalions built and kept up the bases. The designer agreed decisions 1 and 6 on Nov 14, 2026, and added that fighting units may be put to work, less well, and that defences are something to build (decisions 3a and 4). On decision 4 he chose that each unit has its own job. Of it, the one activity a day (3b to 3d) and the order `set_activity` with the activities ready and train are built with decision 0097 (Nov 14, 2026, scenario 28); the rest is not built. Every figure is a placeholder. No real unit has a value yet.
 
+Summary: Units that work, and what they build: a unit fights or works; a working unit makes work each day at its side's base, at a job of its own set by order (the airfield, the port, the aircraft or the defences); a fighting unit can be set to work at half the rate; a base formed in play has no airfield until one is built, and no aircraft uses a base without one. Placeholder figures
+
+Standing: Confirmed by the designer, Nov 14, 2026. The one activity a day and the activities ready and train were built with 0097 (scenario 28). Built Nov 14, 2026 (scenario 30)
+
 ## The gap
 
 Every man ashore is a rifleman. A base's airfield, its rate of unloading and its aircraft repairs are given by the scenario and never change. So nobody builds anything, there is no reason to land engineers, and a beach taken yesterday flies aircraft as well as a base a year old.
