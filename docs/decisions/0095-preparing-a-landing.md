@@ -1,6 +1,6 @@
 # 0095: Preparing a landing
 
-Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that planning ahead should raise an operation's chance of success and that changing a plan should cost some of what was prepared. The designer answered its two questions on Nov 14, 2026: preparation also helps the fight ashore (decision 4a), and what a change costs depends on the change (decision 6). Nothing is built. Every figure is a placeholder set by the architect. The hand calculation is written before any code is delegated.
+Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that planning ahead should raise an operation's chance of success and that changing a plan should cost some of what was prepared. The designer answered its two questions on Nov 14, 2026: preparation also helps the fight ashore, and what a change costs depends on the change. It was revised the same day (see "Decisions"). Nothing is built. Every figure is a placeholder set by the architect. The hand calculation is written before any code is delegated.
 
 ## The gap
 
@@ -10,14 +10,36 @@ The record's first landing is the case. It was ordered and mounted in a few week
 
 ## Decisions
 
-1. **A force prepares a landing by order.** `prepare_landing` names a task force and a coast hex, the place it is to land at. It stands until replaced or until the landing is done. It is refused at intake if the force is not the side's own or the hex is not a coast hex on the map.
-2. **Preparation is a number from 0 to 100, held by the force.** It starts at 0 unless a scenario says.
-3. **It grows by the day in port.** At the start of each day, a force with the order that is stopped at a base of its own side gains `preparation_per_day`, up to 100. At sea it keeps what it has and gains nothing.
-4. **Preparation speeds the landing.** When a force that carries men of a land unit unloads, each ship's work in a pulse, by berth or by lighter, is multiplied by `unprepared_landing_share` plus the rest of 1 times the preparation over 100. A force with no preparation, or one that unloads at another hex than the one it prepared for, works at `unprepared_landing_share` of the rate. It holds for every force that lands men, with or without the order, so that not giving the order is no way round it. A force that carries no men unloads as it always has.
-4a. **It also helps the fight ashore.** When a unit's first men land in a hex, the unit gains `unprepared_landing_fatigue` times 100 less the force's preparation over 100, up to 100. Fatigue cuts the men who fire (decision 0090, 6) and wears off by the day, so men put ashore in a hurry fight worse in their first days and men landed after a full preparation lose nothing. No new state is needed. *The designer's choice, Nov 14, 2026. The architect had proposed that preparation speed the landing and do nothing else, since nothing in the rows sizes the effect on the fight. The figure is a placeholder with nothing behind it and the record says so.*
-5. **It is spent by the landing.** When the force's unloading at the hex is complete, its preparation is 0 and the order is done.
-6. **What a change costs depends on the change.** A new `prepare_landing` order for another hex loses all of it: the force starts again from 0. A ship joining the force, or loading men of a land unit that the force did not carry when it began to prepare, keeps `preparation_kept_on_change` of it. *The designer's choice, Nov 14, 2026.*
-7. **A side sees its own forces' preparation exactly,** each day's gain and each loss with its reason. The enemy sees nothing of it.
+Revised on Nov 14, 2026, after a third outside review and the designer's answer that troops should rehearse as a real activity. What is prepared now has two owners: the force, which is loaded for the landing, and each land unit, which rehearses it. The first version held one number on the force.
+
+### The order
+
+1. **A force prepares a landing by order.** `prepare_landing` names a task force, a coast hex, and the land units that are to land from it: its roster. It stands until replaced or until the landing is done. It is refused at intake if the force or a unit is not the side's own, if the hex is not a coast hex on the map, or if a unit is destroyed. Giving the same order again changes nothing.
+
+### What is earned, and by whom
+
+2. **The force has loading, from 0 to 100.** It is the ships: what is stowed where, and the boats and their crews. It starts at 0 unless a scenario says.
+3. **Each land unit has rehearsal, from 0 to 100, for one hex.** It is the men: knowing the plan, the boats and the beach. It starts at 0 unless a scenario says.
+4. **Both grow by the day, by doing it.** After the day's orders are taken, a force with the order that is stopped at a base of its own side gains `preparation_per_day` of loading, up to 100. Each unit of its roster that is in the force's hex that day, ashore or aboard its ships, gains the same of rehearsal for the hex of the order. A unit elsewhere gains nothing. Neither grows at sea. Resting, or a plan that exists only on paper, earns nothing.
+
+### What it buys
+
+5. **Loading speeds the landing.** From the first man a force lands in a hex until its unloading there is complete, each ship's work in a pulse is multiplied by `unprepared_landing_share` plus the rest of 1 times its loading over 100. That holds for everything it unloads in that time, supply as well as men, and after its last man is ashore. Loading counts only at the hex of the order: at any other hex the force works as one with no loading. It holds for every force that lands men, with or without the order. A force that carries no men unloads as it always has.
+6. **Rehearsal spares the men on landing.** When a unit's first men land in a hex, the unit gains `unprepared_landing_fatigue` times 100 less its rehearsal over 100, up to 100. Its rehearsal counts only if it is for that hex: at any other hex it counts as none. Fatigue cuts the men who fire and wears off by the day (decision 0090), so men put ashore in a hurry fight worse in their first days.
+7. **Both are spent by the landing.** A unit's rehearsal is 0 once its first men have landed. A force's loading is 0, and its order done, when its unloading at the hex is complete.
+
+### What a change costs
+
+8. **A new landing place loses everything.** A new order for another hex sets the force's loading to 0 and the rehearsal of every unit of its roster to 0, since each is for a place.
+9. **A change of ships costs loading and not rehearsal.** A ship joining the force keeps `preparation_kept_on_change` of its loading. Its units keep their rehearsal.
+10. **A change of units costs loading, and the new unit starts where it stands.** A unit added to the roster keeps `preparation_kept_on_change` of the force's loading. The unit brings whatever rehearsal it has for that hex, which is none unless it rehearsed it with another force.
+11. **A unit that changes force keeps its rehearsal** for the same hex.
+12. **A force that splits gives each part its loading. Forces that join take the lower of the two.** Rehearsal is the unit's and is never copied.
+13. **A change of date costs nothing here.** It costs what the days themselves cost.
+
+### What a side knows
+
+14. **A side sees its own forces' loading and its own units' rehearsal exactly,** each day's gain and each loss with its reason. The enemy sees nothing of them.
 
 ## Placeholder figures
 
@@ -32,38 +54,41 @@ In `ground.toml`, and in the frozen step 1 figures with the same first values:
 
 In the frozen step 1 figures the rule is switched off by its first values, as experience and readiness are there: `unprepared_landing_share` is `"1"` and `unprepared_landing_fatigue` is `0`, so the hand calculations of the earlier stages stand. The live values are those above.
 
-None rests on a source. With them a landing is fully prepared after 20 days in port, and one mounted in 10 days gets its men and supply ashore at three quarters of the rate. A coarse measure for stage 4 can rest on the supply the transports had landed when they left on 9 August, which has rows.
+None rests on a source. With them a landing is fully prepared after 20 days in port, and one mounted in 10 days gets its men and supply ashore at three quarters of the rate and its men ashore with a fatigue of 20. A coarse measure for stage 4 can rest on the supply the transports had landed when they left on 9 August, which has rows.
 
 ## A small worked case
 
-A force lies at its base with the order from day 1. A ship of the force unloads by lighter at 20 t an hour.
+A force lies at its base with the order from day 1, with its one unit in its hex. A ship of the force unloads by lighter at 20 t an hour.
 
-| Days in port | Preparation | Rate at the landing | In a 12-hour pulse |
+| Days in port | Loading and rehearsal | Rate at the landing | Fatigue on landing |
 | --- | --- | --- | --- |
-| 0 | 0 | 20 x 0.5 = 10 t an hour | 120 t, or 480 men |
-| 10 | 50 | 20 x (0.5 + 0.5 x 50/100) = 15 t an hour | 180 t, or 720 men |
-| 20 | 100 | 20 x 1 = 20 t an hour | 240 t, or 960 men |
+| 0 | 0 | 20 x 0.5 = 10 t an hour | 40 |
+| 10 | 50 | 20 x (0.5 + 0.5 x 50/100) = 15 t an hour | 40 x 50/100 = 20 |
+| 20 | 100 | 20 x 1 = 20 t an hour | 0 |
 
-After 20 days a ship joins the force. It keeps 100 x 0.5 = 50. Four more days in port bring it to 70, and it lands at 20 x (0.5 + 0.5 x 70/100) = 17 t an hour. A unit it lands gains 40 x (100 - 70)/100 = 12 fatigue, and fires on its first day with 88 men in a hundred.
+After 20 days a ship joins the force. Its loading is 100 x 0.5 = 50; the unit's rehearsal is still 100. Four more days bring the loading to 70. It lands at 20 x (0.5 + 0.5 x 70/100) = 17 t an hour, and the unit lands with no fatigue.
 
-Had the landing place been changed, the force would have gone to 0, and four days would bring it to 20: 12 t an hour, and 32 fatigue for a unit it lands.
+Had the landing place been changed after 20 days, loading and rehearsal would both be 0, and four days would bring each to 20: 12 t an hour, and a fatigue of 32.
+
+A force with loading 100 for one hex that lands at another works at 10 t an hour, and its unit, rehearsed for the first hex, lands with a fatigue of 40.
 
 ## Why
 
 - **It makes lead time a decision.** A commander who waits lands faster and loses fewer days under the enemy's aircraft. One who goes early gets ashore before the enemy is reinforced. The enemy uses the same days.
 - **It makes a late change cost something** beyond the ships that turn round.
-- **One number, two effects, no new mechanism.** It scales the cargo rule's rate and adds to a unit's fatigue. Both exist.
+- **Two numbers, each with its owner, and no new mechanism.** Loading scales the cargo rule's rate. Rehearsal takes from a unit's fatigue on landing. Each follows what earned it: the ships or the men.
+- **Having written a plan earns nothing.** Only days spent by real units in a real place do.
 
 ## What it leaves out
 
-- **Training of troops.** A land unit is a count of men. Nothing in the rows would set a figure for it.
+- **Lasting troop quality.** Rehearsal is for one landing and is spent by it. What a unit keeps is decision 0097.
 - **Preparation of anything but a landing:** a bombardment, a strike or a convoy.
 - **Rehearsal as an act.** Days in port stand for all of it.
 - **Loading for an assault as a choice** of what goes aboard and in what order.
 
 ## What it costs
 
-- **New state:** a force's preparation and the hex it prepares for. They go into the hash and are named beside it; the hash version is raised and the golden files remade (decision 0057).
+- **New state:** a force's loading, the hex and the roster of its order; a unit's rehearsal and the hex it is for. They go into the hash and are named beside it; the hash version is raised and the golden files remade (decision 0057).
 - **A new order with its refusals, new events** with their rows in `side_events.rs`, and the agent interface: the order, a force's preparation in the briefing and queries, and the rate it will land at.
 - **The rulebook:** chapter 2 (working cargo) and chapter 7 (landing), chapter 1 for the order and the events, with the glossary, in the same pull request as the code.
 
@@ -71,8 +96,8 @@ Had the landing place been changed, the force would have gone to 0, and four day
 
 | | |
 | --- | --- |
-| Reads | A force's side, position, status, ships, the land units aboard and its preparation; the bases of the side at its hex; the cargo order and the hex; the three figures |
-| Writes | A force's preparation and the hex it prepares for; a land unit's fatigue on landing; the events. The cargo rule reads the preparation for its rate |
+| Reads | A force's side, position, status, ships, order, roster and loading; a land unit's place and rehearsal; the bases of the side at the force's hex; the four figures |
+| Writes | A force's loading, hex and roster; a land unit's rehearsal and its hex, and its fatigue on landing; the events. The cargo rule reads the loading for its rate |
 
 ## Questions for the designer
 
