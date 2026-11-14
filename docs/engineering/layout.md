@@ -18,6 +18,7 @@ Where things are in the repository and which crate may depend on which. Moved ou
 | `data/oob` | Order-of-battle facts: sourced historical statements as CSV. Research, not simulation data. Start with its `README.md` |
 | `docs/research/oob` | The facts format, the source policy, where sources disagree, and a note per battle and per topic |
 | `tests` | One test file per scenario, each with its hand calculation written out |
+| `scripts` | Commands for working on the repository, not parts of the game: shell scripts run from the top of the repository, each described in `docs/commands.md` |
 | `viewer` | The read-only replay viewer (decision 0018): one HTML page with no build step, its check script, and `replays/` (git-ignored) for exported runs |
 
 Crate boundaries:
