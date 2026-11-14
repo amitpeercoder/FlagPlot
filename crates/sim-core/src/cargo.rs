@@ -21,6 +21,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{BaseId, EventId, LandUnitId, ShipId, TaskForceId};
 use crate::map::HexKind;
+use crate::movement::HaltGround;
 use crate::orders::{Activity, Cargo, Job};
 use crate::preparation::landing_rate_factor;
 use crate::refdata::PortSize;
@@ -61,25 +62,19 @@ struct Participant {
     arrival_event: Option<EventId>,
 }
 
-impl World {
+impl HaltGround<'_> {
     /// The tons of work one man takes, if the ground figures are loaded.
-    fn handling_t_per_man(&self) -> Option<Fixed> {
+    pub(crate) fn handling_t_per_man(&self) -> Option<Fixed> {
         self.ref_data
             .ground
             .as_ref()
             .map(|figures| figures.handling_t_per_man)
     }
 
-    /// Whole men that `tons` of work can move: the tons over the weight of a
-    /// man, cut (decision 0066, "Whole-number arithmetic").
-    fn men_by_time(tons: Fixed, per_man: Fixed) -> u32 {
-        u32::try_from((tons / per_man).trunc().max(0)).unwrap_or(u32::MAX)
-    }
-
     /// Room for men of `unit` aboard a ship: its troop capacity less the men
     /// aboard, or none if men of another unit are aboard (decision 0066, 8).
-    fn berths_for(&self, ship: ShipId, unit: LandUnitId) -> u32 {
-        let ship = &self.truth.ships[&ship];
+    pub(crate) fn berths_for(&self, ship: ShipId, unit: LandUnitId) -> u32 {
+        let ship = &self.ships[&ship];
         let capacity = self.ref_data.ship_classes[&ship.class].troop_capacity_men;
         match ship.troops {
             Some(troops) if troops.unit != unit => 0,
@@ -90,9 +85,8 @@ impl World {
 
     /// The men of `unit` ashore in `hex`: 0 if they are elsewhere or it
     /// has none.
-    fn men_ashore_in(&self, unit: LandUnitId, hex: Hex) -> u32 {
-        self.truth
-            .land_units
+    pub(crate) fn men_ashore_in(&self, unit: LandUnitId, hex: Hex) -> u32 {
+        self.land_units
             .get(&unit)
             .filter(|land_unit| land_unit.hex == Some(hex))
             .map_or(0, |land_unit| land_unit.men_ashore)
@@ -104,7 +98,7 @@ impl World {
     /// except for a load with a land unit, which loads men off a bare shore,
     /// and an unload with men aboard on a coast hex, which lands them and
     /// forms a base there (decision 0066, 6 and 11).
-    fn cargo_place(
+    pub(crate) fn cargo_place(
         &self,
         task_force: &TaskForce,
         cargo: CargoOrder,
@@ -112,7 +106,6 @@ impl World {
     ) -> Option<(Option<BaseId>, bool)> {
         let men_rules = self.ref_data.ground.is_some();
         let base = self
-            .truth
             .bases
             .values()
             .find(|base| base.side == task_force.side && base.hex == hex)
@@ -132,7 +125,7 @@ impl World {
                     && task_force
                         .ships
                         .iter()
-                        .any(|ship| self.truth.ships[ship].troops.is_some())
+                        .any(|ship| self.ships[ship].troops.is_some())
             };
         if base.is_none() && !works_without_base {
             return None;
@@ -153,6 +146,83 @@ impl World {
         let landing_here = !cargo.action.is_load() && coast && self.handling_t_per_man().is_some();
         let ships: Vec<ShipId> = task_force.ships.iter().copied().collect();
         !self.nothing_remains_of(cargo, &ships, hex, base, landing_here)
+    }
+
+    /// [`World::nothing_remains`] for `cargo` worked by `ships` in `hex`.
+    pub(crate) fn nothing_remains_of(
+        &self,
+        cargo: CargoOrder,
+        ships: &[ShipId],
+        hex: Hex,
+        base: Option<BaseId>,
+        landing_here: bool,
+    ) -> bool {
+        if !cargo.action.is_load() {
+            return ships.iter().all(|id| {
+                let ship = &self.ships[id];
+                ship.supply_t.is_zero()
+                    && ship.cargo_fuel_t.is_zero()
+                    && (ship.troops.is_none() || !landing_here)
+            });
+        }
+        let men_done = match cargo.unit {
+            Some(unit) => {
+                self.men_ashore_in(unit, hex) == 0
+                    || ships.iter().all(|id| self.berths_for(*id, unit) == 0)
+            }
+            None => true,
+        };
+        let cargo_done = match (cargo.action.loads(), base) {
+            (Some(named), Some(base)) => {
+                let base = &self.bases[&base];
+                let stock = match named {
+                    Cargo::Supply => base.supply_t,
+                    Cargo::Fuel => base.fuel_t,
+                };
+                stock.is_zero()
+                    || ships.iter().all(|id| {
+                        let ship = &self.ships[id];
+                        ship.supply_t + ship.cargo_fuel_t
+                            == self.ref_data.ship_classes[&ship.class].cargo_capacity_t
+                    })
+            }
+            // No cargo named, or none to load where the side has no base.
+            _ => true,
+        };
+        men_done && cargo_done
+    }
+}
+
+impl World {
+    /// Whole men that `tons` of work can move: the tons over the weight of a
+    /// man, cut (decision 0066, "Whole-number arithmetic").
+    fn men_by_time(tons: Fixed, per_man: Fixed) -> u32 {
+        u32::try_from((tons / per_man).trunc().max(0)).unwrap_or(u32::MAX)
+    }
+
+    /// The tons of work one man takes, if the ground figures are loaded.
+    fn handling_t_per_man(&self) -> Option<Fixed> {
+        self.halt_ground().handling_t_per_man()
+    }
+
+    /// Room for men of `unit` aboard a ship ([`HaltGround::berths_for`]).
+    fn berths_for(&self, ship: ShipId, unit: LandUnitId) -> u32 {
+        self.halt_ground().berths_for(ship, unit)
+    }
+
+    /// The men of `unit` ashore in `hex` ([`HaltGround::men_ashore_in`]).
+    fn men_ashore_in(&self, unit: LandUnitId, hex: Hex) -> u32 {
+        self.halt_ground().men_ashore_in(unit, hex)
+    }
+
+    /// Where `task_force`'s cargo order can work ([`HaltGround::cargo_place`]).
+    fn cargo_place(
+        &self,
+        task_force: &TaskForce,
+        cargo: CargoOrder,
+        hex: Hex,
+    ) -> Option<(Option<BaseId>, bool)> {
+        self.halt_ground().cargo_place(task_force, cargo, hex)
     }
 
     /// Moves cargo for every task force stopped at a base of its own side,
@@ -776,51 +846,8 @@ impl World {
     /// ashore in the hex or no ship has a berth for one ("Settled before the
     /// build").
     fn nothing_remains(&self, p: &Participant, base: Option<BaseId>, landing_here: bool) -> bool {
-        self.nothing_remains_of(p.cargo, &p.ships, p.hex, base, landing_here)
-    }
-
-    /// [`World::nothing_remains`] for `cargo` worked by `ships` in `hex`.
-    fn nothing_remains_of(
-        &self,
-        cargo: CargoOrder,
-        ships: &[ShipId],
-        hex: Hex,
-        base: Option<BaseId>,
-        landing_here: bool,
-    ) -> bool {
-        if !cargo.action.is_load() {
-            return ships.iter().all(|id| {
-                let ship = &self.truth.ships[id];
-                ship.supply_t.is_zero()
-                    && ship.cargo_fuel_t.is_zero()
-                    && (ship.troops.is_none() || !landing_here)
-            });
-        }
-        let men_done = match cargo.unit {
-            Some(unit) => {
-                self.men_ashore_in(unit, hex) == 0
-                    || ships.iter().all(|id| self.berths_for(*id, unit) == 0)
-            }
-            None => true,
-        };
-        let cargo_done = match (cargo.action.loads(), base) {
-            (Some(named), Some(base)) => {
-                let base = &self.truth.bases[&base];
-                let stock = match named {
-                    Cargo::Supply => base.supply_t,
-                    Cargo::Fuel => base.fuel_t,
-                };
-                stock.is_zero()
-                    || ships.iter().all(|id| {
-                        let ship = &self.truth.ships[id];
-                        ship.supply_t + ship.cargo_fuel_t
-                            == self.ref_data.ship_classes[&ship.class].cargo_capacity_t
-                    })
-            }
-            // No cargo named, or none to load where the side has no base.
-            _ => true,
-        };
-        men_done && cargo_done
+        self.halt_ground()
+            .nothing_remains_of(p.cargo, &p.ships, p.hex, base, landing_here)
     }
 
     /// Takes men aboard one ship from the shore, or lands them from it, as

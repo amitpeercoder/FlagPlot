@@ -37,15 +37,20 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::bombardment::has_bombardment_work;
+use crate::choices::movement::{MovementAnswer, MovementQuestion};
+use crate::choices::{Answer, Question};
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{EventId, ShipId, TaskForceId};
+use crate::ids::{BaseId, EventId, LandUnitId, ShipId, TaskForceId};
 use crate::map::Map;
 use crate::orders::{RejectReason, SpeedSetting};
 use crate::refdata::{RefData, SurfaceCombatFigures};
 use crate::rng::RngStream;
-use crate::state::{Halt, HaltWork, Route, Ship, ShipSystem, TaskForce, TaskForceStatus};
+use crate::state::{
+    Base, Halt, HaltWork, LandUnit, Route, Ship, ShipSystem, TaskForce, TaskForceStatus,
+};
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
 
@@ -598,22 +603,53 @@ impl World {
     }
 
     /// What `task_force` would do in `hex` if it halted there (decision 0096,
-    /// 2): bombard, work cargo, both or neither.
+    /// 2): bombard, work cargo, both or neither ([`halt_work`]).
     pub(crate) fn halt_work(&self, task_force: &TaskForce, hex: Hex) -> HaltWork {
-        HaltWork {
-            bombard: self.has_bombardment_work(task_force, hex),
-            cargo: self.has_cargo_work(task_force, hex),
+        let ground = self.halt_ground();
+        halt_work(&ground, task_force, hex, &|at| {
+            self.enemy_base_on_map(task_force.side, at)
+        })
+    }
+
+    /// The lowest-numbered base on the map that is not `side`'s in `hex`: the
+    /// public fact the bombardment rule reads (decision 0034, 2).
+    fn enemy_base_on_map(&self, side: crate::state::Side, hex: Hex) -> Option<BaseId> {
+        self.truth
+            .bases
+            .values()
+            .find(|base| base.hex == hex && base.side != side && base.on_map)
+            .map(|base| base.id)
+    }
+
+    /// What the movement rules read of the world to find where a force halts
+    /// and when it steams on: the figures, the map and the force's own ships,
+    /// bases and land units (see [`HaltGround`]).
+    pub(crate) fn halt_ground(&self) -> HaltGround<'_> {
+        HaltGround {
+            ref_data: &self.ref_data,
+            map: &self.map,
+            ships: &self.truth.ships,
+            bases: &self.truth.bases,
+            land_units: &self.truth.land_units,
         }
     }
 
     /// The first waypoint from the force's next one on that is marked to act
     /// at and where it has work, if any (decision 0096, 1 and 2). The last
-    /// waypoint is never marked.
+    /// waypoint is never marked. The choice is traced (decision 0100).
     fn halt_index(&self, task_force: &TaskForce) -> Option<usize> {
-        let route = &task_force.route;
-        (route.next_index..route.waypoints.len())
-            .filter(|index| route.marked(*index))
-            .find(|index| self.halt_work(task_force, route.waypoints[*index]).any())
+        let ground = self.halt_ground();
+        let side = task_force.side;
+        let answer = halt_index(&ground, task_force, &|at| self.enemy_base_on_map(side, at));
+        self.trace_choice(side, || {
+            (
+                Question::Movement(MovementQuestion::Halt {
+                    force: task_force.id,
+                }),
+                Answer::Movement(MovementAnswer::Halt(answer)),
+            )
+        });
+        answer
     }
 
     /// At the start of the pulse's movement, each halted force whose work is
@@ -636,11 +672,16 @@ impl World {
                 continue;
             };
             let hex = force.from_hex;
-            let bombard_done = !halt.work.bombard
-                || halt.bombarded.is_some()
-                || !self.has_bombardment_work(force, hex);
-            let cargo_done = !halt.work.cargo || !self.has_cargo_work(force, hex);
-            if !(bombard_done && cargo_done) {
+            let side = force.side;
+            let ground = self.halt_ground();
+            let steams_on = steam_on(&ground, force, &|at| self.enemy_base_on_map(side, at));
+            self.trace_choice(side, || {
+                (
+                    Question::Movement(MovementQuestion::SteamOn { force: id }),
+                    Answer::Movement(MovementAnswer::SteamOn(steams_on)),
+                )
+            });
+            if !steams_on {
                 continue;
             }
             let mut causes: Vec<Cause> = Vec::new();
@@ -1384,6 +1425,74 @@ pub(crate) fn forecast_passage(
         }
     }
     result
+}
+
+/// What the rules of halting and steaming on read of the world (decision
+/// 0100, 1): the figures, the map, and the ships, bases and land units. The
+/// rules index these only by the force's own ships and its cargo order's
+/// unit, and look for a base only among those of the force's side; the enemy's
+/// bases are read through a lookup of the map (see [`halt_work`]), never from
+/// here.
+#[derive(Clone, Copy)]
+pub(crate) struct HaltGround<'a> {
+    pub(crate) ref_data: &'a RefData,
+    pub(crate) map: &'a Map,
+    pub(crate) ships: &'a BTreeMap<ShipId, Ship>,
+    pub(crate) bases: &'a BTreeMap<BaseId, Base>,
+    pub(crate) land_units: &'a BTreeMap<LandUnitId, LandUnit>,
+}
+
+/// What `task_force` would do in `hex` if it halted there (decision 0096,
+/// 2): bombard, work cargo, both or neither.
+///
+/// `enemy_base_at` is the map: the lowest-numbered base of the other side on
+/// the force's side's map in a hex (decision 0034, 2). The bombardment rule
+/// reads nothing else of an enemy base.
+pub(crate) fn halt_work(
+    ground: &HaltGround,
+    task_force: &TaskForce,
+    hex: Hex,
+    enemy_base_at: &dyn Fn(Hex) -> Option<BaseId>,
+) -> HaltWork {
+    HaltWork {
+        bombard: has_bombardment_work(ground, task_force, hex, enemy_base_at),
+        cargo: ground.has_cargo_work(task_force, hex),
+    }
+}
+
+/// The first waypoint from the force's next one on that is marked to act at
+/// and where it has work, if any (decision 0096, 1 and 2): the index of that
+/// waypoint in the route. The last waypoint is never marked. It is where the
+/// force halts. Draws nothing.
+pub(crate) fn halt_index(
+    ground: &HaltGround,
+    task_force: &TaskForce,
+    enemy_base_at: &dyn Fn(Hex) -> Option<BaseId>,
+) -> Option<usize> {
+    let route = &task_force.route;
+    (route.next_index..route.waypoints.len())
+        .filter(|index| route.marked(*index))
+        .find(|index| halt_work(ground, task_force, route.waypoints[*index], enemy_base_at).any())
+}
+
+/// Whether a halted force steams on (decision 0096, 4): for a bombardment, it
+/// has bombarded since it halted or can bombard there no longer; for cargo,
+/// it has none left to work there. The force must be halted: for one that is
+/// not, this is `false`.
+pub(crate) fn steam_on(
+    ground: &HaltGround,
+    force: &TaskForce,
+    enemy_base_at: &dyn Fn(Hex) -> Option<BaseId>,
+) -> bool {
+    let Some(halt) = force.halt else {
+        return false;
+    };
+    let hex = force.from_hex;
+    let bombard_done = !halt.work.bombard
+        || halt.bombarded.is_some()
+        || !has_bombardment_work(ground, force, hex, enemy_base_at);
+    let cargo_done = !halt.work.cargo || !ground.has_cargo_work(force, hex);
+    bombard_done && cargo_done
 }
 
 /// Halts at marked waypoints and steaming on (decision 0096).
