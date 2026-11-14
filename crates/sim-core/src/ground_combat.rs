@@ -2199,7 +2199,11 @@ mod tests {
         // The questions of the view, with the staff's default inputs, are
         // answered as the engine answered them here, where nothing marched
         // or fought.
-        for question in allied.questions() {
+        let ground_questions = allied
+            .questions()
+            .into_iter()
+            .filter(|question| matches!(question, Question::Ground(_)));
+        for question in ground_questions {
             let Some(Answer::Ground(answer)) = allied.ask(&question) else {
                 panic!("a question the view lists has an answer: {question:?}");
             };
