@@ -227,13 +227,14 @@ fn the_batch_counts_men_lost_by_cause_and_shells_fired_by_side() {
         assert_eq!(run["bombardment_shells"]["japanese"], "1400");
         assert_eq!(run["bombardment_shells"]["allied"], "0");
         let lost = &run["men_lost"];
-        // Men are lost to fire only by the side shelled, 10 a hit on men, and
-        // in the fight ashore a part of the Japanese battalion's 800 men (the
-        // division fires with no more men than the limit on engaged men,
-        // decision 0105) and the Allied division's few, 20 a hit; none are
-        // unfed or lost with a ship.
+        // Men are lost to fire only by the side shelled, 10 a hit on men less
+        // what the regiment's fieldworks save (decision 0106), never more
+        // than its 1000; and in the fight ashore a part of the Japanese
+        // battalion's 800 men (the division fires with no more men than the
+        // limit on engaged men, decision 0105) and the Allied division's few,
+        // 20 a hit; none are unfed or lost with a ship.
         assert_eq!(lost["japanese"]["fire"], 0);
-        assert_eq!(lost["allied"]["fire"].as_u64().unwrap() % 10, 0);
+        assert!(lost["allied"]["fire"].as_u64().unwrap() <= 1000);
         let japanese_fight = lost["japanese"]["fight"].as_u64().unwrap();
         assert!(japanese_fight > 0 && japanese_fight < 800 && japanese_fight % 20 == 0);
         assert!(lost["allied"]["fight"].as_u64().unwrap() <= 3000);

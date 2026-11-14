@@ -2,18 +2,18 @@ Scenario 27: Preparing a landing
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1cf1d5db645cb435  16 events
-day   2  hash ba16737419190ee9  12 events
-day   3  hash d3923ff7b269dde2  13 events
-day   4  hash ae5dc6b2cb356c07  12 events
-day   5  hash 4a944b70cf6eaece  12 events
-day   6  hash 8303ce08c44ade2f  18 events
-day   7  hash 28cc8dd73cb5fef7  13 events
-day   8  hash 4ccdbf46c304f101  13 events
-day   9  hash 9f1232286781c7c9  13 events
-day  10  hash 931d6bd25de08aea  13 events
-day  11  hash a991a06fd9421b6e  52 events
-day  12  hash ead49fde09a4b4ce  23 events
+day   1  hash 0f88f083eb0c397d  17 events
+day   2  hash 8eb7a1987b063c95  13 events
+day   3  hash d1baef3ec008ae27  14 events
+day   4  hash c6c32a167f739802  12 events
+day   5  hash 35d6c4e8972f81d3  12 events
+day   6  hash 8314ccc060a21aaa  18 events
+day   7  hash b537c11735602960  13 events
+day   8  hash d51358da0c3e9a68  13 events
+day   9  hash b6e54396155b244a  13 events
+day  10  hash 815e051d66aff433  13 events
+day  11  hash d628b8db8fb4ecd1  55 events
+day  12  hash 847c81b9ad18f5d9  26 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder transport force 2" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -28,12 +28,12 @@ ship:5 "Placeholder troop transport 5": afloat in task_force:5; damage flotation
 base:1 "Placeholder base A" (Allied) at (0,0): 982 t of supply in stock
 base:2 "Placeholder base B" (Allied) at (4,0): 156 t of supply in stock
 base:3 "Landing at (0,6)" (Allied) at (0,6): 0 t of supply in stock, no airfield, formed in play, on its own side's map only
-land_unit:1 "Placeholder battalion 1" (Allied): 600 men ashore at (4,0), fatigue 10
-land_unit:2 "Placeholder battalion 2" (Allied): 600 men ashore at (4,0), fatigue 30
-land_unit:3 "Placeholder battalion 3" (Allied): 190 men ashore at (0,6), fatigue 30
+land_unit:1 "Placeholder battalion 1" (Allied): 600 men ashore at (4,0), fatigue 10, fieldworks 20
+land_unit:2 "Placeholder battalion 2" (Allied): 600 men ashore at (4,0), fatigue 30, fieldworks 20
+land_unit:3 "Placeholder battalion 3" (Allied): 190 men ashore at (0,6), fatigue 30, fieldworks 20
 land_unit:4 "Placeholder battalion 4" (Allied): no men ashore
 land_unit:5 "Placeholder battalion 5" (Allied): no men ashore
-land_unit:6 "Placeholder battalion 6" (Allied): 300 men ashore at (0,0)
+land_unit:6 "Placeholder battalion 6" (Allied): 300 men ashore at (0,0), fieldworks 30
 Allied: no contacts
 Allied: no battle claims
 Japanese: no contacts

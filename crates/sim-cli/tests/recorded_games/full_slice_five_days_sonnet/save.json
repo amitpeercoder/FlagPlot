@@ -66,30 +66,30 @@
     },
     {
       "file": "data/scenarios/../reference/ground.toml",
-      "hash": "9c4316095d7247ab"
+      "hash": "7bc7c7ffd6c4f80e"
     }
   ],
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "91b0bd65b7b78893"
+      "hash": "0a74e7b9b644e3f6"
     },
     {
       "day": 2,
-      "hash": "86e3da5910e7ebb0"
+      "hash": "08db40bb13457561"
     },
     {
       "day": 3,
-      "hash": "c3884e963462d329"
+      "hash": "288c1acef8502f22"
     },
     {
       "day": 4,
-      "hash": "6b1f6a4c44122dcc"
+      "hash": "c101f4a318b38679"
     },
     {
       "day": 5,
-      "hash": "4faac81317e556e1"
+      "hash": "af4a3f6d099fbd4c"
     }
   ],
   "orders": [
@@ -480,7 +480,7 @@
       "unit": "task_force:5"
     }
   ],
-  "rules_version": 4,
+  "rules_version": 5,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "f8fc8df6e1e2da5f"
@@ -490,6 +490,6 @@
     "japanese": "script"
   },
   "seed": 1942,
-  "state_version": "flagplot-state-v21",
+  "state_version": "flagplot-state-v22",
   "version": 2
 }

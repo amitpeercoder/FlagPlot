@@ -2,14 +2,14 @@ Scenario 33: Who is engaged, and an attack that fails
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash cc26301398f26967  75 events
-day   2  hash fbd4765968894e49  53 events
-day   3  hash c5f8373966c5e12c  46 events
-day   4  hash a099d89bce9cfb6d  35 events
-day   5  hash 8564888926a96d25  33 events
-day   6  hash f750a104ca76240f  33 events
+day   1  hash e446408da8e7698c  79 events
+day   2  hash be94eee0c8b8649f  58 events
+day   3  hash 532934fb9b767d6d  52 events
+day   4  hash f080227b11e73f3f  37 events
+day   5  hash 0f69383ba25528ff  36 events
+day   6  hash 5733e8daa7e724b2  35 events
 
-base:1 "Placeholder base 1, Allied, at K" (Allied) at (0,0): 4821.8 t of supply in stock
+base:1 "Placeholder base 1, Allied, at K" (Allied) at (0,0): 4821.76 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at K" (Japanese) at (0,0): 982.3 t of supply in stock
 base:3 "Placeholder base 3, Allied, at L" (Allied) at (10,0): 4910.5 t of supply in stock
 base:4 "Placeholder base 4, Japanese, at L" (Japanese) at (10,0): 2.7 t of supply in stock
@@ -17,24 +17,24 @@ base:5 "Placeholder base 5, Japanese, at M" (Japanese) at (10,1): 96.8 t of supp
 base:6 "Placeholder base 6, Allied, at N" (Allied) at (20,0): 4910 t of supply in stock
 base:7 "Placeholder base 7, Japanese, at N" (Japanese) at (20,0): 0 t of supply in stock
 base:8 "Placeholder base 8, Allied, at P" (Allied) at (30,0): 4891.2 t of supply in stock
-base:9 "Placeholder base 9, Japanese, at P" (Japanese) at (30,0): 961.1 t of supply in stock
-land_unit:1 "Placeholder Allied division at K" (Allied): 5920 men ashore at (0,0)
-land_unit:2 "Placeholder Japanese regiment at K" (Japanese): 460 men ashore at (0,0), fatigue 80
-land_unit:3 "Placeholder Allied brigade at L" (Allied): 2980 men ashore at (10,0)
-land_unit:4 "Placeholder Japanese battalion at L" (Japanese): 320 men ashore at (10,1), fatigue 90
-land_unit:5 "Placeholder Allied brigade at N" (Allied): 3000 men ashore at (20,0)
-land_unit:6 "Placeholder Japanese battalion at N" (Japanese): 249 men ashore at (20,1), fatigue 90
-land_unit:7 "Placeholder Allied regiment at P" (Allied): 3440 men ashore at (30,0), fatigue 75
-land_unit:8 "Placeholder Japanese regiment at P" (Japanese): 1180 men ashore at (30,0)
+base:9 "Placeholder base 9, Japanese, at P" (Japanese) at (30,0): 960.86 t of supply in stock
+land_unit:1 "Placeholder Allied division at K" (Allied): 5922 men ashore at (0,0), fieldworks 30
+land_unit:2 "Placeholder Japanese regiment at K" (Japanese): 460 men ashore at (0,0), fatigue 80, fieldworks 30
+land_unit:3 "Placeholder Allied brigade at L" (Allied): 2980 men ashore at (10,0), fieldworks 30
+land_unit:4 "Placeholder Japanese battalion at L" (Japanese): 320 men ashore at (10,1), fatigue 90, fieldworks 20
+land_unit:5 "Placeholder Allied brigade at N" (Allied): 3000 men ashore at (20,0), fieldworks 30
+land_unit:6 "Placeholder Japanese battalion at N" (Japanese): 249 men ashore at (20,1), fatigue 90, fieldworks 20
+land_unit:7 "Placeholder Allied regiment at P" (Allied): 3440 men ashore at (30,0), fatigue 75, fieldworks 30
+land_unit:8 "Placeholder Japanese regiment at P" (Japanese): 1194 men ashore at (30,0), fieldworks 30
 Allied: no contacts
 Allied: no battle claims
 Allied estimate at (0,0): 641 enemy men ashore, reported day 6
 Allied estimate at (10,0): 160 enemy men ashore, reported day 3
 Allied estimate at (20,0): 271 enemy men ashore, reported day 3
-Allied estimate at (30,0): 1006 enemy men ashore, reported day 6
+Allied estimate at (30,0): 1018 enemy men ashore, reported day 6
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (0,0): 5068 enemy men ashore, reported day 6
+Japanese estimate at (0,0): 5069 enemy men ashore, reported day 6
 Japanese estimate at (10,0): 4048 enemy men ashore, reported day 3
 Japanese estimate at (20,0): 4106 enemy men ashore, reported day 3
 Japanese estimate at (30,0): 4495 enemy men ashore, reported day 6

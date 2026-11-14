@@ -2,12 +2,12 @@ Scenario 32: A beaten side falls back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1e5e900670f41edb  45 events
-day   2  hash d1b6cb7179685f42  31 events
-day   3  hash d1bd2374807b9839  29 events
-day   4  hash 6d93114400777be6  27 events
-day   5  hash d16af7b1c141841e  24 events
-day   6  hash 4cb73c7a2969e709  23 events
+day   1  hash 298c58e551808725  46 events
+day   2  hash e547c9735d0ec2ea  34 events
+day   3  hash 64a47c48dccf1df0  32 events
+day   4  hash 3b217776ef4a2be1  29 events
+day   5  hash a32fb6db4e91c8cc  25 events
+day   6  hash 090f0a45dafdaa51  24 events
 
 base:1 "Placeholder base 1, Japanese, at P" (Allied) at (0,0): 486.75 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at R" (Japanese) at (1,0): 97.42 t of supply in stock
@@ -18,10 +18,10 @@ base:6 "Placeholder base 6, Allied, at U" (Allied) at (10,1): 997 t of supply in
 base:7 "Placeholder base 7, Japanese, at S" (Allied) at (20,0): 497 t of supply in stock
 base:8 "Placeholder base 8, Allied, at S" (Allied) at (20,0): 999.5 t of supply in stock
 land_unit:1 "Placeholder Japanese working unit at P" (Japanese): 258 men ashore at (1,0), fatigue 50
-land_unit:2 "Placeholder Allied regiment at P" (Allied): 500 men ashore at (0,0)
-land_unit:3 "Placeholder Japanese battalion at T" (Japanese): 636 men ashore at (11,0), fatigue 50
-land_unit:4 "Placeholder Allied division at T" (Allied): 5880 men ashore at (10,0)
-land_unit:5 "Placeholder Allied company at U" (Allied): 100 men ashore at (10,1)
+land_unit:2 "Placeholder Allied regiment at P" (Allied): 500 men ashore at (0,0), fieldworks 30
+land_unit:3 "Placeholder Japanese battalion at T" (Japanese): 636 men ashore at (11,0), fatigue 50, fieldworks 20
+land_unit:4 "Placeholder Allied division at T" (Allied): 5880 men ashore at (10,0), fieldworks 30
+land_unit:5 "Placeholder Allied company at U" (Allied): 100 men ashore at (10,1), fieldworks 30
 land_unit:6 "Placeholder Japanese working unit at S" (Japanese): no men ashore
 land_unit:7 "Placeholder Allied platoon at S" (Allied): 100 men ashore at (20,0), on attack
 Allied: no contacts

@@ -889,7 +889,8 @@ pub(crate) fn land_unit_line(
         },
         posture: unit.posture.name(),
         fatigue: Dec(unit.fatigue),
-        fieldworks: (unit.fieldworks > Fixed::ZERO).then_some(Dec(unit.fieldworks)),
+        fieldworks: (unit.fieldworks > Fixed::ZERO && unit.men_ashore > 0)
+            .then_some(Dec(unit.fieldworks)),
         cover: ctx
             .view
             .cover(unit.id)

@@ -2,12 +2,12 @@ Scenario 31: An airfield damaged and mended
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 6fe45d55f90fa0b0  23 events
-day   2  hash aac4cec7b76e7db0  22 events
-day   3  hash 939bf8acbfe53739  24 events
-day   4  hash 2bf928967d755d2d  23 events
-day   5  hash 4c8b163bc12f47e7  20 events
-day   6  hash c303f4fdb91f5e2d  19 events
+day   1  hash eecd99b3902247c4  24 events
+day   2  hash 752ec81ae501bd40  23 events
+day   3  hash 75f9cbe3fe032ca4  25 events
+day   4  hash b7f9c0838795ad8a  23 events
+day   5  hash 021e0e4857a7f488  20 events
+day   6  hash bdc60d57700a38d0  19 events
 
 air_group:1 "Placeholder patrol squadron" (Allied) at base:1: 12 ready, mission Search, arc 060-120 to 400 nm
 air_group:2 "Placeholder fighter squadron 1" (Allied) at base:2: 12 ready, mission Rest, no arc
@@ -19,7 +19,7 @@ base:2 "Placeholder base 2" (Allied) at (5,0): 4970 t of supply in stock
 base:3 "Placeholder base 3" (Japanese) at (10,0): 4950 t of supply in stock
 base:4 "Placeholder base 4" (Japanese) at (5,4): 4900 t of supply in stock, no airfield
 land_unit:1 "Placeholder unit 1" (Allied): 500 men ashore at (0,0)
-land_unit:2 "Placeholder unit 2" (Allied): 1000 men ashore at (5,0)
+land_unit:2 "Placeholder unit 2" (Allied): 1000 men ashore at (5,0), fieldworks 30
 Allied: no contacts
 Allied claim at (10,0): 2 aircraft destroyed on the ground, day 1 morning
 Allied claim over (5,4): 0 aircraft shot down, day 1 morning
