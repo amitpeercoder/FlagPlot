@@ -7,8 +7,8 @@ use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
-    FatigueFigures, GroundFigures, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
-    SurfaceCombatFigures,
+    BombardmentFigures, FatigueFigures, GroundFigures, PortSize, RefData, ReportError,
+    SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
 };
 use sim_core::state::ShipSystem;
 
@@ -401,6 +401,12 @@ struct SurfaceCombatFile {
     yard_days_per_flotation_point: Quantity,
     yard_days_per_system_degraded: Quantity,
     yard_days_per_system_out: Quantity,
+    /// Shore bombardment (decision 0092). All four or none: a file with none
+    /// loads as before and no force bombards.
+    bombardment_minutes: Option<u32>,
+    bombardment_hit_chance: Option<Quantity>,
+    bombardment_reference_gun_damage: Option<Quantity>,
+    bombardment_false_claim_chance: Option<Quantity>,
     gun_system_hit: SystemTable,
     torpedo_system_hit: SystemTable,
     straggler_escorts: EscortTable,
@@ -547,6 +553,27 @@ fn parse_surface_combat_figures(
             "yard_days_per_system_out",
             &file.yard_days_per_system_out,
         )?,
+        bombardment: match (
+            file.bombardment_minutes,
+            &file.bombardment_hit_chance,
+            &file.bombardment_reference_gun_damage,
+            &file.bombardment_false_claim_chance,
+        ) {
+            (None, None, None, None) => None,
+            (Some(minutes), Some(hit), Some(reference), Some(false_claim)) => {
+                Some(BombardmentFigures {
+                    minutes,
+                    hit_chance: number("bombardment_hit_chance", hit)?,
+                    reference_gun_damage: number("bombardment_reference_gun_damage", reference)?,
+                    false_claim_chance: number("bombardment_false_claim_chance", false_claim)?,
+                })
+            }
+            _ => {
+                return Err(fail(
+                    "the bombardment figures are bombardment_minutes, bombardment_hit_chance, bombardment_reference_gun_damage and bombardment_false_claim_chance: give all four or none".to_string(),
+                ))
+            }
+        },
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -599,6 +626,9 @@ struct AirCombatFile {
 struct BaseHitTable {
     aircraft: Quantity,
     supply: Quantity,
+    /// The share for men ashore (decision 0092, 8). Without it the share is
+    /// 0 and those hits land on nothing, as before.
+    men: Option<Quantity>,
 }
 
 /// Loads the air combat figures from a TOML file.
@@ -638,6 +668,10 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
         )?,
         base_hit_aircraft: number("base_hit.aircraft", &file.base_hit.aircraft)?,
         base_hit_supply: number("base_hit.supply", &file.base_hit.supply)?,
+        base_hit_men: match &file.base_hit.men {
+            Some(men) => number("base_hit.men", men)?,
+            None => Fixed::ZERO,
+        },
         fighter_false_claim_chance: number(
             "fighter_false_claim_chance",
             &file.fighter_false_claim_chance,
@@ -740,6 +774,11 @@ struct GroundFile {
     attack_fatigue_limit: Quantity,
     beaten_share: Quantity,
     captured_stock_share: Quantity,
+    /// Decision 0092. Without `men_lost_per_base_hit` a hit on men removes
+    /// nobody; without both report errors no ground report is made.
+    men_lost_per_base_hit: Option<Quantity>,
+    report_error_low: Option<Quantity>,
+    report_error_high: Option<Quantity>,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -773,6 +812,22 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         attack_fatigue_limit: number("attack_fatigue_limit", &file.attack_fatigue_limit)?,
         beaten_share: number("beaten_share", &file.beaten_share)?,
         captured_stock_share: number("captured_stock_share", &file.captured_stock_share)?,
+        men_lost_per_base_hit: match &file.men_lost_per_base_hit {
+            Some(men) => number("men_lost_per_base_hit", men)?,
+            None => Fixed::ZERO,
+        },
+        report_error: match (&file.report_error_low, &file.report_error_high) {
+            (None, None) => None,
+            (Some(low), Some(high)) => Some(ReportError {
+                low: number("report_error_low", low)?,
+                high: number("report_error_high", high)?,
+            }),
+            _ => {
+                return Err(fail(
+                    "give report_error_low and report_error_high together, or neither".to_string(),
+                ))
+            }
+        },
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1093,9 +1148,14 @@ mod tests {
             "base_supply_destroyed_per_hit_t = -5"
         )
         .contains("negative"));
-        assert!(
-            bad("[base_hit]\naircraft = \"0.06\"\nsupply = \"0.3\"\n", "").contains("base_hit")
-        );
+        // The table goes, its share for men (decision 0092) with it.
+        let no_table = air_combat_text()
+            .replace("[base_hit]\naircraft = \"0.06\"\nsupply = \"0.3\"\n", "")
+            .replace("men = \"0.2\"\n", "");
+        assert!(parse_air_combat_figures(&no_table, here())
+            .expect_err("rejected")
+            .message
+            .contains("base_hit"));
         assert!(bad("aircraft = \"0.06\"", "aircraft = 0.3").contains("aircraft = 0.3"));
         assert!(bad("aircraft = \"0.06\"", "aircraft = \"1.5\"").contains("base hit chance"));
         assert!(bad("supply = \"0.3\"", "supply = \"-0.1\"").contains("base hit chance"));

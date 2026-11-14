@@ -1986,7 +1986,7 @@ mod tests {
             .collect()
     }
 
-    // ---- the table of the 90 kinds ----
+    // ---- the table of the 95 kinds ----
 
     /// What a side sees of an event.
     #[derive(Clone, Copy, Debug)]
@@ -2374,6 +2374,7 @@ mod tests {
                     claimed_shot_down: 0,
                     claimed_on_ground: 0,
                     from_air: false,
+                    from_bombardment: false,
                 },
                 Whole,
                 Nothing,
@@ -2698,6 +2699,7 @@ mod tests {
                     hits: 3,
                     hits_on_aircraft: 2,
                     hits_on_supply: 1,
+                    hits_on_men: 0,
                 },
                 Cut(
                     "BaseAttacked",
@@ -2707,6 +2709,7 @@ mod tests {
                         "hits",
                         "hits_on_aircraft",
                         "hits_on_supply",
+                        "hits_on_men",
                     ],
                 ),
                 Cut("BaseAttackedAgainst", &["air_group"]),
@@ -3082,6 +3085,84 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // Shore bombardment, men lost to fire and the ground report
+            // (decision 0092, 17 to 20). The Allied ship and force bombard
+            // the Japanese base 2.
+            row(
+                EventKind::BombardmentFire {
+                    ship: ship(1),
+                    base: base(2),
+                    shells: fx(720),
+                    weighed_shots: fx(720),
+                    chance: Fixed::from_ratio(1, 20),
+                    expected: fx(36),
+                    hits: 30,
+                    hits_on_aircraft: 9,
+                    hits_on_supply: 9,
+                    hits_on_men: 6,
+                    rounds_left: fx(80),
+                },
+                Cut(
+                    "BombardmentFire",
+                    &[
+                        "chance",
+                        "expected",
+                        "hits",
+                        "hits_on_aircraft",
+                        "hits_on_supply",
+                        "hits_on_men",
+                    ],
+                ),
+                Nothing,
+            ),
+            row(
+                EventKind::ShoreBombardment {
+                    task_force: force(1),
+                    base: base(2),
+                    hex: hex(),
+                    shells: fx(1320),
+                    weighed_shots: fx(870),
+                    hits: 40,
+                    hits_on_aircraft: 12,
+                    hits_on_supply: 12,
+                    hits_on_men: 8,
+                },
+                Cut(
+                    "ShoreBombardment",
+                    &["hits", "hits_on_aircraft", "hits_on_supply", "hits_on_men"],
+                ),
+                Cut("ShoreBombardmentAgainst", &["task_force"]),
+            ),
+            row(
+                EventKind::MenLostToFire {
+                    unit: unit(1),
+                    base: base(1),
+                    hex: hex(),
+                    lost: 60,
+                    ashore: 940,
+                },
+                Whole,
+                Nothing,
+            ),
+            sided(row(
+                EventKind::GroundReportReceived {
+                    side: Side::Allied,
+                    hex: hex(),
+                    men: 640,
+                    replaced: true,
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::BaseFound {
+                    side: Side::Allied,
+                    base: base(2),
+                    hex: hex(),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3122,7 +3203,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 90, "the log has 90 kinds of event");
+        assert_eq!(all.len(), 95, "the log has 95 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
@@ -3498,6 +3579,7 @@ mod tests {
             claimed_shot_down: 30,
             claimed_on_ground: 0,
             from_air: true,
+            from_bombardment: false,
         };
         let mut events = log(vec![claim.clone()]);
         events[0].breakdown = Some(Breakdown {

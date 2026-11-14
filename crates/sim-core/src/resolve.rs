@@ -2312,6 +2312,7 @@ mod tests {
             claimed_shot_down: 0,
             claimed_on_ground: 0,
             from_air: false,
+            from_bombardment: false,
             received_event: EventId::new(7),
         };
         let with_claim = |claim: &BattleClaim| {
@@ -2369,6 +2370,7 @@ mod tests {
             },
             BattleClaim {
                 from_air: true,
+                from_bombardment: false,
                 ..claim.clone()
             },
             BattleClaim {

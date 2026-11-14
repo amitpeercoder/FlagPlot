@@ -223,3 +223,7 @@ path = "scenario_22_rebase.rs"
 [[test]]
 name = "scenario_23_fight_ashore"
 path = "scenario_23_fight_ashore.rs"
+
+[[test]]
+name = "scenario_24_shells_and_estimates"
+path = "scenario_24_shells_and_estimates.rs"

@@ -169,7 +169,7 @@ fire_control = "0.1"
 main_battery = "0.2"
 
 # Where a bomb hit on a base lands (decision 7 of 0034): one draw for each hit.
-# The two chances add to 1 at most; the rest of the hits land on nothing.
+# The chances add to 1 at most; the rest of the hits land on nothing.
 # aircraft: fitted, not checked (decision 0089, ruling 4). Rabaul round 1
 # (rabaul-r1-base-hit-aircraft.md) moved it 0.3 to 0.06 from about 2.5
 # aircraft destroyed on the ground at Henderson Field (engagement_outcomes

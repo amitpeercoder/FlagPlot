@@ -718,6 +718,7 @@ mod tests {
             claimed_shot_down: 0,
             claimed_on_ground: 0,
             from_air: false,
+            from_bombardment: false,
             received_event: EventId::new(40),
         };
         let outcome = belief.apply_report(&Report::BattleClaim(claim.clone()), &figures());
@@ -740,6 +741,7 @@ mod tests {
             claimed_shot_down: 12,
             claimed_on_ground: 4,
             from_air: true,
+            from_bombardment: false,
             received_event: EventId::new(90),
         };
         belief.apply_report(&Report::BattleClaim(later.clone()), &figures());
@@ -758,6 +760,7 @@ mod tests {
             claimed_shot_down: _,
             claimed_on_ground: _,
             from_air: _,
+            from_bombardment: _,
             received_event: _,
         } = belief.claims()[0].clone();
     }

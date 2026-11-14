@@ -20,7 +20,7 @@ use sim_core::state::{
     ShipSystem, ShipSystems, Side, SystemState, TaskForce, TruthState,
 };
 use sim_core::world::MADE_IDS_FLOOR;
-use sim_core::{DaySummary, StartingContact, World};
+use sim_core::{DaySummary, StartingContact, StartingEstimate, World};
 
 use crate::error::DataError;
 use crate::map::load_map;
@@ -105,6 +105,9 @@ struct ScenarioFile {
     order: Vec<OrderSpec>,
     #[serde(default)]
     contact: Vec<ContactSpec>,
+    /// Opening estimates of the enemy's men ashore (decision 0092, 16).
+    #[serde(default)]
+    estimate: Vec<EstimateSpec>,
     /// Missions and objectives (decision 0054). Optional.
     objectives: Option<ObjectivesSpec>,
 }
@@ -190,6 +193,17 @@ struct ContactSpec {
     age_pulses: Option<u32>,
 }
 
+/// An estimate of the enemy's men ashore in a hex that a side holds when the
+/// game begins (decision 16 of 0092).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EstimateSpec {
+    side: SideSpec,
+    q: i32,
+    r: i32,
+    men: u32,
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct BaseSpec {
@@ -217,6 +231,10 @@ struct BaseSpec {
     /// this many days (decision 0069). A whole number, at least 1. Defaults
     /// to none.
     yard_passage_days: Option<i64>,
+    /// Whether the base is on the enemy's map at the start (decision 0092,
+    /// "As built"). Defaults to true. A base off it cannot be bombarded or
+    /// struck until a ground report finds it.
+    on_map: Option<bool>,
 }
 
 /// A land unit at the start (decision 0066, 3): exactly one of a hex, where
@@ -807,6 +825,8 @@ pub struct Scenario {
     /// The contacts the sides start with, kept so that a world built afresh
     /// for another seed holds them too.
     contacts: Vec<StartingContact>,
+    /// The opening estimates, kept for the same reason (decision 0092, 16).
+    estimates: Vec<StartingEstimate>,
     /// Every file the scenario names, as the paths it reads them from, in a
     /// fixed order (decision 0043, 9).
     data_files: Vec<PathBuf>,
@@ -1060,7 +1080,7 @@ impl Scenario {
                     ),
                     None => None,
                 },
-                on_map: true,
+                on_map: spec.on_map.unwrap_or(true),
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1869,6 +1889,18 @@ impl Scenario {
         world
             .hold_starting_contacts(contacts.clone())
             .map_err(|e| fail(e.to_string()))?;
+        let estimates: Vec<StartingEstimate> = file
+            .estimate
+            .iter()
+            .map(|spec| StartingEstimate {
+                side: spec.side.into(),
+                hex: Hex::new(spec.q, spec.r),
+                men: spec.men,
+            })
+            .collect();
+        world
+            .hold_starting_estimates(estimates.clone())
+            .map_err(|e| fail(e.to_string()))?;
 
         Ok(Scenario {
             name: file.name,
@@ -1877,6 +1909,7 @@ impl Scenario {
             world,
             script,
             contacts,
+            estimates,
             data_files,
         })
     }
@@ -1919,6 +1952,7 @@ impl Scenario {
             self.world.umpire().clone(),
         )?;
         world.hold_starting_contacts(self.contacts.clone())?;
+        world.hold_starting_estimates(self.estimates.clone())?;
         if let Some(objectives) = self.world.objectives() {
             world.set_objectives(objectives.clone())?;
         }
@@ -1929,6 +1963,7 @@ impl Scenario {
             world,
             script: self.script.clone(),
             contacts: self.contacts.clone(),
+            estimates: self.estimates.clone(),
             data_files: self.data_files.clone(),
         })
     }
