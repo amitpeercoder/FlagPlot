@@ -2,10 +2,10 @@ Scenario 24: Shells and bombs on a base, and an attack on a wrong estimate
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0fba8344eb1bfff3  34 events
-day   2  hash 5a12e8c66ac8cd9b  24 events
-day   3  hash 8b00663005d24561  22 events
-day   4  hash 4b382efd1d338c6c  7 events
+day   1  hash 300f2c0b1897f572  34 events
+day   2  hash e41bff32b8e56dfc  24 events
+day   3  hash a43d6888350ab7ee  22 events
+day   4  hash ae8051e8660fc53f  7 events
 
 #1 D0 -         Japanese ground report at (8,0): 300 enemy men ashore
 #2 D1 -         order:1 accepted for task_force:1  <- order:1

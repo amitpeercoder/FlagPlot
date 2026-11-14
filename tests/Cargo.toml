@@ -227,3 +227,7 @@ path = "scenario_23_fight_ashore.rs"
 [[test]]
 name = "scenario_24_shells_and_estimates"
 path = "scenario_24_shells_and_estimates.rs"
+
+[[test]]
+name = "scenario_25_march"
+path = "scenario_25_march.rs"

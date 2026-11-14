@@ -1,6 +1,6 @@
 # Land units
 
-This chapter covers men: the land unit, the troop capacity of a ship, the load order that takes a unit aboard, the landing that puts it ashore and forms a base for it, a unit divided, men lost with a ship, the men's daily supply and the loss of the unfed, the posture of a unit and its order, the day's fight ashore, fatigue, a side beaten in a hex, a base that changes side, men lost to the fire of bombs and shells, and what a side knows of the enemy's men ashore.
+This chapter covers men: the land unit, the troop capacity of a ship, the load order that takes a unit aboard, the landing that puts it ashore and forms a base for it, a unit divided, men lost with a ship, the men's daily supply and the loss of the unfed, the posture of a unit and its order, marching overland, the day's fight ashore, fatigue, a side beaten in a hex, a base that changes side, men lost to the fire of bombs and shells, and what a side knows of the enemy's men ashore.
 
 Men are worked through the cargo rule of chapter 2 and fed through the base supply rule of chapter 5. This chapter gives only what is new in them. Every quantity is a fixed-point number except men, which are whole numbers. "Cut" means cut toward zero (chapter 1, Numbers and chance).
 
@@ -8,14 +8,14 @@ Where these rules run in a day (chapter 1, The order in which a day resolves, gi
 
 | When | Rule |
 | --- | --- |
-| Start of the day, with the other orders | A load order with a unit and a posture order are checked and applied (chapter 1, Orders) |
+| Start of the day, with the other orders | A load order with a unit, a posture order and a march order are checked and applied (chapter 1, Orders) |
 | Night pulse, after the daily supply for aircraft | The men's supply: feeding, the unfed and the loss |
 | Loading phase, last in each pulse | Men are taken aboard and landed with the cargo; units are divided and bases formed |
 | Whenever a ship sinks | The men aboard are lost with her |
 | Night pulse, in the shore bombardment phase, and in the air combat phase of a daylight pulse | Bombs and shells that hit men ashore: men lost to fire (below) |
-| After the third pulse, before the day's base count | The ground combat phase: for each hex with men ashore, the fight, fatigue, a side beaten, a base that changes side and the ground reports |
+| After the third pulse, before the day's base count | The ground combat phase: first the marches, then for each hex with men ashore the fight, fatigue, a side beaten, a base that changes side and the ground reports |
 
-A scenario that names no ground figures has no land units, and every rule here does nothing in it (chapter 1, Where figures come from and when a rule is loaded). [0066, 0090]
+A scenario that names no ground figures has no land units, and every rule here does nothing in it (chapter 1, Where figures come from and when a rule is loaded). A map with no land links allows no march (chapter 2, Land links). [0066, 0090, 0094]
 
 ## The land unit
 
@@ -23,7 +23,7 @@ A scenario that names no ground figures has no land units, and every rule here d
 
 A land unit is a count of men with a side and a name. It has a number, which is stable and never reused. Its men are ashore in one hex, aboard ships, or part each. The men ashore of one unit are all in one hex. The men aboard a ship are of one unit only, and a unit may have men aboard several ships. A unit is destroyed when it has no men ashore and none aboard any ship (below, Destroyed). It stays in the state with no men and keeps its number. [0066 items 1 and 2]
 
-A land unit's state is: its number, its name, its side, the men ashore and the hex they are in, its posture, the order that set its posture, its fatigue and its fed share. The hex is set exactly when the men ashore are above 0. The posture is defend or attack, defend at the start unless the scenario says otherwise. The fatigue is from 0 to 100 and starts at 0 unless the scenario says otherwise. The fed share is from 0 to 1 and starts at 1. A ship's state gains the men aboard and the unit they belong to (`troops`), at least one man when set. The state hash holds the men, the hexes, the posture, its order, the fatigue and the fed share and not the name (chapter 1, The state hash). [0066, 0090 items 1, 8 and 11]
+A land unit's state is: its number, its name, its side, the men ashore and the hex they are in, its posture, the order that set its posture, its fatigue, its fed share and its march (the hex it marches to, the days marched and the march order, or none). The hex is set exactly when the men ashore are above 0. The posture is defend or attack, defend at the start unless the scenario says otherwise. The fatigue is from 0 to 100 and starts at 0 unless the scenario says otherwise. The fed share is from 0 to 1 and starts at 1. A ship's state gains the men aboard and the unit they belong to (`troops`), at least one man when set. The state hash holds the men, the hexes, the posture, its order, the fatigue, the fed share and the march and not the name (chapter 1, The state hash). [0066, 0090 items 1, 8 and 11, 0094]
 
 A side sees: its own units exactly (below, What a side knows and sees).
 
@@ -111,7 +111,7 @@ A side sees: `MenLanded` and `UnloadingComplete`, whole, for its own unit and fo
 
 When a force lands its first man in a hex where its side has no base, a base of the side is formed there before the men land. It has the next free base number, counted over all the bases of both sides (the highest plus one), the name "Landing at (q,r)" with the hex, the port of the hex, no supply or fuel, no guns, no repairs and no aircraft. It is the side's lowest-numbered base in the hex only if it has no lower. `BaseFormed` records it, with the side, hex and force, citing the unload order and the arrival. A force with no men aboard forms no base, so a supply run to an empty hex changes nothing. A hex that holds a base of the side already, formed or not, forms none. [0066 item 11]
 
-A base formed by a landing is not on the enemy's map until it changes side (below, A base that changes side) or a ground report finds it (below, What a side knows of the enemy ashore). It is on its own side's, in every list and answer a side is given of its own bases, and it works as any other base of its side in a rule that reads a base: it holds the stocks unloaded into it, it feeds the men ashore (below), it can be loaded from and unloaded to, and a base count is recorded for it at the end of each day. The other side is told nothing of it until then: chapter 1, What a side may know, gives the map and the base strike refusal. [0066 item 12, 0090 item 18, 0092]
+A base formed by a landing, and a base formed by a march (below, Marching overland), is not on the enemy's map until it changes side (below, A base that changes side) or a ground report finds it (below, What a side knows of the enemy ashore). It is on its own side's, in every list and answer a side is given of its own bases, and it works as any other base of its side in a rule that reads a base: it holds the stocks unloaded into it, it feeds the men ashore (below), it can be loaded from and unloaded to, and a base count is recorded for it at the end of each day. The other side is told nothing of it until then: chapter 1, What a side may know, gives the map and the base strike refusal. [0066 item 12, 0090 item 18, 0092, 0094 item 9]
 
 A side sees: `BaseFormed`, whole, for its own base. The enemy sees nothing.
 
@@ -179,11 +179,68 @@ An attack order needs no enemy. A unit on attack in a hex where nothing is to be
 
 A side sees: its own `OrderAccepted` or `OrderRejected`, with the reason, whole. The enemy sees nothing. [0090 item 29]
 
+## Marching overland
+
+### Where men can march
+
+Men march only along a land link of the map (chapter 2, Land links): a pair of neighbouring hexes the map joins by land. A map with no links allows no march. The map, and so every link, is common knowledge. [0094 items 1 and 2]
+
+### The march order
+
+The order `march` names a land unit and a hex. It is a standing order, in a slot of its own, and stands until the unit arrives or another march order replaces it. The hex is a neighbour of the unit's hex joined to it by a land link, or the unit's own hex. [0094 item 3]
+
+It is checked at intake in this order, and the first reason that applies is recorded (chapter 1, Every reason an order is refused):
+
+1. **Not your land unit.** The unit does not exist or is the enemy's. One reason serves both.
+2. **Land unit destroyed.** The unit has no men ashore and none aboard any ship.
+3. **No men ashore.** The unit has no man ashore.
+4. **No land link.** No land link joins the unit's hex to the hex named, and the hex named is not the unit's own.
+
+An accepted order does this when it is taken in, at the start of the day:
+
+- An order to the unit's own hex stops a march. If the unit has one, it is cleared and `MarchStopped` is recorded with the reason ordered, the hex it was marching to and the days marched. If it has none, nothing is done and nothing is recorded.
+- An order to the hex the unit is already marching to keeps the days marched.
+- An order to any other hex starts a march to it with 0 days marched, replacing any other.
+
+A unit may march out of a hex where the enemy has men. There is no pursuit and no rear guard. [0094 items 3, 4 and 7]
+
+A side sees: its own `OrderAccepted` or `OrderRejected`, with the reason, whole, and `MarchStopped`. The enemy sees nothing.
+
+### A day's march
+
+The marches are the first step of the ground combat phase, before any hex is worked. Each unit with a march, in unit order, is taken in this order:
+
+1. **It stops** if it has no man ashore (`MarchStopped`, reason no men ashore), or if its men ashore are in a hex that no land link joins to the hex it marches to, which happens when they went aboard ships and landed elsewhere (`MarchStopped`, reason no land link). The march is cleared and the unit stays where it is. `MarchStopped` cites the march order.
+2. **Otherwise it marches one more day.** `MarchDay` records the unit, the hex it is in, the hex it marches to, the days marched and `ground.toml: march_days_per_hex`, citing the march order. The unit has marched this day for the fatigue step (below).
+3. **It arrives** if the days marched now equal `march_days_per_hex` (below). Otherwise the days marched are kept for the next day.
+
+Until it arrives the unit is where it was. It is fed there, can be hit there, and fights there as any unit does. Only men ashore march. Men of the unit aboard ships stay aboard, and if they later land in another hex than the unit's, they become a new unit (above, A unit divided). No part of a unit marches alone. [0094 items 4 to 7]
+
+A side sees: `MarchDay` and `MarchStopped`, whole, for its own unit. The enemy sees nothing.
+
+### Arriving, and the supply carried
+
+When a unit arrives, its men ashore are in the hex it marched to and its march is spent. The unit takes part in that day's fight in the new hex. There is no random number. [0094 item 4]
+
+**The supply is taken.** The unit carries `ground.toml: march_supply_days` days of the daily charge for its men: `march_supply_days` times `ground.toml: daily_supply_t_per_man` times the men ashore. It is taken from the unit's side's bases in the hex it left, in base order. Each base with a stock above 0, while any is still wanted, is asked for what is still wanted and pays as much as its stock covers. Each base that pays records `BaseSupplySpent` with the reason march: the men, the amount asked, the amount paid and the stock left, citing the unit's `MarchDay`. Its breakdown has the factors `men_marching`, `march_supply_days` and `daily_supply_t_per_man`, and `taken_from_earlier_bases_t` where an earlier base gave part. A hex with no base of the side, or only empty ones, gives nothing. [0094 item 9]
+
+**The supply is put down.** What was taken is put into the side's lowest-numbered base in the new hex. If the side has none there and something was carried, a base is formed there first. It has the next free base number counted over both sides, the name "Dump at (q,r)" with the hex, the port of the hex, no guns, no repairs and no aircraft, and it is not on the enemy's map (above, A base formed by a landing, says what that means). `MarchBaseFormed` records it with the side, hex and unit, citing the supply events and the day's march. A unit that carries nothing forms no base, and is unfed where it arrives unless a base is there. [0094 items 9 and 10]
+
+`MarchArrived` records the unit, the hex it left, the hex it reached, the men, the supply carried and the base it was put into (none if nothing was carried). It cites the unit's `MarchDay`, each `BaseSupplySpent` and any `MarchBaseFormed`. Its breakdown has the factors `men_marching`, `march_supply_days`, `daily_supply_t_per_man` and `wanted_t`, and its result is the supply carried.
+
+A side sees: `MarchArrived`, `MarchBaseFormed` and `BaseSupplySpent` for its own unit and bases, whole. The enemy sees nothing: it learns that men have come by a ground report, and of a dump when a report finds it (below, What a side knows of the enemy ashore). [0094 item 11]
+
+### Tiredness on the march
+
+A day's march tires a unit by the fatigue rule below: it gains `ground.toml: fatigue_per_march_day` in place of resting, and if it also fired on attack that day it gains both. The change is made after the fight, so a column that arrives and fights the same day fires with the fatigue it had before that day's change. A day on which a march stopped is not a march day. [0094 item 8]
+
+A side sees: `LandUnitFatigue`, as in Fatigue below.
+
 ## The fight ashore
 
 ### The ground combat phase
 
-If the ground figures are loaded, the ground combat phase runs once a day, after the third pulse and before the day's base count (chapter 1, After the pulses). It takes the hexes that hold men ashore at its start, in hex order (by q, then by r), and finishes one hex before the next. In each hex it does, in this order: the day's fight, if the hex is contested; each unit's fatigue and the tired units back to defend; the test of a side beaten; and the bases of a beaten side changing side. Last, the ground reports of the hex (below, What a side knows of the enemy ashore). [0090 items 4, 12, 14, 15 and 17]
+If the ground figures are loaded, the ground combat phase runs once a day, after the third pulse and before the day's base count (chapter 1, After the pulses). It does the marches first (above, Marching overland). It then takes the hexes that hold men ashore, as they are after the marches, in hex order (by q, then by r), and finishes one hex before the next: a unit that arrived is in its new hex. In each hex it does, in this order: the day's fight, if the hex is contested; each unit's fatigue and the tired units back to defend; the test of a side beaten; and the bases of a beaten side changing side. Last, the ground reports of the hex (below, What a side knows of the enemy ashore). [0090 items 4, 12, 14, 15 and 17, 0094 item 4]
 
 ### A hex is contested
 
@@ -215,10 +272,11 @@ A side sees: `GroundFight`, cut to the hex, for a fight its men are in. `GroundF
 
 A land unit has fatigue, from 0 to 100, the scale air groups and task forces use. After the fight (or with no fight), each unit that still has a man ashore, in unit order, is changed once:
 
-- a unit on attack that fired, which is a unit on attack in a fight whose shots are above 0, gains `ground.toml: fatigue_per_attack_day`, up to 100;
+- a unit that marched a day in this phase (above, Marching overland) gains `ground.toml: fatigue_per_march_day`, up to 100, in place of resting;
+- a unit on attack that fired, which is a unit on attack in a fight whose shots are above 0, gains `ground.toml: fatigue_per_attack_day`, up to 100; one that also marched that day gains both, the sum capped once at 100;
 - every other unit, a unit on attack that did not fire included, loses `ground.toml: rest_per_day`, down to 0.
 
-A unit with no man ashore keeps its fatigue. `LandUnitFatigue` (gained or rested, and the new fatigue) is recorded only when the value changes. It cites the unit's fire event where there was one. Its breakdown has the factors `fatigue_before` and `fatigue_per_attack_day` or `rest_per_day`. Fatigue cuts the men who fire (above, Firing men) and nothing else. [0090 items 11 to 13]
+A unit with no man ashore keeps its fatigue. `LandUnitFatigue` (gained, rested, marched, or marched and attacked, and the new fatigue) is recorded only when the value changes. It cites the unit's fire event where there was one and its march day event where there was one. Its breakdown has the factor `fatigue_before` and then `rest_per_day`, or `fatigue_per_march_day` and `fatigue_per_attack_day` for the part that applies. Fatigue cuts the men who fire (above, Firing men) and nothing else. The step comes after the fight, so the men who fire on the day a unit arrives are worked out from the fatigue it had before that day's change. [0090 items 11 to 13, 0094 item 8]
 
 ### The tired stop attacking
 
@@ -284,9 +342,9 @@ A side sees: `GroundReportReceived` and `BaseFound`, whole, for its own reports.
 
 ## What a side knows and sees
 
-A side knows its own land units exactly: the men ashore and where, the men aboard and in which ships, each unit's posture, fatigue and fed share. Its view lists them and its ships show the men aboard. The enemy's land units are not in the view at all. A side knows of the enemy's men ashore only by an estimate (next section). A base the enemy formed by a landing, or that a scenario holds off the map, is not among the enemy's bases the view lists, until a ground report finds it or it is taken: a base that changes side is on both sides' maps (above). [0066 items 21 and 22, 0090 items 18 and 29, 0092]
+A side knows its own land units exactly: the men ashore and where, the men aboard and in which ships, each unit's posture, fatigue, fed share and march. Its view lists them and its ships show the men aboard. The enemy's land units are not in the view at all. A side knows of the enemy's men ashore only by an estimate (next section). A base the enemy formed by a landing or a march, or that a scenario holds off the map, is not among the enemy's bases the view lists, until a ground report finds it or it is taken: a base that changes side is on both sides' maps (above). [0066 items 21 and 22, 0090 items 18 and 29, 0092, 0094 item 11]
 
-Every event of this chapter is seen whole by its own side and not at all by the enemy, except those the sections above cut: men embarked and landed, a base formed, a unit divided, men lost with a ship, men fed, men lost unfed, a unit destroyed, a unit's loading complete, a fed share restored, fatigue, a unit back to defend, men lost in a fight, men lost to fire, an air group lost with a base and its strike mission cleared, a ship lost with a base and a home port lost. The fight itself and a unit's fire are cut, and a base changing side is told to both sides. The test of a side beaten is told to neither. A ground report and a base found are seen whole by the side that was given them and by no other. A side's number for its own land units, and the leak that a gap in its own numbers can show, are in chapter 1, What a side may know. [0066 item 23, 0090 items 28 to 30, 0092]
+Every event of this chapter is seen whole by its own side and not at all by the enemy, except those the sections above cut: men embarked and landed, a base formed, a base formed by a march, a unit divided, a march day, a march arrived, a march stopped, men lost with a ship, men fed, men lost unfed, a unit destroyed, a unit's loading complete, a fed share restored, fatigue, a unit back to defend, men lost in a fight, men lost to fire, an air group lost with a base and its strike mission cleared, a ship lost with a base and a home port lost. The fight itself and a unit's fire are cut, and a base changing side is told to both sides. The test of a side beaten is told to neither. A ground report and a base found are seen whole by the side that was given them and by no other. A side's number for its own land units, and the leak that a gap in its own numbers can show, are in chapter 1, What a side may know. [0066 item 23, 0090 items 28 to 30, 0092, 0094 item 11]
 
 A side sees: as each section says. The briefing, the list and detail queries and the events show a side its own units, the days of supply its base holds at the present charge for aircraft and men together, and whether its men were fed last night.
 
@@ -317,16 +375,21 @@ A side sees: as each section says. The briefing, the list and detail queries and
 | Scenario file | `[[estimate]]` | `side`, `q`, `r` and `men`: an opening estimate (chapter 3, The ground report and the estimate) |
 | Scenario file | `[[land_unit]]` `posture`, `fatigue` | The unit's posture at the start (`defend` by default or `attack`) and its fatigue (0 to 100, 0 by default) |
 | Scenario file | `[[order]]` of kind `set_posture` | `land_unit` (a land unit's number) and `posture` (`attack` or `defend`) |
+| Scenario file | `[[order]]` of kind `march` | `land_unit` (a land unit's number) and `hex` (`[q, r]`) |
+| `ground.toml` | `march_days_per_hex` | Days a march from a hex to a neighbour takes. A whole number, 1 or more. Required |
+| `ground.toml` | `fatigue_per_march_day` | Fatigue a unit gains on a day it marches. From 0 to 100. Required |
+| `ground.toml` | `march_supply_days` | Days of the daily charge for its men that a unit takes with it when it arrives. 0 or more. Required |
+| Scenario file | `land_links`, map file `[[land_link]]` | The land links of the map (chapter 2, Land links) |
 | Scenario file | objective of kind `base_held` | `base` and `points` (chapter 6) |
 | Scenario file | objective of kind `men_lost` | `points_per_100_men` (chapter 6) |
 
-The ground file is a TOML file with `placeholder = true` and the twelve keys, each a whole number or a decimal string, and may hold the three of decision 0092. A TOML float, an unknown key and a missing one of the twelve are refused. The report error figures need the search figures: a world with them and no search figures is refused when it is set up, because belief is written with the search figures. `World::new` and the loader refuse a figure outside the ranges above. The frozen step 1 copy (`data/reference/step1/ground.toml`) holds the same first values. Every figure is a placeholder that rests on no source. [0066, 0090, 0092, 0057]
+The ground file is a TOML file with `placeholder = true` and the fifteen keys (the twelve, and the three of decision 0094), each a whole number or a decimal string, and may hold the three of decision 0092. A TOML float, an unknown key and a missing one of the fifteen are refused. The report error figures need the search figures: a world with them and no search figures is refused when it is set up, because belief is written with the search figures. `World::new` and the loader refuse a figure outside the ranges above. The frozen step 1 copy (`data/reference/step1/ground.toml`) holds the same first values. Every figure is a placeholder that rests on no source. [0066, 0090, 0092, 0094, 0057]
 
 ## Limits
 
 - **A side knows the enemy's men ashore only by an estimate.** It is made daily, where both sides have men ashore, and may be wrong by up to half either way. A side with no men in a hex gets no report of it, and there are no patrols or scouts ashore. [0092]
 - **A bombardment does not close a field.** It destroys aircraft, supply and men, and does not damage the runway. [0092]
-- **No retreat.** A beaten side's men stay in the hex; no unit moves overland. [0090]
+- **No retreat.** A beaten side's men stay in the hex; a unit moves overland only when it is ordered to march (above, Marching overland). [0090, 0094]
 - **Guns ashore do not fire on ships,** and artillery does not close an airfield. [0090]
 - **No terrain, no dug-in defence that grows, and no kinds of unit.** A man is a man, and the defender's advantage is one figure. [0090]
 - **A base is not damaged by the fight for it.** It is taken whole, but for its stocks. [0090]
@@ -334,15 +397,16 @@ The ground file is a TOML file with `placeholder = true` and the twelve keys, ea
 - **Men aboard do not eat,** however long the passage. [0066]
 - **No ration scale.** Men are fed or unfed. [0066]
 - **A side's hold on its own supply.** Men and aircraft draw on one stock, aircraft first, and no order changes that. [0066, 0050]
+- **A march is one hex.** There is no terrain or road: every land link takes the same days. A route of more than one hex is ordered hex by hex. There is no pursuit and no blocking of a march, and a part of a unit cannot march. Men lose nothing on the march but what the unfed rule takes. [0094]
 - **Men saved from a sinking ship,** and men carried in ships not in a task force, are not built. [0066]
 - **Loading and landing are one rate.** Men go over a beach and over a berth at the rate of the port, by the one weight of a man. [0066]
 - **No arrivals or replacements of men** by schedule. A scenario's units are those it starts with. [0066]
-- **A new number can show what the enemy did.** A base formed by a landing and a unit made by division take the next free number counted over both sides, so a gap in the numbers of a side's own bases can show that the enemy formed one. Decision 0047 records the same for a task force split off and 0059 for an air group formed. [0066, 0047, 0059]
+- **A new number can show what the enemy did.** A base formed by a landing or a march and a unit made by division take the next free number counted over both sides, so a gap in the numbers of a side's own bases can show that the enemy formed one. Decision 0047 records the same for a task force split off and 0059 for an air group formed. [0066, 0047, 0059]
 
 ## Not in this chapter
 
 - The cargo rule, berths and lighters, and the rates of a port: chapter 2, Cargo.
 - Supply stocks, the daily supply for aircraft and a base out of supply: chapter 5.
-- Orders in general, and what a side may know and see: chapter 1.
+- The land links a march follows: chapter 2. Orders in general, and what a side may know and see: chapter 1.
 - The ground report and the estimate as belief, and the opening estimate: chapter 3. Shore bombardment: chapter 4. The share of a hit that lands on men: chapter 5.
 - Objectives on a base held and on men lost: chapter 6. Aircraft lost with a base and a group's refusal of orders: chapter 5.

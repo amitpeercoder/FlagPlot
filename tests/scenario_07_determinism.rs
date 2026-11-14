@@ -466,7 +466,11 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // `MenLostToFire`, `GroundReportReceived` and `BaseFound`: the full slice
     // has no bombardment mission and no land unit. Scenario 24 records them,
     // and its own test reads them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 33] = [
+    //
+    // The four kinds of decision 0094, `MarchDay`, `MarchBaseFormed`,
+    // `MarchArrived` and `MarchStopped`: the full slice gives no march order.
+    // Scenario 25 records them, and its own test reads them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 37] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -500,6 +504,10 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "MenLostToFire",
         "GroundReportReceived",
         "BaseFound",
+        "MarchDay",
+        "MarchBaseFormed",
+        "MarchArrived",
+        "MarchStopped",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

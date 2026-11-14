@@ -159,10 +159,13 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
             " (a destroyed unit has no man left, ashore or aboard, and takes no order)"
         }
         R::NoMenAshore => {
-            " (set_posture is for a unit with men ashore; a unit still aboard ship has none to order until it lands)"
+            " (set_posture is for a unit with men ashore, and so is march; a unit still aboard ship has none to order until it lands)"
         }
         R::AirGroupLostWithBase => {
             " (the group was lost when the base it was at changed side; it has no place and takes no order)"
+        }
+        R::NoLandLink(_) => {
+            " (a land unit marches only to a neighbouring hex that the map joins to its own by land, or to its own hex to stop; the unit's line in the briefing and get_entity lists the hexes it can march to under march_to, and a map with no land links allows no march)"
         }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
@@ -190,6 +193,12 @@ mod tests {
                 "the land unit has no men ashore (set_posture is for a unit with men ashore"
             ),
             "{none_ashore}"
+        );
+        let no_link = refusal(&RejectReason::NoLandLink(sim_core::hex::Hex::new(1, 0)));
+        assert!(
+            no_link.starts_with("no land link joins the land unit's hex to")
+                && no_link.contains("march_to"),
+            "{no_link}"
         );
         let lost = refusal(&RejectReason::AirGroupLostWithBase);
         assert!(

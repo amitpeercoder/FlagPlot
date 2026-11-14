@@ -152,6 +152,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
             .num("distance_nm", *distance_nm)
             .num("range_nm", *range_nm),
         RejectReason::AlreadyMovedToday => base("already_moved_today"),
+        RejectReason::NoLandLink(hex) => base("no_land_link").hex("hex", *hex),
     }
 }
 
@@ -613,7 +614,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .int("aircraft", *aircraft);
             // `men` is written only for the men's supply, so that every file
             // made before land units is unchanged (decision 0066).
-            let d = if matches!(reason, SupplyUse::Men) {
+            let d = if matches!(reason, SupplyUse::Men | SupplyUse::March) {
                 d.int("men", *men)
             } else {
                 d
@@ -833,6 +834,64 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .int("men", *men)
                 .flag("replaced", *replaced),
         ),
+        EventKind::MarchDay {
+            unit,
+            from,
+            to,
+            days,
+            of,
+        } => (
+            "march_day",
+            d.id("unit", *unit)
+                .hex("from", *from)
+                .hex("to", *to)
+                .int("days", *days)
+                .int("of", *of),
+        ),
+        EventKind::MarchBaseFormed {
+            base,
+            side,
+            hex,
+            unit,
+        } => (
+            "march_base_formed",
+            d.id("base", *base)
+                .text("side", names::side(*side))
+                .hex("hex", *hex)
+                .id("unit", *unit),
+        ),
+        EventKind::MarchArrived {
+            unit,
+            from,
+            to,
+            men,
+            supply_t,
+            base,
+        } => {
+            let d = d
+                .id("unit", *unit)
+                .hex("from", *from)
+                .hex("to", *to)
+                .int("men", *men)
+                .num("supply_t", *supply_t);
+            let d = match base {
+                Some(base) => d.id("base", *base),
+                None => d,
+            };
+            ("march_arrived", d)
+        }
+        EventKind::MarchStopped {
+            unit,
+            to,
+            days,
+            reason,
+        } => (
+            "march_stopped",
+            d.id("unit", *unit)
+                .hex("to", *to)
+                .int("days", *days)
+                .text("reason", reason.name()),
+        ),
         EventKind::BaseFound { side, base, hex } => (
             "base_found",
             d.text("side", names::side(*side))
@@ -851,6 +910,8 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                     match change {
                         LandFatigueChange::Gained => "gained",
                         LandFatigueChange::Rested => "rested",
+                        LandFatigueChange::Marched => "marched",
+                        LandFatigueChange::MarchedAndAttacked => "marched_and_attacked",
                     },
                 )
                 .num("fatigue", *fatigue),

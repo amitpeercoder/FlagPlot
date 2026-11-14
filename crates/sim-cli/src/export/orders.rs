@@ -89,6 +89,7 @@ fn text(kind: &OrderKind) -> String {
         },
         OrderKind::LandUnit { order, .. } => match order {
             LandUnitOrder::SetPosture(posture) => format!("posture {}", posture.name()),
+            LandUnitOrder::March(hex) => format!("march to {hex}"),
         },
     }
 }

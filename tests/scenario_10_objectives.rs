@@ -540,7 +540,9 @@ fn objectives_change_no_hash_and_no_event() {
     // And it was d45847f62c785916 until the state went to version 13
     // (decision 0092, shells and the enemy ashore); the event log did not
     // change.
-    assert!(baseline.contains("hash ee908e435b2663cd"));
+    // And it was ee908e435b2663cd until the state went to version 14
+    // (decision 0094, marching overland); the event log did not change.
+    assert!(baseline.contains("hash 66549bf6335032e6"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

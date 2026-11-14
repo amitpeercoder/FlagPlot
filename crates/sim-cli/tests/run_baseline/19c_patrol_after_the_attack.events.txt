@@ -2,7 +2,7 @@ Scenario 19c: The patrol after the attack
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 12e834cd07ea5d2a  7 events
+day   1  hash 5791e9c2d2eedff5  7 events
 
 #1 D0 -         Japanese report: 1 ship, carrier, at (4,0), held at the start: new contact:1
 #2 D1 -         order:1 accepted for air_group:1  <- order:1

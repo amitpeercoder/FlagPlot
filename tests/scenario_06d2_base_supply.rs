@@ -614,6 +614,8 @@ fn assert_payment(event: &Event, payment: &Payment, seed: u64, day: u32) {
         SupplyUse::Upkeep => format!("{aircraft} aircraft at the base for the day"),
         SupplyUse::Repairs => format!("{aircraft} repairs"),
         SupplyUse::Men => "men fed".to_string(),
+        // Decision 0094: these scenarios have no march.
+        SupplyUse::March => "men marching".to_string(),
     };
     let mut text = if paid < asked {
         format!(

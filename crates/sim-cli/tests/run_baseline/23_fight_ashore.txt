@@ -2,12 +2,12 @@ Scenario 23: The fight ashore, and a base that changes side
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f836f2ed196bef83  40 events
-day   2  hash 0f7354ffde6397ea  31 events
-day   3  hash adc675e087adc1c9  29 events
-day   4  hash 811158ee17c222d4  23 events
-day   5  hash 351056e2a6eb87e2  17 events
-day   6  hash 7e26ba61ad539c55  17 events
+day   1  hash e2dadeb963696a38  40 events
+day   2  hash f3008f4532a332a5  31 events
+day   3  hash 8dd08e6d9bceba00  29 events
+day   4  hash 7d37d20a81a8ba2d  23 events
+day   5  hash 7524968f41139025  17 events
+day   6  hash 385df6eb910e4ae8  17 events
 
 task_force:1 "Placeholder destroyer patrol" (Japanese): Idle at (3,1); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder fighter squadron at Y" (Japanese) lost with its base: 0 ready, mission Rest, no arc

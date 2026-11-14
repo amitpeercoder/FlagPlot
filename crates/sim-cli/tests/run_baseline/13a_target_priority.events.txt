@@ -2,7 +2,7 @@ Scenario 13a: Target priority
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 780ee5f79542f366  21 events
+day   1  hash 792046afa74003a1  21 events
 
 #1 D0 -         Allied report: 2 ships, cruiser, at (7,0), held at the start: new contact:1
 #2 D0 -         Allied report: 3 ships, transport, at (7,3), held at the start: new contact:2
