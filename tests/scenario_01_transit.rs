@@ -489,7 +489,7 @@ fn the_event_log_explains_the_arrival() {
         route_order.kind,
         OrderKind::TaskForce {
             target: TASK_FORCE,
-            order: TaskForceOrder::SetRoute(vec![Hex::new(8, 3)]),
+            order: TaskForceOrder::route(vec![Hex::new(8, 3)]),
         }
     );
     let speed_order = world.order(orders[1]).expect("the order is on record");

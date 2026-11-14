@@ -62,6 +62,29 @@ pub struct ForceLine {
     /// Tons of fuel carried as cargo (not the fuel the ships burn), summed
     /// over the ships afloat. Set under the same condition.
     pub cargo_fuel_t: Option<Dec>,
+    /// The waypoints of the force's route it is marked to act at (decision
+    /// 0096, 1), in hex order: only those still ahead of it, and never the
+    /// last waypoint, which needs no mark. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub act_at: Vec<Place>,
+    /// The force's halt, while it is halted at a marked waypoint (decision
+    /// 0096, 3). Left out when it is not.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub halt: Option<HaltLine>,
+}
+
+/// A force halted at a marked waypoint to act there (decision 0096).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct HaltLine {
+    /// Where it lies: the centre of the hex.
+    pub place: Place,
+    /// The clock time it halted, such as `D1 22:00`.
+    pub since: String,
+    /// What it waits to do: `bombard`, `cargo` or both, in that order.
+    pub waits_for: Vec<&'static str>,
+    /// Whether it has bombarded since it halted. Left out until it has.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub bombarded: bool,
 }
 
 /// A ship afloat whose propulsion is not working.
@@ -224,7 +247,27 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         least_fuelled: least,
         movement,
         propulsion_damaged,
+        act_at: marks_ahead(ctx, force),
+        halt: force.halt.map(|halt| HaltLine {
+            place: ctx.place(force.position()),
+            since: sim_core::time::ClockTime::from_elapsed(halt.at_hours).to_string(),
+            waits_for: halt_work_words(halt.work),
+            bombarded: halt.bombarded.is_some(),
+        }),
     }
+}
+
+/// The distinct hexes of the route's waypoints still ahead that it is marked
+/// to act at, in hex order (decision 0096, 1). A halted force's route still
+/// points at the waypoint it lies at, so that hex is included while it lies
+/// there.
+fn marks_ahead(ctx: &Ctx<'_>, force: &TaskForce) -> Vec<Place> {
+    let route = &force.route;
+    let marks: std::collections::BTreeSet<Hex> = (route.next_index..route.waypoints.len())
+        .filter(|i| route.marked(*i))
+        .map(|i| route.waypoints[i])
+        .collect();
+    marks.into_iter().map(|hex| ctx.place(hex)).collect()
 }
 
 /// The line of a force away at the yard (decision 0069): at its port, with
@@ -252,6 +295,8 @@ fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         propulsion_damaged: Vec::new(),
         cargo_supply_t: None,
         cargo_fuel_t: None,
+        act_at: Vec::new(),
+        halt: None,
     }
 }
 
@@ -490,4 +535,12 @@ pub(crate) fn land_unit_line(
             .map(|hex| ctx.place(hex))
             .collect(),
     }
+}
+
+/// What a halt is for, in words: `bombard` and `cargo`, in that order.
+pub(crate) fn halt_work_words(work: sim_core::state::HaltWork) -> Vec<&'static str> {
+    [(work.bombard, "bombard"), (work.cargo, "cargo")]
+        .into_iter()
+        .filter_map(|(on, word)| on.then_some(word))
+        .collect()
 }

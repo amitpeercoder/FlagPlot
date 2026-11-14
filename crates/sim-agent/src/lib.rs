@@ -48,19 +48,20 @@ pub use briefing::{
     BaseChangesPart, BaseFormedLine, BaseLostLine, BaseTakenLine, BriefingBase, Claim,
     ContactsPart, DamagedShip, DroppedContact, DueArrival, FatigueLine, FedLine,
     FedShareRestoredLine, Fight, FightLine, FireLine, Fired, FuelChange, FuelWarning,
-    GroupLostWithBaseLine, Heading, HexSupply, HomePortLostLine, LandUnitsPart,
-    LoadingCompleteLine, LossesPart, MenLostLine, MenMoved, NotThere, OrdersPart,
+    GroupLostWithBaseLine, HaltedLine, HaltsPart, Heading, HexSupply, HomePortLostLine,
+    LandUnitsPart, LoadingCompleteLine, LossesPart, MenLostLine, MenMoved, NotThere, OrdersPart,
     OutOfReachWarning, PilotWarning, PropulsionWarning, Raid, RebasedLine, RefusedOrder,
     RepairedShip, ReplacementStream, ReportedContact, ReturnedForce, ShipLostWithBaseLine,
-    ShipRangeWarning, StocksYesterday, Strike, StrikeClearedLine, SunkShip, SupplyChange,
-    SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine, Warnings,
+    ShipRangeWarning, SteamedOnLine, StocksYesterday, Strike, StrikeClearedLine, SunkShip,
+    SupplyChange, SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine,
+    Warnings,
 };
 pub use common::{Dec, Handle, Place};
 pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
 };
 pub use lines::{
-    AboardLine, AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, LandUnitLine,
+    AboardLine, AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, HaltLine, LandUnitLine,
     PropulsionLine,
 };
 pub use measure::{

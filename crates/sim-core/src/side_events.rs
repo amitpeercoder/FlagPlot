@@ -726,7 +726,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // Away at the yard and back: the side's own, never shown to the enemy
         // (decision 0069, 9).
         | EventKind::ForceLeftForYard { task_force, .. }
-        | EventKind::ForceReturnedFromYard { task_force, .. } => whole_if(own_force(task_force)),
+        | EventKind::ForceReturnedFromYard { task_force, .. }
+        // A halt at a marked waypoint and steaming on from it: the side's
+        // own, never shown to the enemy (decision 0096, 7).
+        | EventKind::TaskForceHalted { task_force, .. }
+        | EventKind::TaskForceSteamedOn { task_force, .. } => whole_if(own_force(task_force)),
         // The force surprised, without the one that surprised it.
         EventKind::ForceSurprised {
             round, task_force, ..
@@ -1783,7 +1787,12 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::MarchDay { .. }
         | EventKind::MarchBaseFormed { .. }
         | EventKind::MarchArrived { .. }
-        | EventKind::MarchStopped { .. } => false,
+        | EventKind::MarchStopped { .. }
+        // A halt cites the side's own route order and steaming; steaming on
+        // cites the halt, the route order, and the side's own bombardment
+        // (given it cut) or cargo completion (decision 0096).
+        | EventKind::TaskForceHalted { .. }
+        | EventKind::TaskForceSteamedOn { .. } => false,
 
         // Men lost in a fight cite the enemy's fire; a base taken cites the
         // test that beat the other side (decision 0090).
@@ -3221,6 +3230,34 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // A halt at a marked waypoint and steaming on (decision 0096,
+            // 7): its own side's whole, the enemy's nothing.
+            row(
+                EventKind::TaskForceHalted {
+                    task_force: force(1),
+                    hex: hex(),
+                    work: crate::state::HaltWork {
+                        bombard: true,
+                        cargo: false,
+                    },
+                    elapsed_hours: fx(10),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::TaskForceSteamedOn {
+                    task_force: force(1),
+                    hex: hex(),
+                    work: crate::state::HaltWork {
+                        bombard: false,
+                        cargo: true,
+                    },
+                    fired: false,
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3261,7 +3298,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 99, "the log has 99 kinds of event");
+        assert_eq!(all.len(), 101, "the log has 101 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

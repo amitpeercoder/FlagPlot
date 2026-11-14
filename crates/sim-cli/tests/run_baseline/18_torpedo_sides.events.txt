@@ -2,7 +2,7 @@ Scenario 18: Night action, a ship with wing tubes fires one side at a time
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8aecd3e2da9ab3c4  73 events
+day   1  hash cc2b8745b1eaa65b  73 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

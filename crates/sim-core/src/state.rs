@@ -362,6 +362,10 @@ pub enum TaskForceStatus {
     Arrived,
     /// Stopped short because a ship ran dry.
     OutOfFuel,
+    /// Stopped at a waypoint marked to act at, with work there (decision
+    /// 0096, 2). [`TaskForce::halt`] says what it waits for. Added at the
+    /// end.
+    Halted,
 }
 
 impl TaskForceStatus {
@@ -372,6 +376,7 @@ impl TaskForceStatus {
             TaskForceStatus::Underway => 2,
             TaskForceStatus::Arrived => 3,
             TaskForceStatus::OutOfFuel => 4,
+            TaskForceStatus::Halted => 5,
         }
     }
 }
@@ -385,6 +390,55 @@ pub struct Route {
     /// Index of the waypoint being steamed toward. Equal to the number of
     /// waypoints once the route is complete.
     pub next_index: usize,
+    /// The waypoints marked to act at (decision 0096, 1), by hex: every
+    /// waypoint at one of these hexes is marked. Each is one of the
+    /// waypoints. Empty for a route with no mark.
+    pub act_at: BTreeSet<Hex>,
+}
+
+impl Route {
+    /// Whether the waypoint at `index` is marked to act at. The last
+    /// waypoint never is: a force stops there anyway (decision 0096, 1).
+    pub fn marked(&self, index: usize) -> bool {
+        index + 1 < self.waypoints.len()
+            && self
+                .waypoints
+                .get(index)
+                .is_some_and(|hex| self.act_at.contains(hex))
+    }
+}
+
+/// What a halted force waits to do before it steams on (decision 0096, 2):
+/// a bombardment, cargo, or both.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct HaltWork {
+    pub bombard: bool,
+    pub cargo: bool,
+}
+
+impl HaltWork {
+    /// Either kind of work.
+    pub fn any(self) -> bool {
+        self.bombard || self.cargo
+    }
+}
+
+/// A task force's halt at a marked waypoint (decision 0096). `Some` exactly
+/// when the force's status is [`TaskForceStatus::Halted`].
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Halt {
+    /// The work it halted for.
+    pub work: HaltWork,
+    /// Elapsed hours since the scenario began at which it halted. Its cargo
+    /// is worked from this hour, as an arrived force's is from its arrival.
+    pub at_hours: Fixed,
+    /// The `TaskForceHalted` event.
+    pub event: EventId,
+    /// The force's `ShoreBombardment` since it halted, if it has bombarded.
+    pub bombarded: Option<EventId>,
+    /// The completion event of its cargo order since it halted, if one was
+    /// recorded.
+    pub cargo_completed: Option<EventId>,
 }
 
 /// A standing cargo order: what to do, and the order that set it.
@@ -496,6 +550,9 @@ pub struct TaskForce {
     /// `Some` while the force is away at the yard (decision 0069). Its ships
     /// are then at `ShipLocation::Yard(force)` and out of `ships`.
     pub yard_trip: Option<YardTrip>,
+    /// `Some` while the force is halted at a marked waypoint (decision
+    /// 0096), exactly when its status is [`TaskForceStatus::Halted`].
+    pub halt: Option<Halt>,
 }
 
 /// A task force's trip to the yard (decision 0069).
@@ -654,6 +711,7 @@ impl TaskForce {
             home_port: None,
             fatigue: Fixed::ZERO,
             yard_trip: None,
+            halt: None,
         }
     }
 }

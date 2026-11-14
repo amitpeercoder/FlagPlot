@@ -38,6 +38,7 @@ pub(crate) fn status(status: TaskForceStatus) -> &'static str {
         TaskForceStatus::Underway => "underway",
         TaskForceStatus::Arrived => "arrived",
         TaskForceStatus::OutOfFuel => "out_of_fuel",
+        TaskForceStatus::Halted => "halted",
     }
 }
 
@@ -167,6 +168,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::NoLandLink(_) => {
             " (a land unit marches only to a neighbouring hex that the map joins to its own by land, or to its own hex to stop; the unit's line in the briefing and get_entity lists the hexes it can march to under march_to, and a map with no land links allows no march)"
         }
+        R::MarkNotOnRoute(_) => {
+            " (act_at marks waypoints of the same set_route: each mark must be one of the route's waypoints, and the last waypoint needs no mark since a force stops there anyway)"
+        }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
         }
@@ -199,6 +203,12 @@ mod tests {
             no_link.starts_with("no land link joins the land unit's hex to")
                 && no_link.contains("march_to"),
             "{no_link}"
+        );
+        let mark = refusal(&RejectReason::MarkNotOnRoute(sim_core::hex::Hex::new(2, 1)));
+        assert!(
+            mark.contains("is not one of the route's waypoints (act_at marks")
+                && mark.contains("the last waypoint needs no mark"),
+            "{mark}"
         );
         let lost = refusal(&RejectReason::AirGroupLostWithBase);
         assert!(

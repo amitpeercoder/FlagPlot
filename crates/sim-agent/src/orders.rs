@@ -32,10 +32,18 @@ fn fixed_text(value: Fixed) -> Value {
 pub fn order_to_json(kind: &OrderKind) -> Value {
     match kind {
         OrderKind::TaskForce { order, .. } => match order {
-            TaskForceOrder::SetRoute(waypoints) => json!({
-                "kind": "set_route",
-                "waypoints": waypoints.iter().map(|h| json!([h.q, h.r])).collect::<Vec<_>>(),
-            }),
+            TaskForceOrder::SetRoute { waypoints, act_at } => {
+                let mut body = json!({
+                    "kind": "set_route",
+                    "waypoints": waypoints.iter().map(|h| json!([h.q, h.r])).collect::<Vec<_>>(),
+                });
+                // Written only when a waypoint is marked (decision 0096), so
+                // a route with no mark is written as it always was.
+                if !act_at.is_empty() {
+                    body["act_at"] = act_at.iter().map(|h| json!([h.q, h.r])).collect();
+                }
+                body
+            }
             TaskForceOrder::SetSpeed(speed) => match speed {
                 SpeedSetting::Cruise => json!({ "kind": "set_speed", "speed": "cruise" }),
                 SpeedSetting::Full => json!({ "kind": "set_speed", "speed": "full" }),
@@ -241,6 +249,24 @@ fn load_from(value: &Value) -> Result<TaskForceOrder, String> {
     }
 }
 
+/// Reads a list of `[q, r]` pairs; `what` names one in an error.
+fn hex_pairs(list: &[Value], what: &str) -> Result<Vec<Hex>, String> {
+    let mut hexes = Vec::new();
+    for pair in list {
+        let pair = pair
+            .as_array()
+            .ok_or_else(|| format!("a {what} is not a pair"))?;
+        let get = |i: usize| {
+            pair.get(i)
+                .and_then(Value::as_i64)
+                .and_then(|n| i32::try_from(n).ok())
+                .ok_or_else(|| format!("a {what} is not a pair of whole numbers"))
+        };
+        hexes.push(Hex::new(get(0)?, get(1)?));
+    }
+    Ok(hexes)
+}
+
 /// Reads an order from its unit and its body.
 pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
     let (kind_of_unit, raw) = unit
@@ -258,18 +284,21 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                         .get("waypoints")
                         .and_then(Value::as_array)
                         .ok_or("\"waypoints\" is missing")?;
-                    let mut hexes = Vec::new();
-                    for pair in list {
-                        let pair = pair.as_array().ok_or("a waypoint is not a pair")?;
-                        let get = |i: usize| {
-                            pair.get(i)
-                                .and_then(Value::as_i64)
-                                .and_then(|n| i32::try_from(n).ok())
-                                .ok_or("a waypoint is not a pair of whole numbers")
-                        };
-                        hexes.push(Hex::new(get(0)?, get(1)?));
+                    let waypoints = hex_pairs(list, "waypoint")?;
+                    // Optional (decision 0096): the waypoints to act at.
+                    let act_at = match value.get("act_at") {
+                        None | Some(Value::Null) => Vec::new(),
+                        Some(marks) => hex_pairs(
+                            marks
+                                .as_array()
+                                .ok_or("\"act_at\" is not a list of hexes")?,
+                            "mark",
+                        )?,
+                    };
+                    TaskForceOrder::SetRoute {
+                        waypoints,
+                        act_at: act_at.into_iter().collect(),
                     }
-                    TaskForceOrder::SetRoute(hexes)
                 }
                 "set_speed" => TaskForceOrder::SetSpeed(if value.get("knots").is_some() {
                     SpeedSetting::Knots(fixed(value, "knots")?)

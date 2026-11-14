@@ -153,6 +153,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
             .num("range_nm", *range_nm),
         RejectReason::AlreadyMovedToday => base("already_moved_today"),
         RejectReason::NoLandLink(hex) => base("no_land_link").hex("hex", *hex),
+        RejectReason::MarkNotOnRoute(hex) => base("mark_not_on_route").hex("hex", *hex),
     }
 }
 
@@ -891,6 +892,32 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .hex("to", *to)
                 .int("days", *days)
                 .text("reason", reason.name()),
+        ),
+        EventKind::TaskForceHalted {
+            task_force,
+            hex,
+            work,
+            elapsed_hours,
+        } => (
+            "task_force_halted",
+            d.id("task_force", *task_force)
+                .hex("hex", *hex)
+                .flag("bombard", work.bombard)
+                .flag("cargo", work.cargo)
+                .num("elapsed_hours", *elapsed_hours),
+        ),
+        EventKind::TaskForceSteamedOn {
+            task_force,
+            hex,
+            work,
+            fired,
+        } => (
+            "task_force_steamed_on",
+            d.id("task_force", *task_force)
+                .hex("hex", *hex)
+                .flag("bombard", work.bombard)
+                .flag("cargo", work.cargo)
+                .flag("fired", *fired),
         ),
         EventKind::BaseFound { side, base, hex } => (
             "base_found",

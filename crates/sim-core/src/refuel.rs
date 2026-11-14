@@ -217,7 +217,7 @@ mod tests {
         OrderRequest {
             kind: OrderKind::TaskForce {
                 target: tf(target),
-                order: TaskForceOrder::SetRoute(waypoints.to_vec()),
+                order: TaskForceOrder::route(waypoints.to_vec()),
             },
             origin: Origin::PLAYER,
         }

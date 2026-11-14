@@ -470,7 +470,11 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // The four kinds of decision 0094, `MarchDay`, `MarchBaseFormed`,
     // `MarchArrived` and `MarchStopped`: the full slice gives no march order.
     // Scenario 25 records them, and its own test reads them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 37] = [
+    //
+    // The two kinds of decision 0096, `TaskForceHalted` and
+    // `TaskForceSteamedOn`: the full slice marks no waypoint to act at.
+    // Scenario 26 records them, and its own test reads them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 39] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -508,6 +512,8 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "MarchBaseFormed",
         "MarchArrived",
         "MarchStopped",
+        "TaskForceHalted",
+        "TaskForceSteamedOn",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

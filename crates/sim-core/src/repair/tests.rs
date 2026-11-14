@@ -590,7 +590,7 @@ fn the_yard_order_is_refused_for_the_first_reason_that_applies() {
         TaskForceOrder::SendToYard,
         TaskForceOrder::SetSpeed(SpeedSetting::Full),
         TaskForceOrder::SetReadiness(Readiness::Battle),
-        TaskForceOrder::SetRoute(vec![Hex::new(6, 0)]),
+        TaskForceOrder::route(vec![Hex::new(6, 0)]),
         TaskForceOrder::DetachShips(vec![sid(3)]),
     ] {
         assert_eq!(

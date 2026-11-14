@@ -79,7 +79,7 @@ Steps 1 to 3 run before the pulse's first phase. Each of them does nothing unles
 | 4 | Air supply upkeep | Each base pays the daily supply for the aircraft at it. | Chapter 5, Daily supply |
 | 5 | Men's supply | Each side's men ashore are fed from every base of its side in their hex, the unfed are lost in part, and each unit's fed share is set. Runs only if the ground figures are loaded. | Chapter 7, The men's supply |
 | 6 | Air group rest | The staff stands tired groups down and returns rested ones. | Chapter 5, Stand-down and return |
-| 7 | Movement | The straggler pass, then forces move in order of clock time, and fight where they meet. | Chapter 2, Movement and Stragglers; chapter 4 |
+| 7 | Movement | Halted forces whose work is done steam on, then the straggler pass, then forces move in order of clock time (a force halts at a marked waypoint where it has work), and fight where they meet. | Chapter 2, Movement, Halting at a marked waypoint and steaming on, and Stragglers; chapter 4 |
 | 8 | Night search | Empty. No search flies where it is dark. | Chapter 3, Air search |
 | 9 | Surface engagements | Empty slot. The fights happen inside movement. | Chapter 4, Meeting |
 | 10 | Shore bombardment | A force on the bombardment mission, in the hex of an enemy base on its side's map, fires its guns at the base. Runs only if the bombardment figures and the air combat figures are loaded. | Chapter 4, Shore bombardment |
@@ -141,7 +141,7 @@ The orders that exist are the ones in the tables below. The spec lists more (for
 
 | Order | What it sets | Standing slot |
 | --- | --- | --- |
-| Set route (list of waypoints) | The route, the route's next waypoint index (to 0), the status (to under way), the order that set the route; clears the recorded arrival and its event. It may turn a force round between two hexes (chapter 2, Turning back and re-routing). | Route |
+| Set route (list of waypoints, and optionally `act_at`, a list of hexes to act at) | The route, its marks, the route's next waypoint index (to 0), the status (to under way), the order that set the route; clears the recorded arrival and its event, and any halt (chapter 2, Halting at a marked waypoint and steaming on). It may turn a force round between two hexes (chapter 2, Turning back and re-routing). | Route |
 | Set speed (cruise, full, or a speed in knots) | The speed setting and the order that set it. | Speed |
 | Set mission (transport, surface combat, carrier, bombardment, escort) | The task force's mission. Only one rule reads it: a force on the bombardment mission fires at an enemy base (chapter 4, Shore bombardment). | Mission |
 | Load | A standing cargo order to fill every ship with supply from the base here. | Cargo |
@@ -154,7 +154,7 @@ The orders that exist are the ones in the tables below. The spec lists more (for
 | Detach ships (a list of ships) | Not a standing order. Splits the listed ships into a new force at once. | None |
 | Send to yard (`send_to_yard`, no arguments) | Not a standing order. Sends the whole force, stopped at a base that is a port for the yard, away to the yard at once (below, and chapter 4, Repair). The port is the base it is stopped at. | None |
 
-[0008, 0011, 0014, 0016, 0017, 0021, 0046, 0066, 0069, 0092]
+[0008, 0011, 0014, 0016, 0017, 0021, 0046, 0066, 0069, 0092, 0096]
 
 A route, load, load-fuel or load-with-a-unit order to a force that is out of fuel is refused (Every reason an order is refused, below; differences.md rows 17 and 34).
 
@@ -219,6 +219,7 @@ Then, by kind:
 | Set route | Waypoint off the map | A waypoint is not on the map. The first waypoint is tried first, then each in turn. |
 | Set route | Waypoint unreachable | The first waypoint cannot be reached by sea from the force's position (or the hex it would turn back to), or a later one cannot be reached from the one before. A land hex is unreachable. |
 | Set route | Empty route | The force does not move anywhere: no waypoint other than where it already is, and no leg in progress to finish. |
+| Set route | Mark not on route | A hex in `act_at` is not one of the route's waypoints (the last waypoint counts as one, though it is never treated as marked): "H is marked to act at but is not one of the route's waypoints". Tried after the other reasons above. |
 | Load, Load fuel | Under way | The force's status is under way. |
 | Load, Load fuel | Out of fuel | The force's status is out of fuel. [differences.md row 17] |
 | Load, Load fuel | No own base here | No base of the issuer's side is in the force's position. |
@@ -284,7 +285,7 @@ For a land unit order:
 | March | No men ashore | The unit has no man ashore: "the land unit has no men ashore". |
 | March | No land link | No land link joins the unit's hex to the hex named, and the hex named is not the unit's own: "no land link joins the land unit's hex to H: men can march only to a neighbouring hex the map links by land", with the hex. The map is common knowledge, so the reason shows nothing the side cannot see (chapter 2, Land links). |
 
-[0008, 0016, 0017, 0021, 0026, 0027, 0034, 0036, 0044, 0059, 0066, 0090, 0091, 0094]
+[0008, 0016, 0017, 0021, 0026, 0027, 0034, 0036, 0044, 0059, 0066, 0090, 0091, 0094, 0096]
 
 A refused order changes nothing but the log and the order counter. It is kept in the order record. [0008]
 
@@ -303,6 +304,8 @@ A task force remembers which order set its route, speed, rules of engagement and
 A route order that finds a force between two hexes may turn it round. The event `TaskForceTurnedBack` follows the order's acceptance and cites the order. [0005, 0017]
 
 A side sees: its own turn-back and detach events whole, with the cause. The enemy sees nothing. [0047]
+
+A force halted at a marked waypoint records `TaskForceHalted`, and `TaskForceSteamedOn` when it goes on (chapter 2, Halting at a marked waypoint and steaming on). Each is recorded in the movement step of a pulse, citing the route order, the halt, and the bombardment or cargo completion that ended the wait. A side sees its own two events whole, and the enemy sees neither. The side's briefing, `list_forces` and `get_entity` show its own marks (`act_at`, the marks of the route not yet passed), its force's halt (where, since when, what it waits for, and whether it has bombarded), and, in the briefing, yesterday's halts and steamings on with the reason. Nothing of a halt or a mark reaches the enemy. [0096 item 7]
 
 A side sees the same of the yard events: its own `ForceLeftForYard`, with the order as cause, whole. [0069]
 
@@ -597,7 +600,7 @@ Three invariants hold by construction and are not checked: an air group's ready 
 
 ### The state hash
 
-At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v14`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. An air group's target list (its count, then each kind's code in list order), the order that set it and the game day of its last base strike (written as an optional number) are written after that; version 5 added them. A ship's experience is written after its location; version 6 added it. A ship's `torpedoes_one_side_fired` is written straight after her `torpedoes_ready`; version 7 added it. Version 8 replaced the one counter of task forces made in play with a counter for each side and each kind of unit made in play, written Allied then Japanese, task forces then air groups. Version 9 added a base's `ship_repair_points_per_day` and `yard_passage_days` after its `fuel_t`, a ship's `system_repair_points` after her `experience`, the ship location `Yard` (code 4) and a task force's `yard_trip` after its `fatigue`. Version 10 added a ship's `troops` (the unit and the men, or none) after her `system_repair_points`, a base's `on_map` after its `yard_passage_days`, a cargo order's land unit (an optional number) after its order, the cargo action `LoadNoCargo` (code 4), and the land units (number, side, men ashore and hex, not the name) after the arrivals. Version 11 added an air group's `rebased_day` (an optional number), written after its last base strike day. Version 12 added a land unit's posture (code 1 for defend, 2 for attack), the order that set it (an optional number), its fatigue and its fed share, written after its hex, and the air group location `Lost` (code 3). Version 13 added a claim's `from_bombardment`, written after its `from_air`, and a side's ground estimates (the count, then for each, in hex order, the hex, the men, the day and the report's event) after its claims. Version 14 added a land unit's march after its fed share: a flag, then if there is a march the hex it marches to, the days marched and the march order. [0004, 0057, 0058 item 7, 0059, 0063, 0064, 0066, 0069, 0083, 0086, 0090, 0091, 0092, 0094]
+At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v14`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. An air group's target list (its count, then each kind's code in list order), the order that set it and the game day of its last base strike (written as an optional number) are written after that; version 5 added them. A ship's experience is written after its location; version 6 added it. A ship's `torpedoes_one_side_fired` is written straight after her `torpedoes_ready`; version 7 added it. Version 8 replaced the one counter of task forces made in play with a counter for each side and each kind of unit made in play, written Allied then Japanese, task forces then air groups. Version 9 added a base's `ship_repair_points_per_day` and `yard_passage_days` after its `fuel_t`, a ship's `system_repair_points` after her `experience`, the ship location `Yard` (code 4) and a task force's `yard_trip` after its `fatigue`. Version 10 added a ship's `troops` (the unit and the men, or none) after her `system_repair_points`, a base's `on_map` after its `yard_passage_days`, a cargo order's land unit (an optional number) after its order, the cargo action `LoadNoCargo` (code 4), and the land units (number, side, men ashore and hex, not the name) after the arrivals. Version 11 added an air group's `rebased_day` (an optional number), written after its last base strike day. Version 12 added a land unit's posture (code 1 for defend, 2 for attack), the order that set it (an optional number), its fatigue and its fed share, written after its hex, and the air group location `Lost` (code 3). Version 13 added a claim's `from_bombardment`, written after its `from_air`, and a side's ground estimates (the count, then for each, in hex order, the hex, the men, the day and the report's event) after its claims. Version 14 added a land unit's march after its fed share: a flag, then if there is a march the hex it marches to, the days marched and the march order. Version 15 added a route's marks after its next index (their count, then each hex in order), the task force status halted (code 5), and a task force's halt after its yard trip. [0004, 0057, 0058 item 7, 0059, 0063, 0064, 0066, 0069, 0083, 0086, 0090, 0091, 0092, 0094, 0096]
 
 The hash covers: the seed; the day; every ship, task force, base, air group, land unit, arrival and replacement stream; both sides' contacts, claims and ground estimates; the count of orders and the next order number and next task force number; and the count of events. It does not cover the names of ships, task forces, bases, air groups or land units, the contents of the events or orders, the map, the reference data, the orders waiting for the next day or the objectives. No tag byte stands in for a field that is not in use. Every field of every unit is written, always, in one order. A field added to the state is added to the hash in the same change, and the version is raised when what is hashed or its order changes. [0004, 0055, 0057]
 

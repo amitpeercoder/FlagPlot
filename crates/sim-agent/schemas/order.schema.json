@@ -49,6 +49,16 @@
                   "type": "integer"
                 }
               }
+            },
+            "act_at": {
+              "description": "Optional (decision 0096): [q, r] hexes, each one of the waypoints, to act at. A force halts at a marked waypoint if it has work there (a bombardment or cargo) and steams on when the work is done. The last waypoint needs no mark. A mark that is not one of the waypoints is refused.",
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
             }
           }
         },

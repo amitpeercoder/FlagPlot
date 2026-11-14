@@ -222,6 +222,8 @@ impl World {
         parent.route = crate::state::Route::default();
         parent.route_order = None;
         parent.status = TaskForceStatus::Idle;
+        // Retiring ends a halt, as a new route does (decision 0096, 6).
+        parent.halt = None;
         self.head_home(day, pulse, id, retired);
     }
 
@@ -322,7 +324,7 @@ impl World {
         let request = OrderRequest {
             kind: OrderKind::TaskForce {
                 target: force,
-                order: TaskForceOrder::SetRoute(vec![base.hex]),
+                order: TaskForceOrder::route(vec![base.hex]),
             },
             origin: Origin {
                 issuer: Issuer::LocalCommander,
@@ -850,6 +852,7 @@ mod tests {
         world.truth.task_forces.get_mut(&TF).unwrap().route = crate::state::Route {
             waypoints: vec![hx(12, 0)],
             next_index: 0,
+            act_at: std::collections::BTreeSet::new(),
         };
         world.truth.task_forces.get_mut(&TF).unwrap().status = TaskForceStatus::Underway;
         world.truth.task_forces.get_mut(&TF).unwrap().route_order = Some(OrderId::new(5));
@@ -1143,6 +1146,7 @@ mod tests {
             force.route = crate::state::Route {
                 waypoints: vec![hx(12, 0)],
                 next_index: 0,
+                act_at: std::collections::BTreeSet::new(),
             };
             force.status = TaskForceStatus::Underway;
             force.route_order = Some(OrderId::new(5));
@@ -1428,6 +1432,7 @@ mod tests {
             force.route = crate::state::Route {
                 waypoints: vec![hx(12, 0)],
                 next_index: 0,
+                act_at: std::collections::BTreeSet::new(),
             };
             force.status = TaskForceStatus::Underway;
         }

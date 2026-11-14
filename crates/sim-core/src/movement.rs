@@ -45,7 +45,7 @@ use crate::map::Map;
 use crate::orders::{RejectReason, SpeedSetting};
 use crate::refdata::{RefData, SurfaceCombatFigures};
 use crate::rng::RngStream;
-use crate::state::{Route, Ship, ShipSystem, TaskForce, TaskForceStatus};
+use crate::state::{Halt, HaltWork, Route, Ship, ShipSystem, TaskForce, TaskForceStatus};
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
 
@@ -167,6 +167,12 @@ struct Mover {
     /// `TaskForceArrived` has been recorded for this mover (with the segment
     /// in which the force reached its last waypoint).
     arrival_recorded: bool,
+    /// The index of the waypoint the force halts at, if any: the first
+    /// marked waypoint from the next one on where it has work (decision
+    /// 0096, 2). Worked out when the mover is made, and again after a fight.
+    halt_at: Option<usize>,
+    /// `TaskForceHalted` has been recorded for this mover.
+    halt_recorded: bool,
 }
 
 impl Mover {
@@ -182,6 +188,14 @@ impl Mover {
             Some(toward) if self.progress_nm >= self.half_leg() => toward,
             _ => self.from_hex,
         }
+    }
+
+    /// The force is at the centre of the waypoint it halts at (decision
+    /// 0096, 3).
+    fn halted(&self) -> bool {
+        self.toward_hex.is_none()
+            && self.halt_at == Some(self.next_index)
+            && self.waypoints.get(self.next_index) == Some(&self.from_hex)
     }
 
     /// The distance field to the waypoint at `index`.
@@ -217,6 +231,11 @@ impl Mover {
                     break;
                 };
                 if self.from_hex == *target {
+                    // A waypoint where the force halts is not passed
+                    // (decision 0096, 3).
+                    if self.halt_at == Some(self.next_index) {
+                        break;
+                    }
                     self.next_index += 1;
                     continue;
                 }
@@ -282,9 +301,9 @@ impl Mover {
     }
 
     /// The fuel stopped the force short of its last waypoint (decision 5 of
-    /// 0006).
+    /// 0006), and not at a waypoint where it halts.
     fn ran_dry(&self) -> bool {
-        !self.arrived() && self.fuel_is_the_limit
+        !self.arrived() && !self.halted() && self.fuel_is_the_limit
     }
 
     /// The ships whose fuel set the budget: the ones whose fuel lasts exactly
@@ -316,9 +335,13 @@ impl Mover {
             walked_nm = self.leg_nm - self.progress_nm;
             at = toward;
         }
-        // At a centre: skip the waypoints already reached.
+        // At a centre: skip the waypoints already reached, and stop at one
+        // where the force halts (decision 0096).
         let mut index = self.next_index;
         while *self.waypoints.get(index)? == at {
+            if self.halt_at == Some(index) {
+                return None;
+            }
             index += 1;
         }
         let waypoint = self.waypoints[index];
@@ -422,6 +445,8 @@ fn build_mover<'s>(
         hours_done: hours_used,
         last_steamed: None,
         arrival_recorded: false,
+        halt_at: None,
+        halt_recorded: false,
     })
 }
 
@@ -449,7 +474,7 @@ impl Step {
     fn is_moving(&self, id: TaskForceId) -> bool {
         self.movers
             .get(&id)
-            .is_some_and(|mover| mover.active && !mover.left_nm.is_zero())
+            .is_some_and(|mover| mover.active && !mover.left_nm.is_zero() && !mover.halted())
     }
 
     /// Hours the force has steamed in the segments recorded so far.
@@ -463,6 +488,7 @@ impl Step {
 impl World {
     /// The movement step of one pulse. See the module notes.
     pub(crate) fn move_task_forces(&mut self, day: u32, pulse: Pulse) {
+        self.steam_on_from_halts(day, pulse);
         self.handle_stragglers(day, pulse);
         let mut step = Step {
             day,
@@ -560,13 +586,125 @@ impl World {
     /// already steamed.
     fn new_mover(&self, id: TaskForceId, pulse: Pulse, hours_used: Fixed) -> Option<Mover> {
         let task_force = self.truth.task_forces.get(&id)?;
-        build_mover(
+        let mut mover = build_mover(
             task_force,
             |ship_id| &self.truth.ships[&ship_id],
             &self.ref_data,
             pulse,
             hours_used,
-        )
+        )?;
+        mover.halt_at = self.halt_index(task_force);
+        Some(mover)
+    }
+
+    /// What `task_force` would do in `hex` if it halted there (decision 0096,
+    /// 2): bombard, work cargo, both or neither.
+    pub(crate) fn halt_work(&self, task_force: &TaskForce, hex: Hex) -> HaltWork {
+        HaltWork {
+            bombard: self.has_bombardment_work(task_force, hex),
+            cargo: self.has_cargo_work(task_force, hex),
+        }
+    }
+
+    /// The first waypoint from the force's next one on that is marked to act
+    /// at and where it has work, if any (decision 0096, 1 and 2). The last
+    /// waypoint is never marked.
+    fn halt_index(&self, task_force: &TaskForce) -> Option<usize> {
+        let route = &task_force.route;
+        (route.next_index..route.waypoints.len())
+            .filter(|index| route.marked(*index))
+            .find(|index| self.halt_work(task_force, route.waypoints[*index]).any())
+    }
+
+    /// At the start of the pulse's movement, each halted force whose work is
+    /// done steams on, in force order (decision 0096, 4): for a bombardment,
+    /// it has bombarded since it halted or can bombard there no longer; for
+    /// cargo, it has none left to work there. It is then under way toward
+    /// the waypoint after the one it halted at, and moves in this pulse with
+    /// its full hours. A force with no ship left stays as it is.
+    fn steam_on_from_halts(&mut self, day: u32, pulse: Pulse) {
+        let ids: Vec<TaskForceId> = self
+            .truth
+            .task_forces
+            .values()
+            .filter(|force| force.halt.is_some() && !force.ships.is_empty())
+            .map(|force| force.id)
+            .collect();
+        for id in ids {
+            let force = &self.truth.task_forces[&id];
+            let Some(halt) = force.halt else {
+                continue;
+            };
+            let hex = force.from_hex;
+            let bombard_done = !halt.work.bombard
+                || halt.bombarded.is_some()
+                || !self.has_bombardment_work(force, hex);
+            let cargo_done = !halt.work.cargo || !self.has_cargo_work(force, hex);
+            if !(bombard_done && cargo_done) {
+                continue;
+            }
+            let mut causes: Vec<Cause> = Vec::new();
+            causes.extend(force.route_order.map(Cause::Order));
+            causes.push(Cause::Event(halt.event));
+            causes.extend(halt.bombarded.map(Cause::Event));
+            causes.extend(halt.cargo_completed.map(Cause::Event));
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::TaskForceSteamedOn {
+                    task_force: id,
+                    hex,
+                    work: halt.work,
+                    fired: halt.bombarded.is_some(),
+                },
+                causes,
+                None,
+            );
+            let force = self
+                .truth
+                .task_forces
+                .get_mut(&id)
+                .expect("task force exists");
+            force.halt = None;
+            force.status = TaskForceStatus::Underway;
+            force.route.next_index += 1;
+        }
+    }
+
+    /// Records the halt of a force whose mover has just reached the waypoint
+    /// where it halts: `TaskForceHalted`, citing `causes`, and the halt in
+    /// truth (decision 0096, 3).
+    fn record_halt(&mut self, step: &mut Step, id: TaskForceId, causes: Vec<Cause>) {
+        let mover = step.movers.get_mut(&id).expect("the mover exists");
+        mover.halt_recorded = true;
+        let hex = mover.from_hex;
+        let elapsed_hours = pulse_start(step.day, step.pulse) + mover.hours_done;
+        let work = self.halt_work(&self.truth.task_forces[&id], hex);
+        let event = self.events.record(
+            step.day,
+            Some(step.pulse),
+            EventKind::TaskForceHalted {
+                task_force: id,
+                hex,
+                work,
+                elapsed_hours,
+            },
+            causes,
+            None,
+        );
+        let task_force = self
+            .truth
+            .task_forces
+            .get_mut(&id)
+            .expect("task force exists");
+        task_force.status = TaskForceStatus::Halted;
+        task_force.halt = Some(Halt {
+            work,
+            at_hours: elapsed_hours,
+            event,
+            bombarded: None,
+            cargo_completed: None,
+        });
     }
 
     /// The force at `id` has just changed position to `hex`, `elapsed_hours`
@@ -886,6 +1024,15 @@ impl World {
             task_force.arrived_at_hours = Some(elapsed_hours);
             task_force.arrival_event = Some(arrived);
         }
+        // So with a halt: it comes after the segment's fuel events and cites
+        // the route order and the segment (decision 0096).
+        let mover = &step.movers[&id];
+        if !mover.halt_recorded && mover.halted() {
+            let mut causes: Vec<Cause> = Vec::new();
+            causes.extend(self.truth.task_forces[&id].route_order.map(Cause::Order));
+            causes.push(Cause::Event(event));
+            self.record_halt(step, id, causes);
+        }
         Some(event)
     }
 
@@ -898,7 +1045,10 @@ impl World {
         mover.steam_out(&self.map);
 
         let arrived = mover.arrived();
+        let halted = mover.halted();
         let ran_dry = mover.ran_dry();
+        // A halted force stays under way here: its status is written with its
+        // halt, as its last segment is recorded or below.
         let status = if arrived {
             TaskForceStatus::Arrived
         } else if ran_dry {
@@ -927,7 +1077,11 @@ impl World {
         let steamed = self.record_segment(step, id);
         let mover = &step.movers[&id];
 
-        if arrived && !mover.arrival_recorded {
+        if halted && !mover.halt_recorded {
+            // No distance in the last segment, so none recorded the halt: it
+            // cites the standing orders.
+            self.record_halt(step, id, standing_orders);
+        } else if arrived && !mover.arrival_recorded {
             // No distance in the last segment, so none recorded it: cites the
             // standing orders.
             let outcome_causes = match steamed {
@@ -1134,8 +1288,10 @@ pub(crate) fn forecast_passage(
     force.route = Route {
         waypoints: waypoints.to_vec(),
         next_index: 0,
+        act_at: std::collections::BTreeSet::new(),
     };
     force.status = TaskForceStatus::Underway;
+    force.halt = None;
     if let Some(speed) = speed {
         force.speed = speed;
     }
@@ -1229,6 +1385,10 @@ pub(crate) fn forecast_passage(
     }
     result
 }
+
+/// Halts at marked waypoints and steaming on (decision 0096).
+#[cfg(test)]
+mod halt_tests;
 
 #[cfg(test)]
 mod tests {
@@ -1355,6 +1515,7 @@ mod tests {
                 force.route = Route {
                     waypoints: spec.route.clone(),
                     next_index: 0,
+                    act_at: std::collections::BTreeSet::new(),
                 };
                 force.status = TaskForceStatus::Underway;
             }
@@ -1886,6 +2047,8 @@ mod tests {
             hours_done: mover.hours_done,
             last_steamed: mover.last_steamed,
             arrival_recorded: mover.arrival_recorded,
+            halt_at: mover.halt_at,
+            halt_recorded: mover.halt_recorded,
         }
     }
 

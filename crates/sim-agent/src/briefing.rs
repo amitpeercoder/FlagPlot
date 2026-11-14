@@ -67,6 +67,10 @@ pub struct Briefing {
     /// so a side that has nothing at the yard sees no such part.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub away_at_yard: Vec<AwayForce>,
+    /// 6c. Yesterday's halts at marked waypoints and the forces that steamed
+    /// on (decision 0096, 7). Left out when there were none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub halts: Option<HaltsPart>,
     /// 7. Air groups.
     pub air_groups: Vec<AirGroupLine>,
     /// 8. Bases.
@@ -813,6 +817,45 @@ pub struct FedShareRestoredLine {
     pub event: u32,
 }
 
+/// The side's forces that halted at a marked waypoint, and that steamed on,
+/// yesterday (decision 0096, 7).
+#[derive(Clone, PartialEq, Eq, Debug, Default, Serialize)]
+pub struct HaltsPart {
+    pub halted: Vec<HaltedLine>,
+    pub steamed_on: Vec<SteamedOnLine>,
+}
+
+impl HaltsPart {
+    fn is_empty(&self) -> bool {
+        self.halted.is_empty() && self.steamed_on.is_empty()
+    }
+}
+
+/// A force halted at a marked waypoint to act there.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct HaltedLine {
+    pub task_force: Handle,
+    pub place: Place,
+    /// The clock time it halted, such as `D1 22:00`.
+    pub at: String,
+    /// What it waits to do: `bombard`, `cargo` or both, in that order.
+    pub waits_for: Vec<&'static str>,
+    pub event: u32,
+}
+
+/// A halted force that steamed on, and why.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct SteamedOnLine {
+    pub task_force: Handle,
+    pub place: Place,
+    /// What it had waited to do.
+    pub waited_for: Vec<&'static str>,
+    /// Why it went: `bombarded`, `cannot_bombard_any_longer` and
+    /// `cargo_work_done`, those that apply.
+    pub reasons: Vec<&'static str>,
+    pub event: u32,
+}
+
 /// What yesterday's change of side of bases did to the side (decision 0090,
 /// 29 and 30).
 #[derive(Clone, PartialEq, Eq, Debug, Default, Serialize)]
@@ -1144,6 +1187,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
 
     let land_units = land_units_part(&ctx, view, std::mem::take(&mut day.ground));
     let base_changes = Some(std::mem::take(&mut day.base_changes)).filter(|c| !c.is_empty());
+    let halts = Some(std::mem::take(&mut day.halts)).filter(|h| !h.is_empty());
     let enemy_ashore = enemy_ashore_part(&ctx, view, std::mem::take(&mut day.bases_found));
 
     let arrivals = ArrivalsPart {
@@ -1204,6 +1248,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         losses: day.losses,
         task_forces,
         away_at_yard,
+        halts,
         air_groups,
         bases,
         land_units,
@@ -1362,6 +1407,7 @@ struct Day {
     returned: BTreeMap<BaseId, Vec<ReturnedForce>>,
     ground: GroundDay,
     base_changes: BaseChangesPart,
+    halts: HaltsPart,
     bases_found: Vec<BaseFoundLine>,
 }
 
@@ -1575,6 +1621,7 @@ impl Day {
         let mut returned: BTreeMap<BaseId, Vec<ReturnedForce>> = BTreeMap::new();
         let mut ground = GroundDay::default();
         let mut base_changes = BaseChangesPart::default();
+        let mut halts = HaltsPart::default();
         let mut bases_found: Vec<BaseFoundLine> = Vec::new();
         let mut bombardments: Vec<Bombardment> = Vec::new();
         let mut shell_fire: Vec<ShellFire> = Vec::new();
@@ -2239,6 +2286,43 @@ impl Day {
                             event: id,
                         });
                     }
+                    EventKind::TaskForceHalted {
+                        task_force,
+                        hex,
+                        work,
+                        elapsed_hours,
+                    } => halts.halted.push(HaltedLine {
+                        task_force: ctx.force(*task_force),
+                        place: ctx.place(*hex),
+                        at: sim_core::time::ClockTime::from_elapsed(*elapsed_hours).to_string(),
+                        waits_for: crate::lines::halt_work_words(*work),
+                        event: id,
+                    }),
+                    EventKind::TaskForceSteamedOn {
+                        task_force,
+                        hex,
+                        work,
+                        fired,
+                    } => {
+                        let mut reasons = Vec::new();
+                        if work.bombard {
+                            reasons.push(if *fired {
+                                "bombarded"
+                            } else {
+                                "cannot_bombard_any_longer"
+                            });
+                        }
+                        if work.cargo {
+                            reasons.push("cargo_work_done");
+                        }
+                        halts.steamed_on.push(SteamedOnLine {
+                            task_force: ctx.force(*task_force),
+                            place: ctx.place(*hex),
+                            waited_for: crate::lines::halt_work_words(*work),
+                            reasons,
+                            event: id,
+                        });
+                    }
                     EventKind::StrikeMissionCleared { air_group, base } => {
                         base_changes
                             .strike_missions_cleared
@@ -2512,6 +2596,7 @@ impl Day {
             returned,
             ground,
             base_changes,
+            halts,
             bases_found,
         }
     }

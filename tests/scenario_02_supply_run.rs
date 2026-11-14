@@ -754,7 +754,7 @@ fn the_event_log_explains_an_unload() {
         .collect();
     assert!(traced_orders
         .iter()
-        .any(|order| matches!(order, TaskForceOrder::SetRoute(_))));
+        .any(|order| matches!(order, TaskForceOrder::SetRoute { .. })));
     assert!(traced_orders
         .iter()
         .any(|order| matches!(order, TaskForceOrder::SetSpeed(_))));

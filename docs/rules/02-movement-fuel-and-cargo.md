@@ -104,6 +104,8 @@ A route order replaces the force's route with a list of waypoints. Chapter 1, Ev
 
 An accepted route order sets the route to the waypoints with the next index 0, sets the status to underway, sets the route order, and clears the arrival hour and the arrival event. It never clears the cargo order, the readiness or the rules of engagement. A route order given to an arrived force sets it underway. A route order to a force that is out of fuel is refused (differences.md row 34): it stays out of fuel where it is until it takes fuel in port. [0005, 0017, 0044]
 
+A route order may also carry marks: a list of hexes to act at, each one of the route's waypoints, else the order is refused (chapter 1, Every reason an order is refused). A mark is by hex: every waypoint at a marked hex is marked. The last waypoint is never treated as marked, so a force arrives there as it always did. A new route order replaces the marks with its own. What a marked waypoint does is in Arriving, below. [0096 items 1 and 2]
+
 A speed order sets the speed setting to cruise, full or a number of knots, which must be above zero. It does not change the status. [0021 item 7]
 
 A side sees: its own `OrderAccepted` or `OrderRejected`, with the reason. The enemy sees neither.
@@ -207,6 +209,28 @@ A force arrives when it reaches the centre of its last waypoint. Reaching a wayp
 
 A side sees: its own `TaskForceArrived`.
 
+### Halting at a marked waypoint and steaming on
+
+A force with a route that has marks may halt at one. The engine looks for the halt when the force's mover is made, at the start of each pulse's movement, and again after each fight. The halt is at the first marked waypoint, from the force's next one on, where the force has work. Work is one of two things, and a force may have both:
+
+- **A bombardment.** The force's mission is bombardment, it is not away at the yard, it has a ship afloat, the hex holds a base of the other side that is on the force's side's map, the bombardment and air combat figures are loaded, and a ship of it would fire a shell by the rule of the shore bombardment phase (chapter 4, Shore bombardment).
+- **Cargo.** The force has a cargo order that can work in that hex by the cargo rule below (a base of its side there, or men to land on a coast hex, or men of the order's unit ashore to load), and that is not complete by the cargo rule's own test of when nothing remains to move.
+
+With no work the force passes the waypoint as any other. A mark never stops a force that has nothing to do there. The route forecast (`measure`) does not foresee halts.
+
+A force that reaches the centre of the waypoint it halts at stops there, as a force that arrives does. Its status is halted and it is not moving. It records `TaskForceHalted` (the hex, the work, and the hours since the scenario began), citing its route order and the segment that brought it there, or its route and speed orders if it steamed no distance in the pulse. It is stopped as an arrived force is: it can be met and fought, it refuels and is repaired at a base of its side, it can be given a load or unload order, and it can be sent to the yard. It works cargo from the hour it halted, as an arrived force does from its arrival (Working cargo, below), and it bombards in the night pulse's shore bombardment phase (chapter 4, Shore bombardment). A force that halts by day to bombard waits for the night: the rule does not move the bombardment out of the night pulse.
+
+At the start of each pulse's movement, before the straggler pass, each halted force in force order steams on if its work is done:
+
+- **For a bombardment,** it has bombarded since it halted, or it can no longer bombard there: no ship of it can fire, or its mission or the base changed.
+- **For cargo,** it has none left to work there, by the same test as above.
+
+A force with both waits for both. It records `TaskForceSteamedOn` (the hex, the work, and whether it fired), citing its route order, the halt, the bombardment and the cargo order's completion event. It is then under way toward the waypoint after the one it halted at and moves in that pulse with the pulse's full hours.
+
+A new route order ends a halt, and records nothing of its own: the order accepted is the record. So does a force retiring after a fight or a trip to the yard. A force that halts where its fuel also runs out is halted, and when it steams on it has no fuel and is out of fuel by the rule above. A halted force with no ship left stays as it is. [0096]
+
+A side sees: its own `TaskForceHalted` and `TaskForceSteamedOn`, whole. The enemy sees neither.
+
 ### Turning back and re-routing
 
 A route order given to a force between two centres starts the new route from the centre the force reaches first. The force goes on to the hex ahead or turns back to the hex it left, whichever is the shorter trip to the first waypoint of the new route:
@@ -286,7 +310,7 @@ There are four standing cargo orders. They are one kind of order, so a new one r
 | Load with a land unit | Takes the unit's men ashore in the force's hex aboard first, then the named cargo (supply, fuel or none) as the rows above do. It needs no base: off a shore where the side has none it loads men only (chapter 7) |
 | Unload | Lands the men aboard first, on a coast hex only, then moves everything aboard into the base's two stocks, supply first and then fuel. The first man landed where the side has no base forms one (chapter 7) |
 
-A load order is rejected at intake if the force is underway, or if no base of the side is at the force's position. A load order with a unit has its own reasons and needs no base (chapter 1, Every reason an order is refused). An unload order is always accepted. A load order to a force that is out of fuel is refused (differences.md row 17). Both take effect in a loading phase in which the force is idle or arrived and is exactly at the centre of a hex that holds a base of its own side, as refuelling asks (differences.md row 32). Two cases need no base there, if the ground figures are loaded: a load order with a unit, which takes men off the shore, and an unload order with men aboard in a coast hex, which lands them (chapter 7). A force that is underway, or that is out of fuel, works no cargo, and neither does a force idle part-way along a leg, whatever hex it is nearest to. A load order is still accepted at intake for a force idle part-way along a leg whose position, the nearest centre, holds a base of its side; it then works no cargo until the force is at that centre (differences.md row 41). Cargo moves automatically only through an order: an arrival with no unload order does nothing. A force made by a split has no cargo order. [0011 items 6, 7, 10 and 13, 0046 items 2 and 3, 0066]
+A load order is rejected at intake if the force is underway, or if no base of the side is at the force's position. A load order with a unit has its own reasons and needs no base (chapter 1, Every reason an order is refused). An unload order is always accepted. A load order to a force that is out of fuel is refused (differences.md row 17). Both take effect in a loading phase in which the force is idle, arrived or halted (above, Halting at a marked waypoint) and is exactly at the centre of a hex that holds a base of its own side, as refuelling asks (differences.md row 32). Two cases need no base there, if the ground figures are loaded: a load order with a unit, which takes men off the shore, and an unload order with men aboard in a coast hex, which lands them (chapter 7). A force that is underway, or that is out of fuel, works no cargo, and neither does a force idle part-way along a leg, whatever hex it is nearest to. A load order is still accepted at intake for a force idle part-way along a leg whose position, the nearest centre, holds a base of its side; it then works no cargo until the force is at that centre (differences.md row 41). Cargo moves automatically only through an order: an arrival with no unload order does nothing. A force made by a split has no cargo order. [0011 items 6, 7, 10 and 13, 0046 items 2 and 3, 0066]
 
 A side sees: its own `OrderAccepted` or `OrderRejected`.
 
@@ -300,7 +324,7 @@ A side sees: not an event of its own. The effect is in the cargo events.
 
 ### Working cargo
 
-Cargo moves in the loading phase, the last phase of every pulse, for the hours the force was stopped in the pulse. The force works from the later of the pulse's start and its arrival hour (the start of the pulse if it has no arrival hour) to the end of the pulse. A force that arrived eight hours into the night pulse works four hours of it. A force with no hours works nothing. The base used is the lowest-numbered base of the side at the force's position.
+Cargo moves in the loading phase, the last phase of every pulse, for the hours the force was stopped in the pulse. The force works from the later of the pulse's start and its arrival hour (the start of the pulse if it has no arrival hour) to the end of the pulse. A force halted at a marked waypoint works from the hour it halted in the same way, and its cargo events cite the halt in place of an arrival. A force that arrived eight hours into the night pulse works four hours of it. A force with no hours works nothing. The base used is the lowest-numbered base of the side at the force's position.
 
 Forces are worked in order of number, ships in order of number, and each change to a stock applies at once, so a force that unloads can supply a force with a higher number that loads at the same base in the same pulse. For each ship:
 
@@ -308,7 +332,7 @@ Forces are worked in order of number, ships in order of number, and each change 
 - A load moves the least of that, the ship's room, and the stock.
 - An unload moves supply first, the least of the most it can move and the supply aboard, and then fuel, the least of what the pulse allows after the supply and the fuel cargo aboard. A ship works one cargo at a time, in that order.
 
-Before the cargo, a landing divides units and forms a base where chapter 7 says, and each ship moves its men. Each move above 0 records `CargoLoaded` or `CargoUnloaded`, naming the cargo, the tons moved, the tons now aboard and the base's stock, citing the cargo order and the force's arrival event. When a force has moved something this pulse and nothing remains to move, one more event is recorded: `LoadingComplete` or `UnloadingComplete`, with the hour the slowest ship finished (the start of work plus the longest of each ship's tons over its rate). It cites the cargo events. Nothing remains for a load when the stock is 0 or every ship is full. For an unload nothing remains when no ship has supply or fuel cargo aboard and, in a coast hex, no ship has men aboard. A load order with a unit records `UnitLoadingComplete` in place of `LoadingComplete` (chapter 7). [0011 items 5 and 12, 0046 items 4 and 5, 0066]
+Before the cargo, a landing divides units and forms a base where chapter 7 says, and each ship moves its men. Each move above 0 records `CargoLoaded` or `CargoUnloaded`, naming the cargo, the tons moved, the tons now aboard and the base's stock, citing the cargo order and the force's arrival event (or, for a halted force, its halt). When a force has moved something this pulse and nothing remains to move, one more event is recorded: `LoadingComplete` or `UnloadingComplete`, with the hour the slowest ship finished (the start of work plus the longest of each ship's tons over its rate). It cites the cargo events. Nothing remains for a load when the stock is 0 or every ship is full. For an unload nothing remains when no ship has supply or fuel cargo aboard and, in a coast hex, no ship has men aboard. A load order with a unit records `UnitLoadingComplete` in place of `LoadingComplete` (chapter 7). [0011 items 5 and 12, 0046 items 4 and 5, 0066]
 
 A side sees: `CargoLoaded`, `CargoUnloaded`, `LoadingComplete`, `UnitLoadingComplete`, `UnloadingComplete`, `MenEmbarked` and `MenLanded` for its own ships and forces. The enemy sees none.
 
@@ -354,5 +378,6 @@ A task force's readiness, whether it is alert, the alarm, and the fatigue that a
 - Which events each side may see, in full: chapter 1, What a side sees of an event.
 - Objectives, missions and results: chapter 6. No rule here reads a task force's mission.
 - Ship repair, forward and at the yard, and a force away at the yard: chapter 4, Repair.
+- The bombardment a halted force makes: chapter 4, Shore bombardment.
 - Land units, men worked as cargo, troop capacity, the men's supply and marching overland: chapter 7.
 - Base orders and port damage: not built (0052, 0066). The fight ashore and a base that changes side: chapter 7. Shore bombardment: chapter 4.

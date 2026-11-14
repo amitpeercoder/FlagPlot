@@ -96,7 +96,7 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | The full slice of 39 days with the landings | Decision 0093 | Planned |
 | The rules' choices inside a day as functions of belief | Decision 0055, "Left for later" | Not built: stage 0 |
 | A rules version on a saved game | This spec | Not built: stage 0 |
-| A force that acts at a place and steams on by itself | Decision 0096 | Hand calculation written. Needed before stage 2 |
+| A force that acts at a place and steams on by itself | Decision 0096 | Built |
 | A load of a stated weight, and refuelling that leaves a reserve | Stage 1 | Not built |
 | A day from which a force may be used | Stage 2 | Not built |
 | Preparing a landing: loading and rehearsal | Decision 0095 | Confirmed, revised. Needed before stage 3 |

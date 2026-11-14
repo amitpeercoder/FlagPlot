@@ -506,11 +506,16 @@ impl World {
                     return Err(RejectReason::NoShipAfloat);
                 }
                 match task_force_order {
-                    TaskForceOrder::SetRoute(waypoints) => {
+                    TaskForceOrder::SetRoute { waypoints, act_at } => {
                         if task_force.status == TaskForceStatus::OutOfFuel {
                             return Err(RejectReason::OutOfFuel);
                         }
-                        task_force.check_route(&self.map, waypoints)
+                        task_force.check_route(&self.map, waypoints)?;
+                        // Each mark is one of the waypoints (decision 0096, 1).
+                        match act_at.iter().find(|hex| !waypoints.contains(hex)) {
+                            Some(hex) => Err(RejectReason::MarkNotOnRoute(*hex)),
+                            None => Ok(()),
+                        }
                     }
                     TaskForceOrder::Load | TaskForceOrder::LoadFuel => {
                         if task_force.status == TaskForceStatus::Underway {
@@ -849,7 +854,7 @@ impl World {
                     .expect("order was validated against this task force");
                 let mut follow_up = None;
                 match task_force_order {
-                    TaskForceOrder::SetRoute(waypoints) => {
+                    TaskForceOrder::SetRoute { waypoints, act_at } => {
                         // Turning back is decided on the state the order
                         // found, and the leg is then finished by movement.
                         let (turns_back, _) = task_force
@@ -870,8 +875,11 @@ impl World {
                         task_force.route = Route {
                             waypoints: waypoints.clone(),
                             next_index: 0,
+                            act_at: act_at.clone(),
                         };
                         task_force.status = TaskForceStatus::Underway;
+                        // A new route order ends a halt (decision 0096, 6).
+                        task_force.halt = None;
                         task_force.route_order = Some(order.id);
                         task_force.arrived_at_hours = None;
                         task_force.arrival_event = None;
@@ -1179,7 +1187,7 @@ mod tests {
     }
 
     fn route_to(q: i32, r: i32) -> OrderRequest {
-        order(TaskForceOrder::SetRoute(vec![Hex::new(q, r)]))
+        order(TaskForceOrder::route(vec![Hex::new(q, r)]))
     }
 
     fn rejection(world: &World) -> Option<RejectReason> {
@@ -2714,7 +2722,7 @@ mod tests {
                 set_leg(&mut world, from, Some(toward), nm(progress));
                 world.submit_orders(
                     Side::Allied,
-                    vec![order(TaskForceOrder::SetRoute(vec![waypoint]))],
+                    vec![order(TaskForceOrder::route(vec![waypoint]))],
                 );
                 let steamed = miles_until_stopped(&mut world);
                 assert_eq!(rejection(&world), None, "p={progress} W={waypoint}");
@@ -3120,7 +3128,7 @@ mod tests {
         let mut world = world_with_fuel(2000);
         set_leg(&mut world, hx(1, 0), Some(hx(2, 0)), nm(10));
         let before = world.truth.task_forces[&TF].clone();
-        take_in(&mut world, vec![order(TaskForceOrder::SetRoute(vec![]))]);
+        take_in(&mut world, vec![order(TaskForceOrder::route(vec![]))]);
         assert_eq!(rejection(&world), Some(RejectReason::EmptyRoute));
         assert_eq!(world.truth.task_forces[&TF], before);
     }
@@ -3669,6 +3677,7 @@ mod tests {
             force.route = Route {
                 waypoints: vec![hx(9, 0)],
                 next_index: 0,
+                act_at: std::collections::BTreeSet::new(),
             };
             force.readiness = Readiness::Battle;
             force.readiness_order = Some(crate::ids::OrderId::new(44));
@@ -3808,7 +3817,7 @@ mod tests {
         let staff = OrderRequest {
             kind: OrderKind::TaskForce {
                 target: TF,
-                order: TaskForceOrder::SetRoute(vec![hx(2, 0)]),
+                order: TaskForceOrder::route(vec![hx(2, 0)]),
             },
             origin: Origin {
                 issuer: crate::orders::Issuer::Staff,
@@ -3902,7 +3911,7 @@ mod tests {
 
         take_in(
             &mut world,
-            vec![order(TaskForceOrder::SetRoute(vec![waypoint]))],
+            vec![order(TaskForceOrder::route(vec![waypoint]))],
         );
         assert_eq!(rejection(&world), None);
         // Turned round: the two hexes swap and 40 - 10 = 30 nm are covered.
@@ -3989,7 +3998,7 @@ mod tests {
         );
         take_in(
             &mut world,
-            vec![order(TaskForceOrder::SetRoute(vec![hx(2, 0), hx(6, 0)]))],
+            vec![order(TaskForceOrder::route(vec![hx(2, 0), hx(6, 0)]))],
         );
         assert_eq!(
             rejection(&world),
@@ -4111,7 +4120,7 @@ mod tests {
 
     #[test]
     fn orders_are_numbered_by_unit_whatever_order_they_were_handed_in() {
-        let route = |q| TaskForceOrder::SetRoute(vec![Hex::new(q, 0)]);
+        let route = |q| TaskForceOrder::route(vec![Hex::new(q, 0)]);
         let knots_order = |k| TaskForceOrder::SetSpeed(SpeedSetting::Knots(nm(k)));
         let a = vec![
             order_for(2, route(5)),
@@ -4152,7 +4161,7 @@ mod tests {
         assert!(matches!(
             orders[0].kind,
             OrderKind::TaskForce {
-                order: TaskForceOrder::SetRoute(_),
+                order: TaskForceOrder::SetRoute { .. },
                 ..
             }
         ));

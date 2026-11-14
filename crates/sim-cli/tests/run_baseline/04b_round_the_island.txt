@@ -2,8 +2,8 @@ Scenario 4b: Round the island
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1e3209f86e11f6da  12 events
-day   2  hash 6d8ee2f3d4b98e2f  0 events
+day   1  hash 91a90a72456a1111  12 events
+day   2  hash 38b80d587bd11502  0 events
 
 task_force:1 "Placeholder transit force" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1906.5 t of fuel, 0 t of supply

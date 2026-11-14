@@ -1,0 +1,21 @@
+Scenario 26: A force that acts at a place and steams on
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 122c7adbacb3051f  39 events
+day   2  hash 3ea9b0472037d0e3  13 events
+
+task_force:1 "Placeholder raiding force" (Japanese): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder supply convoy" (Allied): Arrived at (4,3); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder destroyer patrol" (Allied): Arrived at (4,5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Placeholder fighter squadron at X" (Allied) at base:1: 18 ready, mission Rest, no arc
+ship:1 "Placeholder cruiser": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 80 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
+ship:2 "Placeholder cargo ship": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:3 "Placeholder destroyer": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 480 t of fuel, 0 t of supply
+base:1 "Placeholder airfield X, Allied" (Allied) at (0,0): 500 t of supply in stock
+base:2 "Placeholder base Y, Allied" (Allied) at (0,3): 100 t of supply in stock
+base:3 "Placeholder base Z, Allied" (Allied) at (4,3): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese claim from the sea at (0,0): 17 aircraft destroyed on the ground, day 1 night

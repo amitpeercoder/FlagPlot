@@ -1,0 +1,74 @@
+Scenario 26: A force that acts at a place and steams on
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 122c7adbacb3051f  39 events
+day   2  hash 3ea9b0472037d0e3  13 events
+
+#1 D1 -         order:1 accepted for task_force:2  <- order:1
+#2 D1 -         order:2 accepted for task_force:2  <- order:2
+#3 D1 -         order:3 accepted for task_force:2  <- order:3
+#4 D1 -         order:4 accepted for task_force:3  <- order:4
+#5 D1 -         order:5 accepted for task_force:3  <- order:5
+#6 D1 -         order:6 accepted for task_force:1  <- order:6
+#7 D1 -         order:7 accepted for task_force:1  <- order:7
+#8 D1 night     task_force:1 steamed 160 nm at 16 kn from (4,0) to (0,0)  <- order:6, order:7
+#9 D1 night     ship:1 burned 40 t, 1960 t remaining  <- #8
+#10 D1 night     task_force:1 halted at (0,0) at D1 04:00 to bombard  <- order:6, #8
+#11 D1 night     task_force:2 steamed 120 nm at 10 kn from (4,3) to (1,3)  <- order:2, order:3
+#12 D1 night     ship:2 burned 12 t, 988 t remaining  <- #11
+#13 D1 night     task_force:3 steamed 160 nm at 16 kn from (0,5) to (4,5)  <- order:4, order:5
+#14 D1 night     ship:3 burned 20 t, 480 t remaining  <- #13
+#15 D1 night     task_force:3 arrived at (4,5) at D1 04:00  <- #13
+#16 D1 night     ship:1 shelled base:1: 720 shells, 720 weighed shots x 0.05 = 36 expected, 32 hits: 2 on aircraft, 10 on supply, 0 on men, 20 on nothing; 80 rounds left  <- order:6, #10
+#17 D1 night     task_force:1 bombarded base:1 at (0,0): 720 shells, 720 weighed shots, 32 hits: 2 on aircraft, 10 on supply, 0 on men, 20 on nothing  <- #16
+#18 D1 night     air_group:1 lost 2 aircraft on the ground at base:1, 18 left  <- #17
+#19 D1 night     base:1 lost 500 t of supply, 500 t left  <- #17
+#20 D1 night     Allied report: 1 ship, cruiser, at (-1,1): new contact:1  <- #17
+#21 D1 night     Japanese claim from the sea at (0,0): 17 aircraft destroyed on the ground  <- #16
+#22 D1 morning   task_force:1 steamed on from (0,0): it has bombarded  <- order:6, #10, #17
+#23 D1 morning   task_force:1 steamed 96 nm at 16 kn from (0,0) to (2,0)  <- order:6, order:7
+#24 D1 morning   ship:1 burned 24 t, 1936 t remaining  <- #23
+#25 D1 morning   task_force:2 steamed 40 nm at 10 kn from (1,3) to (0,3)  <- order:2, order:3
+#26 D1 morning   ship:2 burned 4 t, 984 t remaining  <- #25
+#27 D1 morning   task_force:2 halted at (0,3) at D1 10:00 to work cargo  <- order:2, #25
+#28 D1 morning   ship:2 unloaded 40 t at base:2, 60 t aboard, 40 t in stock  <- order:1, #27
+#29 D1 morning   Allied contact:1 aged to 1 pulses  <- #20
+#30 D1 afternoon task_force:2 alerted by contact:1  <- #20
+#31 D1 afternoon task_force:1 steamed 64 nm at 16 kn from (2,0) to (4,0)  <- order:6, order:7
+#32 D1 afternoon ship:1 burned 16 t, 1920 t remaining  <- #31
+#33 D1 afternoon task_force:1 arrived at (4,0) at D1 16:00  <- #31
+#34 D1 afternoon ship:2 unloaded 60 t at base:2, 0 t aboard, 100 t in stock  <- order:1, #27
+#35 D1 afternoon task_force:2 completed unloading at base:2 at D1 15:00  <- #34
+#36 D1 afternoon Allied contact:1 aged to 2 pulses  <- #20
+#37 D1 -         base:1 at the end of the day: 500 t of supply, 18 aircraft ready: open
+#38 D1 -         base:2 at the end of the day: 100 t of supply, 0 aircraft ready: not open
+#39 D1 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#40 D2 night     task_force:2 steamed on from (0,3): its cargo work is done  <- order:2, #27, #35
+#41 D2 night     task_force:2 steamed 120 nm at 10 kn from (0,3) to (3,3)  <- order:2, order:3
+#42 D2 night     ship:2 burned 12 t, 972 t remaining  <- #41
+#43 D2 night     Allied contact:1 aged to 3 pulses  <- #20
+#44 D2 morning   task_force:2 stood down  <- #30
+#45 D2 morning   task_force:2 steamed 40 nm at 10 kn from (3,3) to (4,3)  <- order:2, order:3
+#46 D2 morning   ship:2 burned 4 t, 968 t remaining  <- #45
+#47 D2 morning   task_force:2 arrived at (4,3) at D2 10:00  <- #45
+#48 D2 morning   Allied contact:1 aged to 4 pulses  <- #20
+#49 D2 afternoon Allied contact:1 dropped at 5 pulses  <- #20
+#50 D2 -         base:1 at the end of the day: 500 t of supply, 18 aircraft ready: open
+#51 D2 -         base:2 at the end of the day: 100 t of supply, 0 aircraft ready: not open
+#52 D2 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder raiding force" (Japanese): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder supply convoy" (Allied): Arrived at (4,3); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder destroyer patrol" (Allied): Arrived at (4,5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Placeholder fighter squadron at X" (Allied) at base:1: 18 ready, mission Rest, no arc
+ship:1 "Placeholder cruiser": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 80 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
+ship:2 "Placeholder cargo ship": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:3 "Placeholder destroyer": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 480 t of fuel, 0 t of supply
+base:1 "Placeholder airfield X, Allied" (Allied) at (0,0): 500 t of supply in stock
+base:2 "Placeholder base Y, Allied" (Allied) at (0,3): 100 t of supply in stock
+base:3 "Placeholder base Z, Allied" (Allied) at (4,3): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese claim from the sea at (0,0): 17 aircraft destroyed on the ground, day 1 night

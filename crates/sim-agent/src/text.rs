@@ -568,6 +568,23 @@ impl Briefing {
                     supply.0, fuel.0
                 ));
             }
+            if let Some(halt) = &f.halt {
+                s.push_str(&format!(
+                    ", HALTED at {} since {} to {}{}",
+                    at(&halt.place),
+                    halt.since,
+                    waits_text(&halt.waits_for),
+                    if halt.bombarded {
+                        " (it has bombarded)"
+                    } else {
+                        ""
+                    }
+                ));
+            }
+            if !f.act_at.is_empty() {
+                let marks: Vec<String> = f.act_at.iter().map(at).collect();
+                s.push_str(&format!(", route marked to act at {}", marks.join(", ")));
+            }
             o.line(s);
             if let Some(fuel) = &f.least_fuelled {
                 let range = match fuel.range_nm {
@@ -598,6 +615,38 @@ impl Briefing {
                     a.port.text(),
                     names(&a.ships),
                     back
+                ));
+            }
+        }
+
+        if let Some(halts) = &self.halts {
+            o.heading("HALTS");
+            for h in &halts.halted {
+                o.line(format!(
+                    "Halted yesterday: {} at {} at {} to {}{}",
+                    h.task_force.text(),
+                    at(&h.place),
+                    h.at,
+                    waits_text(&h.waits_for),
+                    ev(h.event)
+                ));
+            }
+            for h in &halts.steamed_on {
+                let why: Vec<&str> = h
+                    .reasons
+                    .iter()
+                    .map(|r| match *r {
+                        "bombarded" => "it had bombarded",
+                        "cannot_bombard_any_longer" => "it could bombard no longer",
+                        _ => "its cargo work was done",
+                    })
+                    .collect();
+                o.line(format!(
+                    "Steamed on yesterday: {} from {}: {}{}",
+                    h.task_force.text(),
+                    at(&h.place),
+                    why.join(" and "),
+                    ev(h.event)
                 ));
             }
         }
@@ -1567,4 +1616,16 @@ fn report_text(r: &StrikeReport) -> String {
         ),
     };
     format!("Report: {body}{}", ev(r.event))
+}
+
+/// What a halted force waits to do, in words (decision 0096).
+fn waits_text(waits_for: &[&str]) -> String {
+    let words: Vec<&str> = waits_for
+        .iter()
+        .map(|w| match *w {
+            "bombard" => "bombard (at night)",
+            _ => "work cargo",
+        })
+        .collect();
+    words.join(" and ")
 }
