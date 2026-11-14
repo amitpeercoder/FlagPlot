@@ -11,6 +11,7 @@
 
 pub mod bearing;
 pub mod belief;
+pub mod choices;
 pub mod events;
 pub mod fixed;
 pub mod hash;
