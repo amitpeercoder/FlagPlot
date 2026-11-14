@@ -273,7 +273,7 @@ A force that retires when it has done what it came for cannot be left to the sta
 
 ## The trial
 
-A trial is the staff's war game of a draft plan (`docs/design/planning.md`). It is stage 4, and its own decision record settles the contracts below before it is built. They are stated here so that nothing earlier closes them off.
+A trial is the staff's war game of a draft plan (`docs/design/planning.md`). It is stage 4 of step 3, and its own decision record settles the contracts below before it is built. They are stated here so that nothing earlier closes them off.
 
 - **It plays a private world, built from what the side may know.** A contact is a place, a count and a kind. It has no fuel, damage, aircraft or orders. A constructor builds a whole world from the side's view, public data, what the scenario says the side believed, and stated assumptions for the rest. It is separate from the decision code. The live world is never copied.
 - **The constructor is tested on its hard cases:** no contact; an old contact; two reports of one force; a claim of a sinking that is too high; a contact of the wrong kind; an enemy carrier never seen. Each gives a valid world.

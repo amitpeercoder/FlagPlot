@@ -6,7 +6,7 @@ Who does what, how work is handed out and reviewed, and how scenario tests are w
 
 | Role | Who | Owns |
 | --- | --- | --- |
-| Product manager | Amit, with the main session | What the game is, the spec, every decision marked "needs review", approval of each scenario plan. Not data: see "Who settles data" |
+| Product manager | Amit | What the game is, the spec, every decision marked "needs review", approval of each scenario plan. Not data: see "Who settles data" |
 | Architect | The main session (the most capable model) | Settling data, the plan for each scenario, crate boundaries, the determinism and traceability rules, the hand calculation, decision records, final review before a pull request |
 | Team lead | An Opus subagent | Turning an approved plan into tasks, briefing the developers, reviewing their work against the plan and this file, reporting back what was built, deferred and unclear |
 | Developers | Sonnet subagents | Implementation tasks, tests, bulk reading and summarising of reference material, code search |

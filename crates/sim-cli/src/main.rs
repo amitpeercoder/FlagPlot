@@ -59,7 +59,7 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             in, marked `via task_force:N`. --day N keeps one day. --why EVENT
             prints that event and its causes down to orders, as a tree, with
             each event's breakdown.
-  validate  The umpire's judge of a batch (decision 0062's file, version 2)
+  validate  The umpire's judge of a batch (decision 0062's file, version 5)
             against a measures file of data/validation (docs/step2-spec.md):
             takes each measure's number from every run and writes a markdown
             report, by default docs/validation/<battle>-<label>.md, with the

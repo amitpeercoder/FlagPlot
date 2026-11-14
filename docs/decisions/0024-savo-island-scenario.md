@@ -1,6 +1,6 @@
 # 0024: The Savo Island scenario: what is in it and what is left out
 
-Status: confirmed by the designer on Nov 12, 2026. Decisions 2 and 6 change what decision 0019 said would be in the scenario.
+Status: confirmed by the designer on Nov 12, 2026. Decisions 2 and 6 change what decision 0019 said would be in the scenario. *(Nov 14, 2026: the later changes to the scenario, Yunagi as a force of her own and the break-off levels read from the record, are in the notes of `docs/decisions/0024-scenario-4-savo-island.md`; where they differ from decisions 2, 3 and 9 below, the notes are later.)*
 
 ## The gap
 

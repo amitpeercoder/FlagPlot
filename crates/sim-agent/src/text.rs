@@ -1580,10 +1580,20 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
                     Some(days) => format!("lasts {} days at the present charge", days.0),
                     None => "has no charge".to_string(),
                 };
+                // The men are fed from every base of the side in the hex
+                // (decision 0090, 24a): with more than one, all are named and
+                // the stock is theirs together.
+                let (named, holds) = if h.other_bases.is_empty() {
+                    (base.text(), "holds")
+                } else {
+                    let mut names: Vec<String> = vec![base.text()];
+                    names.extend(h.other_bases.iter().map(Handle::text));
+                    let last = names.pop().expect("two names at least");
+                    (format!("{} and {last}", names.join(", ")), "hold")
+                };
                 o.line(format!(
-                    "Supply at {}: {} holds {} t, the daily charge is {} t ({} aircraft and {} men), so it {lasts}",
+                    "Supply at {}: {named} {holds} {} t, the daily charge is {} t ({} aircraft and {} men), so it {lasts}",
                     at(&h.place),
-                    base.text(),
                     stock.0,
                     h.daily_charge_t.0,
                     h.aircraft,

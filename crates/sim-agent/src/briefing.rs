@@ -1045,19 +1045,25 @@ pub struct StrikeClearedLine {
     pub event: u32,
 }
 
-/// What the base in a hex with men ashore holds, against what the aircraft
-/// and the men at it cost it a day.
+/// What the side's bases in a hex with men ashore hold, against what the
+/// aircraft and the men at them cost a day. The men are fed from every base
+/// of the side in the hex (decision 0090, 24a), so a hex with more than one
+/// counts them all.
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct HexSupply {
     pub place: Place,
     /// The side's men ashore in the hex, all units together.
     pub men_ashore: u32,
-    /// The base the men are fed from, the side's lowest-numbered in the hex;
-    /// `None` where the side has no base there.
+    /// The side's lowest-numbered base in the hex, the first the men are fed
+    /// from; `None` where the side has no base there.
     pub base: Option<Handle>,
-    /// Aircraft at that base, ready or damaged.
+    /// The side's other bases in the hex, in base order, which also feed the
+    /// men (decision 0090, 24a). Left out when there is none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub other_bases: Vec<Handle>,
+    /// Aircraft at the side's bases in the hex, ready or damaged.
     pub aircraft: u32,
-    /// The base's supply stock.
+    /// The supply stock of the side's bases in the hex, all together.
     pub supply_t: Option<Dec>,
     /// What the aircraft and the men cost a day: aircraft times the daily
     /// charge for an aircraft, plus men times the daily charge for a man.
@@ -1431,26 +1437,43 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
     let supply_by_hex = men_by_hex
         .into_iter()
         .map(|(hex, (men, men_charge))| {
-            // The base that feeds the men: the side's lowest-numbered in the
-            // hex (decision 0066, 16).
-            let base = ctx.bases.values().find(|b| b.hex == hex);
-            let aircraft: u32 = base.map_or(0, |b| {
-                ctx.groups
-                    .values()
-                    .filter(|g| g.location == sim_core::state::AirGroupLocation::Base(b.id))
-                    .map(|g| g.ready + g.damaged)
-                    .sum()
+            // The men are fed from every base of the side in the hex, in
+            // base order (decision 0090, 24a), so the stock and the aircraft
+            // counted are those of every such base. The base named is the
+            // side's lowest-numbered in the hex (decision 0066, 16).
+            let bases: Vec<&sim_core::state::Base> = ctx
+                .bases
+                .values()
+                .copied()
+                .filter(|b| b.hex == hex)
+                .collect();
+            let base = bases.first().copied();
+            let aircraft: u32 = ctx
+                .groups
+                .values()
+                .filter(|g| {
+                    bases
+                        .iter()
+                        .any(|b| g.location == sim_core::state::AirGroupLocation::Base(b.id))
+                })
+                .map(|g| g.ready + g.damaged)
+                .sum();
+            let stock: Option<Fixed> = base.map(|_| {
+                bases
+                    .iter()
+                    .fold(Fixed::ZERO, |total, b| total + b.supply_t)
             });
             let charge = per_aircraft * Fixed::from_int(i64::from(aircraft)) + men_charge;
             HexSupply {
                 place: ctx.place(hex),
                 men_ashore: men,
                 base: base.map(|b| ctx.base(b.id)),
+                other_bases: bases.iter().skip(1).map(|b| ctx.base(b.id)).collect(),
                 aircraft,
-                supply_t: base.map(|b| Dec(b.supply_t)),
+                supply_t: stock.map(Dec),
                 daily_charge_t: Dec(charge),
-                days_of_supply: base
-                    .and_then(|b| (!charge.is_zero()).then(|| b.supply_t / charge))
+                days_of_supply: stock
+                    .and_then(|s| (!charge.is_zero()).then(|| s / charge))
                     .map(|days| Dec(Fixed::from_raw(days.raw() / 100_000 * 100_000))),
             }
         })

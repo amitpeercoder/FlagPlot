@@ -215,8 +215,8 @@ changes a rule, a result or a hash.
 
 - `losses.claims` lists the claims the side received yesterday, written in the
   text as "Claims yesterday": what its own people believe they did in a fight
-  at sea or a raid. They can be wrong. Fields added to each (the version stays
-  1): `claimed_hits` (hits believed scored on ships), `taken_for` (the kind of
+  at sea or a raid. They can be wrong. Fields added to each (the version was then
+  1; it is now 3): `claimed_hits` (hits believed scored on ships), `taken_for` (the kind of
   ship the attackers took the contact for when the strike was launched, or
   `null`), `claimed_shot_down` and `claimed_on_ground` (enemy aircraft), and
   `from_air` (true for a raid, false for a fight at sea, whose claim says ships
@@ -236,12 +236,13 @@ changes a rule, a result or a hash.
 A scenario may give each side a mission and objectives; neither changes a rule
 or a hash.
 
-- The briefing has an `objectives` part after the heading (a field added, so
-  the version stays 1): `mission` (text, or `null` without objectives),
+- The briefing has an `objectives` part after the heading (a field added; the version
+  was then 1, it is now 3): `mission` (text, or `null` without objectives),
   `objectives` (one line for each, in the scenario's order) and `result`
   (`null` until the game is over). A line gives the `kind` (`ships_sunk`,
   `ships_crippled`, `ships_out_of_action`, `aircraft_destroyed`, `cargo_landed`,
-  `base_open`), the
+  `base_open`, and, added with the ground fight (decision 0090), `base_held` and
+  `men_lost`: see "The fight ashore" below), the
   `base` where there is one, `closed` for `base_open`, the points (`ship_points`
   for each kind of ship, or `points` for one aircraft, one ton or the base), and
   `known`: what the side knows of its progress. `known.basis` is `exact` (the
@@ -268,7 +269,7 @@ or a hash.
 
 ## The wording pass after the second round (decision 0051)
 
-Fields added (the version stays 1) and words changed after three models played
+Fields added (the version was then 1, it is now 3) and words changed after three models played
 scenarios 5 and 7. No rule, result or hash changes.
 
 - `objectives.levels` (`minor`, `major`, `decisive`, decimal strings, or `null`
@@ -390,6 +391,15 @@ also has `lost_with_base: true` (left out otherwise) and `place: null`.
 - **Bases.** The side of a base changes during a game, so the lists of bases
   and the places that name them are read from the present state on every call;
   nothing is kept from the start of the game.
+- **Supply by hex counts every base of the side in the hex.** The briefing's
+  `land_units.supply_by_hex` line used to count the stock and the aircraft of the
+  side's lowest-numbered base in the hex alone. It now counts the stock and the
+  aircraft of every base of the side in the hex, as feeding does (decision 0090,
+  24a): `supply_t`, `aircraft`, `daily_charge_t` and `days_of_supply` are for the
+  bases together. `base` is still the lowest-numbered one. A new field,
+  `other_bases` (handles), lists the side's other bases in the hex in base order and
+  is left out when there are none, so a hex with one base reads as it did. Fields
+  and values added only, so `version` stays 3.
 
 ## Shells, bombs and what a side knows of the enemy ashore (decision 0092)
 

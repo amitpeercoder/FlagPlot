@@ -1670,3 +1670,69 @@ fn property_the_japanese_view_holds_the_japanese_base_and_no_allied_unit() {
     assert_eq!(allied.bases().count(), 2);
     assert_eq!(allied.enemy_bases().count(), 1);
 }
+
+/// Scenario 21 with ship 2 and unit 2 in a task force 3 of their own, which
+/// sails with task force 1 under the same orders, so that two forces of one
+/// side land men in the same empty hex in the same pulse.
+fn two_forces_land_together() -> String {
+    let source = common::replace_once(
+        &text(),
+        "name = \"Placeholder troop transport 2\"\nclass = 10\nside = \"allied\"\nfuel_t = 1000\ntask_force = 1",
+        "name = \"Placeholder troop transport 2\"\nclass = 10\nside = \"allied\"\nfuel_t = 1000\ntask_force = 3",
+    );
+    let source = common::replace_once(
+        &source,
+        "men = 400\ntask_force = 1",
+        "men = 400\ntask_force = 3",
+    );
+    let source = common::replace_once(
+        &source,
+        "[[task_force]]\nid = 2\n",
+        "[[task_force]]\nid = 3\nname = \"Placeholder second landing convoy\"\nside = \"allied\"\nat_base = 1\nmission = \"transport\"\n\n[[task_force]]\nid = 2\n",
+    );
+    let mut source = source;
+    for (kind, extra) in [
+        ("set_route", "waypoints = [[8, 0]]\n"),
+        ("set_speed", "speed = \"cruise\"\n"),
+        ("unload", ""),
+    ] {
+        source.push_str(&format!(
+            "\n[[order]]\nday = 1\nside = \"allied\"\ntask_force = 3\nkind = \"{kind}\"\n{extra}"
+        ));
+    }
+    source
+}
+
+#[test]
+fn two_forces_of_one_side_landing_in_one_empty_hex_in_one_pulse_form_one_base() {
+    // The cargo rule: a hex that holds a base of the side already, formed or
+    // not, forms none (decision 0066, 11). The second force to land finds
+    // the base the first formed in the same pulse.
+    let scenario = run_text(&two_forces_land_together());
+    let events = events_of(&scenario);
+    let formed: Vec<&Event> = events
+        .iter()
+        .filter(|event| matches!(event.kind, EventKind::BaseFormed { .. }))
+        .collect();
+    assert_eq!(formed.len(), 1, "one base formed, found {formed:?}");
+    let truth = scenario.world.umpire();
+    let at_shore: Vec<BaseId> = truth
+        .bases
+        .values()
+        .filter(|b| b.side == Side::Allied && b.hex == SHORE)
+        .map(|b| b.id)
+        .collect();
+    assert_eq!(at_shore, vec![base(2)]);
+    // Both forces landed their men in the same pulse.
+    let landed_by: std::collections::BTreeSet<(TaskForceId, Option<Pulse>, u32)> = events
+        .iter()
+        .filter_map(|event| match event.kind {
+            EventKind::MenLanded { task_force, .. } if event.day == 2 => {
+                Some((task_force, event.pulse, event.day))
+            }
+            _ => None,
+        })
+        .collect();
+    assert!(landed_by.contains(&(force(1), Some(Pulse::Night), 2)));
+    assert!(landed_by.contains(&(force(3), Some(Pulse::Night), 2)));
+}

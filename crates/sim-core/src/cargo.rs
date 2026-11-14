@@ -343,7 +343,20 @@ impl World {
             divided.insert(new_id, event);
         }
 
-        if let Some(base) = p.base {
+        // A hex that holds a base of the side already, formed or not, forms
+        // none (decision 0066, 11). The base is looked for again here, not
+        // taken from when the participants were built, so that a second
+        // force of the side landing in the same hex in the same pulse finds
+        // the base the first one formed: the lowest-numbered of the side
+        // there, as `cargo_place` finds it.
+        let existing = p.base.or_else(|| {
+            self.truth
+                .bases
+                .values()
+                .find(|base| base.side == p.side && base.hex == p.hex)
+                .map(|base| base.id)
+        });
+        if let Some(base) = existing {
             return (divided, None, base);
         }
         let id = BaseId::new(

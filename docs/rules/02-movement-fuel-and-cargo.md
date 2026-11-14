@@ -9,7 +9,7 @@ Where these rules run in a day (chapter 1, The order in which a day resolves, gi
 | Start of the day, before orders | Refuelling in port |
 | Start of the day | Orders are taken in, including route, speed, readiness, cargo and detach orders (chapter 1, Orders) |
 | Start of each pulse | Alert from belief, then fatigue of the task forces (chapter 3, Readiness, alertness and fatigue of a force) |
-| Movement phase of each pulse | Stragglers, movement, meetings and fights |
+| Movement phase of each pulse | Halted forces whose work is done steam on, then stragglers, then movement, meetings and fights |
 | Loading phase, last in each pulse | Cargo handling |
 
 ## The map as the rules read it
@@ -70,14 +70,15 @@ A task force is a set of ships of one side, with one position, one route, one sp
 | --- | --- |
 | `ships` | The ships in it. A ship afloat is in exactly one task force, one port or away at the yard. A sunk ship is in none. A force away at the yard lists none |
 | `from_hex`, `toward_hex`, `progress_nm`, `leg_nm` | Where it is on a leg, and what the leg is charged (see What a step is charged and Legs and position) |
-| `route` | Waypoints and the index of the next one |
-| `status` | idle (no route), underway, arrived (reached the last waypoint), or out of fuel |
+| `route` | Waypoints, the index of the next one, and its marks: the hexes whose waypoints are marked to act at (`act_at`; none for a route with no mark, and the last waypoint is never marked). See Halting at a marked waypoint and steaming on |
+| `status` | idle (no route), underway, arrived (reached the last waypoint), out of fuel, or halted (stopped at a marked waypoint, holding a halt) |
 | `speed` | cruise, full, or a speed in knots |
 | `readiness`, `alerted`, `fatigue` | See Readiness and fatigue |
 | `rules_of_engagement` | Stance, break-off level, straggler instruction and share to keep |
 | `home_port` | A base of its own side, set by order |
 | `cargo_order` | The standing cargo order, if any |
-| `mission` | Set by order. No rule reads it. [glossary] |
+| `mission` | Set by order. Only shore bombardment reads it: a force on the bombardment mission fires at an enemy base (chapter 4, Shore bombardment), and it is what a bombardment halt is for (Halting at a marked waypoint and steaming on). It is copied by a split. [0092, 0096] |
+| `halt` | Set while the status is halted, and only then: the work it halted for (a bombardment, cargo, or both), the hour it halted, its `TaskForceHalted` event, the bombardment it has fired since and the completion of its cargo order since, each if any. See Halting at a marked waypoint and steaming on. [0096] |
 | `yard_trip` | Set while the force is away at the yard: its port, its day of return and the event that sent it. None otherwise (chapter 4, Repair) |
 
 A task force with no ship afloat is never ordered, never moves and never fights. Every order for it is rejected with "no ship afloat". [0016 item 16, 0044]
@@ -378,7 +379,7 @@ A task force's readiness, whether it is alert, the alarm, and the fatigue that a
 - Fuel for aircraft: the base's supply stock, spent for sorties (chapter 5, Supply for sorties).
 - The briefing, `measure` (passage, route and reach forecasts) and `explain`: not rules.
 - Which events each side may see, in full: chapter 1, What a side sees of an event.
-- Objectives, missions and results: chapter 6. No rule here reads a task force's mission.
+- Objectives, missions and results: chapter 6. The only rule that reads a task force's mission is shore bombardment (chapter 4), and the halt for it (above).
 - Ship repair, forward and at the yard, and a force away at the yard: chapter 4, Repair.
 - The bombardment a halted force makes: chapter 4, Shore bombardment.
 - Land units, men worked as cargo, troop capacity, the men's supply, marching overland and preparing a landing, whose loading scales the rate of a landing: chapter 7.

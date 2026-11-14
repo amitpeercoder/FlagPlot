@@ -8,7 +8,8 @@
 # stated speed.
 #
 # Research looked for long runs at a steady speed and found none
-# (docs/research/oob/passages.md, 76 rows in data/oob/passages.csv): no
+# (docs/research/oob/passages.md, 186 rows in data/oob/passages.csv, counted
+# on Nov 14, 2026; the first pass had 76): no
 # recorded passage has a start, an end, both times and one held speed over
 # 250 miles. A stated speed is nearly always an order, a burst or a
 # ceiling, and where the same source gives positions and times the speed

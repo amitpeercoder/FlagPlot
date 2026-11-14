@@ -233,7 +233,7 @@ A side sees: `ReplacementsReceived` for its own groups, whole.
 
 After replacements, each base, in base order, pays `air_supply.toml: daily_supply_t_per_aircraft` for each aircraft located at it, ready and damaged together (a rebased group's aircraft are at the new base, see "Rebasing an air group"), as much as its stock covers. The aircraft are counted after the night's repairs and replacements. A base with no stock, or with nothing to pay, pays nothing and records nothing. Otherwise `BaseSupplySpent` (reason upkeep) records the aircraft, the amount asked, the amount paid and the stock left, with no cause. A payment the stock cannot cover takes what is left, and nothing is owed. No random number. [0039]
 
-The men ashore in the base's hex are charged after this, in the men's supply phase of the same night, on the same stock: `ground.toml: daily_supply_t_per_man` for each man. It is recorded as `BaseSupplySpent` with the reason men and a count of men, and the aircraft count 0. A stock too short for both feeds the aircraft: their charge is paid first. Every other `BaseSupplySpent` has 0 men. Chapter 7, The men's supply, gives the rule. [0039, 0066]
+The men ashore in the base's hex are charged after this, in the men's supply phase of the same night, on the same stock: `ground.toml: daily_supply_t_per_man` for each man. It is recorded as `BaseSupplySpent` with the reason men and a count of men, and the aircraft count 0. A stock too short for both feeds the aircraft: their charge is paid first. Every other `BaseSupplySpent` has 0 men, except a march's payment, which carries the men marching (chapter 7, Marching overland). Chapter 7, The men's supply, gives the rule. [0039, 0066]
 
 A side sees: `BaseSupplySpent` for its own bases, whole.
 

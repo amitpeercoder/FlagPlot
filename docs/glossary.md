@@ -31,7 +31,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **In the air** | Describes the aircraft of a group that flew in the pulse and were not shot down, until the wear phase of the pulse brings them home (decision 0059) | Aboard |
 | **Landed elsewhere** | Describes aircraft that were in the air when their own deck was lost and landed at another carrier or a base, joining or forming a group there (decision 0059) | Rebased |
 | **Rebase** | An order that moves an air group at a base to another base of its side at once. Its ready aircraft and pilots go with it, its damaged aircraft are written off, and it flies nothing that day (decision 0091) | Landed elsewhere; a group moving with its ship |
-| **Transfer range** | How far an air group may be rebased: twice the longer of its type's search range and strike radius, by air distance between the two bases (decision 0091) | Reach; radius |
+| **Transfer range** | How far an air group may be rebased: twice the longer of its type's search radius and strike radius, by air distance between the two bases (decision 0091) | Reach; radius |
 | **Ditched** | Describes an aircraft that ran out of fuel on the way home from a sortie beyond its radius, or that found no deck to land on, and came down in the sea. It is gone from the group for good and its crew may be recovered or lost (decision 0059) | Shot down, written off |
 | **Range** | How far an aircraft flies one way, as a sourced fact. Only the derivation tool reads it. The engine reads the radius columns, whose names say range (corrected against the code, which reads `search_range_nm`) | |
 | **Crippled** | A ship afloat, at sea, in port or at the yard, whose propulsion or flight deck is out. The objective `ships_crippled` counts them; degraded does not count (decision 0054) | Heavily damaged; slowed |
@@ -39,7 +39,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Straggler** | A ship whose propulsion is degraded or out. The straggler instruction acts on it | Heavily damaged |
 | **Degraded, out** | The two damaged states of a named system. Degraded halves what the system does; out stops it | |
 | **Raid** | The strikes launched in one pulse from one place at one hex, with their escorts | One air group's strike |
-| **Mission** | What an air group is ordered to fly: rest, search, naval strike, combat air patrol. A task force also has a mission, which no rule reads yet | |
+| **Mission** | What an air group is ordered to fly: rest, search, naval strike, combat air patrol. A task force also has a mission; only shore bombardment reads it: a force on the bombardment mission (decision 0092). No other mission of a task force is read by a rule | |
 | **Placeholder** | A figure invented so that the engine runs. Never historical | |
 | **Settled** | A choice between sourced figures, made by the architect and written down with its reason | Stated by a source |
 | **Pulse** | One of the three parts of a game day, resolved in this order: night, morning, afternoon. A pulse is the same across the whole map (decision 0001). Air searches and strikes fly only in the morning and afternoon: the night pulse is dark, its search phase is empty and no strike is launched in it | Darkness. The night pulse is dark, and light is asked of one function |
@@ -49,7 +49,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Saved game** | A file holding the scenario's name and hash, the hash of each data file, the seed, who held each seat, the orders as handed in and the daily hashes. It holds no state (decision 0043) | A snapshot a game can be resumed from |
 | **Replay** | Running a saved game again from the start with no player, and failing on the first day whose hash differs | The replay file the viewer reads, which is an exported run |
 | **Seat** | A side's place in a game. A person, an agent or the script holds it (decision 0050) | A unit |
-| **Unit** | A task force or an air group: what an order is addressed to | A ship |
+| **Unit** | A task force, an air group or a land unit: what an order is addressed to. Chapter 7 of the rulebook says "unit" for a land unit alone | A ship |
 | **Issuer** | Who gave an order: the player, the staff or the local commander. It is part of the order's origin | Who holds the seat |
 | **Origin** | Who issued an order and the intent it serves. Every order carries one (decision 0008) | |
 | **Staff** | The planner that gives orders between days. It is not built | The local commander |
@@ -65,7 +65,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Hex kind** | One of deep sea, shallow sea, coast and land | |
 | **Navigable** | Describes a hex a ship may enter: deep sea, shallow sea or coast that is on the map | Land |
 | **Closed side** | A side of a hex a ship cannot cross. A mark on either hex closes it | |
-| **Route** | The list of waypoints a force steams to, with the index of the next one | The path between them, which is never stored |
+| **Route** | The list of waypoints a force steams to, with the index of the next one, and the waypoints marked to act at | The path between them, which is never stored |
 | **Waypoint** | A hex a route names. A force reaches it when it reaches the hex's centre | |
 | **Leg** | The step between the centres of two neighbouring hexes, charged `leg_nm` miles (1 to 40), set when it begins. Once begun it is always finished at that charge | |
 | **Segment** | A force's steaming from the start of a pulse or its last fight to its next fight or the end of the pulse. It is recorded as one steamed event | A leg |
@@ -76,6 +76,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Arrived** | The status of a force that has reached the centre of its last waypoint | Docked |
 | **Mark, act at** | A hex a route order names, one of the route's waypoints, where the force is to act. Every waypoint at a marked hex is marked, and the last waypoint is never treated as marked. A mark halts a force only if it has work there (decision 0096) | A waypoint that the force always stops at |
 | **Halt, halted** | A force's stop at a marked waypoint where it has work, a bombardment or cargo. The status is halted: at the hex centre, not moving, stopped as an arrived force is. It lasts until its work is done (decision 0096) | Arrived |
+| **Work (at a halt)** | What makes a marked waypoint halt a force: a bombardment it would fire in the night's shore bombardment phase, or cargo it can work there by the cargo rule. With no work the force passes the waypoint. The halt lasts until the work is done (decision 0096) | A land unit's work, which decision 0099 plans and is not built |
 | **Steam on** | What a halted force does when its work is done: it resumes its route toward the waypoint after the one it halted at, in the same pulse and with the pulse's full hours (decision 0096) | Retiring |
 | **Out of fuel** | The status of a force whose fuel ran out before its last waypoint. It takes no route, load or load-fuel order until it has taken fuel in port | A force with no fuel that is not under way |
 | **Stopped** | Not under way: idle, arrived, halted or out of fuel. Refuelling and cargo handling also ask that the force is exactly at a hex centre | |
@@ -100,8 +101,10 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Base found** | A base put on a side's map by a ground report: an enemy base in the hex of the report that was not on the map. It is on the map from then on, and the side may bombard it (decision 0092) | A base taken |
 | **Unit divided, detachment** | A land unit's men aboard a force, made a new unit when the force is about to land them in a hex while the unit has men ashore in another. The new unit is named for the unit it came from, ", detachment" and its number. Units are never merged (decision 0066) | A task force detached by order |
 | **Fed, unfed** | Of the men ashore in a hex on a night: the men fed are the tons all the bases of their side in the hex paid over the charge for a man, cut; the rest are unfed, and a share of them is lost (decisions 0066, 0090) | Men aboard, who are neither |
+| **Men's supply** | The nightly charge for the men ashore: in the night pulse, after the aircraft's supply, each hex's men of a side are charged `ground.toml: daily_supply_t_per_man` a man, which the side's bases in the hex pay from their one stock, in base order, as far as it goes. The men the tons cover are fed and the rest unfed (decisions 0066, 0090) | The supply for aircraft, which is charged first |
 | **Fed share** | A land unit's number from 0 to 1: the men of its side fed in its hex at the last night's charge over the men charged there. It is 1 until the first charge and for a unit with no man ashore at it, and it cuts the unit's firing men (decision 0090) | The fatigue of a unit |
 | **Posture** | A land unit's state, defend or attack, set by the scenario or by the order `set_posture`. A unit on attack in a hex with enemy men starts a fight there, and a tired unit goes back to defend (decision 0090) | A task force's stance, which is engage or avoid |
+| **Ground combat phase** | The phase that runs once a day after the third pulse and before the day's base count: the marches, then each hex with men ashore in hex order, with its day's fight, fatigue, the test of a side beaten, the change of side of a beaten side's bases and the ground reports; last, the day's activity (decisions 0090, 0094, 0097) | A pulse |
 | **Contested hex** | A hex in which both sides have men ashore when the day's fights begin, after the marches, and at least one unit is on attack. It has one fight a day (decision 0090) | A hex in which two forces meet at sea |
 | **Firing men** | A land unit's men ashore times its fed share times 100 less its fatigue over 100, cut to a whole man. Shots are the firing men over `ground.toml: men_per_shot` (decision 0090) | The men ashore |
 | **Beaten** | Of a side in a hex: the other side attacked there that day, and the side has no man ashore or fewer than `ground.toml: beaten_share` times the other side's men, counted after the day's losses. A base with no men falls to an attacker without a fight, and the side is beaten. A beaten side loses every base it holds in the hex (decision 0090) | Sunk, or destroyed |
@@ -133,14 +136,14 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Ground report** | A report to a side of the enemy's men ashore in a hex: the true count times an error drawn between `ground.toml: report_error_low` and `report_error_high`, cut to a whole man. It is made each day in each hex where both sides have men ashore, after the day's fight, and it makes or replaces the side's estimate for the hex and finds the enemy's bases there (decision 0092) | A sighting report, which is of ships |
 | **Estimate (of the enemy ashore)** | What a side believes of the enemy's men in one hex: a count, the day it was reported and the report's event. There is one for a hex, and a new report replaces it. It is never aged, dropped or corrected. It may be wrong (decision 0092) | A count of the truth. A contact, which is of ships |
 | **Opening estimate** | An estimate a scenario gives a side at the start, with no error, as a starting contact is given. It is what that side believed, right or wrong, and is dated day 0 (decision 0092) | A starting contact |
-| **Fight** | The rounds that two opposing task forces fight when they meet (decision 0014) | |
+| **Fight** | The rounds that two opposing task forces fight when they meet (decision 0014). Ashore, the day's fight: the one exchange of shots in a contested hex, in which all of a side's land units there fight as one body (decision 0090) | |
 | **Meeting** | Two opposing forces in one hex, either because one entered it or because both began a pulse there and neither will move. Each meeting is one fight (decision 0022) | |
 | **Round** | One step of a fight, `surface_combat.toml: round_minutes` minutes long | |
 | **Salvo** | One ship's gun fire or its torpedo fire in one round at one target | |
 | **Tubes on one side** | A ship class's `torpedo_tubes_one_side`: the torpedo tubes that bear on one side, from 0 to its `torpedo_tubes`. A derived class takes it from the rows (decision 0074); a centreline fit, and every placeholder and frozen class, has all its tubes on one side. A ship fires this many in her first torpedo salvo and the rest in her second (decision 0083) | `torpedo_tubes`, every tube aboard |
 | **Side fired** | A ship's `torpedoes_one_side_fired`: true once she has fired the tubes of one side and before she fires the other's (decision 0083) | |
 | **Radar** | A yes or no for a ship class, read by one rule: a force with a ship afloat of a class that has it adds `radar_sighting_bonus` to its chance to sight in a fight. A derived class has it only if a ship of it has a surface-search set whose display has a plan position indicator; an air-search set does not give it, and a surface-search set with no row for its display does not either (decision 0077) | Radar fire control, which no rule has; an air-search set |
-| **Shot** | One unit of fire that can hit: one gun round, one torpedo tube or one aircraft's weapon. Each whole shot is one draw (decision 0033) | |
+| **Shot** | One unit of fire that can hit: one gun round, one torpedo tube or one aircraft's weapon. Each whole shot is one draw (decision 0033). Ashore, a land unit's shots are its firing men over `ground.toml: men_per_shot`, a fraction, the part of a shot rolled at that part of the chance (decision 0090) | |
 | **Hit** | A shot that succeeded | |
 | **Shore bombardment** | A force on the bombardment mission, in the night pulse, firing its ships' guns at an enemy base in its hex that is on its side's map. The shells hit aircraft on the ground, supply and men ashore, or nothing. Nothing ashore fires back (decision 0092) | A fight between forces, or an air raid on a base |
 | **Weighed shot** | A bombardment shell counted by its gun: the shells fired times the class's `gun_damage` over `surface_combat.toml: bombardment_reference_gun_damage`. A heavy shell counts for several, a light one for a part of one. Each is rolled at `bombardment_hit_chance` (decision 0092) | A shell fired |
@@ -163,6 +166,8 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Effective stance** | A force's stance in a fight: avoid if it broke off or slipped away earlier in the pulse, otherwise its ordered stance (decision 0022) | |
 | **Firing event** | An event of a side's own fire in a raid: its escorts' or patrol's fight, its guns, or its attack. A raid's claim rests on them (decision 0056) | |
 | **Objective** | A count of something the engine records, taken for one side, with points (decision 0054) | An order |
+| **`base_held`** | An objective kind: whether a named base is the side's own at the end of the game; the points are the objective's, if it is (chapter 6, decision 0090) | `base_open`, which is counted by days |
+| **`men_lost`** | An objective kind: enemy men lost, by any cause (unfed, lost with a ship, lost in a fight and lost to fire), scored for each 100 men. Never observable to a side before the end (chapter 6, decisions 0090, 0092) | Men lost to fire alone |
 | **Margin** | A side's points less the enemy's | |
 | **Level** | One of three sizes of margin, minor, major and decisive, that the scenario gives | A ship's level of damage |
 | **Outcome** | One of seven: a minor, major or decisive victory or defeat, or a stalemate | |
