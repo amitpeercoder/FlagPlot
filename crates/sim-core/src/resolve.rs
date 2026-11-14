@@ -17,8 +17,8 @@ use crate::ids::{BaseId, EventId, LandUnitId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::map::HexKind;
 use crate::orders::{
-    AirGroupOrder, AirMission, CargoAction, LandUnitOrder, Order, OrderKind, OrderRequest, Reach,
-    RejectReason, SpeedSetting, TaskForceOrder,
+    Activity, AirGroupOrder, AirMission, CargoAction, LandUnitOrder, Order, OrderKind,
+    OrderRequest, Posture, Reach, RejectReason, SpeedSetting, TaskForceOrder,
 };
 use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
@@ -876,9 +876,18 @@ impl World {
                 }
                 // An activity order is for a unit aboard as well as ashore
                 // (decision 4 of 0099): only a posture or a march needs a
-                // man ashore.
-                if matches!(land_unit_order, LandUnitOrder::SetActivity(_)) {
+                // man ashore. A working unit works and never attacks
+                // (decision 4 and ruling 1 of 0099).
+                if let LandUnitOrder::SetActivity(activity) = land_unit_order {
+                    if unit.working && !matches!(activity, Activity::Work(_)) {
+                        return Err(RejectReason::WorkingUnitWorks);
+                    }
                     return Ok(());
+                }
+                if unit.working
+                    && matches!(land_unit_order, LandUnitOrder::SetPosture(Posture::Attack))
+                {
+                    return Err(RejectReason::WorkingUnitDefends);
                 }
                 let Some(here) = unit.hex.filter(|_| unit.men_ashore > 0) else {
                     return Err(RejectReason::NoMenAshore);

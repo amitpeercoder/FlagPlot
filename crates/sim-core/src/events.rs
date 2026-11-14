@@ -11,7 +11,7 @@ use crate::hex::Hex;
 use crate::ids::{
     AirGroupId, BaseId, ContactId, EntityRef, EventId, LandUnitId, OrderId, ShipId, TaskForceId,
 };
-use crate::orders::{Cargo, RejectReason};
+use crate::orders::{Cargo, Job, RejectReason};
 use crate::refdata::ShipKind;
 use crate::state::{AirGroupLocation, HaltWork, ShipSystem, Side, SystemState};
 use crate::time::{ClockTime, Pulse};
@@ -1501,6 +1501,25 @@ pub enum EventKind {
         experience: u8,
         by: ExperienceSource,
     },
+    /// A land unit worked a day at `job` at `base` (decisions 3, 3a and 4 of
+    /// 0099): it made `work`, and the base's `total` for the job is then the
+    /// work done on its airfield, the day's work on its port or on its
+    /// aircraft, or its defences. Added at the end.
+    UnitWorked {
+        unit: LandUnitId,
+        base: BaseId,
+        job: Job,
+        work: Fixed,
+        total: Fixed,
+    },
+    /// The airfield of `side`'s base was built: its work done reached the
+    /// figure (decision 5 of 0099). Added at the end.
+    AirfieldBuilt {
+        base: BaseId,
+        side: Side,
+        hex: Hex,
+        work_done: Fixed,
+    },
 }
 
 impl EventKind {
@@ -1880,6 +1899,10 @@ impl EventKind {
             | EventKind::TrainingDay { unit, .. }
             | EventKind::FightDayCounted { unit, .. }
             | EventKind::ExperienceRaised { unit, .. } => vec![EntityRef::LandUnit(*unit)],
+            EventKind::UnitWorked { unit, base, .. } => {
+                vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
+            }
+            EventKind::AirfieldBuilt { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::PreparationShared {
                 parent,
                 new_force,
@@ -3225,6 +3248,31 @@ impl fmt::Display for EventKind {
                 f,
                 "{unit} rose to experience {experience} by {}",
                 by.name()
+            ),
+            EventKind::UnitWorked {
+                unit,
+                base,
+                job,
+                work,
+                total,
+            } => {
+                write!(f, "{unit} worked at the {} of {base}: {work} of work", job.name())?;
+                match job {
+                    Job::Airfield => write!(f, ", {total} done on the airfield"),
+                    Job::Port => write!(f, ", {total} on the port today"),
+                    Job::Aircraft => write!(f, ", {total} on the aircraft today"),
+                    Job::Defences => write!(f, ", defences {total}"),
+                }
+            }
+            EventKind::AirfieldBuilt {
+                base,
+                side,
+                hex,
+                work_done,
+            } => write!(
+                f,
+                "{base} ({}) at {hex} has an airfield: {work_done} of work done",
+                side.name()
             ),
         }
     }

@@ -204,6 +204,15 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::MarkNotOnRoute(_) => {
             " (act_at marks waypoints of the same set_route: each mark must be one of the route's waypoints, and the last waypoint needs no mark since a force stops there anyway)"
         }
+        R::NoAirfield => {
+            " (a base has no airfield until units working on its airfield have done the work it needs; the base's line says how much is done, and no group can rebase to it or land at it before)"
+        }
+        R::WorkingUnitDefends => {
+            " (a unit shown as working only works: it is always on defend and never attacks; only a fighting unit can be put on attack)"
+        }
+        R::WorkingUnitWorks => {
+            " (a unit shown as working only works: set_activity work, with a job if you want one, is the only activity it takes; it does not stand ready or train)"
+        }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
         }

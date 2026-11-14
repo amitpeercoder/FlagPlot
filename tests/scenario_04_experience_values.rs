@@ -116,7 +116,8 @@ fn no_other_scenario_gives_experience() {
     // architect, Nov 13, 2026). Scenario 17, Cape Esperance, gives its real
     // ships their derived values (decision 0072, 13); it moved into this
     // folder for its check on Nov 13, 2026. Scenario 28 gives experience to
-    // land units, not ships (decision 0097).
+    // land units, not ships (decision 0097), and so does scenario 30
+    // (decision 0099).
     let dir = data("scenarios");
     for entry in std::fs::read_dir(dir).expect("the folder reads") {
         let path = entry.expect("an entry").path();
@@ -131,6 +132,7 @@ fn no_other_scenario_gives_experience() {
             || name == "16_all_together.toml"
             || name == "17_cape_esperance.toml"
             || name == "28_experience_and_training.toml"
+            || name == "30_working_units.toml"
         {
             continue;
         }

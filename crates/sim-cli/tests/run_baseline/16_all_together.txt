@@ -2,7 +2,7 @@ Scenario 16: All together
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ed67497d4d00a89b  152 events
+day   1  hash c505589415ea45d5  152 events
 
 task_force:1 "Placeholder Allied carrier force" (Allied): Idle at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder Japanese carrier force" (Japanese): Arrived at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

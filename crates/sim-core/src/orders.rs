@@ -262,20 +262,27 @@ impl Posture {
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub enum Activity {
     /// Stands ready: rehearses if it is on the roster of a force preparing
-    /// a landing, in that force's hex. The default.
+    /// a landing, in that force's hex. The default for a fighting unit.
     #[default]
     Ready,
     /// Trains (decision 3 of 0097). New activities are added at the end.
     Train,
+    /// Works at a job (decisions 3, 3a and 4 of 0099): the job named, or
+    /// with `None` the default job, which is the airfield of the unit's base
+    /// if it has none and else its port. A working unit always works. Added
+    /// at the end.
+    Work(Option<Job>),
 }
 
 impl Activity {
     /// A stable number for the activity. Part of the state hash. Never
-    /// renumber it; add new activities at the end.
+    /// renumber it; add new activities at the end. The job of `Work` is
+    /// hashed apart from it.
     pub const fn code(self) -> u8 {
         match self {
             Activity::Ready => 0,
             Activity::Train => 1,
+            Activity::Work(_) => 2,
         }
     }
 
@@ -284,7 +291,60 @@ impl Activity {
         match self {
             Activity::Ready => "ready",
             Activity::Train => "train",
+            Activity::Work(_) => "work",
         }
+    }
+
+    /// The job named by a work activity, if any.
+    pub const fn job(self) -> Option<Job> {
+        match self {
+            Activity::Work(job) => job,
+            Activity::Ready | Activity::Train => None,
+        }
+    }
+}
+
+/// What a unit's work goes to at its base (decision 4 of 0099).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Job {
+    /// Adds to the work done on the base's airfield, until it is built.
+    Airfield,
+    /// Speeds the next day's unloading at the base, up to twice.
+    Port,
+    /// Repairs more aircraft at the base the next night.
+    Aircraft,
+    /// Adds to the base's defences, up to 100.
+    Defences,
+}
+
+impl Job {
+    /// Every job, in code order.
+    pub const ALL: [Job; 4] = [Job::Airfield, Job::Port, Job::Aircraft, Job::Defences];
+
+    /// A stable number for the job. Part of the state hash. Never renumber
+    /// it; add new jobs at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            Job::Airfield => 1,
+            Job::Port => 2,
+            Job::Aircraft => 3,
+            Job::Defences => 4,
+        }
+    }
+
+    /// The job's name as scenario files, orders and the log write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Job::Airfield => "airfield",
+            Job::Port => "port",
+            Job::Aircraft => "aircraft",
+            Job::Defences => "defences",
+        }
+    }
+
+    /// The job a name gives, if any.
+    pub fn from_name(name: &str) -> Option<Job> {
+        Job::ALL.into_iter().find(|job| job.name() == name)
     }
 }
 
@@ -504,8 +564,8 @@ pub enum LandUnitOrder {
     /// (decision 0094, 3). A standing order: it stands until the unit
     /// arrives or another march order replaces it. Added at the end.
     March(Hex),
-    /// What the unit does on a day it does not march or fight: stand ready
-    /// or train (decision 4 of 0099 and 4 of 0097). A standing order of its
+    /// What the unit does on a day it does not march or fight: stand ready,
+    /// train, or work at a job (decision 4 of 0099 and 4 of 0097). A standing order of its
     /// own slot. Accepted for a unit with men ashore or aboard. Added at the
     /// end.
     SetActivity(Activity),
@@ -687,6 +747,15 @@ pub enum RejectReason {
     /// A prepare-landing order names a hex that is not a coast hex on the
     /// map (decision 0095, 1). Added at the end of the enum.
     NotACoastHex(Hex),
+    /// A rebase order names a base with no airfield (decision 6 of 0099).
+    /// Added at the end of the enum.
+    NoAirfield,
+    /// An attack order to a working unit, which is always on defend
+    /// (decision 0099, ruling 1). Added at the end of the enum.
+    WorkingUnitDefends,
+    /// An order to a working unit to stand ready or to train: a working unit
+    /// works (decision 4 of 0099). Added at the end of the enum.
+    WorkingUnitWorks,
 }
 
 impl fmt::Display for RejectReason {
@@ -790,6 +859,13 @@ impl fmt::Display for RejectReason {
             ),
             RejectReason::NotACoastHex(hex) => {
                 write!(f, "{hex} is not a coast hex on the map")
+            }
+            RejectReason::NoAirfield => f.write_str("the base has no airfield"),
+            RejectReason::WorkingUnitDefends => {
+                f.write_str("a working unit does not attack: it is always on defend")
+            }
+            RejectReason::WorkingUnitWorks => {
+                f.write_str("a working unit works: it does not stand ready or train")
             }
         }
     }

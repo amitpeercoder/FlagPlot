@@ -1,0 +1,405 @@
+# Scenario 30: units that work, and what they build (decision 0099).
+#
+# Proves working units against a hand calculation. Working units build an
+# airfield, and an air group can then be flown to it (units 1 and 2 at A);
+# work on a port speeds the next day's unloading, up to twice, and one unit
+# does one activity a day (units 3 and 4 at B, forces 1 to 4, unit 12);
+# work on aircraft repairs more of them the next night and hungry men make
+# less (unit 5 at C); work on defences raises a defender's chance to hit, a
+# fighting unit set to work makes half as much, and working men do not fire
+# (units 6, 7 and 8 at D); working men do not hold a base (units 9 and 10 at
+# E). The hand calculation is in tests/scenario_30_working_units.rs, which
+# runs the scenario on the frozen step 1 figures. Only the hits of a fight
+# are the dice; the test reads them.
+#
+# The scenario names the wear and repair figures and not the air supply
+# figures: aircraft are repaired and cost no supply. No group has a mission,
+# so nothing flies and nothing wears. No force sails.
+#
+# PLACEHOLDER DATA. The units, bases, ships and map are invented.
+
+name = "Scenario 30: Units that work, and what they build"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_works.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_upkeep = "../reference/air_upkeep.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 5000
+airfield = false
+airfield_work = 17000
+defences = 0
+aircraft_repairs_per_day = 0
+
+[[base]]
+id = 2
+name = "Placeholder base 2"
+side = "allied"
+q = 5
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 3
+name = "Placeholder base 3"
+side = "allied"
+q = 10
+r = 0
+supply_t = "13.5"
+aircraft_repairs_per_day = 1
+
+[[base]]
+id = 4
+name = "Placeholder base 4"
+side = "allied"
+q = 15
+r = 0
+supply_t = 5000
+defences = 40
+
+[[base]]
+id = 5
+name = "Placeholder base 5"
+side = "japanese"
+q = 15
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 6
+name = "Placeholder base 6"
+side = "allied"
+q = 20
+r = 0
+supply_t = 1000
+airfield = false
+airfield_work = 5000
+defences = 30
+
+[[base]]
+id = 7
+name = "Placeholder base 7"
+side = "japanese"
+q = 20
+r = 0
+supply_t = 100
+
+[[task_force]]
+id = 1
+name = "Placeholder force 1"
+side = "allied"
+at_base = 2
+mission = "transport"
+
+[[task_force]]
+id = 2
+name = "Placeholder force 2"
+side = "allied"
+at_base = 2
+mission = "transport"
+
+[[task_force]]
+id = 3
+name = "Placeholder force 3"
+side = "allied"
+at_base = 2
+mission = "transport"
+
+[[task_force]]
+id = 4
+name = "Placeholder force 4"
+side = "allied"
+at_base = 2
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+supply_t = 1500
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+supply_t = 1000
+task_force = 2
+
+[[ship]]
+id = 3
+name = "Placeholder troop transport 3"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 3
+
+[[ship]]
+id = 4
+name = "Placeholder troop transport 4"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 4
+
+# Placeholder fighter: strike range 250 nm, so a transfer range of 500 nm.
+[[air_group]]
+id = 1
+name = "Placeholder fighter squadron"
+side = "allied"
+base = 2
+aircraft_type = 4
+ready = 12
+
+# Placeholder flying boat.
+[[air_group]]
+id = 2
+name = "Placeholder patrol squadron"
+side = "allied"
+base = 3
+aircraft_type = 1
+ready = 2
+damaged = 20
+
+# Land units. Every unit has experience 2 but unit 4 and every skill 2 but as stated.
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+working = true
+men = 1000
+q = 0
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder unit 2"
+side = "allied"
+working = true
+men = 400
+q = 0
+r = 0
+posture = "defend"
+skills = { works = 4 }
+
+[[land_unit]]
+id = 3
+name = "Placeholder unit 3"
+side = "allied"
+working = true
+men = 500
+q = 5
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 4
+name = "Placeholder unit 4"
+side = "allied"
+men = 3000
+q = 5
+r = 0
+posture = "defend"
+experience = 1
+
+[[land_unit]]
+id = 5
+name = "Placeholder unit 5"
+side = "allied"
+working = true
+men = 600
+q = 10
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 6
+name = "Placeholder unit 6"
+side = "allied"
+men = 1000
+q = 15
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 7
+name = "Placeholder unit 7"
+side = "allied"
+working = true
+men = 2000
+q = 15
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 8
+name = "Placeholder unit 8"
+side = "japanese"
+men = 1000
+q = 15
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 9
+name = "Placeholder unit 9"
+side = "allied"
+working = true
+men = 500
+q = 20
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 10
+name = "Placeholder unit 10"
+side = "japanese"
+men = 100
+q = 20
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 11
+name = "Placeholder unit 11"
+side = "allied"
+men = 900
+q = 0
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 12
+name = "Placeholder unit 12"
+side = "allied"
+men = 600
+q = 5
+r = 0
+posture = "defend"
+
+# Day 1.
+
+[[order]]
+day = 1
+side = "allied"
+land_unit = 3
+kind = "set_activity"
+activity = "work"
+job = "port"
+
+[[order]]
+day = 1
+side = "allied"
+land_unit = 4
+kind = "set_activity"
+activity = "train"
+
+[[order]]
+day = 1
+side = "allied"
+land_unit = 5
+kind = "set_activity"
+activity = "work"
+job = "aircraft"
+
+[[order]]
+day = 1
+side = "allied"
+land_unit = 11
+kind = "set_activity"
+activity = "work"
+job = "defences"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "unload"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 3
+kind = "prepare_landing"
+hex = [20, 0]
+roster = [12]
+
+# Day 2: refused, base 1 has no airfield yet.
+
+[[order]]
+day = 2
+side = "allied"
+air_group = 1
+kind = "rebase"
+base = 1
+
+# Day 3: accepted.
+
+[[order]]
+day = 3
+side = "allied"
+air_group = 1
+kind = "rebase"
+base = 1
+
+[[order]]
+day = 3
+side = "allied"
+land_unit = 4
+kind = "set_activity"
+activity = "work"
+job = "port"
+
+[[order]]
+day = 3
+side = "allied"
+land_unit = 12
+kind = "set_activity"
+activity = "work"
+job = "defences"
+
+# Day 4.
+
+[[order]]
+day = 4
+side = "allied"
+task_force = 2
+kind = "unload"
+
+# Day 5.
+
+[[order]]
+day = 5
+side = "allied"
+land_unit = 12
+kind = "set_activity"
+activity = "ready"
+
+[[order]]
+day = 5
+side = "allied"
+task_force = 4
+kind = "prepare_landing"
+hex = [20, 0]
+roster = [12]

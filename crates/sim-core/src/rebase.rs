@@ -26,7 +26,8 @@ impl World {
     /// the checks every air group order has (the side's own, not lost),
     /// in the order of decision 0091, 2: away at the yard, aboard a ship,
     /// already moved that day, the base not the side's own, already at the
-    /// base, beyond the transfer range.
+    /// base, the base with no airfield (decision 6 of 0099), beyond the
+    /// transfer range.
     pub(crate) fn check_rebase(
         &self,
         group: &AirGroup,
@@ -60,6 +61,10 @@ impl World {
         };
         if from == base {
             return Err(RejectReason::AlreadyAtBase);
+        }
+        // Without an airfield no aircraft uses a base (decision 6 of 0099).
+        if !to.airfield {
+            return Err(RejectReason::NoAirfield);
         }
         let distance_nm = self.rebase_distance_nm(from, to.hex);
         let range_nm = self.ref_data.transfer_range_nm(group.aircraft_type);

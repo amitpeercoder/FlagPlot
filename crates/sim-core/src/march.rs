@@ -311,8 +311,11 @@ impl World {
                     );
                     self.truth.bases.insert(
                         id,
+                        // A base formed by a march has no airfield
+                        // (decision 5 of 0099).
                         Base {
                             on_map: false,
+                            airfield: false,
                             ..Base::new(id, format!("Dump at {to}"), side, to)
                         },
                     );

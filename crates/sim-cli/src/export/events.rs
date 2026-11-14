@@ -155,6 +155,9 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::AlreadyMovedToday => base("already_moved_today"),
         RejectReason::NoLandLink(hex) => base("no_land_link").hex("hex", *hex),
         RejectReason::MarkNotOnRoute(hex) => base("mark_not_on_route").hex("hex", *hex),
+        RejectReason::NoAirfield => base("no_airfield"),
+        RejectReason::WorkingUnitDefends => base("working_unit_defends"),
+        RejectReason::WorkingUnitWorks => base("working_unit_works"),
     }
 }
 
@@ -1005,6 +1008,32 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             d.id("unit", *unit)
                 .int("days", *days)
                 .int("experience", u32::from(*experience)),
+        ),
+        EventKind::UnitWorked {
+            unit,
+            base,
+            job,
+            work,
+            total,
+        } => (
+            "unit_worked",
+            d.id("unit", *unit)
+                .id("base", *base)
+                .text("job", job.name())
+                .num("work", *work)
+                .num("total", *total),
+        ),
+        EventKind::AirfieldBuilt {
+            base,
+            side,
+            hex,
+            work_done,
+        } => (
+            "airfield_built",
+            d.text("side", names::side(*side))
+                .id("base", *base)
+                .hex("hex", *hex)
+                .num("work_done", *work_done),
         ),
         EventKind::FightDayCounted {
             unit,

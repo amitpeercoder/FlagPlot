@@ -50,6 +50,7 @@ mod start;
 mod stragglers;
 mod surface;
 mod upkeep;
+pub mod works;
 
 pub use airstrike::StrikeChoice;
 pub use estimate::StartingEstimate;

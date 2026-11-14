@@ -2,7 +2,7 @@ Scenario 15a: Night action, a force that is not ready fires part of its guns
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8ab0e076b54bf2b7  73 events
+day   1  hash 8b36cd47b7e62346  73 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

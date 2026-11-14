@@ -481,7 +481,11 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // `ExperienceRaised`: the full slice has no land unit. Scenario 27
     // records the first six and scenario 28 the other three, and their own
     // tests read them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 48] = [
+    //
+    // The two kinds of decision 0099, `UnitWorked` and `AirfieldBuilt`: the
+    // full slice has no land unit. Scenario 30 records them, and its own test
+    // reads them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 50] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -530,6 +534,8 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "TrainingDay",
         "FightDayCounted",
         "ExperienceRaised",
+        "UnitWorked",
+        "AirfieldBuilt",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

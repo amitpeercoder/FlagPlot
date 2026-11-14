@@ -545,3 +545,23 @@ Fields added only, so `version` stays 3.
   each unit's men by its weight, the engine's own `daily_charge_t`.
 - **What the enemy is told.** Nothing: skills appear only on the side's own unit
   lines, and there is no line for an enemy land unit.
+
+## Units that work, and what they build (decision 0099)
+
+Fields added only, so `version` stays 3.
+
+- **The order** `set_activity` takes `activity` `work` and an optional `job`: `airfield`,
+  `port`, `aircraft` or `defences`. With no job the default applies: the airfield of the
+  unit's base if it has none, else the port. A unit shown `working` takes only `work`.
+- **A land unit line** has `working` (only when true), `job` (only for a unit set to work: the
+  job named, else the default one) with `job_is_default` (only when true), and `skills.works`
+  (always, 0 to 4, 2 the standard). `activity` can be `work`.
+- **A base line** (`list_bases`, `get_entity`, the briefing's `bases`) has `works` only when
+  the base is not as a base always was: `airfield` (false until built), `airfield_work` (done)
+  with `airfield_work_needed` (only while it has no airfield), `defences` (0 to 100), and
+  `port_work_yesterday` and `aircraft_work_yesterday` (what today's cargo and tonight's repairs
+  read).
+- **The briefing's `land_units`** has `work_yesterday` (the side's `UnitWorked` events: unit,
+  base, job, work, total) and `airfields_built_yesterday`, each left out when none.
+- **What the enemy is told.** Nothing: no line, event or field of an enemy base or unit shows
+  an airfield, work or defences. An enemy base keeps its public line.

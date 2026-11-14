@@ -198,6 +198,34 @@ pub struct BaseLine {
     pub port_size: u8,
     /// 0 if the hex has no airfield.
     pub airfield_size: u8,
+    /// The base's airfield, work and defences (decision 0099). Left out
+    /// while the base has an airfield, none is being built, no defences are
+    /// raised and no work of yesterday waits to be read, so a scenario
+    /// without working units is listed as it was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub works: Option<BaseWorksLine>,
+}
+
+/// A base's airfield, work and defences: shown for the side's own bases
+/// only (decision 0099, 5 and 8).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct BaseWorksLine {
+    /// Whether the base has an airfield. Aircraft cannot rebase to or land
+    /// at a base that has none.
+    pub airfield: bool,
+    /// The work done on the airfield so far.
+    pub airfield_work: Dec,
+    /// The work the airfield needs in all (the ground figure
+    /// `airfield_work`). Left out once the base has an airfield.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub airfield_work_needed: Option<Dec>,
+    /// The base's defences, 0 to 100.
+    pub defences: Dec,
+    /// The work on the port made yesterday: what today's cargo at the base
+    /// reads.
+    pub port_work_yesterday: Dec,
+    /// The work on the aircraft made yesterday: what tonight's repairs read.
+    pub aircraft_work_yesterday: Dec,
 }
 
 /// A contact in one line.
@@ -412,7 +440,38 @@ pub(crate) fn base_line(ctx: &Ctx<'_>, base: &Base) -> BaseLine {
         fuel_t: Dec(base.fuel_t),
         port_size: data.map_or(0, |d| d.port_size),
         airfield_size: data.map_or(0, |d| d.airfield_size),
+        works: base_works_line(ctx, base),
     }
+}
+
+/// The base's works line, or `None` while it is as a base always was.
+pub(crate) fn base_works_line(ctx: &Ctx<'_>, base: &Base) -> Option<BaseWorksLine> {
+    use sim_core::orders::Job;
+    let yesterday = ctx.view.day().saturating_sub(1);
+    let port = base.work_of_day(yesterday, Job::Port);
+    let aircraft = base.work_of_day(yesterday, Job::Aircraft);
+    if base.airfield
+        && base.airfield_work == Fixed::ZERO
+        && base.defences == Fixed::ZERO
+        && port == Fixed::ZERO
+        && aircraft == Fixed::ZERO
+    {
+        return None;
+    }
+    Some(BaseWorksLine {
+        airfield: base.airfield,
+        airfield_work: Dec(base.airfield_work),
+        airfield_work_needed: if base.airfield {
+            None
+        } else {
+            ctx.view
+                .ground_figures()
+                .map(|figures| Dec(figures.airfield_work))
+        },
+        defences: Dec(base.defences),
+        port_work_yesterday: Dec(port),
+        aircraft_work_yesterday: Dec(aircraft),
+    })
 }
 
 /// A force with a ship afloat. The briefing and the lists show these only.
@@ -481,6 +540,20 @@ pub struct LandUnitLine {
     /// What the unit does on a day it does not march or fight: `ready` or
     /// `train` (decisions 4 of 0099 and 4 of 0097).
     pub activity: &'static str,
+    /// True for a working unit (decision 0099): it only works, never
+    /// attacks, and its men do not fire or hold a base. Left out when
+    /// false.
+    #[serde(skip_serializing_if = "is_false")]
+    pub working: bool,
+    /// The job a unit set to work makes its work at: the one its order
+    /// names, else the default job at its base (see `job_is_default`). Left
+    /// out when the unit does not work.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub job: Option<&'static str>,
+    /// True when `job` is the default one, because no job was named. Left
+    /// out when false.
+    #[serde(skip_serializing_if = "is_false")]
+    pub job_is_default: bool,
     /// The number of the side's set_activity order, if one is in force.
     /// Left out when none is.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -519,6 +592,9 @@ pub struct SkillsLine {
     pub weight: u32,
     /// Movement by terrain of the hex.
     pub movement: MovementSkillsLine,
+    /// Works: moves the work a day makes, as the skill over 2 (decision
+    /// 0099, 2).
+    pub works: u32,
 }
 
 /// A land unit's movement skills by terrain (decision 0098, 4).
@@ -643,6 +719,28 @@ pub(crate) fn land_unit_hex(ctx: &Ctx<'_>, unit: &LandUnit) -> Option<Hex> {
     })
 }
 
+fn is_false(b: &bool) -> bool {
+    !*b
+}
+
+/// The job a unit set to work makes its work at (decision 0099, 4): the one
+/// named, else the default one at the lowest-numbered base of its side in
+/// its hex (`None` when the unit does not work, and when it has no such base
+/// to say a default of).
+fn working_job(ctx: &Ctx<'_>, unit: &LandUnit) -> Option<&'static str> {
+    use sim_core::orders::Activity;
+    let Activity::Work(named) = unit.activity else {
+        return None;
+    };
+    named.map(|job| job.name()).or_else(|| {
+        let hex = unit.hex?;
+        ctx.bases
+            .values()
+            .find(|b| b.hex == hex)
+            .map(|b| sim_core::works::default_job(b).name())
+    })
+}
+
 pub(crate) fn land_unit_line(
     ctx: &Ctx<'_>,
     unit: &LandUnit,
@@ -682,12 +780,17 @@ pub(crate) fn land_unit_line(
             .map(|hex| ctx.place(hex))
             .collect(),
         activity: unit.activity.name(),
+        working: unit.working,
+        job: working_job(ctx, unit),
+        job_is_default: unit.activity.job().is_none()
+            && matches!(unit.activity, sim_core::orders::Activity::Work(_)),
         activity_order: unit.activity_order.and_then(|o| ctx.order_number_if_own(o)),
         experience: u32::from(unit.experience),
         skills: SkillsLine {
             assault: u32::from(unit.skills.assault),
             holding: u32::from(unit.skills.holding),
             weight: u32::from(unit.skills.weight),
+            works: u32::from(unit.skills.works),
             movement: MovementSkillsLine {
                 clear: u32::from(unit.skills.clear),
                 jungle: u32::from(unit.skills.jungle),

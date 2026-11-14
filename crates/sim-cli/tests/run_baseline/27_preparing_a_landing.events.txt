@@ -2,18 +2,18 @@ Scenario 27: Preparing a landing
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8ba5118aaaf66966  16 events
-day   2  hash 84e18ceda69369d8  12 events
-day   3  hash 58ddfa876074ed9d  13 events
-day   4  hash 8790b43f405910b8  12 events
-day   5  hash 11c90e478df74dcf  12 events
-day   6  hash 5713c6d1bfbe5028  18 events
-day   7  hash 1909471f3dbdfc60  13 events
-day   8  hash 17386eddec59bc0a  13 events
-day   9  hash eb0b5637c829ca2e  13 events
-day  10  hash eb963828a8e72d35  13 events
-day  11  hash bf84bf1016d3b1c3  52 events
-day  12  hash 25cd8c66dc0fa2af  23 events
+day   1  hash fc035ca5408a2eb3  16 events
+day   2  hash 55bd4679baec6081  12 events
+day   3  hash 84f00f5d04d6f2dc  13 events
+day   4  hash 63fc98419c457a65  12 events
+day   5  hash af128bee18bd15f6  12 events
+day   6  hash 6e991794b922e835  18 events
+day   7  hash 019543a3ca2b57a9  13 events
+day   8  hash 3a80d53ff5ce2d3f  13 events
+day   9  hash e6bc7d4b0b3ebea7  13 events
+day  10  hash f6bce905732d8abc  13 events
+day  11  hash a951122b17483cc0  52 events
+day  12  hash 309d77aee91c45e0  23 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:3  <- order:2
@@ -238,7 +238,7 @@ ship:4 "Placeholder troop transport 4": afloat in task_force:4; damage flotation
 ship:5 "Placeholder troop transport 5": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 300 men of land_unit:5 aboard
 base:1 "Placeholder base A" (Allied) at (0,0): 982 t of supply in stock
 base:2 "Placeholder base B" (Allied) at (4,0): 156 t of supply in stock
-base:3 "Landing at (0,6)" (Allied) at (0,6): 0 t of supply in stock, formed in play, on its own side's map only
+base:3 "Landing at (0,6)" (Allied) at (0,6): 0 t of supply in stock, no airfield, formed in play, on its own side's map only
 land_unit:1 "Placeholder battalion 1" (Allied): 600 men ashore at (4,0), fatigue 10
 land_unit:2 "Placeholder battalion 2" (Allied): 600 men ashore at (4,0), fatigue 30
 land_unit:3 "Placeholder battalion 3" (Allied): 190 men ashore at (0,6), fatigue 30

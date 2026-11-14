@@ -839,6 +839,22 @@ impl Briefing {
                 ));
             }
             stocks(&mut o);
+            if let Some(w) = &b.works {
+                let airfield = match (w.airfield, &w.airfield_work_needed) {
+                    (false, Some(needed)) => {
+                        format!(
+                            "no airfield, {} of {} work done",
+                            w.airfield_work.0, needed.0
+                        )
+                    }
+                    (false, None) => format!("no airfield, {} work done", w.airfield_work.0),
+                    (true, _) => "an airfield".to_string(),
+                };
+                o.sub(format!(
+                    "Works: {airfield}; defences {}; yesterday's work on the port {}, on the aircraft {}",
+                    w.defences.0, w.port_work_yesterday.0, w.aircraft_work_yesterday.0
+                ));
+            }
             for r in &b.returned_yesterday {
                 o.sub(format!(
                     "Returned yesterday from the yard: {} with {}{}",
@@ -1224,6 +1240,23 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             u.skills.movement.mountain,
             u.skills.movement.atoll
         ));
+        if u.skills.works != 2 {
+            s.push_str(&format!(", works {}", u.skills.works));
+        }
+        if u.working {
+            s.push_str("; working (it only works: always on defend, never attacks, its men do not fire or hold a base)");
+        }
+        if let Some(job) = u.job {
+            s.push_str(&format!(
+                "; works at {}{}",
+                job,
+                if u.job_is_default {
+                    " (the default job)"
+                } else {
+                    ""
+                }
+            ));
+        }
         if u.activity != "ready" {
             s.push_str(&format!("; activity {}", u.activity));
             if let Some(order) = u.activity_order {
@@ -1568,6 +1601,32 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             r.experience,
             r.by,
             ev(r.event)
+        ));
+    }
+    for w in &land.work_yesterday {
+        let what = match w.job {
+            "airfield" => format!("{} done on the airfield", w.total.0),
+            "port" => format!("{} on the port yesterday", w.total.0),
+            "aircraft" => format!("{} on the aircraft yesterday", w.total.0),
+            _ => format!("defences {}", w.total.0),
+        };
+        o.line(format!(
+            "Work yesterday: {} worked at the {} of {}, {} of work, {}{}",
+            w.land_unit.text(),
+            w.job,
+            w.base.text(),
+            w.work.0,
+            what,
+            ev(w.event)
+        ));
+    }
+    for a in &land.airfields_built_yesterday {
+        o.line(format!(
+            "Airfield built yesterday: {} at {} has an airfield, {} of work done{}",
+            a.base.text(),
+            at(&a.place),
+            a.work_done.0,
+            ev(a.event)
         ));
     }
     if o.0.len() == before {

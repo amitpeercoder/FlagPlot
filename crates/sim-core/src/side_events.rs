@@ -1167,6 +1167,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::TrainingDay { unit, .. }
         | EventKind::FightDayCounted { unit, .. }
         | EventKind::ExperienceRaised { unit, .. } => whole_if(own_unit(unit)),
+        // A side sees its own works whole: each unit's work and its job, and
+        // its own airfield built. The enemy sees none of it (decision 7 of
+        // 0099).
+        EventKind::UnitWorked { unit, .. } => whole_if(own_unit(unit)),
+        EventKind::AirfieldBuilt { side: builder, .. } => whole_if(*builder == side),
 
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
@@ -1235,6 +1240,10 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
             "shots",
             "experience",
             "experience_factor",
+            // Its own base's defences and the factor they give (decision 7
+            // of 0099).
+            "defences",
+            "defences_factor",
         ],
         SideEventKind::Salvo { .. } => &[
             "guns",
@@ -1820,6 +1829,10 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::TrainingDay { .. }
         | EventKind::FightDayCounted { .. }
         | EventKind::ExperienceRaised { .. }
+        // Work cites the side's own activity order and its own feeding;
+        // an airfield built cites the side's own work (decision 0099).
+        | EventKind::UnitWorked { .. }
+        | EventKind::AirfieldBuilt { .. }
         // A halt cites the side's own route order and steaming; steaming on
         // cites the halt, the route order, and the side's own bombardment
         // (given it cut) or cargo completion (decision 0096).
@@ -3381,6 +3394,27 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            row(
+                EventKind::UnitWorked {
+                    unit: unit(1),
+                    base: base(1),
+                    job: crate::orders::Job::Defences,
+                    work: fx(450),
+                    total: fx(2),
+                },
+                Whole,
+                Nothing,
+            ),
+            sided(row(
+                EventKind::AirfieldBuilt {
+                    base: base(1),
+                    side: Side::Allied,
+                    hex: hex(),
+                    work_done: fx(20600),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3421,7 +3455,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 110, "the log has 110 kinds of event");
+        assert_eq!(all.len(), 112, "the log has 112 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

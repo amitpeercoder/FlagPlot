@@ -804,17 +804,28 @@ impl World {
         };
         // Places in order: bases by number, then ships by number that carry a
         // group and are afloat, each with what it can repair.
+        // A base's repairs are its own figure and the repairs its work on
+        // the aircraft the day before gives, also where its own figure is 0
+        // (decision 4 and ruling 4 of 0099).
+        let ground = self.ref_data.ground;
+        let extra_of = |base: &crate::state::Base| match ground {
+            Some(ground) if day > 1 => crate::works::extra_repairs(
+                base.work_of_day(day - 1, crate::orders::Job::Aircraft),
+                &ground,
+            ),
+            _ => 0,
+        };
         let mut places: Vec<(AirGroupLocation, u32)> = self
             .truth
             .bases
             .values()
-            .filter(|base| base.aircraft_repairs_per_day > 0)
             .map(|base| {
                 (
                     AirGroupLocation::Base(base.id),
-                    base.aircraft_repairs_per_day,
+                    base.aircraft_repairs_per_day + extra_of(base),
                 )
             })
+            .filter(|(_, repairs)| *repairs > 0)
             .collect();
         if figures.carrier_repairs_per_day > 0 {
             let carriers: BTreeSet<_> = self
@@ -843,6 +854,22 @@ impl World {
 
         let supply = self.ref_data.air_supply;
         for (place, mut left) in places {
+            // The work that gave a base more repairs is a cause of each.
+            let work_causes: Vec<Cause> = match place {
+                AirGroupLocation::Base(base) if day > 1 => {
+                    let own = self.truth.bases[&base].aircraft_repairs_per_day;
+                    if left > own {
+                        self.events_of_day_where(day - 1, |kind| {
+                            matches!(kind, EventKind::UnitWorked {
+                                base: at, job: crate::orders::Job::Aircraft, ..
+                            } if *at == base)
+                        })
+                    } else {
+                        Vec::new()
+                    }
+                }
+                _ => Vec::new(),
+            };
             // Repairs paid for at a base: the count, and the events that
             // say they were made (decision 3 of 0039).
             let mut paid_for: u32 = 0;
@@ -890,7 +917,7 @@ impl World {
                 let (ready, damaged) = (group.ready, group.damaged);
                 // The latest wear that left aircraft damaged says why there
                 // are any. Aircraft damaged from the start have no cause.
-                let causes: Vec<Cause> = self
+                let mut causes: Vec<Cause> = self
                     .events
                     .latest_where(|kind| {
                         matches!(kind, EventKind::AircraftWorn {
@@ -900,6 +927,7 @@ impl World {
                     .map(Cause::Event)
                     .into_iter()
                     .collect();
+                causes.extend(work_causes.iter().copied());
                 let repaired_event = self.events.record(
                     day,
                     Some(pulse),
