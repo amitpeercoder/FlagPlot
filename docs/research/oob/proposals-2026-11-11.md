@@ -1,6 +1,6 @@
 # Proposals for the architect, 2026-11-11: cruiser floatplanes, aerial torpedoes, anti-aircraft fits
 
-Status: research proposals. Nothing here is settled. Every figure is a row in `data/oob` with its source and locator; the row ids are given so a settlement can name them. "Checked" means the page image or page text was read a second time against the row, not only by the researcher that found it.
+Status: research proposals. Nothing here is settled. Every figure is a row in `data/oob` with its source and locator; the row ids are given so a settlement can name them. "Checked" means the page image or page text was read a second time against the row, not only by the researcher that found it. *(Nov 14, 2026: the search recommendation of section 1c, 300 nm, was replaced by decision 0073, which uses the recorded 330 miles.)*
 
 ## 1. Cruiser floatplanes at Eastern Solomons (the priority request)
 

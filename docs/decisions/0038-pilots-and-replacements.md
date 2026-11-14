@@ -42,8 +42,8 @@ Base supply, which a replacement will draw on, is the next stage.
 
 - Experience, training and the quality of replacements.
 - A pool that holds replacements until they are wanted.
-- Moving a group to another base.
-- Pilots wounded, and pilots rescued at sea.
+- Moving a group to another base. *(Nov 14, 2026: built by decision 0091, for land-based groups only)*
+- Pilots wounded, and pilots rescued at sea. *(Nov 14, 2026: the fate of a crew by where it comes down is built by decision 0059)*
 
 ## As built
 

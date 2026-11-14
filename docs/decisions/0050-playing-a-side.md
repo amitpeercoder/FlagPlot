@@ -66,7 +66,7 @@ A side can be told its situation, ask for detail, ask why and measure (decisions
 - Intents and the staff: orders here are a player's own, unit by unit.
 - A game saved in the middle and resumed.
 - More than one game in a server, and a network transport.
-- Orders the engine does not have yet: forming and disbanding forces, rebasing, target priority, a base's reserve levels.
+- Orders the engine does not have yet: forming and disbanding forces, rebasing, target priority, a base's reserve levels. *(Nov 14, 2026: rebasing is built by decision 0091 and target priority by decision 0063)*
 
 ## Rule card
 

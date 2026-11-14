@@ -174,6 +174,6 @@ No move. `wear_chance_per_100_nm` stays 0.02, and so do the other wear figures. 
 
 ## What is not remade
 
-No figure moved, so no report, run baseline, recorded game or batch file changes. The live report of this battle is still `docs/validation/rabaul-guadalcanal-air-rabaul-r1.md`; the grid's batch at 0.02 reproduces it.
+No figure moved, so no report, run baseline, recorded game or batch file changes. The live report of this battle is still `docs/validation/rabaul-guadalcanal-air-rabaul-r1.md`; the grid's batch at 0.02 reproduces it. *(Nov 14, 2026: the closing report of this battle is `docs/validation/rabaul-guadalcanal-air-close.md`.)*
 
 The wear figures (`wear_base_chance`, `wear_chance_per_100_nm`, `write_off_share`) close as placeholders that the rows size only roughly: in the record's size for the American types and not fitted. `carrier_repairs_per_day` closes as a placeholder that no battle of the slice reads. `docs/validation/tuning/air-figures-closed.md` lists them with every other air figure.

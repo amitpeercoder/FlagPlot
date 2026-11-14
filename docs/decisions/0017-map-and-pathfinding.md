@@ -43,6 +43,8 @@ The spec asks for a hex map of the slice at 40 nm per hex, with a stored latitud
 14. **The turn-back choice of decision 0005 uses path distance,** not straight-line hexes.
 15. **Search and other rules that measure distance still use straight-line hex distance.** An aircraft does not go round an island.
 
+   *Nov 14, 2026: the distance an aircraft flies is the straight line between hex centres, by decision 0040.*
+
 ## Why
 
 - **Generated, not drawn.** A map traced from another game's map would be that game's data. A map generated from public-domain coastlines can be regenerated, checked and extended.
@@ -64,7 +66,7 @@ What it found unclear led to two changes above: which coast of Guadalcanal each 
 - A hex with water on both sides of an island counts as one side only: the larger, or the side of a listed anchorage. Two anchorages on opposite sides of one hex cannot both be served.
 - Going round an island costs less than it should. The hex at the east end of Guadalcanal has one body of water that wraps round the tip, so north and south join inside it.
 - Straits narrower than the lattice can show, about 2 to 4 nm, may come out closed. They go on the same list.
-- **Hex steps overstate distance.** A step is 40 nm in one of six directions, so a course between two of them zigzags, and due north or south costs about 15 percent more than the straight line. Noumea to Espiritu Santo is 405 nm straight and 520 nm by hex. Speeds and ranges from sources therefore do not convert as directly as the spec assumed. This is true of any hex map and is left for step 2 to weigh.
+- **Hex steps overstate distance.** A step is 40 nm in one of six directions, so a course between two of them zigzags, and due north or south costs about 15 percent more than the straight line. Noumea to Espiritu Santo is 405 nm straight and 520 nm by hex. Speeds and ranges from sources therefore do not convert as directly as the spec assumed. This is true of any hex map and is left for step 2 to weigh. *(Nov 14, 2026: settled for ships by decision 0058: a ship is charged straight-line miles where the way is clear)*
 - Shallow water, reefs and anchorages.
 - Port and airfield sizes for real bases.
 - A cache for path distances, if the 180-day soak needs it.

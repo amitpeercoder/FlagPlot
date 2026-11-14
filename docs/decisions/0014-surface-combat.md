@@ -27,6 +27,9 @@ The spec's scenario 4 is Savo Island. It needs a combat rule, the real map and r
 3. **Each round, a force that has not yet sighted the enemy rolls to sight it.** The chance is a base figure for night or day, plus a bonus if any ship afloat in the force has radar, multiplied by a factor if the force is not alert. It is capped at 1. Whether it is night comes from the darkness function (decision 0001).
 4. **A force that is fired on has sighted the enemy from the next round,** with no roll. Gun flashes give the firer away.
 5. **A force is surprised in any round in which it is fired on before it has sighted the enemy.** It cannot fire in that round, and fire against it is more accurate.
+
+   *Nov 14, 2026: a force is surprised in a round if it has not sighted the enemy after the sighting step, the enemy has, and at least one enemy ship has shots to fire that round (chapter 4 of the rules, Surprise; `docs/rules/differences.md`, row 5).*
+
 6. *(Replaced by decision 0021: readiness is set by order, and a force at normal readiness is alert only while alerted.)* **A task force is alert or not alert.** It is a stored flag, alert unless the scenario says otherwise. A force becomes alert when it sights an enemy force or is fired on. What makes a force lose its alertness, or start without it, is deferred: see below.
 7. **If neither force sights the other in six rounds, they pass unseen.** An event records it.
 
@@ -38,6 +41,9 @@ The spec's scenario 4 is Savo Island. It needs a combat rule, the real map and r
    - Torpedo shots = tubes, once only, in the first round the ship fires.
    - Chance to hit = a base figure for the weapon, by night or day, x a factor if the target is surprised, x a factor if the target is lit by fire (any fire damage, at night only).
    - Expected hits = shots x chance. The whole part hits. The fraction is rolled once: hits = whole part, plus one with a chance equal to the fraction.
+
+   *Nov 14, 2026: each shot is rolled on its own at the chance to hit (decision 0033, items 3 to 5), and gun shots are cut by the system factor (decision 0016, item 6) (`docs/rules/differences.md`, row 5).*
+
 10. **Each hit damages one of three tracks, each running 0 to 100:**
     - Damage in points = 100 x the weapon's damage / the target class's toughness.
     - A gun hit lands on flotation, system or fire, by set chances.
@@ -81,15 +87,15 @@ It found two things hard:
 
 ## Deferred
 
-- **How a force comes to be alert or not.** The intended rule ties it to belief: a force is alert when its side holds a fresh contact nearby. That is what would explain Savo, where sighting reports arrived late and were misread. It arrives with stage 4c.
-- **Several forces in one hex fought in sequence,** and the choice to press on or retire after a fight. Stage 4c.
+- **How a force comes to be alert or not.** The intended rule ties it to belief: a force is alert when its side holds a fresh contact nearby. That is what would explain Savo, where sighting reports arrived late and were misread. It arrives with stage 4c. *(Nov 14, 2026: built by decision 0021)*
+- **Several forces in one hex fought in sequence,** and the choice to press on or retire after a fight. Stage 4c. *(Nov 14, 2026: built by decision 0022)*
 - **Range.** There is one night range and one day range, inside the base figures. Opening and closing the range, and long-range torpedoes, come later.
 - **Target choice.** Ships are matched in order. Burning or nearer ships do not draw fire yet.
-- **Stage 4a2, agreed with the designer on Nov 10, 2026.** The single system track is replaced by named systems, each working, degraded or out, and each with one effect: propulsion (half speed, then dead in the water), fire control (hit chance and night sighting), main battery (guns out) and torpedo mounts (tubes out). Flotation and fire stay as tracks. Where a hit lands depends on the weapon, from a data table. A ship with propulsion damage slows its task force through the existing slowest-ship rule. A standing instruction, set with the rules of engagement, says what a force does with a cripple: keep it, detach it with an escort to its home port, or leave it. That needs the detach and home port orders the spec lists. It gets its own decision record.
+- **Stage 4a2, agreed with the designer on Nov 10, 2026.** The single system track is replaced by named systems, each working, degraded or out, and each with one effect: propulsion (half speed, then dead in the water), fire control (hit chance and night sighting), main battery (guns out) and torpedo mounts (tubes out). Flotation and fire stay as tracks. Where a hit lands depends on the weapon, from a data table. A ship with propulsion damage slows its task force through the existing slowest-ship rule. A standing instruction, set with the rules of engagement, says what a force does with a cripple: keep it, detach it with an escort to its home port, or leave it. That needs the detach and home port orders the spec lists. It gets its own decision record. *(Nov 14, 2026: built by decision 0016)*
 - **Towing and scuttling** a ship that is dead in the water, and a force moving away when it breaks off.
 - **Fire and flooding that grow or are fought,** repair *(built: decision 0069, Nov 13, 2026)*, and ammunition resupply.
 - **Armour, shell types and torpedo reliability.**
-- **Shore bombardment,** ships at anchor, and transports as targets.
+- **Shore bombardment,** ships at anchor, and transports as targets. *(Nov 14, 2026: shore bombardment is built by decision 0092)*
 - **Real figures.** Hit chances and damage come from sources in step 2.
 
 ## Rule card

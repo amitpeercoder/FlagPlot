@@ -141,7 +141,7 @@ The research of that day (pull request 214) corrects two statements above.
 - The defender's claims are equal at every share, and so is the raider's claim of aircraft shot down. The raider's claim of hits rests on the bombs it dropped, which differ by share; decision 10 was corrected to say so when the build found it.
 
 **Before and after, 1,000 runs each, label `d0079`.**
-- The reports are `docs/validation/eastern-solomons-d0079.md` and `rabaul-guadalcanal-air-d0079.md`. They were made on the code merged with main after decisions 0081 (the Eastern Solomons orders from the record: the first wave of 27 dive bombers and 10 fighters, the second wave on its own), 0082 (the Rabaul raid days from the forms) and 0083 (torpedo tubes by side, state version 7), against the measures as they stood then.
+- The reports are `docs/validation/archive/eastern-solomons-d0079.md` and `docs/validation/archive/rabaul-guadalcanal-air-d0079.md`. They were made on the code merged with main after decisions 0081 (the Eastern Solomons orders from the record: the first wave of 27 dive bombers and 10 fighters, the second wave on its own), 0082 (the Rabaul raid days from the forms) and 0083 (torpedo tubes by side, state version 7), against the measures as they stood then.
 - "Before" is main at that merge (b82d31b), run with the same seeds.
 - An earlier pair of reports, made on the scenario before 0081, was replaced by these. On the doubled strike it turned two agreements into misses, which was the scenario's fault, not this rule's.
 

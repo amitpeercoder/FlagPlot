@@ -1,6 +1,6 @@
 # 0040: Air distance is a straight line
 
-Status: confirmed by the designer on Nov 11, 2026: straight-line distance for aircraft now, ships later. His reason is recorded under "Why".
+Status: confirmed by the designer on Nov 11, 2026: straight-line distance for aircraft now, ships later. His reason is recorded under "Why". *(Nov 14, 2026: ships were settled by decision 0058: a ship is charged straight-line miles where the way is clear.)*
 
 ## The gap
 
@@ -42,7 +42,7 @@ It was hidden until now. The placeholder scenarios lie along an axis, Savo Islan
 
 ## Deferred
 
-- **Ships.** A force that steams between two axes zigzags and makes up to 15.5 percent less ground than its speed says. Noumea to Espiritu Santo is 405 miles and 520 by hex (decision 0017). That needs its own decision, because it reopens how a force moves and where it is (decisions 0005 and 0017). It is to be settled before step 2 compares ship movements with the record.
+- **Ships.** A force that steams between two axes zigzags and makes up to 15.5 percent less ground than its speed says. Noumea to Espiritu Santo is 405 miles and 520 by hex (decision 0017). That needs its own decision, because it reopens how a force moves and where it is (decisions 0005 and 0017). It is to be settled before step 2 compares ship movements with the record. *(Nov 14, 2026: settled by decision 0058.)*
 - The projection is true east and west at 12 degrees south and up to 5 percent off at the edges of the slice, and a place is taken to be at the centre of its hex, up to 23 miles from where it is. Both are small beside the staircase and are left.
 
 ## What the runs show

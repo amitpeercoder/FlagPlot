@@ -30,7 +30,7 @@ WitP:AE turns speed into whole hexes per 12-hour phase (manual section 6.2.3), a
 
 ## Built
 
-Decisions 1 and 5 were built in their own pull request after scenario 2. They changed the movement state, the state hash and the hexes scenarios 1 and 2 report. Fuel figures and arrival times did not change. Pathfinding (decision 4) is still to come.
+Decisions 1 and 5 were built in their own pull request after scenario 2. They changed the movement state, the state hash and the hexes scenarios 1 and 2 report. Fuel figures and arrival times did not change. Pathfinding (decision 4) is still to come. *(Nov 14, 2026: built by decision 0017)*
 
 ## Rule card
 
@@ -44,4 +44,4 @@ Every other rule that asks where a task force is reads its position, never the s
 
 ## Not modelled yet
 
-Weather, formation speed loss, damage slowing a ship, zigzagging, and any difference between day and night steaming.
+Weather, formation speed loss, damage slowing a ship, zigzagging, and any difference between day and night steaming. *(Nov 14, 2026: damage slows a ship since decision 0016, item 7)*

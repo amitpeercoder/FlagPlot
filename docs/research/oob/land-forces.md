@@ -115,7 +115,7 @@ In `gaps.csv`, with where each would be found. The ones that matter most to the 
 ## What `oob-check` does and does not check
 
 - It holds the three new fact files to the sourcing rule, because they have a `standing` column: a source, a locator, a date read, a known confidence, basis and standing, and a note on every row.
-- It does not know `land_units.csv` or `lift_entities.csv`, so it does not check that a fact row's entity exists, that an attribute is in a vocabulary, or that two chosen rows agree. The attributes are not in `attributes.csv`.
+- It does not know `land_units.csv` or `lift_entities.csv`, so it does not check that a fact row's entity exists, that an attribute is in a vocabulary, or that two chosen rows agree. The attributes are not in `attributes.csv`. *(Nov 14, 2026: `oob-check` has since a rule `lift` (`crates/oob-check/src/lift.rs`) for `lift_entities.csv` and `troop_lift_facts.csv`; it has no checker for `land_units.csv` or `land_unit_facts.csv`.)*
 - The attack rows in `engagement_outcomes.csv` are checked as that file always is. Their measures are new names.
 
 Attributes used in `land_unit_facts.csv`: `strength_men` and its tagged forms; `strength_men_estimated_by_enemy`; `landed_men`, `landed_at`, `landed_on`, `carried_by`; `departed_on`, `ceased_on`; `commander`, `parent_stated`; `rations_days_on_hand`, `ration_scale_note`, `supply_tons_landed`, `supply_note`; `sick_men`, `evacuated_men` and their tagged forms; `estimate_note` and `note` for statements with no number. Added on 2026-11-14 (`outside-research-nov-14.md`): `prior_combat_note`, `training_note`, `replacements_men`, `amphibious_training_note`, `terrain_training_note`, `heavy_weapons_ashore_note`, `heavy_weapons_left_note`, `quality_judgement_note`, `strength_riflemen`; `position_on`, `march_distance_miles`, `march_days`, `attack_on`, `attack_planned_on`, `carried_note`; `directive_on`, `warning_on`, `embarked_on`, `sailed_on`, `rendezvous_on`, `rehearsal_from`, `rehearsal_to`, `loading_note`, `vehicles_left_share_percent`, `preparation_note`, `intelligence_note`.
@@ -124,7 +124,7 @@ Attributes used in `troop_lift_facts.csv`: `troop_capacity_men`, `troops_carried
 
 ## For the architect
 
-- The transports are not in `ships.csv` or `ship_classes.csv`, so their capacities are in a file of their own. Moving them to a ship class attribute needs the classes added first.
+- The transports are not in `ships.csv` or `ship_classes.csv`, so their capacities are in a file of their own. Moving them to a ship class attribute needs the classes added first. *(Nov 14, 2026: `troop-lift.md` adds the transports' capacities; `data/reference/ship_classes_guadalcanal_landings.csv` is a derivation of the landings, which per `troop-lift.md` derives only the four Fubuki-class destroyers.)*
 - A measure for "each attack the record names failed" can be read from the `jp_attack_held_ground` rows: every one is 0.
 - A measure for how fast an unfed force wasted has nothing inside the period to rest on from these sources; the figures begin in November.
 

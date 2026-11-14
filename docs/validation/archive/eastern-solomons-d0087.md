@@ -1,8 +1,10 @@
-# eastern-solomons: validation of batch `r3`
+*Archived on Nov 14, 2026: a report of one round of step 2, kept as a record. The battle's closing report is [eastern-solomons-close.md](../eastern-solomons-close.md); step 2's close is [step2-close.md](../step2-close.md).*
+
+# eastern-solomons: validation of batch `d0087`
 
 Battle: eastern-solomons
 Scenario: data/scenarios/05_eastern_solomons.toml
-Batch: label `r3`, 1000 runs, seeds 1 to 1000, file hash 27a259a29f2098b5
+Batch: label `d0087`, 1000 runs, seeds 1 to 1000, file hash 35adb2816fac1fd7
 Inputs: state hash layout flagplot-state-v7, scenario file hash a9443b066a393e0b
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../reference/ship_classes_eastern_solomons.csv 2716ae28c805274f

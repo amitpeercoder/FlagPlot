@@ -556,4 +556,4 @@ Settled by the architect's team lead for decision 0072 and to be reviewed by the
 - **Fubuki class.** The figures after the rebuild of 1935 to 1937: 2,090 tons, 34 knots, 475 tons of fuel; 4,700 miles at 15 knots as a pair; 150 rounds a gun, the wartime outfit.
 - **Buchanan's torpedo tubes.** Ten (NavSource, as for her three sisters in the force) over DANFS's undated five; a known weakness.
 
-Left disputed: Laffey's main battery (four or five guns, fits 713 and 724), the Fubuki class's torpedo model in 1942 (fits 726 to 729) and the 12.7 cm/50's practical rate (weapon facts 480 and 481), which waits for decision 0070.
+Left disputed: Laffey's main battery (four or five guns, fits 713 and 724), the Fubuki class's torpedo model in 1942 (fits 726 to 729) and the 12.7 cm/50's practical rate (weapon facts 480 and 481), which waits for decision 0070. *(Nov 14, 2026: decision 0070 is built; in `data/oob/weapon_facts.csv` row 480 (about 5 rounds a minute) stands as preferred and row 481 (4.4 to 5.0) as an alternative.)*

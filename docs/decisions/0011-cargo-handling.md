@@ -8,7 +8,7 @@ The spec asks scenario 2 to prove "loading, port capacity limits, base supply le
 
 ## Decisions
 
-1. **One kind of cargo for now: supply, in tons.** A ship carries supply up to its class's cargo capacity. A base holds a supply stock.
+1. **One kind of cargo for now: supply, in tons.** A ship carries supply up to its class's cargo capacity. A base holds a supply stock. *(Nov 14, 2026: fuel is a second kind of cargo by decision 0046, and men are worked as cargo by decision 0066)*
 2. **A port has berths and a handling rate per berth, both set by its size.** A ship on a berth moves cargo at the berth rate. A ship without a berth works by lighter, at the lighter rate, at the same time. A size 0 port has no berths, so every ship there uses lighters.
 3. **There is no separate daily port limit.** A port's capacity is what its berths and lighters can move in the hours available. Nothing stops a task force from using a port because of its size.
 4. **Berths are given out at the start of each loading phase,** to the ships that still have cargo to move, by task force ID and then ship ID. An assignment holds for that pulse. A berth freed part-way through a pulse is used from the next pulse.
@@ -33,11 +33,11 @@ The spec asks scenario 2 to prove "loading, port capacity limits, base supply le
 
 ## Deferred
 
-- Fuel, oil, troops and aircraft as cargo, and combat or amphibious loading.
+- Fuel, oil, troops and aircraft as cargo, and combat or amphibious loading. *(Nov 14, 2026: fuel by decision 0046, men by decision 0066)*
 - A load order for a stated tonnage.
 - A single order that loads, sails and unloads.
 - Port damage, support units, and limits on the size of ship a port can take.
-- Supply consumption, spoilage and automatic movement of supply between bases. Consumption arrives by scenario 6.
+- Supply consumption, spoilage and automatic movement of supply between bases. Consumption arrives by scenario 6. *(Nov 14, 2026: consumption is built by decision 0039)*
 - Handling interrupted by the enemy.
 - Real handling rates. The port table is invented. Sourced figures come in step 2.
 

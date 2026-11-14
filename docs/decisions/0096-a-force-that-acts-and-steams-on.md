@@ -1,6 +1,6 @@
 # 0096: A force that acts at a place and steams on
 
-Status: confirmed as to the need by the step 3 spec, which the designer confirmed on Nov 14, 2026 ("What it builds on": needed before stage 2). The rule's details are the architect's, of the same date. Built on Nov 14, 2026 (scenario 26). It has no figure. The hand calculation is in `tests/scenario_26_act_and_steam_on.rs`.
+Status: confirmed as to the need by the step 3 spec, which the designer confirmed on Nov 14, 2026 ("What it builds on": needed before stage 2). The rule's details are the architect's, of the same date. Built on Nov 14, 2026 (scenario 26). It has no figure. The hand calculation is in `tests/scenario_26_act_and_steam_on.rs`. *(Nov 14, 2026: "decided before stage 2" is in the step 3 spec's section "The staff's decisions", in the paragraph after its table of what the staff decides; the table row for this decision in "What it builds on" says Built.)*
 
 ## The gap
 

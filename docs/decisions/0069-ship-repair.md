@@ -1,6 +1,6 @@
 # 0069: Ship repair
 
-Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers below. Nothing is built. The hand calculation is written before any code is delegated.
+Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers below. Nothing was built when this was written; built on Nov 13, 2026 (scenario 20a, pull request 235; `crates/sim-core/src/repair.rs`). The hand calculation is written before any code is delegated.
 
 Nov 13, 2026, at the close of step 2: **this is next.** The designer decided ("Reported only; repair first"; `docs/step2-spec.md`, "Decided by the designer", 16) that ship repair and "out of the campaign" are built next and the objectives scale set from the record, before step 3 begins; land units and basic ground combat follow those.
 
@@ -64,7 +64,7 @@ A is of the order of South Dakota's 16 days in October. B is near Shokaku's 125.
 - **A ship sent alone from a force.** Forming and merging forces by order is not built (decision 0052, item 7), so a force goes and returns as it is.
 - **Attacks on a repair ship,** and a repair ship that moves between bases. The figure belongs to the base.
 - **Refits that improve a ship.** She returns as her class has her.
-- **A carrier's air group flying ashore when she leaves.** In the record a carrier's group often did: Enterprise's went to Henderson Field. That needs air groups that can change base, which is not built; until then a group goes and returns with its ship (as planned for the build, below).
+- **A carrier's air group flying ashore when she leaves.** In the record a carrier's group often did: Enterprise's went to Henderson Field. That needs air groups that can change base, which is not built; until then a group goes and returns with its ship (as planned for the build, below). *(Nov 14, 2026: rebasing is built by decision 0091 for land-based groups; a group aboard a ship is refused, so this case is still not built)*
 
 ## What it does for "out of the campaign"
 
@@ -100,7 +100,7 @@ Approved on Nov 13, 2026, each as recommended.
 
 ## As planned for the build
 
-Nov 13, 2026. Written by the team lead for the coordinating architect's check, on `origin/main` at state version 8. Nothing here is built, and nothing stands until the architect has read the whole section and ruled on the choices at its end. The decided text above is not changed. Where this section picks something the decisions did not say, it is listed again under "Choices for the architect", with a recommendation. The hand calculation is in `tests/scenario_20a_ship_repair.rs`.
+Nov 13, 2026. Written by the team lead for the coordinating architect's check, on `origin/main` at state version 8. Nothing here is built, and nothing stands until the architect has read the whole section and ruled on the choices at its end. The decided text above is not changed. Where this section picks something the decisions did not say, it is listed again under "Choices for the architect", with a recommendation. The hand calculation is in `tests/scenario_20a_ship_repair.rs`. *(Nov 14, 2026: built on Nov 13, 2026, scenario 20a.)*
 
 ### Two named quantities: days of repair and days away
 

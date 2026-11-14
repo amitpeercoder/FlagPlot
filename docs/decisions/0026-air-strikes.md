@@ -17,6 +17,9 @@ The spec's daylight pulse has three air steps: search, strike decisions by local
 
 3. **In the strike decision step of a daylight pulse, each group on naval strike decides for itself.** It comes after search, so a sighting made that morning can be struck that morning. A group decides only if it has aircraft, has a position, it is not dark there, and it can launch at least one aircraft (decision 10).
 4. **It strikes a contact its side holds that was reported in this pulse or the one before, and is within its strike range** of where the group is. Among several it takes the one whose reported kind is the most important (carriers first, in the order of decision 0012), then the nearest, then the lowest contact number. With none, it does nothing, and nothing is recorded.
+
+   *Nov 14, 2026: a group may be given its own target priority, decision 0063.*
+
 5. **It sends every aircraft it can launch.** Holding some back is stage 5c.
 6. **The decision is made on belief.** The group flies to the hex the contact names. Nothing in the decision reads the truth.
 
@@ -53,10 +56,10 @@ The spec's daylight pulse has three air steps: search, strike decisions by local
 
 ## Deferred
 
-- Fighters, escorts, anti-aircraft fire and aircraft losses: stage 5c.
-- A share of aircraft held back, target priorities and range limits as orders.
+- Fighters, escorts, anti-aircraft fire and aircraft losses: stage 5c. *(Nov 14, 2026: built by decision 0027)*
+- A share of aircraft held back, target priorities and range limits as orders. *(Nov 14, 2026: target priorities are built by decision 0063 and the range limit by decision 0059)*
 - Searching round a contact's hex.
-- Strikes on bases and ground targets.
+- Strikes on bases and ground targets. *(Nov 14, 2026: strikes on bases are built by decision 0034)*
 - Ordnance stocks, and how many aircraft a deck can launch in a pulse.
 - A force attacked from the air becoming alert.
 - A strike by night.

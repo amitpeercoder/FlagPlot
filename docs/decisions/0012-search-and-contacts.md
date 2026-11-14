@@ -13,6 +13,9 @@ The spec asks for air search "by arc and range", reports "generated from truth t
 1. **An air group on a search mission searches an arc from its base:** from one bearing clockwise to another, in 10 degree steps, out to a range in nautical miles. A "from" and "to" that are equal mean the whole circle.
 2. **North is the direction of decreasing r.** Hexes are pointy-topped, so the six neighbours lie on bearings 030, 090, 150, 210, 270 and 330. A hex's bearing from a base is worked out from the hex centres, in fixed point, from a constant table. This holds for every map.
 3. **Distance is hex steps times 40 nm,** the same distance movement uses.
+
+   *Nov 14, 2026: air distance is the straight line between hex centres, by decision 0040; ships are charged straight-line miles where the way is clear by decision 0058 (`docs/rules/differences.md`, row 5).*
+
 4. **A task force can be sighted if its position is inside the arc and within the range.** The edges of the arc and the range itself are inside. A group never searches for its own side.
 5. **The chance of a sighting is coverage:** the miles of sea the aircraft sweep, over the miles of arc at the target's distance.
 
@@ -32,19 +35,38 @@ The spec asks for air search "by arc and range", reports "generated from truth t
     - Kind: the reported kind is drawn from a table of chances for each true kind.
 11. **A report starts at a fixed confidence.**
 
+   *Nov 14, 2026: withdrawn by decision 0032, item 2: a contact has no confidence (`docs/rules/differences.md`, row 5).*
+
 ### Contacts
 
 12. **A contact holds what the report said, an age in pulses and a confidence.** It never holds the identity of what was really seen. The event log, which only the umpire reads, records which task force each sighting was of.
+
+   *Nov 14, 2026: the confidence is withdrawn by decision 0032, item 2 (`docs/rules/differences.md`, row 5).*
+
 13. **A new report refreshes an existing contact** if one lies within a set number of hexes of the reported hex and is no older than a set number of pulses. The nearest such contact is used, the lowest ID on a tie. Its hex, count and kind become the report's, its age returns to zero and its confidence to the starting value. Otherwise the report makes a new contact. The test uses only what the side believes.
 14. **Contacts age at the end of every pulse,** night included. A contact that was not created or refreshed in that pulse gains one pulse of age, and its confidence is multiplied by a decay factor. A contact whose confidence falls below a floor is dropped.
+
+   *Nov 14, 2026: a contact is dropped when it reaches an age of 5 pulses; its confidence and decay factor are withdrawn by decision 0032, item 2 (`docs/rules/differences.md`, row 5).*
+
 15. **The end-of-day intelligence step does nothing yet.** The spec lists "age contacts, merge duplicates" there and also says contacts age each pulse. Ageing per pulse and merging on arrival cover both. The step is kept for briefings.
 
 ### Knowing it was sighted
 
 16. **A task force that is sighted may notice the aircraft.** Each sighting gives the task force one roll at a set chance. A plane can see without being seen, so it is not certain.
+
+   *Nov 14, 2026: withdrawn by decision 0032, item 1: no notice roll exists (`docs/rules/differences.md`, row 5).*
+
 17. **A task force that notices records the hour.** The record is the hour of the latest sighting it noticed. Its own side sees it, as it sees everything about its own units. An event records each notice and cites the sighting.
+
+   *Nov 14, 2026: withdrawn by decision 0032, item 1: no notice roll exists (`docs/rules/differences.md`, row 5).*
+
 18. **Noticing changes nothing else yet.** How a force reacts (press on, turn away until dark, abort) is a standing instruction from its commander, and arrives with rules of engagement in scenario 5. The player cannot react inside a day, so the reaction is the local commander's, as strike decisions are.
+
+   *Nov 14, 2026: withdrawn by decision 0032, item 1: no notice roll exists (`docs/rules/differences.md`, row 5).*
+
 19. **The notice roll has its own random stream:** the task force is the entity and the air group is the second entity, the reverse of the sighting roll. Adding it changes no other result.
+
+   *Nov 14, 2026: withdrawn by decision 0032, item 1: no notice roll exists (`docs/rules/differences.md`, row 5).*
 
 ## Why
 
@@ -77,7 +99,7 @@ It found three things hard:
 - A share of a group on search with the rest on another mission. WitP:AE has the player set this per squadron in steps of ten percent (section 7.2.1.8). The staff will set it.
 - One patrol a day for long-range aircraft, with fuel, supply, fatigue and losses.
 - Course and speed in a contact, and moving a contact along its estimated course as it ages.
-- Event logs filtered for one side. Events stay umpire-only until briefings exist.
+- Event logs filtered for one side. Events stay umpire-only until briefings exist. *(Nov 14, 2026: built: decisions 0047 and 0048)*
 - Real figures. Sweep widths, error chances and decay come from sources in step 2.
 
 ## Rule card

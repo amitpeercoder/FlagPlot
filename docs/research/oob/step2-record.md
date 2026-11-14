@@ -143,4 +143,4 @@ Not found: a dock at Truk, Akashi's count of ships, Rabaul's shore facilities, a
 
 ## Still to do
 
-The Japanese side of Eastern Solomons from Japanese records (search orders, tracks) stands as the next item, and with it the Japanese loss totals above.
+The Japanese side of Eastern Solomons from Japanese records (search orders, tracks) stands as the next item, and with it the Japanese loss totals above. *(Nov 14, 2026: done: `japanese-records-2026-11-12.md` and `japanese-air-records.md`.)*

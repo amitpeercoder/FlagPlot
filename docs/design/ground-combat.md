@@ -44,7 +44,7 @@ Rule complexity asks for one mechanism over several. This plan adds one new kind
 | Shore bombardment | The attack on a base (decision 0034), fired by a force's guns | The empty phase of the night pulse filled |
 | Knowing the enemy ashore | `BeliefState::apply_report` | A ground report and an estimate of men in a hex |
 | Aircraft at a base that falls | `AirGroupLost` and aircraft arrivals (decisions 0025, 0041) | A base that changes side |
-| Random draws | The `GroundCombat` subsystem code, which exists and is unused | New `Draw` values, added at the end |
+| Random draws | The `GroundCombat` subsystem code, which exists and is unused *(Nov 14, 2026: now used by `crates/sim-core/src/ground_combat.rs`)* | New `Draw` values, added at the end |
 
 ## The rules proposed
 
@@ -90,7 +90,7 @@ Rule complexity asks for one mechanism over several. This plan adds one new kind
 
 ### Shells and bombs
 
-- **Shore bombardment.** A force with the bombardment mission, in a hex with an enemy base in the night pulse, fires on it. Each ship's guns give shots by the rule surface combat uses for shots; each hits at one bombardment figure; each hit lands by the table that says where a bomb on a base lands. The mission exists and does nothing today.
+- **Shore bombardment.** A force with the bombardment mission, in a hex with an enemy base in the night pulse, fires on it. Each ship's guns give shots by the rule surface combat uses for shots; each hits at one bombardment figure; each hit lands by the table that says where a bomb on a base lands. The mission exists and does nothing today. *(Nov 14, 2026: built by decision 0092, `crates/sim-core/src/bombardment.rs`.)*
 - **Men as a place for a hit to land.** The table that sends a hit on a base to aircraft, to supply or to nothing gains a share that lands on men, when the base's side has men ashore in the hex. Each such hit removes a fixed number of men. This serves bombs and shells alike.
 - **The ground support mission stays deferred.** A base strike already reaches men through the table. A mission of its own waits until something needs it.
 
@@ -116,7 +116,7 @@ Each of these is real and was considered. None is needed for a naval or air deci
 
 | Left out | What it costs | When it might come |
 | --- | --- | --- |
-| Movement overland between hexes | The Kokoda Track cannot be played; men move only by sea | When a scenario in New Guinea needs it (answer 1 below) |
+| Movement overland between hexes | The Kokoda Track cannot be played; men move only by sea | When a scenario in New Guinea needs it (answer 1 below) *(Nov 14, 2026: marching between linked hexes is built, decision 0094, `crates/sim-core/src/march.rs`.)* |
 | Fire from the shore on ships landing men | An opposed landing costs no ships | With the first scenario of an assault on a defended beach |
 | Artillery ashore closing an airfield | Guns on the island cannot stop Henderson Field flying | With damage to a base's airfield (decision 0052, item 12) |
 | Building and repairing airfields | A base's airfield is given by the scenario | With base damage and base orders |
@@ -142,7 +142,7 @@ The one place where interactions can hide is a base's side. Many rules read it: 
 
 - **State:** land units, men aboard ships, a side's ground estimates, and a base's side becoming something that changes. Each new field goes into `hash::hash_world` and `hash::name_every_field`; the hash version is raised and the golden files remade (decision 0057). This is done once for each stage that adds state, not once for each field.
 - **Stable codes:** a kind code for a land unit and the new `Draw` values, each added at the end. The `GroundCombat` subsystem code is already there.
-- **Figures:** a new `ground_combat.toml`, and its first values added to the frozen step 1 figures as the tests require. A scenario that does not name the file loads no ground rule, so every existing scenario runs as it does now.
+- **Figures:** a new `ground_combat.toml`, and its first values added to the frozen step 1 figures as the tests require. A scenario that does not name the file loads no ground rule, so every existing scenario runs as it does now. *(Nov 14, 2026: built as `data/reference/ground.toml`.)*
 - **Data:** a land unit entry in the scenario file; troop capacity on a ship class; an opening estimate.
 - **The agent interface:** the briefing gains a part for land units and the estimate of the enemy ashore, with a schema change; the queries gain a land unit; orders gain posture and the load order that names a unit.
 - **The viewer:** land units and a base's side by day.
@@ -164,7 +164,7 @@ After stage 2, the rule cards of stages 1 and 2 are read beside the existing one
 
 ## Where it sits beside step 2
 
-Step 2 is under way and its spec says ground combat is not in it. Three things keep the two apart.
+Step 2 is under way and its spec says ground combat is not in it. Three things keep the two apart. *(Nov 14, 2026: step 2 closed on Nov 13, 2026, and stages 1 to 3 are built: decisions 0066, 0090 and 0092.)*
 
 - **Files.** Step 2 has three rules still to land in `sim-core` (strike target priority, the rest of ditching, experience), each raising the hash version. Stages 1 to 3 touch the same files. Two developers never edit the same files at once, so the code of stage 1 starts when those three have merged.
 - **Stage 0 can start now.** It is research and touches no file step 2 is working in.

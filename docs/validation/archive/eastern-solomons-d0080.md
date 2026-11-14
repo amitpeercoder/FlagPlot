@@ -1,8 +1,10 @@
-# eastern-solomons: validation of batch `d0079`
+*Archived on Nov 14, 2026: a report of one round of step 2, kept as a record. The battle's closing report is [eastern-solomons-close.md](../eastern-solomons-close.md); step 2's close is [step2-close.md](../step2-close.md).*
+
+# eastern-solomons: validation of batch `d0080`
 
 Battle: eastern-solomons
 Scenario: data/scenarios/05_eastern_solomons.toml
-Batch: label `d0079`, 1000 runs, seeds 1 to 1000, file hash b6c0f7920f302563
+Batch: label `d0080`, 1000 runs, seeds 1 to 1000, file hash 264a481b118c656d
 Inputs: state hash layout flagplot-state-v7, scenario file hash a9443b066a393e0b
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../reference/ship_classes_eastern_solomons.csv 2716ae28c805274f
@@ -10,12 +12,12 @@ Inputs: state hash layout flagplot-state-v7, scenario file hash a9443b066a393e0b
 - data/scenarios/../reference/aircraft_types_eastern_solomons.csv 8a7741632e7e7ec6
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
 - data/scenarios/../reference/surface_combat.toml 1a9a0ae06d7282b1
-- data/scenarios/../reference/air_combat.toml 439815ff5b44e117
-Measures: data/validation/eastern_solomons.toml (hash 86d416372040b1ea), 16 measures, 14 judged
+- data/scenarios/../reference/air_combat.toml fee72093cc06b6e8
+Measures: data/validation/eastern_solomons.toml (hash c52f629dc38335b8), 18 measures, 15 judged
 
-Judged measures: 10 agree, 1 agree at the edge, 3 miss, of 14.
+Judged measures: 11 agree, 1 agree at the edge, 3 miss, of 15.
 
-**The battle does not pass:** 3 of 14 judged measures miss.
+**The battle does not pass:** 3 of 15 judged measures miss.
 
 | Measure | Record | 5th to 95th | Median | Runs holding the record | Left out | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -25,12 +27,14 @@ Judged measures: 10 agree, 1 agree at the edge, 3 miss, of 14.
 | bomb_hits_on_saratoga | 0 | 0 to 0 | 0 | 1000 of 1000 | 0 | agrees |
 | enterprise_flight_deck_out_at_end | 0 | 0 to 0 | 0 | 955 of 1000 | 0 | agrees |
 | japanese_carrier_aircraft_lost_to_enemy_action | 29 to 32 | 2 to 35 | 26 | 234 of 1000 | 0 | agrees |
-| japanese_carrier_aircraft_lost_all_causes | 35 to 54 | 4 to 58 | 29 | 201 of 1000 | 0 | agrees |
+| japanese_carrier_aircraft_lost_all_causes | 35 to 54 | 4 to 58 | 29 | 191 of 1000 | 0 | agrees |
 | ryujo_aircraft_lost_with_the_ship | 4 | 0 to 0 | 0 | 0 of 1000 | 0 | reported |
 | us_aircraft_lost_to_enemy_action | 13 to 14 | 1 to 9 | 4 | 2 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | us_aircraft_lost_all_causes | 20 to 21 | 1 to 10 | 5 | 0 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | japanese_aircraft_attacking_enterprise_force | 37 | 0 to 37 | 37 | 607 of 1000 | 0 | agrees |
-| us_aircraft_attacking_ryujo | 36 to 38 | 0 to 38 | 0 | 488 of 1000 | 0 | agrees |
+| us_aircraft_attacking_ryujo | 38 | 0 to 38 | 0 | 488 of 1000 | 0 | agrees |
+| japanese_bombers_left_to_attack_enterprise_force | 20 to 27 | 0 to 18 | 11 | 16 of 1000 | 0 | reported |
+| us_aircraft_left_to_attack_ryujo | 36 | 0 to 38 | 0 | 130 of 1000 | 0 | agrees |
 | us_strike_on_the_japanese_fleet_carriers | 0 | 0 to 0 | 0 | 1000 of 1000 | 0 | agrees |
 | us_aircraft_claimed_per_hundred_shot_down | 237 to 362 | 100 to 200 | 148 | 9 of 997 | 3 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | japanese_aircraft_claimed_per_hundred_shot_down | 171 to 261 | 100 to 300 | 150 | 298 of 980 | 20 | agrees |
@@ -51,8 +55,8 @@ Judged measures: 10 agree, 1 agree at the edge, 3 miss, of 14.
 - Counts: US aircraft lost to any cause
 - Record: 20 to 21 (rows 305, 306, 307, 700)
 - Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
-- Spread over 1000 runs kept (0 left out): least 0, 5th 1, 25th 3, median 5, 75th 7, 95th 10, greatest 15
-- Each value and its runs: 0: 13, 1: 49, 2: 103, 3: 140, 4: 160, 5: 129, 6: 114, 7: 108, 8: 60, 9: 53, 10: 31, 11: 18, 12: 13, 13: 5, 14: 3, 15: 1
+- Spread over 1000 runs kept (0 left out): least 0, 5th 1, 25th 3, median 5, 75th 7, 95th 10, greatest 14
+- Each value and its runs: 0: 14, 1: 58, 2: 94, 3: 152, 4: 144, 5: 137, 6: 125, 7: 104, 8: 61, 9: 40, 10: 34, 11: 17, 12: 14, 13: 2, 14: 4
 
 ### us_aircraft_claimed_per_hundred_shot_down
 
@@ -83,7 +87,7 @@ Seen from the Allied side, runs of each result:
 - major defeat: 0 of 1000
 - decisive defeat: 0 of 1000
 
-Allied margin over 1000 runs: 5th 0, median 1.6, 95th 12.45
+Allied margin over 1000 runs: 5th 0, median 1.55, 95th 12.5
 
 ## Notes
 
