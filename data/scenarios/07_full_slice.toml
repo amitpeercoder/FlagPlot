@@ -89,6 +89,10 @@ fatigue = "../reference/fatigue.toml"
 air_supply = "../reference/air_supply.toml"
 ground = "../reference/ground.toml"
 
+# The Japanese bases at Lunga and Tulagi have no defences (0): no row sizes
+# the works of the garrisons of 7 August, so they stay 0 until research gives
+# one (decision 0106, "What it changes in the August scenario").
+#
 # Lunga, the airfield's hex, Japanese at the start (decision 0101, 6). It has
 # no airfield and 13,763 of work done on one (decision 0101, 9): the strip was
 # 2,600 ft graded and rolled on 7 August (place_facts 60) of the 3,778 ft it
@@ -161,8 +165,12 @@ airfield = false
 #   (3,-4): two weeks for the Kawaguchi main body (land_unit_facts 975),
 #     3,090 x 0.005 x 14 = 216.3 t, and seven days for the Ichiki echelon,
 #     916 x 0.005 x 7 = 32.06 t: 248 t, cut to a whole ton.
-#   (2,-5): seven days for the 2,070 men landed there (200, 900, 637 and
-#     333): 72 t, cut to a whole ton.
+#   (2,-5): PLACEHOLDER stock, seven days for the 2,070 men landed there
+#     (200, 900, 637 and 333), 72.45 t, and seven days for the 2,040 men of
+#     the garrison of Lunga and its two construction units, who fall back
+#     there on the first days (decision 0104), 2,040 x 0.005 x 7 = 71.4 t:
+#     143.85 t, 143 t cut to a whole ton (decision 0101, as amended, 8). No
+#     row gives a Japanese stock west of the field.
 # The seven days are the practice a Japanese officer gave (two on the man,
 # three in the unit, two at division, land_unit_facts 1044): a practice and
 # not what these units were issued.
@@ -182,7 +190,7 @@ name = "Placeholder Japanese stock west of the Lunga"
 side = "japanese"
 q = 2
 r = -5
-supply_t = 72
+supply_t = 143
 airfield = false
 on_map = false
 
@@ -3150,6 +3158,32 @@ side = "allied"
 task_force = 21
 kind = "set_route"
 waypoints = [[7, 6]]
+
+# The two construction units of Lunga are set to work at the port on day 1
+# (decision 0101, as amended, 9). These are scripted orders with no row behind
+# them, there only to stop a working unit's default job: with no job named, a
+# working unit at a base with no airfield builds one (decision 0099, 4), and
+# once fed in (2,-5) these two finished an airfield at the placeholder stock
+# there, which no row has. No row has them build anything after 7 August. The
+# order stands when they fall back, and the port work does nothing where no
+# ship unloads. The construction unit on Tulagi surrenders on day 1 and needs
+# none.
+
+[[order]]
+day = 1
+side = "japanese"
+land_unit = 12
+kind = "set_activity"
+activity = "work"
+job = "port"
+
+[[order]]
+day = 1
+side = "japanese"
+land_unit = 13
+kind = "set_activity"
+activity = "work"
+job = "port"
 
 # The Americans stand on the defence once the base is theirs (decision 0101,
 # 12): on the day after the record's, Lunga taken on 8 August (day 2) and
