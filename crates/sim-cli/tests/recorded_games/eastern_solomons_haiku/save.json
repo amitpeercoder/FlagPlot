@@ -511,7 +511,7 @@
       "unit": "air_group:19"
     }
   ],
-  "rules_version": 5,
+  "rules_version": 6,
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
     "hash": "a9443b066a393e0b"

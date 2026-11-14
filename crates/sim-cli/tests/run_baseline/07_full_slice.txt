@@ -2,45 +2,45 @@ Scenario 7: The full slice, 7 August to 14 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9b16017b82e2b2e4  218 events
-day   2  hash 3b2ca74734ba8737  181 events
-day   3  hash 0ffb9d845041427a  148 events
-day   4  hash c427cdd476db8776  152 events
-day   5  hash dafe97f8e120824b  72 events
-day   6  hash 7e47f2499a411dea  46 events
-day   7  hash d8c1ed7823083cb5  31 events
-day   8  hash 4263dcb5868eccfa  48 events
-day   9  hash 0f0d9c09214b909e  54 events
-day  10  hash afac4ad430467022  56 events
-day  11  hash 767f4ca440fd7162  79 events
-day  12  hash 40f77ffa16827bbb  67 events
-day  13  hash 5c19f6fea84321cd  106 events
-day  14  hash b4cc18c7b2147744  83 events
-day  15  hash 31f8f6fe043c0038  100 events
-day  16  hash 4257a076392b33e9  94 events
-day  17  hash 491b22f1381eb88d  53 events
-day  18  hash e5adfaa536981969  214 events
-day  19  hash 6a94e6f3484f5425  157 events
-day  20  hash 6f5483668c4140aa  197 events
-day  21  hash edf082018595c065  231 events
-day  22  hash 14b65aebb4c63bc2  115 events
-day  23  hash 8c1f0b6845ada06a  196 events
-day  24  hash f4ebcfc278db45fa  206 events
-day  25  hash b7950842af8c7fde  223 events
-day  26  hash 5cb498a11b3b6a59  165 events
-day  27  hash 90c8536459c1a987  184 events
-day  28  hash 766ef25a5259d30b  138 events
-day  29  hash 938c2f00fc2e451d  140 events
-day  30  hash ffa5cad48d955dbe  171 events
-day  31  hash 4c23a5ddc703f83e  173 events
-day  32  hash a013a35aedb78fb8  154 events
-day  33  hash 48effee4c7cc73eb  119 events
-day  34  hash ec35251bcf1e7207  147 events
-day  35  hash 3ed974798d3d0e97  150 events
-day  36  hash 3f1529f139fc22ec  146 events
-day  37  hash ca91f38c8b6a7888  213 events
-day  38  hash 5591f3919232d0f7  150 events
-day  39  hash 41ae09c7530b89f8  135 events
+day   1  hash 54ea12f311098d8b  218 events
+day   2  hash e804899831297aa0  181 events
+day   3  hash f5a902c00b96add1  148 events
+day   4  hash 9014bfb1c209096b  152 events
+day   5  hash bd2c21bb9936b381  72 events
+day   6  hash 4c4a0dd814454ce7  46 events
+day   7  hash c96b6f296df1ee41  31 events
+day   8  hash 6a21ac31fee0a5a8  48 events
+day   9  hash cbd3be767c1c5372  54 events
+day  10  hash fc666fdf51e4303d  56 events
+day  11  hash ee5ff1b1f9209cae  80 events
+day  12  hash 9af33ae33935a6c9  67 events
+day  13  hash 7ffdcae019ae32a1  111 events
+day  14  hash cb1cdaa9c10c2bdf  87 events
+day  15  hash 37dfebc17c65309a  101 events
+day  16  hash 7e0ebf7caad6ca71  95 events
+day  17  hash 846f5bbeda002fa4  54 events
+day  18  hash 4102055ee645ef02  215 events
+day  19  hash 4b33484b0bab1325  158 events
+day  20  hash 4c6349c0b1215c2a  194 events
+day  21  hash 8e22b895a29c6198  231 events
+day  22  hash ce6fbc418c5cb5eb  115 events
+day  23  hash 50fe6990a1d4ebd1  196 events
+day  24  hash 2b97012262ed73bf  209 events
+day  25  hash 587bb793ee51fb07  220 events
+day  26  hash 23ecb4e32129d6e3  167 events
+day  27  hash d22f8ac54ab794bc  187 events
+day  28  hash 1828c83fef12ddfa  139 events
+day  29  hash 67027bf51c4d3573  140 events
+day  30  hash c7aabca157ceec5b  176 events
+day  31  hash bcb8dcf2d5d9b4a5  175 events
+day  32  hash 6e55ebd391d42ad7  158 events
+day  33  hash 211e6599efa04e8b  115 events
+day  34  hash 5151085be7a85c5a  143 events
+day  35  hash 5c4b8c24c5e2a225  153 events
+day  36  hash 801b484e82a09aa8  146 events
+day  37  hash 54ebbc4dcdac3e96  217 events
+day  38  hash c2779e206d1c68b6  145 events
+day  39  hash 3238fcf2b681975e  124 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -205,50 +205,50 @@ ship:96 "Placeholder fast transport, crossings 6": afloat in task_force:24; dama
 ship:97 "Placeholder fast transport, Parachutists 1": afloat in task_force:25; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 427.75 t of fuel, 0 t of supply
 ship:98 "Placeholder fast transport, Parachutists 2": afloat in task_force:25; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 427.75 t of fuel, 0 t of supply
 ship:99 "Placeholder troop transport, Seabees 1": afloat in task_force:26; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 937.1 t of fuel, 0 t of supply
-ship:100 "Placeholder fast transport, task force 30, 1": afloat in task_force:30; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-ship:101 "Placeholder fast transport, task force 31, 1": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
-ship:102 "Placeholder fast transport, task force 31, 2": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
-ship:103 "Placeholder fast transport, task force 31, 3": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
-ship:104 "Placeholder fast transport, task force 31, 4": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
-ship:105 "Placeholder fast transport, task force 31, 5": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
+ship:100 "Placeholder fast transport with cargo, task force 30, 1": afloat in task_force:30; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:101 "Placeholder fast transport with cargo, task force 31, 1": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
+ship:102 "Placeholder fast transport with cargo, task force 31, 2": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
+ship:103 "Placeholder fast transport with cargo, task force 31, 3": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
+ship:104 "Placeholder fast transport with cargo, task force 31, 4": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
+ship:105 "Placeholder fast transport with cargo, task force 31, 5": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
 ship:106 "Fubuki": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 900 gun rounds, torpedoes ready; 425.882982 t of fuel, 0 t of supply
 ship:107 "Shirayuki": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 900 gun rounds, torpedoes ready; 425.882982 t of fuel, 0 t of supply
-ship:108 "Placeholder fast transport, task force 32, 1": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-ship:109 "Placeholder fast transport, task force 32, 2": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-ship:110 "Placeholder fast transport, task force 32, 3": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:108 "Placeholder fast transport with cargo, task force 32, 1": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:109 "Placeholder fast transport with cargo, task force 32, 2": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:110 "Placeholder fast transport with cargo, task force 32, 3": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 ship:111 "Hatsuyuki": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 900 gun rounds, torpedoes ready; 411.936176 t of fuel, 0 t of supply
 ship:112 "Amagiri": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 900 gun rounds, torpedoes ready; 411.936176 t of fuel, 0 t of supply
-ship:113 "Placeholder fast transport, task force 33, 1": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:114 "Placeholder fast transport, task force 33, 2": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:115 "Placeholder fast transport, task force 33, 3": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:116 "Placeholder fast transport, task force 33, 4": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:117 "Placeholder fast transport, task force 33, 5": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:118 "Placeholder fast transport, task force 34, 1": afloat in task_force:34; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:119 "Placeholder fast transport, task force 35, 1": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:120 "Placeholder fast transport, task force 35, 2": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:121 "Placeholder fast transport, task force 35, 3": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:122 "Placeholder fast transport, task force 35, 4": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:123 "Placeholder fast transport, task force 35, 5": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:124 "Placeholder fast transport, task force 36, 1": afloat in task_force:36; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:125 "Placeholder fast transport, task force 36, 2": afloat in task_force:36; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:126 "Placeholder fast transport, task force 37, 1": afloat in task_force:37; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:127 "Placeholder fast transport, task force 37, 2": afloat in task_force:37; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
-ship:128 "Placeholder fast transport, task force 38, 1": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-ship:129 "Placeholder fast transport, task force 38, 2": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-ship:130 "Placeholder fast transport, task force 38, 3": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-ship:131 "Placeholder fast transport, task force 38, 4": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-ship:132 "Placeholder fast transport, task force 39, 1": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-ship:133 "Placeholder fast transport, task force 39, 2": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:113 "Placeholder fast transport with cargo, task force 33, 1": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:114 "Placeholder fast transport with cargo, task force 33, 2": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:115 "Placeholder fast transport with cargo, task force 33, 3": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:116 "Placeholder fast transport with cargo, task force 33, 4": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:117 "Placeholder fast transport with cargo, task force 33, 5": afloat in task_force:33; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:118 "Placeholder fast transport with cargo, task force 34, 1": afloat in task_force:34; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:119 "Placeholder fast transport with cargo, task force 35, 1": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:120 "Placeholder fast transport with cargo, task force 35, 2": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:121 "Placeholder fast transport with cargo, task force 35, 3": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:122 "Placeholder fast transport with cargo, task force 35, 4": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:123 "Placeholder fast transport with cargo, task force 35, 5": afloat in task_force:35; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:124 "Placeholder fast transport with cargo, task force 36, 1": afloat in task_force:36; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:125 "Placeholder fast transport with cargo, task force 36, 2": afloat in task_force:36; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:126 "Placeholder fast transport with cargo, task force 37, 1": afloat in task_force:37; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:127 "Placeholder fast transport with cargo, task force 37, 2": afloat in task_force:37; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 422 t of fuel, 0 t of supply
+ship:128 "Placeholder fast transport with cargo, task force 38, 1": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:129 "Placeholder fast transport with cargo, task force 38, 2": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:130 "Placeholder fast transport with cargo, task force 38, 3": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:131 "Placeholder fast transport with cargo, task force 38, 4": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:132 "Placeholder fast transport with cargo, task force 39, 1": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
+ship:133 "Placeholder fast transport with cargo, task force 39, 2": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 base:1 "Lunga" (Allied) at (2,-4): 3478.585 t of supply in stock, 0 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day, 20063 of work done on the airfield
 base:2 "Rabaul" (Japanese) at (-5,-13): 8118.32 t of supply in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock, 0 t of fuel in stock
 base:4 "Tulagi" (Allied) at (3,-5): 771.65 t of supply in stock, no airfield
-base:5 "Placeholder Japanese stock at Taivu" (Japanese) at (3,-4): 6.01 t of supply in stock, no airfield, formed in play, on its own side's map only
-base:6 "Placeholder Japanese stock west of the Lunga" (Japanese) at (2,-5): 0 t of supply in stock, no airfield, formed in play, on its own side's map only
+base:5 "Placeholder Japanese stock at Taivu" (Japanese) at (3,-4): 10.95 t of supply in stock, no airfield, formed in play, on its own side's map only
+base:6 "Placeholder Japanese stock west of the Lunga" (Japanese) at (2,-5): 12.31 t of supply in stock, no airfield, formed in play, on its own side's map only
 base:7 "Shortland" (Japanese) at (-2,-8): 0 t of supply in stock, no airfield
 base:8 "Landing at (2,-4)" (Allied) at (2,-4): 155.25 t of supply in stock, no airfield
 base:9 "Landing at (3,-5)" (Allied) at (3,-5): 147.15 t of supply in stock, no airfield, formed in play, on its own side's map only
-base:10 "Dump at (2,-4)" (Japanese) at (2,-4): 71.31 t of supply in stock, no airfield
+base:10 "Dump at (2,-4)" (Japanese) at (2,-4): 73.98 t of supply in stock, no airfield
 land_unit:1 "Combat Group A (5th Marines less 2/5)" (Allied): 4230 men ashore at (2,-4), fieldworks 30
 land_unit:2 "Combat Group B (1st Marines)" (Allied): 4481 men ashore at (2,-4), fieldworks 30
 land_unit:3 "Support Group, Guadalcanal" (Allied): 1350 men ashore at (2,-4), fieldworks 30
@@ -260,20 +260,20 @@ land_unit:8 "2d Marines and the rest of the Tulagi side" (Allied): 3732 men asho
 land_unit:9 "CUB One detachment" (Allied): 122 men ashore at (2,-4)
 land_unit:10 "6th Naval Construction Battalion" (Allied): 387 men ashore at (2,-4)
 land_unit:11 "Naval guard troops, Lunga" (Japanese): 66 men ashore at (2,-5), fieldworks 30
-land_unit:12 "11th Construction Unit" (Japanese): 270 men ashore at (2,-5)
-land_unit:13 "13th Construction Unit" (Japanese): 272 men ashore at (2,-5)
+land_unit:12 "11th Construction Unit" (Japanese): 271 men ashore at (2,-5)
+land_unit:13 "13th Construction Unit" (Japanese): 277 men ashore at (2,-5)
 land_unit:14 "Tulagi garrison" (Japanese): no men ashore
 land_unit:15 "Construction unit, Tulagi" (Japanese): no men ashore
-land_unit:16 "Yokosuka 5th Special Naval Landing Force" (Japanese): 76 men ashore at (2,-5), fieldworks 30
-land_unit:17 "Ichiki Detachment, first echelon" (Japanese): 216 men ashore at (2,-5), fieldworks 30
-land_unit:18 "Force landed at Tassafaronga on 29 August" (Japanese): 424 men ashore at (2,-5), fieldworks 30
-land_unit:19 "Kawaguchi main body, part 1" (Japanese): 545 men ashore at (2,-4), fatigue 100
-land_unit:20 "Kawaguchi main body, part 2" (Japanese): 67 men ashore at (2,-4), fatigue 100
-land_unit:21 "Kawaguchi main body, part 3" (Japanese): 454 men ashore at (2,-4), fatigue 100
-land_unit:22 "Kawaguchi main body, part 4" (Japanese): 169 men ashore at (2,-4), fatigue 100
-land_unit:23 "Kawaguchi main body, part 5" (Japanese): 169 men ashore at (2,-4), fatigue 100
-land_unit:24 "Aoba Detachment, part" (Japanese): 576 men ashore at (2,-5), fatigue 25, fieldworks 30
-land_unit:25 "Oka group" (Japanese): 162 men ashore at (2,-4), on attack, fatigue 45
+land_unit:16 "Yokosuka 5th Special Naval Landing Force" (Japanese): 80 men ashore at (2,-5), fieldworks 30
+land_unit:17 "Ichiki Detachment, first echelon" (Japanese): 286 men ashore at (2,-5), fieldworks 30
+land_unit:18 "Force landed at Tassafaronga on 29 August" (Japanese): 596 men ashore at (2,-5), fieldworks 30
+land_unit:19 "Kawaguchi main body, part 1" (Japanese): 796 men ashore at (2,-4), fatigue 100
+land_unit:20 "Kawaguchi main body, part 2" (Japanese): 99 men ashore at (2,-4), fatigue 100
+land_unit:21 "Kawaguchi main body, part 3" (Japanese): 663 men ashore at (2,-4), fatigue 100
+land_unit:22 "Kawaguchi main body, part 4" (Japanese): 246 men ashore at (2,-4), fatigue 100
+land_unit:23 "Kawaguchi main body, part 5" (Japanese): 246 men ashore at (2,-4), fatigue 100
+land_unit:24 "Aoba Detachment, part" (Japanese): 637 men ashore at (2,-5), fatigue 25, fieldworks 30
+land_unit:25 "Oka group" (Japanese): 250 men ashore at (2,-4), fatigue 100
 Allied contact:11 at (0,10): 3 ships, carrier, age 3 pulses
 Allied contact:12 at (8,-11): 14 ships, carrier, age 3 pulses
 Allied claim over (2,-4): 9 aircraft shot down, day 18 afternoon
@@ -295,7 +295,7 @@ Allied claim over (2,-4): 6 aircraft shot down, day 35 morning
 Allied claim over (2,-4): 22 aircraft shot down, day 36 morning
 Allied claim over (2,-4): 8 aircraft shot down, day 37 morning
 Allied claim over (2,-4): 20 aircraft shot down, day 38 morning
-Allied estimate at (2,-4): 915 enemy men ashore, reported day 39
+Allied estimate at (2,-4): 1343 enemy men ashore, reported day 39
 Japanese: no contacts
 Japanese claim over (2,-4): 11 aircraft shot down, day 18 afternoon
 Japanese claim at (2,-4): 20 aircraft shot down, 3 aircraft destroyed on the ground, day 19 morning
@@ -320,5 +320,5 @@ Japanese claim over (2,-4): 2 aircraft shot down, day 38 morning
 Japanese estimate at (2,-4): 19308 enemy men ashore, reported day 39
 
 Result (the placeholder scale of decision 0054):
-Allied: 122.040416 points (ships_sunk 2 = 14; ships_crippled 0 = 0; aircraft_destroyed 90 = 4.5; cargo_landed at base:1 6194.75 = 30.97375; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 5090 = 50.9), margin 106.247083, decisive victory
-Japanese: 15.793333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 53 = 2.65; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 281 = 2.81), margin -106.247083, decisive defeat
+Allied: 111.570416 points (ships_sunk 2 = 14; ships_crippled 0 = 0; aircraft_destroyed 90 = 4.5; cargo_landed at base:1 6194.75 = 30.97375; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 4043 = 40.43), margin 95.777083, decisive victory
+Japanese: 15.793333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 53 = 2.65; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 281 = 2.81), margin -95.777083, decisive defeat
