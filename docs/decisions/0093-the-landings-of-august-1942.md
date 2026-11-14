@@ -1,6 +1,6 @@
 # 0093: The landings of August 1942 and the first attacks on the airfield, as a scenario
 
-Status: a plan by the architect, written on Nov 14, 2026. It is stage 4 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer answered its three questions on Nov 14, 2026: the land units go into the full slice now (decisions 1 and 2), marching overland is built first (decision 4 and decision 0094), and only fighting men are counted (decision 6). Nothing is built. The data choices are the architect's, each with its reason, and none is made final here: the rows are read when the scenario is written.
+Status: a plan by the architect, written on Nov 14, 2026. It is stage 4 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer answered its three questions on Nov 14, 2026: the land units go into the full slice now (decisions 1 and 2), marching overland is built first (decision 4 and decision 0094), and only fighting men are counted (decision 6). Nothing is built. The data choices are the architect's, each with its reason, and none is made final here: the rows are read when the scenario is written. *(Nov 14, 2026: decision 0101 settles them, and changes items 3, 4 and 8 of this record.)*
 
 ## What stage 4 of ground combat is for
 
