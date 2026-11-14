@@ -1,6 +1,6 @@
 # 0098: What a land unit is good at
 
-Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that units differ in what they are suited to, so that a staff or a player picks a unit for a mission: Marines for an assault from the sea, mountain troops for the mountains. Decisions 2 and 6 need review. Nothing is built. Every figure is a placeholder. No real unit has a value yet.
+Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that units differ in what they are suited to, so that a staff or a player picks a unit for a mission: Marines for an assault from the sea, mountain troops for the mountains. The designer agreed decisions 2 and 6 on Nov 14, 2026. Nothing is built. Every figure is a placeholder. No real unit has a value yet.
 
 ## The gap
 
@@ -11,7 +11,7 @@ The plan for ground combat cut kinds of unit, weapons and vehicles, and that sta
 ## Decisions
 
 1. **A land unit has skills.** A skill is a whole number from 0 to 4, 2 being the standard, on the scale experience has. A scenario gives a unit its skills; any it does not give is 2. A unit with every skill at 2 is the unit as it is today.
-2. **There are four skills, and each acts on one thing the rules already do.** *Needs review: the list is closed and short on purpose. A fifth is added by a record of its own when a mission needs it.*
+2. **There are four skills, and each acts on one thing the rules already do.** *Agreed by the designer, Nov 14, 2026. The list is closed and short on purpose. A fifth is added by a record of its own when a mission needs it.*
 
    | Skill | What it changes | Who has it |
    | --- | --- | --- |
@@ -23,7 +23,7 @@ The plan for ground combat cut kinds of unit, weapons and vehicles, and that sta
 3. **One formula.** A skill multiplies what it changes by 1 plus its strength times the skill less 2. The strengths are figures, one for each skill, the same for both sides. At a strength of 0 a skill does nothing.
 4. **Movement is by terrain.** A unit has one movement skill for each kind of terrain the map has, each 2 unless given. The map has four: clear, jungle, mountain and atoll. A march counts the lower of the unit's skills for the terrain of the hex it leaves and of the hex it enters. So mountain troops are fast from one mountain hex to the next and ordinary on the plain, and nobody is fast through a hex he is not trained for. A day's march by a unit whose factor is above 1 counts as more than a day toward `march_days_per_hex`; below 1, as less.
 5. **Weight cuts both ways.** A heavy unit fires more for its men and eats more for its men, by the same factor. It is the better unit where supply can reach it and the worse one where it cannot.
-6. **Skills do not change in play.** They are what the unit is. Experience is what it has become, and is the only thing training and fighting raise (decision 0097). *Needs review: the other choice is that a unit could be retrained, over months, to raise a skill. It is left out to keep "what a unit is" apart from "what it has done", and because nothing in the rows would size it.*
+6. **Skills do not change in play.** They are what the unit is. Experience is what it has become, and is the only thing training and fighting raise (decision 0097). *Agreed by the designer, Nov 14, 2026. The other choice is that a unit could be retrained, over months, to raise a skill. It is left out to keep "what a unit is" apart from "what it has done", and because nothing in the rows would size it.*
 7. **A unit made by division takes the skills of the unit it left.**
 8. **A side sees its own units' skills exactly. The enemy sees none of them.** An estimate of the enemy ashore is of men.
 
