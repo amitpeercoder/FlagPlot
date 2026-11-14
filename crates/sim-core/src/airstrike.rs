@@ -9539,6 +9539,59 @@ mod tests {
         assert_eq!(arrived(&world).len(), 1);
     }
 
+    /// Decision 0101: an empty Allied group waits at a Japanese base with no
+    /// airfield; its arrival waits while the base is the enemy's, waits while
+    /// the base has no airfield, and is delivered the night both hold. Until
+    /// then it can fly nothing.
+    #[test]
+    fn an_arrival_to_an_empty_group_waits_for_its_base_to_be_its_sides_with_an_airfield() {
+        use crate::refdata::GroundFigures;
+        let mut world = base_world(1);
+        world.ref_data.ground = Some(GroundFigures::FIRST);
+        crewed(&mut world, 10, 5, 0, Some(0), 0);
+        {
+            let group = world
+                .truth
+                .air_groups
+                .get_mut(&AirGroupId::new(10))
+                .unwrap();
+            group.side = Side::Allied;
+            group.ready = 0;
+            group.damaged = 0;
+            group.strength = 0;
+            group.pilots = Some(0);
+        }
+        world.truth.bases.get_mut(&BASE_JAPANESE).unwrap().airfield = false;
+        world.truth.arrivals.push(arrival(2, 10, 6, 6));
+        let group = world.truth.air_groups[&AirGroupId::new(10)].clone();
+        assert_eq!(world.aircraft_able_to_fly(&group), 0);
+        let waits = |world: &World| {
+            events_where(world, |k| matches!(k, EventKind::ArrivalWaiting { .. })).len()
+        };
+        // The enemy's base, no airfield: waits.
+        world.receive_arrivals(2, Pulse::Night);
+        assert_eq!((waits(&world), arrived(&world).len()), (1, 0));
+        // The enemy's base with an airfield: waits.
+        world.truth.bases.get_mut(&BASE_JAPANESE).unwrap().airfield = true;
+        world.receive_arrivals(3, Pulse::Night);
+        assert_eq!((waits(&world), arrived(&world).len()), (2, 0));
+        // The base is its side's but has no airfield: waits.
+        {
+            let base = world.truth.bases.get_mut(&BASE_JAPANESE).unwrap();
+            base.side = Side::Allied;
+            base.airfield = false;
+        }
+        world.receive_arrivals(4, Pulse::Night);
+        assert_eq!((waits(&world), arrived(&world).len()), (3, 0));
+        // Its side's, with an airfield, below the level: delivered.
+        world.truth.bases.get_mut(&BASE_JAPANESE).unwrap().airfield = true;
+        world.receive_arrivals(5, Pulse::Night);
+        assert_eq!(
+            (waits(&world), arrived(&world)),
+            (3, vec![(5, 10, 6, 6, 6, 6, 6)])
+        );
+    }
+
     #[test]
     fn an_arrival_comes_before_the_replacements_that_night_and_raises_their_ceiling() {
         // 10 aircraft, strength 12; an arrival of 6 makes the strength 18

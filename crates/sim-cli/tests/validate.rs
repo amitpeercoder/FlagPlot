@@ -1496,3 +1496,108 @@ fn a_version_4_batch_is_refused_and_told_to_be_made_again() {
     assert!(err.contains("make it again"), "{err}");
     assert!(!s.dir.join("r.md").exists());
 }
+
+/// A real batch of `scenario`, judged by `body` (measures, not judged), with
+/// the report back.
+fn land_report(name: &str, scenario: &str, body: &str) -> String {
+    let d = dir(name);
+    let batch = d.join("batch.json");
+    let result = binary(&[
+        "batch",
+        scenario,
+        "--label",
+        "land",
+        "--runs",
+        "4",
+        "--out",
+        &text(&batch),
+    ]);
+    assert!(result.status.success(), "{}", stderr(&result));
+    let measures = d.join("measures.toml");
+    fs::write(
+        &measures,
+        format!(
+            "battle = \"land\"\nscenario = \"{scenario}\"\nfacts = \"data/oob/engagement_outcomes.csv\"\n{body}"
+        ),
+    )
+    .expect("write");
+    let out = d.join("report.md");
+    let result = binary(&[
+        "validate",
+        &text(&batch),
+        &text(&measures),
+        "--out",
+        &text(&out),
+    ]);
+    assert!(result.status.success(), "{}", stderr(&result));
+    fs::read_to_string(&out).expect("report")
+}
+
+fn land_measure(id: &str, keys: &str) -> String {
+    format!(
+        "\n[[measure]]\nid = \"{id}\"\ncounts = \"C\"\nrecord_low = 0\nrecord_high = 0\n\
+         judged = false\nrows = [1]\nreason = \"r\"\n{keys}\n"
+    )
+}
+
+#[test]
+fn the_land_takes_read_a_real_batch_and_show_the_runs_left_out() {
+    // Scenario 32: base 7 is Allied at the end of day 1 and Japanese before
+    // it, the 200 men of unit 6 surrender on day 1, and no airfield is built
+    // (so that take leaves every run out).
+    let body = [
+        land_measure(
+            "held",
+            "take = \"base_holder\"\nbase = 7\nday = 1\nside = \"allied\"",
+        ),
+        land_measure(
+            "start",
+            "take = \"base_holder\"\nbase = 7\nday = 1\nside = \"japanese\"",
+        ),
+        land_measure(
+            "lost",
+            "take = \"men_lost\"\nside = \"japanese\"\nfrom_day = 1\nto_day = 6",
+        ),
+        land_measure("field", "take = \"airfield_built_day\"\nbase = 1"),
+        land_measure(
+            "food",
+            "take = \"days_of_food\"\nside = \"allied\"\nq = 20\nr = 0\nday = 1",
+        ),
+        land_measure(
+            "nobody",
+            "take = \"days_of_food\"\nside = \"allied\"\nq = 0\nr = 5\nday = 1",
+        ),
+    ]
+    .concat();
+    let report = land_report("land32", "data/scenarios/32_falling_back.toml", &body);
+    let held = cells(&report, "held");
+    assert_eq!(held[3], "1", "{report}");
+    assert_eq!(held[5], "0", "left out");
+    assert_eq!(cells(&report, "start")[3], "0");
+    // The Japanese lose at least the 200 who surrender.
+    assert!(cells(&report, "lost")[3].parse::<u64>().expect("a number") >= 200);
+    // No airfield is built in scenario 32, and no man is at (0,5).
+    assert_eq!(cells(&report, "field")[5], "4", "{report}");
+    assert_eq!(cells(&report, "nobody")[5], "4", "{report}");
+    // Allied at (20,0), day 1: 100 men eat 0.5 t a day from the base's
+    // 1499 t, 2998 whole days.
+    assert_eq!(cells(&report, "food")[3], "2998", "{report}");
+
+    // Scenario 30 builds the airfield of base 1 on day 2; scenario 31's
+    // arrival due on day 2 comes on day 4.
+    let report = land_report(
+        "land30",
+        "data/scenarios/30_working_units.toml",
+        &land_measure("field", "take = \"airfield_built_day\"\nbase = 1"),
+    );
+    assert_eq!(cells(&report, "field")[3], "2", "{report}");
+    let report = land_report(
+        "land31",
+        "data/scenarios/31_airfield_damage.toml",
+        &land_measure(
+            "arrival",
+            "take = \"arrival_day\"\nair_group = 3\ndue_day = 2",
+        ),
+    );
+    assert_eq!(cells(&report, "arrival")[3], "4", "{report}");
+}

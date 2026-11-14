@@ -173,6 +173,35 @@ pub enum Take {
     FightsSightedFirst(Vec<String>),
     /// The rounds these task forces were surprised in night fights.
     RoundsSurprised(BTreeSet<u32>),
+    /// 1 if the side holds the base at the end of the day.
+    BaseHolder {
+        base: u32,
+        day: u32,
+        side: Side,
+    },
+    /// The side's men lost on the days `from` to `to`, both included.
+    MenLost {
+        side: Side,
+        from: u32,
+        to: u32,
+        /// Only the men lost ashore in this hex, when given.
+        hex: Option<(i32, i32)>,
+    },
+    /// The day the base's airfield was built.
+    AirfieldBuiltDay(u32),
+    /// The first day on or after `due` on which aircraft reached the group.
+    ArrivalDay {
+        air_group: u32,
+        due: u32,
+    },
+    /// Whole days the supply at the side's bases in the hex feeds its men
+    /// ashore there, at the end of the day.
+    DaysOfFood {
+        side: Side,
+        q: i32,
+        r: i32,
+        day: u32,
+    },
 }
 
 const SYSTEMS: [&str; 5] = [
@@ -289,6 +318,13 @@ fn no_other_keys(measure: &Measure, allowed: &[&str]) -> Result<(), String> {
         ("by", measure.by.is_some()),
         ("task_forces", measure.task_forces.is_some()),
         ("unit", measure.unit.is_some()),
+        ("base", measure.base.is_some()),
+        ("air_group", measure.air_group.is_some()),
+        ("due_day", measure.due_day.is_some()),
+        ("from_day", measure.from_day.is_some()),
+        ("to_day", measure.to_day.is_some()),
+        ("q", measure.q.is_some()),
+        ("r", measure.r.is_some()),
     ];
     let take = measure.take.as_deref().unwrap_or("");
     for (key, present) in given {
@@ -304,6 +340,23 @@ fn no_other_keys(measure: &Measure, allowed: &[&str]) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+/// A day key, which must fall within the scenario's days.
+fn day_in_scenario(
+    measure: &Measure,
+    key: &str,
+    day: Option<u32>,
+    batch: &Batch,
+) -> Result<u32, String> {
+    let day = need(measure, key, day)?;
+    if day < 1 || day > batch.scenario.days {
+        return Err(format!(
+            "measure {}: {key} {day} is outside the scenario's {} days",
+            measure.id, batch.scenario.days
+        ));
+    }
+    Ok(day)
 }
 
 /// Reads a measure's `take` and keys, checking each id against the batch.
@@ -517,6 +570,83 @@ pub fn parse(measure: &Measure, batch: &Batch) -> Result<Take, String> {
             }
             Take::RoundsSurprised(forces)
         }
+        "base_holder" => {
+            no_other_keys(measure, &["base", "day", "side"])?;
+            let base = need(measure, "base", measure.base)?;
+            if !known.bases.contains(&base) {
+                return Err(format!(
+                    "measure {}: base {base} is not a base of the batch",
+                    measure.id
+                ));
+            }
+            let day = day_in_scenario(measure, "day", measure.day, batch)?;
+            Take::BaseHolder {
+                base,
+                day,
+                side: side(measure)?,
+            }
+        }
+        "men_lost" => {
+            no_other_keys(measure, &["side", "from_day", "to_day", "q", "r"])?;
+            let hex = match (measure.q, measure.r) {
+                (Some(q), Some(r)) => Some((q, r)),
+                (None, None) => None,
+                (Some(_), None) => return Err(need(measure, "r", None::<i32>).unwrap_err()),
+                (None, Some(_)) => return Err(need(measure, "q", None::<i32>).unwrap_err()),
+            };
+            let from = day_in_scenario(measure, "from_day", measure.from_day, batch)?;
+            let to = day_in_scenario(measure, "to_day", measure.to_day, batch)?;
+            if from > to {
+                return Err(format!(
+                    "measure {}: from_day {from} is after to_day {to}",
+                    measure.id
+                ));
+            }
+            Take::MenLost {
+                side: side(measure)?,
+                from,
+                to,
+                hex,
+            }
+        }
+        "airfield_built_day" => {
+            no_other_keys(measure, &["base"])?;
+            let base = need(measure, "base", measure.base)?;
+            if !known.bases.contains(&base) {
+                return Err(format!(
+                    "measure {}: base {base} is not a base of the batch",
+                    measure.id
+                ));
+            }
+            Take::AirfieldBuiltDay(base)
+        }
+        "arrival_day" => {
+            no_other_keys(measure, &["air_group", "due_day"])?;
+            let air_group = need(measure, "air_group", measure.air_group)?;
+            if !known.groups.contains(&air_group) {
+                return Err(format!(
+                    "measure {}: air_group names air group {air_group}, which the batch does not have",
+                    measure.id
+                ));
+            }
+            let due = day_in_scenario(measure, "due_day", measure.due_day, batch)?;
+            Take::ArrivalDay { air_group, due }
+        }
+        "days_of_food" => {
+            no_other_keys(measure, &["side", "q", "r", "day"])?;
+            if batch.daily_supply_t_per_man.is_none() {
+                return Err(format!(
+                    "measure {}: take days_of_food needs the ground figures, which the batch's scenario does not have",
+                    measure.id
+                ));
+            }
+            Take::DaysOfFood {
+                side: side(measure)?,
+                q: need(measure, "q", measure.q)?,
+                r: need(measure, "r", measure.r)?,
+                day: day_in_scenario(measure, "day", measure.day, batch)?,
+            }
+        }
         other => {
             return Err(format!(
                 "measure {}: take \"{other}\" is not known",
@@ -534,6 +664,10 @@ pub struct Context {
     pub side_of: BTreeMap<u32, Side>,
     /// Minutes a surface-combat round stands for.
     pub round_minutes: Option<u64>,
+    /// The side that holds each base of the header as the scenario starts.
+    pub base_side: BTreeMap<u32, Side>,
+    /// Tons of supply a man ashore costs a day, from the ground figures.
+    pub per_man: Option<Fixed>,
 }
 
 impl Context {
@@ -546,6 +680,15 @@ impl Context {
                 .filter_map(|g| Side::parse(&g.side).map(|s| (g.id, s)))
                 .collect(),
             round_minutes,
+            base_side: batch
+                .bases
+                .iter()
+                .filter_map(|b| Some((b.id, Side::parse(b.side.as_deref()?)?)))
+                .collect(),
+            per_man: batch
+                .daily_supply_t_per_man
+                .as_deref()
+                .and_then(|text| text.parse().ok()),
         }
     }
 }
@@ -726,6 +869,17 @@ fn ships_shots<'a>(run: &'a PerRun, ships: &BTreeSet<u32>, weapon: Weapon) -> Ve
         .collect()
 }
 
+/// `floor(supply / (men x per_man))`, in `Fixed` raw units, which cancel. No
+/// men, or no ration, leaves the run out.
+fn days_of_food(supply: Fixed, men: u64, per_man: Fixed) -> Result<i64, String> {
+    let need = i128::from(men) * i128::from(per_man.raw());
+    if need <= 0 {
+        return Err("days_of_food: the men ashore need no food".to_string());
+    }
+    i64::try_from(i128::from(supply.raw()).max(0) / need)
+        .map_err(|_| "a count is too large".to_string())
+}
+
 /// The value of a measure in one run: `None` when the run is left out.
 pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, String> {
     let n = |x: u64| i64::try_from(x).map_err(|_| "a count is too large".to_string());
@@ -886,12 +1040,92 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
             .filter(|force| forces.contains(&force.task_force))
             .map(|force| force.rounds_surprised)
             .sum::<u64>())?,
+        Take::BaseHolder { base, day, side } => {
+            let mut holder = ctx
+                .base_side
+                .get(base)
+                .copied()
+                .ok_or_else(|| format!("base {base} is not in the batch's header"))?;
+            for change in run
+                .base_changes
+                .iter()
+                .filter(|c| c.base == *base && c.day <= *day)
+            {
+                holder = Side::parse(&change.to)
+                    .ok_or_else(|| format!("\"{}\" is not a side", change.to))?;
+            }
+            i64::from(holder == *side)
+        }
+        Take::MenLost {
+            side,
+            from,
+            to,
+            hex: None,
+        } => n(run
+            .men_lost_by_day
+            .iter()
+            .filter(|d| d.day >= *from && d.day <= *to)
+            .map(|d| match side {
+                Side::Japanese => d.japanese,
+                Side::Allied => d.allied,
+            })
+            .sum())?,
+        Take::MenLost {
+            side,
+            from,
+            to,
+            hex: Some((q, r)),
+        } => n(run
+            .men_lost_ashore_by_day
+            .iter()
+            .filter(|d| d.day >= *from && d.day <= *to && d.q == *q && d.r == *r)
+            .map(|d| match side {
+                Side::Japanese => d.japanese,
+                Side::Allied => d.allied,
+            })
+            .sum())?,
+        Take::AirfieldBuiltDay(base) => match run
+            .airfields_built
+            .iter()
+            .filter(|a| a.base == *base)
+            .map(|a| a.day)
+            .min()
+        {
+            Some(day) => i64::from(day),
+            None => return Ok(None),
+        },
+        Take::ArrivalDay { air_group, due } => match run
+            .arrivals_delivered
+            .iter()
+            .filter(|a| a.air_group == *air_group && a.day >= *due)
+            .map(|a| a.day)
+            .min()
+        {
+            Some(day) => i64::from(day),
+            None => return Ok(None),
+        },
+        Take::DaysOfFood { side, q, r, day } => {
+            let per_man = ctx.per_man.ok_or_else(|| {
+                "days_of_food needs the ground figures, which the batch does not have".to_string()
+            })?;
+            let Some(row) = run.ashore_by_day.iter().find(|a| {
+                a.day == *day && a.q == *q && a.r == *r && Side::parse(&a.side) == Some(*side)
+            }) else {
+                return Ok(None);
+            };
+            let supply: Fixed = row
+                .supply_t
+                .parse()
+                .map_err(|_| format!("the supply \"{}\" is not a decimal number", row.supply_t))?;
+            days_of_food(supply, row.men, per_man)?
+        }
     }))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{floored_sum, hundreds_of, in_hundreds, ShotUnit};
+    use super::*;
+    use serde_json::{json, Value};
 
     #[test]
     fn shots_in_tens_are_added_exactly_and_floored_once() {
@@ -929,5 +1163,308 @@ mod tests {
         assert_eq!(hundreds_of(&["99", "0.999"]), Ok(0));
         assert_eq!(hundreds_of(&[]), Ok(0));
         assert!(hundreds_of(&["1", "many"]).is_err());
+    }
+
+    // ------------------------------------------------- the land-fight takes
+
+    /// A batch of a 6-day scenario with bases 1 (Japanese) and 2 (Allied),
+    /// air group 7, and ground figures of 0.005 t a man a day.
+    fn batch_json(ground: bool) -> Batch {
+        let mut batch = json!({
+            "scenario": {"file": "x.toml", "days": 6},
+            "inputs": {"state_version": "v", "scenario_hash": "h", "data": []},
+            "runs": 1, "first_seed": 1,
+            "ships": [], "per_run": [],
+            "task_forces": [],
+            "air_groups": [{"id": 7, "side": "allied"}],
+            "bases": [{"id": 1, "side": "japanese"}, {"id": 2, "side": "allied"}],
+        });
+        if ground {
+            batch["daily_supply_t_per_man"] = json!("0.005");
+        }
+        serde_json::from_value(batch).expect("a batch")
+    }
+
+    fn run_json(extra: Value) -> PerRun {
+        let mut run = json!({
+            "seed": 1, "sunk": [], "hits_on": [],
+            "fire": {
+                "japanese": {"gun": {"shots": "0", "hits": 0}, "torpedo": {"shots": "0", "hits": 0}},
+                "allied": {"gun": {"shots": "0", "hits": 0}, "torpedo": {"shots": "0", "hits": 0}}
+            },
+            "shots_by": [], "systems_out": [], "air_losses": [], "ready": [],
+            "claims": {
+                "japanese": {"sunk": 0, "hits": 0, "shot_down": 0, "on_ground": 0},
+                "allied": {"sunk": 0, "hits": 0, "shot_down": 0, "on_ground": 0}
+            },
+            "attacks": [], "escorts": [], "launches": [], "fights": [], "formed_groups": [],
+        });
+        for (key, value) in extra.as_object().expect("an object") {
+            run[key] = value.clone();
+        }
+        serde_json::from_value(run).expect("a run")
+    }
+
+    fn measure_json(fields: Value) -> Measure {
+        let mut measure = json!({
+            "id": "m", "counts": "c", "record_low": 0, "record_high": 0,
+            "judged": true, "rows": [1], "reason": "r",
+        });
+        for (key, value) in fields.as_object().expect("an object") {
+            measure[key] = value.clone();
+        }
+        serde_json::from_value(measure).expect("a measure")
+    }
+
+    fn taken(batch: &Batch, fields: Value, run: &PerRun) -> Result<Option<i64>, String> {
+        let measure = measure_json(fields);
+        let take = parse(&measure, batch)?;
+        value(&take, &Context::new(batch, None), run)
+    }
+
+    #[test]
+    fn base_holder_is_the_header_side_changed_by_the_changes_up_to_the_day() {
+        let batch = batch_json(true);
+        let run = run_json(json!({"base_changes": [
+            {"day": 3, "pulse": "night", "base": 1, "from": "japanese", "to": "allied"},
+            {"day": 5, "pulse": "night", "base": 1, "from": "allied", "to": "japanese"},
+            {"day": 4, "pulse": "night", "base": 2, "from": "allied", "to": "japanese"},
+        ]}));
+        let held = |base: u32, day: u32, side: &str| {
+            taken(
+                &batch,
+                json!({"take": "base_holder", "base": base, "day": day, "side": side}),
+                &run,
+            )
+        };
+        assert_eq!(held(1, 2, "japanese"), Ok(Some(1)));
+        assert_eq!(held(1, 2, "allied"), Ok(Some(0)));
+        // The change of day 3 counts at the end of day 3.
+        assert_eq!(held(1, 3, "allied"), Ok(Some(1)));
+        assert_eq!(held(1, 4, "allied"), Ok(Some(1)));
+        assert_eq!(held(1, 5, "japanese"), Ok(Some(1)));
+        assert_eq!(held(2, 3, "allied"), Ok(Some(1)));
+        assert_eq!(held(2, 6, "japanese"), Ok(Some(1)));
+        // A run with no change keeps the header side.
+        let quiet = run_json(json!({}));
+        let take = parse(
+            &measure_json(json!({"take": "base_holder", "base": 2, "day": 6, "side": "allied"})),
+            &batch,
+        )
+        .expect("parses");
+        assert_eq!(
+            value(&take, &Context::new(&batch, None), &quiet),
+            Ok(Some(1))
+        );
+    }
+
+    #[test]
+    fn men_lost_sums_the_days_asked_for_both_ends_included() {
+        let batch = batch_json(true);
+        let run = run_json(json!({"men_lost_by_day": [
+            {"day": 2, "japanese": 10, "allied": 1},
+            {"day": 3, "japanese": 20, "allied": 2},
+            {"day": 5, "japanese": 40, "allied": 4},
+        ]}));
+        let lost = |side: &str, from: u32, to: u32| {
+            taken(
+                &batch,
+                json!({"take": "men_lost", "side": side, "from_day": from, "to_day": to}),
+                &run,
+            )
+        };
+        assert_eq!(lost("japanese", 2, 3), Ok(Some(30)));
+        assert_eq!(lost("japanese", 3, 5), Ok(Some(60)));
+        assert_eq!(lost("allied", 1, 6), Ok(Some(7)));
+        assert_eq!(lost("allied", 4, 4), Ok(Some(0)));
+        // A run with no man lost is 0, not left out.
+        let quiet = run_json(json!({}));
+        let take = parse(
+            &measure_json(
+                json!({"take": "men_lost", "side": "allied", "from_day": 1, "to_day": 6}),
+            ),
+            &batch,
+        )
+        .expect("parses");
+        assert_eq!(
+            value(&take, &Context::new(&batch, None), &quiet),
+            Ok(Some(0))
+        );
+    }
+
+    #[test]
+    fn men_lost_in_a_hex_counts_only_the_men_lost_ashore_there() {
+        let batch = batch_json(true);
+        let run = run_json(json!({
+            "men_lost_by_day": [{"day": 2, "japanese": 100, "allied": 5}],
+            "men_lost_ashore_by_day": [
+                {"day": 2, "q": 1, "r": 0, "japanese": 60, "allied": 5},
+                {"day": 2, "q": 2, "r": 0, "japanese": 30, "allied": 0},
+                {"day": 3, "q": 1, "r": 0, "japanese": 7, "allied": 0},
+            ]
+        }));
+        let lost = |side: &str, q: i32, from: u32, to: u32| {
+            taken(
+                &batch,
+                json!({"take": "men_lost", "side": side, "from_day": from, "to_day": to,
+                       "q": q, "r": 0}),
+                &run,
+            )
+        };
+        assert_eq!(lost("japanese", 1, 1, 6), Ok(Some(67)));
+        assert_eq!(lost("japanese", 1, 2, 2), Ok(Some(60)));
+        assert_eq!(lost("japanese", 2, 1, 6), Ok(Some(30)));
+        assert_eq!(lost("allied", 1, 1, 6), Ok(Some(5)));
+        assert_eq!(lost("allied", 9, 1, 6), Ok(Some(0)));
+        // Without a hex the by-day figure, men lost with a ship included.
+        assert_eq!(
+            taken(
+                &batch,
+                json!({"take": "men_lost", "side": "japanese", "from_day": 1, "to_day": 6}),
+                &run
+            ),
+            Ok(Some(100))
+        );
+        // Both keys or neither.
+        let err = taken(
+            &batch,
+            json!({"take": "men_lost", "side": "allied", "from_day": 1, "to_day": 2, "q": 1}),
+            &run,
+        )
+        .expect_err("refused");
+        assert_eq!(err, "measure m: take men_lost needs the key r");
+    }
+
+    #[test]
+    fn airfield_built_day_is_the_day_of_the_build_and_a_run_without_one_is_left_out() {
+        let batch = batch_json(true);
+        let built = run_json(json!({"airfields_built": [{"day": 4, "base": 1}]}));
+        let measure = json!({"take": "airfield_built_day", "base": 1});
+        assert_eq!(taken(&batch, measure.clone(), &built), Ok(Some(4)));
+        assert_eq!(taken(&batch, measure, &run_json(json!({}))), Ok(None));
+        // Another base's airfield is not this one's.
+        assert_eq!(
+            taken(
+                &batch,
+                json!({"take": "airfield_built_day", "base": 2}),
+                &built
+            ),
+            Ok(None)
+        );
+    }
+
+    #[test]
+    fn arrival_day_is_the_first_delivery_on_or_after_the_due_day() {
+        let batch = batch_json(true);
+        let run = run_json(json!({"arrivals_delivered": [
+            {"day": 2, "air_group": 7, "aircraft": 9},
+            {"day": 5, "air_group": 7, "aircraft": 9},
+            {"day": 3, "air_group": 8, "aircraft": 9},
+        ]}));
+        let arrival = |due: u32| {
+            taken(
+                &batch,
+                json!({"take": "arrival_day", "air_group": 7, "due_day": due}),
+                &run,
+            )
+        };
+        assert_eq!(arrival(1), Ok(Some(2)));
+        assert_eq!(arrival(2), Ok(Some(2)));
+        assert_eq!(arrival(3), Ok(Some(5)));
+        assert_eq!(arrival(6), Ok(None));
+    }
+
+    #[test]
+    fn days_of_food_is_the_supply_over_a_days_ration_rounded_down() {
+        let batch = batch_json(true);
+        // 1000 men eat 5 t a day at 0.005 t each: 12.5 t is 2 days and a half.
+        let run = run_json(json!({"ashore_by_day": [
+            {"day": 2, "side": "allied", "q": 3, "r": 4, "men": 1000, "supply_t": "12.5"},
+            {"day": 3, "side": "allied", "q": 3, "r": 4, "men": 1000, "supply_t": "4.999999"},
+            {"day": 3, "side": "japanese", "q": 3, "r": 4, "men": 200, "supply_t": "10"},
+        ]}));
+        let food = |side: &str, day: u32| {
+            taken(
+                &batch,
+                json!({"take": "days_of_food", "side": side, "q": 3, "r": 4, "day": day}),
+                &run,
+            )
+        };
+        assert_eq!(food("allied", 2), Ok(Some(2)));
+        assert_eq!(food("allied", 3), Ok(Some(0)));
+        // 200 men eat 1 t a day: 10 t is exactly 10 days.
+        assert_eq!(food("japanese", 3), Ok(Some(10)));
+        // No men there that day: left out.
+        assert_eq!(food("japanese", 2), Ok(None));
+        assert_eq!(food("allied", 4), Ok(None));
+    }
+
+    #[test]
+    fn the_new_takes_refuse_wrong_or_missing_keys_as_the_others_do() {
+        let batch = batch_json(true);
+        let err = |fields: Value| taken(&batch, fields, &run_json(json!({}))).expect_err("refused");
+        assert_eq!(
+            err(json!({"take": "base_holder", "day": 1, "side": "allied"})),
+            "measure m: take base_holder needs the key base"
+        );
+        assert_eq!(
+            err(json!({"take": "base_holder", "base": 9, "day": 1, "side": "allied"})),
+            "measure m: base 9 is not a base of the batch"
+        );
+        assert_eq!(
+            err(json!({"take": "base_holder", "base": 1, "day": 7, "side": "allied"})),
+            "measure m: day 7 is outside the scenario's 6 days"
+        );
+        assert_eq!(
+            err(json!({"take": "base_holder", "base": 1, "day": 1, "side": "navy"})),
+            "measure m: side \"navy\" is not japanese or allied"
+        );
+        assert_eq!(
+            err(json!({"take": "base_holder", "base": 1, "day": 1, "side": "allied", "q": 1})),
+            "measure m: take base_holder does not take the key q"
+        );
+        assert_eq!(
+            err(json!({"take": "men_lost", "side": "allied", "from_day": 1})),
+            "measure m: take men_lost needs the key to_day"
+        );
+        assert_eq!(
+            err(json!({"take": "men_lost", "side": "allied", "from_day": 4, "to_day": 2})),
+            "measure m: from_day 4 is after to_day 2"
+        );
+        assert_eq!(
+            err(json!({"take": "airfield_built_day"})),
+            "measure m: take airfield_built_day needs the key base"
+        );
+        assert_eq!(
+            err(json!({"take": "arrival_day", "air_group": 99, "due_day": 1})),
+            "measure m: air_group names air group 99, which the batch does not have"
+        );
+        assert_eq!(
+            err(json!({"take": "arrival_day", "air_group": 7})),
+            "measure m: take arrival_day needs the key due_day"
+        );
+        assert_eq!(
+            err(json!({"take": "days_of_food", "side": "allied", "q": 1, "day": 1})),
+            "measure m: take days_of_food needs the key r"
+        );
+        // A batch with no ground figures cannot be asked for days of food.
+        let bare = batch_json(false);
+        let measure = measure_json(
+            json!({"take": "days_of_food", "side": "allied", "q": 1, "r": 1, "day": 1}),
+        );
+        assert!(parse(&measure, &bare)
+            .err()
+            .is_some_and(|e| e.contains("needs the ground figures")));
+    }
+
+    #[test]
+    fn days_of_food_works_in_fixed_point() {
+        // 7 t over 3 men at 0.3 t a day each is 0.9 t a day: 7 days, and the
+        // 0.1 t left over does not make an eighth.
+        let per_man = Fixed::from_raw(300_000);
+        assert_eq!(days_of_food("7".parse().unwrap(), 3, per_man), Ok(7));
+        assert_eq!(days_of_food("6.999999".parse().unwrap(), 3, per_man), Ok(7));
+        assert_eq!(days_of_food("6.299999".parse().unwrap(), 3, per_man), Ok(6));
+        assert!(days_of_food("1".parse().unwrap(), 0, per_man).is_err());
     }
 }

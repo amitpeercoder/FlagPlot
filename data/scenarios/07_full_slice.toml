@@ -1,50 +1,80 @@
-# Scenario 7: the full slice, 21 August to 3 September 1942 (fourteen days).
+# Scenario 7: the full slice, 7 August to 14 September 1942 (39 days).
 #
-# Decision 0043. Everything the earlier scenarios built, run together on the
-# real map: the Rabaul against Guadalcanal air campaign (scenario 6, as it
-# is), the Eastern Solomons carrier battle placed on day 4, 24 August
-# (scenario 5), a placeholder convoy from Espiritu Santo to Henderson Field,
-# and three placeholder night surface actions in the open Coral Sea. It is
-# assembled from files that exist. It is not a reconstruction and nothing in
-# it is compared with history. Its only claim is that it runs and repeats
-# (tests/scenario_07_determinism.rs).
+# Decisions 0043, 0093 and 0101. Everything the earlier scenarios built, run
+# together on the real map: the landings of 7 to 9 August on Guadalcanal and
+# Tulagi and the land fight that followed them, to the ridge of 12 to 14
+# September (decisions 0093 and 0101, with the architect's rulings recorded at
+# the end of 0101); the Rabaul against Guadalcanal air campaign (scenario 6);
+# the Eastern Solomons carrier battle on day 18, 24 August (scenario 5); a
+# placeholder convoy from Espiritu Santo to Lunga; and three placeholder night
+# surface actions in the open Coral Sea. Day 1 is 7 August; a game day runs
+# from 18:00 the evening before its date (docs/rules chapter 1), so the night
+# pulse of day 1 is the night of 6 to 7 August.
 #
-# What was changed to put the pieces together:
+# From this stage its land fight is measured (data/validation/
+# guadalcanal_landings.toml); the rest of it still is not. The frozen copy in
+# data/scenarios/step2-frozen/ is the fourteen-day slice and is not touched.
+#
+# WHAT THE LAND FIGHT HOLDS (decision 0101 and the rulings at its end; every
+# figure is used as given there, and the row each rests on is named beside it):
+#   - Lunga (base 1) and Tulagi (base 4) start Japanese. The American bases
+#     there are formed by the landings; the Japanese bases change side when
+#     their side is beaten ashore (decision 0090).
+#   - The American transports start at sea and land on day 1. The Japanese
+#     runs start at Shortland (base 7), Ichiki's at Rabaul, and are sent out on
+#     the day that lands them in the night pulse of the record's day.
+#   - A NIGHT LANDING IS NUMBERED A DAY LATER THAN ITS DATE. A destroyer run
+#     landed after dark on the date its row gives (the one clock time read,
+#     land_unit_facts 1049, is about 9 p.m.), and the evening of a date is the
+#     night pulse of the next game day. So the Oite's landing of 16 August is
+#     day 11, not day 10 (the architect's ruling of Nov 14, 2026).
+#   - The squadrons of Henderson Field arrive on day 14, 20 August, and wait
+#     until Lunga is American and has its airfield (decision 0103, 5, and the
+#     ruling A of decision 0101): their groups start at base 1 with nothing.
+#
+# What was changed to put the other pieces together (decision 0043):
 #   - The Eastern Solomons air groups on carriers are numbered 101 to 126
 #     (their numbers there, plus 100), since the Rabaul scenario uses 1 to 3
 #     and 10 to 17. Their ships, task forces and bases keep their numbers.
 #   - Eastern Solomons' own Henderson Field is the Rabaul scenario's base 1.
 #     Its two groups there, VMF-223 (group 9) and VMSB-232 (group 10), are the
 #     Rabaul scenario's groups 10 and 11 and are left out, with their orders.
-#   - Eastern Solomons' orders, written for its day 1, are given on day 4.
-#   - VMF-223 (group 10) starts with 6 damaged aircraft besides its 19 ready
-#     ones. Scenario 6 has none. It is a placeholder so that the log has
-#     damaged aircraft destroyed on the ground.
-#   - Rabaul scenario arrivals after day 14 are left out (days 22 and 24).
-#     Its orders are all on day 1.
+#   - Every day number of the fourteen-day slice is moved by 14 (decision
+#     0093, 1): Eastern Solomons' orders, written for its day 1, are given on
+#     day 18, and the air campaign's orders and arrivals move by the same 14.
+#     The Rabaul raids of 9 to 13 September and the arrivals of scenario 6's
+#     days 22 and 24, which the fourteen days left out, are restored at their
+#     shifted days (ruling F of decision 0101).
+#   - VMF-223 (group 10) no longer starts with 6 damaged aircraft: it starts
+#     with nothing and its aircraft arrive (an arrival brings ready aircraft
+#     only). The damaged aircraft were a placeholder for coverage.
 #   - Ships and air groups of the Eastern Solomons scenario start in the
-#     hexes that scenario gives them and sit there until day 4.
-#   - Force A (task force 6) is sent north on day 5 and back on day 6, so that
-#     the log has a turn-back event (decision 5 of 0005). It is there only for
-#     coverage, as the damaged fighters of group 10 and the order sent to the
-#     wrong side's force are. It is home again at the end of day 6.
-#   - Henderson Field has 400 t of fuel and Espiritu Santo 600 t, so that the
-#     log has refuelling in port (decision 0045): the convoy refuels at
-#     Henderson Field after it arrives. They are placeholders and there only
-#     for coverage, like the damaged fighters above. Without them the full
-#     slice has no fuel at its bases and no refuelling, as before.
+#     hexes that scenario gives them and sit there until day 18 (ruling G of
+#     decision 0101). Where the carriers were on 6 August, south of
+#     Guadalcanal, is a gap.
+#   - Force A (task force 6) is sent north on day 19 and back on day 20, so
+#     that the log has a turn-back event (decision 5 of 0005). It is there
+#     only for coverage, as the order sent to the wrong side's force is.
+#   - Lunga has 400 t of fuel and Espiritu Santo 600 t, so that the log has
+#     refuelling in port (decision 0045). They are placeholders and there only
+#     for coverage. Lunga's fuel is the Japanese base's at the start: the
+#     side that takes it keeps half (decision 0090).
 #
-# PLACEHOLDER DATA. The figures files are placeholders. The convoy, its
-# escort, the night-action forces, a bystander and a dry destroyer are
-# invented: placeholder classes, names starting "Placeholder".
-name = "Scenario 7: The full slice, 21 August to 3 September 1942"
+# PLACEHOLDER DATA. The figures files are placeholders. The convoy, the
+# transports of both sides, the night-action forces, a bystander and a dry
+# destroyer are invented: placeholder classes, names starting "Placeholder".
+name = "Scenario 7: The full slice, 7 August to 14 September 1942"
 placeholder = true
 seed = 1942
-days = 14
+days = 39
 map = "../map/south_pacific.csv"
+land_links = "../map/south_pacific_land_links.csv"
 ship_classes = [
     "../reference/ship_classes_eastern_solomons.csv",
     "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+    "../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+    "../reference/ship_classes_guadalcanal_landings.csv",
 ]
 port_sizes = "../reference/port_sizes.csv"
 aircraft_types = [
@@ -57,17 +87,32 @@ air_combat = "../reference/air_combat.toml"
 air_upkeep = "../reference/air_upkeep.toml"
 fatigue = "../reference/fatigue.toml"
 air_supply = "../reference/air_supply.toml"
+ground = "../reference/ground.toml"
 
+# Lunga, the airfield's hex, Japanese at the start (decision 0101, 6). It has
+# no airfield and 13,763 of work done on one (decision 0101, 9): the strip was
+# 2,600 ft graded and rolled on 7 August (place_facts 60) of the 3,778 ft it
+# had when finished (place_facts 62), so 20,000 x 2,600 / 3,778, cut to a
+# whole number. The share rests on rows; the total, ground.toml's
+# airfield_work, is a placeholder, so this figure is a placeholder too. Its
+# stock is 1,090 t (decision 0101, 20), half of which the side that takes it
+# keeps: 545 t, ten days for the Americans there, the ten days of Japanese
+# food in the division's count of about 15 August, read from the note of
+# land_unit_facts 417. Its guns and repairs a day are the slice's placeholders
+# for Henderson Field, kept by the side that holds it; its fuel is the
+# placeholder above.
 [[base]]
 id = 1
-name = "Henderson Field"
-side = "allied"
+name = "Lunga"
+side = "japanese"
 q = 2
 r = -4
-supply_t = 4000
+supply_t = 1090
 fuel_t = 400
 anti_aircraft = 8
 aircraft_repairs_per_day = 3
+airfield = false
+airfield_work = 13763
 
 # The Rabaul airfields, Lakunai and Vunakanau, in one hex. Nothing attacks
 # them in this scenario, so they are given no guns. Supply and repairs a day
@@ -92,6 +137,1236 @@ q = 7
 r = 6
 supply_t = 960
 fuel_t = 600
+
+# Tulagi, with Gavutu and Tanambogo, one place in one hex (decision 0093, 5;
+# place_positions 74, 75), Japanese at the start, with no airfield (decision
+# 0101, 11). PLACEHOLDER stock: ten days for its 440 men, 440 x 0.005 x 10 =
+# 22 t (the architect's ruling on rows, 1, decision 0101). No row gives a
+# quantity there.
+[[base]]
+id = 4
+name = "Tulagi"
+side = "japanese"
+q = 3
+r = -5
+supply_t = 22
+airfield = false
+
+# The Japanese stocks ashore east and west of the airfield (decision 0101, 22,
+# as amended, 5). A force put ashore with nothing would have a fed share of 0
+# and fire nothing, which the record does not support, so each landing hex
+# holds a base of the Japanese side, off the enemy's map, with no airfield.
+# The bases themselves are placeholders; the stocks are sized from rows,
+# turned into tons by ground.toml's daily_supply_t_per_man of 0.005:
+#   (3,-4): two weeks for the Kawaguchi main body (land_unit_facts 975),
+#     3,090 x 0.005 x 14 = 216.3 t, and seven days for the Ichiki echelon,
+#     916 x 0.005 x 7 = 32.06 t: 248 t, cut to a whole ton.
+#   (2,-5): seven days for the 2,070 men landed there (200, 900, 637 and
+#     333): 72 t, cut to a whole ton.
+# The seven days are the practice a Japanese officer gave (two on the man,
+# three in the unit, two at division, land_unit_facts 1044): a practice and
+# not what these units were issued.
+[[base]]
+id = 5
+name = "Placeholder Japanese stock at Taivu"
+side = "japanese"
+q = 3
+r = -4
+supply_t = 248
+airfield = false
+on_map = false
+
+[[base]]
+id = 6
+name = "Placeholder Japanese stock west of the Lunga"
+side = "japanese"
+q = 2
+r = -5
+supply_t = 72
+airfield = false
+on_map = false
+
+# Shortland, the anchorage the Japanese destroyer runs sailed from, in the hex
+# of its position row (place_positions 24: Shortland Harbour, -7.07268,
+# 155.88036, which the projection of decision 0017 puts in (-2,-8)). No
+# airfield, no stock and no guns (the architect's ruling E, decision 0101).
+[[base]]
+id = 7
+name = "Shortland"
+side = "japanese"
+q = -2
+r = -8
+airfield = false
+
+# ---------------------------------------------------------------------------
+# THE LANDINGS AND THE LAND FIGHT (decisions 0093 and 0101)
+# ---------------------------------------------------------------------------
+
+# The American transports: placeholders (decision 0101, 16). No rule gives a
+# transport its kind or its cargo, so the men and supply go in the placeholder
+# troop transport (class 10, 600 men, 3,000 t) and the placeholder fast
+# transport (class 11, 200 men, no cargo), each named "Placeholder", enough of
+# them to carry each landing's men and supply. A ship carries the men of one
+# unit only, so each unit takes whole ships: on Guadalcanal 8 for Combat Group
+# A, 8 for Combat Group B, 3 for the Support Group and 2 for the pioneers (21);
+# on the Tulagi side 2 for the Raiders, 1 for the Parachutists, 2 for 2/5 and 7
+# for the rest (12). No escort is in the slice: the escorts and the covering
+# cruisers are a gap (ruling H of decision 0101).
+#
+# WHERE THEY START. Both groups were at sea on the night of 6 August, coming
+# round Savo Island from the west, and began landing in the morning of 7
+# August (decision 0101, 7). Each starts three hexes west of its beach by sea,
+# 120 nm, which the placeholder transport's cruising 10 knots steams in 12
+# hours: from 18:00, the start of day 1, it is off its beach at about 06:00 on
+# 7 August, the start of the morning pulse, and lands on day 1, the record's
+# day. (-1,-4) is three hexes west of Lunga along the row; (0,-5) three west of
+# Tulagi along its row, past Savo. A start hex is the working out of a sailing
+# time, not a position from a row: no row of the area's positions puts the
+# force there at 18:00.
+
+[[task_force]]
+id = 20
+name = "Placeholder transports, Guadalcanal"
+side = "allied"
+q = -1
+r = -4
+mission = "transport"
+home_port = 3
+
+[[task_force]]
+id = 21
+name = "Placeholder transports, Tulagi"
+side = "allied"
+q = 0
+r = -5
+mission = "transport"
+home_port = 3
+
+# The 60 days of food the division embarked (land_unit_facts 409), turned
+# into tons by ground.toml's 0.005 a man a day (decision 0101, 18):
+# 10,900 x 0.005 x 60 = 3,270 t for Guadalcanal, shared among its 21
+# transports (15 of 156 t and 6 of 155 t), and 6,075 x 0.005 x 60 = 1,822 t
+# for the Tulagi side among its 12 (10 of 152 t and 2 of 151 t).
+
+[[ship]]
+id = 52
+name = "Placeholder troop transport, Guadalcanal 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 53
+name = "Placeholder troop transport, Guadalcanal 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 54
+name = "Placeholder troop transport, Guadalcanal 3"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 55
+name = "Placeholder troop transport, Guadalcanal 4"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 56
+name = "Placeholder troop transport, Guadalcanal 5"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 57
+name = "Placeholder troop transport, Guadalcanal 6"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 58
+name = "Placeholder troop transport, Guadalcanal 7"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 59
+name = "Placeholder troop transport, Guadalcanal 8"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 60
+name = "Placeholder troop transport, Guadalcanal 9"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 61
+name = "Placeholder troop transport, Guadalcanal 10"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 62
+name = "Placeholder troop transport, Guadalcanal 11"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 63
+name = "Placeholder troop transport, Guadalcanal 12"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 64
+name = "Placeholder troop transport, Guadalcanal 13"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 65
+name = "Placeholder troop transport, Guadalcanal 14"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 66
+name = "Placeholder troop transport, Guadalcanal 15"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 67
+name = "Placeholder troop transport, Guadalcanal 16"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 68
+name = "Placeholder troop transport, Guadalcanal 17"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 69
+name = "Placeholder troop transport, Guadalcanal 18"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 70
+name = "Placeholder troop transport, Guadalcanal 19"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 71
+name = "Placeholder troop transport, Guadalcanal 20"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 72
+name = "Placeholder troop transport, Guadalcanal 21"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 73
+name = "Placeholder troop transport, Tulagi 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 74
+name = "Placeholder troop transport, Tulagi 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 75
+name = "Placeholder troop transport, Tulagi 3"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 76
+name = "Placeholder troop transport, Tulagi 4"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 77
+name = "Placeholder troop transport, Tulagi 5"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 78
+name = "Placeholder troop transport, Tulagi 6"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 79
+name = "Placeholder troop transport, Tulagi 7"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 80
+name = "Placeholder troop transport, Tulagi 8"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 81
+name = "Placeholder troop transport, Tulagi 9"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 82
+name = "Placeholder troop transport, Tulagi 10"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 83
+name = "Placeholder troop transport, Tulagi 11"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 151
+task_force = 21
+
+[[ship]]
+id = 84
+name = "Placeholder troop transport, Tulagi 12"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 151
+task_force = 21
+
+# Transport Division 12's run of 15 August (day 9): four destroyer-transports
+# with the CUB One detachment and 120 t, 30 t each (troop_lift_facts 70, 86 to
+# 88; decision 0101, 21). Class 12 is the placeholder fast transport with the 30
+# t of cargo of row 70 (ruling D of decision 0101). It starts at Espiritu Santo,
+# the base it sailed from, and is sent out on day 8 at its cruising 16 knots,
+# which brings it to Lunga on day 9 (worked out by running the scenario: see
+# the order).
+
+[[task_force]]
+id = 22
+name = "Placeholder fast transports with cargo, run of 15 August"
+side = "allied"
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 85
+name = "Placeholder fast transport with cargo 1"
+class = 12
+side = "allied"
+fuel_t = 500
+supply_t = 30
+task_force = 22
+
+[[ship]]
+id = 86
+name = "Placeholder fast transport with cargo 2"
+class = 12
+side = "allied"
+fuel_t = 500
+supply_t = 30
+task_force = 22
+
+[[ship]]
+id = 87
+name = "Placeholder fast transport with cargo 3"
+class = 12
+side = "allied"
+fuel_t = 500
+supply_t = 30
+task_force = 22
+
+[[ship]]
+id = 88
+name = "Placeholder fast transport with cargo 4"
+class = 12
+side = "allied"
+fuel_t = 500
+supply_t = 30
+task_force = 22
+
+# The run of 21 August (day 15): over 2,000 t landed, 200 t of it rations
+# (land_unit_facts 748; troop_lift_facts 60), here in two placeholder cargo
+# ships (class 3) of 1,000 t each. The record's six destroyer-transports of the
+# run are task force 24, which carries 2/5 across from Tulagi the same day.
+
+[[task_force]]
+id = 23
+name = "Placeholder cargo ships, run of 21 August"
+side = "allied"
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 89
+name = "Placeholder cargo ship, run of 21 August 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+supply_t = 1000
+task_force = 23
+
+[[ship]]
+id = 90
+name = "Placeholder cargo ship, run of 21 August 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+supply_t = 1000
+task_force = 23
+
+# The crossings from Tulagi to Lunga (decision 0101, the line under the
+# American table): 2/5 on day 15, 21 August (land_unit_facts 534), and the
+# Raiders and the Parachutists on day 25, 31 August (land_unit_facts 798, 513).
+# Task force 24, six placeholder fast transports, carries 2/5 and then the
+# Raiders; task force 25, two more, the Parachutists. A ship carries one unit's
+# men and a load order names one unit, so the two units of day 25 need two
+# forces. Both start at Espiritu Santo and are worked out to lie at Tulagi the
+# day before each crossing, load then, and cross and land on the day.
+
+[[task_force]]
+id = 24
+name = "Placeholder fast transports, the Tulagi crossings"
+side = "allied"
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 91
+name = "Placeholder fast transport, crossings 1"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 92
+name = "Placeholder fast transport, crossings 2"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 93
+name = "Placeholder fast transport, crossings 3"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 94
+name = "Placeholder fast transport, crossings 4"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 95
+name = "Placeholder fast transport, crossings 5"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 96
+name = "Placeholder fast transport, crossings 6"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[task_force]]
+id = 25
+name = "Placeholder fast transports, the Parachutists' crossing"
+side = "allied"
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 97
+name = "Placeholder fast transport, Parachutists 1"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 25
+
+[[ship]]
+id = 98
+name = "Placeholder fast transport, Parachutists 2"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 25
+
+# The ship that brought the 6th Naval Construction Battalion on 1 September
+# (day 26; land_unit_facts 606), a placeholder troop transport with the 392 men
+# and no supply: no row gives her load, so none is invented (the architect's
+# ruling, decision 0101).
+
+[[task_force]]
+id = 26
+name = "Placeholder transport, the Seabees of 1 September"
+side = "allied"
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 99
+name = "Placeholder troop transport, Seabees 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 26
+
+# The Japanese runs. Each starts at Shortland (base 7), Ichiki's at Rabaul
+# (base 2): its destroyers came from Truk, which is off the map (ruling E of
+# decision 0101). Every run but the four Fubuki-class destroyers is carried in
+# the placeholder fast transport (class 11, 200 men), enough of them for its
+# men (decision 0101, 17): no Kagero-class, Shiratsuyu-class or Kamikaze-class
+# destroyer has a troop figure, so the real destroyers of those runs are not in
+# the slice. Fubuki and Shirayuki (class 3009, 225 men) are of the run of 29
+# August and Hatsuyuki and Amagiri (class 3010, 150 men) of 31 August, as the
+# derivation list data/derivation/guadalcanal_landings.toml reads them. Each run
+# is ordered out on the day before it lands, with its route to the landing hex
+# and back home, a mark on the landing hex (decision 0096: it halts, lands its
+# men and steams on) and an unload order; its speed is worked out so that it
+# arrives in the night pulse of its landing day (see each run's orders). The
+# runs carry men only: the Japanese supply ashore is the stocks of bases 5 and
+# 6 (decision 0101, 22, as amended).
+
+[[task_force]]
+id = 30
+name = "Placeholder run of 16 August, the Yokosuka 5th Special Naval Landing Force"
+side = "japanese"
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 100
+name = "Placeholder fast transport, task force 30, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 30
+
+[[task_force]]
+id = 31
+name = "Placeholder run of 18 August, the Ichiki Detachment"
+side = "japanese"
+at_base = 2
+mission = "transport"
+home_port = 2
+
+[[ship]]
+id = 101
+name = "Placeholder fast transport, task force 31, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 31
+
+[[ship]]
+id = 102
+name = "Placeholder fast transport, task force 31, 2"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 31
+
+[[ship]]
+id = 103
+name = "Placeholder fast transport, task force 31, 3"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 31
+
+[[ship]]
+id = 104
+name = "Placeholder fast transport, task force 31, 4"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 31
+
+[[ship]]
+id = 105
+name = "Placeholder fast transport, task force 31, 5"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 31
+
+[[task_force]]
+id = 32
+name = "Run of 29 August to Tassafaronga"
+side = "japanese"
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 106
+name = "Fubuki"
+class = 3009
+side = "japanese"
+fuel_t = 475
+task_force = 32
+
+[[ship]]
+id = 107
+name = "Shirayuki"
+class = 3009
+side = "japanese"
+fuel_t = 475
+task_force = 32
+
+[[ship]]
+id = 108
+name = "Placeholder fast transport, task force 32, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 32
+
+[[ship]]
+id = 109
+name = "Placeholder fast transport, task force 32, 2"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 32
+
+[[ship]]
+id = 110
+name = "Placeholder fast transport, task force 32, 3"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 32
+
+[[task_force]]
+id = 33
+name = "Run of 31 August to Taivu, Kawaguchi part 1"
+side = "japanese"
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 111
+name = "Hatsuyuki"
+class = 3010
+side = "japanese"
+fuel_t = 475
+task_force = 33
+
+[[ship]]
+id = 112
+name = "Amagiri"
+class = 3010
+side = "japanese"
+fuel_t = 475
+task_force = 33
+
+[[ship]]
+id = 113
+name = "Placeholder fast transport, task force 33, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 33
+
+[[ship]]
+id = 114
+name = "Placeholder fast transport, task force 33, 2"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 33
+
+[[ship]]
+id = 115
+name = "Placeholder fast transport, task force 33, 3"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 33
+
+[[ship]]
+id = 116
+name = "Placeholder fast transport, task force 33, 4"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 33
+
+[[ship]]
+id = 117
+name = "Placeholder fast transport, task force 33, 5"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 33
+
+[[task_force]]
+id = 34
+name = "Placeholder run of 2 September, Kawaguchi part 2"
+side = "japanese"
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 118
+name = "Placeholder fast transport, task force 34, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 34
+
+[[task_force]]
+id = 35
+name = "Placeholder run of 4 September, Kawaguchi part 3"
+side = "japanese"
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 119
+name = "Placeholder fast transport, task force 35, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 35
+
+[[ship]]
+id = 120
+name = "Placeholder fast transport, task force 35, 2"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 35
+
+[[ship]]
+id = 121
+name = "Placeholder fast transport, task force 35, 3"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 35
+
+[[ship]]
+id = 122
+name = "Placeholder fast transport, task force 35, 4"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 35
+
+[[ship]]
+id = 123
+name = "Placeholder fast transport, task force 35, 5"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 35
+
+[[task_force]]
+id = 36
+name = "Placeholder run of 5 September, Kawaguchi part 4"
+side = "japanese"
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 124
+name = "Placeholder fast transport, task force 36, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 36
+
+[[ship]]
+id = 125
+name = "Placeholder fast transport, task force 36, 2"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 36
+
+[[task_force]]
+id = 37
+name = "Placeholder run of 6 September, Kawaguchi part 5"
+side = "japanese"
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 126
+name = "Placeholder fast transport, task force 37, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 37
+
+[[ship]]
+id = 127
+name = "Placeholder fast transport, task force 37, 2"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 37
+
+[[task_force]]
+id = 38
+name = "Placeholder run of 11 September to Kamimbo, the Aoba Detachment"
+side = "japanese"
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 128
+name = "Placeholder fast transport, task force 38, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 38
+
+[[ship]]
+id = 129
+name = "Placeholder fast transport, task force 38, 2"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 38
+
+[[ship]]
+id = 130
+name = "Placeholder fast transport, task force 38, 3"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 38
+
+[[ship]]
+id = 131
+name = "Placeholder fast transport, task force 38, 4"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 38
+
+[[task_force]]
+id = 39
+name = "Placeholder barges of early September, the Oka group"
+side = "japanese"
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 132
+name = "Placeholder fast transport, task force 39, 1"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 39
+
+[[ship]]
+id = 133
+name = "Placeholder fast transport, task force 39, 2"
+class = 11
+side = "japanese"
+fuel_t = 500
+task_force = 39
+
+
+# Land units (decision 0101, "Land units", with the rulings at its end). A
+# unit's men are its fighting men; a working unit's men work and do not fight
+# (decisions 0093, 6, and 0099). Every unit has experience 2 and every skill 2
+# (the defaults): no real unit has a value until the rule that reads the
+# research statements is written. The Americans aboard are on attack from the
+# start (decision 0101, 12): they land on attack, and go on the defence by
+# order once the base is theirs.
+
+# land_unit_facts 646, the division's own report of men landed.
+[[land_unit]]
+id = 1
+name = "Combat Group A (5th Marines less 2/5)"
+side = "allied"
+men = 4306
+task_force = 20
+posture = "attack"
+
+# land_unit_facts 652, the same report.
+[[land_unit]]
+id = 2
+name = "Combat Group B (1st Marines)"
+side = "allied"
+men = 4561
+task_force = 20
+posture = "attack"
+
+# The rest of the 10,900 ashore on Guadalcanal (land_unit_facts 689, 690;
+# engagement_outcomes 801) after the two groups and the pioneers:
+# 10,900 - 4,306 - 4,561 - 660. 10,900 is the middle of the three totals and
+# has two sources.
+[[land_unit]]
+id = 3
+name = "Support Group, Guadalcanal"
+side = "allied"
+men = 1373
+task_force = 20
+posture = "attack"
+
+# land_unit_facts 498 (about 660). The other rows say 596, 500 and 490. It builds
+# the airfield alone: the 1st Engineer Battalion has no row of its men (a gap).
+[[land_unit]]
+id = 4
+name = "1st Pioneer Battalion"
+side = "allied"
+working = true
+men = 660
+task_force = 20
+
+# land_unit_facts 518, 519.
+[[land_unit]]
+id = 5
+name = "1st Raider Battalion"
+side = "allied"
+men = 828
+task_force = 21
+posture = "attack"
+
+# land_unit_facts 487.
+[[land_unit]]
+id = 6
+name = "1st Parachute Battalion"
+side = "allied"
+men = 395
+task_force = 21
+posture = "attack"
+
+# land_unit_facts 531, 532.
+[[land_unit]]
+id = 7
+name = "2d Battalion, 5th Marines"
+side = "allied"
+men = 1085
+task_force = 21
+posture = "attack"
+
+# The rest of the 6,075 ashore on the Tulagi side (land_unit_facts 778;
+# engagement_outcomes 802): 6,075 - 828 - 395 - 1,085. The 1,390 of the 2d
+# Marines carried back to Espiritu Santo on 12 August (land_unit_facts 549) stay
+# on Tulagi (decision 0101, "Left out").
+[[land_unit]]
+id = 8
+name = "2d Marines and the rest of the Tulagi side"
+side = "allied"
+men = 3767
+task_force = 21
+posture = "attack"
+
+# land_unit_facts 660, 661; troop_lift_facts 86, 87: 5 officers and 118 men, 15 August.
+[[land_unit]]
+id = 9
+name = "CUB One detachment"
+side = "allied"
+working = true
+men = 123
+task_force = 22
+
+# land_unit_facts 606: 5 officers and 387 men, 1 September. The rows of 200 and
+# 357 are of parts.
+[[land_unit]]
+id = 10
+name = "6th Naval Construction Battalion"
+side = "allied"
+working = true
+men = 392
+task_force = 26
+
+# land_unit_facts 317, the Japanese-derived account. The other is 250.
+[[land_unit]]
+id = 11
+name = "Naval guard troops, Lunga"
+side = "japanese"
+men = 240
+q = 2
+r = -4
+
+# land_unit_facts 1.
+[[land_unit]]
+id = 12
+name = "11th Construction Unit"
+side = "japanese"
+working = true
+men = 900
+q = 2
+r = -4
+
+# land_unit_facts 4. The two together are 1,800, between the totals of 1,600 and
+# 1,700 (land_unit_facts 67, 65, 68) and well under 2,700 (land_unit_facts 66).
+[[land_unit]]
+id = 13
+name = "13th Construction Unit"
+side = "japanese"
+working = true
+men = 900
+q = 2
+r = -4
+
+# land_unit_facts 63, one source for the place, the Japanese-derived account:
+# about 40 naval air force men and a naval guard unit of about 200. With the
+# construction unit, 440; 780 by American count (land_unit_facts 226) is the
+# other end of the range the measures take. land_unit_facts 227 (about 500) is
+# of Gavutu and Tanambogo only, a part (the architect's ruling on rows, 1).
+[[land_unit]]
+id = 14
+name = "Tulagi garrison"
+side = "japanese"
+men = 240
+q = 3
+r = -5
+
+# land_unit_facts 63: a construction unit of about 200 men at Tulagi.
+[[land_unit]]
+id = 15
+name = "Construction unit, Tulagi"
+side = "japanese"
+working = true
+men = 200
+q = 3
+r = -5
+
+# troop_lift_facts 37, 38: the men one named ship, the Oite, carried on 16
+# August. The other rows say 150 and about 500. Lands in (2,-5).
+[[land_unit]]
+id = 16
+name = "Yokosuka 5th Special Naval Landing Force"
+side = "japanese"
+men = 200
+task_force = 30
+
+# troop_lift_facts 141, the most exact of rows that run from 900 to 1,000. Six
+# destroyers (troop_lift_facts 138 to 140). Lands at Taivu, (3,-4).
+[[land_unit]]
+id = 17
+name = "Ichiki Detachment, first echelon"
+side = "japanese"
+men = 916
+task_force = 31
+
+# troop_lift_facts 45, 148, which the derivation of the Fubuki class already
+# reads. Another source has 450 and 300 men landed at Taivu that night
+# (land_unit_facts 939 to 941; troop_lift_facts 173, 174); they are not added
+# (decision 0101, as amended, 3).
+[[land_unit]]
+id = 18
+name = "Force landed at Tassafaronga on 29 August"
+side = "japanese"
+men = 900
+task_force = 32
+
+# The Kawaguchi Detachment's main body, 3,090 men, the row for the 35th Brigade
+# headquarters and the 124th Infantry (land_unit_facts 310), landed at Taivu in
+# five parts, one unit for each run (ruling B of decision 0101): 1,200 on 31
+# August (troop_lift_facts 153, 154), 150 on 2 September (159), 1,000 on 4
+# September (161), 370 on 5 September (164) and 370 on 6 September (166). The
+# parts are a schedule for landing 3,090 men and not a statement of which unit
+# came on which night: row 161 names the men of 4 September as of the Ichiki
+# and Aoba Detachments, row 164 is disputed (231 against 370) and row 166 may
+# repeat it (the architect's ruling on rows, 3).
+
+# Lands at Taivu, (3,-4), the night after 31 August.
+[[land_unit]]
+id = 19
+name = "Kawaguchi main body, part 1"
+side = "japanese"
+men = 1200
+task_force = 33
+
+# Lands at Taivu, (3,-4), the night after 2 September.
+[[land_unit]]
+id = 20
+name = "Kawaguchi main body, part 2"
+side = "japanese"
+men = 150
+task_force = 34
+
+# Lands at Taivu, (3,-4), the night after 4 September.
+[[land_unit]]
+id = 21
+name = "Kawaguchi main body, part 3"
+side = "japanese"
+men = 1000
+task_force = 35
+
+# Lands at Taivu, (3,-4), the night after 5 September.
+[[land_unit]]
+id = 22
+name = "Kawaguchi main body, part 4"
+side = "japanese"
+men = 370
+task_force = 36
+
+# Lands at Taivu, (3,-4), the night after 6 September.
+[[land_unit]]
+id = 23
+name = "Kawaguchi main body, part 5"
+side = "japanese"
+men = 370
+task_force = 37
+
+# troop_lift_facts 168: landed at Kamimbo, (2,-5), on 11 September.
+[[land_unit]]
+id = 24
+name = "Aoba Detachment, part"
+side = "japanese"
+men = 637
+task_force = 38
+
+# Decision 0101, as amended, 2: some 1,000 men set out in barges and one third of
+# them were left under Oka's command on the island (land_unit_facts 916 to
+# 918): 1,000 / 3, cut to a whole man. Lower-grade rows say about 1,000 landed
+# and about 650 attacked (land_unit_facts 929 to 931, 925): the dispute, which
+# the measures take. Lands in (2,-5) on day 32, 7 September, the day by which a
+# row has it west of the perimeter (land_unit_facts 931); barges have no class,
+# so it comes in placeholder fast transports.
+[[land_unit]]
+id = 25
+name = "Oka group"
+side = "japanese"
+men = 333
+task_force = 39
+
 
 [[task_force]]
 id = 1
@@ -139,7 +1414,7 @@ r = -18
 mission = "carrier"
 
 # The convoy: two placeholder cargo ships and a placeholder destroyer, loading
-# at Espiritu Santo on day 1 and steaming for Lunga Point.
+# at Espiritu Santo on day 15 and steaming for Lunga Point.
 [[task_force]]
 id = 5
 name = "Placeholder supply convoy"
@@ -149,8 +1424,8 @@ mission = "transport"
 home_port = 3
 
 # The night action in the open Coral Sea well south of the rest. Force A is
-# ordered to battle readiness on day 4 and so has three days of fatigue
-# (decision 0037) when it steams on force B's hex, 8 hexes off, on day 7.
+# ordered to battle readiness on day 18 and so has three days of fatigue
+# (decision 0037) when it steams on force B's hex, 8 hexes off, on day 21.
 [[task_force]]
 id = 6
 name = "Placeholder night force A"
@@ -167,7 +1442,7 @@ q = 0
 r = 10
 mission = "surface_combat"
 
-# A third night action, on day 11, both forces at normal readiness.
+# A third night action, on day 25, both forces at normal readiness.
 [[task_force]]
 id = 12
 name = "Placeholder night force E"
@@ -195,7 +1470,7 @@ q = 0
 r = 10
 mission = "escort"
 
-# A placeholder destroyer with almost no fuel, to run dry on day 2.
+# A placeholder destroyer with almost no fuel, to run dry on day 16.
 [[task_force]]
 id = 9
 name = "Placeholder dry destroyer"
@@ -666,11 +1941,8 @@ name = "VMF-223"
 side = "allied"
 base = 1
 aircraft_type = 2100
-ready = 19
-# Not in scenario 6: six of its aircraft start damaged, so that a raid on
-# Henderson Field can destroy damaged aircraft on the ground (a placeholder).
-damaged = 6
-pilots = 19
+ready = 0
+pilots = 0
 
 [[air_group]]
 id = 11
@@ -678,8 +1950,8 @@ name = "VMSB-232"
 side = "allied"
 base = 1
 aircraft_type = 2101
-ready = 12
-pilots = 12
+ready = 0
+pilots = 0
 
 # Air group id 12 is retired and is never reused. It was "Flight 300", the
 # eleven dive bombers of Enterprise that landed at Henderson Field on 24 August,
@@ -733,9 +2005,9 @@ aircraft_type = 2101
 ready = 0
 pilots = 0
 
-# Squadrons that arrive during the four weeks (decision 0041). Day 1 is 21
-# August. Each arrives with a pilot for each aircraft, which is an
-# assumption: the sources count aircraft.
+# Squadrons that arrive during the slice (decision 0041), listed with the
+# arrivals below. Day 1 is 7 August. Each arrives with a pilot for each
+# aircraft, which is an assumption: the sources count aircraft.
 
 [[air_group]]
 id = 101
@@ -991,13 +2263,34 @@ ready = 5
 # Japanese: the striking force steams south-south-east at 17 knots, the Ryujo
 # detachment at 20.
 
+# 20 August (day 14): the squadrons of Henderson Field, VMF-223 with 19
+# fighters and VMSB-232 with 12 dive bombers (decision 0101, 8; place_facts
+# 53; air_unit_facts 36 and 108 to 135; the strengths are scenario 6's). They
+# do not start at Lunga: an arrival due at a base that is not its side's, or
+# has no airfield, or whose field is damaged to the level that takes no
+# aircraft, waits, and is delivered on the first night all three allow
+# (decision 0103, 5; decision 0101, as amended, 6). Each arrives with a pilot
+# for each aircraft, as every arrival here does.
+
+[[arrival]]
+day = 14
+air_group = 10
+aircraft = 19
+pilots = 19
+
+[[arrival]]
+day = 14
+air_group = 11
+aircraft = 12
+pilots = 12
+
 # 24 August: no scripted arrival. Flight 300 is produced by the rule (decision
 # 11 of 0059) when Enterprise's deck is lost.
 
 # 30 August: VMF-224.
 
 [[arrival]]
-day = 10
+day = 24
 air_group = 13
 aircraft = 19
 pilots = 19
@@ -1005,7 +2298,7 @@ pilots = 19
 # 30 August: VMSB-231.
 
 [[arrival]]
-day = 10
+day = 24
 air_group = 14
 aircraft = 12
 pilots = 12
@@ -1013,12 +2306,36 @@ pilots = 12
 # 31 August: the 6th Air Group's Zeros reach Rabaul.
 
 [[arrival]]
-day = 11
+day = 25
 air_group = 3
 aircraft = 13
 pilots = 13
 
+# The arrivals of scenario 6's days 22 and 24, restored at their shifted days
+# (ruling F of decision 0101).
 # 11 September: VF-5, from Saratoga.
+
+[[arrival]]
+day = 36
+air_group = 15
+aircraft = 24
+pilots = 24
+
+# 13 September: eighteen fighters from Hornet and Wasp.
+
+[[arrival]]
+day = 38
+air_group = 16
+aircraft = 18
+pilots = 18
+
+# 13 September: VS-3.
+
+[[arrival]]
+day = 38
+air_group = 17
+aircraft = 12
+pilots = 12
 
 [[replacement]]
 side = "japanese"
@@ -1038,20 +2355,24 @@ pilots_per_day = 2
 # where the rows are named). The bombers fly the base strike on the days a
 # raid reached Henderson Field by the units' own forms (25 and 26 August, 29
 # and 30 August, 2 and 5 September, 9 to 13 September: days 5, 6, 9, 10, 13,
-# 16 and 20 to 24) and rest on the others. No row sets a rest threshold, so
+# 16 and 20 to 24 of scenario 6, days 19, 20, 23, 24, 27, 30 and 34 to 38
+# here) and rest on the others. No row sets a rest threshold, so
 # none is given. Both fighter groups keep nothing over Rabaul and send every
 # fighter that can fly as escort, which they do only on a raid day.
-# This scenario runs 14 days, so the orders after day 14 are left out.
+# Before day 15, 21 August, the bombers have no order and rest: the raids
+# of 7 to 20 August are not in scenario 6, and no decision adds them. The
+# orders of scenario 6's days 16 to 25, left out of the fourteen-day slice,
+# are restored at their shifted days (ruling F of decision 0101).
 
 [[order]]
-day = 1
+day = 15
 side = "japanese"
 air_group = 1
 kind = "set_air_mission"
 mission = "rest"
 
 [[order]]
-day = 5
+day = 19
 side = "japanese"
 air_group = 1
 kind = "set_air_mission"
@@ -1059,14 +2380,14 @@ mission = "base_strike"
 target_base = 1
 
 [[order]]
-day = 7
+day = 21
 side = "japanese"
 air_group = 1
 kind = "set_air_mission"
 mission = "rest"
 
 [[order]]
-day = 9
+day = 23
 side = "japanese"
 air_group = 1
 kind = "set_air_mission"
@@ -1074,14 +2395,14 @@ mission = "base_strike"
 target_base = 1
 
 [[order]]
-day = 11
+day = 25
 side = "japanese"
 air_group = 1
 kind = "set_air_mission"
 mission = "rest"
 
 [[order]]
-day = 13
+day = 27
 side = "japanese"
 air_group = 1
 kind = "set_air_mission"
@@ -1089,35 +2410,65 @@ mission = "base_strike"
 target_base = 1
 
 [[order]]
-day = 14
+day = 28
 side = "japanese"
 air_group = 1
 kind = "set_air_mission"
 mission = "rest"
 
 [[order]]
-day = 1
+day = 30
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 31
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 34
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 39
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 15
 side = "japanese"
 air_group = 2
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 1
+day = 15
 side = "japanese"
 air_group = 2
 kind = "set_patrol_share"
 share = "0"
 
 [[order]]
-day = 1
+day = 15
 side = "japanese"
 air_group = 3
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 1
+day = 15
 side = "japanese"
 air_group = 3
 kind = "set_patrol_share"
@@ -1132,108 +2483,108 @@ share = "0"
 # do not search (decision 0082).
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 10
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 10
 kind = "set_rest_threshold"
 fatigue = 40
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 13
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 13
 kind = "set_rest_threshold"
 fatigue = 40
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 15
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 15
 kind = "set_rest_threshold"
 fatigue = 40
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 16
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 16
 kind = "set_rest_threshold"
 fatigue = 40
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 11
 kind = "set_air_mission"
 mission = "naval_strike"
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 14
 kind = "set_air_mission"
 mission = "naval_strike"
 
 [[order]]
-day = 1
+day = 15
 side = "allied"
 air_group = 17
 kind = "set_air_mission"
 mission = "naval_strike"
 
-# The Eastern Solomons orders, on day 4. Group numbers are 100 more than in
+# The Eastern Solomons orders, on day 18. Group numbers are 100 more than in
 # scenario 5.
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 task_force = 3
 kind = "set_route"
 waypoints = [[8, -11]]
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 task_force = 3
 kind = "set_speed"
 knots = "17"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 task_force = 4
 kind = "set_route"
 waypoints = [[7, -9]]
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 task_force = 4
 kind = "set_speed"
@@ -1249,56 +2600,56 @@ knots = "20"
 # raid and 8 stay over her (1171).
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 101
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 105
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 111
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 111
 kind = "set_patrol_share"
 share = "0.83"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 114
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 114
 kind = "set_patrol_share"
 share = "0.7"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 118
 kind = "set_air_mission"
 mission = "combat_air_patrol"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 118
 kind = "set_patrol_share"
@@ -1325,14 +2676,14 @@ share = "0.35"
 # start, with every aircraft its group can fly (docs/rules chapter 3).
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 103
 kind = "set_air_mission"
 mission = "search"
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 103
 kind = "set_search_arc"
@@ -1341,14 +2692,14 @@ to_deg = 90
 range_nm = 250
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 104
 kind = "set_air_mission"
 mission = "search"
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 104
 kind = "set_search_arc"
@@ -1369,14 +2720,14 @@ range_nm = 250
 # the four to six of the vanguard (the other cruisers' and the battleships'
 # floatplanes are not in the scenario).
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 117
 kind = "set_air_mission"
 mission = "search"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 117
 kind = "set_search_arc"
@@ -1405,21 +2756,21 @@ range_nm = 330
 # no row makes them a launch the rules could fly apart (decision 0081).
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 106
 kind = "set_air_mission"
 mission = "naval_strike"
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 107
 kind = "set_air_mission"
 mission = "naval_strike"
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 108
 kind = "set_air_mission"
@@ -1436,21 +2787,21 @@ mission = "naval_strike"
 # that the reason stands beside it (decision 0081).
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 102
 kind = "set_air_mission"
 mission = "rest"
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 125
 kind = "set_air_mission"
 mission = "rest"
 
 [[order]]
-day = 4
+day = 18
 side = "allied"
 air_group = 126
 kind = "set_air_mission"
@@ -1470,42 +2821,42 @@ mission = "rest"
 # transports held them all day for a ten-ship force reported as transports.
 # Their torpedo units and Ryujo's groups get no target order.
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 112
 kind = "set_air_mission"
 mission = "naval_strike"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 112
 kind = "set_target_priority"
 kinds = ["carrier", "battleship", "cruiser", "transport"]
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 113
 kind = "set_air_mission"
 mission = "naval_strike"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 115
 kind = "set_air_mission"
 mission = "naval_strike"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 115
 kind = "set_target_priority"
 kinds = ["carrier", "battleship", "cruiser", "transport"]
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 116
 kind = "set_air_mission"
@@ -1526,28 +2877,28 @@ mission = "naval_strike"
 # have had to land elsewhere or ditch (decision 0081).
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 121
 kind = "set_air_mission"
 mission = "rest"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 122
 kind = "set_air_mission"
 mission = "rest"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 123
 kind = "set_air_mission"
 mission = "rest"
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 124
 kind = "set_air_mission"
@@ -1560,7 +2911,7 @@ mission = "rest"
 # derived radius of 175 and within extended reach (218), so the raid is a base
 # strike at base 1 on extended reach.
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 119
 kind = "set_air_mission"
@@ -1568,65 +2919,65 @@ mission = "base_strike"
 target_base = 1
 
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 air_group = 119
 kind = "set_reach"
 reach = "extended"
 
-# The convoy: load on day 1, steam for Lunga Point from day 2 and unload there.
+# The convoy: load on day 15, steam for Lunga Point from day 16 and unload there.
 [[order]]
-day = 1
+day = 15
 side = "allied"
 task_force = 5
 kind = "load"
 
 [[order]]
-day = 2
+day = 16
 side = "allied"
 task_force = 5
 kind = "set_route"
 waypoints = [[2, -4]]
 
 [[order]]
-day = 2
+day = 16
 side = "allied"
 task_force = 5
 kind = "set_speed"
 speed = "cruise"
 
 [[order]]
-day = 2
+day = 16
 side = "allied"
 task_force = 5
 kind = "unload"
 
-# The night action. Force A goes to battle readiness on day 4. On day 7 force A
+# The night action. Force A goes to battle readiness on day 18. On day 21 force A
 # steams for force B's hex and will fight (rules of
 # engagement as scenario 4c's head-on meeting).
 [[order]]
-day = 4
+day = 18
 side = "japanese"
 task_force = 6
 kind = "set_readiness"
 readiness = "battle"
 
 [[order]]
-day = 7
+day = 21
 side = "japanese"
 task_force = 6
 kind = "set_route"
 waypoints = [[0, 10]]
 
 [[order]]
-day = 7
+day = 21
 side = "japanese"
 task_force = 6
 kind = "set_speed"
 knots = "32"
 
 [[order]]
-day = 7
+day = 21
 side = "japanese"
 task_force = 6
 kind = "set_rules_of_engagement"
@@ -1635,7 +2986,7 @@ break_off = "0.5"
 stragglers = "detach"
 
 [[order]]
-day = 7
+day = 21
 side = "allied"
 task_force = 7
 kind = "set_rules_of_engagement"
@@ -1643,43 +2994,43 @@ stance = "engage"
 break_off = "0.5"
 stragglers = "retire"
 
-# The dry destroyer is ordered 80 nm on day 2. With 5 t of fuel it steams 40 nm and stops.
+# The dry destroyer is ordered 80 nm on day 16. With 5 t of fuel it steams 40 nm and stops.
 [[order]]
-day = 2
+day = 16
 side = "allied"
 task_force = 9
 kind = "set_route"
 waypoints = [[4, 14]]
 
-# Coverage only: a turn-back. On day 5 force A is sent north toward (-8,0), ten
-# hexes at its cruising 16 knots, so that at the start of day 6 it is 24 nm
-# along a leg between two hexes. On day 6 it is ordered back to (-8,10), which
+# Coverage only: a turn-back. On day 19 force A is sent north toward (-8,0), ten
+# hexes at its cruising 16 knots, so that at the start of day 20 it is 24 nm
+# along a leg between two hexes. On day 20 it is ordered back to (-8,10), which
 # turns it round mid-leg and records a turn-back event (decision 5 of 0005).
-# It is home again long before its day-7 steam for force B.
+# It is home again long before its day-21 steam for force B.
 [[order]]
-day = 5
+day = 19
 side = "japanese"
 task_force = 6
 kind = "set_route"
 waypoints = [[-8, 0]]
 
 [[order]]
-day = 6
+day = 20
 side = "japanese"
 task_force = 6
 kind = "set_route"
 waypoints = [[-8, 10]]
 
-# The second night action, on day 9: force D avoids.
+# The second night action, on day 23: force D avoids.
 [[order]]
-day = 9
+day = 23
 side = "japanese"
 task_force = 10
 kind = "set_route"
 waypoints = [[0, 14]]
 
 [[order]]
-day = 9
+day = 23
 side = "japanese"
 task_force = 10
 kind = "set_rules_of_engagement"
@@ -1687,44 +3038,44 @@ stance = "engage"
 break_off = "0.5"
 
 [[order]]
-day = 9
+day = 23
 side = "allied"
 task_force = 11
 kind = "set_route"
 waypoints = [[-8, 14]]
 
 [[order]]
-day = 9
+day = 23
 side = "allied"
 task_force = 11
 kind = "set_rules_of_engagement"
 stance = "avoid"
 break_off = "0.5"
 
-# The third night action, day 11.
+# The third night action, day 25.
 [[order]]
-day = 11
+day = 25
 side = "japanese"
 task_force = 12
 kind = "set_route"
 waypoints = [[0, 12]]
 
 [[order]]
-day = 11
+day = 25
 side = "japanese"
 task_force = 12
 kind = "set_speed"
 knots = "32"
 
 [[order]]
-day = 11
+day = 25
 side = "allied"
 task_force = 13
 kind = "set_route"
 waypoints = [[-8, 12]]
 
 [[order]]
-day = 11
+day = 25
 side = "allied"
 task_force = 13
 kind = "set_speed"
@@ -1732,21 +3083,647 @@ knots = "32"
 
 # An order to a unit that is not the giver's: refused (decision 0008).
 [[order]]
-day = 5
+day = 19
 side = "japanese"
 task_force = 5
 kind = "set_speed"
 speed = "full"
 
+# THE LANDINGS' ORDERS. Day 1: the transports steam to their beaches and
+# unload (decision 0101, 12); their men land on attack. They sail on day 3, 9
+# August, with whatever they have not landed (decision 0101, 19; the sailing
+# on the late afternoon of 9 August is in the note of land_unit_facts 414),
+# for Espiritu Santo, the slice's one Allied rear base. They sail by order, not
+# because of the night action off Savo Island of 8 to 9 August, which is not in
+# the slice.
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 20
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 20
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 20
+kind = "unload"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[3, -5]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 21
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 21
+kind = "unload"
+
+[[order]]
+day = 3
+side = "allied"
+task_force = 20
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 3
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[7, 6]]
+
+# The Americans stand on the defence once the base is theirs (decision 0101,
+# 12): on the day after the record's, Lunga taken on 8 August (day 2) and
+# Tulagi secured by 9 August (day 3).
+
+[[order]]
+day = 3
+side = "allied"
+land_unit = 1
+kind = "set_posture"
+posture = "defend"
+
+[[order]]
+day = 3
+side = "allied"
+land_unit = 2
+kind = "set_posture"
+posture = "defend"
+
+[[order]]
+day = 3
+side = "allied"
+land_unit = 3
+kind = "set_posture"
+posture = "defend"
+
+[[order]]
+day = 4
+side = "allied"
+land_unit = 5
+kind = "set_posture"
+posture = "defend"
+
+[[order]]
+day = 4
+side = "allied"
+land_unit = 6
+kind = "set_posture"
+posture = "defend"
+
+[[order]]
+day = 4
+side = "allied"
+land_unit = 7
+kind = "set_posture"
+posture = "defend"
+
+[[order]]
+day = 4
+side = "allied"
+land_unit = 8
+kind = "set_posture"
+posture = "defend"
+
+# Transport Division 12, sent from Espiritu Santo on day 8 to land on day 9, and home.
+
+[[order]]
+day = 8
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[2, -4], [7, 6]]
+act_at = [[2, -4]]
+
+[[order]]
+day = 8
+side = "allied"
+task_force = 22
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 8
+side = "allied"
+task_force = 22
+kind = "unload"
+
+# The run of 21 August: sent on the day that brings it to Lunga on day 15.
+
+[[order]]
+day = 13
+side = "allied"
+task_force = 23
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 13
+side = "allied"
+task_force = 23
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 13
+side = "allied"
+task_force = 23
+kind = "unload"
+
+# The crossings. Task force 24 lies at Tulagi by day 14, loads 2/5 on day 14
+# and lands it at Lunga on day 15; it goes back on day 23, loads the Raiders on
+# day 24 and lands them on day 25. Task force 25 lies at Tulagi by day 23,
+# loads the Parachutists on day 24 and lands them on day 25.
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 24
+kind = "set_route"
+waypoints = [[3, -5]]
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 24
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 14
+side = "allied"
+task_force = 24
+kind = "load"
+unit = 7
+cargo = "none"
+
+[[order]]
+day = 15
+side = "allied"
+task_force = 24
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 15
+side = "allied"
+task_force = 24
+kind = "unload"
+
+[[order]]
+day = 23
+side = "allied"
+task_force = 24
+kind = "set_route"
+waypoints = [[3, -5]]
+
+[[order]]
+day = 24
+side = "allied"
+task_force = 24
+kind = "load"
+unit = 5
+cargo = "none"
+
+[[order]]
+day = 25
+side = "allied"
+task_force = 24
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 25
+side = "allied"
+task_force = 24
+kind = "unload"
+
+[[order]]
+day = 21
+side = "allied"
+task_force = 25
+kind = "set_route"
+waypoints = [[3, -5]]
+
+[[order]]
+day = 21
+side = "allied"
+task_force = 25
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 24
+side = "allied"
+task_force = 25
+kind = "load"
+unit = 6
+cargo = "none"
+
+[[order]]
+day = 25
+side = "allied"
+task_force = 25
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 25
+side = "allied"
+task_force = 25
+kind = "unload"
+
+# The Seabees' ship: sent on the day that brings it to Lunga on day 26.
+
+[[order]]
+day = 24
+side = "allied"
+task_force = 26
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 24
+side = "allied"
+task_force = 26
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 24
+side = "allied"
+task_force = 26
+kind = "unload"
+
+# The Japanese runs: each is sent out on the day before its landing, at the
+# speed that brings it to the landing hex in the night pulse of its landing day
+# (worked out by running the scenario and reading the arrival; the hour of each
+# is in the comment), halts there, lands its men and steams home.
+
+# The Oite's run, landing on day 11.
+[[order]]
+day = 10
+side = "japanese"
+task_force = 30
+kind = "set_route"
+waypoints = [[2, -5], [-2, -8]]
+act_at = [[2, -5]]
+
+[[order]]
+day = 10
+side = "japanese"
+task_force = 30
+kind = "set_speed"
+knots = "9.5"
+
+[[order]]
+day = 10
+side = "japanese"
+task_force = 30
+kind = "unload"
+
+# Ichiki's run, from Rabaul, landing on day 13.
+[[order]]
+day = 12
+side = "japanese"
+task_force = 31
+kind = "set_route"
+waypoints = [[3, -4], [-5, -13]]
+act_at = [[3, -4]]
+
+[[order]]
+day = 12
+side = "japanese"
+task_force = 31
+kind = "set_speed"
+knots = "22"
+
+[[order]]
+day = 12
+side = "japanese"
+task_force = 31
+kind = "unload"
+
+# Tassafaronga, landing on day 24.
+[[order]]
+day = 23
+side = "japanese"
+task_force = 32
+kind = "set_route"
+waypoints = [[2, -5], [-2, -8]]
+act_at = [[2, -5]]
+
+[[order]]
+day = 23
+side = "japanese"
+task_force = 32
+kind = "set_speed"
+knots = "9.5"
+
+[[order]]
+day = 23
+side = "japanese"
+task_force = 32
+kind = "unload"
+
+# Kawaguchi part 1, landing on day 26.
+[[order]]
+day = 25
+side = "japanese"
+task_force = 33
+kind = "set_route"
+waypoints = [[3, -4], [-2, -8]]
+act_at = [[3, -4]]
+
+[[order]]
+day = 25
+side = "japanese"
+task_force = 33
+kind = "set_speed"
+knots = "12"
+
+[[order]]
+day = 25
+side = "japanese"
+task_force = 33
+kind = "unload"
+
+# Kawaguchi part 2, landing on day 28.
+[[order]]
+day = 27
+side = "japanese"
+task_force = 34
+kind = "set_route"
+waypoints = [[3, -4], [-2, -8]]
+act_at = [[3, -4]]
+
+[[order]]
+day = 27
+side = "japanese"
+task_force = 34
+kind = "set_speed"
+knots = "12"
+
+[[order]]
+day = 27
+side = "japanese"
+task_force = 34
+kind = "unload"
+
+# Kawaguchi part 3, landing on day 30.
+[[order]]
+day = 29
+side = "japanese"
+task_force = 35
+kind = "set_route"
+waypoints = [[3, -4], [-2, -8]]
+act_at = [[3, -4]]
+
+[[order]]
+day = 29
+side = "japanese"
+task_force = 35
+kind = "set_speed"
+knots = "12"
+
+[[order]]
+day = 29
+side = "japanese"
+task_force = 35
+kind = "unload"
+
+# Kawaguchi part 4, landing on day 31.
+[[order]]
+day = 30
+side = "japanese"
+task_force = 36
+kind = "set_route"
+waypoints = [[3, -4], [-2, -8]]
+act_at = [[3, -4]]
+
+[[order]]
+day = 30
+side = "japanese"
+task_force = 36
+kind = "set_speed"
+knots = "12"
+
+[[order]]
+day = 30
+side = "japanese"
+task_force = 36
+kind = "unload"
+
+# Kawaguchi part 5, landing on day 32.
+[[order]]
+day = 31
+side = "japanese"
+task_force = 37
+kind = "set_route"
+waypoints = [[3, -4], [-2, -8]]
+act_at = [[3, -4]]
+
+[[order]]
+day = 31
+side = "japanese"
+task_force = 37
+kind = "set_speed"
+knots = "12"
+
+[[order]]
+day = 31
+side = "japanese"
+task_force = 37
+kind = "unload"
+
+# The Aoba Detachment's part at Kamimbo, landing on day 37.
+[[order]]
+day = 36
+side = "japanese"
+task_force = 38
+kind = "set_route"
+waypoints = [[2, -5], [-2, -8]]
+act_at = [[2, -5]]
+
+[[order]]
+day = 36
+side = "japanese"
+task_force = 38
+kind = "set_speed"
+knots = "9.5"
+
+[[order]]
+day = 36
+side = "japanese"
+task_force = 38
+kind = "unload"
+
+# The Oka group, landing on day 32.
+[[order]]
+day = 31
+side = "japanese"
+task_force = 39
+kind = "set_route"
+waypoints = [[2, -5], [-2, -8]]
+act_at = [[2, -5]]
+
+[[order]]
+day = 31
+side = "japanese"
+task_force = 39
+kind = "set_speed"
+knots = "9.5"
+
+[[order]]
+day = 31
+side = "japanese"
+task_force = 39
+kind = "unload"
+
+# Ichiki marches for the airfield on the first day it can be ordered, the day
+# after it lands, and attacks when it arrives (decision 0101, 13, as the
+# architect's ruling C changes it): ordered on day 14, it arrives and attacks on
+# day 16, 22 August, a day after the record's 21 August.
+
+[[order]]
+day = 14
+side = "japanese"
+land_unit = 17
+kind = "march"
+hex = [2, -4]
+
+[[order]]
+day = 14
+side = "japanese"
+land_unit = 17
+kind = "set_posture"
+posture = "attack"
+
+# The Kawaguchi main body marches on day 35 so that it arrives on day 37, 12
+# September (decision 0101, 14): the attack's date has rows and the day it set
+# out has none. The five parts march together.
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 19
+kind = "march"
+hex = [2, -4]
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 19
+kind = "set_posture"
+posture = "attack"
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 20
+kind = "march"
+hex = [2, -4]
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 20
+kind = "set_posture"
+posture = "attack"
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 21
+kind = "march"
+hex = [2, -4]
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 21
+kind = "set_posture"
+posture = "attack"
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 22
+kind = "march"
+hex = [2, -4]
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 22
+kind = "set_posture"
+posture = "attack"
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 23
+kind = "march"
+hex = [2, -4]
+
+[[order]]
+day = 35
+side = "japanese"
+land_unit = 23
+kind = "set_posture"
+posture = "attack"
+
+# The Oka group marches on day 37 so that it arrives on day 39 and attacks on
+# 14 September, the day two sources give (land_unit_facts 1007, 949; decision
+# 0101, as amended, 2). The other forces in (2,-5) stay there.
+
+[[order]]
+day = 37
+side = "japanese"
+land_unit = 25
+kind = "march"
+hex = [2, -4]
+
+[[order]]
+day = 37
+side = "japanese"
+land_unit = 25
+kind = "set_posture"
+posture = "attack"
+
+
 # Missions and objectives (decision 0054). The points and the levels are the
-# placeholder scale of that decision, to be set from the record in step 2.
+# placeholder scale of that decision, to be set from the record. The land
+# fight adds base_held for Lunga and Tulagi and men_lost for each side
+# (decision 0090), beside what the slice had: every point value of them is a
+# PLACEHOLDER set by the lead for this build and resting on no source, as
+# every point value of the slice is (decision 0101, as built).
 [objectives]
 minor = 3
 major = 8
 decisive = 16
 
 [objectives.allied]
-mission = "Land the convoy at Henderson Field, keep the field flying, and win the carrier fight. The Japanese carriers are expected to come down from the north."
+mission = "Take Lunga and Tulagi, build and hold the airfield, land the convoy there, keep the field flying, and win the carrier fight. The Japanese carriers are expected to come down from the north."
 
 [[objectives.allied.objective]]
 kind = "ships_sunk"
@@ -1770,8 +3747,22 @@ kind = "base_open"
 base = 1
 points = 10
 
+[[objectives.allied.objective]]
+kind = "base_held"
+base = 1
+points = 10
+
+[[objectives.allied.objective]]
+kind = "base_held"
+base = 4
+points = 5
+
+[[objectives.allied.objective]]
+kind = "men_lost"
+points_per_100_men = 1
+
 [objectives.japanese]
-mission = "Close Henderson Field, sink what supplies it, and win the carrier fight. The American carriers are believed to be south or east of Guadalcanal."
+mission = "Hold Lunga and Tulagi or take them back, close the airfield, sink what supplies it, and win the carrier fight. The American carriers are believed to be south or east of Guadalcanal."
 
 [[objectives.japanese.objective]]
 kind = "ships_sunk"
@@ -1790,3 +3781,17 @@ kind = "base_open"
 base = 1
 closed = true
 points = 10
+
+[[objectives.japanese.objective]]
+kind = "base_held"
+base = 1
+points = 10
+
+[[objectives.japanese.objective]]
+kind = "base_held"
+base = 4
+points = 5
+
+[[objectives.japanese.objective]]
+kind = "men_lost"
+points_per_100_men = 1

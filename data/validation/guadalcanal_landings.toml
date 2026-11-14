@@ -1,0 +1,203 @@
+# Measures for the landings of August 1942 and the first attacks on the
+# airfield, in the full slice lengthened to 39 days, 7 August to 14 September
+# 1942 (decision 0093, "The measures", and decision 0101, "Measures added to
+# those of decision 0093", as amended). The format and its rules are in
+# README.md beside this file.
+#
+# A few and coarse. Only the land fight of the slice is measured; its sea and
+# air parts are not. A man "lost" in the game is out of the fight, so the
+# record's killed and wounded are added (decision 0093). The game fights the
+# whole of both sides in a hex, so the losses of a fight are taken over the
+# hex of the airfield, (2,-4), on the days the game's fight there can run: a
+# fight lasts until fatigue stops it, four days at most on the placeholder
+# figures (decision 0093, "What it will show that is wrong").
+#
+# The days are the game's (day 1 is 7 August). Ichiki's attack is on day 16,
+# 22 August, a day after the record's (the architect's ruling C, decision
+# 0101); the measures of the Tenaru are taken on the game's days for it and
+# the day is reported in the baseline beside the record's.
+#
+# Ranges and readings set by the team lead of the 39-day build on Nov 14,
+# 2026, for the architect, who owns these files, to confirm. No row's standing
+# was changed. Each reason names the rows of each end.
+
+battle = "rabaul-guadalcanal-air"
+scenario = "data/scenarios/07_full_slice.toml"
+facts = "data/oob/engagement_outcomes.csv"
+
+# ---------------------------------------------------- Who holds the bases
+
+[[measure]]
+id = "lunga_american_end_of_day_2"
+counts = "Lunga (base 1) is held by the Allied side at the end of day 2, 8 August"
+record_low = 1
+record_high = 1
+judged = true
+take = "base_holder"
+base = 1
+day = 2
+side = "allied"
+facts = "data/oob/land_unit_facts.csv"
+rows = [366, 202]
+reason = "Taken on 8 August: the 1st Battalion, 1st Marines 'had overrun the field' on 8 August (366, a row of its commander whose stated words give the day) and the enemy 'occupied Tulagi and the airfield at Guadalcanal' (202, a Japanese account, August). No row has the field's capture as its own attribute; that is a gap."
+
+[[measure]]
+id = "tulagi_american_end_of_day_3"
+counts = "Tulagi (base 4) is held by the Allied side at the end of day 3, 9 August"
+record_low = 1
+record_high = 1
+judged = true
+take = "base_holder"
+base = 4
+day = 3
+side = "allied"
+rows = [2240, 2241, 2242, 2243, 2244]
+reason = "Tulagi by nightfall of 8 August (2240), the island secured by late the next day (2242), and the whole island group taken in three days (2244); 2241 and 2243 agree."
+
+[[measure]]
+id = "lunga_american_after_the_tenaru"
+counts = "Lunga (base 1) is held by the Allied side at the end of day 16, the day of the game's attack from the east"
+record_low = 1
+record_high = 1
+judged = true
+take = "base_holder"
+base = 1
+day = 16
+side = "allied"
+rows = [1914, 1915, 1916, 1917, 1918, 1919]
+reason = "Every row: the attack of 21 August held no ground (1914 to 1919). Decision 0093 sets this at the end of 21 August, day 15; the game's attack is on day 16 (ruling C of decision 0101), and a measure on day 15 would be held by a run in which the attack had not yet come (README, Rules), so it is taken at the end of the game's day of the attack."
+
+[[measure]]
+id = "lunga_american_end_of_day_39"
+counts = "Lunga (base 1) is held by the Allied side at the end of day 39, 14 September"
+record_low = 1
+record_high = 1
+judged = true
+take = "base_holder"
+base = 1
+day = 39
+side = "allied"
+rows = [2005, 2006, 2007, 2008, 2009, 2010]
+reason = "Every row: the attack of 12 to 14 September held no ground (2005 to 2010)."
+
+# ---------------------------------------------------- Men lost
+
+[[measure]]
+id = "tenaru_american_men_lost"
+counts = "Allied men lost ashore at (2,-4) on days 16 to 19, the game's attack from the east and the three days a fight can run after it"
+record_low = 109
+record_high = 110
+judged = true
+take = "men_lost"
+side = "allied"
+q = 2
+r = -4
+from_day = 16
+to_day = 19
+rows = [1936, 1938, 1939, 1742, 1937, 1943, 1944, 1945, 1946, 1743]
+reason = "Killed and wounded added. Low: 34 killed (1936, 1938, 1939, 1742) and 75 wounded (1943, 1945, 1946, 1743), 109. High: 35 killed (1937) and 75 wounded (1944), 110. Not taken: 28 killed and 72 wounded (1744, 1745), a first report that decision 0093 does not take, and the parts by unit (1940 to 1942, 1947 to 1949)."
+
+[[measure]]
+id = "tenaru_japanese_men_lost"
+counts = "Japanese men lost ashore at (2,-4) on days 16 to 19"
+record_low = 800
+record_high = 900
+judged = true
+take = "men_lost"
+side = "japanese"
+q = 2
+r = -4
+from_day = 16
+to_day = 19
+rows = [1920, 1927, 1928, 1746]
+reason = "Low: almost 800 casualties, only 130 surviving (1920), nearly or close to 800 killed (1927, 1928). High: an estimate of 900 killed (1746). Of a group of about 900 (1924) or 916 landed (troop_lift_facts 141). The 15 or 14 taken prisoner (1931 to 1933) are inside either end. Not taken: 700 known killed by 17:00 (1747), a count of the day not finished, and 1,000 'in each engagement' (1748), an estimate for more than this fight."
+
+[[measure]]
+id = "ridge_american_men_lost"
+counts = "Allied men lost ashore at (2,-4) on days 37 to 39, the game's attack of 12 to 14 September"
+record_low = 134
+record_high = 253
+judged = false
+take = "men_lost"
+side = "allied"
+q = 2
+r = -4
+from_day = 37
+to_day = 39
+rows = [2039, 2046, 2041, 2048, 2040, 2047]
+reason = "Killed and wounded added. Low: 31 killed and 103 wounded (2039, 2046; 2041, 2048), 134. High: 59 killed and 194 wounded (2040, 2047), 253. The missing (2042 to 2044) are left out. Not judged: the game fights the whole of both sides in the hex, and at the ridge a small part of each was engaged (decision 0093)."
+
+[[measure]]
+id = "ridge_japanese_men_lost"
+counts = "Japanese men lost ashore at (2,-4) on days 37 to 39"
+record_low = 600
+record_high = 1138
+judged = false
+take = "men_lost"
+side = "japanese"
+q = 2
+r = -4
+from_day = 37
+to_day = 39
+rows = [2023, 2026, 1874, 2024, 2031]
+reason = "Low: about 600 killed on the ridge (2023), more than 600 dead found (2026, 1874). High: the Japanese report of 633 killed and 505 wounded (2024, 2031), 1,138. Not taken: 2,000 killed or died of wounds (2025), a divisional history's estimate, and 1,000 'in each engagement' (1875). Not judged, for the reason of the ridge's American losses. The Oka group's attack of 14 September from the west (land_unit_facts 925 to 927) is in the hex and the days, and its losses are inside the count."
+
+[[measure]]
+id = "tulagi_japanese_men_lost"
+counts = "Japanese men lost ashore at Tulagi, (3,-5), on days 1 to 3"
+record_low = 440
+record_high = 780
+judged = false
+take = "men_lost"
+side = "japanese"
+q = 3
+r = -5
+from_day = 1
+to_day = 3
+facts = "data/oob/land_unit_facts.csv"
+rows = [63, 226]
+reason = "The garrison was destroyed (engagement_outcomes 2243), so its men are the record of its loss. Low: 440, the Japanese-derived account of about 40 naval air men, a guard unit of about 200 and a construction unit of about 200 (63). High: about 780 by American count (226). Not judged: the scenario holds 440 men there (the architect's ruling on rows, 1, decision 0101), so a run cannot lose more."
+
+# ---------------------------------------------------- The airfield and its squadrons
+
+[[measure]]
+id = "airfield_built_day"
+counts = "The day Lunga's (base 1) airfield is built"
+record_low = 11
+record_high = 13
+judged = false
+take = "airfield_built_day"
+base = 1
+facts = "data/oob/place_facts.csv"
+rows = [199, 69, 200, 212, 213]
+reason = "17, 18 or 19 August (decision 0101, 10; place_facts 199, 69, 200; 212 has 18 August, 213 by 19 August): days 11 to 13. The rows of the strip declared fit for fighters and dive bombers on 12 August (52; 69's first part) are of a field not finished, and are not this measure's. Reported, not judged (decision 0101): the airfield's work is a placeholder sized so that the share done on 7 August rests on rows, and nothing was fitted to this day."
+
+[[measure]]
+id = "squadrons_of_20_august_delivered_day"
+counts = "The day VMF-223 (group 10), due on day 14, is delivered"
+record_low = 14
+record_high = 14
+judged = false
+take = "arrival_day"
+air_group = 10
+due_day = 14
+facts = "data/oob/place_facts.csv"
+rows = [53]
+reason = "The squadrons of 20 August were delivered (53), day 14. Reported against day 14 (decision 0101, as amended, 6): the arrival waits until Lunga is American, has its airfield and is below the damage that refuses aircraft. A run in which it never comes is left out and counted as left out."
+
+# ---------------------------------------------------- Food
+
+[[measure]]
+id = "days_of_food_at_lunga_when_the_transports_sail"
+counts = "Days of food ashore at Lunga, (2,-4), for the Allied side at the end of day 3, the day the transports sail: the supply at its bases there over its men's daily charge"
+record_low = 17
+record_high = 37
+judged = false
+take = "days_of_food"
+side = "allied"
+q = 2
+r = -4
+day = 3
+facts = "data/oob/land_unit_facts.csv"
+rows = [415, 414]
+reason = "17 days' rations after counting captured Japanese food (415) to 37 days' food (414), both of the forces ashore after the transports left on 9 August. Reported, not judged (decision 0101): the placeholder rates can land everything, which the record's transports did not, and it is measured and not forced."

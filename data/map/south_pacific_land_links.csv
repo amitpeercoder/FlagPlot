@@ -1,0 +1,21 @@
+# Land links of the real map, data/map/south_pacific.csv (decision 0094, 2).
+#
+# The links of decision 0101, item 5, and no others. Every other hex of the
+# area has no land link: Tulagi's hex, (3,-5), is reached by sea only. No hex of
+# the area has a terrain, so every march is through jungle (decision 0098, "As
+# built").
+#
+# Where places fall, by their position rows in data/oob/place_positions.csv
+# (decision 0101, items 1 to 4, and "Amended from new rows", 1):
+#   (2,-4), Lunga, the airfield's hex: Lunga Point, Kukum (PP 76), Kokumbona
+#     (PP 60, 66, 86), the Matanikau (PP 58) and Point Cruz (PP 59).
+#   (2,-5), the island's north-west coast and Savo Island: Tassafaronga (PP 51,
+#     87), Cape Esperance (PP 32) and Kamimbo (PP 62, 73).
+#   (3,-5), Tulagi's hex: Tulagi, Gavutu and Tanambogo (PP 74, 75), and by
+#     position also Taivu Point (PP 52, 72, 88) and Tasimboko (PP 53, 89), which
+#     the scenario puts in (3,-4) instead (reason on the first row).
+#
+# Each reason is written in its row, as decision 0093, item 4, asks.
+q1,r1,q2,r2,landmass,reason
+2,-4,3,-4,Guadalcanal,"The coast east of the airfield, toward the Tenaru and Taivu. Taivu Point and Tasimboko fall by position in Tulagi's hex, which also holds Tulagi; men in a hex are one body, so a force landed there would be set among the Marines on Tulagi. They are put in (3,-4), which is Guadalcanal and nothing else, joined to the airfield's hex by this link (decision 0093, 4; decision 0101, 3)."
+2,-4,2,-5,Guadalcanal,"The coast west of the airfield, past Kokumbona toward Tassafaronga and Cape Esperance. Kokumbona falls by position in the airfield's hex, but a force the record lands there lay 17 nm from the field for a week without a fight and cannot be put among the men who held it, so it is put in (2,-5) with Tassafaronga and Kamimbo, joined to the airfield's hex by this link (decision 0101, 1, 2 and 4)."

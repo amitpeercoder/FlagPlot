@@ -49,6 +49,10 @@ struct Batch {
     task_forces: Vec<batch_record::TaskForceOut>,
     air_groups: Vec<batch_record::AirGroupOut>,
     bases: Vec<batch_record::BaseOut>,
+    /// Supply a man ashore costs his base a day, in tons, from the ground
+    /// figures. Left out when the scenario has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    daily_supply_t_per_man: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -234,6 +238,7 @@ fn build(
         // recording off (the spec's "can be switched off in batch runs").
         // Recording never changes what happens or a hash.
         let mut ready_by_day: Vec<BTreeMap<AirGroupId, u32>> = Vec::new();
+        let mut ashore_by_day: Vec<Vec<batch_record::AshoreNow>> = Vec::new();
         let executed = crate::execute_observing(
             scenario_path,
             Some(seed),
@@ -243,7 +248,10 @@ fn build(
                     record_breakdowns: false,
                 });
             },
-            |scenario| ready_by_day.push(batch_record::ready_now(scenario.world.umpire())),
+            |scenario| {
+                ready_by_day.push(batch_record::ready_now(scenario.world.umpire()));
+                ashore_by_day.push(batch_record::ashore_now(scenario.world.umpire()));
+            },
         )?;
         let world = &executed.scenario.world;
         let truth = world.umpire();
@@ -325,7 +333,7 @@ fn build(
             sunk: sunk_ids.into_iter().collect(),
             allied_margin: result.as_ref().map(|r| r.allied.margin.to_string()),
             allied_outcome: result.as_ref().map(|r| r.allied.outcome.name()),
-            counts: batch_record::count(world, &executed.initial, &ready_by_day),
+            counts: batch_record::count(world, &executed.initial, &ready_by_day, &ashore_by_day),
         });
     }
 
@@ -381,6 +389,7 @@ fn build(
         task_forces: header.task_forces,
         air_groups: header.air_groups,
         bases: header.bases,
+        daily_supply_t_per_man: header.daily_supply_t_per_man,
     })
 }
 

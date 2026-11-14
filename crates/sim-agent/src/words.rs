@@ -210,6 +210,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::AirfieldTooDamaged { .. } => {
             " (the refusal names the field's damage and the level at which a field takes no aircraft: no group can rebase to it, aircraft with no deck do not land on it and arrivals due at it wait; once units working on its airfield have brought the damage below the level it takes aircraft again)"
         }
+        R::AirGroupWaitsForBase => {
+            " (a group with no aircraft stationed at a base that is not yours, or that has no airfield, waits there for its base: its aircraft come as arrivals once the base is yours, has an airfield and is below the damage level; it takes mission orders as standing orders but no rebase)"
+        }
         R::WorkingUnitDefends => {
             " (a unit shown as working only works: it is always on defend and never attacks; only a fighting unit can be put on attack)"
         }

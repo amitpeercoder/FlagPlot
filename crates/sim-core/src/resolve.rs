@@ -3159,6 +3159,61 @@ mod tests {
         world
     }
 
+    /// Decision 0101: an empty group waiting at a base that is not its side's
+    /// or has no airfield takes no rebase, and takes mission orders as
+    /// standing orders.
+    #[test]
+    fn a_rebase_to_an_empty_group_waiting_for_its_base_is_refused() {
+        // At the enemy's base.
+        let mut world = world_with_two_bases();
+        {
+            let group = world.truth.air_groups.get_mut(&GROUP).expect("group");
+            group.ready = 0;
+            group.damaged = 0;
+            group.pilots = None;
+        }
+        world.truth.bases.get_mut(&BaseId::new(1)).unwrap().side = Side::Japanese;
+        take_in(&mut world, vec![rebase(2)]);
+        assert_eq!(rejection(&world), Some(RejectReason::AirGroupWaitsForBase));
+        assert_eq!(
+            RejectReason::AirGroupWaitsForBase.to_string(),
+            "the air group has no aircraft and waits for its base"
+        );
+        assert_eq!(
+            world.truth.air_groups[&GROUP].location,
+            AirGroupLocation::Base(BaseId::new(1))
+        );
+        // A mission order is a standing order, accepted.
+        let mut world = world_with_two_bases();
+        {
+            let group = world.truth.air_groups.get_mut(&GROUP).expect("group");
+            group.ready = 0;
+            group.damaged = 0;
+            group.pilots = None;
+        }
+        world.truth.bases.get_mut(&BaseId::new(1)).unwrap().side = Side::Japanese;
+        take_in(
+            &mut world,
+            vec![air_order(
+                GROUP,
+                AirGroupOrder::SetAirMission(AirMission::Search),
+            )],
+        );
+        assert_eq!(rejection(&world), None);
+        assert_eq!(world.truth.air_groups[&GROUP].mission, AirMission::Search);
+        // At its own base with no airfield.
+        let mut world = world_with_two_bases();
+        {
+            let group = world.truth.air_groups.get_mut(&GROUP).expect("group");
+            group.ready = 0;
+            group.damaged = 0;
+            group.pilots = None;
+        }
+        world.truth.bases.get_mut(&BaseId::new(1)).unwrap().airfield = false;
+        take_in(&mut world, vec![rebase(2)]);
+        assert_eq!(rejection(&world), Some(RejectReason::AirGroupWaitsForBase));
+    }
+
     #[test]
     fn a_rebase_to_a_group_lost_with_its_ship_is_refused_as_lost() {
         let mut world = world_with_two_bases();

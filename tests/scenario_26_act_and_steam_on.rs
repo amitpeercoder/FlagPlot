@@ -775,8 +775,10 @@ fn other_scenarios() -> Vec<PathBuf> {
 }
 
 /// Property: a route with no mark gives the movement it gave before. In
-/// every other scenario no route has a mark, so the run records no halt, no
-/// steaming on, and no force is ever halted. (The run baselines of
+/// every other scenario with no `act_at` in its file no route has a mark, so
+/// the run records no halt, no steaming on, and no force is ever halted. The
+/// full slice marks its destroyer runs' landing hexes from decision 0101 and
+/// is left out by that test. (The run baselines of
 /// `sim-cli`'s golden-file test cover that the movement is the same as it
 /// was.)
 #[test]
@@ -784,6 +786,10 @@ fn property_in_no_other_scenario_does_a_force_halt_or_steam_on() {
     let files = other_scenarios();
     assert!(files.len() > 40, "{} scenario files", files.len());
     for file in files {
+        let source = std::fs::read_to_string(&file).expect("the file reads");
+        if source.contains("act_at") {
+            continue;
+        }
         let mut scenario = common::load_live(&file)
             .unwrap_or_else(|error| panic!("{} loads: {error}", file.display()));
         loop {

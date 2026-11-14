@@ -346,7 +346,13 @@ impl<'a> Ctx<'a> {
     /// Where an own air group is.
     pub fn group_hex(&self, group: &AirGroup) -> Option<Hex> {
         match group.location {
-            AirGroupLocation::Base(base) => self.bases.get(&base).map(|b| b.hex),
+            // An empty group may wait at a base that is not its side's
+            // (decision 0101): the hex of an enemy base is public.
+            AirGroupLocation::Base(base) => self
+                .bases
+                .get(&base)
+                .map(|b| b.hex)
+                .or_else(|| self.enemy_bases.get(&base).map(|b| b.hex)),
             AirGroupLocation::Ship(ship) => self.ships.get(&ship).and_then(|s| self.ship_hex(s)),
             // Lost with a base that changed side: no place (decision 0090, 20).
             AirGroupLocation::Lost => None,

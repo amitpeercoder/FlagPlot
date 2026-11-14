@@ -1301,12 +1301,13 @@ impl World {
             breakdown,
         );
 
-        // Air groups at it are lost whole (decision 20).
+        // Air groups of the beaten side at it are lost whole (decision 20); a
+        // group of the side that takes it stays (decision 0101).
         let groups: Vec<AirGroupId> = self
             .truth
             .air_groups
             .values()
-            .filter(|group| group.location == AirGroupLocation::Base(base_id))
+            .filter(|group| group.location == AirGroupLocation::Base(base_id) && group.side == from)
             .map(|group| group.id)
             .collect();
         for group_id in groups {
@@ -1919,6 +1920,32 @@ mod tests {
             world.truth.air_groups[&gid(5)].location,
             AirGroupLocation::Base(bid(3))
         );
+    }
+
+    /// Decision 0101: a base that changes side loses only the groups of the
+    /// beaten side. An empty group of the side that takes it stays.
+    #[test]
+    fn a_group_of_the_side_that_takes_the_base_stays() {
+        let mut world = world();
+        let waiting = air_group(8, Side::Allied, AirGroupLocation::Base(bid(1)), 0, 0, None);
+        world.truth.air_groups.insert(waiting.id, waiting);
+        sound(&world);
+        world.fight_ashore(1);
+        sound(&world);
+        let events = all_events(&world);
+        one(&events, |k| matches!(k, EventKind::BaseChangedSide { .. }));
+        // The beaten side's group is lost as before.
+        assert_eq!(
+            world.truth.air_groups[&gid(1)].location,
+            AirGroupLocation::Lost
+        );
+        // The taker's group stays at the base, untouched, and no event names it.
+        assert_eq!(
+            world.truth.air_groups[&gid(8)].location,
+            AirGroupLocation::Base(bid(1))
+        );
+        assert!(!events.iter().any(|e| matches!(&e.kind,
+            EventKind::AirGroupLostWithBase { air_group, .. } if *air_group == gid(8))));
     }
 
     #[test]

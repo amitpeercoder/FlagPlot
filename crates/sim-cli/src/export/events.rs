@@ -161,6 +161,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::AirfieldTooDamaged { damage, refused_at } => base("airfield_too_damaged")
             .num("damage", *damage)
             .num("refused_at", *refused_at),
+        RejectReason::AirGroupWaitsForBase => base("air_group_waits_for_base"),
     }
 }
 

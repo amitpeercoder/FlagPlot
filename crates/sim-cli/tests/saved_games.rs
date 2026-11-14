@@ -263,8 +263,8 @@ fn the_saved_game_holds_orders_with_their_origin_and_the_files_it_names() {
         "data/scenarios/07_full_slice.toml"
     );
     assert_eq!(value["seed"], 1942);
-    assert_eq!(value["data_files"].as_array().expect("files").len(), 12);
-    assert_eq!(value["hashes"].as_array().expect("hashes").len(), 14);
+    assert_eq!(value["data_files"].as_array().expect("files").len(), 17);
+    assert_eq!(value["hashes"].as_array().expect("hashes").len(), 39);
     let orders = value["orders"].as_array().expect("orders");
     assert!(orders.len() > 50);
     assert_eq!(orders[0]["origin"]["issuer"], "player");

@@ -1645,14 +1645,19 @@ impl Scenario {
                         .bases
                         .get(&base_id)
                         .ok_or_else(|| fail(format!("{id} is at unknown base {raw}")))?;
-                    if base.side != side {
+                    // A group with no aircraft and no pilots may wait at a base that
+                    // is not its side's or has no airfield (decision 0101).
+                    let empty = spec.ready == 0
+                        && spec.damaged.unwrap_or(0) == 0
+                        && spec.pilots.unwrap_or(0) == 0;
+                    if base.side != side && !empty {
                         return Err(fail(format!(
                             "{id} is {} but its base {base_id} is {}",
                             side.name(),
                             base.side.name()
                         )));
                     }
-                    if !base.airfield {
+                    if !base.airfield && !empty {
                         return Err(fail(format!(
                             "{id} is at {base_id}, which has no airfield (decision 6 of 0099)"
                         )));
@@ -1981,7 +1986,14 @@ impl Scenario {
                                             ))
                                         })?
                                         .side;
-                                    if held_by == Side::from(spec.side) {
+                                    // A base can change side in play (decision
+                                    // 0090), so only a day-1 order is held to
+                                    // the side the base has at the start; a
+                                    // later one is checked when it is taken in
+                                    // (`NotAnEnemyBase`). Decision 0101, as
+                                    // built: the full slice orders raids on
+                                    // Lunga, Japanese on day 1.
+                                    if day == 1 && held_by == Side::from(spec.side) {
                                         return Err(fail(format!(
                                             "the base_strike order on day {day} names {base}, a base of the group's own side"
                                         )));
@@ -2859,6 +2871,12 @@ r = 0
         assert!(message.contains("unknown base 9"), "{message}");
         let message = error_of(&order("air_group = 1", &strike("target_base = 1")));
         assert!(message.contains("own side"), "{message}");
+        // A later day's order on the same base loads: the base may have
+        // changed side by then, and intake checks it (decision 0101, as built).
+        parse_with(
+            &order("air_group = 1", &strike("target_base = 1")).replace("day = 1\n", "day = 2\n"),
+        )
+        .expect("a later day's strike on a base of the side at the start loads");
         let message = error_of(&order(
             "air_group = 1",
             "kind = \"set_air_mission\"\nmission = \"naval_strike\"\ntarget_base = 2",
@@ -5120,6 +5138,40 @@ task_force = 3
             .expect_err("refused")
             .to_string();
         assert!(message.contains("no airfield"), "{message}");
+    }
+
+    /// Decision 0101: a group with no aircraft and no pilots may start at a
+    /// base that is not its side's or has no airfield; with an aircraft or a
+    /// pilot it is refused as before.
+    #[test]
+    fn an_empty_air_group_may_start_at_an_enemy_base_or_one_with_no_airfield() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let group = |base: u32, extra: &str| {
+            format!(
+                "[[air_group]]\nid = 1\nname = \"AG\"\nside = \"allied\"\nbase = {base}\naircraft_type = 1\n{extra}"
+            )
+        };
+        let load = |head: &str, group: String| Scenario::parse(&format!("{head}\n{group}"), &path);
+        let no_field = HEAD.replace("q = 0\nr = 0\n", "q = 0\nr = 0\nairfield = false\n");
+        // The other side's base.
+        assert!(load(HEAD, group(2, "ready = 0\n")).is_ok());
+        assert!(load(HEAD, group(2, "ready = 1\n"))
+            .expect_err("refused")
+            .to_string()
+            .contains("its base"));
+        assert!(load(HEAD, group(2, "ready = 0\ndamaged = 1\n")).is_err());
+        assert!(load(HEAD, group(2, "ready = 0\npilots = 1\n")).is_err());
+        assert!(load(HEAD, group(2, "ready = 0\npilots = 0\n")).is_ok());
+        // Its own side's base with no airfield.
+        assert!(load(&no_field, group(1, "ready = 0\n")).is_ok());
+        assert!(load(&no_field, group(1, "ready = 2\n"))
+            .expect_err("refused")
+            .to_string()
+            .contains("no airfield"));
+        // Both: the enemy's base with no airfield.
+        let both = HEAD.replace("q = 5\nr = 0\n", "q = 5\nr = 0\nairfield = false\n");
+        assert!(load(&both, group(2, "ready = 0\n")).is_ok());
+        assert!(load(&both, group(2, "ready = 1\n")).is_err());
     }
 
     #[test]
