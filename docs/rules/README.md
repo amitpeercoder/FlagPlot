@@ -27,7 +27,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | Step | When | What runs | Where |
 | --- | --- | --- | --- |
 | 1 | Day start | Refuelling in port | Chapter 2, Refuelling in port |
-| 2 | Day start | Orders intake: numbering, checks, refusals; a yard order and a rebase order are applied at their acceptance | Chapter 1, Orders; chapter 4, Repair; chapter 5, Rebasing an air group |
+| 2 | Day start | Orders intake: numbering, checks, refusals; a yard order, a rebase order and a posture order are applied at their acceptance | Chapter 1, Orders; chapter 4, Repair; chapter 5, Rebasing an air group; chapter 7, The posture and its order |
 | 3 | Start of each pulse | Alert from belief | Chapter 3, Alert from belief |
 | 4 | Start of each pulse | Fatigue of task forces | Chapter 3, Fatigue of a force |
 | 5 | Start of each pulse | Bases out of supply fixed | Chapter 5, A base out of supply |
@@ -35,7 +35,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | 7 | Night pulse | Aircraft arrivals | Chapter 5, Aircraft that arrive on a day |
 | 8 | Night pulse | Replacements, from day 2 | Chapter 5, Replacements |
 | 9 | Night pulse | Daily supply for aircraft | Chapter 5, Daily supply |
-| 10 | Night pulse | Men's supply: the men ashore are fed from their side's base, the unfed are lost in part | Chapter 7, The men's supply |
+| 10 | Night pulse | Men's supply: the men ashore are fed from every base of their side in the hex, the unfed are lost in part | Chapter 7, The men's supply |
 | 11 | Night pulse | Stand-down and return of tired air groups | Chapter 5, Stand-down and return |
 | 12 | Night pulse | Movement: the straggler pass, forces move in order of clock time, fights where they meet | Chapter 2, Movement and Stragglers; chapter 4, Meeting |
 | 13 | Night pulse | Night search, surface engagements, shore bombardment: empty | Chapter 1, The night pulse |
@@ -48,8 +48,9 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | 20 | Morning and afternoon | Surface engagements: an empty slot | Chapter 1, The morning and afternoon pulses |
 | 21 | Morning and afternoon | Loading and unloading, as in step 14 | Chapter 2, Cargo; chapter 7 |
 | 22 | End of each pulse | Contacts age and are dropped | Chapter 3, Ageing and dropping |
-| 23 | After the third pulse | Ground combat, logistics, air group upkeep, intelligence update: all empty | Chapter 1, After the pulses |
-| 24 | Day close | The day counter advances, the invariants are checked, the state hash is recorded | Chapter 1, Invariants; The state hash and saved games |
+| 23 | After the third pulse | Ground combat: for each hex with men ashore, the fight, fatigue, a side beaten, a base that changes side | Chapter 7, The fight ashore; A base that changes side |
+| 24 | After the third pulse | Logistics, air group upkeep, intelligence update: empty. Then the base count | Chapter 1, After the pulses |
+| 25 | Day close | The day counter advances, the invariants are checked, the state hash is recorded | Chapter 1, Invariants; The state hash and saved games |
 
 The result of a game is worked out from the final state and the log. It is not a phase and no rule reads it (chapter 6).
 
@@ -59,9 +60,9 @@ The result of a game is worked out from the final state and the log. It is not a
 2. **Movement, fuel and cargo.** The map as the rules read it, task forces and speed, the budget of a pulse, legs and position, the order of movement, arriving, turning back, fuel burn, refuelling in port, cargo, berths and lighters, and stragglers.
 3. **Search, contacts and claims.** Air search, the sighting report and its errors, belief, contacts and their ageing, a strike that finds nothing, who is alert, the alarm, fatigue of a force, and claims.
 4. **Surface combat and damage.** When a fight begins, its rounds, the hit mechanism shared with air attack, damage tracks and named systems, breaking off, and what a fight leaves behind.
-5. **Air operations.** Air groups, missions, rebasing a group to another base, what a group can fly, air distance, the night's upkeep, the strike decision, escorts and patrol, the raid step by step, wear, fatigue and the supply that flying costs.
-6. **Objectives and results.** A scenario's mission and objectives, points, the margin and the seven outcomes, what a side knows of its progress, and the result at the end.
-7. **Land units.** The land unit and troop capacity, the load order with a unit, men worked as cargo, a landing, a base formed by it, a unit divided, men lost with a ship, the men's supply and the loss of the unfed, and what a side knows of its own men.
+5. **Air operations.** Air groups, missions, rebasing a group to another base, a group lost with its base, what a group can fly, air distance, the night's upkeep, the strike decision, escorts and patrol, the raid step by step, wear, fatigue and the supply that flying costs.
+6. **Objectives and results.** A scenario's mission and objectives (including a base held and men lost), points, the margin and the seven outcomes, what a side knows of its progress, and the result at the end.
+7. **Land units.** The land unit and troop capacity, the load order with a unit, men worked as cargo, a landing, a base formed by it, a unit divided, men lost with a ship, the men's supply and the loss of the unfed, the posture of a unit and its order, the day's fight ashore, fatigue, a side beaten, a base that changes side, and what a side knows of its own men.
 
 ## Kept true
 

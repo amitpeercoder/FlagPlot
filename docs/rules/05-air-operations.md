@@ -25,15 +25,15 @@ An air group is one unit of aircraft of one aircraft type. It holds:
 - `reach`: normal or extended, default normal, and the order that set it (see "Radius and reach").
 - `stood_down`: whether the staff stood the group down today.
 - `rebased_day`: the day it last moved to another base by order, or none (see "Rebasing an air group").
-- Its place: exactly one base or exactly one ship.
+- Its place: exactly one base or exactly one ship, or lost (see "A group lost with its base").
 
-[0025, 0035, 0036, 0038, 0041, 0059, 0091]
+[0025, 0035, 0036, 0038, 0041, 0059, 0090, 0091]
 
 A side sees: its own groups whole. The enemy sees nothing of a group except through a sighting report, a claim, or the fight events listed with each rule below.
 
 ### Where a group is
 
-A group at a base is at the base's hex. A group aboard a ship is at the position of the ship's task force, and moves with it with no order. A group aboard a ship that is in a port is at the port's hex, and is still aboard the ship. A group aboard a ship that has sunk has no position. A group cannot change between a ship and a base. A group at a base changes base only by a rebase order (see "Rebasing an air group"). Aircraft can come to be at another place also by landing there when their own deck is lost (see "Coming home to no deck"), and they then belong to a group of that place. A group with no aircraft is at its place all along and can be given orders. [0025, 0041, 0052, 0059, 0091]
+A group at a base is at the base's hex. A group aboard a ship is at the position of the ship's task force, and moves with it with no order. A group aboard a ship that is in a port is at the port's hex, and is still aboard the ship. A group aboard a ship that has sunk has no position. A group cannot change between a ship and a base. A group at a base changes base only by a rebase order (see "Rebasing an air group"). Aircraft can come to be at another place also by landing there when their own deck is lost (see "Coming home to no deck"), and they then belong to a group of that place. A group with no aircraft is at its place all along and can be given orders. A group lost with its base has no place at all. [0025, 0041, 0052, 0059, 0090, 0091]
 
 A side sees: its own group's place. The enemy sees only what a report says of a force.
 
@@ -48,6 +48,14 @@ A side sees: its own capacity and aircraft count. The enemy does not.
 When a ship sinks, every group aboard it loses the aircraft that were aboard her, ready and damaged, and, if its pilots are tracked, their pilots. The aircraft that were in the air in the pulse are not aboard: they are a group's aircraft that flew in the pulse and were not shot down, which are the aircraft of the sorties noted for it (see "What counts as a sortie"). A sinking in the air combat step finds those noted; a sinking in a surface fight in the movement phase finds none, since the pulse's flying is over, and so loses every aircraft. The group keeps the aircraft in the air as ready aircraft, and one pilot with each where pilots are tracked, until the wear phase of the same pulse brings them home (see "Coming home to no deck"). It stays in the state, aboard the sunk ship, with no position. It records `AirGroupLost` (caused by the `ShipSunk` event, giving only the aircraft that were aboard, 0 if there were none) and, if it lost pilots, `PilotsLost` (caused by `AirGroupLost`, giving the pilots left). An order to such a group is rejected with `AirGroupLost`. A group aboard a ship that sinks in the pulse still attacks in that pulse, because every attack is worked out before any damage lands. [0025, 0026, 0035, 0038, 0041, 0059]
 
 A side sees: `AirGroupLost` and `PilotsLost` for its own groups, whole. The enemy sees nothing of them, and learns the ship sank only through a claim or a report.
+
+### A group lost with its base
+
+When a base changes side (chapter 7, A base that changes side), every group located at it is lost whole, in the ground combat phase after the third pulse, so none is in the air. Its ready and damaged aircraft go to 0 and, if its pilots are tracked, its pilots go to 0. Its place becomes `Lost` (the hash code 3): it is at no base and aboard no ship, and has no position. It keeps its mission, and it keeps its entry in the state. `AirGroupLostWithBase` records it (the group, the base and the aircraft lost, caused by `BaseChangedSide`) and, if it had pilots, `PilotsLost` (caused by it, with 0 left). The aircraft are counted in the `aircraft_destroyed` tally of the enemy of the group's side, as aircraft lost with a ship are (chapter 6). [0090 item 20]
+
+From then on the group flies nothing: it has no aircraft and no position, so no search, strike, patrol or escort. It receives no arrival (Aircraft that arrive on a day) and no replacement, it pays and costs no supply, and it is not repaired. An order to it is refused with its own reason, "the air group was lost with its base", and not with the reason for a group lost with its ship (chapter 1, Every reason an order is refused). A group that was flown to another base by a rebase order on an earlier day is at that base and is not lost. The invariants check that a group with this place has no aircraft. [0090 items 20 and 24]
+
+A side sees: `AirGroupLostWithBase` and `PilotsLost` for its own groups, whole. The enemy sees nothing of them. [0090 item 30]
 
 ## Missions and orders
 
@@ -89,7 +97,7 @@ Not built: an order to change the repair order (0052).
 
 A rebase order (`rebase`, with `air_group` and `base`) moves a group at a base to another base of its side. It is given in a scenario file as `kind = "rebase"` with `air_group` and `base`. It is checked and applied at orders intake, at the start of the day, in the same step as a yard order (chapter 1, Orders). It is for one day's move and is spent when it is done. [0091]
 
-**Refusals.** Chapter 1, Every reason an order is refused, lists them in the order they are tried. In short, the order is refused if the group is not the side's own or is lost with its ship; if it is aboard a ship (away at the yard or not); if it has already moved to another base that day; if the base is not one of the side's own; if the group is already at that base; or if the base is beyond the type's transfer range. A base a landing formed (chapter 7) is a base of the side and may be named. [0091]
+**Refusals.** Chapter 1, Every reason an order is refused, lists them in the order they are tried. In short, the order is refused if the group is not the side's own or is lost with its ship or with its base; if it is aboard a ship (away at the yard or not); if it has already moved to another base that day; if the base is not one of the side's own; if the group is already at that base; or if the base is beyond the type's transfer range. A base a landing formed (chapter 7) is a base of the side and may be named. [0091]
 
 **The transfer range** is twice the longer of the type's search range (`aircraft_types*.csv: search_range_nm`) and strike radius (`strike_range_nm`), read through `RefData::transfer_range_nm`. The group's reach does not change it. The distance is the air distance between the two bases' hexes (Air distance, above): along an axis it is 40 miles a hex. A distance is within the range if it is less than or equal to it. [0040, 0091]
 
@@ -198,7 +206,7 @@ A side sees: `AircraftRepaired` and `BaseSupplySpent` for its own groups and bas
 
 A scenario may list arrivals (`[[arrival]]` entries in the scenario file): a day, an air group, a number of aircraft and a number of pilots. After repair and before replacements, on every day including day 1, each arrival due that day, in the order listed, is delivered:
 
-1. If the group does not exist, or is aboard a ship that has sunk or is away at the yard, nothing happens and nothing is recorded. The aircraft are not kept for the ship's return.
+1. If the group does not exist, or was lost with its base, or is aboard a ship that has sunk or is away at the yard, nothing happens and nothing is recorded. The aircraft are not kept for the ship's return.
 2. The group's `ready` and `strength` each rise by the arrival's aircraft.
 3. If the group's pilots are tracked, its pilots rise by the arrival's pilots. If not, the arrival's pilots are dropped.
 4. `AircraftArrived` is recorded, with no cause (nothing orders it), giving the arrival, the group's ready aircraft, pilots and strength after it.

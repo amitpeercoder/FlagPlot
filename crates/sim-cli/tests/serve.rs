@@ -74,6 +74,13 @@ fn served_order(view: &sim_core::view::SideView<'_>, r: &sim_core::orders::Order
                 target.raw()
             )
         ),
+        sim_core::orders::OrderKind::LandUnit { target, .. } => format!(
+            "land_unit:{}",
+            number(
+                view.land_units().map(|u| u.id.raw()).collect(),
+                target.raw()
+            )
+        ),
     };
     doc["unit"] = json!(unit);
     if let Some(ships) = doc["order"].get_mut("ships").and_then(Value::as_array_mut) {

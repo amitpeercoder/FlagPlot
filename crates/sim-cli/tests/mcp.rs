@@ -152,6 +152,13 @@ fn served_order(view: &sim_core::view::SideView<'_>, r: &sim_core::orders::Order
                 target.raw()
             )
         ),
+        sim_core::orders::OrderKind::LandUnit { target, .. } => format!(
+            "land_unit:{}",
+            number(
+                view.land_units().map(|u| u.id.raw()).collect(),
+                target.raw()
+            )
+        ),
     };
     doc["unit"] = json!(unit);
     if let Some(ships) = doc["order"].get_mut("ships").and_then(Value::as_array_mut) {
@@ -313,6 +320,10 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "Searches and strikes fly only in the morning and afternoon pulses; the afternoon pulse is the last of the day",
         // 13. Radius.
         "give each type's radius",
+        // Ground (decision 0090).
+        "you attack and hold ground with set_posture {posture: attack or defend}",
+        "a base with no man of its side ashore falls to one man on attack in its hex",
+        "Fly your air groups out by rebase a day before",
     ] {
         assert!(instructions.contains(phrase), "instructions lack: {phrase}");
     }
@@ -323,6 +334,11 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "a load in the same day as a sailing is refused",
         "unload {} is never refused, wherever the force is",
         "an unload given while the force is at sea is queued, stands as the force's cargo order, and is carried out after the force arrives",
+        // Ground (decision 0090).
+        "FIGHT ASHORE",
+        "takes one order, set_posture {posture: attack or defend}",
+        "goes back to defend and its order is spent",
+        "falls to a single man of yours on attack in its hex, with no fight",
         // 10. The patrol share.
         "set_patrol_share {share} is the share of the group kept over its own hex: 1 (where it starts) keeps every fighter at home and sends no escort, 0.5 keeps half at home and lets half escort",
     ] {

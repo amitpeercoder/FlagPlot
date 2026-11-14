@@ -67,6 +67,8 @@ pub struct AirGroupOut {
 pub struct BaseOut {
     id: u32,
     name: String,
+    /// The side that holds the base as the scenario starts. A base can change
+    /// side in play (decision 0090): each run's `base_changes` says when.
     side: String,
 }
 
@@ -258,10 +260,13 @@ enum Place {
     Base(BaseId),
 }
 
-fn place_of(location: AirGroupLocation) -> Place {
+/// None for a group lost with its base (decision 0090, 20): it launches
+/// nothing, so no raid is grouped by its place.
+fn place_of(location: AirGroupLocation) -> Option<Place> {
     match location {
-        AirGroupLocation::Ship(ship) => Place::Ship(ship),
-        AirGroupLocation::Base(base) => Place::Base(base),
+        AirGroupLocation::Ship(ship) => Some(Place::Ship(ship)),
+        AirGroupLocation::Base(base) => Some(Place::Base(base)),
+        AirGroupLocation::Lost => None,
     }
 }
 
@@ -416,6 +421,23 @@ pub struct RunCounts {
     pub fights: Vec<FightOut>,
     pub supply: Vec<SupplyOut>,
     pub formed_groups: Vec<FormedGroup>,
+    /// Each time a base changed side in the run, in the order it happened
+    /// (decision 0090). The header gives each base's side as the scenario
+    /// starts; a base's holder at the end of the run is its header side
+    /// changed by these, in order. Left out of a run where no base changed
+    /// side.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub base_changes: Vec<BaseChangeOut>,
+}
+
+/// A base that changed side, from the `BaseChangedSide` event.
+#[derive(Serialize)]
+pub struct BaseChangeOut {
+    day: u32,
+    pulse: &'static str,
+    base: u32,
+    from: String,
+    to: String,
 }
 
 /// The aircraft ready in each air group, taken after a day is resolved.
@@ -457,8 +479,9 @@ pub fn count(
     let mut place_of_group: BTreeMap<AirGroupId, Place> = initial
         .air_groups
         .values()
-        .map(|group| (group.id, place_of(group.location)))
+        .filter_map(|group| place_of(group.location).map(|place| (group.id, place)))
         .collect();
+    let mut base_changes = Vec::new();
     let mut broke_off = Vec::new();
     let mut fights = Vec::new();
     let mut supply: BTreeMap<BaseId, SupplyTotals> = BTreeMap::new();
@@ -725,8 +748,17 @@ pub fn count(
                 ..
             } if *formed => {
                 formed_from.insert(*to, *from);
-                place_of_group.insert(*to, place_of(*at));
+                if let Some(place) = place_of(*at) {
+                    place_of_group.insert(*to, place);
+                }
             }
+            EventKind::BaseChangedSide { base, from, to, .. } => base_changes.push(BaseChangeOut {
+                day: event.day,
+                pulse: pulse_name(event.pulse),
+                base: base.raw(),
+                from: side_name(*from),
+                to: side_name(*to),
+            }),
             EventKind::ClaimReceived {
                 side,
                 claimed_sunk,
@@ -989,6 +1021,7 @@ pub fn count(
             })
             .collect(),
         formed_groups,
+        base_changes,
     }
 }
 

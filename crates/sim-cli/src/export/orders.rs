@@ -2,7 +2,9 @@
 
 use serde::Serialize;
 use sim_core::ids::UmpireKey;
-use sim_core::orders::{AirGroupOrder, AirMission, Order, OrderKind, TaskForceOrder};
+use sim_core::orders::{
+    AirGroupOrder, AirMission, LandUnitOrder, Order, OrderKind, TaskForceOrder,
+};
 
 use super::names;
 
@@ -84,6 +86,9 @@ fn text(kind: &OrderKind) -> String {
                 format!("target priority {}", kinds.join(", "))
             }
             AirGroupOrder::Rebase { base } => format!("rebase to {base}"),
+        },
+        OrderKind::LandUnit { order, .. } => match order {
+            LandUnitOrder::SetPosture(posture) => format!("posture {}", posture.name()),
         },
     }
 }

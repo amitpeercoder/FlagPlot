@@ -425,6 +425,7 @@ function sideReplay(replay, side) {
   const out = Object.assign({}, replay, {
     aircraft_types,
     side_views: undefined, view_side: side,
+    base_changes: undefined, // the umpire's list; a side's page follows base_changed_side events it was given
     orders: (replay.orders || []).filter(own),
     bases: (replay.bases || []).map(b => own(b) ? b : { id: b.id, name: b.name, side: b.side, q: b.q, r: b.r }),
     initial: {
@@ -581,9 +582,9 @@ function snapshot(cur, aux) {
   }
   // Land units (decision 0066): the men of each ashore and where, rebuilt from the events; the formed bases by hex.
   const landUnits = new Map();
-  for (const [id, u] of cur.landUnits) landUnits.set(id, { id, name: u.name, side: u.side, men_ashore: u.men_ashore, hex: u.hex ? u.hex.slice() : null });
+  for (const [id, u] of cur.landUnits) landUnits.set(id, { id, name: u.name, side: u.side, men_ashore: u.men_ashore, hex: u.hex ? u.hex.slice() : null, posture: u.posture, fatigue: u.fatigue, fed_share: u.fed_share });
   return {
-    forces, contacts, landUnits, formedBases: new Map(cur.formedBases),
+    forces, contacts, landUnits, formedBases: new Map(cur.formedBases), baseSide: new Map(cur.baseSide),
     sunk: new Set(cur.sunk),
     shipForce: new Map(cur.shipForce),
     moves: aux.moves, fights: aux.fights, searches: aux.searches,
@@ -791,8 +792,10 @@ function buildModel(replay) {
   steps.forEach(s => s.events.forEach(ei => stepOfEvent.set(events[ei].id, s.index)));
 
   // Rebuild
-  const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map(), landUnits: new Map(), formedBases: new Map() };
-  for (const u of initial.land_units || []) cur.landUnits.set(u.id, { id: u.id, name: u.name, side: u.side, men_ashore: u.men_ashore || 0, hex: Array.isArray(u.hex) ? u.hex.slice() : (u.hex ? [u.hex.q, u.hex.r] : null) });
+  const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map(), landUnits: new Map(), formedBases: new Map(), baseSide: new Map() };
+  for (const u of initial.land_units || []) cur.landUnits.set(u.id, { id: u.id, name: u.name, side: u.side, men_ashore: u.men_ashore || 0, hex: Array.isArray(u.hex) ? u.hex.slice() : (u.hex ? [u.hex.q, u.hex.r] : null), posture: u.posture || 'defend', fatigue: u.fatigue || 0, fed_share: u.fed_share !== undefined ? u.fed_share : 1 });
+  // Who holds each base (decision 0090): the side the replay starts it with, changed by base_changed_side events.
+  for (const b of replay.bases || []) cur.baseSide.set(b.id, b.side);
   cur.groupBase = new Map();
   for (const g of groupTable.values()) { cur.reach.set(g.id, g.reach0); cur.mission.set(g.id, g.mission); cur.groupBase.set(g.id, g.base); }
   // reach and mission are replaced, never changed in place, so each step's snapshot keeps its own.
@@ -896,6 +899,10 @@ function buildModel(replay) {
           if (ar) cur.reach = setAirOrder(cur.reach, t.id, ar[1]);
           const am = o && t && t.type === 'air_group' ? /^air mission (.+)$/.exec(o.text) : null;
           if (am) cur.mission = setAirOrder(cur.mission, t.id, am[1]);
+          // An accepted posture order sets a land unit's posture (decision 0090).
+          const lp = o && t && t.type === 'land_unit' ? /^posture (attack|defend)$/.exec(o.text) : null;
+          const lu = lp ? cur.landUnits.get(t.id) : null;
+          if (lu) lu.posture = lp[1];
           break;
         }
         // A group moved to another base by order (decision 0091): replaced, never changed in place, as the mission is.
@@ -913,16 +920,17 @@ function buildModel(replay) {
         }
         case 'men_embarked':
         case 'men_landed':
-        case 'men_lost_unfed': {
+        case 'men_lost_unfed':
+        case 'men_lost_in_fight': {
           let u = cur.landUnits.get(d.unit);
-          if (!u) { u = { id: d.unit, name: 'land unit ' + d.unit, side: d.side, men_ashore: 0, hex: null }; cur.landUnits.set(d.unit, u); }
+          if (!u) { u = { id: d.unit, name: 'land unit ' + d.unit, side: d.side, men_ashore: 0, hex: null, posture: 'defend', fatigue: 0, fed_share: 1 }; cur.landUnits.set(d.unit, u); }
           u.men_ashore = d.ashore || 0;
           if (Array.isArray(d.hex)) u.hex = u.men_ashore > 0 ? d.hex.slice() : null;
           break;
         }
         case 'unit_divided': {
           const from = cur.landUnits.get(d.from);
-          cur.landUnits.set(d.unit, { id: d.unit, name: (from ? from.name : 'land unit ' + d.from) + ' (part)', side: from ? from.side : undefined, men_ashore: 0, hex: null });
+          cur.landUnits.set(d.unit, { id: d.unit, name: (from ? from.name : 'land unit ' + d.from) + ' (part)', side: from ? from.side : undefined, men_ashore: 0, hex: null, posture: 'defend', fatigue: 0, fed_share: 1 });
           break;
         }
         case 'land_unit_destroyed': {
@@ -930,9 +938,31 @@ function buildModel(replay) {
           if (u) { u.men_ashore = 0; u.hex = null; }
           break;
         }
+        case 'men_fed': {
+          // The fed share of each unit of the side ashore in the hex (decision 0090, 8): the men fed over the men charged.
+          const share = d.men > 0 ? Math.floor(d.fed / d.men * 1e6) / 1e6 : 1;
+          for (const u of cur.landUnits.values()) {
+            if (u.side === d.side && u.men_ashore > 0 && Array.isArray(u.hex) && Array.isArray(d.hex) && u.hex[0] === d.hex[0] && u.hex[1] === d.hex[1]) u.fed_share = share;
+          }
+          break;
+        }
+        case 'fed_share_restored': { const u = cur.landUnits.get(d.unit); if (u) u.fed_share = 1; break; }
+        case 'land_unit_fatigue': { const u = cur.landUnits.get(d.unit); if (u) u.fatigue = d.fatigue; break; }
+        case 'land_unit_back_to_defend': { const u = cur.landUnits.get(d.unit); if (u) { u.posture = 'defend'; u.fatigue = d.fatigue; } break; }
+        // A base changed side (decision 0090): its holder changes on the day of the event; a base a landing formed
+        // is on both maps from now on, and is shown at its hex under its new holder.
+        case 'base_changed_side':
+          cur.baseSide.set(d.base, d.to);
+          if (Array.isArray(d.hex)) {
+            const key = d.hex[0] + ',' + d.hex[1];
+            if (cur.formedBases.has(key) || !bases.has(d.base)) cur.formedBases.set(key, { id: d.base, side: d.to });
+          }
+          break;
         case 'base_formed':
           if (Array.isArray(d.hex)) cur.formedBases.set(d.hex[0] + ',' + d.hex[1], { id: d.base, side: d.side });
           break;
+        // A ship in port at a base that changed side is sunk with it (decision 0090, 21).
+        case 'ship_lost_with_base':
         case 'ship_sunk': {
           cur.sunk.add(d.ship);
           for (const f of cur.forces.values()) f.ships = f.ships.filter(x => x !== d.ship);
@@ -1101,6 +1131,26 @@ function compareWithFinal(model) {
     if (r.men_ashore !== u.men_ashore) problems.push('land unit ' + u.id + ' men ashore rebuilt as ' + r.men_ashore + ' but final says ' + u.men_ashore);
     const want = u.hex ? [u.hex.q, u.hex.r] : null;
     if ((want === null) !== (r.hex === null) || (want && (want[0] !== r.hex[0] || want[1] !== r.hex[1]))) problems.push('land unit ' + u.id + ' hex rebuilt as ' + JSON.stringify(r.hex) + ' but final says ' + JSON.stringify(want));
+  }
+  // Land units' posture, fatigue and fed share (decision 0090), and who holds each base: rebuilt from the events.
+  for (const u of final.land_units || []) {
+    const r = end.landUnits && end.landUnits.get(u.id);
+    if (!r) continue;
+    if (r.posture !== (u.posture || 'defend')) problems.push('land unit ' + u.id + ' posture rebuilt as ' + r.posture + ' but final says ' + (u.posture || 'defend'));
+    if (!numEq(r.fatigue, u.fatigue || 0)) problems.push('land unit ' + u.id + ' fatigue rebuilt as ' + r.fatigue + ' but final says ' + (u.fatigue || 0));
+    const fed = u.fed_share !== undefined ? u.fed_share : 1;
+    if (Math.abs(r.fed_share - fed) > 2e-6) problems.push('land unit ' + u.id + ' fed share rebuilt as ' + r.fed_share + ' but final says ' + fed);
+  }
+  for (const b of final.bases || []) {
+    if (!model.bases.has(b.id)) continue;
+    const held = end.baseSide && end.baseSide.get(b.id);
+    if (held !== b.side) problems.push('base ' + b.id + ' is held by ' + held + ' in the rebuild but ' + b.side + ' in final');
+  }
+  // The replay's own list of changes of side agrees with the events (the umpire's replay only).
+  if (model.replay.base_changes) {
+    const fromEvents = model.events.filter(e => e.kind === 'base_changed_side').map(e => e.id + ':' + e.day + ':' + e.data.base + ':' + e.data.from + ':' + e.data.to);
+    const listed = model.replay.base_changes.map(c => c.event + ':' + c.day + ':' + c.base + ':' + c.from + ':' + c.to);
+    if (JSON.stringify(fromEvents) !== JSON.stringify(listed)) problems.push('base_changes does not match the base_changed_side events');
   }
   return problems;
 }
@@ -1610,7 +1660,7 @@ function renderScreen() {
   for (const b of m.bases.values()) {
     const p = pos(b.q, b.r);
     if (!visible(p, 60)) continue;
-    baseMarks.push({ b, x: p[0], y: p[1] });
+    baseMarks.push({ b: Object.assign({}, b, { side: holderOf(st, b) }), x: p[0], y: p[1] });
     obstacles.push(rectFor(p[0], p[1], 14, 14));
   }
   for (const bm of baseMarks) {
@@ -1993,10 +2043,10 @@ function renderReadout() {
   if (feat.length) line(feat.join(', '));
   if ((hx.closed || []).length) line('Closed sides: ' + hx.closed.join(', '));
   for (const p of m.placementsByHex.get(S.hoverKey) || []) line('Place: ' + p.label.place + (p.label.feature ? ' (' + p.label.feature + ')' : ''));
-  for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + b.side + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')');
+  for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + holderOf(st, b) + (b.side !== holderOf(st, b) ? ', taken from the ' + b.side + ' side' : '') + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')');
   const formed = st.formedBases && st.formedBases.get(S.hoverKey);
   if (formed) line('Base ' + formed.id + ' (' + formed.side + '): formed by a landing');
-  if (st.landUnits) for (const u of st.landUnits.values()) if (u.hex && u.hex[0] === q && u.hex[1] === r && u.men_ashore > 0) line('Land unit: ' + u.name + (u.side ? ' (' + u.side + ')' : '') + ', ' + u.men_ashore + ' men ashore');
+  if (st.landUnits) for (const u of st.landUnits.values()) if (u.hex && u.hex[0] === q && u.hex[1] === r && u.men_ashore > 0) line('Land unit: ' + u.name + (u.side ? ' (' + u.side + ')' : '') + ', ' + u.men_ashore + ' men ashore' + (u.posture === 'attack' ? ', on attack' : '') + (u.fatigue > 0 ? ', fatigue ' + u.fatigue : '') + (u.fed_share !== undefined && u.fed_share < 1 ? ', fed share ' + u.fed_share : ''));
   for (const f of st.forces.values()) if (f.q === q && f.r === r) line('Force: TF' + f.id + ' ' + f.name + ' (' + f.side + '), ' + f.ships.length + ' ship(s) afloat');
   if (S.belief !== 'truth' && st.contacts[S.belief]) {
     for (const c of st.contacts[S.belief].values()) if (c.hex[0] === q && c.hex[1] === r) line('Contact (' + S.belief + ' belief): ' + ghostText(c));
@@ -2424,13 +2474,16 @@ function airGroupsBlock(groups, st) {
   return box;
 }
 
+/** The side that holds a base at a step: the side the replay starts it with, changed by each base_changed_side event up to the step (decision 0090). */
+function holderOf(st, b) { return (st && st.baseSide && st.baseSide.get(b.id)) || b.side; }
+
 function baseSection(id) {
   const m = S.model, st = m.states[S.step], b = m.bases.get(id);
   const sec = el('section');
   if (!b) { sec.append(el('h2', { text: 'Base ' + id })); return sec; }
   sec.append(el('h2', null, (b.name || 'base') + ' ', el('span', { class: 'dim', text: 'base:' + id })));
   const kv = el('dl', { class: 'kv' });
-  kv.append(el('dt', { text: 'Side' }), el('dd', { text: b.side || '?' }), el('dt', { text: 'Hex' }), el('dd', { text: '(' + b.q + ', ' + b.r + ')' }));
+  kv.append(el('dt', { text: 'Side' }), el('dd', { text: holderOf(st, b) || '?' }), el('dt', { text: 'Hex' }), el('dd', { text: '(' + b.q + ', ' + b.r + ')' }));
   sec.append(kv);
   const baseOf = g => (st.groupBase && st.groupBase.has(g.id) ? st.groupBase.get(g.id) : g.base);
   sec.append(airGroupsBlock([...m.groupTable.values()].filter(g => baseOf(g) === id && (g.formedStep === undefined || g.formedStep <= S.step)), st));

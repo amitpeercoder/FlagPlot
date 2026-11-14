@@ -2,7 +2,7 @@ Scenario 17: Cape Esperance, 11 to 12 October 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8bda002ce4feb0c3  223 events
+day   1  hash c5e308bdcff62196  223 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:2  <- order:2

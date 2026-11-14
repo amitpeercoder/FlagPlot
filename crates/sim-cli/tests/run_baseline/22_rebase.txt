@@ -2,9 +2,9 @@ Scenario 22: Rebasing an air group
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 63cc1cc4030e8b8e  7 events
-day   2  hash a948fc167d8487dd  8 events
-day   3  hash df98ca2d38e4d691  5 events
+day   1  hash 48966a4f8f7cf9d5  7 events
+day   2  hash 00afe73b1b510182  8 events
+day   3  hash df0e765c5e56778e  5 events
 
 air_group:1 "Placeholder patrol squadron" (Allied) at base:2: 6 ready, mission Search, arc 060-120 to 400 nm
 air_group:2 "Placeholder fighter squadron" (Allied) at base:1: 12 ready, mission Rest, no arc

@@ -1,6 +1,6 @@
 # Plan: land units and basic ground combat
 
-Status: a plan by the architect, written on Nov 12, 2026, and approved by the designer the same day; the four questions it first left open are answered below. Nothing here is built. Each stage gets its decision record, with a rule card, before its code is delegated. Every figure named is a placeholder. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
+Status: a plan by the architect, written on Nov 12, 2026, and approved by the designer the same day; the four questions it first left open are answered below. Stages 1 and 2 are built (decisions 0066 and 0090); stages 3 and 4 are not. Each stage gets its decision record, with a rule card, before its code is delegated. Every figure named is a placeholder. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
 
 ## Why now
 
