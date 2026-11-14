@@ -92,7 +92,8 @@
 //! - Unit 1 is falling back, and the Allied side is not on attack in the
 //!   hex. So it is not counted among the Japanese fighting men for the
 //!   limit, and it takes no share of the fight's losses. Its fed share is
-//!   0, so it fires nothing in any case.
+//!   0, so it fires nothing in any case, and by the correction it would
+//!   not fire if it could.
 //! - Unit 2: its fatigue is 15, so its firing men are its men times 85/100,
 //!   cut, far above the limit of 3 x 300 = 900: 9 shots at 0.6.
 //!
