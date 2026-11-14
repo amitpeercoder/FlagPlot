@@ -61,9 +61,9 @@
 //! - Day 11: forces 1 and 2 are sent to B and force 3 to C, each at cruise,
 //!   each with an unload order.
 //!
-//! Loading and rehearsal grow after the day's orders are taken, for a force
-//! stopped at a base of its side. A force ordered to sail that day is under
-//! way and gains nothing.
+//! Loading and rehearsal grow in the ground combat phase of each day, for a
+//! force stopped at a base of its side then. A force that sailed that day is
+//! at sea and gains nothing.
 //!
 //! ## What is prepared, day by day
 //!

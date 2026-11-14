@@ -22,7 +22,7 @@ The plan for ground combat deferred "building and repairing airfields" until bas
 
 ### One activity a day
 
-3b. **A unit does one thing in a day, and this rule says which.** Rehearsal (decision 0095), training (decision 0097) and work all read it, so that no day is counted twice. It is worked out once, after the day's orders are taken:
+3b. **A unit does one thing in a day, and this rule says which.** Rehearsal (decision 0095), training (decision 0097) and work all read it, so that no day is counted twice. It is worked out once a day, in the ground combat phase, after the marches and the fights, when it is known whether the unit marched, whether its hex was contested and how it was fed that night. Every gain of the day is given then:
 
    | In this order | The unit's day is |
    | --- | --- |
