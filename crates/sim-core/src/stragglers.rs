@@ -20,22 +20,149 @@
 //! once, so it is validated and applied like any route order.
 
 use std::cmp::Reverse;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
+use crate::choices::surface::{StragglerAction, StragglerPlan, SurfaceAnswer, SurfaceQuestion};
+use crate::choices::{Answer, Question};
 use crate::events::{Breakdown, Cause, DetachReason, EventKind, Factor};
 use crate::fixed::Fixed;
-use crate::ids::{EventId, ShipId, TaskForceId};
+use crate::hex::Hex;
+use crate::ids::{EventId, ShipClassId, ShipId, TaskForceId};
 use crate::orders::{
     Issuer, OrderKind, OrderRequest, Origin, Stance, StragglerInstruction, TaskForceOrder,
 };
-use crate::refdata::SurfaceCombatFigures;
-use crate::state::{RulesOfEngagement, SystemState, TaskForceStatus};
+use crate::refdata::{ShipClass, SurfaceCombatFigures};
+use crate::state::{RulesOfEngagement, Ship, SystemState, TaskForce, TaskForceStatus};
 use crate::time::Pulse;
 use crate::world::World;
 
 /// A count of ships as a `Fixed`.
 fn count(n: usize) -> Fixed {
     Fixed::from_int(i64::try_from(n).expect("few ships"))
+}
+
+/// What a force does with its stragglers (decisions 10 to 14 of
+/// `docs/decisions/0016-systems-and-stragglers.md`, decision 0100, 1): a pure
+/// function of the force, its ships and their classes, and the figures.
+///
+/// The ships are sorted by propulsion. With the instruction keep, or no
+/// straggler, there is nothing to do. With leave every straggler stays in one
+/// new force. Otherwise the stragglers that can steam call for escorts, the
+/// figure for each one's kind, taken from the sound ships with guns, the
+/// least important kind first and the lowest ID on a tie. The force retires
+/// if it is told to, or if the escorts leave it none of its sound ships or
+/// less than its share to keep; if not, the stragglers that can steam go home
+/// with the escorts and those dead in the water are left. Only the force's own
+/// ships are read from `ships`. Nothing is drawn.
+pub(crate) fn straggler_plan(
+    force: &TaskForce,
+    ships: &BTreeMap<ShipId, Ship>,
+    classes: &BTreeMap<ShipClassId, ShipClass>,
+    figures: &SurfaceCombatFigures,
+) -> StragglerPlan {
+    let nothing = StragglerPlan {
+        action: StragglerAction::None,
+        sound_ships: 0,
+        escorts_needed: 0,
+        escorts_taken: 0,
+        kept: 0,
+    };
+    let instruction = force.rules_of_engagement.stragglers;
+    if instruction == StragglerInstruction::Keep {
+        return nothing;
+    }
+    let keep_share = force.rules_of_engagement.keep_share;
+
+    // Sort the ships by propulsion. Ships in a force are afloat.
+    let mut sound: Vec<ShipId> = Vec::new();
+    let mut can_steam: BTreeSet<ShipId> = BTreeSet::new();
+    let mut dead_in_water: BTreeSet<ShipId> = BTreeSet::new();
+    for ship_id in &force.ships {
+        match ships[ship_id].systems.propulsion {
+            SystemState::Working => sound.push(*ship_id),
+            SystemState::Degraded => {
+                can_steam.insert(*ship_id);
+            }
+            SystemState::Out => {
+                dead_in_water.insert(*ship_id);
+            }
+        }
+    }
+    if can_steam.is_empty() && dead_in_water.is_empty() {
+        return nothing;
+    }
+    let sound_count = sound.len();
+
+    if instruction == StragglerInstruction::Leave {
+        return StragglerPlan {
+            action: StragglerAction::Leave {
+                stragglers: can_steam.union(&dead_in_water).copied().collect(),
+            },
+            sound_ships: sound_count,
+            escorts_needed: 0,
+            escorts_taken: 0,
+            kept: sound_count,
+        };
+    }
+
+    // Escorts: sum over the stragglers that can steam of the figure for each
+    // one's kind. Taken from sound ships with guns, the least important kind
+    // first, the lowest ID on a tie.
+    let escorts_needed: usize = can_steam
+        .iter()
+        .map(|ship| {
+            let kind = classes[&ships[ship].class].kind;
+            usize::try_from(figures.straggler_escorts[&kind]).expect("small figure")
+        })
+        .sum();
+    let mut candidates: Vec<(Reverse<crate::refdata::ShipKind>, ShipId)> = sound
+        .iter()
+        .filter_map(|ship| {
+            let class = &classes[&ships[ship].class];
+            (class.main_guns > 0).then_some((Reverse(class.kind), *ship))
+        })
+        .collect();
+    candidates.sort();
+    let escorts: BTreeSet<ShipId> = candidates
+        .iter()
+        .take(escorts_needed)
+        .map(|(_, ship)| *ship)
+        .collect();
+    let kept = sound_count - escorts.len();
+
+    let retires = instruction == StragglerInstruction::Retire
+        || kept == 0
+        || count(kept) < keep_share * count(sound_count);
+    let action = if retires {
+        StragglerAction::Retire {
+            left_behind: dead_in_water,
+        }
+    } else {
+        StragglerAction::Detach {
+            sent_home: can_steam,
+            escorts: escorts.clone(),
+            left_behind: dead_in_water,
+        }
+    };
+    StragglerPlan {
+        action,
+        sound_ships: sound_count,
+        escorts_needed,
+        escorts_taken: escorts.len(),
+        kept,
+    }
+}
+
+/// The hex a straggler force, or a retiring one, heads for (decision 14 of
+/// 0016): the hex of its home port, given as `home` (`None` where it has no
+/// home port or the port is not known). `None` where there is no port, or the
+/// force is already at it and not under way: it gets no order.
+pub(crate) fn home_hex(force: &TaskForce, home: Option<Hex>) -> Option<Hex> {
+    let home = home?;
+    if force.toward_hex.is_none() && force.from_hex == home {
+        return None;
+    }
+    Some(home)
 }
 
 impl World {
@@ -79,152 +206,119 @@ impl World {
         id: TaskForceId,
     ) {
         let force = &self.truth.task_forces[&id];
-        let instruction = force.rules_of_engagement.stragglers;
-        if instruction == StragglerInstruction::Keep {
-            return;
-        }
+        let plan = straggler_plan(
+            force,
+            &self.truth.ships,
+            &self.ref_data.ship_classes,
+            figures,
+        );
+        self.trace_choice(force.side, || {
+            (
+                Question::Surface(SurfaceQuestion::Stragglers { task_force: id }),
+                Answer::Surface(SurfaceAnswer::Stragglers(plan.clone())),
+            )
+        });
         let keep_share = force.rules_of_engagement.keep_share;
         let causes: Vec<Cause> = force.rules_order.map(Cause::Order).into_iter().collect();
+        let breakdown = self.straggler_breakdown(
+            plan.sound_ships,
+            plan.escorts_needed,
+            plan.escorts_taken,
+            keep_share,
+            plan.kept,
+        );
 
-        // Sort the ships by propulsion. Ships in a force are afloat.
-        let mut sound: Vec<ShipId> = Vec::new();
-        let mut can_steam: BTreeSet<ShipId> = BTreeSet::new();
-        let mut dead_in_water: BTreeSet<ShipId> = BTreeSet::new();
-        for ship_id in &force.ships {
-            match self.truth.ships[ship_id].systems.propulsion {
-                SystemState::Working => sound.push(*ship_id),
-                SystemState::Degraded => {
-                    can_steam.insert(*ship_id);
-                }
-                SystemState::Out => {
-                    dead_in_water.insert(*ship_id);
-                }
-            }
-        }
-        if can_steam.is_empty() && dead_in_water.is_empty() {
-            return;
-        }
-        let sound_count = sound.len();
-
-        if instruction == StragglerInstruction::Leave {
-            let stragglers: BTreeSet<ShipId> = can_steam.union(&dead_in_water).copied().collect();
-            let breakdown = self.straggler_breakdown(sound_count, 0, 0, keep_share, sound_count);
-            self.detach_ships(
-                day,
-                pulse,
-                id,
-                &stragglers,
-                &BTreeSet::new(),
-                DetachReason::LeftBehind,
-                &causes,
-                breakdown,
-            );
-            return;
-        }
-
-        // Escorts: sum over the stragglers that can steam of the figure for
-        // each one's kind. Taken from sound ships with guns, the least
-        // important kind first, the lowest ID on a tie.
-        let escorts_needed: usize = can_steam
-            .iter()
-            .map(|ship| {
-                let kind = self.ref_data.ship_classes[&self.truth.ships[ship].class].kind;
-                usize::try_from(figures.straggler_escorts[&kind]).expect("small figure")
-            })
-            .sum();
-        let mut candidates: Vec<(Reverse<crate::refdata::ShipKind>, ShipId)> = sound
-            .iter()
-            .filter_map(|ship| {
-                let class = &self.ref_data.ship_classes[&self.truth.ships[ship].class];
-                (class.main_guns > 0).then_some((Reverse(class.kind), *ship))
-            })
-            .collect();
-        candidates.sort();
-        let escorts: BTreeSet<ShipId> = candidates
-            .iter()
-            .take(escorts_needed)
-            .map(|(_, ship)| *ship)
-            .collect();
-        let kept = sound_count - escorts.len();
-
-        let retires = instruction == StragglerInstruction::Retire
-            || kept == 0
-            || count(kept) < keep_share * count(sound_count);
-        let breakdown =
-            self.straggler_breakdown(sound_count, escorts_needed, escorts.len(), keep_share, kept);
-
-        if !retires {
-            if !can_steam.is_empty() {
-                let (sent_home, event) = self.detach_ships(
-                    day,
-                    pulse,
-                    id,
-                    &can_steam,
-                    &escorts,
-                    DetachReason::SentHome,
-                    &causes,
-                    breakdown.clone(),
-                );
-                self.head_home(day, pulse, sent_home, event);
-            }
-            if !dead_in_water.is_empty() {
+        match plan.action {
+            StragglerAction::None => {}
+            StragglerAction::Leave { stragglers } => {
                 self.detach_ships(
                     day,
                     pulse,
                     id,
-                    &dead_in_water,
+                    &stragglers,
                     &BTreeSet::new(),
                     DetachReason::LeftBehind,
                     &causes,
                     breakdown,
                 );
             }
-            return;
+            StragglerAction::Detach {
+                sent_home,
+                escorts,
+                left_behind,
+            } => {
+                if !sent_home.is_empty() {
+                    let (sent_home, event) = self.detach_ships(
+                        day,
+                        pulse,
+                        id,
+                        &sent_home,
+                        &escorts,
+                        DetachReason::SentHome,
+                        &causes,
+                        breakdown.clone(),
+                    );
+                    self.head_home(day, pulse, sent_home, event);
+                }
+                if !left_behind.is_empty() {
+                    self.detach_ships(
+                        day,
+                        pulse,
+                        id,
+                        &left_behind,
+                        &BTreeSet::new(),
+                        DetachReason::LeftBehind,
+                        &causes,
+                        breakdown,
+                    );
+                }
+            }
+            StragglerAction::Retire { left_behind } => {
+                // Retire: leave what is dead in the water, then the parent
+                // goes home with everything else.
+                if !left_behind.is_empty() {
+                    self.detach_ships(
+                        day,
+                        pulse,
+                        id,
+                        &left_behind,
+                        &BTreeSet::new(),
+                        DetachReason::LeftBehind,
+                        &causes,
+                        breakdown.clone(),
+                    );
+                }
+                // With every ship dead in the water there is nothing left
+                // to send home. The empty parent stays as it is.
+                if self.truth.task_forces[&id].ships.is_empty() {
+                    return;
+                }
+                let parent = self
+                    .truth
+                    .task_forces
+                    .get_mut(&id)
+                    .expect("the task force exists");
+                parent.rules_of_engagement = settled_rules(parent.rules_of_engagement);
+                let retired = self.events.record(
+                    day,
+                    Some(pulse),
+                    EventKind::ForceRetired { task_force: id },
+                    causes,
+                    breakdown,
+                );
+                let parent = self
+                    .truth
+                    .task_forces
+                    .get_mut(&id)
+                    .expect("the task force exists");
+                parent.route = crate::state::Route::default();
+                parent.route_order = None;
+                parent.status = TaskForceStatus::Idle;
+                // Retiring ends a halt, as a new route does (decision 0096, 6).
+                parent.halt = None;
+                self.head_home(day, pulse, id, retired);
+            }
         }
-
-        // Retire: leave what is dead in the water, then the parent goes home
-        // with everything else.
-        if !dead_in_water.is_empty() {
-            self.detach_ships(
-                day,
-                pulse,
-                id,
-                &dead_in_water,
-                &BTreeSet::new(),
-                DetachReason::LeftBehind,
-                &causes,
-                breakdown.clone(),
-            );
-        }
-        // With every ship dead in the water there is nothing left to send
-        // home. The empty parent stays as it is.
-        if self.truth.task_forces[&id].ships.is_empty() {
-            return;
-        }
-        let parent = self
-            .truth
-            .task_forces
-            .get_mut(&id)
-            .expect("the task force exists");
-        parent.rules_of_engagement = settled_rules(parent.rules_of_engagement);
-        let retired = self.events.record(
-            day,
-            Some(pulse),
-            EventKind::ForceRetired { task_force: id },
-            causes,
-            breakdown,
-        );
-        let parent = self
-            .truth
-            .task_forces
-            .get_mut(&id)
-            .expect("the task force exists");
-        parent.route = crate::state::Route::default();
-        parent.route_order = None;
-        parent.status = TaskForceStatus::Idle;
-        // Retiring ends a halt, as a new route does (decision 0096, 6).
-        parent.halt = None;
-        self.head_home(day, pulse, id, retired);
     }
 
     /// The breakdown of one straggler decision, when recording is on. The
@@ -318,19 +412,24 @@ impl World {
     /// leaves the force as it is: idle.
     fn head_home(&mut self, day: u32, pulse: Pulse, force: TaskForceId, detaching_event: EventId) {
         let task_force = &self.truth.task_forces[&force];
-        let Some(base) = task_force
+        let home = task_force
             .home_port
             .and_then(|port| self.truth.bases.get(&port))
-        else {
+            .map(|base| base.hex);
+        let heads_for = home_hex(task_force, home);
+        self.trace_choice(task_force.side, || {
+            (
+                Question::Surface(SurfaceQuestion::HeadHome { task_force: force }),
+                Answer::Surface(SurfaceAnswer::HeadHome(heads_for)),
+            )
+        });
+        let Some(target) = heads_for else {
             return;
         };
-        if task_force.toward_hex.is_none() && task_force.from_hex == base.hex {
-            return;
-        }
         let request = OrderRequest {
             kind: OrderKind::TaskForce {
                 target: force,
-                order: TaskForceOrder::route(vec![base.hex]),
+                order: TaskForceOrder::route(vec![target]),
             },
             origin: Origin {
                 issuer: Issuer::LocalCommander,
@@ -1468,5 +1567,288 @@ mod tests {
             ]
         );
         assert_sound(&world);
+    }
+
+    // ---- the choices a side can ask (decision 0100) ----
+
+    use crate::choices::surface::{StragglerAction, SurfaceAnswer, SurfaceQuestion};
+    use crate::choices::{Answer, Moment, Question};
+
+    fn ask(world: &World, side: Side, question: &SurfaceQuestion) -> Option<SurfaceAnswer> {
+        world.side_view(side).ask_surface(question)
+    }
+
+    fn plan_of(world: &World) -> StragglerPlan {
+        match ask(
+            world,
+            Side::Allied,
+            &SurfaceQuestion::Stragglers { task_force: TF },
+        ) {
+            Some(SurfaceAnswer::Stragglers(plan)) => plan,
+            other => panic!("expected a plan, got {other:?}"),
+        }
+    }
+
+    fn set(raw: &[u32]) -> BTreeSet<ShipId> {
+        ids(raw).into_iter().collect()
+    }
+
+    #[test]
+    fn the_plan_detaches_a_degraded_ship_with_an_escort_and_leaves_one_that_is_out() {
+        // The scenario's force: cruisers 1, 2 (degraded), 3, destroyers 4, 5
+        // and 6 (out); detach, share 0.5. Sound ships: 1, 3, 4, 5 (4). Ship 2
+        // is a cruiser that can steam: it needs 1 escort. The escort comes
+        // from the sound ships with guns, the least important kind first: the
+        // destroyers 4 and 5 before the cruisers, the lowest ID first, so
+        // ship 4. The parent keeps 4 - 1 = 3, which is at least 0.5 x 4 = 2,
+        // so it does not retire. Ship 2 goes home with escort 4, ship 6 is
+        // left.
+        let world = world(&scenario_ships(), StragglerInstruction::Detach, half());
+        assert_eq!(
+            plan_of(&world),
+            StragglerPlan {
+                action: StragglerAction::Detach {
+                    sent_home: set(&[2]),
+                    escorts: set(&[4]),
+                    left_behind: set(&[6]),
+                },
+                sound_ships: 4,
+                escorts_needed: 1,
+                escorts_taken: 1,
+                kept: 3,
+            }
+        );
+    }
+
+    #[test]
+    fn the_plan_retires_when_told_to_or_when_the_escorts_leave_too_little() {
+        // Retire: the dead in the water (6) are left, the rest goes home.
+        let world_retire = world(&scenario_ships(), StragglerInstruction::Retire, half());
+        let plan = plan_of(&world_retire);
+        assert_eq!(
+            plan.action,
+            StragglerAction::Retire {
+                left_behind: set(&[6])
+            }
+        );
+        assert_eq!(
+            (plan.sound_ships, plan.escorts_needed, plan.kept),
+            (4, 1, 3)
+        );
+        // Detach with a share of 0.9: 3 < 0.9 x 4 = 3.6, so it retires.
+        let world_share = world(
+            &scenario_ships(),
+            StragglerInstruction::Detach,
+            Fixed::from_ratio(9, 10),
+        );
+        assert!(matches!(
+            plan_of(&world_share).action,
+            StragglerAction::Retire { .. }
+        ));
+    }
+
+    #[test]
+    fn the_plan_leaves_every_straggler_with_leave_and_nothing_with_keep_or_none() {
+        // Ships 1 and 3 work, 2 is degraded, 4 is out: leave takes 2 and 4,
+        // the parent keeps its 2 sound ships and no escorts are needed.
+        let ships = [
+            (CRUISER, Working),
+            (CRUISER, Degraded),
+            (DESTROYER, Working),
+            (DESTROYER, Out),
+        ];
+        let leave = plan_of(&world(&ships, StragglerInstruction::Leave, half()));
+        assert_eq!(
+            leave,
+            StragglerPlan {
+                action: StragglerAction::Leave {
+                    stragglers: set(&[2, 4])
+                },
+                sound_ships: 2,
+                escorts_needed: 0,
+                escorts_taken: 0,
+                kept: 2,
+            }
+        );
+        assert_eq!(
+            plan_of(&world(&ships, StragglerInstruction::Keep, half())).action,
+            StragglerAction::None
+        );
+        assert_eq!(
+            plan_of(&world(
+                &[(CRUISER, Working); 3],
+                StragglerInstruction::Detach,
+                half()
+            ))
+            .action,
+            StragglerAction::None
+        );
+    }
+
+    fn head_home_question() -> SurfaceQuestion {
+        SurfaceQuestion::HeadHome { task_force: TF }
+    }
+
+    #[test]
+    fn a_force_heads_for_its_home_port_unless_it_is_there_and_not_under_way_or_has_none() {
+        // The force is at (6,0), its home port at (0,0): it heads there.
+        let mut world = world(&[(CRUISER, Working)], StragglerInstruction::Keep, half());
+        assert_eq!(
+            ask(&world, Side::Allied, &head_home_question()),
+            Some(SurfaceAnswer::HeadHome(Some(hx(0, 0))))
+        );
+        // Under way toward somewhere else, it still heads home.
+        world.truth.task_forces.get_mut(&TF).unwrap().toward_hex = Some(hx(5, 0));
+        assert_eq!(
+            ask(&world, Side::Allied, &head_home_question()),
+            Some(SurfaceAnswer::HeadHome(Some(hx(0, 0))))
+        );
+        // At the port and not under way: no order. At the port and under way
+        // (toward a hex): still an order.
+        {
+            let force = world.truth.task_forces.get_mut(&TF).unwrap();
+            force.from_hex = hx(0, 0);
+        }
+        assert_eq!(
+            ask(&world, Side::Allied, &head_home_question()),
+            Some(SurfaceAnswer::HeadHome(Some(hx(0, 0))))
+        );
+        {
+            let force = world.truth.task_forces.get_mut(&TF).unwrap();
+            force.toward_hex = None;
+        }
+        assert_eq!(
+            ask(&world, Side::Allied, &head_home_question()),
+            Some(SurfaceAnswer::HeadHome(None))
+        );
+        // No home port: none. The enemy's view of the same force: no answer.
+        world.truth.task_forces.get_mut(&TF).unwrap().home_port = None;
+        assert_eq!(
+            ask(&world, Side::Allied, &head_home_question()),
+            Some(SurfaceAnswer::HeadHome(None))
+        );
+        assert_eq!(ask(&world, Side::Japanese, &head_home_question()), None);
+    }
+
+    /// The world with an enemy force of the given ships added.
+    fn with_enemy(mut world: World, enemy: &[(u32, SystemState)], at: Hex) -> World {
+        let id = TaskForceId::new(50);
+        let mut force = TaskForce::at(
+            id,
+            "Enemy".to_string(),
+            Side::Japanese,
+            at,
+            Mission::SurfaceCombat,
+        );
+        for (index, (class, propulsion)) in enemy.iter().enumerate() {
+            let ship_id = ShipId::new(100 + u32::try_from(index).expect("few"));
+            force.ships.insert(ship_id);
+            let mut systems = ShipSystems::ALL_WORKING;
+            systems.propulsion = *propulsion;
+            world.truth.ships.insert(
+                ship_id,
+                Ship {
+                    systems,
+                    ..Ship::new(
+                        ship_id,
+                        "Enemy ship".to_string(),
+                        ShipClassId::new(*class),
+                        Side::Japanese,
+                        ShipLocation::TaskForce(id),
+                    )
+                },
+            );
+        }
+        force.rules_of_engagement.stragglers = StragglerInstruction::Retire;
+        world.truth.task_forces.insert(id, force);
+        world
+    }
+
+    #[test]
+    fn the_enemy_does_not_change_what_a_side_is_told_of_its_stragglers() {
+        let one = with_enemy(
+            world(&scenario_ships(), StragglerInstruction::Detach, half()),
+            &[(CRUISER, Out), (DESTROYER, Degraded)],
+            hx(9, 1),
+        );
+        let other = with_enemy(
+            world(&scenario_ships(), StragglerInstruction::Detach, half()),
+            &[(BATTLESHIP, Working)],
+            hx(2, -1),
+        );
+        let questions = one.side_view(Side::Allied).surface_questions();
+        assert_eq!(questions, other.side_view(Side::Allied).surface_questions());
+        assert!(questions
+            .iter()
+            .any(|q| matches!(q, SurfaceQuestion::Stragglers { .. })));
+        for question in &questions {
+            assert_eq!(
+                ask(&one, Side::Allied, question),
+                ask(&other, Side::Allied, question),
+                "{question:?}"
+            );
+        }
+        let enemy = SurfaceQuestion::Stragglers {
+            task_force: TaskForceId::new(50),
+        };
+        assert_eq!(ask(&one, Side::Allied, &enemy), None);
+    }
+
+    #[test]
+    fn the_view_gives_the_plan_and_the_destination_the_engine_acted_on() {
+        // Detach: the plan is asked before the pass and is the engine's. The
+        // detached force does not exist before the pass, so the head-home
+        // question of it cannot be asked then (it names a force the view
+        // does not yet hold). Retire: the force itself heads home, and the
+        // view says the same.
+        for (instruction, share) in [
+            (StragglerInstruction::Detach, half()),
+            (StragglerInstruction::Retire, half()),
+            (StragglerInstruction::Leave, half()),
+            (StragglerInstruction::Keep, half()),
+        ] {
+            let build = || world(&scenario_ships(), instruction, share);
+            let mut engine = build();
+            engine.trace_choices(true);
+            engine.pass_moment(Moment::Phase {
+                day: 1,
+                pulse: Pulse::Night,
+                phase: PulsePhase::Movement,
+            });
+            engine.handle_stragglers(1, Pulse::Night);
+            let trace = engine.take_choice_trace();
+            let before = build();
+            let mut plans = 0;
+            let mut homes = 0;
+            for traced in &trace {
+                let (Question::Surface(question), Answer::Surface(answer)) =
+                    (&traced.question, &traced.answer)
+                else {
+                    continue;
+                };
+                match question {
+                    SurfaceQuestion::Stragglers { .. } => {
+                        plans += 1;
+                        assert_eq!(ask(&before, traced.side, question).as_ref(), Some(answer));
+                    }
+                    SurfaceQuestion::HeadHome { task_force } => {
+                        homes += 1;
+                        if *task_force == TF {
+                            assert_eq!(ask(&before, traced.side, question).as_ref(), Some(answer));
+                        } else {
+                            assert_eq!(ask(&before, traced.side, question), None);
+                            assert_eq!(answer, &SurfaceAnswer::HeadHome(Some(hx(0, 0))));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            assert_eq!(plans, 1);
+            let expected_homes = usize::from(matches!(
+                instruction,
+                StragglerInstruction::Detach | StragglerInstruction::Retire
+            ));
+            assert_eq!(homes, expected_homes, "{instruction:?}");
+        }
     }
 }
