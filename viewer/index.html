@@ -904,7 +904,7 @@ function buildModel(replay) {
           const am = o && t && t.type === 'air_group' ? /^air mission (.+)$/.exec(o.text) : null;
           if (am) cur.mission = setAirOrder(cur.mission, t.id, am[1]);
           // An accepted posture order sets a land unit's posture (decision 0090).
-          const lp = o && t && t.type === 'land_unit' ? /^posture (attack|defend)$/.exec(o.text) : null;
+          const lp = o && t && t.type === 'land_unit' ? /^posture (attack|defend)(?:, when spent (?:hold|fall_back))?$/.exec(o.text) : null;
           const lu = lp ? cur.landUnits.get(t.id) : null;
           if (lu) lu.posture = lp[1];
           // An accepted march order (decision 0094): the unit's own hex stops a march, the hex it already marches to keeps
@@ -982,6 +982,8 @@ function buildModel(replay) {
         }
         case 'fed_share_restored': { const u = cur.landUnits.get(d.unit); if (u) u.fed_share = 1; break; }
         case 'land_unit_fatigue': { const u = cur.landUnits.get(d.unit); if (u) u.fatigue = d.fatigue; break; }
+        // A falling back, after a defeat (decision 0104) or of a spent attacker (decision 0105), tires the unit and puts it on the defence.
+        case 'unit_fell_back': case 'spent_unit_fell_back': { const u = cur.landUnits.get(d.unit); if (u) { u.posture = 'defend'; u.fatigue = d.fatigue; } break; }
         case 'land_unit_back_to_defend': { const u = cur.landUnits.get(d.unit); if (u) { u.posture = 'defend'; u.fatigue = d.fatigue; } break; }
         // A base changed side (decision 0090): its holder changes on the day of the event; a base a landing formed
         // is on both maps from now on, and is shown at its hex under its new holder.
