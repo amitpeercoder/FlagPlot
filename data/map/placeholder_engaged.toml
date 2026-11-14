@@ -1,0 +1,71 @@
+# PLACEHOLDER MAP. Open sea with six coast hexes, all clear, port size 0,
+# used by scenario 33 (decision 0105, who is engaged in a fight ashore and an
+# attack that fails). K at (0,0) has no land link. L at (10,0) has a land link
+# to M at (10,1). N at (20,0) has a land link to O at (20,1). P at (30,0) has
+# no land link. No force sails. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 31]
+r = [-1, 2]
+
+# K.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# L.
+[[hex]]
+q = 10
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# M.
+[[hex]]
+q = 10
+r = 1
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# N.
+[[hex]]
+q = 20
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# O.
+[[hex]]
+q = 20
+r = 1
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# P.
+[[hex]]
+q = 30
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+[[land_link]]
+a = [10, 0]
+b = [10, 1]
+note = "Placeholder: L and M are on one landmass."
+
+[[land_link]]
+a = [20, 0]
+b = [20, 1]
+note = "Placeholder: N and O are on one landmass."
