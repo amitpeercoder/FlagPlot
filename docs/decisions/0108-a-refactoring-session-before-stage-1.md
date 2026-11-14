@@ -1,10 +1,10 @@
 # 0108: A refactoring session before stage 1
 
-Status: settled by the architect on Nov 14, 2026, an engineering choice with no effect on play. The designer approved holding a bounded refactoring session after the cover build (decision 0106) and before stage 1 of step 3 is built. It changes no rule and no result. Not built.
+Status: settled by the architect on Nov 14, 2026, an engineering choice with no effect on play. The designer approved holding a bounded refactoring session after the cover build (decision 0106) and before stage 1 of step 3 is built. It changes no rule and no result. Built on Nov 14 and 15, 2026, in six pull requests (300, 301, 306, 312, 313 and 315): see "As built".
 
 Summary: A refactoring session before stage 1: one command that remakes every generated file; a comparison of every scenario against the previous build; one table describing each kind of event; the replay export carrying the state so the viewer only draws it; the ground combat file split; the decisions index made from the records. No rule and no result changes
 
-Standing: Settled by the architect, Nov 14, 2026, with the designer's approval to hold it. Not built
+Standing: Settled by the architect, Nov 14, 2026, with the designer's approval to hold it. Built, Nov 15, 2026
 
 ## Why now
 
@@ -54,3 +54,26 @@ One Opus lead with Sonnet developers, one pull request for each item, each read 
 ## What it costs
 
 A few hours of team time, and one remaking of the generated files where item 4 moves them. Stage 1 starts after it.
+
+## As built
+
+All six items were built and none was dropped. Each met the bar against main at the commit its branch began from: 907 files compared for each item and none differing, except the 67 replay exports of item 7, whose text is the old text with the version digit changed and the steps added.
+
+| Item | Pull request | What it is |
+| --- | --- | --- |
+| 9, the index | 300 | Each record carries `Summary:` and `Standing:` after its `Status:`; `scripts/decisions-index.sh` writes the table and CI checks it on every commit |
+| 5, the comparison | 301 | `scripts/compare-scenarios.sh`: every scenario, live against the committed baselines and frozen against the previous build, hashes cut out |
+| 6, the event's code | 306 | A side's copy of an event takes its code from the log event it was made from; the 24 codes written twice are gone |
+| 7, the state in the replay | 312 | Replay version 4 carries the state at each step and the viewer draws it; versions 1 to 3 still load by the old path |
+| 4, one command | 313 | `scripts/regenerate.sh` remakes baselines, goldens, recorded games, pinned hashes and the batch fixture and says what changed; the pinned hashes are in `tests/golden/pinned_hashes.txt` |
+| 8, the split | 315 | `ground_combat/` with `mod.rs`, `fight.rs`, `fatigue.rs`, `defeat.rs`, `activity.rs` and `tests.rs`; a move, with six methods made visible to their sibling files |
+
+What a rule build now costs, by the team's estimate: remaking the generated files about a minute where it took ten in eight steps; comparing with the previous build under a minute where it took ten with an old binary kept by hand; a new kind of event about ten minutes where it took fifteen, and the viewer needs nothing for a kind that only changes state.
+
+**Item 6 is narrower than its heading.** It ends the one pair that broke a build, the event's code written twice. A new kind of event still touches several lists, and some of them take it silently through a catch-all arm: the briefing's fold, the batch record, and four places in `side_events.rs`. The follow-up, recorded in `docs/open-work.md`: make those matches exhaustive with an arm that says "nothing", so that a new kind does not compile until someone has decided at each place, as it already does for who may see it. It changes no output.
+
+**Still by hand after a rule build:** a line in the list of event kinds the full slice cannot produce, which is a judgement with its reason; the paragraph in the recorded games' README; and the `[[test]]` entry for a new scenario's test. The regenerate command prints what each needs.
+
+**Left alone:** the agent's `event_kind`, made from the kind's name in the code, which differs on purpose from the replay's code for a kind a side sees cut. Changing it would change the agent's answers and every transcript.
+
+**Not done, as the decision said:** the test suite's speed, about four minutes for a release run of the workspace. No cheap gain was found.
