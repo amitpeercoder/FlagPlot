@@ -1,6 +1,6 @@
 # 0107: Step 3, stage 1: the command contract, and a staff that keeps a base supplied
 
-Status: a plan by the architect, written on Nov 14, 2026, for the designer's approval, and revised the same day after an independent review that the designer asked for. The review found the direction right and six gaps that had to be closed before building: the order of a day, where a staffed day is run, how the staff writes the state it makes, what a saved game holds, what "days of supply" means, and how a supply plan can change without the commander. Each is settled below and marked *(review)*. `docs/step3-spec.md` settles what the contract is; this record says how stage 1 builds it. The designer answered its four questions on Nov 14, 2026, each as recommended, and approved the plan: stage 1 is built as laid out, after the two hand calculations are written, and anything they show still open comes back to him before any code. Confirmed. Nothing is built. Two hand calculations, for days of supply and for one convoy, are written by the architect before approval is asked, since they are what shows a rule still open.
+Status: a plan by the architect, written on Nov 14, 2026, for the designer's approval, and revised the same day after an independent review that the designer asked for. The review found the direction right and six gaps that had to be closed before building: the order of a day, where a staffed day is run, how the staff writes the state it makes, what a saved game holds, what "days of supply" means, and how a supply plan can change without the commander. Each is settled below and marked *(review)*. `docs/step3-spec.md` settles what the contract is; this record says how stage 1 builds it. The designer answered its four questions on Nov 14, 2026, each as recommended, and approved the plan: stage 1 is built as laid out, after the two hand calculations are written, and anything they show still open comes back to him before any code. Confirmed. The two hand calculations are now written; they needed eight rulings, recorded below, and raised one question for the designer, on how much a run carries. Nothing is built. Two hand calculations, for days of supply and for one convoy, are written by the architect before approval is asked, since they are what shows a rule still open.
 
 ## What stage 1 is
 
@@ -165,6 +165,23 @@ Each case gets its numbers in a hand calculation or in the test plan of its step
 - Every intent but supply; fuel; strikes in planned use; escort and cover; recalling a run; several sources; the risk level's numbers; the enemy played by the staff (stage 2).
 - Landing, marching, units made ready, bases built up (stage 3).
 - The trial, and with it the finding of stage 0 that a world built from one side's view holds no enemy the side has not seen (stage 4).
+
+## Rulings from the hand calculations
+
+Made on Nov 14, 2026, while writing the two hand calculations the designer asked for before any code (`tests/scenario_35_days_of_supply.rs` and `tests/scenario_36_one_convoy.rs`). Each closes a place the decisions above left open, and stands over them where they differ.
+
+1. **Men due today count today** (decisions 32 and 35). A day's planned use counts the men aboard the side's own forces that are ordered to land in the hex and are due that day, or were due earlier and have not landed. So the figure falls on the day a regiment is due, a day before the base first pays for it, and the figure and the projection agree.
+2. **A strike mission counts nothing, a patrol counts its two daylight pulses, a search counts its two daylight pulses at the distance it is ordered to fly** (decision 32). They are costed by the rule that charges sorties.
+3. **An order given today shows tomorrow.** The figure is read before the day's orders are taken in, so a group set to patrol today raises the planned use from the next day's reading.
+4. **When a run is needed** (decision 38). A run ordered on a day is needed if, without it, the figure read on the day after it would arrive is below the intent's. The staff does not send a run earlier than that.
+5. **A run's load** (decision 40) is the intent's stock, less the stock projected for the reading on the day the run arrives and not below 0, plus the planned use of one round trip.
+6. **A round trip is counted in whole days:** the passage both ways at cruise, rounded up to whole days, and a day to load and a day to unload.
+7. **Forming a force and its load order are given on the same day.** A side numbers its own forces, so the staff knows the number the new force will have.
+8. **A ship is free when it is back at the source and has refuelled there,** which is the morning after it arrives.
+
+## A question the hand calculation raised
+
+5. **How much a run carries.** By ruling 5 a run brings the base to its floor and carries one round trip's use besides. In the worked case that keeps a base of 2,000 men at exactly 30 days with a ship of 3,000 t carrying 40 t every four days. It is correct and it is not how anyone would run a supply line: the ship sails nearly empty, and each sailing is a risk once there is an enemy. I recommend a doctrine figure, the days of use a run carries above the floor, with a first value of 14, so that a run fills a real part of a ship and sails every two weeks. The intent's days stay the floor, and the commander can still see and change the figure. The other choice is to leave the runs minimal in stage 1 and settle it in stage 2, when convoys can be attacked.
 
 ## Questions for the designer
 
