@@ -6,7 +6,7 @@ The rules of Flag Plot as they stand in the code today, each stated once, in the
 
 - **It states the rules.** It says what the simulation does, in the order it does it, with the order of operations and the rounding where a hand calculation depends on them.
 - **It does not give the reasons.** The decision records in `docs/decisions/` hold why a rule is the way it is. A rule here ends with the decisions it rests on, in brackets.
-- **It does not hold the figures.** The data files in `data/reference/` hold them. The book names a figure by file and key, such as `surface_combat.toml: alarm_chance`, and never copies its value. Every figure in those files is a placeholder unless a record says it was derived.
+- **It does not hold the figures.** The data files in `data/reference/` hold them. The book names a figure by file and key, such as `surface_combat.toml: alarm_chance`, and copies a value only where a worked example needs it, such as a chance in the bombardment rule or the share of a hit that lands on men. A value copied is as the files had it when the page was written; the file is the figure. Every figure in those files is a placeholder unless a record says it was derived.
 - **The code is the authority.** If the book and `crates/sim-core/src/` ever differ, the code is right and the difference is a bug in the book or in the code. Report it. `differences.md` lists the places where a decision record and the code differ today, and the oddities nobody decided, for the architect to rule on.
 - **It is not the spec.** `docs/step1-spec.md` says what step 1 is for. This book says what step 1 does.
 
@@ -38,11 +38,11 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | 10 | Night pulse | Men's supply: the men ashore are fed from every base of their side in the hex, the unfed are lost in part | Chapter 7, The men's supply |
 | 11 | Night pulse | Stand-down and return of tired air groups | Chapter 5, Stand-down and return |
 | 12 | Night pulse | Movement: halted forces whose work is done steam on, the straggler pass, forces move in order of clock time (a force with a marked waypoint and work there halts at it), fights where they meet | Chapter 2, Movement, Halting at a marked waypoint and steaming on, and Stragglers; chapter 4, Meeting |
-| 13 | Night pulse | Night search and surface engagements: empty. Shore bombardment: a force on the bombardment mission, in the hex of an enemy base on its side's map (a halted force is in it), fires at the base | Chapter 1, The night pulse; chapter 4, Shore bombardment |
+| 13 | Night pulse | Night search and surface engagements: empty. Shore bombardment: a force on the bombardment mission, in the hex of an enemy base on its side's map (a halted force is in it), fires at the base: it destroys aircraft, supply and men there, the base's side is given a sighting report of the force, and the bombarding side a claim | Chapter 1, The night pulse; chapter 4, Shore bombardment; chapter 3, Claims |
 | 14 | Night pulse | Loading and unloading, with men taken aboard and landed, units divided and bases formed; a force that lands men works at the rate its loading gives, and a unit's first men landing spend its rehearsal | Chapter 2, Cargo; chapter 7, Landing men; Preparing a landing |
 | 15 | Morning and afternoon | Air search and its sighting reports | Chapter 3, Air search |
 | 16 | Morning and afternoon | Strike decisions and launches | Chapter 5, The strike decision |
-| 17 | Morning and afternoon | Air combat: escorts, patrols, guns, attacks, damage, reports, claims | Chapter 5, The raid, step by step |
+| 17 | Morning and afternoon | Air combat: escorts, patrols, guns, attacks (a hit on a base may land on men ashore there), damage, reports, claims | Chapter 5, The raid, step by step |
 | 18 | Morning and afternoon | Running out of fuel, then coming home to no deck, then wear, then fatigue, then supply for sorties | Chapter 5, The end of a daylight pulse for aircraft |
 | 19 | Morning and afternoon | Movement, as in step 12 | Chapter 2, Movement; chapter 4, Meeting |
 | 20 | Morning and afternoon | Surface engagements: an empty slot | Chapter 1, The morning and afternoon pulses |
@@ -57,7 +57,7 @@ The result of a game is worked out from the final state and the log. It is not a
 ## The chapters
 
 1. **The day, orders, and what a side knows.** Time and the pulses, the order a day resolves in, every order and every reason one is refused, truth and belief, what a side sees of an event, fixed-point numbers and chance, the random keys, the invariants, the state hash and saved games.
-2. **Movement, fuel and cargo.** The map as the rules read it (with its land links), task forces and speed, the budget of a pulse, legs and position, the order of movement, arriving, turning back, fuel burn, refuelling in port, cargo, berths and lighters, and stragglers.
+2. **Movement, fuel and cargo.** The map as the rules read it (with its land links), task forces and speed, the budget of a pulse, legs and position, the order of movement, arriving, halting at a marked waypoint and steaming on, turning back, fuel burn, refuelling in port, cargo, berths and lighters, and stragglers.
 3. **Search, contacts and claims.** Air search, the sighting report and its errors, belief, contacts and their ageing, a strike that finds nothing, who is alert, the alarm, fatigue of a force, claims (after a fight, a raid and a shore bombardment), and the ground report and the estimate of the enemy ashore.
 4. **Surface combat and damage.** When a fight begins, its rounds, the hit mechanism shared with air attack, damage tracks and named systems, breaking off, what a fight leaves behind, repair, and shore bombardment.
 5. **Air operations.** Air groups, missions, rebasing a group to another base, a group lost with its base, what a group can fly, air distance, the night's upkeep, the strike decision, escorts and patrol, the raid step by step (with the share of a hit on a base that lands on men), wear, fatigue and the supply that flying costs.

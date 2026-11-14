@@ -1,6 +1,6 @@
 # 0097: The quality of a land unit, and training
 
-Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that step 3 go beyond rehearsal for one landing to troop quality that lasts. The designer agreed decisions 3 and 5 on Nov 14, 2026. Nothing is built. Every figure is a placeholder. No real unit has a value yet: that waits on research, as the experience of air groups does (decision 0064).
+Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that step 3 go beyond rehearsal for one landing to troop quality that lasts. The designer agreed decisions 3 and 5 on Nov 14, 2026. Built on Nov 14, 2026, scenario 28 ("As built", at the end); the hand calculation is in `tests/scenario_28_experience_and_training.rs`. Every figure is a placeholder. No real unit has a value yet: that waits on research, as the experience of air groups does (decision 0064).
 
 ## The gap
 

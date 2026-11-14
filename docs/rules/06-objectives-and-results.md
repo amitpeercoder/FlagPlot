@@ -8,7 +8,7 @@ A scenario with no objectives plays as before and has no result. [0054]
 
 ### The mission
 
-A side's mission is one or two sentences of words. It is not empty. No rule reads it. A task force also has a mission, which is a different thing and which no rule reads either (glossary). [0054]
+A side's mission is one or two sentences of words. It is not empty. No rule reads it. A task force also has a mission, which is a different thing: only shore bombardment reads it (a force on the bombardment mission fires at an enemy base, chapter 4, Shore bombardment). [0054, 0092]
 
 ### The scenario file
 
@@ -29,7 +29,7 @@ Each objective is a count of something the engine already records, taken for the
 | `cargo_landed` | Tons of supply and fuel the side's own ships unloaded at a named base, less the tons they loaded there, never below 0 | For one ton |
 | `base_open` | The days on which a named base ended the day with supply above zero and at least one ready aircraft at it; with `closed = true`, the days on which it did not | For the base being so on every day. The points earned are these times the days counted over the days resolved |
 | `base_held` | Whether a named base is the side's own at the end of the game | The objective's points, if it is. Scenario keys `base` and `points` |
-| `men_lost` | Enemy men lost, by any cause: unfed, lost with a ship or lost in a fight | For each 100 men. A part of 100 scores its part. Scenario key `points_per_100_men` |
+| `men_lost` | Enemy men lost, by any cause: unfed, lost with a ship, lost in a fight or lost to fire | For each 100 men. A part of 100 scores its part. Scenario key `points_per_100_men` |
 
 [0054, 0090]
 

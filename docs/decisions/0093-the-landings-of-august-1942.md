@@ -2,7 +2,7 @@
 
 Status: a plan by the architect, written on Nov 14, 2026. It is stage 4 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer answered its three questions on Nov 14, 2026: the land units go into the full slice now (decisions 1 and 2), marching overland is built first (decision 4 and decision 0094), and only fighting men are counted (decision 6). Nothing is built. The data choices are the architect's, each with its reason, and none is made final here: the rows are read when the scenario is written.
 
-## What stage 4 is for
+## What stage 4 of ground combat is for
 
 Stages 1 to 3 run on made-up units. Stage 4 puts the record through them: the landings of 7 to 9 August 1942 on Guadalcanal and Tulagi, the Japanese landings that followed, and the two attacks on the airfield inside the period the facts cover well, the Tenaru on 21 August and the ridge on 12 to 14 September. It is where the ground figures first meet something a source says.
 
@@ -84,7 +84,7 @@ Known before a run, and recorded so that nobody is surprised:
 - **The validation harness:** takes for a base's holder on a day and for men lost by side between two days, and the batch record's counts behind them.
 - **A tuning round,** with its record under `docs/validation/tuning/`.
 - **The full slice's generated files are remade:** its run baselines, any recorded game that plays it and the agent's golden files.
-- **No new rule beyond marching** (decision 0094). If the scenario cannot be built without another, the work stops and the rule gets its own record.
+- **No new rule beyond marching** (decision 0094). If the scenario cannot be built without another, the work stops and the rule gets its own record. *(Nov 14, 2026: decisions 0095 to 0099 add to the August scenario: preparing a landing, the quality of a land unit, what a unit is good at, and units that work with the airfield they build. Decision 0099, "What it changes in the August scenario", says how.)*
 
 ## Questions for the designer
 

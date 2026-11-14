@@ -79,5 +79,7 @@ The real map marks every land hex as jungle (decision 0052, item 14), so on it t
 
 ## Questions for the designer
 
+Answered on Nov 14, 2026: the designer agreed decisions 2 and 6.
+
 1. **Decision 2:** four skills to start with: assault from the sea, movement by terrain, holding ground, and weight. Is that the right first set?
 2. **Decision 6:** a unit's skills are fixed; only experience grows in play. Agreed?

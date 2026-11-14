@@ -159,6 +159,8 @@ The architect asked for rounds fired by each US ship by calibre and hits on each
 | Aoba | 7 main-battery rounds (Japanese Wikipedia, citing the official history) | The division broke off after "fifteen minutes of engagement" | The report's flash signal for the fifteen minutes |
 | Kinugasa | 80 main, 11 anti-aircraft, 16 torpedoes (Japanese Wikipedia only) | See the dispute above | |
 
+*Note, Nov 14, 2026 (audit of the documents; no row and no figure changed):* the torpedo counts in this table (Duncan 2, Buchanan 5, Kinugasa 16) are the rows `engagement_outcomes.csv` 1643, 1719 and 1654. `torpedoes-fired.md` (Nov 13) says that no count was found for any American ship and gives Kinugasa 4 only; it did not use those rows. The rows, and so this table, are current for the counts. Kinugasa's 16 (Japanese Wikipedia alone, low, unconfirmed) stands beside 4 (a Japanese staff table, row 2282, medium, unconfirmed); the dispute is open. Buchanan's 5 is low and unconfirmed.
+
 **Hits received, from the Japanese report:** a first shell on Aoba's bridge, her gun director destroyed and a turret unusable; Furutaka hit in her torpedo tubes at 2150, a great fire following; Fubuki hit about 2200 and burning, with a great explosion seen by some afterwards; Kinugasa none; Hatsuyuki holed forward above the waterline. **No count for any ship, and no calibre.** The "up to forty" hits on Aoba and "ninety or more" on Furutaka rest on secondary sources.
 
 **Claims.** Salt Lake City claimed "at least 150" 8-inch hits from her 296 rounds, which is more than half. It is recorded as a claim; nothing in the Japanese record supports a figure of that order.

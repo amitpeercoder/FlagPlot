@@ -1195,7 +1195,7 @@
           }
         },
         "supply_by_hex": {
-          "description": "For each hex with men of the side ashore: the base that feeds them (the side's lowest-numbered there), the aircraft at it, its stock, what the aircraft and the men cost it a day, and the days it lasts at that charge (truncated to one decimal; null without a base or with no charge).",
+          "description": "For each hex with men of the side ashore: the side's lowest-numbered base there, the first that feeds them, and its other bases there (left out when none; the men are fed from every base of the side in the hex), the aircraft at those bases, their stock together, what the aircraft and the men cost a day, and the days the stock lasts at that charge (truncated to one decimal; null without a base or with no charge).",
           "type": "array",
           "items": {
             "type": "object",
@@ -1205,6 +1205,7 @@
               "place": { "$ref": "defs.schema.json#/$defs/place" },
               "men_ashore": { "type": "integer" },
               "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "other_bases": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/handle" } },
               "aircraft": { "type": "integer" },
               "supply_t": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
               "daily_charge_t": { "$ref": "defs.schema.json#/$defs/dec" },

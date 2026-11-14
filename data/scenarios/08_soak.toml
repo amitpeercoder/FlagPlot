@@ -30,7 +30,9 @@
 #      engine rejects or does not deliver.
 #
 # Facts about the engine that this file works around and does not hide:
-#   - Ships cannot take on fuel, in port or at sea. A ship's fuel only falls.
+#   - No ship takes on fuel here. Refuelling in port is built (decision 0045),
+#     but no base of this scenario is given fuel_t, so there is nothing to
+#     take, and there is no refuelling at sea. A ship's fuel only falls.
 #     Every shuttle ship, then, is good for a number of cycles and no more,
 #     and the escort of convoy 5 runs dry first. Convoys are listed from the
 #     start in numbers that cover the whole run.

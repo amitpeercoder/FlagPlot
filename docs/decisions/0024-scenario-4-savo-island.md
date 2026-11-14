@@ -1,3 +1,6 @@
+# 0024, notes: The Savo Island scenario's later changes
+
+Status: the notes of the scenario's later changes, ruled on Nov 13, 2026 (each note says by whom). They belong to decision 0024, `docs/decisions/0024-savo-island-scenario.md`, which says what is in the scenario and what is left out and is not rewritten; where a note differs from it, the note is later. The scenario now has four forces (Yunagi is a force of her own) and break-off levels read from the record, not the one column and the half-ships level that 0024 describes.
 
 ## Note of Nov 13, 2026: the break-off levels, read from the record
 

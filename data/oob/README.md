@@ -29,6 +29,16 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - An outside model's research answers of 13 November 2026, checked against the sources they cite (what was verified, what the sources really say, and the rate of misattribution): `docs/research/oob/outside-research-nov-13.md`
 - An outside research pass of 14 November 2026 (transports, land units, construction and shore work, marches and place positions, preparation of the landing, verdicts, submarine damage), checked against the sources it cites, with the new attributes of `land_unit_facts.csv` and `ship_facts.csv`, the rows' ids, and each Guadalcanal place's map hex: `docs/research/oob/outside-research-nov-14.md`
 - The US side of the air campaign (losses and credits by month from the Navy's statistics, daily dispatches, claims against losses both ways): `docs/research/oob/us-side-air-losses.md`
+- Notes of 10 November 2026 (research notes that propose nothing binding; most statements carry their source, and the pages that would not load are marked "unverified"):
+  - Shipboard anti-aircraft fire in the South Pacific, August 1942 to February 1943 (US and Japanese guns, directors, what each carrier's fire did at Eastern Solomons): `docs/research/oob/anti-aircraft.md`
+  - Damage control, August 1942 to February 1943 (what sank or saved the ships, from the Bureau of Ships damage reports and the combat narratives): `docs/research/oob/damage-control.md`
+  - Surface gunnery fire control, 1942 to 1943 (night doctrine, optics, computers and director control): `docs/research/oob/gunnery-fire-control.md`
+  - Radar in the Solomons, 1942 to 1943 (the US search and fire-control sets, and what is known of Japanese shipboard radar): `docs/research/oob/radar.md`
+  - Sonar and anti-submarine detection, 1942 to 1943 (the sets, depth charges and ahead-thrown weapons): `docs/research/oob/sonar.md`
+  - Torpedoes and their reliability, 1942 to 1943 (the US Mark 14 faults and the Japanese torpedoes): `docs/research/oob/torpedoes.md`
+- Savo Island, four proposed choices for scenario 4c (the research behind decision 0019, kept for the reasoning; where the two differ the decision stands): `docs/research/oob/savo-island-choices.md`
+- Air-group experience values, a proposal of 13 November 2026 (ruled that the values wait; no value is in any data file): `docs/research/oob/air-group-experience-proposal.md`
+- The record on the objectives scale (a fact sheet of 13 November 2026: each ship, ground unit and base in the scenarios in the scale's terms; it proposes no points or levels): `docs/research/oob/history-on-the-scale.md`
 
 The simulation does not read these files. `data/reference/` is what it loads.
 
@@ -43,49 +53,60 @@ The simulation does not read these files. `data/reference/` is what it loads.
 - Quantities are whole numbers or decimal strings in the unit `attributes.csv` gives. The source's own figure is kept in `as_stated`.
 - Nothing comes from any wargame.
 
-## Status after several passes, read on 2026-11-10
+## Status after several passes, counted on 2026-11-14
 
-Scope: what test scenarios 4 to 6 need. The ships at Savo Island (8 to 9 August 1942) and Eastern Solomons (24 to 25 August 1942), their classes, the aircraft flown from the carriers, Henderson Field and Rabaul in August and September 1942, and the weapons and sensors they carried. The second pass covered Savo Island only. The third re-read, in a browser, two official sites that refuse automated fetches.
+Counted on 2026-11-14 (it was first written on 2026-11-10; the counts are new, the prose below the tables is of that date and was not re-read). Rows were counted with a CSV-aware script (Python's `csv` module, so a field that holds a newline is one row), leaving out each file's leading `#` comment lines and its header line. A `wc -l` count is higher by those lines and by any newline inside a field.
+
+Scope when first written: what test scenarios 4 to 6 need. The ships at Savo Island (8 to 9 August 1942) and Eastern Solomons (24 to 25 August 1942), their classes, the aircraft flown from the carriers, Henderson Field and Rabaul in August and September 1942, and the weapons and sensors they carried. The second pass covered Savo Island only. The third re-read, in a browser, two official sites that refuse automated fetches. Later passes added Cape Esperance, the air campaign, the land forces, passages, training and troop lift (see the index above).
 
 | File | Rows | Holds |
 | --- | --- | --- |
-| `ships.csv`, `ship_facts.csv` | 122, 612 | 53 US, 66 Japanese and 3 Australian ships with build dates and fates |
-| `ship_classes.csv`, `ship_class_facts.csv` | 44, 975 | Dimensions, speed, fuel, endurance, armour |
-| `aircraft_types.csv`, `aircraft_type_facts.csv` | 20, 492 | Performance and weights |
-| `weapons.csv`, `weapon_facts.csv` | 62, 432 | Guns, torpedoes, bombs, depth charges |
+| `ships.csv`, `ship_facts.csv` | 170, 1,422 | 82 US, 85 Japanese and 3 Australian ships with build dates and fates |
+| `ship_classes.csv`, `ship_class_facts.csv` | 63, 1,441 | Dimensions, speed, fuel, endurance, armour |
+| `aircraft_types.csv`, `aircraft_type_facts.csv` | 23, 556 | Performance and weights |
+| `weapons.csv`, `weapon_facts.csv` | 71, 481 | Guns, torpedoes, bombs, depth charges |
 | `sensors.csv`, `sensor_facts.csv` | 29, 103 | Radar, sonar, and Japanese rangefinders, binoculars and searchlights |
-| `air_units.csv`, `air_unit_facts.csv` | 50, 265 | Equipment, base and strength by date |
-| `fits.csv` | 617 | Armament by class, radar by ship, aircraft guns and loads |
-| `engagement_forces.csv` | 278 | Who was present at the two battles, by formation |
-| `engagement_events.csv` | 265 | Both battles: sightings, reports, readiness, strikes, by time |
-| `engagement_positions.csv` | 429 | Both battles: stations, tracks, reported positions, sinkings |
-| `engagement_outcomes.csv` | 440 | Both battles: hits, losses, ammunition, aircraft |
-| `place_positions.csv` | 47 | Latitude and longitude of the slice's bases and landmarks, by feature. **Not yet checked by `oob-check`** |
-| `sources.csv` | 66 | Every source cited |
-| `gaps.csv` | 511 | What was not found |
+| `air_units.csv`, `air_unit_facts.csv` | 59, 450 | Equipment, base and strength by date |
+| `fits.csv` | 863 | Armament by class, radar by ship, aircraft guns and loads |
+| `engagement_forces.csv` | 375 | Who was present at the battles, by formation |
+| `engagement_events.csv` | 1,300 | The engagements: sightings, reports, readiness, strikes, by time |
+| `engagement_positions.csv` | 548 | The engagements: stations, tracks, reported positions, sinkings |
+| `engagement_outcomes.csv` | 4,055 | The engagements: hits, losses, ammunition, aircraft |
+| `place_positions.csv` | 61 | Latitude and longitude of the slice's bases and landmarks, by feature. **Not yet checked by `oob-check`** |
+| `land_units.csv`, `land_unit_facts.csv` | 96, 915 | Land units on Guadalcanal and Tulagi, strengths, landings, estimates, rations |
+| `lift_entities.csv`, `troop_lift_facts.csv` | 75, 169 | What men were carried by sea: ships, groups and runs, capacities and loads |
+| `passages.csv` | 186 | Recorded ship passages |
+| `aircrew_fates.csv` | 118 | Named airmen lost and what became of them |
+| `training_facts.csv` | 105 | Training and experience by navy and period |
+| `place_facts.csv`, `places.csv` | 201, 54 | Facts about bases; names of places |
+| `engagements.csv`, `attributes.csv` | 11, 140 | The named battles; the vocabulary of the facts layer |
+| `sources.csv` | 245 | Every source cited |
+| `gaps.csv` | 1,268 | What was not found |
 
-Every row has a source and a locator. About 30 values from the first pass and about 15 from the second were re-read against the cited pages. One error was found and corrected: a website's displacement figures had been converted as metric tonnes when they are long tons.
+Every row has a source and a locator (`sources.csv`, `gaps.csv` and the identity files, which hold no facts, excepted). About 30 values from the first pass and about 15 from the second were re-read against the cited pages. One error was found and corrected: a website's displacement figures had been converted as metric tonnes when they are long tons.
 
 ### How firm it is
 
+The two tables count the 13,349 rows of the 18 files that carry a `confidence` column (the fact files, `fits.csv`, the four engagement files with `engagements.csv` left out, `aircrew_fates.csv`, `passages.csv` and `place_positions.csv`). Shares are rounded.
+
 | Confidence | Rows | Share |
 | --- | --- | --- |
-| high | 1,042 | 21% |
-| medium | 2,364 | 48% |
-| low | 1,549 | 31% |
+| high | 2,929 | 22% |
+| medium | 6,666 | 50% |
+| low | 3,754 | 28% |
 
 | Standing | Rows | Share |
 | --- | --- | --- |
-| preferred | 2,745 | 55% |
-| unconfirmed | 827 | 17% |
-| disputed | 1,266 | 26% |
-| alternative | 117 | 2% |
+| preferred | 5,639 | 42% |
+| unconfirmed | 5,558 | 42% |
+| disputed | 1,779 | 13% |
+| alternative | 373 | 3% |
 
 Where the rows come from matters more than the count:
 
-- **Wikipedia is still the largest single source: 856 rows, 17%.** All are `low` confidence and none is `preferred` on its own.
-- **The Naval War College analysis of Savo Island (1950) is second: 465 rows.** The second pass found a complete scan. It was read through machine-read text, which misreads some digits. Rows with a doubtful digit say so and are graded down. Its diagrams were not read.
-- **Websites carry most of the class and weapon data:** combinedfleet.com (401), navweaps.com (383), the Nishida class pages (285), uboat.net (224) and navypedia.org (76). Nishida and Navypedia give no sources.
+- **Wikipedia is still the largest single source: 1,411 rows, 11% of the 13,349.** All are `low` confidence; 238 of them stand `preferred`, which this pass did not check against the rule above.
+- **The Naval War College analysis of Savo Island (1950) is second: 986 rows.** The second pass found a complete scan. It was read through machine-read text, which misreads some digits. Rows with a doubtful digit say so and are graded down. Its diagrams were not read.
+- **Websites carry most of the class and weapon data:** combinedfleet.com (868), navypedia.org (531), navweaps.com (485), the Nishida class pages (319) and uboat.net (235). Nishida and Navypedia give no sources.
 - **Two official sites load in a browser and not otherwise.** The US Navy's online ship histories and the Australian Navy's unit histories were read that way for the Savo Island ships (30 rows). They gave firm dates, casualties and Chicago's radar, and nothing on the radar of the six ships still missing. Most ship histories in the data still come from a mirror of the older printed entries. NavSource refuses the browser too.
 - **No book was in hand.** Lundstrom, Frank, Loxton, Friedman, Campbell, and Lacroix and Wells would settle most of the disputes.
 
@@ -114,5 +135,5 @@ Where the rows come from matters more than the count:
 - **Actors in engagement rows are free text** where they are not a ship: a formation, an aircraft, a commander. They are not checked.
 - **A class row cannot say which ships it covers.** Where sisters differ (the 8-inch gun in the New Orleans class, the rebuilt and unrebuilt Takao class), the difference is carried by ship rows.
 - **Fact row ids** are assigned at first write and never change. Files are sorted by entity, so new rows do not sit at the end.
-- **The checks were run with a throwaway script** that is not in the repo. They need a permanent home in `sim-data` before the next data pass.
-- **`place_positions.csv` is not validated.** `oob-check` does not know the file yet. Its references and number forms were checked by hand once.
+- **The checks have a permanent home:** `crates/oob-check` (run as `cargo run -p oob-check -- data/oob`, and by `cargo test`). The throwaway script of 2026-11-10 is gone.
+- **`place_positions.csv`, `place_facts.csv` and `aircrew_fates.csv` are not checked by `oob-check`.** Its source (`crates/oob-check/src`) names none of the three; the index above says the same of `place_positions.csv` and `aircrew_fates.csv`. The references and number forms of `place_positions.csv` were checked by hand once.
