@@ -89,6 +89,14 @@ impl Default for MadeIds {
 }
 
 /// Switches that change what is recorded, never what happens.
+/// The label of the rules a game is played under (decision 0100, 8). A
+/// saved game records it with the version of the state's layout, and a
+/// replay under other rules is refused before it runs. It began at 1 with
+/// decision 0100. A pull request raises it by one when it changes a rule in
+/// a way that changes what an existing game would do; a change that leaves
+/// every existing game as it was leaves it alone.
+pub const RULES_VERSION: u32 = 1;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
     /// Record the factors behind each computed quantity. Batch validation can
