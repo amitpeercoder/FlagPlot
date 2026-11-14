@@ -97,21 +97,23 @@
 //! is filled first: 30 t, its room, in 1.5 hours. Ship 4 takes the other 20
 //! t in 1 hour. Base 2 holds 50 t. The load is complete.
 //!
-//! Ships 5 and 6 are formed into a force. It is the side's next force,
-//! force 4: stopped at base 2, with no mission, at cruise speed, with base
-//! 2 as its home port.
+//! Ships 5 and 6 are formed into a force. It takes the first number of the
+//! side's made series (decision 0086), and the side sees it as its next
+//! force: stopped at base 2, with no mission, at cruise speed, with base 2
+//! as its home port.
 //!
-//! Day 2. Force 3 is joined to force 4. Force 4 has ships 3, 4, 5 and 6,
-//! with the 30 t and 20 t aboard ships 3 and 4. Force 3 has ceased to be,
-//! and an order to it is refused.
+//! Day 2. Force 3 is joined to the formed force. The formed force has
+//! ships 3, 4, 5 and 6, with the 30 t and 20 t aboard ships 3 and 4. Force
+//! 3 has ceased to be, and an order to it is refused.
 //!
-//! Day 3. Force 4 loads up to 60 t. It has 50 t aboard and wants 10 more.
-//! Its ships are taken in ship order: ship 3 is full; ship 4 has room for
-//! 10 and takes them, in half an hour. Ships 5 and 6 take nothing. Base 2
-//! holds 40 t.
+//! Day 3. The formed force loads up to 60 t. It has 50 t aboard and wants
+//! 10 more. Its ships are taken in ship order: ship 3 is full; ship 4 has
+//! room for 10 and takes them, in half an hour. Ships 5 and 6 take nothing.
+//! Base 2 holds 40 t.
 //!
-//! Day 4. Force 4 is stood down. Ships 3, 4, 5 and 6 lie in port at base 2
-//! in no force, with 30, 30, 0 and 0 t aboard. Force 4 has ceased to be.
+//! Day 4. The formed force is stood down. Ships 3, 4, 5 and 6 lie in port
+//! at base 2 in no force, with 30, 30, 0 and 0 t aboard. The formed force
+//! has ceased to be.
 //!
 //! # Properties
 //!
