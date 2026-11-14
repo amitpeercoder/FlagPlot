@@ -136,3 +136,50 @@ pub fn edit_file_by(dir: &Path, name: &str, edits: &[(&str, &str)]) {
         })
     });
 }
+
+/// The file of pinned hashes, `tests/golden/pinned_hashes.txt`: one
+/// `name hexhash` line each. `sh scripts/regenerate.sh` writes it; it is not
+/// edited by hand.
+fn pinned_hashes_path() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("golden/pinned_hashes.txt")
+}
+
+/// The hash pinned under `name`. With `FLAGPILOT_UPDATE_GOLDEN` set it writes
+/// `computed` into the file under that name and returns it, so the caller's
+/// assertion holds; otherwise it reads the file.
+pub fn pinned_hash(name: &str, computed: u64) -> u64 {
+    let path = pinned_hashes_path();
+    let text = fs::read_to_string(&path).unwrap_or_default();
+    if std::env::var("FLAGPILOT_UPDATE_GOLDEN").is_ok() {
+        let line = format!("{name} {computed:016x}");
+        let mut found = false;
+        let mut out = String::new();
+        for old in text.lines() {
+            if old.split_whitespace().next() == Some(name) {
+                out.push_str(&line);
+                found = true;
+            } else {
+                out.push_str(old);
+            }
+            out.push('\n');
+        }
+        if !found {
+            out.push_str(&line);
+            out.push('\n');
+        }
+        if out != text {
+            fs::write(&path, out).expect("the pinned hashes write");
+        }
+        return computed;
+    }
+    text.lines()
+        .filter(|line| !line.starts_with('#'))
+        .find_map(|line| {
+            let mut words = line.split_whitespace();
+            (words.next() == Some(name)).then(|| words.next().unwrap_or_default())
+        })
+        .and_then(|hex| u64::from_str_radix(hex, 16).ok())
+        .unwrap_or_else(|| {
+            panic!("no pinned hash {name} in tests/golden/pinned_hashes.txt; run with FLAGPILOT_UPDATE_GOLDEN=1")
+        })
+}

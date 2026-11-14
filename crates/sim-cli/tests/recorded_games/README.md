@@ -24,7 +24,9 @@ transcript and save equal these files byte for byte, and that `replay` of
 `save.json` succeeds. A directory needs no registration: dropping the files in
 is enough. A change to the engine that alters a result makes the test fail,
 rightly; the game is then played again or the record marked as of an older
-engine. The model's play is not judged here, only that it repeats.
+engine. `sh scripts/regenerate.sh` plays every game again (`regame.py`) with the other
+generated files and says whether a transcript or only a save changed; the
+"Regenerated after ..." paragraph below is written by hand. The model's play is not judged here, only that it repeats.
 
 To put a recorded game on the viewer's map: `cargo run --release -p sim-cli -- export crates/sim-cli/tests/recorded_games/NAME/save.json --out /tmp/NAME.json`, then open `viewer/index.html` and pick the file. The replay is the umpire's view, truth and all.
 
