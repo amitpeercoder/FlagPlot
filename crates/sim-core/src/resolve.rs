@@ -977,6 +977,36 @@ impl World {
                     // records the event and notes its number in the trip.
                     return vec![self.send_force_to_yard(*target, order.day_issued)];
                 }
+                // Turning back is decided on the state the order found
+                // (decision 0100, 1), before the order changes anything.
+                let reroute = if let TaskForceOrder::SetRoute { waypoints, .. } = task_force_order {
+                    let force = &self.truth.task_forces[target];
+                    let first_waypoint = waypoints.first().copied();
+                    let answer = force.reroute_centre(&self.map, first_waypoint);
+                    self.trace_choice(force.side, || {
+                        (
+                            crate::choices::Question::Movement(
+                                crate::choices::movement::MovementQuestion::Reroute {
+                                    force: *target,
+                                    first_waypoint,
+                                },
+                            ),
+                            crate::choices::Answer::Movement(
+                                crate::choices::movement::MovementAnswer::Reroute(answer.map(
+                                    |(turns_back, steers_from)| {
+                                        crate::choices::movement::Rerouted {
+                                            turns_back,
+                                            steers_from,
+                                        }
+                                    },
+                                )),
+                            ),
+                        )
+                    });
+                    Some(answer)
+                } else {
+                    None
+                };
                 let task_force = self
                     .truth
                     .task_forces
@@ -985,10 +1015,8 @@ impl World {
                 let mut follow_up = None;
                 match task_force_order {
                     TaskForceOrder::SetRoute { waypoints, act_at } => {
-                        // Turning back is decided on the state the order
-                        // found, and the leg is then finished by movement.
-                        let (turns_back, _) = task_force
-                            .reroute_centre(&self.map, waypoints.first().copied())
+                        let (turns_back, _) = reroute
+                            .flatten()
                             .expect("order was validated: the first waypoint is reachable");
                         if turns_back {
                             task_force.turn_back();

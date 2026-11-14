@@ -510,3 +510,339 @@ fn a_halted_force_at_knots_that_arrive_by_day_waits_for_night() {
     assert_eq!(steamings_on(&world), 1);
     assert_eq!(status(&world), TaskForceStatus::Underway);
 }
+
+// ---- The choices of the passage as questions (decision 0100) ----
+//
+// Each question is answered by the engine's own function, and a side asks it
+// from its view. The hand cases below reason the answer from the world of the
+// module notes; the leak test changes only what the side cannot see; the
+// agreement tests run the engine with the trace on and set its answer beside
+// the view's.
+
+use crate::choices::movement::{MovementAnswer, MovementQuestion, Rerouted};
+use crate::choices::{Answer, Moment, Question};
+use crate::ids::OrderId;
+use crate::orders::CargoAction;
+use crate::state::CargoOrder;
+
+fn ask(world: &World, side: Side, question: MovementQuestion) -> Option<MovementAnswer> {
+    match world.side_view(side).ask(&Question::Movement(question))? {
+        Answer::Movement(answer) => Some(answer),
+        other => panic!("not a movement answer: {other:?}"),
+    }
+}
+
+/// The traced movement choices, as `(question, answer)` pairs.
+fn traced(world: &mut World) -> Vec<(MovementQuestion, MovementAnswer)> {
+    world
+        .take_choice_trace()
+        .into_iter()
+        .filter_map(|choice| match (choice.question, choice.answer) {
+            (Question::Movement(q), Answer::Movement(a)) => Some((q, a)),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn the_force_would_halt_at_the_marked_waypoint_where_it_has_work() {
+    // Marked at (0,0), on the bombardment mission, with the Allied base 1 on
+    // the map in that hex and a cruiser with 800 rounds: it halts at index 0.
+    let world = world();
+    assert_eq!(
+        ask(
+            &world,
+            Side::Japanese,
+            MovementQuestion::Halt { force: force() }
+        ),
+        Some(MovementAnswer::Halt(Some(0)))
+    );
+    // The last waypoint is never marked, so a mark there is no halt.
+    let world = world_marked(&[OUT]);
+    assert_eq!(
+        ask(
+            &world,
+            Side::Japanese,
+            MovementQuestion::Halt { force: force() }
+        ),
+        Some(MovementAnswer::Halt(None))
+    );
+    // Not marked at all: no halt.
+    let world = world_marked(&[]);
+    assert_eq!(
+        ask(
+            &world,
+            Side::Japanese,
+            MovementQuestion::Halt { force: force() }
+        ),
+        Some(MovementAnswer::Halt(None))
+    );
+}
+
+#[test]
+fn an_enemy_base_off_the_map_gives_no_bombardment_work() {
+    // A base formed by a landing is not on the map (decision 0066, 12): the
+    // bombardment rule does not see it, and neither does the view.
+    let mut world = world();
+    world
+        .truth
+        .bases
+        .get_mut(&BaseId::new(1))
+        .expect("base 1")
+        .on_map = false;
+    assert_eq!(
+        ask(
+            &world,
+            Side::Japanese,
+            MovementQuestion::Halt { force: force() }
+        ),
+        Some(MovementAnswer::Halt(None))
+    );
+}
+
+#[test]
+fn a_force_with_cargo_to_load_at_its_own_base_would_halt_there() {
+    // No bombardment mission, but a load order, the Japanese base 2 at (0,0)
+    // with 500 t and a ship with room for 100 t: cargo work, so it halts.
+    let mut world = world();
+    world
+        .ref_data
+        .ship_classes
+        .get_mut(&ShipClassId::new(1))
+        .expect("class")
+        .cargo_capacity_t = n(100);
+    world.truth.bases.insert(
+        BaseId::new(2),
+        Base {
+            supply_t: n(500),
+            ..Base::new(BaseId::new(2), "Base 2".to_string(), Side::Japanese, AT)
+        },
+    );
+    let task_force = world.truth.task_forces.get_mut(&force()).expect("force");
+    task_force.mission = Mission::SurfaceCombat;
+    task_force.cargo_order = Some(CargoOrder {
+        action: CargoAction::Load,
+        order: OrderId::new(1),
+        unit: None,
+    });
+    assert_eq!(
+        ask(
+            &world,
+            Side::Japanese,
+            MovementQuestion::Halt { force: force() }
+        ),
+        Some(MovementAnswer::Halt(Some(0)))
+    );
+    // With the base empty there is nothing to load: no work, no halt.
+    world
+        .truth
+        .bases
+        .get_mut(&BaseId::new(2))
+        .expect("base 2")
+        .supply_t = Fixed::ZERO;
+    assert_eq!(
+        ask(
+            &world,
+            Side::Japanese,
+            MovementQuestion::Halt { force: force() }
+        ),
+        Some(MovementAnswer::Halt(None))
+    );
+}
+
+#[test]
+fn a_halted_force_steams_on_once_it_has_bombarded() {
+    // Halted for a bombardment: it stays until it has fired, then goes on.
+    let mut world = world();
+    movement(&mut world, 1, Pulse::Night);
+    assert_eq!(status(&world), TaskForceStatus::Halted);
+    let steam = MovementQuestion::SteamOn { force: force() };
+    assert_eq!(
+        ask(&world, Side::Japanese, steam.clone()),
+        Some(MovementAnswer::SteamOn(false)),
+        "it has not fired yet"
+    );
+    world.run_pulse_phase(1, Pulse::Night, PulsePhase::ShoreBombardment);
+    assert_eq!(
+        ask(&world, Side::Japanese, steam.clone()),
+        Some(MovementAnswer::SteamOn(true)),
+        "it has fired"
+    );
+    // The question is for a halted force only, and only the side's own.
+    assert_eq!(ask(&world, Side::Allied, steam), None);
+    let world = self::world();
+    assert_eq!(
+        ask(
+            &world,
+            Side::Japanese,
+            MovementQuestion::SteamOn { force: force() }
+        ),
+        None,
+        "a force that is under way has not halted"
+    );
+}
+
+#[test]
+fn a_new_route_turns_a_force_back_when_that_is_the_shorter_trip() {
+    // Between (4,0) and (3,0), 10 of 40 nm out from (4,0): to a waypoint at
+    // (5,0) the trip back is 10 nm and one hex, the trip ahead 30 nm and two
+    // hexes, so it turns back and steers from (4,0). With no waypoint it goes
+    // on to (3,0).
+    let mut world = world();
+    let task_force = world.truth.task_forces.get_mut(&force()).expect("force");
+    task_force.from_hex = OUT;
+    task_force.toward_hex = Some(Hex::new(3, 0));
+    task_force.leg_nm = n(40);
+    task_force.progress_nm = n(10);
+    assert_eq!(
+        ask(
+            &world,
+            Side::Japanese,
+            MovementQuestion::Reroute {
+                force: force(),
+                first_waypoint: Some(Hex::new(5, 0)),
+            }
+        ),
+        Some(MovementAnswer::Reroute(Some(Rerouted {
+            turns_back: true,
+            steers_from: OUT,
+        })))
+    );
+    assert_eq!(
+        ask(
+            &world,
+            Side::Japanese,
+            MovementQuestion::Reroute {
+                force: force(),
+                first_waypoint: None,
+            }
+        ),
+        Some(MovementAnswer::Reroute(Some(Rerouted {
+            turns_back: false,
+            steers_from: Hex::new(3, 0),
+        })))
+    );
+}
+
+#[test]
+fn the_view_gives_the_engines_answers_to_halt_steam_on_and_reroute() {
+    // Halt: asked before the movement phase, the answer is the one the engine
+    // acted on at its start. Steam on: the same at the next pulse's movement.
+    let mut world = world();
+    world.trace_choices(true);
+    world.pass_moment(Moment::DayBegins { day: 1 });
+    let halt_q = MovementQuestion::Halt { force: force() };
+    let before = ask(&world, Side::Japanese, halt_q.clone()).expect("an answer");
+    whole_pulse(&mut world, 1, Pulse::Night);
+    let first = traced(&mut world);
+    assert_eq!(first.first(), Some(&(halt_q.clone(), before)));
+    let steam_q = MovementQuestion::SteamOn { force: force() };
+    let before = ask(&world, Side::Japanese, steam_q.clone()).expect("an answer");
+    movement(&mut world, 1, Pulse::Morning);
+    let second = traced(&mut world);
+    assert!(
+        second.contains(&(steam_q, before)),
+        "the engine's steam-on answer is the view's: {second:?}"
+    );
+
+    // Reroute: a route order taken in turns the force back, and the traced
+    // answer is the view's answer to the same question.
+    let mut world = self::world();
+    let task_force = world.truth.task_forces.get_mut(&force()).expect("force");
+    task_force.from_hex = OUT;
+    task_force.toward_hex = Some(Hex::new(3, 0));
+    task_force.leg_nm = n(40);
+    task_force.progress_nm = n(10);
+    world.trace_choices(true);
+    world.pass_moment(Moment::Orders { day: 1 });
+    let reroute_q = MovementQuestion::Reroute {
+        force: force(),
+        first_waypoint: Some(Hex::new(5, 0)),
+    };
+    let before = ask(&world, Side::Japanese, reroute_q.clone()).expect("an answer");
+    world.take_in_order(
+        1,
+        None,
+        Side::Japanese,
+        request(TaskForceOrder::route(vec![Hex::new(5, 0)])),
+        Vec::new(),
+    );
+    assert_eq!(traced(&mut world), vec![(reroute_q, before)]);
+}
+
+/// The questions of every kind a side could ask, with their answers.
+fn all_answers(world: &World, side: Side) -> Vec<(Question, Option<Answer>)> {
+    let view = world.side_view(side);
+    view.questions()
+        .into_iter()
+        .map(|question| {
+            let answer = view.ask(&question);
+            (question, answer)
+        })
+        .collect()
+}
+
+#[test]
+fn what_the_side_cannot_see_changes_no_answer() {
+    // Two worlds that differ only in what the Japanese cannot see: the Allied
+    // base's stores, an Allied ship and force, and an Allied base off the
+    // map (which the Japanese do not see, and which the bombardment rule does
+    // not read). Every question of the Japanese gets the same answer. The
+    // cargo case is added to both so the cargo test reads an own base too.
+    let build = |extra: bool| {
+        let mut world = world();
+        if extra {
+            let base = world.truth.bases.get_mut(&BaseId::new(1)).expect("base 1");
+            base.supply_t = n(7);
+            base.fuel_t = n(3);
+            world.truth.bases.insert(
+                BaseId::new(9),
+                Base {
+                    on_map: false,
+                    supply_t: n(900),
+                    ..Base::new(BaseId::new(9), "Hidden".to_string(), Side::Allied, OUT)
+                },
+            );
+            world.truth.ships.insert(
+                ShipId::new(2),
+                Ship::new(
+                    ShipId::new(2),
+                    "Ship 2".to_string(),
+                    ShipClassId::new(1),
+                    Side::Allied,
+                    ShipLocation::TaskForce(TaskForceId::new(2)),
+                ),
+            );
+            let mut allied = TaskForce::at(
+                TaskForceId::new(2),
+                "Force 2".to_string(),
+                Side::Allied,
+                OUT,
+                Mission::SurfaceCombat,
+            );
+            allied.ships.insert(ShipId::new(2));
+            world.truth.task_forces.insert(TaskForceId::new(2), allied);
+        }
+        world
+    };
+    let plain = build(false);
+    let more = build(true);
+    let answers = all_answers(&plain, Side::Japanese);
+    assert!(
+        answers
+            .iter()
+            .any(|(q, _)| matches!(q, Question::Movement(MovementQuestion::Halt { .. }))),
+        "the side has movement questions"
+    );
+    assert_eq!(answers, all_answers(&more, Side::Japanese));
+    // And after the halt, with a steam-on question in the list.
+    let (mut plain, mut more) = (build(false), build(true));
+    for world in [&mut plain, &mut more] {
+        movement(world, 1, Pulse::Night);
+    }
+    let answers = all_answers(&plain, Side::Japanese);
+    assert!(answers
+        .iter()
+        .any(|(q, _)| matches!(q, Question::Movement(MovementQuestion::SteamOn { .. }))));
+    assert_eq!(answers, all_answers(&more, Side::Japanese));
+}

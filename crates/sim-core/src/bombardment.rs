@@ -38,6 +38,7 @@ use crate::fixed::Fixed;
 use crate::ground::take_in_proportion;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, LandUnitId, ShipId, TaskForceId};
+use crate::movement::HaltGround;
 use crate::orders::Mission;
 use crate::refdata::{AirCombatFigures, BombardmentFigures};
 use crate::rng::{Draw, RngStream, Subsystem};
@@ -57,6 +58,56 @@ struct ShipFire {
     hits: u32,
     landed: BaseHits,
     breakdown: Option<Breakdown>,
+}
+
+/// The base `force` bombards in `hex` by the rule of the phase (decision
+/// 0092, 1): with the bombardment mission, a ship afloat and not away at the
+/// yard, the lowest-numbered base of the other side in `hex` that is on the
+/// force's side's map.
+///
+/// `enemy_base_at` gives that base: the lowest-numbered base of the other
+/// side on the map in a hex. Where a base is and which side holds it are the
+/// map, which every side has (decision 0034, 2); nothing else of a base is
+/// read here (decision 0100, 1).
+pub(crate) fn bombardment_target_of(
+    force: &TaskForce,
+    hex: Hex,
+    enemy_base_at: &dyn Fn(Hex) -> Option<BaseId>,
+) -> Option<BaseId> {
+    if force.mission != Mission::Bombardment || force.yard_trip.is_some() || force.ships.is_empty()
+    {
+        return None;
+    }
+    enemy_base_at(hex)
+}
+
+/// Whether `force` has a bombardment to make in `hex` (decision 0096, 2):
+/// the phase would have it bombard a base there, the figures the phase needs
+/// are loaded, and a ship of it can fire, that is, would fire a shell by the
+/// gun rule of the phase. It reads the force, its ships, the figures and the
+/// enemy bases on the map (`enemy_base_at`, see [`bombardment_target_of`]).
+pub(crate) fn has_bombardment_work(
+    ground: &HaltGround,
+    force: &TaskForce,
+    hex: Hex,
+    enemy_base_at: &dyn Fn(Hex) -> Option<BaseId>,
+) -> bool {
+    let Some(surface) = ground.ref_data.surface_combat.as_ref() else {
+        return false;
+    };
+    let Some(figures) = surface.bombardment else {
+        return false;
+    };
+    if ground.ref_data.air_combat.is_none()
+        || bombardment_target_of(force, hex, enemy_base_at).is_none()
+    {
+        return false;
+    }
+    force.ships.iter().any(|ship_id| {
+        let ship = &ground.ships[ship_id];
+        let class = &ground.ref_data.ship_classes[&ship.class];
+        gun_shots(ship, class, figures.minutes, surface, Fixed::ONE) > Fixed::ZERO
+    })
 }
 
 impl World {
@@ -198,41 +249,15 @@ impl World {
     }
 
     /// The base `force` bombards in `hex` by the rule of the phase
-    /// (decision 0092, 1): with the bombardment mission, a ship afloat and
-    /// not away at the yard, the lowest-numbered base of the other side in
-    /// `hex` that is on the force's side's map.
+    /// ([`bombardment_target_of`]), the enemy bases on its side's map read
+    /// from the world.
     fn bombardment_target(&self, force: &TaskForce, hex: Hex) -> Option<BaseId> {
-        if force.mission != Mission::Bombardment
-            || force.yard_trip.is_some()
-            || force.ships.is_empty()
-        {
-            return None;
-        }
-        self.truth
-            .bases
-            .values()
-            .find(|base| base.hex == hex && base.side != force.side && base.on_map)
-            .map(|base| base.id)
-    }
-
-    /// Whether `force` has a bombardment to make in `hex` (decision 0096,
-    /// 2): the phase would have it bombard a base there, the figures the
-    /// phase needs are loaded, and a ship of it can fire, that is, would
-    /// fire a shell by the gun rule of the phase.
-    pub(crate) fn has_bombardment_work(&self, force: &TaskForce, hex: Hex) -> bool {
-        let Some(surface) = self.ref_data.surface_combat.as_ref() else {
-            return false;
-        };
-        let Some(figures) = surface.bombardment else {
-            return false;
-        };
-        if self.ref_data.air_combat.is_none() || self.bombardment_target(force, hex).is_none() {
-            return false;
-        }
-        force.ships.iter().any(|ship_id| {
-            let ship = &self.truth.ships[ship_id];
-            let class = &self.ref_data.ship_classes[&ship.class];
-            gun_shots(ship, class, figures.minutes, surface, Fixed::ONE) > Fixed::ZERO
+        bombardment_target_of(force, hex, &|at| {
+            self.truth
+                .bases
+                .values()
+                .find(|base| base.hex == at && base.side != force.side && base.on_map)
+                .map(|base| base.id)
         })
     }
 
