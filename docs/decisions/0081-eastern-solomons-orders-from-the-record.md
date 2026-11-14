@@ -2,6 +2,10 @@
 
 Status: Decided by the architect on the designer's delegation, Nov 13, 2026. Scenario data, two measures and one new way of taking a measure; no rule changed and nothing under `crates/sim-core` changed. It comes before any air figure is tuned (`docs/step2-spec.md`, "Tuning", 8: a scenario's orders are set from rows before the first round of its battle and then left alone). It follows decisions 0031, 0063 ("As built (the scenario orders)") and 0073, and replaces their orders where it says so.
 
+Summary: The Eastern Solomons scenario's remaining orders, from the record: an air group is a launch the record has, where the rows give launches apart. The Japanese carriers' second wave, Enterprise's 17:08 attack group and Saratoga's second group are groups of their own at rest (a launch that finds nothing cannot be ordered); Enterprise's search is the afternoon's 16 SBDs and 7 TBFs to 250; VMSB-232 rests. The strike measures count the wave that took part (`aircraft_taking_part`, batch version 5). With the true first wave the bomb hits on Enterprise miss. The B5N2's radius stays 175 (C5, ruled): its exception's reason corrected; its raid's ditchings are not evidence for the fuel round (decision 0084 reverses C5 on that point). Built (Nov 13, 2026)
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 The air tuning plan of Nov 13, 2026 ran 1,000 runs of the Eastern Solomons and traced each miss to its cause. Three of the scenario's orders were not the record's, and two agreements rested on one of them:

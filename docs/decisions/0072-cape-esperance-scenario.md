@@ -2,6 +2,10 @@
 
 Status: built and run once (Nov 13, 2026); settled by the architect, to be reviewed. Drafted by the architect's team lead on Nov 13, 2026. Second stage built the same day: the ships derived and the scenario written, not run ("Built", below). Third stage the same day: the scenario moved to `data/scenarios/` and the check run once, judged 8, agree 4, at the edge 1, miss 3 ("As built (the check)", at the end). The data choices below are settled as the architect's (decision 0015 and `docs/engineering/data-rules.md`, "Who settles data") and wait for the architect's review. No rule is added or changed.
 
+Summary: The Cape Esperance scenario, planned: Task Force 64's nine ships against the bombardment group's five, the reinforcement group left out; both meet in hex (2,-5) at 23:42, the Americans at battle readiness, the Japanese not alert and not ready; class disputes settled, what is left for exceptions, decision 0070 and research; what the rules cannot show, with radar fire control flagged. Second stage: the ships derived (Laffey and the Fubuki class's tubes by the architect's exceptions, fuel read as FTP 218 full load like the other battles), the class file frozen, scenario 17 written in data/scenarios/not-run with a test of the meeting only; the Japanese break-off level 0.5, invented. No batch is run before Savo Island is tuned. Third stage: the scenario moved to data/scenarios and the check run once (1,000 runs, label check): judged 8, agree 4, at the edge 1, miss 3 (US destroyers sunk, Aoba's gun hits, the Japanese claims); nothing tuned on it
+
+Standing: Built and run once (Nov 13, 2026); settled by the architect, to be reviewed
+
 **No batch of this scenario is run or looked at before Savo Island is tuned, and it is never tuned on.** This stage ran no batch, no `validate` and no run of the scenario, and nothing below was set in answer to an outcome.
 
 ## The gap

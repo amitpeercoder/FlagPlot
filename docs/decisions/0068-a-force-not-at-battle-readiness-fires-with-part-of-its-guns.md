@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its six questions. Built; see "As built". It was built after experience (decision 0064), which changes the same file. The hand calculation was written before any code was delegated.
 
+Summary: A force not at battle readiness fires with part of its guns: one share on its gun shots for the whole of a fight, unless it was ordered to battle readiness or alerted before the pulse began. Found at Savo Island, where the Allied groups fire six times the shells they did. Built.
+
+Standing: Confirmed
+
 ## The gap
 
 At Savo Island the record has the Allied ships fire 471 shells and the Japanese 1,867 (`data/validation/savo_island.toml`, rows 10 and 7). Over 1,000 runs on the figures of Nov 12, 2026 the Allied groups fire about 2,790 a run and the Japanese about 2,170. The Allied count is six times the record. It hid behind a rate: Allied hits for each thousand shells agreed with the record while the shells and the hits were both far too many (`docs/validation/baseline-reading.md`).

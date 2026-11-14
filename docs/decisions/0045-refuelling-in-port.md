@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer chose on Nov 11, 2026 to build refuelling before the agent interface. The details are the architect's.
 
+Summary: Refuelling in port: a base has a fuel stock, and a force stopped at its own side's base at the start of a day fills up from it
+
+Standing: Confirmed
+
 ## The gap
 
 A ship's fuel only falls (decision 0006). The spec lists refuelling under logistics, and gives a base a fuel stock, and neither exists. The soak of scenario 8 showed what that means: a transport lasts about eight round trips between Espiritu Santo and Lunga Point, its escort runs dry on day 38, and a force out of fuel is finished for the rest of the game.

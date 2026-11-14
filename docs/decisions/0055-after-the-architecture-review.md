@@ -2,6 +2,10 @@
 
 Status: decisions 1 to 4 are confirmed, made by the designer on Nov 12, 2026. Decisions 5 to 9 are settled by the architect. The pillar wording at the end was accepted by the designer on Nov 12, 2026 and is made in `docs/pillars.md`.
 
+Summary: After the architecture review: the day is the smallest command cycle, saved games need not survive rule changes, own units are known exactly; a player's own count of orders, the local commander as issuer, a rule tag on random keys, every state field named beside the hash
+
+Standing: Confirmed (1 to 4 and the pillar wording); settled (5 to 9)
+
 ## The review
 
 On Nov 12, 2026 the architecture was reviewed against a target wider than the slice: a grand strategic game, played by a person or an AI agent, against the engine or against another person or agent, with an economy, command and control, and storytelling. The designer set that target as a long-term direction, not the next milestone. So the question was what the code makes expensive later, not what is missing now.

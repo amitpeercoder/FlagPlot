@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the change on Nov 12, 2026. It amends decision 0047, item 10, and decision 0056.
 
+Summary: A claim's breakdown is the umpire's: a side sees its claim whole and no breakdown of it, because the breakdown says how much of the claim is real
+
+Standing: Confirmed
+
 ## The gap
 
 A side learns of its own attacks only as claims, and a claim can be wrong (decision 0056). But a side was shown the claim's breakdown, and the breakdown says how much of the claim is real.

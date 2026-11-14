@@ -2,6 +2,10 @@
 
 Status: settled by the architect. It adds no rule and changes no state, hash, event or random draw, and nothing a player sees. The batch file is the umpire's.
 
+Summary: What `batch` records for each run: counts from the event log and end state for every step 2 measure, header tables, batch file version 2 (version 3, with the shots of each ship, in 0068's change; version 4, with who sighted first in each surface fight and the rounds each force was surprised, Nov 13, 2026; version 5, with the wave that took part, decision 0081); no rule, no state
+
+Standing: Settled
+
 ## The gap
 
 Step 2 judges a measure over runs: the record must lie inside the middle 90 percent of 1,000 runs and hold at least 1 run in 20 (`docs/step2-spec.md`, "What counts as agreement"). So every count a measure reads must be there for each run, not summed over them. Until now `batch` recorded ships sunk, the result and the final hash for each run, and the spec's "The harness" says it is to record more: "aircraft lost by side and cause, hits by ship, sorties flown, supply used, and the round a force broke off". `sim-cli validate` will read that file and the measures under `data/validation/`. This decision says what is recorded and from which events, so that every measure that a run can serve is served.

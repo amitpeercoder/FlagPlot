@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its four questions. Stage 1 (ships) is built; see "As built (stage 1)". Stage 2 (air groups) is not. The hand calculation is written before any code is delegated, and this record gains an "As built" section with each stage.
 
+Summary: Experience: a value from 0 to 4 for a ship and an air group, derived from fact rows by yes or no questions and fixed before tuning; ships first, read at night by the hit and sighting chances; air groups second. Stage 1 (ships) built. Nov 13, 2026: stage 2 (air groups) waits; the facts are too thin, and no air group carries a value until research closes the gaps
+
+Standing: Confirmed
+
 ## The gap
 
 At Savo Island both sides fire by the same rules, and only their ships' figures differ. In the baseline the Japanese guns score 24 to 51 hits for each thousand shells where the record has 81 to 117, and the Allied guns are about right (`docs/validation/baseline-reading.md`). No cruiser is sunk in 681 runs of 1,000; the night cost four. What is missing is that one navy had trained to fight at night and most of the ships it met had not. If that is not a rule, tuning bends the gun and torpedo figures to do its work, and Cape Esperance then fails for a reason no figure can mend.

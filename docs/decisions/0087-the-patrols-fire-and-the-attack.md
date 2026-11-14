@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). The hand calculation's cases were worked and checked by the architect before any code; its two choices (the guns' condition after the patrol's fire before the attack, and the patrol's after-roll before the guns' in step 4a) were ruled as written. Built on Nov 13, 2026; see "As built".
 
+Summary: The patrol's fire and the attack: a share of the patrol's shots at the bombers (`patrol_before_attack_share`, 1 frozen, 0.4 live, a placeholder inside the supported 0.22 to 0.61 of Simpler's study, rows 3979 to 3981) is worked before the attack and the rest after it, by 0079's split; the after-roll is the `AirFight` with `after_attack`, in step 4a before the guns'. No figure for fighters that never engage (inside `fighter_hit_chance`).
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 The patrol fires at a raid's bombers before they attack, and every bomber it shoots down drops nothing (decisions 0027 and 0033; decision 0079 left the patrol so: "The fighters met the strike before it dived (ev 218, 219), so the patrol's hits stay before the attack").

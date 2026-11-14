@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as stage 4a2 of scenario 4. Every figure is a placeholder. It replaces the system damage track of decision 0014.
 
+Summary: Damage to named systems in three states, and a standing instruction for stragglers. Replaces the system track of 0014. Placeholder figures
+
+Standing: Confirmed
+
 ## The gap
 
 Decision 0014 gave a ship three damage tracks. Its "system" track was one lump: a hit could not knock out fire control and leave the guns working, or stop the engines and leave everything else. Nothing slowed a damaged ship, and a force had no way to shed one.

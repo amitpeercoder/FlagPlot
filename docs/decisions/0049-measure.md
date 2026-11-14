@@ -2,6 +2,10 @@
 
 Status: confirmed by the architect, within the plan for the agent interface the designer approved on Nov 11, 2026.
 
+Summary: Measuring: air distance, sea route, a force's passage with time and fuel, and an air group's reach, each by the engine's own function
+
+Standing: Confirmed
+
 ## The gap
 
 The spec asks for geometry as tools: range, path, travel time and air coverage, because a model reasons poorly over raw hex coordinates. So does a person. The rules for each already exist inside the engine, and a player has no way to ask them a question before giving an order. Decision 0040 added that whatever measures an air distance must use the game's own function.

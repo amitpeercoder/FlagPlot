@@ -2,6 +2,10 @@
 
 Status: confirmed by the architect, within the plan for the agent interface the designer approved on Nov 11, 2026. He chose there that scenario 9 is tested by a recorded game and a scripted client, not by a live model in the test run, and that the model plays scenario 5 and also five days of the full slice.
 
+Summary: The MCP server and scenario 9: `sim-cli mcp`, `sim-cli play`, a game as a file of requests, and a model's two recorded games
+
+Standing: Confirmed
+
 ## The gap
 
 A side can be played through `sim-cli serve` (decision 0050), in a protocol of our own. The spec asks for an MCP server, so that any model that speaks that protocol can play without glue written for it, and for scenario 9: a model plays the Allied side of scenario 5 through the MCP server from start to finish with no human help, and the saved game replays to the same hashes.

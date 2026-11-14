@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026. The designer answered its three questions on Nov 14, 2026: a share of the field flies (decision 4), nothing mends itself (decision 9), and landing on a badly damaged field is refused (decision 5, his choice against the architect's proposal). Confirmed. Built on Nov 14, 2026 ("As built" at the end). Every figure is a placeholder.
 
+Summary: An airfield damaged and mended: a hit on a base can land on its airfield; a damaged field flies a share of its aircraft, none at 100; working units mend it as work on the airfield, and nothing mends itself. Placeholder figures
+
+Standing: Confirmed by the designer, Nov 14, 2026, who chose that a badly damaged field takes no aircraft. Built Nov 14, 2026 (scenario 31)
+
 ## The gap
 
 Bombs and shells that hit a base destroy aircraft, supply and men, and leave the field whole (decision 0092; rulebook chapter 5, "Hits on nothing"). So a side cannot stop an airfield flying except by destroying every aircraft on it or taking it. The raids and shellings of Henderson Field were made to close it, and the men who filled the craters were why it stayed open. Decision 0099 left the place for this: "when damage comes, mending it is a fourth job".

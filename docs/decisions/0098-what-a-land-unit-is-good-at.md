@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that units differ in what they are suited to, so that a staff or a player picks a unit for a mission: Marines for an assault from the sea, mountain troops for the mountains. The designer agreed decisions 2 and 6 on Nov 14, 2026. Built on Nov 14, 2026 (see "As built"). Every figure is a placeholder. No real unit has a value yet.
 
+Summary: What a land unit is good at: four skills on the 0 to 4 scale, each acting through a rule that exists (assault from the sea on rehearsal, movement by terrain on marching, holding ground on a defender's fire, weight on shots and supply for each man); fixed for a unit, given by the scenario; the staff picks units by them. Placeholder figures
+
+Standing: Confirmed by the designer, Nov 14, 2026. Built Nov 14, 2026 (scenario 29)
+
 ## The gap
 
 A land unit is a count of men with a name. With decisions 0095 and 0097 it will also carry rehearsal for one landing and experience. Both come from what a unit has done. Nothing says what a unit is: two units with the same history are the same unit, whatever they were raised, trained and equipped for.

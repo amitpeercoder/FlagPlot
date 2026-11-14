@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026 (the format). Items 9 and 10 were added in the Savo Island pass and need review.
 
+Summary: Order-of-battle facts: sourced rows in CSV, ratings derived by written rules, no invented figures for real ships
+
+Standing: Confirmed; standing rules need review
+
 The full design is `docs/research/oob/database-design.md`. Which sources may be used is `docs/research/oob/source-policy.md`. This record is the short form.
 
 ## The gap in the spec

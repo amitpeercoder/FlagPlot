@@ -2,6 +2,10 @@
 
 Status: written by the architect on Nov 14, 2026. The designer wrote `docs/rules-comparison.md`, which sets the rules Flag Plot has against those a larger game's manual describes. He approved on Nov 14, 2026 that two rules it points to are built before the full slice is lengthened (decisions 0103 and 0104), and the order below for the rest. This record rules on every gap the comparison names. It adds no rule itself.
 
+Summary: What we take from the rules comparison (`docs/rules-comparison.md`): each gap it names is ruled build, defer or decline, by whether it changes which choices are sensible in the first 39 days of Guadalcanal. Build first: an airfield damaged and mended (0103) and a beaten side falling back (0104); then refuelling that costs time, claims that can fall short, and submarines
+
+Standing: The order approved by the designer, Nov 14, 2026. Adds no rule
+
 ## The test
 
 The comparison ends with it: a missing mechanism needs attention when it changes which choices are sensible, makes a constraint of the record disappear, or lets the planner exploit a simplification. Each gap is put to that test against the target of step 3, the first 39 days of Guadalcanal. Matching the other game is not a reason.

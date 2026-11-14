@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026.
 
+Summary: A game day runs 18:00 to 18:00 in the reference zone (UTC+11 for the slice)
+
+Standing: Confirmed
+
 ## The gap in the spec
 
 The spec says a day resolves as a 12-hour night pulse, then a 6-hour morning pulse, then a 6-hour afternoon pulse. It does not say what clock time a day starts at, which clock that is, or how game days map to calendar dates.

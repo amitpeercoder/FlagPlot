@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 11, 2026 ("cut both"), with the review in `docs/complexity-review-after-scenario-5.md`.
 
+Summary: What the complexity review cut and merged: noticing, contact confidence, two duplicate figures, and clock rounding
+
+Standing: Confirmed
+
 ## Decisions
 
 1. **A sighted task force no longer rolls to notice the aircraft that sighted it.** Decision 0012, 17 and 18, is withdrawn: the roll, its figure, its event and the time a force stored. Nothing read the time. The designer suggested noticing so that a force could react; it comes back with the rule for the reaction, which is the staff's.

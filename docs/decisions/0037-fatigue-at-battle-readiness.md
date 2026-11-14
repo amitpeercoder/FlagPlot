@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer on Nov 11, 2026. He had approved giving battle readiness a cost through the fatigue number, "so a force held at battle readiness tires and has to stand down". This record builds a graded effect and no forced stand-down; he was shown both and agreed with this one, with the three details as built: the staff does not stand a force down, a force alerted by a contact tires as one at battle readiness does, and a night pulse counts as any other.
 
+Summary: Fatigue at battle readiness: an alert force tires each pulse, and fatigue cuts its chance to sight
+
+Standing: Confirmed
+
 ## The gap
 
 Battle readiness costs nothing (decision 0021). A player would order it for every force on the first day and never think of it again. The complexity review kept readiness on one condition: scenario 6 gives it a cost, or it is cut and every force is simply alert.

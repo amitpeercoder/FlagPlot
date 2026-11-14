@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the forces with the plan for stage 5e on Nov 11, 2026. The positions, air groups and orders are data and scenario inputs, settled by the architect.
 
+Summary: The Eastern Solomons scenario: one day, four forces and Henderson Field; positions, air groups and orders
+
+Standing: Confirmed
+
 ## Decisions
 
 1. **One day: 18:00 on 23 August to 18:00 on 24 August.** The 25th is left out with the convoy it was fought over.

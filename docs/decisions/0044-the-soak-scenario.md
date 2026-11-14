@@ -2,6 +2,10 @@
 
 Status: confirmed by the architect, on the designer's standing word of Nov 11, 2026.
 
+Summary: The soak scenario: the full slice carried on for 180 days, with every subsystem in use in each 30 days
+
+Standing: Confirmed
+
 ## The gap
 
 The spec's scenario 8 is "Soak: 180 days with scripted orders on both sides", proving no crashes and that all invariants hold. The longest run so far is 28 days. Nothing has shown that the engine survives a campaign's length: stocks that run out, groups that are destroyed and never rebuilt, ships out of fuel, counters that only grow.

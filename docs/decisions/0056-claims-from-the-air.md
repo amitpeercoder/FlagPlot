@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026. The chances are placeholders set by the architect, to be set from the record in step 2.
 
+Summary: Claims from the air: one claim a side a raid, of aircraft shot down, hits on ships, ships sunk and aircraft destroyed on the ground; each miss may be claimed
+
+Standing: Confirmed
+
 ## The gap
 
 A side sees that it attacked and never what it did (decision 0047). After a surface fight it gets a claim of ships believed sunk (decision 0014, 16). After an air fight, a strike or a raid on a base it gets nothing. At the end of Eastern Solomons neither side can say whether a carrier was sunk or one aircraft shot down. Decision 0047 named the remedy and put it off. Objectives (decision 0054) make it needed: a side cannot see its own progress.

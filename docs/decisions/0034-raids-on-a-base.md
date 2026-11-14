@@ -2,6 +2,10 @@
 
 Status: confirmed by the architect, within the plan for scenario 6 the designer approved on Nov 11, 2026. Decisions 3 and 6 are choices the plan did not state: decision 3 was settled by decision 0063, and the designer confirmed decision 6 on Nov 12, 2026.
 
+Summary: Raids on a base: the base strike mission, the base's guns, and hits on aircraft on the ground and on supply
+
+Standing: Confirmed
+
 ## The gap
 
 Scenario 6 is four weeks of raids on an airfield. Until now a strike could only be sent at a contact, which is a sighting of ships (decision 0026). A base cannot be sighted, cannot be attacked, has no guns, and nothing at it can be hit.

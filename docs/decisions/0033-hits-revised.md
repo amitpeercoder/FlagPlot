@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 11, 2026, from the complexity review (`docs/complexity-review-after-scenario-5.md`, findings D1, D2 and E). The figures and the rounding rule are the architect's.
 
+Summary: Hits revised: a system hit depends on the damage, each shot is rolled, and a patrol divides among the raids on its hex
+
+Standing: Confirmed
+
 ## The gap
 
 The review found three rules whose results nobody would defend: results that hardly vary, a patrol that meets every raid whole, and a light shell as likely as a heavy one to wreck a ship's engines. The last is one reason the Savo Island scenario comes out wrong (decision 0024).

@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as part of the scenario 3 plan.
 
+Summary: A random number key may name a second entity
+
+Standing: Confirmed
+
 ## The gap in the spec
 
 The spec keys each random draw on seed, day, pulse, subsystem and one entity ID. Search needs a draw for a pair: this air group looking for that task force. Keyed on the group alone, the result for one target would depend on which other targets were in the arc. Keyed on the target alone, two groups searching for it would always get the same result.

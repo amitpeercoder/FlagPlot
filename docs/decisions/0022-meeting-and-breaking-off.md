@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as stage 4c2b of scenario 4. It replaces decisions 1 and 14 of decision 0014.
 
+Summary: Movement and fights in one time-ordered step; a force that breaks off avoids action for the rest of the pulse
+
+Standing: Confirmed
+
 ## The gap
 
 Decision 0014 checked for fights once in a pulse, after all movement, between forces that ended the pulse in the same hex. A force steaming through a hex never met what was in it, and a force could not arrive, fight and leave within one night. Breaking off ended a fight and changed nothing else: a force that had just broken off could attack the next enemy in the same hex.

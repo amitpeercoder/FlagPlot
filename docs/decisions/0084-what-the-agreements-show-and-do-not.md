@@ -2,6 +2,10 @@
 
 Status: Decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"). Measures, one option of a take of `validate`, and the wording of tuning records and decisions; no rule changed, no figure moved and nothing under `crates/sim-core` changed.
 
+Summary: What the agreements show and do not, after an outside review of the tuning: each measure is judged alone, so parts a total hid get measures of their own (torpedo hits on each Savo Island group, Chicago sunk, each northern cruiser's gun hits; the Eastern Solomons aircraft left to attack); the southern group's shells are counted in tens (the take `shots` gets `unit`); the surprised-target factor and the experience strength are fits inside a supported direction, not sizes from a source; the rate-of-fire gate failed and is not a passed check; the Cape Esperance check is one run, committed in advance; Ryujo's ditchings are left out of the fuel round; the strike on Ryujo is 38 as launched and 38 left to attack (36 for some hours on Nov 13, 2026, until the note after decision 0087's result); Cape Esperance's cruiser hits are a weak record, named among the check's limits
+
+Standing: Decided by the architect on the designer's delegation
+
 ## Why
 
 An outside review of Nov 13, 2026 read the step 2 tuning adversarially and made fifteen findings. A review is a lead, not a source: every claim acted on here was checked against the repository's file and line or the fact row, and where a finding is wrong this record says so. The rulings are the architect's; this record carries them out and says what the agreements so far can and cannot be taken to show.

@@ -2,6 +2,10 @@
 
 Status: confirmed by the architect, on the designer's standing word of Nov 11, 2026. Decision 2 reads a phrase of the spec in one of two possible ways and says why.
 
+Summary: The determinism scenario, saved games and replay: the full slice, what shuffled order means, `--save`, `replay` and `hash`
+
+Standing: Confirmed
+
 ## The gap
 
 The spec's scenario 7 is "Determinism: the full slice run twice, and once with shuffled processing order", proving identical daily hashes. It also lists `replay` and `hash` among the commands of the runner, and asks that a saved game, which is the starting state, the seed and the orders of each day, replays to every daily hash. None of this exists. No scenario yet runs ships, carriers, an air campaign and a convoy together.

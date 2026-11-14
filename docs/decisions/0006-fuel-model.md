@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as the placeholder model for step 1. Decision 3 was added in that review and is not built yet. *(Nov 14, 2026: built: `speed_multiplier` in `crates/sim-core/src/movement.rs`.)*
 
+Summary: Fuel: burn per mile rises with the square of speed above cruise, never below the cruise rate. Placeholder
+
+Standing: Confirmed
+
 ## The gap in the spec
 
 The spec lists speed, endurance and fuel capacity for a ship class and asks scenario 1 to check fuel burn. It gives no formula.

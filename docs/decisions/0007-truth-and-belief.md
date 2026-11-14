@@ -2,6 +2,10 @@
 
 Status: settled.
 
+Summary: Truth and belief: `SideView` for players, `umpire()` for tests
+
+Standing: Settled
+
 ## The gap in the spec
 
 The spec says "the type system should make reading truth from a side's view impossible". It does not say how.

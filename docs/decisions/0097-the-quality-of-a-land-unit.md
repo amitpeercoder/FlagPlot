@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that step 3 go beyond rehearsal for one landing to troop quality that lasts. The designer agreed decisions 3 and 5 on Nov 14, 2026. Built on Nov 14, 2026, scenario 28 ("As built", at the end); the hand calculation is in `tests/scenario_28_experience_and_training.rs`. Every figure is a placeholder. No real unit has a value yet: that waits on research, as the experience of air groups does (decision 0064).
 
+Summary: The quality of a land unit, and training: a unit has experience from 0 to 4 on the scale of ships' crews; it moves the chance its shots hit; training raises it slowly to a ceiling and fighting raises it further; real units have no values until researched. Placeholder figures
+
+Standing: Confirmed by the designer, Nov 14, 2026. Built Nov 14, 2026 (scenario 28, with the activities ready and train of decision 0099)
+
 ## The gap
 
 A land unit is a count of men. A battalion that has fought for a month and one that came off the transport yesterday fire alike. Decision 0095 gives a unit rehearsal for one landing, which the landing spends. Nothing a unit has lasts.

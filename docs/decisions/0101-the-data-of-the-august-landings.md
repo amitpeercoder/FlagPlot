@@ -2,6 +2,10 @@
 
 Status: settled by the architect on Nov 14, 2026. It settles the data that decision 0093 left to "when the scenario is written", for the full slice lengthened to 39 days, 7 August to 14 September 1942. Data is the architect's to settle (CLAUDE.md, "Who decides what"); every choice has its reason and the rows it rests on. Nothing is built. Three points change what decision 0093 said and are marked **Changes 0093**. Amended the same day from the rows of `docs/research/oob/outside-research-nov-14-slice.md`: see "Amended from new rows" at the end.
 
+Summary: The data of the August landings: where the record's places fall on the map (Kokumbona is in the airfield's hex, and forces landed there are put in the hex to the north-west); the slice begins before the landing with Lunga and Tulagi Japanese; the airfield at Lunga starts unbuilt with the share of work the rows give; the land units of both sides with the rows each rests on; placeholder transports until transports can be derived; stocks from the rows on days of food, Japanese stocks placeholders; what is left out as a gap
+
+Standing: Settled by the architect, Nov 14, 2026. Changes three points of 0093. Amended from new rows, and by the architect's rulings during the build. Built Nov 14, 2026 (the full slice of 39 days; an empty air group waits at a base not its side's)
+
 Rows are cited by the `id` column of their table: LUF is `land_unit_facts.csv`, TL `troop_lift_facts.csv`, EO `engagement_outcomes.csv`, PF `place_facts.csv`, PP `place_positions.csv`. Every row cited is unconfirmed unless a derivation already reads it. The rows were gathered by a team and about sixty were checked by its lead; each is read again when the scenario file is written, and a row that does not say what this record says goes back to the architect.
 
 ## Where places fall

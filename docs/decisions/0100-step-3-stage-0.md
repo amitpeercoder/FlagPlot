@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026, as `docs/step3-spec.md` asks of every stage. The designer approved it and agreed decisions 4 and 8 on Nov 14, 2026. Built on Nov 14, 2026 ("As built" at the end). It adds no rule of the game and changes no result: every existing scenario gives the events and the hashes it gave before.
 
+Summary: Step 3, stage 0: the choices a side makes inside a day become functions a side can ask, with the engine calling the same ones; the five choices made at the point of contact stay with the rules; a saved game records the rules it was played under and is refused if they differ; time is measured by a command outside the game; an experiment in building a trial's world. No rule changes and no result changes
+
+Standing: Confirmed by the designer, Nov 14, 2026. Built Nov 14, 2026 (17 questions; saved game version 2 with the rules label 1; `sim-cli time`; the experiment on the unmerged branch `s0-experiment`)
+
 ## What stage 0 is
 
 The spec gives stage 0 three things and one experiment:

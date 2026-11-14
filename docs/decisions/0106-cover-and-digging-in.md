@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026, after the designer said that well-prepared defenders were massively bombed and did not suffer heavily for it, and revised the same day on his answers. He agreed that troops dig shallow fieldworks for themselves (decision 5). He ruled that protection depends on how deep the preparation is, with a year's work a different thing from a week's (decisions 8 and 9), and that a long bombardment must tell even where the works hold: on the men's nerves and sleep, and slowly on the works (decisions 10 to 12). Confirmed as revised. Nothing is built. Every figure is a placeholder.
 
+Summary: Cover, men who dig in, and a place under bombardment: a unit's cover is the better of its base's defences and its own fieldworks; cover saves men from bombs and shells and in the fight; troops on the defence dig shallow fieldworks anywhere; defences have three grades, each dearer than the last; men under fire do not rest and tire, up to a limit; fire wears cover down slowly. Placeholder figures
+
+Standing: Confirmed by the designer as revised, Nov 14, 2026. Built Nov 14, 2026 (scenario 34, state version 22, rules label 5)
+
 ## The gap
 
 A base's defences, built by work (decision 0099, 4), do one thing: they raise the chance to hit of a side that defends there. They do not shelter anyone. A man behind full defences is lost to a bomb, a shell or a rifle as easily as a man in the open (decisions 0092 and 0090). So bombardment before an assault is always worth its shells, and a prepared position cannot be what it was: a place that takes a great weight of fire and is still held when the firing stops.

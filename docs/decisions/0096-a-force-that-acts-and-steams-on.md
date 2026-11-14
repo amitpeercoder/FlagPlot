@@ -2,6 +2,10 @@
 
 Status: confirmed as to the need by the step 3 spec, which the designer confirmed on Nov 14, 2026 ("What it builds on": needed before stage 2). The rule's details are the architect's, of the same date. Built on Nov 14, 2026 (scenario 26). It has no figure. The hand calculation is in `tests/scenario_26_act_and_steam_on.rs`. *(Nov 14, 2026: "decided before stage 2" is in the step 3 spec's section "The staff's decisions", in the paragraph after its table of what the staff decides; the table row for this decision in "What it builds on" says Built.)*
 
+Summary: A force that acts at a place and steams on: a route may mark waypoints to act at; a force halts at one if it has a bombardment to make or cargo to work there, and resumes its route by itself when that is done, so that a night raid or a supply run needs no order the next day. No figure, no draw
+
+Standing: Called for by the step 3 spec, which the designer confirmed on Nov 14, 2026; details by the architect. Built (scenario 26)
+
 ## The gap
 
 Orders are taken once, at the start of a day (decision 0055). A force that arrives by night to bombard a base (decision 0092) or to unload has no way to leave before the next day's orders. It lies in the enemy's hex, or off the beach, through the two daylight pulses that follow. No commander would order that, and a staff that did would be read as stupid. A bombardment by a force that is passing was left out of decision 0092 for want of this rule.

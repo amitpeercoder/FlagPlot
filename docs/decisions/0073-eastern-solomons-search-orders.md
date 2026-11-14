@@ -2,6 +2,10 @@
 
 Status: settled by the architect, on the designer's delegation of Nov 13, 2026 ("Go ahead and decide all matters that need decisions"). The orders were revised on Nov 13, 2026: the carriers' attack units stay on naval strike, and Chikuma's floatplanes search to the recorded 330 miles, which decision 0075 lets an order name. Scenario data, not a rule: no rule changed and nothing under `crates/*/src` changed. It replaces item 8 of decision 0031 for the Japanese side.
 
+Summary: The Japanese search at the Eastern Solomons from the record: the vanguard's floatplanes 120 to 180 to the 330 miles flown, the fleet carriers' attack units stay on naval strike (a search cannot be ordered for one pulse), Tone's floatplanes have no order; scenario data, no rule. Frozen figures go with frozen scenarios: every test that runs scenario 5, 7 or 8 on the frozen figures reads its copy in `data/scenarios/step2-frozen/`. Built
+
+Standing: Settled by the architect on the designer's delegation
+
 ## The gap
 
 The spec and the opening list both say it: the Japanese search at the Eastern Solomons was a placeholder arc. Decision 0031, item 8, had the floatplanes of Chikuma and Tone search 110 to 200 degrees to 253 miles, "a quarter-circle toward the south-east", because no source then gave the Japanese sectors. The Japanese records read since (`docs/research/oob/japanese-records-2026-11-12.md`, and the notes at the end of `docs/research/oob/air-search.md`) give the search orders and what was flown.

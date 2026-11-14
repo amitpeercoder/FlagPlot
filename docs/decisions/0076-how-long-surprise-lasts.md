@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation, Nov 13, 2026: no rule. This record adds no rule and changes none, so it has no rule card. It says what was looked at and why nothing is built.
 
+Summary: How long surprise lasts: no rule. In the record a force under fire replied within about one round, which the rules give; the longer interval is the time between being seen and being shot at, outside a fight. A longer surprise for an unready force would charge its unreadiness twice (decision 0068). Three prototypes moved nothing at Savo Island
+
+Standing: Decided by the architect on the designer's delegation: no rule
+
 ## The question
 
 The batch file's record of each fight (decision 0062, version 4) showed that in the rules a force is never surprised for more than one round: a force that is fired on has sighted the enemy by the next round. The record at Savo Island has seven minutes between the Japanese sighting the southern group and that group's first sight of them, and thirteen for the northern group, which is more than one round of five minutes in each case.

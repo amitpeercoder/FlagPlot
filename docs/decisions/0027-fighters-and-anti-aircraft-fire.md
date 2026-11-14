@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 11, 2026, with the plan for scenario 5 (stage 5c). The plan settled the order (escort against combat air patrol, then anti-aircraft fire, then the attack, as the spec has it), that fighters and guns use the shots-times-chance form of decision 0014, and that a share of fighters is held back to defend. The details below that level are the architect's, and decisions 5, 8, 9 and 13 are marked for the complexity review.
 
+Summary: Fighters on patrol and escort, anti-aircraft fire, and aircraft lost: escort against patrol one for one, then guns, then the attack
+
+Standing: Confirmed
+
 ## The gap
 
 Decision 0026 lets a strike fly and hit with nobody opposing it and nobody lost. The spec's air combat step has three parts: escort against combat air patrol, anti-aircraft fire, the attack. This decision adds the first two and the losses they cause.

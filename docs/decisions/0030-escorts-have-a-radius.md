@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer left the choice to the architect on Nov 11, 2026 ("figure this out and decide accordingly").
 
+Summary: Escorts have a radius: fighters go with a raid only within their type's radius, and otherwise stay on patrol
+
+Standing: Confirmed
+
 ## The gap
 
 Decision 0027 sends a fighter group's escorts with its carrier's raid "as far as it goes", and left a fighter's own range for stage 5e. Stage 5e has given fighters real figures: the F4F-4's sourced combat radius is 105 miles without drop tanks, and the A6M2's is 261. In the Eastern Solomons scenario the American strike flies 200 miles and the Japanese strike 240.

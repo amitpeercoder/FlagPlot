@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer chose on Nov 11, 2026 to build this before the agent interface. The details are the architect's.
 
+Summary: Fuel as a cargo: a ship carries fuel as cargo beside supply, a load order names its cargo, and fuel landed joins the base's stock
+
+Standing: Confirmed
+
 ## The gap
 
 A base's fuel is what its scenario gives it (decision 0045). Nothing carries fuel anywhere. A forward base refuels ships until its stock is gone and then never again, however many convoys reach it, because a convoy carries one kind of cargo: supply (decision 0011, 1).

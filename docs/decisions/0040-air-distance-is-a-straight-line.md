@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer on Nov 11, 2026: straight-line distance for aircraft now, ships later. His reason is recorded under "Why". *(Nov 14, 2026: ships were settled by decision 0058: a ship is charged straight-line miles where the way is clear.)*
 
+Summary: Air distance is a straight line between hex centres, in whole miles, for every rule that asks how far an aircraft flies. Ships: decision 0058
+
+Standing: Confirmed
+
 ## The gap
 
 Every rule that asks how far an aircraft flies counts hexes and multiplies by 40 miles (decision 0017, 15). That is exact along the three axes of the hex grid: east and west, and the two diagonals 60 degrees either side. Between the axes the count is the length of a staircase from one hex to the other, and at the worst bearing, 30 degrees off an axis, it is 15.5 percent longer than the line. Due north and south is such a bearing.

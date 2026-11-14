@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 13, 2026. It is stage 2 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer agreed decisions 9 and 16 on Nov 13, 2026, and on decision 20 asked for rebasing by order to be built first (decision 0091), so that a player can fly a group out; with that, decisions 20 and 21 stand. Built on Nov 14, 2026: see "As built" at the end. Every figure is a placeholder set by the architect. Code waits for stage 1 (decision 0066) and rebasing (decision 0091) to merge; the hand calculation is written before any code is delegated. *(Nov 14, 2026: both merged before the build: decision 0066, scenario 21, and decision 0091, scenario 22.)*
 
+Summary: The fight ashore, and a base that changes side: a unit's posture by order, one fight a day in a contested hex with each shot rolled, fatigue for a land unit, a side beaten by a count of men, a base that changes side with its stocks cut and its aircraft lost, and two kinds of objective, `base_held` and `men_lost`. Stage 2 of the ground combat plan. Placeholder figures
+
+Standing: Confirmed by the designer, Nov 13, 2026; rebasing (0091) came first. Built Nov 14, 2026 (stage 2, scenario 23)
+
 ## The gap
 
 After stage 1 men are carried, landed and fed, and they do nothing else. Units of both sides in one hex ignore each other. No base changes hands, so no convoy sails to take a place and none to hold one, and no objective can be to take or hold ground (decision 0054, known limit).

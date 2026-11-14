@@ -2,6 +2,10 @@
 
 Status: decided. The designer was told on Nov 13, 2026 that this reverses his answer 4 to decision 0068 and delegated the decision to the coordinating architect in these words: 'Go ahead and decide all matters that need decisions'. The architect decided it the same day. Every figure in it is a placeholder.
 
+Summary: A force not ready fires part of its torpedoes: the readiness of decision 0068 also takes a share of the torpedo shots, `unready_torpedo_share`. Found because at Savo Island Japanese ships left dead in the water, mostly by Allied torpedoes, are caught by day in half the runs. Reverses 0068's answer 4. Built (Nov 13, 2026)
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 The spec ("Rule work that comes before tuning", the row "Surface fights by day with ships that fell behind") asks that these fights be looked at before the surface figures are tuned. In about half of 1,000 runs of `data/scenarios/04_savo_island.toml`, Japanese ships left behind by the rule for stragglers are caught after dawn. The record has no such fight (rows 14 and 15). Mikawa's force withdrew up the Slot whole. Its only loss on the way home was Kako, sunk by the submarine S-44 on 10 August, which is outside the scope of the measures (row 778). By day the Allied groups are ready and fire every gun, so these fights carry much of the Allied shells and hits that the measures say are too many.

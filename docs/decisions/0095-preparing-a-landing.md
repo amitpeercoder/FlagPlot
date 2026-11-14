@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that planning ahead should raise an operation's chance of success and that changing a plan should cost some of what was prepared. The designer answered its two questions on Nov 14, 2026: preparation also helps the fight ashore, and what a change costs depends on the change. It was revised the same day (see "Decisions"). Built on Nov 14, 2026, scenario 27 ("As built", at the end). Every figure is a placeholder set by the architect. The hand calculation was written before any code was delegated; it is in `tests/scenario_27_preparing_a_landing.rs`.
 
+Summary: Preparing a landing: a force with the order gains preparation for each day in port; the force is loaded and each unit of its roster rehearses, by the day in port; loading speeds the whole unloading at the place prepared for, rehearsal spares the men fatigue on landing; the landing spends both; a new place loses all, a ship or unit added costs half the loading. Placeholder figures
+
+Standing: Confirmed by the designer, Nov 14, 2026; revised the same day with two owners. Built Nov 14, 2026 (scenario 27)
+
 ## The gap
 
 Time already buys a side real things: stocks built up by convoy, ships back from repair, rested air groups, and more reports of the enemy. It does not buy preparation. A landing thrown together the night before goes ashore as fast as one loaded and rehearsed for a month, and a plan changed at the last hour costs nothing but the ships that must turn round.

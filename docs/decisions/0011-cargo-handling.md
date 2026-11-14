@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as part of the scenario 2 plan. The port figures are placeholders.
 
+Summary: Cargo handling: berths and lighters by port size, load and unload orders. Placeholder figures
+
+Standing: Confirmed
+
 ## The gap in the spec
 
 The spec asks scenario 2 to prove "loading, port capacity limits, base supply levels". It lists a port size of 0 to 10, a cargo capacity per ship class and a supply stock per base. It gives no rule for how fast cargo moves, what a port's capacity is, or what orders start it.

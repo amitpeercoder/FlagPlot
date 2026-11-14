@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation, Nov 13, 2026. This is scenario data, not a rule: no rule changed and nothing under `crates/sim-core` changed. It was written after a scratch run had been seen (the air tuning plan of Nov 13, 2026, which ran the scenario with the record's raid days), and it rests on the units' forms and the fact rows named below, not on that run. It is made before any air figure is tuned on Rabaul or checked there (`docs/step2-spec.md`, "Tuning", 8). It replaces items 16 and 17 of decision 0042 for the live scenario. Decision 0042 keeps its text, with a dated note pointing here.
 
+Summary: Rabaul against Guadalcanal: the raid days are the record's (the bombers raid on the eleven days of the units' forms by dated orders, and the Japanese rest thresholds go), and Henderson's dive bombers search 300 to 030 to 200 miles (a reading; that they searched is from rows). The patrol, the Allied threshold of 40 and Rabaul's replacements stay, marked invented. Scenarios 7 and 8 take the raid days. Scenario data, no rule; scenario 6 gets a frozen copy
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 Decision 0042 set three orders that no row sets:

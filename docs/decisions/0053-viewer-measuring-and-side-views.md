@@ -2,6 +2,10 @@
 
 Status: settled, an engineering choice for the umpire's tool of decision 0018. No rule of the game changes.
 
+Summary: The viewer measures (air distance and sea route, checked against the engine) and shows a side's view, built from the events the engine gave it
+
+Standing: Settled
+
 ## The gap
 
 Decision 0018 left two things for later: a view of one side with the truth hidden, which "waits for briefings", and, by decision 0040, a measuring tool that must use the engine's one function for air distance. Briefings (0048), measuring (0049) and what a side may know of what happened (0047) now exist.

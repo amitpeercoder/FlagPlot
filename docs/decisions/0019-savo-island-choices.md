@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, with the stage 4c plan.
 
+Summary: Savo Island: who was where, standard displacement, and unknown radar treated as not fitted
+
+Standing: Confirmed
+
 ## The gap
 
 The sources disagree about who was where on the night of 8 to 9 August 1942, and are silent on some equipment. Decision 0015 says a person settles such things, not a source's grade. The order-of-battle research set out the options in `docs/research/oob/savo-island-choices.md` as proposals. These are the designer's answers.

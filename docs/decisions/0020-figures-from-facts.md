@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as stage 4c1 of scenario 4. The scaling constants are model parameters and placeholders.
 
+Summary: Game figures for real ships derived from facts by written rules, with three shared scaling constants
+
+Standing: Confirmed; constants are placeholders
+
 ## The gap
 
 Decision 0015 says no real ship gets an invented rating: a game figure is derived from sourced fact rows by a written rule, and can name the rule and the rows. It left the rules and the tool unwritten. Until now every ship class the simulation loaded was a placeholder.

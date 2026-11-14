@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026. Decisions 3 and 7 were settled in that review.
 
+Summary: Orders: checked at intake against what the side can see, kept whether accepted or not
+
+Standing: Confirmed
+
 ## The gaps in the spec
 
 The spec says orders are validated against truth at intake, that they persist until replaced, and that each carries an origin of "player or staff". It leaves several details open.

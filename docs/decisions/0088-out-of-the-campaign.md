@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers at the end. Built on Nov 13, 2026, straight after ship repair (decision 0069), whose yard function it reads, to the architect's specification and hand calculation; see "As built". The figures here are placeholders for the example only.
 
+Summary: Ships out of action, counted by the time they are away: a sixth kind of objective, `ships_out_of_action`; a ship afloat scores her kind's points times her days out over the horizon (never more than 1), where her days out are her days of repair at the end (decision 0069's yard function, without the passage) plus those she left for a yard with; the horizon is the game's length unless the scenario states a longer one; in a scenario that uses it, it takes the place of `ships_crippled`; no state, no draw. Built (scenario 20b)
+
+Standing: Confirmed by the designer, Nov 13, 2026; built Nov 13, 2026
+
 Rewritten the same day. The first version drew one line at about thirty days and called a ship past it "out of the campaign". The designer asked what that means in a game that runs from Pearl Harbor to 1945, where a month away takes no ship out of anything. The line was wrong at that length, and so was the name. This version counts the time a ship is away against the length of what is being fought over. The file keeps its first name so that references to it hold.
 
 ## The gap

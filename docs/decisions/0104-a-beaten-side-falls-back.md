@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026. The designer answered its two questions on Nov 14, 2026: the men fall back by marching (decision 1), and men with nowhere to go surrender (decision 7, his choice against the architect's proposal to leave surrender out). Confirmed. Built on Nov 14, 2026 ("As built" at the end). It adds one placeholder figure.
 
+Summary: A beaten side falls back: its units march out of the hex by the marching rule, to a linked hex with a base of their side or with no enemy fighting men, tired by the defeat and carrying nothing; men with nowhere to go surrender
+
+Standing: Confirmed by the designer, Nov 14, 2026, who chose surrender. Built Nov 14, 2026 (scenario 32)
+
 ## The gap
 
 A side beaten in a hex loses its bases there, and its men stay where they are, unfed (decision 0090, 17). They take a share of the fire aimed at the hex, eat nothing and waste by the day beside the men who beat them. The garrison of Lunga left the airfield on 7 August and went west. Decision 0101 lists the garrison staying as a thing the lengthened slice will show wrong.

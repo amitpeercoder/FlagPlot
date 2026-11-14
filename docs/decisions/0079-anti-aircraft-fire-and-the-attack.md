@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). The hand calculation's cases were worked and checked by the architect before any code. Built on Nov 13, 2026; see "As built".
 
+Summary: Anti-aircraft fire and the attack: a share of the guns' shots (`anti_aircraft_before_attack_share`, 1 frozen, 0 live, a placeholder) is worked before the attack and the rest after it, from the one stream, so the draws, the guns' hits and each group's losses are the same at every share; the fire after is the same event with `after_attack`, in a step 4a. Support: one ship's account of the dive (events 222, 223).
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 In a raid the guns of the target fire at the bombers the patrol left, and their hits come off before the attack: "Then every ship afloat in the task force attacked fires its anti-aircraft guns at the bombers that are left ... Then the bombers that are left attack" (decision 0027, items 7 and 8; `docs/rules/05`, "The order of the air combat step"). A bomber the guns shoot down never drops.

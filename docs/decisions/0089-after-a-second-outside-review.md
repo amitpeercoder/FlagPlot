@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"). Written by the architect. It changes no rule, no figure, no measure's record and no verdict. It corrects what four records say about how well a figure is supported, and so the count of figures by status.
 
+Summary: After a second outside review of the tuning: four records overstated a figure's support. `patrol_drawn_off_share` has no row behind either end (under 0080's cap both ends send 10 of 53 at the escorts); `patrol_before_attack_share`'s 0.22 to 0.61 is an interpretation, not a bound; air round 5's two shares are not comparable; `[base_hit] aircraft` and `fighter_false_claim_chance` are fitted, not sized; Aoba's 40 is one statement bounded by two others. The count becomes 3 sized and 6 fitted. No rule, figure, record or verdict changed
+
+Standing: Decided by the architect
+
 ## What this is
 
 An outside review of Nov 13, 2026 read the closed state of step 2 as an adversary, as one did before decision 0084. It is a lead and not a source: each point below was checked against the repository before it was acted on. Most of its twelve points repeat limits that decision 0084 and the closing page already state. Five say something new, and all five are right.

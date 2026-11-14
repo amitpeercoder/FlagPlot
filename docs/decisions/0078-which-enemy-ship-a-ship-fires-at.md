@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). Built on Nov 13, 2026; see "As built".
 
+Summary: Which enemy ship a ship fires at: guns like at like (own kind, else the nearest more important kind, else the most important afloat), torpedoes at the most important kind afloat, each by the firer's place among the candidates; the kinds in the order of importance of 0012. Where both forces are of one kind the pairs are those of 0014. Built (Nov 13, 2026)
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 In a surface fight a ship fires at the enemy ship in its own place: "Ships are matched in ship ID order. The ship in place i of a force's afloat list takes the enemy ship in place (i modulo the number of enemy ships afloat)" (`docs/rules/04`, "Who fires"; decision 0014). What kind of ship the target is plays no part.

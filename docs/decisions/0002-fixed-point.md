@@ -2,6 +2,10 @@
 
 Status: settled.
 
+Summary: Fixed-point numbers: 64-bit, six decimals, truncating
+
+Standing: Settled
+
 ## The gap in the spec
 
 The spec says "integers and fixed-point for all state" without giving a format.

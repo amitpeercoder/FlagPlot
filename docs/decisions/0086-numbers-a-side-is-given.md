@@ -2,6 +2,10 @@
 
 Status: decided by the architect on the designer's delegation of Nov 13, 2026. It closes the numbering leaks that decision 0085 (item 10) left open: the leak decision 0047 recorded in "What it costs", and findings 3 and 8 of the outside review of Nov 13, 2026 and the team's own finding A (pull request 213). It is built in two parts. Part 1 changes no run, state or hash. Part 2 raises the state version to 8.
 
+Summary: The numbers a side is given: event, order and contact numbers are opaque outside sim-core, read only with the umpire's key, and the view counts each side's own; a side's own ships, task forces and air groups are shown numbered 1, 2, 3 among its own; the recorded games' requests translated by a table. Part 2: units made in play numbered from 1,000,001 (Allied) and 2,000,001 (Japanese), state version 8. Built (Nov 13, 2026)
+
+Standing: Decided by the architect on the designer's delegation
+
 ## The gap
 
 Every number the game uses is counted for both sides together, and a side saw some of them.

@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its three questions. Built (stage 1), Nov 12, 2026: see "As built" at the end. The hand calculation was written before any code was delegated.
 
+Summary: Strike target priority as an order: a list of kinds a strike group goes for, in order; a kind off the list is never launched at, which holds a strike; a base strike may fly in the afternoon. Built (stage 1)
+
+Standing: Confirmed
+
 ## The gap
 
 - **A strike group cannot choose.** It goes for the contact of the most important kind in reach, in a fixed order: carrier, battleship, cruiser, destroyer, transport, auxiliary. A commander who wants the convoy sunk, and not its escort, has no way to say so.

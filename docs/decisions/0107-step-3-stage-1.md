@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026, for the designer's approval, and revised the same day after an independent review that the designer asked for. The review found the direction right and six gaps that had to be closed before building: the order of a day, where a staffed day is run, how the staff writes the state it makes, what a saved game holds, what "days of supply" means, and how a supply plan can change without the commander. Each is settled below and marked *(review)*. `docs/step3-spec.md` settles what the contract is; this record says how stage 1 builds it. The designer answered its four questions on Nov 14, 2026, each as recommended, and approved the plan: stage 1 is built as laid out, after the two hand calculations are written, and anything they show still open comes back to him before any code. Confirmed. The two hand calculations are now written; they needed eight rulings, recorded below, and raised one question for the designer, on how much a run carries. Nothing is built. Two hand calculations, for days of supply and for one convoy, are written by the architect before approval is asked, since they are what shows a rule still open.
 
+Summary: Step 3, stage 1: the command contract as state changed by commands; the staff as code outside `sim-core`, passed in to the function that resolves a day and asked after the morning's refuelling; staff commands for the state the staff makes; a saved game keeps what was handed in and a check runs the staff again; four rules it needs (a load up to a weight, a reserve at a base, forming and joining forces, a scenario's commands); days of supply for a side in a hex; the doctrine for keeping a base supplied; the tools; built in four steps
+
+Standing: Confirmed by the designer, Nov 14, 2026, after an independent review. Not built: the hand calculations come first
+
 ## What stage 1 is
 
 The spec's row: the command contract, whole, and a staff for one area intent, keep a base supplied from a pool of shipping. It shows the loop from end to end: propose, explain, approve, run a quiet week, a shortage that stops the clock, a hold and its release, a save in the middle.

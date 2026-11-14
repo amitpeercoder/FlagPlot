@@ -2,6 +2,10 @@
 
 Status: a plan by the architect, written on Nov 14, 2026. It is stage 4 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer answered its three questions on Nov 14, 2026: the land units go into the full slice now (decisions 1 and 2), marching overland is built first (decision 4 and decision 0094), and only fighting men are counted (decision 6). Nothing is built. The data choices are the architect's, each with its reason, and none is made final here: the rows are read when the scenario is written. *(Nov 14, 2026: decision 0101 settles them, and changes items 3, 4 and 8 of this record.)*
 
+Summary: The landings of August 1942 and the first attacks on the airfield, in the full slice: the slice is lengthened to 39 days from 7 August; forces land where the record says and march (0094); fighting men only; real transport classes with a derived troop capacity; a few coarse measures and a tuning round. Stage 4 of the ground combat plan
+
+Standing: Confirmed by the designer, Nov 14, 2026, with the land units in the full slice and marching built first. Item 8 changed by 0101. Built Nov 14, 2026 (the full slice of 39 days and its measures); the soak (item 10) and the tuning round are not
+
 ## What stage 4 of ground combat is for
 
 Stages 1 to 3 run on made-up units. Stage 4 puts the record through them: the landings of 7 to 9 August 1942 on Guadalcanal and Tulagi, the Japanese landings that followed, and the two attacks on the airfield inside the period the facts cover well, the Tenaru on 21 August and the ridge on 12 to 14 September. It is where the ground figures first meet something a source says.

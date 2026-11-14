@@ -2,6 +2,10 @@
 
 Status: confirmed by the designer, Nov 10, 2026, as part of the scenario 3 plan. Every figure is a placeholder.
 
+Summary: Air search by coverage, reports with independent errors, contacts that age and merge. Placeholder figures
+
+Standing: Confirmed
+
 ## The gap in the spec
 
 The spec asks for air search "by arc and range", reports "generated from truth through a detection and error model", and contacts that "age and lose confidence each pulse without a fresh sighting". It gives no detection rule, no error model, no ageing rule, and no rule for when two reports are the same contact.

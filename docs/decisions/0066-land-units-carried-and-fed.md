@@ -2,6 +2,10 @@
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026 (`docs/design/ground-combat.md`, stage 1) and agreed decisions 7, 12 and 14 on Nov 13, 2026. The architect added the points under "Settled before the build" the same day. The hand calculation is in `tests/scenario_21_landing.rs`. The figures are placeholders set by the architect. Built on Nov 13, 2026 (stage 1, scenario 21; see "As built" at the end).
 
+Summary: Land units, carried by sea and fed from a base: a count of men, troop capacity, men worked as cargo at a fixed weight, a landing that forms a base, a daily charge for each man and a share of the unfed lost. Stage 1 of the ground combat plan. Placeholder figures
+
+Standing: Confirmed by the designer, Nov 13, 2026 (7, 12 and 14 agreed); built Nov 13, 2026 (stage 1, scenario 21)
+
 ## The gap
 
 - **A transport carries supply and fuel and nothing else.** A reinforcement run has nothing to deliver, so there is no reason to make one and none to stop it (decision 0052, "What it costs").
