@@ -219,3 +219,7 @@ path = "scenario_21_landing.rs"
 [[test]]
 name = "scenario_22_rebase"
 path = "scenario_22_rebase.rs"
+
+[[test]]
+name = "scenario_23_fight_ashore"
+path = "scenario_23_fight_ashore.rs"

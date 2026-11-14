@@ -76,6 +76,10 @@ pub(crate) fn is_beaten(men: u32, enemy_men: u32, beaten_share: Fixed) -> bool {
     men == 0 || Fixed::from_int(i64::from(men)) < beaten_share * i64::from(enemy_men)
 }
 
+/// One side's loss in a fight: the side, each unit with its men at the start
+/// and its part, the loss in the hex and the side's men there at the start.
+type SideLoss = (Side, Vec<(LandUnitId, u32, u32)>, u32, u32);
+
 /// One hex's units with men ashore at the start of the phase, by side.
 #[derive(Default)]
 struct HexUnits {
@@ -156,7 +160,9 @@ impl World {
             self.men_ashore(&units.units[0]),
             self.men_ashore(&units.units[1]),
         ];
-        let mut beaten: Vec<(Side, EventId)> = Vec::new();
+        // Each side beaten, with the causes of its base changing side: the
+        // test that beat it, and what that test cites.
+        let mut beaten: Vec<(Side, Vec<Cause>)> = Vec::new();
         if let Some(fight) = fight_event {
             let tested: Vec<Side> = Side::ALL
                 .into_iter()
@@ -178,7 +184,7 @@ impl World {
                     vec![Cause::Event(fight)],
                     figures,
                 );
-                beaten.push((side, event));
+                beaten.push((side, vec![Cause::Event(event), Cause::Event(fight)]));
             }
         } else {
             for side in Side::ALL {
@@ -192,15 +198,18 @@ impl World {
                         .values()
                         .any(|base| base.side == side && base.hex == hex);
                 if defenceless {
-                    let causes = self.attack_orders(&units.units[at(attacker)]);
-                    let event = self.record_beaten(day, hex, side, men, false, causes, figures);
-                    beaten.push((side, event));
+                    let orders = self.attack_orders(&units.units[at(attacker)]);
+                    let event =
+                        self.record_beaten(day, hex, side, men, false, orders.clone(), figures);
+                    let mut causes = vec![Cause::Event(event)];
+                    causes.extend(orders);
+                    beaten.push((side, causes));
                 }
             }
         }
 
         // The bases of a beaten side change side (decisions 17 to 23).
-        for (side, cause) in beaten {
+        for (side, causes) in beaten {
             let bases: Vec<BaseId> = self
                 .truth
                 .bases
@@ -209,7 +218,7 @@ impl World {
                 .map(|base| base.id)
                 .collect();
             for base in bases {
-                self.change_side(day, base, other(side), cause, figures);
+                self.change_side(day, base, other(side), causes.clone(), figures);
             }
         }
     }
@@ -332,7 +341,7 @@ impl World {
         // The losses, worked for both sides from the strengths at the start
         // and then taken (decision 9).
         let men_per_hit = u32::try_from(figures.men_per_hit.trunc()).unwrap_or(u32::MAX);
-        let mut losses: Vec<(Side, Vec<(LandUnitId, u32, u32)>, u32, u32)> = Vec::new();
+        let mut losses: Vec<SideLoss> = Vec::new();
         for side in Side::ALL {
             let list = &units.units[at(side)];
             let unit_men: Vec<u32> = list
@@ -563,13 +572,15 @@ impl World {
     }
 
     /// A base of a beaten side changes side, with everything that pointed at
-    /// it (decisions 18 to 22). `cause` is the event that beat its side.
+    /// it (decisions 18 to 22). `causes` are the event that beat its side
+    /// and what that cites: the fight, or under decision 16 the posture
+    /// orders of the units on attack.
     pub(crate) fn change_side(
         &mut self,
         day: u32,
         base_id: BaseId,
         to: Side,
-        cause: EventId,
+        causes: Vec<Cause>,
         figures: &GroundFigures,
     ) {
         let share = figures.captured_stock_share;
@@ -617,7 +628,7 @@ impl World {
                 supply_lost_t: supply_before - supply_kept,
                 fuel_lost_t: fuel_before - fuel_kept,
             },
-            vec![Cause::Event(cause)],
+            causes,
             breakdown,
         );
 
