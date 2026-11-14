@@ -502,7 +502,7 @@ impl World {
         unit.fatigue = after;
         let mut fatigue_event = None;
         if after != before {
-            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            let breakdown = self.config.record_breakdowns.then_some(Breakdown {
                 factors,
                 result: after,
             });
