@@ -2,8 +2,8 @@
 
 Battle: rabaul-guadalcanal-air
 Scenario: data/scenarios/07_full_slice.toml
-Batch: label `before-tuning`, 1000 runs, seeds 1 to 1000, file hash eec359a555d41755
-Inputs: state hash layout flagplot-state-v22, scenario file hash 5ed635ac5538b189
+Batch: label `before-tuning`, 1000 runs, seeds 1 to 1000, file hash 52ea2e3769f29d3e
+Inputs: state hash layout flagplot-state-v23, scenario file hash 5ed635ac5538b189
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../map/south_pacific_land_links.csv a17610478627687e
 - data/scenarios/../reference/ship_classes_eastern_solomons.csv 2716ae28c805274f
@@ -81,7 +81,7 @@ Allied margin over 1000 runs: 5th 83.717083, median 101.637083, 95th 115.267083
 
 ## Beside the four earlier reports
 
-Written by hand after the report above, from the batch `before-tuning` and the event logs of the same 1,000 seeds. Three things changed since the stock-fix report, all settled before the round by decision 0109 (`docs/decisions/0109-the-first-tuning-round-of-the-ground-figures.md`, "Settled before the round"); nothing was tuned. (1) A unit falling back is out of a fight its own side starts: it does not fire, is not counted for the limit on engaged men and takes no share of the losses, on a day when the other side is not on attack in the hex. (2) Each Japanese run lands its own rations as cargo (14 days for the Kawaguchi runs, the Aoba part and the Oka group; 7 days for the Ichiki echelon, the Yokosuka force and the force of 29 August), and the stocks stated ashore are 0 in (3,-4) and 71 t in (2,-5). (3) `fighting_unit_work_share` is 0.1, where it was 0.5. State version flagplot-state-v22, rules label 6. This batch is 1,000 runs, seeds 1 to 1,000. The earlier reports are the baseline (`full-slice-39-days-baseline.md`, state v20), the report after decision 0105 (`-after-0105.md`, v21), the report after decision 0106 (`-after-0106.md`, v22) and the report after the stock fix (`-after-stock-fix.md`, v22).
+Written by hand after the report above, from the batch `before-tuning` and the event logs of the same 1,000 seeds. Three things changed since the stock-fix report, all settled before the round by decision 0109 (`docs/decisions/0109-the-first-tuning-round-of-the-ground-figures.md`, "Settled before the round"); nothing was tuned. (1) A unit falling back is out of a fight its own side starts: it does not fire, is not counted for the limit on engaged men and takes no share of the losses, on a day when the other side is not on attack in the hex. (2) Each Japanese run lands its own rations as cargo (14 days for the Kawaguchi runs, the Aoba part and the Oka group; 7 days for the Ichiki echelon, the Yokosuka force and the force of 29 August), and the stocks stated ashore are 0 in (3,-4) and 71 t in (2,-5). (3) `fighting_unit_work_share` is 0.1, where it was 0.5. State version flagplot-state-v23, rules label 7 (decision 0111, merged alongside, raised the state version and changes nothing in the slice: every scenario's run is the same apart from its hash lines). This batch is 1,000 runs, seeds 1 to 1,000; the event logs read below were made by the same build before that merge, whose runs are the same. The earlier reports are the baseline (`full-slice-39-days-baseline.md`, state v20), the report after decision 0105 (`-after-0105.md`, v21), the report after decision 0106 (`-after-0106.md`, v22) and the report after the stock fix (`-after-stock-fix.md`, v22).
 
 | Measure | Record | Baseline: 5th to 95th, median | After 0105 | After 0106 | After the stock fix | Before tuning | Verdict: baseline, 0105, 0106, fix, before tuning |
 | --- | --- | --- | --- | --- | --- | --- | --- |
