@@ -454,6 +454,55 @@ impl World {
         }
     }
 
+    // ---- EXPERIMENT (decision 0100, 14; branch s0-experiment only, never merged) ----
+    // The three helpers below exist only so that the constructor experiment can
+    // do what the public API of a World does not allow: set the day of a world
+    // built from a view, and write a side's belief that is not a starting
+    // contact. They are findings, not a proposal for their shape.
+
+    /// EXPERIMENT. Sets the last day resolved, after the beliefs were given.
+    pub fn experiment_set_day(&mut self, day: u32) {
+        self.truth.day = day;
+    }
+
+    /// EXPERIMENT. Writes a battle claim into a side's belief, with an event
+    /// that records its arrival, on the day given.
+    pub fn experiment_hold_claim(&mut self, side: Side, claim: &crate::belief::BattleClaim) {
+        let search = self
+            .ref_data
+            .search
+            .clone()
+            .expect("the experiment gives search figures");
+        let mut claim = claim.clone();
+        let id = self.events.record(
+            claim.day,
+            Some(claim.pulse),
+            crate::events::EventKind::ClaimReceived {
+                side,
+                hex: claim.hex,
+                claimed_sunk: claim.claimed_sunk,
+                claimed_hits: claim.claimed_hits,
+                claimed_kind: claim.claimed_kind,
+                claimed_shot_down: claim.claimed_shot_down,
+                claimed_on_ground: claim.claimed_on_ground,
+                from_air: claim.from_air,
+                from_bombardment: claim.from_bombardment,
+            },
+            Vec::new(),
+            None,
+        );
+        claim.received_event = id;
+        self.beliefs
+            .get_mut(&side)
+            .expect("both sides have a belief state")
+            .apply_report(&crate::belief::Report::BattleClaim(claim), &search);
+    }
+
+    /// EXPERIMENT. The number of events in the log (to see what a build leaves in it).
+    pub fn experiment_event_count(&self) -> usize {
+        self.events.len()
+    }
+
     pub fn set_config(&mut self, config: SimConfig) {
         self.config = config;
     }
