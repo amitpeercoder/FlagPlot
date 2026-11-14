@@ -79,3 +79,7 @@ id,key,name,kind,nation
 1075,jp-run-1942-09-02-oka-barge-convoy,"Oka barge convoy from northern Santa Isabel, from 2 Sep (2d Bn 124th Infantry)",run,jp
 1076,jp-run-1942-08-29-desron11-taivu,"11th Destroyer Squadron run to Taivu Point, night of 29 Aug (NIDS account)",run,jp
 1077,jp-run-1942-08-29-desron24-taivu,"24th Destroyer Squadron run to Taivu, after the night of 29 Aug (NIDS account)",run,jp
+1078,jp-run-1942-12-07-drums,"Destroyer drum run to Guadalcanal, 7 Dec 1942 (11 destroyers; not unloaded)",run,jp
+1079,jp-run-1942-12-11-drums,"Destroyer drum run to Guadalcanal, 11 Dec 1942 (nine destroyers)",run,jp
+1080,jp-run-1942-12-13-drums,"Destroyer drum run to Tassafaronga, dated 13 Dec 1942 by JM-98 (11 destroyers, Mikawa supporting)",run,jp
+1081,jp-run-1943-01-drum-runs,"Destroyer drum or rubber-bag runs to Guadalcanal, 2, 10 and 14 Jan 1943",run,jp

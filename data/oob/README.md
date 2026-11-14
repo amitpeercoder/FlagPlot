@@ -29,6 +29,7 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - An outside model's research answers of 13 November 2026, checked against the sources they cite (what was verified, what the sources really say, and the rate of misattribution): `docs/research/oob/outside-research-nov-13.md`
 - An outside research pass of 14 November 2026 (transports, land units, construction and shore work, marches and place positions, preparation of the landing, verdicts, submarine damage), checked against the sources it cites, with the new attributes of `land_unit_facts.csv` and `ship_facts.csv`, the rows' ids, and each Guadalcanal place's map hex: `docs/research/oob/outside-research-nov-14.md`
 - A second outside research pass of 14 November 2026 (the Japanese west of the airfield and the Oka group, positions of places from the 1974 US gazetteer, the engineers and the airfield, the Kawaguchi Detachment by day, Japanese rations), checked against the sources it cites, with each new position's map hex: `docs/research/oob/outside-research-nov-14-slice.md`
+- Levels of supply and convoy cycles, 1942 (the War Department's levels for the South Pacific and how they were defined, the operating level between shipments, what was on hand at Guadalcanal and how often ships came, Noumea's congestion, the Japanese drum runs and their plans in days of rations), read on 2026-11-14, with the range the rows give for a convoy's load above a base's floor: `docs/research/oob/supply-levels-and-convoy-cycles.md`
 - The US side of the air campaign (losses and credits by month from the Navy's statistics, daily dispatches, claims against losses both ways): `docs/research/oob/us-side-air-losses.md`
 - Notes of 10 November 2026 (research notes that propose nothing binding; most statements carry their source, and the pages that would not load are marked "unverified"):
   - Shipboard anti-aircraft fire in the South Pacific, August 1942 to February 1943 (US and Japanese guns, directors, what each carrier's fire did at Eastern Solomons): `docs/research/oob/anti-aircraft.md`
@@ -74,38 +75,38 @@ Scope when first written: what test scenarios 4 to 6 need. The ships at Savo Isl
 | `engagement_positions.csv` | 548 | The engagements: stations, tracks, reported positions, sinkings |
 | `engagement_outcomes.csv` | 4,055 | The engagements: hits, losses, ammunition, aircraft |
 | `place_positions.csv` | 94 | Latitude and longitude of the slice's bases and landmarks, by feature. **Not yet checked by `oob-check`** |
-| `land_units.csv`, `land_unit_facts.csv` | 98, 1,054 | Land units on Guadalcanal and Tulagi, strengths, landings, estimates, rations |
-| `lift_entities.csv`, `troop_lift_facts.csv` | 78, 182 | What men were carried by sea: ships, groups and runs, capacities and loads |
+| `land_units.csv`, `land_unit_facts.csv` | 100, 1,185 | Land units on Guadalcanal and Tulagi, strengths, landings, estimates, rations |
+| `lift_entities.csv`, `troop_lift_facts.csv` | 82, 189 | What men were carried by sea: ships, groups and runs, capacities and loads |
 | `passages.csv` | 186 | Recorded ship passages |
 | `aircrew_fates.csv` | 118 | Named airmen lost and what became of them |
 | `training_facts.csv` | 105 | Training and experience by navy and period |
-| `place_facts.csv`, `places.csv` | 216, 67 | Facts about bases; names of places |
+| `place_facts.csv`, `places.csv` | 240, 67 | Facts about bases; names of places |
 | `engagements.csv`, `attributes.csv` | 11, 140 | The named battles; the vocabulary of the facts layer |
-| `sources.csv` | 262 | Every source cited |
-| `gaps.csv` | 1,278 | What was not found |
+| `sources.csv` | 266 | Every source cited |
+| `gaps.csv` | 1,288 | What was not found |
 
 Every row has a source and a locator (`sources.csv`, `gaps.csv` and the identity files, which hold no facts, excepted). About 30 values from the first pass and about 15 from the second were re-read against the cited pages. One error was found and corrected: a website's displacement figures had been converted as metric tonnes when they are long tons.
 
 ### How firm it is
 
-The two tables count the 13,549 rows of the 18 files that carry a `confidence` column (the fact files, `fits.csv`, the four engagement files with `engagements.csv` left out, `aircrew_fates.csv`, `passages.csv` and `place_positions.csv`). Shares are rounded.
+The two tables count the 13,711 rows of the 18 files that carry a `confidence` column (the fact files, `fits.csv`, the four engagement files with `engagements.csv` left out, `aircrew_fates.csv`, `passages.csv` and `place_positions.csv`). Shares are rounded.
 
 | Confidence | Rows | Share |
 | --- | --- | --- |
-| high | 2,976 | 22% |
-| medium | 6,772 | 50% |
-| low | 3,801 | 28% |
+| high | 3,079 | 22% |
+| medium | 6,828 | 50% |
+| low | 3,804 | 28% |
 
 | Standing | Rows | Share |
 | --- | --- | --- |
-| preferred | 5,639 | 42% |
-| unconfirmed | 5,758 | 42% |
+| preferred | 5,639 | 41% |
+| unconfirmed | 5,920 | 43% |
 | disputed | 1,779 | 13% |
 | alternative | 373 | 3% |
 
 Where the rows come from matters more than the count:
 
-- **Wikipedia is still the largest single source: 1,424 rows, 11% of the 13,549.** All are `low` confidence; 238 of them stand `preferred`, which this pass did not check against the rule above.
+- **Wikipedia is still the largest single source: 1,424 rows, 10% of the 13,711.** All are `low` confidence; 238 of them stand `preferred`, which this pass did not check against the rule above.
 - **The Naval War College analysis of Savo Island (1950) is second: 986 rows.** The second pass found a complete scan. It was read through machine-read text, which misreads some digits. Rows with a doubtful digit say so and are graded down. Its diagrams were not read.
 - **Websites carry most of the class and weapon data:** combinedfleet.com (868), navypedia.org (531), navweaps.com (485), the Nishida class pages (319) and uboat.net (235). Nishida and Navypedia give no sources.
 - **Two official sites load in a browser and not otherwise.** The US Navy's online ship histories and the Australian Navy's unit histories were read that way for the Savo Island ships (30 rows). They gave firm dates, casualties and Chicago's radar, and nothing on the radar of the six ships still missing. Most ship histories in the data still come from a mirror of the older printed entries. NavSource refuses the browser too.
