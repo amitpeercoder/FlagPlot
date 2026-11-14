@@ -13,6 +13,7 @@ If a spec or a rule is ambiguous or looks wrong, stop and ask. Do not guess. A d
 | Do anything | `docs/pillars.md`: what the game is and the five pillars every feature is tested against |
 | Ask what the game does today | `docs/rules/`: every rule as the code has it, in the order a day resolves. `docs/glossary.md`: one meaning for each word |
 | Ask why a rule is as it is | `docs/decisions/` (`README.md` is the index). `docs/rules/differences.md`: where a record and the code differ, with a ruling on each |
+| Work on step 3, the staff planner | `docs/step3-spec.md`, the source of truth for step 3: the target, the command contract, the stages and what done means |
 | Read step 2, or work on what follows it | `docs/step2-spec.md`, the source of truth for step 2. `docs/validation/step2-close.md`: where it ended and what the designer decided. `docs/open-work.md`: what is open and what comes next. `data/validation/`: the measures, and its `README.md` for their rules (no recorded value without the rows it rests on; a range spans a dispute and changes no row's standing). `docs/validation/`: the reports, and `docs/validation/tuning/`: each tuning round's record |
 | Ask what step 1 was for, or left out | `docs/step1-spec.md`, and decision 0052 |
 | Change or add a rule | `docs/engineering/rule-complexity.md`, `docs/engineering/traceability.md`, and the rule's chapter in `docs/rules/` |
