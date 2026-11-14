@@ -6,6 +6,7 @@ use sim_core::state::{Ship, ShipLocation, ShipSystems};
 use sim_core::view::SideView;
 
 use crate::answer::{NotKnown, FORMAT, VERSION};
+use crate::briefing::{ground_estimate_lines, GroundEstimateLine};
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
 use crate::lines::{
     air_group_line, base_line, fed_last_night, force_line, is_listed, land_unit_hex,
@@ -85,6 +86,12 @@ pub struct ListContacts {
     pub kind: &'static str,
     pub area: Option<Area>,
     pub contacts: Vec<ContactLine>,
+    /// The side's estimates of the enemy's men ashore (decision 0092, 19), in
+    /// `area` if one is given: one for each hex, the last report there, with
+    /// its day and age. They are estimates and may be wrong. Left out when
+    /// the side holds none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub ground_estimates: Vec<GroundEstimateLine>,
 }
 
 /// A line for each of the side's task forces that has a ship afloat, in
@@ -140,7 +147,13 @@ pub fn list_bases(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListBases {
 
 /// A line for each contact the side holds, in `area` if one is given.
 pub fn list_contacts(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListContacts {
-    let ctx = Ctx::new(*view);
+    let mut ctx = Ctx::new(*view);
+    // Only when there is an estimate: the numbers of the events are wanted
+    // for the estimates alone.
+    if view.ground_estimates().next().is_some() {
+        ctx.set_events(&view.events());
+    }
+    let ground_estimates = ground_estimate_lines(&ctx, view, Some(&|hex| within(area, hex)));
     ListContacts {
         format: FORMAT,
         version: VERSION,
@@ -151,6 +164,7 @@ pub fn list_contacts(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListConta
             .filter(|c| within(area, c.estimated_hex))
             .map(|c| contact_line(&ctx, c))
             .collect(),
+        ground_estimates,
     }
 }
 

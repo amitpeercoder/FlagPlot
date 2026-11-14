@@ -452,12 +452,34 @@ pub struct FinalOut {
     land_units: Vec<LandUnitOut>,
     contacts: PerSide<ContactOut>,
     claims: PerSide<ClaimOut>,
+    /// What each side believes of the enemy's men ashore (decision 0092,
+    /// 19), beside its contacts. Left out when neither side holds an
+    /// estimate.
+    #[serde(skip_serializing_if = "PerSide::is_empty")]
+    ground_estimates: PerSide<GroundEstimateOut>,
 }
 
 #[derive(Serialize)]
 pub struct PerSide<T> {
     allied: Vec<T>,
     japanese: Vec<T>,
+}
+
+impl<T> PerSide<T> {
+    fn is_empty(&self) -> bool {
+        self.allied.is_empty() && self.japanese.is_empty()
+    }
+}
+
+/// A side's estimate of the enemy's men ashore in a hex: the last ground
+/// report's count, its day and the report's event. It may be wrong; the truth
+/// is in `land_units`.
+#[derive(Serialize)]
+struct GroundEstimateOut {
+    hex: (i32, i32),
+    men: u32,
+    day: u32,
+    report_event: u32,
 }
 
 #[derive(Serialize)]
@@ -516,6 +538,18 @@ pub fn final_state(world: &World) -> FinalOut {
             })
             .collect()
     };
+    let ground_estimates = |side: Side| -> Vec<GroundEstimateOut> {
+        world
+            .side_view(side)
+            .ground_estimates()
+            .map(|estimate| GroundEstimateOut {
+                hex: (estimate.hex.q, estimate.hex.r),
+                men: estimate.men,
+                day: estimate.day,
+                report_event: estimate.report_event.umpire_raw(&key),
+            })
+            .collect()
+    };
     FinalOut {
         task_forces,
         ships,
@@ -529,6 +563,10 @@ pub fn final_state(world: &World) -> FinalOut {
         claims: PerSide {
             allied: claims(Side::Allied),
             japanese: claims(Side::Japanese),
+        },
+        ground_estimates: PerSide {
+            allied: ground_estimates(Side::Allied),
+            japanese: ground_estimates(Side::Japanese),
         },
     }
 }

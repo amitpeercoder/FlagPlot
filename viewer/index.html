@@ -448,6 +448,7 @@ function sideReplay(replay, side) {
       land_units: (final.land_units || []).filter(own),
       contacts: { [side]: (final.contacts && final.contacts[side]) || [] },
       claims: { [side]: (final.claims && final.claims[side]) || [] },
+      ground_estimates: { [side]: (final.ground_estimates && final.ground_estimates[side]) || [] },
     } : null,
   });
   return out;
@@ -583,8 +584,11 @@ function snapshot(cur, aux) {
   // Land units (decision 0066): the men of each ashore and where, rebuilt from the events; the formed bases by hex.
   const landUnits = new Map();
   for (const [id, u] of cur.landUnits) landUnits.set(id, { id, name: u.name, side: u.side, men_ashore: u.men_ashore, hex: u.hex ? u.hex.slice() : null, posture: u.posture, fatigue: u.fatigue, fed_share: u.fed_share });
+  // What each side believes of the enemy's men ashore (decision 0092): the last ground report of each hex.
+  const estimates = {};
+  for (const side of Object.keys(cur.estimates)) estimates[side] = new Map([...cur.estimates[side]].map(([k, e]) => [k, { hex: e.hex.slice(), men: e.men, day: e.day }]));
   return {
-    forces, contacts, landUnits, formedBases: new Map(cur.formedBases), baseSide: new Map(cur.baseSide),
+    forces, contacts, estimates, landUnits, formedBases: new Map(cur.formedBases), baseSide: new Map(cur.baseSide),
     sunk: new Set(cur.sunk),
     shipForce: new Map(cur.shipForce),
     moves: aux.moves, fights: aux.fights, searches: aux.searches,
@@ -792,7 +796,7 @@ function buildModel(replay) {
   steps.forEach(s => s.events.forEach(ei => stepOfEvent.set(events[ei].id, s.index)));
 
   // Rebuild
-  const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map(), landUnits: new Map(), formedBases: new Map(), baseSide: new Map() };
+  const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, estimates: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map(), landUnits: new Map(), formedBases: new Map(), baseSide: new Map() };
   for (const u of initial.land_units || []) cur.landUnits.set(u.id, { id: u.id, name: u.name, side: u.side, men_ashore: u.men_ashore || 0, hex: Array.isArray(u.hex) ? u.hex.slice() : (u.hex ? [u.hex.q, u.hex.r] : null), posture: u.posture || 'defend', fatigue: u.fatigue || 0, fed_share: u.fed_share !== undefined ? u.fed_share : 1 });
   // Who holds each base (decision 0090): the side the replay starts it with, changed by base_changed_side events.
   for (const b of replay.bases || []) cur.baseSide.set(b.id, b.side);
@@ -921,7 +925,8 @@ function buildModel(replay) {
         case 'men_embarked':
         case 'men_landed':
         case 'men_lost_unfed':
-        case 'men_lost_in_fight': {
+        case 'men_lost_in_fight':
+        case 'men_lost_to_fire': {
           let u = cur.landUnits.get(d.unit);
           if (!u) { u = { id: d.unit, name: 'land unit ' + d.unit, side: d.side, men_ashore: 0, hex: null, posture: 'defend', fatigue: 0, fed_share: 1 }; cur.landUnits.set(d.unit, u); }
           u.men_ashore = d.ashore || 0;
@@ -960,6 +965,18 @@ function buildModel(replay) {
           break;
         case 'base_formed':
           if (Array.isArray(d.hex)) cur.formedBases.set(d.hex[0] + ',' + d.hex[1], { id: d.base, side: d.side });
+          break;
+        // A ground report found an enemy base a landing formed (decision 0092, 15): it is on the finder's map now,
+        // held by the other side.
+        case 'base_found':
+          if (Array.isArray(d.hex)) {
+            const key = d.hex[0] + ',' + d.hex[1];
+            if (!cur.formedBases.has(key) && !bases.has(d.base)) cur.formedBases.set(key, { id: d.base, side: d.side === 'allied' ? 'japanese' : 'allied' });
+          }
+          break;
+        // A side's estimate of the enemy's men ashore in a hex: the last report there, dated by its day (decision 0092).
+        case 'ground_report_received':
+          if (Array.isArray(d.hex) && cur.estimates[d.side]) cur.estimates[d.side].set(d.hex[0] + ',' + d.hex[1], { hex: d.hex.slice(), men: d.men, day: ev.day });
           break;
         // A ship in port at a base that changed side is sunk with it (decision 0090, 21).
         case 'ship_lost_with_base':
@@ -1123,6 +1140,17 @@ function compareWithFinal(model) {
       for (const k of ['ship_count', 'kind', 'age_pulses']) if (!numEq(r[k], c[k])) problems.push(side + ' contact ' + c.id + ' ' + k + ' rebuilt ' + r[k] + ' but final ' + c[k]);
     }
     for (const id of have.keys()) if (!want.some(c => c.id === id)) problems.push(side + ' contact ' + id + ' is in the rebuild but not in final');
+  }
+  // The estimates of the enemy's men ashore (decision 0092): the last report of each hex, rebuilt from the events.
+  const fe = final.ground_estimates || {};
+  for (const side of new Set([...Object.keys(fe), ...Object.keys(end.estimates || {})])) {
+    const want = fe[side] || [], have = (end.estimates && end.estimates[side]) || new Map();
+    for (const e of want) {
+      const r = have.get(e.hex[0] + ',' + e.hex[1]);
+      if (!r) { problems.push(side + ' estimate at (' + e.hex + ') is in final but not in the rebuild'); continue; }
+      if (r.men !== e.men || r.day !== e.day) problems.push(side + ' estimate at (' + e.hex + ') rebuilt as ' + r.men + ' on day ' + r.day + ' but final says ' + e.men + ' on day ' + e.day);
+    }
+    for (const key of have.keys()) if (!want.some(e => e.hex[0] + ',' + e.hex[1] === key)) problems.push(side + ' estimate at (' + key + ') is in the rebuild but not in final');
   }
   // Land units (decision 0066): the men ashore and where, rebuilt from the events.
   for (const u of final.land_units || []) {

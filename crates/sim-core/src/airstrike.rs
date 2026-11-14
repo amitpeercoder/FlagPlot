@@ -1735,7 +1735,7 @@ impl World {
                     destroyed_in_all += destroyed;
                     EventKind::AircraftDestroyedOnGround {
                         air_group: group,
-                        base: base,
+                        base,
                         aircraft: destroyed,
                         remaining: air_group.ready,
                     }
@@ -1746,7 +1746,7 @@ impl World {
                     destroyed_in_all += destroyed;
                     EventKind::DamagedAircraftDestroyedOnGround {
                         air_group: group,
-                        base: base,
+                        base,
                         aircraft: destroyed,
                         remaining: air_group.damaged,
                     }
@@ -1789,7 +1789,7 @@ impl World {
                 day,
                 pulse,
                 EventKind::BaseSupplyDestroyed {
-                    base: base,
+                    base,
                     destroyed_t: destroyed,
                     supply_t: after,
                 },

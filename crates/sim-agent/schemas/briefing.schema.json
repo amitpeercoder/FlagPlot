@@ -16,6 +16,10 @@
     "objectives": { "$ref": "#/$defs/objectives" },
     "orders": { "$ref": "#/$defs/orders" },
     "contacts": { "$ref": "#/$defs/contacts" },
+    "enemy_ashore": {
+      "description": "What the side believes of the enemy's men ashore, from its ground reports (decision 0092, 19), and enemy bases a report found yesterday. Left out when the side holds no estimate and found no base.",
+      "$ref": "#/$defs/enemy_ashore"
+    },
     "action": { "$ref": "#/$defs/action" },
     "losses": { "$ref": "#/$defs/losses" },
     "task_forces": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/force_line" } },
@@ -327,6 +331,32 @@
         "event": { "type": "integer" }
       }
     },
+    "enemy_ashore": {
+      "type": "object",
+      "required": ["estimates"],
+      "additionalProperties": false,
+      "properties": {
+        "estimates": {
+          "description": "One estimate for each hex, in hex order.",
+          "type": "array",
+          "items": { "$ref": "defs.schema.json#/$defs/ground_estimate_line" }
+        },
+        "bases_found_yesterday": {
+          "description": "Enemy bases a ground report put on the side's map yesterday (decision 0092, 15). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "place", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "event": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
     "weapon_or_null": { "type": ["string", "null"], "enum": ["guns", "torpedoes", "bombs", null] },
     "action": {
       "type": "object",
@@ -435,6 +465,64 @@
               "hits": { "type": "integer" },
               "hits_on_aircraft": { "type": "integer" },
               "hits_on_supply": { "type": "integer" },
+              "hits_on_men": { "description": "Hits that landed on men ashore (decision 0092, 10). Left out when 0.", "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "bombardments": {
+          "description": "Shore bombardments the side's own forces made last night (decision 0092, 17): the shells and the weighed shots, never a hit; what the side believes it did is in its claim. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["force", "base", "place", "shells", "weighed_shots", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "shells": { "$ref": "defs.schema.json#/$defs/dec" },
+              "weighed_shots": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "shell_fire": {
+          "description": "What each of the side's own ships fired in those bombardments and the rounds it has left. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "base", "shells", "weighed_shots", "rounds_left", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "shells": { "$ref": "defs.schema.json#/$defs/dec" },
+              "weighed_shots": { "$ref": "defs.schema.json#/$defs/dec" },
+              "rounds_left": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "bombardments_against": {
+          "description": "Shore bombardments of the side's own bases last night (decision 0092, 18): the fire and where each hit landed, never the force or the ships that fired. The aircraft and supply destroyed are in losses and the bases, the men lost in land_units. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "base", "place", "shells", "weighed_shots", "hits", "hits_on_aircraft",
+              "hits_on_supply", "hits_on_men", "event"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "shells": { "$ref": "defs.schema.json#/$defs/dec" },
+              "weighed_shots": { "$ref": "defs.schema.json#/$defs/dec" },
+              "hits": { "type": "integer" },
+              "hits_on_aircraft": { "type": "integer" },
+              "hits_on_supply": { "type": "integer" },
+              "hits_on_men": { "type": "integer" },
               "event": { "type": "integer" }
             }
           }
@@ -567,7 +655,7 @@
           }
         },
         "claims": {
-          "description": "Claims yesterday: what the side's own people believe they did in a fight at sea or a raid. They can be wrong. A claim from the air (from_air true) says hits on ships and the kind they were taken for, ships sunk, aircraft shot down and aircraft destroyed on the ground; a claim of a fight at sea says ships sunk only, with the rest 0 and null.",
+          "description": "Claims yesterday: what the side's own people believe they did in a fight at sea or a raid. They can be wrong. A claim from the air (from_air true) says hits on ships and the kind they were taken for, ships sunk, aircraft shot down and aircraft destroyed on the ground; a claim of a fight at sea says ships sunk only, with the rest 0 and null; the claim of a shore bombardment (from_bombardment true, from_air false) says aircraft believed destroyed on the ground and nothing else.",
           "type": "array",
           "items": {
             "type": "object",
@@ -587,6 +675,7 @@
               "claimed_shot_down": { "type": "integer" },
               "claimed_on_ground": { "type": "integer" },
               "from_air": { "type": "boolean" },
+              "from_bombardment": { "description": "True for the claim of a shore bombardment (decision 0092, 17). Left out when false.", "type": "boolean" },
               "event": {
                 "description": "The event that told the side; explain on it shows the side's own firing it rests on.",
                 "type": "integer"
@@ -805,11 +894,11 @@
             "additionalProperties": false,
             "properties": {
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
-              "cause": { "enum": ["unfed", "lost_with_ship", "fight"] },
+              "cause": { "enum": ["unfed", "lost_with_ship", "fight", "fire"] },
               "men": { "type": "integer" },
               "ship": { "description": "The ship lost with, for lost_with_ship.", "$ref": "defs.schema.json#/$defs/handle_or_null" },
-              "place": { "description": "The hex of an unfed or fight loss.", "$ref": "defs.schema.json#/$defs/place_or_null" },
-              "ashore": { "description": "What the unit has left ashore there, for unfed and fight.", "$ref": "defs.schema.json#/$defs/count_or_null" },
+              "place": { "description": "The hex of an unfed, fight or fire loss.", "$ref": "defs.schema.json#/$defs/place_or_null" },
+              "ashore": { "description": "What the unit has left ashore there, for unfed, fight and fire.", "$ref": "defs.schema.json#/$defs/count_or_null" },
               "event": { "type": "integer" }
             }
           }

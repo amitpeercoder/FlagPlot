@@ -324,6 +324,14 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "you attack and hold ground with set_posture {posture: attack or defend}",
         "a base with no man of its side ashore falls to one man on attack in its hex",
         "Fly your air groups out by rebase a day before",
+        // Shells and bombs ashore, and the estimate (decision 0092).
+        "set_mission {mission: bombardment}",
+        "end the night's move in the hex of an enemy base that is on your map",
+        "a claim of aircraft destroyed on the ground, never the true hits",
+        "A base that is not on your map cannot be bombarded or struck until it is found",
+        "wrong by up to half either way",
+        "an opening estimate of the enemy's men, dated day 0, which can be far wrong",
+        "Bombs from the air now also hit men ashore",
     ] {
         assert!(instructions.contains(phrase), "instructions lack: {phrase}");
     }
@@ -339,6 +347,9 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "takes one order, set_posture {posture: attack or defend}",
         "goes back to defend and its order is spent",
         "falls to a single man of yours on attack in its hex, with no fight",
+        // Bombardment (decision 0092).
+        "BOMBARDMENT. set_mission {mission: bombardment} is a standing order",
+        "a base not on your map cannot be bombarded",
         // 10. The patrol share.
         "set_patrol_share {share} is the share of the group kept over its own hex: 1 (where it starts) keeps every fighter at home and sends no escort, 0.5 keeps half at home and lets half escort",
     ] {
@@ -367,6 +378,9 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
             "{tool}"
         );
     }
+    // The estimates of the enemy's men ashore (decision 0092).
+    assert!(tool_description("list_contacts").contains("ground_estimates"));
+    assert!(tool_description("get_briefing").contains("estimates of the enemy's men ashore"));
     // 6, 2, 7, 13, 4. What the briefing and the lists now show.
     assert!(tool_description("list_forces").contains("cargo_supply_t and cargo_fuel_t"));
     let briefing_description = tool_description("get_briefing");

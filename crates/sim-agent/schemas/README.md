@@ -390,3 +390,27 @@ also has `lost_with_base: true` (left out otherwise) and `place: null`.
 - **Bases.** The side of a base changes during a game, so the lists of bases
   and the places that name them are read from the present state on every call;
   nothing is kept from the start of the game.
+
+## Shells, bombs and what a side knows of the enemy ashore (decision 0092)
+
+Fields and values added only, so `version` stays 3. Each is left out when it has
+nothing to say, so the answer for a game with no bombardment, no estimate and no
+man hit by a bomb is byte for byte what it was.
+
+- **The briefing's `enemy_ashore` part** follows `contacts`: `estimates`, one
+  for each hex where the side holds a ground estimate of the enemy's men ashore
+  (`place`, `men`, `day` reported, `age_days`, `event`), and
+  `bases_found_yesterday` (an enemy base a ground report put on the side's map).
+  An estimate is the count of the last report, wrong by up to half either way;
+  it is never aged or corrected, and an opening estimate is dated day 0. The true
+  count and the error are never given. `list_contacts` has the same estimates as
+  `ground_estimates`, in the area if one is given.
+- **The briefing's `action`** has `bombardments` (the side's own force, the base,
+  shells and weighed shots, never a hit), `shell_fire` (each own ship's shells and
+  the rounds it has left) and `bombardments_against` (the side's own base: shells,
+  weighed shots, hits and where they landed, never the force or the ships). A raid
+  on a base has `hits_on_men` when a hit landed on men.
+- **Claims** have `from_bombardment` (true for the claim of a shore bombardment:
+  `claimed_on_ground` aircraft, `from_air` false).
+- **Men lost** in `land_units.lost_yesterday` have the cause `fire` (a bomb or a
+  shell on the base).

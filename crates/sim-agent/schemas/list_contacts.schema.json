@@ -10,7 +10,12 @@
     "version": { "const": 3 },
     "kind": { "const": "list_contacts" },
     "area": { "$ref": "#/$defs/area_or_null" },
-    "contacts": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/contact_line" } }
+    "contacts": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/contact_line" } },
+    "ground_estimates": {
+      "description": "The side's estimates of the enemy's men ashore (decision 0092, 19), one for each hex, in the area if one is given. Estimates, not counts: they may be wrong. Left out when the side holds none.",
+      "type": "array",
+      "items": { "$ref": "defs.schema.json#/$defs/ground_estimate_line" }
+    }
   },
   "$defs": {
     "area_or_null": {

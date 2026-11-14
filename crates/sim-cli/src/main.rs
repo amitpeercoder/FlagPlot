@@ -652,6 +652,17 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
         if view.claims().is_empty() {
             println!("{}: no battle claims", side.name());
         }
+        // What the side believes of the enemy's men ashore (decision 0092):
+        // printed only when it holds an estimate.
+        for estimate in view.ground_estimates() {
+            println!(
+                "{} estimate at {}: {} enemy men ashore, reported day {}",
+                side.name(),
+                estimate.hex,
+                estimate.men,
+                estimate.day
+            );
+        }
     }
     print_result(world);
     Ok(())

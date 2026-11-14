@@ -563,6 +563,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             hits,
             hits_on_aircraft,
             hits_on_supply,
+            hits_on_men,
         } => (
             "base_attacked",
             d.id("air_group", *air_group)
@@ -572,7 +573,8 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .num("expected", *expected)
                 .int("hits", *hits)
                 .int("hits_on_aircraft", *hits_on_aircraft)
-                .int("hits_on_supply", *hits_on_supply),
+                .int("hits_on_supply", *hits_on_supply)
+                .int_when_nonzero("hits_on_men", *hits_on_men),
         ),
         EventKind::AircraftDestroyedOnGround {
             air_group,
@@ -756,6 +758,86 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .hex("hex", *hex)
                 .int("lost", *lost)
                 .int("ashore", *ashore),
+        ),
+        EventKind::BombardmentFire {
+            ship,
+            base,
+            shells,
+            weighed_shots,
+            chance,
+            expected,
+            hits,
+            hits_on_aircraft,
+            hits_on_supply,
+            hits_on_men,
+            rounds_left,
+        } => (
+            "bombardment_fire",
+            d.id("ship", *ship)
+                .id("base", *base)
+                .num("shells", *shells)
+                .num("weighed_shots", *weighed_shots)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("hits", *hits)
+                .int("hits_on_aircraft", *hits_on_aircraft)
+                .int("hits_on_supply", *hits_on_supply)
+                .int("hits_on_men", *hits_on_men)
+                .num("rounds_left", *rounds_left),
+        ),
+        EventKind::ShoreBombardment {
+            task_force,
+            base,
+            hex,
+            shells,
+            weighed_shots,
+            hits,
+            hits_on_aircraft,
+            hits_on_supply,
+            hits_on_men,
+        } => (
+            "shore_bombardment",
+            d.id("task_force", *task_force)
+                .id("base", *base)
+                .hex("hex", *hex)
+                .num("shells", *shells)
+                .num("weighed_shots", *weighed_shots)
+                .int("hits", *hits)
+                .int("hits_on_aircraft", *hits_on_aircraft)
+                .int("hits_on_supply", *hits_on_supply)
+                .int("hits_on_men", *hits_on_men),
+        ),
+        EventKind::MenLostToFire {
+            unit,
+            base,
+            hex,
+            lost,
+            ashore,
+        } => (
+            "men_lost_to_fire",
+            d.id("unit", *unit)
+                .id("base", *base)
+                .hex("hex", *hex)
+                .int("lost", *lost)
+                .int("ashore", *ashore),
+        ),
+        EventKind::GroundReportReceived {
+            side,
+            hex,
+            men,
+            replaced,
+        } => (
+            "ground_report_received",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .int("men", *men)
+                .flag("replaced", *replaced),
+        ),
+        EventKind::BaseFound { side, base, hex } => (
+            "base_found",
+            d.text("side", names::side(*side))
+                .id("base", *base)
+                .hex("hex", *hex),
         ),
         EventKind::LandUnitFatigue {
             unit,
@@ -1175,11 +1257,21 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             claimed_shot_down,
             claimed_on_ground,
             from_air,
+            from_bombardment,
         } => {
             let d = d
                 .text("side", names::side(*side))
                 .hex("hex", *hex)
                 .int("claimed_sunk", *claimed_sunk);
+            // A bombardment's claim (decision 0092, 17) says aircraft
+            // destroyed on the ground and is marked; the others export as
+            // they always did.
+            let d = if *from_bombardment {
+                d.int("claimed_on_ground", *claimed_on_ground)
+                    .flag("from_bombardment", true)
+            } else {
+                d
+            };
             // A claim from the air (decision 0056) adds its own figures; a
             // surface fight's claim exports as it always did.
             let d = if *from_air {
