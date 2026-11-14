@@ -20,7 +20,7 @@ The research of stage 0 is in `docs/research/oob/land-forces.md`. What it gives 
 - **Nothing on how fast an unfed force wasted** before November 1942.
 - **Nothing on how fast men were put ashore** as a rate. The landings of 7 to 9 August and the destroyer runs give totals and dates.
 
-So every figure here is a placeholder, and none is taken from a row. Stage 4 reads the rows.
+So every figure here is a placeholder, and none is taken from a row. Stage 4 of ground combat (decision 0093) reads the rows.
 
 ## Decisions
 

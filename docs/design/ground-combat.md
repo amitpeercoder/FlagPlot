@@ -1,6 +1,6 @@
 # Plan: land units and basic ground combat
 
-Status: a plan by the architect, written on Nov 12, 2026, and approved by the designer the same day; the four questions it first left open are answered below. Stages 1, 2 and 3 are built (decisions 0066, 0090 and 0092); stage 4 is not. Each stage gets its decision record, with a rule card, before its code is delegated. Every figure named is a placeholder. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
+Status: a plan by the architect, written on Nov 12, 2026, and approved by the designer the same day; the four questions it first left open are answered below. Stages 1, 2 and 3 are built (decisions 0066, 0090 and 0092); stage 4, the August landings (decision 0093, confirmed), is not; marching overland (decision 0094) is built and is the ground it stands on. Each stage gets its decision record, with a rule card, before its code is delegated. Every figure named is a placeholder. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
 
 ## Why now
 
@@ -175,7 +175,7 @@ Step 2 is under way and its spec says ground combat is not in it. Three things k
 - **A base that changes side is the widest change since belief.** A rule that assumed a base's side is fixed will be wrong without failing a test. The review in stage 2 is the guard, and the leak tests are the second.
 - **The sources for land strengths are thinner and more disputed than for ships,** above all for the Japanese. Stage 0 may return ranges and not figures, and a measure would then span a dispute.
 - **Scope.** Every row of the left-out table will look reasonable to add. The test stays: does a decision at sea or in the air turn on it.
-- **A fight that is decided in a day.** If the figures let an attack take a base at once, there is no campaign. The scenario of stage 4 is where that shows, and it is a matter of figures, not of rules.
+- **A fight that is decided in a day.** If the figures let an attack take a base at once, there is no campaign. The scenario of stage 4 of ground combat (decision 0093) is where that shows, and it is a matter of figures, not of rules.
 
 ## Answers from the product managers
 

@@ -1,6 +1,6 @@
 # 0095: Preparing a landing
 
-Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that planning ahead should raise an operation's chance of success and that changing a plan should cost some of what was prepared. The designer answered its two questions on Nov 14, 2026: preparation also helps the fight ashore, and what a change costs depends on the change. It was revised the same day (see "Decisions"). Nothing is built. Every figure is a placeholder set by the architect. The hand calculation is written before any code is delegated.
+Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that planning ahead should raise an operation's chance of success and that changing a plan should cost some of what was prepared. The designer answered its two questions on Nov 14, 2026: preparation also helps the fight ashore, and what a change costs depends on the change. It was revised the same day (see "Decisions"). Built on Nov 14, 2026, scenario 27 ("As built", at the end). Every figure is a placeholder set by the architect. The hand calculation was written before any code was delegated; it is in `tests/scenario_27_preparing_a_landing.rs`.
 
 ## The gap
 
@@ -54,7 +54,7 @@ In `ground.toml`, and in the frozen step 1 figures with the same first values:
 
 In the frozen step 1 figures the rule is switched off by its first values, as experience and readiness are there: `unprepared_landing_share` is `"1"` and `unprepared_landing_fatigue` is `0`, so the hand calculations of the earlier stages stand. The live values are those above.
 
-None rests on a source. With them a landing is fully prepared after 20 days in port, and one mounted in 10 days gets its men and supply ashore at three quarters of the rate and its men ashore with a fatigue of 20. A coarse measure for stage 4 can rest on the supply the transports had landed when they left on 9 August, which has rows.
+None rests on a source. With them a landing is fully prepared after 20 days in port, and one mounted in 10 days gets its men and supply ashore at three quarters of the rate and its men ashore with a fatigue of 20. A coarse measure for stage 4 of ground combat (decision 0093) can rest on the supply the transports had landed when they left on 9 August, which has rows.
 
 ## A small worked case
 
@@ -103,8 +103,8 @@ A force with loading 100 for one hex that lands at another works at 10 t an hour
 
 Answered on Nov 14, 2026.
 
-1. **Decision 4:** preparation speeds the landing and also helps the fight ashore (decision 4a).
-2. **Decision 6:** a new landing place loses all of it; a ship joining or a new unit loaded keeps half.
+1. **Decisions 5 and 6:** preparation speeds the landing and also helps the fight ashore (through the fatigue on landing, decision 6).
+2. **Decisions 8 to 10:** a new landing place loses all of it; a ship joining or a new unit loaded keeps half.
 
 ## As built
 
@@ -117,7 +117,7 @@ Built on Nov 14, 2026 (scenario 27, state version 16; the hand calculation is in
 - **A unit rehearses** (ready, on the roster of a force that qualified, did not march, hex not contested) only if every man of it is ashore in the force's hex or aboard the force's ships: a unit aboard another force's ships does not rehearse. Rehearsal for one hex is replaced when the unit rehearses another, with `RehearsalLost` (another landing place).
 - **The rate factor** applies while the force lands men: an unload order on a coast hex with men aboard, or with `landing_at` at that hex. It covers berth and lighter, men, supply and fuel, and the hour of completion. When the unloading completes `landing_at` is cleared; if the order's hex is that hex, `LoadingLost` (spent) is recorded, also when the loading was 0, and the order is done. Roster units still on it go with the order, with no `LeftRoster`.
 - **The first men of a unit** landing in a hex (a unit just made by division counts) record the fatigue gain as `LandUnitFatigue` with the new change `landed`, only if the fatigue changes, then `RehearsalLost` (landed) if it had any, then `LeftRoster` (landed) if it was on a roster.
-- **Preparation helps the fight ashore** only by the fatigue on landing: the fatigue cuts the men who fire (decision 0090). Decision 4a, which the designer's answer named, is read as that and as nothing else.
+- **Preparation helps the fight ashore** only by the fatigue on landing: the fatigue cuts the men who fire (decision 0090). The designer's answer that preparation also helps the fight ashore (decision 6) is read as that and as nothing else.
 - **A split** shares the loading and the order with the new part, with `PreparationShared` (the parent, the new force, the hex, the loading and the units) after `ShipsDetached`, for the detach order and for stragglers alike. `landing_at` is copied to the new part.
 - **Joining** is written as two functions, `preparation::joined` (the lower loading, the roster the union, the receiving force's hex and order) and `preparation::ship_joined` (the loading times the kept share), unit-tested and called by nothing: no order joins forces or adds a ship yet.
 - **No scenario key** sets a force's loading or a unit's rehearsal at the start: both start at 0. The record says "unless a scenario says"; no key is built, as nothing needs one yet.

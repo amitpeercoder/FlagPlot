@@ -81,6 +81,8 @@ Counts are as the sources print them; rival figures are separate rows.
 
 **Cape Esperance.** No count of torpedoes fired was found for any American ship. Buchanan and Duncan made torpedo attacks and two hits are credited to each. The Japanese counts already on file (Aoba 2, Kinugasa 4, from a staff paper) remain the only ones.
 
+*Note, Nov 14, 2026 (audit of the documents; nothing above is changed).* The paragraph above on Cape Esperance disagrees with `cape-esperance.md` (its table of rounds fired) and with the rows. `data/oob/engagement_outcomes.csv` holds counts for American ships: Duncan 2 (row 1643, high, preferred, the Navy's ship history), Buchanan 5 (row 1719, low, unconfirmed, a magazine article that cites a book not read) and McCalla 0 (row 1642, low, unconfirmed). It also holds two Japanese counts for Kinugasa: 4 (row 2282, medium, a staff table, the one named above) and 16 (row 1654, low, unconfirmed, Japanese Wikipedia alone). So "no count was found for any American ship" is not what the rows say; those rows came from the Nov 12 pass on Cape Esperance, which this page did not use. `cape-esperance.md` follows rows 1643, 1654 and 1719; the rows are current, and where this page and `cape-esperance.md` differ, `cape-esperance.md` and the rows are the ones to read. The two Kinugasa counts remain a dispute; this page's 4 is the better-sourced of the two.
+
 **12 to 13 November.** American counts are from the ships' reports as reprinted in the Battle Experience bulletin, and from Sterett's and O'Bannon's own reports. Japanese counts are from the 4th Destroyer Squadron's report, read twice.
 
 | Ship | Fired |

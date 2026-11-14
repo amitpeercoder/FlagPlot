@@ -62,4 +62,6 @@ Looked at, not moved. `anti_aircraft_hit_chance` stays 0.05, **a placeholder tha
 - The guns' share of the kills over the Enterprise force, about 43%, is consistent with the one weak row, about half (3953).
 - No row gives shots against kills, so a grid would have nothing to aim at but the measures, which already agree. That would be a fit with no source, and tuning rule 4 forbids it.
 
+*Note, Nov 14, 2026 (audit of the documents; no figure changed):* the word "consistent" in this conclusion and in "The rules' 43% is consistent with it" above is superseded. The note of Nov 13, 2026 above it, which follows decision 0089, ruling 3, is current: the two shares are not comparable, and the 43% cannot be called consistent with the row's half. `anti_aircraft_hit_chance` still stays 0.05, and the reason for leaving it (no row sizes it) is the same.
+
 It is not a real round with a grid, for that reason. It would become one if a row turned up that gives a force's gun kills, or its rounds and its kills together, for a battle the slice holds.

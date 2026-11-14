@@ -1,6 +1,6 @@
 # 0099: Units that work, and what they build
 
-Status: a plan by the architect, written on Nov 14, 2026, after the designer said that not every man ashore does the same job: construction battalions built and kept up the bases. The designer agreed decisions 1 and 6 on Nov 14, 2026, and added that fighting units may be put to work, less well, and that defences are something to build (decisions 3a and 4). On decision 4 he chose that each unit has its own job. Nothing is built. Every figure is a placeholder. No real unit has a value yet.
+Status: a plan by the architect, written on Nov 14, 2026, after the designer said that not every man ashore does the same job: construction battalions built and kept up the bases. The designer agreed decisions 1 and 6 on Nov 14, 2026, and added that fighting units may be put to work, less well, and that defences are something to build (decisions 3a and 4). On decision 4 he chose that each unit has its own job. Of it, the one activity a day (3b to 3d) and the order `set_activity` with the activities ready and train are built with decision 0097 (Nov 14, 2026, scenario 28); the rest is not built. Every figure is a placeholder. No real unit has a value yet.
 
 ## The gap
 
@@ -70,7 +70,7 @@ In `ground.toml`, and in the frozen step 1 figures with the same first values (n
 | `defences_strength` | `"0.5"` | How much full defences raise a defender's chance to hit |
 | `fighting_unit_work_share` | `"0.5"` | The share of a working unit's work that a fighting unit set to work makes |
 
-None rests on a source. With them a standard battalion of 1,000 builds an airfield in 20 days, doubles a beach's unloading, adds 5 aircraft to a base's nightly repairs, or digs full defences in 20 days. A regiment of 3,000 riflemen set to dig does the last in about 13 days and trains for none of them. The record has what stage 4 needs to check the first: the field at Lunga was begun in July, was nearly done on 7 August, and flew its first American aircraft on 20 August.
+None rests on a source. With them a standard battalion of 1,000 builds an airfield in 20 days, doubles a beach's unloading, adds 5 aircraft to a base's nightly repairs, or digs full defences in 20 days. A regiment of 3,000 riflemen set to dig does the last in about 13 days and trains for none of them. The record has what stage 4 of ground combat (decision 0093) needs to check the first: the field at Lunga was begun in July, was nearly done on 7 August, and flew its first American aircraft on 20 August.
 
 ## What it changes in the August scenario
 

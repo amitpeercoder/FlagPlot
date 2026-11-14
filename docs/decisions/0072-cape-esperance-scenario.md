@@ -1,6 +1,6 @@
 # 0072: The Cape Esperance scenario: what is in it and what is left out
 
-Status: plan; settled by the architect, to be reviewed. Drafted by the architect's team lead on Nov 13, 2026. Second stage built the same day: the ships derived and the scenario written, not run ("Built", below). Third stage the same day: the scenario moved to `data/scenarios/` and the check run once, judged 8, agree 4, at the edge 1, miss 3 ("As built (the check)", at the end). The data choices below are settled as the architect's (decision 0015 and `docs/engineering/data-rules.md`, "Who settles data") and wait for the architect's review. No rule is added or changed.
+Status: built and run once (Nov 13, 2026); settled by the architect, to be reviewed. Drafted by the architect's team lead on Nov 13, 2026. Second stage built the same day: the ships derived and the scenario written, not run ("Built", below). Third stage the same day: the scenario moved to `data/scenarios/` and the check run once, judged 8, agree 4, at the edge 1, miss 3 ("As built (the check)", at the end). The data choices below are settled as the architect's (decision 0015 and `docs/engineering/data-rules.md`, "Who settles data") and wait for the architect's review. No rule is added or changed.
 
 **No batch of this scenario is run or looked at before Savo Island is tuned, and it is never tuned on.** This stage ran no batch, no `validate` and no run of the scenario, and nothing below was set in answer to an outcome.
 

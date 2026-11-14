@@ -577,3 +577,65 @@ fn a_base_strike_on_a_base_formed_by_a_landing_is_refused_as_on_one_that_does_no
     assert_eq!(a[0].0, "refused", "{formed_base}");
     assert_eq!(a, b);
 }
+
+/// Scenario 21 with two Allied bases at the bare shore (10,0), where unit 3's
+/// 500 men are ashore: base 3 with 10 t of supply and base 4 with 20 t.
+fn with_two_bases_at_the_bare_shore(text: &str) -> String {
+    format!(
+        "{text}\n{}",
+        r#"
+[[base]]
+id = 3
+name = "Placeholder shore dump 1"
+side = "allied"
+q = 10
+r = 0
+supply_t = 10
+
+[[base]]
+id = 4
+name = "Placeholder shore dump 2"
+side = "allied"
+q = 10
+r = 0
+supply_t = 20
+"#
+    )
+}
+
+#[test]
+fn the_days_of_supply_of_a_hex_count_the_stock_of_every_base_of_the_side_there() {
+    // The men are fed from every base of their side in the hex, in base
+    // order (decision 0090, 24a), so the briefing counts the stock of both:
+    // 10 + 20 = 30 t against 500 men at 0.005 t a man, 2.5 t a day, which
+    // lasts 12 days. One base alone would read 10 t and 4 days.
+    let (mut session, _) = landing(&with_two_bases_at_the_bare_shore(&scenario_text(
+        "21_landing.toml",
+    )));
+    let first = text_of(&mut session, Side::Allied);
+    let expected = ": base:3 \"Placeholder shore dump 1\" and base:4 \"Placeholder shore dump 2\" hold 30 t, the daily charge is 2.5 t (0 aircraft and 500 men), so it lasts 12 days at the present charge";
+    assert!(first.contains(expected), "missing {expected:?}\n{first}");
+    let data = call(&mut session, Side::Allied, "get_briefing", json!({}));
+    let hexes = data["land_units"]["supply_by_hex"]
+        .as_array()
+        .expect("supply by hex");
+    let shore = hexes
+        .iter()
+        .find(|h| h["place"]["q"] == json!(10) && h["place"]["r"] == json!(0))
+        .unwrap_or_else(|| panic!("the bare shore's line in {hexes:?}"));
+    assert_eq!(shore["base"]["handle"], json!("base:3"), "{shore}");
+    assert_eq!(
+        shore["other_bases"][0]["handle"],
+        json!("base:4"),
+        "{shore}"
+    );
+    // The scenario as written has one base in each hex and names no other.
+    let (mut plain, _) = landing(&scenario_text("21_landing.toml"));
+    let data = call(&mut plain, Side::Allied, "get_briefing", json!({}));
+    for h in data["land_units"]["supply_by_hex"]
+        .as_array()
+        .expect("hexes")
+    {
+        assert!(h.get("other_bases").is_none(), "{h}");
+    }
+}

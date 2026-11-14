@@ -8,7 +8,7 @@ Where things are in the repository and which crate may depend on which. Moved ou
 | `crates/sim-data` | Loads reference data, maps and scenarios from files into `sim-core` types |
 | `crates/sim-cli` | Command-line runner |
 | `crates/sim-agent` | Agent interface: the daily briefing, the list and detail queries, `explain`, `measure`, and the session a seat plays through (`issue_orders`, `end_day`), as JSON with schemas in `schemas/` (decisions 0048 to 0050). Every tool takes a `SideView`; only `session.rs` holds the world. The MCP server that wraps it is in `sim-cli` (decision 0051) |
-| `crates/map-tool` | Generates the hex map of the slice from open coastline data, and renders it, locates points and finds sea paths. May use floats and its own dependencies; nothing depends on it |
+| `crates/map-tool` | Generates the hex map of the slice from open coastline data, and renders it, locates points and finds sea paths. May use floats and its own dependencies. Nothing but the `tests` crate depends on it, as a dev-dependency (scenario 4b's test places the anchors with its projection) |
 | `crates/oob-check` | Checker for the order-of-battle facts in `data/oob`. Depends on nothing else in the workspace |
 | `crates/oob-derive` | Derives ship class figures for a list of real ships from `data/oob` and `data/derivation` (decision 0020). Depends only on `oob-check`; `sim-data` and `sim-core` only in its tests |
 | `data/reference` | Ship classes, port sizes and aircraft types as CSV; search, surface combat and air combat figures as TOML. Files `oob-derive` generates (a ship class file `<name>.csv` with `<name>.sources.csv` and `<name>.ships.csv`, and an aircraft type file with its own `.sources.csv`) say so in their header and are never edited by hand |

@@ -9,7 +9,7 @@ The spec gives stage 0 three things and one experiment:
 - the choices the rules make for a unit inside a day, as functions a staff can ask;
 - a saved game that says what rules it was played under;
 - a measurement of what a day costs with a staff's workload on top;
-- a small experiment in building a trial's private world, to find what is missing before stage 4 leans on it.
+- a small experiment in building a trial's private world, to find what is missing before stage 4 of step 3 leans on it.
 
 ## What was found
 
