@@ -125,8 +125,10 @@
 //!   whose origin is the staff never takes its supply below its reserve,
 //!   on any day of a run in which the men's supply is also drawn from the
 //!   base.
-//! - Where a side has two bases in a hex, a force that refuels draws on
-//!   them in base order, each down to its reserve.
+//! - Where a side has two bases in a hex, each ship of a force that
+//!   refuels is served by the lowest-numbered base that holds fuel above
+//!   its reserve, down to that reserve; a ship that base leaves short does
+//!   not go on to the next (decision 0045's one base for a ship).
 //! - Forming, joining and standing down are each refused at sea, at a base
 //!   of the other side, for a force that is under way, and for a force
 //!   away at the yard; a join is refused between forces at different bases.

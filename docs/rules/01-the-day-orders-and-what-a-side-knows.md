@@ -135,7 +135,7 @@ A side sees: it sees the events of its own units, as the event table below says,
 
 An order is addressed to one unit: a task force, an air group, a land unit or, to form a task force, a base. It carries an origin: who issued it, and the intent it serves if any. An order that is taken in gets a number, is kept whether accepted or refused, and has one event: accepted, or refused with a reason. [0008, 0055]
 
-The orders that exist are the ones in the tables below. The spec lists more (disband, add ships, range limit, base orders other than forming a task force, and land unit orders other than posture, march and activity). They are not built. Forming a task force, joining two and standing one down in port are built (decision 0111). [0008, 0050, 0052, 0090, 0094, 0095, 0099, 0111]
+The orders that exist are the ones in the tables below. The spec lists more (add ships, range limit, base orders other than forming a task force, and land unit orders other than posture, march and activity). They are not built. Forming a task force, joining two and standing one down in port are built (decision 0111); standing a force down is what the spec called disbanding it. [0008, 0050, 0052, 0090, 0094, 0095, 0099, 0111]
 
 ### Task force orders
 
