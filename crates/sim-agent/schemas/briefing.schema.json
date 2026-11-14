@@ -1291,6 +1291,55 @@
         "repaired_yesterday": { "type": "array", "items": { "$ref": "#/$defs/repaired_ship" } },
         "returned_yesterday": { "type": "array", "items": { "$ref": "#/$defs/returned_force" } },
         "works": { "$ref": "defs.schema.json#/$defs/base_works" },
+        "airfield_damage": { "$ref": "defs.schema.json#/$defs/airfield_damage" },
+        "airfield_yesterday": {
+          "description": "What yesterday's events of the side say of the base's airfield (decision 0103): hits that added damage, work that mended it, arrivals held back. Left out when there were none.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "damaged": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["hits", "damage", "event"],
+                "additionalProperties": false,
+                "properties": {
+                  "hits": { "type": "integer" },
+                  "damage": { "description": "The damage after the hits.", "$ref": "defs.schema.json#/$defs/dec" },
+                  "event": { "type": "integer" }
+                }
+              }
+            },
+            "mended": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["land_unit", "points", "damage", "event"],
+                "additionalProperties": false,
+                "properties": {
+                  "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+                  "points": { "$ref": "defs.schema.json#/$defs/dec" },
+                  "damage": { "description": "The damage after the work.", "$ref": "defs.schema.json#/$defs/dec" },
+                  "event": { "type": "integer" }
+                }
+              }
+            },
+            "arrivals_waiting": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["air_group", "aircraft", "damage", "event"],
+                "additionalProperties": false,
+                "properties": {
+                  "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+                  "aircraft": { "type": "integer" },
+                  "damage": { "description": "The field's damage.", "$ref": "defs.schema.json#/$defs/dec" },
+                  "event": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
         "stocks_yesterday": {
           "description": "Where the base's supply and fuel went and came from yesterday, by cause, from the side's own events. null when nothing moved in or out of either stock; otherwise supply and fuel are each null when that stock did not move. start_t is end_t less the net of the causes (landed less the others).",
           "oneOf": [

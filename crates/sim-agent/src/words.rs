@@ -207,6 +207,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::NoAirfield => {
             " (a base has no airfield until units working on its airfield have done the work it needs; the base's line says how much is done, and no group can rebase to it or land at it before)"
         }
+        R::AirfieldTooDamaged { .. } => {
+            " (the refusal names the field's damage and the level at which a field takes no aircraft: no group can rebase to it, aircraft with no deck do not land on it and arrivals due at it wait; once units working on its airfield have brought the damage below the level it takes aircraft again)"
+        }
         R::WorkingUnitDefends => {
             " (a unit shown as working only works: it is always on defend and never attacks; only a fighting unit can be put on attack)"
         }

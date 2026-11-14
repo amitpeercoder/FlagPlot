@@ -585,6 +585,59 @@ pub struct BriefingBase {
     /// while the base is as a base always was.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub works: Option<crate::lines::BaseWorksLine>,
+    /// The damage to the base's airfield (decision 0103). Left out while it
+    /// is 0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub airfield_damage: Option<crate::lines::AirfieldDamageLine>,
+    /// What yesterday's events of the side say of the base's airfield:
+    /// hits, mending, arrivals held back (decision 0103). Left out when
+    /// there were none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub airfield_yesterday: Option<AirfieldYesterday>,
+}
+
+/// What happened to a base's airfield yesterday, from the side's own events
+/// (decision 0103).
+#[derive(Clone, PartialEq, Eq, Debug, Default, Serialize)]
+pub struct AirfieldYesterday {
+    /// Hits that added damage.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub damaged: Vec<AirfieldDamagedLine>,
+    /// Work that mended it.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub mended: Vec<AirfieldMendedLine>,
+    /// Arrivals held back because the field took no aircraft.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub arrivals_waiting: Vec<ArrivalWaitingLine>,
+}
+
+/// Hits on the airfield of a base of the side.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AirfieldDamagedLine {
+    pub hits: u32,
+    /// The damage after the hits.
+    pub damage: Dec,
+    pub event: u32,
+}
+
+/// A unit's work lowered the damage.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AirfieldMendedLine {
+    pub land_unit: Handle,
+    pub points: Dec,
+    /// The damage after the work.
+    pub damage: Dec,
+    pub event: u32,
+}
+
+/// An arrival due at an air group's field was held back.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ArrivalWaitingLine {
+    pub air_group: Handle,
+    pub aircraft: u32,
+    /// The field's damage.
+    pub damage: Dec,
+    pub event: u32,
 }
 
 /// The land units part (decision 0066, 21): every land unit of the side with
@@ -1332,6 +1385,8 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                 repaired_yesterday: day.repaired.get(&b.id).cloned().unwrap_or_default(),
                 returned_yesterday: day.returned.get(&b.id).cloned().unwrap_or_default(),
                 works: crate::lines::base_works_line(&ctx, b),
+                airfield_damage: crate::lines::base_airfield_damage_line(&ctx, b),
+                airfield_yesterday: day.airfield.get(&b.id).cloned(),
             }
         })
         .collect();
@@ -1580,6 +1635,7 @@ struct Day {
     stocks: BTreeMap<BaseId, StockMoves>,
     repaired: BTreeMap<BaseId, Vec<RepairedShip>>,
     returned: BTreeMap<BaseId, Vec<ReturnedForce>>,
+    airfield: BTreeMap<BaseId, AirfieldYesterday>,
     ground: GroundDay,
     base_changes: BaseChangesPart,
     halts: HaltsPart,
@@ -1802,6 +1858,7 @@ impl Day {
         let mut stocks: BTreeMap<BaseId, StockMoves> = BTreeMap::new();
         let mut repaired: BTreeMap<BaseId, Vec<RepairedShip>> = BTreeMap::new();
         let mut returned: BTreeMap<BaseId, Vec<ReturnedForce>> = BTreeMap::new();
+        let mut airfield: BTreeMap<BaseId, AirfieldYesterday> = BTreeMap::new();
         let mut ground = GroundDay::default();
         let mut base_changes = BaseChangesPart::default();
         let mut halts = HaltsPart::default();
@@ -2434,6 +2491,46 @@ impl Day {
                         work_done: Dec(*work_done),
                         event: id,
                     }),
+                    EventKind::AirfieldDamaged {
+                        base, hits, damage, ..
+                    } => airfield
+                        .entry(*base)
+                        .or_default()
+                        .damaged
+                        .push(AirfieldDamagedLine {
+                            hits: *hits,
+                            damage: Dec(*damage),
+                            event: id,
+                        }),
+                    EventKind::AirfieldMended {
+                        unit,
+                        base,
+                        points,
+                        damage,
+                    } => airfield
+                        .entry(*base)
+                        .or_default()
+                        .mended
+                        .push(AirfieldMendedLine {
+                            land_unit: ctx.land_unit(*unit),
+                            points: Dec(*points),
+                            damage: Dec(*damage),
+                            event: id,
+                        }),
+                    EventKind::ArrivalWaiting {
+                        air_group,
+                        base,
+                        aircraft,
+                        damage,
+                        ..
+                    } => airfield.entry(*base).or_default().arrivals_waiting.push(
+                        ArrivalWaitingLine {
+                            air_group: ctx.group(*air_group),
+                            aircraft: *aircraft,
+                            damage: Dec(*damage),
+                            event: id,
+                        },
+                    ),
                     EventKind::UnitDivided {
                         from,
                         unit,
@@ -2917,6 +3014,7 @@ impl Day {
             stocks,
             repaired,
             returned,
+            airfield,
             ground,
             base_changes,
             halts,

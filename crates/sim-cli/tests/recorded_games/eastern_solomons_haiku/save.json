@@ -26,14 +26,14 @@
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
-      "hash": "8346b53f70a48975"
+      "hash": "768ef8b371e81d68"
     }
   ],
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "26c37fe60f2c6937"
+      "hash": "5d77c3e7c73d8710"
     }
   ],
   "orders": [
@@ -511,7 +511,7 @@
       "unit": "air_group:19"
     }
   ],
-  "rules_version": 1,
+  "rules_version": 2,
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
     "hash": "a9443b066a393e0b"
@@ -521,6 +521,6 @@
     "japanese": "script"
   },
   "seed": 1942,
-  "state_version": "flagplot-state-v18",
+  "state_version": "flagplot-state-v19",
   "version": 2
 }

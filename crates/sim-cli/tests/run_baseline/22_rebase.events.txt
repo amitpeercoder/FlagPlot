@@ -2,9 +2,9 @@ Scenario 22: Rebasing an air group
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1b49963381971a74  7 events
-day   2  hash 607919edac54bf4f  8 events
-day   3  hash a4a618e7c36b431f  5 events
+day   1  hash c53524937c608fd9  7 events
+day   2  hash b45d06f819a827de  8 events
+day   3  hash 2529750393dee53a  5 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2

@@ -96,6 +96,7 @@ pub struct SideView<'a> {
 #[derive(Clone, Copy)]
 pub(crate) struct PulseScratch<'a> {
     pub(crate) grounded_bases: &'a BTreeSet<crate::ids::BaseId>,
+    pub(crate) field_damage: &'a BTreeMap<crate::ids::BaseId, Fixed>,
     pub(crate) strikes_in_flight: &'a [StrikeInFlight],
     pub(crate) sorties: &'a [Sortie],
     pub(crate) deck_losses: &'a [DeckLoss],

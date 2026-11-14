@@ -97,7 +97,7 @@ Not built: an order to change the repair order (0052).
 
 A rebase order (`rebase`, with `air_group` and `base`) moves a group at a base to another base of its side. It is given in a scenario file as `kind = "rebase"` with `air_group` and `base`. It is checked and applied at orders intake, at the start of the day, in the same step as a yard order (chapter 1, Orders). It is for one day's move and is spent when it is done. [0091]
 
-**Refusals.** Chapter 1, Every reason an order is refused, lists them in the order they are tried. In short, the order is refused if the group is not the side's own or is lost with its ship or with its base; if it is aboard a ship (away at the yard or not); if it has already moved to another base that day; if the base is not one of the side's own; if the group is already at that base; or if the base is beyond the type's transfer range. A base a landing formed (chapter 7) is a base of the side and may be named, but if it has no airfield the order is refused with "the base has no airfield", tried after the check that the group is not already there and before the range. [0091, 0099]
+**Refusals.** Chapter 1, Every reason an order is refused, lists them in the order they are tried. In short, the order is refused if the group is not the side's own or is lost with its ship or with its base; if it is aboard a ship (away at the yard or not); if it has already moved to another base that day; if the base is not one of the side's own; if the group is already at that base; or if the base is beyond the type's transfer range. A base a landing formed (chapter 7) is a base of the side and may be named, but if it has no airfield the order is refused with "the base has no airfield", tried after the check that the group is not already there and before the range. A base whose airfield is damaged to `ground.toml: airfield_landing_refused_at` or more takes no aircraft (A damaged airfield, below), and the order is refused with "the airfield's damage is D, and a field at L or more takes no aircraft", tried after "no airfield" and before the range. [0091, 0099, 0103]
 
 **The transfer range** is twice the longer of the type's search range (`aircraft_types*.csv: search_range_nm`) and strike radius (`strike_range_nm`), read through `RefData::transfer_range_nm`. The group's reach does not change it. The distance is the air distance between the two bases' hexes (Air distance, above): along an axis it is 40 miles a hex. A distance is within the range if it is less than or equal to it. [0040, 0091]
 
@@ -115,7 +115,7 @@ Both events come straight after the order's `OrderAccepted` and cite the order. 
 
 A side sees: its own `AirGroupRebased` and `AircraftWrittenOff`, whole. The enemy sees nothing of them. Both cite only the side's own order. [0091]
 
-Data: no figure of its own. It reads `aircraft_types*.csv: search_range_nm` and `strike_range_nm`.
+Data: no figure of its own. It reads `aircraft_types*.csv: search_range_nm` and `strike_range_nm`, and `ground.toml: airfield_landing_refused_at`.
 
 ## What a group can fly in a pulse
 
@@ -127,14 +127,15 @@ Search, strike launch and the split of fighters into patrol and escorts all use 
 2. A group that moved to another base by order that day flies none (see "Rebasing an air group").
 3. Start from the smaller of the group's ready aircraft and its pilots. A group whose pilots are not tracked starts from its ready aircraft.
 4. If the group is aboard a ship, multiply by the ship's flight deck factor: 1 if the deck is working, `surface_combat.toml: degraded_factor` if degraded, 0 if out. A group at a base is not multiplied. Without the surface combat figures this step does nothing.
-5. Fatigue. If `fatigue.toml` is loaded, a group that is stood down flies none, and any other group is multiplied by (100 minus its fatigue) over 100, so loaded fatigue figures do cut the aircraft. If `fatigue.toml` is not loaded, nothing is multiplied, no group is ever stood down, and fatigue cuts nothing.
-6. Cut the result to a whole number once, toward zero. The multiplications of steps 4 and 5 are fixed-point, so no rounding happens before this cut.
+5. Airfield damage. A group at a base is multiplied by (100 minus the damage of the base's airfield, as it was at the start of the pulse) over 100. A group aboard a ship, and a group at a base whose airfield is undamaged, is not multiplied. [0103]
+6. Fatigue. If `fatigue.toml` is loaded, a group that is stood down flies none, and any other group is multiplied by (100 minus its fatigue) over 100, so loaded fatigue figures do cut the aircraft. If `fatigue.toml` is not loaded, nothing is multiplied, no group is ever stood down, and fatigue cuts nothing.
+7. Cut the result to a whole number once, toward zero. The multiplications of steps 4, 5 and 6 are fixed-point, so no rounding happens before this cut.
 
-The cut is applied once, to the product. Chapter 1, Where figures come from and when a rule is loaded, says what "loaded" means. A group of 6 aircraft with fatigue 1 and a working deck flies 5. A group aboard a carrier with a degraded deck and fatigue 20, 10 ready and 10 pilots, flies 10 times the degraded factor times 0.8: with a degraded factor of 0.5 (an example, not the figure) that is 4. A group's flight deck is worked group by group, not for the ship. [0026, 0036, 0038, 0039, 0091]
+The cut is applied once, to the product. Chapter 1, Where figures come from and when a rule is loaded, says what "loaded" means. A group of 6 aircraft with fatigue 1 and a working deck flies 5. A group aboard a carrier with a degraded deck and fatigue 20, 10 ready and 10 pilots, flies 10 times the degraded factor times 0.8: with a degraded factor of 0.5 (an example, not the figure) that is 4. A group of 12 ready and crewed aircraft at a base whose airfield has damage 30 flies 12 times 70 over 100, which is 8; with fatigue 50 as well it flies 12 times 0.7 times 0.5, which is 4.2, cut to 4. A group's flight deck is worked group by group, not for the ship. [0026, 0036, 0038, 0039, 0091, 0103]
 
-A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `aircraft_able_to_fly`): the answer is the number of aircraft the group is able to fly now, from the group, its base's supply, its ship's flight deck, its fatigue and the day it moved. [0100]
+A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `aircraft_able_to_fly`): the answer is the number of aircraft the group is able to fly now, from the group, its base's supply and airfield damage, its ship's flight deck, its fatigue and the day it moved. [0100, 0103]
 
-A side sees: the number it flew in its own events (`SearchFlown`, `StrikeLaunched`, `EscortsSent`). It is not told the limits that produced it.
+A side sees: the number it flew in its own events (`SearchFlown`, `StrikeLaunched`, `EscortsSent`). It is not told the limits that produced it, except that its view shows the aircraft a damaged airfield keeps on the ground (A damaged airfield, below).
 
 ### A base out of supply
 
@@ -143,6 +144,24 @@ A base is out of supply at the start of a pulse if its supply stock is exactly z
 Not built: rationing a short stock among groups, supply for ships, a carrier's own supply (0039).
 
 A side sees: `BaseSupplySpent` for its own bases. The enemy sees nothing.
+
+### A damaged airfield
+
+A base's airfield has damage from 0 to 100. A base with no airfield has none, and no airfield is damaged unless a scenario says so (`[[base]]` `airfield_damage`, only for a base with an airfield) or a hit on it does (The attack on a base, below). Damage is lowered only by work on the airfield (chapter 7, Units that work and what they build). Nothing mends it by itself. It touches nothing else: not the port, the stocks, the guns or the men. [0103]
+
+**What may fly.** At the start of each pulse the damage of every base whose airfield is damaged is read, with the grounded bases (A base out of supply), and the pulse works on it, whatever happens to the airfield during the pulse. A group at such a base flies the share of its crewed aircraft the field works: 100 minus the damage, over 100 (step 5 of The order of the limits). Search, the strike decision, the split of fighters into patrol and escorts all read the number that results. The rest of the group's ready aircraft stay on the ground, and the pool of aircraft on the ground a raid can hit (The attack on a base) holds them. At damage 100 nothing flies. A group aboard a ship is not cut by it. [0103]
+
+**A field that takes no aircraft.** A field whose damage is at or above `ground.toml: airfield_landing_refused_at` (`50`) takes no aircraft, as a base with no airfield takes none. Three rules read it:
+
+- A rebase order to it is refused (Rebasing an air group).
+- Aircraft that have lost their deck do not land there. It is not among the bases the landing rule looks at (Coming home to no deck), so they go to the next place that rule gives.
+- An arrival due for a group at it waits (Aircraft that arrive on a day) and is delivered whole on the first night the field is below the level.
+
+Below the level aircraft land as on an undamaged field. A group already at the field stays and flies its share. [0103]
+
+**Figures.** `ground.toml: airfield_damage_per_hit` (`2`), `work_per_airfield_damage_point` (`50`) and `airfield_landing_refused_at` (`50`), and `air_combat.toml: [base_hit] airfield` (`0.2`; `0` in the frozen step 1 figures). All are placeholders that rest on no source. [0103]
+
+A side sees: for its own base, its airfield's damage, the share of every 100 aircraft that may fly and whether the field takes aircraft, and for its own groups, the aircraft the damage keeps on the ground, and the events `AirfieldDamaged` and `AirfieldMended` (chapter 7) and `ArrivalWaiting`. The enemy sees none of it. [0103]
 
 ### Missions and light
 
@@ -209,13 +228,16 @@ A side sees: `AircraftRepaired` and `BaseSupplySpent` for its own groups and bas
 A scenario may list arrivals (`[[arrival]]` entries in the scenario file): a day, an air group, a number of aircraft and a number of pilots. After repair and before replacements, on every day including day 1, each arrival due that day, in the order listed, is delivered:
 
 1. If the group does not exist, or was lost with its base, or is aboard a ship that has sunk or is away at the yard, nothing happens and nothing is recorded. The aircraft are not kept for the ship's return.
-2. The group's `ready` and `strength` each rise by the arrival's aircraft.
-3. If the group's pilots are tracked, its pilots rise by the arrival's pilots. If not, the arrival's pilots are dropped.
-4. `AircraftArrived` is recorded, with no cause (nothing orders it), giving the arrival, the group's ready aircraft, pilots and strength after it.
+2. If the group is at a base that is not of the group's side or takes no aircraft (it has no airfield, or its damage is at or above `airfield_landing_refused_at`; A damaged airfield, above), the arrival waits. It is marked as waiting, `ArrivalWaiting` is recorded, and nothing else happens. It is taken again on each later night, from step 1, and is delivered whole on the first night the base is of the group's side and takes aircraft. It is not delivered in parts and not lost. [0103]
+3. The group's `ready` and `strength` each rise by the arrival's aircraft.
+4. If the group's pilots are tracked, its pilots rise by the arrival's pilots. If not, the arrival's pilots are dropped.
+5. `AircraftArrived` is recorded, with no cause (nothing orders it), giving the arrival, the group's ready aircraft, pilots and strength after it.
 
-An arrival is delivered to the group wherever it now is, including a base it was rebased to (see "Rebasing an air group"). Arriving aircraft are ready. The flight in costs nothing: no wear, fatigue or supply, and nothing can intercept it. An arrival on day 1 is the same as starting with the aircraft. No random number. [0041, 0091]
+An arrival is delivered to the group wherever it now is, including a base it was rebased to (see "Rebasing an air group"). Arriving aircraft are ready. The flight in costs nothing: no wear, fatigue or supply, and nothing can intercept it. An arrival on day 1 is the same as starting with the aircraft. No random number. A waiting arrival that finds its group lost, or aboard a ship that has sunk or is away at the yard, is dropped for the old reasons of step 1 and waits no more. [0041, 0091, 0103]
 
-A side sees: `AircraftArrived` for its own groups, whole.
+`ArrivalWaiting` records the group, the base, the aircraft, the pilots and the field's damage. It has no cause. A side's own arrivals are known to it, so the event is seen whole by the side of the group.
+
+A side sees: `AircraftArrived` and `ArrivalWaiting` for its own groups, whole.
 
 ### Replacements
 
@@ -448,13 +470,13 @@ A side sees: the attacker sees `AirAttack` for its own group, cut to the aircraf
 
 Each strike group with bombers left attacks, in group order. The stream is keyed on (the air group, the base). Each bomber drops one bomb at `air_combat.toml: bomb_hit_chance`, whatever weapon its type carries against ships: a torpedo bomber sent at an airfield carries bombs. The size of the bomb does not matter. Each shot is rolled.
 
-Then one draw for each hit decides where it lands, in the order: below `air_combat.toml: [base_hit] aircraft` it lands on aircraft on the ground; else below that plus `[base_hit] supply` it lands on supply; else below that plus `[base_hit] men` it lands on men; else it lands on nothing.
+Then one draw for each hit decides where it lands, in the order: below `air_combat.toml: [base_hit] aircraft` it lands on aircraft on the ground; else below that plus `[base_hit] supply` it lands on supply; else below that plus `[base_hit] men` it lands on men; else below that plus `[base_hit] airfield` it lands on the airfield; else it lands on nothing.
 
-The share for men (`air_combat.toml: [base_hit] men`, `0.2`) counts only if the ground figures are loaded with `men_lost_per_base_hit` above 0 and the base's side has men ashore in the base's hex at the start of the attack. Otherwise it is 0 and the share lands on nothing, so a raid on a base with no men ashore draws and lands its hits as it did before decision 0092. A file that gives no `[base_hit] men` gives 0. The three shares add to 1 at most, and the loader refuses a file in which they add to more. Shells land by the same table (chapter 4, Shore bombardment). The raid's breakdown names the factor `hit_on_men_chance` only when the share counts, so a raid with no men ashore reads exactly as before. [0092]
+The share for men (`air_combat.toml: [base_hit] men`, `0.2`) counts only if the ground figures are loaded with `men_lost_per_base_hit` above 0 and the base's side has men ashore in the base's hex at the start of the attack. Otherwise it is 0 and the share lands on nothing, so a raid on a base with no men ashore draws and lands its hits as it did before decision 0092. A file that gives no `[base_hit] men` gives 0. The share for the airfield (`air_combat.toml: [base_hit] airfield`, `0.2`; `0` in the frozen step 1 figures) comes after the share for men. It counts only if the base has an airfield and the ground figures are loaded. Otherwise it is 0 and its share lands on nothing. A file that gives no `[base_hit] airfield` gives 0. The four shares add to 1 at most, and the loader refuses a file in which they add to more. Shells land by the same table (chapter 4, Shore bombardment). The raid's breakdown names the factor `hit_on_men_chance` only when the share counts, so a raid with no men ashore reads exactly as before, and the factor `hit_on_airfield_chance` only when the share counts and is above 0. [0092, 0103]
 
-`BaseAttacked` is recorded (group, base, shots, chance, expected, hits, hits on aircraft, hits on supply, hits on men), caused by the strike's launch and the group's `AircraftLost` events. [0034, 0092]
+`BaseAttacked` is recorded (group, base, shots, chance, expected, hits, hits on aircraft, hits on supply, hits on men), caused by the strike's launch and the group's `AircraftLost` events. It does not name the hits on the airfield: they appear in it as hits on nothing, and the damage they do is in `AirfieldDamaged`. [0034, 0092, 0103]
 
-**Aircraft on the ground.** At the start of the step, for each attacked base, a pool is made. For each group located at the base, in group number order: its damaged aircraft first (whatever the group is doing), then its ready aircraft less the aircraft flying in the pulse. The aircraft flying in the pulse are: for a search group with a search arc and light, the aircraft it is able to fly; for each strike, the aircraft launched; and for a fighter group, its patrol and the escorts that go. So the aircraft a tired group leaves behind, the fighters that neither patrol nor escort, a stood-down group, a resting group and a base strike group in the afternoon are all on the ground. A pool made for a base is shared by all the raids on it in the pulse. [0034, 0035, 0036]
+**Aircraft on the ground.** At the start of the step, for each attacked base, a pool is made. For each group located at the base, in group number order: its damaged aircraft first (whatever the group is doing), then its ready aircraft less the aircraft flying in the pulse. The aircraft flying in the pulse are: for a search group with a search arc and light, the aircraft it is able to fly; for each strike, the aircraft launched; and for a fighter group, its patrol and the escorts that go. So the aircraft a tired group leaves behind, the aircraft a damaged airfield keeps on the ground, the fighters that neither patrol nor escort, a stood-down group, a resting group and a base strike group in the afternoon are all on the ground. A pool made for a base is shared by all the raids on it in the pulse. [0034, 0035, 0036]
 
 **Hits on aircraft.** A strike group's hits on aircraft destroy aircraft from the pool, lowest group first, a group's damaged aircraft before its ready ones, no more than the pool holds and never more than the group has at that moment. Hits beyond the pool are wasted. Each kind of aircraft a group lost is one event: `DamagedAircraftDestroyedOnGround` then `AircraftDestroyedOnGround`, caused by `BaseAttacked`. Pilots are not lost, and a destroyed aircraft does not reduce the group's pilots. Aircraft worn in the pulse are not on the ground in it, because the wear step follows air combat. [0034, 0035, 0036, 0038]
 
@@ -462,9 +484,11 @@ The share for men (`air_combat.toml: [base_hit] men`, `0.2`) counts only if the 
 
 **Hits on men.** Each hit on men removes `ground.toml: men_lost_per_base_hit` men from the base's side's land units in the base's hex. `MenLostToFire` is recorded for each unit that lost men, caused by `BaseAttacked` (chapter 7, Men lost to fire). [0092]
 
-**Hits on nothing** change nothing. A side holds no belief about a base's contents, so no report follows. Nothing in the rules damages a base's port or airfield. [0034, 0052]
+**Hits on the airfield.** Each hit on the airfield adds `ground.toml: airfield_damage_per_hit` (`2`) to the damage of the base's airfield, to 100 at most. `AirfieldDamaged` is recorded once for the hits of one attack on the base (for a bombardment, of the whole force's fire), with the hits and the damage after, caused by `BaseAttacked`. It is recorded even when the damage was 100 already. Its breakdown has the factors `hits_on_airfield`, `airfield_damage_per_hit` and `damage_before`, and its result is the damage after. The damage cuts the aircraft the base's groups fly from the next pulse (A damaged airfield, above), not the rest of this one. [0103]
 
-A side sees: the attacker sees `BaseAttacked` cut to the aircraft and shots. The side that holds the base sees it with the hits and where they landed (on men too) and without the raiding group (decision 0065), and its own `AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround`, `BaseSupplyDestroyed` and `MenLostToFire`. The raider is told nothing of men hit. [0092]
+**Hits on nothing** change nothing. A side holds no belief about a base's contents, so no report follows. Nothing in the rules damages a base's port. [0034, 0052, 0103]
+
+A side sees: the attacker sees `BaseAttacked` cut to the aircraft and shots. The side that holds the base sees it with the hits and where they landed (on men too) and without the raiding group (decision 0065), and its own `AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround`, `BaseSupplyDestroyed`, `MenLostToFire` and `AirfieldDamaged`. The raider is told nothing of men hit and nothing of the field: its claim says nothing of it, as it says nothing of supply. [0092, 0103]
 
 ### The report and the claim
 
@@ -516,12 +540,12 @@ Not built: a landing at another deck or a field instead of the sea when the deck
 
 ### Coming home to no deck
 
-The second part of the wear phase, after running out of fuel and before wear. It runs if `air_combat.toml` is loaded. A group's aircraft are in the air if they flew in the pulse (a search, strike, patrol or escort) and were not shot down or ditched for fuel: they are what its noted sorties still hold. Their own deck cannot take them if the group is aboard a ship that has sunk in the pulse, or whose flight deck is out at this moment. A degraded deck still lands them: only a deck that is out, or a ship that has sunk, does not. A group at a base is never affected: no rule damages a field.
+The second part of the wear phase, after running out of fuel and before wear. It runs if `air_combat.toml` is loaded. A group's aircraft are in the air if they flew in the pulse (a search, strike, patrol or escort) and were not shot down or ditched for fuel: they are what its noted sorties still hold. Their own deck cannot take them if the group is aboard a ship that has sunk in the pulse, or whose flight deck is out at this moment. A degraded deck still lands them: only a deck that is out, or a ship that has sunk, does not. A group at a base is never affected: the damage of a field does not stop the aircraft of a group that is already at it from landing on it.
 
 Groups are worked in group number order, each group's aircraft as one body that may be split by room, in this order:
 
 1. **Another carrier of the group's side in the same hex**: the hex of the group's ship, or where it sank (noted when she sank). She must be afloat with her flight deck not out, in any task force of her side; ships are taken in ship number order, lowest first. She takes as many as fit under her aircraft capacity, the ready and damaged aircraft of the groups aboard her counted at that moment, and the rest go on to the next such carrier.
-2. **A base of the group's side with an airfield (chapter 7, Units that work and what they build) within the aircraft type's strike radius of that hex**, by air distance (the radius, not the reach). For a type with no strike radius (some scout types have none), the search range stands for it. The nearest base, then the lowest number. A base takes any number.
+2. **A base of the group's side with an airfield (chapter 7, Units that work and what they build) that takes aircraft (its damage is below `airfield_landing_refused_at`; A damaged airfield) within the aircraft type's strike radius of that hex**, by air distance (the radius, not the reach). For a type with no strike radius (some scout types have none), the search range stands for it. The nearest base, then the lowest number. A base takes any number.
 3. **The sea.** The aircraft left are ditched and `AircraftDitchedNoDeck` is recorded. Where the group's pilots are counted, each crew is recovered with `air_combat.toml: crew_recovered_beside_own_force` if any ship of the group's side is afloat in that hex at that moment (the group's own ship counts if she is afloat with her deck out), and otherwise with `crew_recovered_open_sea`. A crew not recovered is a pilot lost, never below 0, with `PilotsLost` caused by the ditching event. The draws are one stream of the upkeep subsystem with its own value of `Draw` (`NoDeck`, code 4), keyed on the source group, one draw for each aircraft ditched, taken after the group's landings. No other draw is made: the choice of a place is not random.
 
 A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `landing`): the answer is where a group's aircraft would land now if its deck were gone, from the side's carriers in the hex and its bases in reach. [0100]
@@ -576,7 +600,7 @@ A side sees: `BaseSupplySpent` for its own bases, whole. The patrol itself has n
 Chapter 1, The night pulse and The morning and afternoon pulses, hold the sequence. The air rules in that order:
 
 1. Before the pulses, at orders intake: a rebase order is applied (Rebasing an air group; chapter 1, Orders).
-2. At the start of every pulse: the grounded bases are fixed (A base out of supply).
+2. At the start of every pulse: the grounded bases are fixed (A base out of supply), and the damage of each base's airfield is read (A damaged airfield).
 3. In the night pulse, first: repair, arrivals, replacements (from day 2), daily supply, the men's supply (chapter 7), stand-down and return.
 4. In each daylight pulse: air search (chapter 3), the strike decision, air combat, then the wear phase, which runs running out of fuel, then coming home to no deck, then wear, then fatigue, then supply for sorties, and then movement (chapter 2).
 
@@ -589,8 +613,8 @@ Contacts age at the end of every pulse (chapter 3). The end-of-day phases do not
 - **One ship.** All aircraft of a group attack one ship. A strike is not spread, and it attacks nothing but that ship, which is the one its own target list ranks first in the force the raid found. [0026, 0063]
 - **Target lists are standing.** An order given after a contact is seen does not send a strike at it that day: search, decision and strike all happen inside the day. A list cannot hold back a share of a group, split a strike among several ships, name a contact, or hold by the size of a force. [0063]
 - **No night strikes.** [0026, 0034]
-- **Bases.** A base strike launches once a day, in the first daylight pulse in which the base is in reach. A bomb's size does not matter. No runway or port damage. No damage assessment for the raider except a claim. [0034, 0052, 0063]
-- **Rebasing is whole and by order.** A group at a base moves by a rebase order, the whole group at once, to a base with an airfield within its transfer range, and a group aboard a ship cannot be rebased or go aboard. A base takes any number of aircraft. There is no loss on the flight and no enemy patrol meets it. A base beyond the range is reached by two orders on two days. [0052, 0091]
+- **Bases.** A base strike launches once a day, in the first daylight pulse in which the base is in reach. A bomb's size does not matter. No port damage. A runway is damaged by hits and mended by work (A damaged airfield), and the raider has no assessment of it but a claim that says nothing of it. [0034, 0052, 0063, 0103]
+- **Rebasing is whole and by order.** A group at a base moves by a rebase order, the whole group at once, to a base with an airfield that takes aircraft (its damage is below the level of A damaged airfield) within its transfer range, and a group aboard a ship cannot be rebased or go aboard. A base takes any number of aircraft. There is no loss on the flight and no enemy patrol meets it. A base beyond the range is reached by two orders on two days. [0052, 0091]
 - **Landing elsewhere is by deck loss only.** Aircraft in the air when their own deck is lost land at another carrier or a base, or come down in the sea; no group is ordered to move by this rule, and a landing plans no field beyond the target. Aircraft aboard a ship that sinks are lost with her, with their pilots, though most of those men were really saved: a saved pilot with no aircraft has nowhere to go, and there is no roster of pilots. [0025, 0059]
 - **Pilots are a count.** No experience, no skills, no pilot wounded. A pilot shot down away from home is not rescued. The crew of an aircraft that ran out of fuel on the way home may be, at one chance whatever the place it came down, and the pilot of a patrol aircraft shot down over its own hex may be, at a chance for a base and one for ships. [0038, 0052, 0059]
 - **Arrivals and capacity.** An arrival to a group aboard a ship is not tested against the ship's aircraft capacity. An over-capacity ship is found by the end-of-day check, which stops the run. To change: differences.md row 27, a scenario whose arrival would overfill a ship is to be refused when it loads.

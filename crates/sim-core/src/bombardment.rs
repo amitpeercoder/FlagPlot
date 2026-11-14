@@ -128,11 +128,23 @@ impl World {
         manned.then_some(air.base_hit_men)
     }
 
-    /// Where `hits` on `base` land (decision 7 of 0034, decision 8 of 0092):
-    /// one draw below one million for each hit, below the share for aircraft,
-    /// then below that and the share for supply, then below those and the
-    /// share for men, else on nothing. Without men to hit, the share for men
-    /// is nothing, so the draws land as they did before decision 0092.
+    /// The share of the hits on `base` that land on its airfield (decision 2
+    /// of 0103): the table's share for the airfield when the base exists and
+    /// has an airfield and the ground figures are loaded, else `None`, and
+    /// then the share lands on nothing. Needs the air combat figures.
+    pub(crate) fn base_hit_airfield_share(&self, base: BaseId) -> Option<Fixed> {
+        let air = self.ref_data.air_combat.as_ref()?;
+        self.ref_data.ground.as_ref()?;
+        let base = self.truth.bases.get(&base)?;
+        base.airfield.then_some(air.base_hit_airfield)
+    }
+
+    /// Where `hits` on `base` land (decision 7 of 0034, decision 8 of 0092,
+    /// decision 2 of 0103): one draw below one million for each hit, below
+    /// the share for aircraft, then below that and the share for supply, then
+    /// below those and the share for men, then below those and the share for
+    /// the airfield, else on nothing. Without men to hit, or an airfield, the
+    /// share for it is nothing, so the draws land as they did before.
     pub(crate) fn land_base_hits(
         &self,
         stream: &mut RngStream,
@@ -143,6 +155,8 @@ impl World {
         let on_aircraft_below = raw_u64(air.base_hit_aircraft);
         let on_supply_below = on_aircraft_below + raw_u64(air.base_hit_supply);
         let on_men_below = on_supply_below + self.base_hit_men_share(base).map_or(0, raw_u64);
+        let on_airfield_below =
+            on_men_below + self.base_hit_airfield_share(base).map_or(0, raw_u64);
         let mut landed = BaseHits::default();
         for _ in 0..hits {
             let draw = stream.below(Fixed::SCALE.unsigned_abs());
@@ -152,9 +166,66 @@ impl World {
                 landed.supply += 1;
             } else if draw < on_men_below {
                 landed.men += 1;
+            } else if draw < on_airfield_below {
+                landed.airfield += 1;
             }
         }
         landed
+    }
+
+    /// The damage of `hits` on the airfield of `base` (decision 3 of 0103):
+    /// each adds `airfield_damage_per_hit`, to 100 at most. Records
+    /// `AirfieldDamaged` citing `cause`, with the damage after, even when it
+    /// was 100 already. Nothing happens for no hits.
+    pub(crate) fn apply_hits_on_airfield(
+        &mut self,
+        day: u32,
+        pulse: Option<Pulse>,
+        base: BaseId,
+        hits: u32,
+        cause: EventId,
+    ) {
+        if hits == 0 {
+            return;
+        }
+        let Some(figures) = self.ref_data.ground else {
+            return;
+        };
+        let target = self.truth.bases.get_mut(&base).expect("the base exists");
+        let before = target.airfield_damage;
+        let per_hit = figures.airfield_damage_per_hit;
+        target.airfield_damage =
+            (before + per_hit * Fixed::from_int(i64::from(hits))).min(Fixed::from_int(100));
+        let (after, side) = (target.airfield_damage, target.side);
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: vec![
+                Factor {
+                    name: "hits_on_airfield",
+                    value: Fixed::from_int(i64::from(hits)),
+                },
+                Factor {
+                    name: "airfield_damage_per_hit",
+                    value: per_hit,
+                },
+                Factor {
+                    name: "damage_before",
+                    value: before,
+                },
+            ],
+            result: after,
+        });
+        self.events.record(
+            day,
+            pulse,
+            EventKind::AirfieldDamaged {
+                base,
+                side,
+                hits,
+                damage: after,
+            },
+            vec![Cause::Event(cause)],
+            breakdown,
+        );
     }
 
     /// The men lost to `hits` on men at `base` (decision 9 of 0092): each
@@ -343,8 +414,8 @@ impl World {
             );
             let hits = roll_shots(&mut stream, weighed_shots, chance);
             let landed = self.land_base_hits(&mut stream, hits, base, &air);
-            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                factors: vec![
+            let breakdown = self.config.record_breakdowns.then(|| {
+                let mut factors = vec![
                     Factor {
                         name: "rate",
                         value: class.gun_rounds_per_min,
@@ -386,8 +457,21 @@ impl World {
                         name: "chance",
                         value: chance,
                     },
-                ],
-                result: expected,
+                ];
+                // Named only where the airfield can be hit (decision 0103).
+                if let Some(share) = self
+                    .base_hit_airfield_share(base)
+                    .filter(|share| *share > Fixed::ZERO)
+                {
+                    factors.push(Factor {
+                        name: "hit_on_airfield_chance",
+                        value: share,
+                    });
+                }
+                Breakdown {
+                    factors,
+                    result: expected,
+                }
             });
             fires.push(ShipFire {
                 ship: *ship_id,
@@ -447,6 +531,7 @@ impl World {
             total.aircraft += fire.landed.aircraft;
             total.supply += fire.landed.supply;
             total.men += fire.landed.men;
+            total.airfield += fire.landed.airfield;
             shells += fire.shells;
             weighed_shots += fire.weighed_shots;
             hits += fire.hits;
@@ -1032,6 +1117,213 @@ mod tests {
             identical > 100 && in_band > 100,
             "{identical} and {in_band}"
         );
+    }
+
+    #[test]
+    fn the_airfield_share_applies_only_to_a_base_with_an_airfield_and_the_ground_figures() {
+        let base = BaseId::new(1);
+        let mut world = world(&[1], 0);
+        world
+            .ref_data
+            .air_combat
+            .as_mut()
+            .unwrap()
+            .base_hit_airfield = fx("0.2");
+        assert_eq!(world.base_hit_airfield_share(base), Some(fx("0.2")));
+        // An unknown base, a base with no airfield, no ground figures and
+        // no air combat figures: nothing lands on the airfield.
+        assert_eq!(world.base_hit_airfield_share(BaseId::new(9)), None);
+        let mut none = world.clone();
+        none.truth.bases.get_mut(&base).unwrap().airfield = false;
+        assert_eq!(none.base_hit_airfield_share(base), None);
+        let mut no_ground = world.clone();
+        no_ground.ref_data.ground = None;
+        assert_eq!(no_ground.base_hit_airfield_share(base), None);
+        let mut no_air = world.clone();
+        no_air.ref_data.air_combat = None;
+        assert_eq!(no_air.base_hit_airfield_share(base), None);
+    }
+
+    #[test]
+    fn the_airfield_band_comes_after_men_and_a_share_of_0_changes_no_draw() {
+        let base = BaseId::new(1);
+        let air = AirCombatFigures::from_air_combat_toml();
+        let mut with_field = world(&[1], 500);
+        with_field
+            .ref_data
+            .air_combat
+            .as_mut()
+            .unwrap()
+            .base_hit_airfield = fx("0.2");
+        let mut with_field_air = air.clone();
+        with_field_air.base_hit_airfield = fx("0.2");
+        let no_field = world(&[1], 500);
+        // The bands, in millionths: aircraft below 0.3, supply to 0.6, men
+        // to 0.8, the airfield to 1.0.
+        let (men_to, field_to) = (800_000u64, 1_000_000u64);
+        let mut on_field = 0;
+        for hits in [1u32, 4, 20] {
+            for ship in 1..=300u32 {
+                let stream = |world: &World| {
+                    world.rng_pair(
+                        1,
+                        Some(Pulse::Night),
+                        Subsystem::SurfaceCombat,
+                        Draw::Bombardment,
+                        EntityRef::Ship(ShipId::new(ship)),
+                        EntityRef::Base(base),
+                    )
+                };
+                let mut reading = stream(&no_field);
+                let draws: Vec<u64> = (0..hits)
+                    .map(|_| reading.below(Fixed::SCALE.unsigned_abs()))
+                    .collect();
+                let a = no_field.land_base_hits(&mut stream(&no_field), hits, base, &air);
+                let b = with_field.land_base_hits(
+                    &mut stream(&with_field),
+                    hits,
+                    base,
+                    &with_field_air,
+                );
+                // A share of 0: no hit lands on the airfield, the rest as
+                // before.
+                assert_eq!(a.airfield, 0);
+                assert_eq!((a.aircraft, a.supply, a.men), (b.aircraft, b.supply, b.men));
+                let expected = u32::try_from(
+                    draws
+                        .iter()
+                        .filter(|d| **d >= men_to && **d < field_to)
+                        .count(),
+                )
+                .unwrap();
+                assert_eq!(b.airfield, expected);
+                on_field += expected;
+            }
+        }
+        assert!(on_field > 100, "{on_field}");
+        // A base with no airfield never gets one.
+        let mut none = with_field;
+        none.truth.bases.get_mut(&base).unwrap().airfield = false;
+        for ship in 1..=100u32 {
+            let mut stream = none.rng_pair(
+                1,
+                Some(Pulse::Night),
+                Subsystem::SurfaceCombat,
+                Draw::Bombardment,
+                EntityRef::Ship(ShipId::new(ship)),
+                EntityRef::Base(base),
+            );
+            let landed = none.land_base_hits(&mut stream, 20, base, &with_field_air);
+            assert_eq!(landed.airfield, 0);
+        }
+    }
+
+    #[test]
+    fn hits_on_the_airfield_add_damage_up_to_100_and_say_so_even_at_100() {
+        let base = BaseId::new(1);
+        let mut world = world(&[1], 0);
+        let cause = world.events.next_id();
+        let damage_of = |world: &World| world.truth.bases[&base].airfield_damage;
+        let events = |world: &World| -> Vec<(u32, Fixed, Vec<Cause>)> {
+            world
+                .events()
+                .iter()
+                .filter_map(|e| match &e.kind {
+                    EventKind::AirfieldDamaged {
+                        hits, damage, side, ..
+                    } => {
+                        assert_eq!(*side, Side::Allied);
+                        Some((*hits, *damage, e.causes.clone()))
+                    }
+                    _ => None,
+                })
+                .collect()
+        };
+        // No hit, no event.
+        world.apply_hits_on_airfield(1, Some(Pulse::Night), base, 0, cause);
+        assert!(events(&world).is_empty());
+        // 3 hits at 2 each.
+        world.apply_hits_on_airfield(1, Some(Pulse::Night), base, 3, cause);
+        assert_eq!(damage_of(&world), n(6));
+        // 60 hits take it to 100 and no more.
+        world.apply_hits_on_airfield(1, Some(Pulse::Night), base, 60, cause);
+        assert_eq!(damage_of(&world), n(100));
+        // One more at 100: recorded, saying 100.
+        world.apply_hits_on_airfield(1, Some(Pulse::Night), base, 1, cause);
+        assert_eq!(damage_of(&world), n(100));
+        assert_eq!(
+            events(&world),
+            vec![
+                (3, n(6), vec![Cause::Event(cause)]),
+                (60, n(100), vec![Cause::Event(cause)]),
+                (1, n(100), vec![Cause::Event(cause)]),
+            ]
+        );
+    }
+
+    #[test]
+    fn work_on_a_damaged_airfield_mends_it_to_0_at_most_and_records_the_mending() {
+        use crate::orders::Job;
+        let base = BaseId::new(1);
+        let mut world = world(&[1], 1000);
+        world.config.record_breakdowns = true;
+        world.truth.bases.get_mut(&base).unwrap().airfield_damage = n(30);
+        let unit = LandUnitId::new(1);
+        world.truth.land_units.get_mut(&unit).unwrap().working = true;
+        let figures = GroundFigures::FIRST;
+        let mut on_airfields = std::collections::BTreeMap::new();
+        // The default job of a damaged field is the airfield.
+        assert_eq!(
+            crate::works::default_job(&world.truth.bases[&base]),
+            Job::Airfield
+        );
+        // 1000 of work, 50 a point: 20 points, 30 to 10.
+        world.work_day(1, unit, None, &figures, &mut on_airfields);
+        assert_eq!(world.truth.bases[&base].airfield_damage, n(10));
+        // And again: 10 is all there is to mend, not 20.
+        world.work_day(2, unit, None, &figures, &mut on_airfields);
+        assert_eq!(world.truth.bases[&base].airfield_damage, Fixed::ZERO);
+        // Whole: the default job is the port, and nothing is mended.
+        assert_eq!(
+            crate::works::default_job(&world.truth.bases[&base]),
+            Job::Port
+        );
+        world.work_day(3, unit, Some(Job::Airfield), &figures, &mut on_airfields);
+        assert_eq!(world.truth.bases[&base].airfield_damage, Fixed::ZERO);
+        let mended: Vec<_> = world
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::AirfieldMended { points, damage, .. } => {
+                    Some((*points, *damage, e.causes.clone(), e.breakdown.clone()))
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(mended.len(), 2, "none on the day it had nothing to mend");
+        assert_eq!((mended[0].0, mended[0].1), (n(20), n(10)));
+        assert_eq!((mended[1].0, mended[1].1), (n(10), Fixed::ZERO));
+        // Each cites the work event of its day, and says how it was made.
+        let worked: Vec<EventId> = world
+            .events()
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::UnitWorked { .. }))
+            .map(|e| e.id)
+            .collect();
+        assert_eq!(mended[0].2, vec![Cause::Event(worked[0])]);
+        assert_eq!(mended[1].2, vec![Cause::Event(worked[1])]);
+        let breakdown = mended[0].3.as_ref().expect("recorded");
+        let names: Vec<&str> = breakdown.factors.iter().map(|f| f.name).collect();
+        assert_eq!(
+            names,
+            ["work", "work_per_airfield_damage_point", "damage_before"]
+        );
+        assert_eq!(breakdown.result, n(20));
+        // Nothing mends itself: a day with no work leaves the damage.
+        world.truth.bases.get_mut(&base).unwrap().airfield_damage = n(40);
+        world.truth.land_units.get_mut(&unit).unwrap().men_ashore = 0;
+        world.work_day(4, unit, None, &figures, &mut on_airfields);
+        assert_eq!(world.truth.bases[&base].airfield_damage, n(40));
     }
 
     #[test]

@@ -1448,6 +1448,7 @@ mod tests {
             air_group: GROUP,
             aircraft: 2,
             pilots: 0,
+            waiting: false,
         });
         world
             .truth

@@ -731,6 +731,11 @@ pub struct AirCombatFigures {
     /// 0092). With the other two it adds to 1 at most. A file that names no
     /// share for men gives 0, and every such hit lands on nothing.
     pub base_hit_men: Fixed,
+    /// The chance a hit on a base lands on its airfield (decision 2 of
+    /// 0103), counted only where the base has one. With the other three it
+    /// adds to 1 at most. A file that names no share for the airfield gives
+    /// 0, and every such hit lands as before.
+    pub base_hit_airfield: Fixed,
     /// The chance each whole shot of fighters that missed is claimed as an
     /// aircraft shot down (decision 3 of
     /// `docs/decisions/0056-claims-from-the-air.md`).
@@ -892,6 +897,7 @@ impl AirCombatFigures {
             ("aircraft", self.base_hit_aircraft),
             ("supply", self.base_hit_supply),
             ("men", self.base_hit_men),
+            ("airfield", self.base_hit_airfield),
         ] {
             if !in_unit(value) {
                 return Some(format!(
@@ -899,10 +905,13 @@ impl AirCombatFigures {
                 ));
             }
         }
-        let landed = self.base_hit_aircraft + self.base_hit_supply + self.base_hit_men;
+        let landed = self.base_hit_aircraft
+            + self.base_hit_supply
+            + self.base_hit_men
+            + self.base_hit_airfield;
         if landed > Fixed::ONE {
             return Some(format!(
-                "air combat base hit chances on aircraft, supply and men add to {landed}, more than 1"
+                "air combat base hit chances on aircraft, supply, men and airfield add to {landed}, more than 1"
             ));
         }
         if self.base_supply_destroyed_per_hit_t.is_negative() {
@@ -1168,6 +1177,14 @@ pub struct GroundFigures {
     /// The share of a working unit's work that a fighting unit set to work
     /// makes (decision 3a of 0099), from 0 to 1.
     pub fighting_unit_work_share: Fixed,
+    /// Damage one hit on an airfield adds (decision 3 of 0103), 0 or more.
+    pub airfield_damage_per_hit: Fixed,
+    /// Work to mend one point of an airfield's damage (decision 7 of 0103),
+    /// above 0.
+    pub work_per_airfield_damage_point: Fixed,
+    /// The damage at or above which a field takes no aircraft (decision 5 of
+    /// 0103), from 0 to 100.
+    pub airfield_landing_refused_at: Fixed,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1223,6 +1240,9 @@ impl GroundFigures {
         work_per_defence_point: Fixed::from_int(200),
         defences_strength: Fixed::from_raw(500_000),
         fighting_unit_work_share: Fixed::from_raw(500_000),
+        airfield_damage_per_hit: Fixed::from_int(2),
+        work_per_airfield_damage_point: Fixed::from_int(50),
+        airfield_landing_refused_at: Fixed::from_int(50),
     };
 
     /// Describes what is wrong with the figures, if anything. The weight of
@@ -1361,6 +1381,10 @@ impl GroundFigures {
             ("work_to_double_unloading", self.work_to_double_unloading),
             ("work_per_aircraft_repair", self.work_per_aircraft_repair),
             ("work_per_defence_point", self.work_per_defence_point),
+            (
+                "work_per_airfield_damage_point",
+                self.work_per_airfield_damage_point,
+            ),
         ] {
             if value <= Fixed::ZERO {
                 return Some(format!("ground {label} {value} is not above 0"));
@@ -1373,6 +1397,21 @@ impl GroundFigures {
             if share.is_negative() || share > Fixed::ONE {
                 return Some(format!("ground {label} {share} is not between 0 and 1"));
             }
+        }
+        // The airfield's damage (decision 0103).
+        if self.airfield_damage_per_hit.is_negative() {
+            return Some(format!(
+                "ground airfield_damage_per_hit {} is negative",
+                self.airfield_damage_per_hit
+            ));
+        }
+        if self.airfield_landing_refused_at.is_negative()
+            || self.airfield_landing_refused_at > Fixed::from_int(100)
+        {
+            return Some(format!(
+                "ground airfield_landing_refused_at {} is not between 0 and 100",
+                self.airfield_landing_refused_at
+            ));
         }
         if self.training_ceiling > 4 {
             return Some(format!(
@@ -1509,6 +1548,7 @@ impl AirCombatFigures {
             base_hit_supply: tenth(3),
             // Decision 0092's first value.
             base_hit_men: tenth(2),
+            base_hit_airfield: Fixed::ZERO,
             fighter_false_claim_chance: tenth(1),
             anti_aircraft_false_claim_chance: Fixed::from_ratio(5, 100),
             bomb_false_claim_chance: tenth(1),

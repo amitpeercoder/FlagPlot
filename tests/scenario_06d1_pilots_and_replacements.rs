@@ -2143,7 +2143,10 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 && !stem.starts_with("12c_")
                 // Scenario 16 counts pilots for every group and names the
                 // upkeep and supply figures (nothing else changed here).
-                && !stem.starts_with("16_"))
+                && !stem.starts_with("16_")
+                // Scenario 31 counts pilots for the group its arrival is for
+                // (decision 0103).
+                && !stem.starts_with("31_"))
             .then(|| stem.to_string())
         })
         .collect();

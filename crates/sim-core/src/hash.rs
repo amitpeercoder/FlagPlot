@@ -150,8 +150,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 18 adds a base's `airfield`, `airfield_work`, `defences` and
 /// `day_work` after its `on_map`, the activity `Work` (code 2) with its job
 /// after the activity's code, a skill's `works` after its `atoll`, and a land
-/// unit's `working` after its skills (decision 0099).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v18";
+/// unit's `working` after its skills (decision 0099);
+/// version 19 adds a base's `airfield_damage` after its `day_work` and an
+/// arrival's `waiting` after its pilots (decision 0103).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v19";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -185,6 +187,9 @@ fn name_every_field(world: &World) {
         strikes_in_flight: _,
         sorties: _,
         grounded_bases: _,
+        // Not hashed: scratch state of one pulse, the damage of each base
+        // with a damaged airfield at its start (decision 0103).
+        field_damage: _,
         deck_losses: _,
         // Not hashed: fixed for the game and read by no rule (decision 5
         // of 0054).
@@ -324,6 +329,7 @@ fn name_every_field(world: &World) {
             airfield_work: _,
             defences: _,
             day_work,
+            airfield_damage: _,
         } = base;
         if let Some(DayWork {
             day: _,
@@ -380,6 +386,7 @@ fn name_every_field(world: &World) {
         air_group: _,
         aircraft: _,
         pilots: _,
+        waiting: _,
     }) = arrivals.first()
     {}
     if let Some(LandUnit {
@@ -673,6 +680,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             }
             None => h.u8(0),
         }
+        // After the base's day of work (decision 0103).
+        h.i64(base.airfield_damage.raw());
     }
 
     h.count(truth.air_groups.len());
@@ -751,6 +760,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(arrival.air_group.raw());
         h.u32(arrival.aircraft);
         h.u32(arrival.pilots);
+        // After the pilots (decision 0103).
+        h.u8(u8::from(arrival.waiting));
     }
 
     // After the arrivals (decision 0066).

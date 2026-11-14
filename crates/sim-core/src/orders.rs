@@ -756,6 +756,10 @@ pub enum RejectReason {
     /// An order to a working unit to stand ready or to train: a working unit
     /// works (decision 4 of 0099). Added at the end of the enum.
     WorkingUnitWorks,
+    /// A rebase order names a base whose airfield is damaged at or above
+    /// `airfield_landing_refused_at`: it takes no aircraft (decision 5 of
+    /// 0103). Added at the end of the enum.
+    AirfieldTooDamaged { damage: Fixed, refused_at: Fixed },
 }
 
 impl fmt::Display for RejectReason {
@@ -867,6 +871,10 @@ impl fmt::Display for RejectReason {
             RejectReason::WorkingUnitWorks => {
                 f.write_str("a working unit works: it does not stand ready or train")
             }
+            RejectReason::AirfieldTooDamaged { damage, refused_at } => write!(
+                f,
+                "the airfield's damage is {damage}, and a field at {refused_at} or more takes no aircraft"
+            ),
         }
     }
 }

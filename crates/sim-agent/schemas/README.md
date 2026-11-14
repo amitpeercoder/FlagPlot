@@ -565,3 +565,21 @@ Fields added only, so `version` stays 3.
   base, job, work, total) and `airfields_built_yesterday`, each left out when none.
 - **What the enemy is told.** Nothing: no line, event or field of an enemy base or unit shows
   an airfield, work or defences. An enemy base keeps its public line.
+
+## An airfield damaged and mended (decision 0103)
+
+Fields added only, so `version` stays 3.
+
+- **A base line** (`list_bases`, `get_entity`, the briefing's `bases`) has `airfield_damage` only
+  while the damage is above 0: `damage` (0 to 100), `share_that_flies` (100 less the damage: of
+  every 100 ready aircraft of a group at the base that many may fly), `takes_aircraft` (false at
+  or above `refused_at`, the ground figure `airfield_landing_refused_at`, given when the scenario
+  has the figures). A rebase to a field that takes none is refused with `airfield_too_damaged`.
+- **An air group line** has `kept_on_ground_by_field` (`aircraft`, `damage`) only for a group at
+  a base with a damaged airfield when the field keeps at least one crewed aircraft on the ground.
+- **The briefing's `bases`** has `airfield_yesterday`, left out when empty, with `damaged`
+  (`hits`, `damage` after), `mended` (`land_unit`, `points`, `damage` after) and
+  `arrivals_waiting` (`air_group`, `aircraft`, `damage`), from the side's own `AirfieldDamaged`,
+  `AirfieldMended` and `ArrivalWaiting` events, each with its `event`.
+- **What the enemy is told.** Nothing: an enemy base keeps its public line, and no event of an
+  enemy field's damage, mending or held arrivals reaches a side.

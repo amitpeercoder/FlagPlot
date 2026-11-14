@@ -1,0 +1,214 @@
+# Scenario 31: an airfield damaged and mended (decision 0103).
+#
+# Proves decision 0103 against a hand calculation. At A (base 1) a field
+# damaged 30 flies 70 in 100 of its aircraft, and a working unit with no order
+# mends it 10 points a day. At B (base 2) a field damaged 60 has nobody working
+# on it on day 1, then a fighting unit set to the airfield mends 10 a day; a
+# rebase to it is refused at 60 and at 50 and accepted at 40, and an arrival
+# due on day 2 waits until the night of day 4. Bombers at B strike C (base 3,
+# a field that takes hits, whose damage nobody mends) and D (base 4, which has
+# no airfield, so no hit of the raid on it can land there). The hand calculation
+# is in tests/scenario_31_airfield_damage.rs, which runs the scenario on the
+# frozen step 1 figures with `[base_hit] airfield` set to 0.2. Only the hits of
+# a raid and where each lands are the dice; the test reads them.
+#
+# The scenario names no air upkeep, fatigue or air supply figures: nothing
+# wears, tires or costs supply but the men. Group 1's search (the arc 060 to
+# 120, out to 400 nm) finds nothing: there is no force at sea. The frozen step 1
+# figures accept it as scenario 22's search is accepted.
+#
+# The bombers are the placeholder dive bomber (aircraft type 3, strike radius
+# 250 nm): B to C is 200 nm and B to D 160 nm.
+#
+# PLACEHOLDER DATA. The units, bases, air groups, aircraft and map are invented.
+
+name = "Scenario 31: An airfield damaged and mended"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_airfield_damage.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 5000
+airfield_damage = 30
+
+[[base]]
+id = 2
+name = "Placeholder base 2"
+side = "allied"
+q = 5
+r = 0
+supply_t = 5000
+airfield_damage = 60
+
+[[base]]
+id = 3
+name = "Placeholder base 3"
+side = "japanese"
+q = 10
+r = 0
+supply_t = 5000
+
+# No airfield: a hit on it cannot land on one.
+[[base]]
+id = 4
+name = "Placeholder base 4"
+side = "japanese"
+q = 5
+r = 4
+supply_t = 5000
+airfield = false
+
+# Group 1: placeholder flying boat, on search.
+[[air_group]]
+id = 1
+name = "Placeholder patrol squadron"
+side = "allied"
+base = 1
+aircraft_type = 1
+ready = 12
+
+# Group 2: placeholder fighter (transfer range 500 nm), no mission.
+[[air_group]]
+id = 2
+name = "Placeholder fighter squadron 1"
+side = "allied"
+base = 1
+aircraft_type = 4
+ready = 12
+
+# Group 3: placeholder fighter, no mission, pilots counted for the arrival.
+[[air_group]]
+id = 3
+name = "Placeholder fighter squadron 2"
+side = "allied"
+base = 2
+aircraft_type = 4
+ready = 4
+pilots = 4
+
+# Group 4: placeholder dive bomber, strikes base 3.
+[[air_group]]
+id = 4
+name = "Placeholder bomber group 1"
+side = "allied"
+base = 2
+aircraft_type = 3
+ready = 20
+
+# Group 5: placeholder dive bomber, strikes base 4.
+[[air_group]]
+id = 5
+name = "Placeholder bomber group 2"
+side = "allied"
+base = 2
+aircraft_type = 3
+ready = 20
+
+# Unit 1: working, no order. Unit 2: fighting, set to the airfield on day 2.
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+working = true
+men = 500
+q = 0
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder unit 2"
+side = "allied"
+men = 1000
+q = 5
+r = 0
+posture = "defend"
+
+# Six aircraft and six pilots for group 3, due on day 2 at base 2.
+[[arrival]]
+day = 2
+air_group = 3
+aircraft = 6
+pilots = 6
+
+# Day 1: group 1 searches, the bombers strike, group 2 is rebased (refused).
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 60
+to_deg = 120
+range_nm = 400
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 4
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 3
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 5
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 4
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "rebase"
+base = 2
+
+# Day 2: unit 2 works at the airfield.
+
+[[order]]
+day = 2
+side = "allied"
+land_unit = 2
+kind = "set_activity"
+activity = "work"
+job = "airfield"
+
+# Day 3: refused, damage 50 is at the level.
+
+[[order]]
+day = 3
+side = "allied"
+air_group = 2
+kind = "rebase"
+base = 2
+
+# Day 4: accepted, damage 40.
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 2
+kind = "rebase"
+base = 2

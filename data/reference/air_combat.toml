@@ -184,3 +184,7 @@ supply = "0.3"
 # Placeholder set by the architect for decision 0092, resting on no source: the
 # share of hits on a base that land on men.
 men = "0.2"
+# Placeholder set by the architect for decision 0103, resting on no source: the
+# share of hits on a base that land on its airfield, which counts only where
+# the base has one. 0 in the frozen step 1 figures.
+airfield = "0.2"

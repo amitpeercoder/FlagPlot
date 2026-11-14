@@ -158,6 +158,9 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::NoAirfield => base("no_airfield"),
         RejectReason::WorkingUnitDefends => base("working_unit_defends"),
         RejectReason::WorkingUnitWorks => base("working_unit_works"),
+        RejectReason::AirfieldTooDamaged { damage, refused_at } => base("airfield_too_damaged")
+            .num("damage", *damage)
+            .num("refused_at", *refused_at),
     }
 }
 
@@ -1034,6 +1037,44 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .id("base", *base)
                 .hex("hex", *hex)
                 .num("work_done", *work_done),
+        ),
+        EventKind::AirfieldDamaged {
+            base,
+            side,
+            hits,
+            damage,
+        } => (
+            "airfield_damaged",
+            d.text("side", names::side(*side))
+                .id("base", *base)
+                .int("hits", *hits)
+                .num("damage", *damage),
+        ),
+        EventKind::ArrivalWaiting {
+            air_group,
+            base,
+            aircraft,
+            pilots,
+            damage,
+        } => (
+            "arrival_waiting",
+            d.id("air_group", *air_group)
+                .id("base", *base)
+                .int("aircraft", *aircraft)
+                .int("pilots", *pilots)
+                .num("damage", *damage),
+        ),
+        EventKind::AirfieldMended {
+            unit,
+            base,
+            points,
+            damage,
+        } => (
+            "airfield_mended",
+            d.id("unit", *unit)
+                .id("base", *base)
+                .num("points", *points)
+                .num("damage", *damage),
         ),
         EventKind::FightDayCounted {
             unit,

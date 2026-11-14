@@ -2,8 +2,8 @@ Scenario 4a2: Stragglers, a damaged force sheds two ships
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash aa32533df4420c60  25 events
-day   2  hash aa63c6b9f3193a02  5 events
+day   1  hash f7c5ee6649f17251  25 events
+day   2  hash 074ab9fb2591256f  5 events
 
 task_force:1 "Placeholder damaged force" (Allied): Arrived at (12,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0.5; home port base:1
 task_force:1000001 "Placeholder damaged force, sent home" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1

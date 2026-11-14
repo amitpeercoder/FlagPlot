@@ -248,6 +248,9 @@ struct BaseSpec {
     /// The base's defences at the start, 0 to 100 (decision 4 of 0099).
     /// Defaults to 0.
     defences: Option<Quantity>,
+    /// The damage to the airfield at the start, 0 to 100 (decision 0103).
+    /// Only for a base with an airfield. Defaults to 0.
+    airfield_damage: Option<Quantity>,
 }
 
 /// A land unit at the start (decision 0066, 3): exactly one of a hex, where
@@ -1149,6 +1152,25 @@ impl Scenario {
                 }
                 None => Fixed::ZERO,
             };
+            let airfield_damage = match &spec.airfield_damage {
+                Some(quantity) => {
+                    let damage = quantity
+                        .to_fixed()
+                        .map_err(|e| fail(format!("{id}: airfield_damage {e}")))?;
+                    if damage.is_negative() || damage > Fixed::from_int(100) {
+                        return Err(fail(format!(
+                            "{id}: airfield_damage {damage} is not between 0 and 100"
+                        )));
+                    }
+                    if !airfield {
+                        return Err(fail(format!(
+                            "{id}: airfield_damage is given for a base that has no airfield, which has none to damage; give it only for a base with an airfield"
+                        )));
+                    }
+                    damage
+                }
+                None => Fixed::ZERO,
+            };
             let base = Base {
                 id,
                 name: spec.name.clone(),
@@ -1206,6 +1228,7 @@ impl Scenario {
                 airfield_work,
                 defences,
                 day_work: None,
+                airfield_damage,
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1807,6 +1830,7 @@ impl Scenario {
                 air_group: group_id,
                 aircraft: spec.aircraft,
                 pilots,
+                waiting: false,
             });
         }
 
@@ -5039,6 +5063,48 @@ task_force = 3
         assert!(base("defences = -1\n").is_err());
         assert!(base("defences = 1.5\n").is_err());
         assert!(base("airfield = \"no\"\n").is_err());
+    }
+
+    #[test]
+    fn a_base_takes_airfield_damage_only_with_an_airfield() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let base = |extra: &str| {
+            let head = HEAD.replace("q = 5\nr = 0\n", &format!("q = 5\nr = 0\n{extra}"));
+            Scenario::parse(&head, &path)
+        };
+        let damage =
+            |scenario: Scenario| scenario.world.umpire().bases[&BaseId::new(2)].airfield_damage;
+        assert_eq!(damage(base("").expect("loads")), Fixed::ZERO);
+        assert_eq!(
+            damage(base("airfield_damage = 30\n").expect("loads")),
+            Fixed::from_int(30)
+        );
+        assert_eq!(
+            damage(base("airfield_damage = \"12.5\"\n").expect("loads")),
+            Fixed::from_ratio(25, 2)
+        );
+        assert_eq!(
+            damage(base("airfield_damage = 100\n").expect("loads")),
+            Fixed::from_int(100)
+        );
+        let message = base("airfield = false\nairfield_damage = 10\n")
+            .map(|_| ())
+            .expect_err("refused")
+            .to_string();
+        assert!(
+            message.contains("airfield_damage") && message.contains("no airfield"),
+            "{message}"
+        );
+        let message = base("airfield_damage = 101\n")
+            .map(|_| ())
+            .expect_err("refused")
+            .to_string();
+        assert!(
+            message.contains("airfield_damage") && message.contains("0 and 100"),
+            "{message}"
+        );
+        assert!(base("airfield_damage = -1\n").is_err());
+        assert!(base("airfield_damage = 1.5\n").is_err());
     }
 
     #[test]

@@ -17,6 +17,7 @@
 use crate::events::{Breakdown, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::ids::BaseId;
+use crate::landing::takes_aircraft;
 use crate::orders::RejectReason;
 use crate::state::{AirGroup, AirGroupLocation, ShipLocation, Side};
 use crate::world::World;
@@ -26,8 +27,9 @@ impl World {
     /// the checks every air group order has (the side's own, not lost),
     /// in the order of decision 0091, 2: away at the yard, aboard a ship,
     /// already moved that day, the base not the side's own, already at the
-    /// base, the base with no airfield (decision 6 of 0099), beyond the
-    /// transfer range.
+    /// base, the base with no airfield (decision 6 of 0099), the airfield
+    /// damaged to the level that takes no aircraft (decision 5 of 0103),
+    /// beyond the transfer range.
     pub(crate) fn check_rebase(
         &self,
         group: &AirGroup,
@@ -65,6 +67,21 @@ impl World {
         // Without an airfield no aircraft uses a base (decision 6 of 0099).
         if !to.airfield {
             return Err(RejectReason::NoAirfield);
+        }
+        // A field damaged to the level takes no aircraft (decision 5 of
+        // 0103).
+        if !takes_aircraft(to, self.ref_data.ground.as_ref()) {
+            let refused_at = self
+                .ref_data
+                .ground
+                .as_ref()
+                .map_or(Fixed::from_int(100), |figures| {
+                    figures.airfield_landing_refused_at
+                });
+            return Err(RejectReason::AirfieldTooDamaged {
+                damage: to.airfield_damage,
+                refused_at,
+            });
         }
         let distance_nm = self.rebase_distance_nm(from, to.hex);
         let range_nm = self.ref_data.transfer_range_nm(group.aircraft_type);

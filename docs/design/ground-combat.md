@@ -118,8 +118,8 @@ Each of these is real and was considered. None is needed for a naval or air deci
 | --- | --- | --- |
 | Movement overland between hexes | The Kokoda Track cannot be played; men move only by sea | When a scenario in New Guinea needs it (answer 1 below) *(Nov 14, 2026: marching between linked hexes is built, decision 0094, `crates/sim-core/src/march.rs`.)* |
 | Fire from the shore on ships landing men | An opposed landing costs no ships | With the first scenario of an assault on a defended beach |
-| Artillery ashore closing an airfield | Guns on the island cannot stop Henderson Field flying | With damage to a base's airfield (decision 0052, item 12) |
-| Building and repairing airfields | A base's airfield is given by the scenario | With base damage and base orders. Decision 0099 builds the airfield: a base formed in play has none until land units' work builds one. Damage to it and its repair are still left out |
+| Artillery ashore closing an airfield | Guns on the island cannot stop Henderson Field flying. Bombs and shells from outside can damage a field (decision 0103), and guns ashore do not | With guns ashore firing on a base's airfield |
+| Building and repairing airfields | A base's airfield is given by the scenario | With base damage and base orders. Decision 0099 builds the airfield: a base formed in play has none until land units' work builds one. Damage to it by bombs and shells, and its mending by work, are built (decision 0103). Damage to a port and its repair are left out |
 | Sickness apart from hunger | Malaria takes nobody who is fed | Only if the record shows the tuning cannot do without it |
 | Terrain | Every land hex is jungle (decision 0052, item 14), so a terrain figure would be one constant | When the map carries real terrain |
 | Kinds of unit, weapons, armour, engineers | A man is a man | Not planned. The pillars cut it |
