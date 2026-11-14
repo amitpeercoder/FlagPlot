@@ -76,3 +76,6 @@ id,key,name,kind,nation
 1072,jp-run-1942-09-06-yudachi-uranami,"Uranami, Shikinami, Yudachi, Ariake attack mission with troops landed, 6 Sep",run,jp
 1073,jp-run-1942-09-07-destroyer-runs,"Destroyer troop runs of 7 Sep (Umikaze, Kawakaze, Suzukaze, Hatsuyuki, Murakumo)",run,jp
 1074,jp-run-1942-09-11-kamimbo,"Yudachi, Umikaze, Kawakaze run to Kamimbo, 11 Sep (Aoba Detachment)",run,jp
+1075,jp-run-1942-09-02-oka-barge-convoy,"Oka barge convoy from northern Santa Isabel, from 2 Sep (2d Bn 124th Infantry)",run,jp
+1076,jp-run-1942-08-29-desron11-taivu,"11th Destroyer Squadron run to Taivu Point, night of 29 Aug (NIDS account)",run,jp
+1077,jp-run-1942-08-29-desron24-taivu,"24th Destroyer Squadron run to Taivu, after the night of 29 Aug (NIDS account)",run,jp
