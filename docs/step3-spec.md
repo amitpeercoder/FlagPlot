@@ -1,6 +1,6 @@
 # Flag Plot — Step 3 Spec: Staff Planner
 
-Status: second draft, written by the architect on Nov 14, 2026, after the designer read the first draft and an outside review of it and set the target below. The target is the designer's. The contracts in "The command contract" are proposed and become the source of truth for step 3 when the designer has answered the four questions at the end. Nothing is built.
+Status: confirmed by the designer on Nov 14, 2026, and the source of truth for step 3. The architect wrote it after the designer read a first draft and an outside review of it and set the target below; the designer then answered its four questions ("Decided by the designer", at the end). Nothing is built. Each stage still gets its plan and its decision record before any code.
 
 `docs/pillars.md` gives step 3 one line: the layer that turns intent into orders, serving player delegation and the enemy AI, so it is built once. This says what that means for the slice, what it must prove, and in what order it is built.
 
@@ -22,7 +22,7 @@ It has no screen. Step 4 puts a minimal interface over it. Step 3 is judged by t
 4. **The estimate.** Before an operation is committed the commander is told what it needs, when it could go and what it may cost, from a trial that never touches the live enemy.
 5. **The proof.** A model that commands by intent alone does at least as well as the same model ordering every unit, in a fraction of the decisions. This is the first pillar as a claim that can fail.
 
-**Stretch.** The 180-day soak runs staff against staff with every invariant holding.
+**Stretch.** The 180-day soak runs staff against staff with every invariant holding. After step 3, once the battles of October and November 1942 are researched, the goal is the real campaign carried past 14 September.
 
 **Out of reach for this step, and not claimed:**
 
@@ -266,9 +266,11 @@ Whether it is fun is judged by people at step 4, as the pillars say.
 - The proof is run, and its result is reported whichever way it falls. If the model by intent does worse, the step is not done, and what it lacked is the next work.
 - The rulebook has a chapter on the staff: every decision it makes, as the code has it.
 
-## Questions for the designer
+## Decided by the designer
 
-1. **The limits.** Six kinds: forces, area, priority, protected, reserve, and a risk level of three steps. Is that the right small set, or is something a commander must be able to say missing?
-2. **What the staff may change alone.** Routes, the day of a run inside its slack, a like force for another, the order of tasks in a phase. Everything else on an approved plan comes back to the commander. Is the line in the right place?
-3. **The proof's bar.** "No worse on the objectives scale, in fewer decisions." Should it be no worse, or better by a margin? The architect recommends no worse: the claim is that delegation costs nothing, not that the staff out-thinks its commander.
-4. **The stretch.** Is the 180-day soak, staff against staff, the right stretch, or should it be the campaign carried past 14 September once the October battles are researched?
+On Nov 14, 2026.
+
+1. **The limits are the six of this spec:** forces, area, priority, protected commitments, reserves, and a risk level of three steps. More are added when play shows a need.
+2. **The staff changes alone what this spec lists:** routes, the day of a run inside its slack, a like force for another, and the order of tasks in a phase. Everything else on an approved plan comes back to the commander.
+3. **The proof's bar is no worse, in far fewer decisions.** The claim is that delegating costs nothing.
+4. **The stretch is the 180-day soak first.** The real campaign carried past 14 September is the goal after it, once its battles are researched.
