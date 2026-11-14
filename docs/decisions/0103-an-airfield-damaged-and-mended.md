@@ -1,6 +1,6 @@
 # 0103: An airfield damaged and mended
 
-Status: a plan by the architect, written on Nov 14, 2026. Needs review: the three questions at the end are the designer's. Nothing is built. Every figure is a placeholder.
+Status: a plan by the architect, written on Nov 14, 2026. The designer answered its three questions on Nov 14, 2026: a share of the field flies (decision 4), nothing mends itself (decision 9), and landing on a badly damaged field is refused (decision 5, his choice against the architect's proposal). Confirmed. Nothing is built. Every figure is a placeholder.
 
 ## The gap
 
@@ -17,7 +17,7 @@ Bombs and shells that hit a base destroy aircraft, supply and men, and leave the
 ### What damage does
 
 4. **A damaged field flies fewer aircraft.** At the start of each pulse the share of the field that works is 100 less its damage, over 100. Of each group at the base, the aircraft that may fly in that pulse are its ready aircraft times that share, cut to a whole aircraft. The rest stay on the ground, where a hit can find them. At 100 nothing flies.
-5. **Aircraft land on a damaged field as on a whole one.** Rebasing to it, landing elsewhere and arrivals are not refused. A field too damaged to launch from can still be landed on, badly; the wear of that is not modelled.
+5. **A badly damaged field takes no aircraft.** While a field's damage is at or above `airfield_landing_refused_at`: a rebase order to it is refused; aircraft that cannot get home do not land there and go to the next place the rule gives (decision 0059); and an arrival due at it waits, and is delivered on the first night the field is below the level. Below the level aircraft land as on a whole field. *The designer's choice, Nov 14, 2026. The architect had proposed that landing is never refused.* An arrival waits and is not lost, the architect's ruling: the aircraft are at a base in the rear and come when the field can take them. Decision 0101, item 8, is changed to match: an arrival due at a base that is not yet its side's, or has no airfield, waits too.
 6. **Damage does nothing else.** It does not touch the port, the stocks, the guns or the men.
 
 ### Mending
@@ -38,6 +38,7 @@ Bombs and shells that hit a base destroy aircraft, supply and men, and leave the
 | `air_combat.toml` | `[base_hit] airfield` | `"0.2"` | The share of hits on a base that land on the airfield |
 | `ground.toml` | `airfield_damage_per_hit` | `2` | Damage one hit adds |
 | `ground.toml` | `work_per_airfield_damage_point` | `50` | Work to mend one point |
+| `ground.toml` | `airfield_landing_refused_at` | `50` | Damage at or above which a field takes no aircraft |
 
 None rests on a source. In the frozen step 1 figures the share is `0`, so every earlier hand calculation stands. With these, fifty hits on the field close it, and a battalion of 1,000 mends 20 points a day. The record has rows to tune them on: the field was "never out of operation for more than four hours" once the construction battalion had it (`place_facts`, row 72), and the shellings of 25 August, 5 September and 12 to 14 September have rows.
 
@@ -50,13 +51,13 @@ None rests on a source. In the frozen step 1 figures the share is `0`, so every 
 ## What it leaves out
 
 - **A port damaged, and stocks or guns damaged apart from the hits that exist.**
-- **Aircraft wrecked by landing on a damaged field.**
+- **Aircraft wrecked by landing on a damaged field** below the level.
 - **Craters that slow the building of a field not yet built.**
 - **The enemy learning the state of a field.**
 
 ## What it costs
 
-- **New state:** a base's airfield damage, in the hash and named beside it; the hash version is raised and the generated files remade.
+- **New state:** a base's airfield damage, and whether an arrival has been delivered, in the hash and named beside it; the hash version is raised and the generated files remade.
 - **The hit table gains a share,** and the raid and the bombardment each a breakdown factor, named only when the share counts.
 - **The count of aircraft that may fly** is read by search, strikes, patrol and escort.
 - **New events** with their rows in `side_events.rs`, a scenario key, and the agent's view of its own base.
@@ -71,6 +72,8 @@ None rests on a source. In the frozen step 1 figures the share is `0`, so every 
 
 ## Questions for the designer
 
-1. **Decision 4:** a damaged field flies a share of its aircraft, falling to none at 100. The other choice is a field that is open until its damage passes a level and then shut.
-2. **Decision 9:** nothing mends itself. The other choice is a small daily mending by the base with no unit set to it.
-3. **Decision 5:** aircraft may still land on a damaged field. The other choice is to refuse rebasing and arrivals above a level of damage.
+Answered on Nov 14, 2026.
+
+1. **Decision 4:** a damaged field flies a share of its aircraft, falling to none at 100. Agreed.
+2. **Decision 9:** nothing mends itself. Agreed.
+3. **Decision 5:** the designer chose that rebasing and arrivals are refused above a level of damage, and aircraft with no deck go elsewhere.
