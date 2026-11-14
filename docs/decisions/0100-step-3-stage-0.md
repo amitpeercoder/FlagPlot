@@ -1,6 +1,6 @@
 # 0100: Step 3, stage 0: the ground the staff stands on
 
-Status: a plan by the architect, written on Nov 14, 2026, for the designer's approval, as `docs/step3-spec.md` asks of every stage. Decisions 4 and 8 need review. Nothing is built. It adds no rule of the game and changes no result: every existing scenario must give the events and the hashes it gives today.
+Status: a plan by the architect, written on Nov 14, 2026, as `docs/step3-spec.md` asks of every stage. The designer approved it and agreed decisions 4 and 8 on Nov 14, 2026. Nothing is built. It adds no rule of the game and changes no result: every existing scenario must give the events and the hashes it gives today.
 
 ## What stage 0 is
 
@@ -57,7 +57,7 @@ The code was read for every choice a rule makes on a unit's behalf during a day.
 
 2. **A side can ask each of them through its view,** as it can ask about a strike today. The answer is what the engine would do at this moment with what the side holds. It is not a forecast: it does not say what the enemy will do or what the dice will give.
 3. **A side's view hands over the figures those choices use.** Figures are the rules of the game and are the same for both sides. Nothing of the enemy is added to the view.
-4. **The five choices made at the point of contact stay with the rules.** They are not staff decisions: the pilot over the target and the captain in the fight see what is there, and the staff does not. A staff cannot ask them and does not need to. A trial does not ask them either: it plays them, in its own private world. *Needs review: the other course is to make them choices from belief, so that a raid attacks the kind of ship it was told of and not the ships that are there. That would change the results of every air and surface fight and undo the tuning of step 2. The architect recommends against it.*
+4. **The five choices made at the point of contact stay with the rules.** They are not staff decisions: the pilot over the target and the captain in the fight see what is there, and the staff does not. A staff cannot ask them and does not need to. A trial does not ask them either: it plays them, in its own private world. *Agreed by the designer, Nov 14, 2026. The other course is to make them choices from belief, so that a raid attacks the kind of ship it was told of and not the ships that are there. That would change the results of every air and surface fight and undo the tuning of step 2. The architect recommends against it.*
 5. **Which base feeds, refuels or repairs is not a choice.** It is a fixed rule of allocation (the lowest-numbered base of the side in the hex, in order) and stays where it is. A staff reads the rule; it does not ask it.
 
 ### The test of it
@@ -67,7 +67,7 @@ The code was read for every choice a rule makes on a unit's behalf during a day.
 
 ### A saved game and its rules
 
-8. **A saved game records what it was played under:** the version of the state's layout, as a batch file does, and a rules label, which this stage begins at 1 and which a pull request raises when it changes a rule in a way that changes what an existing game would do. A replay of a game whose record differs from the engine's is refused before it runs, with the two versions named. *Needs review: an older saved game is refused, with the reason, and not converted. A game in progress does not survive a change of rules, as decision 0055 already said. The other course is to carry old games forward, which would mean keeping every old rule alive.*
+8. **A saved game records what it was played under:** the version of the state's layout, as a batch file does, and a rules label, which this stage begins at 1 and which a pull request raises when it changes a rule in a way that changes what an existing game would do. A replay of a game whose record differs from the engine's is refused before it runs, with the two versions named. *Agreed by the designer, Nov 14, 2026. An older saved game is refused, with the reason, and not converted. A game in progress does not survive a change of rules, as decision 0055 already said. The other course is to carry old games forward, which would mean keeping every old rule alive.*
 9. **The recorded games in the repository are remade once more** in the new format. From then on a rule change that would break them says so at once.
 10. **Step 3 adds to the record as it goes:** the version of the doctrine, when there is one, and of the trial's settings.
 
@@ -114,5 +114,7 @@ No rule is added, changed or removed. The rulebook changes to say which choices 
 
 ## Questions for the designer
 
-1. **Decision 4:** the five choices made at the point of contact stay with the rules and read what is truly there. Agreed?
-2. **Decision 8:** a saved game from before a change of rules is refused, with the reason, and is not converted. Agreed?
+Answered on Nov 14, 2026.
+
+1. **Decision 4:** the five choices made at the point of contact stay with the rules and read what is truly there. Agreed.
+2. **Decision 8:** a saved game from before a change of rules is refused, with the reason, and is not converted. Agreed.
