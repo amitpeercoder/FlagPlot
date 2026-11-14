@@ -111,8 +111,8 @@ struct PlannedFire {
 }
 
 impl World {
-    /// The day's fight in a contested hex (decisions 4 to 10 of 0090, and 1
-    /// and 4 of 0105).
+    /// The day's fight in a contested hex (decisions 4 to 10 of 0090, 1 and
+    /// 4 of 0105, and correction 1 of 0109).
     pub(super) fn fight(
         &mut self,
         day: u32,
@@ -140,6 +140,14 @@ impl World {
         // its shots and its chance; then each side's shots limited to the men
         // who can come to grips (decision 1 of 0105), and each side's weight
         // of fire (decision 4 of 0105).
+        // The units in the fight (correction 1 of decision 0109): where the
+        // other side is not on attack in the hex, a unit falling back is out
+        // of it both ways. It does not fire, it is not counted for the
+        // limit, and it takes no share of the losses.
+        let engaged_units = [
+            self.in_fight(&units.units[0], attacks[1]),
+            self.in_fight(&units.units[1], attacks[0]),
+        ];
         let mut planned: [Vec<PlannedFire>; 2] = [Vec::new(), Vec::new()];
         let mut fed_today: [Option<EventId>; 2] = [None, None];
         for side in Side::ALL {
@@ -174,7 +182,7 @@ impl World {
                 + figures
                     .defences_strength
                     .mul_div(defences, Fixed::from_int(100));
-            for unit_id in units.units[at(side)].clone() {
+            for unit_id in engaged_units[at(side)].clone() {
                 let unit = &self.truth.land_units[&unit_id];
                 // Working men do not fire (decision 1 of 0099).
                 if unit.working {
@@ -230,12 +238,12 @@ impl World {
             }
         }
         // The limit (decision 1 of 0105): a side's firing men count up to
-        // `engagement_ratio` times the other side's fighting men ashore in the
-        // hex at the start of the fight; above it each unit's shots are cut
+        // `engagement_ratio` times the other side's fighting men in the fight
+        // at its start; above it each unit's shots are cut
         // in the same proportion.
         let fighting = [
-            self.fighting_men_ashore(&units.units[0]),
-            self.fighting_men_ashore(&units.units[1]),
+            self.fighting_men_ashore(&engaged_units[0]),
+            self.fighting_men_ashore(&engaged_units[1]),
         ];
         let mut limits: [Option<(u32, Fixed)>; 2] = [None, None];
         let mut weights = [Fixed::ZERO; 2];
@@ -456,11 +464,11 @@ impl World {
         }
 
         // The losses, worked for both sides from the strengths at the start
-        // and then taken (decision 9).
+        // and then taken (decision 9), shared among the units in the fight.
         let men_per_hit = u32::try_from(figures.men_per_hit.trunc()).unwrap_or(u32::MAX);
         let mut losses: Vec<SideLoss> = Vec::new();
         for side in Side::ALL {
-            let list = &units.units[at(side)];
+            let list = &engaged_units[at(side)];
             let unit_men: Vec<u32> = list
                 .iter()
                 .map(|unit| self.truth.land_units[unit].men_ashore)

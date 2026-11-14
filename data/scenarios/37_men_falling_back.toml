@@ -1,0 +1,142 @@
+# Scenario 37: men who are falling back are fired on only when the side that
+# beat them is on attack (decision 0109, correction 1).
+#
+# Proves correction 1 of decision 0109 against a hand calculation, at two
+# places. At P a Japanese regiment is beaten on day 1 by an Allied attack and
+# falls back to R; on day 2 the Allied unit goes on the defence; on day 3 a
+# Japanese battalion arrives from R and attacks, and the regiment, falling
+# back with no Allied attack in the hex, is out of the fight: it does not
+# fire, is not counted for the limit on engaged men and takes no share of the
+# losses. At T the same regiment falls back while the Allied unit goes on
+# attacking: it is counted and fired on, as before. The hand calculation is in
+# tests/scenario_37_men_falling_back.rs, which runs the scenario on the frozen
+# step 1 figures with `engagement_ratio` set to 3. Only the hits of the
+# fights are the dice; the test reads them.
+#
+# No air combat, wear, fatigue or air supply figures are named, so no aircraft
+# flies and nothing wears or is grounded. Each night the men's supply is the
+# first thing charged. Every base has an airfield (the default).
+#
+# PLACEHOLDER DATA. The units, bases and map are invented.
+
+name = "Scenario 37: Men falling back"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_men_falling_back.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base 1, Japanese, at P"
+side = "japanese"
+q = 0
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 2
+name = "Placeholder base 2, Japanese, at R"
+side = "japanese"
+q = 1
+r = 0
+supply_t = 100
+
+[[base]]
+id = 3
+name = "Placeholder base 3, Allied, at P"
+side = "allied"
+q = 0
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 4
+name = "Placeholder base 4, Japanese, at T"
+side = "japanese"
+q = 10
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 5
+name = "Placeholder base 5, Japanese, at U"
+side = "japanese"
+q = 11
+r = 0
+supply_t = 100
+
+[[base]]
+id = 6
+name = "Placeholder base 6, Allied, at T"
+side = "allied"
+q = 10
+r = 0
+supply_t = 5000
+
+[[land_unit]]
+id = 1
+name = "Placeholder Japanese regiment at P"
+side = "japanese"
+men = 1000
+q = 0
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder Allied division at P"
+side = "allied"
+men = 6000
+q = 0
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 3
+name = "Placeholder Japanese battalion at R"
+side = "japanese"
+men = 300
+q = 1
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 4
+name = "Placeholder Japanese regiment at T"
+side = "japanese"
+men = 1000
+q = 10
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 5
+name = "Placeholder Allied division at T"
+side = "allied"
+men = 6000
+q = 10
+r = 0
+posture = "attack"
+
+# Day 1: unit 3 marches from R to P, three days for the one hex.
+[[order]]
+day = 1
+side = "japanese"
+land_unit = 3
+kind = "march"
+hex = [0, 0]
+
+# Day 2: the Allied unit at P goes on the defence. Unit 5, at T, is given no
+# order and stays on attack.
+[[order]]
+day = 2
+side = "allied"
+land_unit = 2
+kind = "set_posture"
+posture = "defend"

@@ -1108,3 +1108,261 @@ fn the_enemys_men_ashore_change_no_answer_of_the_view_of_the_land_units() {
         assert_eq!(va.ask(&question), vb.ask(&question), "{question:?}");
     }
 }
+
+// ---- Men falling back and a fight their own side starts (correction 1 of
+// decision 0109), by hand-built worlds. Two coast hexes, FB_AT and FB_TO,
+// joined by a land link; engagement ratio 3, the first figures otherwise.
+// Japanese base 1 and Allied base 2 are at FB_AT, each with plenty of supply.
+
+const FB_AT: Hex = Hex::new(0, 0);
+const FB_TO: Hex = Hex::new(1, 0);
+
+/// What a land unit is in a falling-back world: side, men, posture, whether
+/// it is falling back, and its fed share.
+struct FbUnit {
+    id: u32,
+    side: Side,
+    men: u32,
+    posture: Posture,
+    falling_back: bool,
+    fed_share: Fixed,
+}
+
+fn fb_unit(id: u32, side: Side, men: u32, posture: Posture) -> FbUnit {
+    FbUnit {
+        id,
+        side,
+        men,
+        posture,
+        falling_back: false,
+        fed_share: Fixed::ONE,
+    }
+}
+
+impl FbUnit {
+    fn falling_back(self) -> FbUnit {
+        FbUnit {
+            falling_back: true,
+            ..self
+        }
+    }
+
+    fn unfed(self) -> FbUnit {
+        FbUnit {
+            fed_share: Fixed::ZERO,
+            ..self
+        }
+    }
+}
+
+fn fb_world(units: Vec<FbUnit>) -> World {
+    let mut map = Map::new();
+    for q in -1..=2 {
+        for r in -1..=1 {
+            map.insert(Hex::new(q, r), HexData::open_sea());
+        }
+    }
+    for hex in [FB_AT, FB_TO] {
+        map.insert(
+            hex,
+            HexData {
+                kind: crate::map::HexKind::Coast,
+                ..HexData::open_sea()
+            },
+        );
+    }
+    map.add_land_link(FB_AT, FB_TO).expect("link");
+    let mut ref_data = RefData::default();
+    ref_data.port_sizes.insert(
+        0,
+        PortSize {
+            berths: 0,
+            berth_rate_t_per_h: Fixed::ZERO,
+            lighter_rate_t_per_h: n(20),
+        },
+    );
+    ref_data.ground = Some(GroundFigures {
+        engagement_ratio: n(3),
+        ..GroundFigures::FIRST
+    });
+    ref_data.search = Some(SearchFigures::from_search_toml());
+    let mut truth = TruthState::default();
+    for (id, side) in [(1, Side::Japanese), (2, Side::Allied)] {
+        truth.bases.insert(
+            bid(id),
+            Base {
+                supply_t: n(1000),
+                ..Base::new(bid(id), format!("Base {id}"), side, FB_AT)
+            },
+        );
+    }
+    for unit in units {
+        truth.land_units.insert(
+            lid(unit.id),
+            LandUnit {
+                posture: unit.posture,
+                fed_share: unit.fed_share,
+                march: unit.falling_back.then_some(crate::state::March {
+                    to: FB_TO,
+                    days: 0,
+                    counted: Fixed::ZERO,
+                    cause: Cause::Event(crate::ids::EventId::new(1)),
+                }),
+                ..LandUnit::new(
+                    lid(unit.id),
+                    format!("Unit {}", unit.id),
+                    unit.side,
+                    unit.men,
+                    Some(FB_AT),
+                )
+            },
+        );
+    }
+    let world = World::new(7, ref_data, map, truth).expect("valid setup");
+    assert!(invariants::check(&world.truth, &world.map, &world.ref_data).is_empty());
+    world
+}
+
+/// `(firing men, shots, chance, hits)` of a unit's fire on day 1, if it
+/// fired.
+fn fb_fire(world: &World, id: u32) -> Option<(u32, Fixed, Fixed, u32)> {
+    let found: Vec<_> = all_events(world)
+        .into_iter()
+        .filter_map(|e| match e.kind {
+            EventKind::GroundFire {
+                unit,
+                firing_men,
+                shots,
+                chance,
+                hits,
+                ..
+            } if unit == lid(id) => Some((firing_men, shots, chance, hits)),
+            _ => None,
+        })
+        .collect();
+    assert!(found.len() <= 1);
+    found.first().copied()
+}
+
+/// The men a unit lost in the day's fight.
+fn fb_lost(world: &World, id: u32) -> u32 {
+    all_events(world)
+        .into_iter()
+        .filter_map(|e| match e.kind {
+            EventKind::MenLostInFight { unit, lost, .. } if unit == lid(id) => Some(lost),
+            _ => None,
+        })
+        .sum()
+}
+
+#[test]
+fn a_fed_unit_falling_back_is_out_of_a_fight_its_own_side_starts() {
+    // Japanese unit 3 attacks; Japanese unit 1, fed in full, is falling
+    // back; Allied unit 2 defends with 6000 men.
+    let mut world = fb_world(vec![
+        fb_unit(1, Side::Japanese, 1000, Posture::Defend).falling_back(),
+        fb_unit(2, Side::Allied, 6000, Posture::Defend),
+        fb_unit(3, Side::Japanese, 1000, Posture::Attack),
+    ]);
+    world.fight_ashore(1);
+    sound(&world);
+    // Unit 1 fires nothing and loses nothing in the fight.
+    assert_eq!(fb_fire(&world, 1), None);
+    assert_eq!(fb_lost(&world, 1), 0);
+    assert_eq!(world.truth.land_units[&lid(1)].men_ashore, 1000);
+    // It is not counted for the limit: unit 2's 6000 firing men are limited
+    // to 3 x 1000 (unit 3's men alone): 60 shots become 30.
+    let (firing, shots, chance, hits_2) = fb_fire(&world, 2).expect("unit 2 fires");
+    assert_eq!((firing, shots, chance), (6000, n(30), fx("0.6")));
+    // Unit 3 fires its 1000 men: 10 shots at 0.3.
+    let (firing, shots, chance, hits_3) = fb_fire(&world, 3).expect("unit 3 fires");
+    assert_eq!((firing, shots, chance), (1000, n(10), fx("0.3")));
+    // The whole loss falls on unit 3, and on unit 2 for unit 3's hits.
+    assert_eq!(fb_lost(&world, 3), (20 * hits_2).min(1000));
+    assert_eq!(fb_lost(&world, 2), 20 * hits_3);
+}
+
+#[test]
+fn the_same_unit_is_fired_on_and_fires_when_the_other_side_is_on_attack() {
+    // Control: Allied unit 2 attacks, Japanese unit 3 defends, Japanese
+    // unit 1 is falling back and fed in full.
+    let mut world = fb_world(vec![
+        fb_unit(1, Side::Japanese, 1000, Posture::Defend).falling_back(),
+        fb_unit(2, Side::Allied, 6000, Posture::Attack),
+        fb_unit(3, Side::Japanese, 1000, Posture::Defend),
+    ]);
+    world.fight_ashore(1);
+    sound(&world);
+    // It is counted: the limit is 3 x 2000 = 6000, which does not cut unit
+    // 2's 6000 firing men: 60 shots at 0.3.
+    let (firing, shots, chance, hits_2) = fb_fire(&world, 2).expect("unit 2 fires");
+    assert_eq!((firing, shots, chance), (6000, n(60), fx("0.3")));
+    // It fires: 1000 men, 10 shots at 0.6, as unit 3 does.
+    let (firing, shots, chance, _) = fb_fire(&world, 1).expect("unit 1 fires");
+    assert_eq!((firing, shots, chance), (1000, n(10), fx("0.6")));
+    let (firing, shots, chance, _) = fb_fire(&world, 3).expect("unit 3 fires");
+    assert_eq!((firing, shots, chance), (1000, n(10), fx("0.6")));
+    // It is fired on: the loss of 20 a hit is shared by units 1 and 3 in
+    // proportion to their men, which are equal.
+    assert!(hits_2 > 0);
+    assert_eq!(fb_lost(&world, 1), 10 * hits_2);
+    assert_eq!(fb_lost(&world, 3), 10 * hits_2);
+}
+
+/// What the Allied side is shown at the end of day 1, in full.
+fn allied_view(world: &World) -> Vec<String> {
+    let view = world.side_view(Side::Allied);
+    view.events()
+        .iter()
+        .map(|e| {
+            format!(
+                "{} D{} {:?} {:?} {:?} {:?} {} {:?}",
+                e.number,
+                e.day,
+                e.pulse,
+                e.kind,
+                e.order_number,
+                e.causes,
+                e.hidden_causes,
+                e.breakdown
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn the_enemys_view_is_the_same_whether_a_unit_is_falling_back_or_standing() {
+    // Two worlds that differ only in whether Japanese unit 1, which fires
+    // nothing (its fed share is 0), is falling back or standing. The Allied
+    // unit 2 has 2000 firing men, below 3 x 1000, so its limit does not bind
+    // with unit 1 counted or not: the same shots. Unit 3 fires the same.
+    let build = |falling_back: bool| {
+        let one = fb_unit(1, Side::Japanese, 1000, Posture::Defend).unfed();
+        let one = if falling_back {
+            one.falling_back()
+        } else {
+            one
+        };
+        let mut world = fb_world(vec![
+            one,
+            fb_unit(2, Side::Allied, 2000, Posture::Defend),
+            fb_unit(3, Side::Japanese, 1000, Posture::Attack),
+        ]);
+        world.fight_ashore(1);
+        world
+    };
+    let (falling, standing) = (build(true), build(false));
+    // The hits of units 2 and 3 are the same in both worlds.
+    assert_eq!(fb_fire(&falling, 1), None);
+    assert_eq!(fb_fire(&standing, 1).map(|f| (f.0, f.1)), Some((0, n(0))));
+    assert_eq!(fb_fire(&falling, 2), fb_fire(&standing, 2));
+    assert_eq!(fb_fire(&falling, 3), fb_fire(&standing, 3));
+    assert_eq!(fb_fire(&falling, 2).expect("fires").1, n(20));
+    // The worlds do differ: the standing unit shares the loss of unit 2's
+    // hits and the falling-back unit does not.
+    assert_eq!(fb_lost(&falling, 1), 0);
+    assert!(fb_lost(&standing, 1) > 0);
+    let seen = allied_view(&falling);
+    assert!(!seen.is_empty());
+    assert_eq!(seen, allied_view(&standing));
+}

@@ -43,7 +43,7 @@ use crate::hex::Hex;
 use crate::ids::{BaseId, EventId, LandUnitId};
 use crate::orders::{Posture, WhenSpent};
 use crate::refdata::GroundFigures;
-use crate::state::Side;
+use crate::state::{March, Side};
 use crate::world::World;
 
 pub(crate) use self::activity::{is_with_force, unit_day};
@@ -131,6 +131,32 @@ impl World {
             .filter(|unit| !unit.working)
             .map(|unit| unit.men_ashore)
             .sum()
+    }
+
+    /// Whether a unit is falling back: on a march whose cause is a falling
+    /// back by decision 0104 or 0105, the event that records it. A march by
+    /// order has an order for its cause.
+    fn falling_back(&self, unit: LandUnitId) -> bool {
+        matches!(
+            self.truth.land_units[&unit].march,
+            Some(March {
+                cause: Cause::Event(_),
+                ..
+            })
+        )
+    }
+
+    /// The units of a side that are in a day's fight (correction 1 of
+    /// decision 0109): all of them, but where the other side is not on
+    /// attack in the hex, a unit that is falling back is not. Those in it
+    /// share the fight's losses and count among the side's fighting men for
+    /// the limit on engaged men.
+    fn in_fight(&self, units: &[LandUnitId], enemy_attacks: bool) -> Vec<LandUnitId> {
+        units
+            .iter()
+            .copied()
+            .filter(|unit| enemy_attacks || !self.falling_back(*unit))
+            .collect()
     }
 
     fn attacks(&self, units: &[LandUnitId]) -> bool {

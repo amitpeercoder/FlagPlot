@@ -1,10 +1,10 @@
 # 0109: The first tuning round of the ground figures: what is settled first, and the plan
 
-Status: a plan by the architect, written on Nov 14, 2026, from four runs of the lengthened slice (`docs/validation/full-slice-39-days-baseline.md`, `-after-0105.md`, `-after-0106.md`, `-after-stock-fix.md`) and a model's five days in the Allied seat. It follows the rules of tuning in `docs/step2-spec.md`. Decision 1 corrects a rule: the designer confirmed it on Nov 14, 2026. Decisions 2 to 4 settle data and are the architect's. The round itself is run after them. Nothing is built and no figure has moved.
+Status: a plan by the architect, written on Nov 14, 2026, from four runs of the lengthened slice (`docs/validation/full-slice-39-days-baseline.md`, `-after-0105.md`, `-after-0106.md`, `-after-stock-fix.md`) and a model's five days in the Allied seat. It follows the rules of tuning in `docs/step2-spec.md`. Decision 1 corrects a rule: the designer confirmed it on Nov 14, 2026. Decisions 2 to 4 settle data and are the architect's. The round itself is run after them. Nothing is built and no figure has moved. *(Nov 15, 2026: decisions 1 to 4 are built and a new baseline is taken; see As built. The round is not run.)*
 
 Summary: The first tuning round of the ground figures: before it, men who are falling back are not fired on unless the victor attacks, the Japanese runs land their own rations as cargo, and riflemen set to work make a tenth of a labourer's work; then one round on the Tenaru and the ridge, mechanism by mechanism, with the figures each may move and the direction a source supports
 
-Standing: Decision 1 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Not built
+Standing: Decision 1 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Decisions 1 to 4 built, with a new baseline, Nov 15, 2026; the round not run
 
 ## Where the slice stands
 
@@ -91,3 +91,38 @@ Rules of the round, beside the spec's:
 Answered on Nov 14, 2026.
 
 1. **Correction 1:** men who are falling back are fired on only when the side that beat them is on attack. Agreed: a victor chooses to pursue by ordering it.
+
+## As built
+
+Built on Nov 15, 2026, in one pull request, before the round. No figure moved but the one decision 3 names.
+
+**Correction 1, with the architect's ruling.** A unit is falling back while it is on a march whose cause is an event: the falling back of a beaten side (decision 0104) or of a spent attacker (decision 0105). A march by order, including one that replaces a falling back, is not. On a day when the other side is not on attack in the hex, a unit falling back is out of the day's fight both ways (the architect's ruling of Nov 15, 2026): it does not fire, it is not counted among its side's fighting men for the limit on engaged men, and it takes no share of the fight's losses. Men marching away from the enemy do not join a fight their own side starts behind them. On a day the other side attacks, it is in the fight as before. Two things are not changed: whether a hex is contested, and the test of a side beaten, which is made only where the other side attacked, and on such a day the unit is in the fight. Code: `falling_back` and `in_fight` in `crates/sim-core/src/ground_combat/mod.rs`, and the units in the fight in `fight.rs`, which the fire, the limit's count and the shares of the losses all read. A unit out of the fight has no fire event; nothing new is recorded, so no event and no row of `side_events.rs` is added, and the enemy is told nothing new. No field of the state is added, so the state version is unchanged (23, raised by decision 0111, built alongside); the rules label is 7, after decision 0111's 6.
+
+- **Scenario 37** (`data/scenarios/37_men_falling_back.toml`, with its own placeholder map `data/map/placeholder_men_falling_back.toml`, since no map had the hand calculation's hexes and links) proves it on the frozen figures with `engagement_ratio` at 3. Every number of the hand calculation matched. The dice of the scenario's seed: on day 1 at P unit 2 hit 8 times and unit 1 5 times; at T unit 5 11 times and unit 4 7 times; on day 3 at P unit 2 hit 8 times (c = 8: unit 3 lost 160) and unit 3 once; on day 4 unit 2 hit 4 times and unit 3 not at all; at T unit 5 hit 9 times on day 2 and 5 on day 3. The doc comment gained the architect's one sentence that a unit out of the fight would not fire if it could. The properties are tests: units not falling back share losses and count for the limit; the enemy's view is the same in two worlds that differ only in whether a unit is falling back (a unit test in sim-core, since an integration test cannot set a march; it runs the ground combat phase only, so the ground reports, which count the true men in the hex, are outside it); and a fed unit falling back, in a hex where its own side attacks and the other defends, fires nothing and loses nothing, while with the other side on attack it fires and is fired on.
+- **Every other scenario.** `scripts/compare-scenarios.sh` against the merge of pull request 315: on the frozen figures no scenario changed; on the live figures only the full slice did, at the Oka group's fight on day 39.
+
+**Decision 2.** Each Japanese run of the full slice lands its rations as supply cargo with its men, at men x 0.005 x days, the weight and the row it rests on in a comment by each run. Each run's ships are those it had, the placeholder fast transports changed from class 11 to class 12 (the same 200 men, 30 t of cargo) and named "Placeholder fast transport with cargo"; a run's rations are shared equally among its class 12 ships (the smallest choice: the decision says nothing of how they are split, and the unload order lands them all).
+
+| Task force, run | Men | Days | Rations | Ships of class 12 |
+| --- | --- | --- | --- | --- |
+| 30, Yokosuka force, 16 August | 200 | 7 | 7 t | 1, of 7 t |
+| 31, Ichiki echelon, 18 August | 916 | 7 | 32.06 t | 5, of 6.412 t |
+| 32, force of 29 August | 900 | 7 | 31.5 t | 3, of 10.5 t, beside Fubuki and Shirayuki |
+| 33, Kawaguchi part 1, 31 August | 1,200 | 14 | 84 t | 5, of 16.8 t, beside Hatsuyuki and Amagiri |
+| 34, Kawaguchi part 2 | 150 | 14 | 10.5 t | 1, of 10.5 t |
+| 35, Kawaguchi part 3 | 1,000 | 14 | 70 t | 5, of 14 t |
+| 36, Kawaguchi part 4 | 370 | 14 | 25.9 t | 2, of 12.95 t |
+| 37, Kawaguchi part 5 | 370 | 14 | 25.9 t | 2, of 12.95 t |
+| 38, Aoba part, 11 September | 637 | 14 | 44.59 t | 4, of 11.1475 t |
+| 39, Oka group | 333 | 14 | 23.31 t | 2, of 11.655 t |
+
+- **The derived destroyers** (the architect's ruling of Nov 15, 2026). A derived destroyer has no cargo figure, and none is given to one: Fubuki and Shirayuki (task force 32) and Hatsuyuki and Amagiri (task force 33) carry men only, and the run's rations sail in the placeholders beside them. Decision 0101's ruling D has a line that class 12 is now used for these runs as well.
+- **The stocks stated ashore** are 0 in (3,-4) and 71 t in (2,-5). Base 5 is kept, with no stock: a base of the side with no stock is still a base, so where a beaten unit falls back to does not change (decision 0104, 2, looks for a base of the side, not a stock), and the rations of the Taivu runs are unloaded into it. Every run unloads its rations in the night pulse of its landing, as before, and steams on in the morning.
+- **Decision 4** changes nothing in the file.
+
+**Decision 3.** `fighting_unit_work_share` is `"0.1"` in `data/reference/ground.toml`, with the comment the decision gives; the frozen figure is 0.5. It changes the live scenarios 30 and 31, where fighting units are set to work, and the recorded game `full_slice_five_days_sonnet`, in which the model put both combat groups to the airfield: the field is no longer finished on 11 August in that game.
+
+Decision 0101 has dated notes where these make a line of it untrue: its items 17 and 22, amendments 5 and 8 on the stocks, ruling D, and its two "As built" sections. The rulebook (chapter 7: "A hex is contested", "Firing men", "Shots and chance" and the limit on engaged men, "Losses", "A side beaten" and "A beaten side's men", and the table of the work figures) and the glossary ("Falling back", "Limit on engaged men", "Engaged men") say the correction.
+
+**The new baseline** is `docs/validation/full-slice-39-days-before-tuning.md`: 1,000 runs, beside the four earlier reports, with the figures the round will need. Of 6 judged measures 4 agree and 2 miss, the Tenaru's, which none of the three changes touches. The ridge's Japanese losses fall from a median of 1,900 to 1,220 (the record, 600 to 1,138, is now inside the middle 90 percent); the Kawaguchi men lose no man on day 39 in any run, where they lost 709; the Oka group attacks fed, with 188 firing men; every Japanese attacker has a fed share of 1 on its day of attack. The airfield is still built on day 11 and the food at Lunga is still 68 days: what the Americans do is the slice's scripted orders, which set no fighting unit to work.
+
