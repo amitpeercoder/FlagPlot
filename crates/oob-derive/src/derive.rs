@@ -198,6 +198,9 @@ pub struct Env<'a> {
     pub(crate) fire_rate: Option<crate::fire_rate::Achieved>,
     /// Problems with that block's cases, read against the facts.
     pub fire_rate_problems: Vec<Problem>,
+    /// The runs and voyage of the troop figure, when the list asks for it
+    /// (decision 0093, 8).
+    pub(crate) troops: Option<crate::troops::TroopEnv>,
 }
 
 /// A row of `aircraft_types.csv`.
@@ -370,6 +373,7 @@ impl<'a> Env<'a> {
             rules,
             fire_rate: None,
             fire_rate_problems: Vec::new(),
+            troops: None,
         };
         if let Some(fire_rate) = &rules.fire_rate {
             let (achieved, problems) = crate::fire_rate::compute(&env, data, fire_rate);
@@ -818,7 +822,8 @@ impl<'a> Env<'a> {
             return Err(w.problems);
         };
         let keys = (ship, class_key);
-        let figure_count = FIGURES.len() + if air_figures { AIR_FIGURES.len() } else { 0 };
+        let troop_index = FIGURES.len() + if air_figures { AIR_FIGURES.len() } else { 0 };
+        let figure_count = troop_index + usize::from(self.troops.is_some());
         let mut figs: Vec<Option<Figure>> = vec![None; figure_count];
         let num = |got: Got<Dec>| (Value::Num(got.value), got.bare());
 
@@ -997,6 +1002,11 @@ impl<'a> Env<'a> {
         if air_figures {
             self.aircraft_capacity(&mut w, keys, class, &mut figs);
             self.anti_aircraft(&mut w, keys, &mut figs);
+        }
+
+        // troop capacity (decision 0093, 8)
+        if self.troops.is_some() {
+            figs[troop_index] = self.troop_capacity(&mut w, ship, class_key, &class.kind_type);
         }
 
         if !w.problems.is_empty() {

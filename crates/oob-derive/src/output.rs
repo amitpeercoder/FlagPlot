@@ -11,6 +11,7 @@ use crate::derive::{
 use crate::input::{List, Rules};
 use crate::problem::{Kind, Problem};
 use crate::reading::Row;
+use crate::troops::{TROOP_FIGURE, TROOP_RULE};
 
 /// The rule behind each figure, in words, in the order of `FIGURES`.
 const RULES: [&str; 17] = [
@@ -33,13 +34,31 @@ const RULES: [&str; 17] = [
     "heavy guns (counts of the weapons in the heavy_aa slot) x anti_aircraft_heavy_weight + light barrels (light_aa slot) x anti_aircraft_light_weight, rounded down (decision 0029, 1); the slot of the ship if it has a readable row there, else of its class",
 ];
 
-/// The name of figure `i` of a class row: the 14 of decision 0020, then
-/// the two air figures.
-fn figure_name(i: usize) -> &'static str {
+/// The name of figure `i` of a class row: the 15 of decision 0020, then
+/// the two air figures when the list has them, then the troop figure when
+/// the list has it. `air` says whether the list has the air figures.
+fn figure_name(i: usize, air: bool) -> &'static str {
     if i < FIGURES.len() {
         FIGURES[i]
-    } else {
+    } else if air && i < FIGURES.len() + AIR_FIGURES.len() {
         AIR_FIGURES[i - FIGURES.len()]
+    } else {
+        TROOP_FIGURE
+    }
+}
+
+/// Whether figure `i` is written as a whole number: the counts and rounds
+/// carried, and the troop figure, which is the last column wherever it falls.
+fn is_whole(i: usize, air: bool) -> bool {
+    WHOLE.contains(&i) || figure_name(i, air) == TROOP_FIGURE
+}
+
+/// The rule behind figure `i`, in words.
+fn rule_text(i: usize, air: bool) -> &'static str {
+    if figure_name(i, air) == TROOP_FIGURE {
+        TROOP_RULE
+    } else {
+        RULES[i]
     }
 }
 
@@ -94,11 +113,11 @@ struct ClassRow {
     members: Vec<usize>,
 }
 
-fn cell(i: usize, value: &Value) -> String {
+fn cell(i: usize, air: bool, value: &Value) -> String {
     match value {
         Value::Text(text) => text.clone(),
         Value::Flag(flag) => if *flag { "1" } else { "0" }.to_string(),
-        Value::Num(dec) if WHOLE.contains(&i) => dec.whole().to_string(),
+        Value::Num(dec) if is_whole(i, air) => dec.whole().to_string(),
         Value::Num(dec) => dec.to_string(),
     }
 }
@@ -139,11 +158,35 @@ fn short_name(name: &str) -> &str {
     }
 }
 
+/// The header lines for the troop figure: the voyage and the runs read.
+fn troop_header_lines(list: &List) -> Vec<String> {
+    let mut lines = Vec::new();
+    if let Some((text, _)) = &list.troops.voyage {
+        lines.push(format!(
+            "Troop figure (decision 0093, 8): the voyage whose loads are read is {text}"
+        ));
+    }
+    if !list.troops.runs.is_empty() {
+        lines.push(
+            "Troop figure (decision 0093, 8): runs read (run, men row, ships row, ships_in_run):"
+                .to_string(),
+        );
+        for run in &list.troops.runs {
+            lines.push(format!(
+                "  {}, troop_lift_facts.csv:{}, troop_lift_facts.csv:{}, {}",
+                run.run, run.men_row, run.ships_row, run.ships_in_run
+            ));
+        }
+    }
+    lines
+}
+
 /// The problems of the list's pinned class rows against the derived ships
 /// (decision 0077): ships pinned to one id must have one facts class and
 /// the same derived figures.
 pub fn check_pins(list: &List, results: &[ShipResult]) -> Vec<Problem> {
     let mut problems = Vec::new();
+    let air = list.air_figures;
     let Some(pins) = &list.class_ids else {
         return problems;
     };
@@ -171,11 +214,11 @@ pub fn check_pins(list: &List, results: &[ShipResult]) -> Vec<Problem> {
                     problems.push(Problem::new(
                         &other.ship,
                         Kind::List,
-                        figure_name(f),
+                        figure_name(f, air),
                         format!(
                             "class id {id}: {} has {} {} and {} has {}; ships pinned to one id must have the same figures",
                             first.ship,
-                            figure_name(f),
+                            figure_name(f, air),
                             shown(&a.value),
                             other.ship,
                             shown(&b.value)
@@ -195,6 +238,7 @@ fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Prob
         .class_ids
         .as_ref()
         .ok_or_else(|| Problem::new("list", Kind::List, "class_ids", "required (decision 0077)"))?;
+    let air = list.air_figures;
     let mut rows = Vec::new();
     for (&id, ships) in pins {
         let members: Vec<usize> = results
@@ -258,7 +302,7 @@ fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Prob
                         (Value::Flag(true), RADAR) => name.push_str(", radar"),
                         (Value::Flag(false), RADAR) => name.push_str(", no radar"),
                         (value, _) => {
-                            name.push_str(&format!(", {} {}", figure_name(f), shown(value)));
+                            name.push_str(&format!(", {} {}", figure_name(f, air), shown(value)));
                         }
                     }
                 }
@@ -324,9 +368,11 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             torpedo_not_split: Vec::new(),
         });
     }
-    let names: Vec<&str> = (0..FIGURES.len() + if air { AIR_FIGURES.len() } else { 0 })
-        .map(figure_name)
-        .collect();
+    let troop = list.troop_figures;
+    let names: Vec<&str> =
+        (0..FIGURES.len() + if air { AIR_FIGURES.len() } else { 0 } + usize::from(troop))
+            .map(|i| figure_name(i, air))
+            .collect();
     let not_modelled: Vec<&str> = results
         .iter()
         .filter(|r| r.weapons_not_modelled)
@@ -479,12 +525,17 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             line(format!("  {ship}"));
         }
     }
+    if troop {
+        for text in troop_header_lines(list) {
+            line(text);
+        }
+    }
     let class_header: Vec<&str> = [&["id", "name"][..], &names[..]].concat();
     let class_body: Vec<Vec<String>> = rows
         .iter()
         .map(|row| {
             let mut cells = vec![row.id.to_string(), row.name.clone()];
-            cells.extend(row.figures.iter().enumerate().map(|(i, v)| cell(i, v)));
+            cells.extend(row.figures.iter().enumerate().map(|(i, v)| cell(i, air, v)));
             cells
         })
         .collect();
@@ -517,7 +568,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
                 .join(" ");
             let mut notes = Vec::new();
             if let Value::Num(exact) = &row.figures[i] {
-                if WHOLE.contains(&i) && exact.has_fraction() {
+                if is_whole(i, air) && exact.has_fraction() {
                     notes.push(format!("exact {exact}, truncated"));
                 }
             }
@@ -567,8 +618,8 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             source_rows.push(vec![
                 row.id.to_string(),
                 (*figure).to_string(),
-                cell(i, &row.figures[i]),
-                RULES[i].to_string(),
+                cell(i, air, &row.figures[i]),
+                rule_text(i, air).to_string(),
                 facts,
                 notes.join("; "),
             ]);

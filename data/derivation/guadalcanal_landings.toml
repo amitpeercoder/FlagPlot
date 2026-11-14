@@ -1,0 +1,89 @@
+# The ships that carried men to Guadalcanal, August 1942, for the scenario of
+# decision 0093 (the landings of August 1942 and the first attacks on the
+# airfield). The derivation tool turns this list into
+# data/reference/ship_classes_guadalcanal_landings.csv. Decision 0093, 8.
+#
+# WHO IS HERE, AND WHO IS NOT. Only ships every figure of which can be read
+# from the facts are listed: the derivation writes nothing if one figure of
+# one ship cannot be read. That leaves four Fubuki-class destroyers of the
+# Japanese runs of 29 and 31 August. Left out, each for want of a fact
+# (docs/research/oob/troop-lift.md has the full list, and gaps.csv the rows):
+# - Every American transport and cargo ship (19 ships): no row gives a
+#   standard displacement, endurance with its speed, or fuel capacity that can
+#   be read (navypedia's figures for three classes are lone low-grade rows),
+#   no rule maps the types transport and cargo_ship to a kind or derives a
+#   transport's cargo, and no row gives radar or rounds per gun.
+# - The four destroyer-transports: the two readings of their guns after
+#   conversion disagree, the class's maximum speed is disputed, no row of the
+#   4-inch/50 gives its shell, and no row gives radar.
+# - Kagero class (the six of 18 August, and Kagero on 31 August): no torpedo
+#   tube fit and no rounds per gun. Shiratsuyu class (Kawakaze, Umikaze,
+#   Suzukaze, Yudachi): no endurance, tube fit or rounds per gun. Oite
+#   (Kamikaze class, 16 August): no rounds per gun and no radar row.
+#
+# The date is the first day of the scenario.
+
+name = "Guadalcanal landings"
+date = "1942-08-07"
+rules = "rules.toml"
+output = "../reference/ship_classes_guadalcanal_landings.csv"
+first_class_id = 3009
+
+ships = [
+    # 29 August, Tassafaronga.
+    "fubuki", "shirayuki",
+    # 31 August, Tasimboko.
+    "hatsuyuki", "amagiri",
+]
+
+# Working assumption, not a fact (decision 0019, 5), as in the Cape Esperance
+# list for Fubuki and Hatsuyuki: no row says whether these ships carried a
+# search radar on the date, and they are treated as not fitted. A sourced fit
+# or a sourced none is read from the facts instead.
+radar_unknown_means_none = ["fubuki", "shirayuki", "hatsuyuki", "amagiri"]
+
+# The troop capacity (decision 0093, 8; the rule is in the sources file).
+# None of these ships has a stated capacity, so each rests on a run: the men
+# the run carried over the ships in it, as the list reads the number from the
+# named row. That is a weaker kind of support than a stated capacity. The
+# named rows are read whatever their standing; the run's other rows are named
+# in the sources file as not read.
+troop_figures = true
+
+[troops]
+# No ship here rests on a voyage: the American loads of 2 August are read
+# once a transport can be listed, with voyage = "1942-08-02".
+
+# Zimmerman: "four destroyers ... Fubuki, Shirayuki, Kawakaze, and Umikaze
+# --landed 900 men at Tassafaronga". Hough's "two destroyer transports" for
+# the same night (row 149) is not read: it gives no figure of men, and
+# Zimmerman's names four ships that combinedfleet also puts on the run.
+# Kawakaze and Umikaze are of a class that cannot be derived yet.
+[[troops.run]]
+run = "jp-run-1942-08-29-tassafaronga-destroyers"
+ships = ["fubuki", "shirayuki"]
+men_row = 45
+ships_row = 148
+ships_in_run = 4
+reason = "Zimmerman names the four destroyers (row 148) and the 900 men they landed (row 45) in one passage; Hough's two ships (row 149) give no figure of men. Read by the troop-lift lead, for the architect's review."
+
+# Zimmerman: 1,200 men of the Kawaguchi Brigade landed at Tasimboko;
+# combinedfleet names eight destroyers and says "Each destroyer carried
+# 143-155 men, for a total of some 1,200" (row 153), which agrees: 1,200 / 8
+# is 150. Hatsuyuki is also named on the run of 29 August by combinedfleet
+# (ship_facts row 1321) but not by Zimmerman; she is read here, on the run
+# both name her for.
+[[troops.run]]
+run = "jp-run-1942-08-31-tasimboko-destroyers"
+ships = ["hatsuyuki", "amagiri"]
+men_row = 47
+ships_row = 155
+ships_in_run = 8
+reason = "Zimmerman's 1,200 men (row 47); combinedfleet's eight destroyers by name (row 155), whose own per-ship figure of 143 to 155 men (row 153) brackets the 150 the rule gives. Read by the troop-lift lead, for the architect's review."
+
+# The class ids, pinned (decision 0077), continuing from the highest id any
+# list has pinned (3008, cape_esperance.toml). Two rows of the Fubuki class,
+# because the runs give them different troop capacities.
+[class_ids]
+3009 = ["fubuki", "shirayuki"]
+3010 = ["hatsuyuki", "amagiri"]

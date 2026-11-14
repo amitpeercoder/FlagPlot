@@ -130,9 +130,9 @@ id,key,name,nation,class,hull_number
 1126,ca-24-pensacola,USS Pensacola,us,,CA-24
 1127,dd-378-smith,USS Smith,us,,DD-378
 1128,zuiho,Zuiho,jp,,
-1129,yugiri,Yugiri,jp,,
-1130,shirakumo,Shirakumo,jp,,
-1131,hagikaze,Hagikaze,jp,,
+1129,yugiri,Yugiri,jp,jp-fubuki-class,
+1130,shirakumo,Shirakumo,jp,jp-fubuki-class,
+1131,hagikaze,Hagikaze,jp,jp-kagero-class,
 1132,cl-50-helena,Helena,us,us-st-louis-class,CL-50
 1133,dd-485-duncan,Duncan,us,us-gleaves-class,DD-485
 1134,dd-459-laffey,Laffey,us,us-benson-class,DD-459
@@ -143,3 +143,31 @@ id,key,name,nation,class,hull_number
 1139,shirayuki,Shirayuki,jp,jp-fubuki-class,
 1140,ayanami,Ayanami,jp,jp-fubuki-class,
 1141,nisshin,Nisshin,jp,jp-nisshin-class,
+1142,ap-9-zeilin,USS Zeilin,us,us-harris-class,AP-9
+1143,ap-10-mccawley,USS McCawley,us,us-mccawley-class,AP-10
+1144,ap-11-barnett,USS Barnett,us,us-mccawley-class,AP-11
+1145,ap-12-heywood,USS Heywood,us,us-heywood-class,AP-12
+1146,ap-13-george-f-elliott,USS George F. Elliott,us,us-heywood-class,AP-13
+1147,ap-14-fuller,USS Fuller,us,us-heywood-class,AP-14
+1148,ap-16-neville,USS Neville,us,us-heywood-class,AP-16
+1149,ap-27-hunter-liggett,USS Hunter Liggett,us,us-harris-class,AP-27
+1150,ap-35-american-legion,USS American Legion,us,us-american-legion-class,AP-35
+1151,ap-37-president-jackson,USS President Jackson,us,us-president-jackson-class,AP-37
+1152,ap-38-president-adams,USS President Adams,us,us-president-jackson-class,AP-38
+1153,ap-39-president-hayes,USS President Hayes,us,us-president-jackson-class,AP-39
+1154,ap-40-crescent-city,USS Crescent City,us,us-crescent-city-class,AP-40
+1155,ak-20-bellatrix,USS Bellatrix,us,,AK-20
+1156,ak-22-fomalhaut,USS Fomalhaut,us,us-fomalhaut-class,AK-22
+1157,ak-23-alchiba,USS Alchiba,us,us-arcturus-class,AK-23
+1158,ak-26-alhena,USS Alhena,us,us-alhena-class,AK-26
+1159,ak-28-betelgeuse,USS Betelgeuse,us,us-arcturus-class,AK-28
+1160,ak-53-libra,USS Libra,us,us-arcturus-class,AK-53
+1161,oite,Oite,jp,jp-kamikaze-class,
+1162,arashi,Arashi,jp,jp-kagero-class,
+1163,hamakaze,Hamakaze,jp,jp-kagero-class,
+1164,urakaze,Urakaze,jp,jp-kagero-class,
+1165,yudachi,Yudachi,jp,jp-shiratsuyu-class,
+1166,amagiri,Amagiri,jp,jp-fubuki-class,
+1167,asagiri,Asagiri,jp,jp-fubuki-class,
+1168,ariake,Ariake,jp,jp-hatsuharu-class,
+1169,yugure,Yugure,jp,jp-hatsuharu-class,

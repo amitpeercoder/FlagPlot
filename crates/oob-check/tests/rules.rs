@@ -1337,3 +1337,179 @@ fn rule7_training_general_rules_still_apply() {
         &["training_facts.csv|id 1|duplicate id"],
     );
 }
+
+// Rule 8: men carried by sea (`lift_entities.csv`, `troop_lift_facts.csv`)
+// and the `troop_run` rows of `ship_facts.csv`.
+
+const LIFT_ENTITIES_HEADER: &str = "id,key,name,kind,nation\n";
+const TROOP_HEADER: &str = "id,entity,attribute,value,as_stated,valid_from,valid_to,\
+source,locator,accessed,confidence,basis,standing,note\n";
+
+/// A good lift entity file: one run and one ship.
+fn lift_entities(extra: &[&str]) -> String {
+    let mut text = LIFT_ENTITIES_HEADER.to_string();
+    text.push_str("1000,run-a,A run,run,jp\n1001,ship-a,A ship,ship,us\n");
+    for row in extra {
+        text.push_str(row);
+        text.push('\n');
+    }
+    text
+}
+
+/// A good troop statement (id 1) with the fields before the source columns
+/// at the given 0-based positions replaced.
+fn troop_with(changes: &[(usize, &str)]) -> String {
+    let mut fields: Vec<String> = "1,run-a,troops_carried,900,900 men,1942-08,1942-08"
+        .split(',')
+        .map(str::to_string)
+        .collect();
+    for (index, value) in changes {
+        fields[*index] = (*value).to_string();
+    }
+    format!("{},{}", fields.join(","), src("a", "medium", "preferred"))
+}
+
+fn with_lift(entities: &str, troops: &[String]) -> BTreeMap<String, String> {
+    let mut files = base();
+    files.insert("lift_entities.csv".to_string(), entities.to_string());
+    let mut text = TROOP_HEADER.to_string();
+    for row in troops {
+        text.push_str(row);
+        text.push('\n');
+    }
+    files.insert("troop_lift_facts.csv".to_string(), text);
+    files
+        .get_mut("attributes.csv")
+        .unwrap()
+        .push_str("troop_run,ship,text,many\n");
+    files
+}
+
+#[test]
+fn rule8_lift_files_are_optional_and_good_rows_pass() {
+    assert_clean(&problems_in(&base()));
+    let ok = src("a", "medium", "preferred");
+    let mut files = with_lift(
+        &lift_entities(&[
+            "1002,group-a,A group,transport-group,us",
+            "1003,type-a,A type,ship-type,jp",
+        ]),
+        &[
+            troop_with(&[]),
+            troop_with(&[(0, "2"), (2, "ships_in_run"), (3, "six destroyers")]),
+            troop_with(&[
+                (0, "3"),
+                (1, "ship-a"),
+                (2, "troop_capacity_men"),
+                (3, "1388"),
+            ]),
+            troop_with(&[(0, "4"), (2, "lift_note"), (3, "a note")]),
+        ],
+    );
+    files
+        .get_mut("ship_facts.csv")
+        .unwrap()
+        .push_str(&format!("1,shp,troop_run,run-a,,,{ok}\n"));
+    assert_clean(&problems_in(&files));
+}
+
+#[test]
+fn rule8_lift_entity_kind_nation_and_keys() {
+    let files = with_lift(&lift_entities(&["1002,x,An x,fleet,jp"]), &[]);
+    assert_problems(
+        &problems_in(&files),
+        1,
+        &["lift_entities.csv|id 1002|kind `fleet`"],
+    );
+    let files = with_lift(&lift_entities(&["1002,x,An x,run,de"]), &[]);
+    assert_problems(
+        &problems_in(&files),
+        1,
+        &["lift_entities.csv|id 1002|nation `de`"],
+    );
+    let files = with_lift(&lift_entities(&["1002,run-a,Again,run,jp"]), &[]);
+    assert_problems(
+        &problems_in(&files),
+        1,
+        &["lift_entities.csv|id 1002|duplicate key"],
+    );
+    let files = with_lift(&lift_entities(&["1002,Run_B,Bad key,run,jp"]), &[]);
+    assert_problems(
+        &problems_in(&files),
+        1,
+        &["lift_entities.csv|id 1002|key `Run_B`"],
+    );
+}
+
+#[test]
+fn rule8_troop_statement_entity_attribute_and_values() {
+    let files = with_lift(&lift_entities(&[]), &[troop_with(&[(1, "run-z")])]);
+    assert_problems(
+        &problems_in(&files),
+        1,
+        &["troop_lift_facts.csv|id 1|entity `run-z` is not a key"],
+    );
+    let files = with_lift(&lift_entities(&[]), &[troop_with(&[(2, "troops_aboard")])]);
+    assert_problems(
+        &problems_in(&files),
+        1,
+        &["troop_lift_facts.csv|id 1|unknown attribute `troops_aboard`"],
+    );
+    for attribute in [
+        "troop_capacity_men",
+        "troops_carried",
+        "troops_lost",
+        "crew_complement",
+        "troops_per_ship_estimated_by_enemy",
+        "supply_tons_carried",
+    ] {
+        for bad in ["about 700", "12.5", "-3", "", "1e3"] {
+            let files = with_lift(
+                &lift_entities(&[]),
+                &[troop_with(&[(2, attribute), (3, bad)])],
+            );
+            assert!(
+                problems_in(&files)
+                    .iter()
+                    .any(|p| p.starts_with("troop_lift_facts.csv|id 1|")),
+                "{attribute} `{bad}`"
+            );
+        }
+    }
+}
+
+#[test]
+fn rule8_troop_statement_columns_in_order() {
+    let mut files = with_lift(&lift_entities(&[]), &[]);
+    files.insert(
+        "troop_lift_facts.csv".to_string(),
+        "id,attribute,entity,value,as_stated,valid_from,valid_to,source,locator,accessed,\
+         confidence,basis,standing,note\n"
+            .to_string(),
+    );
+    assert_problems(
+        &problems_in(&files),
+        1,
+        &["troop_lift_facts.csv||columns must be, in order"],
+    );
+}
+
+#[test]
+fn rule8_troop_run_value_must_be_a_run() {
+    let ok = src("a", "medium", "preferred");
+    for (value, text) in [
+        ("run-z", "is not a key of lift_entities.csv"),
+        ("ship-a", "of kind `ship`, not a run"),
+    ] {
+        let mut files = with_lift(&lift_entities(&[]), &[]);
+        files
+            .get_mut("ship_facts.csv")
+            .unwrap()
+            .push_str(&format!("1,shp,troop_run,{value},,,{ok}\n"));
+        assert_problems(
+            &problems_in(&files),
+            1,
+            &[&format!("ship_facts.csv|id 1|{text}")],
+        );
+    }
+}

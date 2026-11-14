@@ -65,3 +65,10 @@ id,key,name,nation,kind
 1061,uk-2pdr-pompom-type-unstated,"QF 2-pounder (40/39) pom-pom, mark not stated by the source",uk,aa_gun
 1062,us-90mm-m1-aa,US 90 mm/50 M1 anti-aircraft gun (M1A1 and M2 improvements not told apart),us,aa_gun
 1063,us-6in-47-mk16,US 6in/47 Mark 16,us,gun
+1064,us-3in-50,US 3in/50 (mark not specified by sources read),us,gun
+1065,us-3in-23,US 3in/23 (mark not specified by sources read),us,gun
+1066,us-4in-50,US 4in/50 (mark not specified by sources read),us,gun
+1067,us-5in-51,US 5in/51 (mark not specified by sources read),us,gun
+1068,us-5in-unspecified,US 5in gun (length in calibres and mark not specified by sources read),us,gun
+1069,us-3in-unspecified,US 3in gun (length in calibres and mark not specified by sources read),us,gun
+1070,us-6in-unspecified,US 6in gun (length in calibres and mark not specified by sources read),us,gun

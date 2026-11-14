@@ -1,5 +1,5 @@
 # What troop_lift_facts.csv is about: a named ship, a ship type, a standing transport group, or one run (a voyage or a night's run carrying men). Identity only.
-# These are kept apart from ships.csv and ship_classes.csv, which hold the warships the simulation rates; a transport here has no class row. oob-check does not yet know this file.
+# These are kept apart from ships.csv and ship_classes.csv, which hold the warships the simulation rates; a US transport or cargo ship now also has its own key in ships.csv, whose rows restate the troop rows under it (decision 0093, 8); the keys here stay for the troop rows already filed. oob-check does not yet know this file.
 id,key,name,kind,nation
 1000,jp-convoy-1942-08-25-tanaka,"Tanaka convoy (Ichiki second echelon, Yokosuka 5th SNLF), 19-25 Aug",run,jp
 1001,jp-convoy-1942-10-14-tassafaronga,"Japanese six-transport convoy to Tassafaronga, 14-15 Oct (Maruyama 2d Division)",run,jp
@@ -66,3 +66,13 @@ id,key,name,kind,nation
 1062,us-colhoun-apd-2,USS Colhoun (APD-2),ship,us
 1063,us-gregory-apd-3,USS Gregory (APD-3),ship,us
 1064,us-landing-force-1942-08-02,Landing force as embarked on 2 August 1942 (station list total),run,us
+1065,jp-run-1942-08-16-oite,"Destroyer Oite troop run to Guadalcanal, 16 Aug",run,jp
+1066,jp-run-1942-08-28-desdiv20-aborted,"Desdiv 20 (Yugiri, Asagiri, Amagiri, Shirakumo) run with 550 Kawaguchi men, 28 Aug, aborted",run,jp
+1067,jp-run-1942-08-28-isokaze-group-aborted,"Isokaze, Kawakaze, Umikaze run planned for 350 Kinryu Maru survivors, 27-29 Aug, aborted",run,jp
+1068,jp-run-1942-08-30-yudachi,"Destroyer Yudachi run with 130 Ichiki men, 30 Aug",run,jp
+1069,jp-run-1942-09-02-taivu-yugure-kagero,"Yugure and Kagero run to Taivu, 2 Sep",run,jp
+1070,jp-run-1942-09-04-taivu-two-sections,"Two-section destroyer run to Taivu (six destroyers), 4-5 Sep",run,jp
+1071,jp-run-1942-09-05-desdiv11-taivu,"Fubuki, Shirayuki, Amagiri, Kagero, Yugure run to Taivu, 5 Sep",run,jp
+1072,jp-run-1942-09-06-yudachi-uranami,"Uranami, Shikinami, Yudachi, Ariake attack mission with troops landed, 6 Sep",run,jp
+1073,jp-run-1942-09-07-destroyer-runs,"Destroyer troop runs of 7 Sep (Umikaze, Kawakaze, Suzukaze, Hatsuyuki, Murakumo)",run,jp
+1074,jp-run-1942-09-11-kamimbo,"Yudachi, Umikaze, Kawakaze run to Kamimbo, 11 Sep (Aoba Detachment)",run,jp

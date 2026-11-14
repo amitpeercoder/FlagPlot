@@ -23,6 +23,7 @@ mod input;
 mod output;
 mod problem;
 mod reading;
+mod troops;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -113,7 +114,12 @@ pub fn derive_with(
         return Err(problems);
     };
 
-    let env = derive::Env::build(&data, list.date, &rules);
+    let mut env = derive::Env::build(&data, list.date, &rules);
+    if list.troop_figures {
+        let (troops, troop_problems) = troops::build(&list.troops, &data);
+        problems.extend(troop_problems);
+        env.troops = Some(troops);
+    }
     problems.extend(env.exception_problems());
     problems.extend(env.fire_rate_problems.iter().cloned());
     let needs = |name: &str, given: bool, wanted: bool| {

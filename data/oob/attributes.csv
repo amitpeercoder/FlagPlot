@@ -124,3 +124,19 @@ torpedo_tubes,ship_class,integer,tubes,one,Torpedo tubes fitted in all; 0 where 
 torpedo_tubes_per_broadside,ship_class,integer,tubes,one,"Torpedo tubes that can fire on one side: all of a centreline mount, and the wing or beam mounts of that side only"
 torpedo_mount_position,ship_class,text,,one,"Where the torpedo mounts stand: centreline, wing (beam mounts firing to their own side), mixed or fixed"
 torpedo_model,ship_class,text,,many,"Torpedo model a source says the class carried in the period of the row, as a key of weapons.csv; a statement of type only, with no tube count (tube counts are in fits.csv)"
+troop_capacity_men,ship_class,integer,men,one,"Men a source states the ship can carry as troops; the note says which configuration (AP of 1942, APA of 1943 or later)"
+troop_capacity_men,ship,integer,men,one,"Men a source states the ship can carry as troops; the note says which configuration (AP of 1942, APA of 1943 or later)"
+troops_carried_men,ship,integer,men,many,"Men carried on one voyage, with valid_from and valid_to the voyage's date or dates; a load on that voyage, not a capacity"
+troop_run,ship,text,,many,A run carrying troops in which a source names the ship; the value is the run's key in lift_entities.csv
+displacement_light_lt,ship_class,integer,long tons,one,Light displacement a source states for the class; the note says how the source defines it
+displacement_light_lt,ship,integer,long tons,one,Light displacement a source states for the ship; the note says how the source defines it
+displacement_limiting_lt,ship_class,integer,long tons,one,Limiting displacement as shipscribe and DANFS print it ('lim.' or 'limiting')
+cargo_capacity_lt,ship_class,integer,tons,one,"Cargo a source states the ship could carry; the kind of ton (deadweight, cargo, measurement) is in the note and is not converted"
+cargo_capacity_lt,ship,integer,tons,one,"Cargo a source states the ship could carry; the kind of ton (deadweight, cargo, measurement) is in the note and is not converted"
+service_speed_kn,ship,decimal,knots,one,"Service speed a source states for the ship, as against its maximum speed"
+boats_carried_note,ship,text,,many,"Landing craft or boats a source says the ship carried, with the date in valid_from and valid_to"
+merchant_type,ship,text,,one,"Maritime Commission hull type of the merchant hull the ship was converted from (C2, C2-S and so on)"
+max_speed_kn,ship,decimal,knots,one,"Maximum speed a source states for the ship; the note says whether designed, trial or service (the class attribute of the same name, read of the ship)"
+displacement_full_lt,ship,integer,long tons,one,"Full load displacement a source states for the ship (the class attribute of the same name, read of the ship)"
+displacement_standard_lt,ship,integer,long tons,one,"Standard displacement a source states for the ship (the class attribute of the same name, read of the ship)"
+fuel_capacity_lt,ship,integer,long tons,one,"Fuel a source states the ship could carry; the note says oil or coal (the class attribute of the same name, read of the ship)"
