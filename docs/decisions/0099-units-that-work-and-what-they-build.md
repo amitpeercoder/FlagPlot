@@ -20,6 +20,22 @@ The plan for ground combat deferred "building and repairing airfields" until bas
 
 3a. **A fighting unit can be put to work, and does it less well,** by the order of decision 4. A fighting unit set to work makes work as a working unit does, times `fighting_unit_work_share`, with a works skill of 2 unless the scenario gives it one. A day it works is not a day of training or of rehearsal. If its hex is contested it fights as any unit does and makes no work that day. *Added by the designer, Nov 14, 2026: other units may spare men to build defences, and those men are not training or fighting.*
 
+### One activity a day
+
+3b. **A unit does one thing in a day, and this rule says which.** Rehearsal (decision 0095), training (decision 0097) and work all read it, so that no day is counted twice. It is worked out once, after the day's orders are taken:
+
+   | In this order | The unit's day is |
+   | --- | --- |
+   | It marched, or its hex is contested | None of the three. It marches or fights |
+   | Its activity is work | Work, at its job |
+   | Its activity is train | Training, if the conditions of decision 0097, 3, hold; otherwise nothing |
+   | It stands ready and is on the roster of a force preparing a landing, in that force's hex | Rehearsal for that landing |
+   | It stands ready otherwise | Nothing |
+
+   So rehearsal is what a roster unit does when it is not told to train or to work, and the staff schedules a raw unit to train first and rehearse after by changing its activity. Its place on the roster does not change, so the force's loading is not cut for it.
+3c. **A unit is on one roster at a time.** A prepare order that names a unit already on another force's roster takes it from that roster. Taking a unit off a roster costs the force nothing.
+3d. **A day's gain is given once.** Each of the three is added once for a unit for a day, whatever orders were given that day and however often the day is worked out again from a saved game. A unit at its ceiling of training, or at 100 of rehearsal, still spends the day.
+
 ### What work does
 
 4. **Each unit that works has its own job, set by order.** `set_activity` names a land unit and what it does: a working unit works at a job; a fighting unit stands ready, trains, or works at a job. The order stands until replaced. A unit's work goes to its job at its side's lowest-numbered base in its hex. The jobs are four. *The designer's choice, Nov 14, 2026. The architect had proposed one job for a base at a time.* The staff of step 3 sets the jobs, and its report says what each base is getting.
@@ -88,7 +104,7 @@ Decision 0093, 6, stands as to who fights. The construction units come back as w
 
 | | |
 | --- | --- |
-| Reads | A land unit's mark, activity, men ashore, hex, fed share and works skill; whether its hex was contested and whether it marched; its job; the bases of its side in the hex, their airfield and work done; the four figures |
+| Reads | A land unit's mark, activity, roster, men ashore, hex, fed share and works skill; whether its hex was contested and whether it marched; its job; the bases of its side in the hex, their airfield and work done; the four figures |
 | Writes | A land unit's activity and job; a base's work done, airfield, defences and the day's work; the events. The cargo rule, aircraft repair, the fight, rebasing and landing elsewhere read them |
 
 ## Questions for the designer
