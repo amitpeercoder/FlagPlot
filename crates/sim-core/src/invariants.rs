@@ -123,6 +123,12 @@ pub enum InvariantViolation {
     /// A land unit's hex is set with no men ashore, or men ashore with no
     /// hex, or the hex is off the map (decision 0066, 2).
     LandUnitAshoreInconsistent(LandUnitId),
+    /// An air group lost with its base still has aircraft (decision 0090,
+    /// 20). Added at the end of the enum.
+    LostAirGroupHasAircraft(AirGroupId),
+    /// A land unit's fatigue is outside 0 to 100 or its fed share outside 0
+    /// to 1 (decision 0090). Added at the end of the enum.
+    LandUnitFigureOutOfRange(LandUnitId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -314,6 +320,13 @@ impl fmt::Display for InvariantViolation {
                     "{task_force} has home port {base}, which belongs to the other side"
                 )
             }
+            InvariantViolation::LostAirGroupHasAircraft(group) => {
+                write!(f, "{group} was lost with its base and still has aircraft")
+            }
+            InvariantViolation::LandUnitFigureOutOfRange(unit) => write!(
+                f,
+                "{unit} has a fatigue outside 0 to 100 or a fed share outside 0 to 1"
+            ),
         }
     }
 }
@@ -605,6 +618,11 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         if !consistent {
             violations.push(InvariantViolation::LandUnitAshoreInconsistent(unit.id));
         }
+        let fatigue_ok = unit.fatigue >= Fixed::ZERO && unit.fatigue <= Fixed::from_int(100);
+        let share_ok = unit.fed_share >= Fixed::ZERO && unit.fed_share <= Fixed::ONE;
+        if !fatigue_ok || !share_ok {
+            violations.push(InvariantViolation::LandUnitFigureOutOfRange(unit.id));
+        }
     }
 
     for stream in &truth.replacements {
@@ -643,6 +661,13 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                     *aboard.entry(ship_id).or_insert(0) += group.ready + group.damaged;
                 }
             },
+            // Lost with its base (decision 0090, 20): no place, and nothing
+            // left.
+            AirGroupLocation::Lost => {
+                if group.ready > 0 || group.damaged > 0 {
+                    violations.push(InvariantViolation::LostAirGroupHasAircraft(group.id));
+                }
+            }
         }
     }
     for (ship_id, aircraft) in aboard {

@@ -1004,37 +1004,111 @@ impl AirSupplyFigures {
     }
 }
 
-/// The figures of land units carried by sea and fed from a base. See
-/// `docs/decisions/0066-land-units-carried-and-fed.md`.
+/// The figures of land units carried by sea and fed from a base
+/// (`docs/decisions/0066-land-units-carried-and-fed.md`), and of the fight
+/// ashore and a base that changes side
+/// (`docs/decisions/0090-the-fight-ashore-and-a-base-that-changes-side.md`).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct GroundFigures {
     /// The tons of a ship's work in a pulse that moving one man takes
-    /// (decision 7).
+    /// (decision 7 of 0066).
     pub handling_t_per_man: Fixed,
-    /// Supply a man ashore costs his base a day, in tons (decision 16).
+    /// Supply a man ashore costs his base a day, in tons (decision 16 of
+    /// 0066).
     pub daily_supply_t_per_man: Fixed,
-    /// The share of unfed men lost in a day (decision 19).
+    /// The share of unfed men lost in a day (decision 19 of 0066).
     pub unfed_loss_share_per_day: Fixed,
+    /// Firing men to one shot (decision 7 of 0090).
+    pub men_per_shot: Fixed,
+    /// The chance a shot hits, for a side that attacks (decision 7 of 0090).
+    pub hit_chance: Fixed,
+    /// The chance a shot hits, for a side that defends (decision 7 of 0090).
+    pub defender_hit_chance: Fixed,
+    /// Men a hit removes, a whole number (decision 9 of 0090).
+    pub men_per_hit: Fixed,
+    /// Fatigue a unit on attack gains on a day it fired (decision 12 of
+    /// 0090).
+    pub fatigue_per_attack_day: Fixed,
+    /// Fatigue every other unit ashore loses in a day (decision 12 of 0090).
+    pub rest_per_day: Fixed,
+    /// Above this fatigue a unit on attack goes back to defend (decision 14
+    /// of 0090).
+    pub attack_fatigue_limit: Fixed,
+    /// A side attacked is beaten below this share of the attacker's men
+    /// (decision 15 of 0090).
+    pub beaten_share: Fixed,
+    /// The share of a base's supply and fuel its taker keeps (decision 19 of
+    /// 0090).
+    pub captured_stock_share: Fixed,
 }
 
 impl GroundFigures {
+    /// The first values of the figures (decision 0066, "Placeholder
+    /// figures", and decision 0090, "Placeholder figures"), for tests that
+    /// build a world by hand.
+    #[cfg(test)]
+    pub(crate) const FIRST: GroundFigures = GroundFigures {
+        handling_t_per_man: Fixed::from_raw(250_000),
+        daily_supply_t_per_man: Fixed::from_raw(5_000),
+        unfed_loss_share_per_day: Fixed::from_raw(50_000),
+        men_per_shot: Fixed::from_int(100),
+        hit_chance: Fixed::from_raw(300_000),
+        defender_hit_chance: Fixed::from_raw(600_000),
+        men_per_hit: Fixed::from_int(20),
+        fatigue_per_attack_day: Fixed::from_int(20),
+        rest_per_day: Fixed::from_int(5),
+        attack_fatigue_limit: Fixed::from_int(60),
+        beaten_share: Fixed::from_raw(200_000),
+        captured_stock_share: Fixed::from_raw(500_000),
+    };
+
     /// Describes what is wrong with the figures, if anything. The weight of
-    /// a man and his daily charge divide, so they must be above 0; the share
-    /// lost is from 0 to 1.
+    /// a man, his daily charge and the men to a shot divide, so they must be
+    /// above 0; a hit removes a whole number of men, at least 1; chances and
+    /// shares are from 0 to 1, and the beaten share below 1 so that both
+    /// sides cannot be beaten at once (decision 15 of 0090); fatigue figures
+    /// are from 0 to 100.
     pub fn problem(&self) -> Option<String> {
         for (label, value) in [
             ("handling_t_per_man", self.handling_t_per_man),
             ("daily_supply_t_per_man", self.daily_supply_t_per_man),
+            ("men_per_shot", self.men_per_shot),
+            ("men_per_hit", self.men_per_hit),
         ] {
             if value <= Fixed::ZERO {
                 return Some(format!("ground {label} {value} is not above 0"));
             }
         }
-        let share = self.unfed_loss_share_per_day;
-        if share.is_negative() || share > Fixed::ONE {
+        if self.men_per_hit != Fixed::from_int(self.men_per_hit.trunc()) {
             return Some(format!(
-                "ground unfed_loss_share_per_day {share} is not between 0 and 1"
+                "ground men_per_hit {} is not a whole number",
+                self.men_per_hit
             ));
+        }
+        for (label, share) in [
+            ("unfed_loss_share_per_day", self.unfed_loss_share_per_day),
+            ("hit_chance", self.hit_chance),
+            ("defender_hit_chance", self.defender_hit_chance),
+            ("captured_stock_share", self.captured_stock_share),
+        ] {
+            if share.is_negative() || share > Fixed::ONE {
+                return Some(format!("ground {label} {share} is not between 0 and 1"));
+            }
+        }
+        if self.beaten_share.is_negative() || self.beaten_share >= Fixed::ONE {
+            return Some(format!(
+                "ground beaten_share {} is not from 0 to below 1",
+                self.beaten_share
+            ));
+        }
+        for (label, value) in [
+            ("fatigue_per_attack_day", self.fatigue_per_attack_day),
+            ("rest_per_day", self.rest_per_day),
+            ("attack_fatigue_limit", self.attack_fatigue_limit),
+        ] {
+            if value.is_negative() || value > Fixed::from_int(100) {
+                return Some(format!("ground {label} {value} is not between 0 and 100"));
+            }
         }
         None
     }

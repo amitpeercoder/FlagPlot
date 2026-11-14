@@ -185,6 +185,16 @@ pub enum ForceFatigueChange {
     Rested,
 }
 
+/// How a land unit's fatigue changed in the ground combat phase (decision
+/// 12 of 0090).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum LandFatigueChange {
+    /// The unit was on attack and fired in the day's fight.
+    Gained,
+    /// Any other unit with men ashore.
+    Rested,
+}
+
 /// One of the two damage tracks of a ship. Named systems are separate
 /// (decision 0016).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -1037,6 +1047,104 @@ pub enum EventKind {
         ready: u32,
         pilots: Option<u32>,
     },
+    /// A land unit's fed share went back to 1 at the night's charge, because
+    /// none of its men were ashore to be charged (decision 0090, 8). The
+    /// share of a unit with men ashore is the `MenFed` of its side and hex.
+    FedShareRestored {
+        unit: LandUnitId,
+    },
+    /// The day's fight in a contested hex (decisions 4 and 5 of 0090): both
+    /// sides have men ashore there and a unit on attack. Each side attacks
+    /// if any of its units there is on attack.
+    GroundFight {
+        hex: Hex,
+        allied_attacks: bool,
+        japanese_attacks: bool,
+    },
+    /// A land unit fired in the day's fight (decisions 6 and 7 of 0090):
+    /// `firing_men` of its men ashore fired `shots`, each at `chance`, and
+    /// `hits` hit. The breakdown gives the firing men's three factors.
+    GroundFire {
+        unit: LandUnitId,
+        hex: Hex,
+        firing_men: u32,
+        shots: Fixed,
+        chance: Fixed,
+        hits: u32,
+    },
+    /// A land unit lost men to the enemy's hits in the day's fight (decision
+    /// 9 of 0090): `lost`, its part of the loss in `hex`, and `ashore` what
+    /// it has left there.
+    MenLostInFight {
+        unit: LandUnitId,
+        hex: Hex,
+        lost: u32,
+        ashore: u32,
+    },
+    /// A land unit's fatigue changed in the ground combat phase (decision 12
+    /// of 0090). `fatigue` is what it has afterwards.
+    LandUnitFatigue {
+        unit: LandUnitId,
+        change: LandFatigueChange,
+        fatigue: Fixed,
+    },
+    /// A unit on attack too tired to go on went back to defend, and its
+    /// attack order is spent (decision 14 of 0090).
+    LandUnitBackToDefend {
+        unit: LandUnitId,
+        fatigue: Fixed,
+    },
+    /// A side was beaten in a hex (decisions 15 and 16 of 0090): `men`, its
+    /// men ashore there, against `enemy_men`, the other side's, counted
+    /// after the day's losses. `fought` is false for a base with no men,
+    /// which falls without a fight.
+    SideBeatenAshore {
+        side: Side,
+        hex: Hex,
+        men: u32,
+        enemy_men: u32,
+        fought: bool,
+    },
+    /// A base of a beaten side changed side (decisions 18 and 19 of 0090).
+    /// It keeps `supply_t` of its supply and `fuel_t` of its fuel, and
+    /// `supply_lost_t` and `fuel_lost_t` are lost. It is on both sides' maps
+    /// from now on.
+    BaseChangedSide {
+        base: BaseId,
+        hex: Hex,
+        from: Side,
+        to: Side,
+        supply_t: Fixed,
+        fuel_t: Fixed,
+        supply_lost_t: Fixed,
+        fuel_lost_t: Fixed,
+    },
+    /// An air group at a base that changed side was lost with it, with
+    /// `aircraft`, ready and damaged (decision 20 of 0090). It has no place
+    /// from now on.
+    AirGroupLostWithBase {
+        air_group: AirGroupId,
+        base: BaseId,
+        aircraft: u32,
+    },
+    /// A ship in port at a base that changed side was lost with it, and is
+    /// sunk (decision 21 of 0090).
+    ShipLostWithBase {
+        ship: ShipId,
+        base: BaseId,
+    },
+    /// A task force of the beaten side whose home port changed side has no
+    /// home port (decision 22 of 0090).
+    HomePortLost {
+        task_force: TaskForceId,
+        base: BaseId,
+    },
+    /// An air group of the winning side whose mission was a strike on a base
+    /// that is now its own side's has no mission (decision 22 of 0090).
+    StrikeMissionCleared {
+        air_group: AirGroupId,
+        base: BaseId,
+    },
 }
 
 impl EventKind {
@@ -1088,13 +1196,9 @@ impl EventKind {
             } => vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)],
             EventKind::SearchFlown {
                 air_group, from, ..
-            } => vec![
-                EntityRef::AirGroup(*air_group),
-                match from {
-                    AirGroupLocation::Base(base) => EntityRef::Base(*base),
-                    AirGroupLocation::Ship(ship) => EntityRef::Ship(*ship),
-                },
-            ],
+            } => std::iter::once(EntityRef::AirGroup(*air_group))
+                .chain(place_entity(*from))
+                .collect(),
             EventKind::AirGroupLost {
                 air_group, ship, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Ship(*ship)],
@@ -1126,14 +1230,12 @@ impl EventKind {
             EventKind::DamagedAircraftDestroyedOnGround {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
-            EventKind::AircraftLandedElsewhere { from, to, at, .. } => vec![
-                EntityRef::AirGroup(*from),
-                EntityRef::AirGroup(*to),
-                match at {
-                    AirGroupLocation::Base(base) => EntityRef::Base(*base),
-                    AirGroupLocation::Ship(ship) => EntityRef::Ship(*ship),
-                },
-            ],
+            EventKind::AircraftLandedElsewhere { from, to, at, .. } => {
+                [EntityRef::AirGroup(*from), EntityRef::AirGroup(*to)]
+                    .into_iter()
+                    .chain(place_entity(*at))
+                    .collect()
+            }
             EventKind::AircraftDitchedNoDeck { air_group, .. }
             | EventKind::AircraftWorn { air_group, .. }
             | EventKind::AircraftDitched { air_group, .. }
@@ -1142,13 +1244,11 @@ impl EventKind {
             | EventKind::AirGroupReturned { air_group, .. } => {
                 vec![EntityRef::AirGroup(*air_group)]
             }
-            EventKind::AircraftRepaired { air_group, at, .. } => vec![
-                EntityRef::AirGroup(*air_group),
-                match at {
-                    AirGroupLocation::Base(base) => EntityRef::Base(*base),
-                    AirGroupLocation::Ship(ship) => EntityRef::Ship(*ship),
-                },
-            ],
+            EventKind::AircraftRepaired { air_group, at, .. } => {
+                std::iter::once(EntityRef::AirGroup(*air_group))
+                    .chain(place_entity(*at))
+                    .collect()
+            }
             EventKind::AirAttack {
                 air_group,
                 task_force,
@@ -1362,7 +1462,36 @@ impl EventKind {
                 EntityRef::Base(*from),
                 EntityRef::Base(*to),
             ],
+            EventKind::FedShareRestored { unit }
+            | EventKind::GroundFire { unit, .. }
+            | EventKind::MenLostInFight { unit, .. }
+            | EventKind::LandUnitFatigue { unit, .. }
+            | EventKind::LandUnitBackToDefend { unit, .. } => vec![EntityRef::LandUnit(*unit)],
+            EventKind::GroundFight { .. } | EventKind::SideBeatenAshore { .. } => Vec::new(),
+            EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
+            EventKind::AirGroupLostWithBase {
+                air_group, base, ..
+            }
+            | EventKind::StrikeMissionCleared { air_group, base } => {
+                vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)]
+            }
+            EventKind::ShipLostWithBase { ship, base } => {
+                vec![EntityRef::Ship(*ship), EntityRef::Base(*base)]
+            }
+            EventKind::HomePortLost { task_force, base } => {
+                vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)]
+            }
         }
+    }
+}
+
+/// The entity an air group's place names: its base or its ship, and none
+/// for a group lost with its base (decision 0090, 20).
+fn place_entity(place: AirGroupLocation) -> Option<EntityRef> {
+    match place {
+        AirGroupLocation::Base(base) => Some(EntityRef::Base(base)),
+        AirGroupLocation::Ship(ship) => Some(EntityRef::Ship(ship)),
+        AirGroupLocation::Lost => None,
     }
 }
 
@@ -1523,6 +1652,11 @@ impl fmt::Display for EventKind {
                 AirGroupLocation::Ship(ship) => write!(
                     f,
                     "{air_group} searched {from_deg:03}-{to_deg:03} out to {range_nm} nm from {ship} at {hex} with {aircraft} aircraft"
+                ),
+                // A group lost with its base flies nothing (decision 0090).
+                AirGroupLocation::Lost => write!(
+                    f,
+                    "{air_group} searched {from_deg:03}-{to_deg:03} out to {range_nm} nm from {hex} with {aircraft} aircraft"
                 ),
             },
             EventKind::AirGroupLost {
@@ -1749,6 +1883,12 @@ impl fmt::Display for EventKind {
                 AirGroupLocation::Ship(ship) => write!(
                     f,
                     "{air_group} had {repaired} aircraft repaired aboard {ship}, {ready} ready and {damaged} damaged"
+                ),
+                // A group lost with its base has none to repair (decision
+                // 0090).
+                AirGroupLocation::Lost => write!(
+                    f,
+                    "{air_group} had {repaired} aircraft repaired, {ready} ready and {damaged} damaged"
                 ),
             },
             EventKind::BaseSupplyDestroyed {
@@ -2305,6 +2445,104 @@ impl fmt::Display for EventKind {
                 }
                 f.write_str("; it flies nothing today")
             }
+            EventKind::FedShareRestored { unit } => {
+                write!(f, "{unit} has no men ashore and its fed share is 1")
+            }
+            EventKind::GroundFight {
+                hex,
+                allied_attacks,
+                japanese_attacks,
+            } => {
+                let attackers = match (allied_attacks, japanese_attacks) {
+                    (true, true) => "both sides attack",
+                    (true, false) => "the Allied side attacks",
+                    (false, true) => "the Japanese side attacks",
+                    (false, false) => "nobody attacks",
+                };
+                write!(f, "fight ashore at {hex}: {attackers}")
+            }
+            EventKind::GroundFire {
+                unit,
+                hex,
+                firing_men,
+                shots,
+                chance,
+                hits,
+            } => write!(
+                f,
+                "{unit} fired at {hex} with {firing_men} men: {shots} shots at {chance}, {hits} {}",
+                if *hits == 1 { "hit" } else { "hits" }
+            ),
+            EventKind::MenLostInFight {
+                unit,
+                hex,
+                lost,
+                ashore,
+            } => write!(
+                f,
+                "{unit} lost {lost} men in the fight at {hex}, {ashore} left ashore"
+            ),
+            EventKind::LandUnitFatigue {
+                unit,
+                change,
+                fatigue,
+            } => match change {
+                LandFatigueChange::Gained => {
+                    write!(f, "{unit} attacked: fatigue {fatigue}")
+                }
+                LandFatigueChange::Rested => write!(f, "{unit} rested: fatigue {fatigue}"),
+            },
+            EventKind::LandUnitBackToDefend { unit, fatigue } => write!(
+                f,
+                "{unit} is too tired to attack at fatigue {fatigue} and goes back to defend"
+            ),
+            EventKind::SideBeatenAshore {
+                side,
+                hex,
+                men,
+                enemy_men,
+                fought,
+            } => {
+                write!(
+                    f,
+                    "the {} side is beaten at {hex}: {men} men ashore against {enemy_men}",
+                    side.name()
+                )?;
+                if !fought {
+                    f.write_str(", without a fight")?;
+                }
+                Ok(())
+            }
+            EventKind::BaseChangedSide {
+                base,
+                hex,
+                from,
+                to,
+                supply_t,
+                fuel_t,
+                supply_lost_t,
+                fuel_lost_t,
+            } => write!(
+                f,
+                "{base} at {hex} changed from the {} side to the {} side: {supply_t} t of supply and {fuel_t} t of fuel kept, {supply_lost_t} t and {fuel_lost_t} t lost",
+                from.name(),
+                to.name()
+            ),
+            EventKind::AirGroupLostWithBase {
+                air_group,
+                base,
+                aircraft,
+            } => write!(f, "{air_group} was lost with {base}: {aircraft} aircraft"),
+            EventKind::ShipLostWithBase { ship, base } => {
+                write!(f, "{ship} was lost in port with {base}")
+            }
+            EventKind::HomePortLost { task_force, base } => {
+                write!(f, "{task_force} lost its home port {base} and has none")
+            }
+            EventKind::StrikeMissionCleared { air_group, base } => write!(
+                f,
+                "{air_group} has no mission: the base it was to strike, {base}, is its own side's"
+            ),
         }
     }
 }

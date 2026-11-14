@@ -16,8 +16,8 @@ use crate::fixed::Fixed;
 use crate::ids::{BaseId, EventId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::orders::{
-    AirGroupOrder, AirMission, CargoAction, Order, OrderKind, OrderRequest, Reach, RejectReason,
-    SpeedSetting, TaskForceOrder,
+    AirGroupOrder, AirMission, CargoAction, LandUnitOrder, Order, OrderKind, OrderRequest, Reach,
+    RejectReason, SpeedSetting, TaskForceOrder,
 };
 use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
@@ -68,6 +68,8 @@ pub(crate) enum PulsePhase {
 /// A step after the last pulse.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum EndOfDayPhase {
+    /// The day's fight ashore, fatigue of land units, a side beaten and a
+    /// base that changes side (decision 0090).
     GroundCombat,
     Logistics,
     AirGroupUpkeep,
@@ -202,13 +204,13 @@ impl World {
     fn run_end_of_day_phase(&mut self, day: u32, phase: EndOfDayPhase) {
         match phase {
             EndOfDayPhase::BaseCount => self.record_bases_at_day_end(day),
+            EndOfDayPhase::GroundCombat => self.fight_ashore(day),
             // Not implemented yet. Each arrives with the scenario that needs it.
             // IntelligenceUpdate stays empty on purpose: contacts age at the end
             // of every pulse and reports merge on arrival, which covers "age
             // contacts, merge duplicates" (decision 15 of
             // `docs/decisions/0012-search-and-contacts.md`).
-            EndOfDayPhase::GroundCombat
-            | EndOfDayPhase::Logistics
+            EndOfDayPhase::Logistics
             | EndOfDayPhase::AirGroupUpkeep
             | EndOfDayPhase::IntelligenceUpdate => {}
         }
@@ -630,6 +632,11 @@ impl World {
                 if group.side != order.side {
                     return Err(RejectReason::NotYourUnit);
                 }
+                // A group lost with its base has nothing to order (decision
+                // 0090, 20).
+                if group.location == crate::state::AirGroupLocation::Lost {
+                    return Err(RejectReason::AirGroupLostWithBase);
+                }
                 // A group lost with the ship it was aboard has nothing to
                 // order.
                 if let crate::state::AirGroupLocation::Ship(ship) = group.location {
@@ -767,6 +774,24 @@ impl World {
                         Ok(())
                     }
                 }
+            }
+            OrderKind::LandUnit {
+                target,
+                order: LandUnitOrder::SetPosture(_),
+            } => {
+                // Decision 0090, 2, in this order: the side's own unit; not
+                // destroyed; with a man ashore.
+                let unit = match self.truth.land_units.get(target) {
+                    Some(unit) if unit.side == order.side => unit,
+                    _ => return Err(RejectReason::NotYourLandUnit),
+                };
+                if unit.men_ashore == 0 && self.truth.men_aboard(*target) == 0 {
+                    return Err(RejectReason::LandUnitDestroyed);
+                }
+                if unit.men_ashore == 0 {
+                    return Err(RejectReason::NoMenAshore);
+                }
+                Ok(())
             }
         }
     }
@@ -957,6 +982,19 @@ impl World {
                         unreachable!("rebase orders are applied above")
                     }
                 }
+                Vec::new()
+            }
+            OrderKind::LandUnit {
+                target,
+                order: LandUnitOrder::SetPosture(posture),
+            } => {
+                let unit = self
+                    .truth
+                    .land_units
+                    .get_mut(target)
+                    .expect("order was validated against this land unit");
+                unit.posture = *posture;
+                unit.posture_order = Some(order.id);
                 Vec::new()
             }
         }

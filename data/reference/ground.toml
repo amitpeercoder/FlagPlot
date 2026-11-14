@@ -17,3 +17,34 @@ daily_supply_t_per_man = "0.005"
 
 # The share of unfed men lost in a day. Placeholder: rests on no source.
 unfed_loss_share_per_day = "0.05"
+
+# The fight ashore and a base that changes side (decision 0090, "Placeholder
+# figures"). Every one is a placeholder set by the architect and rests on no
+# source; stage 4 sets them against the attacks on the airfield.
+
+# Firing men to one shot.
+men_per_shot = 100
+
+# The chance a shot hits, for a side that attacks.
+hit_chance = "0.3"
+
+# The chance a shot hits, for a side that defends.
+defender_hit_chance = "0.6"
+
+# Men a hit removes.
+men_per_hit = 20
+
+# Fatigue a unit gains on a day it attacks.
+fatigue_per_attack_day = 20
+
+# Fatigue a unit ashore loses on any other day.
+rest_per_day = 5
+
+# Above this a unit on attack goes back to defend.
+attack_fatigue_limit = 60
+
+# A side attacked is beaten below this share of the attacker's men.
+beaten_share = "0.2"
+
+# The share of a base's supply and fuel its taker keeps.
+captured_stock_share = "0.5"

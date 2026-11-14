@@ -53,12 +53,14 @@ pub(crate) fn take_in_proportion(loss: u32, men: &[u32]) -> Vec<u32> {
 
 impl World {
     /// The men's supply phase of the night pulse (decisions 16 to 20 of
-    /// 0066). For each hex, and each side with men ashore there: the
-    /// lowest-numbered base of the side in the hex is asked for the daily
-    /// charge of every man and pays what its stock covers; the tons paid over
-    /// the charge for a man, cut, are fed, and the rest unfed. A share of the
-    /// unfed is lost, cut, and one man at least, taken from the side's units
-    /// there in proportion.
+    /// 0066, and 24a of 0090). For each hex, and each side with men ashore
+    /// there: every base of the side in the hex with stock, in base order,
+    /// pays what it can of the daily charge of every man still owed; the
+    /// tons paid over the charge for a man, cut, are fed, and the rest
+    /// unfed. A share of the unfed is lost, cut, and one man at least, taken
+    /// from the side's units there in proportion. Each unit ashore takes the
+    /// men fed over the men charged as its fed share (decision 8 of 0090); a
+    /// unit with men aboard and none ashore has a fed share of 1.
     pub(crate) fn feed_men_ashore(&mut self, day: u32, pulse: Pulse) {
         let Some(figures) = self.ref_data.ground else {
             return;
@@ -75,29 +77,62 @@ impl World {
             }
         }
 
+        // A unit none of whose men are ashore to be charged has a fed share
+        // of 1 (decision 8 of 0090). A destroyed unit is left as it is.
+        let restored: Vec<LandUnitId> = self
+            .truth
+            .land_units
+            .values()
+            .filter(|unit| unit.men_ashore == 0 && unit.fed_share != Fixed::ONE)
+            .map(|unit| unit.id)
+            .filter(|unit| self.truth.men_aboard(*unit) > 0)
+            .collect();
+        for unit in restored {
+            self.truth
+                .land_units
+                .get_mut(&unit)
+                .expect("the land unit exists")
+                .fed_share = Fixed::ONE;
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::FedShareRestored { unit },
+                Vec::new(),
+                None,
+            );
+        }
+
         for ((hex, _), (side, units)) in ashore {
             let men: u32 = units
                 .iter()
                 .map(|unit| self.truth.land_units[unit].men_ashore)
                 .sum();
-            let base: Option<BaseId> = self
+            let bases: Vec<BaseId> = self
                 .truth
                 .bases
                 .values()
-                .find(|base| base.side == side && base.hex == hex)
-                .map(|base| base.id);
+                .filter(|base| base.side == side && base.hex == hex)
+                .map(|base| base.id)
+                .collect();
 
-            // The charge (decision 16). A base with no stock is asked
-            // nothing and pays nothing, and nothing is recorded as paid
-            // (decision 17).
+            // The charge (decision 16 of 0066, 24a of 0090). A base with no
+            // stock is asked nothing and pays nothing, and nothing is
+            // recorded as paid (decision 17).
             let mut fed_causes: Vec<Cause> = Vec::new();
             let mut paid = Fixed::ZERO;
-            if let Some(base) = base.filter(|id| !self.truth.bases[id].supply_t.is_zero()) {
-                let asked = figures.daily_supply_t_per_man * i64::from(men);
+            let mut paying: Option<BaseId> = None;
+            let charge = figures.daily_supply_t_per_man * i64::from(men);
+            for base in bases.iter().copied() {
+                if self.truth.bases[&base].supply_t.is_zero() || paid >= charge {
+                    continue;
+                }
+                let asked = charge - paid;
                 let (paid_t, left) = self.take_supply(base, asked);
-                paid = paid_t;
-                let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                    factors: vec![
+                let paid_before = paid;
+                paid += paid_t;
+                paying.get_or_insert(base);
+                let breakdown = self.config.record_breakdowns.then(|| {
+                    let mut factors = vec![
                         Factor {
                             name: "men_ashore",
                             value: Fixed::from_int(i64::from(men)),
@@ -106,8 +141,18 @@ impl World {
                             name: "daily_supply_t_per_man",
                             value: figures.daily_supply_t_per_man,
                         },
-                    ],
-                    result: asked,
+                    ];
+                    // Only where an earlier base of the side paid part.
+                    if !paid_before.is_zero() {
+                        factors.push(Factor {
+                            name: "paid_by_earlier_bases_t",
+                            value: paid_before,
+                        });
+                    }
+                    Breakdown {
+                        factors,
+                        result: asked,
+                    }
                 });
                 let spent = self.events.record(
                     day,
@@ -118,7 +163,7 @@ impl World {
                         aircraft: 0,
                         men,
                         asked_t: asked,
-                        paid_t: paid,
+                        paid_t,
                         left_t: left,
                     },
                     Vec::new(),
@@ -126,6 +171,9 @@ impl World {
                 );
                 fed_causes.push(Cause::Event(spent));
             }
+            // The base the event names: the first that paid, or the first of
+            // the side in the hex if none did.
+            let base = paying.or_else(|| bases.first().copied());
 
             // The men fed: the tons paid over the charge for a man, cut, and
             // never more than the men (decision 17).
@@ -133,6 +181,19 @@ impl World {
                 .unwrap_or(u32::MAX);
             let fed = by_tons.min(men);
             let unfed = men - fed;
+            // The fed share of each unit ashore here (decision 8 of 0090).
+            let fed_share = if men == 0 {
+                Fixed::ONE
+            } else {
+                Fixed::from_ratio(i64::from(fed), i64::from(men))
+            };
+            for unit in &units {
+                self.truth
+                    .land_units
+                    .get_mut(unit)
+                    .expect("the land unit exists")
+                    .fed_share = fed_share;
+            }
             let breakdown = self.config.record_breakdowns.then(|| Breakdown {
                 factors: vec![
                     Factor {
@@ -271,7 +332,7 @@ impl World {
     pub(crate) fn lose_men_with_ship(
         &mut self,
         day: u32,
-        pulse: Pulse,
+        pulse: Option<Pulse>,
         ship: ShipId,
         sunk: EventId,
     ) {
@@ -285,7 +346,7 @@ impl World {
         };
         let lost = self.events.record(
             day,
-            Some(pulse),
+            pulse,
             EventKind::MenLostWithShip {
                 unit: troops.unit,
                 ship,
@@ -294,7 +355,7 @@ impl World {
             vec![Cause::Event(sunk)],
             None,
         );
-        self.destroy_if_no_men(day, Some(pulse), troops.unit, lost);
+        self.destroy_if_no_men(day, pulse, troops.unit, lost);
     }
 }
 
@@ -392,6 +453,7 @@ mod tests {
             handling_t_per_man: Fixed::ONE,
             daily_supply_t_per_man: Fixed::ONE,
             unfed_loss_share_per_day: Fixed::ONE,
+            ..crate::refdata::GroundFigures::FIRST
         });
         let mut truth = TruthState::default();
         let mut force = TaskForce::at(
@@ -421,13 +483,13 @@ mod tests {
         truth.task_forces.insert(force.id, force);
         truth.land_units.insert(
             LandUnitId::new(1),
-            LandUnit {
-                id: LandUnitId::new(1),
-                name: "Battalion".to_string(),
-                side: Side::Allied,
-                men_ashore: ashore,
-                hex: (ashore > 0).then_some(AT),
-            },
+            LandUnit::new(
+                LandUnitId::new(1),
+                "Battalion".to_string(),
+                Side::Allied,
+                ashore,
+                (ashore > 0).then_some(AT),
+            ),
         );
         World::new(7, ref_data, map, truth).expect("valid setup")
     }

@@ -823,7 +823,7 @@ impl World {
                 .values()
                 .filter_map(|group| match group.location {
                     AirGroupLocation::Ship(ship) => Some(ship),
-                    AirGroupLocation::Base(_) => None,
+                    AirGroupLocation::Base(_) | AirGroupLocation::Lost => None,
                 })
                 // A ship at the yard repairs no aircraft (decision 0069).
                 .filter(|ship| {
@@ -967,6 +967,11 @@ impl World {
             let Some(group) = self.truth.air_groups.get(&arrival.air_group) else {
                 continue;
             };
+            // Not delivered to a group lost with its base (decision 0090,
+            // 20).
+            if group.location == AirGroupLocation::Lost {
+                continue;
+            }
             if let AirGroupLocation::Ship(ship) = group.location {
                 // Not delivered to a group lost with its ship, nor to one
                 // aboard a ship away at the yard (decision 0069).

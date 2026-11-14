@@ -32,6 +32,7 @@ mod airstrike;
 mod cargo;
 mod damage;
 mod ground;
+mod ground_combat;
 mod invariants;
 mod landing;
 mod movement;

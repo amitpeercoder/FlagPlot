@@ -730,6 +730,16 @@ struct GroundFile {
     handling_t_per_man: Quantity,
     daily_supply_t_per_man: Quantity,
     unfed_loss_share_per_day: Quantity,
+    // The fight ashore and a base that changes side (decision 0090).
+    men_per_shot: Quantity,
+    hit_chance: Quantity,
+    defender_hit_chance: Quantity,
+    men_per_hit: Quantity,
+    fatigue_per_attack_day: Quantity,
+    rest_per_day: Quantity,
+    attack_fatigue_limit: Quantity,
+    beaten_share: Quantity,
+    captured_stock_share: Quantity,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -754,6 +764,15 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
             "unfed_loss_share_per_day",
             &file.unfed_loss_share_per_day,
         )?,
+        men_per_shot: number("men_per_shot", &file.men_per_shot)?,
+        hit_chance: number("hit_chance", &file.hit_chance)?,
+        defender_hit_chance: number("defender_hit_chance", &file.defender_hit_chance)?,
+        men_per_hit: number("men_per_hit", &file.men_per_hit)?,
+        fatigue_per_attack_day: number("fatigue_per_attack_day", &file.fatigue_per_attack_day)?,
+        rest_per_day: number("rest_per_day", &file.rest_per_day)?,
+        attack_fatigue_limit: number("attack_fatigue_limit", &file.attack_fatigue_limit)?,
+        beaten_share: number("beaten_share", &file.beaten_share)?,
+        captured_stock_share: number("captured_stock_share", &file.captured_stock_share)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));

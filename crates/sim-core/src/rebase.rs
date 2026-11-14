@@ -48,6 +48,8 @@ impl World {
                 });
             }
             AirGroupLocation::Base(from) => from,
+            // Refused at intake before this check (decision 0090, 20).
+            AirGroupLocation::Lost => return Err(RejectReason::AirGroupLostWithBase),
         };
         if group.rebased_day == Some(day) {
             return Err(RejectReason::AlreadyMovedToday);
