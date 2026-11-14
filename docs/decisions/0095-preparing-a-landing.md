@@ -1,6 +1,6 @@
 # 0095: Preparing a landing
 
-Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that planning ahead should raise an operation's chance of success and that changing a plan should cost some of what was prepared. Decisions 4 and 6 need review. Nothing is built. Every figure is a placeholder set by the architect. The hand calculation is written before any code is delegated.
+Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that planning ahead should raise an operation's chance of success and that changing a plan should cost some of what was prepared. The designer answered its two questions on Nov 14, 2026: preparation also helps the fight ashore (decision 4a), and what a change costs depends on the change (decision 6). Nothing is built. Every figure is a placeholder set by the architect. The hand calculation is written before any code is delegated.
 
 ## The gap
 
@@ -13,9 +13,10 @@ The record's first landing is the case. It was ordered and mounted in a few week
 1. **A force prepares a landing by order.** `prepare_landing` names a task force and a coast hex, the place it is to land at. It stands until replaced or until the landing is done. It is refused at intake if the force is not the side's own or the hex is not a coast hex on the map.
 2. **Preparation is a number from 0 to 100, held by the force.** It starts at 0 unless a scenario says.
 3. **It grows by the day in port.** At the start of each day, a force with the order that is stopped at a base of its own side gains `preparation_per_day`, up to 100. At sea it keeps what it has and gains nothing.
-4. **Preparation speeds the landing and nothing else.** When the force unloads at the hex it prepared for, each ship's work in a pulse, by berth or by lighter, is multiplied by `unprepared_landing_share` plus the rest of 1 times the preparation over 100. A force with no preparation, or one that unloads at another hex, works at `unprepared_landing_share` of the rate. A force with no `prepare_landing` order ever given works at the full rate, as now, so no existing scenario changes. *Needs review: it acts on how fast men and supply get ashore, because that is what the record shows going wrong and what our rows can check. The other choice is to let it also raise the men's fire in the first days ashore, which nothing in the rows would size.*
+4. **Preparation speeds the landing.** When a force that carries men of a land unit unloads, each ship's work in a pulse, by berth or by lighter, is multiplied by `unprepared_landing_share` plus the rest of 1 times the preparation over 100. A force with no preparation, or one that unloads at another hex than the one it prepared for, works at `unprepared_landing_share` of the rate. It holds for every force that lands men, with or without the order, so that not giving the order is no way round it. A force that carries no men unloads as it always has.
+4a. **It also helps the fight ashore.** When a unit's first men land in a hex, the unit gains `unprepared_landing_fatigue` times 100 less the force's preparation over 100, up to 100. Fatigue cuts the men who fire (decision 0090, 6) and wears off by the day, so men put ashore in a hurry fight worse in their first days and men landed after a full preparation lose nothing. No new state is needed. *The designer's choice, Nov 14, 2026. The architect had proposed that preparation speed the landing and do nothing else, since nothing in the rows sizes the effect on the fight. The figure is a placeholder with nothing behind it and the record says so.*
 5. **It is spent by the landing.** When the force's unloading at the hex is complete, its preparation is 0 and the order is done.
-6. **A change costs part of it.** A new `prepare_landing` order for another hex keeps `preparation_kept_on_change` of what the force had. So does a ship joining the force. Loading men of a land unit that the force did not carry when it began to prepare does the same. *Needs review: this is what makes a late change of plan cost something. The other choice is that any change sets it to 0.*
+6. **What a change costs depends on the change.** A new `prepare_landing` order for another hex loses all of it: the force starts again from 0. A ship joining the force, or loading men of a land unit that the force did not carry when it began to prepare, keeps `preparation_kept_on_change` of it. *The designer's choice, Nov 14, 2026.*
 7. **A side sees its own forces' preparation exactly,** each day's gain and each loss with its reason. The enemy sees nothing of it.
 
 ## Placeholder figures
@@ -26,7 +27,10 @@ In `ground.toml`, and in the frozen step 1 figures with the same first values:
 | --- | --- | --- |
 | `preparation_per_day` | `5` | Preparation a force gains for each day in port with the order |
 | `unprepared_landing_share` | `"0.5"` | The share of a ship's unloading rate a force with no preparation works at |
-| `preparation_kept_on_change` | `"0.5"` | The share of its preparation a force keeps when its landing is changed |
+| `preparation_kept_on_change` | `"0.5"` | The share of its preparation a force keeps when a ship joins it or a new unit is loaded |
+| `unprepared_landing_fatigue` | `40` | Fatigue a unit gains on landing from a force with no preparation |
+
+In the frozen step 1 figures the rule is switched off by its first values, as experience and readiness are there: `unprepared_landing_share` is `"1"` and `unprepared_landing_fatigue` is `0`, so the hand calculations of the earlier stages stand. The live values are those above.
 
 None rests on a source. With them a landing is fully prepared after 20 days in port, and one mounted in 10 days gets its men and supply ashore at three quarters of the rate. A coarse measure for stage 4 can rest on the supply the transports had landed when they left on 9 August, which has rows.
 
@@ -40,13 +44,15 @@ A force lies at its base with the order from day 1. A ship of the force unloads 
 | 10 | 50 | 20 x (0.5 + 0.5 x 50/100) = 15 t an hour | 180 t, or 720 men |
 | 20 | 100 | 20 x 1 = 20 t an hour | 240 t, or 960 men |
 
-After 20 days the landing place is changed. The force keeps 100 x 0.5 = 50. Four more days in port bring it to 70, and it lands at 20 x (0.5 + 0.5 x 70/100) = 17 t an hour.
+After 20 days a ship joins the force. It keeps 100 x 0.5 = 50. Four more days in port bring it to 70, and it lands at 20 x (0.5 + 0.5 x 70/100) = 17 t an hour. A unit it lands gains 40 x (100 - 70)/100 = 12 fatigue, and fires on its first day with 88 men in a hundred.
+
+Had the landing place been changed, the force would have gone to 0, and four days would bring it to 20: 12 t an hour, and 32 fatigue for a unit it lands.
 
 ## Why
 
 - **It makes lead time a decision.** A commander who waits lands faster and loses fewer days under the enemy's aircraft. One who goes early gets ashore before the enemy is reinforced. The enemy uses the same days.
 - **It makes a late change cost something** beyond the ships that turn round.
-- **One number, one effect.** It reuses the cargo rule's rate and adds no new kind of thing.
+- **One number, two effects, no new mechanism.** It scales the cargo rule's rate and adds to a unit's fatigue. Both exist.
 
 ## What it leaves out
 
@@ -66,9 +72,11 @@ After 20 days the landing place is changed. The force keeps 100 x 0.5 = 50. Four
 | | |
 | --- | --- |
 | Reads | A force's side, position, status, ships, the land units aboard and its preparation; the bases of the side at its hex; the cargo order and the hex; the three figures |
-| Writes | A force's preparation and the hex it prepares for; the events. The cargo rule reads the preparation for its rate |
+| Writes | A force's preparation and the hex it prepares for; a land unit's fatigue on landing; the events. The cargo rule reads the preparation for its rate |
 
 ## Questions for the designer
 
-1. **Decision 4:** preparation speeds the landing and does nothing else, for now. Agreed?
-2. **Decision 6:** changing the landing place, adding a ship or loading a new unit keeps half the preparation. Agreed, or should a change lose all of it?
+Answered on Nov 14, 2026.
+
+1. **Decision 4:** preparation speeds the landing and also helps the fight ashore (decision 4a).
+2. **Decision 6:** a new landing place loses all of it; a ship joining or a new unit loaded keeps half.
