@@ -27,7 +27,7 @@ Then one `[[measure]]` table for each measure:
 
 ## What a measure takes
 
-`counts` says in words what is counted. `take` and its keys say the same thing so that `sim-cli validate` can do it, in the names the batch file uses. Ships, air groups, task forces and bases are given by their ids in the scenario. An air group formed in a run by a landing elsewhere counts with the group it came from, and with that group's source if it too was formed in the run. A ship's task force is the one it starts in.
+`counts` says in words what is counted. `take` and its keys say the same thing so that `sim-cli validate` can do it, in the names the batch file uses. Ships, air groups, task forces and bases are given by their ids in the scenario. An air group formed in a run by a landing elsewhere counts with the group it came from, and with that group's source if it too was formed in the run. A ship's task force is the one it starts in. A day is a day of the scenario, the first being 1; a measure naming a day outside them is refused. Wherever a take leaves a run out, the report's "left out" column says how many runs were.
 
 | `take` | Keys | The number |
 | --- | --- | --- |
@@ -51,6 +51,11 @@ Then one `[[measure]]` table for each measure:
 | `fights_by_day` | none | The number of surface fights in the run that are not in a night pulse |
 | `fights_sighted_first` | `by` | The number of surface fights in a night pulse in which `sighted_first` is one of the values listed in `by` ("allied", "japanese", "both", "neither") |
 | `rounds_surprised` | `task_forces` | The rounds those task forces were surprised, summed over the run's surface fights in a night pulse |
+| `base_holder` | `base`, `day`, `side` | 1 if at the end of that day the base is held by that side, else 0. The holder is the side the batch's header gives the base as the scenario starts, changed by the run's `base_changes` up to and including that day |
+| `men_lost` | `side`, `from_day`, `to_day`; `q` and `r`, both or neither | The side's men lost on those days, both included, by every cause: in a fight ashore, unfed, with a ship, to fire and surrendered. With `q` and `r` only the men lost ashore in that hex are counted (in a fight, unfed, to fire at a base in the hex, surrendered there), and men lost with a ship are not. A run with no man lost is 0 |
+| `airfield_built_day` | `base` | The day the base's airfield was built. A run in which it was not built is left out |
+| `arrival_day` | `air_group`, `due_day` | The first day on or after `due_day` on which aircraft were delivered to that air group (one group, not a list). A run in which none were is left out |
+| `days_of_food` | `side`, `q`, `r`, `day` | The supply at the side's bases in that hex at the end of that day, divided by the side's men ashore there times `daily_supply_t_per_man` (the ground figure in the batch's header), rounded down to a whole day. Worked in fixed point. A run with no man of the side in that hex that day is left out |
 
 **Lost to enemy action is aircraft shot down, and nothing else.** The rules have no write-off for damage taken in combat: an aircraft worn out after a sortie is worn out whoever it met. Where the record counts aircraft expended for combat damage or forced down by it, they stay in the record, and the aircraft shot down in a run stand for them. A ditching, for want of fuel or of a deck, is never enemy action; it is counted where a measure takes every cause.
 

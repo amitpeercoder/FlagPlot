@@ -26,7 +26,7 @@ impl World {
     /// The checks of a rebase order to `group` from `side` for `day`, after
     /// the checks every air group order has (the side's own, not lost),
     /// in the order of decision 0091, 2: away at the yard, aboard a ship,
-    /// already moved that day, the base not the side's own, already at the
+    /// waiting for its base (decision 0101), already moved that day, the base not the side's own, already at the
     /// base, the base with no airfield (decision 6 of 0099), the airfield
     /// damaged to the level that takes no aircraft (decision 5 of 0103),
     /// beyond the transfer range.
@@ -54,6 +54,16 @@ impl World {
             // Refused at intake before this check (decision 0090, 20).
             AirGroupLocation::Lost => return Err(RejectReason::AirGroupLostWithBase),
         };
+        // An empty group stationed at a base that is not its side's or has no
+        // airfield waits for its base (decision 0101).
+        if self
+            .truth
+            .bases
+            .get(&from)
+            .is_some_and(|at| at.side != group.side || !at.airfield)
+        {
+            return Err(RejectReason::AirGroupWaitsForBase);
+        }
         if group.rebased_day == Some(day) {
             return Err(RejectReason::AlreadyMovedToday);
         }

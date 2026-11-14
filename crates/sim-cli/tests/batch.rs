@@ -1264,3 +1264,208 @@ fn the_seven_aircraft_causes_are_each_loss_once_and_sum_to_the_objectives_count(
         }
     }
 }
+
+// ------------------------------------------------------- the land fight
+
+/// The sum of a side's men lost over the days, from `men_lost_by_day`.
+fn lost_by_day_total(run: &Value, side: &str) -> u64 {
+    run.get("men_lost_by_day")
+        .and_then(Value::as_array)
+        .map_or(0, |days| days.iter().map(|d| num(&d[side])).sum())
+}
+
+/// The sum of a side's men lost over every cause, from `men_lost`.
+fn lost_by_cause_total(run: &Value, side: &str) -> u64 {
+    run.get("men_lost").map_or(0, |lost| {
+        ["fight", "unfed", "lost_with_ship", "fire", "surrendered"]
+            .iter()
+            .map(|cause| num(&lost[side][*cause]))
+            .sum()
+    })
+}
+
+fn ashore_row<'a>(run: &'a Value, day: u64, side: &str, q: i64, r: i64) -> Option<&'a Value> {
+    run["ashore_by_day"]
+        .as_array()?
+        .iter()
+        .find(|row| row["day"] == day && row["side"] == side && row["q"] == q && row["r"] == r)
+}
+
+#[test]
+fn the_land_fight_counts_add_up_by_day_and_by_cause_in_every_scenario_that_has_them() {
+    for file in [
+        "data/scenarios/23_fight_ashore.toml",
+        "data/scenarios/30_working_units.toml",
+        "data/scenarios/31_airfield_damage.toml",
+        "data/scenarios/32_falling_back.toml",
+    ] {
+        let batch = parse(&batch("land-sums", file, &["--runs", "3"]));
+        assert_eq!(batch["version"], 5, "{file}");
+        // The ground figures of the scenario: 0.005 t a man a day.
+        assert_eq!(batch["daily_supply_t_per_man"], "0.005", "{file}");
+        for run in batch["per_run"].as_array().expect("runs") {
+            for side in ["japanese", "allied"] {
+                assert_eq!(
+                    lost_by_day_total(run, side),
+                    lost_by_cause_total(run, side),
+                    "{file} {side}"
+                );
+            }
+            // Days are in order, each once, and none is empty.
+            let days: Vec<u64> = run
+                .get("men_lost_by_day")
+                .and_then(Value::as_array)
+                .map_or(vec![], |d| d.iter().map(|x| num(&x["day"])).collect());
+            assert!(days.windows(2).all(|w| w[0] < w[1]), "{file}");
+        }
+    }
+}
+
+#[test]
+fn a_batch_of_a_scenario_without_ground_figures_has_none_of_the_land_fight_keys() {
+    let batch = parse(&batch("land-none", QUIET, &["--runs", "2"]));
+    assert!(batch.get("daily_supply_t_per_man").is_none());
+    for run in batch["per_run"].as_array().expect("runs") {
+        for key in [
+            "men_lost_by_day",
+            "airfields_built",
+            "arrivals_delivered",
+            "ashore_by_day",
+        ] {
+            assert!(run.get(key).is_none(), "{key}");
+        }
+    }
+}
+
+#[test]
+fn scenario_23_records_the_bases_taken_on_day_1() {
+    let batch = parse(&batch(
+        "land-23",
+        "data/scenarios/23_fight_ashore.toml",
+        &["--runs", "3"],
+    ));
+    for run in batch["per_run"].as_array().expect("runs") {
+        // Bases 3 and 5 go from the Japanese to the Allied side on day 1
+        // (the hand calculation of scenario 23).
+        let changes = run["base_changes"].as_array().expect("changes");
+        for base in [3, 5] {
+            let change = changes
+                .iter()
+                .find(|c| c["base"] == base)
+                .expect("a change");
+            assert_eq!(
+                (change["day"].as_u64(), change["to"].as_str()),
+                (Some(1), Some("allied"))
+            );
+        }
+        // Men were lost in fights, by both sides, on day 1.
+        let day1 = &run["men_lost_by_day"][0];
+        assert_eq!(day1["day"], 1);
+        assert!(num(&day1["japanese"]) > 0 && num(&day1["allied"]) > 0);
+        // The Allied units at hex (6,0): 2000 men, fed, so none lost there and
+        // their stock falls by 10 t a day from the day-1 figure of 90.
+        for (day, supply) in [(1, "90"), (2, "80"), (6, "40")] {
+            let row = ashore_row(run, day, "allied", 6, 0).expect("a row");
+            assert_eq!(
+                (num(&row["men"]), row["supply_t"].as_str()),
+                (2000, Some(supply))
+            );
+        }
+    }
+}
+
+#[test]
+fn scenario_30_records_the_airfield_built_in_the_phase_of_day_2() {
+    let batch = parse(&batch(
+        "land-30",
+        "data/scenarios/30_working_units.toml",
+        &["--runs", "3"],
+    ));
+    for run in batch["per_run"].as_array().expect("runs") {
+        let built = run["airfields_built"].as_array().expect("built");
+        assert_eq!(built.len(), 1);
+        assert_eq!(
+            (built[0]["day"].as_u64(), built[0]["base"].as_u64()),
+            (Some(2), Some(1))
+        );
+    }
+}
+
+#[test]
+fn scenario_31_records_the_arrival_delivered_whole_on_day_4() {
+    let batch = parse(&batch(
+        "land-31",
+        "data/scenarios/31_airfield_damage.toml",
+        &["--runs", "3"],
+    ));
+    for run in batch["per_run"].as_array().expect("runs") {
+        // Due on day 2, it waits on the nights of days 2 and 3 (the hand
+        // calculation of scenario 31) and comes once, 6 aircraft, on day 4.
+        let arrivals = run["arrivals_delivered"].as_array().expect("arrivals");
+        assert_eq!(arrivals.len(), 1);
+        assert_eq!(
+            (
+                arrivals[0]["day"].as_u64(),
+                arrivals[0]["air_group"].as_u64(),
+                arrivals[0]["aircraft"].as_u64()
+            ),
+            (Some(4), Some(3), Some(6))
+        );
+        // No man is lost in this scenario.
+        assert!(run.get("men_lost_by_day").is_none());
+        // 500 men at (0,0) eat 2.5 t a day from 5000 t, 1000 men at (5,0)
+        // 5 t a day, with nothing else drawing on the stock.
+        for day in 1..=6u64 {
+            let near = ashore_row(run, day, "allied", 0, 0).expect("a row");
+            let far = ashore_row(run, day, "allied", 5, 0).expect("a row");
+            assert_eq!((num(&near["men"]), num(&far["men"])), (500, 1000));
+            let eaten = |per_day: f64| format!("{}", 5000.0 - per_day * day as f64);
+            assert_eq!(near["supply_t"], eaten(2.5).as_str(), "day {day}");
+            assert_eq!(far["supply_t"], eaten(5.0).as_str(), "day {day}");
+        }
+    }
+}
+
+#[test]
+fn scenario_32_records_the_surrender_of_200_men_and_base_7_changing_side_on_day_1() {
+    let batch = parse(&batch(
+        "land-32",
+        "data/scenarios/32_falling_back.toml",
+        &["--runs", "3"],
+    ));
+    for run in batch["per_run"].as_array().expect("runs") {
+        // Unit 6 surrenders with its 200 men (the hand calculation of
+        // scenario 32), counted as a fifth cause of the Japanese loss.
+        assert_eq!(run["men_lost"]["japanese"]["surrendered"], 200);
+        assert_eq!(run["men_lost"]["allied"]["surrendered"], 0);
+        // The 200 surrender at S, hex (20,0), on day 1, and the per-hex
+        // record has them there. No man is lost with a ship, so the hexes
+        // add up to the by-day totals.
+        let ashore = run["men_lost_ashore_by_day"].as_array().expect("ashore");
+        let at_s = ashore
+            .iter()
+            .find(|row| row["day"] == 1 && row["q"] == 20 && row["r"] == 0)
+            .expect("a row at S");
+        assert!(num(&at_s["japanese"]) >= 200);
+        for side in ["japanese", "allied"] {
+            let by_hex: u64 = ashore.iter().map(|row| num(&row[side])).sum();
+            assert_eq!(by_hex, lost_by_day_total(run, side), "{side}");
+        }
+        assert!(num(&run["men_lost_by_day"][0]["japanese"]) >= 200);
+        assert_eq!(run["men_lost_by_day"][0]["day"], 1);
+        let change = run["base_changes"]
+            .as_array()
+            .expect("changes")
+            .iter()
+            .find(|c| c["base"] == 7)
+            .expect("base 7 changes side");
+        assert_eq!(
+            (
+                change["day"].as_u64(),
+                change["from"].as_str(),
+                change["to"].as_str()
+            ),
+            (Some(1), Some("japanese"), Some("allied"))
+        );
+    }
+}

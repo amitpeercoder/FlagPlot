@@ -2,7 +2,10 @@
 //! 0062; `shots_by` was added at version 3, and who sighted first in each
 //! fight at version 4, and the strike launches at version 5; `men_lost` and
 //! `bombardment_shells` (decision 0092) are left out of a run with none, as
-//! `base_changes` is, so the version stays 5). It only reads: the log, the truth after each day and at the end.
+//! `base_changes` is, so the version stays 5; so are `men_lost_by_day`,
+//! `airfields_built`, `arrivals_delivered` and `ashore_by_day`, and the
+//! header's `daily_supply_t_per_man`, and `men_lost` has a fifth cause,
+//! `surrendered`). It only reads: the log, the truth after each day and at the end.
 //! Every quantity is a whole number or, for a `Fixed`, a decimal string. A
 //! list is empty when there is nothing, and every key is always written, so
 //! a reader can tell an old file (key missing) from a run with none.
@@ -79,6 +82,9 @@ pub struct Header {
     pub task_forces: Vec<TaskForceOut>,
     pub air_groups: Vec<AirGroupOut>,
     pub bases: Vec<BaseOut>,
+    /// Supply a man ashore costs his base a day, as a decimal string, from
+    /// the ground figures; `None` where the scenario has none.
+    pub daily_supply_t_per_man: Option<String>,
 }
 
 /// The initial task force of each ship (none for a ship in port).
@@ -123,6 +129,11 @@ pub fn header(initial: &TruthState, world: &World) -> Header {
                 side: side_name(base.side),
             })
             .collect(),
+        daily_supply_t_per_man: world
+            .ref_data()
+            .ground
+            .as_ref()
+            .map(|figures| figures.daily_supply_t_per_man.to_string()),
     }
 }
 
@@ -440,6 +451,104 @@ pub struct RunCounts {
     /// string (decision 0092). Left out of a run with no bombardment.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bombardment_shells: Option<BombardmentShells>,
+    /// For each day with a man lost, the men of each side lost that day by
+    /// every cause: in a fight, unfed, with a ship, to fire and by surrender.
+    /// Left out of a run where no man was lost.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub men_lost_by_day: Vec<MenLostDay>,
+    /// The same by day and hex, for the men lost ashore: in a fight, unfed,
+    /// to fire and by surrender, not those lost with a ship. Left out of a
+    /// run with none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub men_lost_ashore_by_day: Vec<MenLostAshoreDay>,
+    /// Each airfield built in the run, from `AirfieldBuilt`. Left out of a
+    /// run that builds none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub airfields_built: Vec<AirfieldBuiltOut>,
+    /// Each delivery of aircraft to an air group, from `AircraftArrived`.
+    /// Left out of a run with none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub arrivals_delivered: Vec<ArrivalOut>,
+    /// The men ashore at the end of each day, by side and hex, with the
+    /// supply of the side's bases in the hex. Left out of a run in which no
+    /// day ended with a man ashore.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub ashore_by_day: Vec<AshoreOut>,
+}
+
+/// The men each side lost on one day, by every cause.
+#[derive(Serialize)]
+pub struct MenLostDay {
+    day: u32,
+    japanese: u64,
+    allied: u64,
+}
+
+/// The men each side lost ashore in one hex on one day.
+#[derive(Serialize)]
+pub struct MenLostAshoreDay {
+    day: u32,
+    q: i32,
+    r: i32,
+    japanese: u64,
+    allied: u64,
+}
+
+#[derive(Serialize)]
+pub struct AirfieldBuiltOut {
+    day: u32,
+    base: u32,
+}
+
+#[derive(Serialize)]
+pub struct ArrivalOut {
+    day: u32,
+    air_group: u32,
+    aircraft: u32,
+}
+
+/// The men of a side ashore in a hex at the end of a day, and the supply (in
+/// tons, a decimal string) of the side's bases in the hex.
+#[derive(Serialize)]
+pub struct AshoreOut {
+    day: u32,
+    side: String,
+    q: i32,
+    r: i32,
+    men: u64,
+    supply_t: String,
+}
+
+/// The same, before it is given its day.
+pub struct AshoreNow {
+    side: Side,
+    hex: (i32, i32),
+    men: u64,
+    supply_t: Fixed,
+}
+
+/// The men ashore by side and hex and the supply of the side's bases there,
+/// taken after a day is resolved.
+pub fn ashore_now(truth: &TruthState) -> Vec<AshoreNow> {
+    let mut men: BTreeMap<(usize, i32, i32), u64> = BTreeMap::new();
+    for unit in truth.land_units.values() {
+        if let (Some(hex), true) = (unit.hex, unit.men_ashore > 0) {
+            let side = SIDES.iter().position(|s| *s == unit.side).expect("a side");
+            *men.entry((side, hex.q, hex.r)).or_default() += u64::from(unit.men_ashore);
+        }
+    }
+    men.into_iter()
+        .map(|((side, q, r), men)| AshoreNow {
+            side: SIDES[side],
+            hex: (q, r),
+            men,
+            supply_t: truth
+                .bases
+                .values()
+                .filter(|base| base.side == SIDES[side] && (base.hex.q, base.hex.r) == (q, r))
+                .fold(Fixed::ZERO, |sum, base| sum + base.supply_t),
+        })
+        .collect()
 }
 
 /// The men a side lost, by cause. A side's own men: the side of the unit.
@@ -459,6 +568,9 @@ pub struct MenLostByCause {
     lost_with_ship: u64,
     /// To a bomb or a shell on a base.
     fire: u64,
+    /// Surrendered: the men ashore of a unit beaten with nowhere to fall
+    /// back to (decision 0104).
+    surrendered: u64,
 }
 
 #[derive(Serialize)]
@@ -490,6 +602,7 @@ pub fn count(
     world: &World,
     initial: &TruthState,
     ready_by_day: &[BTreeMap<AirGroupId, u32>],
+    ashore_by_day: &[Vec<AshoreNow>],
 ) -> RunCounts {
     let truth = world.umpire();
     let side_of_ship = |ship: &ShipId| truth.ships.get(ship).map(|s| s.side);
@@ -504,7 +617,12 @@ pub fn count(
     let mut claims = [[0u64; 4]; 2];
     // Men lost by side (Japanese, Allied) and cause: fight, unfed, with a
     // ship, to fire. Shells fired in bombardments by side.
-    let mut men_lost = [[0u64; 4]; 2];
+    let mut men_lost = [[0u64; 5]; 2];
+    // The same by day: [Japanese, Allied].
+    let mut men_lost_day: BTreeMap<u32, [u64; 2]> = BTreeMap::new();
+    let mut men_lost_hex: BTreeMap<(u32, i32, i32), [u64; 2]> = BTreeMap::new();
+    let mut airfields_built = Vec::new();
+    let mut arrivals_delivered = Vec::new();
     let mut shells = [Fixed::ZERO; 2];
     let mut attacks = Vec::new();
     let mut escorts = Vec::new();
@@ -793,26 +911,61 @@ pub fn count(
                     place_of_group.insert(*to, place);
                 }
             }
-            EventKind::MenLostInFight { unit, lost, .. } => {
+            EventKind::MenLostInFight {
+                unit, lost, hex, ..
+            } => {
                 if let Some(u) = truth.land_units.get(unit) {
+                    men_lost_hex.entry((event.day, hex.q, hex.r)).or_default()[slot(u.side)] +=
+                        u64::from(*lost);
                     men_lost[slot(u.side)][0] += u64::from(*lost);
+                    men_lost_day.entry(event.day).or_default()[slot(u.side)] += u64::from(*lost);
                 }
             }
-            EventKind::MenLostUnfed { unit, lost, .. } => {
+            EventKind::MenLostUnfed {
+                unit, lost, hex, ..
+            } => {
                 if let Some(u) = truth.land_units.get(unit) {
+                    men_lost_hex.entry((event.day, hex.q, hex.r)).or_default()[slot(u.side)] +=
+                        u64::from(*lost);
                     men_lost[slot(u.side)][1] += u64::from(*lost);
+                    men_lost_day.entry(event.day).or_default()[slot(u.side)] += u64::from(*lost);
                 }
             }
             EventKind::MenLostWithShip { unit, men, .. } => {
                 if let Some(u) = truth.land_units.get(unit) {
                     men_lost[slot(u.side)][2] += u64::from(*men);
+                    men_lost_day.entry(event.day).or_default()[slot(u.side)] += u64::from(*men);
                 }
             }
-            EventKind::MenLostToFire { unit, lost, .. } => {
+            EventKind::MenLostToFire {
+                unit, lost, hex, ..
+            } => {
                 if let Some(u) = truth.land_units.get(unit) {
+                    men_lost_hex.entry((event.day, hex.q, hex.r)).or_default()[slot(u.side)] +=
+                        u64::from(*lost);
                     men_lost[slot(u.side)][3] += u64::from(*lost);
+                    men_lost_day.entry(event.day).or_default()[slot(u.side)] += u64::from(*lost);
                 }
             }
+            EventKind::UnitSurrendered { side, men, hex, .. } => {
+                men_lost_hex.entry((event.day, hex.q, hex.r)).or_default()[slot(*side)] +=
+                    u64::from(*men);
+                men_lost[slot(*side)][4] += u64::from(*men);
+                men_lost_day.entry(event.day).or_default()[slot(*side)] += u64::from(*men);
+            }
+            EventKind::AirfieldBuilt { base, .. } => airfields_built.push(AirfieldBuiltOut {
+                day: event.day,
+                base: base.raw(),
+            }),
+            EventKind::AircraftArrived {
+                air_group,
+                aircraft,
+                ..
+            } => arrivals_delivered.push(ArrivalOut {
+                day: event.day,
+                air_group: air_group.raw(),
+                aircraft: *aircraft,
+            }),
             EventKind::BombardmentFire {
                 ship,
                 shells: fired,
@@ -1101,6 +1254,7 @@ pub fn count(
                 unfed: men_lost[index][1],
                 lost_with_ship: men_lost[index][2],
                 fire: men_lost[index][3],
+                surrendered: men_lost[index][4],
             };
             MenLostBySide {
                 japanese: by_cause(0),
@@ -1114,6 +1268,42 @@ pub fn count(
                 japanese: shells[0].to_string(),
                 allied: shells[1].to_string(),
             }),
+        men_lost_by_day: men_lost_day
+            .into_iter()
+            .filter(|(_, lost)| lost.iter().any(|n| *n > 0))
+            .map(|(day, lost)| MenLostDay {
+                day,
+                japanese: lost[0],
+                allied: lost[1],
+            })
+            .collect(),
+        men_lost_ashore_by_day: men_lost_hex
+            .into_iter()
+            .filter(|(_, lost)| lost.iter().any(|n| *n > 0))
+            .map(|((day, q, r), lost)| MenLostAshoreDay {
+                day,
+                q,
+                r,
+                japanese: lost[0],
+                allied: lost[1],
+            })
+            .collect(),
+        airfields_built,
+        arrivals_delivered,
+        ashore_by_day: ashore_by_day
+            .iter()
+            .enumerate()
+            .flat_map(|(index, day)| {
+                day.iter().map(move |row| AshoreOut {
+                    day: index as u32 + 1,
+                    side: side_name(row.side),
+                    q: row.hex.0,
+                    r: row.hex.1,
+                    men: row.men,
+                    supply_t: row.supply_t.to_string(),
+                })
+            })
+            .collect(),
     }
 }
 

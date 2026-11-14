@@ -29,7 +29,11 @@ pub struct Batch {
     pub results: Option<Vec<ResultRow>>,
     pub task_forces: Vec<IdOnly>,
     pub air_groups: Vec<GroupIn>,
-    pub bases: Vec<IdOnly>,
+    pub bases: Vec<BaseIn>,
+    /// Supply a man ashore costs his base a day, a decimal string; left out
+    /// of a batch whose scenario has no ground figures.
+    #[serde(default)]
+    pub daily_supply_t_per_man: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -63,6 +67,15 @@ pub struct IdOnly {
 }
 
 #[derive(Deserialize)]
+pub struct BaseIn {
+    pub id: u32,
+    /// The side that holds the base as the scenario starts. Left out of a
+    /// hand-made batch with no `base_holder` measure.
+    #[serde(default)]
+    pub side: Option<String>,
+}
+
+#[derive(Deserialize)]
 pub struct GroupIn {
     pub id: u32,
     pub side: String,
@@ -92,6 +105,63 @@ pub struct PerRun {
     pub launches: Vec<Launch>,
     pub fights: Vec<Fight>,
     pub formed_groups: Vec<Formed>,
+    #[serde(default)]
+    pub base_changes: Vec<BaseChange>,
+    #[serde(default)]
+    pub men_lost_by_day: Vec<MenLostDay>,
+    #[serde(default)]
+    pub men_lost_ashore_by_day: Vec<MenLostAshoreDay>,
+    #[serde(default)]
+    pub airfields_built: Vec<AirfieldBuilt>,
+    #[serde(default)]
+    pub arrivals_delivered: Vec<Arrival>,
+    #[serde(default)]
+    pub ashore_by_day: Vec<Ashore>,
+}
+
+#[derive(Deserialize)]
+pub struct BaseChange {
+    pub day: u32,
+    pub base: u32,
+    pub to: String,
+}
+
+#[derive(Deserialize)]
+pub struct MenLostDay {
+    pub day: u32,
+    pub japanese: u64,
+    pub allied: u64,
+}
+
+#[derive(Deserialize)]
+pub struct MenLostAshoreDay {
+    pub day: u32,
+    pub q: i32,
+    pub r: i32,
+    pub japanese: u64,
+    pub allied: u64,
+}
+
+#[derive(Deserialize)]
+pub struct AirfieldBuilt {
+    pub day: u32,
+    pub base: u32,
+}
+
+#[derive(Deserialize)]
+pub struct Arrival {
+    pub day: u32,
+    pub air_group: u32,
+}
+
+#[derive(Deserialize)]
+pub struct Ashore {
+    pub day: u32,
+    pub side: String,
+    pub q: i32,
+    pub r: i32,
+    pub men: u64,
+    pub supply_t: String,
 }
 
 #[derive(Deserialize)]
@@ -277,6 +347,23 @@ pub struct Measure {
     pub by: Option<Vec<String>>,
     #[serde(default)]
     pub task_forces: Option<Vec<u32>>,
+    /// A single base (`base_holder`, `airfield_built_day`).
+    #[serde(default)]
+    pub base: Option<u32>,
+    /// A single air group (`arrival_day`).
+    #[serde(default)]
+    pub air_group: Option<u32>,
+    #[serde(default)]
+    pub due_day: Option<u32>,
+    #[serde(default)]
+    pub from_day: Option<u32>,
+    #[serde(default)]
+    pub to_day: Option<u32>,
+    /// A hex (`days_of_food`).
+    #[serde(default)]
+    pub q: Option<i32>,
+    #[serde(default)]
+    pub r: Option<i32>,
     /// The unit a `shots` take counts in: "shells" (the default) or "tens".
     #[serde(default)]
     pub unit: Option<String>,

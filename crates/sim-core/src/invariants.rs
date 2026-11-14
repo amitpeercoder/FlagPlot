@@ -813,6 +813,10 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                 None => {
                     violations.push(InvariantViolation::AirGroupAtUnknownBase(group.id, base_id))
                 }
+                // An empty group with no pilots may wait anywhere (decision 0101).
+                Some(_)
+                    if group.ready == 0 && group.damaged == 0 && group.pilots.unwrap_or(0) == 0 => {
+                }
                 Some(base) if base.side != group.side => violations.push(
                     InvariantViolation::AirGroupAtOtherSidesBase(group.id, base_id),
                 ),
@@ -960,6 +964,77 @@ mod tests {
         assert_eq!(
             check(&truth, &map, &RefData::default()),
             vec![InvariantViolation::AirGroupAtOtherSidesBase(
+                AirGroupId::new(1),
+                BaseId::new(1)
+            )]
+        );
+    }
+
+    /// Decision 0101: a group with no aircraft and no pilots may wait at a base
+    /// that is not its side's, or has no airfield; with an aircraft or a
+    /// pilot it is still a violation.
+    #[test]
+    fn an_empty_air_group_may_wait_at_an_enemy_base_without_an_airfield() {
+        let (mut truth, map) = setup();
+        let base = truth.bases.get_mut(&BaseId::new(1)).expect("base");
+        base.side = Side::Japanese;
+        base.airfield = false;
+        let group = truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group");
+        group.ready = 0;
+        group.strength = 0;
+        assert_eq!(check(&truth, &map, &RefData::default()), Vec::new());
+        // One aircraft: both violations are named, the side first.
+        truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group")
+            .ready = 1;
+        assert_eq!(
+            check(&truth, &map, &RefData::default()),
+            vec![InvariantViolation::AirGroupAtOtherSidesBase(
+                AirGroupId::new(1),
+                BaseId::new(1)
+            )]
+        );
+        // No aircraft but a pilot: still a violation.
+        let group = truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group");
+        group.ready = 0;
+        group.pilots = Some(1);
+        assert_eq!(check(&truth, &map, &RefData::default()).len(), 1);
+        // A damaged aircraft: still a violation.
+        let group = truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group");
+        group.pilots = None;
+        group.damaged = 1;
+        assert_eq!(check(&truth, &map, &RefData::default()).len(), 1);
+    }
+
+    #[test]
+    fn an_empty_air_group_at_its_own_base_without_an_airfield_is_allowed() {
+        let (mut truth, map) = setup();
+        truth.bases.get_mut(&BaseId::new(1)).expect("base").airfield = false;
+        let group = truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group");
+        group.ready = 0;
+        assert_eq!(check(&truth, &map, &RefData::default()), Vec::new());
+        truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group")
+            .ready = 1;
+        assert_eq!(
+            check(&truth, &map, &RefData::default()),
+            vec![InvariantViolation::AirGroupAtBaseWithoutAirfield(
                 AirGroupId::new(1),
                 BaseId::new(1)
             )]

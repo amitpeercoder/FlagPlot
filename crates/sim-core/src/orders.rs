@@ -760,6 +760,10 @@ pub enum RejectReason {
     /// `airfield_landing_refused_at`: it takes no aircraft (decision 5 of
     /// 0103). Added at the end of the enum.
     AirfieldTooDamaged { damage: Fixed, refused_at: Fixed },
+    /// A rebase order to an air group with no aircraft that is stationed at a
+    /// base that is not its side's or has no airfield: it waits for its base
+    /// (decision 0101). Added at the end of the enum.
+    AirGroupWaitsForBase,
 }
 
 impl fmt::Display for RejectReason {
@@ -875,6 +879,9 @@ impl fmt::Display for RejectReason {
                 f,
                 "the airfield's damage is {damage}, and a field at {refused_at} or more takes no aircraft"
             ),
+            RejectReason::AirGroupWaitsForBase => {
+                f.write_str("the air group has no aircraft and waits for its base")
+            }
         }
     }
 }

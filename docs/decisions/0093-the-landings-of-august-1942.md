@@ -93,3 +93,7 @@ Answered on Nov 14, 2026.
 1. **Decision 2:** the land units go into the full slice now, which is lengthened to hold them.
 2. **Decision 4:** marching is built first (decision 0094), and forces land where the record says.
 3. **Decision 6:** only fighting men are counted. Agreed.
+
+## As built
+
+Built on Nov 14, 2026, with the data of decision 0101 and the architect's rulings recorded at its end; decision 0101's "As built" lists the choices of the build. The full slice runs 39 days from 7 August with the landings and the land fight in it, every day number of the fourteen-day slice moved by 14 (item 1), and the frozen copy untouched (item 2). Item 3 was changed by decision 0101, 7: the forces at sea on 6 August start at sea. Items 4 and 5 are the land links file `data/map/south_pacific_land_links.csv`, with Kokumbona moved to the airfield's hex by decision 0101, 1. Item 8 was changed by decision 0101, 16: the transports are placeholders. The measures are in `data/validation/guadalcanal_landings.toml`, with the airfield's American holding after the attack from the east taken on day 16, the game's day of that attack, and the baseline is `docs/validation/full-slice-39-days-baseline.md`: of 6 judged measures 4 agree and the losses at the Tenaru, on both sides, miss. Everything in "What it will show that is wrong" shows: the whole of both sides fights, every Japanese man who reaches the field is lost, and the attack from the east comes a day late. The soak (item 10) and the tuning round are not built.

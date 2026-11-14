@@ -1,17 +1,19 @@
 //! Scenario 7: determinism (decision 0043).
 //!
 //! `data/scenarios/07_full_slice.toml` runs everything the earlier scenarios
-//! built, together, for 14 days on the real map: the carrier forces of the
-//! Eastern Solomons scenario on day 4, the air campaign of the Rabaul against
-//! Guadalcanal scenario, a convoy from Espiritu Santo to Henderson Field and
-//! three night surface actions. It is assembled from files that exist and is
-//! not compared with history.
+//! built, together, for 39 days on the real map, 7 August to 14 September
+//! 1942 (decisions 0093 and 0101): the landings on Guadalcanal and Tulagi and
+//! the land fight that followed, the carrier forces of the Eastern Solomons
+//! scenario on day 18, the air campaign of the Rabaul against Guadalcanal
+//! scenario, a convoy from Espiritu Santo to Lunga and three night surface
+//! actions. Its land fight is measured (`data/validation/
+//! guadalcanal_landings.toml`); the claims of this test are of equality only.
 //!
 //! There is no hand calculation of outcomes. The claim is equality, and
 //! nothing else:
 //!
 //! 1. Run twice in one process, with seeds 1942 (the scenario's own) and 1 to
-//!    20, the 14 daily hashes and every field of every event are equal.
+//!    20, the 39 daily hashes and every field of every event are equal.
 //! 2. Run with and without breakdown recording, the daily hashes are equal
 //!    and the events are equal apart from their breakdowns, which are
 //!    present in one and absent in the other.
@@ -20,7 +22,7 @@
 //!    applied to the scenario text before the loader sees it, so it reaches
 //!    the loader and not a map after ids have been put in it. It permutes
 //!    the `[[base]]`, `[[task_force]]`, `[[ship]]`, `[[air_group]]`,
-//!    `[[arrival]]` and `[[replacement]]` tables among their own places, and
+//!    `[[arrival]]`, `[[replacement]]` and `[[land_unit]]` tables among their own places, and
 //!    the `[[order]]` tables among theirs, except that the orders to one unit
 //!    on one day keep their order (decision 4 of 0043, a later order
 //!    replaces an earlier one). 22 permutations from a small generator
@@ -99,13 +101,13 @@ const FULL: &str = "07_full_slice.toml";
 const FULL_FROZEN: &str = "step2-frozen/07_full_slice.toml";
 
 #[test]
-fn the_full_slice_runs_fourteen_days_with_the_invariants_holding() {
+fn the_full_slice_runs_thirty_nine_days_with_the_invariants_holding() {
     // `run_to_end` checks the invariants at the end of every day and fails
     // the run if one breaks.
     let outcome = run(load(FULL, None));
-    assert_eq!(outcome.hashes.len(), 14);
+    assert_eq!(outcome.hashes.len(), 39);
     let distinct: BTreeSet<u64> = outcome.hashes.iter().copied().collect();
-    assert_eq!(distinct.len(), 14, "every day changes the state");
+    assert_eq!(distinct.len(), 39, "every day changes the state");
 }
 
 // ---------------------------------------------------------------------
@@ -119,7 +121,7 @@ fn run_twice_in_one_process_gives_the_same_hashes_and_events() {
     for seed in seeds {
         let a = run(load(FULL, Some(seed)));
         let b = run(load(FULL, Some(seed)));
-        assert_eq!(a.hashes.len(), 14);
+        assert_eq!(a.hashes.len(), 39);
         assert_same(&format!("seed {seed}"), &a, &b);
     }
     // The seed matters: two seeds give different runs.
@@ -237,17 +239,19 @@ fn order_key(table: &str) -> (String, String) {
     let unit = value("task_force")
         .map(|n| format!("task_force {n}"))
         .or_else(|| value("air_group").map(|n| format!("air_group {n}")))
+        .or_else(|| value("land_unit").map(|n| format!("land_unit {n}")))
         .expect("an order is for a unit");
     (day, unit)
 }
 
-const SHUFFLED: [&str; 6] = [
+const SHUFFLED: [&str; 7] = [
     "base",
     "task_force",
     "ship",
     "air_group",
     "arrival",
     "replacement",
+    "land_unit",
 ];
 
 /// The tables in another order. `how` is a shuffle of the places a kind's

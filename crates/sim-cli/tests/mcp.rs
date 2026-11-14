@@ -814,9 +814,9 @@ fn play_and_the_held_open_server_agree_on_scenario_5() {
 }
 
 #[test]
-fn play_and_the_held_open_server_agree_over_the_fourteen_days_of_the_full_slice() {
+fn play_and_the_held_open_server_agree_over_the_thirty_nine_days_of_the_full_slice() {
     // To the end: `play` gives a saved game only once the game is over.
-    play_equals_mcp(S07, 14, "equal7");
+    play_equals_mcp(S07, 39, "equal7");
 }
 
 #[test]
