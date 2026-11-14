@@ -18,7 +18,7 @@ use crate::view::SideView;
 
 impl SideView<'_> {
     /// One of the side's own forces, by number.
-    fn own_force(&self, id: TaskForceId) -> Option<&TaskForce> {
+    pub(super) fn own_force(&self, id: TaskForceId) -> Option<&TaskForce> {
         self.task_forces().find(|force| force.id == id)
     }
 

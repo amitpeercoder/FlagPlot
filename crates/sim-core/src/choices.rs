@@ -116,3 +116,31 @@ pub(crate) struct Trace {
     pub(crate) moment: Option<Moment>,
     pub(crate) entries: Vec<TracedChoice>,
 }
+
+/// The cell a world keeps its trace in. A mutex and not a `RefCell`, so that
+/// a world can still be shared between threads for reading (a test runs
+/// seeds side by side); the lock is never contended in a game, which runs on
+/// one thread. Cloning a world clones its trace.
+#[derive(Debug, Default)]
+pub(crate) struct TraceCell(std::sync::Mutex<Option<Trace>>);
+
+impl TraceCell {
+    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, Option<Trace>> {
+        // A panic while the lock was held leaves only a trace, never state.
+        self.0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    pub(crate) fn get_mut(&mut self) -> &mut Option<Trace> {
+        self.0
+            .get_mut()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+}
+
+impl Clone for TraceCell {
+    fn clone(&self) -> Self {
+        TraceCell(std::sync::Mutex::new(self.lock().clone()))
+    }
+}

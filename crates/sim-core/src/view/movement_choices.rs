@@ -9,9 +9,8 @@
 
 use crate::choices::movement::{MovementAnswer, MovementQuestion, Rerouted};
 use crate::hex::Hex;
-use crate::ids::{BaseId, TaskForceId};
+use crate::ids::BaseId;
 use crate::movement::{halt_index, steam_on, HaltGround};
-use crate::state::TaskForce;
 use crate::view::SideView;
 
 impl SideView<'_> {
@@ -71,14 +70,6 @@ impl SideView<'_> {
             }
         }
         questions
-    }
-
-    /// One of the side's own task forces.
-    fn own_force(&self, id: TaskForceId) -> Option<&TaskForce> {
-        self.truth
-            .task_forces
-            .get(&id)
-            .filter(|force| force.side == self.side)
     }
 
     /// What the movement rules read of the world: the figures, the map, and

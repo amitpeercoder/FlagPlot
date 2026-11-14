@@ -1,12 +1,11 @@
 //! The game: reference data, truth, both sides' beliefs, orders and events.
 
 use core::fmt;
-use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::airstrike::StrikeInFlight;
 use crate::belief::BeliefState;
-use crate::choices::{Answer, Moment, Question, Trace, TracedChoice};
+use crate::choices::{Answer, Moment, Question, Trace, TraceCell, TracedChoice};
 use crate::events::EventLog;
 use crate::hash;
 use crate::ids::{AirGroupId, BaseId, EntityRef, IdAllocator, OrderId, TaskForceId};
@@ -196,7 +195,7 @@ pub struct World {
     /// The trace of the choices made, while it is on (decision 0100, 7).
     /// Not state: how to record, never what happens, like `config`. A cell,
     /// because the choices are made by functions that only read the world.
-    pub(crate) choice_trace: RefCell<Option<Trace>>,
+    pub(crate) choice_trace: TraceCell,
 }
 
 impl World {
@@ -368,7 +367,7 @@ impl World {
             grounded_bases: BTreeSet::new(),
             deck_losses: Vec::new(),
             objectives: None,
-            choice_trace: RefCell::new(None),
+            choice_trace: TraceCell::default(),
         })
     }
 
@@ -430,15 +429,10 @@ impl World {
         }
     }
 
-    /// Whether the trace of choices is on.
-    pub(crate) fn tracing_choices(&self) -> bool {
-        self.choice_trace.borrow().is_some()
-    }
-
     /// Records a choice the engine made, if the trace is on. The question
     /// and answer are built only then.
     pub(crate) fn trace_choice(&self, side: Side, choice: impl FnOnce() -> (Question, Answer)) {
-        let mut cell = self.choice_trace.borrow_mut();
+        let mut cell = self.choice_trace.lock();
         if let Some(trace) = cell.as_mut() {
             let (question, answer) = choice();
             if let Some(moment) = trace.moment {
@@ -455,7 +449,7 @@ impl World {
     /// Marks the moment of the day the resolution has reached, for the
     /// trace.
     pub(crate) fn pass_moment(&self, moment: Moment) {
-        if let Some(trace) = self.choice_trace.borrow_mut().as_mut() {
+        if let Some(trace) = self.choice_trace.lock().as_mut() {
             trace.moment = Some(moment);
         }
     }
