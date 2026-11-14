@@ -204,3 +204,7 @@ Built on Nov 13, 2026, to the sections above and the architect's hand calculatio
 - **The property "more supply never loses more men"** is tested for the half "more supply", over eight sizes of the load. The half "landed sooner" is not tested.
 
 Differences from the record's rules: none. The points above are the names and orders the record left open.
+
+## Note, Nov 14, 2026
+
+Decision 16 is changed by decision 24a of 0090 (the fight ashore and a base that changes side): men are fed from every base of their side in the hex, in base order, and not only from the lowest-numbered one. A hex with one base of the side is fed as above. The rulebook's chapter 7 states the rule as it now is.

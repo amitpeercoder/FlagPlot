@@ -133,7 +133,7 @@
     "land_unit_line": {
       "description": "A land unit of the side (decision 0066, 21): its men ashore and where, its men aboard by ship, and whether its men were fed in the last night pulse. Only the side's own units have one.",
       "type": "object",
-      "required": ["land_unit", "men_ashore", "place", "men_aboard", "aboard", "destroyed", "fed_last_night"],
+      "required": ["land_unit", "men_ashore", "place", "men_aboard", "aboard", "destroyed", "fed_last_night", "posture", "fatigue", "fed_share"],
       "additionalProperties": false,
       "properties": {
         "land_unit": { "$ref": "#/$defs/handle" },
@@ -156,7 +156,11 @@
         "fed_last_night": {
           "description": "How the side's men ashore in the unit's hex were fed in the last night pulse, from the side's own MenFed event: fed, partly_fed or unfed. not_ashore for a unit with no man ashore; not_known when the side holds no such event for the hex.",
           "enum": ["fed", "partly_fed", "unfed", "not_ashore", "not_known"]
-        }
+        },
+        "posture": { "description": "defend or attack (decision 0090, 1).", "enum": ["defend", "attack"] },
+        "fatigue": { "description": "How tired the unit is, 0 to 100 (decision 0090, 11). It cuts the men who fire and nothing else.", "$ref": "#/$defs/dec" },
+        "fed_share": { "description": "The share of the unit's men fed at the last night's charge, 0 to 1 (decision 0090, 8): 1 until the first night and for a unit with no man ashore at the charge.", "$ref": "#/$defs/dec" },
+        "posture_order": { "description": "The number of the side's standing posture order, when one is in force. Left out otherwise.", "type": "integer" }
       }
     },
     "force_line": {
@@ -306,7 +310,12 @@
           "type": "string"
         },
         "location": {
-          "$ref": "#/$defs/handle"
+          "description": "The base or the ship the group is at; null for a group lost with a base that changed side (decision 0090, 20), which has no place.",
+          "$ref": "#/$defs/handle_or_null"
+        },
+        "lost_with_base": {
+          "description": "True only for a group lost with a base that changed side. Left out otherwise.",
+          "type": "boolean"
         },
         "place": {
           "$ref": "#/$defs/place_or_null"

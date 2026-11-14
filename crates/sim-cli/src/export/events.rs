@@ -2,7 +2,8 @@
 
 use serde::Serialize;
 use sim_core::events::{
-    Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange, SupplyUse,
+    Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange, LandFatigueChange,
+    SupplyUse,
 };
 use sim_core::fixed::Fixed;
 use sim_core::ids::UmpireKey;
@@ -128,6 +129,9 @@ fn reject_reason(reason: &RejectReason) -> Data {
         }
         RejectReason::NoShipAfloat => base("no_ship_afloat"),
         RejectReason::AirGroupLost => base("air_group_lost"),
+        RejectReason::LandUnitDestroyed => base("land_unit_destroyed"),
+        RejectReason::NoMenAshore => base("no_men_ashore"),
+        RejectReason::AirGroupLostWithBase => base("air_group_lost_with_base"),
         RejectReason::TargetListEmpty => base("target_list_empty"),
         RejectReason::OutOfFuel => base("out_of_fuel"),
         RejectReason::AwayAtYard => base("away_at_yard"),
@@ -314,6 +318,8 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             match from {
                 AirGroupLocation::Base(base) => d.id("air_group", *air_group).id("base", *base),
                 AirGroupLocation::Ship(ship) => d.id("air_group", *air_group).id("ship", *ship),
+                // Lost with its base: no place (decision 0090, 20).
+                AirGroupLocation::Lost => d.id("air_group", *air_group),
             }
             .hex("hex", *hex)
             .int("from_deg", *from_deg)
@@ -401,6 +407,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             match at {
                 AirGroupLocation::Base(base) => d.id("from", *from).id("to", *to).id("base", *base),
                 AirGroupLocation::Ship(ship) => d.id("from", *from).id("to", *to).id("ship", *ship),
+                AirGroupLocation::Lost => d.id("from", *from).id("to", *to),
             }
             .int("aircraft", *aircraft)
             .int("pilots", *pilots)
@@ -443,6 +450,8 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             match at {
                 AirGroupLocation::Base(base) => d.id("air_group", *air_group).id("base", *base),
                 AirGroupLocation::Ship(ship) => d.id("air_group", *air_group).id("ship", *ship),
+                // Lost with its base: no place (decision 0090, 20).
+                AirGroupLocation::Lost => d.id("air_group", *air_group),
             }
             .int("repaired", *repaired)
             .int("ready", *ready)
@@ -709,6 +718,120 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .int("ashore", *ashore),
         ),
         EventKind::LandUnitDestroyed { unit } => ("land_unit_destroyed", d.id("unit", *unit)),
+        EventKind::FedShareRestored { unit } => ("fed_share_restored", d.id("unit", *unit)),
+        EventKind::GroundFight {
+            hex,
+            allied_attacks,
+            japanese_attacks,
+        } => (
+            "ground_fight",
+            d.hex("hex", *hex)
+                .flag("allied_attacks", *allied_attacks)
+                .flag("japanese_attacks", *japanese_attacks),
+        ),
+        EventKind::GroundFire {
+            unit,
+            hex,
+            firing_men,
+            shots,
+            chance,
+            hits,
+        } => (
+            "ground_fire",
+            d.id("unit", *unit)
+                .hex("hex", *hex)
+                .int("firing_men", *firing_men)
+                .num("shots", *shots)
+                .num("chance", *chance)
+                .int("hits", *hits),
+        ),
+        EventKind::MenLostInFight {
+            unit,
+            hex,
+            lost,
+            ashore,
+        } => (
+            "men_lost_in_fight",
+            d.id("unit", *unit)
+                .hex("hex", *hex)
+                .int("lost", *lost)
+                .int("ashore", *ashore),
+        ),
+        EventKind::LandUnitFatigue {
+            unit,
+            change,
+            fatigue,
+        } => (
+            "land_unit_fatigue",
+            d.id("unit", *unit)
+                .text(
+                    "change",
+                    match change {
+                        LandFatigueChange::Gained => "gained",
+                        LandFatigueChange::Rested => "rested",
+                    },
+                )
+                .num("fatigue", *fatigue),
+        ),
+        EventKind::LandUnitBackToDefend { unit, fatigue } => (
+            "land_unit_back_to_defend",
+            d.id("unit", *unit).num("fatigue", *fatigue),
+        ),
+        EventKind::SideBeatenAshore {
+            side,
+            hex,
+            men,
+            enemy_men,
+            fought,
+        } => (
+            "side_beaten_ashore",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .int("men", *men)
+                .int("enemy_men", *enemy_men)
+                .flag("fought", *fought),
+        ),
+        EventKind::BaseChangedSide {
+            base,
+            hex,
+            from,
+            to,
+            supply_t,
+            fuel_t,
+            supply_lost_t,
+            fuel_lost_t,
+        } => (
+            "base_changed_side",
+            d.id("base", *base)
+                .hex("hex", *hex)
+                .text("from", names::side(*from))
+                .text("to", names::side(*to))
+                .num("supply_t", *supply_t)
+                .num("fuel_t", *fuel_t)
+                .num("supply_lost_t", *supply_lost_t)
+                .num("fuel_lost_t", *fuel_lost_t),
+        ),
+        EventKind::AirGroupLostWithBase {
+            air_group,
+            base,
+            aircraft,
+        } => (
+            "air_group_lost_with_base",
+            d.id("air_group", *air_group)
+                .id("base", *base)
+                .int("aircraft", *aircraft),
+        ),
+        EventKind::ShipLostWithBase { ship, base } => {
+            ("ship_lost_with_base", d.id("ship", *ship).id("base", *base))
+        }
+        EventKind::HomePortLost { task_force, base } => (
+            "home_port_lost",
+            d.id("task_force", *task_force).id("base", *base),
+        ),
+        EventKind::StrikeMissionCleared { air_group, base } => (
+            "strike_mission_cleared",
+            d.id("air_group", *air_group).id("base", *base),
+        ),
         EventKind::UnitLoadingComplete {
             task_force,
             unit,

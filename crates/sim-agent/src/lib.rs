@@ -44,14 +44,16 @@ mod words;
 pub use answer::{NotKnown, FORMAT, VERSION};
 pub use briefing::{briefing, briefing_for_game, Briefing};
 pub use briefing::{
-    ActionPart, AircraftLoss, ArrivalsPart, AttackOnShip, AwayForce, BaseFormedLine, BriefingBase,
-    Claim, ContactsPart, DamagedShip, DroppedContact, DueArrival, FedLine, Fight, Fired,
-    FuelChange, FuelWarning, Heading, HexSupply, LandUnitsPart, LoadingCompleteLine, LossesPart,
-    MenLostLine, MenMoved, NotThere, OrdersPart, OutOfReachWarning, PilotWarning,
-    PropulsionWarning, Raid, RebasedLine, RefusedOrder, RepairedShip, ReplacementStream,
-    ReportedContact, ReturnedForce, ShipRangeWarning, StocksYesterday, Strike, SunkShip,
-    SupplyChange, SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine,
-    Warnings,
+    ActionPart, AircraftLoss, ArrivalsPart, AttackOnShip, AwayForce, BackToDefendLine,
+    BaseChangesPart, BaseFormedLine, BaseLostLine, BaseTakenLine, BriefingBase, Claim,
+    ContactsPart, DamagedShip, DroppedContact, DueArrival, FatigueLine, FedLine,
+    FedShareRestoredLine, Fight, FightLine, FireLine, Fired, FuelChange, FuelWarning,
+    GroupLostWithBaseLine, Heading, HexSupply, HomePortLostLine, LandUnitsPart,
+    LoadingCompleteLine, LossesPart, MenLostLine, MenMoved, NotThere, OrdersPart,
+    OutOfReachWarning, PilotWarning, PropulsionWarning, Raid, RebasedLine, RefusedOrder,
+    RepairedShip, ReplacementStream, ReportedContact, ReturnedForce, ShipLostWithBaseLine,
+    ShipRangeWarning, StocksYesterday, Strike, StrikeClearedLine, SunkShip, SupplyChange,
+    SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine, Warnings,
 };
 pub use common::{Dec, Handle, Place};
 pub use explain::{

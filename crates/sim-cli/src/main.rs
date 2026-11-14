@@ -19,7 +19,7 @@ use std::process::ExitCode;
 
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
-use sim_core::orders::{AirMission, Stance};
+use sim_core::orders::{AirMission, Posture, Stance};
 use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState, TruthState};
 use sim_core::DaySummary;
 use sim_data::{LoadOptions, Scenario};
@@ -501,6 +501,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             match group.location {
                 AirGroupLocation::Base(base) => format!("at {base}"),
                 AirGroupLocation::Ship(ship) => format!("aboard {ship}"),
+                AirGroupLocation::Lost => "lost with its base".to_string(),
             },
             ready,
             mission,
@@ -606,8 +607,17 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             Some(hex) => format!("{} men ashore at {hex}", unit.men_ashore),
             None => "no men ashore".to_string(),
         };
+        // Posture and fatigue only where they are not the start's
+        // (decision 0090): a defending, rested unit's line is as it was.
+        let mut state = String::new();
+        if unit.posture != Posture::Defend {
+            state += &format!(", on {}", unit.posture.name());
+        }
+        if unit.fatigue > Fixed::ZERO {
+            state += &format!(", fatigue {}", unit.fatigue);
+        }
         println!(
-            "{} \"{}\" ({}): {ashore}",
+            "{} \"{}\" ({}): {ashore}{state}",
             unit.id,
             unit.name,
             unit.side.name()

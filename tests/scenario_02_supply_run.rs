@@ -747,7 +747,7 @@ fn the_event_log_explains_an_unload() {
         .filter_map(|cause| match cause {
             Cause::Order(id) => match &world.order(*id).expect("on record").kind {
                 OrderKind::TaskForce { order, .. } => Some(order),
-                OrderKind::AirGroup { .. } => None,
+                OrderKind::AirGroup { .. } | OrderKind::LandUnit { .. } => None,
             },
             Cause::Event(_) => None,
         })

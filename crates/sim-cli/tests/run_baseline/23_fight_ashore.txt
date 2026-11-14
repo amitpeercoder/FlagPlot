@@ -1,0 +1,35 @@
+Scenario 23: The fight ashore, and a base that changes side
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash edd72340c777c12e  36 events
+day   2  hash 968337b39059af7b  27 events
+day   3  hash 833e21bf83ae508f  27 events
+day   4  hash 58c7786b59db3129  21 events
+day   5  hash 509b8221b2d073d2  15 events
+day   6  hash 851a648b8b30781e  15 events
+
+task_force:1 "Placeholder destroyer patrol" (Japanese): Idle at (3,1); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Placeholder fighter squadron at Y" (Japanese) lost with its base: 0 ready, mission Rest, no arc
+air_group:2 "Placeholder fighter squadron at Z, first" (Japanese) lost with its base: 0 ready, mission Rest, no arc
+air_group:3 "Placeholder fighter squadron at Z, second" (Japanese) at base:2: 8 ready, mission Rest, no arc
+ship:1 "Placeholder destroyer in port": SUNK; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer at sea": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+base:1 "Placeholder airfield X, Allied" (Allied) at (0,0): 971.9 t of supply in stock
+base:2 "Placeholder airfield X, Japanese" (Japanese) at (0,0): 88.1 t of supply in stock
+base:3 "Placeholder airfield Y, Japanese" (Allied) at (6,0): 0 t of supply in stock, 40 t of fuel in stock
+base:4 "Placeholder airfield Y, Allied" (Allied) at (6,0): 40 t of supply in stock
+base:5 "Placeholder airfield Z, Japanese" (Allied) at (10,0): 28.8 t of supply in stock, 15 t of fuel in stock
+land_unit:1 "Placeholder Allied regiment at X" (Allied): 900 men ashore at (0,0)
+land_unit:2 "Placeholder Japanese battalion at X" (Japanese): 240 men ashore at (0,0), fatigue 70
+land_unit:3 "Placeholder Japanese garrison at Y" (Japanese): no men ashore
+land_unit:4 "Placeholder Allied regiment at Y" (Allied): 2000 men ashore at (6,0), on attack, fatigue 45
+land_unit:5 "Placeholder Allied platoon at Z" (Allied): 48 men ashore at (10,0), on attack
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
+
+Result (the placeholder scale of decision 0054):
+Allied: 23.6 points (base_held at base:3 1 = 10; base_held at base:5 1 = 5; ships_sunk 1 = 2; men_lost 660 = 6.6), margin 22.58, decisive victory
+Japanese: 1.02 points (base_held at base:1 0 = 0; men_lost 102 = 1.02), margin -22.58, decisive defeat

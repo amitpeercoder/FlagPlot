@@ -1,0 +1,213 @@
+# Scenario 23: the fight ashore, and a base that changes side (decision
+# 0090).
+#
+# Proves the fight ashore against a hand calculation, in three places on one
+# row. At X, a Japanese unit on attack against a fed Allied defender fails and
+# stops by fatigue. At Y, an Allied unit on attack beats an unfed Japanese
+# defender on the first day; base 3 changes side, with half its fuel, its air
+# group, a ship in its port and a force's home port. At Z, one Allied unit on
+# attack takes an empty Japanese base without a fight; one of its two air
+# groups was flown out the day before it fell. The hand calculation is in
+# tests/scenario_23_fight_ashore.rs.
+#
+# No air combat, wear, fatigue or air supply figures are named, so no aircraft
+# flies, nothing wears, tires or is grounded, and no base pays for aircraft.
+# Each night the men's supply is the first thing charged.
+#
+# PLACEHOLDER DATA. The units, bases, ships, air groups and map are invented.
+
+name = "Scenario 23: The fight ashore, and a base that changes side"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_fight_ashore.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder airfield X, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 2
+name = "Placeholder airfield X, Japanese"
+side = "japanese"
+q = 0
+r = 0
+supply_t = 100
+
+[[base]]
+id = 3
+name = "Placeholder airfield Y, Japanese"
+side = "japanese"
+q = 6
+r = 0
+fuel_t = 80
+
+[[base]]
+id = 4
+name = "Placeholder airfield Y, Allied"
+side = "allied"
+q = 6
+r = 0
+supply_t = 100
+
+[[base]]
+id = 5
+name = "Placeholder airfield Z, Japanese"
+side = "japanese"
+q = 10
+r = 0
+supply_t = 60
+fuel_t = 30
+
+[[land_unit]]
+id = 1
+name = "Placeholder Allied regiment at X"
+side = "allied"
+men = 1000
+q = 0
+r = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder Japanese battalion at X"
+side = "japanese"
+men = 600
+q = 0
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 3
+name = "Placeholder Japanese garrison at Y"
+side = "japanese"
+men = 300
+q = 6
+r = 0
+
+[[land_unit]]
+id = 4
+name = "Placeholder Allied regiment at Y"
+side = "allied"
+men = 2000
+q = 6
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 5
+name = "Placeholder Allied platoon at Z"
+side = "allied"
+men = 50
+q = 10
+r = 0
+posture = "attack"
+
+# Placeholder fighter: search range 0, strike range 250 nm, so a transfer
+# range of 500 nm.
+[[air_group]]
+id = 1
+name = "Placeholder fighter squadron at Y"
+side = "japanese"
+base = 3
+aircraft_type = 4
+ready = 9
+damaged = 2
+
+[[air_group]]
+id = 2
+name = "Placeholder fighter squadron at Z, first"
+side = "japanese"
+base = 5
+aircraft_type = 4
+ready = 5
+damaged = 1
+
+[[air_group]]
+id = 3
+name = "Placeholder fighter squadron at Z, second"
+side = "japanese"
+base = 5
+aircraft_type = 4
+ready = 8
+
+[[task_force]]
+id = 1
+name = "Placeholder destroyer patrol"
+side = "japanese"
+q = 3
+r = 1
+mission = "escort"
+home_port = 3
+
+# In port at base 3, in no task force.
+[[ship]]
+id = 1
+name = "Placeholder destroyer in port"
+class = 2
+side = "japanese"
+fuel_t = 500
+port = 3
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer at sea"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 1
+
+# Day 1: group 3 flies from Z to X, 10 hexes, 400 nm, within its 500 nm.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "rebase"
+base = 2
+
+[objectives]
+minor = 5
+major = 10
+decisive = 20
+
+[objectives.allied]
+mission = "Placeholder: take the airfields at Y and Z and hold X."
+
+[[objectives.allied.objective]]
+kind = "base_held"
+base = 3
+points = 10
+
+[[objectives.allied.objective]]
+kind = "base_held"
+base = 5
+points = 5
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { destroyer = 2 }
+
+[[objectives.allied.objective]]
+kind = "men_lost"
+points_per_100_men = 1
+
+[objectives.japanese]
+mission = "Placeholder: take the Allied airfield at X."
+
+[[objectives.japanese.objective]]
+kind = "base_held"
+base = 1
+points = 10
+
+[[objectives.japanese.objective]]
+kind = "men_lost"
+points_per_100_men = 1

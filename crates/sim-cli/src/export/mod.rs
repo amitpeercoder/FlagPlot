@@ -37,7 +37,14 @@ struct Replay {
     map: MapOut,
     directions: Vec<[i32; 2]>,
     labels: Vec<LabelOut>,
+    /// The bases as the run starts, with the side that holds each then.
     bases: Vec<BaseOut>,
+    /// Each time a base changed side (decision 0090), in the order it
+    /// happened. A base's holder on a day is its side in `bases`, changed by
+    /// the entries up to and including that day. Left out where no base
+    /// changed side, so the replay of such a run is as it was.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    base_changes: Vec<BaseChangeOut>,
     /// The reach figures of each aircraft type (version 3), for the viewer's
     /// rings: reference data, not state.
     aircraft_types: Vec<state::AircraftTypeOut>,
@@ -49,6 +56,38 @@ struct Replay {
     days: Vec<DayOut>,
     #[serde(rename = "final")]
     final_state: FinalOut,
+}
+
+/// A base that changed side, from the `BaseChangedSide` event.
+#[derive(Serialize)]
+struct BaseChangeOut {
+    /// The event's number in `events`.
+    event: u32,
+    day: u32,
+    pulse: Option<&'static str>,
+    base: u32,
+    from: &'static str,
+    to: &'static str,
+}
+
+fn base_changes(world: &sim_core::World, key: &sim_core::ids::UmpireKey) -> Vec<BaseChangeOut> {
+    world
+        .events()
+        .iter()
+        .filter_map(|event| match &event.kind {
+            sim_core::events::EventKind::BaseChangedSide { base, from, to, .. } => {
+                Some(BaseChangeOut {
+                    event: event.id.umpire_raw(key),
+                    day: event.day,
+                    pulse: event.pulse.map(|pulse| pulse.name()),
+                    base: base.raw(),
+                    from: names::side(*from),
+                    to: names::side(*to),
+                })
+            }
+            _ => None,
+        })
+        .collect()
 }
 
 #[derive(Serialize)]
@@ -164,6 +203,7 @@ fn build(
         directions: map::directions(),
         labels,
         bases: state::bases(&executed.initial),
+        base_changes: base_changes(world, &key),
         aircraft_types: state::aircraft_types(world.ref_data()),
         initial: state::snapshot(&executed.initial, world.ref_data()),
         orders: world

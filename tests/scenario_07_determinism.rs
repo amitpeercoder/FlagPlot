@@ -454,7 +454,14 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // `AircraftWrittenOff` and `AirGroupRebased` are the two of decision
     // 0091: the full slice gives no rebase order. Scenario 22 records them,
     // and its own test reads them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 16] = [
+    //
+    // The twelve kinds of decision 0090, `FedShareRestored`, `GroundFight`,
+    // `GroundFire`, `MenLostInFight`, `LandUnitFatigue`,
+    // `LandUnitBackToDefend`, `SideBeatenAshore`, `BaseChangedSide`,
+    // `AirGroupLostWithBase`, `ShipLostWithBase`, `HomePortLost` and
+    // `StrikeMissionCleared`: the full slice has no land unit. Scenario 23
+    // records them, and its own test reads them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 28] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -471,6 +478,18 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "UnitLoadingComplete",
         "AircraftWrittenOff",
         "AirGroupRebased",
+        "FedShareRestored",
+        "GroundFight",
+        "GroundFire",
+        "MenLostInFight",
+        "LandUnitFatigue",
+        "LandUnitBackToDefend",
+        "SideBeatenAshore",
+        "BaseChangedSide",
+        "AirGroupLostWithBase",
+        "ShipLostWithBase",
+        "HomePortLost",
+        "StrikeMissionCleared",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

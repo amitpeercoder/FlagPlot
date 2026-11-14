@@ -21,8 +21,8 @@ use crate::ids::{
 };
 use crate::map::Map;
 use crate::orders::{
-    AirMission, CargoAction, Mission, Reach, Readiness, RejectReason, SpeedSetting, Stance,
-    StragglerInstruction,
+    AirMission, CargoAction, Mission, Posture, Reach, Readiness, RejectReason, SpeedSetting,
+    Stance, StragglerInstruction,
 };
 use crate::refdata::ShipKind;
 
@@ -674,6 +674,10 @@ pub enum AirGroupLocation {
     Base(BaseId),
     /// Aboard a ship. It is where the ship is, and is lost if the ship sinks.
     Ship(ShipId),
+    /// Lost with the base it was at when the base changed side (decision
+    /// 0090, 20). The group has no place: it flies nothing, receives
+    /// nothing and takes no order. Added at the end: the hash code is 3.
+    Lost,
 }
 
 impl fmt::Display for AirGroupLocation {
@@ -681,6 +685,7 @@ impl fmt::Display for AirGroupLocation {
         match self {
             AirGroupLocation::Base(base) => fmt::Display::fmt(base, f),
             AirGroupLocation::Ship(ship) => fmt::Display::fmt(ship, f),
+            AirGroupLocation::Lost => f.write_str("lost"),
         }
     }
 }
@@ -849,6 +854,44 @@ pub struct LandUnit {
     /// The hex the men ashore are in. `Some` exactly when `men_ashore` is
     /// above 0.
     pub hex: Option<Hex>,
+    /// Defend or attack (decision 0090, 1). Defend unless the scenario or a
+    /// posture order says otherwise.
+    pub posture: Posture,
+    /// The standing order that set the posture, if any. Spent when a tired
+    /// unit goes back to defend (decision 0090, 14).
+    pub posture_order: Option<OrderId>,
+    /// How tired the unit is, from 0 to 100 (decision 0090, 11). It cuts the
+    /// men who fire and nothing else.
+    pub fatigue: Fixed,
+    /// The men of the unit's side fed in its hex at the last night's charge
+    /// over the men charged, from 0 to 1 (decision 0090, 8). 1 for a unit
+    /// none of whose men were ashore at that charge, and 1 until the first.
+    pub fed_share: Fixed,
+}
+
+impl LandUnit {
+    /// A unit on defend with no fatigue, fully fed and no standing order:
+    /// how every unit starts unless the scenario says otherwise, and how a
+    /// unit divided off another starts.
+    pub fn new(
+        id: LandUnitId,
+        name: String,
+        side: Side,
+        men_ashore: u32,
+        hex: Option<Hex>,
+    ) -> LandUnit {
+        LandUnit {
+            id,
+            name,
+            side,
+            men_ashore,
+            hex,
+            posture: Posture::Defend,
+            posture_order: None,
+            fatigue: Fixed::ZERO,
+            fed_share: Fixed::ONE,
+        }
+    }
 }
 
 /// The real state of the world.
@@ -954,7 +997,7 @@ impl TruthState {
                 .ships
                 .get(&ship)
                 .is_some_and(|ship| matches!(ship.location, ShipLocation::Yard(_))),
-            AirGroupLocation::Base(_) => false,
+            AirGroupLocation::Base(_) | AirGroupLocation::Lost => false,
         }
     }
 
@@ -962,7 +1005,8 @@ impl TruthState {
     /// `docs/decisions/0025-carrier-air-groups.md`): its base's hex, or the
     /// position of the task force its ship is in, or the hex of the base its
     /// ship is in port at. A group aboard a sunk ship, or aboard a ship or at
-    /// a base that does not exist, has no position.
+    /// a base that does not exist, or lost with its base (decision 0090), has
+    /// no position.
     pub fn air_group_hex(&self, group: &AirGroup) -> Option<Hex> {
         match group.location {
             AirGroupLocation::Base(base) => self.bases.get(&base).map(|base| base.hex),
@@ -976,6 +1020,7 @@ impl TruthState {
                 // must not read this as "lost": the ship is afloat.
                 ShipLocation::Yard(_) => None,
             },
+            AirGroupLocation::Lost => None,
         }
     }
 }

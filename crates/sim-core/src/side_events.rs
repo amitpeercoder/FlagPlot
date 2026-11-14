@@ -245,6 +245,25 @@ pub enum SideEventKind {
         task_force: TaskForceId,
         chance: Fixed,
     },
+    /// A fight ashore the side's men were in (decision 0090, 28): the hex.
+    /// Not which side attacked.
+    GroundFight { hex: Hex },
+    /// The side's own unit fired ashore: its firing men and shots. Not the
+    /// chance or the hits (decision 0090, 28).
+    GroundFire {
+        unit: LandUnitId,
+        hex: Hex,
+        firing_men: u32,
+        shots: Fixed,
+    },
+    /// The side's own base changed side to the enemy (decision 0090, 30).
+    /// Not the stocks left in it, which are the new holder's.
+    BaseChangedSide {
+        base: BaseId,
+        hex: Hex,
+        from: Side,
+        to: Side,
+    },
 }
 
 /// Why a surface fight ended, as a side is told (decision 0085, F5). It has
@@ -313,6 +332,9 @@ impl SideEventKind {
             SideEventKind::BaseAttacked {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
+            SideEventKind::GroundFight { .. } => Vec::new(),
+            SideEventKind::GroundFire { unit, .. } => vec![EntityRef::LandUnit(*unit)],
+            SideEventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
         }
     }
 }
@@ -438,6 +460,27 @@ impl fmt::Display for SideEventKind {
             SideEventKind::AlarmRoll { task_force, chance } => {
                 write!(f, "{task_force} heard a fight, chance {chance}: alarmed")
             }
+            SideEventKind::GroundFight { hex } => write!(f, "fight ashore at {hex}"),
+            SideEventKind::GroundFire {
+                unit,
+                hex,
+                firing_men,
+                shots,
+            } => write!(
+                f,
+                "{unit} fired at {hex} with {firing_men} men: {shots} shots"
+            ),
+            SideEventKind::BaseChangedSide {
+                base,
+                hex,
+                from,
+                to,
+            } => write!(
+                f,
+                "{base} at {hex} changed from the {} side to the {} side",
+                from.name(),
+                to.name()
+            ),
         }
     }
 }
@@ -895,6 +938,59 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             }
         }
 
+        // The fight ashore (decision 0090, 28 to 30). A side sees its own
+        // half: that there was a fight and where, its own units'
+        // firing men and shots, and its own losses. Never its hits, the
+        // enemy's units or the enemy's men.
+        EventKind::FedShareRestored { unit }
+        | EventKind::MenLostInFight { unit, .. }
+        | EventKind::LandUnitFatigue { unit, .. }
+        | EventKind::LandUnitBackToDefend { unit, .. } => whole_if(own_unit(unit)),
+        EventKind::GroundFight { hex, .. } => Seen::Cut(SideEventKind::GroundFight { hex: *hex }),
+        EventKind::GroundFire {
+            unit,
+            hex,
+            firing_men,
+            shots,
+            ..
+        } => cut_if(
+            own_unit(unit),
+            SideEventKind::GroundFire {
+                unit: *unit,
+                hex: *hex,
+                firing_men: *firing_men,
+                shots: *shots,
+            },
+        ),
+        // The test of a side beaten weighs both sides' men: the umpire's.
+        EventKind::SideBeatenAshore { .. } => Seen::Nothing,
+        // Both sides see a base change side; the stocks left in it only the
+        // new holder.
+        EventKind::BaseChangedSide {
+            base,
+            hex,
+            from,
+            to,
+            ..
+        } => {
+            if *to == side {
+                Seen::Whole
+            } else {
+                Seen::Cut(SideEventKind::BaseChangedSide {
+                    base: *base,
+                    hex: *hex,
+                    from: *from,
+                    to: *to,
+                })
+            }
+        }
+        // What the beaten side lost with its base is its own; the winner is
+        // not told. A strike mission cleared is the winner's own.
+        EventKind::AirGroupLostWithBase { air_group, .. }
+        | EventKind::StrikeMissionCleared { air_group, .. } => whole_if(own_group(air_group)),
+        EventKind::ShipLostWithBase { ship, .. } => whole_if(own_ship(ship)),
+        EventKind::HomePortLost { task_force, .. } => whole_if(own_force(task_force)),
+
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
 
@@ -929,7 +1025,20 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
         | SideEventKind::ForceSlippedAway { .. }
         | SideEventKind::AlarmRoll { .. }
         | SideEventKind::SalvoAgainst { .. }
-        | SideEventKind::AirAttackAgainst { .. } => &[],
+        | SideEventKind::AirAttackAgainst { .. }
+        // A fight ashore has no breakdown; a base lost is given none.
+        | SideEventKind::GroundFight { .. }
+        | SideEventKind::BaseChangedSide { .. } => &[],
+        // The side's own unit's firing men and shots, without the chance
+        // (decision 0090, 28).
+        SideEventKind::GroundFire { .. } => &[
+            "men_ashore",
+            "fed_share",
+            "fatigue_factor",
+            "firing_men",
+            "men_per_shot",
+            "shots",
+        ],
         SideEventKind::Salvo { .. } => &[
             "guns",
             "tubes",
@@ -1325,7 +1434,10 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
         | SideEventKind::BaseAttacked { .. }
         | SideEventKind::BaseAttackedAgainst { .. }
         | SideEventKind::SearchAttempt { .. }
-        | SideEventKind::AlarmRoll { .. }) => other,
+        | SideEventKind::AlarmRoll { .. }
+        | SideEventKind::GroundFight { .. }
+        | SideEventKind::GroundFire { .. }
+        | SideEventKind::BaseChangedSide { .. }) => other,
     }
 }
 
@@ -1355,7 +1467,9 @@ fn may_have_hidden_causes(kind: &SideEventKind) -> bool {
         | SideEventKind::ForceSlippedAway { .. }
         | SideEventKind::AirAttack { .. }
         | SideEventKind::BaseAttacked { .. }
-        | SideEventKind::SearchAttempt { .. } => false,
+        | SideEventKind::SearchAttempt { .. }
+        // An own unit's fire cites the fight and its own feeding.
+        | SideEventKind::GroundFire { .. } => false,
         // Surprised: cites the enemy's sighting roll. A fight's beginning:
         // the steaming that brought the enemy in, and both sides' orders. Its
         // end: the enemy's sinking, break-off or slipping away. An alarm: the
@@ -1369,7 +1483,11 @@ fn may_have_hidden_causes(kind: &SideEventKind) -> bool {
         | SideEventKind::BaseAttackedAgainst { .. }
         | SideEventKind::AirFight { .. }
         | SideEventKind::AntiAircraftFire { .. }
-        | SideEventKind::BaseAntiAircraftFire { .. } => true,
+        | SideEventKind::BaseAntiAircraftFire { .. }
+        // A fight ashore cites both sides' posture orders; a base lost, the
+        // test that beat its side.
+        | SideEventKind::GroundFight { .. }
+        | SideEventKind::BaseChangedSide { .. } => true,
     }
 }
 
@@ -1451,7 +1569,21 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::UnitLoadingComplete { .. }
         // A rebase cites only the side's own order (decision 0091).
         | EventKind::AircraftWrittenOff { .. }
-        | EventKind::AirGroupRebased { .. } => false,
+        | EventKind::AirGroupRebased { .. }
+        // Fatigue and a unit back to defend cite the unit's own fire; what
+        // was lost with a base, and what pointed at it, cite the change of
+        // side, which both sides are given (decision 0090).
+        | EventKind::FedShareRestored { .. }
+        | EventKind::LandUnitFatigue { .. }
+        | EventKind::LandUnitBackToDefend { .. }
+        | EventKind::AirGroupLostWithBase { .. }
+        | EventKind::ShipLostWithBase { .. }
+        | EventKind::HomePortLost { .. }
+        | EventKind::StrikeMissionCleared { .. } => false,
+
+        // Men lost in a fight cite the enemy's fire; a base taken cites the
+        // test that beat the other side (decision 0090).
+        EventKind::MenLostInFight { .. } | EventKind::BaseChangedSide { .. } => true,
 
         // Never given whole: each of these is cut (and decided in
         // `may_have_hidden_causes`) or hidden from every side. If one were
@@ -1469,7 +1601,10 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::AirFight { .. }
         | EventKind::AntiAircraftFire { .. }
         | EventKind::BaseAntiAircraftFire { .. }
-        | EventKind::BaseAttacked { .. } => true,
+        | EventKind::BaseAttacked { .. }
+        | EventKind::GroundFight { .. }
+        | EventKind::GroundFire { .. }
+        | EventKind::SideBeatenAshore { .. } => true,
     }
 }
 
@@ -1489,24 +1624,33 @@ pub(crate) fn order_numbers(side: Side, owners: &Owners) -> BTreeMap<OrderId, u3
 /// log order.
 pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEvent> {
     let gates = fight_gates(side, log, owners);
-    let seen: Vec<Seen> = log
-        .iter()
-        .zip(&gates)
-        .map(|(event, gate)| {
-            let knows_fight = matches!(gate, Gate::Inside(Some(_)));
-            let seen = seen(&event.kind, side, owners, knows_fight);
-            // Decision 5: a fight is seen from the round the side first knew
-            // of it. An event of the fight from an earlier round, or of a
-            // fight it never knew of, is not (a force can break off before
-            // it has sighted or been fired on).
-            match (gate, fight_round(&event.kind)) {
-                (Gate::Inside(known), Some(round)) if known.is_none_or(|k| round < k) => {
-                    Seen::Nothing
-                }
-                _ => seen,
-            }
-        })
-        .collect();
+    // A base's events are seen by the side that held it when they were
+    // recorded (decision 0090, 24). The holder at the start is the side the
+    // base had before its first change, and each change hands it on.
+    let mut at_the_time = owners.clone();
+    let mut first_holder: BTreeMap<BaseId, Side> = BTreeMap::new();
+    for event in log {
+        if let EventKind::BaseChangedSide { base, from, .. } = &event.kind {
+            first_holder.entry(*base).or_insert(*from);
+        }
+    }
+    at_the_time.bases.extend(first_holder);
+    let mut seen: Vec<Seen> = Vec::with_capacity(log.len());
+    for (event, gate) in log.iter().zip(&gates) {
+        let knows_fight = matches!(gate, Gate::Inside(Some(_)));
+        let this = self::seen(&event.kind, side, &at_the_time, knows_fight);
+        if let EventKind::BaseChangedSide { base, to, .. } = &event.kind {
+            at_the_time.bases.insert(*base, *to);
+        }
+        // Decision 5: a fight is seen from the round the side first knew of
+        // it. An event of the fight from an earlier round, or of a fight it
+        // never knew of, is not (a force can break off before it has
+        // sighted or been fired on).
+        seen.push(match (gate, fight_round(&event.kind)) {
+            (Gate::Inside(known), Some(round)) if known.is_none_or(|k| round < k) => Seen::Nothing,
+            _ => this,
+        });
+    }
     // The side's own numbers: its events counted from 1 in log order, and its
     // orders counted from 1 in the order book's order (decision 0086).
     let mut event_numbers: BTreeMap<EventId, u32> = BTreeMap::new();
@@ -1575,7 +1719,7 @@ mod tests {
     use super::*;
     use crate::events::{
         DamageTrack, DetachReason, EngagementEndReason, FatigueChange, ForceFatigueChange,
-        SortieKind, SupplyUse,
+        LandFatigueChange, SortieKind, SupplyUse,
     };
     use crate::hex::Hex;
     use crate::ids::ContactId;
@@ -1649,7 +1793,7 @@ mod tests {
             .collect()
     }
 
-    // ---- the table of the 76 kinds ----
+    // ---- the table of the 90 kinds ----
 
     /// What a side sees of an event.
     #[derive(Clone, Copy, Debug)]
@@ -2629,6 +2773,122 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // The fight ashore and a base that changes side (decision 0090,
+            // 28 to 30).
+            row(
+                EventKind::FedShareRestored { unit: unit(1) },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::GroundFight {
+                    hex: hex(),
+                    allied_attacks: true,
+                    japanese_attacks: false,
+                },
+                Cut("GroundFight", &["allied_attacks", "japanese_attacks"]),
+                Cut("GroundFight", &["allied_attacks", "japanese_attacks"]),
+            ),
+            row(
+                EventKind::GroundFire {
+                    unit: unit(1),
+                    hex: hex(),
+                    firing_men: 1600,
+                    shots: fx(16),
+                    chance: Fixed::from_raw(300_000),
+                    hits: 5,
+                },
+                Cut("GroundFire", &["chance", "hits"]),
+                Nothing,
+            ),
+            row(
+                EventKind::MenLostInFight {
+                    unit: unit(1),
+                    hex: hex(),
+                    lost: 100,
+                    ashore: 900,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::LandUnitFatigue {
+                    unit: unit(1),
+                    change: LandFatigueChange::Gained,
+                    fatigue: fx(20),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::LandUnitBackToDefend {
+                    unit: unit(1),
+                    fatigue: fx(80),
+                },
+                Whole,
+                Nothing,
+            ),
+            sided(row(
+                EventKind::SideBeatenAshore {
+                    side: Side::Allied,
+                    hex: hex(),
+                    men: 100,
+                    enemy_men: 2000,
+                    fought: true,
+                },
+                Nothing,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::BaseChangedSide {
+                    base: base(1),
+                    hex: hex(),
+                    from: Side::Allied,
+                    to: Side::Japanese,
+                    supply_t: fx(30),
+                    fuel_t: fx(15),
+                    supply_lost_t: fx(30),
+                    fuel_lost_t: fx(15),
+                },
+                Cut(
+                    "BaseChangedSide",
+                    &["supply_t", "fuel_t", "supply_lost_t", "fuel_lost_t"],
+                ),
+                Whole,
+            )),
+            row(
+                EventKind::AirGroupLostWithBase {
+                    air_group: group(1),
+                    base: base(1),
+                    aircraft: 11,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::ShipLostWithBase {
+                    ship: ship(1),
+                    base: base(1),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::HomePortLost {
+                    task_force: force(1),
+                    base: base(1),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::StrikeMissionCleared {
+                    air_group: group(1),
+                    base: base(2),
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -2669,7 +2929,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 78, "the log has 78 kinds of event");
+        assert_eq!(all.len(), 90, "the log has 90 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

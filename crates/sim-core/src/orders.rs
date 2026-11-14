@@ -225,6 +225,37 @@ impl StragglerInstruction {
     }
 }
 
+/// What a land unit does ashore (decision 0090, 1).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub enum Posture {
+    /// Holds its ground and fires only in a fight the enemy starts. The
+    /// default.
+    #[default]
+    Defend,
+    /// Attacks the enemy's men in its hex, or takes an enemy base there that
+    /// has no men.
+    Attack,
+}
+
+impl Posture {
+    /// A stable number for the posture. Part of the state hash. Never
+    /// renumber it; add new postures at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            Posture::Defend => 1,
+            Posture::Attack => 2,
+        }
+    }
+
+    /// The posture's name as scenario files, orders and the log write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Posture::Defend => "defend",
+            Posture::Attack => "attack",
+        }
+    }
+}
+
 /// A kind of cargo a ship carries (decision 0046). A ship carries supply and
 /// fuel together, up to its class's cargo capacity.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -402,6 +433,14 @@ pub enum AirGroupOrder {
     },
 }
 
+/// An order to a land unit (decision 0090).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum LandUnitOrder {
+    /// Defend or attack (decision 0090, 2). A standing order: it stands
+    /// until another replaces it, or until the unit is too tired to attack.
+    SetPosture(Posture),
+}
+
 /// An order together with the unit it is for.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum OrderKind {
@@ -413,6 +452,11 @@ pub enum OrderKind {
         target: AirGroupId,
         order: AirGroupOrder,
     },
+    /// Added at the end (decision 0090).
+    LandUnit {
+        target: LandUnitId,
+        order: LandUnitOrder,
+    },
 }
 
 impl OrderKind {
@@ -421,6 +465,7 @@ impl OrderKind {
         match self {
             OrderKind::TaskForce { target, .. } => EntityRef::TaskForce(*target),
             OrderKind::AirGroup { target, .. } => EntityRef::AirGroup(*target),
+            OrderKind::LandUnit { target, .. } => EntityRef::LandUnit(*target),
         }
     }
 }
@@ -554,6 +599,15 @@ pub enum RejectReason {
     /// A second rebase order to an air group on the day it has already moved
     /// (decision 0091, "As built"). Added at the end of the enum.
     AlreadyMovedToday,
+    /// A posture order names a land unit with no men ashore or aboard
+    /// (decision 0090, 2). Added at the end of the enum.
+    LandUnitDestroyed,
+    /// A posture order names a land unit with no man ashore (decision 0090,
+    /// 2). Added at the end of the enum.
+    NoMenAshore,
+    /// An order to an air group lost with the base it was at when the base
+    /// changed side (decision 0090, 20). Added at the end of the enum.
+    AirGroupLostWithBase,
 }
 
 impl fmt::Display for RejectReason {
@@ -638,6 +692,11 @@ impl fmt::Display for RejectReason {
             ),
             RejectReason::AlreadyMovedToday => {
                 f.write_str("the air group has already moved to another base today")
+            }
+            RejectReason::LandUnitDestroyed => f.write_str("the land unit is destroyed"),
+            RejectReason::NoMenAshore => f.write_str("the land unit has no men ashore"),
+            RejectReason::AirGroupLostWithBase => {
+                f.write_str("the air group was lost with its base")
             }
             RejectReason::TargetKindRepeated(kind) => {
                 write!(f, "the target list names {} twice", kind.name())

@@ -1,6 +1,6 @@
 # 0090: The fight ashore, and a base that changes side
 
-Status: a plan by the architect, written on Nov 13, 2026. It is stage 2 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer agreed decisions 9 and 16 on Nov 13, 2026, and on decision 20 asked for rebasing by order to be built first (decision 0091), so that a player can fly a group out; with that, decisions 20 and 21 stand. Nothing is built. Every figure is a placeholder set by the architect. Code waits for stage 1 (decision 0066) and rebasing (decision 0091) to merge; the hand calculation is written before any code is delegated.
+Status: a plan by the architect, written on Nov 13, 2026. It is stage 2 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer agreed decisions 9 and 16 on Nov 13, 2026, and on decision 20 asked for rebasing by order to be built first (decision 0091), so that a player can fly a group out; with that, decisions 20 and 21 stand. Built on Nov 14, 2026: see "As built" at the end. Every figure is a placeholder set by the architect. Code waits for stage 1 (decision 0066) and rebasing (decision 0091) to merge; the hand calculation is written before any code is delegated.
 
 ## The gap
 
@@ -138,3 +138,29 @@ Answered on Nov 13, 2026.
 1. **Decision 9:** a hit removes a fixed number of men. Agreed.
 2. **Decision 16:** a base with no men ashore falls, without a fight, to a unit on attack in its hex. Agreed.
 3. **Decisions 20 and 21:** build rebasing by order first (decision 0091). With it built, the groups still at a base that falls, and a ship in its port, are lost.
+
+## As built
+
+Built on Nov 14, 2026, to the sections above and the architect's hand calculation in `tests/scenario_23_fight_ashore.rs`. Nothing above this section was changed. Every choice the build made that the record did not is listed here. The rulebook's chapters 1, 2, 5, 6 and 7 state the rules as built.
+
+- **The fed share** is held as a fixed-point number: the men fed over the men charged, cut to six decimals. A unit's firing men are its men ashore times its fed share times (100 less its fatigue) over 100, cut to a whole man.
+- **Where the share is set.** The share of the units ashore in a hex is set by the side's `MenFed` event there. A unit with men aboard and none ashore at the charge has its share set back to 1, with a `FedShareRestored` event. A destroyed unit keeps its share.
+- **Feeding from several bases (24a).** Each base with stock, in base order, is asked what is still owed and records its own `BaseSupplySpent`. Its breakdown has a factor `paid_by_earlier_bases_t` only where an earlier base paid. `MenFed` names the first base that paid, or the lowest-numbered base of the side in the hex if none did, so a hex with one base reads as in stage 1.
+- **"Fired."** A unit fired if it is on attack in a fight and its shots are above 0. A unit on attack with no firing men rests.
+- **A tired unit goes back to defend whether or not it fought.** A unit on attack with men ashore whose fatigue after the day's change is above the limit goes back to defend. It cites its fatigue event.
+- **Fatigue events** are recorded only when the value changes.
+- **Both sides beaten at once.** This can happen only when both attacked and neither has a man left. Then neither is beaten. *Accepted by the architect, Nov 14, 2026.*
+- **The test of a side beaten is its own event,** `SideBeatenAshore`, recorded whenever a side is beaten, whether or not it holds a base there. No side is given it, since it weighs both sides' men. `BaseChangedSide` cites it and what it cites (the fight, or the posture orders of the units on attack), so both sides are told that the change has causes they cannot see.
+- **The fight events.** The fight is one `GroundFight` event for each contested hex, and a side is given only its hex. Each unit's fire is a `GroundFire` event, one for every unit in the fight, including those with no firing men. Its side is given the firing men and shots and the breakdown's own factors (`men_ashore`, `fed_share`, `fatigue_factor`, `firing_men`, `men_per_shot`, `shots`), not the chance or the hits. Men lost are `MenLostInFight`, seen whole by their side, citing the enemy's fire.
+- **A group lost with its base** has the new place `Lost` (hash code 3), no aircraft and no pilots, and keeps its mission. An order to it is refused with its own reason, "the air group was lost with its base", and not with the reason for a group lost with its ship.
+- **A ship lost in port** has its own event, `ShipLostWithBase`, since `ShipSunk` names a task force. She is sunk and scored as sunk, and the air groups and men aboard her are lost as with a ship that sinks.
+- **The fix-ups of decision 22** are the events `HomePortLost` and `StrikeMissionCleared`. A cleared group's mission is rest, with no mission order.
+- **`base_open` known progress** is not observable for a base the side saw change side, since it was counted on days the side did not hold it. *Accepted by the architect, Nov 14, 2026.*
+- **The refusals of a posture order** are tried in this order: not the side's own unit (`NotYourLandUnit`), destroyed (`LandUnitDestroyed`), no man ashore (`NoMenAshore`).
+- **Scenario keys.** A land unit takes `posture` (`"defend"` or `"attack"`) and `fatigue`. An order takes `land_unit = n`, `kind = "set_posture"` and `posture = "attack"` or `"defend"`. Objectives take `base_held` with `base` and `points`, and `men_lost` with `points_per_100_men`. `men_per_hit` must be a whole number and `beaten_share` below 1.
+- **The holder of a base at the time of each event** is worked out in the projection of the log from its `BaseChangedSide` events.
+- **Two invariants are added:** a group lost with its base has no aircraft; a land unit's fatigue is from 0 to 100 and its fed share from 0 to 1.
+- **The state hash is version 12.**
+- **The agent interface.** A posture order is `{"unit": "land_unit:N", "order": {"kind": "set_posture", "posture": "attack"}}`, as every other unit order. Each own land unit line gives `posture`, `fatigue`, `fed_share` and the standing posture order's number. The briefing gives a new optional part, `base_changes`, for bases taken and lost, after the land units. A group lost with its base has no location and is marked `lost_with_base`. The schemas gain fields only, so their version stays 3.
+- **The replay and the batch file.** The replay keeps each base's side at the start in its base list and adds `base_changes`, one entry for each `BaseChangedSide` (its day, pulse, base, from and to), left out when empty; the viewer follows the change events, so a side's page shows the holder at each step. The batch file adds `base_changes` to each run the same way. Neither changes version, and a run with no change reads as before.
+- **`sim-cli run`** adds ", on attack" and ", fatigue N" to a land unit line only when the unit is on attack or tired, so a run with no posture order prints as in stage 1 but for its hashes.

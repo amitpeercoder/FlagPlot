@@ -80,17 +80,22 @@ pub enum Draw {
     /// salvo, keyed on the day, the pulse, the surface combat subsystem, the
     /// firing ship and the enemy force.
     TorpedoOtherSide,
+    /// A land unit's shots in the day's fight ashore (decision 0090, 7): one
+    /// stream for each firing unit and day, with no pulse, in the ground
+    /// combat subsystem, keyed on the unit.
+    GroundFire,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 6] = [
+    pub const ALL: [Draw; 7] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
         Draw::PatrolPilot,
         Draw::NoDeck,
         Draw::TorpedoOtherSide,
+        Draw::GroundFire,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -103,6 +108,7 @@ impl Draw {
             Draw::PatrolPilot => 3,
             Draw::NoDeck => 4,
             Draw::TorpedoOtherSide => 5,
+            Draw::GroundFire => 6,
         }
     }
 }

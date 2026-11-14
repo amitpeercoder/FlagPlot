@@ -130,8 +130,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// its order and the cargo action `LoadNoCargo` (code 4), and the land units
 /// after the arrivals (decision 0066);
 /// version 11 adds an air group's `rebased_day` after its
-/// `last_base_strike_day` (decision 0091).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v11";
+/// `last_base_strike_day` (decision 0091);
+/// version 12 adds a land unit's `posture`, `posture_order`, `fatigue` and
+/// `fed_share` after its hex, and the air group location `Lost` (code 3)
+/// (decision 0090).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v12";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -334,6 +337,10 @@ fn name_every_field(world: &World) {
         side: _,
         men_ashore: _,
         hex: _,
+        posture: _,
+        posture_order: _,
+        fatigue: _,
+        fed_share: _,
     }) = land_units.values().next()
     {}
     for belief in beliefs.values() {
@@ -538,6 +545,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.u8(2);
                 h.u32(ship.raw());
             }
+            // Lost with its base (decision 0090).
+            AirGroupLocation::Lost => h.u8(3),
         }
         h.u32(group.aircraft_type.raw());
         h.u32(group.ready);
@@ -615,6 +624,11 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             }
             None => h.u8(0),
         }
+        // After the hex (decision 0090).
+        h.u8(unit.posture.code());
+        h.optional_u32(unit.posture_order.map(|id| id.raw()));
+        h.i64(unit.fatigue.raw());
+        h.i64(unit.fed_share.raw());
     }
 
     h.count(world.beliefs.len());

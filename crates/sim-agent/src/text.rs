@@ -8,7 +8,7 @@
 //! fixed words contain no digits, so every number in the text comes from the
 //! data.
 
-use crate::briefing::{Briefing, LandUnitsPart, StrikeReport};
+use crate::briefing::{BaseChangesPart, Briefing, LandUnitsPart, StrikeReport};
 use crate::common::{Handle, Place};
 use crate::objectives::{ObjectiveLine, ResultPart, ShipKindPoints};
 
@@ -555,6 +555,12 @@ impl Briefing {
         };
         o.each("Air groups", &self.air_groups, |g| {
             let mut s = format!("{} ({})", g.air_group.text(), g.aircraft_type);
+            if g.location.is_none() {
+                s.push_str(
+                    ": lost with its base, which changed side; it has no place and takes no order",
+                );
+                return s;
+            }
             // Two of the side's own groups under one squadron's name are
             // two groups with their own aircraft, not one counted twice.
             if let Some(mine) = squadron(g) {
@@ -569,10 +575,16 @@ impl Briefing {
                     s.push_str(&format!(", a separate group from {},", others.join(", ")));
                 }
             }
-            s.push_str(&format!(" at {}", g.location.text()));
+            let Some(location) = &g.location else {
+                s.push_str(
+                    ": lost with its base, which changed side; it has no place and takes no order",
+                );
+                return s;
+            };
+            s.push_str(&format!(" at {}", location.text()));
             if let Some(p) = &g.place {
                 // A base's name is already in the location.
-                let base = g.location.handle.starts_with("base:");
+                let base = location.handle.starts_with("base:");
                 s.push_str(&format!(" {}", if base { p.coords() } else { at(p) }));
             }
             s.push_str(&format!(": {} ready", g.ready));
@@ -725,6 +737,10 @@ impl Briefing {
 
         if let Some(land) = &self.land_units {
             land_units_text(&mut o, land);
+        }
+
+        if let Some(changes) = &self.base_changes {
+            base_changes_text(&mut o, changes);
         }
 
         o.heading("ARRIVALS");
@@ -904,6 +920,65 @@ impl Briefing {
     }
 }
 
+/// What yesterday's change of side of bases did to the side (decision 0090,
+/// 29 and 30).
+fn base_changes_text(o: &mut Out, c: &BaseChangesPart) {
+    o.heading("BASES THAT CHANGED SIDE");
+    for t in &c.taken {
+        o.line(format!(
+            "Base taken yesterday: {} at {} is yours now, with {} t supply and {} t fuel kept ({} t supply and {} t fuel lost in the change){}",
+            t.base.text(),
+            at(&t.place),
+            t.supply_t.0,
+            t.fuel_t.0,
+            t.supply_lost_t.0,
+            t.fuel_lost_t.0,
+            ev(t.event)
+        ));
+    }
+    for l in &c.lost {
+        o.line(format!(
+            "Base lost yesterday: {} at {} is the enemy's now{}",
+            l.base.text(),
+            at(&l.place),
+            ev(l.event)
+        ));
+    }
+    for g in &c.air_groups_lost {
+        o.line(format!(
+            "Air group lost with its base: {} with {} aircraft, lost with {}{}",
+            g.air_group.text(),
+            g.aircraft,
+            g.base.text(),
+            ev(g.event)
+        ));
+    }
+    for s in &c.ships_lost {
+        o.line(format!(
+            "Ship lost in port: {} was lost with {}{}",
+            s.ship.text(),
+            s.base.text(),
+            ev(s.event)
+        ));
+    }
+    for h in &c.home_ports_lost {
+        o.line(format!(
+            "Home port lost: {} has no home port, since {} changed side{}",
+            h.task_force.text(),
+            h.base.text(),
+            ev(h.event)
+        ));
+    }
+    for m in &c.strike_missions_cleared {
+        o.line(format!(
+            "Strike mission cleared: {} has no mission, since {} is now your own{}",
+            m.air_group.text(),
+            m.base.text(),
+            ev(m.event)
+        ));
+    }
+}
+
 /// The land units part (decision 0066, 21): each unit's men and place, then
 /// what yesterday's events say happened to them, then the days of supply.
 fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
@@ -931,6 +1006,13 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             ));
         }
         s.push_str(&parts.join("; "));
+        s.push_str(&format!(
+            "; posture {}, fatigue {}, fed share {}",
+            u.posture, u.fatigue.0, u.fed_share.0
+        ));
+        if let Some(order) = u.posture_order {
+            s.push_str(&format!(" (posture set by your order {order})"));
+        }
         s.push_str(match u.fed_last_night {
             "fed" => "; fed last night",
             "partly_fed" => "; partly fed last night",
@@ -1026,6 +1108,15 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
                     .map_or(String::new(), |p| format!(" at {}", at(p))),
                 l.ashore.unwrap_or(0)
             ),
+            "fight" => format!(
+                "{} lost {} men in the fight{}, {} left ashore",
+                l.land_unit.text(),
+                l.men,
+                l.place
+                    .as_ref()
+                    .map_or(String::new(), |p| format!(" at {}", at(p))),
+                l.ashore.unwrap_or(0)
+            ),
             _ => format!(
                 "{} lost {} men with {}",
                 l.land_unit.text(),
@@ -1040,6 +1131,51 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             "Destroyed yesterday: {} has no man left{}",
             d.land_unit.text(),
             ev(d.event)
+        ));
+    }
+    for f in &land.fights_yesterday {
+        o.line(format!(
+            "Fight ashore yesterday at {}{}",
+            at(&f.place),
+            ev(f.event)
+        ));
+    }
+    for f in &land.fire_yesterday {
+        o.line(format!(
+            "Fire yesterday: {} fired at {} with {} men, {} shots{}",
+            f.land_unit.text(),
+            at(&f.place),
+            f.firing_men,
+            f.shots.0,
+            ev(f.event)
+        ));
+    }
+    for f in &land.fatigue_yesterday {
+        o.line(format!(
+            "Fatigue yesterday: {} {}, fatigue now {}{}",
+            f.land_unit.text(),
+            if f.change == "gained" {
+                "attacked and tired"
+            } else {
+                "rested"
+            },
+            f.fatigue.0,
+            ev(f.event)
+        ));
+    }
+    for b in &land.back_to_defend_yesterday {
+        o.line(format!(
+            "Back to defend yesterday: {} was too tired to attack at fatigue {} and its attack order is spent{}",
+            b.land_unit.text(),
+            b.fatigue.0,
+            ev(b.event)
+        ));
+    }
+    for r in &land.fed_share_restored_yesterday {
+        o.line(format!(
+            "Fed share restored: {} has no men ashore and its fed share is 1{}",
+            r.land_unit.text(),
+            ev(r.event)
         ));
     }
     if o.0.len() == before {
@@ -1118,6 +1254,12 @@ fn objective_text(o: &mut Out, line: &ObjectiveLine) {
         "cargo_landed" => format!(
             "Objective: tons of supply and fuel you unload at {base} and do not load back, points for each ton: {points}"
         ),
+        "base_held" => format!(
+            "Objective: {base} is your own side's at the end of the game, points: {points}"
+        ),
+        "men_lost" => format!(
+            "Objective: enemy men lost, by any cause, points for each hundred men: {points}"
+        ),
         _ if line.closed == Some(true) => format!(
             "Objective: {base} shut at the end of each day (no supply, or no aircraft ready), points if shut every day: {points}, earned by the share of days"
         ),
@@ -1135,6 +1277,22 @@ fn objective_text(o: &mut Out, line: &ObjectiveLine) {
             known
                 .points
                 .map(|p| format!(", worth {} points", p.0))
+                .unwrap_or_default()
+        ),
+        "exact" if line.kind == "base_held" => format!(
+            "What you know of your progress: {}{}",
+            if known.count.0.is_zero() {
+                "the base is not yours now"
+            } else {
+                "the base is yours now"
+            },
+            known
+                .points
+                .map(|p| if known.count.0.is_zero() {
+                    format!(", so no points yet (worth {} if it is yours at the end)", line.points.map_or(p.0, |x| x.0))
+                } else {
+                    format!(", worth {} points if it stays so", p.0)
+                })
                 .unwrap_or_default()
         ),
         "exact" => format!(

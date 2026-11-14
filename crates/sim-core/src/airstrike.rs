@@ -1852,7 +1852,10 @@ impl World {
             self.ref_data.air_combat.as_ref(),
         ) {
             let chance = match location {
-                AirGroupLocation::Base(_) => figures.crew_recovered_over_own_base,
+                // A group lost with its base flies no patrol (decision 0090).
+                AirGroupLocation::Base(_) | AirGroupLocation::Lost => {
+                    figures.crew_recovered_over_own_base
+                }
                 AirGroupLocation::Ship(_) => figures.crew_recovered_beside_own_force,
             };
             let mut stream = self.rng_pair(

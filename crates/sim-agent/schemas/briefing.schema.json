@@ -30,6 +30,10 @@
       "description": "The side's land units and what yesterday's events say happened to their men (decision 0066, 21). Left out when the side has no land unit.",
       "$ref": "#/$defs/land_units"
     },
+    "base_changes": {
+      "description": "Bases that changed side yesterday and what went with them (decision 0090, 29 and 30). Left out when no base changed side and nothing was lost with one.",
+      "$ref": "#/$defs/base_changes"
+    },
     "arrivals": { "$ref": "#/$defs/arrivals" },
     "warnings": { "$ref": "#/$defs/warnings" }
   },
@@ -71,7 +75,7 @@
       "required": ["kind", "base", "closed", "ship_points", "points", "known"],
       "additionalProperties": false,
       "properties": {
-        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open"] },
+        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost"] },
         "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
         "closed": { "type": ["boolean", "null"] },
         "ship_points": {
@@ -138,7 +142,7 @@
             "required": ["kind", "base", "closed", "count", "days", "ships", "points"],
             "additionalProperties": false,
             "properties": {
-              "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open"] },
+              "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost"] },
               "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
               "closed": { "type": ["boolean", "null"] },
               "count": { "$ref": "defs.schema.json#/$defs/dec" },
@@ -625,6 +629,102 @@
         "event": { "type": "integer" }
       }
     },
+    "base_changes": {
+      "type": "object",
+      "required": ["taken", "lost", "air_groups_lost", "ships_lost", "home_ports_lost", "strike_missions_cleared"],
+      "additionalProperties": false,
+      "properties": {
+        "taken": {
+          "description": "Bases the side took yesterday, with the stocks it kept and the stocks lost in the change.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "place", "supply_t", "fuel_t", "supply_lost_t", "fuel_lost_t", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "supply_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "supply_lost_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "fuel_lost_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "lost": {
+          "description": "Bases the side lost yesterday. The stocks left in them are the new holder's and are not given.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "place", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "air_groups_lost": {
+          "description": "The side's air groups lost with a base.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["air_group", "base", "aircraft", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "aircraft": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "ships_lost": {
+          "description": "The side's ships lost in port with a base.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "base", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "home_ports_lost": {
+          "description": "The side's task forces whose home port was lost.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "base", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "strike_missions_cleared": {
+          "description": "The side's air groups whose base strike mission was cleared because the base is now the side's own.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["air_group", "base", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "event": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
     "land_units": {
       "type": "object",
       "required": [
@@ -705,16 +805,87 @@
             "additionalProperties": false,
             "properties": {
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
-              "cause": { "enum": ["unfed", "lost_with_ship"] },
+              "cause": { "enum": ["unfed", "lost_with_ship", "fight"] },
               "men": { "type": "integer" },
               "ship": { "description": "The ship lost with, for lost_with_ship.", "$ref": "defs.schema.json#/$defs/handle_or_null" },
-              "place": { "description": "The hex of an unfed loss.", "$ref": "defs.schema.json#/$defs/place_or_null" },
-              "ashore": { "description": "What the unit has left ashore there, for unfed.", "$ref": "defs.schema.json#/$defs/count_or_null" },
+              "place": { "description": "The hex of an unfed or fight loss.", "$ref": "defs.schema.json#/$defs/place_or_null" },
+              "ashore": { "description": "What the unit has left ashore there, for unfed and fight.", "$ref": "defs.schema.json#/$defs/count_or_null" },
               "event": { "type": "integer" }
             }
           }
         },
         "destroyed_yesterday": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fights_yesterday": {
+          "description": "Fights ashore the side's men were in yesterday (decision 0090, 28): the hex only, never which side attacked. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fire_yesterday": {
+          "description": "The side's own units' fire in yesterday's fights: firing men and shots, never the chance or the hits. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "place", "firing_men", "shots", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "firing_men": { "type": "integer" },
+              "shots": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fatigue_yesterday": {
+          "description": "Changes of the side's own units' fatigue yesterday. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "change", "fatigue", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "change": { "enum": ["gained", "rested"] },
+              "fatigue": { "description": "The unit's fatigue afterwards.", "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "back_to_defend_yesterday": {
+          "description": "Units on attack too tired to go on that went back to defend yesterday; the posture order is spent. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "fatigue", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "fatigue": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fed_share_restored_yesterday": {
+          "description": "Units with no man ashore whose fed share went back to 1. Left out when none.",
           "type": "array",
           "items": {
             "type": "object",

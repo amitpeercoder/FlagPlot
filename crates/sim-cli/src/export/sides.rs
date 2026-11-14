@@ -376,5 +376,32 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             d.id("task_force", *task_force).num("chance", *chance),
             true,
         ),
+        SideEventKind::GroundFight { hex } => ("ground_fight", d.hex("hex", *hex), true),
+        SideEventKind::GroundFire {
+            unit,
+            hex,
+            firing_men,
+            shots,
+        } => (
+            "ground_fire",
+            d.id("unit", *unit)
+                .hex("hex", *hex)
+                .int("firing_men", *firing_men)
+                .num("shots", *shots),
+            true,
+        ),
+        SideEventKind::BaseChangedSide {
+            base,
+            hex,
+            from,
+            to,
+        } => (
+            "base_changed_side",
+            d.id("base", *base)
+                .hex("hex", *hex)
+                .text("from", names::side(*from))
+                .text("to", names::side(*to)),
+            true,
+        ),
     }
 }

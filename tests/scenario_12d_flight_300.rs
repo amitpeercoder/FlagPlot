@@ -572,7 +572,7 @@ fn every_homecoming_follows_the_model_and_aircraft_land_at_henderson_in_some_run
             .iter()
             .filter_map(|g| match g.place {
                 AirGroupLocation::Ship(ship) => Some((g.id, ship)),
-                AirGroupLocation::Base(_) => None,
+                AirGroupLocation::Base(_) | AirGroupLocation::Lost => None,
             })
             .collect();
         // Only for a group aboard a ship whose deck sank or went out in the

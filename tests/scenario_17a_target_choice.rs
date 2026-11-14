@@ -643,9 +643,11 @@ fn case_7_an_unarmed_ship_counting_for_its_place() {
 /// was unchanged. It was 0x8b7cd91a2f608ed5 until the state went to version
 /// 10 (decision 0066, land units); the log was unchanged again. It was
 /// 0x8411a9fd58a3680b until the state went to version 11 (decision 0091,
-/// rebasing); the log was unchanged again.
+/// rebasing); the log was unchanged again. It was 0x3f24661c88fb42de until
+/// the state went to version 12 (decision 0090, the fight ashore); the log
+/// was unchanged again.
 const CASE_8_LOG: &str = include_str!("golden/17a_case_8_events.txt");
-const CASE_8_HASH: u64 = 0x3f24661c88fb42de;
+const CASE_8_HASH: u64 = 0x6c4ecebc0c9f0fbd;
 
 fn log_text(events: &[Event]) -> String {
     let mut text = String::new();

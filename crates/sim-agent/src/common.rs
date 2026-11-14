@@ -177,6 +177,12 @@ impl<'a> Ctx<'a> {
             .expect("an order the side is shown is its own")
     }
 
+    /// The side's number of one of its own orders, or `None` for an order
+    /// the side is not shown.
+    pub fn order_number_if_own(&self, id: OrderId) -> Option<u32> {
+        self.order_numbers.get(&id).copied()
+    }
+
     /// The line the log writes for an event, with an order named by the
     /// side's own number.
     pub fn event_text(&self, kind: &SideEventKind) -> String {
@@ -342,6 +348,8 @@ impl<'a> Ctx<'a> {
         match group.location {
             AirGroupLocation::Base(base) => self.bases.get(&base).map(|b| b.hex),
             AirGroupLocation::Ship(ship) => self.ships.get(&ship).and_then(|s| self.ship_hex(s)),
+            // Lost with a base that changed side: no place (decision 0090, 20).
+            AirGroupLocation::Lost => None,
         }
     }
 

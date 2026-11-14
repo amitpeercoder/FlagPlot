@@ -258,16 +258,9 @@ impl World {
                     }
                 }
             }
-            self.truth.land_units.insert(
-                new_id,
-                LandUnit {
-                    id: new_id,
-                    name,
-                    side,
-                    men_ashore: 0,
-                    hex: None,
-                },
-            );
+            self.truth
+                .land_units
+                .insert(new_id, LandUnit::new(new_id, name, side, 0, None));
             let event = self.events.record(
                 day,
                 Some(pulse),

@@ -11,8 +11,8 @@ use sim_core::ids::{
 use sim_core::map::HexKind;
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Cargo, Issuer, Mission, OrderKind, OrderRequest, Origin, Reach,
-    Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
+    AirGroupOrder, AirMission, Cargo, Issuer, LandUnitOrder, Mission, OrderKind, OrderRequest,
+    Origin, Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
@@ -163,6 +163,15 @@ enum ObjectiveSpec {
         points: Quantity,
         closed: Option<bool>,
     },
+    /// Decision 0090, 25: points if the base is the side's at the end.
+    BaseHeld {
+        base: u32,
+        points: Quantity,
+    },
+    /// Decision 0090, 26: points for each 100 enemy men lost.
+    MenLost {
+        points_per_100_men: Quantity,
+    },
 }
 
 /// A contact a side holds when the game begins (decision 8 of
@@ -222,6 +231,11 @@ struct LandUnitSpec {
     q: Option<i32>,
     r: Option<i32>,
     task_force: Option<u32>,
+    /// The posture at the start, `defend` or `attack` (decision 0090, 1).
+    /// Defaults to defend.
+    posture: Option<PostureSpec>,
+    /// Fatigue at the start, 0 to 100 (decision 0090, 11). Defaults to 0.
+    fatigue: Option<Quantity>,
 }
 
 #[derive(Deserialize)]
@@ -352,9 +366,12 @@ struct OrderSpec {
     /// The day the order takes effect. Day 1 is the first day.
     day: u32,
     side: SideSpec,
-    /// Exactly one of `task_force` and `air_group` must be given.
+    /// Exactly one of `task_force`, `air_group` and `land_unit` must be
+    /// given.
     task_force: Option<u32>,
     air_group: Option<u32>,
+    /// A land unit, for a `set_posture` order (decision 0090).
+    land_unit: Option<u32>,
     #[serde(default)]
     issuer: IssuerSpec,
     intent: Option<u32>,
@@ -454,6 +471,26 @@ enum ActionSpec {
     /// Send the whole force to the yard from the base it is stopped at
     /// (decision 0069). No other key.
     SendToYard {},
+    /// A land unit's posture, `defend` or `attack` (decision 0090).
+    SetPosture {
+        posture: PostureSpec,
+    },
+}
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum PostureSpec {
+    Defend,
+    Attack,
+}
+
+impl From<PostureSpec> for Posture {
+    fn from(spec: PostureSpec) -> Posture {
+        match spec {
+            PostureSpec::Defend => Posture::Defend,
+            PostureSpec::Attack => Posture::Attack,
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -729,6 +766,16 @@ fn build_objectives(
                     base: BaseId::new(*base),
                     closed: closed.unwrap_or(false),
                     points: points_of(points, &format!("{what} points"))?,
+                },
+                ObjectiveSpec::BaseHeld { base, points } => Objective::BaseHeld {
+                    base: BaseId::new(*base),
+                    points: points_of(points, &format!("{what} points"))?,
+                },
+                ObjectiveSpec::MenLost { points_per_100_men } => Objective::MenLost {
+                    points_per_100_men: points_of(
+                        points_per_100_men,
+                        &format!("{what} points_per_100_men"),
+                    )?,
                 },
             });
         }
@@ -1269,13 +1316,21 @@ impl Scenario {
                 return Err(fail(format!("{id} has no men")));
             }
             let side: Side = spec.side.into();
-            let mut unit = LandUnit {
-                id,
-                name: spec.name.clone(),
-                side,
-                men_ashore: 0,
-                hex: None,
-            };
+            let mut unit = LandUnit::new(id, spec.name.clone(), side, 0, None);
+            if let Some(posture) = spec.posture {
+                unit.posture = posture.into();
+            }
+            if let Some(fatigue) = &spec.fatigue {
+                let fatigue = fatigue
+                    .to_fixed()
+                    .map_err(|e| fail(format!("{id} fatigue {e}")))?;
+                if fatigue.is_negative() || fatigue > Fixed::from_int(100) {
+                    return Err(fail(format!(
+                        "{id} has fatigue {fatigue}, which is not between 0 and 100"
+                    )));
+                }
+                unit.fatigue = fatigue;
+            }
             match (spec.q, spec.r, spec.task_force) {
                 (Some(q), Some(r), None) => {
                     let hex = Hex::new(q, r);
@@ -1542,8 +1597,8 @@ impl Scenario {
                     "the {kind} order on day {day} must be addressed to a {wanted}"
                 ))
             };
-            let kind = match (&spec.task_force, &spec.air_group) {
-                (Some(raw), None) => {
+            let kind = match (&spec.task_force, &spec.air_group, &spec.land_unit) {
+                (Some(raw), None, None) => {
                     let order = match &spec.action {
                         ActionSpec::SetRoute { waypoints } => TaskForceOrder::SetRoute(
                             waypoints.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
@@ -1633,13 +1688,16 @@ impl Scenario {
                         ActionSpec::Rebase { .. } => {
                             return Err(wrong_target("rebase", "air_group"))
                         }
+                        ActionSpec::SetPosture { .. } => {
+                            return Err(wrong_target("set_posture", "land_unit"))
+                        }
                     };
                     OrderKind::TaskForce {
                         target: TaskForceId::new(*raw),
                         order,
                     }
                 }
-                (None, Some(raw)) => {
+                (None, Some(raw), None) => {
                     let order = match &spec.action {
                         ActionSpec::SetAirMission {
                             mission,
@@ -1734,9 +1792,25 @@ impl Scenario {
                         order,
                     }
                 }
+                (None, None, Some(raw)) => {
+                    let order = match &spec.action {
+                        ActionSpec::SetPosture { posture } => {
+                            LandUnitOrder::SetPosture((*posture).into())
+                        }
+                        _ => {
+                            return Err(fail(format!(
+                                "an order on day {day} for a land_unit must be set_posture"
+                            )))
+                        }
+                    };
+                    OrderKind::LandUnit {
+                        target: LandUnitId::new(*raw),
+                        order,
+                    }
+                }
                 _ => {
                     return Err(fail(format!(
-                        "the order on day {day} needs exactly one of task_force and air_group"
+                        "the order on day {day} needs exactly one of task_force, air_group and land_unit"
                     )))
                 }
             };
@@ -2428,7 +2502,7 @@ r = 0
         assert!(error_of(&order("air_group = 1", "kind = \"load\"")).contains("air_group"));
         assert!(
             error_of(&order("task_force = 1\nair_group = 1", "kind = \"load\""))
-                .contains("exactly one of task_force and air_group")
+                .contains("exactly one of task_force, air_group and land_unit")
         );
         assert!(error_of(&order("", "kind = \"load\"")).contains("exactly one"));
         let float = arc.replace("range_nm = 600", "range_nm = 600.5");

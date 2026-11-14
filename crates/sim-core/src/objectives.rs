@@ -41,8 +41,9 @@
 //!   (damaged), `AircraftWorn::written_off` and `AircraftDitched::ditched`
 //!   (out of fuel on the way home, decision 5 of 0059: counted for the enemy
 //!   though no one claims it), `AircraftDitchedNoDeck` (no deck, decision
-//!   9 of 0059) and `AircraftWrittenOff` (damaged aircraft left behind by a
-//!   rebase, decision 0091, 5). Aircraft that land elsewhere are not lost and
+//!   9 of 0059), `AircraftWrittenOff` (damaged aircraft left behind by a
+//!   rebase, decision 0091, 5) and `AirGroupLostWithBase` (lost with a base
+//!   that changed side, ready and damaged, decision 0090, 20). Aircraft that land elsewhere are not lost and
 //!   are not counted. Not counted: `AircraftWorn`
 //!   `worn` (damaged and repaired later, not lost), `PilotsLost` (pilots, not
 //!   aircraft; the aircraft's own event counts the aircraft), `AircraftRepaired`
@@ -55,10 +56,17 @@
 //!   above zero and at least one ready aircraft of an air group at it, from
 //!   the `BaseAtDayEnd` event of each day (decision 0067). With
 //!   `closed = true`, the days on which it did not. The points are the
-//!   objective's points times those days over the days resolved.
+//!   objective's points times those days over the days resolved. A base
+//!   that changed side is counted whoever held it (decision 0090, 27).
+//! - `base_held`: the named base is the side's own at the end (decision
+//!   0090, 25).
+//! - `men_lost`: enemy men lost, by any cause, from these events:
+//!   `MenLostWithShip`, `MenLostUnfed` and `MenLostInFight` (decision 0090,
+//!   26). The points are the objective's points for each 100 men, a part of
+//!   100 scoring its part.
 
 use core::fmt;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::events::{base_is_open, EventKind, EventLog};
 use crate::fixed::Fixed;
@@ -101,6 +109,12 @@ pub enum Objective {
     /// the whole horizon, times the share of the horizon she is away
     /// (decision 0088). Added at the end of the enum.
     ShipsOutOfAction(ShipPoints),
+    /// The named base is the side's own at the end (decision 0090, 25).
+    /// Added at the end of the enum.
+    BaseHeld { base: BaseId, points: Fixed },
+    /// Enemy men lost by any cause, points for each 100 men (decision 0090,
+    /// 26). Added at the end of the enum.
+    MenLost { points_per_100_men: Fixed },
 }
 
 impl Objective {
@@ -113,13 +127,17 @@ impl Objective {
             Objective::CargoLanded { .. } => "cargo_landed",
             Objective::BaseOpen { .. } => "base_open",
             Objective::ShipsOutOfAction(_) => "ships_out_of_action",
+            Objective::BaseHeld { .. } => "base_held",
+            Objective::MenLost { .. } => "men_lost",
         }
     }
 
     /// The base the objective names, if it names one.
     pub const fn base(&self) -> Option<BaseId> {
         match self {
-            Objective::CargoLanded { base, .. } | Objective::BaseOpen { base, .. } => Some(*base),
+            Objective::CargoLanded { base, .. }
+            | Objective::BaseOpen { base, .. }
+            | Objective::BaseHeld { base, .. } => Some(*base),
             _ => None,
         }
     }
@@ -283,6 +301,10 @@ pub struct Tally {
     /// Enemy ships not sunk with days out above zero (decision 0088), in
     /// ship number order.
     pub out_of_action: BTreeMap<ShipId, OutOfAction>,
+    /// The bases that are the side's own at the end (decision 0090, 25).
+    pub bases_held: BTreeSet<BaseId>,
+    /// Enemy men lost, by any cause (decision 0090, 26).
+    pub men_lost: u32,
 }
 
 /// One enemy ship's time away (decision 0088).
@@ -358,6 +380,14 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
     // The days of repair each ship left for a yard with, over every
     // departure in the log (decision 0088).
     let left_for_yard = left_for_yard_with(log);
+
+    // Bases held at the end (decision 0090, 25).
+    for base in truth.bases.values() {
+        out.get_mut(&base.side)
+            .expect("both sides")
+            .bases_held
+            .insert(base.id);
+    }
 
     // Ships: a side's tally holds the enemy's losses.
     for ship in truth.ships.values() {
@@ -437,6 +467,13 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
                 air_group,
                 aircraft,
                 ..
+            }
+            // Lost with their base when it changed side (decision 0090, 20),
+            // counted as a group lost with its ship is.
+            | EventKind::AirGroupLostWithBase {
+                air_group,
+                aircraft,
+                ..
             } => {
                 if let Some(group) = truth.air_groups.get(air_group) {
                     out.get_mut(&other(group.side))
@@ -475,6 +512,17 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
                         .entry(*base)
                         .or_insert(Fixed::ZERO);
                     *total -= *loaded_t;
+                }
+            }
+            // Men lost by any cause (decision 0090, 26): counted for the
+            // enemy of the unit's side.
+            EventKind::MenLostWithShip { unit, men: lost, .. }
+            | EventKind::MenLostUnfed { unit, lost, .. }
+            | EventKind::MenLostInFight { unit, lost, .. } => {
+                if let Some(unit) = truth.land_units.get(unit) {
+                    out.get_mut(&other(unit.side))
+                        .expect("both sides")
+                        .men_lost += *lost;
                 }
             }
             // Bases: each day's end, for both sides, whichever side holds
@@ -528,7 +576,8 @@ fn is_crippled(ship: &Ship) -> bool {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ObjectiveScore {
     /// `ships_sunk`, `ships_crippled`, `ships_out_of_action`,
-    /// `aircraft_destroyed`, `cargo_landed` or `base_open`.
+    /// `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held` or
+    /// `men_lost`.
     pub kind: &'static str,
     pub base: Option<BaseId>,
     /// For `base_open`: whether the side wanted the base shut.
@@ -600,6 +649,12 @@ fn ship_count(by_kind: &BTreeMap<ShipKind, u32>, points: &ShipPoints) -> (Fixed,
     (count, total)
 }
 
+/// The points of `men` enemy men lost at `points_per_100_men` for each 100,
+/// a part of 100 scoring its part (decision 0090, 26).
+pub fn men_lost_points(men: u32, points_per_100_men: Fixed) -> Fixed {
+    points_per_100_men.mul_div(Fixed::from_int(i64::from(men)), Fixed::from_int(100))
+}
+
 /// One side's points by objective for one tally.
 fn score_side(side: &SideObjectives, tally: &Tally, horizon_days: u32) -> Vec<ObjectiveScore> {
     side.objectives
@@ -667,6 +722,16 @@ fn score_side(side: &SideObjectives, tally: &Tally, horizon_days: u32) -> Vec<Ob
                     score.count = Fixed::from_int(i64::from(days.as_wanted(*closed)));
                     score.days = Some(days.days);
                     score.points = days.points(*closed, *points);
+                }
+                Objective::BaseHeld { base, points } => {
+                    if tally.bases_held.contains(base) {
+                        score.count = Fixed::ONE;
+                        score.points = *points;
+                    }
+                }
+                Objective::MenLost { points_per_100_men } => {
+                    score.count = Fixed::from_int(i64::from(tally.men_lost));
+                    score.points = men_lost_points(tally.men_lost, *points_per_100_men);
                 }
             }
             score
@@ -809,7 +874,16 @@ pub fn known_progress(
     // Each day's end at the side's own bases, which it sees whole.
     let mut base_days: BTreeMap<BaseId, BaseDays> = BTreeMap::new();
     let mut claimed = Claimed::default();
+    // Bases the side saw change side (decision 0090, 30).
+    let mut changed: BTreeSet<BaseId> = BTreeSet::new();
     for event in events {
+        match &event.kind {
+            SideEventKind::Whole(EventKind::BaseChangedSide { base, .. })
+            | SideEventKind::BaseChangedSide { base, .. } => {
+                changed.insert(*base);
+            }
+            _ => {}
+        }
         if let SideEventKind::Whole(kind) = &event.kind {
             match kind {
                 EventKind::CargoUnloaded {
@@ -898,7 +972,10 @@ pub fn known_progress(
                     points,
                 } => {
                     known.closed = *closed;
-                    if own_bases.contains(base) {
+                    // A base that changed side was counted on days the side
+                    // did not hold it, which it cannot see (As built of
+                    // 0090).
+                    if own_bases.contains(base) && !changed.contains(base) {
                         let days = base_days.get(base).copied().unwrap_or_default();
                         known.basis = KnownBasis::Exact;
                         known.count = Fixed::from_int(i64::from(days.as_wanted(*closed)));
@@ -906,6 +983,20 @@ pub fn known_progress(
                         known.points = Some(days.points(*closed, *points));
                     }
                 }
+                // A side can always see whose a base on its map is (decision
+                // 0090, 25).
+                Objective::BaseHeld { base, points } => {
+                    known.basis = KnownBasis::Exact;
+                    if own_bases.contains(base) {
+                        known.count = Fixed::ONE;
+                        known.points = Some(*points);
+                    } else {
+                        known.points = Some(Fixed::ZERO);
+                    }
+                }
+                // The enemy's men are not something a side knows before the
+                // end (decision 0090, 26).
+                Objective::MenLost { .. } => {}
             }
             known
         })

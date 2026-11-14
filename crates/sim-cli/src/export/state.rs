@@ -48,6 +48,17 @@ pub struct LandUnitOut {
     side: &'static str,
     men_ashore: u32,
     hex: Option<Pos>,
+    /// "attack" (decision 0090). Left out on defend, so a file made where no
+    /// unit attacks is unchanged.
+    #[serde(skip_serializing_if = "is_defend")]
+    posture: &'static str,
+    /// Fatigue, 0 to 100 (decision 0090, 11). Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    fatigue: Num,
+    /// The share of its men fed at the last night's charge (decision 0090,
+    /// 8). Left out when 1.
+    #[serde(skip_serializing_if = "num_is_one")]
+    fed_share: Num,
 }
 
 /// The men of one land unit aboard a ship.
@@ -138,6 +149,11 @@ pub struct AirGroupOut {
     /// Set for a group aboard a ship.
     #[serde(skip_serializing_if = "Option::is_none")]
     ship: Option<u32>,
+    /// True for a group lost with the base it was at when the base changed
+    /// side (decision 0090, 20): it has no base and no ship. Left out when
+    /// false.
+    #[serde(skip_serializing_if = "is_false")]
+    lost_with_base: bool,
     aircraft_type: String,
     /// The type's number in `aircraft_types` (version 3): names need not be
     /// unique.
@@ -254,6 +270,14 @@ fn num_is_zero(n: &Num) -> bool {
     n.0 == sim_core::fixed::Fixed::ZERO
 }
 
+fn num_is_one(n: &Num) -> bool {
+    n.0 == sim_core::fixed::Fixed::ONE
+}
+
+fn is_defend(posture: &&'static str) -> bool {
+    *posture == "defend"
+}
+
 fn is_false(b: &bool) -> bool {
     !*b
 }
@@ -283,6 +307,9 @@ fn land_unit(unit: &LandUnit) -> LandUnitOut {
         side: names::side(unit.side),
         men_ashore: unit.men_ashore,
         hex: unit.hex.map(Pos::from),
+        posture: unit.posture.name(),
+        fatigue: Num(unit.fatigue),
+        fed_share: Num(unit.fed_share),
     }
 }
 
@@ -379,12 +406,13 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         side: names::side(group.side),
         base: match group.location {
             AirGroupLocation::Base(base) => Some(base.raw()),
-            AirGroupLocation::Ship(_) => None,
+            AirGroupLocation::Ship(_) | AirGroupLocation::Lost => None,
         },
         ship: match group.location {
-            AirGroupLocation::Base(_) => None,
+            AirGroupLocation::Base(_) | AirGroupLocation::Lost => None,
             AirGroupLocation::Ship(ship) => Some(ship.raw()),
         },
+        lost_with_base: group.location == AirGroupLocation::Lost,
         aircraft_type: ref_data.aircraft_types[&group.aircraft_type].name.clone(),
         aircraft_type_id: group.aircraft_type.raw(),
         ready: group.ready,

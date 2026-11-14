@@ -14,7 +14,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
-use sim_core::events::{EventKind, SupplyUse, Weapon};
+use sim_core::events::{EventKind, LandFatigueChange, SupplyUse, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId};
@@ -70,6 +70,11 @@ pub struct Briefing {
     /// has no land unit, so a scenario without any is briefed as it was.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub land_units: Option<LandUnitsPart>,
+    /// 8c. Bases that changed side yesterday and what went with them
+    /// (decision 0090, 29 and 30). Left out of the data and the text when no
+    /// base changed side and nothing was lost with one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_changes: Option<BaseChangesPart>,
     /// 9. Arrivals due and replacement streams.
     pub arrivals: ArrivalsPart,
     /// 10. The five warnings.
@@ -495,6 +500,26 @@ pub struct LandUnitsPart {
     pub lost_yesterday: Vec<MenLostLine>,
     /// Units that lost their last man yesterday.
     pub destroyed_yesterday: Vec<UnitDestroyedLine>,
+    /// Fights ashore the side's men were in yesterday (decision 0090, 28):
+    /// the hex only, never which side attacked. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fights_yesterday: Vec<FightLine>,
+    /// The side's own units' fire in yesterday's fights: firing men and
+    /// shots, never the chance or the hits. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fire_yesterday: Vec<FireLine>,
+    /// Changes of the side's own units' fatigue yesterday. Left out when
+    /// none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fatigue_yesterday: Vec<FatigueLine>,
+    /// Units on attack too tired to go on that went back to defend
+    /// yesterday. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub back_to_defend_yesterday: Vec<BackToDefendLine>,
+    /// Units with no man ashore whose fed share went back to 1. Left out
+    /// when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fed_share_restored_yesterday: Vec<FedShareRestoredLine>,
     /// For each hex with men of the side ashore, the days of supply its base
     /// holds at the present charge.
     pub supply_by_hex: Vec<HexSupply>,
@@ -560,14 +585,14 @@ pub struct FedLine {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct MenLostLine {
     pub land_unit: Handle,
-    /// `unfed` or `lost_with_ship`.
+    /// `unfed`, `lost_with_ship` or `fight` (decision 0090, 9).
     pub cause: &'static str,
     pub men: u32,
     /// The ship lost with, for `lost_with_ship`.
     pub ship: Option<Handle>,
-    /// The hex of the unfed loss.
+    /// The hex of the unfed or fight loss.
     pub place: Option<Place>,
-    /// What the unit has left ashore there, for `unfed`.
+    /// What the unit has left ashore there, for `unfed` and `fight`.
     pub ashore: Option<u32>,
     pub event: u32,
 }
@@ -575,6 +600,130 @@ pub struct MenLostLine {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct UnitDestroyedLine {
     pub land_unit: Handle,
+    pub event: u32,
+}
+
+/// A fight ashore the side's men were in (decision 0090, 28).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FightLine {
+    pub place: Place,
+    pub event: u32,
+}
+
+/// The side's own unit fired in a fight ashore (decision 0090, 28): its
+/// firing men and its shots. The chance and the hits are not given.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FireLine {
+    pub land_unit: Handle,
+    pub place: Place,
+    pub firing_men: u32,
+    pub shots: Dec,
+    pub event: u32,
+}
+
+/// A change of a unit's fatigue (decision 0090, 12).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FatigueLine {
+    pub land_unit: Handle,
+    /// `gained` (on attack and fired) or `rested`.
+    pub change: &'static str,
+    /// The unit's fatigue afterwards.
+    pub fatigue: Dec,
+    pub event: u32,
+}
+
+/// A unit on attack that was too tired and went back to defend (decision
+/// 0090, 14).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct BackToDefendLine {
+    pub land_unit: Handle,
+    pub fatigue: Dec,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FedShareRestoredLine {
+    pub land_unit: Handle,
+    pub event: u32,
+}
+
+/// What yesterday's change of side of bases did to the side (decision 0090,
+/// 29 and 30).
+#[derive(Clone, PartialEq, Eq, Debug, Default, Serialize)]
+pub struct BaseChangesPart {
+    /// Bases the side took, with the stocks it kept.
+    pub taken: Vec<BaseTakenLine>,
+    /// Bases the side lost. The stocks left in them are the new holder's and
+    /// are not given.
+    pub lost: Vec<BaseLostLine>,
+    /// The side's air groups lost with a base.
+    pub air_groups_lost: Vec<GroupLostWithBaseLine>,
+    /// The side's ships lost in port with a base.
+    pub ships_lost: Vec<ShipLostWithBaseLine>,
+    /// The side's task forces whose home port was lost.
+    pub home_ports_lost: Vec<HomePortLostLine>,
+    /// The side's air groups whose base strike mission was cleared because
+    /// the base is now the side's own.
+    pub strike_missions_cleared: Vec<StrikeClearedLine>,
+}
+
+impl BaseChangesPart {
+    fn is_empty(&self) -> bool {
+        self.taken.is_empty()
+            && self.lost.is_empty()
+            && self.air_groups_lost.is_empty()
+            && self.ships_lost.is_empty()
+            && self.home_ports_lost.is_empty()
+            && self.strike_missions_cleared.is_empty()
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct BaseTakenLine {
+    pub base: Handle,
+    pub place: Place,
+    /// The stocks the side holds in it now.
+    pub supply_t: Dec,
+    pub fuel_t: Dec,
+    /// The stocks lost in the change (decision 0090, 30).
+    pub supply_lost_t: Dec,
+    pub fuel_lost_t: Dec,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct BaseLostLine {
+    pub base: Handle,
+    pub place: Place,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct GroupLostWithBaseLine {
+    pub air_group: Handle,
+    pub base: Handle,
+    pub aircraft: u32,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ShipLostWithBaseLine {
+    pub ship: Handle,
+    pub base: Handle,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct HomePortLostLine {
+    pub task_force: Handle,
+    pub base: Handle,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct StrikeClearedLine {
+    pub air_group: Handle,
+    pub base: Handle,
     pub event: u32,
 }
 
@@ -828,6 +977,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         .collect();
 
     let land_units = land_units_part(&ctx, view, std::mem::take(&mut day.ground));
+    let base_changes = Some(std::mem::take(&mut day.base_changes)).filter(|c| !c.is_empty());
 
     let arrivals = ArrivalsPart {
         due: view
@@ -889,6 +1039,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         air_groups,
         bases,
         land_units,
+        base_changes,
         arrivals,
         warnings,
     }
@@ -957,6 +1108,11 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         fed_last_night: ground.fed,
         lost_yesterday: ground.lost,
         destroyed_yesterday: ground.destroyed,
+        fights_yesterday: ground.fights,
+        fire_yesterday: ground.fire,
+        fatigue_yesterday: ground.fatigue,
+        back_to_defend_yesterday: ground.back_to_defend,
+        fed_share_restored_yesterday: ground.fed_share_restored,
         supply_by_hex,
     })
 }
@@ -997,6 +1153,7 @@ struct Day {
     repaired: BTreeMap<BaseId, Vec<RepairedShip>>,
     returned: BTreeMap<BaseId, Vec<ReturnedForce>>,
     ground: GroundDay,
+    base_changes: BaseChangesPart,
 }
 
 /// What yesterday's events of the side say of its land units (decision
@@ -1011,6 +1168,11 @@ struct GroundDay {
     fed: Vec<FedLine>,
     lost: Vec<MenLostLine>,
     destroyed: Vec<UnitDestroyedLine>,
+    fights: Vec<FightLine>,
+    fire: Vec<FireLine>,
+    fatigue: Vec<FatigueLine>,
+    back_to_defend: Vec<BackToDefendLine>,
+    fed_share_restored: Vec<FedShareRestoredLine>,
 }
 
 /// What moved in and out of a base's stocks yesterday, by cause, from the
@@ -1182,6 +1344,7 @@ impl Day {
         let mut repaired: BTreeMap<BaseId, Vec<RepairedShip>> = BTreeMap::new();
         let mut returned: BTreeMap<BaseId, Vec<ReturnedForce>> = BTreeMap::new();
         let mut ground = GroundDay::default();
+        let mut base_changes = BaseChangesPart::default();
 
         for e in events {
             let id = ctx.number(e.id);
@@ -1417,6 +1580,11 @@ impl Day {
                         at: match at {
                             sim_core::state::AirGroupLocation::Base(base) => ctx.base(*base),
                             sim_core::state::AirGroupLocation::Ship(ship) => ctx.ship(*ship),
+                            // A group lost with its base lands nowhere.
+                            sim_core::state::AirGroupLocation::Lost => Handle {
+                                handle: "lost_with_base".to_string(),
+                                name: None,
+                            },
                         },
                         aircraft: *n,
                         pilots: *pilots,
@@ -1670,8 +1838,121 @@ impl Day {
                             event: id,
                         });
                     }
+                    EventKind::MenLostInFight {
+                        unit,
+                        hex,
+                        lost,
+                        ashore,
+                    } => ground.lost.push(MenLostLine {
+                        land_unit: ctx.land_unit(*unit),
+                        cause: "fight",
+                        men: *lost,
+                        ship: None,
+                        place: Some(ctx.place(*hex)),
+                        ashore: Some(*ashore),
+                        event: id,
+                    }),
+                    EventKind::LandUnitFatigue {
+                        unit,
+                        change,
+                        fatigue,
+                    } => ground.fatigue.push(FatigueLine {
+                        land_unit: ctx.land_unit(*unit),
+                        change: match change {
+                            LandFatigueChange::Gained => "gained",
+                            LandFatigueChange::Rested => "rested",
+                        },
+                        fatigue: Dec(*fatigue),
+                        event: id,
+                    }),
+                    EventKind::LandUnitBackToDefend { unit, fatigue } => {
+                        ground.back_to_defend.push(BackToDefendLine {
+                            land_unit: ctx.land_unit(*unit),
+                            fatigue: Dec(*fatigue),
+                            event: id,
+                        });
+                    }
+                    EventKind::FedShareRestored { unit } => {
+                        ground.fed_share_restored.push(FedShareRestoredLine {
+                            land_unit: ctx.land_unit(*unit),
+                            event: id,
+                        });
+                    }
+                    EventKind::BaseChangedSide {
+                        base,
+                        hex,
+                        supply_t,
+                        fuel_t,
+                        supply_lost_t,
+                        fuel_lost_t,
+                        ..
+                    } => base_changes.taken.push(BaseTakenLine {
+                        base: ctx.base(*base),
+                        place: ctx.place(*hex),
+                        supply_t: Dec(*supply_t),
+                        fuel_t: Dec(*fuel_t),
+                        supply_lost_t: Dec(*supply_lost_t),
+                        fuel_lost_t: Dec(*fuel_lost_t),
+                        event: id,
+                    }),
+                    EventKind::AirGroupLostWithBase {
+                        air_group,
+                        base,
+                        aircraft,
+                    } => base_changes.air_groups_lost.push(GroupLostWithBaseLine {
+                        air_group: ctx.group(*air_group),
+                        base: ctx.base(*base),
+                        aircraft: *aircraft,
+                        event: id,
+                    }),
+                    EventKind::ShipLostWithBase { ship, base } => {
+                        base_changes.ships_lost.push(ShipLostWithBaseLine {
+                            ship: ctx.ship(*ship),
+                            base: ctx.base(*base),
+                            event: id,
+                        });
+                    }
+                    EventKind::HomePortLost { task_force, base } => {
+                        base_changes.home_ports_lost.push(HomePortLostLine {
+                            task_force: ctx.force(*task_force),
+                            base: ctx.base(*base),
+                            event: id,
+                        });
+                    }
+                    EventKind::StrikeMissionCleared { air_group, base } => {
+                        base_changes
+                            .strike_missions_cleared
+                            .push(StrikeClearedLine {
+                                air_group: ctx.group(*air_group),
+                                base: ctx.base(*base),
+                                event: id,
+                            });
+                    }
                     _ => {}
                 },
+                SideEventKind::GroundFight { hex } => ground.fights.push(FightLine {
+                    place: ctx.place(*hex),
+                    event: id,
+                }),
+                SideEventKind::GroundFire {
+                    unit,
+                    hex,
+                    firing_men,
+                    shots,
+                } => ground.fire.push(FireLine {
+                    land_unit: ctx.land_unit(*unit),
+                    place: ctx.place(*hex),
+                    firing_men: *firing_men,
+                    shots: Dec(*shots),
+                    event: id,
+                }),
+                SideEventKind::BaseChangedSide { base, hex, .. } => {
+                    base_changes.lost.push(BaseLostLine {
+                        base: ctx.base(*base),
+                        place: ctx.place(*hex),
+                        event: id,
+                    });
+                }
                 SideEventKind::Salvo {
                     firer,
                     weapon,
@@ -1857,6 +2138,7 @@ impl Day {
             repaired,
             returned,
             ground,
+            base_changes,
         }
     }
 }

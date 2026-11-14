@@ -27,7 +27,7 @@ A side sees: it sees its own reports, contacts and claims and what becomes of th
 An air group searches in a daylight pulse if all of these hold:
 
 - its mission is search, and it holds a search arc;
-- it has a position: it is at a base, or aboard a ship that is afloat (a group aboard a sunk ship is lost with it and has no position);
+- it has a position: it is at a base, or aboard a ship that is afloat (a group aboard a sunk ship is lost with it, and a group lost with its base is lost whole: neither has a position);
 - it is not dark at its position (for now, dark means the night pulse, everywhere);
 - the number of aircraft it can fly is above 0.
 

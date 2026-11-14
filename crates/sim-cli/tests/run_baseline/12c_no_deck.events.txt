@@ -2,7 +2,7 @@ Scenario 12c: No deck
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash bd5854d99b6a4089  47 events
+day   1  hash 91fed275756d42b0  47 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
