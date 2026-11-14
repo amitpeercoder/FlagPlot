@@ -170,11 +170,11 @@ Land units, sea transport, supply, marching, combat, capture, fatigue, training,
 | Rule | WitP:AE | Flag Plot |
 | --- | --- | --- |
 | Composition | Squads, guns, vehicles, tanks and support devices | Men, with unit skills and weight abstracting differences |
-| Fire | Weapon acquisition, range, soft/armoured targets and penetration | Shots derived from effective manpower and generic hit chances |
+| Fire | Weapon acquisition, range, soft/armoured targets and penetration | Shots derived from effective manpower and generic hit chances. *Note, Nov 14, 2026: a side's fire now counts no more men than a multiple of the enemy's fighting men in the hex (decision 0105), so a large force does not fire in full on a small one; losses are still taken from all its units in proportion.* |
 | Sequence | Bombardment, defensive fire, attacking fire and assault | Both sides calculate fire from starting strengths, then apply losses |
-| Attack choices | Bombardment, deliberate and shock attacks | Attack or defend |
+| Attack choices | Bombardment, deliberate and shock attacks | Attack or defend. *Note, Nov 14, 2026: an attack order may say what the unit does when its attack is spent, hold or fall back (decision 0105).* |
 | Terrain | Changes movement, supply and combat | Changes marching through movement skills; no combat terrain effect |
-| Defeat | Adjusted assault odds, forts, retreat and surrender | Surviving fighting-man ratio determines defeat and base capture |
+| Defeat | Adjusted assault odds, forts, retreat and surrender | Surviving fighting-man ratio determines defeat and base capture. *Note, Nov 14, 2026: an attack that fails by the odds now tires its men, so a hopeless attack stops in a day or two, and a spent attacker holds or falls back by its order or by whether it can be fed where it stands (decision 0105); it does not surrender.* |
 | Losses | Disabled and destroyed devices, recovery and replacements | Permanent manpower losses; no scheduled land replacements |
 | Movement | Routes, roads, railways, rivers and controlled hexsides | One adjacent land link per order; no comparable transport network or retreat-path system. *Note, Nov 14, 2026: a beaten side's units now fall back along a land link by the one rule of decision 0104, with no retreat path to choose.* |
 
@@ -236,7 +236,7 @@ This ranking is an assessment of operational consequences, not an approved imple
 3. **Sustained fleet operations.** Replenishment, rearming, machinery wear and repair-facility constraints are much thinner.
 4. **Threats to shipping.** Submarines and mines are absent.
 5. **Developing battle damage.** Fires and flooding do not evolve after an attack.
-6. **Land-campaign dynamics.** Terrain, equipment, disruption, retreat and replacements are largely absent. *Note, Nov 14, 2026: a beaten side's falling back and surrender are built (decision 0104); the rest stands.*
+6. **Land-campaign dynamics.** Terrain, equipment, disruption, retreat and replacements are largely absent. *Note, Nov 14, 2026: a beaten side's falling back and surrender are built (decision 0104), and so are a failed attack's fatigue and a spent attacker's falling back or holding (decision 0105); the rest stands.*
 7. **Weather.** Plans face no weather-driven loss of air cover or cancellation of offensive missions.
 
 Importance depends on the scenario. Missing industry barely affects a one-night Savo scenario; missing engagement range and participation rules directly affect it. Across Guadalcanal, airfield suppression, replenishment, weather and accumulated damage become much harder to omit without changing the commander's decisions.

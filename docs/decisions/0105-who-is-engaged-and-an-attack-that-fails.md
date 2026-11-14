@@ -1,6 +1,6 @@
 # 0105: Who is engaged in a fight ashore, and an attack that fails
 
-Status: a plan by the architect, written on Nov 14, 2026, after the first baseline of the lengthened slice (`docs/validation/full-slice-39-days-baseline.md`), and revised the same day on the designer's answers. He agreed the limit on engaged men (decision 1). He rejected the first draft's rule that an attack breaks on losing a fifth of its men in a day: an attack fails when it does not overcome the defence, and what follows is wear on the men, not a rule that calls them off (decisions 4 and 5). And he said that what men do when their attack is spent depends on the command and on whether they can stay (decisions 6 and 7). Confirmed as revised. Nothing is built. Every figure is a placeholder.
+Status: a plan by the architect, written on Nov 14, 2026, after the first baseline of the lengthened slice (`docs/validation/full-slice-39-days-baseline.md`), and revised the same day on the designer's answers. He agreed the limit on engaged men (decision 1). He rejected the first draft's rule that an attack breaks on losing a fifth of its men in a day: an attack fails when it does not overcome the defence, and what follows is wear on the men, not a rule that calls them off (decisions 4 and 5). And he said that what men do when their attack is spent depends on the command and on whether they can stay (decisions 6 and 7). Confirmed as revised. Built Nov 14, 2026 (scenario 33); see "As built". Every figure is a placeholder.
 
 ## What the baseline showed
 
