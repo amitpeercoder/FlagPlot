@@ -98,7 +98,7 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | A load of a stated weight, and refuelling that leaves a reserve | Stage 1 | Not built |
 | A day from which a force may be used | Stage 2 | Not built |
 | Preparing a landing: loading and rehearsal | Decision 0095 | Confirmed, revised. Needed before stage 3 |
-| The experience of a land unit, and training | Decision 0097 | A plan. Needed before stage 3 |
+| The experience of a land unit, and training | Decision 0097 | Confirmed. Needed before stage 3 |
 | A report of enemy men ashore without a landing | Not planned | Missing. Today only a side with men in the hex gets one (decision 0092). Stage 3 says whether the invasion needs it |
 | The objectives scale set from the record | `docs/open-work.md` | Open. Not a condition of stages 0 to 2. It is frozen before stage 5's games are played |
 

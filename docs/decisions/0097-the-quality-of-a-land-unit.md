@@ -1,6 +1,6 @@
 # 0097: The quality of a land unit, and training
 
-Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that step 3 go beyond rehearsal for one landing to troop quality that lasts. Decisions 3 and 5 need review. Nothing is built. Every figure is a placeholder. No real unit has a value yet: that waits on research, as the experience of air groups does (decision 0064).
+Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that step 3 go beyond rehearsal for one landing to troop quality that lasts. The designer agreed decisions 3 and 5 on Nov 14, 2026. Nothing is built. Every figure is a placeholder. No real unit has a value yet: that waits on research, as the experience of air groups does (decision 0064).
 
 ## The gap
 
@@ -10,9 +10,9 @@ A land unit is a count of men. A battalion that has fought for a month and one t
 
 1. **A land unit has experience, a whole number from 0 to 4,** 2 being its service's standard. It is the scale ships' crews have (decision 0064), and it means the same: 0 is raw, 4 is the best there is. A scenario gives it; 2 if it does not.
 2. **Experience moves the chance a unit's shot hits.** The chance of decision 0090, 7, is multiplied by 1 plus `experience_fire_strength` times the unit's experience less 2. At a strength of 0 it does nothing. One figure serves both sides.
-3. **Training raises it, slowly, and only so far.** A unit ordered to train gains a day of training on each day that all its men are ashore at a base of its side, fed in full, not marching and not in a fight. After `training_days_per_level` such days its experience rises by one and the count starts again. Training cannot take a unit above `training_ceiling`. *Needs review: the ceiling is the standard, 2. Training makes raw troops into sound ones and no more; what is above that comes from fighting. The other choice is no ceiling.*
+3. **Training raises it, slowly, and only so far.** A unit ordered to train gains a day of training on each day that all its men are ashore at a base of its side, fed in full, not marching and not in a fight. After `training_days_per_level` such days its experience rises by one and the count starts again. Training cannot take a unit above `training_ceiling`. *Agreed by the designer, Nov 14, 2026. The ceiling is the standard, 2. Training makes raw troops into sound ones and no more; what is above that comes from fighting. The other choice is no ceiling.*
 4. **A unit trains or rehearses, not both.** A day that counts for rehearsal under decision 0095 does not count for training.
-5. **Fighting raises it too.** A unit that fired in a fight on `fight_days_per_level` days gains one, up to 4. *Needs review: without this, experience above the standard could only be given by a scenario. With it, a unit that survives a campaign is worth more than its replacement, which is a reason to preserve it.*
+5. **Fighting raises it too.** A unit that fired in a fight on `fight_days_per_level` days gains one, up to 4. *Agreed by the designer, Nov 14, 2026. Without this, experience above the standard could only be given by a scenario. With it, a unit that survives a campaign is worth more than its replacement, which is a reason to preserve it.*
 6. **Men who join a unit do not dilute it,** because nothing adds men to a unit in play. A unit made by division takes the experience of the unit it left.
 7. **A side sees its own units' experience and days of training exactly. The enemy sees neither.** An estimate of the enemy ashore is of men and says nothing of their quality.
 
@@ -62,5 +62,7 @@ No real unit gets a value from this record. A unit's experience is a fact about 
 
 ## Questions for the designer
 
-1. **Decision 3:** training raises a unit to the standard and no further. Agreed?
-2. **Decision 5:** fighting also raises experience, up to the top. Agreed?
+Answered on Nov 14, 2026.
+
+1. **Decision 3:** training raises a unit to the standard and no further. Agreed.
+2. **Decision 5:** fighting also raises experience, up to the top. Agreed.
