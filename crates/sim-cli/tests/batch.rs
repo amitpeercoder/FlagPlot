@@ -1542,7 +1542,10 @@ fn scenario_31_records_the_arrival_delivered_whole_on_day_4() {
     let batch = parse(&batch(
         "land-31",
         "data/scenarios/31_airfield_damage.toml",
-        &["--runs", "3"],
+        // Its hand calculation is on the frozen figures; on the live ones a
+        // fighting unit at work makes a tenth of a labourer's work
+        // (decision 0109, 3) and the arrival does not come.
+        &["--runs", "3", "--reference", "data/reference/step1"],
     ));
     for run in batch["per_run"].as_array().expect("runs") {
         // Due on day 2, it waits on the nights of days 2 and 3 (the hand

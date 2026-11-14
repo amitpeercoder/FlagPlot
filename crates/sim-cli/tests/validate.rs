@@ -1500,9 +1500,26 @@ fn a_version_4_batch_is_refused_and_told_to_be_made_again() {
 /// A real batch of `scenario`, judged by `body` (measures, not judged), with
 /// the report back.
 fn land_report(name: &str, scenario: &str, body: &str) -> String {
+    land_report_on(name, scenario, body, &[])
+}
+
+/// As [`land_report`], on the figures of `reference`: a scenario whose
+/// figures the live files have moved since its hand calculation is read on
+/// the frozen step 1 figures, as its own test runs it.
+fn land_report_frozen(name: &str, scenario: &str, body: &str) -> String {
+    land_report_on(
+        name,
+        scenario,
+        body,
+        &["--reference", "data/reference/step1"],
+    )
+}
+
+fn land_report_on(name: &str, scenario: &str, body: &str, reference: &[&str]) -> String {
     let d = dir(name);
     let batch = d.join("batch.json");
-    let result = binary(&[
+    let batch_text = text(&batch);
+    let mut args = vec![
         "batch",
         scenario,
         "--label",
@@ -1510,8 +1527,10 @@ fn land_report(name: &str, scenario: &str, body: &str) -> String {
         "--runs",
         "4",
         "--out",
-        &text(&batch),
-    ]);
+        &batch_text,
+    ];
+    args.extend_from_slice(reference);
+    let result = binary(&args);
     assert!(result.status.success(), "{}", stderr(&result));
     let measures = d.join("measures.toml");
     fs::write(
@@ -1522,13 +1541,10 @@ fn land_report(name: &str, scenario: &str, body: &str) -> String {
     )
     .expect("write");
     let out = d.join("report.md");
-    let result = binary(&[
-        "validate",
-        &text(&batch),
-        &text(&measures),
-        "--out",
-        &text(&out),
-    ]);
+    let (measures_text, out_text) = (text(&measures), text(&out));
+    let mut args = vec!["validate", &batch_text, &measures_text, "--out", &out_text];
+    args.extend_from_slice(reference);
+    let result = binary(&args);
     assert!(result.status.success(), "{}", stderr(&result));
     fs::read_to_string(&out).expect("report")
 }
@@ -1584,14 +1600,16 @@ fn the_land_takes_read_a_real_batch_and_show_the_runs_left_out() {
     assert_eq!(cells(&report, "food")[3], "2998", "{report}");
 
     // Scenario 30 builds the airfield of base 1 on day 2; scenario 31's
-    // arrival due on day 2 comes on day 4.
+    // arrival due on day 2 comes on day 4, by its hand calculation, on the
+    // frozen figures (on the live ones a fighting unit at work makes a
+    // tenth of a labourer's work, decision 0109, 3, and it does not come).
     let report = land_report(
         "land30",
         "data/scenarios/30_working_units.toml",
         &land_measure("field", "take = \"airfield_built_day\"\nbase = 1"),
     );
     assert_eq!(cells(&report, "field")[3], "2", "{report}");
-    let report = land_report(
+    let report = land_report_frozen(
         "land31",
         "data/scenarios/31_airfield_damage.toml",
         &land_measure(
