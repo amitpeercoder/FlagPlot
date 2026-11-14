@@ -15,8 +15,8 @@ use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
     AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Halt, HaltWork, LandUnit, March,
-    Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems,
-    TaskForce, Troops, TruthState, YardTrip,
+    Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem,
+    ShipSystems, TaskForce, Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -140,8 +140,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// after its `fed_share` (decision 0094);
 /// version 15 adds a route's `act_at` after its `next_index`, the task force
 /// status `Halted` (code 5), and a task force's `halt` after its `yard_trip`
-/// (decision 0096).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v15";
+/// (decision 0096);
+/// version 16 adds a task force's `preparation` and `landing_at` after its
+/// `halt`, and a land unit's `rehearsal`, `rehearsal_hex`, `activity`,
+/// `activity_order`, `experience`, `training_days` and `fight_days` after
+/// its `march` (decisions 0095 and 0097).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v16";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -249,6 +253,8 @@ fn name_every_field(world: &World) {
             fatigue: _,
             yard_trip,
             halt,
+            preparation,
+            landing_at: _,
         } = task_force;
         let Route {
             waypoints: _,
@@ -265,6 +271,13 @@ fn name_every_field(world: &World) {
             bombarded: _,
             cargo_completed: _,
         }) = halt
+        {}
+        if let Some(Preparation {
+            hex: _,
+            roster: _,
+            loading: _,
+            order: _,
+        }) = preparation
         {}
         let RulesOfEngagement {
             stance: _,
@@ -362,6 +375,13 @@ fn name_every_field(world: &World) {
         fatigue: _,
         fed_share: _,
         march: _,
+        rehearsal: _,
+        rehearsal_hex: _,
+        activity: _,
+        activity_order: _,
+        experience: _,
+        training_days: _,
+        fight_days: _,
     }) = land_units.values().next()
     {}
     if let Some(Some(March {
@@ -561,6 +581,30 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             }
             None => h.u8(0),
         }
+        // After the halt (decision 0095): the preparation, whose roster is
+        // in unit order, and the hex where landing has begun.
+        match &task_force.preparation {
+            Some(preparation) => {
+                h.u8(1);
+                h.i32(preparation.hex.q);
+                h.i32(preparation.hex.r);
+                h.count(preparation.roster.len());
+                for unit in &preparation.roster {
+                    h.u32(unit.raw());
+                }
+                h.i64(preparation.loading.raw());
+                h.u32(preparation.order.raw());
+            }
+            None => h.u8(0),
+        }
+        match task_force.landing_at {
+            Some(hex) => {
+                h.u8(1);
+                h.i32(hex.q);
+                h.i32(hex.r);
+            }
+            None => h.u8(0),
+        }
     }
 
     h.count(truth.bases.len());
@@ -694,6 +738,21 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             }
             None => h.u8(0),
         }
+        // After the march (decisions 0095 and 0097).
+        h.i64(unit.rehearsal.raw());
+        match unit.rehearsal_hex {
+            Some(hex) => {
+                h.u8(1);
+                h.i32(hex.q);
+                h.i32(hex.r);
+            }
+            None => h.u8(0),
+        }
+        h.u8(unit.activity.code());
+        h.optional_u32(unit.activity_order.map(|id| id.raw()));
+        h.u8(unit.experience);
+        h.u32(unit.training_days);
+        h.u32(unit.fight_days);
     }
 
     h.count(world.beliefs.len());

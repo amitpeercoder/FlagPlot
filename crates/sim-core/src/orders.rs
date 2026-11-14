@@ -257,6 +257,37 @@ impl Posture {
     }
 }
 
+/// What a land unit that is not marching or fighting does with its day
+/// (decision 4 of 0099, 3b of 0099 and 4 of 0097).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub enum Activity {
+    /// Stands ready: rehearses if it is on the roster of a force preparing
+    /// a landing, in that force's hex. The default.
+    #[default]
+    Ready,
+    /// Trains (decision 3 of 0097). New activities are added at the end.
+    Train,
+}
+
+impl Activity {
+    /// A stable number for the activity. Part of the state hash. Never
+    /// renumber it; add new activities at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            Activity::Ready => 0,
+            Activity::Train => 1,
+        }
+    }
+
+    /// The activity's name as orders and the log write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Activity::Ready => "ready",
+            Activity::Train => "train",
+        }
+    }
+}
+
 /// A kind of cargo a ship carries (decision 0046). A ship carries supply and
 /// fuel together, up to its class's cargo capacity.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -391,6 +422,15 @@ pub enum TaskForceOrder {
         unit: LandUnitId,
         cargo: Option<Cargo>,
     },
+    /// Prepare a landing at a coast hex with the listed land units as the
+    /// force's roster (decision 0095, 1). A standing order of a slot of its
+    /// own (the force's preparation): it touches no cargo, route or other
+    /// order. It may be given at sea. An empty roster is accepted. Added at
+    /// the end.
+    PrepareLanding {
+        hex: Hex,
+        roster: BTreeSet<LandUnitId>,
+    },
 }
 
 impl TaskForceOrder {
@@ -464,6 +504,11 @@ pub enum LandUnitOrder {
     /// (decision 0094, 3). A standing order: it stands until the unit
     /// arrives or another march order replaces it. Added at the end.
     March(Hex),
+    /// What the unit does on a day it does not march or fight: stand ready
+    /// or train (decision 4 of 0099 and 4 of 0097). A standing order of its
+    /// own slot. Accepted for a unit with men ashore or aboard. Added at the
+    /// end.
+    SetActivity(Activity),
 }
 
 /// An order together with the unit it is for.
@@ -639,6 +684,9 @@ pub enum RejectReason {
     /// A route marks a hex to act at that is not one of its waypoints
     /// (decision 0096, 1). Added at the end of the enum.
     MarkNotOnRoute(Hex),
+    /// A prepare-landing order names a hex that is not a coast hex on the
+    /// map (decision 0095, 1). Added at the end of the enum.
+    NotACoastHex(Hex),
 }
 
 impl fmt::Display for RejectReason {
@@ -740,6 +788,9 @@ impl fmt::Display for RejectReason {
                 f,
                 "{hex} is marked to act at but is not one of the route's waypoints"
             ),
+            RejectReason::NotACoastHex(hex) => {
+                write!(f, "{hex} is not a coast hex on the map")
+            }
         }
     }
 }

@@ -97,6 +97,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::NotYourUnit => base("not_your_unit"),
         RejectReason::EmptyRoute => base("empty_route"),
         RejectReason::WaypointOffMap(hex) => base("waypoint_off_map").hex("hex", *hex),
+        RejectReason::NotACoastHex(hex) => base("not_a_coast_hex").hex("hex", *hex),
         RejectReason::UnderWay => base("under_way"),
         RejectReason::NoOwnBaseHere => base("no_own_base_here"),
         RejectReason::InvalidBearing(bearing) => {
@@ -919,6 +920,110 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .flag("cargo", work.cargo)
                 .flag("fired", *fired),
         ),
+        // Preparing a landing and the experience of a land unit (decisions
+        // 0095 and 0097). Minimal: the export proper comes with the viewer.
+        EventKind::LoadingGained {
+            task_force,
+            hex,
+            loading,
+        } => (
+            "loading_gained",
+            d.id("task_force", *task_force)
+                .hex("hex", *hex)
+                .num("loading", *loading),
+        ),
+        EventKind::LoadingLost {
+            task_force,
+            hex,
+            loading_before,
+            loading,
+            reason,
+        } => (
+            "loading_lost",
+            d.id("task_force", *task_force)
+                .hex("hex", *hex)
+                .num("loading_before", *loading_before)
+                .num("loading", *loading)
+                .text("reason", reason.name()),
+        ),
+        EventKind::RehearsalGained {
+            unit,
+            task_force,
+            hex,
+            rehearsal,
+        } => (
+            "rehearsal_gained",
+            d.id("unit", *unit)
+                .id("task_force", *task_force)
+                .hex("hex", *hex)
+                .num("rehearsal", *rehearsal),
+        ),
+        EventKind::RehearsalLost {
+            unit,
+            hex,
+            rehearsal_before,
+            reason,
+        } => (
+            "rehearsal_lost",
+            d.id("unit", *unit)
+                .hex("hex", *hex)
+                .num("rehearsal_before", *rehearsal_before)
+                .text("reason", reason.name()),
+        ),
+        EventKind::LeftRoster {
+            unit,
+            task_force,
+            reason,
+        } => (
+            "left_roster",
+            d.id("unit", *unit)
+                .id("task_force", *task_force)
+                .text("reason", reason.name()),
+        ),
+        EventKind::PreparationShared {
+            parent,
+            new_force,
+            hex,
+            loading,
+            units,
+        } => (
+            "preparation_shared",
+            d.id("parent", *parent)
+                .id("new_force", *new_force)
+                .hex("hex", *hex)
+                .num("loading", *loading)
+                .ids("units", units),
+        ),
+        EventKind::TrainingDay {
+            unit,
+            days,
+            experience,
+        } => (
+            "training_day",
+            d.id("unit", *unit)
+                .int("days", *days)
+                .int("experience", u32::from(*experience)),
+        ),
+        EventKind::FightDayCounted {
+            unit,
+            days,
+            experience,
+        } => (
+            "fight_day_counted",
+            d.id("unit", *unit)
+                .int("days", *days)
+                .int("experience", u32::from(*experience)),
+        ),
+        EventKind::ExperienceRaised {
+            unit,
+            experience,
+            by,
+        } => (
+            "experience_raised",
+            d.id("unit", *unit)
+                .int("experience", u32::from(*experience))
+                .text("by", by.name()),
+        ),
         EventKind::BaseFound { side, base, hex } => (
             "base_found",
             d.text("side", names::side(*side))
@@ -939,6 +1044,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                         LandFatigueChange::Rested => "rested",
                         LandFatigueChange::Marched => "marched",
                         LandFatigueChange::MarchedAndAttacked => "marched_and_attacked",
+                        LandFatigueChange::Landed => "landed",
                     },
                 )
                 .num("fatigue", *fatigue),

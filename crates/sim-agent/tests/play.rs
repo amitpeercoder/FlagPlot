@@ -153,9 +153,10 @@ fn tf_index(order: &TaskForceOrder) -> usize {
         TaskForceOrder::LoadFuel => 9,
         TaskForceOrder::SendToYard => 10,
         TaskForceOrder::LoadUnit { .. } => 11,
+        TaskForceOrder::PrepareLanding { .. } => 12,
     }
 }
-const TF_KINDS: usize = 12;
+const TF_KINDS: usize = 13;
 
 fn ag_index(order: &AirGroupOrder) -> usize {
     match order {
@@ -219,6 +220,16 @@ fn examples() -> Vec<OrderKind> {
         tf(TaskForceOrder::SetReadiness(Readiness::Battle)),
         tf(TaskForceOrder::SetReadiness(Readiness::Normal)),
         tf(TaskForceOrder::SendToYard),
+        tf(TaskForceOrder::PrepareLanding {
+            hex: Hex::new(4, 0),
+            roster: [LandUnitId::new(1), LandUnitId::new(3)]
+                .into_iter()
+                .collect(),
+        }),
+        tf(TaskForceOrder::PrepareLanding {
+            hex: Hex::new(-2, 5),
+            roster: std::collections::BTreeSet::new(),
+        }),
         tf(TaskForceOrder::LoadUnit {
             unit: LandUnitId::new(2),
             cargo: Some(Cargo::Supply),
@@ -282,6 +293,15 @@ fn examples() -> Vec<OrderKind> {
         target: sim_core::ids::LandUnitId::new(4),
         order: LandUnitOrder::March(sim_core::hex::Hex::new(3, -2)),
     });
+    for activity in [
+        sim_core::orders::Activity::Ready,
+        sim_core::orders::Activity::Train,
+    ] {
+        out.push(OrderKind::LandUnit {
+            target: sim_core::ids::LandUnitId::new(4),
+            order: LandUnitOrder::SetActivity(activity),
+        });
+    }
     out
 }
 
@@ -292,6 +312,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
     let mut seen_ag = [false; AG_KINDS];
     let mut seen_posture = false;
     let mut seen_march = false;
+    let mut seen_activity = false;
     for kind in examples() {
         match &kind {
             OrderKind::TaskForce { order, .. } => seen_tf[tf_index(order)] = true,
@@ -299,6 +320,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
             OrderKind::LandUnit { order, .. } => match order {
                 LandUnitOrder::SetPosture(_) => seen_posture = true,
                 LandUnitOrder::March(_) => seen_march = true,
+                LandUnitOrder::SetActivity(_) => seen_activity = true,
             },
         }
         let request = OrderRequest {
@@ -318,6 +340,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
     assert!(seen_ag.iter().all(|s| *s), "air group kinds: {seen_ag:?}");
     assert!(seen_posture, "the land unit order is in the examples");
     assert!(seen_march, "the march order is in the examples");
+    assert!(seen_activity, "the activity order is in the examples");
     // Every scripted order of every scenario is in the schema too.
     for name in [
         "05_eastern_solomons.toml",

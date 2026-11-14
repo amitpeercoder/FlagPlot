@@ -13,16 +13,17 @@
 
 use crate::events::{Cause, DetachReason, EventKind, MarchStop};
 use crate::fixed::Fixed;
-use crate::ids::{BaseId, EventId, OrderId, ShipId, TaskForceId};
+use crate::ids::{BaseId, EventId, LandUnitId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
+use crate::map::HexKind;
 use crate::orders::{
     AirGroupOrder, AirMission, CargoAction, LandUnitOrder, Order, OrderKind, OrderRequest, Reach,
     RejectReason, SpeedSetting, TaskForceOrder,
 };
 use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
-    CargoOrder, March, Route, RulesOfEngagement, SearchArc, ShipLocation, Side, TaskForce,
-    TaskForceStatus,
+    CargoOrder, March, Preparation, Route, RulesOfEngagement, SearchArc, ShipLocation, Side,
+    TaskForce, TaskForceStatus,
 };
 use std::collections::BTreeSet;
 
@@ -358,20 +359,32 @@ impl World {
         // turned the force round between two hexes changed its leg and maybe
         // its position, an ordered detach names the new force, and a rebase
         // writes off the damaged aircraft and moves the group.
+        let mut detached: Option<EventId> = None;
         for follow_up in follow_ups {
             // The yard order's follow-up carries a breakdown of the days away
             // (decision 0069), and the rebase's of the distance and transfer
             // range (decision 0091); no other follow-up has one.
             let breakdown = self
                 .yard_breakdown(&follow_up)
-                .or_else(|| self.rebase_breakdown(&follow_up));
+                .or_else(|| self.rebase_breakdown(&follow_up))
+                .or_else(|| self.preparation_breakdown(&follow_up));
             let departed = match &follow_up {
                 EventKind::ForceLeftForYard { task_force, .. } => Some(*task_force),
                 _ => None,
             };
+            // The preparation a detached part took cites the detachment
+            // too (decision 12 of 0095).
+            let mut follow_up_causes = vec![Cause::Order(id)];
+            if matches!(follow_up, EventKind::PreparationShared { .. }) {
+                follow_up_causes.extend(detached.map(Cause::Event));
+            }
+            let is_detachment = matches!(follow_up, EventKind::ShipsDetached { .. });
             let follow_up_event =
                 self.events
-                    .record(day, pulse, follow_up, vec![Cause::Order(id)], breakdown);
+                    .record(day, pulse, follow_up, follow_up_causes, breakdown);
+            if is_detachment {
+                detached = Some(follow_up_event);
+            }
             if let Some(force) = departed {
                 if let Some(trip) = self
                     .truth
@@ -402,6 +415,33 @@ impl World {
         name: String,
     ) -> TaskForceId {
         let parent_side = self.truth.task_forces[&parent].side;
+        // The part that leaves takes the roster units that have men aboard
+        // and all of whose men aboard are in its ships (decision 12 of
+        // 0095); every other roster unit stays.
+        let shared = self.truth.task_forces[&parent]
+            .preparation
+            .clone()
+            .map(|preparation| {
+                let leaving: BTreeSet<LandUnitId> = preparation
+                    .roster
+                    .iter()
+                    .copied()
+                    .filter(|unit| {
+                        let aboard = self.truth.men_aboard(*unit);
+                        let in_leaving: u32 = ships
+                            .iter()
+                            .filter_map(|ship| self.truth.ships[ship].troops)
+                            .filter(|troops| troops.unit == *unit)
+                            .map(|troops| troops.men)
+                            .sum();
+                        aboard > 0 && in_leaving == aboard
+                    })
+                    .collect();
+                Preparation {
+                    roster: leaving,
+                    ..preparation
+                }
+            });
         let id = self.made_ids.alloc_task_force(parent_side);
         let parent_force = self
             .truth
@@ -428,6 +468,17 @@ impl World {
         force.toward_hex = parent_force.toward_hex;
         force.progress_nm = parent_force.progress_nm;
         force.leg_nm = parent_force.leg_nm;
+        // Both parts have begun landing where the parent had (decision 5 of
+        // 0095), and each has its loading (decision 12).
+        force.landing_at = parent_force.landing_at;
+        if let Some(shared) = shared {
+            if let Some(parent_preparation) = parent_force.preparation.as_mut() {
+                for unit in &shared.roster {
+                    parent_preparation.roster.remove(unit);
+                }
+            }
+            force.preparation = Some(shared);
+        }
         for ship in ships {
             let removed = parent_force.ships.remove(ship);
             assert!(removed, "{ship} is in the parent task force");
@@ -615,6 +666,33 @@ impl World {
                         }
                         Ok(())
                     }
+                    TaskForceOrder::PrepareLanding { hex, roster } => {
+                        // Decision 0095, 1, in this order: each unit of the
+                        // roster the side's own, the hex a coast hex on the
+                        // map, each unit with men ashore or aboard. It may
+                        // be given at sea, and an empty roster is accepted.
+                        for unit in roster {
+                            match self.truth.land_units.get(unit) {
+                                Some(unit) if unit.side == order.side => {}
+                                _ => return Err(RejectReason::NotYourLandUnit),
+                            }
+                        }
+                        if !self
+                            .map
+                            .get(*hex)
+                            .is_some_and(|data| data.kind == HexKind::Coast)
+                        {
+                            return Err(RejectReason::NotACoastHex(*hex));
+                        }
+                        for unit in roster {
+                            if self.truth.land_units[unit].men_ashore == 0
+                                && self.truth.men_aboard(*unit) == 0
+                            {
+                                return Err(RejectReason::LandUnitDestroyed);
+                            }
+                        }
+                        Ok(())
+                    }
                     TaskForceOrder::SetSpeed(SpeedSetting::Knots(knots)) => {
                         if *knots <= Fixed::ZERO {
                             Err(RejectReason::SpeedNotAboveZero(*knots))
@@ -796,6 +874,12 @@ impl World {
                 if unit.men_ashore == 0 && self.truth.men_aboard(*target) == 0 {
                     return Err(RejectReason::LandUnitDestroyed);
                 }
+                // An activity order is for a unit aboard as well as ashore
+                // (decision 4 of 0099): only a posture or a march needs a
+                // man ashore.
+                if matches!(land_unit_order, LandUnitOrder::SetActivity(_)) {
+                    return Ok(());
+                }
                 let Some(here) = unit.hex.filter(|_| unit.men_ashore > 0) else {
                     return Err(RejectReason::NoMenAshore);
                 };
@@ -834,13 +918,20 @@ impl World {
                     // Name the new force in the log: the order's acceptance
                     // names only the parent. The caller records this after
                     // the acceptance, citing the order.
-                    return vec![EventKind::ShipsDetached {
+                    let mut events = vec![EventKind::ShipsDetached {
                         parent: *target,
                         new_force,
                         ships: listed.iter().copied().collect(),
                         escorts: Vec::new(),
                         reason: DetachReason::Ordered,
                     }];
+                    // The preparation the new part took, recorded after the
+                    // detachment and citing it (decision 12 of 0095).
+                    events.extend(self.preparation_shared(*target, new_force));
+                    return events;
+                }
+                if let TaskForceOrder::PrepareLanding { hex, roster } = task_force_order {
+                    return self.apply_prepare_landing(*target, *hex, roster, order.id);
                 }
                 if let TaskForceOrder::SendToYard = task_force_order {
                     // The ships leave the force and the map; the caller
@@ -943,6 +1034,9 @@ impl World {
                     TaskForceOrder::DetachShips(_) => {
                         unreachable!("detach orders are applied above")
                     }
+                    TaskForceOrder::PrepareLanding { .. } => {
+                        unreachable!("prepare-landing orders are applied above")
+                    }
                     TaskForceOrder::SendToYard => {
                         unreachable!("yard orders are applied above")
                     }
@@ -1015,6 +1109,11 @@ impl World {
                     LandUnitOrder::SetPosture(posture) => {
                         unit.posture = *posture;
                         unit.posture_order = Some(order.id);
+                        Vec::new()
+                    }
+                    LandUnitOrder::SetActivity(activity) => {
+                        unit.activity = *activity;
+                        unit.activity_order = Some(order.id);
                         Vec::new()
                     }
                     // Decision 0094, 3 and 4: an order to the unit's own hex

@@ -203,6 +203,133 @@ pub enum LandFatigueChange {
     /// The unit marched that day and also fired on attack: it gains both
     /// (decision 8 of 0094). Added at the end.
     MarchedAndAttacked,
+    /// The unit's first men landed from a ship (decision 6 of 0095): the
+    /// fatigue of a landing, less for a rehearsal. Added at the end.
+    Landed,
+}
+
+/// Why a force lost loading (decision 0095, 5, 7, 8 and 10).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum LoadingLoss {
+    /// The force was ordered to prepare a landing at another hex.
+    NewLandingPlace,
+    /// A unit was added to its roster: it kept a share.
+    UnitAdded,
+    /// Its unloading at the hex was complete: the loading is spent and the
+    /// order done.
+    Spent,
+}
+
+impl LoadingLoss {
+    /// A stable number for the reason. Never renumber it; add new reasons at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            LoadingLoss::NewLandingPlace => 0,
+            LoadingLoss::UnitAdded => 1,
+            LoadingLoss::Spent => 2,
+        }
+    }
+
+    /// The reason as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            LoadingLoss::NewLandingPlace => "new landing place",
+            LoadingLoss::UnitAdded => "unit added",
+            LoadingLoss::Spent => "spent by the landing",
+        }
+    }
+}
+
+/// Why a unit lost rehearsal (decision 0095, 7, 8 and 3b of 0099).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum RehearsalLoss {
+    /// Its force was ordered to prepare a landing at another hex.
+    NewLandingPlace,
+    /// Its first men landed: the rehearsal is spent.
+    Landed,
+    /// The unit rehearses a landing at another hex than the one it had
+    /// rehearsed, with another force.
+    OtherLandingPlace,
+}
+
+impl RehearsalLoss {
+    /// A stable number for the reason. Never renumber it; add new reasons at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            RehearsalLoss::NewLandingPlace => 0,
+            RehearsalLoss::Landed => 1,
+            RehearsalLoss::OtherLandingPlace => 2,
+        }
+    }
+
+    /// The reason as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            RehearsalLoss::NewLandingPlace => "new landing place",
+            RehearsalLoss::Landed => "landed",
+            RehearsalLoss::OtherLandingPlace => "another landing place",
+        }
+    }
+}
+
+/// Why a unit left a force's roster (decision 0095, 7 and 3c of 0099).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum RosterLeft {
+    /// Another force's prepare order named it.
+    TakenByOrder,
+    /// A new order of the same force left it out.
+    DroppedByOrder,
+    /// Its first men landed from a ship.
+    Landed,
+}
+
+impl RosterLeft {
+    /// A stable number for the reason. Never renumber it; add new reasons at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            RosterLeft::TakenByOrder => 0,
+            RosterLeft::DroppedByOrder => 1,
+            RosterLeft::Landed => 2,
+        }
+    }
+
+    /// The reason as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            RosterLeft::TakenByOrder => "taken by another force's order",
+            RosterLeft::DroppedByOrder => "dropped by order",
+            RosterLeft::Landed => "landed",
+        }
+    }
+}
+
+/// What raised a land unit's experience (decisions 3 and 5 of 0097).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ExperienceSource {
+    Training,
+    Fighting,
+}
+
+impl ExperienceSource {
+    /// A stable number for the source. Never renumber it; add new sources at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            ExperienceSource::Training => 0,
+            ExperienceSource::Fighting => 1,
+        }
+    }
+
+    /// The source as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            ExperienceSource::Training => "training",
+            ExperienceSource::Fighting => "fighting",
+        }
+    }
 }
 
 /// Why a land unit's march stopped short of its hex (decision 0094, 3).
@@ -1301,6 +1428,75 @@ pub enum EventKind {
         work: HaltWork,
         fired: bool,
     },
+    /// A force stopped at a base of its side gained `loading` (now) for the
+    /// landing it prepares at `hex` (decision 0095, 4).
+    LoadingGained {
+        task_force: TaskForceId,
+        hex: Hex,
+        loading: Fixed,
+    },
+    /// A force's loading for `hex` fell from `loading_before` to `loading`
+    /// (decision 0095, 5, 8 and 10). A `Spent` loss means the order is done.
+    LoadingLost {
+        task_force: TaskForceId,
+        hex: Hex,
+        loading_before: Fixed,
+        loading: Fixed,
+        reason: LoadingLoss,
+    },
+    /// A land unit of a force's roster rehearsed a day for the landing at
+    /// `hex` and now has `rehearsal` (decision 0095, 4).
+    RehearsalGained {
+        unit: LandUnitId,
+        task_force: TaskForceId,
+        hex: Hex,
+        rehearsal: Fixed,
+    },
+    /// A land unit's rehearsal for `hex` fell from `rehearsal_before` to 0
+    /// (decision 0095, 7, 8 and 3b of 0099).
+    RehearsalLost {
+        unit: LandUnitId,
+        hex: Hex,
+        rehearsal_before: Fixed,
+        reason: RehearsalLoss,
+    },
+    /// A land unit left a force's roster (decision 0095, 7 and 3c of 0099).
+    LeftRoster {
+        unit: LandUnitId,
+        task_force: TaskForceId,
+        reason: RosterLeft,
+    },
+    /// A force that split gave the new part its loading at `hex` and the
+    /// roster `units` (decision 12 of 0095).
+    PreparationShared {
+        parent: TaskForceId,
+        new_force: TaskForceId,
+        hex: Hex,
+        loading: Fixed,
+        units: Vec<LandUnitId>,
+    },
+    /// A land unit trained a day: `days` counted toward the next step of
+    /// experience, at `experience` (decision 3 of 0097).
+    TrainingDay {
+        unit: LandUnitId,
+        days: u32,
+        experience: u8,
+    },
+    /// A land unit fired in a fight on a day that counts: `days` counted
+    /// toward the next step of experience, at `experience` (decision 5 of
+    /// 0097).
+    FightDayCounted {
+        unit: LandUnitId,
+        days: u32,
+        experience: u8,
+    },
+    /// A land unit's experience rose to `experience` (decisions 3 and 5 of
+    /// 0097).
+    ExperienceRaised {
+        unit: LandUnitId,
+        experience: u8,
+        by: ExperienceSource,
+    },
 }
 
 impl EventKind {
@@ -1661,6 +1857,36 @@ impl EventKind {
             EventKind::MarchArrived { unit, base, .. } => {
                 let mut entities = vec![EntityRef::LandUnit(*unit)];
                 entities.extend(base.iter().map(|b| EntityRef::Base(*b)));
+                entities
+            }
+            EventKind::LoadingGained { task_force, .. }
+            | EventKind::LoadingLost { task_force, .. } => {
+                vec![EntityRef::TaskForce(*task_force)]
+            }
+            EventKind::RehearsalGained {
+                unit, task_force, ..
+            }
+            | EventKind::LeftRoster {
+                unit, task_force, ..
+            } => vec![
+                EntityRef::LandUnit(*unit),
+                EntityRef::TaskForce(*task_force),
+            ],
+            EventKind::RehearsalLost { unit, .. }
+            | EventKind::TrainingDay { unit, .. }
+            | EventKind::FightDayCounted { unit, .. }
+            | EventKind::ExperienceRaised { unit, .. } => vec![EntityRef::LandUnit(*unit)],
+            EventKind::PreparationShared {
+                parent,
+                new_force,
+                units,
+                ..
+            } => {
+                let mut entities = vec![
+                    EntityRef::TaskForce(*parent),
+                    EntityRef::TaskForce(*new_force),
+                ];
+                entities.extend(units.iter().map(|unit| EntityRef::LandUnit(*unit)));
                 entities
             }
         }
@@ -2689,6 +2915,7 @@ impl fmt::Display for EventKind {
                 }
                 LandFatigueChange::Rested => write!(f, "{unit} rested: fatigue {fatigue}"),
                 LandFatigueChange::Marched => write!(f, "{unit} marched: fatigue {fatigue}"),
+                LandFatigueChange::Landed => write!(f, "{unit} landed: fatigue {fatigue}"),
                 LandFatigueChange::MarchedAndAttacked => {
                     write!(f, "{unit} marched and attacked: fatigue {fatigue}")
                 }
@@ -2886,6 +3113,104 @@ impl fmt::Display for EventKind {
                 }
                 f.write_str(&done.join(" and "))
             }
+            EventKind::LoadingGained {
+                task_force,
+                hex,
+                loading,
+            } => write!(
+                f,
+                "{task_force} loaded for the landing at {hex}: loading {loading}"
+            ),
+            EventKind::LoadingLost {
+                task_force,
+                hex,
+                loading_before,
+                loading,
+                reason,
+            } => match reason {
+                LoadingLoss::Spent => write!(
+                    f,
+                    "{task_force} completed its unloading at {hex}: loading {loading_before} spent, its order to prepare the landing done"
+                ),
+                _ => write!(
+                    f,
+                    "{task_force} lost loading for the landing at {hex} ({}): {loading_before} to {loading}",
+                    reason.name()
+                ),
+            },
+            EventKind::RehearsalGained {
+                unit,
+                task_force,
+                hex,
+                rehearsal,
+            } => write!(
+                f,
+                "{unit} rehearsed the landing at {hex} with {task_force}: rehearsal {rehearsal}"
+            ),
+            EventKind::RehearsalLost {
+                unit,
+                hex,
+                rehearsal_before,
+                reason,
+            } => write!(
+                f,
+                "{unit} lost its rehearsal of {rehearsal_before} for the landing at {hex} ({})",
+                reason.name()
+            ),
+            EventKind::LeftRoster {
+                unit,
+                task_force,
+                reason,
+            } => write!(
+                f,
+                "{unit} left the roster of {task_force} ({})",
+                reason.name()
+            ),
+            EventKind::PreparationShared {
+                parent,
+                new_force,
+                hex,
+                loading,
+                units,
+            } => {
+                write!(
+                    f,
+                    "{new_force} took loading {loading} for the landing at {hex} from {parent}"
+                )?;
+                if units.is_empty() {
+                    f.write_str(", and no unit of its roster")
+                } else {
+                    let names: Vec<String> = units.iter().map(LandUnitId::to_string).collect();
+                    write!(f, ", and the roster units {}", names.join(", "))
+                }
+            }
+            EventKind::TrainingDay {
+                unit,
+                days,
+                experience,
+            } => write!(
+                f,
+                "{unit} trained: {days} {} counted at experience {experience}",
+                if *days == 1 { "day" } else { "days" }
+            ),
+            EventKind::FightDayCounted {
+                unit,
+                days,
+                experience,
+            } => write!(
+                f,
+                "{unit} fired in a fight: {days} {} counted at experience {experience}",
+                if *days == 1 { "day" } else { "days" }
+            ),
+            EventKind::ExperienceRaised {
+                unit,
+                experience,
+                by,
+            } => write!(
+                f,
+                "{unit} rose to experience {experience} by {}",
+                by.name()
+            ),
         }
     }
 }

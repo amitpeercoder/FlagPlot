@@ -256,6 +256,30 @@
               "const": "send_to_yard"
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "hex",
+            "roster"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "prepare_landing"
+            },
+            "hex": {
+              "description": "The coast hex the landing is for, [q, r] (decision 0095, 1).",
+              "type": "array",
+              "items": { "type": "integer" }
+            },
+            "roster": {
+              "description": "The land units that are to land from the force, each written \"land_unit:N\". May be empty.",
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
         }
       ]
     },
@@ -453,6 +477,23 @@
               "description": "The hex to march the unit's men ashore to, [q, r] (decision 0094, 3): a neighbour of the unit's hex joined to it by a land link, which the unit's line lists as march_to. A pair of whole numbers. The unit's own hex stops a march. A standing order until the unit arrives or another march order replaces it. Refused for a unit that is not yours, a destroyed unit, a unit with no man ashore, and a hex no land link joins to the unit's.",
               "type": "array",
               "items": { "type": "integer" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "activity"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_activity"
+            },
+            "activity": {
+              "description": "What the unit does on a day it does not march or fight (decision 4 of 0099 and 4 of 0097): ready (rehearses if it is on the roster of a force preparing a landing) or train. A standing order.",
+              "enum": ["ready", "train"]
             }
           }
         }

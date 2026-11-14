@@ -6,13 +6,15 @@
 //! order always gives the same bytes. The saved-game file and the agent
 //! interface both use these functions; there is no second encoding.
 
+use std::collections::BTreeSet;
+
 use serde_json::{json, Map, Value};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Cargo, LandUnitOrder, Mission, OrderKind, Posture, Reach, Readiness,
-    SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
+    Activity, AirGroupOrder, AirMission, Cargo, LandUnitOrder, Mission, OrderKind, Posture, Reach,
+    Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::ShipKind;
 
@@ -93,6 +95,16 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                     None => "none",
                 },
             }),
+            // The roster is written as the engine's land unit handles
+            // (decision 0095, 1). The agent interface proper comes later.
+            TaskForceOrder::PrepareLanding { hex, roster } => json!({
+                "kind": "prepare_landing",
+                "hex": [hex.q, hex.r],
+                "roster": roster
+                    .iter()
+                    .map(|unit| format!("land_unit:{}", unit.raw()))
+                    .collect::<Vec<_>>(),
+            }),
         },
         OrderKind::AirGroup { order, .. } => match order {
             AirGroupOrder::SetAirMission(mission) => {
@@ -148,6 +160,10 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
             LandUnitOrder::March(hex) => json!({
                 "kind": "march",
                 "hex": [hex.q, hex.r],
+            }),
+            LandUnitOrder::SetActivity(activity) => json!({
+                "kind": "set_activity",
+                "activity": activity.name(),
             }),
         },
     }
@@ -350,6 +366,25 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                     other => return Err(format!("unknown readiness \"{other}\"")),
                 }),
                 "send_to_yard" => TaskForceOrder::SendToYard,
+                "prepare_landing" => {
+                    let hex = hex_pairs(
+                        std::slice::from_ref(value.get("hex").ok_or("\"hex\" is missing")?),
+                        "hex",
+                    )?[0];
+                    let list = value
+                        .get("roster")
+                        .and_then(Value::as_array)
+                        .ok_or("\"roster\" is missing")?;
+                    let mut roster = BTreeSet::new();
+                    for item in list {
+                        let unit = item
+                            .as_str()
+                            .and_then(land_unit_number)
+                            .ok_or("a roster unit must be a land unit written \"land_unit:N\"")?;
+                        roster.insert(LandUnitId::new(unit));
+                    }
+                    TaskForceOrder::PrepareLanding { hex, roster }
+                }
                 other => return Err(format!("unknown task force order \"{other}\"")),
             };
             Ok(OrderKind::TaskForce {
@@ -439,6 +474,11 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                     }
                     LandUnitOrder::March(Hex::new(get(0)?, get(1)?))
                 }
+                "set_activity" => LandUnitOrder::SetActivity(match text(value, "activity")? {
+                    "ready" => Activity::Ready,
+                    "train" => Activity::Train,
+                    other => return Err(format!("unknown activity \"{other}\"")),
+                }),
                 other => return Err(format!("unknown land unit order \"{other}\"")),
             };
             Ok(OrderKind::LandUnit {

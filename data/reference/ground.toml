@@ -69,3 +69,33 @@ fatigue_per_march_day = 10
 
 # Days of its daily charge a marching unit takes with it.
 march_supply_days = 5
+
+# Preparing a landing (decision 0095) and the experience of a land unit
+# (decision 0097). Placeholders set by the architect, resting on no source.
+# Preparation (loading and rehearsal) a force and each unit of its roster gain
+# for a day in port with the order, from 0 to 100.
+preparation_per_day = 5
+
+# The share of a ship's unloading rate a force with no loading works at while
+# it lands men, from 0 to 1.
+unprepared_landing_share = "0.5"
+
+# The share of its loading a force keeps when a unit is added to its roster,
+# from 0 to 1.
+preparation_kept_on_change = "0.5"
+
+# Fatigue a unit gains on landing with no rehearsal, from 0 to 100.
+unprepared_landing_fatigue = 40
+
+# How much a step of experience moves the chance a shot hits, from 0 to 0.5.
+experience_fire_strength = "0.25"
+
+# Days of training for one step of experience, a whole number of 1 or more.
+training_days_per_level = 30
+
+# The experience training cannot pass, a whole number from 0 to 4.
+training_ceiling = 2
+
+# Days of firing in a fight for one step of experience, a whole number of 1 or
+# more.
+fight_days_per_level = 10

@@ -1152,6 +1152,21 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::MarchBaseFormed { unit, .. }
         | EventKind::MarchArrived { unit, .. }
         | EventKind::MarchStopped { unit, .. } => whole_if(own_unit(unit)),
+        // A side sees its own force's loading and its own units' rehearsal,
+        // roster, training, fighting days and experience whole, each gain and
+        // each loss with its reason. The enemy sees none of it (decisions
+        // 0095, 14 and 0097, 7).
+        EventKind::LoadingGained { task_force, .. }
+        | EventKind::LoadingLost { task_force, .. }
+        | EventKind::PreparationShared {
+            parent: task_force, ..
+        } => whole_if(own_force(task_force)),
+        EventKind::RehearsalGained { unit, .. }
+        | EventKind::RehearsalLost { unit, .. }
+        | EventKind::LeftRoster { unit, .. }
+        | EventKind::TrainingDay { unit, .. }
+        | EventKind::FightDayCounted { unit, .. }
+        | EventKind::ExperienceRaised { unit, .. } => whole_if(own_unit(unit)),
 
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
@@ -1208,7 +1223,9 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
             "weighed_shots",
         ],
         // The side's own unit's firing men and shots, without the chance
-        // (decision 0090, 28).
+        // (decision 0090, 28). Its own unit's experience and the factor it
+        // gives are its own; the side's chance they multiply is not shown
+        // (decision 0097, 7).
         SideEventKind::GroundFire { .. } => &[
             "men_ashore",
             "fed_share",
@@ -1216,6 +1233,8 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
             "firing_men",
             "men_per_shot",
             "shots",
+            "experience",
+            "experience_factor",
         ],
         SideEventKind::Salvo { .. } => &[
             "guns",
@@ -1788,6 +1807,19 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::MarchBaseFormed { .. }
         | EventKind::MarchArrived { .. }
         | EventKind::MarchStopped { .. }
+        // Preparation and experience cite only the side's own orders and its
+        // own events: its prepare and activity orders, its landings, the
+        // night's feeding, its unloading, its detachment, its training days
+        // and its fire, which it is given cut (decisions 0095 and 0097).
+        | EventKind::LoadingGained { .. }
+        | EventKind::LoadingLost { .. }
+        | EventKind::RehearsalGained { .. }
+        | EventKind::RehearsalLost { .. }
+        | EventKind::LeftRoster { .. }
+        | EventKind::PreparationShared { .. }
+        | EventKind::TrainingDay { .. }
+        | EventKind::FightDayCounted { .. }
+        | EventKind::ExperienceRaised { .. }
         // A halt cites the side's own route order and steaming; steaming on
         // cites the halt, the route order, and the side's own bombardment
         // (given it cut) or cargo completion (decision 0096).
@@ -3258,6 +3290,96 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // Preparing a landing and the experience of a land unit
+            // (decisions 0095, 14 and 0097, 7): its own side's whole, the
+            // enemy's nothing.
+            row(
+                EventKind::LoadingGained {
+                    task_force: force(1),
+                    hex: hex(),
+                    loading: fx(5),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::LoadingLost {
+                    task_force: force(1),
+                    hex: hex(),
+                    loading_before: fx(25),
+                    loading: Fixed::from_ratio(25, 2),
+                    reason: crate::events::LoadingLoss::UnitAdded,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::RehearsalGained {
+                    unit: unit(1),
+                    task_force: force(1),
+                    hex: hex(),
+                    rehearsal: fx(5),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::RehearsalLost {
+                    unit: unit(1),
+                    hex: hex(),
+                    rehearsal_before: fx(25),
+                    reason: crate::events::RehearsalLoss::Landed,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::LeftRoster {
+                    unit: unit(1),
+                    task_force: force(1),
+                    reason: crate::events::RosterLeft::Landed,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::PreparationShared {
+                    parent: force(1),
+                    new_force: force(3),
+                    hex: hex(),
+                    loading: fx(25),
+                    units: vec![unit(1)],
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::TrainingDay {
+                    unit: unit(1),
+                    days: 3,
+                    experience: 0,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::FightDayCounted {
+                    unit: unit(1),
+                    days: 3,
+                    experience: 2,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::ExperienceRaised {
+                    unit: unit(1),
+                    experience: 3,
+                    by: crate::events::ExperienceSource::Fighting,
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3298,7 +3420,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 101, "the log has 101 kinds of event");
+        assert_eq!(all.len(), 110, "the log has 110 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
@@ -3755,6 +3877,109 @@ mod tests {
                 result: Some(fx(1)),
             })
         );
+    }
+
+    #[test]
+    fn a_ground_fire_cut_keeps_the_units_experience_and_factor_and_never_the_chance() {
+        // Decision 0097, 7: a side's own unit's experience is its own, the
+        // side's chance it multiplies is not shown.
+        let factor = |name, value| Factor { name, value };
+        let mut events = log(vec![EventKind::GroundFire {
+            unit: unit(1),
+            hex: hex(),
+            firing_men: 600,
+            shots: fx(6),
+            chance: Fixed::from_ratio(375, 1000),
+            hits: 2,
+        }]);
+        events[0].breakdown = Some(Breakdown {
+            factors: vec![
+                factor("men_ashore", fx(600)),
+                factor("fed_share", fx(1)),
+                factor("fatigue_factor", fx(1)),
+                factor("firing_men", fx(600)),
+                factor("men_per_shot", fx(100)),
+                factor("shots", fx(6)),
+                factor("side_chance", Fixed::from_ratio(3, 10)),
+                factor("experience", fx(3)),
+                factor("experience_factor", Fixed::from_ratio(125, 100)),
+                factor("chance", Fixed::from_ratio(375, 1000)),
+            ],
+            result: Fixed::from_ratio(225, 100),
+        });
+        let shown = project(Side::Allied, &events, &owners(false));
+        let breakdown = shown[0].breakdown.as_ref().expect("a breakdown");
+        let names: Vec<&str> = breakdown.factors.iter().map(|f| f.name).collect();
+        assert_eq!(
+            names,
+            vec![
+                "men_ashore",
+                "fed_share",
+                "fatigue_factor",
+                "firing_men",
+                "men_per_shot",
+                "shots",
+                "experience",
+                "experience_factor"
+            ]
+        );
+        assert_eq!(breakdown.result, None);
+        // The enemy is given nothing of it.
+        assert!(project(Side::Japanese, &events, &owners(false)).is_empty());
+    }
+
+    #[test]
+    fn two_logs_that_differ_only_in_the_enemys_experience_or_preparation_give_a_side_the_same_events(
+    ) {
+        // The Japanese unit's chance (from its experience) and a Japanese
+        // force's preparation are nothing the Allied side is given.
+        let fire = |chance: Fixed| EventKind::GroundFire {
+            unit: unit(2),
+            hex: hex(),
+            firing_men: 600,
+            shots: fx(6),
+            chance,
+            hits: 2,
+        };
+        let own = EventKind::OrderAccepted {
+            order: order(1),
+            target: crate::ids::EntityRef::LandUnit(unit(1)),
+        };
+        let enemy_prep = vec![
+            EventKind::LoadingGained {
+                task_force: force(2),
+                hex: hex(),
+                loading: fx(5),
+            },
+            EventKind::RehearsalGained {
+                unit: unit(2),
+                task_force: force(2),
+                hex: hex(),
+                rehearsal: fx(5),
+            },
+            EventKind::TrainingDay {
+                unit: unit(2),
+                days: 1,
+                experience: 0,
+            },
+            EventKind::ExperienceRaised {
+                unit: unit(2),
+                experience: 3,
+                by: crate::events::ExperienceSource::Training,
+            },
+        ];
+        let plain = log(vec![own.clone(), fire(Fixed::from_ratio(3, 10))]);
+        let mut with = vec![own.clone(), fire(Fixed::from_ratio(375, 1000))];
+        with.extend(enemy_prep);
+        let with = log(with);
+        let shown = |events: &[Event]| -> Vec<(u32, SideEventKind)> {
+            project(Side::Allied, events, &owners(false))
+                .into_iter()
+                .map(|event| (event.number, event.kind))
+                .collect()
+        };
+        assert_eq!(shown(&plain), shown(&with));
+        assert_eq!(shown(&plain).len(), 1, "only its own order");
     }
 
     #[test]

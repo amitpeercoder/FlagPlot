@@ -1110,6 +1110,33 @@ pub struct GroundFigures {
     /// Days of its daily charge a marching unit takes with it (decision 9 of
     /// 0094).
     pub march_supply_days: Fixed,
+    /// Preparation (loading and rehearsal) a force and each unit of its
+    /// roster gain for a day in port with the order, from 0 to 100
+    /// (decision 4 of 0095).
+    pub preparation_per_day: Fixed,
+    /// The share of a ship's unloading rate a force with no loading works
+    /// at while it lands men, from 0 to 1 (decision 5 of 0095). 1 switches
+    /// the rule off.
+    pub unprepared_landing_share: Fixed,
+    /// The share of its loading a force keeps when a unit is added to its
+    /// roster, from 0 to 1 (decisions 9 and 10 of 0095).
+    pub preparation_kept_on_change: Fixed,
+    /// Fatigue a unit gains on landing with no rehearsal, from 0 to 100
+    /// (decision 6 of 0095). 0 switches the rule off.
+    pub unprepared_landing_fatigue: Fixed,
+    /// How much a step of experience moves the chance a shot hits, from 0 to
+    /// 0.5 so that the factor is never below 0 (decision 2 of 0097). 0
+    /// switches the rule off.
+    pub experience_fire_strength: Fixed,
+    /// Days of training for one step of experience, at least 1 (decision 3
+    /// of 0097).
+    pub training_days_per_level: u32,
+    /// The experience training cannot pass, from 0 to 4 (decision 3 of
+    /// 0097).
+    pub training_ceiling: u32,
+    /// Days of firing in a fight for one step of experience, at least 1
+    /// (decision 5 of 0097).
+    pub fight_days_per_level: u32,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1146,6 +1173,14 @@ impl GroundFigures {
         march_days_per_hex: 3,
         fatigue_per_march_day: Fixed::from_int(10),
         march_supply_days: Fixed::from_int(5),
+        preparation_per_day: Fixed::from_int(5),
+        unprepared_landing_share: Fixed::from_raw(500_000),
+        preparation_kept_on_change: Fixed::from_raw(500_000),
+        unprepared_landing_fatigue: Fixed::from_int(40),
+        experience_fire_strength: Fixed::from_raw(250_000),
+        training_days_per_level: 30,
+        training_ceiling: 2,
+        fight_days_per_level: 10,
     };
 
     /// Describes what is wrong with the figures, if anything. The weight of
@@ -1213,6 +1248,51 @@ impl GroundFigures {
             return Some(format!(
                 "ground march_supply_days {} is negative",
                 self.march_supply_days
+            ));
+        }
+        // Preparation and experience (decisions 0095 and 0097).
+        for (label, value) in [
+            ("preparation_per_day", self.preparation_per_day),
+            (
+                "unprepared_landing_fatigue",
+                self.unprepared_landing_fatigue,
+            ),
+        ] {
+            if value.is_negative() || value > Fixed::from_int(100) {
+                return Some(format!("ground {label} {value} is not between 0 and 100"));
+            }
+        }
+        for (label, share) in [
+            ("unprepared_landing_share", self.unprepared_landing_share),
+            (
+                "preparation_kept_on_change",
+                self.preparation_kept_on_change,
+            ),
+        ] {
+            if share.is_negative() || share > Fixed::ONE {
+                return Some(format!("ground {label} {share} is not between 0 and 1"));
+            }
+        }
+        if self.experience_fire_strength.is_negative()
+            || self.experience_fire_strength > Fixed::from_ratio(1, 2)
+        {
+            return Some(format!(
+                "ground experience_fire_strength {} is not between 0 and 0.5",
+                self.experience_fire_strength
+            ));
+        }
+        for (label, days) in [
+            ("training_days_per_level", self.training_days_per_level),
+            ("fight_days_per_level", self.fight_days_per_level),
+        ] {
+            if days == 0 {
+                return Some(format!("ground {label} 0 is not 1 or more"));
+            }
+        }
+        if self.training_ceiling > 4 {
+            return Some(format!(
+                "ground training_ceiling {} is not between 0 and 4",
+                self.training_ceiling
             ));
         }
         if let Some(error) = self.report_error {

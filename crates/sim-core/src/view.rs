@@ -411,6 +411,63 @@ impl<'a> SideView<'a> {
         land_unit.hex.map(|hex| self.map.land_neighbours(hex))
     }
 
+    /// The factor one of the side's own forces' work is multiplied by while
+    /// it lands men at `hex` (decision 5 of 0095): the share of the rate an
+    /// unprepared force works at plus the rest of 1 times its loading for that
+    /// hex over 100. `None` for a force that is not the side's, or where the
+    /// scenario has no ground figures.
+    pub fn landing_rate_factor(&self, task_force: TaskForceId, hex: Hex) -> Option<Fixed> {
+        let force = self
+            .truth
+            .task_forces
+            .get(&task_force)
+            .filter(|force| force.side == self.side)?;
+        let figures = self.ref_data.ground.as_ref()?;
+        Some(crate::preparation::landing_rate_factor(figures, force.preparation.as_ref(), hex).0)
+    }
+
+    /// The fatigue one of the side's own land units would gain when its first
+    /// men land at `hex` (decision 6 of 0095), from its rehearsal for that
+    /// hex. `None` for a unit that is not the side's, or where the scenario
+    /// has no ground figures.
+    pub fn landing_fatigue(&self, unit: LandUnitId, hex: Hex) -> Option<Fixed> {
+        let land_unit = self
+            .truth
+            .land_units
+            .get(&unit)
+            .filter(|land_unit| land_unit.side == self.side)?;
+        let figures = self.ref_data.ground.as_ref()?;
+        Some(
+            crate::preparation::landing_fatigue_gain(
+                figures,
+                land_unit.rehearsal,
+                land_unit.rehearsal_hex,
+                hex,
+            )
+            .0,
+        )
+    }
+
+    /// The force whose roster one of the side's own land units is on, if any
+    /// (decision 3c of 0099). `None` for a unit that is not the side's.
+    pub fn roster_of(&self, unit: LandUnitId) -> Option<TaskForceId> {
+        self.truth
+            .land_units
+            .get(&unit)
+            .filter(|land_unit| land_unit.side == self.side)?;
+        self.truth
+            .task_forces
+            .values()
+            .filter(|force| force.side == self.side)
+            .find(|force| {
+                force
+                    .preparation
+                    .as_ref()
+                    .is_some_and(|preparation| preparation.roster.contains(&unit))
+            })
+            .map(|force| force.id)
+    }
+
     /// The fewest steps by sea from every hex that can reach `target` to it
     /// (decision 0048, warnings). The map is common knowledge, so this is
     /// not enemy truth; it counts steps, not miles (a step is charged by

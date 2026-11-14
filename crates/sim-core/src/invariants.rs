@@ -139,6 +139,18 @@ pub enum InvariantViolation {
     /// or is halted off the centre of its hex or past the end of its route
     /// (decision 0096). Added at the end of the enum.
     TaskForceHaltUnsound(TaskForceId),
+    /// A task force's loading is outside 0 to 100, or its roster names a
+    /// unit that does not exist or is of the other side (decision 0095).
+    /// Added at the end of the enum.
+    PreparationUnsound(TaskForceId),
+    /// A land unit is on the rosters of two forces (decision 3c of 0099).
+    /// Added at the end of the enum.
+    UnitOnTwoRosters(LandUnitId),
+    /// A land unit's rehearsal is outside 0 to 100 or its hex is not set
+    /// exactly when the rehearsal is above 0, its experience is above 4, or
+    /// a count of days is not below the days for a step (decisions 0095 and
+    /// 0097). Added at the end of the enum.
+    LandUnitExperienceUnsound(LandUnitId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -344,6 +356,17 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::TaskForceHaltUnsound(task_force) => write!(
                 f,
                 "{task_force} is halted without a halt, holds a halt and is not halted, or is halted off a waypoint's centre"
+            ),
+            InvariantViolation::PreparationUnsound(task_force) => write!(
+                f,
+                "{task_force} has a loading outside 0 to 100, or a roster naming a unit that does not exist or is of the other side"
+            ),
+            InvariantViolation::UnitOnTwoRosters(unit) => {
+                write!(f, "{unit} is on the rosters of two task forces")
+            }
+            InvariantViolation::LandUnitExperienceUnsound(unit) => write!(
+                f,
+                "{unit} has a rehearsal outside 0 to 100, a rehearsal hex that does not match its rehearsal, an experience above 4, or a count of days not below the days for a step"
             ),
         }
     }
@@ -662,6 +685,42 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
             if !map.has_land_link(hex, march.to) || !days_ok {
                 violations.push(InvariantViolation::LandUnitMarchUnsound(unit.id));
             }
+        }
+    }
+
+    // Preparation and experience (decisions 0095 and 0097).
+    let mut rostered: BTreeMap<LandUnitId, TaskForceId> = BTreeMap::new();
+    for task_force in truth.task_forces.values() {
+        let Some(preparation) = &task_force.preparation else {
+            continue;
+        };
+        let loading_ok =
+            preparation.loading >= Fixed::ZERO && preparation.loading <= Fixed::from_int(100);
+        let roster_ok = preparation.roster.iter().all(|unit| {
+            truth
+                .land_units
+                .get(unit)
+                .is_some_and(|unit| unit.side == task_force.side)
+        });
+        if !loading_ok || !roster_ok {
+            violations.push(InvariantViolation::PreparationUnsound(task_force.id));
+        }
+        for unit in &preparation.roster {
+            if rostered.insert(*unit, task_force.id).is_some() {
+                violations.push(InvariantViolation::UnitOnTwoRosters(*unit));
+            }
+        }
+    }
+    for unit in truth.land_units.values() {
+        let rehearsal_ok = unit.rehearsal >= Fixed::ZERO
+            && unit.rehearsal <= Fixed::from_int(100)
+            && unit.rehearsal_hex.is_some() == (unit.rehearsal > Fixed::ZERO);
+        let counts_ok = ref_data.ground.is_none_or(|ground| {
+            unit.training_days < ground.training_days_per_level
+                && unit.fight_days < ground.fight_days_per_level
+        });
+        if !rehearsal_ok || unit.experience > crate::state::LandUnit::MAX_EXPERIENCE || !counts_ok {
+            violations.push(InvariantViolation::LandUnitExperienceUnsound(unit.id));
         }
     }
 
