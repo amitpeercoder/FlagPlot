@@ -99,6 +99,7 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | A day from which a force may be used | Stage 2 | Not built |
 | Preparing a landing: loading and rehearsal | Decision 0095 | Confirmed, revised. Needed before stage 3 |
 | The experience of a land unit, and training | Decision 0097 | Confirmed. Needed before stage 3 |
+| What a land unit is good at: its skills | Decision 0098 | A plan. Needed before stage 3 |
 | A report of enemy men ashore without a landing | Not planned | Missing. Today only a side with men in the hex gets one (decision 0092). Stage 3 says whether the invasion needs it |
 | The objectives scale set from the record | `docs/open-work.md` | Open. Not a condition of stages 0 to 2. It is frozen before stage 5's games are played |
 
@@ -258,7 +259,7 @@ What it must be able to decide in the slice, and the orders each needs:
 | Strike what comes within reach | Target priority, reach, when a contact is worth a strike | Exist. A strike of a stated size: decided in stage 2 |
 | Intercept a force expected at a place | Where and when to be | Exist |
 | Bombard a base | The force, arrival by night, the withdrawal | Decision 0092 |
-| Land troops, take and hold a place | The shipping, the escort, the date, the march, the posture, the follow-up supply | Decisions 0066, 0090, 0094 |
+| Land troops, take and hold a place | Which units, by what each is good at (decision 0098); the shipping, the escort, the date, the march, the posture, the follow-up supply | Decisions 0066, 0090, 0094 |
 | Pull out of a place | What is flown out and taken off, and when | Decisions 0091 and 0066 |
 | Rest, repair and replace | Which groups stand down, which ships go to a repair base or the yard | Exist |
 | Use shipping from a pool | Which ships form a convoy | Forming and merging forces by order: required, decided in stage 1 |
