@@ -44,6 +44,33 @@ pub enum Report {
     /// A strike flew to a hex and found nothing (decision 0028): the side
     /// drops `contact` if it still holds it and it still names `hex`.
     NothingThere { contact: ContactId, hex: Hex },
+    /// A count of the enemy's men ashore in a hex (decision 0092, 11 to 16):
+    /// it replaces the side's estimate for that hex.
+    Ground(GroundReport),
+}
+
+/// What a ground report says: the enemy's men ashore in a hex, on a day
+/// (decision 0092, 13 and 14). It may be wrong by its error, and an opening
+/// estimate may be wrong by anything.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct GroundReport {
+    pub hex: Hex,
+    pub men: u32,
+    /// The day of the report: 0 for a scenario's opening estimate.
+    pub day: u32,
+    /// The event that records this report's arrival.
+    pub received_event: EventId,
+}
+
+/// What a side believes of the enemy's men ashore in one hex (decision 0092,
+/// 11): the count the last report gave, its day and its event. It is never
+/// aged or dropped; its day says how old it is.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct GroundEstimate {
+    pub hex: Hex,
+    pub men: u32,
+    pub day: u32,
+    pub report_event: EventId,
 }
 
 /// What a sighting claims. It may be wrong about everything.
@@ -85,6 +112,10 @@ pub struct BattleClaim {
     /// True for the claim of a raid, which tells a claim of nothing from a
     /// surface fight's (decision 0056, 1).
     pub from_air: bool,
+    /// True for the claim of a shore bombardment (decision 0092, 17): the
+    /// aircraft believed destroyed on the ground and nothing else. Then
+    /// `from_air` is false.
+    pub from_bombardment: bool,
     /// The event that records this claim's arrival.
     pub received_event: EventId,
 }
@@ -101,6 +132,7 @@ impl BattleClaim {
             self.claimed_shot_down,
             self.claimed_on_ground,
             self.from_air,
+            self.from_bombardment,
         )
     }
 }
@@ -139,6 +171,9 @@ pub enum ApplyOutcome {
     /// A "nothing there" report changed nothing: the contact was gone or no
     /// longer names the hex.
     Unchanged,
+    /// A ground report made or replaced the estimate for its hex. `replaced`
+    /// is true if the side held one there before.
+    Estimate { replaced: bool },
 }
 
 /// What [`BeliefState::age_contacts`] did to one contact.
@@ -159,6 +194,9 @@ pub struct BeliefState {
     contact_ids: IdAllocator<ContactId>,
     /// Battle claims, in the order they arrived. They never age.
     claims: Vec<BattleClaim>,
+    /// Estimates of the enemy's men ashore, one for a hex (decision 0092,
+    /// 11). They never age.
+    ground_estimates: BTreeMap<Hex, GroundEstimate>,
     /// Contacts created or refreshed since the last ageing. Always empty
     /// between pulses, so not hashed.
     refreshed_this_pulse: BTreeSet<ContactId>,
@@ -171,6 +209,7 @@ impl BeliefState {
             contacts: BTreeMap::new(),
             contact_ids: IdAllocator::new(),
             claims: Vec::new(),
+            ground_estimates: BTreeMap::new(),
             refreshed_this_pulse: BTreeSet::new(),
         }
     }
@@ -193,6 +232,16 @@ impl BeliefState {
         &self.claims
     }
 
+    /// The side's estimates of the enemy's men ashore, in hex order.
+    pub fn ground_estimates(&self) -> impl Iterator<Item = &GroundEstimate> {
+        self.ground_estimates.values()
+    }
+
+    /// The side's estimate of the enemy's men ashore in `hex`, if it has one.
+    pub fn ground_estimate(&self, hex: Hex) -> Option<&GroundEstimate> {
+        self.ground_estimates.get(&hex)
+    }
+
     /// The raw value the next contact ID will have. Part of the state hash.
     pub(crate) fn next_contact_raw(&self) -> u32 {
         self.contact_ids.next_raw()
@@ -213,7 +262,8 @@ impl BeliefState {
     /// refreshed, the lowest ID on a tie. Otherwise the report makes a new
     /// contact. A battle claim is appended to the claims. A "nothing there"
     /// report removes the contact if it exists and names that hex (decision
-    /// 0028).
+    /// 0028). A ground report makes or replaces the estimate for its hex
+    /// (decision 0092, 11 and 12).
     pub(crate) fn apply_report(
         &mut self,
         report: &Report,
@@ -239,6 +289,21 @@ impl BeliefState {
                 } else {
                     ApplyOutcome::Unchanged
                 }
+            }
+            Report::Ground(ground) => {
+                let replaced = self
+                    .ground_estimates
+                    .insert(
+                        ground.hex,
+                        GroundEstimate {
+                            hex: ground.hex,
+                            men: ground.men,
+                            day: ground.day,
+                            report_event: ground.received_event,
+                        },
+                    )
+                    .is_some();
+                ApplyOutcome::Estimate { replaced }
             }
         }
     }

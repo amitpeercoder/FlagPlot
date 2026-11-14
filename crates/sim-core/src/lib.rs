@@ -29,8 +29,10 @@ pub mod view;
 pub mod world;
 
 mod airstrike;
+mod bombardment;
 mod cargo;
 mod damage;
+mod estimate;
 mod ground;
 mod ground_combat;
 mod invariants;
@@ -46,6 +48,7 @@ mod surface;
 mod upkeep;
 
 pub use airstrike::StrikeChoice;
+pub use estimate::StartingEstimate;
 pub use invariants::InvariantViolation;
 pub use movement::{PassageEnd, PassageForecast, ShipPassage};
 pub use start::StartingContact;

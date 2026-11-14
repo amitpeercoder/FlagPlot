@@ -504,6 +504,8 @@ pub enum EventKind {
         claimed_on_ground: u32,
         /// True for the claim of a raid.
         from_air: bool,
+        /// True for the claim of a shore bombardment (decision 0092, 17).
+        from_bombardment: bool,
     },
     /// A hit knocked, or tried to knock, one named system of a ship down one
     /// level (decision 0016). `before == after` when the ship lacks the
@@ -743,6 +745,9 @@ pub enum EventKind {
         hits: u32,
         hits_on_aircraft: u32,
         hits_on_supply: u32,
+        /// Hits that landed on men ashore (decision 0092, 8 and 10): 0 when
+        /// the base's side had no men in its hex.
+        hits_on_men: u32,
     },
     /// Hits on aircraft destroyed aircraft of an air group on the ground
     /// (decision 8 of 0034). `remaining` is what the group has ready
@@ -1145,6 +1150,65 @@ pub enum EventKind {
         air_group: AirGroupId,
         base: BaseId,
     },
+    /// A ship of a force on the bombardment mission fired its guns at an
+    /// enemy base in a night's shore bombardment (decision 0092, 2 to 5).
+    /// `shells` were fired and spent, leaving `rounds_left`; `weighed_shots`
+    /// are the shells times the class's gun damage over the reference gun
+    /// damage, each hitting at `chance`. Of the `hits`, the three counts
+    /// landed on aircraft, supply and men; the rest landed on nothing.
+    BombardmentFire {
+        ship: ShipId,
+        base: BaseId,
+        shells: Fixed,
+        weighed_shots: Fixed,
+        chance: Fixed,
+        expected: Fixed,
+        hits: u32,
+        hits_on_aircraft: u32,
+        hits_on_supply: u32,
+        hits_on_men: u32,
+        rounds_left: Fixed,
+    },
+    /// A force bombarded an enemy base in its hex in the night (decision
+    /// 0092, 1): its ships' fire, added. It cites each ship's fire; the
+    /// aircraft, supply and men destroyed cite it.
+    ShoreBombardment {
+        task_force: TaskForceId,
+        base: BaseId,
+        hex: Hex,
+        shells: Fixed,
+        weighed_shots: Fixed,
+        hits: u32,
+        hits_on_aircraft: u32,
+        hits_on_supply: u32,
+        hits_on_men: u32,
+    },
+    /// A land unit lost men ashore to a bomb or a shell that hit men at a
+    /// base (decision 0092, 9 and 20), `ashore` left.
+    MenLostToFire {
+        unit: LandUnitId,
+        base: BaseId,
+        hex: Hex,
+        lost: u32,
+        ashore: u32,
+    },
+    /// A side was given a ground report of the enemy's men ashore in a hex
+    /// (decision 0092, 12 to 16): its estimate there is now `men`, dated
+    /// `day`. `replaced` is true if it held one before. Day 0 is a
+    /// scenario's opening estimate.
+    GroundReportReceived {
+        side: Side,
+        hex: Hex,
+        men: u32,
+        replaced: bool,
+    },
+    /// A ground report put an enemy base formed by a landing on the
+    /// reporting side's map (decision 0092, 15).
+    BaseFound {
+        side: Side,
+        base: BaseId,
+        hex: Hex,
+    },
 }
 
 impl EventKind {
@@ -1481,6 +1545,17 @@ impl EventKind {
             EventKind::HomePortLost { task_force, base } => {
                 vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)]
             }
+            EventKind::BombardmentFire { ship, base, .. } => {
+                vec![EntityRef::Ship(*ship), EntityRef::Base(*base)]
+            }
+            EventKind::ShoreBombardment {
+                task_force, base, ..
+            } => vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)],
+            EventKind::MenLostToFire { unit, base, .. } => {
+                vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
+            }
+            EventKind::GroundReportReceived { .. } => Vec::new(),
+            EventKind::BaseFound { base, .. } => vec![EntityRef::Base(*base)],
         }
     }
 }
@@ -1719,12 +1794,24 @@ impl fmt::Display for EventKind {
                 hits,
                 hits_on_aircraft,
                 hits_on_supply,
-            } => write!(
-                f,
-                "{air_group} bombs at {base}: {shots} shots x {chance} = {expected} expected, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply, {} on nothing",
-                if *hits == 1 { "hit" } else { "hits" },
-                hits - hits_on_aircraft - hits_on_supply
-            ),
+                hits_on_men,
+            } => {
+                write!(
+                    f,
+                    "{air_group} bombs at {base}: {shots} shots x {chance} = {expected} expected, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply, ",
+                    if *hits == 1 { "hit" } else { "hits" },
+                )?;
+                // Men are named only when a hit landed on them, so a raid
+                // that hit no man reads as it did before decision 0092.
+                if *hits_on_men > 0 {
+                    write!(f, "{hits_on_men} on men, ")?;
+                }
+                write!(
+                    f,
+                    "{} on nothing",
+                    hits - hits_on_aircraft - hits_on_supply - hits_on_men
+                )
+            }
             EventKind::AircraftDestroyedOnGround {
                 air_group,
                 base,
@@ -2193,6 +2280,7 @@ impl fmt::Display for EventKind {
                 claimed_shot_down,
                 claimed_on_ground,
                 from_air,
+                from_bombardment,
             } => f.write_str(&claim_text(
                 *side,
                 *hex,
@@ -2202,6 +2290,7 @@ impl fmt::Display for EventKind {
                 *claimed_shot_down,
                 *claimed_on_ground,
                 *from_air,
+                *from_bombardment,
             )),
             EventKind::ShipsDetached {
                 parent,
@@ -2543,6 +2632,67 @@ impl fmt::Display for EventKind {
                 f,
                 "{air_group} has no mission: the base it was to strike, {base}, is its own side's"
             ),
+            EventKind::BombardmentFire {
+                ship,
+                base,
+                shells,
+                weighed_shots,
+                chance,
+                expected,
+                hits,
+                hits_on_aircraft,
+                hits_on_supply,
+                hits_on_men,
+                rounds_left,
+            } => write!(
+                f,
+                "{ship} shelled {base}: {shells} shells, {weighed_shots} weighed shots x {chance} = {expected} expected, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply, {hits_on_men} on men, {} on nothing; {rounds_left} rounds left",
+                if *hits == 1 { "hit" } else { "hits" },
+                hits - hits_on_aircraft - hits_on_supply - hits_on_men
+            ),
+            EventKind::ShoreBombardment {
+                task_force,
+                base,
+                hex,
+                shells,
+                weighed_shots,
+                hits,
+                hits_on_aircraft,
+                hits_on_supply,
+                hits_on_men,
+            } => write!(
+                f,
+                "{task_force} bombarded {base} at {hex}: {shells} shells, {weighed_shots} weighed shots, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply, {hits_on_men} on men, {} on nothing",
+                if *hits == 1 { "hit" } else { "hits" },
+                hits - hits_on_aircraft - hits_on_supply - hits_on_men
+            ),
+            EventKind::MenLostToFire {
+                unit,
+                base,
+                hex,
+                lost,
+                ashore,
+            } => write!(
+                f,
+                "{unit} lost {lost} men to fire on {base} at {hex}, {ashore} left ashore"
+            ),
+            EventKind::GroundReportReceived {
+                side,
+                hex,
+                men,
+                replaced,
+            } => write!(
+                f,
+                "{} ground report at {hex}: {men} enemy men ashore{}",
+                side.name(),
+                if *replaced { ", replacing the estimate held" } else { "" }
+            ),
+            EventKind::BaseFound { side, base, hex } => write!(
+                f,
+                "{} found enemy {base} at {hex}: it is on the {} side's map",
+                side.name(),
+                side.name()
+            ),
         }
     }
 }
@@ -2738,7 +2888,14 @@ pub fn claim_text(
     claimed_shot_down: u32,
     claimed_on_ground: u32,
     from_air: bool,
+    from_bombardment: bool,
 ) -> String {
+    if from_bombardment {
+        return format!(
+            "{} claim from the sea at {hex}: {claimed_on_ground} aircraft destroyed on the ground",
+            side.name()
+        );
+    }
     if !from_air {
         return format!(
             "{} claims {claimed_sunk} enemy {} sunk at {hex}",

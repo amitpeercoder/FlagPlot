@@ -1,0 +1,27 @@
+# PLACEHOLDER MAP. A strip of open sea with two coast hexes on one row, used by
+# scenario 24 (decision 0092): X at (0,0) and Y at (8,0), 320 nm from X. The
+# geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 9]
+r = [-1, 1]
+
+# X: a base shelled by a force at sea.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Y: a fight ashore on a wrong estimate.
+[[hex]]
+q = 8
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

@@ -265,6 +265,16 @@ impl World {
                 "there are air groups but no search figures".to_string(),
             ));
         }
+        let reports_ashore = ref_data
+            .ground
+            .is_some_and(|ground| ground.report_error.is_some());
+        if reports_ashore && ref_data.search.is_none() {
+            // A ground report is written into belief with the search figures
+            // (decision 0092, 12).
+            return Err(SimError::InvalidSetup(
+                "there are ground report figures but no search figures".to_string(),
+            ));
+        }
         if ref_data.surface_combat.is_some() && ref_data.search.is_none() {
             // A fight reports what it sighted through the search figures.
             return Err(SimError::InvalidSetup(

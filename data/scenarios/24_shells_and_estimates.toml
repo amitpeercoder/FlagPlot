@@ -1,0 +1,150 @@
+# Scenario 24: shells and bombs on a base, and an attack on a wrong estimate
+# (decision 0092).
+#
+# Proves decision 0092 against a hand calculation, in two places on one row.
+# At X, a Japanese force bombards an Allied base on two nights: its shells hit
+# the base's aircraft, supply and men, and the Japanese side is told its shells
+# fired and claims aircraft on the ground. At Y, a Japanese unit ordered to
+# attack on an opening estimate of 300 Allied men finds 3000 and fails; both
+# sides' ground reports then replace their estimates, and base 3, which is not
+# on the Allied side's map, is put on it. The hand calculation is in
+# tests/scenario_24_shells_and_estimates.rs.
+#
+# No air supply, wear or fatigue figures are named, so no base pays for its
+# aircraft and nothing wears, tires or is grounded. Each night the men's supply
+# is the first thing charged.
+#
+# PLACEHOLDER DATA. The units, bases, ships, air groups and map are invented.
+
+name = "Scenario 24: Shells and bombs on a base, and an attack on a wrong estimate"
+placeholder = true
+seed = 1942
+days = 4
+map = "../map/placeholder_shells_and_estimates.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder airfield X, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 2000
+
+[[base]]
+id = 2
+name = "Placeholder airfield Y, Allied"
+side = "allied"
+q = 8
+r = 0
+supply_t = 1000
+
+# Not on the Allied side's map until a ground report puts it there.
+[[base]]
+id = 3
+name = "Placeholder airfield Y, Japanese"
+side = "japanese"
+q = 8
+r = 0
+supply_t = 100
+on_map = false
+
+# Placeholder fighters (aircraft type 4), at rest.
+[[air_group]]
+id = 1
+name = "Placeholder fighter squadron at X"
+side = "allied"
+base = 1
+aircraft_type = 4
+ready = 20
+damaged = 4
+
+[[land_unit]]
+id = 1
+name = "Placeholder Allied regiment at X"
+side = "allied"
+men = 1000
+q = 0
+r = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder Allied division at Y"
+side = "allied"
+men = 3000
+q = 8
+r = 0
+
+[[land_unit]]
+id = 3
+name = "Placeholder Japanese battalion at Y"
+side = "japanese"
+men = 800
+q = 8
+r = 0
+posture = "attack"
+
+# The Japanese side's opening estimate of Allied men at Y: far too low.
+[[estimate]]
+side = "japanese"
+q = 8
+r = 0
+men = 300
+
+# At sea at (2,0), 2 hexes from X.
+[[task_force]]
+id = 1
+name = "Placeholder bombardment force"
+side = "japanese"
+q = 2
+r = 0
+mission = "bombardment"
+
+# Placeholder cruiser: 8 guns at 3 rounds a minute, gun damage 20.
+[[ship]]
+id = 1
+name = "Placeholder cruiser"
+class = 1
+side = "japanese"
+fuel_t = 2000
+gun_rounds = 800
+task_force = 1
+
+# Placeholder destroyer: 4 guns at 6 rounds a minute, gun damage 5.
+[[ship]]
+id = 2
+name = "Placeholder destroyer"
+class = 2
+side = "japanese"
+fuel_t = 500
+gun_rounds = 600
+task_force = 1
+
+# Day 1: steam to X at cruise speed and shell it on the night of days 1 and 2.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[0, 0]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+# Day 3: steam back out to (2,0).
+[[order]]
+day = 3
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[2, 0]]

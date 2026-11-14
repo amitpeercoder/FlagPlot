@@ -456,6 +456,50 @@ pub struct SurfaceCombatFigures {
     /// Days of yard repair for each system out. Not negative and not below
     /// `yard_days_per_system_degraded`.
     pub yard_days_per_system_out: Fixed,
+    /// The figures of a night's shore bombardment (decision 0092). `None`
+    /// when the file names none of them: then no force bombards.
+    pub bombardment: Option<BombardmentFigures>,
+}
+
+/// The figures of shore bombardment (decision 0092, 2, 3, 5 and 17).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct BombardmentFigures {
+    /// Minutes a ship fires in a night's bombardment. Above 0.
+    pub minutes: u32,
+    /// The chance a weighed shot hits something the base table names. From
+    /// 0 to 1.
+    pub hit_chance: Fixed,
+    /// The gun damage of a shell that counts as one shot. Above 0.
+    pub reference_gun_damage: Fixed,
+    /// The chance a weighed shot that destroyed no aircraft is claimed as
+    /// one. From 0 to 1.
+    pub false_claim_chance: Fixed,
+}
+
+impl BombardmentFigures {
+    /// Describes what is wrong with the figures, if anything.
+    pub fn problem(&self) -> Option<String> {
+        if self.minutes == 0 {
+            return Some("surface combat bombardment_minutes is not above 0".to_string());
+        }
+        if self.reference_gun_damage <= Fixed::ZERO {
+            return Some(format!(
+                "surface combat bombardment_reference_gun_damage {} is not above 0",
+                self.reference_gun_damage
+            ));
+        }
+        for (label, value) in [
+            ("bombardment_hit_chance", self.hit_chance),
+            ("bombardment_false_claim_chance", self.false_claim_chance),
+        ] {
+            if value.is_negative() || value > Fixed::ONE {
+                return Some(format!(
+                    "surface combat {label} {value} is not between 0 and 1"
+                ));
+            }
+        }
+        None
+    }
 }
 
 /// The least `unready_gun_share` and `unready_torpedo_share` may be (decisions
@@ -637,6 +681,13 @@ impl SurfaceCombatFigures {
                 ));
             }
         }
+        if let Some(problem) = self
+            .bombardment
+            .as_ref()
+            .and_then(BombardmentFigures::problem)
+        {
+            return Some(problem);
+        }
         None
     }
 }
@@ -676,6 +727,10 @@ pub struct AirCombatFigures {
     /// 0034). With `base_hit_aircraft` it adds to 1 at most; the rest of the
     /// hits land on nothing.
     pub base_hit_supply: Fixed,
+    /// The chance a hit on a base lands on men ashore there (decision 8 of
+    /// 0092). With the other two it adds to 1 at most. A file that names no
+    /// share for men gives 0, and every such hit lands on nothing.
+    pub base_hit_men: Fixed,
     /// The chance each whole shot of fighters that missed is claimed as an
     /// aircraft shot down (decision 3 of
     /// `docs/decisions/0056-claims-from-the-air.md`).
@@ -836,6 +891,7 @@ impl AirCombatFigures {
         for (label, value) in [
             ("aircraft", self.base_hit_aircraft),
             ("supply", self.base_hit_supply),
+            ("men", self.base_hit_men),
         ] {
             if !in_unit(value) {
                 return Some(format!(
@@ -843,10 +899,10 @@ impl AirCombatFigures {
                 ));
             }
         }
-        let landed = self.base_hit_aircraft + self.base_hit_supply;
+        let landed = self.base_hit_aircraft + self.base_hit_supply + self.base_hit_men;
         if landed > Fixed::ONE {
             return Some(format!(
-                "air combat base hit chances on aircraft and supply add to {landed}, more than 1"
+                "air combat base hit chances on aircraft, supply and men add to {landed}, more than 1"
             ));
         }
         if self.base_supply_destroyed_per_hit_t.is_negative() {
@@ -1040,6 +1096,20 @@ pub struct GroundFigures {
     /// The share of a base's supply and fuel its taker keeps (decision 19 of
     /// 0090).
     pub captured_stock_share: Fixed,
+    /// Men a bomb or shell hit on men removes, a whole number (decision 9 of
+    /// 0092). A file that names none gives 0: a hit on men removes nobody.
+    pub men_lost_per_base_hit: Fixed,
+    /// The bounds of a ground report's error (decision 14 of 0092). `None`
+    /// when the file names neither: then no ground report is made.
+    pub report_error: Option<ReportError>,
+}
+
+/// The least and the most a ground report can be, as a share of the truth
+/// (decision 14 of 0092).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ReportError {
+    pub low: Fixed,
+    pub high: Fixed,
 }
 
 impl GroundFigures {
@@ -1060,6 +1130,11 @@ impl GroundFigures {
         attack_fatigue_limit: Fixed::from_int(60),
         beaten_share: Fixed::from_raw(200_000),
         captured_stock_share: Fixed::from_raw(500_000),
+        men_lost_per_base_hit: Fixed::from_int(10),
+        report_error: Some(ReportError {
+            low: Fixed::from_raw(500_000),
+            high: Fixed::from_raw(1_500_000),
+        }),
     };
 
     /// Describes what is wrong with the figures, if anything. The weight of
@@ -1108,6 +1183,22 @@ impl GroundFigures {
         ] {
             if value.is_negative() || value > Fixed::from_int(100) {
                 return Some(format!("ground {label} {value} is not between 0 and 100"));
+            }
+        }
+        if self.men_lost_per_base_hit.is_negative()
+            || self.men_lost_per_base_hit != Fixed::from_int(self.men_lost_per_base_hit.trunc())
+        {
+            return Some(format!(
+                "ground men_lost_per_base_hit {} is not a whole number of 0 or more",
+                self.men_lost_per_base_hit
+            ));
+        }
+        if let Some(error) = self.report_error {
+            if error.low.is_negative() || error.high < error.low {
+                return Some(format!(
+                    "ground report_error_low {} and report_error_high {} are not 0 or more with the low not above the high",
+                    error.low, error.high
+                ));
             }
         }
         None
@@ -1229,6 +1320,8 @@ impl AirCombatFigures {
             base_supply_destroyed_per_hit_t: Fixed::from_int(50),
             base_hit_aircraft: tenth(3),
             base_hit_supply: tenth(3),
+            // Decision 0092's first value.
+            base_hit_men: tenth(2),
             fighter_false_claim_chance: tenth(1),
             anti_aircraft_false_claim_chance: Fixed::from_ratio(5, 100),
             bomb_false_claim_chance: tenth(1),
@@ -1311,6 +1404,12 @@ impl SurfaceCombatFigures {
             yard_days_per_flotation_point: Fixed::from_int(2),
             yard_days_per_system_degraded: Fixed::from_int(5),
             yard_days_per_system_out: Fixed::from_int(30),
+            bombardment: Some(BombardmentFigures {
+                minutes: 30,
+                hit_chance: hundredth(5),
+                reference_gun_damage: Fixed::from_int(20),
+                false_claim_chance: hundredth(1),
+            }),
         }
     }
 }

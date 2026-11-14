@@ -16,7 +16,7 @@
 use std::collections::BTreeMap;
 
 use crate::airstrike::StrikeChoice;
-use crate::belief::{BattleClaim, BeliefState, Contact};
+use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate};
 use crate::events::EventLog;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
@@ -29,7 +29,8 @@ use crate::movement::{self, PassageForecast};
 use crate::objectives::{self, KnownProgress, Objective, SideObjectives};
 use crate::orders::{AirMission, Order, SpeedSetting};
 use crate::refdata::{
-    AirSupplyFigures, AircraftType, GroundFigures, PortSize, RefData, SearchFigures, ShipClass,
+    AirSupplyFigures, AircraftType, BombardmentFigures, GroundFigures, PortSize, RefData,
+    SearchFigures, ShipClass,
 };
 use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{
@@ -230,6 +231,28 @@ impl<'a> SideView<'a> {
     /// shown.
     pub fn claims(&self) -> &'a [BattleClaim] {
         self.belief.claims()
+    }
+
+    /// What the side believes of the enemy's men ashore: one estimate for a
+    /// hex, in hex order, each the count of the last ground report or
+    /// opening estimate there, with its day (decision 0092, 11 and 19). It
+    /// may be wrong; the truth is not shown.
+    pub fn ground_estimates(&self) -> impl Iterator<Item = &'a GroundEstimate> + '_ {
+        self.belief.ground_estimates()
+    }
+
+    /// The side's estimate of the enemy's men ashore in `hex`, if it has one.
+    pub fn ground_estimate(&self, hex: Hex) -> Option<&'a GroundEstimate> {
+        self.belief.ground_estimate(hex)
+    }
+
+    /// The figures of shore bombardment, if a force can bombard (decision
+    /// 0092): public rules, not intelligence.
+    pub fn bombardment_figures(&self) -> Option<&'a BombardmentFigures> {
+        self.ref_data
+            .surface_combat
+            .as_ref()
+            .and_then(|surface| surface.bombardment.as_ref())
     }
 
     /// The side's own orders, accepted or not, in the order they were taken

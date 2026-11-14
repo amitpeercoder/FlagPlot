@@ -194,10 +194,12 @@ impl World {
             // so do the straggler passes after them (decision 0022,
             // decision 8). The slot stays, like night search.
             PulsePhase::SurfaceEngagements => {}
-            // Not implemented yet. Each arrives with the scenario that needs it.
+            // Decision 0092: a force on the bombardment mission shells an
+            // enemy base in its hex.
+            PulsePhase::ShoreBombardment => self.bombard_bases(day, pulse),
             // Night search is decision 7 territory: there is no search where it
             // is dark, so this phase stays empty.
-            PulsePhase::NightSearch | PulsePhase::ShoreBombardment => {}
+            PulsePhase::NightSearch => {}
         }
     }
 
