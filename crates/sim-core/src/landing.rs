@@ -38,17 +38,19 @@
 //! at that ship or base, or form a new group there. Their sortie goes with
 //! them, so wear, fatigue and supply are worked for the group that has them.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
+use crate::choices::air::{AirAnswer, AirQuestion, GroupLanding};
+use crate::choices::{Answer, Question};
 use crate::damage::roll_shots;
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, ShipId};
 use crate::orders::{AirMission, Reach};
-use crate::refdata::ShipKind;
+use crate::refdata::{AircraftType, RefData, ShipKind};
 use crate::rng::{Draw, Subsystem};
-use crate::state::{AirGroup, AirGroupLocation, ShipLocation, ShipSystem, SystemState};
+use crate::state::{AirGroup, AirGroupLocation, Ship, ShipLocation, ShipSystem, Side, SystemState};
 use crate::time::Pulse;
 use crate::upkeep::Sortie;
 use crate::world::World;
@@ -60,6 +62,139 @@ pub(crate) struct DeckLoss {
     pub(crate) ship: ShipId,
     pub(crate) hex: Hex,
     pub(crate) cause: EventId,
+}
+
+/// A carrier of the side in the hex where aircraft are coming down: her
+/// number, how many aircraft she carries at most, and how many are aboard her
+/// (the ready and damaged aircraft of the groups aboard) when the landings
+/// begin.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) struct CarrierRoom {
+    pub(crate) ship: ShipId,
+    pub(crate) capacity: u32,
+    pub(crate) aboard: u32,
+}
+
+/// One group's aircraft in the air whose own deck is gone: where they are,
+/// how far a base may be, how many there are, and the carriers of its side in
+/// the hex, lowest ship number first.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub(crate) struct Airborne {
+    pub(crate) group: AirGroupId,
+    pub(crate) hex: Hex,
+    pub(crate) radius_nm: Fixed,
+    pub(crate) in_air: u32,
+    pub(crate) carriers: Vec<CarrierRoom>,
+}
+
+/// How far from the hex a base may be for a type to land there: its strike
+/// radius, or its search range for a type with no strike radius, as some
+/// scouts are.
+pub(crate) fn landing_radius(aircraft_type: &AircraftType) -> Fixed {
+    if aircraft_type.strike_range_nm > Fixed::ZERO {
+        aircraft_type.strike_range_nm
+    } else {
+        aircraft_type.search_range_nm
+    }
+}
+
+/// The carriers of `side` in `hex` that can take aircraft down, other than
+/// `own_ship` (the ship whose deck is gone): a ship of the carrier kind, not
+/// sunk, flight deck not out, in that hex, lowest ship number first, each with
+/// her capacity and the aircraft aboard her. `ships` are the ships to look
+/// among, in ship number order; `ship_hex` gives a ship's hex; `groups` are
+/// the air groups that may be aboard.
+pub(crate) fn carriers_in_hex<'a>(
+    ships: impl Iterator<Item = &'a Ship>,
+    side: Side,
+    own_ship: ShipId,
+    hex: Hex,
+    ship_hex: impl Fn(ShipId) -> Option<Hex>,
+    ref_data: &RefData,
+    groups: impl Iterator<Item = &'a AirGroup> + Clone,
+) -> Vec<CarrierRoom> {
+    ships
+        .filter(|ship| {
+            ship.side == side
+                && ship.id != own_ship
+                && ref_data
+                    .ship_classes
+                    .get(&ship.class)
+                    .is_some_and(|class| class.kind == ShipKind::Carrier)
+                && ship.location != ShipLocation::Sunk
+                && ship.systems.get(ShipSystem::FlightDeck) != SystemState::Out
+                && ship_hex(ship.id) == Some(hex)
+        })
+        .map(|ship| CarrierRoom {
+            ship: ship.id,
+            capacity: ref_data
+                .ship_classes
+                .get(&ship.class)
+                .map_or(0, |class| class.aircraft_capacity),
+            aboard: groups
+                .clone()
+                .filter(|group| group.location == AirGroupLocation::Ship(ship.id))
+                .map(|group| group.ready + group.damaged)
+                .sum(),
+        })
+        .collect()
+}
+
+/// Where the aircraft in the air of each group in `groups` land (decisions 7
+/// to 10 of 0059; the module comment gives the order). The groups are one
+/// side's, in group number order; `bases` are that side's bases with an
+/// airfield, in base number order. For each group the aircraft, as one body,
+/// go first to the carriers in its hex, lowest ship number first, as many as
+/// fit under each one's capacity less the aircraft aboard her and those the
+/// groups before it have put aboard her (the room is shared in order); then
+/// to the nearest base within the group's radius of its hex, lowest number
+/// first, which takes any number; the rest go into the sea. It draws nothing:
+/// the crews' recovery from the sea is the caller's. The engine and a side's
+/// view both call it (decision 0100, 1).
+pub(crate) fn place_landings(groups: &[Airborne], bases: &[(BaseId, Hex)]) -> Vec<GroupLanding> {
+    let mut put_aboard: BTreeMap<ShipId, u32> = BTreeMap::new();
+    let mut placed = Vec::new();
+    for airborne in groups {
+        let mut places: Vec<(AirGroupLocation, u32)> = Vec::new();
+        let mut remaining = airborne.in_air;
+        // 1. Another carrier of the side in the same hex.
+        for carrier in &airborne.carriers {
+            if remaining == 0 {
+                break;
+            }
+            let already = put_aboard.get(&carrier.ship).copied().unwrap_or(0);
+            let room = carrier.capacity.saturating_sub(carrier.aboard + already);
+            let take = room.min(remaining);
+            if take > 0 {
+                places.push((AirGroupLocation::Ship(carrier.ship), take));
+                *put_aboard.entry(carrier.ship).or_insert(0) += take;
+                remaining -= take;
+            }
+        }
+        // 2. A base of the side within the radius: the nearest, then the
+        // lowest number.
+        if remaining > 0 {
+            let base = bases
+                .iter()
+                .filter(|(_, base_hex)| {
+                    airborne
+                        .hex
+                        .air_distance_within(*base_hex, airborne.radius_nm)
+                })
+                .min_by_key(|(id, base_hex)| (airborne.hex.air_distance_nm(*base_hex), *id))
+                .map(|(id, _)| *id);
+            if let Some(base) = base {
+                places.push((AirGroupLocation::Base(base), remaining));
+                remaining = 0;
+            }
+        }
+        placed.push(GroupLanding {
+            group: airborne.group,
+            places,
+            sea: remaining,
+        });
+    }
+    placed
 }
 
 impl World {
@@ -87,17 +222,6 @@ impl World {
         }
     }
 
-    /// The aircraft aboard `ship`: the ready and damaged aircraft of every
-    /// group aboard her.
-    fn aircraft_aboard(&self, ship: ShipId) -> u32 {
-        self.truth
-            .air_groups
-            .values()
-            .filter(|group| group.location == AirGroupLocation::Ship(ship))
-            .map(|group| group.ready + group.damaged)
-            .sum()
-    }
-
     /// Brings home the aircraft in the air whose own deck is lost. See the
     /// module comment. Run in the wear phase after the fuel roll and before
     /// wear.
@@ -110,6 +234,14 @@ impl World {
             .filter(|sortie| sortie.aircraft > 0)
             .map(|sortie| sortie.air_group)
             .collect();
+        // What each group whose deck is gone has in the air, and where.
+        struct Pending {
+            id: AirGroupId,
+            hex: Hex,
+            causes: Vec<Cause>,
+        }
+        let mut pending: Vec<Pending> = Vec::new();
+        let mut airborne: BTreeMap<Side, Vec<Airborne>> = BTreeMap::new();
         for id in groups {
             let group = self.truth.air_groups[&id].clone();
             let AirGroupLocation::Ship(own_ship) = group.location else {
@@ -147,78 +279,58 @@ impl World {
             if in_air == 0 {
                 continue;
             }
-            let aircraft_type = self.ref_data.aircraft_types[&group.aircraft_type].clone();
-            let radius = if aircraft_type.strike_range_nm > Fixed::ZERO {
-                aircraft_type.strike_range_nm
-            } else {
-                aircraft_type.search_range_nm
-            };
-
-            // Where they go, in order.
-            let mut places: Vec<(AirGroupLocation, u32)> = Vec::new();
-            let mut remaining = in_air;
-            // 1. Another carrier of the side in the same hex.
-            let carriers: Vec<ShipId> = self
+            let aircraft_type = &self.ref_data.aircraft_types[&group.aircraft_type];
+            let carriers = carriers_in_hex(
+                self.truth.ships.values(),
+                group.side,
+                own_ship,
+                hex,
+                |ship| self.ship_hex(ship),
+                &self.ref_data,
+                self.truth.air_groups.values(),
+            );
+            airborne.entry(group.side).or_default().push(Airborne {
+                group: id,
+                hex,
+                radius_nm: landing_radius(aircraft_type),
+                in_air,
+                carriers,
+            });
+            pending.push(Pending { id, hex, causes });
+        }
+        // Where they go, in order: the carriers' room is shared between a
+        // side's groups in group number order, and the sides do not meet.
+        let mut landings: BTreeMap<AirGroupId, GroupLanding> = BTreeMap::new();
+        for (side, groups) in airborne {
+            let bases: Vec<(BaseId, Hex)> = self
                 .truth
-                .ships
+                .bases
                 .values()
-                .filter(|ship| {
-                    ship.side == group.side
-                        && ship.id != own_ship
-                        && self
-                            .ref_data
-                            .ship_classes
-                            .get(&ship.class)
-                            .is_some_and(|class| class.kind == ShipKind::Carrier)
-                        && ship.location != ShipLocation::Sunk
-                        && ship.systems.get(ShipSystem::FlightDeck) != SystemState::Out
-                        && self.ship_hex(ship.id) == Some(hex)
-                })
-                .map(|ship| ship.id)
+                // Not a base with no airfield (decision 6 of 0099).
+                .filter(|base| base.side == side && base.airfield)
+                .map(|base| (base.id, base.hex))
                 .collect();
-            let mut taken_by: Vec<(ShipId, u32)> = Vec::new();
-            for carrier in carriers {
-                if remaining == 0 {
-                    break;
-                }
-                let capacity = self
-                    .ref_data
-                    .ship_classes
-                    .get(&self.truth.ships[&carrier].class)
-                    .map_or(0, |class| class.aircraft_capacity);
-                let already: u32 = taken_by
-                    .iter()
-                    .filter(|(ship, _)| *ship == carrier)
-                    .map(|(_, n)| n)
-                    .sum();
-                let room = capacity.saturating_sub(self.aircraft_aboard(carrier) + already);
-                let take = room.min(remaining);
-                if take > 0 {
-                    places.push((AirGroupLocation::Ship(carrier), take));
-                    taken_by.push((carrier, take));
-                    remaining -= take;
-                }
-            }
-            // 2. A base of the side within the radius: the nearest, then the
-            // lowest number.
-            if remaining > 0 {
-                let base: Option<BaseId> = self
-                    .truth
-                    .bases
-                    .values()
-                    .filter(|base| {
-                        // Not a base with no airfield (decision 6 of 0099).
-                        base.side == group.side
-                            && base.airfield
-                            && hex.air_distance_within(base.hex, radius)
-                    })
-                    .min_by_key(|base| (hex.air_distance_nm(base.hex), base.id))
-                    .map(|base| base.id);
-                if let Some(base) = base {
-                    places.push((AirGroupLocation::Base(base), remaining));
-                    remaining = 0;
-                }
-            }
+            let placed = place_landings(&groups, &bases);
+            self.trace_choice(side, || {
+                (
+                    Question::Air(AirQuestion::Landing {
+                        groups: groups
+                            .iter()
+                            .map(|airborne| (airborne.group, airborne.in_air))
+                            .collect(),
+                    }),
+                    Answer::Air(AirAnswer::Landing(placed.clone())),
+                )
+            });
+            landings.extend(placed.into_iter().map(|landing| (landing.group, landing)));
+        }
+        for Pending { id, hex, causes } in pending {
+            let group = self.truth.air_groups[&id].clone();
+            let GroupLanding {
+                places,
+                sea: remaining,
+                ..
+            } = landings.remove(&id).expect("the group was placed");
             // Land them, in order, taking each from the group's sorties.
             for (place, n) in places {
                 let moved_pilots = if group.pilots.is_some() {

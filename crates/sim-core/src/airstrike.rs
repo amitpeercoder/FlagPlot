@@ -135,6 +135,8 @@
 use std::collections::BTreeMap;
 
 use crate::belief::{ApplyOutcome, BattleClaim, BeliefState, Report};
+use crate::choices::air::{AirAnswer, AirQuestion, BaseStrikeLaunch, EscortChoice, FighterSplit};
+use crate::choices::{Answer, Question};
 use crate::damage::{
     damage_per_hit, raw_u64, roll_shots, system_for_draw, system_hit_chance, DamageSite, HitSet,
 };
@@ -145,10 +147,10 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
 use crate::orders::{AirMission, Reach};
-use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind};
+use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind, SurfaceCombatFigures};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::{draw_report, ReportDraws};
-use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side};
+use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side, SystemState};
 use crate::time::{self, Pulse};
 use crate::upkeep::Sortie;
 use crate::world::World;
@@ -607,6 +609,62 @@ pub(crate) fn take_ground(
     taken
 }
 
+/// How many aircraft of `group` can be flown this pulse (decision 14 of 0026
+/// and decision 2 of 0036): its ready aircraft times the flight deck's factor
+/// (all of them from a base, or from a ship whose deck works; the degraded
+/// factor if it is degraded; none if it is out) times 100 less its fatigue
+/// over 100, multiplied in fixed point and rounded down once. A stood-down
+/// group flies none. Without the fatigue figures (`fatigue_loaded` false) a
+/// group is never tired or stood down. A group whose pilots are tracked
+/// starts from the smaller of its ready aircraft and its pilots (decision 2
+/// of 0038). A group at a base with no supply at the start of the pulse
+/// (`base_grounded`) flies none (decision 7 of 0039). A group that moved to
+/// another base by order today flies none (decision 0091, 6): `day` is the
+/// day being resolved.
+///
+/// `flight_deck` is the state of the flight deck of the ship the group is
+/// aboard, `None` if it is not aboard a ship that exists; it matters only
+/// with the surface combat figures, without which no system can be damaged.
+/// The inputs are the group's own and the figures: this is the one function
+/// the engine and a side's view both call (decision 0100, 1).
+pub(crate) fn able_to_fly(
+    group: &AirGroup,
+    base_grounded: bool,
+    flight_deck: Option<SystemState>,
+    surface_combat: Option<&SurfaceCombatFigures>,
+    fatigue_loaded: bool,
+    day: u32,
+) -> u32 {
+    // A base with no supply at the start of the pulse flies nothing
+    // (decision 7 of 0039). Groups aboard ships are never affected.
+    if matches!(group.location, AirGroupLocation::Base(_)) && base_grounded {
+        return 0;
+    }
+    // A group that moved to another base today flies nothing (decision
+    // 0091, 6).
+    if group.rebased_day == Some(day) {
+        return 0;
+    }
+    let crewed = group
+        .pilots
+        .map_or(group.ready, |pilots| group.ready.min(pilots));
+    let mut able = Fixed::from_int(i64::from(crewed));
+    if let (AirGroupLocation::Ship(_), Some(state)) = (group.location, flight_deck) {
+        // Without the figures no system can be damaged (World::new).
+        if let Some(figures) = surface_combat {
+            able = able * figures.system_factor(ShipSystem::FlightDeck, state);
+        }
+    }
+    if fatigue_loaded {
+        if group.stood_down {
+            return 0;
+        }
+        let hundred = Fixed::from_int(100);
+        able = able.mul_div(hundred - group.fatigue, hundred);
+    }
+    u32::try_from(able.trunc()).expect("a share of the aircraft is not negative")
+}
+
 impl World {
     /// The aircraft of `group` that can be flown this pulse (decision 14 of
     /// 0026 and decision 2 of 0036): its ready aircraft times the flight
@@ -620,40 +678,33 @@ impl World {
     /// start of the pulse flies none (decision 7 of 0039). A group that
     /// moved to another base by order today flies none (decision 0091, 6).
     pub(crate) fn aircraft_able_to_fly(&self, group: &AirGroup) -> u32 {
-        // A base with no supply at the start of the pulse flies nothing
-        // (decision 7 of 0039). Groups aboard ships are never affected.
-        if let AirGroupLocation::Base(base) = group.location {
-            if self.grounded_bases.contains(&base) {
-                return 0;
-            }
-        }
-        // A group that moved to another base today flies nothing (decision
-        // 0091, 6). The day being resolved is the one after the last day
-        // resolved.
-        if group.rebased_day == Some(self.truth.day + 1) {
-            return 0;
-        }
-        let crewed = group
-            .pilots
-            .map_or(group.ready, |pilots| group.ready.min(pilots));
-        let mut able = Fixed::from_int(i64::from(crewed));
-        if let AirGroupLocation::Ship(ship) = group.location {
-            if let Some(ship) = self.truth.ships.get(&ship) {
-                // Without the figures no system can be damaged (World::new).
-                if let Some(figures) = &self.ref_data.surface_combat {
-                    let state = ship.systems.get(ShipSystem::FlightDeck);
-                    able = able * figures.system_factor(ShipSystem::FlightDeck, state);
-                }
-            }
-        }
-        if self.ref_data.fatigue.is_some() {
-            if group.stood_down {
-                return 0;
-            }
-            let hundred = Fixed::from_int(100);
-            able = able.mul_div(hundred - group.fatigue, hundred);
-        }
-        u32::try_from(able.trunc()).expect("a share of the aircraft is not negative")
+        let base_grounded = match group.location {
+            AirGroupLocation::Base(base) => self.grounded_bases.contains(&base),
+            _ => false,
+        };
+        let flight_deck = match group.location {
+            AirGroupLocation::Ship(ship) => self
+                .truth
+                .ships
+                .get(&ship)
+                .map(|ship| ship.systems.get(ShipSystem::FlightDeck)),
+            _ => None,
+        };
+        let able = able_to_fly(
+            group,
+            base_grounded,
+            flight_deck,
+            self.ref_data.surface_combat.as_ref(),
+            self.ref_data.fatigue.is_some(),
+            self.truth.day + 1,
+        );
+        self.trace_choice(group.side, || {
+            (
+                Question::Air(AirQuestion::AircraftAbleToFly { group: group.id }),
+                Answer::Air(AirAnswer::AircraftAbleToFly(able)),
+            )
+        });
+        able
     }
 
     /// The strike decision step of one daylight pulse (decisions 3 to 6 of
@@ -708,7 +759,35 @@ impl World {
             }
 
             if let AirMission::BaseStrike(base) = group.mission {
-                self.decide_base_strike(day, pulse, &group, base, origin, reach_nm, aircraft);
+                // The base's side and hex are public facts (decision 0034, 2).
+                let target = self
+                    .truth
+                    .bases
+                    .get(&base)
+                    .map(|target| (target.side, target.hex));
+                let launch = base_strike_launch(
+                    &group,
+                    base,
+                    day,
+                    pulse,
+                    origin,
+                    aircraft_type.attack_weapon,
+                    aircraft,
+                    reach_nm,
+                    target,
+                );
+                self.trace_choice(group.side, || {
+                    (
+                        Question::Air(AirQuestion::BaseStrike {
+                            group: group.id,
+                            pulse,
+                        }),
+                        Answer::Air(AirAnswer::BaseStrike(launch)),
+                    )
+                });
+                if let Some(launch) = launch {
+                    self.launch_base_strike(day, pulse, &group, launch);
+                }
                 continue;
             }
 
@@ -721,6 +800,12 @@ impl World {
                 reach_nm,
                 figures.strike_contact_max_age_pulses,
             );
+            self.trace_choice(group.side, || {
+                (
+                    Question::Air(AirQuestion::Strike { group: group.id }),
+                    Answer::Air(AirAnswer::Strike(chosen)),
+                )
+            });
             let Some(StrikeChoice {
                 kind: taken_for,
                 distance_nm,
@@ -766,41 +851,24 @@ impl World {
         }
     }
 
-    /// The decision of one group on the base strike mission (decision 3 of
-    /// 0034, and 7 of 0063): it launches every aircraft it can fly in a
-    /// daylight pulse, if it has not launched at its base that game day, the
-    /// base exists, is held by the other side and is within the reach in
-    /// force. So it flies in the first daylight pulse in which the base is in
-    /// reach, once a day. It reads no belief and needs no contact. The caller
-    /// has checked the light, that the type carries a weapon and that the
-    /// group can fly an aircraft.
-    #[allow(clippy::too_many_arguments)]
-    fn decide_base_strike(
+    /// Launches the base strike of one group that [`base_strike_launch`]
+    /// said launches (decision 3 of 0034, and 7 of 0063): it records the
+    /// launch and the strike in flight, and notes the day of the launch so
+    /// the group launches once a game day. It reads no belief and needs no
+    /// contact.
+    fn launch_base_strike(
         &mut self,
         day: u32,
         pulse: Pulse,
         group: &AirGroup,
-        base: BaseId,
-        origin: Hex,
-        reach_nm: Fixed,
-        aircraft: u32,
+        launch: BaseStrikeLaunch,
     ) {
-        // Once in a game day, in the first daylight pulse the base is in
-        // reach (decision 7 of 0063). The caller has checked the light.
-        if group.last_base_strike_day == Some(day) {
-            return;
-        }
-        let Some(target) = self.truth.bases.get(&base) else {
-            return;
-        };
-        if target.side == group.side {
-            return;
-        }
-        let hex = target.hex;
-        let distance_nm = Fixed::from_int(i64::from(origin.air_distance_nm(hex)));
-        if !origin.air_distance_within(hex, reach_nm) {
-            return;
-        }
+        let BaseStrikeLaunch {
+            base,
+            hex,
+            distance_nm,
+            aircraft,
+        } = launch;
         let causes: Vec<Cause> = group
             .mission_order
             .map(Cause::Order)
@@ -863,7 +931,18 @@ impl World {
         // Everything is worked out on the state at the start of the step.
         let mut raids = group_raids(&strikes);
         let mut fighters = self.split_fighter_groups();
-        send_escorts(&mut raids, &mut fighters);
+        let escorts = send_escorts(&mut raids, &mut fighters);
+        for (index, choice) in escorts {
+            let group = &fighters[index];
+            self.trace_choice(group.side, || {
+                (
+                    Question::Air(AirQuestion::Escort {
+                        group: group.air_group,
+                    }),
+                    Answer::Air(AirAnswer::Escort(choice)),
+                )
+            });
+        }
         let mut ground = {
             let flying = self.aircraft_flying(pulse, &strikes, &raids, &fighters);
             self.aircraft_on_the_ground(&strikes, &flying)
@@ -1815,16 +1894,20 @@ impl World {
             .filter(|group| !self.truth.air_group_at_yard(group))
             .map(|group| {
                 let flyable = self.aircraft_able_to_fly(group);
-                let patrol = (Fixed::from_int(i64::from(flyable)) * group.patrol_share).trunc();
-                let patrol =
-                    u32::try_from(patrol).expect("a share of the aircraft is not negative");
+                let split = fighter_split(flyable, group.patrol_share);
+                self.trace_choice(group.side, || {
+                    (
+                        Question::Air(AirQuestion::FighterSplit { group: group.id }),
+                        Answer::Air(AirAnswer::FighterSplit(split)),
+                    )
+                });
                 FighterGroup {
                     air_group: group.id,
                     side: group.side,
                     origin: group.location,
                     hex: self.truth.air_group_hex(group),
-                    patrol,
-                    escorts: flyable - patrol,
+                    patrol: split.patrol,
+                    escorts: split.escorts,
                     radius_nm: self.ref_data.reach_nm(group.aircraft_type, group.reach),
                     orders: group
                         .mission_order
@@ -2931,6 +3014,145 @@ pub(crate) fn contact_to_strike(
         })
 }
 
+/// Whether `group`, on the base strike mission against `base`, launches in
+/// `pulse` of game day `day` (decision 3 of 0034, and 7 of 0063), and what it
+/// launches. It launches every aircraft it can fly (`aircraft`, the answer of
+/// [`able_to_fly`]) in a daylight pulse, if its type carries a weapon, it has
+/// not launched at a base that game day, the base exists, is held by the other
+/// side and is within `reach_nm` of `origin`. So it flies in the first
+/// daylight pulse in which the base is in reach, once a day.
+///
+/// `target` is the base's side and hex, `None` if it does not exist or the
+/// side does not know of it: both are public facts, which every side has
+/// (decision 0034, 2). The function reads no belief, needs no contact and
+/// nothing else of the base. The strike decision and a side's view both call
+/// it (decision 0100, 1).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn base_strike_launch(
+    group: &AirGroup,
+    base: BaseId,
+    day: u32,
+    pulse: Pulse,
+    origin: Hex,
+    weapon: AttackWeapon,
+    aircraft: u32,
+    reach_nm: Fixed,
+    target: Option<(Side, Hex)>,
+) -> Option<BaseStrikeLaunch> {
+    if time::is_dark(origin, pulse) || weapon == AttackWeapon::None || aircraft == 0 {
+        return None;
+    }
+    // Once in a game day, in the first daylight pulse the base is in reach
+    // (decision 7 of 0063).
+    if group.last_base_strike_day == Some(day) {
+        return None;
+    }
+    let (side, hex) = target?;
+    if side == group.side {
+        return None;
+    }
+    let distance_nm = Fixed::from_int(i64::from(origin.air_distance_nm(hex)));
+    if !origin.air_distance_within(hex, reach_nm) {
+        return None;
+    }
+    Some(BaseStrikeLaunch {
+        base,
+        hex,
+        distance_nm,
+        aircraft,
+    })
+}
+
+/// How a fighter group that can fly `flyable` aircraft divides them (decision
+/// 2 of 0027): the patrol is the share, rounded down, and the rest escort.
+pub(crate) fn fighter_split(flyable: u32, patrol_share: Fixed) -> FighterSplit {
+    let patrol = (Fixed::from_int(i64::from(flyable)) * patrol_share).trunc();
+    let patrol = u32::try_from(patrol).expect("a share of the aircraft is not negative");
+    FighterSplit {
+        patrol,
+        escorts: flyable - patrol,
+    }
+}
+
+/// What a side's escort choice reads of one of its raids: where it leaves
+/// from, where it goes, its first group and its bombers.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) struct RaidSummary {
+    /// The lowest-numbered group of the raid.
+    pub(crate) lead: AirGroupId,
+    pub(crate) origin: AirGroupLocation,
+    pub(crate) hex: Hex,
+    pub(crate) bombers: u32,
+}
+
+fn summarise(raids: &[Raid]) -> Vec<RaidSummary> {
+    raids
+        .iter()
+        .map(|raid| RaidSummary {
+            lead: raid.strikes[0].air_group,
+            origin: raid.strikes[0].origin,
+            hex: raid.strikes[0].hex,
+            bombers: raid.strikes.iter().map(|strike| strike.aircraft).sum(),
+        })
+        .collect()
+}
+
+/// The raids of `side` among `strikes` (the strikes in flight), in the order
+/// [`group_raids`] gives them. A side's raids are built from its own strikes
+/// only.
+pub(crate) fn raids_of_side(strikes: &[StrikeInFlight], side: Side) -> Vec<RaidSummary> {
+    let own: Vec<StrikeInFlight> = strikes
+        .iter()
+        .filter(|strike| strike.side == side)
+        .cloned()
+        .collect();
+    summarise(&group_raids(&own))
+}
+
+/// The raid, among `raids`, a fighter group whose escorts leave from `origin`
+/// would join: of the raids from its place the one with the most bombers, then
+/// the lowest first group (decision 5 of 0027). The raid's index in `raids`,
+/// and whether its target hex is within `radius_nm` of the group's `hex`
+/// (decision 0030): a group with no position cannot be measured and sends its
+/// escorts. `None`: no raid leaves from its place.
+fn escort_raid(
+    raids: &[RaidSummary],
+    origin: AirGroupLocation,
+    hex: Option<Hex>,
+    radius_nm: Fixed,
+) -> Option<(usize, bool)> {
+    let index = raids
+        .iter()
+        .enumerate()
+        .filter(|(_, raid)| raid.origin == origin)
+        .max_by_key(|(_, raid)| (raid.bombers, std::cmp::Reverse(raid.lead)))
+        .map(|(index, _)| index)?;
+    let within = hex.is_none_or(|hex| hex.air_distance_within(raids[index].hex, radius_nm));
+    Some((index, within))
+}
+
+/// What the escorts of a fighter group do (decisions 5 of 0027 and 0030): go
+/// with the raid from its place that has the most bombers, then the lowest
+/// first group, if that raid's target is within the fighter type's radius of
+/// the group; else, with a raid from its place, stay with the patrol; with no
+/// raid from its place, send none. `raids` are the side's own raids of the
+/// pulse. The engine and a side's view both call it.
+pub(crate) fn escort_choice(
+    raids: &[RaidSummary],
+    origin: AirGroupLocation,
+    hex: Option<Hex>,
+    radius_nm: Fixed,
+) -> EscortChoice {
+    match escort_raid(raids, origin, hex, radius_nm) {
+        None => EscortChoice::NoRaid,
+        Some((index, true)) => EscortChoice::Goes {
+            lead: raids[index].lead,
+            hex: raids[index].hex,
+        },
+        Some((_, false)) => EscortChoice::Stays,
+    }
+}
+
 /// A sortie out to `to` and back from `from`: twice the distance (decision 4
 /// of 0035).
 fn out_and_back(from: Hex, to: Hex) -> Fixed {
@@ -2974,25 +3196,22 @@ fn same_kind_of_target(a: Aim, b: Aim) -> bool {
 /// target hex is within the fighter type's radius of the group (decision 0030).
 /// A place with no raid sends none. A group whose escorts do not go keeps
 /// all it can fly as patrol (decision 2 of 0030). A group with no position
-/// cannot be measured and sends its escorts as before.
-fn send_escorts(raids: &mut [Raid], fighters: &mut [FighterGroup]) {
+/// cannot be measured and sends its escorts as before. The choice is
+/// [`escort_choice`]. Returns it for each group that has escorts, by index
+/// into `fighters`, for the caller to trace.
+fn send_escorts(raids: &mut [Raid], fighters: &mut [FighterGroup]) -> Vec<(usize, EscortChoice)> {
+    let summaries = summarise(raids);
+    let mut made = Vec::new();
     for (index, group) in fighters.iter_mut().enumerate() {
         if group.escorts == 0 {
             continue;
         }
-        let chosen = raids
-            .iter()
-            .enumerate()
-            .filter(|(_, raid)| raid.strikes[0].origin == group.origin)
-            .max_by_key(|(_, raid)| {
-                let bombers: u32 = raid.strikes.iter().map(|strike| strike.aircraft).sum();
-                (bombers, std::cmp::Reverse(raid.strikes[0].air_group))
-            })
-            .map(|(raid_index, _)| raid_index);
-        if let Some(raid_index) = chosen {
-            let within = group.hex.is_none_or(|hex| {
-                hex.air_distance_within(raids[raid_index].strikes[0].hex, group.radius_nm)
-            });
+        let chosen = escort_raid(&summaries, group.origin, group.hex, group.radius_nm);
+        made.push((
+            index,
+            escort_choice(&summaries, group.origin, group.hex, group.radius_nm),
+        ));
+        if let Some((raid_index, within)) = chosen {
             if within {
                 raids[raid_index].escorts.push(index);
             } else {
@@ -3001,6 +3220,7 @@ fn send_escorts(raids: &mut [Raid], fighters: &mut [FighterGroup]) {
             }
         }
     }
+    made
 }
 
 #[cfg(test)]
@@ -11522,6 +11742,531 @@ mod tests {
                     }
                 }
             }
+        }
+    }
+
+    // ---- the choices of the air steps a side can ask (decision 0100) ----
+
+    mod choices {
+        use super::*;
+        use crate::choices::air::{GroupLanding, RestChoice};
+        use crate::choices::{Moment, TracedChoice};
+        use crate::landing::{place_landings, Airborne, CarrierRoom};
+        use crate::state::Base;
+        use crate::upkeep::rest_choice;
+
+        const BASE_A: BaseId = BaseId::new(1);
+        const BASE_J: BaseId = BaseId::new(2);
+        const CAP: AirGroupId = AirGroupId::new(20);
+        const RAIDERS: AirGroupId = AirGroupId::new(21);
+
+        /// The standard world with Allied carrier ship 5 beside ship 1, Allied
+        /// base 1 at (3,0) and Japanese base 2 at (5,0), with: fighters (group
+        /// 20, 12 aircraft, half patrol, rest above 30 at fatigue 40) and
+        /// dive bombers on a base strike on base 2 (group 21, 18 aircraft),
+        /// both at base 1; and the figures for fatigue. The Allied side holds
+        /// a fresh cruiser contact at the enemy's hex.
+        fn rich_world() -> World {
+            let mut world = world_with_a_good_contact(1);
+            tire(&mut world);
+            let mut carrier = ship(5, 2, Side::Allied, FORCE_A);
+            carrier.systems = crate::state::ShipSystems::ALL_WORKING;
+            world.truth.ships.insert(carrier.id, carrier);
+            world
+                .truth
+                .task_forces
+                .get_mut(&FORCE_A)
+                .expect("force")
+                .ships
+                .insert(ShipId::new(5));
+            for (id, side, hex) in [
+                (BASE_A, Side::Allied, Hex::new(3, 0)),
+                (BASE_J, Side::Japanese, Hex::new(5, 0)),
+            ] {
+                world.truth.bases.insert(
+                    id,
+                    Base {
+                        supply_t: Fixed::from_int(500),
+                        ..Base::new(id, format!("Base {}", id.raw()), side, hex)
+                    },
+                );
+            }
+            let mut fighters = group(CAP, Side::Allied, 1, 5, 12);
+            fighters.location = AirGroupLocation::Base(BASE_A);
+            fighters.mission = AirMission::CombatAirPatrol;
+            fighters.patrol_share = fixed(1, 2);
+            fighters.rest_above = Some(Fixed::from_int(30));
+            fighters.fatigue = Fixed::from_int(40);
+            world.truth.air_groups.insert(CAP, fighters);
+            let mut raiders = group(RAIDERS, Side::Allied, 1, 2, 18);
+            raiders.location = AirGroupLocation::Base(BASE_A);
+            raiders.mission = AirMission::BaseStrike(BASE_J);
+            world.truth.air_groups.insert(RAIDERS, raiders);
+            world
+        }
+
+        /// A copy of `world` as the side cannot see it differ: the enemy's
+        /// ships, groups and base stores, its strikes in flight and its
+        /// bases with no supply.
+        fn with_the_enemy_changed(mut world: World) -> World {
+            let ship = ship_mut(&mut world, 2);
+            ship.systems.set(ShipSystem::FlightDeck, SystemState::Out);
+            ship.fuel_t = Fixed::from_int(7);
+            let enemy = group_mut(&mut world, ENEMY_BOMBERS);
+            enemy.ready = 3;
+            enemy.fatigue = Fixed::from_int(90);
+            enemy.stood_down = true;
+            enemy.rest_above = Some(Fixed::from_int(10));
+            world
+                .truth
+                .task_forces
+                .get_mut(&FORCE_B)
+                .expect("force")
+                .from_hex = Hex::new(8, 2);
+            world.truth.bases.get_mut(&BASE_J).expect("base").supply_t = Fixed::ZERO;
+            world.grounded_bases.insert(BASE_J);
+            world.strikes_in_flight.push(StrikeInFlight {
+                air_group: ENEMY_BOMBERS,
+                side: Side::Japanese,
+                origin: AirGroupLocation::Base(BASE_A),
+                aim: Aim::Contact(ContactId::new(1)),
+                hex: Hex::new(0, 0),
+                aircraft: 40,
+                launched: EventId::new(1),
+                taken_for: None,
+            });
+            world
+        }
+
+        fn begin(world: &mut World) {
+            world.trace_choices(true);
+            world.pass_moment(Moment::DayBegins { day: 1 });
+        }
+
+        fn air_trace(world: &mut World) -> Vec<TracedChoice> {
+            world
+                .take_choice_trace()
+                .into_iter()
+                .filter(|choice| matches!(choice.question, Question::Air(_)))
+                .collect()
+        }
+
+        /// Asks the view of `before` each traced question and checks the
+        /// answer is the engine's.
+        fn assert_same(before: &World, trace: &[TracedChoice]) {
+            assert!(!trace.is_empty());
+            for choice in trace {
+                let Question::Air(question) = &choice.question else {
+                    unreachable!()
+                };
+                let asked = before.side_view(choice.side).ask_air(question);
+                assert_eq!(
+                    asked.map(Answer::Air),
+                    Some(choice.answer.clone()),
+                    "{question:?}"
+                );
+            }
+        }
+
+        /// What the staff does at the strike decision and the air combat step
+        /// of the morning of day 1 is what the side's view says at the moment
+        /// before each: strike, aircraft able to fly, base strike, split and
+        /// escorts (decision 0100, 7). The escorts go with the raid from
+        /// their base, which is the base strike launched in the same step.
+        #[test]
+        fn the_views_answers_equal_the_engines_for_the_strike_and_air_combat_steps() {
+            let mut engine = rich_world();
+            begin(&mut engine);
+            engine.decide_strikes(1, Pulse::Morning);
+            let decided = air_trace(&mut engine);
+            let kinds: Vec<&AirQuestion> = decided
+                .iter()
+                .map(|choice| match &choice.question {
+                    Question::Air(question) => question,
+                    _ => unreachable!(),
+                })
+                .collect();
+            assert!(kinds
+                .iter()
+                .any(|q| matches!(q, AirQuestion::Strike { .. })));
+            assert!(kinds
+                .iter()
+                .any(|q| matches!(q, AirQuestion::BaseStrike { .. })));
+            assert_same(&rich_world(), &decided);
+
+            // The same state at the start of the air combat step.
+            let mut at_step = rich_world();
+            at_step.decide_strikes(1, Pulse::Morning);
+            engine.resolve_strikes(1, Pulse::Morning);
+            let fought = air_trace(&mut engine);
+            assert!(fought
+                .iter()
+                .any(|c| matches!(c.question, Question::Air(AirQuestion::Escort { .. }))));
+            assert!(fought
+                .iter()
+                .any(|c| matches!(c.question, Question::Air(AirQuestion::FighterSplit { .. }))));
+            assert_same(&at_step, &fought);
+        }
+
+        /// The escorts of group 20 (6 of its 12 fly as escorts) go with the
+        /// base strike of group 21: the base is at (3,0), the raid at (5,0),
+        /// 100 nm, within the fighter's radius of 250 nm.
+        #[test]
+        fn the_escorts_go_with_the_raid_from_their_base() {
+            let mut world = rich_world();
+            // Fatigue 40 cuts 12 to 7 (12 times 60 over 100, rounded down), so
+            // patrol is 3 (half of 7, rounded down) and escorts 4.
+            world.decide_strikes(1, Pulse::Morning);
+            let view = world.side_view(Side::Allied);
+            assert_eq!(
+                view.ask_air(&AirQuestion::FighterSplit { group: CAP }),
+                Some(AirAnswer::FighterSplit(FighterSplit {
+                    patrol: 3,
+                    escorts: 4
+                }))
+            );
+            // Group 21 launched, as the stood-down check and fatigue allow.
+            assert_eq!(
+                view.ask_air(&AirQuestion::Escort { group: CAP }),
+                Some(AirAnswer::Escort(EscortChoice::Goes {
+                    lead: RAIDERS,
+                    hex: Hex::new(5, 0)
+                }))
+            );
+        }
+
+        #[test]
+        fn the_view_answers_a_stand_down_as_the_rest_step_does() {
+            let mut engine = rich_world();
+            begin(&mut engine);
+            let before = rich_world();
+            engine.stand_down_and_return_air_groups(1, Pulse::Night);
+            let trace = air_trace(&mut engine);
+            assert_eq!(
+                trace
+                    .iter()
+                    .map(|c| c.answer.clone())
+                    .collect::<Vec<Answer>>(),
+                vec![Answer::Air(AirAnswer::Rest(RestChoice::StandDown))]
+            );
+            assert_same(&before, &trace);
+        }
+
+        /// Fatigue 40 over a threshold of 30 stands a group down; stood down
+        /// at 30 exactly (not above) it returns; stood down at 31 it stays;
+        /// at 30 not stood down it is left as it is.
+        #[test]
+        fn rest_choice_stands_down_above_the_threshold_and_returns_at_it() {
+            let (f30, f31, f40) = (
+                Fixed::from_int(30),
+                Fixed::from_int(31),
+                Fixed::from_int(40),
+            );
+            assert_eq!(rest_choice(f40, f30, false), RestChoice::StandDown);
+            assert_eq!(rest_choice(f30, f30, true), RestChoice::Return);
+            assert_eq!(rest_choice(f31, f30, true), RestChoice::NoChange);
+            assert_eq!(rest_choice(f30, f30, false), RestChoice::NoChange);
+        }
+
+        /// An 18 aircraft group: fatigue 50 gives 9; a grounded base, a move
+        /// today or being stood down gives 0; without the fatigue figures
+        /// stood down does not matter and fatigue does not cut; a degraded
+        /// deck gives the figure's factor (here as the standard figures have
+        /// it), and a ship that is not there leaves the aircraft alone.
+        #[test]
+        fn able_to_fly_cases() {
+            let mut g = group(AirGroupId::new(1), Side::Allied, 1, 2, 18);
+            g.fatigue = Fixed::from_int(50);
+            assert_eq!(able_to_fly(&g, false, None, None, true, 1), 9);
+            assert_eq!(able_to_fly(&g, false, None, None, false, 1), 18);
+            g.stood_down = true;
+            assert_eq!(able_to_fly(&g, false, None, None, true, 1), 0);
+            assert_eq!(able_to_fly(&g, false, None, None, false, 1), 18);
+            g.stood_down = false;
+            g.rebased_day = Some(1);
+            assert_eq!(able_to_fly(&g, false, None, None, true, 1), 0);
+            assert_eq!(able_to_fly(&g, false, None, None, true, 2), 9);
+            g.rebased_day = None;
+            g.pilots = Some(10);
+            assert_eq!(able_to_fly(&g, false, None, None, false, 1), 10);
+            // Grounded: only a group at a base.
+            assert_eq!(able_to_fly(&g, true, None, None, false, 1), 10);
+            g.location = AirGroupLocation::Base(BASE_A);
+            assert_eq!(able_to_fly(&g, true, None, None, false, 1), 0);
+            // A ship's deck out gives none, with the figures.
+            g.location = AirGroupLocation::Ship(ShipId::new(1));
+            let figures = SurfaceCombatFigures::from_surface_combat_toml();
+            assert_eq!(
+                able_to_fly(&g, false, Some(SystemState::Out), Some(&figures), false, 1),
+                0
+            );
+            assert_eq!(
+                able_to_fly(&g, false, Some(SystemState::Out), None, false, 1),
+                10
+            );
+        }
+
+        /// A group at (0,0) with a weapon and 18 aircraft, reach 250, strikes
+        /// base 2 held by the other side at (5,0), 200 nm: it launches. It
+        /// does not in the dark, with no aircraft, with no weapon, after
+        /// launching today, at its own side's base, at an unknown base or
+        /// beyond its reach (199 nm reach).
+        #[test]
+        fn base_strike_launch_cases() {
+            let g = group(AirGroupId::new(1), Side::Allied, 1, 2, 18);
+            let at = |pulse, weapon, aircraft, reach: i64, target| {
+                base_strike_launch(
+                    &g,
+                    BASE_J,
+                    1,
+                    pulse,
+                    Hex::new(0, 0),
+                    weapon,
+                    aircraft,
+                    Fixed::from_int(reach),
+                    target,
+                )
+            };
+            let enemy = Some((Side::Japanese, Hex::new(5, 0)));
+            let go = Some(BaseStrikeLaunch {
+                base: BASE_J,
+                hex: Hex::new(5, 0),
+                distance_nm: Fixed::from_int(200),
+                aircraft: 18,
+            });
+            assert_eq!(at(Pulse::Morning, AttackWeapon::Bomb, 18, 250, enemy), go);
+            assert_eq!(at(Pulse::Afternoon, AttackWeapon::Bomb, 18, 200, enemy), go);
+            assert_eq!(at(Pulse::Night, AttackWeapon::Bomb, 18, 250, enemy), None);
+            assert_eq!(at(Pulse::Morning, AttackWeapon::Bomb, 0, 250, enemy), None);
+            assert_eq!(at(Pulse::Morning, AttackWeapon::None, 18, 250, enemy), None);
+            assert_eq!(at(Pulse::Morning, AttackWeapon::Bomb, 18, 199, enemy), None);
+            assert_eq!(at(Pulse::Morning, AttackWeapon::Bomb, 18, 250, None), None);
+            let own = Some((Side::Allied, Hex::new(5, 0)));
+            assert_eq!(at(Pulse::Morning, AttackWeapon::Bomb, 18, 250, own), None);
+            let mut launched = g.clone();
+            launched.last_base_strike_day = Some(1);
+            assert_eq!(
+                base_strike_launch(
+                    &launched,
+                    BASE_J,
+                    1,
+                    Pulse::Morning,
+                    Hex::new(0, 0),
+                    AttackWeapon::Bomb,
+                    18,
+                    Fixed::from_int(250),
+                    enemy
+                ),
+                None
+            );
+        }
+
+        /// 7 aircraft at share 1/2: patrol 3, escorts 4. At share 0 all
+        /// escort, at 1 all patrol.
+        #[test]
+        fn fighter_split_rounds_the_patrol_down() {
+            let split = |n, share| fighter_split(n, share);
+            assert_eq!(
+                split(7, fixed(1, 2)),
+                FighterSplit {
+                    patrol: 3,
+                    escorts: 4
+                }
+            );
+            assert_eq!(
+                split(7, Fixed::ZERO),
+                FighterSplit {
+                    patrol: 0,
+                    escorts: 7
+                }
+            );
+            assert_eq!(
+                split(7, Fixed::ONE),
+                FighterSplit {
+                    patrol: 7,
+                    escorts: 0
+                }
+            );
+        }
+
+        /// Two raids from ship 1: group 1 with 10 bombers to (5,0) and group
+        /// 2 with 12 to (-5,0); one from base 1. The escorts of a group aboard
+        /// ship 1 go with the larger raid (group 2) if it is in radius; else
+        /// stay; a group at base 3 sees no raid.
+        #[test]
+        fn escort_choice_takes_the_biggest_raid_from_its_place_if_in_radius() {
+            let ship = AirGroupLocation::Ship(ShipId::new(1));
+            let raid = |lead, origin, hex, bombers| RaidSummary {
+                lead: AirGroupId::new(lead),
+                origin,
+                hex,
+                bombers,
+            };
+            let raids = [
+                raid(1, ship, Hex::new(5, 0), 10),
+                raid(2, ship, Hex::new(-5, 0), 12),
+                raid(3, AirGroupLocation::Base(BASE_A), Hex::new(5, 0), 40),
+            ];
+            let radius = Fixed::from_int(250);
+            assert_eq!(
+                escort_choice(&raids, ship, Some(Hex::new(0, 0)), radius),
+                EscortChoice::Goes {
+                    lead: AirGroupId::new(2),
+                    hex: Hex::new(-5, 0)
+                }
+            );
+            assert_eq!(
+                escort_choice(&raids, ship, Some(Hex::new(0, 0)), Fixed::from_int(199)),
+                EscortChoice::Stays
+            );
+            // No position: measured nowhere, so they go.
+            assert!(matches!(
+                escort_choice(&raids, ship, None, Fixed::ZERO),
+                EscortChoice::Goes { .. }
+            ));
+            assert_eq!(
+                escort_choice(&raids, AirGroupLocation::Base(BASE_J), None, radius),
+                EscortChoice::NoRaid
+            );
+        }
+
+        /// Group 1 has 30 aircraft in the air over (0,0), group 2 has 40;
+        /// ship 7 (capacity 50, 10 aboard) and ship 8 (capacity 20, 0 aboard)
+        /// are in the hex, ship 7 first. Group 1 puts 30 aboard ship 7
+        /// (room 40), the room left there is 10; group 2 puts 10 on ship 7,
+        /// then 20 on ship 8, then base 4 (100 nm off, nearer than base 3 at
+        /// 150 and in range 250) takes the remaining 10. Group 3 at 5,0 of
+        /// type with radius 50 and 5 aircraft finds no base in reach and no
+        /// carrier: they ditch.
+        #[test]
+        fn place_landings_shares_the_room_in_order_then_a_base_then_the_sea() {
+            let carriers = vec![
+                CarrierRoom {
+                    ship: ShipId::new(7),
+                    capacity: 50,
+                    aboard: 10,
+                },
+                CarrierRoom {
+                    ship: ShipId::new(8),
+                    capacity: 20,
+                    aboard: 0,
+                },
+            ];
+            let at = |id, in_air, hex, radius, carriers: &Vec<CarrierRoom>| Airborne {
+                group: AirGroupId::new(id),
+                hex,
+                radius_nm: Fixed::from_int(radius),
+                in_air,
+                carriers: carriers.clone(),
+            };
+            let none = Vec::new();
+            let groups = [
+                at(1, 30, Hex::new(0, 0), 250, &carriers),
+                at(2, 40, Hex::new(0, 0), 250, &carriers),
+                at(3, 5, Hex::new(5, 0), 50, &none),
+            ];
+            let bases = [
+                (BaseId::new(3), Hex::new(3, 0)),
+                (BaseId::new(4), Hex::new(2, 0)),
+            ];
+            let landed = place_landings(&groups, &bases);
+            assert_eq!(
+                landed,
+                vec![
+                    GroupLanding {
+                        group: AirGroupId::new(1),
+                        places: vec![(AirGroupLocation::Ship(ShipId::new(7)), 30)],
+                        sea: 0
+                    },
+                    GroupLanding {
+                        group: AirGroupId::new(2),
+                        places: vec![
+                            (AirGroupLocation::Ship(ShipId::new(7)), 10),
+                            (AirGroupLocation::Ship(ShipId::new(8)), 20),
+                            (AirGroupLocation::Base(BaseId::new(4)), 10),
+                        ],
+                        sea: 0
+                    },
+                    GroupLanding {
+                        group: AirGroupId::new(3),
+                        places: vec![],
+                        sea: 5
+                    },
+                ]
+            );
+        }
+
+        /// Ship 1's deck is out with group 1's 18 aircraft in the air: they go
+        /// to the carrier beside her (ship 5), as a side's view says before
+        /// the step.
+        #[test]
+        fn the_view_answers_where_aircraft_land_as_the_engine_does() {
+            let ready = |world: &mut World| {
+                ship_mut(world, 1)
+                    .systems
+                    .set(ShipSystem::FlightDeck, SystemState::Out);
+            };
+            let mut engine = rich_world();
+            ready(&mut engine);
+            let mut before = rich_world();
+            ready(&mut before);
+            begin(&mut engine);
+            let mut sorties = vec![crate::upkeep::Sortie {
+                air_group: BOMBERS,
+                kind: crate::events::SortieKind::Strike,
+                aircraft: 18,
+                sent: 18,
+                distance_nm: Fixed::from_int(200),
+                causes: vec![],
+            }];
+            engine.come_home(1, Pulse::Morning, &mut sorties);
+            let trace = air_trace(&mut engine);
+            assert_eq!(
+                trace[0].answer,
+                Answer::Air(AirAnswer::Landing(vec![GroupLanding {
+                    group: BOMBERS,
+                    places: vec![(AirGroupLocation::Ship(ShipId::new(5)), 18)],
+                    sea: 0
+                }]))
+            );
+            assert_same(&before, &trace);
+        }
+
+        /// Two worlds that differ only in what the Allied side cannot see
+        /// (the enemy's ships, groups, stores, strikes in flight and grounded
+        /// bases) give it the same answers to every question it can ask.
+        #[test]
+        fn the_enemy_unseen_changes_no_answer() {
+            let mut plain = rich_world();
+            let mut changed = rich_world();
+            // Something for the landing question to chew on, and the raid
+            // of the morning in flight for the escorts.
+            for world in [&mut plain, &mut changed] {
+                ship_mut(world, 1)
+                    .systems
+                    .set(ShipSystem::FlightDeck, SystemState::Out);
+                world.decide_strikes(1, Pulse::Morning);
+            }
+            let changed = with_the_enemy_changed(changed);
+            let answers = |world: &World, side| {
+                let view = world.side_view(side);
+                let questions = view.air_questions();
+                assert!(questions.len() > 5);
+                questions
+                    .iter()
+                    .map(|q| (q.clone(), view.ask_air(q)))
+                    .collect::<Vec<_>>()
+            };
+            let allied = answers(&plain, Side::Allied);
+            assert_eq!(allied, answers(&changed, Side::Allied));
+            assert!(allied.iter().any(|(q, a)| matches!(
+                (q, a),
+                (AirQuestion::Landing { .. }, Some(AirAnswer::Landing(_)))
+            )));
+            assert!(allied.iter().any(|(q, a)| matches!(
+                (q, a),
+                (AirQuestion::Escort { .. }, Some(AirAnswer::Escort(_)))
+            )));
         }
     }
 }

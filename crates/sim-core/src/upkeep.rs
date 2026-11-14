@@ -118,6 +118,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::choices::air::{AirAnswer, AirQuestion, RestChoice};
+use crate::choices::{Answer, Question};
 use crate::damage::roll_shots;
 use crate::events::{Breakdown, Cause, EventKind, Factor, FatigueChange, SortieKind, SupplyUse};
 use crate::fixed::Fixed;
@@ -142,6 +144,22 @@ pub(crate) struct Sortie {
     pub(crate) distance_nm: Fixed,
     /// The events or orders that say the group flew.
     pub(crate) causes: Vec<Cause>,
+}
+
+/// What a group with a rest threshold does (decision 7 of 0036): it is stood
+/// down if its `fatigue` is above the `threshold` and it is not stood down
+/// yet, returned to flying if it is stood down and its fatigue is not above
+/// the threshold, and otherwise left as it is. The engine's rest step and a
+/// side's view both call it (decision 0100, 1).
+pub(crate) fn rest_choice(fatigue: Fixed, threshold: Fixed, stood_down: bool) -> RestChoice {
+    let above = fatigue > threshold;
+    if above == stood_down {
+        RestChoice::NoChange
+    } else if above {
+        RestChoice::StandDown
+    } else {
+        RestChoice::Return
+    }
 }
 
 impl World {
@@ -758,13 +776,30 @@ impl World {
             let Some(threshold) = group.rest_above else {
                 continue;
             };
-            let above = group.fatigue > threshold;
-            if above == group.stood_down {
-                continue;
-            }
+            let choice = rest_choice(group.fatigue, threshold, group.stood_down);
+            let side = group.side;
+            let above = match choice {
+                RestChoice::StandDown => true,
+                RestChoice::Return => false,
+                RestChoice::NoChange => {
+                    self.trace_choice(side, || {
+                        (
+                            Question::Air(AirQuestion::Rest { group: id }),
+                            Answer::Air(AirAnswer::Rest(choice)),
+                        )
+                    });
+                    continue;
+                }
+            };
             group.stood_down = above;
             let fatigue = group.fatigue;
             let causes: Vec<Cause> = group.rest_order.map(Cause::Order).into_iter().collect();
+            self.trace_choice(side, || {
+                (
+                    Question::Air(AirQuestion::Rest { group: id }),
+                    Answer::Air(AirAnswer::Rest(choice)),
+                )
+            });
             let kind = if above {
                 EventKind::AirGroupStoodDown {
                     air_group: id,
