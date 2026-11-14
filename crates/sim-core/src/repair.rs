@@ -161,6 +161,7 @@ impl World {
             .expect("the force exists");
         let ships = std::mem::take(&mut force.ships);
         force.status = TaskForceStatus::Idle;
+        force.halt = None;
         force.route = crate::state::Route::default();
         force.route_order = None;
         force.cargo_order = None;

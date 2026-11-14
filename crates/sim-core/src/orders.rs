@@ -6,6 +6,7 @@
 //! so on). They arrive with the scenarios that use them.
 
 use core::fmt;
+use std::collections::BTreeSet;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
@@ -333,7 +334,15 @@ pub enum TaskForceOrder {
     /// path over hexes ships can enter (decision 0017). Rejected if a
     /// waypoint is off the map or cannot be reached by sea from the one
     /// before.
-    SetRoute(Vec<Hex>),
+    ///
+    /// `act_at` marks waypoints to act at, by hex (decision 0096, 1): at a
+    /// marked waypoint other than the last the force halts if it has work
+    /// there, and steams on when the work is done. Each must be one of the
+    /// waypoints. Empty for a route with no mark.
+    SetRoute {
+        waypoints: Vec<Hex>,
+        act_at: BTreeSet<Hex>,
+    },
     SetSpeed(SpeedSetting),
     SetMission(Mission),
     /// Fill every ship to its cargo capacity from the stock of the base here.
@@ -382,6 +391,17 @@ pub enum TaskForceOrder {
         unit: LandUnitId,
         cargo: Option<Cargo>,
     },
+}
+
+impl TaskForceOrder {
+    /// A route order with no mark (decision 0096): what a route order was
+    /// before marks.
+    pub fn route(waypoints: Vec<Hex>) -> TaskForceOrder {
+        TaskForceOrder::SetRoute {
+            waypoints,
+            act_at: BTreeSet::new(),
+        }
+    }
 }
 
 /// An order to an air group. Each is a standing order of its own kind: a new
@@ -616,6 +636,9 @@ pub enum RejectReason {
     /// A march order names a hex that no land link joins to the unit's hex
     /// (decision 0094, 3). Added at the end of the enum.
     NoLandLink(Hex),
+    /// A route marks a hex to act at that is not one of its waypoints
+    /// (decision 0096, 1). Added at the end of the enum.
+    MarkNotOnRoute(Hex),
 }
 
 impl fmt::Display for RejectReason {
@@ -713,6 +736,10 @@ impl fmt::Display for RejectReason {
             RejectReason::TargetKindRepeated(kind) => {
                 write!(f, "the target list names {} twice", kind.name())
             }
+            RejectReason::MarkNotOnRoute(hex) => write!(
+                f,
+                "{hex} is marked to act at but is not one of the route's waypoints"
+            ),
         }
     }
 }

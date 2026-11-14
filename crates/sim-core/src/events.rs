@@ -13,7 +13,7 @@ use crate::ids::{
 };
 use crate::orders::{Cargo, RejectReason};
 use crate::refdata::ShipKind;
-use crate::state::{AirGroupLocation, ShipSystem, Side, SystemState};
+use crate::state::{AirGroupLocation, HaltWork, ShipSystem, Side, SystemState};
 use crate::time::{ClockTime, Pulse};
 
 /// Something that led to an event.
@@ -1281,6 +1281,26 @@ pub enum EventKind {
         days: u32,
         reason: MarchStop,
     },
+    /// A task force halted at `hex`, a waypoint of its route marked to act
+    /// at, because it has work there (decision 0096, 2): a bombardment, cargo
+    /// or both, as `work` says. It halted at `elapsed_hours` since the
+    /// scenario began.
+    TaskForceHalted {
+        task_force: TaskForceId,
+        hex: Hex,
+        work: HaltWork,
+        elapsed_hours: Fixed,
+    },
+    /// A halted task force steamed on from `hex` at the start of a pulse's
+    /// movement, its work done (decision 0096, 4). `work` is what it halted
+    /// for; `fired` is whether it bombarded while halted (with `work.bombard`
+    /// and not `fired`, no ship of it could fire any longer).
+    TaskForceSteamedOn {
+        task_force: TaskForceId,
+        hex: Hex,
+        work: HaltWork,
+        fired: bool,
+    },
 }
 
 impl EventKind {
@@ -1628,6 +1648,10 @@ impl EventKind {
             }
             EventKind::GroundReportReceived { .. } => Vec::new(),
             EventKind::BaseFound { base, .. } => vec![EntityRef::Base(*base)],
+            EventKind::TaskForceHalted { task_force, .. }
+            | EventKind::TaskForceSteamedOn { task_force, .. } => {
+                vec![EntityRef::TaskForce(*task_force)]
+            }
             EventKind::MarchDay { unit, .. } | EventKind::MarchStopped { unit, .. } => {
                 vec![EntityRef::LandUnit(*unit)]
             }
@@ -2831,7 +2855,48 @@ impl fmt::Display for EventKind {
                     MarchStop::NoLandLink => "no land link joins its hex to it",
                 }
             ),
+            EventKind::TaskForceHalted {
+                task_force,
+                hex,
+                work,
+                elapsed_hours,
+            } => write!(
+                f,
+                "{task_force} halted at {hex} at {} to {}",
+                ClockTime::from_elapsed(*elapsed_hours),
+                halt_work_words(*work)
+            ),
+            EventKind::TaskForceSteamedOn {
+                task_force,
+                hex,
+                work,
+                fired,
+            } => {
+                write!(f, "{task_force} steamed on from {hex}: ")?;
+                let mut done: Vec<&str> = Vec::new();
+                if work.bombard {
+                    done.push(if *fired {
+                        "it has bombarded"
+                    } else {
+                        "it can bombard no longer"
+                    });
+                }
+                if work.cargo {
+                    done.push("its cargo work is done");
+                }
+                f.write_str(&done.join(" and "))
+            }
         }
+    }
+}
+
+/// What a halted force waits to do, in words.
+fn halt_work_words(work: HaltWork) -> &'static str {
+    match (work.bombard, work.cargo) {
+        (true, true) => "bombard and work cargo",
+        (true, false) => "bombard",
+        (false, true) => "work cargo",
+        (false, false) => "do nothing",
     }
 }
 

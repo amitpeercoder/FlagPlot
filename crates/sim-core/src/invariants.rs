@@ -18,7 +18,9 @@ use crate::hex::{Hex, HEX_NM};
 use crate::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use crate::map::Map;
 use crate::refdata::RefData;
-use crate::state::{AirGroupLocation, ShipLocation, ShipSystem, SystemState, TruthState};
+use crate::state::{
+    AirGroupLocation, ShipLocation, ShipSystem, SystemState, TaskForceStatus, TruthState,
+};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum InvariantViolation {
@@ -133,6 +135,10 @@ pub enum InvariantViolation {
     /// its own, or has marched the full days and not arrived (decision
     /// 0094). Added at the end of the enum.
     LandUnitMarchUnsound(LandUnitId),
+    /// A task force is halted without a halt, has a halt and is not halted,
+    /// or is halted off the centre of its hex or past the end of its route
+    /// (decision 0096). Added at the end of the enum.
+    TaskForceHaltUnsound(TaskForceId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -335,6 +341,10 @@ impl fmt::Display for InvariantViolation {
                 f,
                 "{unit} marches to a hex no land link joins to its own, or has marched the full days and not arrived"
             ),
+            InvariantViolation::TaskForceHaltUnsound(task_force) => write!(
+                f,
+                "{task_force} is halted without a halt, holds a halt and is not halted, or is halted off a waypoint's centre"
+            ),
         }
     }
 }
@@ -459,6 +469,18 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         }
         if task_force.yard_trip.is_some() && !task_force.ships.is_empty() {
             violations.push(InvariantViolation::TaskForceAwayHasShips(task_force.id));
+        }
+        // A halted force holds a halt, and only it does; it is at the centre
+        // of the waypoint it halted at, which is not its last (decision 0096).
+        let halted = task_force.status == TaskForceStatus::Halted;
+        let halt_sound = halted == task_force.halt.is_some()
+            && (!halted
+                || (task_force.toward_hex.is_none()
+                    && task_force.route.next_index + 1 < task_force.route.waypoints.len()
+                    && task_force.route.waypoints[task_force.route.next_index]
+                        == task_force.from_hex));
+        if !halt_sound {
+            violations.push(InvariantViolation::TaskForceHaltUnsound(task_force.id));
         }
         if task_force.toward_hex.is_some() != (task_force.progress_nm.raw() > 0) {
             violations.push(InvariantViolation::TaskForceLegStateInconsistent(

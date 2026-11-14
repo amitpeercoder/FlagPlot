@@ -14,9 +14,9 @@ use crate::orders::{AirMission, Mission, SpeedSetting};
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, LandUnit, March, Replacement, Route,
-    RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, TaskForce, Troops,
-    TruthState, YardTrip,
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Halt, HaltWork, LandUnit, March,
+    Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems,
+    TaskForce, Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -137,8 +137,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 13 adds a claim's `from_bombardment` after its `from_air`, and a
 /// side's ground estimates after its claims (decision 0092);
 /// version 14 adds a land unit's `march` (its hex, days marched and order)
-/// after its `fed_share` (decision 0094).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v14";
+/// after its `fed_share` (decision 0094);
+/// version 15 adds a route's `act_at` after its `next_index`, the task force
+/// status `Halted` (code 5), and a task force's `halt` after its `yard_trip`
+/// (decision 0096).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v15";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -245,11 +248,24 @@ fn name_every_field(world: &World) {
             home_port: _,
             fatigue: _,
             yard_trip,
+            halt,
         } = task_force;
         let Route {
             waypoints: _,
             next_index: _,
+            act_at: _,
         } = route;
+        if let Some(Halt {
+            work: HaltWork {
+                bombard: _,
+                cargo: _,
+            },
+            at_hours: _,
+            event: _,
+            bombarded: _,
+            cargo_completed: _,
+        }) = halt
+        {}
         let RulesOfEngagement {
             stance: _,
             break_off: _,
@@ -472,6 +488,12 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.i32(waypoint.r);
         }
         h.count(task_force.route.next_index);
+        // After the route index (decision 0096).
+        h.count(task_force.route.act_at.len());
+        for hex in &task_force.route.act_at {
+            h.i32(hex.q);
+            h.i32(hex.r);
+        }
         h.i32(task_force.from_hex.q);
         h.i32(task_force.from_hex.r);
         match task_force.toward_hex {
@@ -523,6 +545,19 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.u32(trip.base.raw());
                 h.u32(trip.return_day);
                 h.u32(trip.departure.raw());
+            }
+            None => h.u8(0),
+        }
+        // Last in the task force (decision 0096).
+        match task_force.halt {
+            Some(halt) => {
+                h.u8(1);
+                h.u8(u8::from(halt.work.bombard));
+                h.u8(u8::from(halt.work.cargo));
+                h.i64(halt.at_hours.raw());
+                h.u32(halt.event.raw());
+                h.optional_u32(halt.bombarded.map(|id| id.raw()));
+                h.optional_u32(halt.cargo_completed.map(|id| id.raw()));
             }
             None => h.u8(0),
         }

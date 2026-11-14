@@ -1355,7 +1355,7 @@ mod tests {
             vec![OrderRequest {
                 kind: OrderKind::TaskForce {
                     target: TaskForceId::new(5),
-                    order: TaskForceOrder::SetRoute(vec![Hex::new(9, 0)]),
+                    order: TaskForceOrder::route(vec![Hex::new(9, 0)]),
                 },
                 origin: Origin::PLAYER,
             }],

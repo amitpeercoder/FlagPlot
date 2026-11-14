@@ -42,7 +42,7 @@ use crate::orders::Mission;
 use crate::refdata::{AirCombatFigures, BombardmentFigures};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::draw_report;
-use crate::state::ShipSystem;
+use crate::state::{ShipSystem, TaskForce};
 use crate::surface::gun_shots;
 use crate::time::Pulse;
 use crate::world::World;
@@ -197,6 +197,45 @@ impl World {
         }
     }
 
+    /// The base `force` bombards in `hex` by the rule of the phase
+    /// (decision 0092, 1): with the bombardment mission, a ship afloat and
+    /// not away at the yard, the lowest-numbered base of the other side in
+    /// `hex` that is on the force's side's map.
+    fn bombardment_target(&self, force: &TaskForce, hex: Hex) -> Option<BaseId> {
+        if force.mission != Mission::Bombardment
+            || force.yard_trip.is_some()
+            || force.ships.is_empty()
+        {
+            return None;
+        }
+        self.truth
+            .bases
+            .values()
+            .find(|base| base.hex == hex && base.side != force.side && base.on_map)
+            .map(|base| base.id)
+    }
+
+    /// Whether `force` has a bombardment to make in `hex` (decision 0096,
+    /// 2): the phase would have it bombard a base there, the figures the
+    /// phase needs are loaded, and a ship of it can fire, that is, would
+    /// fire a shell by the gun rule of the phase.
+    pub(crate) fn has_bombardment_work(&self, force: &TaskForce, hex: Hex) -> bool {
+        let Some(surface) = self.ref_data.surface_combat.as_ref() else {
+            return false;
+        };
+        let Some(figures) = surface.bombardment else {
+            return false;
+        };
+        if self.ref_data.air_combat.is_none() || self.bombardment_target(force, hex).is_none() {
+            return false;
+        }
+        force.ships.iter().any(|ship_id| {
+            let ship = &self.truth.ships[ship_id];
+            let class = &self.ref_data.ship_classes[&ship.class];
+            gun_shots(ship, class, figures.minutes, surface, Fixed::ONE) > Fixed::ZERO
+        })
+    }
+
     /// The shore bombardment phase of the night pulse (decision 0092, 1).
     /// Does nothing without the bombardment figures and the air combat
     /// figures, whose table says where a hit lands.
@@ -216,18 +255,9 @@ impl World {
             .truth
             .task_forces
             .values()
-            .filter(|force| {
-                force.mission == Mission::Bombardment
-                    && force.yard_trip.is_none()
-                    && !force.ships.is_empty()
-            })
             .filter_map(|force| {
-                let hex = force.position();
-                self.truth
-                    .bases
-                    .values()
-                    .find(|base| base.hex == hex && base.side != force.side && base.on_map)
-                    .map(|base| (force.id, base.id))
+                self.bombardment_target(force, force.position())
+                    .map(|base| (force.id, base))
             })
             .collect();
         for (force, base) in forces {
@@ -258,10 +288,11 @@ impl World {
         let (side, hex) = (force.side, force.position());
         let ships: Vec<ShipId> = force.ships.iter().copied().collect();
         // Why the force is there: the order that set its route and its
-        // arrival, if it arrived.
+        // arrival, if it arrived, or its halt, if it halted (decision 0096).
         let mut causes: Vec<Cause> = Vec::new();
         causes.extend(force.route_order.map(Cause::Order));
         causes.extend(force.arrival_event.map(Cause::Event));
+        causes.extend(force.halt.map(|halt| Cause::Event(halt.event)));
 
         // Each ship's fire, on the truth at the start (decisions 2, 3, 5).
         let reference = figures.reference_gun_damage;
@@ -412,6 +443,16 @@ impl World {
             fire_events.clone(),
             None,
         );
+        // A halted force has now bombarded, and may steam on (decision 0096,
+        // 4).
+        if let Some(halt) = self
+            .truth
+            .task_forces
+            .get_mut(&force_id)
+            .and_then(|force| force.halt.as_mut())
+        {
+            halt.bombarded = Some(bombardment);
+        }
 
         // The hits land (decision 4): every aircraft at the base is on the
         // ground at night, each group's damaged aircraft before its ready.

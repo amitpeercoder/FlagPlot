@@ -22,7 +22,7 @@ use crate::ids::{BaseId, EventId, LandUnitId, ShipId, TaskForceId};
 use crate::map::HexKind;
 use crate::orders::Cargo;
 use crate::refdata::PortSize;
-use crate::state::{Base, CargoOrder, LandUnit, Side, TaskForceStatus, Troops};
+use crate::state::{Base, CargoOrder, LandUnit, Side, TaskForce, TaskForceStatus, Troops};
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
 
@@ -44,6 +44,8 @@ struct Participant {
     hours: Fixed,
     ships: Vec<ShipId>,
     port: PortSize,
+    /// The force's arrival, or its halt (decision 0096): a cause of its
+    /// cargo events.
     arrival_event: Option<EventId>,
 }
 
@@ -84,6 +86,63 @@ impl World {
             .map_or(0, |land_unit| land_unit.men_ashore)
     }
 
+    /// Whether `task_force`'s cargo order can work in `hex` by the cargo
+    /// rule, and if so the lowest-numbered base of its side there, if any,
+    /// and whether the hex is a coast hex. A base of its side is needed,
+    /// except for a load with a land unit, which loads men off a bare shore,
+    /// and an unload with men aboard on a coast hex, which lands them and
+    /// forms a base there (decision 0066, 6 and 11).
+    fn cargo_place(
+        &self,
+        task_force: &TaskForce,
+        cargo: CargoOrder,
+        hex: Hex,
+    ) -> Option<(Option<BaseId>, bool)> {
+        let men_rules = self.ref_data.ground.is_some();
+        let base = self
+            .truth
+            .bases
+            .values()
+            .find(|base| base.side == task_force.side && base.hex == hex)
+            .map(|base| base.id);
+        let coast = self
+            .map
+            .get(hex)
+            .is_some_and(|data| data.kind == HexKind::Coast);
+        let works_without_base = men_rules
+            && if cargo.action.is_load() {
+                // A load with a unit loads men off a bare shore.
+                cargo.unit.is_some()
+            } else {
+                // An unload with men aboard lands them on a coast hex
+                // and forms a base there.
+                coast
+                    && task_force
+                        .ships
+                        .iter()
+                        .any(|ship| self.truth.ships[ship].troops.is_some())
+            };
+        if base.is_none() && !works_without_base {
+            return None;
+        }
+        Some((base, coast))
+    }
+
+    /// Whether `task_force` has cargo to work in `hex` (decision 0096, 2):
+    /// a cargo order that can work there by the cargo rule, and something
+    /// of it not yet done by the test that completes the order.
+    pub(crate) fn has_cargo_work(&self, task_force: &TaskForce, hex: Hex) -> bool {
+        let Some(cargo) = task_force.cargo_order else {
+            return false;
+        };
+        let Some((base, coast)) = self.cargo_place(task_force, cargo, hex) else {
+            return false;
+        };
+        let landing_here = !cargo.action.is_load() && coast && self.handling_t_per_man().is_some();
+        let ships: Vec<ShipId> = task_force.ships.iter().copied().collect();
+        !self.nothing_remains_of(cargo, &ships, hex, base, landing_here)
+    }
+
     /// Moves cargo for every task force stopped at a base of its own side,
     /// and men for every force with a land unit to load or men to land
     /// (decision 0066).
@@ -97,12 +156,13 @@ impl World {
             let Some(cargo) = task_force.cargo_order else {
                 continue;
             };
-            // Only a task force that has stopped on purpose works cargo. One
-            // that ran dry may be miles from any base, whatever hex
+            // Only a task force that has stopped on purpose works cargo:
+            // idle, arrived, or halted at a marked waypoint (decision 0096,
+            // 3). One that ran dry may be miles from any base, whatever hex
             // it is nearest to.
             if !matches!(
                 task_force.status,
-                TaskForceStatus::Idle | TaskForceStatus::Arrived
+                TaskForceStatus::Idle | TaskForceStatus::Arrived | TaskForceStatus::Halted
             ) {
                 continue;
             }
@@ -113,34 +173,16 @@ impl World {
                 continue;
             }
             let hex = task_force.from_hex;
-            let base = self
-                .truth
-                .bases
-                .values()
-                .find(|base| base.side == task_force.side && base.hex == hex)
-                .map(|base| base.id);
-            let coast = self
-                .map
-                .get(hex)
-                .is_some_and(|data| data.kind == HexKind::Coast);
-            let works_without_base = men_rules
-                && if cargo.action.is_load() {
-                    // A load with a unit loads men off a bare shore.
-                    cargo.unit.is_some()
-                } else {
-                    // An unload with men aboard lands them on a coast hex
-                    // and forms a base there.
-                    coast
-                        && task_force
-                            .ships
-                            .iter()
-                            .any(|ship| self.truth.ships[ship].troops.is_some())
-                };
-            if base.is_none() && !works_without_base {
+            let Some((base, coast)) = self.cargo_place(task_force, cargo, hex) else {
                 continue;
-            }
-            let work_start = match task_force.arrived_at_hours {
-                Some(arrived) => start.max(arrived),
+            };
+            // From its arrival, or from its halt (decision 0096, 3).
+            let stopped_at = task_force
+                .halt
+                .map(|halt| halt.at_hours)
+                .or(task_force.arrived_at_hours);
+            let work_start = match stopped_at {
+                Some(stopped) => start.max(stopped),
                 None => start,
             };
             let hours = end - work_start;
@@ -159,7 +201,10 @@ impl World {
                 hours,
                 ships: task_force.ships.iter().copied().collect(),
                 port: self.ref_data.port_sizes[&size],
-                arrival_event: task_force.arrival_event,
+                arrival_event: task_force
+                    .halt
+                    .map(|halt| halt.event)
+                    .or(task_force.arrival_event),
             });
         }
 
@@ -576,8 +621,19 @@ impl World {
             ],
             result: elapsed_hours,
         });
-        self.events
+        let completed = self
+            .events
             .record(day, Some(pulse), kind, cargo_events, breakdown);
+        // A halted force's cargo work is done, and it may steam on (decision
+        // 0096, 4).
+        if let Some(halt) = self
+            .truth
+            .task_forces
+            .get_mut(&p.task_force)
+            .and_then(|force| force.halt.as_mut())
+        {
+            halt.cargo_completed = Some(completed);
+        }
     }
 
     /// Whether the order is done. An unload: nothing aboard any ship, men
@@ -586,30 +642,42 @@ impl World {
     /// ashore in the hex or no ship has a berth for one ("Settled before the
     /// build").
     fn nothing_remains(&self, p: &Participant, base: Option<BaseId>, landing_here: bool) -> bool {
-        if !p.cargo.action.is_load() {
-            return p.ships.iter().all(|id| {
+        self.nothing_remains_of(p.cargo, &p.ships, p.hex, base, landing_here)
+    }
+
+    /// [`World::nothing_remains`] for `cargo` worked by `ships` in `hex`.
+    fn nothing_remains_of(
+        &self,
+        cargo: CargoOrder,
+        ships: &[ShipId],
+        hex: Hex,
+        base: Option<BaseId>,
+        landing_here: bool,
+    ) -> bool {
+        if !cargo.action.is_load() {
+            return ships.iter().all(|id| {
                 let ship = &self.truth.ships[id];
                 ship.supply_t.is_zero()
                     && ship.cargo_fuel_t.is_zero()
                     && (ship.troops.is_none() || !landing_here)
             });
         }
-        let men_done = match p.cargo.unit {
+        let men_done = match cargo.unit {
             Some(unit) => {
-                self.men_ashore_in(unit, p.hex) == 0
-                    || p.ships.iter().all(|id| self.berths_for(*id, unit) == 0)
+                self.men_ashore_in(unit, hex) == 0
+                    || ships.iter().all(|id| self.berths_for(*id, unit) == 0)
             }
             None => true,
         };
-        let cargo_done = match (p.cargo.action.loads(), base) {
-            (Some(cargo), Some(base)) => {
+        let cargo_done = match (cargo.action.loads(), base) {
+            (Some(named), Some(base)) => {
                 let base = &self.truth.bases[&base];
-                let stock = match cargo {
+                let stock = match named {
                     Cargo::Supply => base.supply_t,
                     Cargo::Fuel => base.fuel_t,
                 };
                 stock.is_zero()
-                    || p.ships.iter().all(|id| {
+                    || ships.iter().all(|id| {
                         let ship = &self.truth.ships[id];
                         ship.supply_t + ship.cargo_fuel_t
                             == self.ref_data.ship_classes[&ship.class].cargo_capacity_t
@@ -998,7 +1066,7 @@ mod tests {
         world.submit_orders(
             Side::Allied,
             vec![
-                order(1, TaskForceOrder::SetRoute(vec![Hex::new(4, 0)])),
+                order(1, TaskForceOrder::route(vec![Hex::new(4, 0)])),
                 order(1, TaskForceOrder::Unload),
             ],
         );
@@ -1109,7 +1177,7 @@ mod tests {
         world.submit_orders(
             Side::Allied,
             vec![
-                order(1, TaskForceOrder::SetRoute(vec![Hex::new(4, 0)])),
+                order(1, TaskForceOrder::route(vec![Hex::new(4, 0)])),
                 order(1, TaskForceOrder::Unload),
             ],
         );
@@ -1437,7 +1505,7 @@ mod tests {
         world.truth.ships.get_mut(&ship(1)).expect("ship").fuel_t = Fixed::from_int(10);
         world.submit_orders(
             Side::Allied,
-            vec![order(1, TaskForceOrder::SetRoute(vec![Hex::new(8, 0)]))],
+            vec![order(1, TaskForceOrder::route(vec![Hex::new(8, 0)]))],
         );
         world.resolve_day().expect("day resolves");
         let truth = world.umpire();
