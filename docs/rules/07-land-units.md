@@ -1,6 +1,6 @@
 # Land units
 
-This chapter covers men: the land unit, the troop capacity of a ship, the load order that takes a unit aboard, the landing that puts it ashore and forms a base for it, a unit divided, men lost with a ship, the men's daily supply and the loss of the unfed, the posture of a unit and its order, marching overland, the day's fight ashore, fatigue, a side beaten in a hex, a base that changes side, men lost to the fire of bombs and shells, and what a side knows of the enemy's men ashore.
+This chapter covers men: the land unit, the troop capacity of a ship, the load order that takes a unit aboard, the landing that puts it ashore and forms a base for it, a unit divided, men lost with a ship, the men's daily supply and the loss of the unfed, the posture of a unit and its order, marching overland, the day's fight ashore, fatigue, a side beaten in a hex, a base that changes side, the day's activity of a unit, preparing a landing, the experience of a unit and training, men lost to the fire of bombs and shells, and what a side knows of the enemy's men ashore.
 
 Men are worked through the cargo rule of chapter 2 and fed through the base supply rule of chapter 5. This chapter gives only what is new in them. Every quantity is a fixed-point number except men, which are whole numbers. "Cut" means cut toward zero (chapter 1, Numbers and chance).
 
@@ -8,14 +8,14 @@ Where these rules run in a day (chapter 1, The order in which a day resolves, gi
 
 | When | Rule |
 | --- | --- |
-| Start of the day, with the other orders | A load order with a unit, a posture order and a march order are checked and applied (chapter 1, Orders) |
+| Start of the day, with the other orders | A load order with a unit, a posture order, a march order, a prepare-landing order and an activity order are checked and applied (chapter 1, Orders) |
 | Night pulse, after the daily supply for aircraft | The men's supply: feeding, the unfed and the loss |
-| Loading phase, last in each pulse | Men are taken aboard and landed with the cargo; units are divided and bases formed |
+| Loading phase, last in each pulse | Men are taken aboard and landed with the cargo; units are divided and bases formed; a force that lands men works at the rate its loading gives, and a unit's first men landing spend its rehearsal (Preparing a landing, below) |
 | Whenever a ship sinks | The men aboard are lost with her |
 | Night pulse, in the shore bombardment phase, and in the air combat phase of a daylight pulse | Bombs and shells that hit men ashore: men lost to fire (below) |
-| After the third pulse, before the day's base count | The ground combat phase: first the marches, then for each hex with men ashore the fight, fatigue, a side beaten, a base that changes side and the ground reports |
+| After the third pulse, before the day's base count | The ground combat phase: first the marches, then for each hex with men ashore the fight, fatigue, a side beaten, a base that changes side and the ground reports; last, once every hex is done, the day's activity: each force's loading, each unit's rehearsal or training, and the days of fighting counted (The day's activity, below) |
 
-A scenario that names no ground figures has no land units, and every rule here does nothing in it (chapter 1, Where figures come from and when a rule is loaded). A map with no land links allows no march (chapter 2, Land links). [0066, 0090, 0094]
+A scenario that names no ground figures has no land units, and every rule here does nothing in it (chapter 1, Where figures come from and when a rule is loaded). A map with no land links allows no march (chapter 2, Land links). A scenario whose ground file gives the frozen step 1 figures has the rules of preparation and experience switched off by their first values: `unprepared_landing_share` is 1, `unprepared_landing_fatigue` is 0 and `experience_fire_strength` is 0, though loading, rehearsal and the days counted are still kept. [0066, 0090, 0094, 0095, 0097]
 
 ## The land unit
 
@@ -23,13 +23,13 @@ A scenario that names no ground figures has no land units, and every rule here d
 
 A land unit is a count of men with a side and a name. It has a number, which is stable and never reused. Its men are ashore in one hex, aboard ships, or part each. The men ashore of one unit are all in one hex. The men aboard a ship are of one unit only, and a unit may have men aboard several ships. A unit is destroyed when it has no men ashore and none aboard any ship (below, Destroyed). It stays in the state with no men and keeps its number. [0066 items 1 and 2]
 
-A land unit's state is: its number, its name, its side, the men ashore and the hex they are in, its posture, the order that set its posture, its fatigue, its fed share and its march (the hex it marches to, the days marched and the march order, or none). The hex is set exactly when the men ashore are above 0. The posture is defend or attack, defend at the start unless the scenario says otherwise. The fatigue is from 0 to 100 and starts at 0 unless the scenario says otherwise. The fed share is from 0 to 1 and starts at 1. A ship's state gains the men aboard and the unit they belong to (`troops`), at least one man when set. The state hash holds the men, the hexes, the posture, its order, the fatigue, the fed share and the march and not the name (chapter 1, The state hash). [0066, 0090 items 1, 8 and 11, 0094]
+A land unit's state is: its number, its name, its side, the men ashore and the hex they are in, its posture, the order that set its posture, its fatigue, its fed share, its march (the hex it marches to, the days marched and the march order, or none), its rehearsal and the hex the rehearsal is for, its activity (ready or train) and the order that set it, its experience, its days of training and its days of fighting. The hex is set exactly when the men ashore are above 0. The posture is defend or attack, defend at the start unless the scenario says otherwise. The fatigue is from 0 to 100 and starts at 0 unless the scenario says otherwise. The fed share is from 0 to 1 and starts at 1. The rehearsal is from 0 to 100, starts at 0, and its hex is set exactly when it is above 0. The activity is ready at the start. The experience is a whole number from 0 to 4 and starts at 2 unless the scenario says otherwise. The days of training are below `training_days_per_level` and the days of fighting below `fight_days_per_level`, both 0 at the start unless the scenario says otherwise. A ship's state gains the men aboard and the unit they belong to (`troops`), at least one man when set. A task force's state gains its preparation and `landing_at` (Preparing a landing, below). The state hash holds the men, the hexes, the posture, its order, the fatigue, the fed share, the march, the rehearsal and its hex, the activity, its order, the experience and the two counts of days, and not the name (chapter 1, The state hash). [0066, 0090 items 1, 8 and 11, 0094, 0095 items 2 and 3, 0097 items 1 and 3]
 
 A side sees: its own units exactly (below, What a side knows and sees).
 
 ### The scenario gives the units
 
-A scenario's `[[land_unit]]` entry gives `id`, `name`, `side` and `men`, and either a hex (`q` and `r`) where the men are ashore, or a `task_force` where they are aboard. It may give a `posture`, `"defend"` (the default) or `"attack"`, and a `fatigue`, a whole number or a decimal string from 0 to 100 (0 if not given). The scenario's `ground` key names the ground figures file. The loader refuses a scenario that:
+A scenario's `[[land_unit]]` entry gives `id`, `name`, `side` and `men`, and either a hex (`q` and `r`) where the men are ashore, or a `task_force` where they are aboard. It may give a `posture`, `"defend"` (the default) or `"attack"`, a `fatigue`, a whole number or a decimal string from 0 to 100 (0 if not given), an `experience`, a whole number from 0 to 4 (2 if not given), and `training_days` and `fight_days`, whole numbers of days already counted (0 if not given). No key gives a unit a rehearsal or an activity: a unit starts with 0 rehearsal and ready, and a force starts with no preparation. The scenario's `ground` key names the ground figures file. The loader refuses a scenario that:
 
 - has a land unit and names no `ground` file;
 - gives a unit no men, a number of 0 or of 1,000,000 and above (those are kept for units made in play), or a number twice;
@@ -37,9 +37,10 @@ A scenario's `[[land_unit]]` entry gives `id`, `name`, `side` and `men`, and eit
 - puts a unit ashore off the map or in a hex that is neither coast nor land;
 - puts a unit aboard a task force that does not exist or is of the other side;
 - puts a unit aboard a force whose ships do not have berths for all its men;
-- gives a unit a fatigue below 0 or above 100, or a posture that is neither `defend` nor `attack`.
+- gives a unit a fatigue below 0 or above 100, or a posture that is neither `defend` nor `attack`;
+- gives a unit an experience above 4, or days of training or of fighting that are not whole numbers or are not below the days a step takes (`training_days_per_level`, `fight_days_per_level`).
 
-Units are put aboard in unit order, each over the force's ships in ship order, into a ship that has no men aboard or holds men of this unit, each up to its troop capacity. A unit that is aboard has no men ashore. The game is also refused when it is built (`World::new`) if there are land units and no ground figures, or if the ground figures are wrong (below, Data keys). [0066 items 3 and 4, Settled before the build, 0090 items 1 and 11]
+Units are put aboard in unit order, each over the force's ships in ship order, into a ship that has no men aboard or holds men of this unit, each up to its troop capacity. A unit that is aboard has no men ashore. The game is also refused when it is built (`World::new`) if there are land units and no ground figures, or if the ground figures are wrong (below, Data keys). [0066 items 3 and 4, Settled before the build, 0090 items 1 and 11, 0097 items 1 and 3]
 
 ### Troop capacity
 
@@ -105,6 +106,12 @@ Then each ship, in ship order, lands the least of the men its tons of work can m
 
 An unload order is complete when no ship has supply or fuel aboard and, in a coast hex, no ship has men aboard. Then `UnloadingComplete` is recorded as before, citing the events of the pulse. [0066 item 9]
 
+**The rate of a landing.** While a force lands men, every ship's rate (berth or lighter) is multiplied by a factor: `ground.toml: unprepared_landing_share` plus the rest of 1 times the force's loading over 100. The force lands men while it holds an unload order in a coast hex and has men aboard any ship, or has begun landing in that hex and its unloading there is not yet complete (`landing_at`, below). The factor covers everything the force unloads in that time: the men, then the supply and the fuel, the berths' work and the hour the unloading completes. Loading counts only if the force's prepare-landing order is for the hex it lands in; at any other hex, or with no order, it counts as 0 and the factor is the share. A force that carries no men, and has not begun a landing, unloads as chapter 2 says, with no factor. A load order has no factor. With the frozen step 1 share of 1 the factor is 1 for every force. [0095 item 5]
+
+**The first men of a unit.** When men of a unit land in a hex and the unit has no man ashore, which includes a unit just made by division, three things follow, each citing that `MenLanded` event: the unit gains landing fatigue and loses its rehearsal, and it leaves its force's roster (Preparing a landing, below). [0095 items 6 and 7]
+
+The breakdowns of `CargoUnloaded` and `MenLanded` gain the factors `port_rate_t_per_h` (the port's rate before the factor), `unprepared_landing_share`, `loading` (the loading counted) and `loading_factor`, only where a landing force works and the share is below 1. With the frozen share of 1 every breakdown is as it was. [0095 item 5]
+
 A side sees: `MenLanded` and `UnloadingComplete`, whole, for its own unit and force.
 
 ### A base formed by a landing
@@ -117,7 +124,7 @@ A side sees: `BaseFormed`, whole, for its own base. The enemy sees nothing.
 
 ### A unit divided
 
-A unit is divided when its men would be ashore in two hexes. When a force is about to land men of a unit that has men ashore in a hex other than the force's hex, all the unit's men aboard the force's ships become a new unit first. The new unit has the next free number, counted over all the land units of both sides (the highest plus one), the side of the unit it came from, no men ashore, and the name of that unit with ", detachment" and its own number after it. The men ashore elsewhere keep the unit. It is the new unit that lands. Units are never merged. A unit whose men ashore are in the force's hex, or that has none ashore, is not divided. `UnitDivided` records the unit it came from, the new unit, the force and the men, citing the unload order and the arrival. [0066 item 14, Settled before the build]
+A unit is divided when its men would be ashore in two hexes. When a force is about to land men of a unit that has men ashore in a hex other than the force's hex, all the unit's men aboard the force's ships become a new unit first. The new unit has the next free number, counted over all the land units of both sides (the highest plus one), the side of the unit it came from, no men ashore, and the name of that unit with ", detachment" and its own number after it. The men ashore elsewhere keep the unit. It is the new unit that lands. The new unit takes the experience of the unit it came from and nothing else of what that unit has: no rehearsal, no days of training or of fighting counted, the activity ready, and no place on a roster. Units are never merged. A unit whose men ashore are in the force's hex, or that has none ashore, is not divided. `UnitDivided` records the unit it came from, the new unit, the force and the men, citing the unload order and the arrival. [0066 item 14, Settled before the build, 0097 item 6]
 
 A side sees: `UnitDivided`, whole, for its own unit.
 
@@ -256,9 +263,9 @@ A unit's firing men are its men ashore times its fed share, times 100 less its f
 
 ### Shots and chance
 
-Each unit in the fight fires, a unit of the side on defend too. Its shots are its firing men over `ground.toml: men_per_shot`, not cut: the part of a shot is rolled at that part of the chance, by the rule that surface combat uses (chapter 4, Each shot is rolled). Each shot hits at `ground.toml: hit_chance` if its side attacks, or at `ground.toml: defender_hit_chance` if it defends. Each unit's shots are rolled on a stream keyed on the day, no pulse, the ground combat subsystem, the draw `GroundFire` (code 6) and the unit, so no stream is shared between units and the order of firing does not matter. [0090 item 7, 0055]
+Each unit in the fight fires, a unit of the side on defend too. Its shots are its firing men over `ground.toml: men_per_shot`, not cut: the part of a shot is rolled at that part of the chance, by the rule that surface combat uses (chapter 4, Each shot is rolled). Each shot hits at `ground.toml: hit_chance` if its side attacks, or at `ground.toml: defender_hit_chance` if it defends: the side's chance. A unit's chance is the side's times `1 + ground.toml: experience_fire_strength x (the unit's experience - 2)`, kept within 0 and 1 (Experience and training, below). At the frozen strength of 0 the factor is 1. Each unit's shots are rolled on a stream keyed on the day, no pulse, the ground combat subsystem, the draw `GroundFire` (code 6) and the unit, so no stream is shared between units and the order of firing does not matter. [0090 item 7, 0055]
 
-`GroundFire` is recorded for every unit in the fight, also a unit with no firing men: the unit, the hex, the firing men, the shots, the chance and the hits. It cites the fight and the `MenFed` event of the day in that hex, if any. Its breakdown has the factors `men_ashore`, `fed_share`, `fatigue_factor` (100 less fatigue over 100), `firing_men`, `men_per_shot`, `shots` and `chance`, and its result is the shots times the chance. [0090 item 7]
+`GroundFire` is recorded for every unit in the fight, also a unit with no firing men: the unit, the hex, the firing men, the shots, the chance and the hits. It cites the fight and the `MenFed` event of the day in that hex, if any. Its breakdown has the factors `men_ashore`, `fed_share`, `fatigue_factor` (100 less fatigue over 100), `firing_men`, `men_per_shot`, `shots` and `chance`, and its result is the shots times the chance. Where the strength is above 0, the factors `side_chance`, `experience` and `experience_factor` come between `shots` and `chance`; with the strength at 0 the breakdown is as it was. [0090 item 7, 0097 item 2]
 
 ### Losses
 
@@ -266,7 +273,7 @@ Both sides fire on the strengths they had at the start of the fight, and the los
 
 Each unit that loses men records `MenLostInFight`: the unit, the hex, the men lost and the men it has left ashore. It cites the fire events of the other side's units. Its breakdown has the factors `loss_in_hex`, `unit_men_ashore`, `men_ashore_in_hex` and `in_proportion`. A unit with no men left ashore has no hex, and a unit with no man anywhere is destroyed (above, Destroyed). [0090 items 9 and 10]
 
-A side sees: `GroundFight`, cut to the hex, for a fight its men are in. `GroundFire` for its own unit, cut to the unit, the hex, the firing men and the shots, with the breakdown factors `men_ashore`, `fed_share`, `fatigue_factor`, `firing_men`, `men_per_shot` and `shots`, and no chance or hits. `MenLostInFight` for its own unit, whole. It is not told its hits, the enemy's units, the enemy's men or how many of them there are. The enemy's own half of the fight is the enemy's. [0090 item 28]
+A side sees: `GroundFight`, cut to the hex, for a fight its men are in. `GroundFire` for its own unit, cut to the unit, the hex, the firing men and the shots, with the breakdown factors `men_ashore`, `fed_share`, `fatigue_factor`, `firing_men`, `men_per_shot` and `shots`, and `experience` and `experience_factor` where they are given, and no chance or hits (so no side chance either). `MenLostInFight` for its own unit, whole. It is not told its hits, the enemy's units, the enemy's men or how many of them there are. The enemy's own half of the fight is the enemy's. [0090 item 28]
 
 ### Fatigue
 
@@ -276,7 +283,9 @@ A land unit has fatigue, from 0 to 100, the scale air groups and task forces use
 - a unit on attack that fired, which is a unit on attack in a fight whose shots are above 0, gains `ground.toml: fatigue_per_attack_day`, up to 100; one that also marched that day gains both, the sum capped once at 100;
 - every other unit, a unit on attack that did not fire included, loses `ground.toml: rest_per_day`, down to 0.
 
-A unit with no man ashore keeps its fatigue. `LandUnitFatigue` (gained, rested, marched, or marched and attacked, and the new fatigue) is recorded only when the value changes. It cites the unit's fire event where there was one and its march day event where there was one. Its breakdown has the factor `fatigue_before` and then `rest_per_day`, or `fatigue_per_march_day` and `fatigue_per_attack_day` for the part that applies. Fatigue cuts the men who fire (above, Firing men) and nothing else. The step comes after the fight, so the men who fire on the day a unit arrives are worked out from the fatigue it had before that day's change. [0090 items 11 to 13, 0094 item 8]
+A unit also gains fatigue when its first men land (above, Landing men): `ground.toml: unprepared_landing_fatigue` times 100 less its rehearsal for that hex over 100, up to 100. It is a change of its own, made in the loading phase when the men land, and it wears off by the rules above, so men put ashore in a hurry fire worse for some days. [0095 item 6]
+
+A unit with no man ashore keeps its fatigue. `LandUnitFatigue` (gained, rested, marched, marched and attacked, or landed, and the new fatigue) is recorded only when the value changes. It cites the unit's fire event where there was one and its march day event where there was one; a landing's change cites the `MenLanded` event. Its breakdown has the factor `fatigue_before` and then `rest_per_day`, or `fatigue_per_march_day` and `fatigue_per_attack_day` for the part that applies, or, for a landing, `unprepared_landing_fatigue` and `rehearsal` (the rehearsal counted, 0 if it is for another hex). Fatigue cuts the men who fire (above, Firing men) and nothing else. The step comes after the fight, so the men who fire on the day a unit arrives are worked out from the fatigue it had before that day's change. [0090 items 11 to 13, 0094 item 8, 0095 item 6]
 
 ### The tired stop attacking
 
@@ -312,6 +321,149 @@ A side sees: `BaseChangedSide`, both sides, at its place in the log: whole to th
 
 Events of a base are seen by the side that held it when they were recorded. The holder at the time of each event is worked out from the log: the side the base had before its first change of side, handed on at each `BaseChangedSide` event. A base's past, and the numbers a side was given for it, are therefore not handed to its taker or renumbered. [0090 item 24, 0086]
 
+## The day's activity
+
+### The activity and its order
+
+A land unit has an activity for the days on which it neither marches nor fights. It is ready or train. It is ready at the start. No scenario key sets it: a scenario order does, as it does any other order. The order `set_activity` names a land unit and an activity, `ready` or `train`. It is a standing order, in a slot of its own, and stands until another replaces it. It is applied when it is taken in, at the start of the day: the unit's activity is set and the order is kept as the one that set it. [0099 items 3b and 4, 0097 item 4]
+
+It is checked at intake in this order, and the first reason that applies is recorded (chapter 1, Every reason an order is refused):
+
+1. **Not your land unit.** The unit does not exist or is the enemy's. One reason serves both.
+2. **Land unit destroyed.** The unit has no men ashore and none aboard any ship.
+
+A unit that has men aboard ships only may be set to train, and any other activity: the order needs no man ashore. It gains nothing from training until all its men are ashore. [0099 item 4]
+
+A side sees: its own `OrderAccepted` or `OrderRejected`, with the reason, whole. The enemy sees nothing.
+
+### One activity a day
+
+A unit does one thing in a day, and this table says which. It is worked out once a day, at the end of the ground combat phase, when every hex is done, so it is known whether the unit marched, whether its hex was contested and how it was fed that night. The first row that applies to the unit is its day. A unit with no man ashore and none aboard is not taken. [0099 item 3b]
+
+| In this order | The unit's day is |
+| --- | --- |
+| It marched a day in this phase, or its hex was contested (it has men ashore in a hex where a fight was held) | None of the rest. It marched or fought. |
+| Its activity is train | A day of training, if all its men are ashore at a base of its side and its fed share is 1 (Experience and training, below); otherwise nothing |
+| Its activity is ready and it is on the roster of a force that qualified today, and every man of it is ashore in that force's hex or aboard that force's ships | A day of rehearsal for the landing of the force's order (Preparing a landing, below) |
+| Its activity is ready in any other case | Nothing |
+
+So rehearsal is what a rostered unit does when it is not told to train. A scenario or a staff schedules a raw unit to train first and to rehearse after by changing its activity. Its place on the roster does not change, so the force's loading is not cut for it. [0099 item 3b]
+
+The work of a unit, the third activity of decision 0099, is not built: there is no activity `work`.
+
+The phase does its parts in this order, once a day. First each force's loading (Preparing a landing, below), which says which forces qualified. Then each unit, in unit order, by the table. Last the days of fighting (Experience and training, below). Each gain is given once for a unit for a day. A unit at its ceiling of training, or at 100 of rehearsal, still spends the day. [0099 items 3b and 3d]
+
+A side sees: as the sections that follow say.
+
+## Preparing a landing
+
+### The order
+
+The order `prepare_landing` names a task force, a hex and a roster: the land units that are to land from the force. It is a standing order, in a slot of its own, and stands until the force is given another or until the landing it prepares is done. It may be given at sea, and the roster may be empty. [0095 item 1]
+
+It is checked at intake in this order, and the first reason that applies is recorded (chapter 1, Every reason an order is refused). The reasons for a task force order in general (not your unit, away at the yard, no ship afloat) come first, then:
+
+1. **Not your land unit.** A unit on the roster does not exist or is the enemy's. One reason serves both. The first such unit in roster order decides.
+2. **Not a coast hex.** The hex is off the map or is not a coast hex: "H is not a coast hex on the map". The map is common knowledge, so the reason shows nothing a side cannot see.
+3. **Land unit destroyed.** A unit on the roster has no man ashore and none aboard any ship.
+
+With no ground figures the order is accepted and does nothing. [0095 item 1, 0099 item 3c]
+
+An accepted order does this when it is taken in, at the start of the day. It sets the force's preparation: the hex, the roster, the loading and the order. The loading is what the force had (below), or 0 for a force with none.
+
+- **The same order again** (the same hex and the same roster) changes nothing, and the earlier order stays the one that is cited.
+- **A new hex** sets the loading to 0, records `LoadingLost` (new landing place) if it was above 0, and takes away the rehearsal of every unit of the old roster whose rehearsal is for the old hex, each with `RehearsalLost` (new landing place). A unit of the old roster that is not on the new one also records `LeftRoster` (dropped by order).
+- **The same hex with another roster.** A unit dropped leaves the roster at no cost, with `LeftRoster` (dropped by order); its rehearsal is kept. If any unit is added, the loading is multiplied once by `ground.toml: preparation_kept_on_change`, however many are added, and `LoadingLost` (unit added) is recorded if the loading changes. A unit added brings the rehearsal it has for that hex, which is none unless it rehearsed it with another force.
+- **A unit named on another force's roster** is taken off that roster, with `LeftRoster` (taken by another force's order). That force loses nothing.
+
+A unit is on one roster at a time. [0095 items 8 to 11, 0099 item 3c]
+
+A side sees: its own `OrderAccepted` or `OrderRejected`, with the reason, whole, and the events above. The enemy sees nothing.
+
+### Loading and rehearsal
+
+A force has loading, from 0 to 100. It is the ships: what is stowed where, and the boats and their crews. A land unit has rehearsal, from 0 to 100, for one hex: the men knowing the plan, the boats and the beach. Both start at 0. No scenario key sets either: a scenario cannot start a force loaded or a unit rehearsed. Both are gained by the day, by doing it, in the day's activity (above). [0095 items 2 to 4]
+
+**A force gains loading** `ground.toml: preparation_per_day`, up to 100, if it qualifies. It qualifies if all of these hold when the day is settled:
+
+- its roster is not empty;
+- it is idle, arrived or halted at the centre of its hex, and is not away at the yard;
+- a base of its side is in its hex;
+- it did not arrive or halt at any hour of that day, and was not under way at any hour of it.
+
+`LoadingGained` records the force, the hex of the order and the new loading, when the loading changes, citing the order. Its breakdown has the factors `loading_before` and `preparation_per_day`. A force at sea, or one that came in during the day, gains nothing. Having the order on paper earns nothing: only days in port do. [0095 item 4]
+
+**A unit gains rehearsal** by the same figure, up to 100, on a day that is a day of rehearsal by the table above: it is ready, it is on the roster of a force that qualified, it did not march, its hex was not contested, and every man of it is ashore in the force's hex or aboard the force's ships. A unit aboard the ships of another force does not rehearse, nor does a unit with some men ashore elsewhere. The rehearsal is for the hex of the force's order. If the unit had rehearsal for another hex, that is lost first, with `RehearsalLost` (another landing place), and it starts again from 0. `RehearsalGained` records the unit, the force, the hex and the new rehearsal, when the rehearsal changes, citing the order that set the force's preparation and the unit's activity order if it has one. Its breakdown has the factors `rehearsal_before` and `preparation_per_day`. [0095 item 4, 0099 item 3b]
+
+A side sees: `LoadingGained` and `RehearsalGained`, whole, for its own force and unit. The enemy sees nothing.
+
+### What it buys
+
+**The rate of the landing.** While a force lands men, its ships work at a rate that follows its loading (above, Landing men, The rate of a landing). The factor is `unprepared_landing_share` plus the rest of 1 times the loading over 100, and the loading counts only at the hex of the order. It covers every ton the force unloads from the first man landed until its unloading there is complete, supply and fuel as well as men. It is for every force that lands men, with the order or without it. With the placeholder figures a force with no loading lands at half the port's rate, and one with 100 at the whole of it. [0095 item 5]
+
+**The fatigue on landing.** When a unit's first men land in a hex, the unit gains `unprepared_landing_fatigue` times 100 less its rehearsal over 100, up to 100. The rehearsal counts only if it is for that hex; at any other hex it counts as none. The gain is the change `landed` of `LandUnitFatigue` (below, Fatigue). Fatigue cuts the men who fire and wears off by the day. [0095 item 6]
+
+### Spent by the landing
+
+- **The unit's rehearsal is 0** when its first men land, in any hex. If it had any, `RehearsalLost` (landed) records it, citing the `MenLanded` event.
+- **The unit leaves its force's roster** when its first men land from a ship, in any hex: its landing is done. `LeftRoster` (landed) records it, citing the same event. A force whose roster is empty gains no loading, though its order stands and it keeps the loading it has.
+- **The force's loading is 0, and its order is done,** when its unloading at the hex of the order is complete. The force's `landing_at` is the hex where it has begun to land men, set when a ship lands one and cleared when the unloading there is complete. When it is cleared, if the force's order is for that hex, `LoadingLost` (spent by the landing) records the loading, also when the loading was 0, and the preparation is gone. A unit still on the roster goes with it, with no `LeftRoster`. If the order is for another hex it stands, with its loading. [0095 item 7]
+
+A side sees: `RehearsalLost`, `LeftRoster` and `LoadingLost`, whole, for its own unit and force. The enemy sees nothing.
+
+### What a change costs
+
+| The change | The loading | A unit's rehearsal |
+| --- | --- | --- |
+| A new landing place (a new order for another hex) | Lost: 0 | Lost for every unit of the old roster that had it for the old hex |
+| A unit added to the roster, also one taken from another force's roster | Multiplied once by `preparation_kept_on_change`, however many are added | The unit keeps what it has for that hex |
+| A unit dropped from the roster, or taken from it by another force's order | Nothing | The unit keeps it |
+| A force splits, by the detach order or by stragglers | Each part has the loading the force had | Not copied: it is the unit's |
+| Forces join, or a ship joins a force | Written and not reachable: nothing in the game does either yet | |
+| A change of date | Nothing here | Nothing here |
+
+[0095 items 8 to 13]
+
+**A split.** The part that leaves takes the roster units all of whose men aboard are in its ships, with the hex, the loading and the order of the parent. The rest of the roster stays. The new part has begun landing where the parent had (`landing_at` is copied). `PreparationShared` records the parent, the new force, the hex, the loading and the units, after `ShipsDetached`, citing it, for a detach order and for stragglers alike. [0095 item 12, ruling of Nov 14, 2026]
+
+**A join.** The rules are written as two functions that nothing calls, since no order joins forces or adds a ship yet: forces that join take the lower loading (the other force's counted only if it is for the same hex, else 0), the union of the rosters and the receiving force's hex and order; a ship that joins keeps `preparation_kept_on_change` of the loading. The order that does either is a stage of step 3. [0095 item 12]
+
+### What a side sees
+
+A side sees its own forces' preparation (hex, roster, loading, the share of the port's rate it would land at) and `landing_at`, and its own units' rehearsal, roster place and the fatigue they would land with, exactly. It sees each day's gain and each loss with its reason, each whole to the side that owns the force or the unit. The enemy sees none of it. [0095 item 14]
+
+## Experience and training
+
+### Experience
+
+A land unit has experience, a whole number from 0 to 4, 2 being its service's standard. It is the scale of a ship's crew (decision 0064) and it means the same: 0 is raw and 4 is the best there is. A scenario gives it (the key `experience`), and it is 2 if the scenario does not. Every real unit in the scenarios of the repository is 2: no real unit has a value until the research is done, as for air groups. [0097 item 1, Real units]
+
+**What it does.** It moves the chance a unit's shot hits (above, Shots and chance). The unit's chance is the side's chance times `1 + experience_fire_strength x (experience - 2)`, kept within 0 and 1. With the placeholder strength of 0.25 a raw unit's shots hit half as often as a standard unit's, and a unit of experience 4 half as often again. The loader and `World::new` keep the strength from 0 to 0.5, so the factor is never below 0. One strength serves both sides. At the frozen strength of 0 it does nothing. Nothing else reads experience. [0097 item 2]
+
+### Days of training
+
+A unit set to train (above, The day's activity) has a day of training on a day when all of these hold: its activity is train, it did not march, its hex was not contested, all its men are ashore (it has none aboard), its hex holds a base of its side, and its fed share is 1. The fed share is the one the night's charge set: a unit that landed after the charge keeps the share it had. A unit with its fed share below 1, or at no base, or with men aboard, trains nothing, and nothing is recorded. [0097 items 3 and 4]
+
+The day is counted in the day's activity. `TrainingDay` records the unit, the days counted after the day and the experience, citing the unit's activity order and the day's `MenFed` event for its hex. Its breakdown has the factors `days_before` and `training_days_per_level`. When the days counted reach `ground.toml: training_days_per_level`, the experience rises by one and the count starts again from 0. [0097 item 3]
+
+**The ceiling.** Training cannot take a unit above `ground.toml: training_ceiling`, a whole number from 0 to 4 (2, the standard, with the placeholder figures). A unit at or above it spends the day and counts nothing, and no event is recorded. Training makes raw troops into sound ones and no more. [0097 item 3]
+
+### Days of fighting
+
+A unit fired on a day if its shots in a fight were above 0, whether it attacked or defended. Each such day adds one to its days of fighting, up to the step at `ground.toml: fight_days_per_level`, when the experience rises by one and the count starts again. At experience 4 nothing is counted. A unit with no man left ashore or aboard is not counted. The days are counted in the day's activity, after each unit's rehearsal or training, for every unit that fired. `FightDayCounted` records the unit, the days counted after the day and the experience, citing the unit's `GroundFire` event. Its breakdown has the factors `days_before` and `fight_days_per_level`. [0097 item 5]
+
+Days of fighting are counted with the frozen figures too, so a frozen run of a scenario with a fight ashore records `FightDayCounted` events, and a unit may reach experience 3. At the frozen strength of 0 nothing that happens changes. [0097 item 5]
+
+`ExperienceRaised` records the unit, the new experience and the cause, training or fighting, citing the `TrainingDay` or `FightDayCounted` event of the day. A day of training does not count as a day of rehearsal, and the reverse. [0097 items 3 to 5]
+
+### A unit divided, and losses
+
+A unit made by division takes the experience of the unit it came from, and nothing else of that unit's (above, A unit divided). Nothing adds men to a unit in play, so no men join and dilute it. A unit that loses men keeps its experience: it is not lost with losses. [0097 item 6, What it leaves out]
+
+### What a side sees
+
+A side sees its own units' experience, days of training and days of fighting exactly, and `TrainingDay`, `FightDayCounted` and `ExperienceRaised`, whole. The enemy sees none of it. An estimate of the enemy ashore is of men and says nothing of their quality. A side's own `GroundFire` carries `experience` and `experience_factor` and not the side's chance (above, The fight ashore). [0097 item 7]
+
 ## Men lost to fire
 
 A bomb or a shell that hits men ashore removes men. This is the share for men of the table of where a hit on a base lands (chapter 5, The attack on a base; chapter 4, Shore bombardment). [0092]
@@ -342,11 +494,11 @@ A side sees: `GroundReportReceived` and `BaseFound`, whole, for its own reports.
 
 ## What a side knows and sees
 
-A side knows its own land units exactly: the men ashore and where, the men aboard and in which ships, each unit's posture, fatigue, fed share and march. Its view lists them and its ships show the men aboard. The enemy's land units are not in the view at all. A side knows of the enemy's men ashore only by an estimate (next section). A base the enemy formed by a landing or a march, or that a scenario holds off the map, is not among the enemy's bases the view lists, until a ground report finds it or it is taken: a base that changes side is on both sides' maps (above). [0066 items 21 and 22, 0090 items 18 and 29, 0092, 0094 item 11]
+A side knows its own land units exactly: the men ashore and where, the men aboard and in which ships, each unit's posture, fatigue, fed share, march, activity, experience, days of training and of fighting, rehearsal and place on a roster, and its forces' preparation. Its view lists them and its ships show the men aboard. The enemy's land units are not in the view at all. A side knows of the enemy's men ashore only by an estimate (next section). A base the enemy formed by a landing or a march, or that a scenario holds off the map, is not among the enemy's bases the view lists, until a ground report finds it or it is taken: a base that changes side is on both sides' maps (above). [0066 items 21 and 22, 0090 items 18 and 29, 0092, 0094 item 11, 0095 item 14, 0097 item 7]
 
-Every event of this chapter is seen whole by its own side and not at all by the enemy, except those the sections above cut: men embarked and landed, a base formed, a base formed by a march, a unit divided, a march day, a march arrived, a march stopped, men lost with a ship, men fed, men lost unfed, a unit destroyed, a unit's loading complete, a fed share restored, fatigue, a unit back to defend, men lost in a fight, men lost to fire, an air group lost with a base and its strike mission cleared, a ship lost with a base and a home port lost. The fight itself and a unit's fire are cut, and a base changing side is told to both sides. The test of a side beaten is told to neither. A ground report and a base found are seen whole by the side that was given them and by no other. A side's number for its own land units, and the leak that a gap in its own numbers can show, are in chapter 1, What a side may know. [0066 item 23, 0090 items 28 to 30, 0092, 0094 item 11]
+Every event of this chapter is seen whole by its own side and not at all by the enemy, except those the sections above cut: men embarked and landed, a base formed, a base formed by a march, a unit divided, a march day, a march arrived, a march stopped, men lost with a ship, men fed, men lost unfed, a unit destroyed, a unit's loading complete, a fed share restored, fatigue, a unit back to defend, men lost in a fight, men lost to fire, an air group lost with a base and its strike mission cleared, a ship lost with a base and a home port lost; and, for a force or unit of the side's own, loading gained and lost, rehearsal gained and lost, a unit left a roster, preparation shared, a day of training, a day of fighting counted and experience raised. The fight itself and a unit's fire are cut, and a base changing side is told to both sides. The test of a side beaten is told to neither. A ground report and a base found are seen whole by the side that was given them and by no other. A side's number for its own land units, and the leak that a gap in its own numbers can show, are in chapter 1, What a side may know. [0066 item 23, 0090 items 28 to 30, 0092, 0094 item 11, 0095 item 14, 0097 item 7]
 
-A side sees: as each section says. The briefing, the list and detail queries and the events show a side its own units, the days of supply its base holds at the present charge for aircraft and men together, and whether its men were fed last night.
+A side sees: as each section says. The briefing, the list and detail queries and the events show a side its own units, the days of supply its base holds at the present charge for aircraft and men together, and whether its men were fed last night. A unit's line shows its activity, its experience, its days of training (the days counted, the days a step takes and the ceiling) and of fighting, and, when they apply, its rehearsal and its place on a roster with the fatigue it would land with. A force's line shows its preparation (the hex, the roster, the loading and the rate it would land at) and `landing_at`. The enemy is shown none of it.
 
 ## Data keys
 
@@ -374,16 +526,27 @@ A side sees: as each section says. The briefing, the list and detail queries and
 | Scenario file | `[[base]]` `on_map` | `true` by default. `false` puts the base off the enemy's map at the start (decision 0092) |
 | Scenario file | `[[estimate]]` | `side`, `q`, `r` and `men`: an opening estimate (chapter 3, The ground report and the estimate) |
 | Scenario file | `[[land_unit]]` `posture`, `fatigue` | The unit's posture at the start (`defend` by default or `attack`) and its fatigue (0 to 100, 0 by default) |
+| Scenario file | `[[land_unit]]` `experience`, `training_days`, `fight_days` | The unit's experience (a whole number from 0 to 4, 2 by default) and the days of training and of fighting already counted (whole numbers, 0 by default, below `training_days_per_level` and `fight_days_per_level`) |
 | Scenario file | `[[order]]` of kind `set_posture` | `land_unit` (a land unit's number) and `posture` (`attack` or `defend`) |
 | Scenario file | `[[order]]` of kind `march` | `land_unit` (a land unit's number) and `hex` (`[q, r]`) |
+| Scenario file | `[[order]]` of kind `prepare_landing` | `task_force` (a force's number), `hex` (`[q, r]`) and `roster` (land units' numbers; may be empty) |
+| Scenario file | `[[order]]` of kind `set_activity` | `land_unit` (a land unit's number) and `activity` (`ready` or `train`) |
 | `ground.toml` | `march_days_per_hex` | Days a march from a hex to a neighbour takes. A whole number, 1 or more. Required |
 | `ground.toml` | `fatigue_per_march_day` | Fatigue a unit gains on a day it marches. From 0 to 100. Required |
 | `ground.toml` | `march_supply_days` | Days of the daily charge for its men that a unit takes with it when it arrives. 0 or more. Required |
+| `ground.toml` | `preparation_per_day` | Loading a force and rehearsal a unit of its roster gain in a day. From 0 to 100. Required |
+| `ground.toml` | `unprepared_landing_share` | The share of its rate a force with no loading works at while it lands men. From 0 to 1. Required |
+| `ground.toml` | `preparation_kept_on_change` | The share of its loading a force keeps when a unit is added to its roster. From 0 to 1. Required |
+| `ground.toml` | `unprepared_landing_fatigue` | Fatigue a unit gains on landing with no rehearsal. From 0 to 100. Required |
+| `ground.toml` | `experience_fire_strength` | How much a step of experience moves the chance a shot hits. From 0 to 0.5. Required |
+| `ground.toml` | `training_days_per_level` | Days of training for one step of experience. A whole number, 1 or more. Required |
+| `ground.toml` | `training_ceiling` | The experience training cannot pass. A whole number from 0 to 4. Required |
+| `ground.toml` | `fight_days_per_level` | Days of firing in a fight for one step of experience. A whole number, 1 or more. Required |
 | Scenario file | `land_links`, map file `[[land_link]]` | The land links of the map (chapter 2, Land links) |
 | Scenario file | objective of kind `base_held` | `base` and `points` (chapter 6) |
 | Scenario file | objective of kind `men_lost` | `points_per_100_men` (chapter 6) |
 
-The ground file is a TOML file with `placeholder = true` and the fifteen keys (the twelve, and the three of decision 0094), each a whole number or a decimal string, and may hold the three of decision 0092. A TOML float, an unknown key and a missing one of the fifteen are refused. The report error figures need the search figures: a world with them and no search figures is refused when it is set up, because belief is written with the search figures. `World::new` and the loader refuse a figure outside the ranges above. The frozen step 1 copy (`data/reference/step1/ground.toml`) holds the same first values. Every figure is a placeholder that rests on no source. [0066, 0090, 0092, 0094, 0057]
+The ground file is a TOML file with `placeholder = true` and the twenty-three keys (the twelve, the three of decision 0094 and the eight of decisions 0095 and 0097), each a whole number or a decimal string, and may hold the three of decision 0092. A TOML float, an unknown key and a missing one of the twenty-three are refused. The report error figures need the search figures: a world with them and no search figures is refused when it is set up, because belief is written with the search figures. `World::new` and the loader refuse a figure outside the ranges above. The frozen step 1 copy (`data/reference/step1/ground.toml`) holds the same first values. The frozen copy switches the preparation and experience rules off by its first values: `unprepared_landing_share` 1, `unprepared_landing_fatigue` 0 and `experience_fire_strength` 0, and the live file has 0.5, 40 and 0.25; the others are the same in both (`preparation_per_day` 5, `preparation_kept_on_change` 0.5, `training_days_per_level` 30, `training_ceiling` 2, `fight_days_per_level` 10). Every figure is a placeholder that rests on no source. A `unprepared_landing_share` of 0 is within its range, and with no loading a landing then never completes: a figure to rule on when it is tuned. [0066, 0090, 0092, 0094, 0095, 0097, 0057]
 
 ## Limits
 
@@ -399,7 +562,12 @@ The ground file is a TOML file with `placeholder = true` and the fifteen keys (t
 - **A side's hold on its own supply.** Men and aircraft draw on one stock, aircraft first, and no order changes that. [0066, 0050]
 - **A march is one hex.** There is no terrain or road: every land link takes the same days. A route of more than one hex is ordered hex by hex. There is no pursuit and no blocking of a march, and a part of a unit cannot march. Men lose nothing on the march but what the unfed rule takes. [0094]
 - **Men saved from a sinking ship,** and men carried in ships not in a task force, are not built. [0066]
-- **Loading and landing are one rate.** Men go over a beach and over a berth at the rate of the port, by the one weight of a man. [0066]
+- **Loading and landing are one rate.** Men go over a beach and over a berth at the rate of the port, by the one weight of a man; a landing force's rate is then scaled by its loading. [0066, 0095]
+- **No scenario key sets a force's loading or a unit's rehearsal** at the start: both start at 0. [0095]
+- **Nothing joins forces or adds a ship to a force yet.** The rules for a join are written and no order reaches them: a join order is a stage of step 3. [0095]
+- **Only the activities ready and train are built.** A unit cannot work, and a unit set to work is a rule of decision 0099 that waits. [0099]
+- **Experience is not lost with losses.** A unit cut to a tenth of its men keeps its experience and its counts, and nothing in play adds men to a unit or lowers its experience. No real unit differs from the standard until research gives each one a value. Kinds of training, the quality of replacements and experience for air groups are not built. [0097]
+- **Preparation is for a landing and nothing else.** Loading and rehearsal are spent by the landing and do not last; they are for one hex, and a bombardment, a strike or a convoy has none. [0095]
 - **No arrivals or replacements of men** by schedule. A scenario's units are those it starts with. [0066]
 - **A new number can show what the enemy did.** A base formed by a landing or a march and a unit made by division take the next free number counted over both sides, so a gap in the numbers of a side's own bases can show that the enemy formed one. Decision 0047 records the same for a task force split off and 0059 for an air group formed. [0066, 0047, 0059]
 
@@ -408,5 +576,6 @@ The ground file is a TOML file with `placeholder = true` and the fifteen keys (t
 - The cargo rule, berths and lighters, and the rates of a port: chapter 2, Cargo.
 - Supply stocks, the daily supply for aircraft and a base out of supply: chapter 5.
 - The land links a march follows: chapter 2. Orders in general, and what a side may know and see: chapter 1.
+- The experience of a ship's crew: chapter 4 (decision 0064). The cargo rule a landing force's rate scales: chapter 2.
 - The ground report and the estimate as belief, and the opening estimate: chapter 3. Shore bombardment: chapter 4. The share of a hit that lands on men: chapter 5.
 - Objectives on a base held and on men lost: chapter 6. Aircraft lost with a base and a group's refusal of orders: chapter 5.

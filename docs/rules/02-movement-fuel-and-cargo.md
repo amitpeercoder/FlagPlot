@@ -334,6 +334,8 @@ Forces are worked in order of number, ships in order of number, and each change 
 
 Before the cargo, a landing divides units and forms a base where chapter 7 says, and each ship moves its men. Each move above 0 records `CargoLoaded` or `CargoUnloaded`, naming the cargo, the tons moved, the tons now aboard and the base's stock, citing the cargo order and the force's arrival event (or, for a halted force, its halt). When a force has moved something this pulse and nothing remains to move, one more event is recorded: `LoadingComplete` or `UnloadingComplete`, with the hour the slowest ship finished (the start of work plus the longest of each ship's tons over its rate). It cites the cargo events. Nothing remains for a load when the stock is 0 or every ship is full. For an unload nothing remains when no ship has supply or fuel cargo aboard and, in a coast hex, no ship has men aboard. A load order with a unit records `UnitLoadingComplete` in place of `LoadingComplete` (chapter 7). [0011 items 5 and 12, 0046 items 4 and 5, 0066]
 
+**The loading factor.** While a force lands men on a coast hex, each ship's rate, berth or lighter, is multiplied by a factor that follows the force's loading: `ground.toml: unprepared_landing_share` plus the rest of 1 times the loading over 100 (chapter 7, Landing men and Preparing a landing). It scales the tons of men, supply and fuel alike, from the first man landed until the unloading there is complete, and so the hour the unloading completes. A force that carries no men and has begun no landing, and every load order, work at the rate of the port as before. With the frozen share of 1 the factor is 1. The breakdowns of `CargoUnloaded` and `MenLanded` then name `port_rate_t_per_h`, `unprepared_landing_share`, `loading` and `loading_factor`, only where the share is below 1. [0095 item 5]
+
 A side sees: `CargoLoaded`, `CargoUnloaded`, `LoadingComplete`, `UnitLoadingComplete`, `UnloadingComplete`, `MenEmbarked` and `MenLanded` for its own ships and forces. The enemy sees none.
 
 ### At sea
@@ -379,5 +381,5 @@ A task force's readiness, whether it is alert, the alarm, and the fatigue that a
 - Objectives, missions and results: chapter 6. No rule here reads a task force's mission.
 - Ship repair, forward and at the yard, and a force away at the yard: chapter 4, Repair.
 - The bombardment a halted force makes: chapter 4, Shore bombardment.
-- Land units, men worked as cargo, troop capacity, the men's supply and marching overland: chapter 7.
+- Land units, men worked as cargo, troop capacity, the men's supply, marching overland and preparing a landing, whose loading scales the rate of a landing: chapter 7.
 - Base orders and port damage: not built (0052, 0066). The fight ashore and a base that changes side: chapter 7. Shore bombardment: chapter 4.

@@ -27,7 +27,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | Step | When | What runs | Where |
 | --- | --- | --- | --- |
 | 1 | Day start | Refuelling in port | Chapter 2, Refuelling in port |
-| 2 | Day start | Orders intake: numbering, checks, refusals; a yard order, a rebase order, a posture order and a march order are applied at their acceptance | Chapter 1, Orders; chapter 4, Repair; chapter 5, Rebasing an air group; chapter 7, The posture and its order; Marching overland |
+| 2 | Day start | Orders intake: numbering, checks, refusals; a yard order, a rebase order, a posture order, a march order, a prepare-landing order and an activity order are applied at their acceptance | Chapter 1, Orders; chapter 4, Repair; chapter 5, Rebasing an air group; chapter 7, The posture and its order; Marching overland; Preparing a landing; The day's activity |
 | 3 | Start of each pulse | Alert from belief | Chapter 3, Alert from belief |
 | 4 | Start of each pulse | Fatigue of task forces | Chapter 3, Fatigue of a force |
 | 5 | Start of each pulse | Bases out of supply fixed | Chapter 5, A base out of supply |
@@ -39,7 +39,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | 11 | Night pulse | Stand-down and return of tired air groups | Chapter 5, Stand-down and return |
 | 12 | Night pulse | Movement: halted forces whose work is done steam on, the straggler pass, forces move in order of clock time (a force with a marked waypoint and work there halts at it), fights where they meet | Chapter 2, Movement, Halting at a marked waypoint and steaming on, and Stragglers; chapter 4, Meeting |
 | 13 | Night pulse | Night search and surface engagements: empty. Shore bombardment: a force on the bombardment mission, in the hex of an enemy base on its side's map (a halted force is in it), fires at the base | Chapter 1, The night pulse; chapter 4, Shore bombardment |
-| 14 | Night pulse | Loading and unloading, with men taken aboard and landed, units divided and bases formed | Chapter 2, Cargo; chapter 7 |
+| 14 | Night pulse | Loading and unloading, with men taken aboard and landed, units divided and bases formed; a force that lands men works at the rate its loading gives, and a unit's first men landing spend its rehearsal | Chapter 2, Cargo; chapter 7, Landing men; Preparing a landing |
 | 15 | Morning and afternoon | Air search and its sighting reports | Chapter 3, Air search |
 | 16 | Morning and afternoon | Strike decisions and launches | Chapter 5, The strike decision |
 | 17 | Morning and afternoon | Air combat: escorts, patrols, guns, attacks, damage, reports, claims | Chapter 5, The raid, step by step |
@@ -48,7 +48,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | 20 | Morning and afternoon | Surface engagements: an empty slot | Chapter 1, The morning and afternoon pulses |
 | 21 | Morning and afternoon | Loading and unloading, as in step 14 | Chapter 2, Cargo; chapter 7 |
 | 22 | End of each pulse | Contacts age and are dropped | Chapter 3, Ageing and dropping |
-| 23 | After the third pulse | Ground combat: first the marches (a day marched, an arrival with its supply and any dump formed); then for each hex with men ashore, the fight, fatigue, a side beaten, a base that changes side, the ground reports | Chapter 7, Marching overland; The fight ashore; A base that changes side; What a side knows of the enemy ashore |
+| 23 | After the third pulse | Ground combat: first the marches (a day marched, an arrival with its supply and any dump formed); then for each hex with men ashore, the fight, fatigue, a side beaten, a base that changes side, the ground reports; last, the day's activity: each force's loading, each unit's rehearsal or training, the days of fighting counted | Chapter 7, Marching overland; The fight ashore; A base that changes side; What a side knows of the enemy ashore; The day's activity; Preparing a landing; Experience and training |
 | 24 | After the third pulse | Logistics, air group upkeep, intelligence update: empty. Then the base count | Chapter 1, After the pulses |
 | 25 | Day close | The day counter advances, the invariants are checked, the state hash is recorded | Chapter 1, Invariants; The state hash and saved games |
 
@@ -62,7 +62,7 @@ The result of a game is worked out from the final state and the log. It is not a
 4. **Surface combat and damage.** When a fight begins, its rounds, the hit mechanism shared with air attack, damage tracks and named systems, breaking off, what a fight leaves behind, repair, and shore bombardment.
 5. **Air operations.** Air groups, missions, rebasing a group to another base, a group lost with its base, what a group can fly, air distance, the night's upkeep, the strike decision, escorts and patrol, the raid step by step (with the share of a hit on a base that lands on men), wear, fatigue and the supply that flying costs.
 6. **Objectives and results.** A scenario's mission and objectives (including a base held and men lost), points, the margin and the seven outcomes, what a side knows of its progress, and the result at the end.
-7. **Land units.** The land unit and troop capacity, the load order with a unit, men worked as cargo, a landing, a base formed by it, a unit divided, men lost with a ship, the men's supply and the loss of the unfed, the posture of a unit and its order, marching overland, the day's fight ashore, fatigue, a side beaten, a base that changes side, men lost to the fire of bombs and shells, and what a side knows of its own men and of the enemy's.
+7. **Land units.** The land unit and troop capacity, the load order with a unit, men worked as cargo, a landing, a base formed by it, a unit divided, men lost with a ship, the men's supply and the loss of the unfed, the posture of a unit and its order, marching overland, the day's fight ashore, fatigue, a side beaten, a base that changes side, the day's activity, preparing a landing, experience and training, men lost to the fire of bombs and shells, and what a side knows of its own men and of the enemy's.
 
 ## Kept true
 
