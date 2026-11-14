@@ -255,7 +255,9 @@ fn the_saved_game_holds_orders_with_their_origin_and_the_files_it_names() {
     let value: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
     assert_eq!(value["format"], "flagplot-saved-game");
-    assert_eq!(value["version"], 1);
+    assert_eq!(value["version"], 2);
+    assert_eq!(value["state_version"], "flagplot-state-v18");
+    assert_eq!(value["rules_version"], 1);
     assert_eq!(
         value["scenario"]["file"],
         "data/scenarios/07_full_slice.toml"
@@ -397,4 +399,68 @@ fn every_scenario_in_the_folder_saves_and_replays() {
         count += 1;
     }
     assert!(count >= 24, "{count} scenarios");
+}
+
+/// Decision 0100, 8: a saved game records what it was played under, and a
+/// replay of a game played under anything else is refused before it runs.
+/// `change` edits the saved game's JSON; the returned text is the refusal.
+fn refusal_of_edited_save(label: &str, change: impl FnOnce(&mut serde_json::Value)) -> String {
+    let game = save("data/scenarios/01_transit.toml", label, &[]);
+    let mut value: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
+    change(&mut value);
+    fs::write(&game, serde_json::to_string_pretty(&value).expect("JSON")).expect("writes");
+    let game = game.to_string_lossy().into_owned();
+    let replay = binary(&["replay", &game]);
+    assert!(!replay.status.success(), "the replay was refused");
+    assert!(
+        !text(&replay.stdout).contains("day 1 "),
+        "refused before it ran: {}",
+        text(&replay.stdout)
+    );
+    // `events` and `export` read it the same way.
+    let events = binary(&["events", &game, "--unit", "ship:1"]);
+    assert!(!events.status.success());
+    assert_eq!(events.stderr, replay.stderr, "events says the same");
+    let export = binary(&["export", &game, "--out", &format!("{game}.out.json")]);
+    assert!(!export.status.success());
+    assert_eq!(export.stderr, replay.stderr, "export says the same");
+    text(&replay.stderr)
+}
+
+#[test]
+fn a_saved_game_of_the_current_format_replays() {
+    let game = save("data/scenarios/01_transit.toml", "v2-replays", &[]);
+    ok(&binary(&["replay", &game.to_string_lossy()]), "replay");
+}
+
+#[test]
+fn a_version_1_saved_game_is_refused_with_the_reason() {
+    let error = refusal_of_edited_save("v1", |v| {
+        v["version"] = serde_json::json!(1);
+        let map = v.as_object_mut().expect("object");
+        map.remove("state_version");
+        map.remove("rules_version");
+    });
+    assert!(
+        error.contains("saved before saved games recorded the rules"),
+        "{error}"
+    );
+    assert!(error.contains("not converted"), "{error}");
+}
+
+#[test]
+fn a_saved_game_of_other_rules_is_refused_naming_both() {
+    let error = refusal_of_edited_save("rules", |v| v["rules_version"] = serde_json::json!(99));
+    assert!(error.contains("rules version 99"), "{error}");
+    assert!(error.contains("engine has rules version 1"), "{error}");
+}
+
+#[test]
+fn a_saved_game_of_another_state_layout_is_refused_naming_both() {
+    let error = refusal_of_edited_save("state", |v| {
+        v["state_version"] = serde_json::json!("flagplot-state-v0");
+    });
+    assert!(error.contains("flagplot-state-v0"), "{error}");
+    assert!(error.contains("flagplot-state-v18"), "{error}");
 }

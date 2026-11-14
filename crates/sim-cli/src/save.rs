@@ -27,7 +27,10 @@ use sim_core::state::Side;
 use sim_data::Scenario;
 
 pub const FORMAT: &str = "flagplot-saved-game";
-pub const VERSION: u32 = 1;
+/// Version 2 (decision 0100, 8) adds `"state_version"` and `"rules_version"`:
+/// what the game was played under. A game of version 1 has neither and is
+/// refused, not converted.
+pub const VERSION: u32 = 2;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -47,6 +50,12 @@ pub fn hash_hex(bytes: &[u8]) -> String {
 fn file_hash(path: &Path) -> Result<String, String> {
     let bytes = fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
     Ok(hash_hex(&bytes))
+}
+
+/// The version of the state's layout the engine has, in the text a batch file
+/// and a saved game record it.
+fn engine_state_version() -> String {
+    String::from_utf8_lossy(sim_core::hash::STATE_VERSION).into_owned()
 }
 
 /// What a run was made on, written into every file that holds results (a
@@ -81,7 +90,7 @@ pub fn inputs(scenario_path: &str, scenario: &Scenario) -> Result<Inputs, String
         });
     }
     Ok(Inputs {
-        state_version: String::from_utf8_lossy(sim_core::hash::STATE_VERSION).into_owned(),
+        state_version: engine_state_version(),
         scenario_hash: file_hash(Path::new(scenario_path))?,
         data,
     })
@@ -158,6 +167,8 @@ pub fn write(
             .map(|(path, hash)| json!({ "file": path, "hash": hash }))
             .collect::<Vec<_>>(),
         "seed": seed,
+        "state_version": engine_state_version(),
+        "rules_version": sim_core::world::RULES_VERSION,
         "seats": {
             "allied": seats.get(&Side::Allied).copied().unwrap_or(SeatKind::Script).name(),
             "japanese": seats.get(&Side::Japanese).copied().unwrap_or(SeatKind::Script).name(),
@@ -208,8 +219,34 @@ pub fn read(file: &str) -> Result<Saved, String> {
             "not a Flag Plot saved game (format \"{FORMAT}\")"
         )));
     }
-    if value.get("version").and_then(Value::as_u64) != Some(u64::from(VERSION)) {
-        return Err(bad(format!("saved game version is not {VERSION}")));
+    match value.get("version").and_then(Value::as_u64) {
+        Some(v) if v == u64::from(VERSION) => {}
+        Some(v) if v < u64::from(VERSION) => {
+            return Err(bad(format!(
+                "this game was saved before saved games recorded the rules they were played under \
+                 (saved game version {v}, now {VERSION}); it is not converted, so play it again"
+            )));
+        }
+        _ => return Err(bad(format!("saved game version is not {VERSION}"))),
+    }
+    let saved_state = text(&value, "state_version").map_err(&bad)?;
+    let engine_state = engine_state_version();
+    if saved_state != engine_state {
+        return Err(bad(format!(
+            "this game was saved under state layout {saved_state}, and this engine has {engine_state}; \
+             it is not converted, so play it again"
+        )));
+    }
+    let saved_rules = value
+        .get("rules_version")
+        .and_then(Value::as_u64)
+        .ok_or_else(|| bad("\"rules_version\" is missing or not a whole number".into()))?;
+    let engine_rules = u64::from(sim_core::world::RULES_VERSION);
+    if saved_rules != engine_rules {
+        return Err(bad(format!(
+            "this game was saved under rules version {saved_rules}, and this engine has rules version {engine_rules}; \
+             it is not converted, so play it again"
+        )));
     }
     let scenario = value
         .get("scenario")
