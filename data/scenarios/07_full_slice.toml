@@ -3611,12 +3611,17 @@ land_unit = 17
 kind = "march"
 hex = [2, -4]
 
+# Each attack order at the Tenaru and the ridge carries the instruction to fall
+# back when the attack is spent, as the attackers did (decision 0105, "What it
+# changes in the August scenario").
+
 [[order]]
 day = 14
 side = "japanese"
 land_unit = 17
 kind = "set_posture"
 posture = "attack"
+when_spent = "fall_back"
 
 # The Kawaguchi main body marches on day 35 so that it arrives on day 37, 12
 # September (decision 0101, 14): the attack's date has rows and the day it set
@@ -3635,6 +3640,7 @@ side = "japanese"
 land_unit = 19
 kind = "set_posture"
 posture = "attack"
+when_spent = "fall_back"
 
 [[order]]
 day = 35
@@ -3649,6 +3655,7 @@ side = "japanese"
 land_unit = 20
 kind = "set_posture"
 posture = "attack"
+when_spent = "fall_back"
 
 [[order]]
 day = 35
@@ -3663,6 +3670,7 @@ side = "japanese"
 land_unit = 21
 kind = "set_posture"
 posture = "attack"
+when_spent = "fall_back"
 
 [[order]]
 day = 35
@@ -3677,6 +3685,7 @@ side = "japanese"
 land_unit = 22
 kind = "set_posture"
 posture = "attack"
+when_spent = "fall_back"
 
 [[order]]
 day = 35
@@ -3691,6 +3700,7 @@ side = "japanese"
 land_unit = 23
 kind = "set_posture"
 posture = "attack"
+when_spent = "fall_back"
 
 # The Oka group marches on day 37 so that it arrives on day 39 and attacks on
 # 14 September, the day two sources give (land_unit_facts 1007, 949; decision
@@ -3709,6 +3719,7 @@ side = "japanese"
 land_unit = 25
 kind = "set_posture"
 posture = "attack"
+when_spent = "fall_back"
 
 
 # Missions and objectives (decision 0054). The points and the levels are the
