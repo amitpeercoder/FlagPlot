@@ -867,6 +867,22 @@ pub struct LandUnit {
     /// over the men charged, from 0 to 1 (decision 0090, 8). 1 for a unit
     /// none of whose men were ashore at that charge, and 1 until the first.
     pub fed_share: Fixed,
+    /// The unit's march, if it has a march order standing (decision 0094, 3
+    /// and 4). `None` unless a march order is given.
+    pub march: Option<March>,
+}
+
+/// A land unit's march to a neighbouring hex (decision 0094, 3 and 4). It
+/// stands until the unit arrives or the order is replaced.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct March {
+    /// The hex the unit marches to: a neighbour of its hex joined to it by a
+    /// land link.
+    pub to: Hex,
+    /// The days marched so far, below the figure `march_days_per_hex`.
+    pub days: u32,
+    /// The march order.
+    pub order: OrderId,
 }
 
 impl LandUnit {
@@ -890,6 +906,7 @@ impl LandUnit {
             posture_order: None,
             fatigue: Fixed::ZERO,
             fed_share: Fixed::ONE,
+            march: None,
         }
     }
 }

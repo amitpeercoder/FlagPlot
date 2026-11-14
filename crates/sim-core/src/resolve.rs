@@ -11,7 +11,7 @@
 //! sequence is fixed from the start, and each is filled in by the scenario
 //! that needs it.
 
-use crate::events::{Cause, DetachReason, EventKind};
+use crate::events::{Cause, DetachReason, EventKind, MarchStop};
 use crate::fixed::Fixed;
 use crate::ids::{BaseId, EventId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
@@ -21,7 +21,8 @@ use crate::orders::{
 };
 use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
-    CargoOrder, Route, RulesOfEngagement, SearchArc, ShipLocation, Side, TaskForce, TaskForceStatus,
+    CargoOrder, March, Route, RulesOfEngagement, SearchArc, ShipLocation, Side, TaskForce,
+    TaskForceStatus,
 };
 use std::collections::BTreeSet;
 
@@ -779,10 +780,10 @@ impl World {
             }
             OrderKind::LandUnit {
                 target,
-                order: LandUnitOrder::SetPosture(_),
+                order: land_unit_order,
             } => {
-                // Decision 0090, 2, in this order: the side's own unit; not
-                // destroyed; with a man ashore.
+                // Decision 0090, 2, and 0094, 3, in this order: the side's
+                // own unit; not destroyed; with a man ashore.
                 let unit = match self.truth.land_units.get(target) {
                     Some(unit) if unit.side == order.side => unit,
                     _ => return Err(RejectReason::NotYourLandUnit),
@@ -790,8 +791,15 @@ impl World {
                 if unit.men_ashore == 0 && self.truth.men_aboard(*target) == 0 {
                     return Err(RejectReason::LandUnitDestroyed);
                 }
-                if unit.men_ashore == 0 {
+                let Some(here) = unit.hex.filter(|_| unit.men_ashore > 0) else {
                     return Err(RejectReason::NoMenAshore);
+                };
+                // A march goes to the unit's own hex, which stops it, or along
+                // a land link (decision 0094, 3).
+                if let LandUnitOrder::March(to) = land_unit_order {
+                    if *to != here && !self.map.has_land_link(here, *to) {
+                        return Err(RejectReason::NoLandLink(*to));
+                    }
                 }
                 Ok(())
             }
@@ -988,16 +996,48 @@ impl World {
             }
             OrderKind::LandUnit {
                 target,
-                order: LandUnitOrder::SetPosture(posture),
+                order: land_unit_order,
             } => {
                 let unit = self
                     .truth
                     .land_units
                     .get_mut(target)
                     .expect("order was validated against this land unit");
-                unit.posture = *posture;
-                unit.posture_order = Some(order.id);
-                Vec::new()
+                match land_unit_order {
+                    LandUnitOrder::SetPosture(posture) => {
+                        unit.posture = *posture;
+                        unit.posture_order = Some(order.id);
+                        Vec::new()
+                    }
+                    // Decision 0094, 3 and 4: an order to the unit's own hex
+                    // stops a march; one to the hex it already marches to
+                    // keeps the days marched (As built); one to another hex
+                    // starts the count again.
+                    LandUnitOrder::March(to) => {
+                        let here = unit.hex.expect("order was validated: men ashore");
+                        if *to == here {
+                            return match unit.march.take() {
+                                Some(march) => vec![EventKind::MarchStopped {
+                                    unit: *target,
+                                    to: march.to,
+                                    days: march.days,
+                                    reason: MarchStop::Ordered,
+                                }],
+                                None => Vec::new(),
+                            };
+                        }
+                        let days = unit
+                            .march
+                            .filter(|march| march.to == *to)
+                            .map_or(0, |march| march.days);
+                        unit.march = Some(March {
+                            to: *to,
+                            days,
+                            order: order.id,
+                        });
+                        Vec::new()
+                    }
+                }
             }
         }
     }

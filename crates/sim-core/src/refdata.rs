@@ -1102,6 +1102,14 @@ pub struct GroundFigures {
     /// The bounds of a ground report's error (decision 14 of 0092). `None`
     /// when the file names neither: then no ground report is made.
     pub report_error: Option<ReportError>,
+    /// Days to march from a hex to a neighbour, at least 1 (decision 4 of
+    /// 0094).
+    pub march_days_per_hex: u32,
+    /// Fatigue a unit gains on a day it marches (decision 8 of 0094).
+    pub fatigue_per_march_day: Fixed,
+    /// Days of its daily charge a marching unit takes with it (decision 9 of
+    /// 0094).
+    pub march_supply_days: Fixed,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1135,6 +1143,9 @@ impl GroundFigures {
             low: Fixed::from_raw(500_000),
             high: Fixed::from_raw(1_500_000),
         }),
+        march_days_per_hex: 3,
+        fatigue_per_march_day: Fixed::from_int(10),
+        march_supply_days: Fixed::from_int(5),
     };
 
     /// Describes what is wrong with the figures, if anything. The weight of
@@ -1142,7 +1153,8 @@ impl GroundFigures {
     /// above 0; a hit removes a whole number of men, at least 1; chances and
     /// shares are from 0 to 1, and the beaten share below 1 so that both
     /// sides cannot be beaten at once (decision 15 of 0090); fatigue figures
-    /// are from 0 to 100.
+    /// are from 0 to 100; a march takes at least a day and carries no less
+    /// than nothing (decision 0094).
     pub fn problem(&self) -> Option<String> {
         for (label, value) in [
             ("handling_t_per_man", self.handling_t_per_man),
@@ -1180,6 +1192,7 @@ impl GroundFigures {
             ("fatigue_per_attack_day", self.fatigue_per_attack_day),
             ("rest_per_day", self.rest_per_day),
             ("attack_fatigue_limit", self.attack_fatigue_limit),
+            ("fatigue_per_march_day", self.fatigue_per_march_day),
         ] {
             if value.is_negative() || value > Fixed::from_int(100) {
                 return Some(format!("ground {label} {value} is not between 0 and 100"));
@@ -1191,6 +1204,15 @@ impl GroundFigures {
             return Some(format!(
                 "ground men_lost_per_base_hit {} is not a whole number of 0 or more",
                 self.men_lost_per_base_hit
+            ));
+        }
+        if self.march_days_per_hex == 0 {
+            return Some("ground march_days_per_hex 0 is not 1 or more".to_string());
+        }
+        if self.march_supply_days.is_negative() {
+            return Some(format!(
+                "ground march_supply_days {} is negative",
+                self.march_supply_days
             ));
         }
         if let Some(error) = self.report_error {

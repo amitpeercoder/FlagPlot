@@ -14,7 +14,7 @@ use crate::orders::{AirMission, Mission, SpeedSetting};
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, LandUnit, Replacement, Route,
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, LandUnit, March, Replacement, Route,
     RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, TaskForce, Troops,
     TruthState, YardTrip,
 };
@@ -135,8 +135,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `fed_share` after its hex, and the air group location `Lost` (code 3)
 /// (decision 0090);
 /// version 13 adds a claim's `from_bombardment` after its `from_air`, and a
-/// side's ground estimates after its claims (decision 0092).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v13";
+/// side's ground estimates after its claims (decision 0092);
+/// version 14 adds a land unit's `march` (its hex, days marched and order)
+/// after its `fed_share` (decision 0094).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v14";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -343,7 +345,14 @@ fn name_every_field(world: &World) {
         posture_order: _,
         fatigue: _,
         fed_share: _,
+        march: _,
     }) = land_units.values().next()
+    {}
+    if let Some(Some(March {
+        to: _,
+        days: _,
+        order: _,
+    })) = land_units.values().next().map(|unit| unit.march)
     {}
     for belief in beliefs.values() {
         if let Some(Contact {
@@ -639,6 +648,17 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.optional_u32(unit.posture_order.map(|id| id.raw()));
         h.i64(unit.fatigue.raw());
         h.i64(unit.fed_share.raw());
+        // After the fed share (decision 0094).
+        match unit.march {
+            Some(march) => {
+                h.u8(1);
+                h.i32(march.to.q);
+                h.i32(march.to.r);
+                h.u32(march.days);
+                h.u32(march.order.raw());
+            }
+            None => h.u8(0),
+        }
     }
 
     h.count(world.beliefs.len());
