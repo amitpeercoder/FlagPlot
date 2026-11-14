@@ -630,12 +630,12 @@ pub struct FinalOut {
 
 #[derive(Serialize)]
 pub struct PerSide<T> {
-    allied: Vec<T>,
-    japanese: Vec<T>,
+    pub allied: Vec<T>,
+    pub japanese: Vec<T>,
 }
 
 impl<T> PerSide<T> {
-    fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.allied.is_empty() && self.japanese.is_empty()
     }
 }
@@ -669,9 +669,23 @@ struct ClaimOut {
     received_event: u32,
 }
 
-/// The truth after the last day, with the contacts and claims each side
-/// holds, read through `side_view`.
-pub fn final_state(world: &World) -> FinalOut {
+/// The truth at one moment with what each side believes of the enemy: the
+/// records of `final`, less the claims. `final_state` and every step of the
+/// replay's `steps` are made from this one function, so the last step's
+/// records are `final`'s.
+pub struct Records {
+    task_forces: Vec<TaskForceOut>,
+    ships: Vec<ShipOut>,
+    air_groups: Vec<AirGroupOut>,
+    bases: Vec<BaseOut>,
+    land_units: Vec<LandUnitOut>,
+    contacts: PerSide<ContactOut>,
+    ground_estimates: PerSide<GroundEstimateOut>,
+}
+
+/// The records of the world as it stands, with the contacts and ground
+/// estimates each side holds, read through `side_view`.
+pub fn records(world: &World) -> Records {
     let Snapshot {
         task_forces,
         ships,
@@ -693,6 +707,93 @@ pub fn final_state(world: &World) -> FinalOut {
             })
             .collect()
     };
+    let ground_estimates = |side: Side| -> Vec<GroundEstimateOut> {
+        world
+            .side_view(side)
+            .ground_estimates()
+            .map(|estimate| GroundEstimateOut {
+                hex: (estimate.hex.q, estimate.hex.r),
+                men: estimate.men,
+                day: estimate.day,
+                report_event: estimate.report_event.umpire_raw(&key),
+            })
+            .collect()
+    };
+    Records {
+        task_forces,
+        ships,
+        air_groups,
+        bases,
+        land_units,
+        contacts: PerSide {
+            allied: contacts(Side::Allied),
+            japanese: contacts(Side::Japanese),
+        },
+        ground_estimates: PerSide {
+            allied: ground_estimates(Side::Allied),
+            japanese: ground_estimates(Side::Japanese),
+        },
+    }
+}
+
+/// One record as JSON text with its key, for the comparison of one step's
+/// records with the step before.
+fn keyed<K, T: Serialize>(items: &[T], key: impl Fn(&T) -> K) -> Vec<(K, String)> {
+    items
+        .iter()
+        .map(|item| {
+            let text = serde_json::to_string(item).expect("a record serialises");
+            (key(item), text)
+        })
+        .collect()
+}
+
+/// The records of one moment as `(key, JSON text)` lists, each in the order
+/// `final` writes it.
+pub struct KeyedRecords {
+    pub task_forces: Vec<(u32, String)>,
+    pub ships: Vec<(u32, String)>,
+    pub air_groups: Vec<(u32, String)>,
+    pub bases: Vec<(u32, String)>,
+    pub land_units: Vec<(u32, String)>,
+    pub contacts: PerSide<(u32, String)>,
+    /// Keyed by hex, as the side holds one estimate for each.
+    pub ground_estimates: PerSide<((i32, i32), String)>,
+}
+
+impl Records {
+    pub fn keyed(&self) -> KeyedRecords {
+        KeyedRecords {
+            task_forces: keyed(&self.task_forces, |r| r.id),
+            ships: keyed(&self.ships, |r| r.id),
+            air_groups: keyed(&self.air_groups, |r| r.id),
+            bases: keyed(&self.bases, |r| r.id),
+            land_units: keyed(&self.land_units, |r| r.id),
+            contacts: PerSide {
+                allied: keyed(&self.contacts.allied, |r| r.id),
+                japanese: keyed(&self.contacts.japanese, |r| r.id),
+            },
+            ground_estimates: PerSide {
+                allied: keyed(&self.ground_estimates.allied, |r| r.hex),
+                japanese: keyed(&self.ground_estimates.japanese, |r| r.hex),
+            },
+        }
+    }
+}
+
+/// The truth after the last day, with the contacts and claims each side
+/// holds, read through `side_view`.
+pub fn final_state(world: &World) -> FinalOut {
+    let Records {
+        task_forces,
+        ships,
+        air_groups,
+        bases,
+        land_units,
+        contacts,
+        ground_estimates,
+    } = records(world);
+    let key = world.umpire_key();
     let claims = |side: Side| -> Vec<ClaimOut> {
         world
             .side_view(side)
@@ -707,35 +808,17 @@ pub fn final_state(world: &World) -> FinalOut {
             })
             .collect()
     };
-    let ground_estimates = |side: Side| -> Vec<GroundEstimateOut> {
-        world
-            .side_view(side)
-            .ground_estimates()
-            .map(|estimate| GroundEstimateOut {
-                hex: (estimate.hex.q, estimate.hex.r),
-                men: estimate.men,
-                day: estimate.day,
-                report_event: estimate.report_event.umpire_raw(&key),
-            })
-            .collect()
-    };
     FinalOut {
         task_forces,
         ships,
         air_groups,
         bases,
         land_units,
-        contacts: PerSide {
-            allied: contacts(Side::Allied),
-            japanese: contacts(Side::Japanese),
-        },
+        contacts,
         claims: PerSide {
             allied: claims(Side::Allied),
             japanese: claims(Side::Japanese),
         },
-        ground_estimates: PerSide {
-            allied: ground_estimates(Side::Allied),
-            japanese: ground_estimates(Side::Japanese),
-        },
+        ground_estimates,
     }
 }

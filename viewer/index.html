@@ -422,8 +422,18 @@ function sideReplay(replay, side) {
     for (const g of [...(initial.air_groups || []), ...((final && final.air_groups) || [])]) if (own(g) && g.aircraft_type_id !== undefined) typeIds.add(g.aircraft_type_id);
     aircraft_types = aircraft_types.filter(t => typeIds.has(t.id));
   }
+  // A side's steps are the groups of its own events, which can put an event of the end of a day in the step the
+  // umpire calls its orders (the side was told of no pulsed event that day). Each side event therefore says the
+  // umpire's step it belongs to, and the state of a side's step is the one at the end of that.
+  let umpireStep = null;
+  if (Array.isArray(replay.steps)) {
+    umpireStep = new Map();
+    const um = buildSteps(replay.events || []);
+    um.forEach(s => s.events.forEach(ei => umpireStep.set(replay.events[ei].id, { day: s.day, phase: s.phase })));
+  }
   const out = Object.assign({}, replay, {
     aircraft_types,
+    steps: Array.isArray(replay.steps) ? sideSteps(replay.steps, side) : undefined,
     side_views: undefined, view_side: side,
     base_changes: undefined, // the umpire's list; a side's page follows base_changed_side events it was given
     orders: (replay.orders || []).filter(own),
@@ -438,6 +448,7 @@ function sideReplay(replay, side) {
     events: sv.events.map(e => ({
       id: e.n, log_id: e.log_id, day: e.day, pulse: e.pulse, kind: e.kind, text: e.text, causes: e.causes || [],
       entities: e.entities || [], breakdown: e.breakdown, data: e.data || {}, cut: !!e.cut, hidden_causes: !!e.hidden_causes,
+      umpire_step: umpireStep ? umpireStep.get(e.log_id) : undefined,
     })),
     days: [],
     final: final ? {
@@ -508,7 +519,7 @@ function buildSteps(events) {
 function validateReplay(r) {
   if (r === null || typeof r !== 'object' || Array.isArray(r)) return 'This is JSON but not a replay: expected an object at the top level.';
   if (r.format !== 'flagplot-replay') return 'Not a Flag Plot replay: format is ' + JSON.stringify(r.format) + ', expected "flagplot-replay".';
-  if (r.version !== 1 && r.version !== 2 && r.version !== 3) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads versions 1, 2 and 3.';
+  if (r.version !== 1 && r.version !== 2 && r.version !== 3 && r.version !== 4) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads versions 1, 2, 3 and 4.';
   if (r.version >= 2) {
     // Version 2 adds side_views: for each side, the events the engine let it see (decision 0047).
     if (!r.side_views || typeof r.side_views !== 'object') return 'Replay version ' + r.version + ' has no "side_views" object.';
@@ -518,15 +529,21 @@ function validateReplay(r) {
       for (const ev of sv.events) if (!ev || !Number.isInteger(ev.n) || !Number.isInteger(ev.log_id) || !Number.isInteger(ev.day) || typeof ev.kind !== 'string') return 'A ' + side + ' side event is missing its integer n, log_id or day, or its kind.';
     }
   }
-  if (r.version === 3) {
+  if (r.version >= 3) {
     // Version 3 adds aircraft_types: the reach figures of each type, for the reach rings.
-    if (!Array.isArray(r.aircraft_types)) return 'Replay version 3 has no "aircraft_types" list.';
+    if (!Array.isArray(r.aircraft_types)) return 'Replay version ' + r.version + ' has no "aircraft_types" list.';
     const num = x => typeof x === 'number' && Number.isFinite(x);
     for (const t of r.aircraft_types) {
       if (!t || typeof t !== 'object' || !Number.isInteger(t.id) || typeof t.name !== 'string') return 'An entry of "aircraft_types" is missing its integer id or its name.';
       if (!num(t.strike_radius_nm) || !num(t.extended_reach_nm) || !num(t.search_range_nm) || t.strike_radius_nm < 0 || t.search_range_nm < 0) return 'The "aircraft_types" entry ' + t.id + ' needs finite strike_radius_nm, extended_reach_nm and search_range_nm, none below 0.';
       if (t.extended_reach_nm < t.strike_radius_nm) return 'The "aircraft_types" entry ' + t.id + ' has an extended_reach_nm below its strike_radius_nm.';
     }
+  }
+  if (r.version === 4 && r.steps === undefined) return 'Replay version 4 has no "steps" list.';
+  if (r.steps !== undefined) {
+    // Version 4 adds steps: the state at the end of each step, as changes (decision 0108).
+    const bad = validateSteps(r.steps);
+    if (bad) return bad;
   }
   if (!r.scenario || typeof r.scenario !== 'object') return 'Replay has no "scenario" object.';
   if (!r.map || typeof r.map !== 'object' || !Array.isArray(r.map.hexes)) return 'Replay has no "map.hexes" list.';
@@ -567,6 +584,361 @@ function splitText(text) {
 function numEq(a, b) {
   if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) < 1e-9;
   return a === b;
+}
+
+/**
+ * The air layer's part of one event: what the step's drawings (fights, searches, the sightings, misses, launches, escorts and
+ * strikes that found nothing) take from it. Called by both ways of building a model, with where forces are at this moment
+ * (pos: forces, shipForce, sunk and groupBase, the rebuild's own state or a version 4 step's). Returns true when the event is
+ * air activity. Beyond the step's aux and attempts it changes only the formed-step of a group a landing formed.
+ */
+function drawAirEvent(ctx, ev, si, aux, attempts, pos) {
+  const { bases, airGroups, groupTable, umpire, eventById, stepOfEvent } = ctx;
+  const d = ev.data || {};
+  switch (ev.kind) {
+        case 'report_received': {
+          // A report that a search of this step made: the mark is where the side was told (the umpire also gets where the force truly was).
+          if (Array.isArray(d.hex)) {
+            for (const c of ev.causes || []) {
+              const ce = c.event !== undefined ? eventById.get(c.event) : null;
+              if (!ce || ce.kind !== 'search_attempt' || stepOfEvent.get(ce.id) !== si) continue;
+              const at = attempts.get(ce.id);
+              aux.air.sighted.push({ q: d.hex[0], r: d.hex[1], side: d.side, event: ev.id, attempt: ce.id, air_group: ce.data && ce.data.air_group, trueHex: at ? at.hex : null });
+              break;
+            }
+          }
+          break;
+        }
+        case 'engagement_begun':
+        case 'engagement_ended':
+          if (Array.isArray(d.hex)) aux.fights.push({ q: d.hex[0], r: d.hex[1], a: d.a, b: d.b, kind: ev.kind, event: ev.id });
+          break;
+        case 'search_flown': {
+          // From a base, the base's hex; from a ship, the hex the event records.
+          const b = d.base != null ? bases.get(d.base) : null;
+          const at = b ? { q: b.q, r: b.r } : (Array.isArray(d.hex) ? { q: d.hex[0], r: d.hex[1] } : null);
+          if (at) aux.searches.push({ event: ev.id, air_group: d.air_group, base: d.base, ship: d.ship, q: at.q, r: at.r, from_deg: d.from_deg, to_deg: d.to_deg, range_nm: d.range_nm, aircraft: d.aircraft, side: (airGroups.get(d.air_group) || b || {}).side });
+          break;
+        }
+        // The umpire's uncut search attempt names the force it looked for: where that force truly was, at this moment.
+        case 'search_attempt': {
+          if (!umpire || d.task_force === undefined) break;
+          const f = pos.forces.get(d.task_force), hex = f ? [f.q, f.r] : null;
+          attempts.set(ev.id, { hex });
+          if (d.sighted === false && hex) { const g = groupTable.get(d.air_group); aux.air.misses.push({ q: hex[0], r: hex[1], side: g ? g.side : null, event: ev.id, air_group: d.air_group, task_force: d.task_force }); }
+          break;
+        }
+        case 'strike_launched':
+        case 'base_strike_launched': {
+          const g = groupTable.get(d.air_group);
+          aux.air.launches.push({ ev: ev.id, d, g, launch: airGroupHex(bases, pos, g), target: Array.isArray(d.hex) ? [d.hex[0], d.hex[1]] : null, kind: ev.kind === 'base_strike_launched' ? 'base' : 'ship', baseId: d.base });
+          break;
+        }
+        case 'escorts_sent': aux.air.escorts.push({ ev: ev.id, d }); break;
+        case 'aircraft_landed_elsewhere': {
+          const g = d.formed ? groupTable.get(d.to) : null;
+          if (g && g.formedStep === -1) g.formedStep = si;
+          break;
+        }
+        case 'strike_found_nothing': {
+          if (!umpire) break;
+          // Where the force the strike was sent at truly is: launch -> the report behind it -> the sighting or attack that report was about -> that force, now.
+          let hex = null;
+          const launch = (ev.causes || []).map(c => c.event !== undefined ? eventById.get(c.event) : null).find(e => e && e.kind === 'strike_launched');
+          if (launch) {
+            const seen = new Set([launch.id]);
+            let level = [launch];
+            for (let depth = 0; depth < 4 && !hex && level.length; depth++) {
+              const next = [];
+              for (const e of level) for (const c of e.causes || []) {
+                const ce = c.event !== undefined ? eventById.get(c.event) : null;
+                if (!ce || seen.has(ce.id)) continue;
+                seen.add(ce.id); next.push(ce);
+                if (!hex && (ce.kind === 'search_attempt' || ce.kind === 'air_attack') && ce.data && ce.data.task_force !== undefined) {
+                  const f = pos.forces.get(ce.data.task_force);
+                  if (f) hex = [f.q, f.r];
+                }
+              }
+              level = next;
+            }
+          }
+          aux.air.nothing.set(ev.id, { hex });
+          break;
+        }
+    default: return false;
+  }
+  return AIR_ACTIVITY.has(ev.kind);
+}
+const AIR_ACTIVITY = new Set(['search_flown', 'strike_launched', 'base_strike_launched']);
+
+/** The raids and tallies of a step, from what its events drew. */
+function finishAirStep(airCtx, aux, idxs, si) {
+  if (aux.air.launches.length) { const a = assembleAir(airCtx, aux.air, idxs, si); aux.air.raids = a.raids; aux.air.tallies = a.tallies; }
+}
+
+// ---- Replay version 4: the state at each step is in the file (decision 0108, item 7) ----
+// The export records, for every (day, phase) step, the records that changed since the step before (`steps`); this
+// applies them in order and takes what the page draws of the state from the records. Versions 1 to 3 have no such
+// list and are rebuilt from their events by the loop in buildModel, which stays as it was for them.
+const STEP_PHASES = ['start', 'orders', 'night', 'morning', 'afternoon', 'end'];
+const STEP_KINDS = ['task_forces', 'ships', 'air_groups', 'bases', 'land_units'];
+const stepKey = (day, phase) => day + ':' + phase;
+
+/** The first problem with a replay's `steps`, or null. */
+function validateSteps(steps) {
+  if (!Array.isArray(steps) || !steps.length) return 'Replay "steps" must be a non-empty list.';
+  const isHex = h => Array.isArray(h) && h.length === 2 && Number.isInteger(h[0]) && Number.isInteger(h[1]);
+  let last = -1;
+  for (let i = 0; i < steps.length; i++) {
+    const s = steps[i], where = 'Replay step ' + i;
+    if (!s || typeof s !== 'object' || !Number.isInteger(s.day) || s.day < 0 || !STEP_PHASES.includes(s.phase)) return where + ' has no integer day and a phase of start, orders, night, morning, afternoon or end.';
+    if ((i === 0) !== (s.phase === 'start') || (i === 0 && s.day !== 0)) return where + ': only the first step is "start", on day 0.';
+    const rank = s.day * 10 + STEP_PHASES.indexOf(s.phase);
+    if (rank <= last) return where + ' (day ' + s.day + ', ' + s.phase + ') is not after the step before it.';
+    last = rank;
+    for (const [word, part] of [['changed', s.changed], ['removed', s.removed]]) {
+      if (part === undefined) continue;
+      if (part === null || typeof part !== 'object' || Array.isArray(part)) return where + ' has a "' + word + '" that is not an object.';
+      for (const k of STEP_KINDS) {
+        if (part[k] === undefined) continue;
+        if (!Array.isArray(part[k])) return where + ' "' + word + '.' + k + '" is not a list.';
+        for (const x of part[k]) if (word === 'changed' ? (!x || !Number.isInteger(x.id)) : !Number.isInteger(x)) return where + ' "' + word + '.' + k + '" has an entry without an integer id.';
+      }
+      for (const k of ['contacts', 'ground_estimates']) {
+        if (part[k] === undefined) continue;
+        if (part[k] === null || typeof part[k] !== 'object') return where + ' "' + word + '.' + k + '" is not an object of the sides.';
+        for (const side of SIDES) {
+          const list = part[k][side];
+          if (list === undefined) continue;
+          if (!Array.isArray(list)) return where + ' "' + word + '.' + k + '.' + side + '" is not a list.';
+          for (const x of list) {
+            const ok = k === 'contacts' ? (word === 'changed' ? x && Number.isInteger(x.id) : Number.isInteger(x)) : (word === 'changed' ? x && isHex(x.hex) : isHex(x));
+            if (!ok) return where + ' "' + word + '.' + k + '.' + side + '" has an entry without its ' + (k === 'contacts' ? 'integer id' : 'hex') + '.';
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * A side's steps: each entry of the umpire's `steps` cut to what the side's page holds, as sideReplay cuts initial and final:
+ * its own task forces, ships, air groups, bases and land units, and its own side's contacts and estimates. A record that
+ * changed to another side's (a base taken) is removed from the side's list, as it is no longer its own.
+ */
+function sideSteps(steps, side) {
+  const present = {};
+  for (const k of STEP_KINDS) present[k] = new Set();
+  return steps.map(e => {
+    const changed = {}, removed = {}, ch = e.changed || {}, rm = e.removed || {};
+    for (const k of STEP_KINDS) {
+      const c = [], r = [];
+      for (const rec of ch[k] || []) {
+        if (rec.side === side) { c.push(rec); present[k].add(rec.id); }
+        else if (present[k].delete(rec.id)) r.push(rec.id);
+      }
+      for (const id of rm[k] || []) if (present[k].delete(id)) r.push(id);
+      if (c.length) changed[k] = c;
+      if (r.length) removed[k] = r;
+    }
+    for (const k of ['contacts', 'ground_estimates']) {
+      const c = ch[k] && ch[k][side], r = rm[k] && rm[k][side];
+      if (c && c.length) changed[k] = { [side]: c };
+      if (r && r.length) removed[k] = { [side]: r };
+    }
+    return { day: e.day, phase: e.phase, changed, removed };
+  });
+}
+
+/**
+ * The states of a version 4 replay, one for each viewer step: the same objects the rebuild makes, with every
+ * record-held part taken from the file's `steps` and nothing worked out from the events but what a step's own events
+ * draw (moves, fights, searches, the air layer and the trail a force steamed through), what only an event gives a
+ * side's page (a base taken, a ship sunk, a base found: a side's records are its own units' only), and a force's
+ * place at the moment of an event inside the step, which the end-of-step records cannot give. That place starts from
+ * the step before's records, so nothing carries over from one step to the next.
+ */
+function rebuildFromSteps(ctx) {
+  const { replay, events, steps, bases, initial, groupTable, umpire, eventById, orderById, stepOfEvent, airCtx, airDraw } = ctx;
+  const entries = replay.steps;
+  const entryAt = new Map();
+  entries.forEach((e, j) => entryAt.set(stepKey(e.day, e.phase), j));
+  const rec = { task_forces: new Map(), ships: new Map(), air_groups: new Map(), bases: new Map(), land_units: new Map(), contacts: { allied: new Map(), japanese: new Map() }, ground_estimates: { allied: new Map(), japanese: new Map() } };
+  const hexOf = h => h[0] + ',' + h[1];
+  const applyEntry = e => {
+    const ch = e.changed || {}, rm = e.removed || {};
+    for (const k of STEP_KINDS) {
+      for (const r of ch[k] || []) rec[k].set(r.id, r);
+      for (const id of rm[k] || []) rec[k].delete(id);
+    }
+    for (const side of SIDES) {
+      for (const r of (ch.contacts && ch.contacts[side]) || []) rec.contacts[side].set(r.id, r);
+      for (const id of (rm.contacts && rm.contacts[side]) || []) rec.contacts[side].delete(id);
+      for (const r of (ch.ground_estimates && ch.ground_estimates[side]) || []) rec.ground_estimates[side].set(hexOf(r.hex), r);
+      for (const h of (rm.ground_estimates && rm.ground_estimates[side]) || []) rec.ground_estimates[side].delete(hexOf(h));
+    }
+  };
+
+  // Kept from one step to the next: what the records do not hold.
+  const trails = new Map(), detachedFrom = new Map(), marchOf = new Map(), missionText = new Map();
+  const shipForce = new Map(), sunk = new Set(), baseSide = new Map(), formedBases = new Map();
+  for (const f of initial.task_forces || []) for (const s of f.ships || []) shipForce.set(s, f.id);
+  for (const b of bases.values()) baseSide.set(b.id, b.side);
+  let groupBase = new Map();
+  for (const g of groupTable.values()) groupBase.set(g.id, g.base);
+  // The force positions at the start of a step, seeded from the records of the step before, moved by the step's own events.
+  let livePos = new Map();
+  for (const f of initial.task_forces || []) { const p = f.position || { q: 0, r: 0 }; livePos.set(f.id, { q: p.q, r: p.r }); }
+  const live = { forces: livePos, shipForce, sunk, groupBase };
+
+  const states = [], eventForces = new Map();
+  let hasAir = false, applied = -1;
+  for (let si = 0; si < steps.length; si++) {
+    const step = steps[si];
+    const aux = { moves: new Map(), fights: [], searches: [], air: { sighted: [], misses: [], launches: [], escorts: [], nothing: new Map(), raids: [], tallies: [] } };
+    const attempts = new Map();
+    live.groupBase = groupBase;
+    for (const ei of step.events) {
+      const ev = events[ei], d = ev.data || {};
+      const fset = new Set();
+      for (const e of ev.entities || []) {
+        const p = parseEntity(e);
+        if (!p) continue;
+        if (p.type === 'task_force') fset.add(p.id);
+        else if (p.type === 'ship' && shipForce.has(p.id)) fset.add(shipForce.get(p.id));
+      }
+      if (ev.kind === 'ships_detached') { fset.add(d.parent); fset.add(d.new_force); }
+      eventForces.set(ev.id, [...fset].filter(x => x !== undefined));
+
+      switch (ev.kind) {
+        // Where a force is at this moment of the step, and the hexes it steamed through (the trail and this step's moves).
+        case 'task_force_steamed': {
+          const f = live.forces.get(d.task_force);
+          if (!f || !Array.isArray(d.to)) break;
+          if (!trails.has(d.task_force)) trails.set(d.task_force, [[f.q, f.r]]);
+          const path = [];
+          if (Array.isArray(d.from)) path.push(d.from.slice());
+          const entered = Array.isArray(d.hexes_entered) && d.hexes_entered.length ? d.hexes_entered : [d.to];
+          for (const h of entered) { trails.get(d.task_force).push([h[0], h[1]]); path.push([h[0], h[1]]); }
+          f.q = d.to[0]; f.r = d.to[1];
+          if (!aux.moves.has(d.task_force)) aux.moves.set(d.task_force, []);
+          aux.moves.get(d.task_force).push(path);
+          break;
+        }
+        case 'task_force_turned_back': {
+          const f = live.forces.get(d.task_force);
+          if (!f || !Array.isArray(d.position)) break;
+          if (!trails.has(d.task_force)) trails.set(d.task_force, [[f.q, f.r]]);
+          if (f.q !== d.position[0] || f.r !== d.position[1]) trails.get(d.task_force).push([d.position[0], d.position[1]]);
+          f.q = d.position[0]; f.r = d.position[1];
+          break;
+        }
+        case 'ships_detached': {
+          const parent = live.forces.get(d.parent);
+          if (!live.forces.has(d.new_force)) {
+            const q = parent ? parent.q : 0, r = parent ? parent.r : 0;
+            live.forces.set(d.new_force, { q, r });
+            trails.set(d.new_force, [[q, r]]);
+            detachedFrom.set(d.new_force, d.parent);
+          }
+          for (const s of [...(d.ships || []), ...(d.escorts || [])]) shipForce.set(s, d.new_force);
+          break;
+        }
+        case 'air_group_rebased': {
+          const m = new Map(live.groupBase); m.set(d.air_group, d.to); live.groupBase = m;
+          break;
+        }
+        case 'ship_lost_with_base':
+        case 'ship_sunk':
+          sunk.add(d.ship);
+          break;
+        // What only an event gives a side's page, whose records are its own units' and bases' only: a base taken, and
+        // an enemy base a ground report found.
+        case 'base_changed_side':
+          baseSide.set(d.base, d.to);
+          if (Array.isArray(d.hex) && !bases.has(d.base)) formedBases.set(hexOf(d.hex), { id: d.base, side: d.to });
+          break;
+        case 'base_found':
+          if (Array.isArray(d.hex)) {
+            const key = hexOf(d.hex);
+            if (!formedBases.has(key) && !bases.has(d.base)) formedBases.set(key, { id: d.base, side: d.side === 'allied' ? 'japanese' : 'allied' });
+          }
+          break;
+        case 'march_day':
+          if (Array.isArray(d.to)) marchOf.set(d.unit, { to: d.to.slice(), of: d.of });
+          break;
+        // The record of a group's mission is the mission's name; the order that set it also says the base a base strike is on
+        // ("base_strike on base:2"), which the page shows beside the name.
+        case 'order_accepted': {
+          const o = orderById.get(d.order), t = parseEntity(d.target), am = o && t && t.type === 'air_group' ? /^air mission (.+)$/.exec(o.text) : null;
+          if (am) missionText.set(t.id, am[1]);
+          break;
+        }
+        // The drawings of the air layer are made from the step's events by the one function the rebuild uses too.
+        default:
+          if (drawAirEvent(airDraw, ev, si, aux, attempts, live)) hasAir = true;
+          break;
+      }
+    }
+    finishAirStep(airCtx, aux, step.events, si);
+
+    // The step's own state: the records at the end of its (day, phase), by the entries applied up to it.
+    const j = entryAt.get(stepKey(step.stateDay, step.statePhase));
+    if (j === undefined) throw new Error('the replay has no state for ' + step.label + ' (day ' + step.stateDay + ', ' + step.statePhase + ') in its "steps"');
+    for (let k = applied + 1; k <= j; k++) applyEntry(entries[k]);
+    applied = Math.max(applied, j);
+
+    const forces = new Map(), newPos = new Map();
+    for (const f of rec.task_forces.values()) {
+      const pos = f.position || { q: 0, r: 0 };
+      if (!trails.has(f.id)) trails.set(f.id, [[pos.q, pos.r]]);
+      newPos.set(f.id, { q: pos.q, r: pos.r });
+      forces.set(f.id, { id: f.id, name: f.name || ('TF ' + f.id), side: f.side, q: pos.q, r: pos.r, ships: (f.ships || []).slice(), trail: cloneTrail(trails.get(f.id)), detachedFrom: detachedFrom.has(f.id) ? detachedFrom.get(f.id) : null, readiness: f.readiness || 'normal', alerted: !!f.alerted });
+      for (const s of f.ships || []) shipForce.set(s, f.id);
+    }
+    // A force with no record keeps the place the events gave it (a side's page holds its own forces only).
+    for (const [id, p] of live.forces) if (!newPos.has(id)) newPos.set(id, p);
+    for (const s of rec.ships.values()) {
+      if (s.location === 'sunk') sunk.add(s.id);
+      else if (s.location && s.location.task_force !== undefined) shipForce.set(s.id, s.location.task_force);
+      else if (s.location && s.location.yard !== undefined) shipForce.set(s.id, s.location.yard);
+    }
+    for (const b of rec.bases.values()) {
+      baseSide.set(b.id, b.side);
+      if (!bases.has(b.id)) formedBases.set(b.q + ',' + b.r, { id: b.id, side: b.side });
+    }
+    const mission = new Map(), reach = new Map(), nextGroupBase = new Map(live.groupBase);
+    for (const g of groupTable.values()) {
+      const r = rec.air_groups.get(g.id);
+      const said = missionText.get(g.id);
+      mission.set(g.id, r ? (said !== undefined && said.split(' ')[0] === r.mission ? said : r.mission) : g.mission);
+      reach.set(g.id, r ? (r.reach === 'extended' ? 'extended' : 'normal') : g.reach0);
+      if (r && r.base != null) nextGroupBase.set(g.id, r.base);
+      else if (r && r.ship != null) nextGroupBase.set(g.id, null);
+    }
+    groupBase = nextGroupBase;
+    const landUnits = new Map();
+    for (const u of rec.land_units.values()) {
+      const to = u.march ? [u.march.to.q, u.march.to.r] : null;
+      const mo = u.march ? marchOf.get(u.id) : null;
+      landUnits.set(u.id, { id: u.id, name: u.name, side: u.side, men_ashore: u.men_ashore || 0, hex: u.hex ? [u.hex.q, u.hex.r] : null, posture: u.posture || 'defend', fatigue: u.fatigue || 0, fieldworks: u.fieldworks || 0, fed_share: u.fed_share !== undefined ? u.fed_share : 1, march: u.march ? { to, days: u.march.days, of: mo && mo.to[0] === to[0] && mo.to[1] === to[1] ? mo.of : null } : null });
+    }
+    const contacts = {}, estimates = {};
+    for (const side of SIDES) {
+      contacts[side] = new Map([...rec.contacts[side]].map(([id, c]) => [id, { id, side, hex: c.hex.slice(), ship_count: c.ship_count, kind: c.kind, age_pulses: c.age_pulses }]));
+      estimates[side] = new Map([...rec.ground_estimates[side]].map(([k, e]) => [k, { hex: e.hex.slice(), men: e.men, day: e.day }]));
+    }
+    states.push({
+      forces, contacts, estimates, landUnits, formedBases: new Map(formedBases), baseSide: new Map(baseSide),
+      sunk: new Set(sunk), shipForce: new Map(shipForce),
+      moves: aux.moves, fights: aux.fights, searches: aux.searches,
+      air: aux.air, reach, mission, groupBase,
+    });
+    // The next step starts where this one's records leave the forces.
+    live.forces = new Map([...newPos].map(([id, p]) => [id, { q: p.q, r: p.r }]));
+  }
+  return { states, eventForces, hasAir };
 }
 
 // ---- Model: indexes and state rebuild ----
@@ -794,6 +1166,15 @@ function buildModel(replay) {
   const steps = buildSteps(events);
   const stepOfEvent = new Map();
   steps.forEach(s => s.events.forEach(ei => stepOfEvent.set(events[ei].id, s.index)));
+  // Version 4 (or any replay with steps): the state of each step is in the file, and the rebuild below does not run.
+  const fromSteps = Array.isArray(replay.steps);
+  if (fromSteps) {
+    // The (day, phase) whose end state a step shows: its own, or for a side's page the umpire's step of its last event.
+    for (const s of steps) {
+      const last = s.events.length ? events[s.events[s.events.length - 1]] : null, u = last && last.umpire_step;
+      s.stateDay = u ? u.day : s.day; s.statePhase = u ? u.phase : s.phase;
+    }
+  }
 
   // Rebuild
   const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, estimates: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map(), landUnits: new Map(), formedBases: new Map(), baseSide: new Map() };
@@ -806,6 +1187,7 @@ function buildModel(replay) {
   const setAirOrder = (map, id, v) => { const m = new Map(map); m.set(id, v); return m; };
   let hasAir = false;
   const airCtx = { events, eventById, groupTable, umpire };
+  const airDraw = { bases, airGroups, groupTable, umpire, eventById, stepOfEvent };
   for (const f of initial.task_forces || []) {
     const pos = f.position || { q: 0, r: 0 };
     cur.forces.set(f.id, { id: f.id, name: f.name || ('TF ' + f.id), side: f.side, q: pos.q, r: pos.r, ships: (f.ships || []).slice(), trail: [[pos.q, pos.r]], detachedFrom: null, readiness: f.readiness || 'normal', alerted: !!f.alerted });
@@ -821,7 +1203,7 @@ function buildModel(replay) {
     return cur.contacts[side];
   };
 
-  for (let si = 0; si < steps.length; si++) {
+  for (let si = 0; !fromSteps && si < steps.length; si++) {
     const aux = { moves: new Map(), fights: [], searches: [], air: { sighted: [], misses: [], launches: [], escorts: [], nothing: new Map(), raids: [], tallies: [] } };
     const attempts = new Map(); // search_attempt event id -> where the force it looked for truly was (umpire only)
     for (const ei of steps[si].events) {
@@ -1023,16 +1405,8 @@ function buildModel(replay) {
         case 'report_received': {
           const m = contactSide(ev);
           if (m) m.set(d.contact, { id: d.contact, side: d.side, hex: Array.isArray(d.hex) ? d.hex.slice() : [0, 0], ship_count: d.ship_count, kind: d.kind, age_pulses: d.age_pulses !== undefined ? d.age_pulses : 0 });
-          // A report that a search of this step made: the mark is where the side was told (the umpire also gets where the force truly was).
-          if (Array.isArray(d.hex)) {
-            for (const c of ev.causes || []) {
-              const ce = c.event !== undefined ? eventById.get(c.event) : null;
-              if (!ce || ce.kind !== 'search_attempt' || stepOfEvent.get(ce.id) !== si) continue;
-              const at = attempts.get(ce.id);
-              aux.air.sighted.push({ q: d.hex[0], r: d.hex[1], side: d.side, event: ev.id, attempt: ce.id, air_group: ce.data && ce.data.air_group, trueHex: at ? at.hex : null });
-              break;
-            }
-          }
+          // A report that a search of this step made is marked by the air layer.
+          if (drawAirEvent(airDraw, ev, si, aux, attempts, cur)) hasAir = true;
           break;
         }
         case 'contact_aged': {
@@ -1047,69 +1421,19 @@ function buildModel(replay) {
           if (m) m.delete(d.contact);
           break;
         }
-        case 'engagement_begun':
-        case 'engagement_ended':
-          if (Array.isArray(d.hex)) aux.fights.push({ q: d.hex[0], r: d.hex[1], a: d.a, b: d.b, kind: ev.kind, event: ev.id });
+        default:
+          if (drawAirEvent(airDraw, ev, si, aux, attempts, cur)) hasAir = true;
           break;
-        case 'search_flown': {
-          // From a base, the base's hex; from a ship, the hex the event records.
-          const b = d.base != null ? bases.get(d.base) : null;
-          const at = b ? { q: b.q, r: b.r } : (Array.isArray(d.hex) ? { q: d.hex[0], r: d.hex[1] } : null);
-          hasAir = true;
-          if (at) aux.searches.push({ event: ev.id, air_group: d.air_group, base: d.base, ship: d.ship, q: at.q, r: at.r, from_deg: d.from_deg, to_deg: d.to_deg, range_nm: d.range_nm, aircraft: d.aircraft, side: (airGroups.get(d.air_group) || b || {}).side });
-          break;
-        }
-        // The umpire's uncut search attempt names the force it looked for: where that force truly was, at this moment.
-        case 'search_attempt': {
-          if (!umpire || d.task_force === undefined) break;
-          const f = cur.forces.get(d.task_force), hex = f ? [f.q, f.r] : null;
-          attempts.set(ev.id, { hex });
-          if (d.sighted === false && hex) { const g = groupTable.get(d.air_group); aux.air.misses.push({ q: hex[0], r: hex[1], side: g ? g.side : null, event: ev.id, air_group: d.air_group, task_force: d.task_force }); }
-          break;
-        }
-        case 'strike_launched':
-        case 'base_strike_launched': {
-          hasAir = true;
-          const g = groupTable.get(d.air_group);
-          aux.air.launches.push({ ev: ev.id, d, g, launch: airGroupHex(bases, cur, g), target: Array.isArray(d.hex) ? [d.hex[0], d.hex[1]] : null, kind: ev.kind === 'base_strike_launched' ? 'base' : 'ship', baseId: d.base });
-          break;
-        }
-        case 'escorts_sent': aux.air.escorts.push({ ev: ev.id, d }); break;
-        case 'aircraft_landed_elsewhere': {
-          const g = d.formed ? groupTable.get(d.to) : null;
-          if (g && g.formedStep === -1) g.formedStep = si;
-          break;
-        }
-        case 'strike_found_nothing': {
-          if (!umpire) break;
-          // Where the force the strike was sent at truly is: launch -> the report behind it -> the sighting or attack that report was about -> that force, now.
-          let hex = null;
-          const launch = (ev.causes || []).map(c => c.event !== undefined ? eventById.get(c.event) : null).find(e => e && e.kind === 'strike_launched');
-          if (launch) {
-            const seen = new Set([launch.id]);
-            let level = [launch];
-            for (let depth = 0; depth < 4 && !hex && level.length; depth++) {
-              const next = [];
-              for (const e of level) for (const c of e.causes || []) {
-                const ce = c.event !== undefined ? eventById.get(c.event) : null;
-                if (!ce || seen.has(ce.id)) continue;
-                seen.add(ce.id); next.push(ce);
-                if (!hex && (ce.kind === 'search_attempt' || ce.kind === 'air_attack') && ce.data && ce.data.task_force !== undefined) {
-                  const f = cur.forces.get(ce.data.task_force);
-                  if (f) hex = [f.q, f.r];
-                }
-              }
-              level = next;
-            }
-          }
-          aux.air.nothing.set(ev.id, { hex });
-          break;
-        }
-        default: break;
       }
     }
-    if (aux.air.launches.length) { const a = assembleAir(airCtx, aux.air, steps[si].events, si); aux.air.raids = a.raids; aux.air.tallies = a.tallies; }
+    finishAirStep(airCtx, aux, steps[si].events, si);
     states.push(snapshot(cur, aux));
+  }
+  if (fromSteps) {
+    const made = rebuildFromSteps({ replay, events, steps, bases, initial, groupTable, airGroups, umpire, eventById, orderById, stepOfEvent, airCtx, airDraw });
+    for (const st of made.states) states.push(st);
+    for (const [k, v] of made.eventForces) eventForces.set(k, v);
+    hasAir = made.hasAir;
   }
 
   // Bounds in nm
@@ -1391,7 +1715,7 @@ function measureHexes(sea, a, b) {
 
 const FlagPlotCore = {
   HEX_SPACING, ROW_SPACING, HEX_R, LABEL_COS_LAT, PHASES,
-  SIDES, sideReplay,
+  SIDES, sideReplay, sideSteps, validateSteps, rebuildFromSteps,
   HEX_NM, isqrt, airDistanceNm, makeSeaMap, canStep, seaDistancesTo, seaPath, hexDistance, stepChargeNm, measureHexes,
   hexKey, hexCenter, hexCorner, hexCorners, edgeForDirection, pointToHex, bearingPoint, arcWidth, arcSpec, placeLabels,
   stepLabel, buildSteps, validateReplay, parseEntity, splitText, buildModel, compareWithFinal, whyTree, eventMatches, summarize,

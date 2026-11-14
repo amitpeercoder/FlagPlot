@@ -194,7 +194,22 @@ fn execute_observing(
     seed: Option<u64>,
     options: &LoadOptions,
     before_run: impl FnOnce(&mut Scenario),
+    after_day: impl FnMut(&Scenario),
+) -> Result<Executed, String> {
+    execute_watching(path, seed, options, before_run, after_day, &mut |_, _| {})
+}
+
+/// [`execute_observing`], handing the world, read only, to `watch` at each
+/// moment of each day (`Scenario::next_day_watched`). The days are the same
+/// days, so the run is that of `execute`. `export` records the state at each
+/// step this way.
+fn execute_watching(
+    path: &str,
+    seed: Option<u64>,
+    options: &LoadOptions,
+    before_run: impl FnOnce(&mut Scenario),
     mut after_day: impl FnMut(&Scenario),
+    watch: &mut dyn FnMut(&sim_core::World, sim_core::choices::Moment),
 ) -> Result<Executed, String> {
     let mut scenario = Scenario::load_with(Path::new(path), options).map_err(|e| e.to_string())?;
     if let Some(seed) = seed {
@@ -203,7 +218,10 @@ fn execute_observing(
     before_run(&mut scenario);
     let initial = scenario.world.umpire().clone();
     let mut summaries = Vec::new();
-    while let Some(summary) = scenario.next_day().map_err(|e| e.to_string())? {
+    while let Some(summary) = scenario
+        .next_day_watched(watch)
+        .map_err(|e| e.to_string())?
+    {
         summaries.push(summary);
         after_day(&scenario);
     }
@@ -227,7 +245,20 @@ fn execute_saved(
     options: &LoadOptions,
     to_end: bool,
     before_run: impl FnOnce(&Scenario, &save::Saved),
+    on_day: impl FnMut(&DaySummary),
+) -> Result<(Executed, save::Saved), String> {
+    execute_saved_watching(file, options, to_end, before_run, on_day, &mut |_, _| {})
+}
+
+/// [`execute_saved`], handing the world, read only, to `watch` at each
+/// moment of each day, as [`execute_watching`] does.
+fn execute_saved_watching(
+    file: &str,
+    options: &LoadOptions,
+    to_end: bool,
+    before_run: impl FnOnce(&Scenario, &save::Saved),
     mut on_day: impl FnMut(&DaySummary),
+    watch: &mut dyn FnMut(&sim_core::World, sim_core::choices::Moment),
 ) -> Result<(Executed, save::Saved), String> {
     let saved = save::read(file)?;
     let scenario =
@@ -240,7 +271,7 @@ fn execute_saved(
     let mut summaries = Vec::new();
     for (day, hash) in &saved.hashes {
         let summary = scenario
-            .next_day()
+            .next_day_watched(watch)
             .map_err(|e| e.to_string())?
             .ok_or_else(|| format!("the scenario has no day {day}"))?;
         on_day(&summary);
@@ -254,7 +285,10 @@ fn execute_saved(
         }
     }
     if to_end {
-        while let Some(summary) = scenario.next_day().map_err(|e| e.to_string())? {
+        while let Some(summary) = scenario
+            .next_day_watched(watch)
+            .map_err(|e| e.to_string())?
+        {
             on_day(&summary);
             summaries.push(summary);
         }
@@ -276,14 +310,29 @@ fn execute_source(
     seed: Option<u64>,
     options: &LoadOptions,
 ) -> Result<(Executed, Option<save::Saved>), String> {
+    execute_source_watching(source, seed, options, &mut |_, _| {})
+}
+
+/// [`execute_source`], handing the world, read only, to `watch` at each
+/// moment of each day, for a scenario and for a saved game alike.
+fn execute_source_watching(
+    source: &str,
+    seed: Option<u64>,
+    options: &LoadOptions,
+    watch: &mut dyn FnMut(&sim_core::World, sim_core::choices::Moment),
+) -> Result<(Executed, Option<save::Saved>), String> {
     let text = std::fs::read_to_string(source).map_err(|e| format!("{source}: {e}"))?;
     if !text.trim_start().starts_with('{') {
-        return Ok((execute(source, seed, options, |_| {})?, None));
+        return Ok((
+            execute_watching(source, seed, options, |_| {}, |_| {}, watch)?,
+            None,
+        ));
     }
     if seed.is_some() {
         return Err("--seed does not go with a saved game: it holds its own seed".to_string());
     }
-    let (executed, saved) = execute_saved(source, options, true, |_, _| {}, |_| {})?;
+    let (executed, saved) =
+        execute_saved_watching(source, options, true, |_, _| {}, |_| {}, watch)?;
     Ok((executed, Some(saved)))
 }
 

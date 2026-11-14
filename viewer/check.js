@@ -9,6 +9,8 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
+// --against-rebuild: also compare each version 4 file's model with the one the rebuild from the events makes (it needs the rebuild to know every event).
+const AGAINST_REBUILD = process.argv.includes('--against-rebuild');
 let failures = 0;
 function fail(msg) { failures++; console.log('  FAIL: ' + msg); }
 function assert(cond, msg) { if (!cond) fail(msg); }
@@ -113,6 +115,11 @@ function checkSideViews(replay, umpireModel) {
     // The page for a side is built from its events alone, so its own end state must come out of them.
     const sr = Core.sideReplay(replay, side);
     const model = Core.buildModel(sr);
+    if (replay.steps) {
+      assert(Array.isArray(sr.steps), label + ': the side page lost its steps');
+      checkSideSteps(replay, side, sr, model, label);
+      if (AGAINST_REBUILD) crossCheckRebuild(Core.buildModel(Core.sideReplay(Object.assign({}, replay, { steps: undefined }), side)), model, label);
+    }
     Core.compareWithFinal(model).forEach(p => fail(label + ': rebuild vs final: ' + p));
     let enemy = 0;
     for (const st of model.states) {
@@ -227,6 +234,130 @@ function checkAirModel(replay, model, label) {
   return tot;
 }
 
+
+// ---- Replay version 4: the state at each step is in the file ----
+const STEP_KINDS = ['task_forces', 'ships', 'air_groups', 'bases', 'land_units'];
+const SORTED = x => JSON.stringify(x, (k, v) => (v && typeof v === 'object' && !Array.isArray(v)) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a < b ? -1 : 1)) : v);
+
+/** Applies the entries of `steps` in order, on its own (no code of the page), and returns each step's records as JSON text by kind and key. */
+function applySteps(steps) {
+  const cur = { task_forces: new Map(), ships: new Map(), air_groups: new Map(), bases: new Map(), land_units: new Map(), contacts: { allied: new Map(), japanese: new Map() }, ground_estimates: { allied: new Map(), japanese: new Map() } };
+  const out = [];
+  for (const e of steps) {
+    const ch = e.changed || {}, rm = e.removed || {};
+    for (const k of STEP_KINDS) { for (const r of ch[k] || []) cur[k].set(r.id, SORTED(r)); for (const id of rm[k] || []) cur[k].delete(id); }
+    for (const side of Core.SIDES) {
+      for (const r of (ch.contacts && ch.contacts[side]) || []) cur.contacts[side].set(r.id, SORTED(r));
+      for (const id of (rm.contacts && rm.contacts[side]) || []) cur.contacts[side].delete(id);
+      for (const r of (ch.ground_estimates && ch.ground_estimates[side]) || []) cur.ground_estimates[side].set(r.hex.join(','), SORTED(r));
+      for (const h of (rm.ground_estimates && rm.ground_estimates[side]) || []) cur.ground_estimates[side].delete(h.join(','));
+    }
+    out.push({ task_forces: new Map(cur.task_forces), ships: new Map(cur.ships), air_groups: new Map(cur.air_groups), bases: new Map(cur.bases), land_units: new Map(cur.land_units) });
+  }
+  return { last: cur, all: out };
+}
+
+function sameJson(a, b) { return SORTED(a) === SORTED(b); }
+
+/** The steps of a version 4 replay: they end exactly at `final`, cover every viewer step, and a side's page holds none of the enemy's. */
+function checkSteps(replay, model) {
+  const steps = replay.steps;
+  const before = failures;
+  assert(steps[0].day === 0 && steps[0].phase === 'start', 'the first entry of steps is not day 0 "start"');
+  // Every day has every phase, in order, and the days run 1..n
+  const want = [];
+  for (let d = 1; d <= replay.scenario.days; d++) for (const p of ['orders', 'night', 'morning', 'afternoon', 'end']) want.push(d + ':' + p);
+  assert(JSON.stringify(steps.slice(1).map(e => e.day + ':' + e.phase)) === JSON.stringify(want), 'steps do not hold every phase of every day: ' + steps.length + ' entries for ' + replay.scenario.days + ' days');
+  // The first entry carries every record of the start state: nothing is "removed", and it equals initial plus the day-0 events' effect on contacts
+  assert(!steps[0].removed || Object.keys(steps[0].removed).length === 0, 'the first entry removes something');
+  // Applied from the first, the last step is exactly final's records, every kind and field
+  const { last, all } = applySteps(steps);
+  const final = replay.final;
+  const sets = [];
+  for (const k of STEP_KINDS) sets.push([k, [...last[k].values()], (final[k] || []).map(SORTED)]);
+  for (const side of Core.SIDES) {
+    sets.push(['contacts.' + side, [...last.contacts[side].values()], ((final.contacts || {})[side] || []).map(SORTED)]);
+    sets.push(['ground_estimates.' + side, [...last.ground_estimates[side].values()], ((final.ground_estimates || {})[side] || []).map(SORTED)]);
+  }
+  for (const [name, have, wanted] of sets) {
+    assert(have.length === wanted.length, 'the last step has ' + have.length + ' ' + name + ', final ' + wanted.length);
+    const byKey = new Set(wanted);
+    for (const h of have) if (!byKey.has(h)) { fail('the last step\'s ' + name + ' record differs from final\'s: ' + h.slice(0, 120)); break; }
+  }
+  // A step that changed nothing is just its day and phase; no entry lists a record that equals the one before it
+  steps.forEach((e, i) => {
+    if (i === 0) return;
+    for (const k of STEP_KINDS) for (const r of (e.changed || {})[k] || []) assert(all[i - 1][k].get(r.id) !== SORTED(r), 'step ' + i + ' lists ' + k + ' ' + r.id + ' unchanged');
+    for (const part of ['changed', 'removed']) if (e[part] !== undefined) assert(Object.keys(e[part]).length > 0 && Object.values(e[part]).every(v => Array.isArray(v) ? v.length > 0 : Object.values(v).some(l => l.length > 0)), 'step ' + i + ' has an empty ' + part + ' or an empty list in it');
+  });
+  // Every viewer step has its state, and it is the one at the end of the viewer step's own (day, phase) for the umpire
+  assert(model.states.length === model.steps.length, 'the model has ' + model.states.length + ' states for ' + model.steps.length + ' steps');
+  if (!replay.view_side) for (const s of model.steps) assert(s.stateDay === s.day && s.statePhase === s.phase, 'step ' + s.label + ' takes its state from another step');
+  return failures === before;
+}
+
+/** The state of each step in a model, as comparable text, for the parts both ways of building a model make. */
+function stateText(model, st) {
+  const mapOf = m => [...m.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+  const forces = [...st.forces.values()].sort((a, b) => a.id - b.id).map(f => [f.id, f.side, f.q, f.r, [...f.ships].sort((a, b) => a - b), f.trail, f.detachedFrom, f.readiness, f.alerted]);
+  const contacts = Core.SIDES.map(side => mapOf(st.contacts[side] || new Map()));
+  const estimates = Core.SIDES.map(side => mapOf((st.estimates && st.estimates[side]) || new Map()));
+  // The rebuild does not set the march a falling back gives a unit (decisions 0104, 0105: toward the hex it fell back to, no day marched
+  // yet); the records hold it. It is left out of the comparison until the unit has marched a day.
+  const land = [...st.landUnits.values()].sort((a, b) => a.id - b.id).map(u => [u.id, u.side, u.men_ashore, u.hex, u.posture, u.fatigue, u.fieldworks, u.fed_share, u.march && u.march.days > 0 ? [u.march.to, u.march.days, u.march.of] : null]);
+  const baseSide = mapOf(new Map([...st.baseSide].filter(([id]) => model.bases.has(id))));
+  return {
+    forces, contacts, estimates, land, baseSide, formed: mapOf(new Map([...st.formedBases].map(([k, b]) => [k, b.side]))), // by hex and holder: the rebuild gives a hex the id of an original base captured there, in place of the formed base's sunk: [...st.sunk].sort((a, b) => a - b), shipForce: mapOf(st.shipForce),
+    reach: mapOf(st.reach), mission: mapOf(st.mission), groupBase: mapOf(st.groupBase),
+    moves: mapOf(st.moves), fights: st.fights, searches: st.searches, air: st.air,
+  };
+}
+
+/** The model built from a version 4 replay's steps against the one the rebuild from the events makes of the same file, at every step. */
+function crossCheckRebuild(oldModel, model, label) {
+  if (oldModel.states.length !== model.states.length) { fail(label + ': the rebuild has ' + oldModel.states.length + ' steps, the steps\' model ' + model.states.length); return; }
+  const problems = [];
+  model.states.forEach((st, si) => {
+    const a = stateText(oldModel, oldModel.states[si]), b = stateText(model, st);
+    for (const k of Object.keys(a)) if (SORTED(a[k]) !== SORTED(b[k])) problems.push('step ' + si + ' (' + model.steps[si].label + '): ' + k + ' differs: rebuild ' + SORTED(a[k]).slice(0, 200) + ' / steps ' + SORTED(b[k]).slice(0, 200));
+  });
+  assert(JSON.stringify([...oldModel.eventForces]) === JSON.stringify([...model.eventForces]), label + ': eventForces differ');
+  assert(oldModel.hasAir === model.hasAir, label + ': hasAir differs');
+  problems.slice(0, 5).forEach(p => fail(label + ': ' + p));
+  if (problems.length > 5) fail(label + ': ... and ' + (problems.length - 5) + ' more differences from the rebuild');
+}
+
+/** A side's page of a version 4 replay holds nothing of the enemy: in its steps, its model and its states. */
+function checkSideSteps(replay, side, sr, model, label) {
+  const enemy = Core.SIDES.find(x => x !== side);
+  const enemyIds = {};
+  for (const k of STEP_KINDS) enemyIds[k] = new Set([...(replay.initial[k] || []), ...(replay.final[k] || []), ...replay.steps.flatMap(e => (e.changed || {})[k] || [])].filter(r => r.side === enemy).map(r => r.id));
+  assert(sr.steps.length === replay.steps.length, label + ': the side has ' + sr.steps.length + ' entries of steps, the umpire ' + replay.steps.length);
+  sr.steps.forEach((e, i) => {
+    const u = replay.steps[i];
+    assert(u.day === e.day && u.phase === e.phase, label + ': step ' + i + ' is not the umpire\'s step');
+    for (const k of STEP_KINDS) {
+      for (const r of (e.changed || {})[k] || []) {
+        assert(r.side === side, label + ': step ' + i + ' holds ' + k + ' ' + r.id + ' of ' + r.side);
+        assert(((u.changed || {})[k] || []).some(x => x.id === r.id && SORTED(x) === SORTED(r)), label + ': step ' + i + ' ' + k + ' ' + r.id + ' is not the umpire\'s record');
+      }
+    }
+    for (const k of ['contacts', 'ground_estimates']) for (const part of [e.changed, e.removed]) assert(!part || !part[k] || (Object.keys(part[k]).length === 1 && part[k][side] !== undefined), label + ': step ' + i + ' holds the ' + enemy + '\'s ' + k);
+  });
+  for (const st of model.states) {
+    for (const f of st.forces.values()) assert(f.side === side, label + ': an enemy force in a state');
+    for (const u of st.landUnits.values()) assert(u.side === side, label + ': an enemy land unit in a state');
+    for (const other of Core.SIDES) if (other !== side) assert(st.contacts[other].size === 0 && st.estimates[other].size === 0, label + ': the ' + other + '\'s contacts or estimates in a state');
+    for (const [id] of st.shipForce) assert(!enemyIds.ships.has(id), label + ': the enemy ship ' + id + ' is in a force');
+  }
+  // What the side holds at the end is exactly its own final records.
+  const { last } = applySteps(sr.steps);
+  for (const k of STEP_KINDS) {
+    const wanted = (replay.final[k] || []).filter(r => r.side === side).map(SORTED).sort(), have = [...last[k].values()].sort();
+    assert(JSON.stringify(wanted) === JSON.stringify(have), label + ': the side\'s last ' + k + ' are not its own final ' + k);
+  }
+}
+
 // ---- One replay ----
 let currentFile = '';
 function checkReplay(file) {
@@ -238,6 +369,10 @@ function checkReplay(file) {
   if (bad) { fail('validateReplay: ' + bad); return; }
   const before = failures;
   const model = Core.buildModel(replay);
+  if (replay.steps) {
+    checkSteps(replay, model);
+    if (AGAINST_REBUILD) crossCheckRebuild(Core.buildModel(Object.assign({}, replay, { steps: undefined, version: 3 })), model, 'umpire');
+  }
   const g = checkGeometry(replay, path.basename(file)) || { edges: 0, oneSided: 0 };
 
   // Each air group at a base ends at the base the final state gives: a rebase (decision 0091) is followed.
@@ -412,7 +547,7 @@ function synthetic() {
     else console.log('  ok: rejects ' + name + ': ' + msg);
   };
   reject('wrong format', Object.assign(base(), { format: 'something-else' }), 'format');
-  reject('version 4', Object.assign(base(), { version: 4 }), '1, 2 and 3');
+  reject('version 5', Object.assign(base(), { version: 5 }), '1, 2, 3 and 4');
   reject('version 2 without side views', Object.assign(base(), { version: 2 }), 'side_views');
   reject('version 3 without side views', Object.assign(base(), { version: 3, aircraft_types: [] }), 'side_views');
   reject('version 2 with a side event without its number', Object.assign(base(), { version: 2, side_views: { allied: { events: [{ log_id: 1, day: 1, kind: 'x' }] }, japanese: { events: [] } } }), 'allied');
@@ -433,6 +568,19 @@ function synthetic() {
   reject('version 3 with a negative radius', v3([typ({ strike_radius_nm: -1, extended_reach_nm: 0 })]), 'aircraft_types');
   const side3 = Core.sideReplay(ok3, 'allied');
   assert(Array.isArray(side3.aircraft_types) && side3.aircraft_types.length === 0, 'a side page carries aircraft types of groups it does not have');
+  // A version 3 file opens as it always did: its state is rebuilt from its events.
+  {
+    const r3 = Object.assign(base(), { version: 3, side_views: { allied: { events: [] }, japanese: { events: [] } }, aircraft_types: [] });
+    r3.initial.task_forces = [{ id: 1, name: 'Solo', side: 'allied', position: { q: 0, r: 0 }, ships: [1] }];
+    r3.initial.ships = [{ id: 1, name: 'S', side: 'allied' }];
+    r3.final.task_forces = [{ id: 1, name: 'Solo', side: 'allied', position: { q: 0, r: 0 }, ships: [1] }];
+    r3.final.ships = [{ id: 1, location: { task_force: 1 } }];
+    r3.events = [{ id: 1, day: 1, pulse: null, kind: 'order_accepted', text: '#1 D1 -         order:1 accepted for task_force:1  <- order:1', causes: [{ order: 1 }], entities: ['task_force:1'], data: { order: 1, target: 'task_force:1' } }];
+    r3.orders = [{ id: 1, side: 'allied', day: 1, issuer: 'player', target: 'task_force:1', text: 'hold' }];
+    assert(r3.steps === undefined && Core.validateReplay(r3) === null, 'a version 3 file without steps was rejected');
+    run('version 3 file, rebuilt from its events', r3, 2);
+  }
+  synthetic4(base, hex, ev, reject, dirs);
   const v1 = base();
   if (Core.validateReplay(v1)) fail('a version 1 file was rejected'); else console.log('  ok: version 1 still opens');
   const m1 = Core.buildModel(v1);
@@ -442,6 +590,76 @@ function synthetic() {
   reject('null', null, 'object');
   reject('no events list', Object.assign(base(), { events: undefined }), 'events');
   reject('duplicate event ids', Object.assign(base(), { events: [ev(1, 1, null), ev(1, 1, null)] }), 'share');
+}
+
+
+// ---- A hand-built version 4 replay: the state of each step is the file's ----
+function synthetic4(base, hex, ev, reject) {
+  console.log('synthetic version 4');
+  const before = failures;
+  const tf = (id, side, q, r, ships) => ({ id, name: 'TF' + id, side, position: { q, r }, ships, readiness: 'normal', alerted: false, mission: 'idle', status: 'idle' });
+  const ship = (id, side, location) => ({ id, name: 'S' + id, side, location, fuel: 10 });
+  const contact = (id, age) => ({ id, hex: [1, 0], ship_count: 1, kind: 'cruiser', age_pulses: age });
+  const events = [
+    { id: 1, day: 1, pulse: 'night', kind: 'task_force_steamed', text: '#1 D1 night     task_force:1 steamed', causes: [], entities: ['task_force:1'], data: { task_force: 1, from: [0, 0], to: [1, 0], hexes_entered: [[1, 0]] } },
+    { id: 2, day: 1, pulse: null, kind: 'claim_received', text: '#2 D1 -         claim', causes: [], entities: [], data: { side: 'allied', hex: [1, 0], claimed_sunk: 0 } },
+  ];
+  const entries = [
+    { day: 0, phase: 'start', changed: { task_forces: [tf(1, 'allied', 0, 0, [1]), tf(2, 'japanese', 1, 0, [2])], ships: [ship(1, 'allied', { task_force: 1 }), ship(2, 'japanese', { task_force: 2 })], contacts: { allied: [contact(1, 0)], japanese: [] } } },
+    { day: 1, phase: 'orders' },
+    { day: 1, phase: 'night', changed: { task_forces: [tf(1, 'allied', 1, 0, [1])] } },
+    { day: 1, phase: 'morning', changed: { contacts: { allied: [contact(1, 1)], japanese: [] } } },
+    { day: 1, phase: 'afternoon' },
+    { day: 1, phase: 'end', changed: { ships: [ship(2, 'japanese', 'sunk')], task_forces: [tf(2, 'japanese', 1, 0, [])] }, removed: { contacts: { allied: [1], japanese: [] } } },
+  ];
+  const mk = () => Object.assign(base(), {
+    version: 4, side_views: { allied: { events: [] }, japanese: { events: [] } }, aircraft_types: [],
+    map: { hex_nm: 40, real: false, hexes: [hex(0, 0), hex(1, 0)] }, scenario: { name: 'Synthetic 4', placeholder: true, seed: 1, days: 1, path: 'x' },
+    events: events.map(e => Object.assign({}, e)), steps: JSON.parse(JSON.stringify(entries)),
+    initial: { task_forces: [tf(1, 'allied', 0, 0, [1]), tf(2, 'japanese', 1, 0, [2])], ships: [{ id: 1, name: 'S1', side: 'allied' }, { id: 2, name: 'S2', side: 'japanese' }], air_groups: [], bases: [] },
+    final: { task_forces: [tf(1, 'allied', 1, 0, [1]), tf(2, 'japanese', 1, 0, [])], ships: [ship(1, 'allied', { task_force: 1 }), ship(2, 'japanese', 'sunk')], air_groups: [], bases: [], contacts: { allied: [], japanese: [] }, claims: { allied: [], japanese: [] } },
+  });
+  const r4 = mk();
+  const bad = Core.validateReplay(r4);
+  if (bad) { fail('a valid version 4 file was rejected: ' + bad); return; }
+  const m = Core.buildModel(r4);
+  assert(m.steps.length === 3 && m.states.length === 3, 'version 4: expected 3 steps (Start, night, end), got ' + m.steps.length);
+  const f = (si, id) => m.states[si].forces.get(id);
+  assert(f(0, 1).q === 0 && f(1, 1).q === 1 && f(2, 1).q === 1, 'version 4: force 1 is not where the steps put it at each step');
+  assert(JSON.stringify(f(1, 1).trail) === '[[0,0],[1,0]]' && JSON.stringify(f(0, 1).trail) === '[[0,0]]', 'version 4: the trail is not the hexes steamed through: ' + JSON.stringify(f(1, 1).trail));
+  assert(m.states[1].moves.get(1).length === 1 && m.states[0].moves.size === 0, 'version 4: the step\'s move is not drawn from its events');
+  assert(m.states[1].contacts.allied.size === 1 && m.states[1].contacts.allied.get(1).age_pulses === 0, 'version 4: contact at the night step');
+  assert(m.states[2].contacts.allied.size === 0, 'version 4: a removed contact is still there at the end');
+  assert(!m.states[1].sunk.has(2) && m.states[2].sunk.has(2), 'version 4: ship 2 sunk at the wrong step');
+  assert(m.states[2].shipForce.get(1) === 1 && f(2, 2).ships.length === 0, 'version 4: ships of a force');
+  assert(Core.compareWithFinal(m).length === 0, 'version 4: end state differs from final: ' + Core.compareWithFinal(m).join('; '));
+  assert(checkSteps(Object.assign({}, r4, { scenario: Object.assign({}, r4.scenario, { days: 1 }) }), m), 'version 4: checkSteps found a fault in the hand-built file');
+  // The allied page: its own forces and contacts, nothing of the enemy's
+  const sr = Core.sideReplay(Object.assign({}, r4, { side_views: { allied: { events: events.map((e, i) => ({ n: i + 1, log_id: e.id, day: e.day, pulse: e.pulse, kind: e.kind, text: e.text, entities: e.entities, data: e.data, causes: [] })) }, japanese: { events: [] } } }), 'allied');
+  const sm = Core.buildModel(sr);
+  assert(sm.states.every(st => [...st.forces.keys()].join() === '1' && st.contacts.japanese.size === 0 && !st.shipForce.has(2)), 'version 4: the allied page holds the enemy\'s force, ship or contacts');
+  assert(sr.steps.every(e => ((e.changed || {}).task_forces || []).every(t => t.side === 'allied') && ((e.changed || {}).ships || []).every(t => t.side === 'allied')), 'version 4: the allied steps hold an enemy record');
+  assert(sm.states[sm.states.length - 1].contacts.allied.size === 0 && sm.states[1].forces.get(1).q === 1, 'version 4: the allied page does not follow its own steps');
+  checkSideSteps(r4, 'allied', sr, sm, 'version 4 synthetic allied');
+  // A viewer step with no entry is an error the page reports
+  const gap = mk(); gap.steps = gap.steps.filter(e => e.phase !== 'end');
+  let threw = '';
+  try { Core.buildModel(gap); } catch (e) { threw = e.message; }
+  assert(/no state for Day 1, end of day/.test(threw), 'version 4: a step with no entry did not give its error: ' + threw);
+  // Bad files
+  const noSteps = mk(); delete noSteps.steps;
+  reject('version 4 without steps', noSteps, 'steps');
+  const late = mk(); late.steps[0] = { day: 1, phase: 'orders' };
+  reject('steps that do not begin with start', late, 'start');
+  const order = mk(); order.steps[3] = { day: 1, phase: 'orders' };
+  reject('steps out of order', order, 'not after');
+  const noId = mk(); noId.steps[0].changed.ships[0] = { name: 'x' };
+  reject('a changed record with no id', noId, 'id');
+  const badKind = mk(); badKind.steps[2].changed.task_forces = 'x';
+  reject('a changed list that is not a list', badKind, 'not a list');
+  const badPhase = mk(); badPhase.steps[1].phase = 'dawn';
+  reject('an unknown phase', badPhase, 'phase');
+  if (failures === before) console.log('  ok: version 4 file opens from its steps, the allied page is cut, a missing step is an error');
 }
 
 // ---- A hand-built version 3 replay: one strike that found nothing, asserted exactly ----
@@ -564,7 +782,7 @@ function checkMeasuring() {
 }
 
 // ---- Main ----
-const files = process.argv.slice(2);
+const files = process.argv.slice(2).filter(a => !a.startsWith('--'));
 if (!files.length) console.log('(no replay files given: only the script and synthetic checks run)');
 for (const f of files) checkReplay(f);
 synthetic();

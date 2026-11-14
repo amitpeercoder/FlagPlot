@@ -3,6 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
+use sim_core::choices::Moment;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
@@ -2313,6 +2314,16 @@ impl Scenario {
     /// Submits the scripted orders for the next day and resolves it. Returns
     /// `None` once the scenario has run all its days.
     pub fn next_day(&mut self) -> Result<Option<DaySummary>, DataError> {
+        self.next_day_watched(&mut |_, _| {})
+    }
+
+    /// [`Scenario::next_day`], handing the world, read only, to `watch` at
+    /// each moment of the day as [`World::resolve_day_watched`] does. The day
+    /// is the same day: `next_day` is this with a watcher that does nothing.
+    pub fn next_day_watched(
+        &mut self,
+        watch: &mut dyn FnMut(&World, Moment),
+    ) -> Result<Option<DaySummary>, DataError> {
         let day = self.world.day() + 1;
         if day > self.days {
             return Ok(None);
@@ -2320,7 +2331,7 @@ impl Scenario {
         for (side, request) in self.script.remove(&day).unwrap_or_default() {
             self.world.submit_orders(side, vec![request]);
         }
-        Ok(Some(self.world.resolve_day()?))
+        Ok(Some(self.world.resolve_day_watched(watch)?))
     }
 
     /// Runs every remaining day and returns their summaries.

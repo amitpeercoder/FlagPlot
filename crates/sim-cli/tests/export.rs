@@ -90,7 +90,7 @@ fn every_scenario_exports_what_the_world_logged() {
         assert!(bytes.ends_with(b"\n"), "{scenario}: no trailing newline");
         let replay = parse(&bytes);
         assert_eq!(replay["format"], "flagplot-replay");
-        assert_eq!(replay["version"], 3);
+        assert_eq!(replay["version"], 4);
         assert_eq!(replay["scenario"]["path"], scenario.as_str());
 
         let mut loaded = Scenario::load(&Path::new(ROOT).join(&scenario)).expect("loads");
@@ -577,7 +577,7 @@ fn a_recorded_game_exports_with_the_hashes_it_saved() {
     let bytes = export("recorded", save, &[]);
     let replay = parse(&bytes);
     assert_eq!(replay["format"], "flagplot-replay");
-    assert_eq!(replay["version"], 3);
+    assert_eq!(replay["version"], 4);
     let title = replay["scenario"]["name"].as_str().expect("a title");
     assert!(title.ends_with(&format!("(saved game {save})")), "{title}");
     // The hashes are those the game saved.
@@ -630,6 +630,89 @@ fn aircraft_types_carry_the_reach_every_rule_reads() {
                 types.iter().any(|t| t["id"].as_u64() == Some(id)),
                 "{scenario}: group {} names type {id}, not listed",
                 group["id"]
+            );
+        }
+    }
+}
+
+/// The replay's `steps` (version 4): the start, then every phase of every
+/// day, the first entry holding every record of the start state and the last
+/// leaving exactly the final state's records, and the contacts and ground
+/// estimates of each side applied the same way.
+#[test]
+fn the_steps_cover_every_phase_and_end_at_the_final_state() {
+    use std::collections::BTreeMap;
+
+    fn apply(state: &mut BTreeMap<String, Value>, kind: &str, entry: &Value) {
+        if let Some(list) = entry["changed"][kind].as_array() {
+            for record in list {
+                let key = record["id"].to_string();
+                state.insert(key, record.clone());
+            }
+        }
+        if let Some(list) = entry["removed"][kind].as_array() {
+            for id in list {
+                state.remove(&id.to_string());
+            }
+        }
+    }
+
+    for scenario in scenarios() {
+        let replay = parse(&export(
+            &format!("steps-{}", stem(&scenario)),
+            &scenario,
+            &[],
+        ));
+        let steps = replay["steps"].as_array().expect("steps is a list");
+        let days = replay["scenario"]["days"].as_u64().expect("days") as usize;
+        assert_eq!(steps.len(), 1 + 5 * days, "{scenario}");
+        assert_eq!(steps[0]["day"], 0, "{scenario}");
+        assert_eq!(steps[0]["phase"], "start", "{scenario}");
+        assert!(steps[0].get("removed").is_none(), "{scenario}");
+        for (i, entry) in steps.iter().enumerate().skip(1) {
+            let day = (i - 1) / 5 + 1;
+            let phase = ["orders", "night", "morning", "afternoon", "end"][(i - 1) % 5];
+            assert_eq!(entry["day"], day, "{scenario}: entry {i}");
+            assert_eq!(entry["phase"], phase, "{scenario}: entry {i}");
+        }
+        for kind in ["task_forces", "ships", "air_groups", "bases", "land_units"] {
+            let mut state = BTreeMap::new();
+            for entry in steps {
+                apply(&mut state, kind, entry);
+            }
+            let wanted: BTreeMap<String, Value> = replay["final"][kind]
+                .as_array()
+                .map(|list| {
+                    list.iter()
+                        .map(|record| (record["id"].to_string(), record.clone()))
+                        .collect()
+                })
+                .unwrap_or_default();
+            assert_eq!(state, wanted, "{scenario}: {kind} at the last step");
+        }
+        for side in ["allied", "japanese"] {
+            let mut contacts = BTreeMap::new();
+            for entry in steps {
+                if let Some(list) = entry["changed"]["contacts"][side].as_array() {
+                    for record in list {
+                        contacts.insert(record["id"].to_string(), record.clone());
+                    }
+                }
+                if let Some(list) = entry["removed"]["contacts"][side].as_array() {
+                    for id in list {
+                        contacts.remove(&id.to_string());
+                    }
+                }
+            }
+            let wanted: BTreeMap<String, Value> = replay["final"]["contacts"][side]
+                .as_array()
+                .expect("contacts")
+                .iter()
+                .map(|record| (record["id"].to_string(), record.clone()))
+                .collect();
+            assert_eq!(
+                contacts, wanted,
+                "{scenario}: {side} contacts at the last step"
             );
         }
     }
