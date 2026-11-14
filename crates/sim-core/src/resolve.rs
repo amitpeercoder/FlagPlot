@@ -1133,13 +1133,14 @@ impl World {
                                 None => Vec::new(),
                             };
                         }
-                        let days = unit
+                        let (days, counted) = unit
                             .march
                             .filter(|march| march.to == *to)
-                            .map_or(0, |march| march.days);
+                            .map_or((0, Fixed::ZERO), |march| (march.days, march.counted));
                         unit.march = Some(March {
                             to: *to,
                             days,
+                            counted,
                             order: order.id,
                         });
                         Vec::new()

@@ -316,13 +316,15 @@ impl World {
                 }
             }
             // A unit made by division takes its parent's experience and
-            // nothing else of its parent's: no rehearsal, no days counted,
-            // no activity, no roster (decision 6 of 0097).
-            let experience = land_unit.experience;
+            // skills and nothing else of its parent's: no rehearsal, no days
+            // counted, no activity, no roster (decision 6 of 0097, decision
+            // 7 of 0098).
+            let (experience, skills) = (land_unit.experience, land_unit.skills);
             self.truth.land_units.insert(
                 new_id,
                 LandUnit {
                     experience,
+                    skills,
                     ..LandUnit::new(new_id, name, side, 0, None)
                 },
             );

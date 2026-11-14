@@ -6,8 +6,9 @@
 //! ground figures are loaded. Hexes are taken in hex order and, in a hex,
 //! sides in the order of their codes. There is no randomness.
 //!
-//! Reads: each land unit's men ashore and hex, the bases of the side in the
-//! hex and their supply stock, the two ground figures. Writes: a base's
+//! Reads: each land unit's men ashore, hex and weight (decision 0098), the
+//! bases of the side in the hex and their supply stock, the ground figures.
+//! Writes: a base's
 //! supply stock, a land unit's men ashore and hex, and the events.
 
 use std::collections::BTreeMap;
@@ -16,7 +17,7 @@ use crate::events::{Breakdown, Cause, EventKind, Factor, SupplyUse};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{BaseId, EventId, LandUnitId, ShipId};
-use crate::state::Side;
+use crate::state::{Side, Skills};
 use crate::time::Pulse;
 use crate::world::World;
 
@@ -121,7 +122,18 @@ impl World {
             let mut fed_causes: Vec<Cause> = Vec::new();
             let mut paid = Fixed::ZERO;
             let mut paying: Option<BaseId> = None;
-            let charge = figures.daily_supply_t_per_man * i64::from(men);
+            // Each unit's men cost the daily charge times its weight factor
+            // (decision 5 of 0098); the men of a standard unit cost the
+            // charge, exactly.
+            let mut charge = Fixed::ZERO;
+            let mut weighted_men = Fixed::ZERO;
+            for unit in &units {
+                let unit = &self.truth.land_units[unit];
+                let factor = Skills::factor(unit.skills.weight, figures.weight_strength);
+                charge += figures.daily_supply_t_per_man * factor * i64::from(unit.men_ashore);
+                weighted_men += factor * i64::from(unit.men_ashore);
+            }
+            let weighted = weighted_men != Fixed::from_int(i64::from(men));
             for base in bases.iter().copied() {
                 if self.truth.bases[&base].supply_t.is_zero() || paid >= charge {
                     continue;
@@ -142,6 +154,13 @@ impl World {
                             value: figures.daily_supply_t_per_man,
                         },
                     ];
+                    // Only where a unit's weight acts (decision 0098).
+                    if weighted {
+                        factors.push(Factor {
+                            name: "weighted_men",
+                            value: weighted_men,
+                        });
+                    }
                     // Only where an earlier base of the side paid part.
                     if !paid_before.is_zero() {
                         factors.push(Factor {
@@ -176,9 +195,20 @@ impl World {
             let base = paying.or_else(|| bases.first().copied());
 
             // The men fed: the tons paid over the charge for a man, cut, and
-            // never more than the men (decision 17).
-            let by_tons = u32::try_from((paid / figures.daily_supply_t_per_man).trunc().max(0))
-                .unwrap_or(u32::MAX);
+            // never more than the men (decision 17). Where weight acts the
+            // charge for a man is the hex's charge over its men (decision 5
+            // of 0098); for standard units it is the daily charge, and the
+            // sum below is the tons paid over it, exactly.
+            let by_tons = if charge.is_zero() {
+                men
+            } else {
+                u32::try_from(
+                    paid.mul_div(Fixed::from_int(i64::from(men)), charge)
+                        .trunc()
+                        .max(0),
+                )
+                .unwrap_or(u32::MAX)
+            };
             let fed = by_tons.min(men);
             let unfed = men - fed;
             // The fed share of each unit ashore here (decision 8 of 0090).
@@ -208,7 +238,13 @@ impl World {
                         name: "daily_supply_t_per_man",
                         value: figures.daily_supply_t_per_man,
                     },
-                ],
+                ]
+                .into_iter()
+                .chain(weighted.then_some(Factor {
+                    name: "weighted_men",
+                    value: weighted_men,
+                }))
+                .collect(),
                 result: Fixed::from_int(i64::from(fed)),
             });
             let fed_event = self.events.record(

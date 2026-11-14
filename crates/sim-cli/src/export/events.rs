@@ -842,6 +842,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             to,
             days,
             of,
+            ..
         } => (
             "march_day",
             d.id("unit", *unit)

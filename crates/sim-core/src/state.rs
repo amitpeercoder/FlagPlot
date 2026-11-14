@@ -19,7 +19,7 @@ use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, EventId, LandUnitId, OrderId, ShipClassId, ShipId,
     TaskForceId,
 };
-use crate::map::Map;
+use crate::map::{Map, Terrain};
 use crate::orders::{
     Activity, AirMission, CargoAction, Mission, Posture, Reach, Readiness, RejectReason,
     SpeedSetting, Stance, StragglerInstruction,
@@ -973,6 +973,71 @@ pub struct LandUnit {
     /// Days of firing in a fight counted toward the next step of experience,
     /// below `fight_days_per_level` (decision 5 of 0097).
     pub fight_days: u32,
+    /// What the unit is good at (decision 0098): set by the scenario and
+    /// never changed in play.
+    pub skills: Skills,
+}
+
+/// A land unit's skills (decision 0098, 1 to 4): each a whole number from 0
+/// to 4, 2 being the standard. A unit with every skill at 2 is the unit as
+/// it was before the rule. They never change in play (decision 6).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Skills {
+    /// Assault from the sea: moves the rehearsal gained in a day.
+    pub assault: u8,
+    /// Holding ground: moves the chance its shots hit while its side
+    /// defends.
+    pub holding: u8,
+    /// Weight: moves its shots and the supply each of its men costs.
+    pub weight: u8,
+    /// Movement through clear hexes.
+    pub clear: u8,
+    /// Movement through jungle hexes.
+    pub jungle: u8,
+    /// Movement through mountain hexes.
+    pub mountain: u8,
+    /// Movement through atoll hexes.
+    pub atoll: u8,
+}
+
+impl Skills {
+    /// The standard of a skill (decision 1 of 0098).
+    pub const STANDARD: u8 = 2;
+    /// The highest a skill can be.
+    pub const MAX: u8 = 4;
+    /// Every skill at the standard: the unit as it was before the rule.
+    pub const STANDARD_ALL: Skills = Skills {
+        assault: Skills::STANDARD,
+        holding: Skills::STANDARD,
+        weight: Skills::STANDARD,
+        clear: Skills::STANDARD,
+        jungle: Skills::STANDARD,
+        mountain: Skills::STANDARD,
+        atoll: Skills::STANDARD,
+    };
+
+    /// The unit's movement skill for a kind of terrain (decision 4).
+    pub const fn movement(&self, terrain: Terrain) -> u8 {
+        match terrain {
+            Terrain::Clear => self.clear,
+            Terrain::Jungle => self.jungle,
+            Terrain::Mountain => self.mountain,
+            Terrain::Atoll => self.atoll,
+        }
+    }
+
+    /// The factor of a skill (decision 3 of 0098): 1 plus the strength
+    /// times the skill less 2. At a strength of 0, or a skill of 2, it is
+    /// exactly 1.
+    pub fn factor(skill: u8, strength: Fixed) -> Fixed {
+        Fixed::ONE + strength * (i64::from(skill) - i64::from(Skills::STANDARD))
+    }
+}
+
+impl Default for Skills {
+    fn default() -> Skills {
+        Skills::STANDARD_ALL
+    }
 }
 
 /// A land unit's march to a neighbouring hex (decision 0094, 3 and 4). It
@@ -982,8 +1047,13 @@ pub struct March {
     /// The hex the unit marches to: a neighbour of its hex joined to it by a
     /// land link.
     pub to: Hex,
-    /// The days marched so far, below the figure `march_days_per_hex`.
+    /// The days marched so far.
     pub days: u32,
+    /// The days counted toward the figure `march_days_per_hex`, below it:
+    /// each day marched counts as the unit's movement factor for the hexes
+    /// it leaves and enters (decision 4 of 0098). Equal to `days` for a unit
+    /// whose movement factor is 1.
+    pub counted: Fixed,
     /// The march order.
     pub order: OrderId,
 }
@@ -1023,6 +1093,7 @@ impl LandUnit {
             experience: LandUnit::DEFAULT_EXPERIENCE,
             training_days: 0,
             fight_days: 0,
+            skills: Skills::STANDARD_ALL,
         }
     }
 }

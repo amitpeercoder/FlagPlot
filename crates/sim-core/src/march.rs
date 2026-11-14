@@ -2,16 +2,17 @@
 //!
 //! The marches are the first step of the ground combat phase, before the
 //! day's fights. Units with a march order are taken in unit order. Each
-//! marches one more day; when it has marched `march_days_per_hex` days its
-//! men ashore are in the new hex, with the supply it carried from its side's
-//! bases in the hex it left, and its order is spent. The fatigue of a day's
-//! march is gained in the phase's fatigue step, after the fights
-//! (`ground_combat.rs`). There is no randomness.
+//! marches one more day, which counts as its movement factor for the hexes
+//! it leaves and enters (decision 4 of 0098); when the days counted reach
+//! `march_days_per_hex` its men ashore are in the new hex, with the supply
+//! it carried from its side's bases in the hex it left, and its order is
+//! spent. The fatigue of a day's march is gained in the phase's fatigue
+//! step, after the fights (`ground_combat.rs`). There is no randomness.
 //!
-//! Reads: a land unit's men ashore, hex, side and march; the map's land
-//! links; the bases of the side in both hexes and their stock; the ground
-//! figures. Writes: a land unit's hex and march; a base's supply; a new
-//! base; and the events.
+//! Reads: a land unit's men ashore, hex, side, march and skills; the map's
+//! land links and terrain; the bases of the side in both hexes and their
+//! stock; the ground figures. Writes: a land unit's hex and march; a base's
+//! supply; a new base; and the events.
 
 use std::collections::BTreeMap;
 
@@ -19,9 +20,53 @@ use crate::events::{Breakdown, Cause, EventKind, Factor, MarchStop, SupplyUse};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{BaseId, EventId, LandUnitId};
+use crate::map::{Map, Terrain};
 use crate::refdata::GroundFigures;
-use crate::state::{Base, March};
+use crate::state::{Base, March, Skills};
 use crate::world::World;
+
+/// The name of a movement skill in a breakdown, by its terrain.
+const fn terrain_skill_name(terrain: Terrain) -> &'static str {
+    match terrain {
+        Terrain::Clear => "clear_skill",
+        Terrain::Jungle => "jungle_skill",
+        Terrain::Mountain => "mountain_skill",
+        Terrain::Atoll => "atoll_skill",
+    }
+}
+
+/// The factors a breakdown names where a unit's weight acts (decision 5 of
+/// 0098): its weight and the factor.
+pub(crate) fn weight_factors(weight: u8, factor: Fixed) -> [Factor; 2] {
+    [
+        Factor {
+            name: "weight",
+            value: Fixed::from_int(i64::from(weight)),
+        },
+        Factor {
+            name: "weight_factor",
+            value: factor,
+        },
+    ]
+}
+
+/// The terrain of a hex for a march (decision 4 of 0098). A hex the map
+/// gives no terrain counts as jungle, as the generated map marks every land
+/// hex (decision 0052, 14).
+pub(crate) fn terrain_at(map: &Map, hex: Hex) -> Terrain {
+    map.get(hex)
+        .and_then(|data| data.terrain)
+        .unwrap_or(Terrain::Jungle)
+}
+
+/// The movement skill that counts for a march from `from` to `to`: the
+/// lower of the unit's skills for the terrain of the two hexes (decision 4
+/// of 0098).
+pub(crate) fn march_skill(map: &Map, skills: &Skills, from: Hex, to: Hex) -> u8 {
+    skills
+        .movement(terrain_at(map, from))
+        .min(skills.movement(terrain_at(map, to)))
+}
 
 impl World {
     /// The day's marches (decision 0094, 4 to 10). Returns, for each unit
@@ -72,8 +117,56 @@ impl World {
                 continue;
             }
             let from = unit.hex.expect("a unit with men ashore has a hex");
+            // The day counts as the movement factor of the lower of the
+            // unit's skills for the terrain of the hex it leaves and of the
+            // hex it enters (decision 4 of 0098).
+            let (terrain_from, terrain_to) =
+                (terrain_at(&self.map, from), terrain_at(&self.map, march.to));
+            let (skill_from, skill_to) = (
+                unit.skills.movement(terrain_from),
+                unit.skills.movement(terrain_to),
+            );
+            let skill = march_skill(&self.map, &unit.skills, from, march.to);
+            let factor = Skills::factor(skill, figures.movement_skill_strength);
             let days = march.days + 1;
+            let counted = march.counted + factor;
             let of = figures.march_days_per_hex;
+            // Only where the skill acts, so a breakdown of a standard march
+            // is as it was (none).
+            let breakdown = (self.config.record_breakdowns && factor != Fixed::ONE).then(|| {
+                let mut factors = vec![Factor {
+                    name: terrain_skill_name(terrain_from),
+                    value: Fixed::from_int(i64::from(skill_from)),
+                }];
+                if terrain_to != terrain_from {
+                    factors.push(Factor {
+                        name: terrain_skill_name(terrain_to),
+                        value: Fixed::from_int(i64::from(skill_to)),
+                    });
+                }
+                factors.extend([
+                    Factor {
+                        name: "movement_skill",
+                        value: Fixed::from_int(i64::from(skill)),
+                    },
+                    Factor {
+                        name: "movement_skill_strength",
+                        value: figures.movement_skill_strength,
+                    },
+                    Factor {
+                        name: "movement_factor",
+                        value: factor,
+                    },
+                    Factor {
+                        name: "counted_before",
+                        value: march.counted,
+                    },
+                ]);
+                Breakdown {
+                    factors,
+                    result: counted,
+                }
+            });
             let day_event = self.events.record(
                 day,
                 None,
@@ -82,18 +175,23 @@ impl World {
                     from,
                     to: march.to,
                     days,
+                    counted,
                     of,
                 },
                 vec![Cause::Order(march.order)],
-                None,
+                breakdown,
             );
             marched.insert(unit_id, day_event);
-            if days < of {
+            if counted < Fixed::from_int(i64::from(of)) {
                 self.truth
                     .land_units
                     .get_mut(&unit_id)
                     .expect("the land unit exists")
-                    .march = Some(March { days, ..march });
+                    .march = Some(March {
+                    days,
+                    counted,
+                    ..march
+                });
                 continue;
             }
             self.arrive(day, unit_id, from, march.to, day_event, figures);
@@ -117,7 +215,13 @@ impl World {
     ) {
         let unit = &self.truth.land_units[&unit_id];
         let (side, men) = (unit.side, unit.men_ashore);
-        let wanted = figures.march_supply_days * figures.daily_supply_t_per_man * i64::from(men);
+        // Its men's daily charge, times its weight factor (decision 5 of
+        // 0098).
+        let weight = unit.skills.weight;
+        let weight_factor = Skills::factor(weight, figures.weight_strength);
+        let per_man = figures.daily_supply_t_per_man * weight_factor;
+        let wanted = figures.march_supply_days * per_man * i64::from(men);
+        let weighted = weight_factor != Fixed::ONE;
 
         // Taken from the bases of the hex left, in base order (decision 9).
         let bases_left: Vec<BaseId> = self
@@ -152,6 +256,9 @@ impl World {
                         value: figures.daily_supply_t_per_man,
                     },
                 ];
+                if weighted {
+                    factors.extend(weight_factors(weight, weight_factor));
+                }
                 // Only where an earlier base of the side gave part.
                 if !carried_before.is_zero() {
                     factors.push(Factor {
@@ -240,8 +347,8 @@ impl World {
             .expect("the land unit exists");
         unit.hex = Some(to);
         unit.march = None;
-        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-            factors: vec![
+        let breakdown = self.config.record_breakdowns.then(|| {
+            let mut factors = vec![
                 Factor {
                     name: "men_marching",
                     value: Fixed::from_int(i64::from(men)),
@@ -254,12 +361,18 @@ impl World {
                     name: "daily_supply_t_per_man",
                     value: figures.daily_supply_t_per_man,
                 },
-                Factor {
-                    name: "wanted_t",
-                    value: wanted,
-                },
-            ],
-            result: carried,
+            ];
+            if weighted {
+                factors.extend(weight_factors(weight, weight_factor));
+            }
+            factors.push(Factor {
+                name: "wanted_t",
+                value: wanted,
+            });
+            Breakdown {
+                factors,
+                result: carried,
+            }
         });
         self.events.record(
             day,

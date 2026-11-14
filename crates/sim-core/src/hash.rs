@@ -16,7 +16,7 @@ use crate::state::Side;
 use crate::state::{
     AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Halt, HaltWork, LandUnit, March,
     Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem,
-    ShipSystems, TaskForce, Troops, TruthState, YardTrip,
+    ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -144,8 +144,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 16 adds a task force's `preparation` and `landing_at` after its
 /// `halt`, and a land unit's `rehearsal`, `rehearsal_hex`, `activity`,
 /// `activity_order`, `experience`, `training_days` and `fight_days` after
-/// its `march` (decisions 0095 and 0097).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v16";
+/// its `march` (decisions 0095 and 0097);
+/// version 17 adds a march's `counted` after its `days`, and a land unit's
+/// `skills` after its `fight_days` (decision 0098).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v17";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -382,11 +384,22 @@ fn name_every_field(world: &World) {
         experience: _,
         training_days: _,
         fight_days: _,
+        skills:
+            Skills {
+                assault: _,
+                holding: _,
+                weight: _,
+                clear: _,
+                jungle: _,
+                mountain: _,
+                atoll: _,
+            },
     }) = land_units.values().next()
     {}
     if let Some(Some(March {
         to: _,
         days: _,
+        counted: _,
         order: _,
     })) = land_units.values().next().map(|unit| unit.march)
     {}
@@ -734,6 +747,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.i32(march.to.q);
                 h.i32(march.to.r);
                 h.u32(march.days);
+                h.i64(march.counted.raw());
                 h.u32(march.order.raw());
             }
             None => h.u8(0),
@@ -753,6 +767,19 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u8(unit.experience);
         h.u32(unit.training_days);
         h.u32(unit.fight_days);
+        // After the counts (decision 0098), in a fixed order.
+        let skills = unit.skills;
+        for skill in [
+            skills.assault,
+            skills.holding,
+            skills.weight,
+            skills.clear,
+            skills.jungle,
+            skills.mountain,
+            skills.atoll,
+        ] {
+            h.u8(skill);
+        }
     }
 
     h.count(world.beliefs.len());

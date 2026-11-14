@@ -2182,6 +2182,7 @@ impl Day {
                         to,
                         days,
                         of,
+                        ..
                     } => ground.marches.push(MarchDayLine {
                         land_unit: ctx.land_unit(*unit),
                         from: ctx.place(*from),

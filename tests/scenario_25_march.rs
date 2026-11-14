@@ -499,6 +499,7 @@ fn the_march_of_unit_1_from_p_to_q() {
                 from: P,
                 to: Q,
                 days: day,
+                counted: Fixed::from_int(i64::from(day)),
                 of: 3,
             }
         );

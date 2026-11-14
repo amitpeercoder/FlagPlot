@@ -99,3 +99,19 @@ training_ceiling = 2
 # Days of firing in a fight for one step of experience, a whole number of 1 or
 # more.
 fight_days_per_level = 10
+
+# The strengths of a land unit's skills (decision 0098). Placeholders set by
+# the architect, resting on no source. A skill's factor is 1 plus its strength
+# times the skill less 2; each strength is at least 0 and below 0.5.
+# How much a step of the assault skill moves the rehearsal gained in a day.
+assault_skill_strength = "0.25"
+
+# How much a step of a movement skill moves a day's march.
+movement_skill_strength = "0.25"
+
+# How much a step of the holding skill moves a defender's chance to hit.
+holding_skill_strength = "0.15"
+
+# How much a step of weight moves a unit's shots and the supply each of its
+# men costs.
+weight_strength = "0.25"

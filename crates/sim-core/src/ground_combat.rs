@@ -34,7 +34,7 @@ use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, LandUnitId, ShipId, Tas
 use crate::orders::{Activity, AirMission, Posture};
 use crate::refdata::GroundFigures;
 use crate::rng::{Draw, Subsystem};
-use crate::state::{AirGroupLocation, LandUnit, ShipLocation, Side};
+use crate::state::{AirGroupLocation, LandUnit, ShipLocation, Side, Skills};
 use crate::world::World;
 
 /// The other side.
@@ -72,14 +72,30 @@ pub(crate) fn firing_men(men_ashore: u32, fed_share: Fixed, fatigue: Fixed) -> (
 /// A unit's chance to hit and the factor experience gives it (decision 2 of
 /// 0097): the side's chance times one plus the strength times the
 /// experience less 2, cut to 0 to 1. At a strength of 0 the factor is 1.
+#[cfg(test)]
 pub(crate) fn experience_chance(
     side_chance: Fixed,
     strength: Fixed,
     experience: u8,
 ) -> (Fixed, Fixed) {
+    skilled_chance(side_chance, strength, experience, Fixed::ONE)
+}
+
+/// A unit's chance to hit and the factor its experience gives it, with the
+/// factor of its holding skill (decision 2 of 0098; 1 unless its side
+/// defends): the side's chance times both factors, cut to 0 to 1. With a
+/// holding factor of 1 it is [`experience_chance`].
+pub(crate) fn skilled_chance(
+    side_chance: Fixed,
+    strength: Fixed,
+    experience: u8,
+    holding_factor: Fixed,
+) -> (Fixed, Fixed) {
     let factor = Fixed::ONE + strength * (i64::from(experience) - 2);
     (
-        (side_chance * factor).max(Fixed::ZERO).min(Fixed::ONE),
+        (side_chance * factor * holding_factor)
+            .max(Fixed::ZERO)
+            .min(Fixed::ONE),
         factor,
     )
 }
@@ -540,27 +556,42 @@ impl World {
                     .get(*event)
                     .is_some_and(|event| event.day == day)
             });
-            let side_chance = if attacks[at(side)] {
-                figures.hit_chance
-            } else {
+            let defends = !attacks[at(side)];
+            let side_chance = if defends {
                 figures.defender_hit_chance
+            } else {
+                figures.hit_chance
             };
             for unit_id in units.units[at(side)].clone() {
                 let unit = &self.truth.land_units[&unit_id];
-                let (men_ashore, fed_share, fatigue, posture, experience) = (
+                let (men_ashore, fed_share, fatigue, posture, experience, skills) = (
                     unit.men_ashore,
                     unit.fed_share,
                     unit.fatigue,
                     unit.posture,
                     unit.experience,
+                    unit.skills,
                 );
                 // The unit's chance: the side's, times one plus the strength
                 // times the unit's experience less 2 (decision 2 of 0097),
-                // from 0 to 1.
-                let (chance, experience_factor) =
-                    experience_chance(side_chance, figures.experience_fire_strength, experience);
+                // times its holding factor while its side defends (decision 2
+                // of 0098), from 0 to 1.
+                let holding_factor = if defends {
+                    Skills::factor(skills.holding, figures.holding_skill_strength)
+                } else {
+                    Fixed::ONE
+                };
+                let (chance, experience_factor) = skilled_chance(
+                    side_chance,
+                    figures.experience_fire_strength,
+                    experience,
+                    holding_factor,
+                );
                 let (firing, fatigue_factor) = firing_men(men_ashore, fed_share, fatigue);
-                let shots = Fixed::from_int(i64::from(firing)) / figures.men_per_shot;
+                // Its shots, times its weight factor (decision 2 of 0098).
+                let weight_factor = Skills::factor(skills.weight, figures.weight_strength);
+                let shots =
+                    Fixed::from_int(i64::from(firing)) / figures.men_per_shot * weight_factor;
                 let mut stream = self.rng(
                     day,
                     None,
@@ -592,18 +623,26 @@ impl World {
                             name: "men_per_shot",
                             value: figures.men_per_shot,
                         },
-                        Factor {
-                            name: "shots",
-                            value: shots,
-                        },
                     ];
-                    // Only where experience does something, so a breakdown
-                    // with the strength at 0 is as it was.
-                    if figures.experience_fire_strength > Fixed::ZERO {
+                    // Each skill only where it acts, so a breakdown of a
+                    // standard unit is as it was (decision 0098).
+                    if weight_factor != Fixed::ONE {
+                        factors.extend(crate::march::weight_factors(skills.weight, weight_factor));
+                    }
+                    factors.push(Factor {
+                        name: "shots",
+                        value: shots,
+                    });
+                    // Only where experience or holding does something, so a
+                    // breakdown with the strengths at 0 is as it was.
+                    let holds = holding_factor != Fixed::ONE;
+                    if figures.experience_fire_strength > Fixed::ZERO || holds {
                         factors.push(Factor {
                             name: "side_chance",
                             value: side_chance,
                         });
+                    }
+                    if figures.experience_fire_strength > Fixed::ZERO {
                         factors.push(Factor {
                             name: "experience",
                             value: Fixed::from_int(i64::from(experience)),
@@ -611,6 +650,16 @@ impl World {
                         factors.push(Factor {
                             name: "experience_factor",
                             value: experience_factor,
+                        });
+                    }
+                    if holds {
+                        factors.push(Factor {
+                            name: "holding_skill",
+                            value: Fixed::from_int(i64::from(skills.holding)),
+                        });
+                        factors.push(Factor {
+                            name: "holding_factor",
+                            value: holding_factor,
                         });
                     }
                     factors.push(Factor {

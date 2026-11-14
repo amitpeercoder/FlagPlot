@@ -411,6 +411,41 @@ impl<'a> SideView<'a> {
         land_unit.hex.map(|hex| self.map.land_neighbours(hex))
     }
 
+    /// The factor a day's march counts as for one of the side's own land
+    /// units marching from its hex to `to` (decision 4 of 0098): the factor
+    /// of the lower of its movement skills for the terrain of the two hexes.
+    /// `None` for a unit that is not the side's or has no man ashore, or
+    /// where the scenario has no ground figures.
+    pub fn movement_factor(&self, unit: LandUnitId, to: Hex) -> Option<Fixed> {
+        let land_unit = self
+            .truth
+            .land_units
+            .get(&unit)
+            .filter(|land_unit| land_unit.side == self.side && land_unit.men_ashore > 0)?;
+        let from = land_unit.hex?;
+        let figures = self.ref_data.ground.as_ref()?;
+        let skill = crate::march::march_skill(self.map, &land_unit.skills, from, to);
+        Some(crate::state::Skills::factor(
+            skill,
+            figures.movement_skill_strength,
+        ))
+    }
+
+    /// The supply one of the side's own land units' men ashore cost a day,
+    /// in tons (decision 16 of 0066 and decision 5 of 0098): its men ashore
+    /// times the daily charge times its weight factor. `None` for a unit that
+    /// is not the side's, or where the scenario has no ground figures.
+    pub fn daily_charge_t(&self, unit: LandUnitId) -> Option<Fixed> {
+        let land_unit = self
+            .truth
+            .land_units
+            .get(&unit)
+            .filter(|land_unit| land_unit.side == self.side)?;
+        let figures = self.ref_data.ground.as_ref()?;
+        let factor = crate::state::Skills::factor(land_unit.skills.weight, figures.weight_strength);
+        Some(figures.daily_supply_t_per_man * factor * i64::from(land_unit.men_ashore))
+    }
+
     /// The factor one of the side's own forces' work is multiplied by while
     /// it lands men at `hex` (decision 5 of 0095): the share of the rate an
     /// unprepared force works at plus the rest of 1 times its loading for that
