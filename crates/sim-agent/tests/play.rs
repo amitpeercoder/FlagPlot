@@ -141,7 +141,7 @@ fn fx(text: &str) -> Fixed {
 /// new kind of order breaks this build until it has an example below.
 fn tf_index(order: &TaskForceOrder) -> usize {
     match order {
-        TaskForceOrder::SetRoute(_) => 0,
+        TaskForceOrder::SetRoute { .. } => 0,
         TaskForceOrder::SetSpeed(_) => 1,
         TaskForceOrder::SetMission(_) => 2,
         TaskForceOrder::Load => 3,
@@ -186,10 +186,7 @@ fn examples() -> Vec<OrderKind> {
         order,
     };
     let mut out = vec![
-        tf(TaskForceOrder::SetRoute(vec![
-            Hex::new(2, -4),
-            Hex::new(0, 7),
-        ])),
+        tf(TaskForceOrder::route(vec![Hex::new(2, -4), Hex::new(0, 7)])),
         tf(TaskForceOrder::SetSpeed(SpeedSetting::Cruise)),
         tf(TaskForceOrder::SetSpeed(SpeedSetting::Full)),
         tf(TaskForceOrder::SetSpeed(SpeedSetting::Knots(fx("17.5")))),

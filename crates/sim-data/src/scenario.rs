@@ -419,8 +419,12 @@ enum CargoSpec {
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum ActionSpec {
+    /// `act_at` marks waypoints to act at, by hex (decision 0096, 1); each
+    /// must be one of the waypoints, which the order's intake checks.
     SetRoute {
         waypoints: Vec<[i32; 2]>,
+        #[serde(default)]
+        act_at: Vec<[i32; 2]>,
     },
     /// Exactly one of `speed` and `knots` (decision 7 of 0021).
     SetSpeed {
@@ -1633,9 +1637,10 @@ impl Scenario {
             let kind = match (&spec.task_force, &spec.air_group, &spec.land_unit) {
                 (Some(raw), None, None) => {
                     let order = match &spec.action {
-                        ActionSpec::SetRoute { waypoints } => TaskForceOrder::SetRoute(
-                            waypoints.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
-                        ),
+                        ActionSpec::SetRoute { waypoints, act_at } => TaskForceOrder::SetRoute {
+                            waypoints: waypoints.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
+                            act_at: act_at.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
+                        },
                         ActionSpec::SetSpeed { speed, knots } => {
                             TaskForceOrder::SetSpeed(match (speed, knots) {
                                 (Some(speed), None) => (*speed).into(),

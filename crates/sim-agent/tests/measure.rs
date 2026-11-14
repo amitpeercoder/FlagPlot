@@ -450,7 +450,7 @@ fn a_force_that_starts_between_two_hexes_is_forecast_from_where_it_really_is() {
         let (p, _) = compare(
             scenario,
             &Setup {
-                order: Some(TaskForceOrder::SetRoute(vec![Hex::new(q, r)])),
+                order: Some(TaskForceOrder::route(vec![Hex::new(q, r)])),
                 ..setup(Side::Allied, 1, 2, q, r)
             },
             &label,

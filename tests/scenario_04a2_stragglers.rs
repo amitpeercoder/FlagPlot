@@ -696,7 +696,7 @@ fn the_staff_order_sends_task_force_2_home() {
         order.kind,
         OrderKind::TaskForce {
             target: TF2,
-            order: TaskForceOrder::SetRoute(vec![hex(0, 0)]),
+            order: TaskForceOrder::route(vec![hex(0, 0)]),
         }
     );
     // Accepted in the night pulse of day 1, citing the order and the event
@@ -882,7 +882,7 @@ fn assert_force_retires(run: &Run) {
         staff[0].kind,
         OrderKind::TaskForce {
             target: TF1,
-            order: TaskForceOrder::SetRoute(vec![hex(0, 0)]),
+            order: TaskForceOrder::route(vec![hex(0, 0)]),
         }
     );
     let accepted = run.accepted_event(staff[0].id);
@@ -1228,7 +1228,7 @@ fn check_staff_orders(run: &Run) {
         else {
             panic!("the staff order is for a task force");
         };
-        assert_eq!(*kind, TaskForceOrder::SetRoute(vec![hex(0, 0)]));
+        assert_eq!(*kind, TaskForceOrder::route(vec![hex(0, 0)]));
         let cause = sent_home.get(&target).expect("a force sent home");
         let accepted = run.accepted_event(order.id);
         assert_eq!(accepted.len(), 1);

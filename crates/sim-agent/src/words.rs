@@ -38,6 +38,7 @@ pub(crate) fn status(status: TaskForceStatus) -> &'static str {
         TaskForceStatus::Underway => "underway",
         TaskForceStatus::Arrived => "arrived",
         TaskForceStatus::OutOfFuel => "out_of_fuel",
+        TaskForceStatus::Halted => "halted",
     }
 }
 

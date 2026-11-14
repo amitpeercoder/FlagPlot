@@ -1,0 +1,167 @@
+# Scenario 26: a force bombards by night and is gone by day; a convoy unloads
+# and comes home by itself; and a marked waypoint with nothing to do there is
+# passed (decision 0096).
+#
+# Proves decision 0096 against a hand calculation. A Japanese cruiser is
+# ordered to Allied base 1 at X, marked to act there, and back: it halts, fires
+# in the night's shore bombardment phase and steams on in the morning. An
+# Allied cargo ship is ordered to unload at base 2 at Y, marked, and home to
+# Z: it halts, unloads by lighter and steams on the next night. An Allied
+# destroyer passes a marked waypoint where it has no work. The hand
+# calculation is in tests/scenario_26_act_and_steam_on.rs.
+#
+# PLACEHOLDER DATA. The bases, ships, air group and map are invented.
+
+name = "Scenario 26: A force that acts at a place and steams on"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_act_and_steam_on.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+[[base]]
+id = 1
+name = "Placeholder airfield X, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 2
+name = "Placeholder base Y, Allied"
+side = "allied"
+q = 0
+r = 3
+supply_t = 0
+
+[[base]]
+id = 3
+name = "Placeholder base Z, Allied"
+side = "allied"
+q = 4
+r = 3
+supply_t = 0
+
+# Placeholder fighters (aircraft type 4), with no mission.
+[[air_group]]
+id = 1
+name = "Placeholder fighter squadron at X"
+side = "allied"
+base = 1
+aircraft_type = 4
+ready = 20
+
+# At sea at (4,0), 4 hexes from X.
+[[task_force]]
+id = 1
+name = "Placeholder raiding force"
+side = "japanese"
+q = 4
+r = 0
+mission = "bombardment"
+
+# Placeholder cruiser: 8 guns at 3 rounds a minute, gun damage 20.
+[[ship]]
+id = 1
+name = "Placeholder cruiser"
+class = 1
+side = "japanese"
+fuel_t = 2000
+gun_rounds = 800
+task_force = 1
+
+# At base 3 at Z.
+[[task_force]]
+id = 2
+name = "Placeholder supply convoy"
+side = "allied"
+at_base = 3
+mission = "transport"
+
+# Placeholder cargo ship, with 100 t of supply aboard.
+[[ship]]
+id = 2
+name = "Placeholder cargo ship"
+class = 3
+side = "allied"
+fuel_t = 1000
+supply_t = 100
+task_force = 2
+
+# At sea at (0,5).
+[[task_force]]
+id = 3
+name = "Placeholder destroyer patrol"
+side = "allied"
+q = 0
+r = 5
+mission = "surface_combat"
+
+# Placeholder destroyer.
+[[ship]]
+id = 3
+name = "Placeholder destroyer"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 3
+
+# Day 1: the raid. To X, marked to act there, and back to (4,0).
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[0, 0], [4, 0]]
+act_at = [[0, 0]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+# Day 1: the supply run. Unload; to Y, marked to act there, and home to Z.
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "unload"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_route"
+waypoints = [[0, 3], [4, 3]]
+act_at = [[0, 3]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_speed"
+speed = "cruise"
+
+# Day 1: a marked waypoint with nothing to do there.
+[[order]]
+day = 1
+side = "allied"
+task_force = 3
+kind = "set_route"
+waypoints = [[2, 5], [4, 5]]
+act_at = [[2, 5]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 3
+kind = "set_speed"
+speed = "cruise"
