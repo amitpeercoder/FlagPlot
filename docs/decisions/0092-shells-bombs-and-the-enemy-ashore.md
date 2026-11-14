@@ -1,6 +1,6 @@
 # 0092: Shells and bombs on a base and its men, and what a side knows of the enemy ashore
 
-Status: a plan by the architect, written on Nov 14, 2026. It is stage 3 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). Decisions 5, 14 and 17 are choices the plan did not make and need review. Nothing is built. Every figure is a placeholder set by the architect. The hand calculation is written before any code is delegated.
+Status: a plan by the architect, written on Nov 14, 2026. It is stage 3 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer answered its three questions on Nov 14, 2026: shells are weighed by the gun (decision 5), the estimate is daily (decision 14), and a claim follows a bombardment (decision 17). Nothing is built. Every figure is a placeholder set by the architect. The hand calculation is written before any code is delegated.
 
 ## The gap
 
@@ -17,9 +17,9 @@ Status: a plan by the architect, written on Nov 14, 2026. It is stage 3 of the g
 2. **Each ship fires its guns for `bombardment_minutes`.** Its shots are its class's rounds a minute, times its guns, times the minutes, times its main battery's factor, and no more than the rounds it has aboard: the rule of surface combat for a round of fire, with a longer time. The rounds are spent. Nothing but the yard gives them back, as now.
 3. **Each shot hits at `bombardment_hit_chance`,** rolled, on a stream keyed on the day, the night pulse, the surface combat subsystem, a new draw `Bombardment`, the ship and the base.
 4. **Each hit lands by the table that says where a bomb on a base lands** (decision 0034): on aircraft, on supply, on men (decision 6), or on nothing. All aircraft at the base are on the ground at night. A hit on aircraft destroys one, and a hit on supply destroys the fixed weight, by the rules as they are.
-5. **A hit is a hit, whatever the gun.** A destroyer's shell and a battleship's do the same. *Needs review: the other choice is to weigh each ship's shots by its class's gun damage. It is left out because nothing in the game yet says what a heavier shell does to a field.*
+5. **Shells are weighed by the gun.** A ship's shots that are rolled are its shells fired times its class's gun damage over `bombardment_reference_gun_damage`, with the part of a shot rolled at that part of the chance. So a heavy shell counts for several and a light one for a part of one. The rounds spent are the shells fired. *The designer's choice, Nov 14, 2026. The architect had proposed that every shell count the same. How much a heavier shell does to a field rests on no row yet: the weight is the gun damage the game already derives from the shell's weight.*
 6. **Nothing ashore fires back,** and the base's anti-aircraft guns do not fire at ships.
-7. **The base's side gets a sighting report of the force,** with the errors of any sighting report, drawn on the first firing ship's stream after its hits. Being shelled shows that ships are there.
+7. **The base's side gets a sighting report of the force,** with the errors of any sighting report, drawn on the first firing ship's stream after its hits and where they landed. Being shelled shows that ships are there.
 
 ### Men as a place for a hit to land
 
@@ -38,7 +38,7 @@ Status: a plan by the architect, written on Nov 14, 2026. It is stage 3 of the g
 
 ### What a side knows
 
-17. **The side that bombards is told its own shots and nothing of what they did.** No claim follows. *Needs review: a raid from the air gives a claim of aircraft destroyed on the ground, which is too high by a known rule. A bombardment by night gives none, because the claim rule would need a figure with nothing behind it. A claim can follow in its own record.*
+17. **The side that bombards gets a claim, as after a raid from the air.** One claim for a force for a night: the aircraft it believes it destroyed on the ground. It is the aircraft really destroyed plus false ones, rolled from the force's weighed shots less the aircraft really destroyed, at `bombardment_false_claim_chance`, on a stream keyed on the day, the night pulse, the intelligence subsystem, the draw `Claim`, the first firing ship and the base. It is never below the truth. It goes into belief by `apply_report` and is never corrected. There is no claim for supply or for men. The side is also told its own shells fired. *The designer's choice, Nov 14, 2026. The architect had proposed no claim.*
 18. **The base's side sees the bombardment whole but for who fired:** the shots, the hits and where each landed, its aircraft and supply destroyed, and its men lost.
 19. **A side sees its own estimates and the reports that made them.** It never sees the enemy's estimate of its own men. The error drawn is not shown to anyone but the umpire.
 20. **Men lost to a bomb or a shell are seen whole by their own side.** The raider is told nothing of men hit. They count in the `men_lost` tally.
@@ -48,13 +48,15 @@ Status: a plan by the architect, written on Nov 14, 2026. It is stage 3 of the g
 | File | Key | Value | What it is |
 | --- | --- | --- | --- |
 | `surface_combat.toml` | `bombardment_minutes` | `30` | Minutes a ship fires in a night's bombardment |
-| `surface_combat.toml` | `bombardment_hit_chance` | `"0.05"` | The chance a shell hits something the table names |
+| `surface_combat.toml` | `bombardment_hit_chance` | `"0.05"` | The chance a weighed shot hits something the table names |
+| `surface_combat.toml` | `bombardment_reference_gun_damage` | `20` | The gun damage of a shell that counts as one shot |
+| `surface_combat.toml` | `bombardment_false_claim_chance` | `"0.01"` | The chance a weighed shot that destroyed no aircraft is claimed as one |
 | `air_combat.toml` | `[base_hit] men` | `"0.2"` | The share of hits on a base that land on men |
 | `ground.toml` | `men_lost_per_base_hit` | `10` | Men a bomb or shell hit removes |
 | `ground.toml` | `report_error_low` | `"0.5"` | The least a ground report can be, as a share of the truth |
 | `ground.toml` | `report_error_high` | `"1.5"` | The most |
 
-Each goes into the frozen step 1 figures with the same first value. None rests on a source. A cruiser of 6 guns at 1.13 rounds a minute fires 203 shells in a night and expects about 10 hits: with the table as it stands, under 1 on aircraft, 3 on supply, 2 on men and the rest on nothing.
+Each goes into the frozen step 1 figures with the same first value. None rests on a source. A cruiser of 6 guns at 1.13 rounds a minute, with a gun damage near 20, fires 203 shells in a night and expects about 10 hits: with the table as it stands, under 1 on aircraft, 3 on supply, 2 on men and the rest on nothing. A destroyer's shell, with a gun damage near 4, counts as a fifth of that.
 
 The table is read from `air_combat.toml`, so a bombardment needs the air combat figures as well as the surface combat ones. Without either the phase does nothing.
 
@@ -81,7 +83,7 @@ Scenario 24, of made-up ships, units and bases marked placeholder, in two parts:
 - **Runway damage.** A bombardment destroys aircraft and supply and does not close the field.
 - **Bombardment by day, and by a force that is passing.** The force must end the night's movement in the hex.
 - **Fire from the shore on ships.**
-- **A claim after a bombardment, and a claim of enemy men lost.**
+- **A claim of supply destroyed or of enemy men lost.**
 - **Patrols and scouts ashore.** A side with no men in a hex gets no ground report of it, and aircraft report nothing of men.
 - **The ground support mission** (the plan defers it).
 
@@ -102,6 +104,8 @@ Scenario 24, of made-up ships, units and bases marked placeholder, in two parts:
 
 ## Questions for the designer
 
-1. **Decision 5:** every shell hit counts the same, whatever the gun. Agreed for now?
-2. **Decision 14:** a side gets a fresh estimate each day of the enemy's men in a hex where both have men, wrong by up to half either way. Agreed?
-3. **Decision 17:** the side that bombards is told nothing of what its shells did. Agreed for now?
+Answered on Nov 14, 2026.
+
+1. **Decision 5:** shells are weighed by the gun.
+2. **Decision 14:** a fresh estimate each day, wrong by up to half either way. Agreed.
+3. **Decision 17:** a claim follows a bombardment, as after a raid from the air.
