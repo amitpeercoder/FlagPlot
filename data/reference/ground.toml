@@ -138,8 +138,13 @@ work_per_defence_point = 200
 defences_strength = "0.5"
 
 # The share of a working unit's work that a fighting unit set to work makes,
-# from 0 to 1.
-fighting_unit_work_share = "0.5"
+# from 0 to 1. PLACEHOLDER, 0.1 from 0.5 (decision 0109, 3): a regiment digs as
+# well as a few hundred labourers with tools, not as well as two thousand. The
+# field was finished on 17 to 19 August by the engineers and pioneers, with
+# captured Japanese machines (place_facts 56, 198), and no row has riflemen
+# building it; the figure is moved toward that, the one thing the record
+# supports. The frozen figure (data/reference/step1) stays 0.5.
+fighting_unit_work_share = "0.1"
 
 # The figures of an airfield damaged and mended (decision 0103). Placeholders
 # set by the architect for decision 0103, resting on no source.
