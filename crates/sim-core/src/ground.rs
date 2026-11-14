@@ -52,6 +52,19 @@ pub(crate) fn take_in_proportion(loss: u32, men: &[u32]) -> Vec<u32> {
         .collect()
 }
 
+/// The supply `men` men of a unit with `skills` cost a day, in tons (decision
+/// 16 of 0066 and decision 5 of 0098): the men times the daily charge times
+/// the unit's weight factor. The one formula: the night's feeding, a side's
+/// view of a unit's charge and its planned use of supply all call it.
+pub(crate) fn daily_charge_t(
+    figures: &crate::refdata::GroundFigures,
+    skills: &crate::state::Skills,
+    men: u32,
+) -> Fixed {
+    let factor = Skills::factor(skills.weight, figures.weight_strength);
+    figures.daily_supply_t_per_man * factor * i64::from(men)
+}
+
 impl World {
     /// The men's supply phase of the night pulse (decisions 16 to 20 of
     /// 0066, and 24a of 0090). For each hex, and each side with men ashore
@@ -130,7 +143,7 @@ impl World {
             for unit in &units {
                 let unit = &self.truth.land_units[unit];
                 let factor = Skills::factor(unit.skills.weight, figures.weight_strength);
-                charge += figures.daily_supply_t_per_man * factor * i64::from(unit.men_ashore);
+                charge += daily_charge_t(&figures, &unit.skills, unit.men_ashore);
                 weighted_men += factor * i64::from(unit.men_ashore);
             }
             let weighted = weighted_men != Fixed::from_int(i64::from(men));

@@ -500,8 +500,11 @@ impl<'a> SideView<'a> {
             .get(&unit)
             .filter(|land_unit| land_unit.side == self.side)?;
         let figures = self.ref_data.ground.as_ref()?;
-        let factor = crate::state::Skills::factor(land_unit.skills.weight, figures.weight_strength);
-        Some(figures.daily_supply_t_per_man * factor * i64::from(land_unit.men_ashore))
+        Some(crate::ground::daily_charge_t(
+            figures,
+            &land_unit.skills,
+            land_unit.men_ashore,
+        ))
     }
 
     /// The factor one of the side's own forces' work is multiplied by while
