@@ -586,6 +586,96 @@ function numEq(a, b) {
   return a === b;
 }
 
+/**
+ * The air layer's part of one event: what the step's drawings (fights, searches, the sightings, misses, launches, escorts and
+ * strikes that found nothing) take from it. Called by both ways of building a model, with where forces are at this moment
+ * (pos: forces, shipForce, sunk and groupBase, the rebuild's own state or a version 4 step's). Returns true when the event is
+ * air activity. Beyond the step's aux and attempts it changes only the formed-step of a group a landing formed.
+ */
+function drawAirEvent(ctx, ev, si, aux, attempts, pos) {
+  const { bases, airGroups, groupTable, umpire, eventById, stepOfEvent } = ctx;
+  const d = ev.data || {};
+  switch (ev.kind) {
+        case 'report_received': {
+          // A report that a search of this step made: the mark is where the side was told (the umpire also gets where the force truly was).
+          if (Array.isArray(d.hex)) {
+            for (const c of ev.causes || []) {
+              const ce = c.event !== undefined ? eventById.get(c.event) : null;
+              if (!ce || ce.kind !== 'search_attempt' || stepOfEvent.get(ce.id) !== si) continue;
+              const at = attempts.get(ce.id);
+              aux.air.sighted.push({ q: d.hex[0], r: d.hex[1], side: d.side, event: ev.id, attempt: ce.id, air_group: ce.data && ce.data.air_group, trueHex: at ? at.hex : null });
+              break;
+            }
+          }
+          break;
+        }
+        case 'engagement_begun':
+        case 'engagement_ended':
+          if (Array.isArray(d.hex)) aux.fights.push({ q: d.hex[0], r: d.hex[1], a: d.a, b: d.b, kind: ev.kind, event: ev.id });
+          break;
+        case 'search_flown': {
+          // From a base, the base's hex; from a ship, the hex the event records.
+          const b = d.base != null ? bases.get(d.base) : null;
+          const at = b ? { q: b.q, r: b.r } : (Array.isArray(d.hex) ? { q: d.hex[0], r: d.hex[1] } : null);
+          if (at) aux.searches.push({ event: ev.id, air_group: d.air_group, base: d.base, ship: d.ship, q: at.q, r: at.r, from_deg: d.from_deg, to_deg: d.to_deg, range_nm: d.range_nm, aircraft: d.aircraft, side: (airGroups.get(d.air_group) || b || {}).side });
+          break;
+        }
+        // The umpire's uncut search attempt names the force it looked for: where that force truly was, at this moment.
+        case 'search_attempt': {
+          if (!umpire || d.task_force === undefined) break;
+          const f = pos.forces.get(d.task_force), hex = f ? [f.q, f.r] : null;
+          attempts.set(ev.id, { hex });
+          if (d.sighted === false && hex) { const g = groupTable.get(d.air_group); aux.air.misses.push({ q: hex[0], r: hex[1], side: g ? g.side : null, event: ev.id, air_group: d.air_group, task_force: d.task_force }); }
+          break;
+        }
+        case 'strike_launched':
+        case 'base_strike_launched': {
+          const g = groupTable.get(d.air_group);
+          aux.air.launches.push({ ev: ev.id, d, g, launch: airGroupHex(bases, pos, g), target: Array.isArray(d.hex) ? [d.hex[0], d.hex[1]] : null, kind: ev.kind === 'base_strike_launched' ? 'base' : 'ship', baseId: d.base });
+          break;
+        }
+        case 'escorts_sent': aux.air.escorts.push({ ev: ev.id, d }); break;
+        case 'aircraft_landed_elsewhere': {
+          const g = d.formed ? groupTable.get(d.to) : null;
+          if (g && g.formedStep === -1) g.formedStep = si;
+          break;
+        }
+        case 'strike_found_nothing': {
+          if (!umpire) break;
+          // Where the force the strike was sent at truly is: launch -> the report behind it -> the sighting or attack that report was about -> that force, now.
+          let hex = null;
+          const launch = (ev.causes || []).map(c => c.event !== undefined ? eventById.get(c.event) : null).find(e => e && e.kind === 'strike_launched');
+          if (launch) {
+            const seen = new Set([launch.id]);
+            let level = [launch];
+            for (let depth = 0; depth < 4 && !hex && level.length; depth++) {
+              const next = [];
+              for (const e of level) for (const c of e.causes || []) {
+                const ce = c.event !== undefined ? eventById.get(c.event) : null;
+                if (!ce || seen.has(ce.id)) continue;
+                seen.add(ce.id); next.push(ce);
+                if (!hex && (ce.kind === 'search_attempt' || ce.kind === 'air_attack') && ce.data && ce.data.task_force !== undefined) {
+                  const f = pos.forces.get(ce.data.task_force);
+                  if (f) hex = [f.q, f.r];
+                }
+              }
+              level = next;
+            }
+          }
+          aux.air.nothing.set(ev.id, { hex });
+          break;
+        }
+    default: return false;
+  }
+  return AIR_ACTIVITY.has(ev.kind);
+}
+const AIR_ACTIVITY = new Set(['search_flown', 'strike_launched', 'base_strike_launched']);
+
+/** The raids and tallies of a step, from what its events drew. */
+function finishAirStep(airCtx, aux, idxs, si) {
+  if (aux.air.launches.length) { const a = assembleAir(airCtx, aux.air, idxs, si); aux.air.raids = a.raids; aux.air.tallies = a.tallies; }
+}
+
 // ---- Replay version 4: the state at each step is in the file (decision 0108, item 7) ----
 // The export records, for every (day, phase) step, the records that changed since the step before (`steps`); this
 // applies them in order and takes what the page draws of the state from the records. Versions 1 to 3 have no such
@@ -670,7 +760,7 @@ function sideSteps(steps, side) {
  * the step before's records, so nothing carries over from one step to the next.
  */
 function rebuildFromSteps(ctx) {
-  const { replay, events, steps, bases, initial, groupTable, airGroups, umpire, eventById, orderById, stepOfEvent, airCtx } = ctx;
+  const { replay, events, steps, bases, initial, groupTable, umpire, eventById, orderById, stepOfEvent, airCtx, airDraw } = ctx;
   const entries = replay.steps;
   const entryAt = new Map();
   entries.forEach((e, j) => entryAt.set(stepKey(e.day, e.phase), j));
@@ -785,78 +875,13 @@ function rebuildFromSteps(ctx) {
           if (am) missionText.set(t.id, am[1]);
           break;
         }
-        // The drawings of the air layer, made from the step's events as the rebuild makes them.
-        case 'report_received': {
-          if (Array.isArray(d.hex)) {
-            for (const c of ev.causes || []) {
-              const ce = c.event !== undefined ? eventById.get(c.event) : null;
-              if (!ce || ce.kind !== 'search_attempt' || stepOfEvent.get(ce.id) !== si) continue;
-              const at = attempts.get(ce.id);
-              aux.air.sighted.push({ q: d.hex[0], r: d.hex[1], side: d.side, event: ev.id, attempt: ce.id, air_group: ce.data && ce.data.air_group, trueHex: at ? at.hex : null });
-              break;
-            }
-          }
+        // The drawings of the air layer are made from the step's events by the one function the rebuild uses too.
+        default:
+          if (drawAirEvent(airDraw, ev, si, aux, attempts, live)) hasAir = true;
           break;
-        }
-        case 'engagement_begun':
-        case 'engagement_ended':
-          if (Array.isArray(d.hex)) aux.fights.push({ q: d.hex[0], r: d.hex[1], a: d.a, b: d.b, kind: ev.kind, event: ev.id });
-          break;
-        case 'search_flown': {
-          const b = d.base != null ? bases.get(d.base) : null;
-          const at = b ? { q: b.q, r: b.r } : (Array.isArray(d.hex) ? { q: d.hex[0], r: d.hex[1] } : null);
-          hasAir = true;
-          if (at) aux.searches.push({ event: ev.id, air_group: d.air_group, base: d.base, ship: d.ship, q: at.q, r: at.r, from_deg: d.from_deg, to_deg: d.to_deg, range_nm: d.range_nm, aircraft: d.aircraft, side: (airGroups.get(d.air_group) || b || {}).side });
-          break;
-        }
-        case 'search_attempt': {
-          if (!umpire || d.task_force === undefined) break;
-          const f = live.forces.get(d.task_force), hex = f ? [f.q, f.r] : null;
-          attempts.set(ev.id, { hex });
-          if (d.sighted === false && hex) { const g = groupTable.get(d.air_group); aux.air.misses.push({ q: hex[0], r: hex[1], side: g ? g.side : null, event: ev.id, air_group: d.air_group, task_force: d.task_force }); }
-          break;
-        }
-        case 'strike_launched':
-        case 'base_strike_launched': {
-          hasAir = true;
-          const g = groupTable.get(d.air_group);
-          aux.air.launches.push({ ev: ev.id, d, g, launch: airGroupHex(bases, live, g), target: Array.isArray(d.hex) ? [d.hex[0], d.hex[1]] : null, kind: ev.kind === 'base_strike_launched' ? 'base' : 'ship', baseId: d.base });
-          break;
-        }
-        case 'escorts_sent': aux.air.escorts.push({ ev: ev.id, d }); break;
-        case 'aircraft_landed_elsewhere': {
-          const g = d.formed ? groupTable.get(d.to) : null;
-          if (g && g.formedStep === -1) g.formedStep = si;
-          break;
-        }
-        case 'strike_found_nothing': {
-          if (!umpire) break;
-          let hex = null;
-          const launch = (ev.causes || []).map(c => c.event !== undefined ? eventById.get(c.event) : null).find(e => e && e.kind === 'strike_launched');
-          if (launch) {
-            const seen = new Set([launch.id]);
-            let level = [launch];
-            for (let depth = 0; depth < 4 && !hex && level.length; depth++) {
-              const next = [];
-              for (const e of level) for (const c of e.causes || []) {
-                const ce = c.event !== undefined ? eventById.get(c.event) : null;
-                if (!ce || seen.has(ce.id)) continue;
-                seen.add(ce.id); next.push(ce);
-                if (!hex && (ce.kind === 'search_attempt' || ce.kind === 'air_attack') && ce.data && ce.data.task_force !== undefined) {
-                  const f = live.forces.get(ce.data.task_force);
-                  if (f) hex = [f.q, f.r];
-                }
-              }
-              level = next;
-            }
-          }
-          aux.air.nothing.set(ev.id, { hex });
-          break;
-        }
-        default: break;
       }
     }
-    if (aux.air.launches.length) { const a = assembleAir(airCtx, aux.air, step.events, si); aux.air.raids = a.raids; aux.air.tallies = a.tallies; }
+    finishAirStep(airCtx, aux, step.events, si);
 
     // The step's own state: the records at the end of its (day, phase), by the entries applied up to it.
     const j = entryAt.get(stepKey(step.stateDay, step.statePhase));
@@ -1162,6 +1187,7 @@ function buildModel(replay) {
   const setAirOrder = (map, id, v) => { const m = new Map(map); m.set(id, v); return m; };
   let hasAir = false;
   const airCtx = { events, eventById, groupTable, umpire };
+  const airDraw = { bases, airGroups, groupTable, umpire, eventById, stepOfEvent };
   for (const f of initial.task_forces || []) {
     const pos = f.position || { q: 0, r: 0 };
     cur.forces.set(f.id, { id: f.id, name: f.name || ('TF ' + f.id), side: f.side, q: pos.q, r: pos.r, ships: (f.ships || []).slice(), trail: [[pos.q, pos.r]], detachedFrom: null, readiness: f.readiness || 'normal', alerted: !!f.alerted });
@@ -1379,16 +1405,8 @@ function buildModel(replay) {
         case 'report_received': {
           const m = contactSide(ev);
           if (m) m.set(d.contact, { id: d.contact, side: d.side, hex: Array.isArray(d.hex) ? d.hex.slice() : [0, 0], ship_count: d.ship_count, kind: d.kind, age_pulses: d.age_pulses !== undefined ? d.age_pulses : 0 });
-          // A report that a search of this step made: the mark is where the side was told (the umpire also gets where the force truly was).
-          if (Array.isArray(d.hex)) {
-            for (const c of ev.causes || []) {
-              const ce = c.event !== undefined ? eventById.get(c.event) : null;
-              if (!ce || ce.kind !== 'search_attempt' || stepOfEvent.get(ce.id) !== si) continue;
-              const at = attempts.get(ce.id);
-              aux.air.sighted.push({ q: d.hex[0], r: d.hex[1], side: d.side, event: ev.id, attempt: ce.id, air_group: ce.data && ce.data.air_group, trueHex: at ? at.hex : null });
-              break;
-            }
-          }
+          // A report that a search of this step made is marked by the air layer.
+          if (drawAirEvent(airDraw, ev, si, aux, attempts, cur)) hasAir = true;
           break;
         }
         case 'contact_aged': {
@@ -1403,72 +1421,16 @@ function buildModel(replay) {
           if (m) m.delete(d.contact);
           break;
         }
-        case 'engagement_begun':
-        case 'engagement_ended':
-          if (Array.isArray(d.hex)) aux.fights.push({ q: d.hex[0], r: d.hex[1], a: d.a, b: d.b, kind: ev.kind, event: ev.id });
+        default:
+          if (drawAirEvent(airDraw, ev, si, aux, attempts, cur)) hasAir = true;
           break;
-        case 'search_flown': {
-          // From a base, the base's hex; from a ship, the hex the event records.
-          const b = d.base != null ? bases.get(d.base) : null;
-          const at = b ? { q: b.q, r: b.r } : (Array.isArray(d.hex) ? { q: d.hex[0], r: d.hex[1] } : null);
-          hasAir = true;
-          if (at) aux.searches.push({ event: ev.id, air_group: d.air_group, base: d.base, ship: d.ship, q: at.q, r: at.r, from_deg: d.from_deg, to_deg: d.to_deg, range_nm: d.range_nm, aircraft: d.aircraft, side: (airGroups.get(d.air_group) || b || {}).side });
-          break;
-        }
-        // The umpire's uncut search attempt names the force it looked for: where that force truly was, at this moment.
-        case 'search_attempt': {
-          if (!umpire || d.task_force === undefined) break;
-          const f = cur.forces.get(d.task_force), hex = f ? [f.q, f.r] : null;
-          attempts.set(ev.id, { hex });
-          if (d.sighted === false && hex) { const g = groupTable.get(d.air_group); aux.air.misses.push({ q: hex[0], r: hex[1], side: g ? g.side : null, event: ev.id, air_group: d.air_group, task_force: d.task_force }); }
-          break;
-        }
-        case 'strike_launched':
-        case 'base_strike_launched': {
-          hasAir = true;
-          const g = groupTable.get(d.air_group);
-          aux.air.launches.push({ ev: ev.id, d, g, launch: airGroupHex(bases, cur, g), target: Array.isArray(d.hex) ? [d.hex[0], d.hex[1]] : null, kind: ev.kind === 'base_strike_launched' ? 'base' : 'ship', baseId: d.base });
-          break;
-        }
-        case 'escorts_sent': aux.air.escorts.push({ ev: ev.id, d }); break;
-        case 'aircraft_landed_elsewhere': {
-          const g = d.formed ? groupTable.get(d.to) : null;
-          if (g && g.formedStep === -1) g.formedStep = si;
-          break;
-        }
-        case 'strike_found_nothing': {
-          if (!umpire) break;
-          // Where the force the strike was sent at truly is: launch -> the report behind it -> the sighting or attack that report was about -> that force, now.
-          let hex = null;
-          const launch = (ev.causes || []).map(c => c.event !== undefined ? eventById.get(c.event) : null).find(e => e && e.kind === 'strike_launched');
-          if (launch) {
-            const seen = new Set([launch.id]);
-            let level = [launch];
-            for (let depth = 0; depth < 4 && !hex && level.length; depth++) {
-              const next = [];
-              for (const e of level) for (const c of e.causes || []) {
-                const ce = c.event !== undefined ? eventById.get(c.event) : null;
-                if (!ce || seen.has(ce.id)) continue;
-                seen.add(ce.id); next.push(ce);
-                if (!hex && (ce.kind === 'search_attempt' || ce.kind === 'air_attack') && ce.data && ce.data.task_force !== undefined) {
-                  const f = cur.forces.get(ce.data.task_force);
-                  if (f) hex = [f.q, f.r];
-                }
-              }
-              level = next;
-            }
-          }
-          aux.air.nothing.set(ev.id, { hex });
-          break;
-        }
-        default: break;
       }
     }
-    if (aux.air.launches.length) { const a = assembleAir(airCtx, aux.air, steps[si].events, si); aux.air.raids = a.raids; aux.air.tallies = a.tallies; }
+    finishAirStep(airCtx, aux, steps[si].events, si);
     states.push(snapshot(cur, aux));
   }
   if (fromSteps) {
-    const made = rebuildFromSteps({ replay, events, steps, bases, initial, groupTable, airGroups, umpire, eventById, orderById, stepOfEvent, airCtx });
+    const made = rebuildFromSteps({ replay, events, steps, bases, initial, groupTable, airGroups, umpire, eventById, orderById, stepOfEvent, airCtx, airDraw });
     for (const st of made.states) states.push(st);
     for (const [k, v] of made.eventForces) eventForces.set(k, v);
     hasAir = made.hasAir;

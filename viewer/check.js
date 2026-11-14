@@ -9,6 +9,8 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
+// --against-rebuild: also compare each version 4 file's model with the one the rebuild from the events makes (it needs the rebuild to know every event).
+const AGAINST_REBUILD = process.argv.includes('--against-rebuild');
 let failures = 0;
 function fail(msg) { failures++; console.log('  FAIL: ' + msg); }
 function assert(cond, msg) { if (!cond) fail(msg); }
@@ -116,7 +118,7 @@ function checkSideViews(replay, umpireModel) {
     if (replay.steps) {
       assert(Array.isArray(sr.steps), label + ': the side page lost its steps');
       checkSideSteps(replay, side, sr, model, label);
-      crossCheckRebuild(Core.buildModel(Core.sideReplay(Object.assign({}, replay, { steps: undefined }), side)), model, label);
+      if (AGAINST_REBUILD) crossCheckRebuild(Core.buildModel(Core.sideReplay(Object.assign({}, replay, { steps: undefined }), side)), model, label);
     }
     Core.compareWithFinal(model).forEach(p => fail(label + ': rebuild vs final: ' + p));
     let enemy = 0;
@@ -369,7 +371,7 @@ function checkReplay(file) {
   const model = Core.buildModel(replay);
   if (replay.steps) {
     checkSteps(replay, model);
-    crossCheckRebuild(Core.buildModel(Object.assign({}, replay, { steps: undefined, version: 3 })), model, 'umpire');
+    if (AGAINST_REBUILD) crossCheckRebuild(Core.buildModel(Object.assign({}, replay, { steps: undefined, version: 3 })), model, 'umpire');
   }
   const g = checkGeometry(replay, path.basename(file)) || { edges: 0, oneSided: 0 };
 
@@ -780,7 +782,7 @@ function checkMeasuring() {
 }
 
 // ---- Main ----
-const files = process.argv.slice(2);
+const files = process.argv.slice(2).filter(a => !a.startsWith('--'));
 if (!files.length) console.log('(no replay files given: only the script and synthetic checks run)');
 for (const f of files) checkReplay(f);
 synthetic();
