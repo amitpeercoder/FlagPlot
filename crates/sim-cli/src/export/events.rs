@@ -841,6 +841,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             from,
             to,
             days,
+            counted,
             of,
         } => (
             "march_day",
@@ -848,6 +849,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .hex("from", *from)
                 .hex("to", *to)
                 .int("days", *days)
+                .num("counted", *counted)
                 .int("of", *of),
         ),
         EventKind::MarchBaseFormed {

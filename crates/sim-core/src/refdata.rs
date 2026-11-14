@@ -1137,6 +1137,18 @@ pub struct GroundFigures {
     /// Days of firing in a fight for one step of experience, at least 1
     /// (decision 5 of 0097).
     pub fight_days_per_level: u32,
+    /// How much a step of the assault skill moves the rehearsal gained in a
+    /// day (decision 3 of 0098). 0 switches the skill off.
+    pub assault_skill_strength: Fixed,
+    /// How much a step of a movement skill moves a day's march (decision 3
+    /// of 0098). 0 switches the skill off.
+    pub movement_skill_strength: Fixed,
+    /// How much a step of the holding skill moves a defender's chance to hit
+    /// (decision 3 of 0098). 0 switches the skill off.
+    pub holding_skill_strength: Fixed,
+    /// How much a step of weight moves a unit's shots and the supply each of
+    /// its men costs (decision 3 of 0098). 0 switches the skill off.
+    pub weight_strength: Fixed,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1181,6 +1193,10 @@ impl GroundFigures {
         training_days_per_level: 30,
         training_ceiling: 2,
         fight_days_per_level: 10,
+        assault_skill_strength: Fixed::from_raw(250_000),
+        movement_skill_strength: Fixed::from_raw(250_000),
+        holding_skill_strength: Fixed::from_raw(150_000),
+        weight_strength: Fixed::from_raw(250_000),
     };
 
     /// Describes what is wrong with the figures, if anything. The weight of
@@ -1287,6 +1303,21 @@ impl GroundFigures {
         ] {
             if days == 0 {
                 return Some(format!("ground {label} 0 is not 1 or more"));
+            }
+        }
+        // The strengths of the skills (decision 0098): below 0.5, so that a
+        // skill of 0 never makes a factor of 0 (a march that never ends, a
+        // unit that eats nothing).
+        for (label, strength) in [
+            ("assault_skill_strength", self.assault_skill_strength),
+            ("movement_skill_strength", self.movement_skill_strength),
+            ("holding_skill_strength", self.holding_skill_strength),
+            ("weight_strength", self.weight_strength),
+        ] {
+            if strength.is_negative() || strength >= Fixed::from_ratio(1, 2) {
+                return Some(format!(
+                    "ground {label} {strength} is not at least 0 and below 0.5"
+                ));
             }
         }
         if self.training_ceiling > 4 {

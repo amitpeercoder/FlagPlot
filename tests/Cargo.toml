@@ -243,3 +243,7 @@ path = "scenario_27_preparing_a_landing.rs"
 [[test]]
 name = "scenario_28_experience_and_training"
 path = "scenario_28_experience_and_training.rs"
+
+[[test]]
+name = "scenario_29_skills"
+path = "scenario_29_skills.rs"

@@ -1370,13 +1370,17 @@ pub enum EventKind {
         hex: Hex,
     },
     /// A land unit marched a day from `from` toward `to` in the ground
-    /// combat phase (decision 0094, 4): `days` of the `of` the march takes.
-    /// Its men are still at `from` unless `days` is `of`.
+    /// combat phase (decision 0094, 4): `days` days marched, counted as
+    /// `counted` of the `of` the march takes (decision 4 of 0098: each day
+    /// counts as the unit's movement factor, so `counted` is `days` for a
+    /// unit whose factor is 1). Its men are still at `from` unless `counted`
+    /// has reached `of`.
     MarchDay {
         unit: LandUnitId,
         from: Hex,
         to: Hex,
         days: u32,
+        counted: Fixed,
         of: u32,
     },
     /// A march formed a base for its side in the hex it reached, to hold the
@@ -3037,12 +3041,23 @@ impl fmt::Display for EventKind {
                 from,
                 to,
                 days,
+                counted,
                 of,
-            } => write!(
-                f,
-                "{unit} marched from {from} toward {to}: {days} of {of} {}",
-                if *of == 1 { "day" } else { "days" }
-            ),
+            } => {
+                let of_days = if *of == 1 { "day" } else { "days" };
+                if *counted == Fixed::from_int(i64::from(*days)) {
+                    write!(
+                        f,
+                        "{unit} marched from {from} toward {to}: {days} of {of} {of_days}"
+                    )
+                } else {
+                    write!(
+                        f,
+                        "{unit} marched from {from} toward {to}: {days} {} marched, counted as {counted} of {of} {of_days}",
+                        if *days == 1 { "day" } else { "days" }
+                    )
+                }
+            }
             EventKind::MarchBaseFormed {
                 base,
                 side,

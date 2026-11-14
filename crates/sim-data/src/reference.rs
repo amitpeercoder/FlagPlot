@@ -795,6 +795,12 @@ struct GroundFile {
     training_days_per_level: u32,
     training_ceiling: u32,
     fight_days_per_level: u32,
+    /// The strengths of a land unit's skills (decision 0098). Required like
+    /// the older keys.
+    assault_skill_strength: Quantity,
+    movement_skill_strength: Quantity,
+    holding_skill_strength: Quantity,
+    weight_strength: Quantity,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -867,6 +873,10 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         training_days_per_level: file.training_days_per_level,
         training_ceiling: file.training_ceiling,
         fight_days_per_level: file.fight_days_per_level,
+        assault_skill_strength: number("assault_skill_strength", &file.assault_skill_strength)?,
+        movement_skill_strength: number("movement_skill_strength", &file.movement_skill_strength)?,
+        holding_skill_strength: number("holding_skill_strength", &file.holding_skill_strength)?,
+        weight_strength: number("weight_strength", &file.weight_strength)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -2338,6 +2348,54 @@ mod tests {
         }
     }
 
+    const SKILL_KEYS: [&str; 4] = [
+        "assault_skill_strength",
+        "movement_skill_strength",
+        "holding_skill_strength",
+        "weight_strength",
+    ];
+
+    #[test]
+    fn the_skill_strengths_are_read_and_each_is_required() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.assault_skill_strength, Fixed::from_ratio(1, 4));
+        assert_eq!(figures.movement_skill_strength, Fixed::from_ratio(1, 4));
+        assert_eq!(figures.holding_skill_strength, Fixed::from_ratio(15, 100));
+        assert_eq!(figures.weight_strength, Fixed::from_ratio(1, 4));
+        for key in SKILL_KEYS {
+            let text = without_keys(&ground_text(), &[key]);
+            assert!(
+                parse_ground_figures(&text, here())
+                    .expect_err("a missing key is refused")
+                    .message
+                    .contains(key),
+                "without {key}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_skill_strengths_are_at_least_0_and_below_one_half_and_no_float() {
+        let bad = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        let ok = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .unwrap_or_else(|e| panic!("{key} {value} loads: {}", e.message))
+        };
+        for key in SKILL_KEYS {
+            assert!(bad(key, "-1").contains(key));
+            assert!(bad(key, "\"-0.1\"").contains(key));
+            assert!(bad(key, "\"0.5\"").contains(key));
+            assert!(bad(key, "1").contains(key));
+            assert!(bad(key, "0.25").contains(key));
+            ok(key, "0");
+            ok(key, "\"0.49\"");
+        }
+    }
+
     const PREPARATION_KEYS: [&str; 8] = [
         "preparation_per_day",
         "unprepared_landing_share",
@@ -2737,6 +2795,11 @@ mod tests {
         assert_eq!(ground.training_days_per_level, 30);
         assert_eq!(ground.training_ceiling, 2);
         assert_eq!(ground.fight_days_per_level, 10);
+        // The strengths of decision 0098 are 0: no skill does anything.
+        assert_eq!(ground.assault_skill_strength, Fixed::ZERO);
+        assert_eq!(ground.movement_skill_strength, Fixed::ZERO);
+        assert_eq!(ground.holding_skill_strength, Fixed::ZERO);
+        assert_eq!(ground.weight_strength, Fixed::ZERO);
         let error = ground.report_error.expect("held");
         assert_eq!(
             (error.low, error.high),

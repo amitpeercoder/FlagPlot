@@ -18,7 +18,7 @@ use sim_core::orders::{
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
     AirGroup, AirGroupLocation, Arrival, Base, LandUnit, Replacement, Ship, ShipLocation,
-    ShipSystem, ShipSystems, Side, SystemState, TaskForce, TruthState,
+    ShipSystem, ShipSystems, Side, Skills, SystemState, TaskForce, TruthState,
 };
 use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::{DaySummary, StartingContact, StartingEstimate, World};
@@ -267,6 +267,24 @@ struct LandUnitSpec {
     /// Days of fighting counted at the start, a whole number below the
     /// ground figure `fight_days_per_level` (decision 0097). Defaults to 0.
     fight_days: Option<u32>,
+    /// What the unit is good at (decision 0098): each skill a whole number
+    /// from 0 to 4; any not given is 2.
+    skills: Option<SkillsSpec>,
+}
+
+/// A land unit's skills (decision 0098), each optional, defaulting to 2:
+/// `assault`, `holding`, `weight`, and one movement skill for each kind of
+/// terrain, `clear`, `jungle`, `mountain` and `atoll`.
+#[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+struct SkillsSpec {
+    assault: Option<u32>,
+    holding: Option<u32>,
+    weight: Option<u32>,
+    clear: Option<u32>,
+    jungle: Option<u32>,
+    mountain: Option<u32>,
+    atoll: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -1436,6 +1454,44 @@ impl Scenario {
                     )));
                 }
                 unit.fight_days = days;
+            }
+            if let Some(skills) = &spec.skills {
+                let standard = Skills::STANDARD_ALL;
+                let mut set = Skills::STANDARD_ALL;
+                for (name, given, slot, default) in [
+                    (
+                        "assault",
+                        skills.assault,
+                        &mut set.assault,
+                        standard.assault,
+                    ),
+                    (
+                        "holding",
+                        skills.holding,
+                        &mut set.holding,
+                        standard.holding,
+                    ),
+                    ("weight", skills.weight, &mut set.weight, standard.weight),
+                    ("clear", skills.clear, &mut set.clear, standard.clear),
+                    ("jungle", skills.jungle, &mut set.jungle, standard.jungle),
+                    (
+                        "mountain",
+                        skills.mountain,
+                        &mut set.mountain,
+                        standard.mountain,
+                    ),
+                    ("atoll", skills.atoll, &mut set.atoll, standard.atoll),
+                ] {
+                    let value = given.unwrap_or(u32::from(default));
+                    if value > u32::from(Skills::MAX) {
+                        return Err(fail(format!(
+                            "{id} has a {name} skill of {value}, which is not a whole number from 0 to {}",
+                            Skills::MAX
+                        )));
+                    }
+                    *slot = value as u8;
+                }
+                unit.skills = set;
             }
             match (spec.q, spec.r, spec.task_force) {
                 (Some(q), Some(r), None) => {
@@ -4660,6 +4716,55 @@ task_force = 3
             (two.experience, two.training_days, two.fight_days),
             (4, 29, 9)
         );
+    }
+
+    #[test]
+    fn a_land_unit_takes_skills_and_any_not_given_is_2() {
+        let scenario = landing(
+            true,
+            &format!(
+                "{}{}",
+                unit_ashore(1, 100, 0, 0),
+                unit_with(
+                    2,
+                    "skills = { assault = 4, holding = 3, weight = 0, mountain = 4, clear = 1 }"
+                )
+            ),
+        )
+        .expect("loads");
+        let truth = scenario.world.umpire();
+        assert_eq!(
+            truth.land_units[&LandUnitId::new(1)].skills,
+            Skills::STANDARD_ALL
+        );
+        assert_eq!(
+            truth.land_units[&LandUnitId::new(2)].skills,
+            Skills {
+                assault: 4,
+                holding: 3,
+                weight: 0,
+                clear: 1,
+                jungle: 2,
+                mountain: 4,
+                atoll: 2,
+            }
+        );
+    }
+
+    #[test]
+    fn a_skill_is_whole_from_0_to_4_and_named() {
+        let message = landing_error(true, &unit_with(1, "skills = { weight = 5 }"));
+        assert!(message.contains("weight skill of 5"), "{message}");
+        for keys in [
+            "skills = { assault = -1 }",
+            "skills = { holding = 1.5 }",
+            "skills = { mountain = \"3\" }",
+            "skills = { swimming = 3 }",
+        ] {
+            assert!(landing(true, &unit_with(1, keys)).is_err(), "{keys}");
+        }
+        assert!(landing(true, &unit_with(1, "skills = { atoll = 0, jungle = 4 }")).is_ok());
+        assert!(landing(true, &unit_with(1, "skills = {}")).is_ok());
     }
 
     #[test]

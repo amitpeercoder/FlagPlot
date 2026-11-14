@@ -124,7 +124,7 @@ fn a_unit_ashore_lists_where_it_can_march_and_a_march_shows_its_days() {
     assert_eq!(u["march"]["of_days"], 3, "{u}");
     assert_eq!(u["march"]["order"], 1, "{u}");
     assert!(
-        text.contains("marching to (1,0), 1 of 3 days marched (by your order 1)"),
+        text.contains("marching to (1,0), 1 of 3 days marched (1 counted) (by your order 1)"),
         "{text}"
     );
     let day = &data["land_units"]["marches_yesterday"];

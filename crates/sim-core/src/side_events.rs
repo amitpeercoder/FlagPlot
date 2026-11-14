@@ -3225,6 +3225,7 @@ mod tests {
                     from: hex(),
                     to: Hex::new(1, 0),
                     days: 1,
+                    counted: Fixed::ONE,
                     of: 3,
                 },
                 Whole,

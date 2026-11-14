@@ -151,6 +151,9 @@ pub enum InvariantViolation {
     /// a count of days is not below the days for a step (decisions 0095 and
     /// 0097). Added at the end of the enum.
     LandUnitExperienceUnsound(LandUnitId),
+    /// A land unit has a skill above 4 (decision 0098, 1). Added at the end
+    /// of the enum.
+    LandUnitSkillOutOfRange(LandUnitId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -368,6 +371,9 @@ impl fmt::Display for InvariantViolation {
                 f,
                 "{unit} has a rehearsal outside 0 to 100, a rehearsal hex that does not match its rehearsal, an experience above 4, or a count of days not below the days for a step"
             ),
+            InvariantViolation::LandUnitSkillOutOfRange(unit) => {
+                write!(f, "{unit} has a skill above 4")
+            }
         }
     }
 }
@@ -679,9 +685,10 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         // A unit whose men ashore were all lost after the day's marches keeps
         // its march until the next day's, which stops it (decision 0094).
         if let (Some(march), Some(hex)) = (unit.march, unit.hex) {
-            let days_ok = ref_data
-                .ground
-                .is_some_and(|ground| march.days < ground.march_days_per_hex);
+            let days_ok = ref_data.ground.is_some_and(|ground| {
+                march.counted >= Fixed::ZERO
+                    && march.counted < Fixed::from_int(i64::from(ground.march_days_per_hex))
+            });
             if !map.has_land_link(hex, march.to) || !days_ok {
                 violations.push(InvariantViolation::LandUnitMarchUnsound(unit.id));
             }
@@ -721,6 +728,22 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         });
         if !rehearsal_ok || unit.experience > crate::state::LandUnit::MAX_EXPERIENCE || !counts_ok {
             violations.push(InvariantViolation::LandUnitExperienceUnsound(unit.id));
+        }
+        // Skills (decision 0098, 1).
+        let skills = unit.skills;
+        let skills_ok = [
+            skills.assault,
+            skills.holding,
+            skills.weight,
+            skills.clear,
+            skills.jungle,
+            skills.mountain,
+            skills.atoll,
+        ]
+        .into_iter()
+        .all(|skill| skill <= crate::state::Skills::MAX);
+        if !skills_ok {
+            violations.push(InvariantViolation::LandUnitSkillOutOfRange(unit.id));
         }
     }
 

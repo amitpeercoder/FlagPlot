@@ -9,9 +9,10 @@
 //! randomness.
 //!
 //! Reads: a force's side, position, status, ships, roster and loading; a
-//! land unit's men, place and rehearsal; the bases of the side at the force's
-//! hex; the ground figures. Writes: a force's preparation; a land unit's
-//! rehearsal and its hex; the rosters; the events.
+//! land unit's men, place, rehearsal and assault skill; the bases of the
+//! side at the force's hex; the ground figures. Writes: a force's
+//! preparation; a land unit's rehearsal and its hex; the rosters; the
+//! events.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -22,7 +23,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{EventId, LandUnitId, OrderId, TaskForceId};
 use crate::refdata::GroundFigures;
-use crate::state::{Preparation, TaskForceStatus};
+use crate::state::{Preparation, Skills, TaskForceStatus};
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
 
@@ -415,12 +416,17 @@ impl World {
             .get_mut(&unit_id)
             .expect("the land unit exists");
         let before = unit.rehearsal;
-        let after = (before + figures.preparation_per_day).min(HUNDRED);
+        // The day's rehearsal times the unit's assault factor (decision 2 of
+        // 0098).
+        let assault = unit.skills.assault;
+        let factor = Skills::factor(assault, figures.assault_skill_strength);
+        let gained = figures.preparation_per_day * factor;
+        let after = (before + gained).min(HUNDRED);
         unit.rehearsal = after;
         unit.rehearsal_hex = (after > Fixed::ZERO).then_some(preparation.hex);
         if after != before {
-            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                factors: vec![
+            let breakdown = self.config.record_breakdowns.then(|| {
+                let mut factors = vec![
                     Factor {
                         name: "rehearsal_before",
                         value: before,
@@ -429,8 +435,25 @@ impl World {
                         name: "preparation_per_day",
                         value: figures.preparation_per_day,
                     },
-                ],
-                result: after,
+                ];
+                // Only where the skill acts, so a standard unit's breakdown
+                // is as it was.
+                if factor != Fixed::ONE {
+                    factors.extend([
+                        Factor {
+                            name: "assault_skill",
+                            value: Fixed::from_int(i64::from(assault)),
+                        },
+                        Factor {
+                            name: "assault_factor",
+                            value: factor,
+                        },
+                    ]);
+                }
+                Breakdown {
+                    factors,
+                    result: after,
+                }
             });
             self.events.record(
                 day,

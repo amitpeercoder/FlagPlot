@@ -1034,13 +1034,14 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["land_unit", "from", "to", "days", "of_days", "event"],
+            "required": ["land_unit", "from", "to", "days", "counted", "of_days", "event"],
             "additionalProperties": false,
             "properties": {
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
               "from": { "$ref": "defs.schema.json#/$defs/place" },
               "to": { "$ref": "defs.schema.json#/$defs/place" },
               "days": { "type": "integer" },
+              "counted": { "description": "The days counted toward of_days (decision 0098, 4).", "$ref": "defs.schema.json#/$defs/dec" },
               "of_days": { "type": "integer" },
               "event": { "type": "integer" }
             }

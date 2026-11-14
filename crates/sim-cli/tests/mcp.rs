@@ -355,6 +355,16 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "fight_days_per_level",
         "experience_fire_strength",
         "the enemy sees none of it",
+        // Skills of a land unit (decision 0098).
+        "Skills of a land unit",
+        "whole numbers from 0 to 4, 2 the standard, fixed in play",
+        "assault_skill_strength per step",
+        "the lower of the unit's skills for the hex it leaves and the hex it enters decides",
+        "movement_skill_strength per step",
+        "holding_skill_strength per step",
+        "weight_strength per step",
+        "A unit made by division takes its parent's skills",
+        "You see the skills of your own units only",
         // Acting at a place and steaming on (decision 0096).
         "set_route {waypoints: [[q, r], ...], act_at: [[q, r], ...]}",
         "A force halts at a marked waypoint only if it has work there",
@@ -395,6 +405,10 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "TRAIN AND EXPERIENCE. set_activity {activity: ready or train} is a standing order",
         "a unit still aboard may be set to train",
         "set_activity {activity: ready or train}, for its days at rest",
+        // Skills of a land unit (decision 0098).
+        "SKILLS. A land unit's skills (0 to 4, 2 the standard, fixed in play) are shown in its line as skills",
+        "A unit made by division takes its parent's skills",
+        "You see your own units' skills; the enemy sees none",
         // Acting at a place and steaming on (decision 0096).
         "set_route {waypoints: [[q, r], ...], act_at: [[q, r], ...] (optional)}",
         "ACT AT A PLACE. A route may mark waypoints to act at with act_at",

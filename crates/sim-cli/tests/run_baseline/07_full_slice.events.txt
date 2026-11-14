@@ -2,20 +2,20 @@ Scenario 7: The full slice, 21 August to 3 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 4e5a220161964d16  37 events
-day   2  hash f7af4e674f3830f8  32 events
-day   3  hash d98fceb93ccc201f  25 events
-day   4  hash 5e9f2830ec12268f  270 events
-day   5  hash 9f25a2ba91d14ccb  114 events
-day   6  hash e4445ef8ab22dfd7  88 events
-day   7  hash e548b8797b9748e9  175 events
-day   8  hash 73052f89c51694f4  110 events
-day   9  hash e647127e07adcc0c  163 events
-day  10  hash 2d3661adbf918edc  136 events
-day  11  hash 15214dccefc7a359  127 events
-day  12  hash 1e6be4be663a0c37  99 events
-day  13  hash 69d99c40884601b1  131 events
-day  14  hash 9b749ede52d67085  115 events
+day   1  hash df950a4e85acc7e9  37 events
+day   2  hash 36997ec54a004267  32 events
+day   3  hash 92900989397e2b70  25 events
+day   4  hash b6be905484ddedc8  270 events
+day   5  hash c8b21759a0e0dc3c  114 events
+day   6  hash 9f3fcb857791fb4c  88 events
+day   7  hash 1b348a141d3edeaa  175 events
+day   8  hash c25fcf8a592bf33d  110 events
+day   9  hash c707ee75c6964885  163 events
+day  10  hash 217d5f5d6cc8bc89  136 events
+day  11  hash 1e0d2097ee4684b0  127 events
+day  12  hash 514a4ae48bc2c5da  99 events
+day  13  hash 52c403b2c10f3efc  131 events
+day  14  hash 74903449c73b3a5c  115 events
 
 #1 D1 -         order:1 accepted for task_force:5  <- order:1
 #2 D1 -         order:2 accepted for air_group:10  <- order:2

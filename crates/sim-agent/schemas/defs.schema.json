@@ -133,7 +133,7 @@
     "land_unit_line": {
       "description": "A land unit of the side (decision 0066, 21): its men ashore and where, its men aboard by ship, and whether its men were fed in the last night pulse. Only the side's own units have one.",
       "type": "object",
-      "required": ["land_unit", "men_ashore", "place", "men_aboard", "aboard", "destroyed", "fed_last_night", "posture", "fatigue", "fed_share", "activity", "experience", "training", "fighting"],
+      "required": ["land_unit", "men_ashore", "place", "men_aboard", "aboard", "destroyed", "fed_last_night", "posture", "fatigue", "fed_share", "activity", "experience", "skills", "training", "fighting"],
       "additionalProperties": false,
       "properties": {
         "land_unit": { "$ref": "#/$defs/handle" },
@@ -164,11 +164,12 @@
         "march": {
           "description": "The unit's march, when a march order is standing (decision 0094, 4 and 11). The unit is where it was until it has marched all the days. Left out when it has none.",
           "type": "object",
-          "required": ["to", "days_marched", "of_days"],
+          "required": ["to", "days_marched", "days_counted", "of_days"],
           "additionalProperties": false,
           "properties": {
             "to": { "$ref": "#/$defs/place" },
             "days_marched": { "description": "The days marched so far, below of_days.", "type": "integer" },
+            "days_counted": { "description": "The days counted toward of_days (decision 0098, 4): each day marched counts as the unit's movement factor for the hexes it leaves and enters. Equal to days_marched for a unit of standard movement.", "$ref": "#/$defs/dec" },
             "of_days": { "description": "The days a march takes: the scenario's march_days_per_hex.", "type": "integer" },
             "order": { "description": "The number of the side's march order, when it is still known.", "type": "integer" }
           }
@@ -181,6 +182,29 @@
         "activity": { "description": "What the unit does on a day it does not march or fight (decisions 4 of 0099 and 4 of 0097): ready (rehearses a landing when it is on a roster; the default) or train.", "enum": ["ready", "train"] },
         "activity_order": { "description": "The number of the side's set_activity order, when one is in force. Left out otherwise.", "type": "integer" },
         "experience": { "description": "The unit's experience, 0 to 4 (decision 0097, 1): 2 is its service's standard. It moves its chance to hit.", "type": "integer" },
+        "skills": {
+          "description": "What the unit is good at (decision 0098): each 0 to 4, 2 the standard, fixed in play. Shown for the side's own units only.",
+          "type": "object",
+          "required": ["assault", "holding", "weight", "movement"],
+          "additionalProperties": false,
+          "properties": {
+            "assault": { "description": "Assault from the sea: moves the rehearsal gained a day.", "type": "integer" },
+            "holding": { "description": "Holding ground: moves the chance to hit while its side defends.", "type": "integer" },
+            "weight": { "description": "Weight: moves its shots and each man's daily supply.", "type": "integer" },
+            "movement": {
+              "description": "Movement by the terrain of the hex; a march uses the lower skill of the hex left and the hex entered.",
+              "type": "object",
+              "required": ["clear", "jungle", "mountain", "atoll"],
+              "additionalProperties": false,
+              "properties": {
+                "clear": { "type": "integer" },
+                "jungle": { "type": "integer" },
+                "mountain": { "type": "integer" },
+                "atoll": { "type": "integer" }
+              }
+            }
+          }
+        },
         "training": {
           "description": "Days of training counted toward the next step of experience (decision 0097, 3).",
           "type": "object",

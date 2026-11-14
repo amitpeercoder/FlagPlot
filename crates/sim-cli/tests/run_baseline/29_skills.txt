@@ -1,0 +1,46 @@
+Scenario 29: What a land unit is good at
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 73aa36c395c01fc5  60 events
+day   2  hash 03b89254c6bfd73d  55 events
+day   3  hash 40a6877bf9be7183  58 events
+day   4  hash 1ad2501cc191e41a  53 events
+day   5  hash 4b70bc71104b2483  39 events
+day   6  hash bf3b495beb015605  41 events
+day   7  hash c0dc3d8fa4b31df1  35 events
+day   8  hash 59fadb2080b0a603  35 events
+
+task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder transport force 2" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder transport force 3" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 600 men of land_unit:5 aboard
+ship:2 "Placeholder troop transport 2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 600 men of land_unit:6 aboard
+ship:3 "Placeholder troop transport 3": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 600 men of land_unit:7 aboard
+base:1 "Placeholder base 1" (Allied) at (0,0): 5000 t of supply in stock
+base:2 "Placeholder base 2" (Allied) at (0,3): 974 t of supply in stock
+base:3 "Placeholder base 3" (Allied) at (1,3): 994 t of supply in stock
+base:4 "Placeholder base 4" (Allied) at (6,0): 4944.65 t of supply in stock
+base:5 "Placeholder base 5" (Japanese) at (6,0): 4990.45 t of supply in stock
+base:6 "Placeholder base 6" (Allied) at (8,0): 4982.5 t of supply in stock
+base:7 "Placeholder base 7" (Japanese) at (8,0): 4987 t of supply in stock
+base:8 "Dump at (2,3)" (Allied) at (2,3): 0 t of supply in stock, formed in play, on its own side's map only
+land_unit:1 "Placeholder unit 1" (Allied): 200 men ashore at (1,3)
+land_unit:2 "Placeholder unit 2" (Allied): 200 men ashore at (1,3), fatigue 5
+land_unit:3 "Placeholder unit 3" (Allied): 200 men ashore at (1,3), fatigue 50
+land_unit:4 "Placeholder unit 4" (Allied): 200 men ashore at (2,3), fatigue 5
+land_unit:5 "Placeholder unit 5" (Allied): no men ashore
+land_unit:6 "Placeholder unit 6" (Allied): no men ashore
+land_unit:7 "Placeholder unit 7" (Allied): no men ashore
+land_unit:8 "Placeholder unit 8" (Allied): 900 men ashore at (6,0)
+land_unit:9 "Placeholder unit 9" (Japanese): 240 men ashore at (6,0), fatigue 60
+land_unit:10 "Placeholder unit 10" (Allied): 420 men ashore at (8,0)
+land_unit:11 "Placeholder unit 11" (Japanese): 240 men ashore at (8,0), fatigue 60
+Allied: no contacts
+Allied: no battle claims
+Allied estimate at (6,0): 190 enemy men ashore, reported day 8
+Allied estimate at (8,0): 149 enemy men ashore, reported day 8
+Japanese: no contacts
+Japanese: no battle claims
+Japanese estimate at (6,0): 706 enemy men ashore, reported day 8
+Japanese estimate at (8,0): 568 enemy men ashore, reported day 8
