@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/order",
   "title": "order: one order for one unit, as saved games and issue_orders write it",
-  "description": "unit is \"task_force:N\", \"air_group:N\" or \"land_unit:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, set_rules_of_engagement, set_home_port, detach, set_readiness and send_to_yard (no other key); load takes an optional unit, a land unit written \"land_unit:N\"; an air group's are set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority and rebase; a land unit's are set_posture (posture defend or attack, a standing order) and march (hex [q, r], a standing order until the unit arrives). The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply; with a unit it may name cargo supply, fuel or none.",
+  "description": "unit is \"task_force:N\", \"air_group:N\" or \"land_unit:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, set_rules_of_engagement, set_home_port, detach, set_readiness, send_to_yard and prepare_landing (hex [q, r] of a coast hex and roster, a list of land units written \"land_unit:N\", of the side's own numbers; a standing order); load takes an optional unit, a land unit written \"land_unit:N\"; an air group's are set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority and rebase; a land unit's are set_posture (posture defend or attack, a standing order), march (hex [q, r], a standing order until the unit arrives) and set_activity (activity ready or train, a standing order). The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply; with a unit it may name cargo supply, fuel or none.",
   "type": "object",
   "required": [
     "unit",
@@ -270,12 +270,12 @@
               "const": "prepare_landing"
             },
             "hex": {
-              "description": "The coast hex the landing is for, [q, r] (decision 0095, 1).",
+              "description": "The coast hex the landing is for, [q, r] (decision 0095, 1). Refused when it is not a coast hex of the map.",
               "type": "array",
               "items": { "type": "integer" }
             },
             "roster": {
-              "description": "The land units that are to land from the force, each written \"land_unit:N\". May be empty.",
+              "description": "The land units that are to land from the force, each written \"land_unit:N\" with the side's own number (decision 0095, 1). May be empty. A unit is on one roster at a time: naming it here takes it off any other force's.",
               "type": "array",
               "items": { "type": "string" }
             }

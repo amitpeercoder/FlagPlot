@@ -921,7 +921,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .flag("fired", *fired),
         ),
         // Preparing a landing and the experience of a land unit (decisions
-        // 0095 and 0097). Minimal: the export proper comes with the viewer.
+        // 0095 and 0097). Reasons are snake_case words, as everywhere here.
         EventKind::LoadingGained {
             task_force,
             hex,
@@ -944,7 +944,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .hex("hex", *hex)
                 .num("loading_before", *loading_before)
                 .num("loading", *loading)
-                .text("reason", reason.name()),
+                .text("reason", names::loading_loss(*reason)),
         ),
         EventKind::RehearsalGained {
             unit,
@@ -968,7 +968,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             d.id("unit", *unit)
                 .hex("hex", *hex)
                 .num("rehearsal_before", *rehearsal_before)
-                .text("reason", reason.name()),
+                .text("reason", names::rehearsal_loss(*reason)),
         ),
         EventKind::LeftRoster {
             unit,
@@ -978,7 +978,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             "left_roster",
             d.id("unit", *unit)
                 .id("task_force", *task_force)
-                .text("reason", reason.name()),
+                .text("reason", names::roster_left(*reason)),
         ),
         EventKind::PreparationShared {
             parent,

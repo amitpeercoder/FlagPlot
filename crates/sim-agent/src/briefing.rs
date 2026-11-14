@@ -641,6 +641,29 @@ pub struct LandUnitsPart {
     /// Marches that stopped short yesterday, and why. Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub marches_stopped_yesterday: Vec<MarchStoppedLine>,
+    /// Loading gained or lost yesterday by the side's forces preparing a
+    /// landing (decision 0095). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub loading_yesterday: Vec<LoadingLine>,
+    /// Rehearsal gained or lost yesterday by the side's units (decision
+    /// 0095). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub rehearsal_yesterday: Vec<RehearsalChangeLine>,
+    /// Units that left a force's roster yesterday, and why. Left out when
+    /// none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub roster_left_yesterday: Vec<RosterLeftLine>,
+    /// Forces that split yesterday and shared their preparation. Left out
+    /// when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub preparation_shared_yesterday: Vec<PreparationSharedLine>,
+    /// Days of training and of firing counted yesterday toward a step of
+    /// experience (decision 0097). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub experience_days_yesterday: Vec<ExperienceDayLine>,
+    /// Steps of experience gained yesterday. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub experience_raised_yesterday: Vec<ExperienceRaisedLine>,
     /// For each hex with men of the side ashore, the days of supply its base
     /// holds at the present charge.
     pub supply_by_hex: Vec<HexSupply>,
@@ -690,6 +713,90 @@ pub struct MarchStoppedLine {
     pub days: u32,
     /// `ordered`, `no_men_ashore` or `no_land_link`.
     pub reason: &'static str,
+    pub event: u32,
+}
+
+/// A force's loading rose or fell (decision 0095, 4, 5, 8 and 10).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct LoadingLine {
+    pub task_force: Handle,
+    pub hex: Place,
+    /// `gained` or `lost`.
+    pub change: &'static str,
+    /// The loading afterwards, 0 to 100.
+    pub loading: Dec,
+    /// The loading before a loss; left out for a gain.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loading_before: Option<Dec>,
+    /// Why it fell: `new_landing_place`, `unit_added` or `spent` (the landing
+    /// is done and the order with it). Left out for a gain.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<&'static str>,
+    pub event: u32,
+}
+
+/// A unit's rehearsal rose or fell (decision 0095, 3, 7 and 8).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct RehearsalChangeLine {
+    pub land_unit: Handle,
+    pub hex: Place,
+    /// `gained` or `lost`.
+    pub change: &'static str,
+    /// The force whose roster the unit rehearsed for; left out for a loss.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub task_force: Option<Handle>,
+    /// The rehearsal afterwards for a gain; the rehearsal before for a loss
+    /// (a loss takes it to 0).
+    pub rehearsal: Dec,
+    /// Why it fell: `new_landing_place`, `landed` or `other_landing_place`.
+    /// Left out for a gain.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<&'static str>,
+    pub event: u32,
+}
+
+/// A unit left a force's roster (decision 0095, 7 and 3c of 0099).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct RosterLeftLine {
+    pub land_unit: Handle,
+    pub task_force: Handle,
+    /// `taken_by_another_force`, `dropped_by_order` or `landed`.
+    pub reason: &'static str,
+    pub event: u32,
+}
+
+/// A force split and gave the new part its preparation (decision 12 of
+/// 0095).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct PreparationSharedLine {
+    pub task_force: Handle,
+    pub new_force: Handle,
+    pub hex: Place,
+    pub loading: Dec,
+    /// The units of the roster the new part took.
+    pub units: Vec<Handle>,
+    pub event: u32,
+}
+
+/// A day counted toward a step of experience (decision 0097, 3 and 5).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ExperienceDayLine {
+    pub land_unit: Handle,
+    /// `training` or `fighting`.
+    pub source: &'static str,
+    /// The days counted toward the next step.
+    pub days: u32,
+    pub experience: u32,
+    pub event: u32,
+}
+
+/// A unit's experience rose (decisions 3 and 5 of 0097).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ExperienceRaisedLine {
+    pub land_unit: Handle,
+    pub experience: u32,
+    /// `training` or `fighting`.
+    pub by: &'static str,
     pub event: u32,
 }
 
@@ -1366,6 +1473,12 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         march_arrivals_yesterday: ground.march_arrivals,
         bases_formed_by_march_yesterday: ground.march_bases_formed,
         marches_stopped_yesterday: ground.marches_stopped,
+        loading_yesterday: ground.loading,
+        rehearsal_yesterday: ground.rehearsal,
+        roster_left_yesterday: ground.roster_left,
+        preparation_shared_yesterday: ground.preparation_shared,
+        experience_days_yesterday: ground.experience_days,
+        experience_raised_yesterday: ground.experience_raised,
         supply_by_hex,
     })
 }
@@ -1432,6 +1545,12 @@ struct GroundDay {
     march_arrivals: Vec<MarchArrivedLine>,
     march_bases_formed: Vec<MarchBaseFormedLine>,
     marches_stopped: Vec<MarchStoppedLine>,
+    loading: Vec<LoadingLine>,
+    rehearsal: Vec<RehearsalChangeLine>,
+    roster_left: Vec<RosterLeftLine>,
+    preparation_shared: Vec<PreparationSharedLine>,
+    experience_days: Vec<ExperienceDayLine>,
+    experience_raised: Vec<ExperienceRaisedLine>,
 }
 
 /// What moved in and out of a base's stocks yesterday, by cause, from the
@@ -2110,6 +2229,118 @@ impl Day {
                         to: ctx.place(*to),
                         days: *days,
                         reason: reason.name(),
+                        event: id,
+                    }),
+                    EventKind::LoadingGained {
+                        task_force,
+                        hex,
+                        loading,
+                    } => ground.loading.push(LoadingLine {
+                        task_force: ctx.force(*task_force),
+                        hex: ctx.place(*hex),
+                        change: "gained",
+                        loading: Dec(*loading),
+                        loading_before: None,
+                        reason: None,
+                        event: id,
+                    }),
+                    EventKind::LoadingLost {
+                        task_force,
+                        hex,
+                        loading_before,
+                        loading,
+                        reason,
+                    } => ground.loading.push(LoadingLine {
+                        task_force: ctx.force(*task_force),
+                        hex: ctx.place(*hex),
+                        change: "lost",
+                        loading: Dec(*loading),
+                        loading_before: Some(Dec(*loading_before)),
+                        reason: Some(words::loading_loss(*reason)),
+                        event: id,
+                    }),
+                    EventKind::RehearsalGained {
+                        unit,
+                        task_force,
+                        hex,
+                        rehearsal,
+                    } => ground.rehearsal.push(RehearsalChangeLine {
+                        land_unit: ctx.land_unit(*unit),
+                        hex: ctx.place(*hex),
+                        change: "gained",
+                        task_force: Some(ctx.force(*task_force)),
+                        rehearsal: Dec(*rehearsal),
+                        reason: None,
+                        event: id,
+                    }),
+                    EventKind::RehearsalLost {
+                        unit,
+                        hex,
+                        rehearsal_before,
+                        reason,
+                    } => ground.rehearsal.push(RehearsalChangeLine {
+                        land_unit: ctx.land_unit(*unit),
+                        hex: ctx.place(*hex),
+                        change: "lost",
+                        task_force: None,
+                        rehearsal: Dec(*rehearsal_before),
+                        reason: Some(words::rehearsal_loss(*reason)),
+                        event: id,
+                    }),
+                    EventKind::LeftRoster {
+                        unit,
+                        task_force,
+                        reason,
+                    } => ground.roster_left.push(RosterLeftLine {
+                        land_unit: ctx.land_unit(*unit),
+                        task_force: ctx.force(*task_force),
+                        reason: words::roster_left(*reason),
+                        event: id,
+                    }),
+                    EventKind::PreparationShared {
+                        parent,
+                        new_force,
+                        hex,
+                        loading,
+                        units,
+                    } => ground.preparation_shared.push(PreparationSharedLine {
+                        task_force: ctx.force(*parent),
+                        new_force: ctx.force(*new_force),
+                        hex: ctx.place(*hex),
+                        loading: Dec(*loading),
+                        units: units.iter().map(|u| ctx.land_unit(*u)).collect(),
+                        event: id,
+                    }),
+                    EventKind::TrainingDay {
+                        unit,
+                        days,
+                        experience,
+                    } => ground.experience_days.push(ExperienceDayLine {
+                        land_unit: ctx.land_unit(*unit),
+                        source: "training",
+                        days: *days,
+                        experience: u32::from(*experience),
+                        event: id,
+                    }),
+                    EventKind::FightDayCounted {
+                        unit,
+                        days,
+                        experience,
+                    } => ground.experience_days.push(ExperienceDayLine {
+                        land_unit: ctx.land_unit(*unit),
+                        source: "fighting",
+                        days: *days,
+                        experience: u32::from(*experience),
+                        event: id,
+                    }),
+                    EventKind::ExperienceRaised {
+                        unit,
+                        experience,
+                        by,
+                    } => ground.experience_raised.push(ExperienceRaisedLine {
+                        land_unit: ctx.land_unit(*unit),
+                        experience: u32::from(*experience),
+                        by: by.name(),
                         event: id,
                     }),
                     EventKind::UnitDivided {

@@ -1,0 +1,291 @@
+# Scenario 27: preparing a landing (decision 0095).
+#
+# Proves loading, rehearsal and the rate of a landing against a hand
+# calculation. Five forces lie at port A. Force 1 prepares a landing at B for
+# ten days and force 2 does not prepare. Force 3 prepares for B and lands at
+# C. Force 4 changes its landing place and force 5 takes on a second unit.
+# On day 11 forces 1 and 2 sail to B and force 3 to C and unload. The hand
+# calculation is in tests/scenario_27_preparing_a_landing.rs, which gives
+# the four figures of the rule the values it calculates with (the frozen
+# figures switch the rule off).
+#
+# No air combat, wear, fatigue or air supply figures are named, so no
+# aircraft flies. There is no enemy, no search and no random draw.
+#
+# PLACEHOLDER DATA. The ships, units, bases and map are invented.
+
+name = "Scenario 27: Preparing a landing"
+placeholder = true
+seed = 1942
+days = 12
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 2
+name = "Placeholder base B"
+side = "allied"
+q = 4
+r = 0
+supply_t = 100
+
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[task_force]]
+id = 2
+name = "Placeholder transport force 2"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[task_force]]
+id = 3
+name = "Placeholder transport force 3"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[task_force]]
+id = 4
+name = "Placeholder transport force 4"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[task_force]]
+id = 5
+name = "Placeholder transport force 5"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 60
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 2
+
+[[ship]]
+id = 3
+name = "Placeholder fast transport 3"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 4
+name = "Placeholder troop transport 4"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 4
+
+[[ship]]
+id = 5
+name = "Placeholder troop transport 5"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 5
+
+[[land_unit]]
+id = 1
+name = "Placeholder battalion 1"
+side = "allied"
+men = 600
+task_force = 1
+
+[[land_unit]]
+id = 2
+name = "Placeholder battalion 2"
+side = "allied"
+men = 600
+task_force = 2
+
+[[land_unit]]
+id = 3
+name = "Placeholder battalion 3"
+side = "allied"
+men = 200
+task_force = 3
+
+[[land_unit]]
+id = 4
+name = "Placeholder battalion 4"
+side = "allied"
+men = 600
+task_force = 4
+
+[[land_unit]]
+id = 5
+name = "Placeholder battalion 5"
+side = "allied"
+men = 300
+task_force = 5
+
+# Unit 6 is ashore at A from the start.
+[[land_unit]]
+id = 6
+name = "Placeholder battalion 6"
+side = "allied"
+men = 300
+q = 0
+r = 0
+
+# Day 1: forces 1, 3, 4 and 5 prepare a landing at B with the unit aboard.
+# Force 2 is given no such order.
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "prepare_landing"
+hex = [4, 0]
+roster = [1]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 3
+kind = "prepare_landing"
+hex = [4, 0]
+roster = [3]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 4
+kind = "prepare_landing"
+hex = [4, 0]
+roster = [4]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 5
+kind = "prepare_landing"
+hex = [4, 0]
+roster = [5]
+
+# Day 3: force 1 is given the same order again.
+
+[[order]]
+day = 3
+side = "allied"
+task_force = 1
+kind = "prepare_landing"
+hex = [4, 0]
+roster = [1]
+
+# Day 6: force 4 prepares for C. Force 5 prepares for B with units 5 and 6.
+
+[[order]]
+day = 6
+side = "allied"
+task_force = 4
+kind = "prepare_landing"
+hex = [0, 6]
+roster = [4]
+
+[[order]]
+day = 6
+side = "allied"
+task_force = 5
+kind = "prepare_landing"
+hex = [4, 0]
+roster = [5, 6]
+
+# Day 11: forces 1 and 2 sail to B and force 3 to C, at cruise, and unload.
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[4, 0]]
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 1
+kind = "unload"
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 2
+kind = "set_route"
+waypoints = [[4, 0]]
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 2
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 2
+kind = "unload"
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 3
+kind = "set_route"
+waypoints = [[0, 6]]
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 3
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 3
+kind = "unload"

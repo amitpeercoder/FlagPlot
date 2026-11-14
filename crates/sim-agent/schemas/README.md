@@ -475,3 +475,47 @@ was.
   `event`). `explain` of either event works like that of any own event.
 - **What the enemy is told.** Nothing: no halt, no mark, no steaming on. It sees
   the force only as it sees any force, by contact.
+
+## Preparing a landing and the experience of a land unit (decisions 0095 and 0097)
+
+Fields and values added only, so `version` stays 3. A reader must ignore fields it
+does not know. Where an object is left out when it has nothing to say, a game with
+no preparation looks as it did.
+
+- **The prepare_landing order.** `{"unit": "task_force:1", "order": {"kind":
+  "prepare_landing", "hex": [4, 0], "roster": ["land_unit:1"]}}`: the roster
+  names the side's own land units by the side's numbers, and may be empty. A
+  standing order until replaced or until the landing is done; it may be given at
+  sea. A roster unit that is not the side's own or does not exist gets the refusal
+  `the land unit is not one of your units` with a hint, a destroyed one `the land
+  unit is destroyed`, and a hex that is not a coast hex of the map `(q,r) is not a
+  coast hex on the map`, with a hint. The same order again changes nothing.
+- **The set_activity order.** `{"unit": "land_unit:1", "order": {"kind":
+  "set_activity", "activity": "train"}}`, `ready` or `train`; a standing order. It
+  is accepted for a unit aboard ship, and refused as `not known` for a unit that is
+  not the side's own.
+- **A force line** (`list_forces`, `get_entity`, the briefing's `task_forces`) has
+  `preparation` while the force holds one: `hex`, `roster` (handles), `loading` (0
+  to 100), `landing_rate` (the share of the port's rate it would unload at in `hex`,
+  the engine's own `landing_rate_factor`, 1 being the port's rate) and `order`; and
+  `landing_at`, the hex where it has begun landing men and its unloading is not
+  complete.
+- **A land unit line** always has `activity` (`ready` or `train`), `experience` (0
+  to 4, 2 the standard), `training` (`days` counted, `of_days` a step takes, `up_to`
+  the experience training stops at) and `fighting` (`days`, `of_days`); and
+  `activity_order`, `rehearsal` (`hex`, `rehearsal`) and `roster` (`task_force`,
+  `hex`, and `landing_fatigue`, the fatigue it would gain when its first men land at
+  that hex, the engine's own function) when they apply. The text says the experience
+  and the activity only when they are not the standard.
+- **The briefing's `land_units` part** has, each left out when empty,
+  `loading_yesterday` (`change` gained or lost, with `loading_before` and `reason`
+  `new_landing_place`, `unit_added` or `spent` for a loss), `rehearsal_yesterday`
+  (`gained` with `task_force`, or `lost` with `reason` `new_landing_place`, `landed` or
+  `other_landing_place`), `roster_left_yesterday` (`reason` `taken_by_another_force`,
+  `dropped_by_order` or `landed`), `preparation_shared_yesterday` (a force that split),
+  `experience_days_yesterday` (`source` `training` or `fighting`, the `days` counted)
+  and `experience_raised_yesterday` (`by` `training` or `fighting`). `fatigue_yesterday`
+  changes have the value `landed`.
+- **What the enemy is told.** Nothing of any of it: no loading, rehearsal, roster,
+  experience, day counted or order. The only trace of it in the other side's answers
+  is what its own reports show (the men ashore, and the fight).

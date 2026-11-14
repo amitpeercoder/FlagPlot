@@ -133,7 +133,7 @@
     "land_unit_line": {
       "description": "A land unit of the side (decision 0066, 21): its men ashore and where, its men aboard by ship, and whether its men were fed in the last night pulse. Only the side's own units have one.",
       "type": "object",
-      "required": ["land_unit", "men_ashore", "place", "men_aboard", "aboard", "destroyed", "fed_last_night", "posture", "fatigue", "fed_share"],
+      "required": ["land_unit", "men_ashore", "place", "men_aboard", "aboard", "destroyed", "fed_last_night", "posture", "fatigue", "fed_share", "activity", "experience", "training", "fighting"],
       "additionalProperties": false,
       "properties": {
         "land_unit": { "$ref": "#/$defs/handle" },
@@ -177,6 +177,51 @@
           "description": "The hexes the unit's men ashore can be ordered to march to: the neighbours the map joins to their hex by a land link, in hex order (decision 0094, 1 and 3). Left out when there are none: on a map with no land links, and for a unit with no man ashore.",
           "type": "array",
           "items": { "$ref": "#/$defs/place" }
+        },
+        "activity": { "description": "What the unit does on a day it does not march or fight (decisions 4 of 0099 and 4 of 0097): ready (rehearses a landing when it is on a roster; the default) or train.", "enum": ["ready", "train"] },
+        "activity_order": { "description": "The number of the side's set_activity order, when one is in force. Left out otherwise.", "type": "integer" },
+        "experience": { "description": "The unit's experience, 0 to 4 (decision 0097, 1): 2 is its service's standard. It moves its chance to hit.", "type": "integer" },
+        "training": {
+          "description": "Days of training counted toward the next step of experience (decision 0097, 3).",
+          "type": "object",
+          "required": ["days", "of_days", "up_to"],
+          "additionalProperties": false,
+          "properties": {
+            "days": { "description": "Days counted, below of_days.", "type": "integer" },
+            "of_days": { "description": "The days a step takes: the scenario's training_days_per_level.", "type": "integer" },
+            "up_to": { "description": "The experience training raises a unit to and no further: the scenario's training_ceiling.", "type": "integer" }
+          }
+        },
+        "fighting": {
+          "description": "Days of firing in a fight counted toward the next step of experience (decision 0097, 5).",
+          "type": "object",
+          "required": ["days", "of_days"],
+          "additionalProperties": false,
+          "properties": {
+            "days": { "description": "Days counted, below of_days.", "type": "integer" },
+            "of_days": { "description": "The days a step takes: the scenario's fight_days_per_level.", "type": "integer" }
+          }
+        },
+        "rehearsal": {
+          "description": "The unit's rehearsal of a landing (decision 0095, 3), while it has one. Left out when it has none.",
+          "type": "object",
+          "required": ["hex", "rehearsal"],
+          "additionalProperties": false,
+          "properties": {
+            "hex": { "description": "The hex the rehearsal is for.", "$ref": "#/$defs/place" },
+            "rehearsal": { "description": "0 to 100.", "$ref": "#/$defs/dec" }
+          }
+        },
+        "roster": {
+          "description": "The roster of a force the unit is on (decision 0095, 1). Left out when it is on none.",
+          "type": "object",
+          "required": ["task_force", "hex", "landing_fatigue"],
+          "additionalProperties": false,
+          "properties": {
+            "task_force": { "$ref": "#/$defs/handle" },
+            "hex": { "description": "The hex of the force's prepare_landing order.", "$ref": "#/$defs/place" },
+            "landing_fatigue": { "description": "The fatigue the unit would gain when its first men land at that hex, from its rehearsal for it (decision 0095, 6): the engine's own function.", "$ref": "#/$defs/dec" }
+          }
         }
       }
     },
@@ -292,6 +337,23 @@
             "waits_for": { "description": "What it waits to do before it steams on: bombard (done in a night pulse), cargo, or both in that order.", "type": "array", "items": { "enum": ["bombard", "cargo"] } },
             "bombarded": { "description": "true once it has bombarded since it halted; left out until then.", "const": true }
           }
+        },
+        "preparation": {
+          "description": "Decision 0095: the landing the force is prepared for, by a prepare_landing order. Left out when it has none.",
+          "type": "object",
+          "required": ["hex", "roster", "loading", "landing_rate"],
+          "additionalProperties": false,
+          "properties": {
+            "hex": { "description": "The coast hex the landing is for.", "$ref": "#/$defs/place" },
+            "roster": { "description": "The land units that are to land from the force, in number order.", "type": "array", "items": { "$ref": "#/$defs/handle" } },
+            "loading": { "description": "The force's loading for that hex, 0 to 100.", "$ref": "#/$defs/dec" },
+            "landing_rate": { "description": "The share of the port's rate the force would unload at in hex, men and cargo alike (decision 0095, 5): the engine's own landing_rate_factor. 1 is the port's rate.", "$ref": "#/$defs/dec" },
+            "order": { "description": "The number of the side's prepare_landing order, when it is still known.", "type": "integer" }
+          }
+        },
+        "landing_at": {
+          "description": "Decision 0095, 5: the hex where the force has begun landing men and its unloading is not yet complete; until it is, it works at the rate of a landing there. Left out when it is not landing.",
+          "$ref": "#/$defs/place"
         }
       }
     },

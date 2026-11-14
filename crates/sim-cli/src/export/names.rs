@@ -1,11 +1,40 @@
 //! Stable snake_case words for the simulation's enums. Every match lists
 //! every variant, so a new one fails to compile here until it is named.
 
-use sim_core::events::{DamageTrack, DetachReason, EngagementEndReason, Weapon};
+use sim_core::events::{
+    DamageTrack, DetachReason, EngagementEndReason, LoadingLoss, RehearsalLoss, RosterLeft, Weapon,
+};
 use sim_core::map::{HexKind, Terrain};
 use sim_core::orders::{AirMission, Issuer, Mission, SpeedSetting, Stance};
 use sim_core::side_events::SideEndReason;
 use sim_core::state::{ShipSystem, Side, SystemState, TaskForceStatus};
+
+/// Why a force's loading fell (decision 0095).
+pub fn loading_loss(reason: LoadingLoss) -> &'static str {
+    match reason {
+        LoadingLoss::NewLandingPlace => "new_landing_place",
+        LoadingLoss::UnitAdded => "unit_added",
+        LoadingLoss::Spent => "spent",
+    }
+}
+
+/// Why a unit's rehearsal fell (decision 0095).
+pub fn rehearsal_loss(reason: RehearsalLoss) -> &'static str {
+    match reason {
+        RehearsalLoss::NewLandingPlace => "new_landing_place",
+        RehearsalLoss::Landed => "landed",
+        RehearsalLoss::OtherLandingPlace => "other_landing_place",
+    }
+}
+
+/// Why a unit left a roster (decision 0095).
+pub fn roster_left(reason: RosterLeft) -> &'static str {
+    match reason {
+        RosterLeft::TakenByOrder => "taken_by_another_force",
+        RosterLeft::DroppedByOrder => "dropped_by_order",
+        RosterLeft::Landed => "landed",
+    }
+}
 
 pub fn side(side: Side) -> &'static str {
     match side {
