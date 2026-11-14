@@ -1,0 +1,55 @@
+# PLACEHOLDER MAP. Open sea with four coast hexes, all clear, port size 0,
+# used by scenario 37 (decision 0109, correction 1: men who are falling back
+# are fired on only when the side that beat them is on attack). P at (0,0) has
+# a land link to R at (1,0). T at (10,0) has a land link to U at (11,0). No
+# force sails. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 12]
+r = [-1, 2]
+
+# P.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# R.
+[[hex]]
+q = 1
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# T.
+[[hex]]
+q = 10
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# U.
+[[hex]]
+q = 11
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+[[land_link]]
+a = [0, 0]
+b = [1, 0]
+note = "Placeholder: P and R are on one landmass."
+
+[[land_link]]
+a = [10, 0]
+b = [11, 0]
+note = "Placeholder: T and U are on one landmass."

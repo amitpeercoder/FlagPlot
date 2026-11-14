@@ -269,5 +269,9 @@ name = "scenario_34_cover"
 path = "scenario_34_cover.rs"
 
 [[test]]
+name = "scenario_37_men_falling_back"
+path = "scenario_37_men_falling_back.rs"
+
+[[test]]
 name = "choices_asked_and_run"
 path = "choices_asked_and_run.rs"
