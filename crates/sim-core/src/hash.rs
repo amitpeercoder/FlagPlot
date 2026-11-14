@@ -10,13 +10,13 @@
 //! `docs/decisions/0004-state-hash.md`.
 
 use crate::belief::{BattleClaim, Contact, GroundEstimate};
-use crate::orders::{AirMission, Mission, SpeedSetting};
+use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting};
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Halt, HaltWork, LandUnit, March,
-    Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem,
-    ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, DayWork, Halt, HaltWork, LandUnit,
+    March, Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation,
+    ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -146,8 +146,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `activity_order`, `experience`, `training_days` and `fight_days` after
 /// its `march` (decisions 0095 and 0097);
 /// version 17 adds a march's `counted` after its `days`, and a land unit's
-/// `skills` after its `fight_days` (decision 0098).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v17";
+/// `skills` after its `fight_days` (decision 0098);
+/// version 18 adds a base's `airfield`, `airfield_work`, `defences` and
+/// `day_work` after its `on_map`, the activity `Work` (code 2) with its job
+/// after the activity's code, a skill's `works` after its `atoll`, and a land
+/// unit's `working` after its skills (decision 0099).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v18";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -313,7 +317,17 @@ fn name_every_field(world: &World) {
             ship_repair_points_per_day: _,
             yard_passage_days: _,
             on_map: _,
+            airfield: _,
+            airfield_work: _,
+            defences: _,
+            day_work,
         } = base;
+        if let Some(DayWork {
+            day: _,
+            port: _,
+            aircraft: _,
+        }) = day_work
+        {}
     }
     if let Some(group) = air_groups.values().next() {
         let AirGroup {
@@ -393,7 +407,9 @@ fn name_every_field(world: &World) {
                 jungle: _,
                 mountain: _,
                 atoll: _,
+                works: _,
             },
+        working: _,
     }) = land_units.values().next()
     {}
     if let Some(Some(March {
@@ -639,8 +655,21 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             }
             None => h.u8(0),
         }
-        // Last in the base (decision 0066).
+        // After the base's place on the map (decision 0066).
         h.u8(u8::from(base.on_map));
+        // Last in the base (decision 0099).
+        h.u8(u8::from(base.airfield));
+        h.i64(base.airfield_work.raw());
+        h.i64(base.defences.raw());
+        match base.day_work {
+            Some(work) => {
+                h.u8(1);
+                h.u32(work.day);
+                h.i64(work.port.raw());
+                h.i64(work.aircraft.raw());
+            }
+            None => h.u8(0),
+        }
     }
 
     h.count(truth.air_groups.len());
@@ -763,6 +792,10 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             None => h.u8(0),
         }
         h.u8(unit.activity.code());
+        // The job of a work activity, 0 for none (decision 0099).
+        if let Activity::Work(job) = unit.activity {
+            h.u8(job.map_or(0, Job::code));
+        }
         h.optional_u32(unit.activity_order.map(|id| id.raw()));
         h.u8(unit.experience);
         h.u32(unit.training_days);
@@ -777,9 +810,12 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             skills.jungle,
             skills.mountain,
             skills.atoll,
+            skills.works,
         ] {
             h.u8(skill);
         }
+        // After the skills (decision 0099).
+        h.u8(u8::from(unit.working));
     }
 
     h.count(world.beliefs.len());

@@ -21,7 +21,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{BaseId, EventId, LandUnitId, ShipId, TaskForceId};
 use crate::map::HexKind;
-use crate::orders::Cargo;
+use crate::orders::{Activity, Cargo, Job};
 use crate::preparation::landing_rate_factor;
 use crate::refdata::PortSize;
 use crate::state::{Base, CargoOrder, LandUnit, Side, TaskForce, TaskForceStatus, Troops};
@@ -318,13 +318,21 @@ impl World {
             // A unit made by division takes its parent's experience and
             // skills and nothing else of its parent's: no rehearsal, no days
             // counted, no activity, no roster (decision 6 of 0097, decision
-            // 7 of 0098).
-            let (experience, skills) = (land_unit.experience, land_unit.skills);
+            // 7 of 0098). A part of a working unit is a working unit, and
+            // works at the default job (decision 1 of 0099, As built).
+            let (experience, skills, working) =
+                (land_unit.experience, land_unit.skills, land_unit.working);
             self.truth.land_units.insert(
                 new_id,
                 LandUnit {
                     experience,
                     skills,
+                    working,
+                    activity: if working {
+                        Activity::Work(None)
+                    } else {
+                        Activity::Ready
+                    },
                     ..LandUnit::new(new_id, name, side, 0, None)
                 },
             );
@@ -368,8 +376,10 @@ impl World {
         );
         self.truth.bases.insert(
             id,
+            // A base formed by a landing has no airfield (decision 5 of 0099).
             Base {
                 on_map: false,
+                airfield: false,
                 ..Base::new(id, format!("Landing at {}", p.hex), p.side, p.hex)
             },
         );
@@ -425,12 +435,28 @@ impl World {
         let factor = landing_rate.map_or(Fixed::ONE, |landing| landing.factor);
         // The breakdown names the figures only where the share is below 1.
         let shown = landing_rate.filter(|landing| landing.share < Fixed::ONE);
+        // Work on the base's port the day before speeds every ship's rate,
+        // up to twice (decision 4 of 0099). With none the factor is 1.
+        let port_work = match (p.base, self.ref_data.ground) {
+            (Some(base), Some(figures)) if day > 1 => {
+                let work = self.truth.bases[&base].work_of_day(day - 1, Job::Port);
+                (work > Fixed::ZERO).then(|| (work, crate::works::port_factor(work, &figures)))
+            }
+            _ => None,
+        };
+        let port_factor = port_work.map_or(Fixed::ONE, |(_, factor)| factor);
+        if let (Some((_, _)), Some(base)) = (port_work, p.base) {
+            causes.extend(self.events_of_day_where(day - 1, |kind| {
+                matches!(kind, EventKind::UnitWorked { base: at, job: Job::Port, .. } if *at == base)
+            }));
+        }
         let port_rate_of = |ship_id: &ShipId| {
-            if berthed.contains(ship_id) {
+            let own = if berthed.contains(ship_id) {
                 p.port.berth_rate_t_per_h
             } else {
                 p.port.lighter_rate_t_per_h
-            }
+            };
+            own * port_factor
         };
         let rate_of = |ship_id: &ShipId| port_rate_of(ship_id) * factor;
         let mut men_landed = false;
@@ -476,7 +502,7 @@ impl World {
                     p,
                     *ship_id,
                     on_berth,
-                    (rate, port_rate_of(ship_id), shown),
+                    (rate, port_rate_of(ship_id), shown, port_work),
                     per_man,
                     &causes,
                     &divided,
@@ -577,6 +603,7 @@ impl World {
                         },
                     ];
                     factors.extend(landing_factors(shown, port_rate_of(ship_id)));
+                    factors.extend(port_work_factors(port_work));
                     // The tons the ship's men took first (decision 0066, 7).
                     // Only where men moved, so a breakdown with none is as
                     // it was.
@@ -807,7 +834,12 @@ impl World {
         p: &Participant,
         ship_id: ShipId,
         on_berth: bool,
-        (rate, port_rate, landing): (Fixed, Fixed, Option<LandingRate>),
+        (rate, port_rate, landing, port_work): (
+            Fixed,
+            Fixed,
+            Option<LandingRate>,
+            Option<(Fixed, Fixed)>,
+        ),
         per_man: Fixed,
         causes: &[Cause],
         divided: &BTreeMap<LandUnitId, EventId>,
@@ -878,6 +910,7 @@ impl World {
                 },
             ];
             factors.extend(landing_factors(landing, port_rate));
+            factors.extend(port_work_factors(port_work));
             factors.extend([
                 Factor {
                     name: "handling_t_per_man",
@@ -930,6 +963,25 @@ impl World {
         }
         Some((men_t, event))
     }
+}
+
+/// The factors the day before's work on the port adds to a breakdown
+/// (decision 4 of 0099): the work and the factor it gives. None where no
+/// work was made.
+fn port_work_factors(port_work: Option<(Fixed, Fixed)>) -> Vec<Factor> {
+    let Some((work, factor)) = port_work else {
+        return Vec::new();
+    };
+    vec![
+        Factor {
+            name: "port_work",
+            value: work,
+        },
+        Factor {
+            name: "port_work_factor",
+            value: factor,
+        },
+    ]
 }
 
 /// The factors a landing adds to a breakdown (decision 5 of 0095): the port's

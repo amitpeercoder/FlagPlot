@@ -150,10 +150,12 @@ impl World {
     /// The day's activity, once every hex is resolved (decision 3b of 0099).
     /// First the loading of each force with a preparation; then each land
     /// unit's one activity, in unit order: none if it marched or its hex was
-    /// contested, else training if it was ordered to train and the
-    /// conditions of decision 3 of 0097 hold, else rehearsal if it is on the
-    /// roster of a force that qualified today and is in its hex or aboard
-    /// its ships; then the day's count of fighting for each unit that fired.
+    /// contested, else work if it is a working unit or was set to work
+    /// (decisions 3 and 3a of 0099), else training if it was ordered to
+    /// train and the conditions of decision 3 of 0097 hold, else rehearsal if
+    /// it is on the roster of a force that qualified today and is in its hex
+    /// or aboard its ships; then the airfields the day's work built; then the
+    /// day's count of fighting for each unit that fired.
     /// Each gain is given once because the phase runs once a day.
     pub(crate) fn day_activity(
         &mut self,
@@ -167,6 +169,7 @@ impl World {
         let rostered = self.rostered_with(&qualifying);
 
         let units: Vec<LandUnitId> = self.truth.land_units.keys().copied().collect();
+        let mut on_airfields: BTreeMap<BaseId, Vec<EventId>> = BTreeMap::new();
         for unit_id in units {
             let unit = &self.truth.land_units[&unit_id];
             let aboard = self.truth.men_aboard(unit_id);
@@ -180,14 +183,26 @@ impl World {
             if marched.contains_key(&unit_id) || contested {
                 continue;
             }
-            if unit.activity == Activity::Train {
-                self.train_day(day, unit_id, figures);
-            } else if let Some(force) = rostered.get(&unit_id) {
-                if self.is_with_force(unit_id, *force) {
-                    self.rehearse_day(day, unit_id, *force, figures);
+            // A working unit always works (decision 1 of 0099).
+            let activity = if unit.working {
+                Activity::Work(unit.activity.job())
+            } else {
+                unit.activity
+            };
+            match activity {
+                Activity::Work(job) => self.work_day(day, unit_id, job, figures, &mut on_airfields),
+                Activity::Train => self.train_day(day, unit_id, figures),
+                Activity::Ready => {
+                    if let Some(force) = rostered.get(&unit_id) {
+                        if self.is_with_force(unit_id, *force) {
+                            self.rehearse_day(day, unit_id, *force, figures);
+                        }
+                    }
                 }
             }
         }
+        // The airfields the day's work built (decision 5 of 0099).
+        self.finish_airfields(day, &on_airfields, figures);
 
         // The days of fighting (decision 5 of 0097).
         for (unit_id, fire_event) in fired {
@@ -369,10 +384,15 @@ impl World {
         }
     }
 
-    fn men_ashore(&self, units: &[LandUnitId]) -> u32 {
+    /// The men ashore of the fighting units among `units`: the men that
+    /// make a hex contested and hold a base (decision 0099, ruling 1).
+    /// Working men are not counted.
+    fn fighting_men_ashore(&self, units: &[LandUnitId]) -> u32 {
         units
             .iter()
-            .map(|unit| self.truth.land_units[unit].men_ashore)
+            .map(|unit| &self.truth.land_units[unit])
+            .filter(|unit| !unit.working)
+            .map(|unit| unit.men_ashore)
             .sum()
     }
 
@@ -404,7 +424,11 @@ impl World {
         figures: &GroundFigures,
     ) -> (bool, BTreeMap<LandUnitId, EventId>) {
         let attacks = [self.attacks(&units.units[0]), self.attacks(&units.units[1])];
-        let present = [!units.units[0].is_empty(), !units.units[1].is_empty()];
+        // Only fighting men make a hex contested (decision 0099, ruling 1).
+        let present = [
+            self.fighting_men_ashore(&units.units[0]) > 0,
+            self.fighting_men_ashore(&units.units[1]) > 0,
+        ];
         let contested = present[0] && present[1] && (attacks[0] || attacks[1]);
 
         let mut fight_event = None;
@@ -438,10 +462,11 @@ impl World {
             );
         }
 
-        // A side beaten (decisions 15 and 16).
+        // A side beaten (decisions 15 and 16), counting fighting men only:
+        // labourers do not hold a base (decision 1 and ruling 1 of 0099).
         let men = [
-            self.men_ashore(&units.units[0]),
-            self.men_ashore(&units.units[1]),
+            self.fighting_men_ashore(&units.units[0]),
+            self.fighting_men_ashore(&units.units[1]),
         ];
         // Each side beaten, with the causes of its base changing side: the
         // test that beat it, and what that test cites.
@@ -562,8 +587,28 @@ impl World {
             } else {
                 figures.hit_chance
             };
+            // While a side defends, its units' chance is multiplied by its
+            // defences: those of its lowest-numbered base in the hex
+            // (decision 4 of 0099).
+            let defences = if defends {
+                self.truth
+                    .bases
+                    .values()
+                    .find(|base| base.side == side && base.hex == hex)
+                    .map_or(Fixed::ZERO, |base| base.defences)
+            } else {
+                Fixed::ZERO
+            };
+            let defences_factor = Fixed::ONE
+                + figures
+                    .defences_strength
+                    .mul_div(defences, Fixed::from_int(100));
             for unit_id in units.units[at(side)].clone() {
                 let unit = &self.truth.land_units[&unit_id];
+                // Working men do not fire (decision 1 of 0099).
+                if unit.working {
+                    continue;
+                }
                 let (men_ashore, fed_share, fatigue, posture, experience, skills) = (
                     unit.men_ashore,
                     unit.fed_share,
@@ -585,7 +630,7 @@ impl World {
                     side_chance,
                     figures.experience_fire_strength,
                     experience,
-                    holding_factor,
+                    holding_factor * defences_factor,
                 );
                 let (firing, fatigue_factor) = firing_men(men_ashore, fed_share, fatigue);
                 // Its shots, times its weight factor (decision 2 of 0098).
@@ -636,7 +681,8 @@ impl World {
                     // Only where experience or holding does something, so a
                     // breakdown with the strengths at 0 is as it was.
                     let holds = holding_factor != Fixed::ONE;
-                    if figures.experience_fire_strength > Fixed::ZERO || holds {
+                    let dug_in = defences_factor != Fixed::ONE;
+                    if figures.experience_fire_strength > Fixed::ZERO || holds || dug_in {
                         factors.push(Factor {
                             name: "side_chance",
                             value: side_chance,
@@ -660,6 +706,17 @@ impl World {
                         factors.push(Factor {
                             name: "holding_factor",
                             value: holding_factor,
+                        });
+                    }
+                    // Only where defences act (decision 4 of 0099).
+                    if dug_in {
+                        factors.push(Factor {
+                            name: "defences",
+                            value: defences,
+                        });
+                        factors.push(Factor {
+                            name: "defences_factor",
+                            value: defences_factor,
                         });
                     }
                     factors.push(Factor {

@@ -1149,6 +1149,25 @@ pub struct GroundFigures {
     /// How much a step of weight moves a unit's shots and the supply each of
     /// its men costs (decision 3 of 0098). 0 switches the skill off.
     pub weight_strength: Fixed,
+    /// Work a man of a standard working unit makes in a day (decision 3 of
+    /// 0099), 0 or more.
+    pub work_per_man_day: Fixed,
+    /// Work to build an airfield (decision 5 of 0099), above 0.
+    pub airfield_work: Fixed,
+    /// Work in a day that doubles the next day's unloading at a base
+    /// (decision 4 of 0099), above 0.
+    pub work_to_double_unloading: Fixed,
+    /// Work in a day for one more aircraft repaired the next night (decision
+    /// 4 of 0099), above 0.
+    pub work_per_aircraft_repair: Fixed,
+    /// Work for one point of a base's defences (decision 4 of 0099), above 0.
+    pub work_per_defence_point: Fixed,
+    /// How much full defences raise a defender's chance to hit (decision 4
+    /// of 0099), from 0 to 1. 0 switches defences off in the fight.
+    pub defences_strength: Fixed,
+    /// The share of a working unit's work that a fighting unit set to work
+    /// makes (decision 3a of 0099), from 0 to 1.
+    pub fighting_unit_work_share: Fixed,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1197,6 +1216,13 @@ impl GroundFigures {
         movement_skill_strength: Fixed::from_raw(250_000),
         holding_skill_strength: Fixed::from_raw(150_000),
         weight_strength: Fixed::from_raw(250_000),
+        work_per_man_day: Fixed::ONE,
+        airfield_work: Fixed::from_int(20_000),
+        work_to_double_unloading: Fixed::from_int(1_000),
+        work_per_aircraft_repair: Fixed::from_int(200),
+        work_per_defence_point: Fixed::from_int(200),
+        defences_strength: Fixed::from_raw(500_000),
+        fighting_unit_work_share: Fixed::from_raw(500_000),
     };
 
     /// Describes what is wrong with the figures, if anything. The weight of
@@ -1318,6 +1344,34 @@ impl GroundFigures {
                 return Some(format!(
                     "ground {label} {strength} is not at least 0 and below 0.5"
                 ));
+            }
+        }
+        // Work and what it builds (decision 0099): the four figures that
+        // divide are above 0, the work a man makes is not below 0, and the
+        // strength of defences and the share a fighting unit makes are from
+        // 0 to 1.
+        if self.work_per_man_day.is_negative() {
+            return Some(format!(
+                "ground work_per_man_day {} is negative",
+                self.work_per_man_day
+            ));
+        }
+        for (label, value) in [
+            ("airfield_work", self.airfield_work),
+            ("work_to_double_unloading", self.work_to_double_unloading),
+            ("work_per_aircraft_repair", self.work_per_aircraft_repair),
+            ("work_per_defence_point", self.work_per_defence_point),
+        ] {
+            if value <= Fixed::ZERO {
+                return Some(format!("ground {label} {value} is not above 0"));
+            }
+        }
+        for (label, share) in [
+            ("defences_strength", self.defences_strength),
+            ("fighting_unit_work_share", self.fighting_unit_work_share),
+        ] {
+            if share.is_negative() || share > Fixed::ONE {
+                return Some(format!("ground {label} {share} is not between 0 and 1"));
             }
         }
         if self.training_ceiling > 4 {

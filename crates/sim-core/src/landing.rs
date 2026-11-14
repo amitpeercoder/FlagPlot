@@ -24,7 +24,8 @@
 //!    number first, as many as fit under her aircraft capacity (the ready
 //!    and damaged aircraft of the groups aboard her at that moment), the rest
 //!    going on to the next.
-//! 2. A base of its side within the type's strike radius of that hex (the
+//! 2. A base of its side with an airfield (decision 6 of 0099) within the
+//!    type's strike radius of that hex (the
 //!    search range for a type with no strike radius, as some scouts are): the
 //!    nearest, then the lowest number. A base takes any number.
 //! 3. The sea: the aircraft are ditched, and where pilots are counted each
@@ -206,7 +207,10 @@ impl World {
                     .bases
                     .values()
                     .filter(|base| {
-                        base.side == group.side && hex.air_distance_within(base.hex, radius)
+                        // Not a base with no airfield (decision 6 of 0099).
+                        base.side == group.side
+                            && base.airfield
+                            && hex.air_distance_within(base.hex, radius)
                     })
                     .min_by_key(|base| (hex.air_distance_nm(base.hex), base.id))
                     .map(|base| base.id);

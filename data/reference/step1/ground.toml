@@ -122,3 +122,28 @@ holding_skill_strength = 0
 # How much a step of weight moves a unit's shots and the supply each of its
 # men costs.
 weight_strength = 0
+
+# The figures of work and what it builds (decision 0099). Placeholders set by
+# the architect, resting on no source. No frozen scenario has a working unit, so these do nothing here. The live values are the same, in data/reference/ground.toml.
+# Work a man of a standard working unit makes in a day, 0 or more.
+work_per_man_day = 1
+
+# Work to build an airfield on a base that has none, above 0.
+airfield_work = 20000
+
+# Work in a day that doubles the next day's unloading at a base, above 0.
+work_to_double_unloading = 1000
+
+# Work in a day for one more aircraft repaired the next night, above 0.
+work_per_aircraft_repair = 200
+
+# Work for one point of a base's defences, which run from 0 to 100, above 0.
+work_per_defence_point = 200
+
+# How much full defences raise a defender's chance to hit, from 0 to 1. 0
+# switches defences off in the fight.
+defences_strength = "0.5"
+
+# The share of a working unit's work that a fighting unit set to work makes,
+# from 0 to 1.
+fighting_unit_work_share = "0.5"

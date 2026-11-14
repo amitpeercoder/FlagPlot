@@ -801,6 +801,15 @@ struct GroundFile {
     movement_skill_strength: Quantity,
     holding_skill_strength: Quantity,
     weight_strength: Quantity,
+    /// The figures of work and what it builds (decision 0099). Required like
+    /// the older keys.
+    work_per_man_day: Quantity,
+    airfield_work: Quantity,
+    work_to_double_unloading: Quantity,
+    work_per_aircraft_repair: Quantity,
+    work_per_defence_point: Quantity,
+    defences_strength: Quantity,
+    fighting_unit_work_share: Quantity,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -877,6 +886,22 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         movement_skill_strength: number("movement_skill_strength", &file.movement_skill_strength)?,
         holding_skill_strength: number("holding_skill_strength", &file.holding_skill_strength)?,
         weight_strength: number("weight_strength", &file.weight_strength)?,
+        work_per_man_day: number("work_per_man_day", &file.work_per_man_day)?,
+        airfield_work: number("airfield_work", &file.airfield_work)?,
+        work_to_double_unloading: number(
+            "work_to_double_unloading",
+            &file.work_to_double_unloading,
+        )?,
+        work_per_aircraft_repair: number(
+            "work_per_aircraft_repair",
+            &file.work_per_aircraft_repair,
+        )?,
+        work_per_defence_point: number("work_per_defence_point", &file.work_per_defence_point)?,
+        defences_strength: number("defences_strength", &file.defences_strength)?,
+        fighting_unit_work_share: number(
+            "fighting_unit_work_share",
+            &file.fighting_unit_work_share,
+        )?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -2396,6 +2421,74 @@ mod tests {
         }
     }
 
+    const WORK_KEYS: [&str; 7] = [
+        "work_per_man_day",
+        "airfield_work",
+        "work_to_double_unloading",
+        "work_per_aircraft_repair",
+        "work_per_defence_point",
+        "defences_strength",
+        "fighting_unit_work_share",
+    ];
+
+    #[test]
+    fn the_work_figures_are_read_and_each_is_required() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.work_per_man_day, Fixed::ONE);
+        assert_eq!(figures.airfield_work, Fixed::from_int(20_000));
+        assert_eq!(figures.work_to_double_unloading, Fixed::from_int(1_000));
+        assert_eq!(figures.work_per_aircraft_repair, Fixed::from_int(200));
+        assert_eq!(figures.work_per_defence_point, Fixed::from_int(200));
+        assert_eq!(figures.defences_strength, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.fighting_unit_work_share, Fixed::from_ratio(1, 2));
+        for key in WORK_KEYS {
+            let text = without_keys(&ground_text(), &[key]);
+            assert!(
+                parse_ground_figures(&text, here())
+                    .expect_err("a missing key is refused")
+                    .message
+                    .contains(key),
+                "without {key}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_work_figures_are_in_range_and_no_float() {
+        let bad = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        let ok = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .unwrap_or_else(|e| panic!("{key} {value} loads: {}", e.message))
+        };
+        for key in WORK_KEYS {
+            assert!(bad(key, "-1").contains(key));
+            assert!(bad(key, "0.5").contains(key));
+            ok(key, "\"0.5\"");
+        }
+        // The man-day work may be 0; the four that divide may not.
+        ok("work_per_man_day", "0");
+        for key in [
+            "airfield_work",
+            "work_to_double_unloading",
+            "work_per_aircraft_repair",
+            "work_per_defence_point",
+        ] {
+            assert!(bad(key, "0").contains(key));
+            ok(key, "1");
+        }
+        // The two shares run from 0 to 1.
+        for key in ["defences_strength", "fighting_unit_work_share"] {
+            ok(key, "0");
+            ok(key, "1");
+            assert!(bad(key, "\"1.5\"").contains(key));
+            assert!(bad(key, "2").contains(key));
+        }
+    }
+
     const PREPARATION_KEYS: [&str; 8] = [
         "preparation_per_day",
         "unprepared_landing_share",
@@ -2800,6 +2893,10 @@ mod tests {
         assert_eq!(ground.movement_skill_strength, Fixed::ZERO);
         assert_eq!(ground.holding_skill_strength, Fixed::ZERO);
         assert_eq!(ground.weight_strength, Fixed::ZERO);
+        // No frozen scenario has a working unit, so the figures of decision
+        // 0099 do nothing there.
+        assert_eq!(ground.work_per_man_day, Fixed::ONE);
+        assert_eq!(ground.airfield_work, Fixed::from_int(20_000));
         let error = ground.report_error.expect("held");
         assert_eq!(
             (error.low, error.high),

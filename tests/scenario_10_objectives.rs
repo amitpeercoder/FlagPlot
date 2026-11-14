@@ -551,7 +551,10 @@ fn objectives_change_no_hash_and_no_event() {
     // And it was 7aabfe163b7239ec until the state went to version 17
     // (decision 0098, what a land unit is good at); the event log did not
     // change.
-    assert!(baseline.contains("hash 0cbc21551900dd35"));
+    // And it was 0cbc21551900dd35 until the state went to version 18
+    // (decision 0099, units that work and what they build); the event log
+    // did not change.
+    assert!(baseline.contains("hash 61a33e426ea5e04b"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

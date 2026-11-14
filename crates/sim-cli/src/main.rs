@@ -570,6 +570,28 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
         } else {
             String::new()
         };
+        // The airfield, the work done on it and the defences are said only
+        // where they differ from a base as it always was (decision 0099).
+        let works = {
+            let mut parts = Vec::new();
+            if !base.airfield {
+                parts.push("no airfield".to_string());
+            }
+            if base.airfield_work > Fixed::ZERO {
+                parts.push(format!(
+                    "{} of work done on the airfield",
+                    base.airfield_work
+                ));
+            }
+            if base.defences > Fixed::ZERO {
+                parts.push(format!("defences {}", base.defences));
+            }
+            if parts.is_empty() {
+                String::new()
+            } else {
+                format!(", {}", parts.join(", "))
+            }
+        };
         // Fuel is shown only for a base that has ever been given some. A
         // stock only falls, so that is a stock above nothing now or one that
         // refuelled a ship (decision 0045).
@@ -589,7 +611,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             ", formed in play, on its own side's map only"
         };
         println!(
-            "{} \"{}\" ({}) at {}: {} t of supply in stock{}{}{}{}",
+            "{} \"{}\" ({}) at {}: {} t of supply in stock{}{}{}{}{}",
             base.id,
             base.name,
             base.side.name(),
@@ -598,6 +620,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             fuel,
             guns,
             repairs,
+            works,
             formed
         );
     }

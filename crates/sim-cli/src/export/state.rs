@@ -68,6 +68,13 @@ pub struct LandUnitOut {
     /// no unit trains is unchanged.
     #[serde(skip_serializing_if = "is_ready")]
     activity: &'static str,
+    /// The job a working unit is set to (decision 0099). Left out when the
+    /// unit is not working or names none (the default job then applies).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    job: Option<&'static str>,
+    /// True for a working unit (decision 0099, 1). Left out when false.
+    #[serde(skip_serializing_if = "is_false")]
+    working: bool,
     /// Experience, 0 to 4 (decision 0097, 1). Left out at the standard, 2.
     #[serde(skip_serializing_if = "is_standard_experience")]
     experience: u8,
@@ -122,6 +129,10 @@ pub struct SkillsOut {
     jungle: u8,
     mountain: u8,
     atoll: u8,
+    /// Left out at the standard, so a file made before decision 0099 is
+    /// unchanged.
+    #[serde(skip_serializing_if = "is_standard_skill")]
+    works: u8,
 }
 
 /// The men of one land unit aboard a ship.
@@ -327,6 +338,16 @@ pub struct BaseOut {
     /// side's map only. Left out when true.
     #[serde(skip_serializing_if = "is_true")]
     on_map: bool,
+    /// False for a base with no airfield (decision 0099, 5). Left out when
+    /// true.
+    #[serde(skip_serializing_if = "is_true")]
+    airfield: bool,
+    /// Work done on the airfield. Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    airfield_work: Num,
+    /// Defences, 0 to 100 (decision 0099, 7). Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    defences: Num,
 }
 
 fn is_true(b: &bool) -> bool {
@@ -351,6 +372,10 @@ fn is_defend(posture: &&'static str) -> bool {
 
 fn is_ready(activity: &&'static str) -> bool {
     *activity == "ready"
+}
+
+fn is_standard_skill(skill: &u8) -> bool {
+    *skill == sim_core::state::Skills::STANDARD
 }
 
 fn is_standard_experience(experience: &u8) -> bool {
@@ -399,6 +424,8 @@ fn land_unit(unit: &LandUnit) -> LandUnitOut {
             counted: Num(march.counted),
         }),
         activity: unit.activity.name(),
+        job: unit.activity.job().map(|job| job.name()),
+        working: unit.working,
         experience: unit.experience,
         skills: (unit.skills != sim_core::state::Skills::STANDARD_ALL).then_some(SkillsOut {
             assault: unit.skills.assault,
@@ -408,6 +435,7 @@ fn land_unit(unit: &LandUnit) -> LandUnitOut {
             jungle: unit.skills.jungle,
             mountain: unit.skills.mountain,
             atoll: unit.skills.atoll,
+            works: unit.skills.works,
         }),
         training_days: unit.training_days,
         fight_days: unit.fight_days,
@@ -436,6 +464,9 @@ fn base(base: &Base) -> BaseOut {
         ship_repair_points_per_day: Num(base.ship_repair_points_per_day),
         yard_passage_days: base.yard_passage_days,
         on_map: base.on_map,
+        airfield: base.airfield,
+        airfield_work: Num(base.airfield_work),
+        defences: Num(base.defences),
     }
 }
 

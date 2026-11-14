@@ -11,7 +11,7 @@ use sim_core::ids::{
 use sim_core::map::HexKind;
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
 use sim_core::orders::{
-    Activity, AirGroupOrder, AirMission, Cargo, Issuer, LandUnitOrder, Mission, OrderKind,
+    Activity, AirGroupOrder, AirMission, Cargo, Issuer, Job, LandUnitOrder, Mission, OrderKind,
     OrderRequest, Origin, Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction,
     TaskForceOrder,
 };
@@ -239,6 +239,15 @@ struct BaseSpec {
     /// "As built"). Defaults to true. A base off it cannot be bombarded or
     /// struck until a ground report finds it.
     on_map: Option<bool>,
+    /// Whether the base has an airfield (decision 5 of 0099). Defaults to
+    /// true.
+    airfield: Option<bool>,
+    /// The work already done on the airfield, 0 or more (decision 5 of
+    /// 0099). Only for a base with `airfield = false`. Defaults to 0.
+    airfield_work: Option<Quantity>,
+    /// The base's defences at the start, 0 to 100 (decision 4 of 0099).
+    /// Defaults to 0.
+    defences: Option<Quantity>,
 }
 
 /// A land unit at the start (decision 0066, 3): exactly one of a hex, where
@@ -270,6 +279,9 @@ struct LandUnitSpec {
     /// What the unit is good at (decision 0098): each skill a whole number
     /// from 0 to 4; any not given is 2.
     skills: Option<SkillsSpec>,
+    /// Marks a working unit (decision 1 of 0099): one whose men do not
+    /// fight but work. Defaults to false. Not with `posture = "attack"`.
+    working: Option<bool>,
 }
 
 /// A land unit's skills (decision 0098), each optional, defaulting to 2:
@@ -285,6 +297,7 @@ struct SkillsSpec {
     jungle: Option<u32>,
     mountain: Option<u32>,
     atoll: Option<u32>,
+    works: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -540,8 +553,11 @@ enum ActionSpec {
         roster: Vec<u32>,
     },
     /// A land unit's activity, `ready` or `train` (decisions 0095 and 0097).
+    /// With `work`, an optional `job`: `airfield`, `port`, `aircraft` or
+    /// `defences` (decision 0099).
     SetActivity {
         activity: ActivitySpec,
+        job: Option<String>,
     },
 }
 
@@ -550,6 +566,7 @@ enum ActionSpec {
 enum ActivitySpec {
     Ready,
     Train,
+    Work,
 }
 
 impl From<ActivitySpec> for Activity {
@@ -557,6 +574,7 @@ impl From<ActivitySpec> for Activity {
         match spec {
             ActivitySpec::Ready => Activity::Ready,
             ActivitySpec::Train => Activity::Train,
+            ActivitySpec::Work => Activity::Work(None),
         }
     }
 }
@@ -1099,6 +1117,38 @@ impl Scenario {
 
         for spec in &file.base {
             let id = BaseId::new(spec.id);
+            let airfield = spec.airfield.unwrap_or(true);
+            let airfield_work = match &spec.airfield_work {
+                Some(quantity) => {
+                    let work = quantity
+                        .to_fixed()
+                        .map_err(|e| fail(format!("{id}: airfield_work {e}")))?;
+                    if work.is_negative() {
+                        return Err(fail(format!("{id}: airfield_work is negative")));
+                    }
+                    if airfield {
+                        return Err(fail(format!(
+                            "{id}: airfield_work is given for a base that has an airfield, which has nothing more to build; give it only with airfield = false"
+                        )));
+                    }
+                    work
+                }
+                None => Fixed::ZERO,
+            };
+            let defences = match &spec.defences {
+                Some(quantity) => {
+                    let defences = quantity
+                        .to_fixed()
+                        .map_err(|e| fail(format!("{id}: defences {e}")))?;
+                    if defences.is_negative() || defences > Fixed::from_int(100) {
+                        return Err(fail(format!(
+                            "{id}: defences {defences} is not between 0 and 100"
+                        )));
+                    }
+                    defences
+                }
+                None => Fixed::ZERO,
+            };
             let base = Base {
                 id,
                 name: spec.name.clone(),
@@ -1152,6 +1202,10 @@ impl Scenario {
                     None => None,
                 },
                 on_map: spec.on_map.unwrap_or(true),
+                airfield,
+                airfield_work,
+                defences,
+                day_work: None,
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1411,6 +1465,15 @@ impl Scenario {
             if let Some(posture) = spec.posture {
                 unit.posture = posture.into();
             }
+            if spec.working.unwrap_or(false) {
+                if unit.posture == Posture::Attack {
+                    return Err(fail(format!(
+                        "{id} is a working unit and has posture attack: a working unit does not attack, it is always on defend"
+                    )));
+                }
+                unit.working = true;
+                unit.activity = Activity::Work(None);
+            }
             if let Some(fatigue) = &spec.fatigue {
                 let fatigue = fatigue
                     .to_fixed()
@@ -1481,6 +1544,7 @@ impl Scenario {
                         standard.mountain,
                     ),
                     ("atoll", skills.atoll, &mut set.atoll, standard.atoll),
+                    ("works", skills.works, &mut set.works, standard.works),
                 ] {
                     let value = given.unwrap_or(u32::from(default));
                     if value > u32::from(Skills::MAX) {
@@ -1563,6 +1627,11 @@ impl Scenario {
                             "{id} is {} but its base {base_id} is {}",
                             side.name(),
                             base.side.name()
+                        )));
+                    }
+                    if !base.airfield {
+                        return Err(fail(format!(
+                            "{id} is at {base_id}, which has no airfield (decision 6 of 0099)"
                         )));
                     }
                     AirGroupLocation::Base(base_id)
@@ -1973,8 +2042,25 @@ impl Scenario {
                         ActionSpec::March { hex: [q, r] } => {
                             LandUnitOrder::March(Hex::new(*q, *r))
                         }
-                        ActionSpec::SetActivity { activity } => {
-                            LandUnitOrder::SetActivity((*activity).into())
+                        ActionSpec::SetActivity { activity, job } => {
+                            let activity = match (activity, job) {
+                                (ActivitySpec::Work, Some(name)) => {
+                                    let job = Job::from_name(name).ok_or_else(|| {
+                                        fail(format!(
+                                            "the set_activity order on day {day} has job \"{name}\", which is not airfield, port, aircraft or defences"
+                                        ))
+                                    })?;
+                                    Activity::Work(Some(job))
+                                }
+                                (ActivitySpec::Work, None) => Activity::Work(None),
+                                (other, None) => (*other).into(),
+                                (_, Some(_)) => {
+                                    return Err(fail(format!(
+                                        "the set_activity order on day {day} gives a job, which only the activity work takes"
+                                    )))
+                                }
+                            };
+                            LandUnitOrder::SetActivity(activity)
                         }
                         _ => {
                             return Err(fail(format!(
@@ -4747,6 +4833,7 @@ task_force = 3
                 jungle: 2,
                 mountain: 4,
                 atoll: 2,
+                works: 2,
             }
         );
     }
@@ -4875,9 +4962,9 @@ task_force = 3
                 other => panic!("not a land unit order: {other:?}"),
             }
         }
-        // Another activity, none, and the order given to a task force are
-        // refused.
-        assert!(landing(true, &order("work")).is_err());
+        // An unknown activity, none, and the order given to a task force
+        // are refused.
+        assert!(landing(true, &order("idle")).is_err());
         let none = unit_at_base(1)
             + "\n[[order]]\nday = 3\nside = \"allied\"\nland_unit = 1\nkind = \"set_activity\"\n";
         assert!(landing(true, &none).is_err());
@@ -4890,6 +4977,164 @@ task_force = 3
             message.contains("set_activity") && message.contains("land_unit"),
             "{message}"
         );
+    }
+
+    #[test]
+    fn a_base_takes_an_airfield_flag_work_done_on_it_and_defences() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let base = |extra: &str| {
+            let head = HEAD.replace("q = 5\nr = 0\n", &format!("q = 5\nr = 0\n{extra}"));
+            Scenario::parse(&head, &path)
+        };
+        let figures = |scenario: Scenario| {
+            let base = scenario.world.umpire().bases[&BaseId::new(2)].clone();
+            (
+                base.airfield,
+                base.airfield_work,
+                base.defences,
+                base.day_work,
+            )
+        };
+        assert_eq!(
+            figures(base("").expect("loads")),
+            (true, Fixed::ZERO, Fixed::ZERO, None)
+        );
+        assert_eq!(
+            figures(
+                base("airfield = false\nairfield_work = 5000\ndefences = \"12.5\"\n")
+                    .expect("loads")
+            ),
+            (false, Fixed::from_int(5000), Fixed::from_ratio(25, 2), None)
+        );
+        assert_eq!(
+            figures(base("airfield = false\nairfield_work = \"0.5\"\n").expect("loads")).1,
+            Fixed::from_ratio(1, 2)
+        );
+        assert_eq!(
+            figures(base("defences = 100\n").expect("loads")).2,
+            Fixed::from_int(100)
+        );
+        assert!(figures(base("airfield = false\n").expect("loads")).1 == Fixed::ZERO);
+        // Work on an airfield that exists, negative work, defences out of
+        // range and floats are refused.
+        let message = base("airfield_work = 100\n")
+            .map(|_| ())
+            .expect_err("refused")
+            .to_string();
+        assert!(
+            message.contains("airfield_work") && message.contains("has an airfield"),
+            "{message}"
+        );
+        assert!(base("airfield = true\nairfield_work = 0\n").is_err());
+        assert!(base("airfield = false\nairfield_work = -1\n").is_err());
+        assert!(base("airfield = false\nairfield_work = 1.5\n").is_err());
+        let message = base("defences = 101\n")
+            .map(|_| ())
+            .expect_err("refused")
+            .to_string();
+        assert!(
+            message.contains("defences") && message.contains("0 and 100"),
+            "{message}"
+        );
+        assert!(base("defences = -1\n").is_err());
+        assert!(base("defences = 1.5\n").is_err());
+        assert!(base("airfield = \"no\"\n").is_err());
+    }
+
+    #[test]
+    fn an_air_group_may_not_start_at_a_base_with_no_airfield() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let with_group = |extra: &str| {
+            let head = HEAD.replace("q = 0\nr = 0\n", &format!("q = 0\nr = 0\n{extra}"));
+            Scenario::parse(&format!("{head}\n{}", air_group(1, 1)), &path)
+        };
+        assert!(with_group("").is_ok());
+        let message = with_group("airfield = false\n")
+            .map(|_| ())
+            .expect_err("refused")
+            .to_string();
+        assert!(message.contains("no airfield"), "{message}");
+    }
+
+    #[test]
+    fn a_working_unit_is_marked_works_and_may_not_attack() {
+        let scenario = landing(
+            true,
+            &format!(
+                "{}{}",
+                unit_ashore(1, 100, 0, 0),
+                unit_with(2, "working = true\nskills = { works = 4 }")
+            ),
+        )
+        .expect("loads");
+        let truth = scenario.world.umpire();
+        let fighter = &truth.land_units[&LandUnitId::new(1)];
+        assert!(!fighter.working);
+        assert_eq!(fighter.activity, Activity::Ready);
+        assert_eq!(fighter.skills.works, 2);
+        let worker = &truth.land_units[&LandUnitId::new(2)];
+        assert!(worker.working);
+        assert_eq!(worker.activity, Activity::Work(None));
+        assert_eq!(worker.skills.works, 4);
+        assert!(landing(true, &unit_with(1, "working = false\nposture = \"attack\"")).is_ok());
+        assert!(landing(true, &unit_with(1, "working = true\nposture = \"defend\"")).is_ok());
+        let message = landing_error(true, &unit_with(1, "working = true\nposture = \"attack\""));
+        assert!(
+            message.contains("working unit") && message.contains("attack"),
+            "{message}"
+        );
+        // The works skill is whole, 0 to 4.
+        let message = landing_error(true, &unit_with(1, "skills = { works = 5 }"));
+        assert!(message.contains("works skill of 5"), "{message}");
+        assert!(landing(true, &unit_with(1, "skills = { works = 0 }")).is_ok());
+        assert!(landing(true, &unit_with(1, "skills = { works = -1 }")).is_err());
+        assert!(landing(true, &unit_with(1, "skills = { works = 1.5 }")).is_err());
+        assert!(landing(true, &unit_with(1, "working = \"yes\"")).is_err());
+    }
+
+    #[test]
+    fn a_set_activity_order_may_be_work_with_a_job() {
+        let order = |extra: &str| {
+            format!(
+                "{}\n[[order]]\nday = 3\nside = \"allied\"\nland_unit = 1\nkind = \"set_activity\"\n{extra}",
+                unit_at_base(1)
+            )
+        };
+        let wanted_activity = |extra: &str| {
+            let scenario = landing(true, &order(extra)).expect("loads");
+            match &scenario.scripted_orders()[&3][0].1.kind {
+                OrderKind::LandUnit { order, .. } => order.clone(),
+                other => panic!("not a land unit order: {other:?}"),
+            }
+        };
+        assert_eq!(
+            wanted_activity("activity = \"work\"\n"),
+            LandUnitOrder::SetActivity(Activity::Work(None))
+        );
+        for (name, job) in [
+            ("airfield", Job::Airfield),
+            ("port", Job::Port),
+            ("aircraft", Job::Aircraft),
+            ("defences", Job::Defences),
+        ] {
+            assert_eq!(
+                wanted_activity(&format!("activity = \"work\"\njob = \"{name}\"\n")),
+                LandUnitOrder::SetActivity(Activity::Work(Some(job)))
+            );
+        }
+        // An unknown job, and a job with another activity, are refused.
+        let message = landing_error(true, &order("activity = \"work\"\njob = \"farming\"\n"));
+        assert!(
+            message.contains("farming") && message.contains("job"),
+            "{message}"
+        );
+        for activity in ["ready", "train"] {
+            let message = landing_error(
+                true,
+                &order(&format!("activity = \"{activity}\"\njob = \"port\"\n")),
+            );
+            assert!(message.contains("only the activity work"), "{message}");
+        }
     }
 
     #[test]

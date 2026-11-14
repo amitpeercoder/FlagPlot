@@ -330,10 +330,41 @@ pub struct Base {
     /// 12): true for every base a scenario starts with, false for one formed
     /// by a landing, which only its own side knows of.
     pub on_map: bool,
+    /// Whether the base has an airfield (decision 5 of 0099). Without one no
+    /// aircraft uses it (decision 6). True for a base a scenario states
+    /// unless it says otherwise; false for one formed by a landing or a
+    /// march, until its work done reaches `airfield_work`.
+    pub airfield: bool,
+    /// The work done on the base's airfield (decisions 4 and 5 of 0099). It
+    /// stays with the base: it is not lost when the builders leave, and a
+    /// side that takes the base takes it. Nothing is added once the airfield
+    /// is built.
+    pub airfield_work: Fixed,
+    /// The base's defences, from 0 to 100 (decision 4 of 0099). They stay
+    /// with the base and do not wear away (4a).
+    pub defences: Fixed,
+    /// The work made at the base on its last day of work for the jobs the
+    /// next day reads: the port and the aircraft (decision 4 of 0099).
+    /// `None` until the first work there.
+    pub day_work: Option<DayWork>,
+}
+
+/// The work made at a base on one day for the two jobs the next day reads
+/// (decision 4 of 0099): the port, read by the next day's cargo, and the
+/// aircraft, read by the next night's repair.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct DayWork {
+    /// The day the work was made. Only the day after reads it.
+    pub day: u32,
+    /// Work on the port that day.
+    pub port: Fixed,
+    /// Work on the aircraft that day.
+    pub aircraft: Fixed,
 }
 
 impl Base {
-    /// A base with no supply or fuel, no anti-aircraft fire and no repairs.
+    /// A base with no supply or fuel, no anti-aircraft fire and no repairs,
+    /// with an airfield, no work done and no defences.
     pub fn new(id: BaseId, name: String, side: Side, hex: Hex) -> Base {
         Base {
             id,
@@ -347,6 +378,23 @@ impl Base {
             ship_repair_points_per_day: Fixed::ZERO,
             yard_passage_days: None,
             on_map: true,
+            airfield: true,
+            airfield_work: Fixed::ZERO,
+            defences: Fixed::ZERO,
+            day_work: None,
+        }
+    }
+
+    /// The work of `job` made at the base on `day`, for the day after to
+    /// read: 0 if no work for it was made that day.
+    pub fn work_of_day(&self, day: u32, job: crate::orders::Job) -> Fixed {
+        match self.day_work {
+            Some(work) if work.day == day => match job {
+                crate::orders::Job::Port => work.port,
+                crate::orders::Job::Aircraft => work.aircraft,
+                crate::orders::Job::Airfield | crate::orders::Job::Defences => Fixed::ZERO,
+            },
+            _ => Fixed::ZERO,
         }
     }
 }
@@ -976,6 +1024,11 @@ pub struct LandUnit {
     /// What the unit is good at (decision 0098): set by the scenario and
     /// never changed in play.
     pub skills: Skills,
+    /// Whether the unit is a working unit (decision 1 of 0099): its men do
+    /// not fire, are not counted when a hex is contested or a side is tested
+    /// for being beaten, and its activity is always work. Set by the
+    /// scenario and never changed in play.
+    pub working: bool,
 }
 
 /// A land unit's skills (decision 0098, 1 to 4): each a whole number from 0
@@ -998,6 +1051,9 @@ pub struct Skills {
     pub mountain: u8,
     /// Movement through atoll hexes.
     pub atoll: u8,
+    /// Works: moves the work the unit makes in a day, as the skill over 2
+    /// (decision 2 of 0099).
+    pub works: u8,
 }
 
 impl Skills {
@@ -1014,6 +1070,7 @@ impl Skills {
         jungle: Skills::STANDARD,
         mountain: Skills::STANDARD,
         atoll: Skills::STANDARD,
+        works: Skills::STANDARD,
     };
 
     /// The unit's movement skill for a kind of terrain (decision 4).
@@ -1094,6 +1151,7 @@ impl LandUnit {
             training_days: 0,
             fight_days: 0,
             skills: Skills::STANDARD_ALL,
+            working: false,
         }
     }
 }

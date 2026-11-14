@@ -581,6 +581,10 @@ pub struct BriefingBase {
     /// Forces that came back here from the yard yesterday.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub returned_yesterday: Vec<ReturnedForce>,
+    /// The base's airfield, work and defences (decision 0099). Left out
+    /// while the base is as a base always was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub works: Option<crate::lines::BaseWorksLine>,
 }
 
 /// The land units part (decision 0066, 21): every land unit of the side with
@@ -664,6 +668,13 @@ pub struct LandUnitsPart {
     /// Steps of experience gained yesterday. Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub experience_raised_yesterday: Vec<ExperienceRaisedLine>,
+    /// Work made yesterday by the side's units (decision 0099). Left out
+    /// when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub work_yesterday: Vec<WorkDayLine>,
+    /// Airfields of the side built yesterday. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub airfields_built_yesterday: Vec<AirfieldBuiltLine>,
     /// For each hex with men of the side ashore, the days of supply its base
     /// holds at the present charge.
     pub supply_by_hex: Vec<HexSupply>,
@@ -789,6 +800,30 @@ pub struct ExperienceDayLine {
     /// The days counted toward the next step.
     pub days: u32,
     pub experience: u32,
+    pub event: u32,
+}
+
+/// A unit worked a day at a base (decision 0099).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct WorkDayLine {
+    pub land_unit: Handle,
+    pub base: Handle,
+    /// `airfield`, `port`, `aircraft` or `defences`.
+    pub job: &'static str,
+    /// The work the unit made.
+    pub work: Dec,
+    /// The work done on the airfield, the day's work on the port or on the
+    /// aircraft, or the defences after the day.
+    pub total: Dec,
+    pub event: u32,
+}
+
+/// A base of the side got its airfield (decision 0099, 5).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AirfieldBuiltLine {
+    pub base: Handle,
+    pub place: Place,
+    pub work_done: Dec,
     pub event: u32,
 }
 
@@ -1296,6 +1331,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                 stocks_yesterday: stocks_yesterday(b, day.stocks.get(&b.id)),
                 repaired_yesterday: day.repaired.get(&b.id).cloned().unwrap_or_default(),
                 returned_yesterday: day.returned.get(&b.id).cloned().unwrap_or_default(),
+                works: crate::lines::base_works_line(&ctx, b),
             }
         })
         .collect();
@@ -1503,6 +1539,8 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         preparation_shared_yesterday: ground.preparation_shared,
         experience_days_yesterday: ground.experience_days,
         experience_raised_yesterday: ground.experience_raised,
+        work_yesterday: ground.work,
+        airfields_built_yesterday: ground.airfields_built,
         supply_by_hex,
     })
 }
@@ -1575,6 +1613,8 @@ struct GroundDay {
     preparation_shared: Vec<PreparationSharedLine>,
     experience_days: Vec<ExperienceDayLine>,
     experience_raised: Vec<ExperienceRaisedLine>,
+    work: Vec<WorkDayLine>,
+    airfields_built: Vec<AirfieldBuiltLine>,
 }
 
 /// What moved in and out of a base's stocks yesterday, by cause, from the
@@ -2367,6 +2407,31 @@ impl Day {
                         land_unit: ctx.land_unit(*unit),
                         experience: u32::from(*experience),
                         by: by.name(),
+                        event: id,
+                    }),
+                    EventKind::UnitWorked {
+                        unit,
+                        base,
+                        job,
+                        work,
+                        total,
+                    } => ground.work.push(WorkDayLine {
+                        land_unit: ctx.land_unit(*unit),
+                        base: ctx.base(*base),
+                        job: job.name(),
+                        work: Dec(*work),
+                        total: Dec(*total),
+                        event: id,
+                    }),
+                    EventKind::AirfieldBuilt {
+                        base,
+                        hex,
+                        work_done,
+                        ..
+                    } => ground.airfields_built.push(AirfieldBuiltLine {
+                        base: ctx.base(*base),
+                        place: ctx.place(*hex),
+                        work_done: Dec(*work_done),
                         event: id,
                     }),
                     EventKind::UnitDivided {

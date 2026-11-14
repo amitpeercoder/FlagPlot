@@ -161,10 +161,17 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 "kind": "march",
                 "hex": [hex.q, hex.r],
             }),
-            LandUnitOrder::SetActivity(activity) => json!({
-                "kind": "set_activity",
-                "activity": activity.name(),
-            }),
+            LandUnitOrder::SetActivity(activity) => match activity.job() {
+                Some(job) => json!({
+                    "kind": "set_activity",
+                    "activity": activity.name(),
+                    "job": job.name(),
+                }),
+                None => json!({
+                    "kind": "set_activity",
+                    "activity": activity.name(),
+                }),
+            },
         },
     }
 }
@@ -477,6 +484,17 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                 "set_activity" => LandUnitOrder::SetActivity(match text(value, "activity")? {
                     "ready" => Activity::Ready,
                     "train" => Activity::Train,
+                    "work" => Activity::Work(match value.get("job") {
+                        None | Some(Value::Null) => None,
+                        Some(job) => {
+                            let name = job.as_str().ok_or("\"job\" is not text")?;
+                            Some(sim_core::orders::Job::from_name(name).ok_or_else(|| {
+                                format!(
+                                    "unknown job \"{name}\" (airfield, port, aircraft or defences)"
+                                )
+                            })?)
+                        }
+                    }),
                     other => return Err(format!("unknown activity \"{other}\"")),
                 }),
                 other => return Err(format!("unknown land unit order \"{other}\"")),

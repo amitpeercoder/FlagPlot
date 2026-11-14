@@ -154,6 +154,15 @@ pub enum InvariantViolation {
     /// A land unit has a skill above 4 (decision 0098, 1). Added at the end
     /// of the enum.
     LandUnitSkillOutOfRange(LandUnitId),
+    /// A working unit whose activity is not work, or that is on attack
+    /// (decision 1 and ruling 1 of 0099). Added at the end of the enum.
+    WorkingUnitUnsound(LandUnitId),
+    /// A base with negative work done on its airfield, or defences outside
+    /// 0 to 100 (decision 4 of 0099). Added at the end of the enum.
+    BaseWorksUnsound(BaseId),
+    /// An air group at a base with no airfield (decision 6 of 0099). Added
+    /// at the end of the enum.
+    AirGroupAtBaseWithoutAirfield(AirGroupId, BaseId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -373,6 +382,17 @@ impl fmt::Display for InvariantViolation {
             ),
             InvariantViolation::LandUnitSkillOutOfRange(unit) => {
                 write!(f, "{unit} has a skill above 4")
+            }
+            InvariantViolation::WorkingUnitUnsound(unit) => write!(
+                f,
+                "{unit} is a working unit whose activity is not work, or is on attack"
+            ),
+            InvariantViolation::BaseWorksUnsound(base) => write!(
+                f,
+                "{base} has negative work done on its airfield or defences outside 0 to 100"
+            ),
+            InvariantViolation::AirGroupAtBaseWithoutAirfield(group, base) => {
+                write!(f, "{group} is at {base}, which has no airfield")
             }
         }
     }
@@ -739,11 +759,27 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
             skills.jungle,
             skills.mountain,
             skills.atoll,
+            skills.works,
         ]
         .into_iter()
         .all(|skill| skill <= crate::state::Skills::MAX);
         if !skills_ok {
             violations.push(InvariantViolation::LandUnitSkillOutOfRange(unit.id));
+        }
+        // A working unit works and defends (decision 0099).
+        if unit.working
+            && (!matches!(unit.activity, crate::orders::Activity::Work(_))
+                || unit.posture == crate::orders::Posture::Attack)
+        {
+            violations.push(InvariantViolation::WorkingUnitUnsound(unit.id));
+        }
+    }
+    for base in truth.bases.values() {
+        if base.airfield_work.is_negative()
+            || base.defences.is_negative()
+            || base.defences > Fixed::from_int(100)
+        {
+            violations.push(InvariantViolation::BaseWorksUnsound(base.id));
         }
     }
 
@@ -766,6 +802,9 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                 }
                 Some(base) if base.side != group.side => violations.push(
                     InvariantViolation::AirGroupAtOtherSidesBase(group.id, base_id),
+                ),
+                Some(base) if !base.airfield => violations.push(
+                    InvariantViolation::AirGroupAtBaseWithoutAirfield(group.id, base_id),
                 ),
                 Some(_) => {}
             },
