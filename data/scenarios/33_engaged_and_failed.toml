@@ -1,0 +1,210 @@
+# Scenario 33: who is engaged in a fight ashore, and an attack that fails
+# (decision 0105).
+#
+# Proves decision 0105 against a hand calculation, at four hexes. At K a
+# large Allied division holds against a small Japanese regiment: the
+# Allied fire is limited to 3 times the Japanese men, the attack fails twice
+# and wears the regiment out, and it holds with no instruction because its
+# base has supply. At L a tired Japanese battalion attacks, fails, and its
+# order says fall back, so it marches for M though its base holds supply. At N
+# the same, with no instruction and a base with nothing to feed it: it falls
+# back to O. At P a larger Allied force attacks a smaller one and its attack
+# does not fail. The hand calculation is in tests/scenario_33_engaged_and_failed.rs,
+# which runs the scenario on the frozen step 1 figures with the two new
+# figures set. Only the hits of the fights are the dice; the test reads them.
+#
+# No air combat, wear, fatigue or air supply figures are named, so no aircraft
+# flies and nothing wears or is grounded. Each night the men's supply is the
+# first thing charged. Every base has an airfield (the default).
+#
+# PLACEHOLDER DATA. The units, bases and map are invented.
+
+name = "Scenario 33: Who is engaged, and an attack that fails"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_engaged.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base 1, Allied, at K"
+side = "allied"
+q = 0
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 2
+name = "Placeholder base 2, Japanese, at K"
+side = "japanese"
+q = 0
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 3
+name = "Placeholder base 3, Allied, at L"
+side = "allied"
+q = 10
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 4
+name = "Placeholder base 4, Japanese, at L"
+side = "japanese"
+q = 10
+r = 0
+supply_t = 10
+
+[[base]]
+id = 5
+name = "Placeholder base 5, Japanese, at M"
+side = "japanese"
+q = 10
+r = 1
+supply_t = 100
+
+[[base]]
+id = 6
+name = "Placeholder base 6, Allied, at N"
+side = "allied"
+q = 20
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 7
+name = "Placeholder base 7, Japanese, at N"
+side = "japanese"
+q = 20
+r = 0
+supply_t = "2.5"
+
+[[base]]
+id = 8
+name = "Placeholder base 8, Allied, at P"
+side = "allied"
+q = 30
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 9
+name = "Placeholder base 9, Japanese, at P"
+side = "japanese"
+q = 30
+r = 0
+supply_t = 1000
+
+[[land_unit]]
+id = 1
+name = "Placeholder Allied division at K"
+side = "allied"
+men = 6000
+q = 0
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder Japanese regiment at K"
+side = "japanese"
+men = 1000
+q = 0
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 3
+name = "Placeholder Allied brigade at L"
+side = "allied"
+men = 3000
+q = 10
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 4
+name = "Placeholder Japanese battalion at L"
+side = "japanese"
+men = 500
+q = 10
+r = 0
+posture = "defend"
+fatigue = 40
+
+[[land_unit]]
+id = 5
+name = "Placeholder Allied brigade at N"
+side = "allied"
+men = 3000
+q = 20
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 6
+name = "Placeholder Japanese battalion at N"
+side = "japanese"
+men = 500
+q = 20
+r = 0
+posture = "defend"
+fatigue = 40
+
+[[land_unit]]
+id = 7
+name = "Placeholder Allied regiment at P"
+side = "allied"
+men = 4000
+q = 30
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 8
+name = "Placeholder Japanese regiment at P"
+side = "japanese"
+men = 1600
+q = 30
+r = 0
+posture = "defend"
+
+# Day 1: the Japanese units at K, L and N and the Allied unit at P are set to
+# attack, with the instruction each carries when its attack is spent.
+
+[[order]]
+day = 1
+side = "japanese"
+land_unit = 2
+kind = "set_posture"
+posture = "attack"
+
+[[order]]
+day = 1
+side = "japanese"
+land_unit = 4
+kind = "set_posture"
+posture = "attack"
+when_spent = "fall_back"
+
+[[order]]
+day = 1
+side = "japanese"
+land_unit = 6
+kind = "set_posture"
+posture = "attack"
+
+[[order]]
+day = 1
+side = "allied"
+land_unit = 7
+kind = "set_posture"
+posture = "attack"
