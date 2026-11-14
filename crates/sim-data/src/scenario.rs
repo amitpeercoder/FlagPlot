@@ -23,7 +23,7 @@ use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::{DaySummary, StartingContact, StartingEstimate, World};
 
 use crate::error::DataError;
-use crate::map::load_map;
+use crate::map::{load_land_links, load_map};
 use crate::quantity::Quantity;
 use crate::reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
@@ -59,6 +59,9 @@ struct ScenarioFile {
     days: u32,
     /// Path to the map file, relative to the scenario file.
     map: String,
+    /// Path to a land links file, relative to the scenario file. Optional:
+    /// its links are added to the map, whatever its format (decision 0094).
+    land_links: Option<String>,
     /// Path to the ship class file, or a list of them, relative to the
     /// scenario file. Ids must not repeat across files.
     ship_classes: FileList,
@@ -492,6 +495,11 @@ enum ActionSpec {
     /// A land unit's posture, `defend` or `attack` (decision 0090).
     SetPosture {
         posture: PostureSpec,
+    },
+    /// March a land unit to a neighbouring hex (decision 0094). The hex is
+    /// `[q, r]`.
+    March {
+        hex: [i32; 2],
     },
 }
 
@@ -942,7 +950,11 @@ impl Scenario {
                 }
             }
         };
-        let map = load_map(&folder.join(&file.map))?;
+        let mut map = load_map(&folder.join(&file.map))?;
+        let land_links_file = file.land_links.as_ref().map(|name| folder.join(name));
+        if let Some(links) = &land_links_file {
+            load_land_links(links, &mut map)?;
+        }
         let class_files = file.ship_classes.names();
         if class_files.is_empty() {
             return Err(fail("ship_classes names no file".to_string()));
@@ -1002,6 +1014,7 @@ impl Scenario {
         }
 
         let mut data_files: Vec<PathBuf> = vec![folder.join(&file.map)];
+        data_files.extend(land_links_file);
         for name in &class_files {
             data_files.push(reference(name)?);
         }
@@ -1711,6 +1724,7 @@ impl Scenario {
                         ActionSpec::SetPosture { .. } => {
                             return Err(wrong_target("set_posture", "land_unit"))
                         }
+                        ActionSpec::March { .. } => return Err(wrong_target("march", "land_unit")),
                     };
                     OrderKind::TaskForce {
                         target: TaskForceId::new(*raw),
@@ -1817,9 +1831,12 @@ impl Scenario {
                         ActionSpec::SetPosture { posture } => {
                             LandUnitOrder::SetPosture((*posture).into())
                         }
+                        ActionSpec::March { hex: [q, r] } => {
+                            LandUnitOrder::March(Hex::new(*q, *r))
+                        }
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for a land_unit must be set_posture"
+                                "an order on day {day} for a land_unit must be set_posture or march"
                             )))
                         }
                     };
@@ -4468,5 +4485,105 @@ task_force = 3
         }
         // A side that is neither.
         assert!(parse_with(&estimate("side = \"french\"\nq = 3\nr = 0\nmen = 300")).is_err());
+    }
+
+    // -----------------------------------------------------------------
+    // Marching overland (decision 0094).
+    // -----------------------------------------------------------------
+
+    fn unit_at_base(id: u32) -> String {
+        format!(
+            "\n[[land_unit]]\nid = {id}\nname = \"Unit {id}\"\nside = \"allied\"\nmen = 100\nq = 0\nr = 0\n"
+        )
+    }
+
+    #[test]
+    fn a_march_order_names_a_land_unit_and_a_hex() {
+        let extra = format!(
+            "{}\n[[order]]\nday = 2\nside = \"allied\"\nland_unit = 1\nkind = \"march\"\nhex = [3, -2]\n",
+            unit_at_base(1)
+        );
+        let scenario = landing(true, &extra).expect("loads");
+        let (side, request) = &scenario.scripted_orders()[&2][0];
+        assert_eq!(*side, Side::Allied);
+        match &request.kind {
+            OrderKind::LandUnit { target, order } => {
+                assert_eq!(*target, LandUnitId::new(1));
+                assert_eq!(*order, LandUnitOrder::March(Hex::new(3, -2)));
+            }
+            other => panic!("not a land unit order: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_march_order_must_be_for_a_land_unit_and_a_land_unit_takes_only_two_kinds() {
+        let order = |target: &str, kind: &str, key: &str| {
+            format!(
+                "{}\n[[order]]\nday = 1\nside = \"allied\"\n{target}\nkind = \"{kind}\"\n{key}\n",
+                unit_at_base(1)
+            )
+        };
+        let message = landing_error(true, &order("task_force = 1", "march", "hex = [1, 0]"));
+        assert!(
+            message.contains("march") && message.contains("land_unit"),
+            "{message}"
+        );
+        let message = landing_error(
+            true,
+            &order("land_unit = 1", "set_route", "waypoints = [[1, 0]]"),
+        );
+        assert!(message.contains("set_posture or march"), "{message}");
+        // The hex is two whole numbers.
+        let message = landing_error(true, &order("land_unit = 1", "march", "hex = [1]"));
+        assert!(!message.is_empty());
+    }
+
+    #[test]
+    fn a_scenario_names_a_land_links_file_that_adds_links_and_is_a_data_file() {
+        let dir = std::env::temp_dir().join(format!("flagplot-land-links-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("make the temp dir");
+        let map = dir.join("map.toml");
+        fs::write(
+            &map,
+            "placeholder = true\n[[hex]]\nq = 0\nr = 0\nkind = \"coast\"\nport_size = 3\n\
+             [[hex]]\nq = 1\nr = 0\nkind = \"coast\"\n\
+             [[hex]]\nq = 5\nr = 0\nkind = \"coast\"\n",
+        )
+        .expect("write the map");
+        let links = dir.join("links.csv");
+        fs::write(
+            &links,
+            "# placeholder\nq1,r1,q2,r2,landmass,reason\n0,0,1,0,Placeholder island,invented\n",
+        )
+        .expect("write the links");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let text = HEAD.replace(
+            "map = \"../map/placeholder_search.toml\"",
+            &format!(
+                "map = {:?}\nland_links = {:?}",
+                map.to_string_lossy(),
+                links.to_string_lossy()
+            ),
+        );
+        let scenario = Scenario::parse(&text, &path).expect("loads");
+        assert!(scenario
+            .world
+            .map()
+            .has_land_link(Hex::new(0, 0), Hex::new(1, 0)));
+        assert_eq!(scenario.data_files()[0], map);
+        assert_eq!(scenario.data_files()[1], links);
+        // A scenario without the key has no links.
+        let plain = Scenario::parse(HEAD, &path).expect("loads");
+        assert_eq!(plain.world.map().land_links().count(), 0);
+        // A bad links file is the scenario's error, naming the file.
+        fs::write(&links, "q1,r1,q2,r2,landmass,reason\n0,0,5,5,a,b\n").expect("rewrite");
+        let error = Scenario::parse(&text, &path)
+            .expect_err("refused")
+            .to_string();
+        assert!(
+            error.contains("links.csv") && error.contains("not neighbours"),
+            "{error}"
+        );
+        fs::remove_dir_all(&dir).ok();
     }
 }

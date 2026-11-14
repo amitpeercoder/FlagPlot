@@ -19,6 +19,20 @@ struct MapFile {
     region: Vec<RegionSpec>,
     #[serde(default)]
     hex: Vec<HexSpec>,
+    /// Pairs of neighbouring hexes men can march between (decision 0094).
+    #[serde(default)]
+    land_link: Vec<LandLinkSpec>,
+}
+
+/// One land link (decision 1 of 0094).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LandLinkSpec {
+    a: [i32; 2],
+    b: [i32; 2],
+    /// Free text for the reader of the file. Not used by the loader.
+    #[allow(dead_code)]
+    note: Option<String>,
 }
 
 /// A rectangle of identical hexes. Both ranges are inclusive.
@@ -182,10 +196,78 @@ pub fn load_map(path: &Path) -> Result<Map, DataError> {
             map.insert(neighbor, other);
         }
     }
+    for link in &file.land_link {
+        let a = Hex::new(link.a[0], link.a[1]);
+        let b = Hex::new(link.b[0], link.b[1]);
+        map.add_land_link(a, b)
+            .map_err(|e| DataError::in_file(path, e))?;
+    }
     if map.is_empty() {
         return Err(DataError::in_file(path, "the map has no hexes"));
     }
     Ok(map)
+}
+
+/// The columns of a land links file, in order.
+const LAND_LINK_COLUMNS: [&str; 6] = ["q1", "r1", "q2", "r2", "landmass", "reason"];
+
+/// Reads a land links file (decision 2 of 0094) and adds its links to `map`,
+/// whatever format the map came from. See [`parse_land_links`].
+pub fn load_land_links(path: &Path, map: &mut Map) -> Result<(), DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_land_links(&text, path, map)
+}
+
+/// Parses a land links file: lines starting with `#` are comments; the
+/// header is exactly `q1,r1,q2,r2,landmass,reason`; each row is one link
+/// between two neighbouring hexes. `landmass` is the landmass the link is
+/// for (a hex can hold two islands) and `reason` says why the two are
+/// joined; both must be filled. A link the map refuses, or that is listed
+/// twice, or that the map already has, is an error naming the row. `path` is
+/// only used in messages.
+fn parse_land_links(text: &str, path: &Path, map: &mut Map) -> Result<(), DataError> {
+    let mut reader = csv::ReaderBuilder::new()
+        .comment(Some(b'#'))
+        .trim(csv::Trim::All)
+        .from_reader(text.as_bytes());
+    let fail = |message: String| DataError::in_file(path, message);
+
+    let headers = reader.headers().map_err(|e| fail(e.to_string()))?;
+    let found: Vec<&str> = headers.iter().collect();
+    if found != LAND_LINK_COLUMNS {
+        return Err(fail(format!(
+            "the header must be exactly {}, found {}",
+            LAND_LINK_COLUMNS.join(","),
+            found.join(",")
+        )));
+    }
+
+    for (index, row) in reader.records().enumerate() {
+        let row = row.map_err(|e| fail(e.to_string()))?;
+        let place = format!("land link row {}", index + 1);
+        let number = |column: usize| -> Result<i32, DataError> {
+            let text = row.get(column).unwrap_or("");
+            text.parse().map_err(|_| {
+                fail(format!(
+                    "{place}: {} \"{text}\" is not a whole number",
+                    LAND_LINK_COLUMNS[column]
+                ))
+            })
+        };
+        let a = Hex::new(number(0)?, number(1)?);
+        let b = Hex::new(number(2)?, number(3)?);
+        for column in [4, 5] {
+            if row.get(column).unwrap_or("").is_empty() {
+                return Err(fail(format!(
+                    "{place} ({a} to {b}): {} is empty",
+                    LAND_LINK_COLUMNS[column]
+                )));
+            }
+        }
+        map.add_land_link(a, b)
+            .map_err(|e| fail(format!("{place}: {e}")))?;
+    }
+    Ok(())
 }
 
 /// The columns of a generated map, in order.
@@ -532,5 +614,124 @@ mod tests {
             .unwrap_err()
             .message
             .contains("twice"));
+    }
+
+    // ------------------------------------------------------------------
+    // Land links (decision 0094).
+    // ------------------------------------------------------------------
+
+    const LINK_HEADER: &str = "# a comment\nq1,r1,q2,r2,landmass,reason\n";
+
+    /// A map of coast hexes (0,0), (1,0) and (2,0), land (3,0), and deep sea
+    /// at (4,0).
+    fn link_map() -> Map {
+        parse(
+            "0,0,coast,12,-12.0000,160.0000,1,\n\
+             1,0,coast,12,-12.0000,160.6814,1,\n\
+             2,0,coast,12,-12.0000,161.3628,1,\n\
+             3,0,land,100,-12.0000,162.0442,0,\n\
+             4,0,deep_sea,0,-12.0000,162.7256,1,\n",
+        )
+        .unwrap()
+    }
+
+    fn links(body: &str) -> Result<Map, DataError> {
+        let mut map = link_map();
+        parse_land_links(
+            &format!("{LINK_HEADER}{body}"),
+            Path::new("l.csv"),
+            &mut map,
+        )?;
+        Ok(map)
+    }
+
+    #[test]
+    fn a_land_links_file_adds_its_links_to_the_map() {
+        let map = links(
+            "# another comment\n0,0,1,0,Placeholder island,one landmass\n\
+             3,0,2,0,Placeholder island,a shore walk\n",
+        )
+        .unwrap();
+        assert!(map.has_land_link(Hex::new(1, 0), Hex::new(0, 0)));
+        assert!(map.has_land_link(Hex::new(2, 0), Hex::new(3, 0)));
+        assert!(!map.has_land_link(Hex::new(1, 0), Hex::new(2, 0)));
+        // An empty file of links is allowed.
+        assert_eq!(links("").unwrap().land_links().count(), 0);
+    }
+
+    fn link_message(body: &str) -> String {
+        links(body).unwrap_err().message
+    }
+
+    #[test]
+    fn a_bad_land_links_file_is_an_error_naming_the_row() {
+        let wrong = "q1,r1,q2,r2,landmass\n0,0,1,0,x\n";
+        let mut map = link_map();
+        assert!(parse_land_links(wrong, Path::new("l.csv"), &mut map)
+            .unwrap_err()
+            .message
+            .contains("header"));
+        let extra = "q1,r1,q2,r2,landmass,reason,more\n0,0,1,0,x,y,z\n";
+        assert!(parse_land_links(extra, Path::new("l.csv"), &mut map)
+            .unwrap_err()
+            .message
+            .contains("header"));
+        assert!(link_message("0,0,1,0,x\n").contains("record"));
+        assert!(
+            link_message("0,x,1,0,a,b\n").contains("row 1")
+                && link_message("0,x,1,0,a,b\n").contains("r1")
+        );
+        assert!(link_message("0,0,1,0,a,b\n0,0,1.5,0,a,b\n").contains("row 2"));
+        let empty_landmass = link_message("0,0,1,0,,reason\n");
+        assert!(empty_landmass.contains("landmass is empty") && empty_landmass.contains("row 1"));
+        assert!(link_message("0,0,1,0,island,\n").contains("reason is empty"));
+    }
+
+    #[test]
+    fn a_land_link_the_map_refuses_is_an_error_naming_the_row() {
+        assert!(link_message("0,0,2,0,a,b\n").contains("not neighbours"));
+        assert!(link_message("0,0,1,0,a,b\n3,0,4,0,a,b\n").contains("row 2"));
+        assert!(link_message("3,0,4,0,a,b\n").contains("neither land nor coast"));
+        assert!(link_message("-1,0,0,0,a,b\n").contains("not on the map"));
+        let twice = link_message("0,0,1,0,a,b\n1,0,0,0,a,b\n");
+        assert!(twice.contains("twice") && twice.contains("row 2"));
+    }
+
+    #[test]
+    fn a_link_the_toml_map_has_is_refused_in_the_links_file() {
+        let mut map = load_toml(
+            "placeholder = true\n\
+             [[hex]]\nq = 0\nr = 0\nkind = \"coast\"\n\
+             [[hex]]\nq = 1\nr = 0\nkind = \"coast\"\n\
+             [[land_link]]\na = [0, 0]\nb = [1, 0]\nnote = \"a bridge\"\n",
+        )
+        .unwrap();
+        assert!(map.has_land_link(Hex::new(0, 0), Hex::new(1, 0)));
+        let text = format!("{LINK_HEADER}1,0,0,0,a,b\n");
+        let error = parse_land_links(&text, Path::new("l.csv"), &mut map).unwrap_err();
+        assert!(error.message.contains("twice"));
+    }
+
+    #[test]
+    fn toml_land_links_are_added_and_refusals_name_the_link() {
+        let head = "placeholder = true\n\
+             [[region]]\nkind = \"deep_sea\"\nq = [0, 3]\nr = [0, 0]\n\
+             [[hex]]\nq = 0\nr = 0\nkind = \"coast\"\n\
+             [[hex]]\nq = 1\nr = 0\nkind = \"coast\"\n";
+        let map = load_toml(&format!("{head}[[land_link]]\na = [0, 0]\nb = [1, 0]\n")).unwrap();
+        assert!(map.has_land_link(Hex::new(1, 0), Hex::new(0, 0)));
+        // No link list, no links.
+        assert_eq!(load_toml(head).unwrap().land_links().count(), 0);
+        let refused = |link: &str| load_toml(&format!("{head}{link}")).unwrap_err().message;
+        assert!(refused("[[land_link]]\na = [0, 0]\nb = [2, 0]\n").contains("not neighbours"));
+        assert!(
+            refused("[[land_link]]\na = [1, 0]\nb = [2, 0]\n").contains("neither land nor coast")
+        );
+        assert!(refused("[[land_link]]\na = [1, 0]\nb = [1, 1]\n").contains("not on the map"));
+        assert!(refused(
+            "[[land_link]]\na = [0, 0]\nb = [1, 0]\n[[land_link]]\na = [1, 0]\nb = [0, 0]\n"
+        )
+        .contains("twice"));
+        assert!(refused("[[land_link]]\na = [0, 0]\nb = [1, 0]\nextra = 1\n").contains("extra"));
     }
 }

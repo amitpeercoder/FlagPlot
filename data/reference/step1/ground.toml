@@ -59,3 +59,16 @@ men_lost_per_base_hit = 10
 # The least and the most a ground report can be, as a share of the truth.
 report_error_low = "0.5"
 report_error_high = "1.5"
+
+# Marching overland (decision 0094). Placeholders set by the architect, resting
+# on no source. The record has two marches inside the period, both from Taivu
+# to the airfield: about two days in August and about a week in September
+# inland. One figure cannot be both, so it is tuned in stage 4.
+# Days to march from a hex to a neighbour, a whole number of 1 or more.
+march_days_per_hex = 3
+
+# Fatigue a unit gains on a day it marches.
+fatigue_per_march_day = 10
+
+# Days of its daily charge a marching unit takes with it.
+march_supply_days = 5

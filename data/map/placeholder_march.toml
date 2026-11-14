@@ -1,0 +1,51 @@
+# PLACEHOLDER MAP. A strip of open sea with four coast hexes on one row, used
+# by scenario 25 (decision 0094): P at (0,0), Q at (1,0), R at (2,0) and S at
+# (3,0). Land links join P to Q and R to S only: Q and R are neighbours with
+# no link, so men cannot march between them. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 4]
+r = [-1, 1]
+
+# P, Q, R and S are coast hexes with a port and an anchorage.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 1
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 2
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 3
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+[[land_link]]
+a = [0, 0]
+b = [1, 0]
+note = "Placeholder: P and Q are on one landmass."
+
+[[land_link]]
+a = [2, 0]
+b = [3, 0]
+note = "Placeholder: R and S are on one landmass."
