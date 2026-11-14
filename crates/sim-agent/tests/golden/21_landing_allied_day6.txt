@@ -50,7 +50,7 @@ BASES
 - base:2 "Landing at (8,0)" at (8,0): supply 0 t, fuel 0 t (for ships; aircraft do not use it)
   - Yesterday: 3 t supply spent, 0 t destroyed; supply lasts 0 days at yesterday's spending
   - Stocks yesterday: supply 3 t to 0 t (feeding men ashore 3 t)
-  - Works: no airfield, 0 of 20000 work done; defences 0; yesterday's work on the port 0, on the aircraft 0
+  - Works: no airfield, 0 of 20000 work done; defences 0 (improvised); yesterday's work on the port 0, on the aircraft 0
 
 LAND UNITS
 - land_unit:1 "Placeholder battalion 1": 585 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night

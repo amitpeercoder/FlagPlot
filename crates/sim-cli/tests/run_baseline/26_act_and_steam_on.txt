@@ -2,8 +2,8 @@ Scenario 26: A force that acts at a place and steams on
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c9b8e248e8f59823  39 events
-day   2  hash 99faa697447b2bc3  13 events
+day   1  hash 9f0fe12f7e2d91ee  39 events
+day   2  hash 5cbb6191a3be4a34  13 events
 
 task_force:1 "Placeholder raiding force" (Japanese): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder supply convoy" (Allied): Arrived at (4,3); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

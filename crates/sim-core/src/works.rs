@@ -150,6 +150,9 @@ impl World {
         // The damage a day's work on a built airfield mends (decision 7 of
         // 0103): the points, and the damage before.
         let mut mended: Option<(Fixed, Fixed)> = None;
+        // The grade factors above 1 that work on defences was spent at
+        // (decision 8 of 0106).
+        let mut grades: Vec<(&'static str, Fixed)> = Vec::new();
         let total = match job {
             // Nothing is added once the airfield is built (ruling 2), but
             // its damage is mended.
@@ -176,10 +179,13 @@ impl World {
                 day_work.aircraft += work;
                 day_work.aircraft
             }
-            // Not cut to a whole number (ruling 3), and no more than 100.
+            // Not cut to a whole number (ruling 3), and no more than 100;
+            // each grade at its cost (decision 8 of 0106).
             Job::Defences => {
-                base.defences = (base.defences + work / figures.work_per_defence_point)
-                    .min(Fixed::from_int(100));
+                let (defences, dearer) =
+                    crate::cover::defences_after_work(base.defences, work, figures);
+                base.defences = defences;
+                grades = dearer;
                 base.defences
             }
         };
@@ -213,6 +219,13 @@ impl World {
                     name: "work_per_defence_point",
                     value: figures.work_per_defence_point,
                 });
+                // Only where a dearer grade was worked (decision 8 of 0106).
+                for (name, value) in &grades {
+                    factors.push(Factor {
+                        name,
+                        value: *value,
+                    });
+                }
             }
             Breakdown {
                 factors,

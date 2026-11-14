@@ -32,6 +32,7 @@ pub mod world;
 mod airstrike;
 mod bombardment;
 mod cargo;
+mod cover;
 mod damage;
 mod estimate;
 #[cfg(test)]

@@ -207,6 +207,20 @@ impl<'a> SideView<'a> {
             .filter(move |unit| unit.side == side)
     }
 
+    /// The cover of one of the side's own land units (decision 1 of 0106):
+    /// 0 if it is marching or on attack, else the higher of its own
+    /// fieldworks and the defences of its side's lowest-numbered base in its
+    /// hex. It reads only the side's own unit and bases. `None` for a unit
+    /// that is not the side's. The engine reads the same function.
+    pub fn cover(&self, unit: LandUnitId) -> Option<Fixed> {
+        let unit = self
+            .truth
+            .land_units
+            .get(&unit)
+            .filter(|unit| unit.side == self.side)?;
+        Some(crate::cover::unit_cover(self.truth, unit))
+    }
+
     /// The men of one of the side's own land units aboard its ships. `None`
     /// for a unit that is not the side's.
     pub fn men_aboard(&self, unit: LandUnitId) -> Option<u32> {

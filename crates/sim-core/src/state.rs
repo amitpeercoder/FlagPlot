@@ -1044,6 +1044,11 @@ pub struct LandUnit {
     /// defend, and for one on attack by its scenario entry. Set by a posture
     /// order and spent with it.
     pub when_spent: Option<WhenSpent>,
+    /// The holes and scrapes the unit has dug where it stands (decision 5 of
+    /// 0106), from 0 to `fieldworks_limit`. Lost when it marches, falls
+    /// back, is taken aboard or is set to attack (decision 6), and worn by
+    /// hits on men (decision 12).
+    pub fieldworks: Fixed,
 }
 
 /// A land unit's skills (decision 0098, 1 to 4): each a whole number from 0
@@ -1169,6 +1174,7 @@ impl LandUnit {
             skills: Skills::STANDARD_ALL,
             working: false,
             when_spent: None,
+            fieldworks: Fixed::ZERO,
         }
     }
 }
@@ -1190,6 +1196,19 @@ pub struct TruthState {
     pub arrivals: Vec<Arrival>,
     /// Land units (decision 0066). Empty in a scenario without any.
     pub land_units: BTreeMap<LandUnitId, LandUnit>,
+    /// The day's hits on men of each side in each hex, kept from the pulse
+    /// they land in to the ground combat phase, which settles the day's
+    /// strain on them and then empties it (decision 10 of 0106). Empty at
+    /// the end of every day.
+    pub hits_on_men: BTreeMap<(Hex, Side), HitsOnMen>,
+}
+
+/// A day's hits on the men of one side in one hex (decision 10 of 0106):
+/// how many, and the events of the fire that made them, in order.
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
+pub struct HitsOnMen {
+    pub hits: u32,
+    pub causes: Vec<EventId>,
 }
 
 impl TruthState {

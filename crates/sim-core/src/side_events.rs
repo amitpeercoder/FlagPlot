@@ -1229,6 +1229,10 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         EventKind::AirfieldDamaged { side: owner, .. } => whole_if(*owner == side),
         EventKind::ArrivalWaiting { air_group, .. } => whole_if(own_group(air_group)),
         EventKind::AirfieldMended { unit, .. } => whole_if(own_unit(unit)),
+        // A side sees its own units' fieldworks and the wear on its own
+        // defences whole; the enemy sees none of it (decision 14 of 0106).
+        EventKind::FieldworksChanged { unit, .. } => whole_if(own_unit(unit)),
+        EventKind::DefencesWorn { side: owner, .. } => whole_if(*owner == side),
 
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
@@ -1908,6 +1912,11 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         // is given cut, as for supply destroyed; an arrival held back cites
         // nothing; a field mended cites the side's own work (decision 0103).
         | EventKind::AirfieldDamaged { .. }
+        // Fieldworks and wear cite the unit's own order, its own falling
+        // back or embarking, or the fire on its own men, which the side is
+        // given (decision 0106).
+        | EventKind::FieldworksChanged { .. }
+        | EventKind::DefencesWorn { .. }
         | EventKind::ArrivalWaiting { .. }
         | EventKind::AirfieldMended { .. }
         // A halt cites the side's own route order and steaming; steaming on
@@ -3593,6 +3602,28 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // A unit's fieldworks and the wear on a base's defences are its
+            // own side's alone (decision 14 of 0106).
+            sided(row(
+                EventKind::FieldworksChanged {
+                    unit: unit(1),
+                    change: crate::events::FieldworksChange::Worn,
+                    fieldworks: fx(19),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::DefencesWorn {
+                    base: BaseId::new(1),
+                    side: Side::Allied,
+                    hex: hex(),
+                    hits: 5,
+                    defences: fx(49),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3633,7 +3664,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 120, "the log has 120 kinds of event");
+        assert_eq!(all.len(), 122, "the log has 122 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

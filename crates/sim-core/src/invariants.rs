@@ -166,6 +166,11 @@ pub enum InvariantViolation {
     /// A base whose airfield damage is outside 0 to 100, or above 0 with no
     /// airfield (decision 1 of 0103). Added at the end of the enum.
     AirfieldDamageUnsound(BaseId),
+    /// A land unit whose fieldworks are below 0 or above the limit (0
+    /// without the ground figures), or above 0 while it is a working unit,
+    /// on attack or marching (decisions 5 and 6 of 0106). Added at the end
+    /// of the enum.
+    FieldworksUnsound(LandUnitId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -400,6 +405,10 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::AirfieldDamageUnsound(base) => write!(
                 f,
                 "{base} has airfield damage outside 0 to 100, or damage with no airfield"
+            ),
+            InvariantViolation::FieldworksUnsound(unit) => write!(
+                f,
+                "{unit} has fieldworks below 0 or above the limit, or has fieldworks while working, on attack or marching"
             ),
         }
     }
@@ -779,6 +788,21 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                 || unit.posture == crate::orders::Posture::Attack)
         {
             violations.push(InvariantViolation::WorkingUnitUnsound(unit.id));
+        }
+        // Fieldworks are the unit's own holes, within the limit, and lost
+        // when it marches or attacks (decisions 5 and 6 of 0106).
+        let limit = ref_data
+            .ground
+            .as_ref()
+            .map_or(Fixed::ZERO, |ground| ground.fieldworks_limit);
+        if unit.fieldworks.is_negative()
+            || unit.fieldworks > limit
+            || (unit.fieldworks > Fixed::ZERO
+                && (unit.working
+                    || unit.posture == crate::orders::Posture::Attack
+                    || unit.march.is_some()))
+        {
+            violations.push(InvariantViolation::FieldworksUnsound(unit.id));
         }
     }
     for base in truth.bases.values() {

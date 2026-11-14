@@ -1197,7 +1197,9 @@ impl World {
                         unit.posture = *posture;
                         unit.posture_order = Some(order.id);
                         unit.when_spent = *when_spent;
-                        Vec::new()
+                        // Set to attack, it leaves its fieldworks (decision
+                        // 6 of 0106).
+                        left_fieldworks(unit, *posture == Posture::Attack)
                     }
                     LandUnitOrder::SetActivity(activity) => {
                         unit.activity = *activity;
@@ -1231,12 +1233,29 @@ impl World {
                             counted,
                             cause: Cause::Order(order.id),
                         });
-                        Vec::new()
+                        // A unit that marches leaves its fieldworks
+                        // (decision 6 of 0106).
+                        left_fieldworks(unit, true)
                     }
                 }
             }
         }
     }
+}
+
+/// A land unit that leaves its fieldworks by an order (decision 6 of
+/// 0106): if `leaves` and it has any, they go to 0, and the order's
+/// follow-up event says so.
+fn left_fieldworks(unit: &mut crate::state::LandUnit, leaves: bool) -> Vec<EventKind> {
+    if !leaves || unit.fieldworks <= Fixed::ZERO {
+        return Vec::new();
+    }
+    unit.fieldworks = Fixed::ZERO;
+    vec![EventKind::FieldworksChanged {
+        unit: unit.id,
+        change: crate::events::FieldworksChange::Lost,
+        fieldworks: Fixed::ZERO,
+    }]
 }
 
 #[cfg(test)]

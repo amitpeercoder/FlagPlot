@@ -56,6 +56,11 @@ pub struct LandUnitOut {
     /// Fatigue, 0 to 100 (decision 0090, 11). Left out when 0.
     #[serde(skip_serializing_if = "num_is_zero")]
     fatigue: Num,
+    /// The fieldworks the unit has dug (decision 0106), 0 to the ground
+    /// figure `fieldworks_limit`. Left out when 0, so a file made where
+    /// no unit digs in is unchanged.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    fieldworks: Num,
     /// The share of its men fed at the last night's charge (decision 0090,
     /// 8). Left out when 1.
     #[serde(skip_serializing_if = "num_is_one")]
@@ -430,6 +435,7 @@ fn land_unit(unit: &LandUnit, key: &UmpireKey) -> LandUnitOut {
         hex: unit.hex.map(Pos::from),
         posture: unit.posture.name(),
         fatigue: Num(unit.fatigue),
+        fieldworks: Num(unit.fieldworks),
         fed_share: Num(unit.fed_share),
         march: unit.march.map(|march| MarchOut {
             to: Pos::from(march.to),

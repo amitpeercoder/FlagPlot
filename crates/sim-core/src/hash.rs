@@ -15,9 +15,9 @@ use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent}
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, DayWork, Halt, HaltWork, LandUnit,
-    March, Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation,
-    ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, DayWork, Halt, HaltWork, HitsOnMen,
+    LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship,
+    ShipLocation, ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -157,8 +157,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 20 makes a march's order its cause, an order or the event of a
 /// falling back (decision 0104);
 /// version 21 adds a land unit's `when_spent` after its `working`
-/// (decision 0105).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v21";
+/// (decision 0105);
+/// version 22 adds a land unit's `fieldworks` after its `when_spent`, and
+/// the day's hits on men by hex and side after the land units (decision
+/// 0106).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v22";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -212,7 +215,9 @@ fn name_every_field(world: &World) {
         replacements,
         arrivals,
         land_units,
+        hits_on_men,
     } = truth;
+    if let Some(HitsOnMen { hits: _, causes: _ }) = hits_on_men.values().next() {}
     if let Some(ship) = ships.values().next() {
         let Ship {
             id: _,
@@ -426,6 +431,7 @@ fn name_every_field(world: &World) {
             },
         working: _,
         when_spent: _,
+        fieldworks: _,
     }) = land_units.values().next()
     {}
     if let Some(Some(March {
@@ -849,6 +855,21 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u8(u8::from(unit.working));
         // After working (decision 0105): 0 for no instruction.
         h.u8(unit.when_spent.map_or(0, WhenSpent::code));
+        // After when_spent (decision 0106).
+        h.i64(unit.fieldworks.raw());
+    }
+
+    // After the land units (decision 0106): empty at the end of every day.
+    h.count(truth.hits_on_men.len());
+    for ((hex, side), hits) in &truth.hits_on_men {
+        h.i32(hex.q);
+        h.i32(hex.r);
+        h.u8(side.code());
+        h.u32(hits.hits);
+        h.count(hits.causes.len());
+        for cause in &hits.causes {
+            h.u32(cause.raw());
+        }
     }
 
     h.count(world.beliefs.len());

@@ -2,10 +2,10 @@ Scenario 3: Search, flying boats against an approaching force
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 975d04e508134b66  20 events
-day   2  hash 0c0e1c4e71b68622  21 events
-day   3  hash ac9a2ccb8288666a  11 events
-day   4  hash b66e56627ae5b23b  8 events
+day   1  hash 36ae41556d7eb9d7  20 events
+day   2  hash 7b3bd42d9ad1f6e7  21 events
+day   3  hash 3b860978a69856bf  11 events
+day   4  hash d825ffe1318c4a38  8 events
 
 task_force:1 "Placeholder cruiser force" (Japanese): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder patrol squadron" (Allied) at base:1: 4 ready, mission Search, arc 240-300 to 600 nm

@@ -676,6 +676,16 @@ pub struct LandUnitsPart {
     /// none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub fatigue_yesterday: Vec<FatigueLine>,
+    /// Changes of the side's own units' fieldworks yesterday (decision
+    /// 0106): units that dug in, whose fieldworks fire wore down, or that
+    /// left them. Left out when none. The enemy is told nothing.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fieldworks_yesterday: Vec<FieldworksLine>,
+    /// The side's own bases whose defences hits on its men wore down
+    /// yesterday (decision 0106, 12). Left out when none. The enemy is told
+    /// nothing.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub defences_worn_yesterday: Vec<DefencesWornLine>,
     /// Units on attack too tired to go on that went back to defend
     /// yesterday. Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -1048,11 +1058,37 @@ pub struct FireLine {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct FatigueLine {
     pub land_unit: Handle,
-    /// `gained` (on attack and fired), `rested`, `marched` or
-    /// `marched_and_attacked` (decision 0094, 8).
+    /// `gained` (on attack and fired), `rested`, `marched`,
+    /// `marched_and_attacked` (decision 0094, 8), `landed` or `strained`
+    /// (under fire and did not rest, decision 0106, 10).
     pub change: &'static str,
     /// The unit's fatigue afterwards.
     pub fatigue: Dec,
+    pub event: u32,
+}
+
+/// A change of a unit's fieldworks (decision 0106, 5, 6 and 12).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FieldworksLine {
+    pub land_unit: Handle,
+    /// `dug` (the unit dug in where it stands), `worn` (hits on men wore
+    /// them down) or `lost` (the unit left them).
+    pub change: &'static str,
+    /// The unit's fieldworks afterwards.
+    pub fieldworks: Dec,
+    pub event: u32,
+}
+
+/// Hits on the side's men wore down the defences of one of its bases
+/// (decision 0106, 12).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct DefencesWornLine {
+    pub base: Handle,
+    pub place: Place,
+    /// The hits on the side's men in the hex that wore them.
+    pub hits: u32,
+    /// The base's defences afterwards.
+    pub defences: Dec,
     pub event: u32,
 }
 
@@ -1639,6 +1675,8 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         fights_yesterday: ground.fights,
         fire_yesterday: ground.fire,
         fatigue_yesterday: ground.fatigue,
+        fieldworks_yesterday: ground.fieldworks,
+        defences_worn_yesterday: ground.defences_worn,
         back_to_defend_yesterday: ground.back_to_defend,
         fed_share_restored_yesterday: ground.fed_share_restored,
         marches_yesterday: ground.marches,
@@ -1718,6 +1756,8 @@ struct GroundDay {
     fights: Vec<FightLine>,
     fire: Vec<FireLine>,
     fatigue: Vec<FatigueLine>,
+    fieldworks: Vec<FieldworksLine>,
+    defences_worn: Vec<DefencesWornLine>,
     back_to_defend: Vec<BackToDefendLine>,
     fed_share_restored: Vec<FedShareRestoredLine>,
     marches: Vec<MarchDayLine>,
@@ -2753,8 +2793,32 @@ impl Day {
                             LandFatigueChange::Marched => "marched",
                             LandFatigueChange::MarchedAndAttacked => "marched_and_attacked",
                             LandFatigueChange::Landed => "landed",
+                            LandFatigueChange::Strained => "strained",
                         },
                         fatigue: Dec(*fatigue),
+                        event: id,
+                    }),
+                    EventKind::FieldworksChanged {
+                        unit,
+                        change,
+                        fieldworks,
+                    } => ground.fieldworks.push(FieldworksLine {
+                        land_unit: ctx.land_unit(*unit),
+                        change: change.name(),
+                        fieldworks: Dec(*fieldworks),
+                        event: id,
+                    }),
+                    EventKind::DefencesWorn {
+                        base,
+                        hex,
+                        hits,
+                        defences,
+                        ..
+                    } => ground.defences_worn.push(DefencesWornLine {
+                        base: ctx.base(*base),
+                        place: ctx.place(*hex),
+                        hits: *hits,
+                        defences: Dec(*defences),
                         event: id,
                     }),
                     EventKind::LandUnitBackToDefend { unit, fatigue } => {

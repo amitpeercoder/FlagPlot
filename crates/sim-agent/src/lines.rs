@@ -257,6 +257,11 @@ pub struct BaseWorksLine {
     pub airfield_work_needed: Option<Dec>,
     /// The base's defences, 0 to 100.
     pub defences: Dec,
+    /// The grade of the defences (decision 0106, 7): `improvised` below the
+    /// ground figure `prepared_from`, `prepared` from there to below
+    /// `fortified_from`, `fortified` from there to 100. Dearer to build, and
+    /// protective, as it rises.
+    pub grade: &'static str,
     /// The work on the port made yesterday: what today's cargo at the base
     /// reads.
     pub port_work_yesterday: Dec,
@@ -525,6 +530,16 @@ fn aircraft_kept_by_field(ctx: &Ctx<'_>, group: &AirGroup) -> Option<KeptByField
     })
 }
 
+/// The grade of a base's defences by the ground figures (decision 0106, 7).
+/// A scenario with no ground figures has only the improvised grade.
+fn defences_grade(ctx: &Ctx<'_>, defences: Fixed) -> &'static str {
+    match ctx.view.ground_figures() {
+        Some(figures) if defences >= figures.fortified_from => "fortified",
+        Some(figures) if defences >= figures.prepared_from => "prepared",
+        _ => "improvised",
+    }
+}
+
 /// The base's works line, or `None` while it is as a base always was.
 pub(crate) fn base_works_line(ctx: &Ctx<'_>, base: &Base) -> Option<BaseWorksLine> {
     use sim_core::orders::Job;
@@ -550,6 +565,7 @@ pub(crate) fn base_works_line(ctx: &Ctx<'_>, base: &Base) -> Option<BaseWorksLin
                 .map(|figures| Dec(figures.airfield_work))
         },
         defences: Dec(base.defences),
+        grade: defences_grade(ctx, base.defences),
         port_work_yesterday: Dec(port),
         aircraft_work_yesterday: Dec(aircraft),
     })
@@ -600,6 +616,18 @@ pub struct LandUnitLine {
     /// How tired the unit is, 0 to 100 (decision 0090, 11). It cuts the men
     /// who fire and nothing else.
     pub fatigue: Dec,
+    /// The fieldworks the unit has dug where it stands, 0 to the ground
+    /// figure `fieldworks_limit` (decision 0106, 5). Left out when 0. The
+    /// unit's own side only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fieldworks: Option<Dec>,
+    /// The unit's cover, 0 to 100 (decision 0106, 1): the higher of its
+    /// fieldworks and the defences of its side's lowest-numbered base in its
+    /// hex, and 0 while it marches or is on attack. It saves men from bombs
+    /// and shells and in the fight. Left out when 0. The unit's own side
+    /// only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover: Option<Dec>,
     /// The share of the unit's men fed at the last night's charge, 0 to 1
     /// (decision 0090, 8): 1 until the first night and for a unit that had
     /// no man ashore at the charge.
@@ -861,6 +889,13 @@ pub(crate) fn land_unit_line(
         },
         posture: unit.posture.name(),
         fatigue: Dec(unit.fatigue),
+        fieldworks: (unit.fieldworks > Fixed::ZERO && unit.men_ashore > 0)
+            .then_some(Dec(unit.fieldworks)),
+        cover: ctx
+            .view
+            .cover(unit.id)
+            .filter(|cover| *cover > Fixed::ZERO)
+            .map(Dec),
         fed_share: Dec(unit.fed_share),
         posture_order: unit.posture_order.and_then(|o| ctx.order_number_if_own(o)),
         when_spent: unit.when_spent.map(|w| w.name()),

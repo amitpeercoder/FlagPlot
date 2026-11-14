@@ -285,6 +285,10 @@ struct LandUnitSpec {
     /// Marks a working unit (decision 1 of 0099): one whose men do not
     /// fight but work. Defaults to false. Not with `posture = "attack"`.
     working: Option<bool>,
+    /// The fieldworks the unit has dug at the start (decision 0106): from 0
+    /// to the ground figure `fieldworks_limit`, and 0 for a working unit,
+    /// one on attack or one with no men ashore. Defaults to 0.
+    fieldworks: Option<Quantity>,
 }
 
 /// A land unit's skills (decision 0098), each optional, defaulting to 2:
@@ -1527,6 +1531,30 @@ impl Scenario {
                     )));
                 }
                 unit.fatigue = fatigue;
+            }
+            if let Some(fieldworks) = &spec.fieldworks {
+                let fieldworks = fieldworks
+                    .to_fixed()
+                    .map_err(|e| fail(format!("{id} fieldworks {e}")))?;
+                let limit = ref_data
+                    .ground
+                    .as_ref()
+                    .map_or(Fixed::ZERO, |g| g.fieldworks_limit);
+                if fieldworks.is_negative() || fieldworks > limit {
+                    return Err(fail(format!(
+                        "{id} has fieldworks {fieldworks}, which is not between 0 and the fieldworks_limit {limit}"
+                    )));
+                }
+                if fieldworks > Fixed::ZERO
+                    && (unit.working
+                        || unit.posture == Posture::Attack
+                        || spec.task_force.is_some())
+                {
+                    return Err(fail(format!(
+                        "{id} has fieldworks but is a working unit, on attack or has no men ashore: only a fighting unit on defend with men ashore has fieldworks"
+                    )));
+                }
+                unit.fieldworks = fieldworks;
             }
             if let Some(experience) = spec.experience {
                 if experience > u32::from(LandUnit::MAX_EXPERIENCE) {
@@ -4877,6 +4905,59 @@ task_force = 3
             (two.experience, two.training_days, two.fight_days),
             (4, 29, 9)
         );
+    }
+
+    #[test]
+    fn a_land_unit_takes_fieldworks_up_to_the_limit() {
+        let scenario = landing(
+            true,
+            &format!(
+                "{}{}{}{}",
+                unit_ashore(1, 100, 0, 0),
+                unit_with(2, "fieldworks = 30"),
+                unit_with(3, "fieldworks = \"12.5\""),
+                unit_with(4, "fieldworks = 0"),
+            ),
+        )
+        .expect("loads");
+        let truth = scenario.world.umpire();
+        let fieldworks = |unit: u32| truth.land_units[&LandUnitId::new(unit)].fieldworks;
+        assert_eq!(fieldworks(1), Fixed::ZERO);
+        assert_eq!(fieldworks(2), Fixed::from_int(30));
+        assert_eq!(fieldworks(3), Fixed::from_ratio(25, 2));
+        assert_eq!(fieldworks(4), Fixed::ZERO);
+    }
+
+    #[test]
+    fn fieldworks_above_the_limit_or_below_nothing_are_refused() {
+        for keys in ["fieldworks = 31", "fieldworks = -1", "fieldworks = 3.5"] {
+            let message = landing_error(true, &unit_with(1, keys));
+            assert!(
+                message.contains("land_unit:1") || message.contains("fieldworks"),
+                "{keys}: {message}"
+            );
+        }
+        let message = landing_error(true, &unit_with(1, "fieldworks = 31"));
+        assert!(message.contains("fieldworks_limit"), "{message}");
+        let message = landing_error(true, &unit_with(1, "fieldworks = -1"));
+        assert!(message.contains("fieldworks"), "{message}");
+    }
+
+    #[test]
+    fn fieldworks_are_refused_for_a_working_unit_an_attacker_and_a_unit_aboard() {
+        let message = landing_error(true, &unit_with(1, "working = true\nfieldworks = 10"));
+        assert!(message.contains("land_unit:1"), "{message}");
+        assert!(message.contains("fieldworks"), "{message}");
+        let message = landing_error(true, &unit_with(1, "posture = \"attack\"\nfieldworks = 10"));
+        assert!(message.contains("land_unit:1"), "{message}");
+        assert!(message.contains("fieldworks"), "{message}");
+        let aboard = format!("{}fieldworks = 10\n", unit_aboard(1, 100, 1));
+        let message = landing_error(true, &aboard);
+        assert!(message.contains("land_unit:1"), "{message}");
+        assert!(message.contains("fieldworks"), "{message}");
+        // Zero fieldworks are no fieldworks: allowed anywhere.
+        landing(true, &unit_with(1, "working = true\nfieldworks = 0")).expect("loads");
+        landing(true, &unit_with(1, "posture = \"attack\"\nfieldworks = 0")).expect("loads");
     }
 
     #[test]

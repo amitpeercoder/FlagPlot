@@ -613,3 +613,21 @@ Fields added only, so `version` stays 3.
   "fall_back"}`) for a unit on attack.
 - **What the enemy is told.** Nothing of a failed attack or of a spent unit's falling back, and
   nothing of a unit's instruction.
+
+## Cover and digging in (decision 0106)
+
+Fields added only, so `version` stays 3. Everything here is of the side's own units and bases;
+the enemy is told none of it.
+
+- **A land unit line** has `fieldworks` (what the unit has dug where it stands, 0 to the ground
+  figure `fieldworks_limit`) and `cover` (0 to 100: the higher of its fieldworks and the defences
+  of its side's lowest-numbered base in its hex, and 0 while it marches or is on attack), each
+  left out when 0.
+- **A base's `works`** has `grade` of its defences: `improvised`, `prepared` or `fortified`,
+  from the ground figures `prepared_from` and `fortified_from`.
+- **The briefing's `land_units`** has `fieldworks_yesterday` (`land_unit`, `change`: `dug`,
+  `worn` or `lost`, `fieldworks` after, `event`) and `defences_worn_yesterday` (`base`, `place`,
+  `hits`, `defences` after, `event`), each left out when none. `fatigue_yesterday` has a change
+  `strained`: the unit was under fire and did not rest.
+- **What the enemy is told.** Nothing of a side's fieldworks, cover, grades, strain or wear, and
+  nothing of what fire did to its men's state.

@@ -827,6 +827,21 @@ struct GroundFile {
     /// like the older keys.
     engagement_ratio: Quantity,
     failed_attack_fatigue: Quantity,
+    /// Cover, fieldworks and strain (decision 0106). Required like the
+    /// older keys.
+    cover_from_fire: Quantity,
+    cover_in_fight: Quantity,
+    fieldworks_per_day: Quantity,
+    fieldworks_limit: Quantity,
+    prepared_from: Quantity,
+    fortified_from: Quantity,
+    prepared_work_factor: Quantity,
+    fortified_work_factor: Quantity,
+    strain_per_hit: Quantity,
+    strain_per_day: Quantity,
+    strain_limit: Quantity,
+    cover_from_strain: Quantity,
+    cover_wear_per_hit: Quantity,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -923,6 +938,19 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         beaten_fatigue: number("beaten_fatigue", &file.beaten_fatigue)?,
         engagement_ratio: number("engagement_ratio", &file.engagement_ratio)?,
         failed_attack_fatigue: number("failed_attack_fatigue", &file.failed_attack_fatigue)?,
+        cover_from_fire: number("cover_from_fire", &file.cover_from_fire)?,
+        cover_in_fight: number("cover_in_fight", &file.cover_in_fight)?,
+        fieldworks_per_day: number("fieldworks_per_day", &file.fieldworks_per_day)?,
+        fieldworks_limit: number("fieldworks_limit", &file.fieldworks_limit)?,
+        prepared_from: number("prepared_from", &file.prepared_from)?,
+        fortified_from: number("fortified_from", &file.fortified_from)?,
+        prepared_work_factor: number("prepared_work_factor", &file.prepared_work_factor)?,
+        fortified_work_factor: number("fortified_work_factor", &file.fortified_work_factor)?,
+        strain_per_hit: number("strain_per_hit", &file.strain_per_hit)?,
+        strain_per_day: number("strain_per_day", &file.strain_per_day)?,
+        strain_limit: number("strain_limit", &file.strain_limit)?,
+        cover_from_strain: number("cover_from_strain", &file.cover_from_strain)?,
+        cover_wear_per_hit: number("cover_wear_per_hit", &file.cover_wear_per_hit)?,
         work_per_airfield_damage_point: number(
             "work_per_airfield_damage_point",
             &file.work_per_airfield_damage_point,
@@ -2535,6 +2563,101 @@ mod tests {
             ("failed_attack_fatigue", "100"),
         ] {
             parse_ground_figures(&with_key(&ground_text(), key, value), here()).expect("loads");
+        }
+    }
+
+    const COVER_KEYS: [&str; 13] = [
+        "cover_from_fire",
+        "cover_in_fight",
+        "fieldworks_per_day",
+        "fieldworks_limit",
+        "prepared_from",
+        "fortified_from",
+        "prepared_work_factor",
+        "fortified_work_factor",
+        "strain_per_hit",
+        "strain_per_day",
+        "strain_limit",
+        "cover_from_strain",
+        "cover_wear_per_hit",
+    ];
+
+    #[test]
+    fn the_cover_figures_are_read_and_each_is_required() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.cover_from_fire, Fixed::from_ratio(9, 10));
+        assert_eq!(figures.cover_in_fight, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.fieldworks_per_day, Fixed::from_int(10));
+        assert_eq!(figures.fieldworks_limit, Fixed::from_int(30));
+        assert_eq!(figures.prepared_from, Fixed::from_int(30));
+        assert_eq!(figures.fortified_from, Fixed::from_int(60));
+        assert_eq!(figures.prepared_work_factor, Fixed::from_int(3));
+        assert_eq!(figures.fortified_work_factor, Fixed::from_int(10));
+        assert_eq!(figures.strain_per_hit, Fixed::ONE);
+        assert_eq!(figures.strain_per_day, Fixed::from_int(10));
+        assert_eq!(figures.strain_limit, Fixed::from_int(60));
+        assert_eq!(figures.cover_from_strain, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.cover_wear_per_hit, Fixed::from_ratio(1, 5));
+        for key in COVER_KEYS {
+            let text = without_keys(&ground_text(), &[key]);
+            assert!(
+                parse_ground_figures(&text, here())
+                    .expect_err("a missing key is refused")
+                    .message
+                    .contains(key),
+                "without {key}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_cover_figures_are_refused_out_of_range_and_accepted_at_the_edges() {
+        let bad = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        let ok = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .unwrap_or_else(|e| panic!("{key} {value} loads: {}", e.message))
+        };
+        for key in ["cover_from_fire", "cover_in_fight", "cover_from_strain"] {
+            assert!(bad(key, "\"1.5\"").contains(key), "{key} above 1");
+            assert!(bad(key, "-1").contains(key), "{key} below 0");
+            ok(key, "0");
+            ok(key, "1");
+        }
+        for key in [
+            "fieldworks_per_day",
+            "strain_per_hit",
+            "strain_per_day",
+            "strain_limit",
+            "cover_wear_per_hit",
+        ] {
+            assert!(bad(key, "101").contains(key), "{key} above 100");
+            assert!(bad(key, "-1").contains(key), "{key} below 0");
+            ok(key, "0");
+            ok(key, "100");
+        }
+        // The limit of a unit's own digging is the top of the improvised
+        // grade: not above where the prepared grade begins.
+        assert!(bad("fieldworks_limit", "31").contains("fieldworks_limit"));
+        assert!(bad("fieldworks_limit", "-1").contains("fieldworks_limit"));
+        ok("fieldworks_limit", "0");
+        ok("fieldworks_limit", "30");
+        // The grades are in order and inside 0 to 100.
+        assert!(bad("fortified_from", "20").contains("fortified_from"));
+        assert!(bad("fortified_from", "101").contains("fortified_from"));
+        ok("fortified_from", "30");
+        ok("fortified_from", "100");
+        // Lowering the prepared grade below the limit is refused too.
+        assert!(bad("prepared_from", "20").contains("fieldworks_limit"));
+        // A grade is never cheaper than the one before.
+        for key in ["prepared_work_factor", "fortified_work_factor"] {
+            assert!(bad(key, "\"0.5\"").contains(key), "{key} below 1");
+            assert!(bad(key, "0").contains(key), "{key} 0");
+            ok(key, "1");
+            ok(key, "25");
         }
     }
 

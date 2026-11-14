@@ -2,68 +2,68 @@ Scenario 28: Experience and training
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 36bc3f11a5754ba2  43 events
-day   2  hash 85820aa965989c77  41 events
-day   3  hash 3046e3681cab9918  25 events
-day   4  hash ae532a9581f4571d  25 events
-day   5  hash 666f9074bc6b545d  25 events
-day   6  hash ac506c5161d02ea2  25 events
-day   7  hash eede71d47546589b  25 events
-day   8  hash 6df3978099e95164  25 events
-day   9  hash 6bbb7930c2861d1d  25 events
-day  10  hash b2cae41c3ce52d5f  25 events
-day  11  hash 67c12d74eb296ce2  25 events
-day  12  hash 23c131c9d6c69bcb  25 events
-day  13  hash 2de904baac5df9cc  25 events
-day  14  hash bf7c30db3cc35bf6  25 events
-day  15  hash b40c95790574a6ef  25 events
-day  16  hash 2da593a86e06302c  25 events
-day  17  hash 1309728c09c46811  25 events
-day  18  hash 281f58f2f18c0bc2  25 events
-day  19  hash a813c7295c99b50f  25 events
-day  20  hash c25884575d9e19b3  25 events
-day  21  hash a87f2cc87d35c57f  25 events
-day  22  hash 8da8cc5b4e832fcb  25 events
-day  23  hash 2a4369dc947121d6  23 events
-day  24  hash c423994fa3e5c23d  23 events
-day  25  hash 41a2ac18b641d0c0  23 events
-day  26  hash a6a99ffab51ffcbc  23 events
-day  27  hash 4b965cc858655f99  23 events
-day  28  hash 92e0153c04a8a2e0  23 events
-day  29  hash 6a4b367b881064e1  23 events
-day  30  hash 70ab3c4b18af0d38  24 events
-day  31  hash 9dd275e9b6c29186  23 events
-day  32  hash 5b30a9a264d8c738  23 events
-day  33  hash fd40bf3d753766ce  23 events
-day  34  hash a582fb2c55b362e1  23 events
-day  35  hash e154f28a8167e1d3  23 events
-day  36  hash 74709842a559559a  23 events
-day  37  hash bf9debeae798854c  23 events
-day  38  hash 8f04ea5bfe1735c5  23 events
-day  39  hash 665044a60a70898d  23 events
-day  40  hash e0861f450c0bcebe  23 events
-day  41  hash 81c9b98e39da117d  23 events
-day  42  hash eece30e35abc2c96  23 events
-day  43  hash bca484a6acdc5255  23 events
-day  44  hash 33f63e1755429415  23 events
-day  45  hash 5ab7fb1152af84df  23 events
-day  46  hash 19ad7138e26a1dbc  23 events
-day  47  hash 03f117efdaa01788  23 events
-day  48  hash 2cbdc6fa31dfa515  23 events
-day  49  hash 4705b5ea2fcca628  23 events
-day  50  hash d7258cc1b8295079  23 events
-day  51  hash 02ca2385f025f4c2  23 events
-day  52  hash fcbbc1c69593f3d7  23 events
-day  53  hash 44f4d792fa901be2  23 events
-day  54  hash d9bf131c26d4051a  23 events
-day  55  hash ccd36c9d356adf27  23 events
-day  56  hash ef19efbf8878809f  23 events
-day  57  hash a341f7b6f5ee5455  23 events
-day  58  hash 53ff6980b1ff6028  23 events
-day  59  hash 26ed5cfdc81537bf  23 events
-day  60  hash fd8398f7a9a37d0e  24 events
-day  61  hash cc53cc778e502ce7  22 events
-day  62  hash 0e2bde0039650ff1  23 events
+day   1  hash e89b6240fa4a3437  47 events
+day   2  hash 08ed690f1a2ce1c0  47 events
+day   3  hash c0037d8d8f4d01f7  31 events
+day   4  hash 50fbb66948b391dc  27 events
+day   5  hash e264896fc6ceeb08  25 events
+day   6  hash f778aaeab6504903  25 events
+day   7  hash 70d468cbc3fca87a  25 events
+day   8  hash ac45037619dd1929  25 events
+day   9  hash 23bce0c2e2f87708  25 events
+day  10  hash 9c981b2c80a133d6  25 events
+day  11  hash 96277c39c1614ffb  25 events
+day  12  hash 2d9903bc3df6d4ce  25 events
+day  13  hash 3edbb51b013d50ad  25 events
+day  14  hash d5e53a6e71b6b1af  25 events
+day  15  hash ce8514ed9f3f0932  25 events
+day  16  hash 9a716771b4031a3d  25 events
+day  17  hash 3b326b2372ad1d24  25 events
+day  18  hash ee2f7ad5eef12beb  25 events
+day  19  hash 8f865eb474a74b1f  25 events
+day  20  hash 794759559eca07da  25 events
+day  21  hash 2af2644ef4b45fe2  25 events
+day  22  hash 1e35fda451bcdb86  25 events
+day  23  hash 9c50285df6fa84b3  23 events
+day  24  hash f40b0b52e2722e1c  23 events
+day  25  hash a56b7c3f50731111  23 events
+day  26  hash 40ce7a42a72b15d9  23 events
+day  27  hash 120ac5e6f1778d4c  23 events
+day  28  hash 3d67fd3d165e8505  23 events
+day  29  hash bfe19fa870484dc8  23 events
+day  30  hash 0caf6b227bb2b371  24 events
+day  31  hash 8f162880c91d660b  23 events
+day  32  hash 7b71e03920c10905  23 events
+day  33  hash c4d0cc2f15a2fbbf  23 events
+day  34  hash 207867694919a3b8  23 events
+day  35  hash a505f7ab6ec328c2  23 events
+day  36  hash 7aa3d39f38b72227  23 events
+day  37  hash fa83ab519bf6b85d  23 events
+day  38  hash 92457830fb7ba630  23 events
+day  39  hash a2e2eb0d97667688  23 events
+day  40  hash 36d462dc7fe944bf  23 events
+day  41  hash 0b5199b594cdb90d  23 events
+day  42  hash 7387937128e8453f  23 events
+day  43  hash 1ef014aada5bdb98  23 events
+day  44  hash 00df52b5fcac8608  23 events
+day  45  hash 9282f7d2942646c2  23 events
+day  46  hash 4b2046fefefe1c79  23 events
+day  47  hash 7e4272e6d5f18601  23 events
+day  48  hash f25c14d704fcd240  23 events
+day  49  hash 5aadd4ec3298a975  23 events
+day  50  hash 8e13f7807815d8b4  23 events
+day  51  hash c35a621d38e726f3  23 events
+day  52  hash 2056352c67ccd0e1  23 events
+day  53  hash 753edcc0a776729b  23 events
+day  54  hash c06420c93bb89a17  23 events
+day  55  hash 124b807887a5c75a  23 events
+day  56  hash d1a102c49ac6bcce  23 events
+day  57  hash dce669bf4622ca90  23 events
+day  58  hash 0d9b08330c2ac919  23 events
+day  59  hash c7aa1543e32b4c06  23 events
+day  60  hash 8a90f488674e08eb  24 events
+day  61  hash 4d3e53ab35bb900e  22 events
+day  62  hash 5e34da2bb87f648c  23 events
 
 base:1 "Placeholder base 1" (Allied) at (0,0): 4690 t of supply in stock
 base:2 "Placeholder base 2" (Allied) at (10,0): 4702.2 t of supply in stock
@@ -71,11 +71,11 @@ base:3 "Placeholder base 3" (Japanese) at (10,0): 4886.4 t of supply in stock
 base:4 "Placeholder base 4" (Allied) at (20,0): 4899.4 t of supply in stock
 base:5 "Placeholder base 5" (Japanese) at (20,0): 4845 t of supply in stock
 base:6 "Placeholder base 6" (Allied) at (30,0): 0 t of supply in stock
-land_unit:1 "Placeholder unit 1" (Allied): 1000 men ashore at (0,0)
-land_unit:2 "Placeholder unit 2" (Allied): 960 men ashore at (10,0)
-land_unit:3 "Placeholder unit 3" (Japanese): 360 men ashore at (10,0)
-land_unit:4 "Placeholder unit 4" (Allied): 320 men ashore at (20,0)
-land_unit:5 "Placeholder unit 5" (Japanese): 500 men ashore at (20,0)
+land_unit:1 "Placeholder unit 1" (Allied): 1000 men ashore at (0,0), fieldworks 30
+land_unit:2 "Placeholder unit 2" (Allied): 960 men ashore at (10,0), fieldworks 30
+land_unit:3 "Placeholder unit 3" (Japanese): 360 men ashore at (10,0), fieldworks 30
+land_unit:4 "Placeholder unit 4" (Allied): 320 men ashore at (20,0), fieldworks 30
+land_unit:5 "Placeholder unit 5" (Japanese): 500 men ashore at (20,0), fieldworks 30
 land_unit:6 "Placeholder unit 6" (Allied): no men ashore
 Allied: no contacts
 Allied: no battle claims

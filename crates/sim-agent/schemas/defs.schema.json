@@ -159,6 +159,8 @@
         },
         "posture": { "description": "defend or attack (decision 0090, 1).", "enum": ["defend", "attack"] },
         "fatigue": { "description": "How tired the unit is, 0 to 100 (decision 0090, 11). It cuts the men who fire and nothing else.", "$ref": "#/$defs/dec" },
+        "fieldworks": { "description": "The fieldworks the unit has dug where it stands, 0 to the ground figure fieldworks_limit (decision 0106, 5). Left out when 0. Shown for the side's own units only.", "$ref": "#/$defs/dec" },
+        "cover": { "description": "The unit's cover, 0 to 100 (decision 0106, 1): the higher of its fieldworks and the defences of its side's lowest-numbered base in its hex, and 0 while it marches or is on attack. It saves men from bombs and shells and in the fight. Left out when 0. Shown for the side's own units only.", "$ref": "#/$defs/dec" },
         "fed_share": { "description": "The share of the unit's men fed at the last night's charge, 0 to 1 (decision 0090, 8): 1 until the first night and for a unit with no man ashore at the charge.", "$ref": "#/$defs/dec" },
         "posture_order": { "description": "The number of the side's standing posture order, when one is in force. Left out otherwise.", "type": "integer" },
         "when_spent": { "description": "What the unit does when its attack is spent, as its standing attack order says (decision 0105, 6): hold or fall_back. Left out when the order gave none. Shown for the side's own units only.", "enum": ["hold", "fall_back"] },
@@ -535,13 +537,14 @@
     "base_works": {
       "description": "A base's airfield, work and defences (decision 0099), for the side's own bases only. Left out while the base has an airfield, none is being built, no defences are raised and no work of yesterday waits to be read.",
       "type": "object",
-      "required": ["airfield", "airfield_work", "defences", "port_work_yesterday", "aircraft_work_yesterday"],
+      "required": ["airfield", "airfield_work", "defences", "grade", "port_work_yesterday", "aircraft_work_yesterday"],
       "additionalProperties": false,
       "properties": {
         "airfield": { "description": "Whether the base has an airfield. No group can rebase to or land at a base that has none.", "type": "boolean" },
         "airfield_work": { "description": "The work done on the airfield so far.", "$ref": "#/$defs/dec" },
         "airfield_work_needed": { "description": "The work the airfield needs in all (the ground figure airfield_work). Left out once the base has an airfield.", "$ref": "#/$defs/dec" },
         "defences": { "description": "The base's defences, 0 to 100: while the side defends the hex its units' chance to hit rises with them.", "$ref": "#/$defs/dec" },
+        "grade": { "description": "The grade of the defences (decision 0106, 7): improvised below the ground figure prepared_from, prepared from there to below fortified_from, fortified from there to 100. Each grade costs more work a point and shelters more.", "enum": ["improvised", "prepared", "fortified"] },
         "port_work_yesterday": { "description": "The work on the port made yesterday: what today's cargo at the base reads.", "$ref": "#/$defs/dec" },
         "aircraft_work_yesterday": { "description": "The work on the aircraft made yesterday: what tonight's repairs read.", "$ref": "#/$defs/dec" }
       }

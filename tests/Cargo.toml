@@ -265,5 +265,9 @@ name = "scenario_33_engaged_and_failed"
 path = "scenario_33_engaged_and_failed.rs"
 
 [[test]]
+name = "scenario_34_cover"
+path = "scenario_34_cover.rs"
+
+[[test]]
 name = "choices_asked_and_run"
 path = "choices_asked_and_run.rs"
