@@ -73,23 +73,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "0a74e7b9b644e3f6"
+      "hash": "3e6b3d4bd6156bf7"
     },
     {
       "day": 2,
-      "hash": "08db40bb13457561"
+      "hash": "1d3636ea143431ef"
     },
     {
       "day": 3,
-      "hash": "288c1acef8502f22"
+      "hash": "16c4bd18c27d7b47"
     },
     {
       "day": 4,
-      "hash": "c101f4a318b38679"
+      "hash": "26cc87b055e386ad"
     },
     {
       "day": 5,
-      "hash": "af4a3f6d099fbd4c"
+      "hash": "3a888e6338cffcd2"
     }
   ],
   "orders": [
@@ -279,6 +279,34 @@
       },
       "side": "allied",
       "unit": "air_group:103"
+    },
+    {
+      "day": 1,
+      "order": {
+        "activity": "work",
+        "job": "port",
+        "kind": "set_activity"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "land_unit:12"
+    },
+    {
+      "day": 1,
+      "order": {
+        "activity": "work",
+        "job": "port",
+        "kind": "set_activity"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "land_unit:13"
     },
     {
       "day": 2,
@@ -483,7 +511,7 @@
   "rules_version": 5,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "f8fc8df6e1e2da5f"
+    "hash": "b3d47f3433ed4a0b"
   },
   "seats": {
     "allied": "player",
