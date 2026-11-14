@@ -238,7 +238,7 @@ fn resolve_asking(start: &Start, repeats: u32) -> (Spread, usize, usize) {
         let mut count = 0;
         let mut seen = 0;
         let t = timed(|| {
-            world.resolve_day_watched(&mut |w, _moment| {
+            world.resolve_day_watched(sim_core::Staffs::none(), &mut |w, _moment| {
                 seen += 1;
                 count += ask_everything(w);
             })

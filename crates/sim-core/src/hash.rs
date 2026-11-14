@@ -190,6 +190,15 @@ fn name_every_field(world: &World) {
         made_ids: _,
         // Not hashed: orders waiting for the next day are not yet state.
         pending: _,
+        // Hashed after the beliefs, Allied then Japanese (decision 0107).
+        command: _,
+        // Not hashed: commands and a staff's hand-in waiting for the next
+        // day are not yet state, as orders waiting are not.
+        pending_commands: _,
+        pending_staff: _,
+        // Not hashed: what the staff handed in on the last day, kept for
+        // the runner that saves the game. What it changed is state.
+        staff_handed_in: _,
         // Hashed by count only.
         events: _,
         // Not hashed: the hashes themselves.

@@ -22,7 +22,7 @@ use sim_core::state::{
     ShipSystem, ShipSystems, Side, Skills, SystemState, TaskForce, TruthState,
 };
 use sim_core::world::MADE_IDS_FLOOR;
-use sim_core::{DaySummary, StartingContact, StartingEstimate, World};
+use sim_core::{DaySummary, Staffs, StartingContact, StartingEstimate, World};
 
 use crate::error::DataError;
 use crate::map::{load_land_links, load_map};
@@ -2432,17 +2432,26 @@ impl Scenario {
         })
     }
 
-    /// Submits the scripted orders for the next day and resolves it. Returns
-    /// `None` once the scenario has run all its days.
+    /// Submits the scripted orders for the next day and resolves it, with no
+    /// staff for either side. Returns `None` once the scenario has run all
+    /// its days.
     pub fn next_day(&mut self) -> Result<Option<DaySummary>, DataError> {
-        self.next_day_watched(&mut |_, _| {})
+        self.next_day_watched(Staffs::none(), &mut |_, _| {})
     }
 
-    /// [`Scenario::next_day`], handing the world, read only, to `watch` at
-    /// each moment of the day as [`World::resolve_day_watched`] does. The day
-    /// is the same day: `next_day` is this with a watcher that does nothing.
+    /// [`Scenario::next_day`], with each side's staff in `staffs` asked at
+    /// its step of the day (decision 0107).
+    pub fn next_day_staffed(&mut self, staffs: Staffs<'_>) -> Result<Option<DaySummary>, DataError> {
+        self.next_day_watched(staffs, &mut |_, _| {})
+    }
+
+    /// [`Scenario::next_day_staffed`], handing the world, read only, to
+    /// `watch` at each moment of the day as [`World::resolve_day_watched`]
+    /// does. The day is the same day: `next_day_staffed` is this with a
+    /// watcher that does nothing.
     pub fn next_day_watched(
         &mut self,
+        staffs: Staffs<'_>,
         watch: &mut dyn FnMut(&World, Moment),
     ) -> Result<Option<DaySummary>, DataError> {
         let day = self.world.day() + 1;
@@ -2452,7 +2461,7 @@ impl Scenario {
         for (side, request) in self.script.remove(&day).unwrap_or_default() {
             self.world.submit_orders(side, vec![request]);
         }
-        Ok(Some(self.world.resolve_day_watched(watch)?))
+        Ok(Some(self.world.resolve_day_watched(staffs, watch)?))
     }
 
     /// Runs every remaining day and returns their summaries.

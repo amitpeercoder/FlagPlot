@@ -219,7 +219,7 @@ fn execute_watching(
     let initial = scenario.world.umpire().clone();
     let mut summaries = Vec::new();
     while let Some(summary) = scenario
-        .next_day_watched(watch)
+        .next_day_watched(sim_core::Staffs::none(), watch)
         .map_err(|e| e.to_string())?
     {
         summaries.push(summary);
@@ -271,7 +271,7 @@ fn execute_saved_watching(
     let mut summaries = Vec::new();
     for (day, hash) in &saved.hashes {
         let summary = scenario
-            .next_day_watched(watch)
+            .next_day_watched(sim_core::Staffs::none(), watch)
             .map_err(|e| e.to_string())?
             .ok_or_else(|| format!("the scenario has no day {day}"))?;
         on_day(&summary);
@@ -286,7 +286,7 @@ fn execute_saved_watching(
     }
     if to_end {
         while let Some(summary) = scenario
-            .next_day_watched(watch)
+            .next_day_watched(sim_core::Staffs::none(), watch)
             .map_err(|e| e.to_string())?
         {
             on_day(&summary);
