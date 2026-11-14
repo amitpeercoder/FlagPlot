@@ -60,9 +60,11 @@ jobs:
         if: steps.changes.outputs.needed == 'true'
         run: cargo run --locked -p sim-cli -- run data/scenarios/01_transit.toml --events
 
-      # The viewer rebuilds state from the exported events on its own, in
-      # JavaScript. Export every scenario and check the two agree.
-      - name: Export every scenario and check the viewer rebuilds it
+      # The export carries the state at each step (replay version 4); the
+      # viewer's own rebuild from the events, in JavaScript, is what it
+      # still uses for older files. Export every scenario and check the
+      # steps end at the final state and agree with the rebuild.
+      - name: Export every scenario and check the viewer reads it
         if: steps.changes.outputs.needed == 'true'
         run: |
           mkdir -p viewer/replays

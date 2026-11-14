@@ -16,6 +16,7 @@ mod num;
 mod orders;
 mod sides;
 mod state;
+mod steps;
 
 use std::fs;
 use std::path::Path;
@@ -56,6 +57,9 @@ struct Replay {
     days: Vec<DayOut>,
     #[serde(rename = "final")]
     final_state: FinalOut,
+    /// The state at the end of each step (version 4): the viewer draws it
+    /// instead of working it out from the events. Last in the file.
+    steps: Vec<steps::StepOut>,
 }
 
 /// A base that changed side, from the `BaseChangedSide` event.
@@ -155,7 +159,12 @@ pub fn command(
         Some(path) => map::labels(Path::new(path))?,
         None => Vec::new(),
     };
-    let (executed, saved) = crate::execute_source(scenario_path, seed, options)?;
+    let mut recorder = steps::StepRecorder::new();
+    let (executed, saved) =
+        crate::execute_source_watching(scenario_path, seed, options, &mut |world, moment| {
+            recorder.watch(world, moment)
+        })?;
+    let steps = recorder.finish(&executed.scenario.world);
     // A saved game is of the scenario it names; the replay says so, and says
     // which game it is.
     let (scenario_file, title) = match &saved {
@@ -169,7 +178,7 @@ pub fn command(
         None => (scenario_path, None),
     };
     let inputs = crate::save::inputs(scenario_file, &executed.scenario)?;
-    let mut replay = build(&executed, scenario_file, inputs, labels);
+    let mut replay = build(&executed, scenario_file, inputs, labels, steps);
     if let Some(title) = title {
         replay.scenario.name = title;
     }
@@ -184,13 +193,14 @@ fn build(
     scenario_path: &str,
     inputs: crate::save::Inputs,
     labels: Vec<LabelOut>,
+    steps: Vec<steps::StepOut>,
 ) -> Replay {
     let scenario = &executed.scenario;
     let world = &scenario.world;
     let key = world.umpire_key();
     Replay {
         format: "flagplot-replay",
-        version: 3,
+        version: 4,
         scenario: ScenarioOut {
             name: scenario.name.clone(),
             placeholder: scenario.placeholder,
@@ -227,5 +237,6 @@ fn build(
             })
             .collect(),
         final_state: state::final_state(world),
+        steps,
     }
 }
