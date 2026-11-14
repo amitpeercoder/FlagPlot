@@ -1,10 +1,10 @@
 # 0109: The first tuning round of the ground figures: what is settled first, and the plan
 
-Status: a plan by the architect, written on Nov 14, 2026, from four runs of the lengthened slice (`docs/validation/full-slice-39-days-baseline.md`, `-after-0105.md`, `-after-0106.md`, `-after-stock-fix.md`) and a model's five days in the Allied seat. It follows the rules of tuning in `docs/step2-spec.md`. Decision 1 corrects a rule and needs the designer's confirmation; decisions 2 to 4 settle data and are the architect's; the round itself is run after them. Nothing is built and no figure has moved.
+Status: a plan by the architect, written on Nov 14, 2026, from four runs of the lengthened slice (`docs/validation/full-slice-39-days-baseline.md`, `-after-0105.md`, `-after-0106.md`, `-after-stock-fix.md`) and a model's five days in the Allied seat. It follows the rules of tuning in `docs/step2-spec.md`. Decision 1 corrects a rule: the designer confirmed it on Nov 14, 2026. Decisions 2 to 4 settle data and are the architect's. The round itself is run after them. Nothing is built and no figure has moved.
 
 Summary: The first tuning round of the ground figures: before it, men who are falling back are not fired on unless the victor attacks, the Japanese runs land their own rations as cargo, and riflemen set to work make a tenth of a labourer's work; then one round on the Tenaru and the ridge, mechanism by mechanism, with the figures each may move and the direction a source supports
 
-Standing: Plan. Decision 1 needs review. Not built
+Standing: Decision 1 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Not built
 
 ## Where the slice stands
 
@@ -88,4 +88,6 @@ Rules of the round, beside the spec's:
 
 ## Question for the designer
 
-1. **Correction 1:** men who are falling back are fired on only when the side that beat them is on attack. I recommend it: it is what decision 0104 said, a victor chooses to pursue by ordering it, and without it a third party's attack destroys a retreat. The other choice is that men still in the hex are in every fight there, as now.
+Answered on Nov 14, 2026.
+
+1. **Correction 1:** men who are falling back are fired on only when the side that beat them is on attack. Agreed: a victor chooses to pursue by ordering it.
