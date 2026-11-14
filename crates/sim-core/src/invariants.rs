@@ -163,6 +163,9 @@ pub enum InvariantViolation {
     /// An air group at a base with no airfield (decision 6 of 0099). Added
     /// at the end of the enum.
     AirGroupAtBaseWithoutAirfield(AirGroupId, BaseId),
+    /// A base whose airfield damage is outside 0 to 100, or above 0 with no
+    /// airfield (decision 1 of 0103). Added at the end of the enum.
+    AirfieldDamageUnsound(BaseId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -394,6 +397,10 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::AirGroupAtBaseWithoutAirfield(group, base) => {
                 write!(f, "{group} is at {base}, which has no airfield")
             }
+            InvariantViolation::AirfieldDamageUnsound(base) => write!(
+                f,
+                "{base} has airfield damage outside 0 to 100, or damage with no airfield"
+            ),
         }
     }
 }
@@ -780,6 +787,12 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
             || base.defences > Fixed::from_int(100)
         {
             violations.push(InvariantViolation::BaseWorksUnsound(base.id));
+        }
+        if base.airfield_damage.is_negative()
+            || base.airfield_damage > Fixed::from_int(100)
+            || (!base.airfield && base.airfield_damage > Fixed::ZERO)
+        {
+            violations.push(InvariantViolation::AirfieldDamageUnsound(base.id));
         }
     }
 

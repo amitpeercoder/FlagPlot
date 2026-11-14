@@ -9,9 +9,10 @@ use crate::airstrike::{
     able_to_fly, base_strike_launch, escort_choice, fighter_split, raids_of_side,
 };
 use crate::choices::air::{AirAnswer, AirQuestion};
+use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ShipId};
-use crate::landing::{carriers_in_hex, landing_radius, place_landings, Airborne};
+use crate::landing::{carriers_in_hex, landing_radius, place_landings, takes_aircraft, Airborne};
 use crate::orders::AirMission;
 use crate::state::{AirGroup, AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState};
 use crate::time::Pulse;
@@ -32,6 +33,15 @@ impl SideView<'_> {
             AirGroupLocation::Base(base) => self.pulse.grounded_bases.contains(&base),
             _ => false,
         };
+        let field_damage = match group.location {
+            AirGroupLocation::Base(base) => self
+                .pulse
+                .field_damage
+                .get(&base)
+                .copied()
+                .unwrap_or(Fixed::ZERO),
+            _ => Fixed::ZERO,
+        };
         let flight_deck = match group.location {
             AirGroupLocation::Ship(ship) => self
                 .ships()
@@ -42,6 +52,7 @@ impl SideView<'_> {
         able_to_fly(
             group,
             base_grounded,
+            field_damage,
             flight_deck,
             self.ref_data.surface_combat.as_ref(),
             self.ref_data.fatigue.is_some(),
@@ -224,7 +235,7 @@ impl SideView<'_> {
         }
         let bases: Vec<(BaseId, Hex)> = self
             .bases()
-            .filter(|base| base.airfield)
+            .filter(|base| takes_aircraft(base, self.ref_data.ground.as_ref()))
             .map(|base| (base.id, base.hex))
             .collect();
         Some(AirAnswer::Landing(place_landings(&airborne, &bases)))

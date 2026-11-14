@@ -48,9 +48,11 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, ShipId};
 use crate::orders::{AirMission, Reach};
-use crate::refdata::{AircraftType, RefData, ShipKind};
+use crate::refdata::{AircraftType, GroundFigures, RefData, ShipKind};
 use crate::rng::{Draw, Subsystem};
-use crate::state::{AirGroup, AirGroupLocation, Ship, ShipLocation, ShipSystem, Side, SystemState};
+use crate::state::{
+    AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystem, Side, SystemState,
+};
 use crate::time::Pulse;
 use crate::upkeep::Sortie;
 use crate::world::World;
@@ -197,6 +199,16 @@ pub(crate) fn place_landings(groups: &[Airborne], bases: &[(BaseId, Hex)]) -> Ve
     placed
 }
 
+/// Whether `base` takes aircraft: it has an airfield (decision 6 of 0099)
+/// whose damage is below `airfield_landing_refused_at` (decision 5 of 0103).
+/// Without the ground figures no field is ever refused for its damage. The
+/// one test a rebase, a landing, the view of it and an arrival make.
+pub(crate) fn takes_aircraft(base: &Base, ground: Option<&GroundFigures>) -> bool {
+    base.airfield
+        && !ground
+            .is_some_and(|figures| base.airfield_damage >= figures.airfield_landing_refused_at)
+}
+
 impl World {
     /// The hex of a ship afloat: its task force's position, or its port's.
     pub(crate) fn ship_hex(&self, ship: ShipId) -> Option<Hex> {
@@ -306,8 +318,11 @@ impl World {
                 .truth
                 .bases
                 .values()
-                // Not a base with no airfield (decision 6 of 0099).
-                .filter(|base| base.side == side && base.airfield)
+                // Not a base with no airfield (decision 6 of 0099), nor one
+                // whose damage is at the level (decision 5 of 0103).
+                .filter(|base| {
+                    base.side == side && takes_aircraft(base, self.ref_data.ground.as_ref())
+                })
                 .map(|base| (base.id, base.hex))
                 .collect();
             let placed = place_landings(&groups, &bases);

@@ -497,6 +497,16 @@
           "description": "Given (true) only for a group that a rebase order moved to its present base on the day just resolved (decision 0091): it flew nothing on that day, and its aircraft were on the ground at this base. Left out otherwise.",
           "const": true
         },
+        "kept_on_ground_by_field": {
+          "description": "Given only for a group at a base whose airfield is damaged (decision 4 of 0103), when the field keeps at least one of the group's crewed aircraft on the ground: how many, and the field's damage. The field lets 100 less the damage, over 100, of the group's crewed aircraft fly. Left out otherwise.",
+          "type": "object",
+          "required": ["aircraft", "damage"],
+          "additionalProperties": false,
+          "properties": {
+            "aircraft": { "type": "integer" },
+            "damage": { "$ref": "#/$defs/dec" }
+          }
+        },
         "would_strike": {
           "description": "Given only for a group on naval_strike with ready aircraft that would launch now: the contact the staff would send it at if the strike decision were made at this moment, by the rule the decision uses (a contact reported in this pulse or the one before, within the group's reach, of a kind on its target list; the kind first on the list, then the nearest). The decision is made in each daylight pulse on the contacts held then, so a contact that is not sighted again may be too old by the morning. Left out when the group would launch at nothing.",
           "type": "object",
@@ -522,6 +532,18 @@
         "defences": { "description": "The base's defences, 0 to 100: while the side defends the hex its units' chance to hit rises with them.", "$ref": "#/$defs/dec" },
         "port_work_yesterday": { "description": "The work on the port made yesterday: what today's cargo at the base reads.", "$ref": "#/$defs/dec" },
         "aircraft_work_yesterday": { "description": "The work on the aircraft made yesterday: what tonight's repairs read.", "$ref": "#/$defs/dec" }
+      }
+    },
+    "airfield_damage": {
+      "description": "The damage to a base's airfield (decision 0103), for the side's own bases only. Left out while the damage is 0.",
+      "type": "object",
+      "required": ["damage", "share_that_flies", "takes_aircraft"],
+      "additionalProperties": false,
+      "properties": {
+        "damage": { "description": "The damage, above 0 and up to 100.", "$ref": "#/$defs/dec" },
+        "share_that_flies": { "description": "How many of every 100 of a group's ready aircraft the field lets fly: 100 less the damage.", "$ref": "#/$defs/dec" },
+        "takes_aircraft": { "description": "Whether a rebase to the field is accepted and aircraft land on it. False at or above refused_at, and a field with no airfield.", "type": "boolean" },
+        "refused_at": { "description": "The damage at or above which the field takes no aircraft (the ground figure airfield_landing_refused_at). Left out without the ground figures.", "$ref": "#/$defs/dec" }
       }
     },
     "base_line": {
@@ -556,7 +578,8 @@
           "description": "The map's airfield size of the hex, 0 where the map gives none. No rule reads it: a base of size 0 launches and receives air groups, repairs and is raided like any other, and no limit on the aircraft at a base follows from it.",
           "type": "integer"
         },
-        "works": { "$ref": "#/$defs/base_works" }
+        "works": { "$ref": "#/$defs/base_works" },
+        "airfield_damage": { "$ref": "#/$defs/airfield_damage" }
       }
     },
     "ground_estimate_line": {

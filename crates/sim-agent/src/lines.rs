@@ -175,6 +175,19 @@ pub struct AirGroupLine {
     /// day, and its place is the new base. Left out otherwise.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub moved_yesterday: bool,
+    /// The aircraft the group's damaged airfield keeps on the ground
+    /// (decision 4 of 0103). Left out unless the field's damage is above 0
+    /// and keeps at least one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kept_on_ground_by_field: Option<KeptByField>,
+}
+
+/// Aircraft a damaged airfield keeps on the ground.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct KeptByField {
+    pub aircraft: u32,
+    /// The field's damage.
+    pub damage: Dec,
 }
 
 /// The contact a naval strike group would launch at now.
@@ -204,6 +217,29 @@ pub struct BaseLine {
     /// without working units is listed as it was.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub works: Option<BaseWorksLine>,
+    /// The damage to the base's airfield and what it does (decision 0103,
+    /// 11): shown for the side's own bases only, and only while the damage
+    /// is above 0, so a base never hit on its airfield is listed as it was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub airfield_damage: Option<AirfieldDamageLine>,
+}
+
+/// The damage to a base's airfield (decision 0103).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AirfieldDamageLine {
+    /// The damage, above 0 and up to 100.
+    pub damage: Dec,
+    /// How many of every 100 of a group's ready aircraft the field lets fly:
+    /// 100 less the damage.
+    pub share_that_flies: Dec,
+    /// Whether the field takes aircraft: a rebase to it is accepted and
+    /// aircraft land on it. False at or above `refused_at`.
+    pub takes_aircraft: bool,
+    /// The damage at or above which the field takes no aircraft (the ground
+    /// figure `airfield_landing_refused_at`), when the scenario has the
+    /// figures.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refused_at: Option<Dec>,
 }
 
 /// A base's airfield, work and defences: shown for the side's own bases
@@ -414,6 +450,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
                     .expect("an air distance is a whole number of miles"),
             }),
         moved_yesterday: group.rebased_day == Some(ctx.view.day()),
+        kept_on_ground_by_field: aircraft_kept_by_field(ctx, group),
         air_group: ctx.group(group.id),
         aircraft_type: aircraft_type
             .map_or_else(|| group.aircraft_type.to_string(), |t| t.name.clone()),
@@ -441,7 +478,51 @@ pub(crate) fn base_line(ctx: &Ctx<'_>, base: &Base) -> BaseLine {
         port_size: data.map_or(0, |d| d.port_size),
         airfield_size: data.map_or(0, |d| d.airfield_size),
         works: base_works_line(ctx, base),
+        airfield_damage: base_airfield_damage_line(ctx, base),
     }
+}
+
+/// The base's airfield damage line, or `None` while the damage is 0.
+pub(crate) fn base_airfield_damage_line(ctx: &Ctx<'_>, base: &Base) -> Option<AirfieldDamageLine> {
+    if base.airfield_damage <= Fixed::ZERO {
+        return None;
+    }
+    let refused_at = ctx
+        .view
+        .ground_figures()
+        .map(|figures| figures.airfield_landing_refused_at);
+    Some(AirfieldDamageLine {
+        damage: Dec(base.airfield_damage),
+        share_that_flies: Dec(Fixed::from_int(100) - base.airfield_damage.min(Fixed::from_int(100))),
+        takes_aircraft: base.airfield && refused_at.is_none_or(|at| base.airfield_damage < at),
+        refused_at: refused_at.map(Dec),
+    })
+}
+
+/// The aircraft of a group at a base with a damaged airfield that the field
+/// keeps on the ground (decision 4 of 0103): its crewed aircraft less the
+/// share the field lets fly, cut to a whole aircraft as the rule cuts it.
+/// `None` for a group not at a base, at an undamaged field, or when the
+/// field keeps none.
+fn aircraft_kept_by_field(ctx: &Ctx<'_>, group: &AirGroup) -> Option<KeptByField> {
+    let sim_core::state::AirGroupLocation::Base(base) = group.location else {
+        return None;
+    };
+    let damage = ctx.bases.get(&base)?.airfield_damage;
+    if damage <= Fixed::ZERO {
+        return None;
+    }
+    let hundred = Fixed::from_int(100);
+    let crewed = group
+        .pilots
+        .map_or(group.ready, |pilots| group.ready.min(pilots));
+    let flies = Fixed::from_int(i64::from(crewed)).mul_div(hundred - damage.min(hundred), hundred);
+    let flies = u32::try_from(flies.trunc()).unwrap_or(0);
+    let kept = crewed - flies.min(crewed);
+    (kept > 0).then_some(KeptByField {
+        aircraft: kept,
+        damage: Dec(damage),
+    })
 }
 
 /// The base's works line, or `None` while it is as a base always was.

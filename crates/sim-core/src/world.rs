@@ -7,6 +7,7 @@ use crate::airstrike::StrikeInFlight;
 use crate::belief::BeliefState;
 use crate::choices::{Answer, Moment, Question, Trace, TraceCell, TracedChoice};
 use crate::events::EventLog;
+use crate::fixed::Fixed;
 use crate::hash;
 use crate::ids::{AirGroupId, BaseId, EntityRef, IdAllocator, OrderId, TaskForceId};
 use crate::invariants::{self, InvariantViolation};
@@ -91,10 +92,11 @@ impl Default for MadeIds {
 /// The label of the rules a game is played under (decision 0100, 8). A
 /// saved game records it with the version of the state's layout, and a
 /// replay under other rules is refused before it runs. It began at 1 with
-/// decision 0100. A pull request raises it by one when it changes a rule in
-/// a way that changes what an existing game would do; a change that leaves
-/// every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 1;
+/// decision 0100, and is 2 from decision 0103 (an airfield damaged and
+/// mended, which changes scenario 24). A pull request raises it by one when
+/// it changes a rule in a way that changes what an existing game would do; a
+/// change that leaves every existing game as it was leaves it alone.
+pub const RULES_VERSION: u32 = 2;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
@@ -182,6 +184,10 @@ pub struct World {
     /// 0039): their groups fly nothing in it. Worked out once at the start
     /// of each pulse, so not hashed.
     pub(crate) grounded_bases: BTreeSet<BaseId>,
+    /// The damage of each base whose airfield is damaged, at the start of the
+    /// pulse (decision 0103): its groups fly the rest of their ready
+    /// aircraft. Worked out with `grounded_bases`, so not hashed.
+    pub(crate) field_damage: BTreeMap<BaseId, Fixed>,
     /// The ships that sank, or whose flight deck went out, in the air combat
     /// step of this pulse, with where and what caused it (decision 7 of
     /// 0059). Read by the landing step of the same pulse's wear phase and
@@ -365,6 +371,7 @@ impl World {
             strikes_in_flight: Vec::new(),
             sorties: Vec::new(),
             grounded_bases: BTreeSet::new(),
+            field_damage: BTreeMap::new(),
             deck_losses: Vec::new(),
             objectives: None,
             choice_trace: TraceCell::default(),
@@ -491,6 +498,7 @@ impl World {
             self.objectives.as_ref(),
             PulseScratch {
                 grounded_bases: &self.grounded_bases,
+                field_damage: &self.field_damage,
                 strikes_in_flight: &self.strikes_in_flight,
                 sorties: &self.sorties,
                 deck_losses: &self.deck_losses,

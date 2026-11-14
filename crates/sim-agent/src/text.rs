@@ -747,6 +747,12 @@ impl Briefing {
             if g.moved_yesterday {
                 s.push_str(", moved to this base yesterday and flew nothing yesterday");
             }
+            if let Some(k) = &g.kept_on_ground_by_field {
+                s.push_str(&format!(
+                    ", {} of its aircraft kept on the ground by the damage ({}) to the airfield",
+                    k.aircraft, k.damage.0
+                ));
+            }
             if let Some(w) = &g.would_strike {
                 s.push_str(&format!(
                     ", would strike {} now ({}, {} miles)",
@@ -854,6 +860,53 @@ impl Briefing {
                     "Works: {airfield}; defences {}; yesterday's work on the port {}, on the aircraft {}",
                     w.defences.0, w.port_work_yesterday.0, w.aircraft_work_yesterday.0
                 ));
+            }
+            if let Some(d) = &b.airfield_damage {
+                let level = match (d.takes_aircraft, &d.refused_at) {
+                    (true, Some(at)) => format!(
+                        "it takes aircraft; at damage {} or more it takes none",
+                        at.0
+                    ),
+                    (true, None) => "it takes aircraft".to_string(),
+                    (false, Some(at)) => format!(
+                        "it takes no aircraft (damage {} or more): rebases to it are refused, aircraft with no deck land elsewhere and arrivals wait until the damage is below {}",
+                        at.0, at.0
+                    ),
+                    (false, None) => "it takes no aircraft".to_string(),
+                };
+                o.sub(format!(
+                    "Airfield damage {}: {} of every 100 aircraft may fly; {}",
+                    d.damage.0, d.share_that_flies.0, level
+                ));
+            }
+            if let Some(y) = &b.airfield_yesterday {
+                for a in &y.damaged {
+                    o.sub(format!(
+                        "Airfield hit yesterday: {} hit{} on the airfield, damage {}{}",
+                        a.hits,
+                        if a.hits == 1 { "" } else { "s" },
+                        a.damage.0,
+                        ev(a.event)
+                    ));
+                }
+                for a in &y.mended {
+                    o.sub(format!(
+                        "Airfield mended yesterday: {} mended {} points of damage, damage {}{}",
+                        a.land_unit.text(),
+                        a.points.0,
+                        a.damage.0,
+                        ev(a.event)
+                    ));
+                }
+                for a in &y.arrivals_waiting {
+                    o.sub(format!(
+                        "Arrival held back yesterday: {} aircraft due at {} wait, the airfield's damage {} takes no aircraft{}",
+                        a.aircraft,
+                        a.air_group.text(),
+                        a.damage.0,
+                        ev(a.event)
+                    ));
+                }
             }
             for r in &b.returned_yesterday {
                 o.sub(format!(

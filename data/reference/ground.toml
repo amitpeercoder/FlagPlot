@@ -140,3 +140,15 @@ defences_strength = "0.5"
 # The share of a working unit's work that a fighting unit set to work makes,
 # from 0 to 1.
 fighting_unit_work_share = "0.5"
+
+# The figures of an airfield damaged and mended (decision 0103). Placeholders
+# set by the architect for decision 0103, resting on no source.
+# Damage one hit on an airfield adds, 0 or more; the damage runs from 0 to 100.
+airfield_damage_per_hit = 2
+
+# Work to mend one point of an airfield's damage, above 0.
+work_per_airfield_damage_point = 50
+
+# The damage at or above which a field takes no aircraft (no rebase to it, no
+# landing, no arrival), from 0 to 100.
+airfield_landing_refused_at = 50

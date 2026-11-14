@@ -347,6 +347,10 @@ pub struct Base {
     /// next day reads: the port and the aircraft (decision 4 of 0099).
     /// `None` until the first work there.
     pub day_work: Option<DayWork>,
+    /// The damage to the base's airfield, from 0 to 100 (decision 0103).
+    /// 0 for a base with no airfield. A hit on the airfield adds to it,
+    /// work on the airfield lowers it, and nothing else changes it.
+    pub airfield_damage: Fixed,
 }
 
 /// The work made at a base on one day for the two jobs the next day reads
@@ -382,6 +386,7 @@ impl Base {
             airfield_work: Fixed::ZERO,
             defences: Fixed::ZERO,
             day_work: None,
+            airfield_damage: Fixed::ZERO,
         }
     }
 
@@ -962,13 +967,17 @@ pub struct Replacement {
 }
 
 /// Aircraft and pilots a scenario flies in to an air group on a named day
-/// (decision 0041). Static: it is never changed by the rules.
+/// (decision 0041). The rules change only `waiting`.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Arrival {
     pub day: u32,
     pub air_group: AirGroupId,
     pub aircraft: u32,
     pub pilots: u32,
+    /// True once the arrival has been held back on or after its day because
+    /// its group's field could not take it (decision 0103, 5). False at
+    /// load. It is delivered on the first night the field can.
+    pub waiting: bool,
 }
 
 /// A land unit: a count of men with a side and a name (decision 0066, 1).

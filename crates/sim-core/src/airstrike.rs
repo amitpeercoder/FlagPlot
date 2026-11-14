@@ -242,6 +242,9 @@ struct BaseAttack {
     hits_on_aircraft: u32,
     hits_on_supply: u32,
     hits_on_men: u32,
+    /// Not in the event (decision 0103): the damage it does is its own
+    /// event.
+    hits_on_airfield: u32,
     breakdown: Option<Breakdown>,
 }
 
@@ -267,6 +270,7 @@ pub(crate) struct BaseHits {
     pub(crate) aircraft: u32,
     pub(crate) supply: u32,
     pub(crate) men: u32,
+    pub(crate) airfield: u32,
 }
 
 /// Which of a group's aircraft a ground pool entry counts (decision 11 of
@@ -613,8 +617,11 @@ pub(crate) fn take_ground(
 /// and decision 2 of 0036): its ready aircraft times the flight deck's factor
 /// (all of them from a base, or from a ship whose deck works; the degraded
 /// factor if it is degraded; none if it is out) times 100 less its fatigue
-/// over 100, multiplied in fixed point and rounded down once. A stood-down
-/// group flies none. Without the fatigue figures (`fatigue_loaded` false) a
+/// over 100, multiplied in fixed point and rounded down once; for a group at
+/// a base, also times 100 less the damage of its airfield (`field_damage`,
+/// the base's at the start of the pulse, 0 for a group aboard a ship) over 100
+/// (decision 4 of 0103), between the deck's factor and the fatigue's. A
+/// stood-down group flies none. Without the fatigue figures (`fatigue_loaded` false) a
 /// group is never tired or stood down. A group whose pilots are tracked
 /// starts from the smaller of its ready aircraft and its pilots (decision 2
 /// of 0038). A group at a base with no supply at the start of the pulse
@@ -630,6 +637,7 @@ pub(crate) fn take_ground(
 pub(crate) fn able_to_fly(
     group: &AirGroup,
     base_grounded: bool,
+    field_damage: Fixed,
     flight_deck: Option<SystemState>,
     surface_combat: Option<&SurfaceCombatFigures>,
     fatigue_loaded: bool,
@@ -655,6 +663,10 @@ pub(crate) fn able_to_fly(
             able = able * figures.system_factor(ShipSystem::FlightDeck, state);
         }
     }
+    if matches!(group.location, AirGroupLocation::Base(_)) && field_damage > Fixed::ZERO {
+        let hundred = Fixed::from_int(100);
+        able = able.mul_div(hundred - field_damage.min(hundred), hundred);
+    }
     if fatigue_loaded {
         if group.stood_down {
             return 0;
@@ -677,10 +689,18 @@ impl World {
     /// pilots (decision 2 of 0038). A group at a base with no supply at the
     /// start of the pulse flies none (decision 7 of 0039). A group that
     /// moved to another base by order today flies none (decision 0091, 6).
+    /// A group at a base with a damaged airfield flies a share of them
+    /// (decision 4 of 0103), by the damage at the start of the pulse.
     pub(crate) fn aircraft_able_to_fly(&self, group: &AirGroup) -> u32 {
         let base_grounded = match group.location {
             AirGroupLocation::Base(base) => self.grounded_bases.contains(&base),
             _ => false,
+        };
+        let field_damage = match group.location {
+            AirGroupLocation::Base(base) => {
+                self.field_damage.get(&base).copied().unwrap_or(Fixed::ZERO)
+            }
+            _ => Fixed::ZERO,
         };
         let flight_deck = match group.location {
             AirGroupLocation::Ship(ship) => self
@@ -693,6 +713,7 @@ impl World {
         let able = able_to_fly(
             group,
             base_grounded,
+            field_damage,
             flight_deck,
             self.ref_data.surface_combat.as_ref(),
             self.ref_data.fatigue.is_some(),
@@ -1350,6 +1371,7 @@ impl World {
                             aircraft: attack.hits_on_aircraft,
                             supply: attack.hits_on_supply,
                             men: attack.hits_on_men,
+                            airfield: attack.hits_on_airfield,
                         },
                         event,
                         pool,
@@ -1877,6 +1899,7 @@ impl World {
             );
         }
         self.apply_hits_on_men(day, pulse, base, hits.men, attack_event);
+        self.apply_hits_on_airfield(day, pulse, base, hits.airfield, attack_event);
         destroyed_in_all
     }
 
@@ -2843,6 +2866,17 @@ impl World {
                     value: share,
                 });
             }
+            // And the share for the airfield only where it counts (decision
+            // 0103).
+            if let Some(share) = self
+                .base_hit_airfield_share(base)
+                .filter(|share| *share > Fixed::ZERO)
+            {
+                factors.push(Factor {
+                    name: "hit_on_airfield_chance",
+                    value: share,
+                });
+            }
             Breakdown {
                 factors,
                 result: expected,
@@ -2852,6 +2886,7 @@ impl World {
             aircraft: hits_on_aircraft,
             supply: hits_on_supply,
             men: hits_on_men,
+            airfield: hits_on_airfield,
         } = landed;
         Outcome::BaseAttack(Box::new(BaseAttack {
             air_group: strike.air_group,
@@ -2864,6 +2899,7 @@ impl World {
             hits_on_aircraft,
             hits_on_supply,
             hits_on_men,
+            hits_on_airfield,
             breakdown,
         }))
     }
@@ -9300,6 +9336,7 @@ mod tests {
             air_group: AirGroupId::new(group),
             aircraft,
             pilots,
+            waiting: false,
         }
     }
 
@@ -9352,6 +9389,153 @@ mod tests {
             "air_group:10 received 6 aircraft and 5 pilots by arrival, 14 ready, 12 pilots and strength 18"
         );
         world.receive_arrivals(4, Pulse::Night);
+        assert_eq!(arrived(&world).len(), 1);
+    }
+
+    /// A field that takes aircraft is below the level and has an airfield
+    /// (decision 5 of 0103); without the ground figures damage never refuses.
+    #[test]
+    fn a_field_takes_aircraft_below_the_level_and_with_an_airfield() {
+        use crate::landing::takes_aircraft;
+        use crate::refdata::GroundFigures;
+        let figures = GroundFigures::FIRST;
+        let mut base = crate::state::Base::new(
+            BASE_JAPANESE,
+            "Base".to_string(),
+            Side::Japanese,
+            Hex::new(5, 0),
+        );
+        assert!(takes_aircraft(&base, Some(&figures)));
+        base.airfield_damage = Fixed::from_int(49);
+        assert!(takes_aircraft(&base, Some(&figures)));
+        base.airfield_damage = Fixed::from_int(50);
+        assert!(!takes_aircraft(&base, Some(&figures)));
+        base.airfield_damage = Fixed::from_int(100);
+        assert!(!takes_aircraft(&base, Some(&figures)));
+        assert!(takes_aircraft(&base, None), "no figures, no refusal");
+        base.airfield_damage = Fixed::ZERO;
+        base.airfield = false;
+        assert!(!takes_aircraft(&base, Some(&figures)));
+        assert!(!takes_aircraft(&base, None));
+    }
+
+    #[test]
+    fn a_rebase_to_a_field_at_the_level_is_refused_and_below_it_accepted() {
+        use crate::orders::RejectReason;
+        use crate::refdata::GroundFigures;
+        let mut world = base_world(1);
+        world.ref_data.ground = Some(GroundFigures::FIRST);
+        // A second Japanese field, 60 nm from the first.
+        let second = BaseId::new(9);
+        world.truth.bases.insert(
+            second,
+            crate::state::Base::new(second, "Base 9".to_string(), Side::Japanese, Hex::new(6, 0)),
+        );
+        crewed(&mut world, 10, 5, 8, Some(8), 8);
+        let check = |world: &World| {
+            let group = world.truth.air_groups[&AirGroupId::new(10)].clone();
+            world.check_rebase(&group, second, Side::Japanese, 2)
+        };
+        let set = |world: &mut World, damage: i64| {
+            world.truth.bases.get_mut(&second).unwrap().airfield_damage = Fixed::from_int(damage);
+        };
+        assert_eq!(check(&world), Ok(()));
+        set(&mut world, 49);
+        assert_eq!(check(&world), Ok(()));
+        for damage in [50, 80, 100] {
+            set(&mut world, damage);
+            assert_eq!(
+                check(&world),
+                Err(RejectReason::AirfieldTooDamaged {
+                    damage: Fixed::from_int(damage),
+                    refused_at: Fixed::from_int(50),
+                })
+            );
+        }
+        assert_eq!(
+            check(&world).unwrap_err().to_string(),
+            "the airfield's damage is 100, and a field at 50 or more takes no aircraft"
+        );
+        // A base with no airfield is refused for that first.
+        world.truth.bases.get_mut(&second).unwrap().airfield = false;
+        set(&mut world, 0);
+        assert_eq!(check(&world), Err(RejectReason::NoAirfield));
+    }
+
+    #[test]
+    fn an_arrival_at_a_field_at_the_level_waits_and_is_delivered_once_on_the_first_night_below_it()
+    {
+        use crate::refdata::GroundFigures;
+        let mut world = base_world(1);
+        world.ref_data.ground = Some(GroundFigures::FIRST);
+        crewed(&mut world, 10, 5, 4, Some(4), 4);
+        world.truth.arrivals.push(arrival(2, 10, 6, 6));
+        let set = |world: &mut World, damage: i64| {
+            world
+                .truth
+                .bases
+                .get_mut(&BASE_JAPANESE)
+                .unwrap()
+                .airfield_damage = Fixed::from_int(damage);
+        };
+        let waiting = |world: &World| -> Vec<(u32, Fixed)> {
+            events_where(world, |k| matches!(k, EventKind::ArrivalWaiting { .. }))
+                .iter()
+                .map(|event| match event.kind {
+                    EventKind::ArrivalWaiting {
+                        air_group,
+                        base,
+                        aircraft,
+                        pilots,
+                        damage,
+                    } => {
+                        assert_eq!(
+                            (air_group.raw(), base, aircraft, pilots),
+                            (10, BASE_JAPANESE, 6, 6)
+                        );
+                        (event.day, damage)
+                    }
+                    _ => unreachable!(),
+                })
+                .collect()
+        };
+        // Not yet due: nothing, and not waiting.
+        set(&mut world, 60);
+        world.receive_arrivals(1, Pulse::Night);
+        assert!(waiting(&world).is_empty() && !world.truth.arrivals[0].waiting);
+        // Due, at 60: waits, whole. And at 50, the level: waits again.
+        world.receive_arrivals(2, Pulse::Night);
+        assert!(world.truth.arrivals[0].waiting);
+        set(&mut world, 50);
+        world.receive_arrivals(3, Pulse::Night);
+        assert_eq!(
+            waiting(&world),
+            vec![(2, Fixed::from_int(60)), (3, Fixed::from_int(50))]
+        );
+        assert!(arrived(&world).is_empty());
+        assert_eq!(world.truth.air_groups[&AirGroupId::new(10)].ready, 4);
+        // At 40: delivered, whole, and once.
+        set(&mut world, 40);
+        world.receive_arrivals(4, Pulse::Night);
+        assert_eq!(arrived(&world), vec![(4, 10, 6, 6, 10, 10, 10)]);
+        assert!(!world.truth.arrivals[0].waiting);
+        world.receive_arrivals(5, Pulse::Night);
+        world.receive_arrivals(6, Pulse::Night);
+        assert_eq!(arrived(&world).len(), 1);
+        assert_eq!(waiting(&world).len(), 2);
+        // An arrival that waited for a group that was then lost is dropped.
+        world.truth.arrivals.push(Arrival {
+            waiting: true,
+            ..arrival(2, 10, 1, 1)
+        });
+        world
+            .truth
+            .air_groups
+            .get_mut(&AirGroupId::new(10))
+            .unwrap()
+            .location = AirGroupLocation::Lost;
+        world.receive_arrivals(7, Pulse::Night);
+        assert!(!world.truth.arrivals[1].waiting);
         assert_eq!(arrived(&world).len(), 1);
     }
 
@@ -11977,32 +12161,92 @@ mod tests {
         fn able_to_fly_cases() {
             let mut g = group(AirGroupId::new(1), Side::Allied, 1, 2, 18);
             g.fatigue = Fixed::from_int(50);
-            assert_eq!(able_to_fly(&g, false, None, None, true, 1), 9);
-            assert_eq!(able_to_fly(&g, false, None, None, false, 1), 18);
+            assert_eq!(able_to_fly(&g, false, Fixed::ZERO, None, None, true, 1), 9);
+            assert_eq!(
+                able_to_fly(&g, false, Fixed::ZERO, None, None, false, 1),
+                18
+            );
             g.stood_down = true;
-            assert_eq!(able_to_fly(&g, false, None, None, true, 1), 0);
-            assert_eq!(able_to_fly(&g, false, None, None, false, 1), 18);
+            assert_eq!(able_to_fly(&g, false, Fixed::ZERO, None, None, true, 1), 0);
+            assert_eq!(
+                able_to_fly(&g, false, Fixed::ZERO, None, None, false, 1),
+                18
+            );
             g.stood_down = false;
             g.rebased_day = Some(1);
-            assert_eq!(able_to_fly(&g, false, None, None, true, 1), 0);
-            assert_eq!(able_to_fly(&g, false, None, None, true, 2), 9);
+            assert_eq!(able_to_fly(&g, false, Fixed::ZERO, None, None, true, 1), 0);
+            assert_eq!(able_to_fly(&g, false, Fixed::ZERO, None, None, true, 2), 9);
             g.rebased_day = None;
             g.pilots = Some(10);
-            assert_eq!(able_to_fly(&g, false, None, None, false, 1), 10);
+            assert_eq!(
+                able_to_fly(&g, false, Fixed::ZERO, None, None, false, 1),
+                10
+            );
             // Grounded: only a group at a base.
-            assert_eq!(able_to_fly(&g, true, None, None, false, 1), 10);
+            assert_eq!(able_to_fly(&g, true, Fixed::ZERO, None, None, false, 1), 10);
             g.location = AirGroupLocation::Base(BASE_A);
-            assert_eq!(able_to_fly(&g, true, None, None, false, 1), 0);
+            assert_eq!(able_to_fly(&g, true, Fixed::ZERO, None, None, false, 1), 0);
             // A ship's deck out gives none, with the figures.
             g.location = AirGroupLocation::Ship(ShipId::new(1));
             let figures = SurfaceCombatFigures::from_surface_combat_toml();
             assert_eq!(
-                able_to_fly(&g, false, Some(SystemState::Out), Some(&figures), false, 1),
+                able_to_fly(
+                    &g,
+                    false,
+                    Fixed::ZERO,
+                    Some(SystemState::Out),
+                    Some(&figures),
+                    false,
+                    1
+                ),
                 0
             );
             assert_eq!(
-                able_to_fly(&g, false, Some(SystemState::Out), None, false, 1),
+                able_to_fly(
+                    &g,
+                    false,
+                    Fixed::ZERO,
+                    Some(SystemState::Out),
+                    None,
+                    false,
+                    1
+                ),
                 10
+            );
+        }
+
+        /// A damaged field flies a share of the ready aircraft, cut to a
+        /// whole aircraft once with the other factors (decision 4 of 0103):
+        /// 12 at damage 30 give 8, 4 at 60 give 1, 4 at 50 give 2, 10 at 40
+        /// give 6, 10 at 60 give 4, any at 100 give 0; a group aboard a ship
+        /// ignores the damage, and fatigue multiplies with it.
+        #[test]
+        fn able_to_fly_from_a_damaged_field() {
+            let at_base = |ready: u32, damage: i64| {
+                let mut g = group(AirGroupId::new(1), Side::Allied, 1, 2, ready);
+                g.location = AirGroupLocation::Base(BASE_A);
+                able_to_fly(&g, false, Fixed::from_int(damage), None, None, false, 1)
+            };
+            assert_eq!(at_base(12, 30), 8);
+            assert_eq!(at_base(4, 60), 1);
+            assert_eq!(at_base(4, 50), 2);
+            assert_eq!(at_base(10, 40), 6);
+            assert_eq!(at_base(10, 60), 4);
+            assert_eq!(at_base(12, 0), 12);
+            assert_eq!(at_base(12, 100), 0);
+            let mut ship = group(AirGroupId::new(1), Side::Allied, 1, 2, 12);
+            ship.location = AirGroupLocation::Ship(ShipId::new(1));
+            assert_eq!(
+                able_to_fly(&ship, false, Fixed::from_int(60), None, None, false, 1),
+                12
+            );
+            // 12 x 70/100 x 50/100 = 4.2, cut once.
+            let mut tired = group(AirGroupId::new(1), Side::Allied, 1, 2, 12);
+            tired.location = AirGroupLocation::Base(BASE_A);
+            tired.fatigue = Fixed::from_int(50);
+            assert_eq!(
+                able_to_fly(&tired, false, Fixed::from_int(30), None, None, true, 1),
+                4
             );
         }
 

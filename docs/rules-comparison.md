@@ -157,7 +157,7 @@ Further differences:
 - Aircraft replacement streams are daily scenario allowances. Unused replacements disappear, rather than accumulating in national pools.
 - Rebasing moves a whole land-based group. It has no interception or flight losses; damaged aircraft are written off. Routine carrier-to-base and base-to-carrier transfers are absent.
 
-**Operational effect:** Flag Plot represents reach, numbers, protection, fatigue and attrition, but aircraft types lack much of AE's tactical performance differentiation. A base strike can destroy aircraft, supply and men, but cannot suppress flying by damaging a runway or its service facilities.
+**Operational effect:** Flag Plot represents reach, numbers, protection, fatigue and attrition, but aircraft types lack much of AE's tactical performance differentiation. A base strike can destroy aircraft, supply and men, but cannot suppress flying by damaging a runway or its service facilities. *Note, Nov 14, 2026: decision 0103 is built. A share of the hits on a base now lands on its airfield and damages it, and a damaged field flies fewer aircraft. A port and service facilities are still not damaged.*
 
 AE references: 7.0.1–7.4, 9.4, 15.4, 16.3; particularly pp. 141–142, 156–175, 213–214, 252, 259.
 
@@ -186,7 +186,7 @@ Other consequential differences:
 - Preparation applies to a landing place. It does not provide a general operation-preparation system for bombardments, strikes or convoys.
 - Experience can grow through training and combat, but losses do not dilute it. At this baseline real units have standard experience and skills pending research.
 
-Engineering is narrower too. Flag Plot can build an airfield, accumulate defences, and assign work that improves next-day handling or aircraft repair. Airfields are present or absent. Port work provides a temporary handling boost, not a permanent increase in port size.
+Engineering is narrower too. Flag Plot can build an airfield, accumulate defences, and assign work that improves next-day handling or aircraft repair. Airfields are present or absent. *Note, Nov 14, 2026: an airfield now also has damage from 0 to 100, which work on it mends (decision 0103).* Port work provides a temporary handling boost, not a permanent increase in port size.
 
 AE supports progressive facility sizes, runway/service/port damage and repair, and fortifications reduced by attacks and engineers. Flag Plot's defences increase defensive fire accuracy; they do not wear down and transfer intact with a captured base. Working units never fire, even in close combat.
 
@@ -231,7 +231,7 @@ AE reference: 17.0; pp. 263–265.
 
 This ranking is an assessment of operational consequences, not an approved implementation sequence.
 
-1. **Airfield suppression.** Bombing and shelling cannot close a field through runway or service damage.
+1. **Airfield suppression.** Bombing and shelling cannot close a field through runway or service damage. *Note, Nov 14, 2026: built by decision 0103. Hits on a base can damage its airfield, which cuts the aircraft it flies and, at a level, takes no aircraft. Service and port damage are not built.*
 2. **Aircraft and crew differentiation.** Pilot quality, altitude, speed and tactical performance lack AE's influence on air combat.
 3. **Sustained fleet operations.** Replenishment, rearming, machinery wear and repair-facility constraints are much thinner.
 4. **Threats to shipping.** Submarines and mines are absent.

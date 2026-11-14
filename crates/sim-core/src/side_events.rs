@@ -1172,6 +1172,12 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // 0099).
         EventKind::UnitWorked { unit, .. } => whole_if(own_unit(unit)),
         EventKind::AirfieldBuilt { side: builder, .. } => whole_if(*builder == side),
+        // A side sees its own field's damage, an arrival held back at its
+        // own field and its own units mending it whole; the enemy sees none
+        // of it (decision 11 of 0103).
+        EventKind::AirfieldDamaged { side: owner, .. } => whole_if(*owner == side),
+        EventKind::ArrivalWaiting { air_group, .. } => whole_if(own_group(air_group)),
+        EventKind::AirfieldMended { unit, .. } => whole_if(own_unit(unit)),
 
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
@@ -1833,6 +1839,12 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         // an airfield built cites the side's own work (decision 0099).
         | EventKind::UnitWorked { .. }
         | EventKind::AirfieldBuilt { .. }
+        // A field damaged cites the raid or the shelling, which the side
+        // is given cut, as for supply destroyed; an arrival held back cites
+        // nothing; a field mended cites the side's own work (decision 0103).
+        | EventKind::AirfieldDamaged { .. }
+        | EventKind::ArrivalWaiting { .. }
+        | EventKind::AirfieldMended { .. }
         // A halt cites the side's own route order and steaming; steaming on
         // cites the halt, the route order, and the side's own bombardment
         // (given it cut) or cargo completion (decision 0096).
@@ -3415,6 +3427,37 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            sided(row(
+                EventKind::AirfieldDamaged {
+                    base: base(1),
+                    side: Side::Allied,
+                    hits: 3,
+                    damage: fx(6),
+                },
+                Whole,
+                Nothing,
+            )),
+            row(
+                EventKind::ArrivalWaiting {
+                    air_group: group(1),
+                    base: base(1),
+                    aircraft: 6,
+                    pilots: 6,
+                    damage: fx(60),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::AirfieldMended {
+                    unit: unit(1),
+                    base: base(1),
+                    points: fx(20),
+                    damage: fx(40),
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3455,7 +3498,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 112, "the log has 112 kinds of event");
+        assert_eq!(all.len(), 115, "the log has 115 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

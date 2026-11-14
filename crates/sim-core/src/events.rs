@@ -1520,6 +1520,35 @@ pub enum EventKind {
         hex: Hex,
         work_done: Fixed,
     },
+    /// Hits on the airfield of `side`'s base added to its damage (decision 3
+    /// of 0103): `hits` hits, and `damage` is the damage after, from 0 to
+    /// 100. Added at the end.
+    AirfieldDamaged {
+        base: BaseId,
+        side: Side,
+        hits: u32,
+        damage: Fixed,
+    },
+    /// An arrival due at an air group's field was held back because the
+    /// field takes no aircraft (decision 5 of 0103): its damage is at or
+    /// above the level. The arrival waits, whole, for the first night the
+    /// field takes aircraft. Recorded on each night it is held back. Added
+    /// at the end.
+    ArrivalWaiting {
+        air_group: AirGroupId,
+        base: BaseId,
+        aircraft: u32,
+        pilots: u32,
+        damage: Fixed,
+    },
+    /// A land unit's work on an airfield lowered its damage by `points` to
+    /// `damage` (decision 7 of 0103). Added at the end.
+    AirfieldMended {
+        unit: LandUnitId,
+        base: BaseId,
+        points: Fixed,
+        damage: Fixed,
+    },
 }
 
 impl EventKind {
@@ -1902,7 +1931,15 @@ impl EventKind {
             EventKind::UnitWorked { unit, base, .. } => {
                 vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
             }
-            EventKind::AirfieldBuilt { base, .. } => vec![EntityRef::Base(*base)],
+            EventKind::AirfieldBuilt { base, .. } | EventKind::AirfieldDamaged { base, .. } => {
+                vec![EntityRef::Base(*base)]
+            }
+            EventKind::ArrivalWaiting {
+                air_group, base, ..
+            } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
+            EventKind::AirfieldMended { unit, base, .. } => {
+                vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
+            }
             EventKind::PreparationShared {
                 parent,
                 new_force,
@@ -3273,6 +3310,38 @@ impl fmt::Display for EventKind {
                 f,
                 "{base} ({}) at {hex} has an airfield: {work_done} of work done",
                 side.name()
+            ),
+            EventKind::AirfieldDamaged {
+                base,
+                side,
+                hits,
+                damage,
+            } => write!(
+                f,
+                "{} hit{} on the airfield of {base} ({}), damage {damage}",
+                hits,
+                if *hits == 1 { "" } else { "s" },
+                side.name()
+            ),
+            EventKind::ArrivalWaiting {
+                air_group,
+                base,
+                aircraft,
+                pilots,
+                damage,
+            } => write!(
+                f,
+                "{aircraft} aircraft and {pilots} {} due at {air_group} wait: the airfield of {base} is damaged {damage} and takes no aircraft",
+                if *pilots == 1 { "pilot" } else { "pilots" }
+            ),
+            EventKind::AirfieldMended {
+                unit,
+                base,
+                points,
+                damage,
+            } => write!(
+                f,
+                "{unit} mended {points} of damage on the airfield of {base}, damage {damage}"
             ),
         }
     }

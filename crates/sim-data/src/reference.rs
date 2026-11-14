@@ -629,6 +629,9 @@ struct BaseHitTable {
     /// The share for men ashore (decision 0092, 8). Without it the share is
     /// 0 and those hits land on nothing, as before.
     men: Option<Quantity>,
+    /// The share for the airfield (decision 0103, 2). Without it the share
+    /// is 0 and those hits land as before.
+    airfield: Option<Quantity>,
 }
 
 /// Loads the air combat figures from a TOML file.
@@ -670,6 +673,10 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
         base_hit_supply: number("base_hit.supply", &file.base_hit.supply)?,
         base_hit_men: match &file.base_hit.men {
             Some(men) => number("base_hit.men", men)?,
+            None => Fixed::ZERO,
+        },
+        base_hit_airfield: match &file.base_hit.airfield {
+            Some(airfield) => number("base_hit.airfield", airfield)?,
             None => Fixed::ZERO,
         },
         fighter_false_claim_chance: number(
@@ -810,6 +817,11 @@ struct GroundFile {
     work_per_defence_point: Quantity,
     defences_strength: Quantity,
     fighting_unit_work_share: Quantity,
+    /// The figures of an airfield damaged and mended (decision 0103).
+    /// Required like the older keys.
+    airfield_damage_per_hit: Quantity,
+    work_per_airfield_damage_point: Quantity,
+    airfield_landing_refused_at: Quantity,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -901,6 +913,15 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         fighting_unit_work_share: number(
             "fighting_unit_work_share",
             &file.fighting_unit_work_share,
+        )?,
+        airfield_damage_per_hit: number("airfield_damage_per_hit", &file.airfield_damage_per_hit)?,
+        work_per_airfield_damage_point: number(
+            "work_per_airfield_damage_point",
+            &file.work_per_airfield_damage_point,
+        )?,
+        airfield_landing_refused_at: number(
+            "airfield_landing_refused_at",
+            &file.airfield_landing_refused_at,
         )?,
     };
     if let Some(problem) = figures.problem() {
@@ -1225,7 +1246,8 @@ mod tests {
         // The table goes, its share for men (decision 0092) with it.
         let no_table = air_combat_text()
             .replace("[base_hit]\naircraft = \"0.06\"\nsupply = \"0.3\"\n", "")
-            .replace("men = \"0.2\"\n", "");
+            .replace("men = \"0.2\"\n", "")
+            .replace("airfield = \"0.2\"\n", "");
         assert!(parse_air_combat_figures(&no_table, here())
             .expect_err("rejected")
             .message
@@ -2453,6 +2475,52 @@ mod tests {
         }
     }
 
+    const AIRFIELD_KEYS: [&str; 3] = [
+        "airfield_damage_per_hit",
+        "work_per_airfield_damage_point",
+        "airfield_landing_refused_at",
+    ];
+
+    #[test]
+    fn the_airfield_figures_are_read_each_is_required_and_in_range() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.airfield_damage_per_hit, Fixed::from_int(2));
+        assert_eq!(figures.work_per_airfield_damage_point, Fixed::from_int(50));
+        assert_eq!(figures.airfield_landing_refused_at, Fixed::from_int(50));
+        for key in AIRFIELD_KEYS {
+            let text = without_keys(&ground_text(), &[key]);
+            assert!(
+                parse_ground_figures(&text, here())
+                    .expect_err("a missing key is refused")
+                    .message
+                    .contains(key),
+                "without {key}"
+            );
+        }
+        let bad = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        let ok = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .unwrap_or_else(|e| panic!("{key} {value} loads: {}", e.message))
+        };
+        assert!(bad("airfield_damage_per_hit", "-1").contains("airfield_damage_per_hit"));
+        ok("airfield_damage_per_hit", "0");
+        assert!(
+            bad("work_per_airfield_damage_point", "0").contains("work_per_airfield_damage_point")
+        );
+        ok("work_per_airfield_damage_point", "1");
+        assert!(bad("airfield_landing_refused_at", "101").contains("airfield_landing_refused_at"));
+        assert!(bad("airfield_landing_refused_at", "-1").contains("airfield_landing_refused_at"));
+        ok("airfield_landing_refused_at", "0");
+        ok("airfield_landing_refused_at", "100");
+        for key in AIRFIELD_KEYS {
+            assert!(bad(key, "0.5").contains(key));
+        }
+    }
+
     #[test]
     fn the_work_figures_are_in_range_and_no_float() {
         let bad = |key: &str, value: &str| {
@@ -2911,5 +2979,7 @@ mod tests {
         assert_eq!(bombardment.false_claim_chance, Fixed::from_ratio(1, 100));
         let air = parse_air_combat_figures(&frozen("air_combat.toml"), here()).expect("parses");
         assert_eq!(air.base_hit_men, Fixed::from_ratio(2, 10));
+        // The share for the airfield (decision 0103) is 0 in the frozen figures.
+        assert_eq!(air.base_hit_airfield, Fixed::ZERO);
     }
 }

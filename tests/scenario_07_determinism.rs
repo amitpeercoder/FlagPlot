@@ -485,7 +485,7 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // The two kinds of decision 0099, `UnitWorked` and `AirfieldBuilt`: the
     // full slice has no land unit. Scenario 30 records them, and its own test
     // reads them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 50] = [
+    const NOT_IN_THE_FULL_SLICE: [&str; 53] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -536,6 +536,9 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "ExperienceRaised",
         "UnitWorked",
         "AirfieldBuilt",
+        "AirfieldDamaged",
+        "ArrivalWaiting",
+        "AirfieldMended",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

@@ -46,7 +46,7 @@ A side sees: its own orders and their acceptance or rejection. The enemy sees ne
 
 ### The aircraft that fly
 
-The aircraft a group sends is the number it can fly this pulse: its ready aircraft, limited by its pilots where they are tracked, by the flight deck of the ship it is aboard, by its fatigue, and by supply at its base. A stood-down group flies none. Chapter 5, What a group can fly in a pulse, holds that rule, and this chapter reads its result. A group that can fly none records nothing. A group aboard a ship flies from the ship's task force position at the start of the pulse. A group at a base flies from the base's hex. [0025, 0026, 0036, 0038, 0039]
+The aircraft a group sends is the number it can fly this pulse: its ready aircraft, limited by its pilots where they are tracked, by the flight deck of the ship it is aboard, by the damage to the airfield of the base it is at, by its fatigue, and by supply at its base. A stood-down group flies none. Chapter 5, What a group can fly in a pulse, holds that rule, and this chapter reads its result. A group that can fly none records nothing. A group aboard a ship flies from the ship's task force position at the start of the pulse. A group at a base flies from the base's hex. [0025, 0026, 0036, 0038, 0039, 0103]
 
 A side sees: its own groups and their aircraft. The enemy sees nothing. [0047]
 

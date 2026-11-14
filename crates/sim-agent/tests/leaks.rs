@@ -1030,6 +1030,7 @@ fn a_day_that_cannot_be_resolved_names_no_enemy_unit() {
         air_group: AirGroupId::new(3),
         aircraft: 100,
         pilots: 0,
+        waiting: false,
     });
     scenario.world = World::new(
         world.seed(),

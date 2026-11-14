@@ -201,8 +201,17 @@ impl World {
     /// Works out which bases have no supply at the start of the pulse
     /// (decision 7 of 0039): their groups fly nothing in it, whatever
     /// happens to the stock during the pulse. Without the supply figures no
-    /// base is ever grounded.
+    /// base is ever grounded. It also takes the damage of each base whose
+    /// airfield is damaged (decision 4 of 0103), which cuts the aircraft
+    /// its groups may fly in the pulse, whatever happens to it during it.
     pub(crate) fn work_out_grounded_bases(&mut self) {
+        self.field_damage = self
+            .truth
+            .bases
+            .values()
+            .filter(|base| base.airfield_damage > Fixed::ZERO)
+            .map(|base| (base.id, base.airfield_damage))
+            .collect();
         self.grounded_bases = if self.ref_data.air_supply.is_some() {
             self.truth
                 .bases
@@ -1023,16 +1032,25 @@ impl World {
     /// group's pilots if they are tracked. Delivered on day 1 too. A group
     /// that no longer exists or was lost with its ship receives nothing and
     /// records nothing. `AircraftArrived` has no cause (nothing orders it).
-    /// No random number.
+    /// An arrival due at a base that is not its group's side's or takes no
+    /// aircraft (no airfield, or its damage at the level, decision 5 of 0103)
+    /// waits, whole: it is marked `waiting`, `ArrivalWaiting` is recorded,
+    /// and it is considered again on each later night until the field takes
+    /// it. No random number.
     pub(crate) fn receive_arrivals(&mut self, day: u32, pulse: Pulse) {
-        let arrivals = self.truth.arrivals.clone();
-        for arrival in arrivals.into_iter().filter(|arrival| arrival.day == day) {
+        for index in 0..self.truth.arrivals.len() {
+            let arrival = self.truth.arrivals[index];
+            if !(arrival.day == day || (arrival.waiting && arrival.day < day)) {
+                continue;
+            }
             let Some(group) = self.truth.air_groups.get(&arrival.air_group) else {
+                self.truth.arrivals[index].waiting = false;
                 continue;
             };
             // Not delivered to a group lost with its base (decision 0090,
             // 20).
             if group.location == AirGroupLocation::Lost {
+                self.truth.arrivals[index].waiting = false;
                 continue;
             }
             if let AirGroupLocation::Ship(ship) = group.location {
@@ -1044,9 +1062,42 @@ impl World {
                     .get(&ship)
                     .is_some_and(|ship| ship.location.is_on_the_map());
                 if !on_the_map {
+                    self.truth.arrivals[index].waiting = false;
                     continue;
                 }
             }
+            // A group at a base that takes no aircraft waits for it
+            // (decision 5 of 0103).
+            if let AirGroupLocation::Base(base_id) = group.location {
+                let refused = self.truth.bases.get(&base_id).filter(|base| {
+                    base.side != group.side
+                        || !crate::landing::takes_aircraft(base, self.ref_data.ground.as_ref())
+                });
+                if let Some(base) = refused {
+                    let (damage, group_id) = (base.airfield_damage, group.id);
+                    let pilots = if group.pilots.is_some() {
+                        arrival.pilots
+                    } else {
+                        0
+                    };
+                    self.truth.arrivals[index].waiting = true;
+                    self.events.record(
+                        day,
+                        Some(pulse),
+                        EventKind::ArrivalWaiting {
+                            air_group: group_id,
+                            base: base_id,
+                            aircraft: arrival.aircraft,
+                            pilots,
+                            damage,
+                        },
+                        Vec::new(),
+                        None,
+                    );
+                    continue;
+                }
+            }
+            self.truth.arrivals[index].waiting = false;
             let group = self
                 .truth
                 .air_groups

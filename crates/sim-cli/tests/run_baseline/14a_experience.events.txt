@@ -2,7 +2,7 @@ Scenario 14a: Night action, experienced crews against green ones
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a06f8393a1067815  58 events
+day   1  hash a1f2b78f7454982c  58 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

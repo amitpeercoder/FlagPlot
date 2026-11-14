@@ -9,7 +9,9 @@
 //! lowest-numbered base in its hex (decision 4): the airfield's work done,
 //! the day's work on the port or on the aircraft, which the next day reads,
 //! or the base's defences. A unit with no job named builds the airfield if
-//! the base has none, and else works the port. Once every unit has worked,
+//! the base has none or its field is damaged, and else works the port. Work
+//! on the airfield of a base that has one mends its damage, by the work over
+//! `work_per_airfield_damage_point`, to 0 at most (decision 0103, 7). Once every unit has worked,
 //! each base whose work done has reached `airfield_work` has an airfield
 //! (decision 5): the day's work is added whole on the day it is built, and
 //! nothing is added after (ruling 2).
@@ -21,8 +23,9 @@
 //! Reads: a land unit's mark, activity, men ashore, hex, fed share and works
 //! skill and its activity order; the bases of its side in its hex, their
 //! airfield and work done; the night's feeding event; the ground figures.
-//! Writes: a base's work done, airfield, defences and the day's work; the
-//! events `UnitWorked` and `AirfieldBuilt`. Draws no random number.
+//! Writes: a base's work done, airfield, defences, airfield damage and the
+//! day's work; the events `UnitWorked`, `AirfieldMended` and `AirfieldBuilt`.
+//! Draws no random number.
 
 use std::collections::BTreeMap;
 
@@ -35,9 +38,10 @@ use crate::state::{Base, DayWork, Skills};
 use crate::world::World;
 
 /// The job a unit with no job named works at, at `base` (decision 4 of
-/// 0099): the airfield if the base has none, and else the port.
+/// 0099, decision 8 of 0103): the airfield if the base has none or its field
+/// is damaged, and else the port.
 pub fn default_job(base: &Base) -> Job {
-    if base.airfield {
+    if base.airfield && base.airfield_damage <= Fixed::ZERO {
         Job::Port
     } else {
         Job::Airfield
@@ -143,11 +147,20 @@ impl World {
                 });
             }
         };
+        // The damage a day's work on a built airfield mends (decision 7 of
+        // 0103): the points, and the damage before.
+        let mut mended: Option<(Fixed, Fixed)> = None;
         let total = match job {
-            // Nothing is added once the airfield is built (ruling 2).
+            // Nothing is added once the airfield is built (ruling 2), but
+            // its damage is mended.
             Job::Airfield => {
                 if !base.airfield {
                     base.airfield_work += work;
+                } else if base.airfield_damage > Fixed::ZERO {
+                    let before = base.airfield_damage;
+                    let points = (work / figures.work_per_airfield_damage_point).min(before);
+                    base.airfield_damage = before - points;
+                    mended = Some((points, before));
                 }
                 base.airfield_work
             }
@@ -219,6 +232,38 @@ impl World {
             causes,
             breakdown,
         );
+        if let Some((points, before)) = mended {
+            let damage = self.truth.bases[&base_id].airfield_damage;
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "work",
+                        value: work,
+                    },
+                    Factor {
+                        name: "work_per_airfield_damage_point",
+                        value: figures.work_per_airfield_damage_point,
+                    },
+                    Factor {
+                        name: "damage_before",
+                        value: before,
+                    },
+                ],
+                result: points,
+            });
+            self.events.record(
+                day,
+                None,
+                EventKind::AirfieldMended {
+                    unit: unit_id,
+                    base: base_id,
+                    points,
+                    damage,
+                },
+                vec![Cause::Event(event)],
+                breakdown,
+            );
+        }
         if job == Job::Airfield {
             on_airfields.entry(base_id).or_default().push(event);
         }

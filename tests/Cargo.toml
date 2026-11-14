@@ -253,5 +253,9 @@ name = "scenario_30_working_units"
 path = "scenario_30_working_units.rs"
 
 [[test]]
+name = "scenario_31_airfield_damage"
+path = "scenario_31_airfield_damage.rs"
+
+[[test]]
 name = "choices_asked_and_run"
 path = "choices_asked_and_run.rs"

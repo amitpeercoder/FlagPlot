@@ -348,6 +348,9 @@ pub struct BaseOut {
     /// Defences, 0 to 100 (decision 0099, 7). Left out when 0.
     #[serde(skip_serializing_if = "num_is_zero")]
     defences: Num,
+    /// Damage to the airfield, 0 to 100 (decision 0103). Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    airfield_damage: Num,
 }
 
 fn is_true(b: &bool) -> bool {
@@ -467,6 +470,7 @@ fn base(base: &Base) -> BaseOut {
         airfield: base.airfield,
         airfield_work: Num(base.airfield_work),
         defences: Num(base.defences),
+        airfield_damage: Num(base.airfield_damage),
     }
 }
 
