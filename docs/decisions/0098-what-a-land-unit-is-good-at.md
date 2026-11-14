@@ -1,6 +1,6 @@
 # 0098: What a land unit is good at
 
-Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that units differ in what they are suited to, so that a staff or a player picks a unit for a mission: Marines for an assault from the sea, mountain troops for the mountains. The designer agreed decisions 2 and 6 on Nov 14, 2026. Nothing is built. Every figure is a placeholder. No real unit has a value yet.
+Status: a plan by the architect, written on Nov 14, 2026, after the designer asked that units differ in what they are suited to, so that a staff or a player picks a unit for a mission: Marines for an assault from the sea, mountain troops for the mountains. The designer agreed decisions 2 and 6 on Nov 14, 2026. Built on Nov 14, 2026 (see "As built"). Every figure is a placeholder. No real unit has a value yet.
 
 ## The gap
 
@@ -79,5 +79,24 @@ The real map marks every land hex as jungle (decision 0052, item 14), so on it t
 
 ## Questions for the designer
 
-1. **Decision 2:** four skills to start with: assault from the sea, movement by terrain, holding ground, and weight. Is that the right first set?
-2. **Decision 6:** a unit's skills are fixed; only experience grows in play. Agreed?
+Answered on Nov 14, 2026.
+
+1. **Decision 2:** four skills to start with: assault from the sea, movement by terrain, holding ground, and weight. Agreed.
+2. **Decision 6:** a unit's skills are fixed; only experience grows in play. Agreed.
+
+## As built
+
+Built on Nov 14, 2026 (scenario 29, state version 17; the hand calculation is in `tests/scenario_29_skills.rs`, on the placeholder map `data/map/placeholder_skills.toml`). Choices the record did not make:
+
+- **A hex with no terrain counts as jungle.** The generated map marks every land hex jungle and gives coast hexes no terrain (decision 0052, 14), so on the real map only the jungle skill can act, as the record says.
+- **Each strength is at least 0 and below 0.5,** so that a skill of 0 never makes a factor of 0: a march that never ends, a unit that eats nothing. The loader and `World::new` refuse a strength outside that, and a TOML float.
+- **Breakdowns name a skill and its factor only where the factor is not 1** (the strength above 0 and the skill not 2), so a standard unit's breakdowns and every existing scenario's logs are as they were. The holding skill is named only while the unit's side defends, with `side_chance` beside it.
+- **A march keeps `days` and gains `counted`.** `days` is the days marched, which fatigue counts; `counted` is the days counted toward `march_days_per_hex`, the sum of the day's movement factors, and the unit arrives when it reaches the figure. The `MarchDay` event carries `counted`, and its text adds "counted as" only where it differs from the days. A march order to the hex already marched to keeps both.
+- **Weight acts on a march's carried supply too:** a marching unit carries `march_supply_days` of its own daily charge, weight included.
+- **Feeding where weight acts.** The hex's charge is the sum, for each unit, of its men times the daily charge times its weight factor. The men fed are the tons paid times the men over that charge, cut: exactly the old count for standard units. The fed share is common to the side's units in the hex, as before, and the unfed loss is by men.
+- **The chance** is the side's chance times the experience factor times the holding factor, cut to 0 to 1. Shots are not cut to whole numbers, as before.
+- **The scenario key** is an inline table on a land unit: `skills = { assault, holding, weight, clear, jungle, mountain, atoll }`, each optional and 2 when not given, whole numbers from 0 to 4. An invariant refuses a skill above 4 in play.
+- **The agent interface.** The side's own unit line carries `skills` (assault, holding, weight and movement by terrain), the march line `days_counted` and the march-day line `counted`. The briefing's daily supply by hex counts each unit's weight. `SideView::movement_factor` and `SideView::daily_charge_t` answer for the side's own units. The replay export carries skills, left out when all are 2, and `counted`. Schemas version 3 is unchanged: fields only.
+- **Hash version 17:** a march's `counted` after its `days`, and a land unit's seven skills after its `fight_days`.
+
+The figures are in `data/reference/ground.toml` (live) and `data/reference/step1/ground.toml` (frozen, every strength 0). The rulebook is chapter 7 (What a land unit is good at), with chapters 1 and 2 and the glossary.

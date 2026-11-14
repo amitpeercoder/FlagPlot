@@ -2,9 +2,9 @@ Scenario 6c2: Tired lookouts
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0a45226791b9d231  5 events
-day   2  hash feecada6e5cfd6bb  3 events
-day   3  hash 1cb88ecff89aed07  58 events
+day   1  hash b53aa5219db70fda  5 events
+day   2  hash f50364f9987c55dc  3 events
+day   3  hash 7e79c69731a5860a  58 events
 
 task_force:1 "Placeholder attacking force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, fatigue 15, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness battle, alert, fatigue 45, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

@@ -2,12 +2,12 @@ Scenario 6d2: Base supply
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ed2531777505142e  30 events
-day   2  hash 0171ab1659b57c3a  23 events
-day   3  hash e41c9fa0798eeb74  23 events
-day   4  hash be6c3a88a38d3294  22 events
-day   5  hash 9bba255381add0e5  7 events
-day   6  hash 79e682c5a7743261  7 events
+day   1  hash 7f7966d7eb0b9d71  30 events
+day   2  hash a2d926e7763d4825  23 events
+day   3  hash 58fa54aadf80b84f  23 events
+day   4  hash ee169cbbd4ffddf3  22 events
+day   5  hash 948396ace429cd52  7 events
+day   6  hash 9b6315f03532810a  7 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2

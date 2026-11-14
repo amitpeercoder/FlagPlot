@@ -58,7 +58,7 @@ A side sees: not an event.
 
 ### What reads nothing
 
-Airfield size is stored on a hex and no rule reads it. Terrain is stored and no rule reads it: the generated map marks every land hex jungle. The anchorage flag on a hex is stored and no rule reads it. Shallow sea is treated as sea. [0052 items 14 and 15]
+Airfield size is stored on a hex and no rule reads it. Terrain is stored and only the march of a land unit reads it, for the unit's movement skill (chapter 7, Skills, decision 0098): the generated map marks every land hex jungle. The anchorage flag on a hex is stored and no rule reads it. Shallow sea is treated as sea. [0052 items 14 and 15]
 
 ## Task forces and ships
 
