@@ -1386,6 +1386,10 @@ pub(crate) fn forecast_passage(
     result
 }
 
+/// Halts at marked waypoints and steaming on (decision 0096).
+#[cfg(test)]
+mod halt_tests;
+
 #[cfg(test)]
 mod tests {
     use super::*;
