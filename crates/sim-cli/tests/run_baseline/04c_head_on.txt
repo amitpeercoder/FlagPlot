@@ -2,7 +2,7 @@ Scenario 4c2b: Head on
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 6cf22534958032e8  78 events
+day   1  hash a8c2489c9009cbff  78 events
 
 task_force:1 "Placeholder eastbound force" (Japanese): Underway at (5,0), 20 nm from (4,0) toward (5,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder westbound force" (Allied): Underway at (0,0), 24 nm from (1,0) toward (0,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

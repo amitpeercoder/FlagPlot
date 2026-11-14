@@ -2,12 +2,12 @@ Scenario 30: Units that work, and what they build
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d718381549353f8c  55 events
-day   2  hash 7faff01a4a426ca5  44 events
-day   3  hash dced16f9ecf6f70f  45 events
-day   4  hash 3c89a4db2691542d  44 events
-day   5  hash 68a15fa343b485b4  38 events
-day   6  hash 22f799f22c791ce1  31 events
+day   1  hash b9af0b64b871582b  56 events
+day   2  hash 23b797274bb0e402  46 events
+day   3  hash 5f67cbc4fbd4a8e6  38 events
+day   4  hash 61ace277fc4d3567  36 events
+day   5  hash efd125a86602c195  38 events
+day   6  hash 7e301601e89d623d  31 events
 
 task_force:1 "Placeholder force 1" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder force 2" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -22,8 +22,8 @@ ship:4 "Placeholder troop transport 4": afloat in task_force:4; damage flotation
 base:1 "Placeholder base 1" (Allied) at (0,0): 4931 t of supply in stock, 20600 of work done on the airfield, defences 13.5
 base:2 "Placeholder base 2" (Allied) at (5,0): 7377 t of supply in stock, defences 3
 base:3 "Placeholder base 3" (Allied) at (10,0): 0 t of supply in stock, repairs 1 aircraft a day
-base:4 "Placeholder base 4" (Allied) at (15,0): 4913.3 t of supply in stock, defences 40
-base:5 "Placeholder base 5" (Japanese) at (15,0): 4977 t of supply in stock
+base:4 "Placeholder base 4" (Allied) at (15,0): 4911.9 t of supply in stock, defences 40
+base:5 "Placeholder base 5" (Japanese) at (15,0): 4974.5 t of supply in stock
 base:6 "Placeholder base 6" (Japanese) at (20,0): 496.25 t of supply in stock, no airfield, 5000 of work done on the airfield, defences 30
 base:7 "Placeholder base 7" (Japanese) at (20,0): 99.5 t of supply in stock
 land_unit:1 "Placeholder unit 1" (Allied): 1000 men ashore at (0,0)
@@ -31,16 +31,16 @@ land_unit:2 "Placeholder unit 2" (Allied): 400 men ashore at (0,0)
 land_unit:3 "Placeholder unit 3" (Allied): 500 men ashore at (5,0)
 land_unit:4 "Placeholder unit 4" (Allied): 3000 men ashore at (5,0)
 land_unit:5 "Placeholder unit 5" (Allied): 556 men ashore at (10,0)
-land_unit:6 "Placeholder unit 6" (Allied): 938 men ashore at (15,0)
-land_unit:7 "Placeholder unit 7" (Allied): 1882 men ashore at (15,0)
-land_unit:8 "Placeholder unit 8" (Japanese): 600 men ashore at (15,0), fatigue 70
+land_unit:6 "Placeholder unit 6" (Allied): 973 men ashore at (15,0)
+land_unit:7 "Placeholder unit 7" (Allied): 1947 men ashore at (15,0)
+land_unit:8 "Placeholder unit 8" (Japanese): 800 men ashore at (15,0), fatigue 80
 land_unit:9 "Placeholder unit 9" (Allied): no men ashore
 land_unit:10 "Placeholder unit 10" (Japanese): 100 men ashore at (20,0), on attack
 land_unit:11 "Placeholder unit 11" (Allied): 900 men ashore at (0,0)
 land_unit:12 "Placeholder unit 12" (Allied): 600 men ashore at (5,0)
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (15,0): 336 enemy men ashore, reported day 6
+Allied estimate at (15,0): 448 enemy men ashore, reported day 6
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (15,0): 3685 enemy men ashore, reported day 6
+Japanese estimate at (15,0): 3815 enemy men ashore, reported day 6
