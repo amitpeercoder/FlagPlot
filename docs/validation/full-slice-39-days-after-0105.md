@@ -79,3 +79,26 @@ Allied margin over 1000 runs: 5th 95.437083, median 113.857083, 95th 127.587083
 - Percentiles are by nearest rank: the value at place ceil(p x n / 100) of the n kept runs, sorted. The record is inside the middle 90 percent if any part of it lies from the 5th percentile to the 95th, ends included. The verdict is "agrees, at the edge" where a measure agrees and no part of its record lies from the 25th percentile to the 75th, ends included; it still agrees. A run holds the record if its value is from the low end to the high end, ends included.
 - Hits are counted as rolled: a salvo is rolled at the ships afloat when its round starts, so a hit on a ship another salvo sinks in the same round is counted (decision 0062).
 - Escorts are matched to a raid's first strike group: an escort entry is added once, when its day, pulse and first group are those of an attack the measure counts (decision 0062).
+
+## Beside the baseline
+
+Written by hand after the report above, for decision 0105 (`docs/decisions/0105-who-is-engaged-and-an-attack-that-fails.md`). The baseline is `docs/validation/full-slice-39-days-baseline.md` (1000 runs, state v20). Nothing was tuned. The live figures are `engagement_ratio` 3 and `failed_attack_fatigue` 30, and the attack orders at the Tenaru and the ridge carry `when_spent = "fall_back"`.
+
+| Measure | Record | Baseline: 5th to 95th, median | After 0105: 5th to 95th, median | Verdict before, after |
+| --- | --- | --- | --- | --- |
+| lunga_american_end_of_day_2 | 1 | 1 to 1, 1 | 1 to 1, 1 | agrees, agrees |
+| tulagi_american_end_of_day_3 | 1 | 1 to 1, 1 | 1 to 1, 1 | agrees, agrees |
+| lunga_american_after_the_tenaru | 1 | 1 to 1, 1 | 1 to 1, 1 | agrees, agrees |
+| lunga_american_end_of_day_39 | 1 | 1 to 1, 1 | 1 to 1, 1 | agrees, agrees |
+| tenaru_american_men_lost | 109 to 110 | 10 to 90, 40 | 10 to 90, 40 | miss, miss |
+| tenaru_japanese_men_lost | 800 to 900 | 916 to 916, 916 | 240 to 420, 340 | miss, miss |
+| ridge_american_men_lost | 134 to 253 | 80 to 240, 160 | 60 to 200, 120 | reported |
+| ridge_japanese_men_lost | 600 to 1138 | 3325 to 3327, 3326 | 1720 to 2080, 1900 | reported |
+| tulagi_japanese_men_lost | 440 to 780 | 440 to 440, 440 | 440 to 440, 440 | reported |
+| airfield_built_day | 11 to 13 | 11 to 11, 11 | 11 to 11, 11 | reported |
+| squadrons_of_20_august_delivered_day | 14 | 14 to 14, 14 | 14 to 14, 14 | reported |
+| days_of_food_at_lunga_when_the_transports_sail | 17 to 37 | 68 to 68, 68 | 68 to 68, 68 | reported |
+
+- **At the Tenaru** (seed 1): the Ichiki echelon arrives on day 16 with 916 men and attacks. Its 412 firing men meet Marine fire cut to three times its 916 men. Its weight of fire is 1.236 against 16.488: the attack fails, and 360 men are lost. Its fatigue reaches 100, it goes back to defend, and it falls back toward (2,-5) with 556 men, where it arrives on day 19. The Japanese loss has gone from all 916 in every run to 240 to 420 (median 340). That is still below the record's 800 to 900. The American loss is unchanged and still below the record.
+- **At the ridge** (seed 1): the five Kawaguchi parts arrive on day 37 with 3,090 men and attack. Their weight of fire is 6.4 against 55.6: the attack fails, and they lose 1,040 men. All five go back to defend and fall back toward (2,-5). They march out over days 38 to 40, so they are still in the hex on day 39. On day 39 the Oka group attacks there with 236 men, unfed and with no firing men. That fight's losses are taken from every Japanese unit in the hex, the Kawaguchi parts that are marching out included (decision 2), so another 646 of them are lost. The Japanese loss at the ridge has fallen from about 3,326 to 1,720 to 2,080, still well above the record's 600 to 1,138. Much of what is left over comes from the men who are falling back being hit again on day 39. The American loss is still inside its record in 437 of 1000 runs.
+- Nothing else moved. The outcome is still a decisive Allied victory in every run, with the median margin down from 129.86 to 113.86 because fewer Japanese men are lost.
