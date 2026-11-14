@@ -44,7 +44,7 @@ Rule complexity asks for one mechanism over several. This plan adds one new kind
 | Shore bombardment | The attack on a base (decision 0034), fired by a force's guns | The empty phase of the night pulse filled |
 | Knowing the enemy ashore | `BeliefState::apply_report` | A ground report and an estimate of men in a hex |
 | Aircraft at a base that falls | `AirGroupLost` and aircraft arrivals (decisions 0025, 0041) | A base that changes side |
-| Random draws | The `GroundCombat` subsystem code, which exists and is unused *(Nov 14, 2026: now used by `crates/sim-core/src/ground_combat.rs`)* | New `Draw` values, added at the end |
+| Random draws | The `GroundCombat` subsystem code, which exists and is unused *(Nov 14, 2026: now used by `crates/sim-core/src/ground_combat/`)* | New `Draw` values, added at the end |
 
 ## The rules proposed
 
