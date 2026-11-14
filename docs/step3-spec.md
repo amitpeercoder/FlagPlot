@@ -4,6 +4,8 @@ Status: confirmed by the designer on Nov 14, 2026, and the source of truth for s
 
 Amended by the architect on Nov 14, 2026, with the designer's agreement, after a second outside review. The designer's four decisions are unchanged. Amended again the same day, after the designer set out the play the step must support ("The play it must support", below): the estimate now offers an operation at more than one date, and a rule for preparing a landing is named as a condition of stage 3 (decision 0095).
 
+Amended a third time the same day, after a third outside review of that play: a plan can be preparing before it is released; what is made ready has named owners; a what-if carries the side's other plans; more reports come from collection and not from waiting; an amendment is shown with its cost before it is applied; and one built operation is added to what done means. Preparing a landing was revised (decision 0095) and the quality of a land unit added (decision 0097).
+
 What changed in the first amendment: a sixth point of the target (the choices), orders that can honour a reserve, what an unattended staff may do, a separate setup for staff play, what the risk levels change, how the proof is kept fair, and a list of requirements for the stage briefs.
 
 `docs/pillars.md` gives step 3 one line: the layer that turns intent into orders, serving player delegation and the enemy AI, so it is built once. This says what that means for the slice, what it must prove, and in what order it is built.
@@ -43,11 +45,11 @@ Set out by the designer on Nov 14, 2026. Each line is checked against this spec.
 
 | The designer asked for | Where it is met |
 | --- | --- |
-| The player plans a large invasion and the control of an island | Stage 3: taking and holding a place |
-| The longer ahead he plans, the better his chances: troops and resources ready, and more known of the enemy, as claims | What time buys is real things: stocks, repaired ships, rested groups, forces come available, more reports. The estimate shows it by offering the operation at more than one date. Preparing a landing adds what is prepared as such (decision 0095). Training of troops is not modelled |
+| The player plans a large invasion and the control of an island | Stage 3: taking and holding a place. What "control" of an island means day by day is defined there: the named places held, and a garrison supplied |
+| The longer ahead he plans, the better his chances: troops and resources ready, and more known of the enemy, as claims | What time buys is real things: stocks, repaired ships, rested groups, forces come available, more reports. The estimate shows it by offering the operation at more than one date. The ships are loaded for the landing and the units rehearse it, by the day, as real activity (decision 0095). Training raises a unit's lasting experience (decision 0097); real units have no values for it until they are researched. Reports come from collection that is tasked, not from the passing of days |
 | He plans, and the staff answers "what if". Other plans are in priority, since they draw on the same troops, shipping and stocks | The trial and its courses; priority, commitments and the report of what was displaced |
 | The plan is carried out | An approved plan, its baseline and the daily report against it |
-| It can be amended at any time, at a cost to the readiness built up | Amendments at any time. A change costs what it physically costs, and part of a landing's preparation (decision 0095) |
+| It can be amended at any time, at a cost to the readiness built up | At the start of any day, and a run can be stopped there. Each thing made ready has an owner, and a change costs what that owner loses ("What is made ready"). The cost is shown before the change is applied |
 | He feels like a general or an admiral, with their trade-offs and their strain | The choices, the command report and the interrupts give the decisions. Whether it feels so is judged by a person at step 4. This step has one seat, the area commander, who may take any force himself by holding it |
 
 ## Scope
@@ -70,7 +72,8 @@ Not in step 3:
 - Weather, light and the moon (after the kill gate).
 - Reading the enemy's intentions from signals. The enemy's plans come to exist in this step; nothing reads them yet.
 - The economy, production and allocation between areas (step 5). Allocation inside the area, among the ships, aircraft, fuel and supply the slice has, is in.
-- Training of troops, and a choice of seats. The seat is the area commander.
+- A choice of seats. The seat is the area commander.
+- Values of experience for real land units, which wait on research.
 - Closing the historical misses of step 2. They are accepted limits of the model (`docs/validation/step2-close.md`) and none is a condition of this step.
 
 ## What it builds on
@@ -94,7 +97,9 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | A force that acts at a place and steams on by itself | A decision of its own, after decision 0092 | Not built. Needed before stage 2 |
 | A load of a stated weight, and refuelling that leaves a reserve | Stage 1 | Not built |
 | A day from which a force may be used | Stage 2 | Not built |
-| Preparing a landing | Decision 0095 | A plan. Needed before stage 3 |
+| Preparing a landing: loading and rehearsal | Decision 0095 | Confirmed, revised. Needed before stage 3 |
+| The experience of a land unit, and training | Decision 0097 | A plan. Needed before stage 3 |
+| A report of enemy men ashore without a landing | Not planned | Missing. Today only a side with men in the hex gets one (decision 0092). Stage 3 says whether the invasion needs it |
 | The objectives scale set from the record | `docs/open-work.md` | Open. Not a condition of stages 0 to 2. It is frozen before stage 5's games are played |
 
 ## The seat and the levels
@@ -156,19 +161,36 @@ The numbers behind each cell are fixed in stage 2's record. Its acceptance cases
 
 ### The plan's life
 
-A plan is a draft, proposed, approved, complete, failed or cancelled.
+A plan is a draft, preparing, released, complete, failed or cancelled. "Approved" below means preparing or released.
 
-- **A draft** is the staff's. It can be trialled. It gives no orders.
+- **A draft** is the staff's. It can be trialled. It gives no orders, commits nothing and earns nothing. Five drafts prepare nothing.
+- **Preparing,** the commander has said: make ready to do this by about then, and bring me the choice. The staff commits the forces, shipping and stock the preparation needs, and gives real tasks: assemble, load, rehearse, train, build up stock, search. It says what it is doing now, what is still provisional, and what will need his word. The launch is not yet ordered.
+- **Released,** the commander has ordered it to go. From a plan that is preparing he may release it, put it back, change it or cancel it, and what was made ready is kept or lost by its owner's rule.
 - **Approved,** it has a **baseline:** its objectives, dates, forces and phases as approved. The baseline never changes.
-- **An amendment** is a numbered change to an approved plan, with its reason. Before it is made the staff says what it costs: what must turn round, unload or wait, and what a landing loses of its preparation. The report of plan against actual is always against the baseline, with the amendments listed.
+- **An amendment** is a numbered change to an approved plan, with its reason. It takes effect at the start of a day, and a commander can stop a run at the next day's start to make one; nothing is ordered inside a day. Before it is applied the staff shows what it costs: what must turn round, unload or wait, what is lost of what was made ready and by whom, the new earliest date, what other plans give up, and the estimate as it now stands. What is shown is tied to the plan's revision and the state it was worked from, and is void if either changes. What is applied is what was shown. A change turned down has no effect. The report of plan against actual is always against the baseline, with the amendments listed.
 - **What the staff may amend alone:** routes, the day of a run inside the slack the plan gives, one like force for another inside the forces allowed, the order of tasks inside a phase.
 - **What needs the commander:** an objective, an objective's date, and cancelling. The staff proposes it and raises an interrupt. A proposal never crosses a hard limit. Where only a wider limit would meet the intent, the staff says which limit and by how much, and that is all it may do.
 - **While a proposal waits,** the forces in it go on with the approved plan as far as it can still be carried out inside the limits. A force that cannot go on takes the plan's fallback, which every plan states: hold where it is, or come home.
 - **With no commander present,** on either side, the staff chooses among what it is allowed: it slips the date, then cuts the objective to what can be met, then stands the task down, taking the first that is feasible, and records which. It never widens a limit. The same rule holds for a player who runs time and does not answer.
-- **A plan drafted inside the limits may be approved by rule.** The commander says whether drafts inside his limits are approved as they are made or wait for him. With no commander they are approved. This is what lets a campaign begin from a statement.
+- **A plan drafted inside the limits may be made ready and released by rule.** The commander says whether drafts inside his limits are approved as they are made or wait for him. With no commander they are approved. This is what lets a campaign begin from a statement.
 - **A phase** has a condition to begin and a condition to end, each read from the side's view. A task is done, failed or expired by a condition of the same kind.
 - **An order stands until the reason for it changes.** The staff does not give a replacement order on a day when it would give the same order again, and a changed order names what changed. A convoy is not turned round twice by two small changes.
 - **Cancelled with ships at sea,** each force is given a task to come home, and keeps it.
+
+### What is made ready
+
+Readiness is not one number. It is a few facts, each with an owner, and a change costs what its owner loses.
+
+| What | Belongs to | Earned by | Kept through | Lost or spent by |
+| --- | --- | --- | --- | --- |
+| Loading | A task force, for a landing place | Days in port with the order (decision 0095) | A change of date; a unit changing to this force keeps its own | A new place: all. A ship or a unit added: half. The landing spends it |
+| Rehearsal | A land unit, for a landing place | Days with its force in port (decision 0095) | A change of ships, of force or of date | A new place: all. The landing spends it |
+| Experience | A land unit | Training and fighting (decision 0097) | Everything | Nothing |
+| Stock in place | A base | Convoys | A change of plan, where it lies | Use, raids, and the days it takes to move it elsewhere |
+| Forces on hand | Each force | Repair, rest, arrival | A change of plan | A commitment to another plan |
+| The picture of the enemy | The side's belief | Search and reports that were tasked and got through | A change of plan, for the places it covers | Age. A report grows stale; waiting alone earns none |
+
+An amendment that changes nothing a row depends on costs nothing: a new name, a new order of reports, a later date for a force already ready. The staff may not make a substitution inside its own reach if it costs loading or rehearsal: that comes to the commander.
 
 ### Hold and release
 
@@ -253,7 +275,10 @@ A trial is the staff's war game of a draft plan (`docs/design/planning.md`). It 
 - **No trial inside a trial.** Both sides inside a trial play by doctrine alone.
 - **A fixed budget of work,** in games and days, not a time on a clock. The course chosen never depends on how fast the machine was. The budget is set from a measurement of the whole workload, staff and all.
 - **Its assumptions are in the estimate.** What was assumed about the unseen is shown with the figures.
-- **It answers "what if we wait".** For an operation the staff trials the same course at two or three starting dates. Each shows what the later date buys (stock, forces come available, repairs done, a landing's preparation, more reports) and what the enemy is believed to do with the same days. The dates are chosen from when those things change, not at even steps.
+- **It carries the side's other plans.** A what-if is worked from the side's commitments, what has been made ready and its other approved plans, in a private copy. It reports the operation's spread and what each plan it displaces loses. It can vary the target, the troops, the shipping, a reserve and a priority as well as the date. Trying one changes no commitment, no readiness and no stock; approving one applies that one. Where a limit binds, the staff offers the comparison itself: keep the convoy where it is, or borrow it and take the shortage.
+- **It answers "what if we had started sooner".** With the landing's date and the situation held, it varies the day preparation began. This is a different question from waiting, and both are answered.
+- **A report it foresees is not a report.** A trial may say that waiting could show more. It never shows a drawn enemy as known, and reading an estimate changes no belief.
+- **It answers "what if we wait".** For an operation the staff trials the same course at two or three starting dates. The days between are played, with preparation, use of supply, reports, other commitments and the enemy's moves. Each shows what the later date buys (stock, forces come available, repairs done, loading and rehearsal, training, the reports that tasked search may bring) and what the enemy is believed to do with the same days. The dates are chosen from when those things change, not at even steps.
 - **It is checked three ways, apart:** that its sampling is right, in small cases worked by hand; that over independent runs its spreads hold the outcome as often as it says and are narrow enough to be of use, by a rule with numbers written before the run; and that controlled cases of a wrong picture move the estimate as expected. Runs that never reach an objective are reported, not dropped.
 
 How the unseen is filled in is the hardest problem of the step. The first draft's recommendation stands as the starting point: what the side holds, plus forces it knew of and has lost, placed by how far they could have gone.
@@ -307,6 +332,15 @@ The hand calculation still comes first wherever a stage has arithmetic: a convoy
 - **The campaign.** The 39 days, staff against staff, a thousand seeds, every invariant holding, no order refused that the staff should have known would be, and both sides doing something: the measures above, each inside bounds set in stage 3's record.
 - **Legibility.** A cheap model, given a decision's record, says what the staff is trying to do and what would change its mind, at a pass mark written before the run. It does not score predictions that depend on where a hidden enemy is.
 - **The choices.** A few situations built for the purpose, through the tools: commit scarce cover now or keep it; sail on what is known or wait while supply runs down; go on after losing an escort or change the objective. For each the staff gives the feasible courses, what each gives up, what is unknown and the day by which to choose. Where one course is plainly best it says so. A change of priority or of risk changes the recommendation and the reason. Accepting a recommendation takes one answer.
+- **The operation.** One built invasion, on placeholder forces, through the intent tools alone:
+  1. Ask for an island by a date, with what control means stated.
+  2. Authorise its preparation. The staff assigns troops, shipping, cover, build-up and search.
+  3. A second plan needs some of the same shipping and stock. The staff shows what each order of priority costs the other.
+  4. Compare the same date prepared early and prepared late; then going sooner against waiting.
+  5. Release it and run it through embarking, the passage, the landing, the fight and the supply that follows, reported against the plan.
+  6. Before the landing, compare leaving it be, a new date, new troops or ships, and a new beach; apply one. A report or a loss then forces a choice between going on, waiting and asking for less.
+  7. Go on past the capture, amend it once more, and save and resume twice along the way with nothing changed by it.
+  Earlier preparation that is used well must show in what is ready and, in this built case, in the operation's prospects. It is not required that every added day helps in a live campaign: the enemy has the same days.
 - **The proof.** The same model plays the same side of the campaign both ways: by intent only, and by unit orders. By intent it scores no worse on the objectives scale, by a margin fixed beforehand, and gives fewer than a set share of the decisions. Fixed in stage 5's record before a game is played: the model and its version, separate sessions, the prompts, what each is shown, the tools each has, the opponent, the seeds, the budget, and what is done with a game not finished. A decision is one intent, limit, hold, override or approval, or one unit order, however the tools batch them. Commands given, decisions that took judgement and calls made are reported apart. The games of the test are not the situations the doctrine was improved on, and the operational measures are reported beside the score. A failure is put down to its cause: what the staff could not do, what intent could not say, what a reason did not explain, or how the model used the tools.
 - **Speed.** On a named machine, with the workloads named in stage 0: a day's staff decisions for both sides, a preview, a quiet week, a trial at each quality offered, each late in the campaign with its history behind it, inside times the designer accepts. The time is measured outside the game's logic and never changes a result. Memory and storage for reasons and trial records are measured with it.
 
@@ -316,6 +350,7 @@ Whether it is fun is judged by people at step 4, as the pillars say.
 
 - The campaign of the target runs as the campaign test says.
 - The contract's cases all pass, and the save case among them.
+- The operation above runs from end to end with no unit order, and its comparisons come out as stated.
 - The choices are shown: each built situation gives courses that differ, and the recommendation moves with priority and risk.
 - The command report gives a quiet week in a few lines and a heavy loss with what it means for the operation, each item leading to its reasons.
 - Every staff decision answers "why", acted on or not.
@@ -335,6 +370,7 @@ Requirements each stage's record takes up, from the second review. They are not 
 - **Stage 1, the command report:** open matters keep one identity from day to day, so a delayed convoy is one concern for a week and not seven.
 - **Stage 2.** The numbers of the risk table. The day from which a force may be used.
 - **Stage 4, the unseen.** A world with no unseen carrier is valid and proves nothing. The constructor's tests state what the worlds must hold across a trial: where the scenario says a side believes a force exists and has not seen it, some worlds have it. "Not seen" and "believed absent" are different inputs. Where nothing supports a probability the estimate says so and shows the cases apart. What the enemy is assumed to want and to believe inside a trial is built from the side's permitted inputs and shown as an assumption.
+- **Stage 3, collection.** A plan that is preparing names what it most needs to know, what the side has that could find it out, what that costs and what cannot be known. Search is tasked for it. Whether an invasion needs a report of the enemy's men before it lands, which nothing gives today, is settled in this stage's record.
 - **Stage 4, dates.** One of the built situations of "The choices" is the date of a landing: go now, less prepared and against fewer men, or later.
 - **Stage 4, quality.** A trial is offered at stated sizes, each a fixed amount of work with what is lost in precision at the smaller. A trial can be abandoned with no effect on the game.
 - **Stage 5.** The objectives scale is frozen before its games. A better score never hides a supply line lost or a carrier spent for nothing: the operational measures are judged with it.
