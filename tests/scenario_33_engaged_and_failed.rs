@@ -1621,3 +1621,111 @@ fn property_the_enemys_view_is_the_same_whichever_instruction_the_attack_orders_
         views(&two, Side::Japanese, 3)
     );
 }
+
+/// The days on which `side`'s attack failed, at any hex.
+fn failed_days(run: &Run, side: Side) -> Vec<u32> {
+    run.all(|k| matches!(k, EventKind::GroundAttackFailed { side: s, .. } if *s == side))
+        .iter()
+        .map(|e| e.day)
+        .collect()
+}
+
+/// The men each unit of `side` lost in fights, by day.
+fn fight_losses(run: &Run, side: Side) -> Vec<(u32, u32)> {
+    run.all(|k| matches!(k, EventKind::MenLostInFight { .. }))
+        .iter()
+        .filter_map(|e| match e.kind {
+            EventKind::MenLostInFight { unit, lost, .. }
+                if run.at(0).land_units[&unit].side == side =>
+            {
+                Some((e.day, lost))
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn property_the_attacker_sees_the_same_whatever_the_defenders_fatigue_and_units() {
+    // The architect's amendment following decision 0105, 9: the attacker is
+    // told on which days its own attack failed, which reads the defender's
+    // weight of fire, and nothing else of it. Two worlds that differ only in
+    // the defender at P (one regiment of 1600 men rested, or two of 800 at
+    // fatigue 20), matched on the hits of each side (the men each side lost)
+    // and on the days the Allied attack failed, give the Allied side the
+    // same view. Each day of dice must match, so the worlds are compared over
+    // the first two days, on the seeds where they do.
+    let split = |source: &str| {
+        let one_regiment = "men = 1600\nq = 30\nr = 0\nposture = \"defend\"\n";
+        assert!(source.contains(one_regiment));
+        source.replace(
+            one_regiment,
+            "men = 800\nq = 30\nr = 0\nposture = \"defend\"\nfatigue = 20\n\n[[land_unit]]\nid = 9\nname = \"Placeholder Japanese second regiment at P\"\nside = \"japanese\"\nmen = 800\nq = 30\nr = 0\nposture = \"defend\"\nfatigue = 20\n",
+        )
+    };
+    let mut matched = 0;
+    const DAYS: u32 = 2;
+    for seed in 1..=400 {
+        let one = text().replace("seed = 1942", &format!("seed = {seed}"));
+        let two = split(&one);
+        let (a, b) = (Run::text(&one), Run::text(&two));
+        let japanese_men = |run: &Run| {
+            (1..=DAYS)
+                .map(|day| run.men_at(day, Side::Japanese, P))
+                .collect::<Vec<_>>()
+        };
+        let early = |list: Vec<(u32, u32)>| -> Vec<(u32, u32)> {
+            list.into_iter().filter(|(day, _)| *day <= DAYS).collect()
+        };
+        let early_failed =
+            |list: Vec<u32>| -> Vec<u32> { list.into_iter().filter(|day| *day <= DAYS).collect() };
+        if early(fight_losses(&a, Side::Allied)) != early(fight_losses(&b, Side::Allied))
+            || japanese_men(&a) != japanese_men(&b)
+            || early_failed(failed_days(&a, Side::Allied))
+                != early_failed(failed_days(&b, Side::Allied))
+        {
+            continue;
+        }
+        matched += 1;
+        assert_ne!(a.scenario.world.day_hashes(), b.scenario.world.day_hashes());
+        assert_eq!(
+            views(&one, Side::Allied, DAYS as usize),
+            views(&two, Side::Allied, DAYS as usize),
+            "seed {seed}"
+        );
+    }
+    assert!(matched >= 3, "only {matched} seeds matched in 400");
+}
+
+#[test]
+fn property_the_attacker_is_told_of_its_failure_by_the_hex_and_the_day_only() {
+    // What the attacker is given of a failed attack: the hex and the day, no
+    // weight, no men and no unit of the enemy; the enemy is given nothing.
+    let source = text();
+    let mut scenario = from(&source);
+    scenario.run_to_end().expect("runs");
+    let japanese = scenario.world.side_view(Side::Japanese);
+    let failed: Vec<_> = japanese
+        .events()
+        .into_iter()
+        .filter(|e| format!("{:?}", e.kind).starts_with("GroundAttackFailed"))
+        .collect();
+    // K on days 1 and 2, L and N on day 1.
+    assert_eq!(failed.len(), 4, "{failed:?}");
+    for e in &failed {
+        let text = format!("{:?}", e.kind);
+        assert!(text.starts_with("GroundAttackFailed { hex: Hex"), "{text}");
+        assert!(!text.contains("weight") && !text.contains("LandUnitId"));
+        assert!(e.breakdown.is_none());
+    }
+    let allied = scenario.world.side_view(Side::Allied);
+    let allied_failed: Vec<_> = allied
+        .events()
+        .into_iter()
+        .filter(|e| format!("{:?}", e.kind).starts_with("GroundAttackFailed"))
+        .collect();
+    // The Allied side is told only of its own failure, at P.
+    assert!(allied_failed
+        .iter()
+        .all(|e| format!("{:?}", e.kind) == format!("GroundAttackFailed {{ hex: {P:?} }}")));
+}

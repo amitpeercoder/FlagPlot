@@ -191,7 +191,9 @@
 //! batch; men are conserved; the order of firing does not matter; a base's
 //! side and the invariants agree at the end of every day; a scenario with no
 //! posture order is unchanged from stage 1; and the enemy's view of a fight
-//! does not show the other side's fatigue, fed share or number of units.
+//! does not show the other side's fatigue, fed share or number of units, where
+//! the hits are the same and the attacker's attack failed on the same days
+//! (decision 0105, 9).
 
 mod common;
 
@@ -1773,6 +1775,23 @@ fn japanese_men_by_day(run: &Run) -> Vec<u32> {
         .collect()
 }
 
+/// The days on which the Allied attack failed (decision 0105, 4).
+fn allied_failed_days(run: &Run) -> Vec<u32> {
+    run.events()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.kind,
+                sim_core::events::EventKind::GroundAttackFailed {
+                    side: Side::Allied,
+                    ..
+                }
+            )
+        })
+        .map(|e| e.day)
+        .collect()
+}
+
 fn allied_losses_by_day(run: &Run) -> Vec<Option<(u32, u32)>> {
     let events = run.events();
     (1..=run.days())
@@ -1844,8 +1863,12 @@ fn property_the_enemy_sees_the_same_fight_whatever_the_other_sides_fatigue_and_u
         let one = view_world(&[(2, 400, 0)], 1000, seed);
         let two = view_world(&[(2, 200, 40), (3, 200, 40)], 1000, seed);
         let (a, b) = (Run::text(&one), Run::text(&two));
+        // The attacker is told on which days its own attack failed, which
+        // reads the enemy's weight of fire (decision 0105, 9, the architect's
+        // amendment): a seed counts only where those days are the same too.
         if allied_losses_by_day(&a) != allied_losses_by_day(&b)
             || japanese_men_by_day(&a) != japanese_men_by_day(&b)
+            || allied_failed_days(&a) != allied_failed_days(&b)
         {
             continue;
         }

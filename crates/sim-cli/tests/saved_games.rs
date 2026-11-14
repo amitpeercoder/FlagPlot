@@ -453,7 +453,7 @@ fn a_version_1_saved_game_is_refused_with_the_reason() {
 fn a_saved_game_of_other_rules_is_refused_naming_both() {
     let error = refusal_of_edited_save("rules", |v| v["rules_version"] = serde_json::json!(99));
     assert!(error.contains("rules version 99"), "{error}");
-    assert!(error.contains("engine has rules version 3"), "{error}");
+    assert!(error.contains("engine has rules version 4"), "{error}");
 }
 
 #[test]
