@@ -784,6 +784,17 @@ struct GroundFile {
     march_days_per_hex: u32,
     fatigue_per_march_day: Quantity,
     march_supply_days: Quantity,
+    /// Preparing a landing (decision 0095) and the experience of a land unit
+    /// (decision 0097). Required like the older keys. The three counts are
+    /// whole numbers, read as such.
+    preparation_per_day: Quantity,
+    unprepared_landing_share: Quantity,
+    preparation_kept_on_change: Quantity,
+    unprepared_landing_fatigue: Quantity,
+    experience_fire_strength: Quantity,
+    training_days_per_level: u32,
+    training_ceiling: u32,
+    fight_days_per_level: u32,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -836,6 +847,26 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         march_days_per_hex: file.march_days_per_hex,
         fatigue_per_march_day: number("fatigue_per_march_day", &file.fatigue_per_march_day)?,
         march_supply_days: number("march_supply_days", &file.march_supply_days)?,
+        preparation_per_day: number("preparation_per_day", &file.preparation_per_day)?,
+        unprepared_landing_share: number(
+            "unprepared_landing_share",
+            &file.unprepared_landing_share,
+        )?,
+        preparation_kept_on_change: number(
+            "preparation_kept_on_change",
+            &file.preparation_kept_on_change,
+        )?,
+        unprepared_landing_fatigue: number(
+            "unprepared_landing_fatigue",
+            &file.unprepared_landing_fatigue,
+        )?,
+        experience_fire_strength: number(
+            "experience_fire_strength",
+            &file.experience_fire_strength,
+        )?,
+        training_days_per_level: file.training_days_per_level,
+        training_ceiling: file.training_ceiling,
+        fight_days_per_level: file.fight_days_per_level,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -2285,6 +2316,94 @@ mod tests {
     }
 
     #[test]
+    fn the_preparation_and_experience_figures_are_read_and_each_is_required() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.preparation_per_day, Fixed::from_int(5));
+        assert_eq!(figures.unprepared_landing_share, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.preparation_kept_on_change, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.unprepared_landing_fatigue, Fixed::from_int(40));
+        assert_eq!(figures.experience_fire_strength, Fixed::from_ratio(1, 4));
+        assert_eq!(figures.training_days_per_level, 30);
+        assert_eq!(figures.training_ceiling, 2);
+        assert_eq!(figures.fight_days_per_level, 10);
+        for key in PREPARATION_KEYS {
+            let text = without_keys(&ground_text(), &[key]);
+            assert!(
+                parse_ground_figures(&text, here())
+                    .expect_err("a missing key is refused")
+                    .message
+                    .contains(key),
+                "without {key}"
+            );
+        }
+    }
+
+    const PREPARATION_KEYS: [&str; 8] = [
+        "preparation_per_day",
+        "unprepared_landing_share",
+        "preparation_kept_on_change",
+        "unprepared_landing_fatigue",
+        "experience_fire_strength",
+        "training_days_per_level",
+        "training_ceiling",
+        "fight_days_per_level",
+    ];
+
+    #[test]
+    fn the_preparation_and_experience_figures_refuse_floats_and_bad_values() {
+        let bad = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        let ok = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .unwrap_or_else(|e| panic!("{key} {value} loads: {}", e.message))
+        };
+        // Quantities to 100: 0 to 100, no float.
+        for key in ["preparation_per_day", "unprepared_landing_fatigue"] {
+            assert!(bad(key, "-1").contains(key));
+            assert!(bad(key, "101").contains(key));
+            assert!(bad(key, "5.5").contains(key));
+            ok(key, "0");
+            ok(key, "100");
+            ok(key, "\"2.5\"");
+        }
+        // Shares: 0 to 1, no float.
+        for key in ["unprepared_landing_share", "preparation_kept_on_change"] {
+            assert!(bad(key, "-1").contains(key));
+            assert!(bad(key, "2").contains(key));
+            assert!(bad(key, "\"1.01\"").contains(key));
+            assert!(bad(key, "0.5").contains(key));
+            ok(key, "0");
+            ok(key, "1");
+        }
+        // Strength: 0 to 0.5.
+        let key = "experience_fire_strength";
+        assert!(bad(key, "-1").contains(key));
+        assert!(bad(key, "\"0.51\"").contains(key));
+        assert!(bad(key, "1").contains(key));
+        assert!(bad(key, "0.25").contains(key));
+        ok(key, "0");
+        ok(key, "\"0.5\"");
+        // Counts: whole numbers of 1 or more, and a ceiling of 0 to 4.
+        for key in ["training_days_per_level", "fight_days_per_level"] {
+            assert!(bad(key, "0").contains(key));
+            assert!(bad(key, "-1").contains(key));
+            assert!(bad(key, "2.5").contains(key));
+            assert!(bad(key, "\"3\"").contains(key));
+            let one = ok(key, "1");
+            assert_eq!(one.training_days_per_level.min(one.fight_days_per_level), 1);
+        }
+        let key = "training_ceiling";
+        assert!(bad(key, "5").contains(key));
+        assert!(bad(key, "-1").contains(key));
+        assert!(bad(key, "2.5").contains(key));
+        assert_eq!(ok(key, "0").training_ceiling, 0);
+        assert_eq!(ok(key, "4").training_ceiling, 4);
+    }
+
+    #[test]
     fn the_troop_capacity_column_defaults_to_0_and_is_read_when_present() {
         let without = classes("1,Cargo,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0\n")
             .expect("parses");
@@ -2608,6 +2727,16 @@ mod tests {
         assert_eq!(ground.march_days_per_hex, 3);
         assert_eq!(ground.fatigue_per_march_day, Fixed::from_int(10));
         assert_eq!(ground.march_supply_days, Fixed::from_int(5));
+        // The first values of decisions 0095 and 0097 switch the rules off:
+        // no unprepared landing and no effect of experience.
+        assert_eq!(ground.preparation_per_day, Fixed::from_int(5));
+        assert_eq!(ground.unprepared_landing_share, Fixed::ONE);
+        assert_eq!(ground.preparation_kept_on_change, Fixed::from_ratio(1, 2));
+        assert_eq!(ground.unprepared_landing_fatigue, Fixed::ZERO);
+        assert_eq!(ground.experience_fire_strength, Fixed::ZERO);
+        assert_eq!(ground.training_days_per_level, 30);
+        assert_eq!(ground.training_ceiling, 2);
+        assert_eq!(ground.fight_days_per_level, 10);
         let error = ground.report_error.expect("held");
         assert_eq!(
             (error.low, error.high),

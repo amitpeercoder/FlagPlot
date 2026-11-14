@@ -66,3 +66,21 @@ Answered on Nov 14, 2026.
 
 1. **Decision 3:** training raises a unit to the standard and no further. Agreed.
 2. **Decision 5:** fighting also raises experience, up to the top. Agreed.
+
+## As built
+
+Built on Nov 14, 2026 (scenario 28, state version 16; the hand calculation is in `tests/scenario_28_experience_and_training.rs`), with the part of decision 0099 that its decisions 3 and 4 name: the one activity a day (3b to 3d) and the order `set_activity` with the activities ready and train. The activity work and everything else of 0099 is not built. Choices the record did not make:
+
+- **State.** A land unit's `activity` (ready or train; work to come), `activity_order`, `experience` (0 to 4, 2 by default), `training_days` and `fight_days`. The hash holds them.
+- **The order `set_activity`** (a land unit, `ready` or `train`) is refused for the first reason that applies: not your land unit; land unit destroyed. A unit that has men aboard only may be set to train, and gains nothing until all its men are ashore. The order is a standing one and is applied when taken in.
+- **The day's activity** is settled once every hex is resolved, at the end of the ground combat phase: first each force's loading (decision 0095), then each unit in unit order (a unit that marched or whose hex was contested: nothing; train: a day of training if all its men are ashore at a base of its side and its fed share is 1; ready, on the roster of a force that qualified: rehearsal; otherwise nothing), then the days of fighting.
+- **"Fed in full"** is a fed share of 1, as the night's charge set it. A unit that landed after the charge keeps the share it had.
+- **A unit fired** if its shots in a fight were above 0, on attack or on defend. Each such day adds one to its count, up to the step at `fight_days_per_level`; at experience 4 nothing is counted. At or above the training ceiling a day of training counts nothing and is not recorded.
+- **The events** are `TrainingDay` and `FightDayCounted`, which record the count after the day and the experience before any rise, and `ExperienceRaised` (by training or by fighting). Each is seen whole by its own side and not at all by the enemy.
+- **The chance** is the side's chance times 1 plus the strength times the experience less 2, kept within 0 and 1. The loader and `World::new` keep the strength from 0 to 0.5, so the factor is never below 0. The `GroundFire` breakdown gains `side_chance`, `experience` and `experience_factor` only where the strength is above 0. A side's own cut of `GroundFire` keeps `experience` and `experience_factor` and still has no chance or hits.
+- **Scenario keys.** On `[[land_unit]]`: `experience` (0 to 4) and `training_days` and `fight_days` (0 or more, below their figures). In scenario files the order kinds `prepare_landing` (`task_force`, `hex`, `roster`) and `set_activity` (`land_unit`, `activity`).
+- **A unit made by division** takes its parent's experience and nothing else: no rehearsal, no days counted, the activity ready and no roster.
+- **Days of fighting are counted with the frozen figures too,** so the frozen runs of scenarios with a fight ashore gain `FightDayCounted` events, and a unit may reach 3. At the frozen strength of 0 nothing that happens changes. The baselines of scenarios 23, 24 and 25 changed only by those events, since no unit reaches 10 days.
+- **Every real unit** in the repository's scenarios starts at experience 2 with nothing counted. Real units' values wait on research.
+- **The agent interface** writes `set_activity {unit: "land_unit:N", activity}` and shows a land unit's `activity`, `experience`, `training {days, of_days, up_to}` and `fighting {days, of_days}`. The schema version stays 3. The MCP instructions gained a paragraph, "Preparing a landing and training".
+- **The figures** are the four of the record, in `data/reference/ground.toml`; the frozen copy has the strength 0 and the same other three.

@@ -474,7 +474,14 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // The two kinds of decision 0096, `TaskForceHalted` and
     // `TaskForceSteamedOn`: the full slice marks no waypoint to act at.
     // Scenario 26 records them, and its own test reads them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 39] = [
+    //
+    // The nine kinds of decisions 0095 and 0097, `LoadingGained`,
+    // `LoadingLost`, `RehearsalGained`, `RehearsalLost`, `LeftRoster`,
+    // `PreparationShared`, `TrainingDay`, `FightDayCounted` and
+    // `ExperienceRaised`: the full slice has no land unit. Scenario 27
+    // records the first six and scenario 28 the other three, and their own
+    // tests read them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 48] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -514,6 +521,15 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "MarchStopped",
         "TaskForceHalted",
         "TaskForceSteamedOn",
+        "LoadingGained",
+        "LoadingLost",
+        "RehearsalGained",
+        "RehearsalLost",
+        "LeftRoster",
+        "PreparationShared",
+        "TrainingDay",
+        "FightDayCounted",
+        "ExperienceRaised",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

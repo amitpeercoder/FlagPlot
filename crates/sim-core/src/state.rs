@@ -21,8 +21,8 @@ use crate::ids::{
 };
 use crate::map::Map;
 use crate::orders::{
-    AirMission, CargoAction, Mission, Posture, Reach, Readiness, RejectReason, SpeedSetting,
-    Stance, StragglerInstruction,
+    Activity, AirMission, CargoAction, Mission, Posture, Reach, Readiness, RejectReason,
+    SpeedSetting, Stance, StragglerInstruction,
 };
 use crate::refdata::ShipKind;
 
@@ -553,6 +553,29 @@ pub struct TaskForce {
     /// `Some` while the force is halted at a marked waypoint (decision
     /// 0096), exactly when its status is [`TaskForceStatus::Halted`].
     pub halt: Option<Halt>,
+    /// The landing the force is loaded for, by order (decision 0095).
+    /// `None` until a prepare-landing order is given, and again when the
+    /// landing is done.
+    pub preparation: Option<Preparation>,
+    /// The hex where the force has begun landing men and its unloading is
+    /// not yet complete (decision 5 of 0095): from the first man landed
+    /// until the unloading there is complete, the force works at the rate of
+    /// a landing, whatever it still carries.
+    pub landing_at: Option<Hex>,
+}
+
+/// A force's preparation for a landing (decision 0095).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Preparation {
+    /// The coast hex the landing is for.
+    pub hex: Hex,
+    /// The land units that are to land from the force. A unit is on at most
+    /// one roster.
+    pub roster: BTreeSet<LandUnitId>,
+    /// The force's loading, from 0 to 100.
+    pub loading: Fixed,
+    /// The prepare-landing order.
+    pub order: OrderId,
 }
 
 /// A task force's trip to the yard (decision 0069).
@@ -712,6 +735,8 @@ impl TaskForce {
             fatigue: Fixed::ZERO,
             yard_trip: None,
             halt: None,
+            preparation: None,
+            landing_at: None,
         }
     }
 }
@@ -928,6 +953,26 @@ pub struct LandUnit {
     /// The unit's march, if it has a march order standing (decision 0094, 3
     /// and 4). `None` unless a march order is given.
     pub march: Option<March>,
+    /// How well the unit has rehearsed the landing at `rehearsal_hex`, from
+    /// 0 to 100 (decision 3 of 0095). 0 until it rehearses.
+    pub rehearsal: Fixed,
+    /// The hex the rehearsal is for: `Some` exactly when `rehearsal` is above
+    /// 0.
+    pub rehearsal_hex: Option<Hex>,
+    /// What the unit does on a day it does not march or fight (decision 4 of
+    /// 0099). Ready unless an order says otherwise.
+    pub activity: Activity,
+    /// The order that set the activity, if any.
+    pub activity_order: Option<OrderId>,
+    /// The unit's experience, from 0 to 4 (decision 1 of 0097). 2 is its
+    /// service's standard.
+    pub experience: u8,
+    /// Days of training counted toward the next step of experience, below
+    /// `training_days_per_level` (decision 3 of 0097).
+    pub training_days: u32,
+    /// Days of firing in a fight counted toward the next step of experience,
+    /// below `fight_days_per_level` (decision 5 of 0097).
+    pub fight_days: u32,
 }
 
 /// A land unit's march to a neighbouring hex (decision 0094, 3 and 4). It
@@ -944,6 +989,12 @@ pub struct March {
 }
 
 impl LandUnit {
+    /// The experience of a unit a scenario does not rate: its service's
+    /// standard (decision 1 of 0097).
+    pub const DEFAULT_EXPERIENCE: u8 = 2;
+    /// The highest experience (decision 1 of 0097).
+    pub const MAX_EXPERIENCE: u8 = 4;
+
     /// A unit on defend with no fatigue, fully fed and no standing order:
     /// how every unit starts unless the scenario says otherwise, and how a
     /// unit divided off another starts.
@@ -965,6 +1016,13 @@ impl LandUnit {
             fatigue: Fixed::ZERO,
             fed_share: Fixed::ONE,
             march: None,
+            rehearsal: Fixed::ZERO,
+            rehearsal_hex: None,
+            activity: Activity::Ready,
+            activity_order: None,
+            experience: LandUnit::DEFAULT_EXPERIENCE,
+            training_days: 0,
+            fight_days: 0,
         }
     }
 }

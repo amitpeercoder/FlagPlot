@@ -71,6 +71,35 @@ pub struct ForceLine {
     /// 0096, 3). Left out when it is not.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub halt: Option<HaltLine>,
+    /// The landing the force is prepared for, by a prepare_landing order
+    /// (decision 0095): the hex, the roster, its loading and the rate it
+    /// would land at there. Left out when it has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preparation: Option<Box<PreparationLine>>,
+    /// The hex where the force has begun landing men and its unloading is
+    /// not yet complete (decision 0095, 5): until it is, it works at the
+    /// rate of a landing there. Left out when it is not landing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub landing_at: Option<Place>,
+}
+
+/// A force's preparation for a landing (decision 0095).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct PreparationLine {
+    /// The coast hex the landing is for.
+    pub hex: Place,
+    /// The land units that are to land from the force, in number order.
+    pub roster: Vec<Handle>,
+    /// The force's loading for that hex, 0 to 100.
+    pub loading: Dec,
+    /// The share of the port's rate the force would unload at in `hex`, men
+    /// and cargo alike: `SideView::landing_rate_factor`, the function the
+    /// cargo rule calls. 1 is the port's own rate.
+    pub landing_rate: Dec,
+    /// The number of the side's prepare_landing order, when it is still
+    /// known.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub order: Option<u32>,
 }
 
 /// A force halted at a marked waypoint to act there (decision 0096).
@@ -254,7 +283,29 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
             waits_for: halt_work_words(halt.work),
             bombarded: halt.bombarded.is_some(),
         }),
+        preparation: preparation_line(ctx, force),
+        landing_at: force.landing_at.map(|hex| ctx.place(hex)),
     }
+}
+
+/// A force's preparation for a landing, with the rate it would land at in the
+/// hex of its order (decision 0095).
+fn preparation_line(ctx: &Ctx<'_>, force: &TaskForce) -> Option<Box<PreparationLine>> {
+    let preparation = force.preparation.as_ref()?;
+    Some(Box::new(PreparationLine {
+        hex: ctx.place(preparation.hex),
+        roster: preparation
+            .roster
+            .iter()
+            .map(|unit| ctx.land_unit(*unit))
+            .collect(),
+        loading: Dec(preparation.loading),
+        landing_rate: Dec(ctx
+            .view
+            .landing_rate_factor(force.id, preparation.hex)
+            .unwrap_or(Fixed::ONE)),
+        order: ctx.order_number_if_own(preparation.order),
+    }))
 }
 
 /// The distinct hexes of the route's waypoints still ahead that it is marked
@@ -297,6 +348,8 @@ fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         cargo_fuel_t: None,
         act_at: Vec::new(),
         halt: None,
+        preparation: preparation_line(ctx, force),
+        landing_at: force.landing_at.map(|hex| ctx.place(hex)),
     }
 }
 
@@ -425,6 +478,70 @@ pub struct LandUnitLine {
     /// links and for a unit with no man ashore.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub march_to: Vec<Place>,
+    /// What the unit does on a day it does not march or fight: `ready` or
+    /// `train` (decisions 4 of 0099 and 4 of 0097).
+    pub activity: &'static str,
+    /// The number of the side's set_activity order, if one is in force.
+    /// Left out when none is.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub activity_order: Option<u32>,
+    /// The unit's experience, 0 to 4 (decision 0097, 1): 2 is its service's
+    /// standard. It moves its chance to hit.
+    pub experience: u32,
+    /// Days of training counted toward the next step of experience, and the
+    /// days a step takes and the experience training stops at (decision
+    /// 0097, 3).
+    pub training: TrainingLine,
+    /// Days of firing in a fight counted toward the next step of experience,
+    /// and the days a step takes (decision 0097, 5).
+    pub fighting: FightingLine,
+    /// The unit's rehearsal of a landing, while it has one (decision 0095,
+    /// 3). Left out when it has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rehearsal: Option<RehearsalLine>,
+    /// The roster of a force the unit is on, while it is on one (decision
+    /// 0095, 1). Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub roster: Option<RosterLine>,
+}
+
+/// A unit's days of training toward its next step of experience.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct TrainingLine {
+    pub days: u32,
+    /// The days a step takes: the scenario's `training_days_per_level`.
+    pub of_days: u32,
+    /// The experience training goes up to: `training_ceiling`.
+    pub up_to: u32,
+}
+
+/// A unit's days of fighting toward its next step of experience.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FightingLine {
+    pub days: u32,
+    /// The days a step takes: the scenario's `fight_days_per_level`.
+    pub of_days: u32,
+}
+
+/// How well a unit has rehearsed a landing, and where.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct RehearsalLine {
+    /// The hex the rehearsal is for.
+    pub hex: Place,
+    /// 0 to 100.
+    pub rehearsal: Dec,
+}
+
+/// The roster a unit is on (decision 0095, 1).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct RosterLine {
+    pub task_force: Handle,
+    /// The hex of the force's prepare_landing order.
+    pub hex: Place,
+    /// The fatigue the unit would gain when its first men land at that hex,
+    /// from its rehearsal for it: `SideView::landing_fatigue` (decision
+    /// 0095, 6).
+    pub landing_fatigue: Dec,
 }
 
 /// A land unit's march in progress (decision 0094, 4): where to, the days
@@ -534,6 +651,42 @@ pub(crate) fn land_unit_line(
             .into_iter()
             .map(|hex| ctx.place(hex))
             .collect(),
+        activity: unit.activity.name(),
+        activity_order: unit.activity_order.and_then(|o| ctx.order_number_if_own(o)),
+        experience: u32::from(unit.experience),
+        training: TrainingLine {
+            days: unit.training_days,
+            of_days: ctx
+                .view
+                .ground_figures()
+                .map_or(0, |figures| figures.training_days_per_level),
+            up_to: ctx
+                .view
+                .ground_figures()
+                .map_or(0, |figures| figures.training_ceiling),
+        },
+        fighting: FightingLine {
+            days: unit.fight_days,
+            of_days: ctx
+                .view
+                .ground_figures()
+                .map_or(0, |figures| figures.fight_days_per_level),
+        },
+        rehearsal: unit.rehearsal_hex.map(|hex| RehearsalLine {
+            hex: ctx.place(hex),
+            rehearsal: Dec(unit.rehearsal),
+        }),
+        roster: ctx.view.roster_of(unit.id).and_then(|force| {
+            let preparation = ctx.forces.get(&force)?.preparation.as_ref()?;
+            Some(RosterLine {
+                task_force: ctx.force(force),
+                hex: ctx.place(preparation.hex),
+                landing_fatigue: Dec(ctx
+                    .view
+                    .landing_fatigue(unit.id, preparation.hex)
+                    .unwrap_or(Fixed::ZERO)),
+            })
+        }),
     }
 }
 

@@ -1,0 +1,87 @@
+Scenario 28: Experience and training
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 9c8c16807fa514c6  41 events
+day   2  hash d9784bb5c063ed51  38 events
+day   3  hash e9ed7456dc8e59bc  37 events
+day   4  hash f70b48454a090d79  38 events
+day   5  hash 6a40ee3b5032c232  25 events
+day   6  hash 995dd35d0a74ce9c  25 events
+day   7  hash ae436fe5904e40b4  25 events
+day   8  hash 25718ef7bbd04b8e  25 events
+day   9  hash 525f76568237a837  25 events
+day  10  hash 6a82d6533d52c3e0  25 events
+day  11  hash 6f4dde8fb473d682  25 events
+day  12  hash 31577b975c309407  25 events
+day  13  hash 7b64c30bced31e69  25 events
+day  14  hash d05c2b8343e8b77e  25 events
+day  15  hash 32bfe0cae9fa3837  25 events
+day  16  hash 65dffb687c109444  25 events
+day  17  hash 6a01e4a5c84b59c6  25 events
+day  18  hash ca2ae25ed6eceb89  25 events
+day  19  hash 77953516e416d029  25 events
+day  20  hash 3ced69d1fe7c7a18  25 events
+day  21  hash d7e5f5345058d6d8  23 events
+day  22  hash 8749c5b5cacc9f09  23 events
+day  23  hash 6f88c44eec2c8784  23 events
+day  24  hash e2cd438d7fa2bd73  23 events
+day  25  hash bb77eb721eceb85f  23 events
+day  26  hash 9516c7765b43b538  23 events
+day  27  hash 3fd0abd6e3a901b6  23 events
+day  28  hash 534b5754e0adb9cf  23 events
+day  29  hash 40cfc311df472265  23 events
+day  30  hash c0575d5a4d853aa1  24 events
+day  31  hash f4ce39e1be8ac695  23 events
+day  32  hash 35cfa52dc60b5c55  23 events
+day  33  hash 0d63b275dd21315a  23 events
+day  34  hash 2a53e57c74c0150d  23 events
+day  35  hash db5509f772a5bb89  23 events
+day  36  hash a9384b5aee6e60e1  23 events
+day  37  hash acd930116854afb3  23 events
+day  38  hash 5309e4dfe281516d  23 events
+day  39  hash 144ed2601d14713f  23 events
+day  40  hash 00d15aae2cc75bf3  23 events
+day  41  hash c03e753e03402cf1  23 events
+day  42  hash 491b797ce636355e  23 events
+day  43  hash 4dd9597390072a8a  23 events
+day  44  hash 37677c1690b725f8  23 events
+day  45  hash 10685c3646b17836  23 events
+day  46  hash b52a3e8c24c64dc3  23 events
+day  47  hash bcb39406f042280d  23 events
+day  48  hash 4c02d099d9b51a0b  23 events
+day  49  hash 826127801623d8a6  23 events
+day  50  hash eeac4989ac14f3fb  23 events
+day  51  hash 84e2cc4f436b223c  23 events
+day  52  hash 39e1581ff210f0f0  23 events
+day  53  hash ce2c893651dccb3a  23 events
+day  54  hash d0336277f507e87f  23 events
+day  55  hash 1d513c4a9710651b  23 events
+day  56  hash e7a7489c51e5b071  23 events
+day  57  hash 61cbbda16dbcfd25  23 events
+day  58  hash a3d1b5df1b774da9  23 events
+day  59  hash 293354effbc102fd  23 events
+day  60  hash b41df120d77461c9  24 events
+day  61  hash 62f94598b449c250  22 events
+day  62  hash 303a1294f4294ace  23 events
+
+base:1 "Placeholder base 1" (Allied) at (0,0): 4690 t of supply in stock
+base:2 "Placeholder base 2" (Allied) at (10,0): 4720 t of supply in stock
+base:3 "Placeholder base 3" (Japanese) at (10,0): 4974.2 t of supply in stock
+base:4 "Placeholder base 4" (Allied) at (20,0): 4952 t of supply in stock
+base:5 "Placeholder base 5" (Japanese) at (20,0): 4845 t of supply in stock
+base:6 "Placeholder base 6" (Allied) at (30,0): 0 t of supply in stock
+land_unit:1 "Placeholder unit 1" (Allied): 1000 men ashore at (0,0)
+land_unit:2 "Placeholder unit 2" (Allied): 900 men ashore at (10,0)
+land_unit:3 "Placeholder unit 3" (Japanese): 60 men ashore at (10,0)
+land_unit:4 "Placeholder unit 4" (Allied): 140 men ashore at (20,0)
+land_unit:5 "Placeholder unit 5" (Japanese): 500 men ashore at (20,0)
+land_unit:6 "Placeholder unit 6" (Allied): no men ashore
+Allied: no contacts
+Allied: no battle claims
+Allied estimate at (10,0): 32 enemy men ashore, reported day 62
+Allied estimate at (20,0): 602 enemy men ashore, reported day 62
+Japanese: no contacts
+Japanese: no battle claims
+Japanese estimate at (10,0): 890 enemy men ashore, reported day 62
+Japanese estimate at (20,0): 194 enemy men ashore, reported day 62

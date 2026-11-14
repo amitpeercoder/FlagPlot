@@ -1,0 +1,150 @@
+# Scenario 28: the experience of a land unit and training (decision 0097).
+#
+# Proves training, the experience of a land unit and its effect on a shot
+# against a hand calculation. Six units on four coast hexes far apart: unit 1
+# trains for 62 days, unit 6 trains on a base with 1 t of supply, units 2 and
+# 3 fight at F (unit 2 is one day of fighting short of a step) and units 4 and
+# 5 fight at G, raw against the best. The hand calculation is in
+# tests/scenario_28_experience_and_training.rs, which gives the four figures
+# of the rules the values it calculates with (the frozen figures switch the
+# rules off). The hits of a fight are the dice; the test reads them.
+#
+# No ships, no aircraft and no land links.
+#
+# PLACEHOLDER DATA. The units, bases and map are invented.
+
+name = "Scenario 28: Experience and training"
+placeholder = true
+seed = 1942
+days = 62
+map = "../map/placeholder_training.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 2
+name = "Placeholder base 2"
+side = "allied"
+q = 10
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 3
+name = "Placeholder base 3"
+side = "japanese"
+q = 10
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 4
+name = "Placeholder base 4"
+side = "allied"
+q = 20
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 5
+name = "Placeholder base 5"
+side = "japanese"
+q = 20
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 6
+name = "Placeholder base 6"
+side = "allied"
+q = 30
+r = 0
+supply_t = 1
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+men = 1000
+q = 0
+r = 0
+posture = "defend"
+experience = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder unit 2"
+side = "allied"
+men = 1000
+q = 10
+r = 0
+posture = "defend"
+experience = 2
+fight_days = 9
+
+[[land_unit]]
+id = 3
+name = "Placeholder unit 3"
+side = "japanese"
+men = 600
+q = 10
+r = 0
+posture = "attack"
+experience = 3
+
+[[land_unit]]
+id = 4
+name = "Placeholder unit 4"
+side = "allied"
+men = 500
+q = 20
+r = 0
+posture = "attack"
+experience = 0
+
+[[land_unit]]
+id = 5
+name = "Placeholder unit 5"
+side = "japanese"
+men = 500
+q = 20
+r = 0
+posture = "defend"
+experience = 4
+
+[[land_unit]]
+id = 6
+name = "Placeholder unit 6"
+side = "allied"
+men = 100
+q = 30
+r = 0
+posture = "defend"
+experience = 1
+
+# Day 1: units 1 and 6 are set to train.
+[[order]]
+day = 1
+side = "allied"
+land_unit = 1
+kind = "set_activity"
+activity = "train"
+
+[[order]]
+day = 1
+side = "allied"
+land_unit = 6
+kind = "set_activity"
+activity = "train"

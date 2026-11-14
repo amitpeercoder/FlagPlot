@@ -99,8 +99,8 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | A force that acts at a place and steams on by itself | Decision 0096 | Built |
 | A load of a stated weight, and refuelling that leaves a reserve | Stage 1 | Not built |
 | A day from which a force may be used | Stage 2 | Not built |
-| Preparing a landing: loading and rehearsal | Decision 0095 | Confirmed, revised. Needed before stage 3 |
-| The experience of a land unit, and training | Decision 0097 | Confirmed. Needed before stage 3 |
+| Preparing a landing: loading and rehearsal | Decision 0095 | Built |
+| The experience of a land unit, and training | Decision 0097 | Built |
 | What a land unit is good at: its skills | Decision 0098 | Confirmed. Needed before stage 3 |
 | Units that work, and an airfield and defences that are built | Decision 0099 | Confirmed. Needed before stage 3 |
 | A report of enemy men ashore without a landing | Not planned | Missing. Today only a side with men in the hex gets one (decision 0092). Stage 3 says whether the invasion needs it |

@@ -996,7 +996,7 @@
             "additionalProperties": false,
             "properties": {
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
-              "change": { "description": "gained (on attack and fired), rested, marched or marched_and_attacked (decision 0094, 8).", "enum": ["gained", "rested", "marched", "marched_and_attacked"] },
+              "change": { "description": "gained (on attack and fired), rested, marched or marched_and_attacked (decision 0094, 8), or landed (the unit's first men landed from a ship, decision 6 of 0095).", "enum": ["gained", "rested", "marched", "marched_and_attacked", "landed"] },
               "fatigue": { "description": "The unit's fatigue afterwards.", "$ref": "defs.schema.json#/$defs/dec" },
               "event": { "type": "integer" }
             }
@@ -1091,6 +1091,105 @@
               "to": { "$ref": "defs.schema.json#/$defs/place" },
               "days": { "type": "integer" },
               "reason": { "enum": ["ordered", "no_men_ashore", "no_land_link"] },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "loading_yesterday": {
+          "description": "Loading gained or lost yesterday by the side's forces preparing a landing (decision 0095, 4, 5, 8 and 10). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "hex", "change", "loading", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "hex": { "$ref": "defs.schema.json#/$defs/place" },
+              "change": { "enum": ["gained", "lost"] },
+              "loading": { "description": "The loading afterwards, 0 to 100.", "$ref": "defs.schema.json#/$defs/dec" },
+              "loading_before": { "description": "The loading before a loss. Left out for a gain.", "$ref": "defs.schema.json#/$defs/dec" },
+              "reason": { "description": "Why it fell: new_landing_place, unit_added, or spent (the landing is done and the order with it). Left out for a gain.", "enum": ["new_landing_place", "unit_added", "spent"] },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "rehearsal_yesterday": {
+          "description": "Rehearsal gained or lost yesterday by the side's units (decision 0095, 3, 7 and 8). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "hex", "change", "rehearsal", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "hex": { "$ref": "defs.schema.json#/$defs/place" },
+              "change": { "enum": ["gained", "lost"] },
+              "task_force": { "description": "The force whose roster the unit rehearsed for. Left out for a loss.", "$ref": "defs.schema.json#/$defs/handle" },
+              "rehearsal": { "description": "The rehearsal afterwards for a gain; the rehearsal before for a loss (a loss takes it to 0).", "$ref": "defs.schema.json#/$defs/dec" },
+              "reason": { "description": "Why it fell: new_landing_place, landed or other_landing_place. Left out for a gain.", "enum": ["new_landing_place", "landed", "other_landing_place"] },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "roster_left_yesterday": {
+          "description": "Units that left a force's roster yesterday (decision 0095, 7 and 3c of 0099). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "task_force", "reason", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "reason": { "enum": ["taken_by_another_force", "dropped_by_order", "landed"] },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "preparation_shared_yesterday": {
+          "description": "Forces that split yesterday and gave the new part their preparation (decision 12 of 0095). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "new_force", "hex", "loading", "units", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "description": "The force that split.", "$ref": "defs.schema.json#/$defs/handle" },
+              "new_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "hex": { "$ref": "defs.schema.json#/$defs/place" },
+              "loading": { "$ref": "defs.schema.json#/$defs/dec" },
+              "units": { "description": "The units of the roster the new part took.", "type": "array", "items": { "$ref": "defs.schema.json#/$defs/handle" } },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "experience_days_yesterday": {
+          "description": "Days of training and of firing counted yesterday toward a step of experience (decision 0097, 3 and 5). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "source", "days", "experience", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "source": { "enum": ["training", "fighting"] },
+              "days": { "description": "The days counted toward the next step.", "type": "integer" },
+              "experience": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "experience_raised_yesterday": {
+          "description": "Steps of experience gained yesterday (decisions 3 and 5 of 0097). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "experience", "by", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "experience": { "description": "The experience reached.", "type": "integer" },
+              "by": { "enum": ["training", "fighting"] },
               "event": { "type": "integer" }
             }
           }

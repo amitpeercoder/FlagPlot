@@ -72,6 +72,14 @@ fn text(kind: &OrderKind) -> String {
                 let ships: Vec<String> = ships.iter().map(ToString::to_string).collect();
                 format!("detach {}", ships.join(", "))
             }
+            TaskForceOrder::PrepareLanding { hex, roster } => {
+                let units: Vec<String> = roster.iter().map(ToString::to_string).collect();
+                if units.is_empty() {
+                    format!("prepare a landing at {hex}")
+                } else {
+                    format!("prepare a landing at {hex} with {}", units.join(", "))
+                }
+            }
         },
         OrderKind::AirGroup { order, .. } => match order {
             AirGroupOrder::SetAirMission(AirMission::BaseStrike(base)) => {
@@ -97,6 +105,7 @@ fn text(kind: &OrderKind) -> String {
         OrderKind::LandUnit { order, .. } => match order {
             LandUnitOrder::SetPosture(posture) => format!("posture {}", posture.name()),
             LandUnitOrder::March(hex) => format!("march to {hex}"),
+            LandUnitOrder::SetActivity(activity) => format!("activity {}", activity.name()),
         },
     }
 }

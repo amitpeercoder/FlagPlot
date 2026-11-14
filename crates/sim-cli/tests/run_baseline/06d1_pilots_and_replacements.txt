@@ -2,12 +2,12 @@ Scenario 6d1: Pilots and replacements
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0b48634240ceb0b2  27 events
-day   2  hash 71b55cd5bc393eca  22 events
-day   3  hash 1762b627eccf906f  23 events
-day   4  hash 7b6ed5bcdd01b559  25 events
-day   5  hash 14095af9cd7600c2  23 events
-day   6  hash 5ca091ba7096cdcb  23 events
+day   1  hash 8c5ec9de42a5335d  27 events
+day   2  hash 34fa882c3fdf8e2d  22 events
+day   3  hash 3bbeec33766d10e4  23 events
+day   4  hash d35a112563e1e722  25 events
+day   5  hash debfc20004074fd5  23 events
+day   6  hash 47ef0b0a3e8f50e4  23 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 10 ready, 5 pilots, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 8 ready, 8 pilots, mission CombatAirPatrol, patrol share 0.5, no arc

@@ -39,6 +39,9 @@ mod invariants;
 mod landing;
 mod march;
 mod movement;
+mod preparation;
+#[cfg(test)]
+mod preparation_tests;
 mod rebase;
 mod refuel;
 mod resolve;

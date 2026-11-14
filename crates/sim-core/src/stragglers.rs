@@ -302,6 +302,12 @@ impl World {
             causes.to_vec(),
             breakdown,
         );
+        // The preparation the new part took, citing the detachment (decision
+        // 12 of 0095).
+        if let Some(shared) = self.preparation_shared(parent, new_force) {
+            self.events
+                .record(day, Some(pulse), shared, vec![Cause::Event(event)], None);
+        }
         (new_force, event)
     }
 

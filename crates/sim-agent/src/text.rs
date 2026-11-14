@@ -585,6 +585,29 @@ impl Briefing {
                 let marks: Vec<String> = f.act_at.iter().map(at).collect();
                 s.push_str(&format!(", route marked to act at {}", marks.join(", ")));
             }
+            if let Some(p) = &f.preparation {
+                let roster: Vec<String> = p.roster.iter().map(|u| u.handle.clone()).collect();
+                s.push_str(&format!(
+                    ", PREPARING a landing at {} with {}: loading {}, lands at {} of the port's rate there",
+                    at(&p.hex),
+                    if roster.is_empty() {
+                        "no unit on its roster".to_string()
+                    } else {
+                        format!("roster {}", roster.join(", "))
+                    },
+                    p.loading.0,
+                    p.landing_rate.0
+                ));
+                if let Some(order) = p.order {
+                    s.push_str(&format!(" (by your order {order})"));
+                }
+            }
+            if let Some(place) = &f.landing_at {
+                s.push_str(&format!(
+                    ", landing at {} (works at the landing rate until the unloading there is complete)",
+                    at(place)
+                ));
+            }
             o.line(s);
             if let Some(fuel) = &f.least_fuelled {
                 let range = match fuel.range_nm {
@@ -1175,6 +1198,42 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             let to: Vec<String> = u.march_to.iter().map(at).collect();
             s.push_str(&format!("; can march to {}", to.join(", ")));
         }
+        // The experience and the day's activity are said when they are not
+        // the standard ones, so a unit that was never trained or fought reads
+        // as it always did.
+        if u.experience != 2 || u.training.days > 0 || u.fighting.days > 0 || u.activity != "ready"
+        {
+            s.push_str(&format!(
+                "; experience {} ({} of {} days of training, up to experience {}; {} of {} days of fighting)",
+                u.experience,
+                u.training.days,
+                u.training.of_days,
+                u.training.up_to,
+                u.fighting.days,
+                u.fighting.of_days
+            ));
+        }
+        if u.activity != "ready" {
+            s.push_str(&format!("; activity {}", u.activity));
+            if let Some(order) = u.activity_order {
+                s.push_str(&format!(" (by your order {order})"));
+            }
+        }
+        if let Some(r) = &u.rehearsal {
+            s.push_str(&format!(
+                "; rehearsed {} for a landing at {}",
+                r.rehearsal.0,
+                at(&r.hex)
+            ));
+        }
+        if let Some(r) = &u.roster {
+            s.push_str(&format!(
+                "; on the roster of {} for a landing at {}, where it would gain fatigue {} landing",
+                r.task_force.text(),
+                at(&r.hex),
+                r.landing_fatigue.0
+            ));
+        }
         s.push_str(match u.fed_last_night {
             "fed" => "; fed last night",
             "partly_fed" => "; partly fed last night",
@@ -1329,6 +1388,7 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
                 "gained" => "attacked and tired",
                 "marched" => "marched and tired",
                 "marched_and_attacked" => "marched, attacked and tired",
+                "landed" => "landed and tired",
                 _ => "rested",
             },
             f.fatigue.0,
@@ -1396,6 +1456,106 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             at(&m.to),
             plural(m.days, "day", "days"),
             ev(m.event)
+        ));
+    }
+    for l in &land.loading_yesterday {
+        let what = match (l.change, l.reason, l.loading_before) {
+            ("lost", Some("spent"), Some(before)) => format!(
+                "the landing at {} is done and its order with it (loading was {})",
+                at(&l.hex),
+                before.0
+            ),
+            ("lost", Some(why), Some(before)) => format!(
+                "loading for {} fell from {} to {} ({})",
+                at(&l.hex),
+                before.0,
+                l.loading.0,
+                match why {
+                    "new_landing_place" => "a new landing place was ordered",
+                    _ => "a unit was added to the roster",
+                }
+            ),
+            _ => format!("loading for {} is now {}", at(&l.hex), l.loading.0),
+        };
+        o.line(format!(
+            "Loading yesterday: {}: {what}{}",
+            l.task_force.text(),
+            ev(l.event)
+        ));
+    }
+    for r in &land.rehearsal_yesterday {
+        let what = match (r.change, r.reason) {
+            ("lost", Some(why)) => format!(
+                "lost its rehearsal of {} for {} ({})",
+                r.rehearsal.0,
+                at(&r.hex),
+                match why {
+                    "new_landing_place" => "its force's landing place was changed",
+                    "landed" => "its men landed",
+                    _ => "it rehearsed for another landing place",
+                }
+            ),
+            _ => format!(
+                "rehearsed for the landing at {}, now {}{}",
+                at(&r.hex),
+                r.rehearsal.0,
+                r.task_force
+                    .as_ref()
+                    .map_or(String::new(), |f| format!(" (roster of {})", f.text()))
+            ),
+        };
+        o.line(format!(
+            "Rehearsal yesterday: {} {what}{}",
+            r.land_unit.text(),
+            ev(r.event)
+        ));
+    }
+    for r in &land.roster_left_yesterday {
+        o.line(format!(
+            "Roster yesterday: {} left the roster of {}: {}{}",
+            r.land_unit.text(),
+            r.task_force.text(),
+            match r.reason {
+                "taken_by_another_force" => "another force's order took it",
+                "dropped_by_order" => "your order dropped it",
+                _ => "its men landed",
+            },
+            ev(r.event)
+        ));
+    }
+    for p in &land.preparation_shared_yesterday {
+        let units: Vec<String> = p.units.iter().map(|u| u.handle.clone()).collect();
+        o.line(format!(
+            "Preparation shared yesterday: {} split off {}, which has the landing at {} with loading {} and {}{}",
+            p.task_force.text(),
+            p.new_force.text(),
+            at(&p.hex),
+            p.loading.0,
+            if units.is_empty() {
+                "no unit on its roster".to_string()
+            } else {
+                format!("roster {}", units.join(", "))
+            },
+            ev(p.event)
+        ));
+    }
+    for d in &land.experience_days_yesterday {
+        o.line(format!(
+            "Experience yesterday: {} counted a day of {}, {} toward the next step from experience {}{}",
+            d.land_unit.text(),
+            d.source,
+            d.days,
+            d.experience,
+            ev(d.event)
+        ));
+    }
+    for r in &land.experience_raised_yesterday {
+        o.line(format!(
+            "Experience raised yesterday: {} reached experience {} by {}{}",
+            r.land_unit.text(),
+            r.experience,
+            r.by,
+            ev(r.event)
         ));
     }
     if o.0.len() == before {

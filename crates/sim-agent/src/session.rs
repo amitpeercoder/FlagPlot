@@ -58,6 +58,24 @@ fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32
         }
         return body;
     }
+    // A prepare_landing roster names its units by the side's numbers too;
+    // one that names none of the side's units becomes the number no unit
+    // has, so an enemy unit and one that does not exist are refused alike
+    // (decision 0095, 1).
+    if body.get("kind").and_then(Value::as_str) == Some("prepare_landing") {
+        if let Some(Value::Array(roster)) = body.get_mut("roster") {
+            for item in roster.iter_mut() {
+                let Some(number) = item.as_str().and_then(land_unit_number) else {
+                    continue;
+                };
+                let raw = ctx
+                    .own_land_unit(number)
+                    .map_or(NO_SUCH_UNIT, |unit| unit.id.raw());
+                *item = json!(format!("land_unit:{raw}"));
+            }
+        }
+        return body;
+    }
     if body.get("kind").and_then(Value::as_str) != Some("detach") {
         return body;
     }

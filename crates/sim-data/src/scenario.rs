@@ -11,8 +11,9 @@ use sim_core::ids::{
 use sim_core::map::HexKind;
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Cargo, Issuer, LandUnitOrder, Mission, OrderKind, OrderRequest,
-    Origin, Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
+    Activity, AirGroupOrder, AirMission, Cargo, Issuer, LandUnitOrder, Mission, OrderKind,
+    OrderRequest, Origin, Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction,
+    TaskForceOrder,
 };
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
@@ -257,6 +258,15 @@ struct LandUnitSpec {
     posture: Option<PostureSpec>,
     /// Fatigue at the start, 0 to 100 (decision 0090, 11). Defaults to 0.
     fatigue: Option<Quantity>,
+    /// Experience at the start, a whole 0 to 4 (decision 0097). Defaults to 2.
+    experience: Option<u32>,
+    /// Days of training counted at the start, a whole number below the
+    /// ground figure `training_days_per_level` (decision 0097). Defaults to
+    /// 0.
+    training_days: Option<u32>,
+    /// Days of fighting counted at the start, a whole number below the
+    /// ground figure `fight_days_per_level` (decision 0097). Defaults to 0.
+    fight_days: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -391,7 +401,7 @@ struct OrderSpec {
     /// given.
     task_force: Option<u32>,
     air_group: Option<u32>,
-    /// A land unit, for a `set_posture` order (decision 0090).
+    /// A land unit, for a `set_posture`, `march` or `set_activity` order.
     land_unit: Option<u32>,
     #[serde(default)]
     issuer: IssuerSpec,
@@ -505,6 +515,32 @@ enum ActionSpec {
     March {
         hex: [i32; 2],
     },
+    /// Prepare a landing at a coast hex with the listed land units as the
+    /// roster (decision 0095). The hex is `[q, r]`; the roster may be empty.
+    PrepareLanding {
+        hex: [i32; 2],
+        roster: Vec<u32>,
+    },
+    /// A land unit's activity, `ready` or `train` (decisions 0095 and 0097).
+    SetActivity {
+        activity: ActivitySpec,
+    },
+}
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum ActivitySpec {
+    Ready,
+    Train,
+}
+
+impl From<ActivitySpec> for Activity {
+    fn from(spec: ActivitySpec) -> Activity {
+        match spec {
+            ActivitySpec::Ready => Activity::Ready,
+            ActivitySpec::Train => Activity::Train,
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -1368,6 +1404,39 @@ impl Scenario {
                 }
                 unit.fatigue = fatigue;
             }
+            if let Some(experience) = spec.experience {
+                if experience > u32::from(LandUnit::MAX_EXPERIENCE) {
+                    return Err(fail(format!(
+                        "{id} has experience {experience}, which is not a whole number from 0 to {}",
+                        LandUnit::MAX_EXPERIENCE
+                    )));
+                }
+                unit.experience = experience as u8;
+            }
+            if let Some(days) = spec.training_days {
+                let per_level = ref_data
+                    .ground
+                    .as_ref()
+                    .map_or(u32::MAX, |g| g.training_days_per_level);
+                if days >= per_level {
+                    return Err(fail(format!(
+                        "{id} has {days} days of training counted, which is not below the {per_level} days a step takes"
+                    )));
+                }
+                unit.training_days = days;
+            }
+            if let Some(days) = spec.fight_days {
+                let per_level = ref_data
+                    .ground
+                    .as_ref()
+                    .map_or(u32::MAX, |g| g.fight_days_per_level);
+                if days >= per_level {
+                    return Err(fail(format!(
+                        "{id} has {days} days of fighting counted, which is not below the {per_level} days a step takes"
+                    )));
+                }
+                unit.fight_days = days;
+            }
             match (spec.q, spec.r, spec.task_force) {
                 (Some(q), Some(r), None) => {
                     let hex = Hex::new(q, r);
@@ -1730,6 +1799,15 @@ impl Scenario {
                             return Err(wrong_target("set_posture", "land_unit"))
                         }
                         ActionSpec::March { .. } => return Err(wrong_target("march", "land_unit")),
+                        ActionSpec::SetActivity { .. } => {
+                            return Err(wrong_target("set_activity", "land_unit"))
+                        }
+                        ActionSpec::PrepareLanding { hex: [q, r], roster } => {
+                            TaskForceOrder::PrepareLanding {
+                                hex: Hex::new(*q, *r),
+                                roster: roster.iter().map(|raw| LandUnitId::new(*raw)).collect(),
+                            }
+                        }
                     };
                     OrderKind::TaskForce {
                         target: TaskForceId::new(*raw),
@@ -1839,9 +1917,12 @@ impl Scenario {
                         ActionSpec::March { hex: [q, r] } => {
                             LandUnitOrder::March(Hex::new(*q, *r))
                         }
+                        ActionSpec::SetActivity { activity } => {
+                            LandUnitOrder::SetActivity((*activity).into())
+                        }
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for a land_unit must be set_posture or march"
+                                "an order on day {day} for a land_unit must be set_posture, march or set_activity"
                             )))
                         }
                     };
@@ -4537,10 +4618,173 @@ task_force = 3
             true,
             &order("land_unit = 1", "set_route", "waypoints = [[1, 0]]"),
         );
-        assert!(message.contains("set_posture or march"), "{message}");
+        assert!(
+            message.contains("set_posture, march or set_activity"),
+            "{message}"
+        );
         // The hex is two whole numbers.
         let message = landing_error(true, &order("land_unit = 1", "march", "hex = [1]"));
         assert!(!message.is_empty());
+    }
+
+    // -----------------------------------------------------------------
+    // Experience, training and preparing a landing (decisions 0095, 0097).
+    // -----------------------------------------------------------------
+
+    fn unit_with(id: u32, keys: &str) -> String {
+        format!(
+            "\n[[land_unit]]\nid = {id}\nname = \"Unit {id}\"\nside = \"allied\"\nmen = 100\nq = 0\nr = 0\n{keys}\n"
+        )
+    }
+
+    #[test]
+    fn a_land_unit_takes_experience_and_counts() {
+        let scenario = landing(
+            true,
+            &format!(
+                "{}{}",
+                unit_ashore(1, 100, 0, 0),
+                unit_with(2, "experience = 4\ntraining_days = 29\nfight_days = 9")
+            ),
+        );
+        // Unit 1 is built the usual way; unit 2 gives all three keys.
+        let scenario = scenario.expect("loads");
+        let truth = scenario.world.umpire();
+        let one = &truth.land_units[&LandUnitId::new(1)];
+        assert_eq!(
+            (one.experience, one.training_days, one.fight_days),
+            (2, 0, 0)
+        );
+        let two = &truth.land_units[&LandUnitId::new(2)];
+        assert_eq!(
+            (two.experience, two.training_days, two.fight_days),
+            (4, 29, 9)
+        );
+    }
+
+    #[test]
+    fn experience_and_the_counts_are_whole_and_in_range() {
+        let message = landing_error(true, &unit_with(1, "experience = 5"));
+        assert!(message.contains("experience 5"), "{message}");
+        let message = landing_error(true, &unit_with(1, "experience = -1"));
+        assert!(!message.is_empty());
+        let message = landing_error(true, &unit_with(1, "experience = 1.5"));
+        assert!(!message.is_empty());
+        // The live ground figures: 30 days of training and 10 of fighting
+        // for a step.
+        let message = landing_error(true, &unit_with(1, "training_days = 30"));
+        assert!(message.contains("training"), "{message}");
+        let message = landing_error(true, &unit_with(1, "fight_days = 10"));
+        assert!(message.contains("fighting"), "{message}");
+        let message = landing_error(true, &unit_with(1, "fight_days = -1"));
+        assert!(!message.is_empty());
+        let message = landing_error(true, &unit_with(1, "training_days = 2.5"));
+        assert!(!message.is_empty());
+        assert!(landing(true, &unit_with(1, "training_days = 29\nfight_days = 9")).is_ok());
+    }
+
+    #[test]
+    fn a_prepare_landing_order_names_a_force_a_hex_and_a_roster() {
+        let order = |roster: &str| {
+            format!(
+                "{}\n[[order]]\nday = 1\nside = \"allied\"\ntask_force = 1\nkind = \"prepare_landing\"\nhex = [4, 0]\nroster = {roster}\n",
+                unit_aboard(1, 100, 1)
+            )
+        };
+        let scenario = landing(true, &order("[1, 3]")).expect("loads");
+        let (side, request) = &scenario.scripted_orders()[&1][0];
+        assert_eq!(*side, Side::Allied);
+        match &request.kind {
+            OrderKind::TaskForce { target, order } => {
+                assert_eq!(*target, TaskForceId::new(1));
+                assert_eq!(
+                    *order,
+                    TaskForceOrder::PrepareLanding {
+                        hex: Hex::new(4, 0),
+                        roster: [LandUnitId::new(1), LandUnitId::new(3)]
+                            .into_iter()
+                            .collect(),
+                    }
+                );
+            }
+            other => panic!("not a task force order: {other:?}"),
+        }
+        // An empty roster is accepted by the loader.
+        let scenario = landing(true, &order("[]")).expect("loads");
+        match &scenario.scripted_orders()[&1][0].1.kind {
+            OrderKind::TaskForce {
+                order: TaskForceOrder::PrepareLanding { roster, .. },
+                ..
+            } => assert!(roster.is_empty()),
+            other => panic!("not a prepare order: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_prepare_landing_order_is_refused_for_a_land_unit_and_when_malformed() {
+        let order = |target: &str, keys: &str| {
+            format!(
+                "\n[[order]]\nday = 1\nside = \"allied\"\n{target}\nkind = \"prepare_landing\"\n{keys}\n"
+            )
+        };
+        let message = landing_error(
+            true,
+            &(unit_ashore(1, 100, 0, 0) + &order("land_unit = 1", "hex = [4, 0]\nroster = []")),
+        );
+        assert!(
+            message.contains("set_posture, march or set_activity"),
+            "{message}"
+        );
+        // The hex and the roster are both needed, the hex is two whole
+        // numbers and the roster is whole numbers.
+        for keys in [
+            "roster = []",
+            "hex = [4, 0]",
+            "hex = [4]\nroster = []",
+            "hex = [4, 0]\nroster = [1.5]",
+            "hex = [4, 0]\nroster = [-1]",
+            "hex = [4, 0]\nroster = []\nmarch = 1",
+        ] {
+            assert!(
+                landing(true, &order("task_force = 1", keys)).is_err(),
+                "{keys}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_set_activity_order_names_a_land_unit_and_ready_or_train() {
+        let order = |activity: &str| {
+            format!(
+                "{}\n[[order]]\nday = 3\nside = \"allied\"\nland_unit = 1\nkind = \"set_activity\"\nactivity = \"{activity}\"\n",
+                unit_at_base(1)
+            )
+        };
+        for (name, wanted) in [("train", Activity::Train), ("ready", Activity::Ready)] {
+            let scenario = landing(true, &order(name)).expect("loads");
+            match &scenario.scripted_orders()[&3][0].1.kind {
+                OrderKind::LandUnit { target, order } => {
+                    assert_eq!(*target, LandUnitId::new(1));
+                    assert_eq!(*order, LandUnitOrder::SetActivity(wanted));
+                }
+                other => panic!("not a land unit order: {other:?}"),
+            }
+        }
+        // Another activity, none, and the order given to a task force are
+        // refused.
+        assert!(landing(true, &order("work")).is_err());
+        let none = unit_at_base(1)
+            + "\n[[order]]\nday = 3\nside = \"allied\"\nland_unit = 1\nkind = \"set_activity\"\n";
+        assert!(landing(true, &none).is_err());
+        let message = landing_error(
+            true,
+            &(unit_at_base(1)
+                + "\n[[order]]\nday = 3\nside = \"allied\"\ntask_force = 1\nkind = \"set_activity\"\nactivity = \"train\"\n"),
+        );
+        assert!(
+            message.contains("set_activity") && message.contains("land_unit"),
+            "{message}"
+        );
     }
 
     #[test]

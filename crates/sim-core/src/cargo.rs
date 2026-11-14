@@ -15,16 +15,28 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::events::LoadingLoss;
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{BaseId, EventId, LandUnitId, ShipId, TaskForceId};
 use crate::map::HexKind;
 use crate::orders::Cargo;
+use crate::preparation::landing_rate_factor;
 use crate::refdata::PortSize;
 use crate::state::{Base, CargoOrder, LandUnit, Side, TaskForce, TaskForceStatus, Troops};
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
+
+/// What a landing multiplies a ship's rate by, for a breakdown (decision 5 of
+/// 0095): the figures behind the factor. Held only where the factor can
+/// differ from 1, so a breakdown with the share at 1 is as it was.
+#[derive(Clone, Copy)]
+struct LandingRate {
+    share: Fixed,
+    loading: Fixed,
+    factor: Fixed,
+}
 
 /// A task force that works cargo in this pulse.
 struct Participant {
@@ -303,9 +315,17 @@ impl World {
                     }
                 }
             }
-            self.truth
-                .land_units
-                .insert(new_id, LandUnit::new(new_id, name, side, 0, None));
+            // A unit made by division takes its parent's experience and
+            // nothing else of its parent's: no rehearsal, no days counted,
+            // no activity, no roster (decision 6 of 0097).
+            let experience = land_unit.experience;
+            self.truth.land_units.insert(
+                new_id,
+                LandUnit {
+                    experience,
+                    ..LandUnit::new(new_id, name, side, 0, None)
+                },
+            );
             let event = self.events.record(
                 day,
                 Some(pulse),
@@ -363,20 +383,48 @@ impl World {
         let mut moved_any = false;
         let loading = p.cargo.action.is_load();
         let per_man = self.handling_t_per_man();
-        let rate_of = |ship_id: &ShipId| {
+        // While a force lands men, from the first man landed until its
+        // unloading there is complete, every ship's rate, for men, supply and
+        // fuel, is multiplied by the factor of its loading (decision 5 of
+        // 0095). A force with no men aboard and no landing begun here works
+        // as it always has.
+        let landing_here = !loading && p.coast && per_man.is_some();
+        let force_now = &self.truth.task_forces[&p.task_force];
+        let lands_men = landing_here
+            && (force_now.landing_at == Some(p.hex)
+                || p.ships
+                    .iter()
+                    .any(|ship| self.truth.ships[ship].troops.is_some()));
+        let landing_rate = match (lands_men, self.ref_data.ground) {
+            (true, Some(figures)) => {
+                let (factor, loading_counted) =
+                    landing_rate_factor(&figures, force_now.preparation.as_ref(), p.hex);
+                Some(LandingRate {
+                    share: figures.unprepared_landing_share,
+                    loading: loading_counted,
+                    factor,
+                })
+            }
+            _ => None,
+        };
+        let factor = landing_rate.map_or(Fixed::ONE, |landing| landing.factor);
+        // The breakdown names the figures only where the share is below 1.
+        let shown = landing_rate.filter(|landing| landing.share < Fixed::ONE);
+        let port_rate_of = |ship_id: &ShipId| {
             if berthed.contains(ship_id) {
                 p.port.berth_rate_t_per_h
             } else {
                 p.port.lighter_rate_t_per_h
             }
         };
+        let rate_of = |ship_id: &ShipId| port_rate_of(ship_id) * factor;
+        let mut men_landed = false;
 
         // An unload lands men first, on a coast hex only (decision 0066, 9
         // and 10). Before the first man lands, units are divided and a base
         // is formed where needed.
         let mut base = p.base;
         let mut divided: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
-        let landing_here = !loading && p.coast && per_man.is_some();
         if let (true, Some(per_man)) = (landing_here, per_man) {
             let landing: BTreeSet<LandUnitId> = p
                 .ships
@@ -408,13 +456,22 @@ impl World {
             // Men first (decision 0066, 7 to 9).
             if let Some(per_man) = per_man {
                 if let Some(moved) = self.move_men(
-                    day, pulse, p, *ship_id, on_berth, rate, per_man, &causes, &divided,
+                    day,
+                    pulse,
+                    p,
+                    *ship_id,
+                    on_berth,
+                    (rate, port_rate_of(ship_id), shown),
+                    per_man,
+                    &causes,
+                    &divided,
                 ) {
                     let (men_t, event) = moved;
                     work_t -= men_t;
                     ship_total += men_t;
                     cargo_events.push(Cause::Event(event));
                     moved_any = true;
+                    men_landed |= !loading;
                 }
             }
             let men_t = capacity_by_time - work_t;
@@ -504,6 +561,7 @@ impl World {
                             value: capacity_by_time,
                         },
                     ];
+                    factors.extend(landing_factors(shown, port_rate_of(ship_id)));
                     // The tons the ship's men took first (decision 0066, 7).
                     // Only where men moved, so a breakdown with none is as
                     // it was.
@@ -575,6 +633,14 @@ impl World {
             }
         }
 
+        // The force has begun landing here (decision 5 of 0095).
+        if men_landed {
+            self.truth
+                .task_forces
+                .get_mut(&p.task_force)
+                .expect("the force exists")
+                .landing_at = Some(p.hex);
+        }
         if !moved_any {
             return;
         }
@@ -633,6 +699,32 @@ impl World {
             .and_then(|force| force.halt.as_mut())
         {
             halt.cargo_completed = Some(completed);
+        }
+        // The landing is complete: the force has no landing begun, and if its
+        // loading was for this hex it is spent and the order done (decision 7
+        // of 0095).
+        if lands_men && !loading {
+            let force = self
+                .truth
+                .task_forces
+                .get_mut(&p.task_force)
+                .expect("the force exists");
+            force.landing_at = None;
+            if let Some(preparation) = force.preparation.take_if(|prep| prep.hex == p.hex) {
+                self.events.record(
+                    day,
+                    Some(pulse),
+                    EventKind::LoadingLost {
+                        task_force: p.task_force,
+                        hex: p.hex,
+                        loading_before: preparation.loading,
+                        loading: Fixed::ZERO,
+                        reason: LoadingLoss::Spent,
+                    },
+                    vec![Cause::Event(completed)],
+                    None,
+                );
+            }
         }
     }
 
@@ -700,7 +792,7 @@ impl World {
         p: &Participant,
         ship_id: ShipId,
         on_berth: bool,
-        rate: Fixed,
+        (rate, port_rate, landing): (Fixed, Fixed, Option<LandingRate>),
         per_man: Fixed,
         causes: &[Cause],
         divided: &BTreeMap<LandUnitId, EventId>,
@@ -732,6 +824,9 @@ impl World {
             .get_mut(&unit)
             .expect("the land unit exists");
         let ship = self.truth.ships.get_mut(&ship_id).expect("ship exists");
+        // The unit's first men in the hex (decision 6 of 0095): a unit just
+        // made by division counts.
+        let first_men = !loading && land_unit.men_ashore == 0;
         let (aboard, ashore) = if loading {
             land_unit.men_ashore -= men;
             if land_unit.men_ashore == 0 {
@@ -748,8 +843,8 @@ impl World {
             (aboard, land_unit.men_ashore)
         };
 
-        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-            factors: vec![
+        let breakdown = self.config.record_breakdowns.then(|| {
+            let mut factors = vec![
                 Factor {
                     name: "hours_worked",
                     value: p.hours,
@@ -766,6 +861,9 @@ impl World {
                     name: "capacity_by_time_t",
                     value: capacity_by_time,
                 },
+            ];
+            factors.extend(landing_factors(landing, port_rate));
+            factors.extend([
                 Factor {
                     name: "handling_t_per_man",
                     value: per_man,
@@ -778,8 +876,11 @@ impl World {
                     name: limit_name,
                     value: Fixed::from_int(i64::from(limit)),
                 },
-            ],
-            result: Fixed::from_int(i64::from(men)),
+            ]);
+            Breakdown {
+                factors,
+                result: Fixed::from_int(i64::from(men)),
+            }
         });
         let mut causes = causes.to_vec();
         if let Some(division) = divided.get(&unit) {
@@ -809,8 +910,38 @@ impl World {
         let event = self
             .events
             .record(day, Some(pulse), kind, causes, breakdown);
+        if first_men {
+            self.first_men_landed(day, pulse, p.hex, unit, event);
+        }
         Some((men_t, event))
     }
+}
+
+/// The factors a landing adds to a breakdown (decision 5 of 0095): the port's
+/// rate before the factor, the share an unprepared force works at, the
+/// loading counted and the factor they make. None where the share is 1.
+fn landing_factors(landing: Option<LandingRate>, port_rate: Fixed) -> Vec<Factor> {
+    let Some(landing) = landing else {
+        return Vec::new();
+    };
+    vec![
+        Factor {
+            name: "port_rate_t_per_h",
+            value: port_rate,
+        },
+        Factor {
+            name: "unprepared_landing_share",
+            value: landing.share,
+        },
+        Factor {
+            name: "loading",
+            value: landing.loading,
+        },
+        Factor {
+            name: "loading_factor",
+            value: landing.factor,
+        },
+    ]
 }
 
 #[cfg(test)]

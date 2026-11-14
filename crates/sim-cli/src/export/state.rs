@@ -64,6 +64,39 @@ pub struct LandUnitOut {
     /// marches is unchanged.
     #[serde(skip_serializing_if = "Option::is_none")]
     march: Option<MarchOut>,
+    /// "train" (decision 0097, 4). Left out on ready, so a file made where
+    /// no unit trains is unchanged.
+    #[serde(skip_serializing_if = "is_ready")]
+    activity: &'static str,
+    /// Experience, 0 to 4 (decision 0097, 1). Left out at the standard, 2.
+    #[serde(skip_serializing_if = "is_standard_experience")]
+    experience: u8,
+    /// Days of training and of firing counted toward the next step of
+    /// experience. Each left out when 0.
+    #[serde(skip_serializing_if = "is_zero_days")]
+    training_days: u32,
+    #[serde(skip_serializing_if = "is_zero_days")]
+    fight_days: u32,
+    /// The rehearsal of a landing (decision 0095, 3): the hex it is for and
+    /// the value. Left out when the unit has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rehearsal: Option<RehearsalOut>,
+}
+
+/// A land unit's rehearsal for a landing at a hex.
+#[derive(Serialize)]
+pub struct RehearsalOut {
+    hex: Pos,
+    value: Num,
+}
+
+/// A force's preparation for a landing (decision 0095).
+#[derive(Serialize)]
+pub struct PreparationOut {
+    hex: Pos,
+    /// The land unit ids of the roster.
+    roster: Vec<u32>,
+    loading: Num,
 }
 
 /// A land unit's march in progress.
@@ -105,6 +138,14 @@ pub struct TaskForceOut {
     #[serde(skip_serializing_if = "num_is_zero")]
     fatigue: Num,
     rules_of_engagement: RulesOut,
+    /// The landing the force prepares (decision 0095). Left out when it has
+    /// none, so a file made where no force prepares is unchanged.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    preparation: Option<PreparationOut>,
+    /// The hex where the force has begun landing men and its unloading is
+    /// not complete (decision 0095, 5). Left out when it is not landing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    landing_at: Option<Pos>,
 }
 
 #[derive(Serialize)]
@@ -290,6 +331,18 @@ fn is_defend(posture: &&'static str) -> bool {
     *posture == "defend"
 }
 
+fn is_ready(activity: &&'static str) -> bool {
+    *activity == "ready"
+}
+
+fn is_standard_experience(experience: &u8) -> bool {
+    *experience == LandUnit::DEFAULT_EXPERIENCE
+}
+
+fn is_zero_days(days: &u32) -> bool {
+    *days == 0
+}
+
 fn is_false(b: &bool) -> bool {
     !*b
 }
@@ -325,6 +378,14 @@ fn land_unit(unit: &LandUnit) -> LandUnitOut {
         march: unit.march.map(|march| MarchOut {
             to: Pos::from(march.to),
             days: march.days,
+        }),
+        activity: unit.activity.name(),
+        experience: unit.experience,
+        training_days: unit.training_days,
+        fight_days: unit.fight_days,
+        rehearsal: unit.rehearsal_hex.map(|hex| RehearsalOut {
+            hex: Pos::from(hex),
+            value: Num(unit.rehearsal),
         }),
     }
 }
@@ -374,6 +435,15 @@ fn task_force(force: &TaskForce) -> TaskForceOut {
             stragglers: roe.stragglers.name(),
             keep_share: Num(roe.keep_share),
         },
+        preparation: force
+            .preparation
+            .as_ref()
+            .map(|preparation| PreparationOut {
+                hex: Pos::from(preparation.hex),
+                roster: preparation.roster.iter().map(|unit| unit.raw()).collect(),
+                loading: Num(preparation.loading),
+            }),
+        landing_at: force.landing_at.map(Pos::from),
     }
 }
 

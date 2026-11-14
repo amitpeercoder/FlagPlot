@@ -113,6 +113,36 @@ pub(crate) fn role(role: AircraftRole) -> &'static str {
     }
 }
 
+/// Why a force's loading fell, as the briefing writes it (decision 0095).
+pub(crate) fn loading_loss(reason: sim_core::events::LoadingLoss) -> &'static str {
+    use sim_core::events::LoadingLoss as L;
+    match reason {
+        L::NewLandingPlace => "new_landing_place",
+        L::UnitAdded => "unit_added",
+        L::Spent => "spent",
+    }
+}
+
+/// Why a unit's rehearsal fell, as the briefing writes it (decision 0095).
+pub(crate) fn rehearsal_loss(reason: sim_core::events::RehearsalLoss) -> &'static str {
+    use sim_core::events::RehearsalLoss as L;
+    match reason {
+        L::NewLandingPlace => "new_landing_place",
+        L::Landed => "landed",
+        L::OtherLandingPlace => "other_landing_place",
+    }
+}
+
+/// Why a unit left a roster, as the briefing writes it (decision 0095).
+pub(crate) fn roster_left(reason: sim_core::events::RosterLeft) -> &'static str {
+    use sim_core::events::RosterLeft as L;
+    match reason {
+        L::TakenByOrder => "taken_by_another_force",
+        L::DroppedByOrder => "dropped_by_order",
+        L::Landed => "landed",
+    }
+}
+
 /// A refusal as a player is shown it: the engine's own words, unchanged, and
 /// for the reasons that need one a short hint of what the order needs. The
 /// engine's text is what the events and the saved games hold; the hint is
@@ -136,7 +166,7 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
             " (combat_air_patrol and set_patrol_share are for fighter groups; the briefing's air group lines say which type each group is)"
         }
         R::NotYourLandUnit => {
-            " (a load with a unit needs the handle of a land unit of your own side, written land_unit:N; list_forces shows them)"
+            " (a load with a unit, and each unit of a prepare_landing roster, needs the handle of a land unit of your own side, written land_unit:N; list_forces shows them)"
         }
         R::NoMenAshoreHere => {
             " (a load with a unit takes the unit's men that are ashore in the hex where the task force is stopped; the unit's line says where its men are)"
@@ -157,7 +187,7 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
             " (the transfer range is twice the longer of the aircraft type's search range and strike radius; measure with question air_reach gives it, and a nearer base can be used first, the move made over two days)"
         }
         R::LandUnitDestroyed => {
-            " (a destroyed unit has no man left, ashore or aboard, and takes no order)"
+            " (a destroyed unit has no man left, ashore or aboard, and takes no order, and cannot be on the roster of a prepare_landing)"
         }
         R::NoMenAshore => {
             " (set_posture is for a unit with men ashore, and so is march; a unit still aboard ship has none to order until it lands)"
@@ -167,6 +197,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         }
         R::NoLandLink(_) => {
             " (a land unit marches only to a neighbouring hex that the map joins to its own by land, or to its own hex to stop; the unit's line in the briefing and get_entity lists the hexes it can march to under march_to, and a map with no land links allows no march)"
+        }
+        R::NotACoastHex(_) => {
+            " (prepare_landing names the coast hex where the landing is to be made, a hex the map marks as coast, as the hex of a port or a landing beach is; a hex of open sea, of land or off the map is refused)"
         }
         R::MarkNotOnRoute(_) => {
             " (act_at marks waypoints of the same set_route: each mark must be one of the route's waypoints, and the last waypoint needs no mark since a force stops there anyway)"
@@ -203,6 +236,13 @@ mod tests {
             no_link.starts_with("no land link joins the land unit's hex to")
                 && no_link.contains("march_to"),
             "{no_link}"
+        );
+        let not_coast = refusal(&RejectReason::NotACoastHex(sim_core::hex::Hex::new(3, 3)));
+        assert!(
+            not_coast.starts_with(
+                "(3,3) is not a coast hex on the map (prepare_landing names the coast hex"
+            ),
+            "{not_coast}"
         );
         let mark = refusal(&RejectReason::MarkNotOnRoute(sim_core::hex::Hex::new(2, 1)));
         assert!(

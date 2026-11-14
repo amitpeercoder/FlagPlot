@@ -1,0 +1,38 @@
+# PLACEHOLDER MAP. Open sea with three coast hexes, used by scenario 27
+# (decision 0095, preparing a landing): A at (0,0) with port size 5, B at
+# (4,0) and C at (0,6), each of B and C with port size 0, so ships there work
+# by lighter. A to B is 4 hexes, 160 nm, and A to C is 6 hexes, 240 nm. Both
+# lie along an axis of the grid, where a leg between centres is charged 40 nm
+# (decision 0058), so the passages are exact in the hand calculation; a C off
+# the axes, such as (4,2), is 6 hexes but a straight line of 212 nm. The
+# geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 5]
+r = [-1, 7]
+
+# A, the embarkation port.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 5
+anchorage = true
+
+# B, an empty shore with a small Allied base.
+[[hex]]
+q = 4
+r = 0
+kind = "coast"
+port_size = 0
+
+# C, an empty shore with no base.
+[[hex]]
+q = 0
+r = 6
+kind = "coast"
+port_size = 0

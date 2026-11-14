@@ -26,15 +26,15 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::damage::roll_shots;
-use crate::events::{Breakdown, Cause, EventKind, Factor, LandFatigueChange};
+use crate::events::{Breakdown, Cause, EventKind, ExperienceSource, Factor, LandFatigueChange};
 use crate::fixed::Fixed;
 use crate::ground::take_in_proportion;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, LandUnitId, ShipId, TaskForceId};
-use crate::orders::{AirMission, Posture};
+use crate::orders::{Activity, AirMission, Posture};
 use crate::refdata::GroundFigures;
 use crate::rng::{Draw, Subsystem};
-use crate::state::{AirGroupLocation, ShipLocation, Side};
+use crate::state::{AirGroupLocation, LandUnit, ShipLocation, Side};
 use crate::world::World;
 
 /// The other side.
@@ -69,6 +69,21 @@ pub(crate) fn firing_men(men_ashore: u32, fed_share: Fixed, fatigue: Fixed) -> (
     )
 }
 
+/// A unit's chance to hit and the factor experience gives it (decision 2 of
+/// 0097): the side's chance times one plus the strength times the
+/// experience less 2, cut to 0 to 1. At a strength of 0 the factor is 1.
+pub(crate) fn experience_chance(
+    side_chance: Fixed,
+    strength: Fixed,
+    experience: u8,
+) -> (Fixed, Fixed) {
+    let factor = Fixed::ONE + strength * (i64::from(experience) - 2);
+    (
+        (side_chance * factor).max(Fixed::ZERO).min(Fixed::ONE),
+        factor,
+    )
+}
+
 /// Whether a side with `men` ashore is beaten by one with `enemy_men`
 /// (decision 15): it has no man, or fewer than `beaten_share` times the
 /// other side's men.
@@ -96,6 +111,8 @@ impl World {
         // The marches come first, before the day's fights (decision 0094,
         // 4): a unit that arrives fights in its new hex.
         let marched = self.march_land_units(day, &figures);
+        let mut contested_hexes: BTreeSet<Hex> = BTreeSet::new();
+        let mut fired: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
         let mut hexes: BTreeMap<Hex, HexUnits> = BTreeMap::new();
         for unit in self.truth.land_units.values() {
             if let (Some(hex), true) = (unit.hex, unit.men_ashore > 0) {
@@ -103,7 +120,236 @@ impl World {
             }
         }
         for (hex, units) in hexes {
-            self.resolve_hex(day, hex, &units, &marched, &figures);
+            let (contested, fired_here) = self.resolve_hex(day, hex, &units, &marched, &figures);
+            if contested {
+                contested_hexes.insert(hex);
+            }
+            fired.extend(fired_here);
+        }
+        // The day's activity, once every hex is resolved (decision 3b of
+        // 0099): loading, rehearsal and training, then the days of fighting.
+        self.day_activity(day, &marched, &contested_hexes, &fired, &figures);
+    }
+
+    /// The day's activity, once every hex is resolved (decision 3b of 0099).
+    /// First the loading of each force with a preparation; then each land
+    /// unit's one activity, in unit order: none if it marched or its hex was
+    /// contested, else training if it was ordered to train and the
+    /// conditions of decision 3 of 0097 hold, else rehearsal if it is on the
+    /// roster of a force that qualified today and is in its hex or aboard
+    /// its ships; then the day's count of fighting for each unit that fired.
+    /// Each gain is given once because the phase runs once a day.
+    pub(crate) fn day_activity(
+        &mut self,
+        day: u32,
+        marched: &BTreeMap<LandUnitId, EventId>,
+        contested_hexes: &BTreeSet<Hex>,
+        fired: &BTreeMap<LandUnitId, EventId>,
+        figures: &GroundFigures,
+    ) {
+        let qualifying = self.gain_loading(day, figures);
+        let rostered = self.rostered_with(&qualifying);
+
+        let units: Vec<LandUnitId> = self.truth.land_units.keys().copied().collect();
+        for unit_id in units {
+            let unit = &self.truth.land_units[&unit_id];
+            let aboard = self.truth.men_aboard(unit_id);
+            if unit.men_ashore == 0 && aboard == 0 {
+                continue;
+            }
+            // A unit that marched, or whose hex was contested, marches or
+            // fights: none of the three.
+            let contested =
+                unit.men_ashore > 0 && unit.hex.is_some_and(|hex| contested_hexes.contains(&hex));
+            if marched.contains_key(&unit_id) || contested {
+                continue;
+            }
+            if unit.activity == Activity::Train {
+                self.train_day(day, unit_id, figures);
+            } else if let Some(force) = rostered.get(&unit_id) {
+                if self.is_with_force(unit_id, *force) {
+                    self.rehearse_day(day, unit_id, *force, figures);
+                }
+            }
+        }
+
+        // The days of fighting (decision 5 of 0097).
+        for (unit_id, fire_event) in fired {
+            let unit = &self.truth.land_units[unit_id];
+            if unit.experience >= LandUnit::MAX_EXPERIENCE
+                || (unit.men_ashore == 0 && self.truth.men_aboard(*unit_id) == 0)
+            {
+                continue;
+            }
+            let before = unit.fight_days;
+            let experience = unit.experience;
+            let days = before + 1;
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "days_before",
+                        value: Fixed::from_int(i64::from(before)),
+                    },
+                    Factor {
+                        name: "fight_days_per_level",
+                        value: Fixed::from_int(i64::from(figures.fight_days_per_level)),
+                    },
+                ],
+                result: Fixed::from_int(i64::from(days)),
+            });
+            let counted = self.events.record(
+                day,
+                None,
+                EventKind::FightDayCounted {
+                    unit: *unit_id,
+                    days,
+                    experience,
+                },
+                vec![Cause::Event(*fire_event)],
+                breakdown,
+            );
+            self.count_toward_experience(
+                day,
+                *unit_id,
+                days,
+                figures.fight_days_per_level,
+                ExperienceSource::Fighting,
+                counted,
+            );
+        }
+    }
+
+    /// Whether every man of `unit` is ashore in the hex of `force` or aboard
+    /// its ships, with at least one man (decision 3b of 0099, and 4 of
+    /// 0095).
+    fn is_with_force(&self, unit_id: LandUnitId, force: TaskForceId) -> bool {
+        let unit = &self.truth.land_units[&unit_id];
+        let force = &self.truth.task_forces[&force];
+        let aboard_here: u32 = force
+            .ships
+            .iter()
+            .filter_map(|ship| self.truth.ships[ship].troops)
+            .filter(|troops| troops.unit == unit_id)
+            .map(|troops| troops.men)
+            .sum();
+        let ashore_ok = unit.men_ashore == 0 || unit.hex == Some(force.from_hex);
+        ashore_ok
+            && aboard_here == self.truth.men_aboard(unit_id)
+            && unit.men_ashore + aboard_here > 0
+    }
+
+    /// A day of training for a unit set to train, if the conditions of
+    /// decision 3 of 0097 hold: all its men ashore at a base of its side,
+    /// fed in full. At or above the ceiling nothing changes and nothing is
+    /// recorded: the unit still spent the day.
+    fn train_day(&mut self, day: u32, unit_id: LandUnitId, figures: &GroundFigures) {
+        let unit = &self.truth.land_units[&unit_id];
+        let Some(hex) = unit.hex.filter(|_| unit.men_ashore > 0) else {
+            return;
+        };
+        let side = unit.side;
+        let in_base = self
+            .truth
+            .bases
+            .values()
+            .any(|base| base.side == side && base.hex == hex);
+        if self.truth.men_aboard(unit_id) > 0 || !in_base || unit.fed_share != Fixed::ONE {
+            return;
+        }
+        if u32::from(unit.experience) >= figures.training_ceiling {
+            return;
+        }
+        let before = unit.training_days;
+        let experience = unit.experience;
+        let days = before + 1;
+        let mut causes: Vec<Cause> = unit.activity_order.map(Cause::Order).into_iter().collect();
+        let fed = self.events.latest_where(|kind| {
+            matches!(kind, EventKind::MenFed { side: owner, hex: at_hex, .. }
+                if *owner == side && *at_hex == hex)
+        });
+        causes.extend(
+            fed.filter(|event| {
+                self.events
+                    .get(*event)
+                    .is_some_and(|event| event.day == day)
+            })
+            .map(Cause::Event),
+        );
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: vec![
+                Factor {
+                    name: "days_before",
+                    value: Fixed::from_int(i64::from(before)),
+                },
+                Factor {
+                    name: "training_days_per_level",
+                    value: Fixed::from_int(i64::from(figures.training_days_per_level)),
+                },
+            ],
+            result: Fixed::from_int(i64::from(days)),
+        });
+        let counted = self.events.record(
+            day,
+            None,
+            EventKind::TrainingDay {
+                unit: unit_id,
+                days,
+                experience,
+            },
+            causes,
+            breakdown,
+        );
+        self.count_toward_experience(
+            day,
+            unit_id,
+            days,
+            figures.training_days_per_level,
+            ExperienceSource::Training,
+            counted,
+        );
+    }
+
+    /// Stores a day counted toward a step of experience (`days` is the count
+    /// after the day); at `per_level` the experience rises by one and the
+    /// count starts again, with `ExperienceRaised` citing the event of the
+    /// day.
+    fn count_toward_experience(
+        &mut self,
+        day: u32,
+        unit_id: LandUnitId,
+        days: u32,
+        per_level: u32,
+        source: ExperienceSource,
+        counted: EventId,
+    ) {
+        let unit = self
+            .truth
+            .land_units
+            .get_mut(&unit_id)
+            .expect("the land unit exists");
+        let raised = days >= per_level;
+        let (stored, experience) = if raised {
+            (0, unit.experience + 1)
+        } else {
+            (days, unit.experience)
+        };
+        match source {
+            ExperienceSource::Training => unit.training_days = stored,
+            ExperienceSource::Fighting => unit.fight_days = stored,
+        }
+        unit.experience = experience;
+        if raised {
+            self.events.record(
+                day,
+                None,
+                EventKind::ExperienceRaised {
+                    unit: unit_id,
+                    experience,
+                    by: source,
+                },
+                vec![Cause::Event(counted)],
+                None,
+            );
         }
     }
 
@@ -140,17 +386,22 @@ impl World {
         units: &HexUnits,
         marched: &BTreeMap<LandUnitId, EventId>,
         figures: &GroundFigures,
-    ) {
+    ) -> (bool, BTreeMap<LandUnitId, EventId>) {
         let attacks = [self.attacks(&units.units[0]), self.attacks(&units.units[1])];
         let present = [!units.units[0].is_empty(), !units.units[1].is_empty()];
         let contested = present[0] && present[1] && (attacks[0] || attacks[1]);
 
         let mut fight_event = None;
+        // The units on attack that fired (for fatigue), and every unit that
+        // fired, whatever its posture (for the day's count of fighting).
         let mut fired: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
+        let mut fired_any: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
         if contested {
-            let (event, fire_events) = self.fight(day, hex, units, attacks, figures);
+            let (event, fire_events, every_fire_event) =
+                self.fight(day, hex, units, attacks, figures);
             fight_event = Some(event);
             fired = fire_events;
+            fired_any = every_fire_event;
         }
 
         // Fatigue (decision 12) and the tired back to defend (decision 14),
@@ -241,11 +492,13 @@ impl World {
         // The ground reports, after the fight and its losses (decision 13 of
         // 0092).
         self.report_ashore(day, hex, fight_event);
+        (contested, fired_any)
     }
 
     /// The day's fight in a contested hex (decisions 4 to 10). Returns the
-    /// fight's event and, for each unit on attack that fired, its fire
-    /// event.
+    /// fight's event, for each unit on attack that fired its fire event, and
+    /// for every unit that fired, on attack or not, its fire event.
+    #[allow(clippy::type_complexity)]
     fn fight(
         &mut self,
         day: u32,
@@ -253,7 +506,11 @@ impl World {
         units: &HexUnits,
         attacks: [bool; 2],
         figures: &GroundFigures,
-    ) -> (EventId, BTreeMap<LandUnitId, EventId>) {
+    ) -> (
+        EventId,
+        BTreeMap<LandUnitId, EventId>,
+        BTreeMap<LandUnitId, EventId>,
+    ) {
         let mut causes = self.attack_orders(&units.units[0]);
         causes.extend(self.attack_orders(&units.units[1]));
         let fight = self.events.record(
@@ -272,6 +529,7 @@ impl World {
         let mut hits = [0u32; 2];
         let mut fire_events: [Vec<EventId>; 2] = [Vec::new(), Vec::new()];
         let mut fired: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
+        let mut fired_any: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
         for side in Side::ALL {
             let fed = self.events.latest_where(|kind| {
                 matches!(kind, EventKind::MenFed { side: owner, hex: at_hex, .. }
@@ -282,15 +540,25 @@ impl World {
                     .get(*event)
                     .is_some_and(|event| event.day == day)
             });
-            let chance = if attacks[at(side)] {
+            let side_chance = if attacks[at(side)] {
                 figures.hit_chance
             } else {
                 figures.defender_hit_chance
             };
             for unit_id in units.units[at(side)].clone() {
                 let unit = &self.truth.land_units[&unit_id];
-                let (men_ashore, fed_share, fatigue, posture) =
-                    (unit.men_ashore, unit.fed_share, unit.fatigue, unit.posture);
+                let (men_ashore, fed_share, fatigue, posture, experience) = (
+                    unit.men_ashore,
+                    unit.fed_share,
+                    unit.fatigue,
+                    unit.posture,
+                    unit.experience,
+                );
+                // The unit's chance: the side's, times one plus the strength
+                // times the unit's experience less 2 (decision 2 of 0097),
+                // from 0 to 1.
+                let (chance, experience_factor) =
+                    experience_chance(side_chance, figures.experience_fire_strength, experience);
                 let (firing, fatigue_factor) = firing_men(men_ashore, fed_share, fatigue);
                 let shots = Fixed::from_int(i64::from(firing)) / figures.men_per_shot;
                 let mut stream = self.rng(
@@ -302,8 +570,8 @@ impl World {
                 );
                 let unit_hits = roll_shots(&mut stream, shots, chance);
                 hits[at(side)] += unit_hits;
-                let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                    factors: vec![
+                let breakdown = self.config.record_breakdowns.then(|| {
+                    let mut factors = vec![
                         Factor {
                             name: "men_ashore",
                             value: Fixed::from_int(i64::from(men_ashore)),
@@ -328,12 +596,31 @@ impl World {
                             name: "shots",
                             value: shots,
                         },
-                        Factor {
-                            name: "chance",
-                            value: chance,
-                        },
-                    ],
-                    result: shots * chance,
+                    ];
+                    // Only where experience does something, so a breakdown
+                    // with the strength at 0 is as it was.
+                    if figures.experience_fire_strength > Fixed::ZERO {
+                        factors.push(Factor {
+                            name: "side_chance",
+                            value: side_chance,
+                        });
+                        factors.push(Factor {
+                            name: "experience",
+                            value: Fixed::from_int(i64::from(experience)),
+                        });
+                        factors.push(Factor {
+                            name: "experience_factor",
+                            value: experience_factor,
+                        });
+                    }
+                    factors.push(Factor {
+                        name: "chance",
+                        value: chance,
+                    });
+                    Breakdown {
+                        factors,
+                        result: shots * chance,
+                    }
                 });
                 let mut causes = vec![Cause::Event(fight)];
                 causes.extend(fed_today.map(Cause::Event));
@@ -352,8 +639,11 @@ impl World {
                     breakdown,
                 );
                 fire_events[at(side)].push(event);
-                if posture == Posture::Attack && shots > Fixed::ZERO {
-                    fired.insert(unit_id, event);
+                if shots > Fixed::ZERO {
+                    fired_any.insert(unit_id, event);
+                    if posture == Posture::Attack {
+                        fired.insert(unit_id, event);
+                    }
                 }
             }
         }
@@ -439,7 +729,7 @@ impl World {
                 self.destroy_if_no_men(day, None, unit_id, lost);
             }
         }
-        (fight, fired)
+        (fight, fired, fired_any)
     }
 
     /// A unit's fatigue for the day (decision 12), then back to defend if it
