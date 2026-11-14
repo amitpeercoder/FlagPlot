@@ -38,6 +38,55 @@ struct RawList {
     first_aircraft_type_id: Option<u32>,
     #[serde(default)]
     experience: Option<crate::experience::RawExperience>,
+    #[serde(default)]
+    troop_figures: bool,
+    #[serde(default)]
+    troops: Option<RawTroops>,
+}
+
+/// The `[troops]` table of a list: the voyage whose loads are read and the
+/// runs read for ships (decision 0093, 8).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawTroops {
+    #[serde(default)]
+    voyage: Option<String>,
+    #[serde(default)]
+    run: Vec<RawRun>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawRun {
+    run: String,
+    ships: Vec<String>,
+    men_row: i64,
+    ships_row: i64,
+    ships_in_run: i64,
+    reason: String,
+}
+
+/// One run read for some ships of the list.
+#[derive(Clone, Debug)]
+pub struct TroopRun {
+    /// Key in `lift_entities.csv`, of kind run.
+    pub run: String,
+    pub ships: Vec<String>,
+    /// Row of `troop_lift_facts.csv` giving the men carried.
+    pub men_row: i64,
+    /// Row of `troop_lift_facts.csv` giving the ships in the run.
+    pub ships_row: i64,
+    /// The list's reading of the ships row.
+    pub ships_in_run: i64,
+    pub reason: String,
+}
+
+/// The `[troops]` table, checked.
+#[derive(Clone, Debug, Default)]
+pub struct TroopsInput {
+    /// The voyage whose loads are read, as written and as a day.
+    pub voyage: Option<(String, Day)>,
+    pub runs: Vec<TroopRun>,
 }
 
 /// Either the string "all" or a list of ship names.
@@ -113,6 +162,101 @@ pub struct List {
     pub first_aircraft_type_id: u32,
     /// Ships' experience values to derive (decision 0064).
     pub experience: Option<crate::experience::Experience>,
+    /// Write the `troop_capacity_men` column (decision 0093, 8).
+    pub troop_figures: bool,
+    /// The voyage and the runs the troop figure is read from.
+    pub troops: TroopsInput,
+}
+
+/// Checks the `[troops]` table against the list.
+fn parse_troops(raw: &RawTroops, ships: &[String], problems: &mut Vec<Problem>) -> TroopsInput {
+    let mut input = TroopsInput::default();
+    if let Some(text) = &raw.voyage {
+        match Day::parse_full(text) {
+            Some(day) => input.voyage = Some((text.clone(), day)),
+            None => problems.push(list_problem(
+                "troops",
+                format!("voyage `{text}` is not a full date, YYYY-MM-DD"),
+            )),
+        }
+    }
+    let mut in_run: BTreeMap<&str, &str> = BTreeMap::new();
+    let mut seen_runs: Vec<&str> = Vec::new();
+    for entry in &raw.run {
+        let run = entry.run.as_str();
+        let fail = |problems: &mut Vec<Problem>, message: String| {
+            problems.push(Problem::new(run, Kind::List, "troops", message));
+        };
+        let mut ok = true;
+        if seen_runs.contains(&run) {
+            fail(problems, "the run is listed more than once".to_string());
+            ok = false;
+        }
+        seen_runs.push(run);
+        if run.trim().is_empty() {
+            fail(problems, "`run` is empty".to_string());
+            ok = false;
+        }
+        if entry.reason.trim().is_empty() {
+            fail(problems, "`reason` must not be empty".to_string());
+            ok = false;
+        }
+        if entry.ships.is_empty() {
+            fail(problems, "`ships` is empty".to_string());
+            ok = false;
+        }
+        if entry.ships_in_run < 1 {
+            fail(
+                problems,
+                format!("ships_in_run {} is not at least 1", entry.ships_in_run),
+            );
+            ok = false;
+        } else if usize::try_from(entry.ships_in_run).is_ok_and(|n| n < entry.ships.len()) {
+            fail(
+                problems,
+                format!(
+                    "ships_in_run {} is fewer than the {} ships named for the run",
+                    entry.ships_in_run,
+                    entry.ships.len()
+                ),
+            );
+            ok = false;
+        }
+        let mut named: Vec<&str> = Vec::new();
+        for ship in &entry.ships {
+            if !ships.contains(ship) {
+                fail(problems, format!("`{ship}` is not in ships"));
+                ok = false;
+            } else if named.contains(&ship.as_str()) {
+                fail(
+                    problems,
+                    format!("ship `{ship}` is named twice for the run"),
+                );
+                ok = false;
+            } else if let Some(other) = in_run.get(ship.as_str()) {
+                if *other != run {
+                    fail(
+                        problems,
+                        format!("ship `{ship}` is already read for run {other}: a ship is in at most one run"),
+                    );
+                    ok = false;
+                }
+            }
+            named.push(ship);
+            in_run.entry(ship).or_insert(run);
+        }
+        if ok {
+            input.runs.push(TroopRun {
+                run: entry.run.clone(),
+                ships: entry.ships.clone(),
+                men_row: entry.men_row,
+                ships_row: entry.ships_row,
+                ships_in_run: entry.ships_in_run,
+                reason: entry.reason.clone(),
+            });
+        }
+    }
+    input
 }
 
 /// Checks the `[class_ids]` table against the list (decision 0077): it is
@@ -405,6 +549,17 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         }
         None => None,
     };
+    let troops = match &raw.troops {
+        Some(_) if !raw.troop_figures => {
+            problems.push(list_problem(
+                "troops",
+                "a [troops] table needs troop_figures = true",
+            ));
+            TroopsInput::default()
+        }
+        Some(table) => parse_troops(table, &ships, &mut problems),
+        None => TroopsInput::default(),
+    };
     let Some(date) = date else {
         return (None, problems);
     };
@@ -428,6 +583,8 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         aircraft_output: raw.aircraft_output,
         first_aircraft_type_id: raw.first_aircraft_type_id.unwrap_or(0),
         experience,
+        troop_figures: raw.troop_figures,
+        troops,
     };
     (Some(list), problems)
 }

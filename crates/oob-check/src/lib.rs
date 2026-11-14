@@ -13,6 +13,7 @@
 //! | `standing` | Chosen rows do not contradict each other, and `preferred` is earned |
 //! | `passages` | Recorded passages: required columns, located ends, forms of times, coordinates and speeds |
 //! | `training` | Statements about training by navy: columns, closed entity and attribute lists, forms of values and dates |
+//! | `lift` | Men carried by sea: `lift_entities.csv` and `troop_lift_facts.csv` (columns, closed lists, forms of values, entities are keys) and that a `troop_run` value names a run |
 //!
 //! Sort order is NOT checked. The design asks for fact and fit files to be
 //! sorted by entity, attribute or slot, date and source. Row order changes
@@ -21,6 +22,7 @@
 //! The checker reads files and nothing else. It does not feed the
 //! simulation, which loads only `data/reference`.
 
+mod lift;
 mod passages;
 mod refs;
 mod schema;
@@ -147,6 +149,7 @@ pub fn check_files(files: &BTreeMap<String, String>) -> Report {
         standing::check(&data, &mut problems);
         passages::check(&data, &mut problems);
         training::check(&data, &mut problems);
+        lift::check(&data, &mut problems);
     }
     problems.sort();
     problems.dedup();
