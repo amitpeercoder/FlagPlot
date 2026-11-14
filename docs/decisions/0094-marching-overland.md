@@ -34,7 +34,7 @@ So the rule does not work out by itself where men can walk. The map says it.
 ### Supply on the march
 
 9. **A unit marches with supply.** When it arrives, `march_supply_days` days of the daily charge for its men are taken from its side's bases in the hex it left, in base order, as far as their stock goes, and put into its side's lowest-numbered base in the new hex. Where the side has none there, a base is formed, as a landing forms one: no guns, no repairs, and not on the enemy's map until a report finds it (decisions 0066, 11 and 12, and 0092, 15).
-10. **A unit that leaves from a hex with no base of its side, or an empty one, carries nothing** and is unfed where it arrives unless a base is there.
+10. **A unit that leaves from a hex with no base of its side, or an empty one, carries nothing** and is unfed where it arrives unless a base is there. No base is formed for a unit that carries nothing.
 
 ### What a side knows
 
@@ -65,7 +65,7 @@ Hexes P and Q are joined by a land link. Unit 1, 1,000 men, fed, fatigue 0, is a
 
 If it is on attack and the enemy has men at Q, it fires on day 3 with 1,000 x 80/100 = 800 men (its fatigue before the day's change is 20) and gains 20 more for the attack, 50 after the day.
 
-The hand calculation is in the test of the rule's scenario.
+The hand calculation is in `tests/scenario_25_march.rs`.
 
 ## Why
 
