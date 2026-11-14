@@ -100,7 +100,7 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | Preparing a landing: loading and rehearsal | Decision 0095 | Confirmed, revised. Needed before stage 3 |
 | The experience of a land unit, and training | Decision 0097 | Confirmed. Needed before stage 3 |
 | What a land unit is good at: its skills | Decision 0098 | Confirmed. Needed before stage 3 |
-| Units that work, and an airfield that is built | Decision 0099 | A plan. Needed before stage 3 |
+| Units that work, and an airfield and defences that are built | Decision 0099 | Confirmed. Needed before stage 3 |
 | A report of enemy men ashore without a landing | Not planned | Missing. Today only a side with men in the hex gets one (decision 0092). Stage 3 says whether the invasion needs it |
 | The objectives scale set from the record | `docs/open-work.md` | Open. Not a condition of stages 0 to 2. It is frozen before stage 5's games are played |
 
