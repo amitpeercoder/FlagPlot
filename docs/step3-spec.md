@@ -89,12 +89,12 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | Land units, carried and fed | Decision 0066 | Built |
 | The fight ashore, a base that changes side, `base_held` | Decision 0090 | Built |
 | Rebasing an air group | Decision 0091 | Built |
-| Shore bombardment, hits on men, the estimate of the enemy ashore | Decision 0092 | Being built |
+| Shore bombardment, hits on men, the estimate of the enemy ashore | Decision 0092 | Built |
 | Marching overland | Decision 0094 | Hand calculation written |
 | The full slice of 39 days with the landings | Decision 0093 | Planned |
 | The rules' choices inside a day as functions of belief | Decision 0055, "Left for later" | Not built: stage 0 |
 | A rules version on a saved game | This spec | Not built: stage 0 |
-| A force that acts at a place and steams on by itself | A decision of its own, after decision 0092 | Not built. Needed before stage 2 |
+| A force that acts at a place and steams on by itself | Decision 0096 | Hand calculation written. Needed before stage 2 |
 | A load of a stated weight, and refuelling that leaves a reserve | Stage 1 | Not built |
 | A day from which a force may be used | Stage 2 | Not built |
 | Preparing a landing: loading and rehearsal | Decision 0095 | Confirmed, revised. Needed before stage 3 |
