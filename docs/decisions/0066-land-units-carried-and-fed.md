@@ -146,10 +146,10 @@ The legibility test asks a cheap model, from one side's briefing and events, why
 
 ## What it leaves out
 
-- **Fighting, fatigue, posture, and a base that changes side:** stage 2. Until then units of both sides in one hex ignore each other.
-- **Shore bombardment, bombs on men, and what a side knows of the enemy ashore:** stage 3.
+- **Fighting, fatigue, posture, and a base that changes side:** stage 2. Until then units of both sides in one hex ignore each other. *(Nov 14, 2026: built by decision 0090)*
+- **Shore bombardment, bombs on men, and what a side knows of the enemy ashore:** stage 3. *(Nov 14, 2026: which is stage 3, built by decision 0092)*
 - **Men aboard do not eat,** however long the passage.
-- **A second base in the hex does not feed** when the lowest-numbered one is empty.
+- **A second base in the hex does not feed** when the lowest-numbered one is empty. *(Nov 14, 2026: decision 0090, item 24a, feeds men from every base of their side in the hex, in base order)*
 - **No ration scale.** Men are fed or unfed; half rations are not a state.
 - **A side's hold on its own supply.** Men and aircraft draw on one stock with aircraft first, and no order changes that. Reserve levels stay deferred (decision 0050).
 - **Men saved from a sinking ship** (the plan, answer 3), and men carried in ships not in a task force.

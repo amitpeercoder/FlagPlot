@@ -212,7 +212,7 @@ The hand-calculation tests run on the step 1 figures, frozen for step 2 ("Decide
 
 The result on the scale is reported and not judged until the scale counts a ship that is out of the campaign ("Decided by the designer", 4). Every point and level of decision 0054 is still a placeholder. At Rabaul the result is the same in every run (a major Allied victory in 1,000 of 1,000), so the scale does not yet tell one run from another.
 
-**The architect recommended:** the scale stays reported and not judged. Ship repair (decision 0069, which the designer confirmed) and "out of the campaign" follow step 2, with land units and ground combat, before step 3. **The designer decided on Nov 13, 2026: "Reported only; repair first".** The scale stays reported and not judged. Ship repair (decision 0069) and "out of the campaign" are built next and the scale set from the record, before step 3 begins; land units and basic ground combat follow those, also before step 3.
+**The architect recommended:** the scale stays reported and not judged. Ship repair (decision 0069, which the designer confirmed) and "out of the campaign" follow step 2, with land units and ground combat, before step 3. **The designer decided on Nov 13, 2026: "Reported only; repair first".** The scale stays reported and not judged. Ship repair (decision 0069) and "out of the campaign" are built next and the scale set from the record, before step 3 begins; land units and basic ground combat follow those, also before step 3. *(Nov 14, 2026: built since: ship repair, decision 0069, scenario 20a; ships out of action, decision 0088, scenario 20b; land units, decision 0066, scenario 21; the fight ashore, decision 0090, scenario 23; shells and bombs on a base, decision 0092, scenario 24; marching overland, decision 0094, scenario 25. The objectives scale is still to be set from the record.)*
 
 ## Decided on your delegation, Nov 13, 2026
 
@@ -239,15 +239,15 @@ You gave the coordinating architect your decisions on Nov 13 ("Go ahead and deci
 | 0086 | The numbers a side is given | None changed |
 | 0087 | The patrol's fire split before and after the attack | Amends 0079 |
 
-Also for the designer to look at: decision 0066 (land units) has three choices marked "needs review" (its items 7, 12 and 14), and decision 0083 records one fight for three forces as a plan for you.
+Also for the designer to look at: decision 0066 (land units) has three choices marked "needs review" (its items 7, 12 and 14), and decision 0083 records one fight for three forces as a plan for you. *(Nov 14, 2026: the designer agreed items 7, 12 and 14 of decision 0066 on Nov 13, 2026; see its line 3.)*
 
 ## Handed to step 3
 
 Gathered from `docs/open-work.md` and the round records, with duplicates removed.
 
 **Before step 3, already ruled:**
-- Ship repair (decision 0069) and "out of the campaign" on the objectives scale.
-- Land units and basic ground combat (decision 0066).
+- Ship repair (decision 0069) and "out of the campaign" on the objectives scale. *(Nov 14, 2026: built as decisions 0069 and 0088, scenarios 20a and 20b; the scale is still to be set from the record.)*
+- Land units and basic ground combat (decision 0066). *(Nov 14, 2026: built: decisions 0066, 0090, 0092 and 0094, scenarios 21, 23, 24 and 25.)*
 - The staff closing the range on a contact it cannot reach; choices inside a day made into functions the planner can ask; objectives that name a flow; timing a trial of a plan by hand.
 
 **Surface fights:**

@@ -16,6 +16,8 @@ The spec says orders are validated against truth at intake, that they persist un
 6. **A route is rejected whole** if any waypoint is off the map or the path crosses a hex ships cannot enter.
 7. **A rejection may only cite facts the issuing side can see:** its own units, the map and ownership. An order that would fail because of something the side does not know is accepted at intake and fails in execution. The side learns of it through an event it would plausibly receive. This amends the spec, which said orders are validated against truth state.
 
+   *Nov 14, 2026: every order is checked against the truth, every check today reads a fact the side can see, and nothing fails in execution yet (`docs/rules/differences.md`, row 9).*
+
    One reason, "not one of your units", covers both a unit that does not exist and a unit of the enemy. Two reasons would let a side probe for enemy unit IDs.
 
 ## Why
@@ -25,13 +27,13 @@ The spec says orders are validated against truth at intake, that they persist un
 
 ## Not built yet
 
-- **The seat record.** Added to the saved game and the agent transcript when the agent server is built.
+- **The seat record.** Added to the saved game and the agent transcript when the agent server is built. *(Nov 14, 2026: built by decision 0050, item 11: a saved game records who held each seat)*
 - **Execution-time failure.** Nothing needs it yet. Every check today is map or ownership, which the side can see.
 
 ## Still true
 
-- **Only three orders exist:** set route, set speed, set mission. The spec lists many more. Each arrives with the scenario that needs it.
-- **Mission is stored but does nothing yet.**
+- **Only three orders exist:** set route, set speed, set mission. The spec lists many more. Each arrives with the scenario that needs it. *(Nov 14, 2026: many orders exist now (`crates/sim-core/src/orders.rs`))*
+- **Mission is stored but does nothing yet.** *(Nov 14, 2026: the bombardment mission is read by shore bombardment, decision 0092)*
 
 ## Rule card
 

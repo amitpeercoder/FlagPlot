@@ -102,7 +102,7 @@ No move: `fighter_hit_chance` stays 0.3.
 
 ## The reports
 
-- `docs/validation/eastern-solomons-r3.md`: judged 15, agree 11, at the edge 1, miss 3.
-- `docs/validation/rabaul-guadalcanal-air-r3.md`: judged 10, agree 4, at the edge 2, miss 4.
+- `docs/validation/archive/eastern-solomons-r3.md`: judged 15, agree 11, at the edge 1, miss 3.
+- `docs/validation/archive/rabaul-guadalcanal-air-r3.md`: judged 10, agree 4, at the edge 2, miss 4.
 
 Both are on the figures in use, which this round did not change: the same as the reports of decision 0087, labelled for the round.

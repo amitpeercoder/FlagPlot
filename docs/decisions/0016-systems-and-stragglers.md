@@ -87,7 +87,7 @@ Still open: the log does not print the share-to-keep check itself. It is in the 
 - Flooding that slows a ship. Damage to radar and other sensors.
 - Magazine explosions and other single hits that destroy a ship.
 - Forming and merging task forces by order.
-- The flight deck, with launching and landing, in scenario 5.
+- The flight deck, with launching and landing, in scenario 5. *(Nov 14, 2026: the flight deck is a fifth system by decision 0026)*
 - Real figures.
 
 ## Rule card

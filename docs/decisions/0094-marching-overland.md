@@ -1,6 +1,6 @@
 # 0094: Marching overland
 
-Status: confirmed as to the need. The designer asked on Nov 14, 2026 for movement overland to be built before the scenario of the August landings (decision 0093), so that a force that landed along the coast marches to the airfield and is not set down beside it. The rule's details are the architect's, of the same date. Not built. Its three figures are placeholders. The hand calculation is written before any code is delegated.
+Status: confirmed as to the need. The designer asked on Nov 14, 2026 for movement overland to be built before the scenario of the August landings (decision 0093), so that a force that landed along the coast marches to the airfield and is not set down beside it. The rule's details are the architect's, of the same date. Not built when written; built on Nov 14, 2026 (scenario 25, pull request 262; see "As built"). Its three figures are placeholders. The hand calculation is written before any code is delegated.
 
 ## The gap
 

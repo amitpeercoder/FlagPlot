@@ -6,12 +6,12 @@ The name comes from the compartment on a flagship where the admiral and staff tr
 
 ## Status
 
-The game is built in five steps. Step 1, a headless, deterministic simulation core, is complete: all nine of its scenarios pass. Step 2, which checks the simulation against the historical record and tunes its figures, is under way. There is no game to play yet.
+The game is built in five steps. Step 1, a headless, deterministic simulation core, is complete: all nine of its scenarios pass. Step 2, which checks the simulation against the historical record and tunes its figures, was closed on Nov 13, 2026 (`docs/validation/step2-close.md`). The spec of step 3 is confirmed; nothing of it is built. There is no game to play yet.
 
 - **What runs today.** Ships steam, burn fuel and carry cargo. Aircraft search, strike ships and bases, fight in the air, wear out and are repaired. Forces fight at night on the surface. Each side knows the enemy only through sighting reports and claims, which can be wrong. A scripted or an AI player can play a scenario through `sim-cli`.
 - **What is real.** The ships and aircraft of Savo Island, the Eastern Solomons and the four weeks over Guadalcanal are historical, with ratings derived by a written rule from sourced facts in `data/oob`. The map of the South Pacific, `data/map/south_pacific.csv`, is real geography, generated from public-domain Natural Earth coastlines by `crates/map-tool`.
-- **What is a placeholder.** Every combat, wear, fatigue, supply and claim figure, and every point value, until step 2 sets it from the record. The small test scenarios use invented ships and maps, each named "Placeholder".
-- **What step 1 left out.** Ground combat, land units, shore bombardment, ship repair and base damage, among others. Decision 0052 has the list.
+- **What is a placeholder.** Every combat, wear, fatigue, supply and claim figure, and every point value, until step 2 sets it from the record. *(Nov 14, 2026: step 2 closed with most of them still placeholders; `docs/validation/tuning/`.)* The small test scenarios use invented ships and maps, each named "Placeholder".
+- **What step 1 left out.** Ground combat, land units, shore bombardment, ship repair and base damage, among others. Decision 0052 has the list. *(Nov 14, 2026: since built: land units and ground combat, decisions 0066, 0090 and 0094; shore bombardment, decision 0092; ship repair, decision 0069. Base damage is not built.)*
 
 ## Documents
 

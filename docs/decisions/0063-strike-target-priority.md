@@ -60,7 +60,7 @@ Groups 1 and 2 fly to different hexes, so they are two raids, and the escorts go
 - An order given after a contact is seen. Orders stay standing; search, decision and strike still happen inside the day.
 - A share of a group held back, a strike split among several ships, and a named contact as a target.
 - Holding by size ("not fewer than four ships").
-- Target choice in a surface fight.
+- Target choice in a surface fight. *(Nov 14, 2026: built by decision 0078: guns fire like at like and torpedoes at the most important kind afloat)*
 - Strikers kept back to defend their ship. Aircraft on deck defend nothing.
 
 ## What it costs

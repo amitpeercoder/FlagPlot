@@ -46,7 +46,7 @@ None rests on a source. At 0.25 a unit of assault skill 4 rehearses a landing in
 
 ## Real units
 
-No real unit gets a value from this record. A unit's skills are facts about it, with rows and a written rule, as a ship's figures are. Until that research is done every real land unit is 2 in every skill. The tuning rule holds: a unit's value is never changed to improve a report; only the strengths are tuned.
+No real unit gets a value from this record. A unit's skills are facts about it, with rows and a written rule, as a ship's figures are. Until that research is done every real land unit is 2 in every skill. The hand calculation is in `tests/scenario_29_skills.rs`. The tuning rule holds: a unit's value is never changed to improve a report; only the strengths are tuned.
 
 The real map marks every land hex as jungle (decision 0052, item 14), so on it the only movement skill that can act is the one for jungle. The skill for mountains is tested on a placeholder map that has them.
 

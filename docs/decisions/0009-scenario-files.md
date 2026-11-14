@@ -18,7 +18,7 @@ The spec says a scenario is a TOML file with the starting state, scripted orders
 
 ## Not done yet
 
-- Hex latitude and longitude. The spec asks for them for rendering. The placeholder map has no real geography, so they are left out until the real map is drawn.
+- Hex latitude and longitude. The spec asks for them for rendering. The placeholder map has no real geography, so they are left out until the real map is drawn. *(Nov 14, 2026: the map has them, decision 0017)*
 - Most ship class fields the spec lists: displacement, guns, torpedoes, anti-aircraft, armour, aircraft capacity, cargo and troop capacity.
-- Aircraft types and weapons.
-- JSON schemas for orders and observations, which the agent interface needs.
+- Aircraft types and weapons. *(Nov 14, 2026: aircraft types came with decisions 0025 to 0029)*
+- JSON schemas for orders and observations, which the agent interface needs. *(Nov 14, 2026: built by decision 0048, item 11)*

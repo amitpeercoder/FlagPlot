@@ -1,6 +1,6 @@
 # Savo Island: the surface tuning closed, with its misses named
 
-Nov 13, 2026. Savo Island's surface tuning ends after round 2 and decision 0083. The third and fourth mechanisms in the order of tuning, what a hit does and when a force breaks off (`docs/step2-spec.md`, "Tuning", 2), were tested for a supported move, and none was found. The rule work this brought up is built: tubes that bear on one side, with the other side fired later (decisions 0074 and 0083). No further figure moves at Savo Island, and there is no further round (the architect's ruling of Nov 13, 2026). The surface figures go to Cape Esperance to be checked, once, on the coordinating architect's word.
+Nov 13, 2026. Savo Island's surface tuning ends after round 2 and decision 0083. The third and fourth mechanisms in the order of tuning, what a hit does and when a force breaks off (`docs/step2-spec.md`, "Tuning", 2), were tested for a supported move, and none was found. The rule work this brought up is built: tubes that bear on one side, with the other side fired later (decisions 0074 and 0083). No further figure moves at Savo Island, and there is no further round (the architect's ruling of Nov 13, 2026). The surface figures go to Cape Esperance to be checked, once, on the coordinating architect's word. *(Nov 14, 2026: the check was run once on Nov 13, 2026 (`docs/validation/cape-esperance-check.md`; `docs/validation/step2-close.md`), and the scenario moved to `data/scenarios/17_cape_esperance.toml` in commit 897ba4f.)*
 
 The report this page reads is `docs/validation/savo-island-after-0083.md`: the figures of round 2, on the engine with decision 0083, and the measures with decision 0084's.
 
@@ -126,7 +126,7 @@ From the records' own words:
 | Radar for sighting | Decision 0077's sets | A rule of the derivation; there the other side had the radar |
 | Torpedo sides | Decisions 0074 and 0083 | Built; the Japanese cruisers there fight one force |
 
-What the check can and cannot show is in decision 0084, finding 1. The check is one run, on the figures and rules as they stand when the scenario moves out of `not-run/`.
+What the check can and cannot show is in decision 0084, finding 1. The check is one run, on the figures and rules as they stand when the scenario moves out of `not-run/`. *(Nov 14, 2026: the check was run once on Nov 13, 2026 (`docs/validation/cape-esperance-check.md`; `docs/validation/step2-close.md`), and the scenario moved to `data/scenarios/17_cape_esperance.toml` in commit 897ba4f.)*
 
 ## Watches that still bind
 

@@ -120,4 +120,4 @@ At 0.7 no other measure of the Eastern Solomons changes its verdict.
 ## The reports
 
 - `docs/validation/eastern-solomons-r4.md`: judged 15, agree 11, at the edge 2, miss 2. American claims agree (251); the Japanese claims ratio is at the edge.
-- `docs/validation/rabaul-guadalcanal-air-r4.md`: judged 10, agree 5, at the edge 2, miss 3. American claims agree (316).
+- `docs/validation/archive/rabaul-guadalcanal-air-r4.md`: judged 10, agree 5, at the edge 2, miss 3. American claims agree (316).

@@ -20,6 +20,9 @@ A scenario ends when its last day is resolved and says nothing more. No side has
    | `base_open` | 1 if, at the end, a named base has supply above zero and at least one aircraft ready; with `closed = true` the opposite, for the side that wants it shut | points |
 
    A ship sunk is not also crippled. A side's own losses are not a separate objective: a carrier lost gives the enemy its points, and one ledger is enough.
+
+   *Nov 14, 2026: "crippled" means what the objective `ships_crippled` tests (propulsion or flight deck out), and flotation damage of `crippled_flotation` or more is "heavily damaged" in the rules and the glossary (`docs/rules/differences.md`, row 3). Later kinds of objective: `ships_out_of_action` (decision 0088), `base_held` and `men_lost` (decision 0090); decision 0067 changed `cargo_landed` (tons landed less tons loaded back) and `base_open` (the share of days open). History's result on the scale is gathered in `docs/research/oob/history-on-the-scale.md`.*
+
 3. **A side's points** are the sum over its objectives of count times points, in fixed point, cut to six decimal places.
 4. **The result is read from the margin**, a side's points less the enemy's, against three levels the scenario gives (`minor`, `major`, `decisive`, rising). A margin of at least `decisive` is a decisive victory, at least `major` a major victory, at least `minor` a minor victory. A margin between minus `minor` and `minor`, neither included, is a stalemate. One side's victory is the other's defeat at the same level.
 5. **No rule reads the objectives or the result.** They are not state and are not in the hash. The result is a function of the final truth and the event log, so a replay gives the same result.
@@ -53,7 +56,7 @@ One aircraft destroyed is worth 0.05. Levels for a one-day battle: minor 3, majo
 ## What it costs
 
 - The points are invented. Until step 2 a "minor victory" is a statement about the placeholder scale and not about history.
-- With ground combat deferred (decision 0052) no base changes hands, so no objective can be to take or hold ground.
+- With ground combat deferred (decision 0052) no base changes hands, so no objective can be to take or hold ground. *(Nov 14, 2026: a base can change side since decision 0090, and the objective `base_held` exists)*
 - Savo Island has no transports in it (decision 0024), so the Allied aim there, protecting them, cannot be scored.
 
 ## Rule card

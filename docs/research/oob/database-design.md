@@ -351,7 +351,7 @@ Proposed home: a loader and test in `sim-data`, or a small separate tool crate, 
 
 ## Feeding the simulation
 
-Not built now. This is the intended path, so the facts layer is shaped to allow it.
+Not built now. This is the intended path, so the facts layer is shaped to allow it. *(Nov 14, 2026: `oob-derive` now carries the facts into the simulation's figures by a written rule, decision 0020.)*
 
 ```
 data/oob/*.csv  ──►  derivation tool  ──►  data/reference/*.csv  ──►  sim-data loader  ──►  sim-core

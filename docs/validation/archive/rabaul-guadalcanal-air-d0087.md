@@ -1,8 +1,10 @@
-# rabaul-guadalcanal-air: validation of batch `r4`
+*Archived on Nov 14, 2026: a report of one round of step 2, kept as a record. The battle's closing report is [rabaul-guadalcanal-air-close.md](../rabaul-guadalcanal-air-close.md); step 2's close is [step2-close.md](../step2-close.md).*
+
+# rabaul-guadalcanal-air: validation of batch `d0087`
 
 Battle: rabaul-guadalcanal-air
 Scenario: data/scenarios/06_rabaul_guadalcanal.toml
-Batch: label `r4`, 1000 runs, seeds 1 to 1000, file hash 25ae7826d866548f
+Batch: label `d0087`, 1000 runs, seeds 1 to 1000, file hash 4befa1b317395b64
 Inputs: state hash layout flagplot-state-v7, scenario file hash 7e02fa82236e0f69
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../reference/ship_classes.csv 366fefba209ee1bc
@@ -10,15 +12,15 @@ Inputs: state hash layout flagplot-state-v7, scenario file hash 7e02fa82236e0f69
 - data/scenarios/../reference/aircraft_types_rabaul_guadalcanal.csv 8d2c4aa0f492f24f
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
 - data/scenarios/../reference/surface_combat.toml 1a9a0ae06d7282b1
-- data/scenarios/../reference/air_combat.toml 5476f2d8aa7681d5
+- data/scenarios/../reference/air_combat.toml fe71bc60e64ccbe2
 - data/scenarios/../reference/air_upkeep.toml b2db73fbc8e30d0e
 - data/scenarios/../reference/fatigue.toml 32b26b3bef8a1089
 - data/scenarios/../reference/air_supply.toml 4269ae7b442c3edc
 Measures: data/validation/rabaul_guadalcanal.toml (hash 268e015147c174ee), 15 measures, 10 judged
 
-Judged measures: 5 agree, 2 agree at the edge, 3 miss, of 10.
+Judged measures: 4 agree, 2 agree at the edge, 4 miss, of 10.
 
-**The battle does not pass:** 3 of 10 judged measures miss.
+**The battle does not pass:** 4 of 10 judged measures miss.
 
 | Measure | Record | 5th to 95th | Median | Runs holding the record | Left out | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -29,7 +31,7 @@ Judged measures: 5 agree, 2 agree at the edge, 3 miss, of 10.
 | us_aircraft_destroyed_on_the_ground | 2 to 3 | 7 to 19 | 13 | 1 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | raid_days_that_reach_guadalcanal | 11 | 9 to 10 | 9 | 2 of 1000 | 0 | reported |
 | bomber_sorties_that_reach_guadalcanal | 211 to 213 | 200 to 224 | 214 | 148 of 1000 | 0 | reported |
-| us_aircraft_claimed_per_hundred_shot_down | 250 to 382 | 259 to 396 | 316 | 891 of 1000 | 0 | agrees |
+| us_aircraft_claimed_per_hundred_shot_down | 250 to 382 | 121 to 160 | 138 | 0 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | japanese_aircraft_claimed_on_ground_per_hundred_destroyed | 2066 to 4600 | 188 to 412 | 260 | 0 of 1000 | 0 | reported |
 | vmf_223_ready_on_day_5 | 11 | 6 to 14 | 10 | 152 of 1000 | 0 | agrees |
 | vmsb_232_ready_on_day_5 | 9 | 8 to 12 | 10 | 161 of 1000 | 0 | agrees |
@@ -53,6 +55,13 @@ Judged measures: 5 agree, 2 agree at the edge, 3 miss, of 10.
 - Record: 2 to 3 (rows 1266, 1272, 1283, 1299, 1330)
 - Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
 - Spread over 1000 runs kept (0 left out): least 2, 5th 7, 25th 10, median 13, 75th 15, 95th 19, greatest 23
+
+### us_aircraft_claimed_per_hundred_shot_down
+
+- Counts: Aircraft the US side claims shot down, for each 100 Japanese aircraft really shot down
+- Record: 250 to 382 (rows 534, 546, 557, 560, 1332, 1333, 594, 593, 603, 1345, 612, 1351, 936, 629, 641, 472, 1358, 951, 1048, 1202, 1060, 1149, 1154, 1216, 1020, 1024, 1095, 1140, 1101, 1034, 1133, 1109, 1231, 1137, 988, 1049, 1061, 1090, 1110, 1102, 1138)
+- Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
+- Spread over 1000 runs kept (0 left out): least 110, 5th 121, 25th 130, median 138, 75th 146, 95th 160, greatest 182
 
 ### f4fs_ready_on_day_21
 

@@ -1,3 +1,5 @@
+*Archived on Nov 14, 2026: a report of one round of step 2, kept as a record. The battle's closing report is [rabaul-guadalcanal-air-close.md](../rabaul-guadalcanal-air-close.md); step 2's close is [step2-close.md](../step2-close.md).*
+
 # rabaul-guadalcanal-air: validation of batch `d0079`
 
 Battle: rabaul-guadalcanal-air

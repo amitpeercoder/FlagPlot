@@ -13,6 +13,9 @@ The spec says an air group is based at an airfield or on a carrier, and that eve
 3. **A group aboard a ship is where the ship is.** Its position is the position of the ship's task force. It moves with the ship and needs no order to do so.
 4. **Search from a ship uses the rule of decision 0012 unchanged.** The search is flown from the ship's position at the start of the pulse, because search comes before movement in a daylight pulse. Distance, arc and darkness are worked from that hex.
 5. **A group aboard a ship that is sunk is lost with it.** All its aircraft are lost, and an event says so, citing the sinking. Landing on another carrier or ashore is deferred.
+
+   *Nov 14, 2026: a group in the air when its ship is sunk or her deck is closed lands on another deck or a field, by decision 0059; a group aboard a ship that is sunk is still lost with it.*
+
 6. **A group aboard a ship in a base's hex is still aboard the ship.** Moving a group between a ship and a base is an order that does not exist yet. Its position is then the base's hex.
 7. **Any aircraft type may be based on any ship with the capacity.** Which types can fly from a deck is a fact about the type, and arrives with the real aircraft in stage 5e.
 8. **The class file's aircraft capacity column is optional.** A class file without it holds no ship that carries aircraft. This keeps the generated Savo Island class file as it is until the derivation tool learns the figure, in stage 5e.

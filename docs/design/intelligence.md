@@ -11,7 +11,7 @@ The pillars already ask for this. The player commands on belief and the staff ex
 ## What exists to build on
 
 - **Belief is written only from reports.** `BeliefState::apply_report` is the one door. A side's own units are known exactly; the enemy reaches it only as reports. This rule is what every tool for a player rests on (decisions 0007, 0047).
-- **Two kinds of report so far:** a sighting from search, which can be wrong about kind and number (decision 0012), and a battle claim, which can overstate (decisions 0014, 0056).
+- **Two kinds of report so far:** a sighting from search, which can be wrong about kind and number (decision 0012), and a battle claim, which can overstate (decisions 0014, 0056). *(Nov 14, 2026: a third is built: the daily ground report and the estimate of the enemy ashore, decision 0092.)*
 - **Contacts age and are dropped.** A strike that finds nothing drops its contact (decision 0028).
 - **Every report is an event with causes,** so a side can ask why it believes something and be shown the report.
 - **Contact confidence was cut** after scenario 5 because nothing read it (decision 0032). It is the natural thing to bring back when several sources can report the same thing.
@@ -30,7 +30,7 @@ What a side believes it did gets checked against what it later sees.
 - A reconnaissance flight over a base counts the aircraft on the field after a raid, and the claim of aircraft destroyed is set against it.
 - Slow, reliable confirmation: months later a loss is admitted or learned of, and an old claim is confirmed or struck off.
 
-Needs: claims (being built). Adds: a claim that can be revised by a later report, and a record of what a side believed on each day, so that "what did I think on the 24th" stays answerable.
+Needs: claims (being built). *(Nov 14, 2026: claims are built, decisions 0014 and 0056.)* Adds: a claim that can be revised by a later report, and a record of what a side believed on each day, so that "what did I think on the 24th" stays answerable.
 
 ### Layer 2: standing sources
 

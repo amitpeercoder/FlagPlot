@@ -13,9 +13,14 @@ Decision 0014 made a task force alert or not by a stored flag that the scenario 
 1. **A task force is at normal or battle readiness,** set by order. The default is normal. A force at battle readiness is alert.
 2. **A force at normal readiness is alert only while it is alerted.** Being alerted lasts for the pulse. It is worked out afresh at the start of each pulse.
 
+   *Nov 14, 2026: the flag a fight or an alarm sets is not cleared when the pulse ends. It is cleared at the start of a later pulse by alert from belief, which records `ForceStoodDown`; "lasts for the pulse" was loose (chapter 3 of the rules; `docs/rules/differences.md`, row 1).*
+
 ### What alerts a force
 
 3. **Belief, at the start of each pulse.** A force is alerted if its side holds a contact within a set number of hexes of its position that is no older than a set number of pulses. The straight-line hex count is used. An event records a force becoming alerted this way and cites the report behind the contact. Another records it standing down when no such contact remains. A force that was alerted in the pulse before and still has such a contact stays alerted, and no event is recorded, because nothing changed.
+
+   *Nov 14, 2026: a force alerted by a fight stays alerted for as long as the contact the fight's report made stays fresh and within the alert distance of the force (`docs/rules/differences.md`, row 1).*
+
 4. **Events, during a pulse.** A force at normal readiness that sights an enemy force, or is fired on, is alerted for the rest of the pulse, as in decision 0014. For a force at battle readiness nothing changes: it is alert by its readiness.
 5. **Alarm.** When a fight in which at least one salvo was fired ends, every task force in that hex other than the two that fought, with a ship afloat, that is not alert, has a set chance to be alerted for the rest of the pulse. An event records every such roll, with its chance and whether it succeeded, and cites the end of the fight.
 6. **Belief does not alert a force in the middle of a pulse.** A side's belief is shared the moment a report arrives. If alertness followed it at once, the first report of a fight would alert every force of that side in the hex. So within a pulse the news of a fight reaches other forces only by the alarm roll, which can fail. From the next pulse, decision 3 applies and they know.
@@ -50,11 +55,11 @@ It found three things unclear, each now changed:
 
 ## Known gap
 
-**Battle readiness costs nothing yet.** A player would always choose it. In reality a crew cannot stay at its stations for days: the Allied ships at Savo were at a relaxed condition because their men were exhausted. That cost is crew fatigue, which arrives with air operations in scenario 6. Until then readiness is set by scripted scenarios, and nothing that plays the game should be given the order.
+**Battle readiness costs nothing yet.** A player would always choose it. In reality a crew cannot stay at its stations for days: the Allied ships at Savo were at a relaxed condition because their men were exhausted. That cost is crew fatigue, which arrives with air operations in scenario 6. Until then readiness is set by scripted scenarios, and nothing that plays the game should be given the order. *(Nov 14, 2026: built by decision 0037: an alert force tires each pulse)*
 
 ## Deferred
 
-- Fatigue, as above.
+- Fatigue, as above. *(Nov 14, 2026: built by decision 0037)*
 - Alarm reaching neighbouring hexes.
 - Reports that arrive late or not at all. Scenario 5.
 - A force reacting to being alerted by changing course or speed. Scenario 5.

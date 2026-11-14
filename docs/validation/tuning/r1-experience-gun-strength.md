@@ -10,7 +10,7 @@ Savo Island, Nov 13, 2026. The second mechanism in the order of tuning, the chan
 
 Nothing else. No experience value of any ship was touched; only the strength of its effect. The frozen step 1 figures keep 0, the value at which experience does nothing.
 
-**Its kind:** a surface figure, tuned on Savo Island and not checked on any battle until Cape Esperance is run.
+**Its kind:** a surface figure, tuned on Savo Island and not checked on any battle until Cape Esperance is run. *(Nov 14, 2026: Cape Esperance was run once on Nov 13, 2026; see `docs/validation/cape-esperance-check.md` and `docs/validation/step2-close.md`.)*
 
 ## Why this figure
 

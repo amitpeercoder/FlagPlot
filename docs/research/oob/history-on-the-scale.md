@@ -1,6 +1,6 @@
 # History on the objectives scale: the record in the scale's terms
 
-Status: a fact sheet for the architect's plan to set the objectives scale from the record (decisions 0054 and 0088; decision 0069's section "The yard function's figures from the record", on branch `ship-repair`, pull request 235). Gathered Nov 13, 2026. It proposes no points, levels, horizons or figures. Nothing here settles a dispute: a dispute is shown as a range with each row. A missing fact is named as a gap. No row was added and no data file changed. Nothing from `references/` was read.
+Status: a fact sheet for the architect's plan to set the objectives scale from the record (decisions 0054 and 0088; decision 0069's section "The yard function's figures from the record", on branch `ship-repair`, pull request 235). Gathered Nov 13, 2026. It proposes no points, levels, horizons or figures. Nothing here settles a dispute: a dispute is shown as a range with each row. A missing fact is named as a gap. No row was added and no data file changed. Nothing from `references/` was read. *(Nov 14, 2026: the branches named are merged: decision 0069 is built (scenario 20a) and decision 0088 is built (scenario 20b).)*
 
 How to read the citations:
 
@@ -209,7 +209,7 @@ points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transpor
 | 6 Rabaul | `aircraft_destroyed` (0.05); `base_open`, base 1, 10 points (the Japanese with `closed = true`) | "Henderson Field never stopped flying in these four weeks, and Rabaul's raids cost it more than it could replace. (The architect's reading; not yet scored from the order-of-battle facts.)" |
 | 17 Cape Esperance | `ships_sunk`, `ships_crippled` | "Two Japanese ships, the heavy cruiser Furutaka and the destroyer Fubuki, were sunk that night for one American destroyer, Duncan; Aoba was badly damaged and the bombardment of Henderson Field was not carried out. (From the order-of-battle facts; not yet scored from them.)" |
 
-The missions are in each file's `[objectives.allied]` and `[objectives.japanese]` tables. None names a horizon, since `horizon_days` is not built (decision 0088, "As planned for the build", on branch `out-of-action-build-spec`).
+The missions are in each file's `[objectives.allied]` and `[objectives.japanese]` tables. None names a horizon, since `horizon_days` is not built (decision 0088, "As planned for the build", on branch `out-of-action-build-spec`). *(Nov 14, 2026: `horizon_days` is built, decision 0088, scenario 20b.)*
 
 ### The runs: 1,000 runs each, seeds 1 to 1000, seen from the Allied side
 
@@ -305,7 +305,7 @@ The Rabaul window, 21 Aug to 17 Sep (28 days, `engagements.csv` 1002), is the pr
 - Rabaul: Japanese troops landed on Guadalcanal in the window (900, 1,200 and others), but no row gives tons and there is no ground combat. The `base_open` objective reads one day only, the last, and no row gives the field's state on 17 Sep.
 - Ships lost the day after or outside the scenario's ship list: Kako, Jarvis, Mutsuki, Kinryu Maru, Murakumo and Natsugumo. A day-long scenario cannot score them.
 - Men killed and wounded are recorded in many rows but are no kind on the scale.
-- Days away cannot be scored until `ships_out_of_action` is built (decision 0088). Enterprise's 53 days, Aoba's 127, Boise's 160, Salt Lake City's about 151 and Farenholt's 143 score nothing today.
+- Days away cannot be scored until `ships_out_of_action` is built (decision 0088). Enterprise's 53 days, Aoba's 127, Boise's 160, Salt Lake City's about 151 and Farenholt's 143 score nothing today. *(Nov 14, 2026: `ships_out_of_action` is built, decision 0088, scenario 20b.)*
 
 ### Rows worth adding
 

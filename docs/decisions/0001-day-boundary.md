@@ -9,7 +9,12 @@ The spec says a day resolves as a 12-hour night pulse, then a 6-hour morning pul
 ## Decisions
 
 1. **One simulation clock, anchored to UTC.** Inside the simulation, time is "elapsed hours since the scenario began". Day 1 starts at elapsed hour 0. Each scenario states the UTC instant of elapsed hour 0. Local times and dates are for display only.
+
+   *Nov 14, 2026: no UTC anchor exists yet: the clock counts elapsed hours from the start of day 1 (`docs/rules/differences.md`, row 10).*
+
 2. **A game day starts at 18:00 in the scenario's reference zone.** For the South Pacific slice the reference zone is UTC+11, so a day starts at 07:00 UTC. Orders are given at dusk.
+
+   *Nov 14, 2026: no calendar date exists yet, and the clock shows 18:00 at its start (`docs/rules/differences.md`, row 10).*
 
    | Pulse | Reference-zone time |
    | --- | --- |

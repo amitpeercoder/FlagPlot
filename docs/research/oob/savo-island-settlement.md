@@ -1,6 +1,6 @@
 # Savo Island: settlement sheet for the 20 ships
 
-Status: **approved by Amit on 2026-11-10, in one pass, as recommended.** The rows are marked in the data with "Settled by Amit" and the item of this sheet. Two things the sheet had left open were approved later the same day: the 8th Year torpedo warhead, and treating main-gun ammunition for three Japanese ships as not limiting (see "What approval did"). The sheet below is kept as it was put to him, apart from this paragraph and the last section. It is for the architect to turn into a numbered decision record.
+Status: **approved by Amit on 2026-11-10, in one pass, as recommended.** The rows are marked in the data with "Settled by Amit" and the item of this sheet. Two things the sheet had left open were approved later the same day: the 8th Year torpedo warhead, and treating main-gun ammunition for three Japanese ships as not limiting (see "What approval did"). The sheet below is kept as it was put to him, apart from this paragraph and the last section. It is for the architect to turn into a numbered decision record. *(Nov 14, 2026: done: decision 0023.)*
 
 **Why it exists.** The derivation tool (`crates/oob-derive`, decision 0020) builds the ship classes a scenario loads from `preferred` fact rows that hold on 8 August 1942, and refuses anything else. Against this branch it reports 103 problems and derives no ship. Each group below is one decision that clears several of them.
 

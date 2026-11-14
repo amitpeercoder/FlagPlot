@@ -31,7 +31,7 @@ A ship's fuel only falls (decision 0006). The spec lists refuelling under logist
 
 ## Deferred
 
-- Fuel as a cargo, and tankers.
+- Fuel as a cargo, and tankers. *(Nov 14, 2026: fuel as a cargo is built by decision 0046)*
 - Refuelling at sea.
 - A rate by port size, port damage, and a reserve a base keeps back.
 - Refuelling at a friendly base while only passing through.

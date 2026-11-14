@@ -24,7 +24,7 @@ Step 1 is headless by design, and the pillars say no real interface is built bef
 ## Deferred
 
 - State as it was at each pulse. The replay has the starting state, the events and the final state. The viewer rebuilds positions and contacts from events. Ship damage is shown as events and as the final state.
-- One side's view with the truth hidden, as a player would see it. That needs events filtered by side, which waits for briefings.
+- One side's view with the truth hidden, as a player would see it. That needs events filtered by side, which waits for briefings. *(Nov 14, 2026: built: the viewer shows a side's view, decision 0053)*
 - Anything interactive: orders, plans, the clock.
 
 ## Rule card

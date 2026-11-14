@@ -23,7 +23,7 @@ Replacements (decision 0038) top a group up to the strength it started with, by 
 
 ## What it costs
 
-- A group cannot arrive at one base and later move to another. Moving groups is still deferred.
+- A group cannot arrive at one base and later move to another. Moving groups is still deferred. *(Nov 14, 2026: rebasing is built by decision 0091, for land-based groups)*
 - The flight in costs nothing: no wear, no fatigue, no supply, and nothing can intercept it.
 
 ## Rule card

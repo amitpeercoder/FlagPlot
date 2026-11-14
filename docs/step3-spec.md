@@ -94,8 +94,8 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | Shore bombardment, hits on men, the estimate of the enemy ashore | Decision 0092 | Built |
 | Marching overland | Decision 0094 | Built |
 | The full slice of 39 days with the landings | Decision 0093 | Planned |
-| The rules' choices inside a day as functions of belief | Decision 0055, "Left for later" | Not built: stage 0 |
-| A rules version on a saved game | This spec | Not built: stage 0 |
+| The rules' choices inside a day as functions of belief | Decision 0100 (stage 0) | Planned and confirmed. Not built |
+| A rules version on a saved game | Decision 0100 (stage 0) | Planned and confirmed. Not built |
 | A force that acts at a place and steams on by itself | Decision 0096 | Built |
 | A load of a stated weight, and refuelling that leaves a reserve | Stage 1 | Not built |
 | A day from which a force may be used | Stage 2 | Not built |

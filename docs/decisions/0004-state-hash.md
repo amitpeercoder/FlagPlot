@@ -20,6 +20,6 @@ The hash exists to detect divergence between two runs. It is not a security feat
 
 ## Consequences
 
-- A new state field must be added to `hash::hash_world` in the same change, or two different states could share a hash. Nothing enforces this yet.
+- A new state field must be added to `hash::hash_world` in the same change, or two different states could share a hash. Nothing enforces this yet. *(Nov 14, 2026: enforced since decision 0055, item 8, by `name_every_field` in `crates/sim-core/src/hash.rs`: a state field not named there does not compile.)*
 - A 64-bit hash can collide by chance. For comparing two runs day by day, that risk is negligible. If hashes are ever used to identify states across many games, move to a wider hash.
-- Reference data and the map are not hashed. A replay against changed data files will diverge without the hash of day 0 saying why. Hashing the data files into the save is a later step.
+- Reference data and the map are not hashed. A replay against changed data files will diverge without the hash of day 0 saying why. Hashing the data files into the save is a later step. *(Nov 14, 2026: a saved game records the hash of the scenario file and of each data file it names (`crates/sim-cli/src/save.rs`); a batch summary and a replay carry the same `inputs` (decision 0057, item 4).)*

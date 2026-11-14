@@ -52,7 +52,7 @@ A game of four days. The Allied side holds `cargo_landed` at base 1 at 0.005 poi
 ## What it leaves out
 
 - **A base that is open at dusk and was useless all day,** for want of fuel or with every pilot spent. The two conditions are the ones the objective already has. A better test of a working field is a question for the scale as a whole.
-- **"Out of the campaign"** and the other reworking of the scale, which stay on the opening list.
+- **"Out of the campaign"** and the other reworking of the scale, which stay on the opening list. *(Nov 14, 2026: "out of the campaign" is built as ships out of action by decision 0088)*
 - **Cargo destroyed ashore.** A ton landed and then bombed still counts as landed.
 - **Fuel landed and then taken as bunker fuel.** A ship that refuels from the base's stock records `ShipRefuelled`, not `CargoLoaded`, so the fuel still counts as landed. Bunker fuel cannot be unloaded again, so there is no way round the rule here: the rulebook review looked for one.
 
