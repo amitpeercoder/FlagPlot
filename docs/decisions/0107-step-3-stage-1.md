@@ -1,6 +1,6 @@
 # 0107: Step 3, stage 1: the command contract, and a staff that keeps a base supplied
 
-Status: a plan by the architect, written on Nov 14, 2026, for the designer's approval. `docs/step3-spec.md` settles what the contract is; this record says how stage 1 builds it, what each part is in the state and in the tools, the three small rules it needs, and the cases it must pass. Needs review: the plan as a whole, and the three questions at the end. Nothing is built. The hand calculations it names are written by the architect after approval and before any code.
+Status: a plan by the architect, written on Nov 14, 2026, for the designer's approval, and revised the same day after an independent review that the designer asked for. The review found the direction right and six gaps that had to be closed before building: the order of a day, where a staffed day is run, how the staff writes the state it makes, what a saved game holds, what "days of supply" means, and how a supply plan can change without the commander. Each is settled below and marked *(review)*. `docs/step3-spec.md` settles what the contract is; this record says how stage 1 builds it. The designer answered its four questions on Nov 14, 2026, each as recommended, and approved the plan: stage 1 is built as laid out, after the two hand calculations are written, and anything they show still open comes back to him before any code. Confirmed. Nothing is built. Two hand calculations, for days of supply and for one convoy, are written by the architect before approval is asked, since they are what shows a rule still open.
 
 ## What stage 1 is
 
@@ -10,127 +10,167 @@ It has no fighting doctrine, no landing and no trial. Those are stages 2, 3 and 
 
 ## Where each part lives
 
-1. **What the commander says is state.** Intents, limits, holds, approved plans with their amendments, commitments, and interrupts set and acknowledged are part of each side's state in `sim-core`, in a module of their own. They are hashed and named beside the hash, saved, and replayed (the spec, "What is saved"). They are changed only by a **command**: a new kind of thing a seat submits, beside orders, taken in at the start of a day. A command is checked at intake and accepted or refused with a reason, as an order is.
-2. **What the staff decides is code outside `sim-core`,** in a new crate, `sim-staff`. It depends on `sim-core` only. Every function in it takes a `SideView` and nothing else, as `sim-agent`'s do, and a test reads its source to check. It returns orders, each with its reason, and proposals.
-3. **The view carries the side's own command state.** `SideView` gains the side's intents, limits, holds, plans and commitments, whole, and nothing of the enemy's. Whether a side has a staff, and what its intents are, is never told to the other side.
-4. **The staff's orders are orders.** Before a day is resolved, the session asks the staff of each seat that has one for the day's orders and submits them with the staff as their origin. They are checked like any order. A replay runs the staff again from the saved state and gets the same orders; the saved game's rules label covers the doctrine, so a save made under another doctrine is refused (decision 0100).
-5. **Proposals and reports are worked out, not stored.** They are a function of the state and are worked out again when asked for. An estimate a commander was shown is kept with the session, outside the state.
+1. **What the commander says is state.** Intents, limits, holds, the two leaves, approved plans with their amendments, commitments, and interrupts set and acknowledged are part of each side's state in `sim-core`, in a module of their own. They are hashed and named beside the hash. They change only by a **command**, a new kind of thing handed in beside orders, checked and accepted or refused with a reason as an order is.
+2. **Every change to command state is an event,** with its causes, seen whole by its own side and not at all by the enemy, with its row in `side_events.rs`. *(review)*
+3. **What the staff decides is code outside `sim-core`,** in a new crate, `sim-staff`. It depends on `sim-core` only. Every function in it takes a `SideView` and nothing else, and a test reads its source to check. It forbids floating point as `sim-core` does, because its decisions reach the hash. *(review)*
+4. **The staff hands in three things:** orders, each with its reason; **staff commands,** for the state the staff itself makes; and decisions to give no order, each with its reason. A staff command may do only what the spec lets the staff do alone: commit and free ships and stock, add and time runs inside an approved plan (decision 22), mark a plan complete or failed, and, where the commander has given leave, move a draft to preparing or a plan to released. Intake refuses anything else from the staff. Staff commands are taken in, hashed and saved as the commander's are. *(review)*
+5. **What is worked out and never stored:** proposals, previews, the command report, days of supply and the staff's projection of stock. Each is a function of the state and the view.
+6. **The view carries the side's own command state,** whole, and nothing of the enemy's. Whether a side has a staff, and what its intents are, is never told to the other side.
 
-## The three rules stage 1 needs
+## The order of a day *(review)*
 
-The spec says a limit the orders cannot honour is not a limit, and names two orders. A third is forming convoys.
+The staff must see today's holds and reserves, and the stock after the morning's refuelling. So the day's sequence is fixed in `sim-core`, which is the only place that can hold it:
 
-6. **A load of a stated weight.** A load order may name the tons of supply or of fuel to take. It takes no more than that, than the ship's room, and than the stock. With no weight it is as it is today.
-7. **A reserve at a base, and refuelling that stops at it.** A base has a fuel reserve and a supply reserve, set by the reserve limit, 0 unless set. Refuelling in port takes a base's fuel down to its reserve and no further, in the order ships refuel today. The staff plans no load and no use that takes a stock below its reserve. An event can: a raid, the men's supply, aircraft upkeep. *Question 1 asks whether refuelling should also start to cost time here.*
-8. **Forming and joining forces by order.** At a base, ships in port that are in no force may be formed into a task force; ships may be detached from a force that is stopped there into a new one; and two forces stopped at the same base may be joined. Joining uses the functions decision 0095 wrote for it and left uncalled. Each is refused at sea.
+| Step | What happens |
+| --- | --- |
+| 1 | Commands handed in for the day are taken in: intents, limits, holds, leaves, interrupts, approvals |
+| 2 | An order the commander has handed in for a unit that is in any intent's forces limit holds that unit, from now, as an override |
+| 3 | Forces back from the yard are home. Ships in port refuel, each base down to its reserve and no further |
+| 4 | The staff of each side that has one is asked, on the view as it now stands |
+| 5 | Staff commands are taken in. Then all orders, the commander's and the staff's. A staff order to a held unit is refused, as a guard behind the staff's own check |
+| 6 | The rest of the day, as it is |
 
-Each is a rule change with its lines in the rulebook, its rule card in the record that builds it, and a hand calculation.
+7. **The staff is passed in, not called from outside.** `sim-core` defines what a staff is: something that, given a side's view, returns orders, staff commands and reasons. The function that resolves a day takes each side's staff, or none. `sim-staff` provides the staff. Every loop that resolves days passes it: the session, `run`, `batch`, the validation harness and the timing command. `sim-core` still depends on nothing, `sim-agent` still depends on `sim-core` only and is handed its staff by its caller, and a staffed day is the same sequence wherever it is run. *(review)*
+8. **A day with no staff and no command is resolved exactly as today.** Every existing scenario, baseline and recorded game is unchanged.
+
+## What a saved game holds *(review)*
+
+9. **A saved game keeps what was handed in,** as it does today: the commander's commands and orders, and the staff's commands, orders and reasons, each with its origin. A replay hands them in again and does not run the staff. So a replay still works when the doctrine has since changed.
+10. **A check runs the staff again and compares.** `replay --check-staff` asks the staff at each day and reports the first difference from what was saved. It is the test that the staff is a function of the view, and CI runs it on every staffed recorded game.
+11. **The doctrine has its own version,** kept in `sim-staff` and recorded in the save beside the rules label (decision 0100, 10). It is checked when a game is resumed for more play, which is refused under another doctrine, and not when a game is replayed.
+12. **A reason is kept, not worked out again.** It is handed in with its order or with the decision to give none, recorded as an event, and saved. `why` on last week's decision reads it. So a reason still resolves after its intent is replaced.
+
+## The four rules stage 1 needs
+
+Each gets a decision record of its own with a rule card and a hand calculation; the rulings here are what those records start from.
+
+13. **A load up to a stated weight.** A load order may name a weight of supply or of fuel for the force: load until that much is aboard, shared among its ships in ship order. It is complete when the weight is aboard, or the room or the stock ends. It does not apply to men. With no weight it is as today.
+14. **A reserve at a base.** A base has a supply reserve and a fuel reserve, 0 unless the reserve limit sets them.
+    - Refuelling takes a base's fuel down to its reserve and no further, for every force, the commander's own included: it is a rule and not an order. Where a side has two bases in a hex, refuelling goes on to the next when the first is at its reserve.
+    - A load ordered by the staff is capped when it is worked: it never takes a stock below its reserve, whatever was eaten in the night. So a draw the staff's own plan causes never goes below a reserve, as the spec requires.
+    - What the men eat, aircraft upkeep, repairs, bombs and shells still take a stock below it. Those are events.
+15. **Forming, joining and standing down forces, at a base.** Ships in port in no force may be formed into one. Two forces stopped at the same base may be joined. A force stopped at a base may be stood down, its ships then lying in port in no force. Each is refused at sea, for a held force, and for a force away at the yard. A formed force has no mission, cruise speed, the engagement settings a scenario's force has by default, and this base as its home port. In a join the receiving force keeps its orders and settings and takes the other's ships with what they carry; the other's orders end. The existing order that detaches ships is left as it is.
+16. **A scenario may state a side's commands,** by day, as it states orders, so that a test can begin with an intent in force.
+
+Refuelling that costs time is **not** in stage 1: question 1.
 
 ## The contract in stage 1
 
-9. **One kind of intent:** keep a base at so many days of supply. It names the base, the days, and optionally the same for fuel. The other kinds come with the stages that give them a doctrine.
-10. **All six limits exist,** since every later stage leans on them, though stage 1's doctrine uses four:
+17. **One kind of intent:** keep a base at so many days of supply. It names the base and the days. It has no date: it stands until withdrawn. An intent for fuel waits for stage 2, since a base's fuel is used only by the forces sent to it and stage 1 sends none. *(review)*
+18. **All six limits exist.** Stage 1's doctrine reads forces, area, priority, protected and reserve. Risk is stored and shown and read by nothing until stage 2.
+19. **The forces limit of a supply intent names the pool and exactly one source base.** Several sources are for a later stage.
+20. **Holds** on a setting, a unit and a parent force are tested apart, as the spec asks. Guarding a hold does not freeze what is above it: a held ship takes the force it is in out of the pool, and nothing else of the side. A held setting has nothing to bite on in stage 1's doctrine and is tested by a stub.
+21. **Leave to prepare and leave to launch** are two settings of a seat, with the spec's defaults.
 
-   | Limit | In stage 1 |
-   | --- | --- |
-   | Forces | The ships, forces and bases the staff may use for an intent: the pool, and the base it draws stock from. Used |
-   | Area | The hexes its ships may enter. Used: a route that would leave it is not planned |
-   | Priority | The order of the side's intents. Used, between two supply intents |
-   | Protected | A force that stays on its task. Used |
-   | Reserve | Decision 7. Used |
-   | Risk | Stored and shown. Stage 1's doctrine does not read it: nothing in it is risked. Stage 2 gives it numbers |
+### A supply plan *(review)*
 
-11. **A plan** for a supply intent is a schedule of convoy runs: for each, the ships, the load by weight, the base it loads at, the route, the day it sails, the day it is due and the day the ships are free again. It has one phase. Its life is the spec's: draft, preparing, released, complete, failed, cancelled, with a baseline and numbered amendments.
-12. **Leave to prepare and leave to launch** are two settings of a seat, with the spec's defaults. For a supply plan, preparing is forming the convoy and loading it; released, it sails.
-13. **Commitments** are of ships by day and of stock by weight and day. A ship is free when it can be where its next run starts: the passage back, the unloading and the refuelling are inside the commitment. Two plans never count the same ton or the same ship.
-14. **Holds** on a setting, a unit and a base, as the spec has them, with the three cases tested apart.
-15. **Interrupts** a commander can set in stage 1: a base's days of supply, or of fuel, falling below a number; a plan that can no longer be met; a ship of the side lost; a proposal waiting for him. They fire on the change, as the spec has it.
-16. **A run** resolves up to a number of days and stops early for an interrupt, with every reason of the day listed together.
-17. **Reasons.** Every order the staff gives or withholds has the five parts of the spec. In stage 1 "worked" is always arithmetic that can be read: stock, use, passage and capacity.
+22. **A supply plan's baseline is its intent:** the base, the days of supply and the limits it was approved under. Its convoy runs are tasks inside its one phase. The staff may add a run, size it and time it alone, inside the limits: question 3 asks the designer to confirm this reading of what the staff may change alone. What needs the commander is a change to the days, the base or a limit, and cancelling.
+23. **Its phase** begins when the plan is released and ends when the intent is withdrawn. **Released** covers every run of the plan: leave to launch is asked once. **Preparing** is forming and loading the first run, which does not sail.
+24. **Its fallback** is come home: on cancelling, or when a run cannot go on, its ships return to the source.
+25. **With no commander,** it follows the spec's order: slip the run, then accept fewer days than asked and say how many, then stand the plan down.
+26. **A run** is carried out by these orders, which the staff gives on the days named: form the force if it is not formed; a load order of a stated weight at the source; and, on the first day the load is complete, a route to the destination and back, marked to act at the destination, with an unload order (decision 0096). Loading and sailing cannot be the same day, because a day's movement comes before its loading.
+27. **Commitments** are of ships by day and of stock by weight and day. A ship is committed from the day its run is planned until it is back at the source and refuelled. A ton at the source is committed from the day its run is planned until it is loaded. Two plans never count the same ship or the same ton.
 
-## Days of supply
+### Interrupts, runs and reports
 
-18. **Days of supply is a base's stock over its planned use for a day.** Planned use is what the base's side expects it to pay on a day like those ahead:
-   - the men's supply for the men of its side ashore in its hex, at their weight (decisions 0066 and 0098);
-   - the daily upkeep of the aircraft at it;
-   - the supply of the sorties its groups fly on the missions they are set, counted as if every aircraft able to fly flew its mission each day it could.
-19. **Men and aircraft that are on their way count from the day they are due,** by the plans the staff holds. So a base about to receive a regiment is short before the regiment lands.
-20. **A base with no planned use has no figure,** and the tools say so in words. It is never shown as infinite or as zero.
-21. **Standing aircraft down does not raise it.** Planned use counts the missions the commander's intents call for, not the ones flying today. Where the staff rests a group, the use it would have had is still counted.
-22. **A base that changes side** has a figure from the day it is the side's, and none before; a base lost has none after.
+28. **Interrupts** in stage 1: a base's days of supply falling below a number; a plan that can no longer be met; a ship of the side lost; a proposal or a leave waiting for the commander. They fire on the change.
+29. **A run of days** resolves up to a number of days and stops between days for an interrupt, with every reason of the day listed together. Before it runs, the staff's orders for the first day are listed. One day of it is exactly `end_day`. It is offered to a game with one seat held by a player.
+30. **The command report** keeps one identity for a matter that lasts: the plan, the run and the kind of matter. A convoy late for a week is one open matter with a history, and it is the same matter after a save and a resume.
 
-The spec asks for four hand-worked cases: a unit arriving, a surge of sorties, no consumption at all, and a base taken and lost. They are the architect's first hand calculation for this stage.
+## Days of supply *(review)*
+
+31. **It is for a side in a hex, read when the staff is asked:** after the morning's refuelling and before the day's orders. An intent names a base and means its hex, since the men of a side are fed from every base it has there.
+32. **It is the side's supply stock in the hex over its planned use for that day.** Planned use is:
+    - the men's supply for its men ashore there, each unit at its weight;
+    - the daily upkeep of its aircraft there, ready and damaged;
+    - the repairs its bases there would pay for that night: for each, the smaller of its repairs a day and its damaged aircraft, times the supply of a repair;
+    - the sorties of its groups there whose mission flies whatever is sighted, search and patrol, at each daylight pulse, with the aircraft able to fly.
+33. **A strike mission counts nothing in stage 1.** Whether it flies depends on what is sighted, and a figure that moved with enemy reports would set off interrupts for no change in supply. Stage 2, which gives strikes a doctrine, decides how they are planned for.
+34. **Standing down.** The staff of stage 1 gives no order to an air group, so it cannot raise the figure by resting one. From stage 2 a group the staff itself stood down is counted as flying. A group the commander rests is counted as resting: it is his order.
+35. **The figure is today's; the staff plans on the days ahead.** Its projection takes each coming day's planned use, with what is on its way counted from the day it is due: aircraft arrivals and replacements the scenario has scheduled, and men aboard the side's own forces that are ordered to land there. The report gives the figure and the first day the projection falls below the intent.
+36. **No planned use, no figure,** said in words. A hex that is not the side's has none.
+
+The four cases the spec asks for are the architect's first hand calculation: a unit arriving, a surge of sorties, no consumption at all, and a base taken and lost. The surge has a scenario of its own, with aircraft and no wear, so that it has no dice.
 
 ## The doctrine: keep a base supplied
 
-23. **Each day, for each supply intent in priority order,** the staff works out the base's stock day by day over the days ahead, from planned use and the runs already committed.
-24. **It sends a run when one is needed and can be made.** A run is needed if, on the day a run sailing now would land, the stock would be below the intent's days of supply. It can be made if the pool has ships free, the source base has stock above its reserve, and a route exists inside the area limit.
-25. **A run's size** is the smallest of: what brings the base to its days of supply on the day it lands, with the use of the days until the next run could come; the room of the ships free; and the source's stock above its reserve.
-26. **Its ships** are the fewest that carry the load, the lowest-numbered first. **Its route** is the shortest sea route inside the area. **Its speed** is cruise. It unloads on arrival and comes back, by the order of decision 0096.
-27. **An order stands until its reason changes.** A run under way is not re-planned on a day when the same run would be planned again.
-28. **When it cannot meet an intent** it says which of the four things binds: no ship free until a day, the source's stock, no route in the area, or the base using faster than the pool can carry. It reports the shortfall in days of supply and goes on with what it can do. At the source, it reports the day the source itself runs dry at the present rate.
-29. **Escort, cover and what the enemy may do to a convoy are not in stage 1.** A convoy lost to the enemy is a ship lost: an interrupt, and a new plan.
+37. **Each day, for each supply intent in priority order,** the staff projects the hex's stock day by day, from planned use and the runs committed.
+38. **One run of a plan is being loaded at a time.** A new run is planned on the first day when no run of the plan is loading and the projection, with the runs under way, falls below the intent's days on some day before a new run could land.
+39. **A run's ships** are the pool's free ships in number order, taken until their room covers the load or none is left.
+40. **A run's load** is what brings the hex to its days of supply on the day the run lands, plus the planned use of one round trip of those ships, so that the next run can be back in time. It is no more than the ships' room and the source's stock above its reserve and its commitments. It is fixed when the load order is given and not sized again.
+41. **A run can be made** if the pool has a free ship, the source has stock to give, a sea route lies inside the area limit, and each ship has fuel for the round trip after refuelling at the source. The staff checks the route the engine would take and adds waypoints to keep it inside the area; if none does, it has no route.
+42. **Times** are worked from the cargo rule's own rates, berth or lighter, at both ends, and the passage at cruise.
+43. **A run under way is not recalled** for a higher intent in stage 1. The higher intent has the ships as they come free.
+44. **When it cannot meet an intent** it says which binds: no ship free until a day, the source's stock, no route in the area, ships without the fuel, or the hex using more than the pool can carry. It gives the shortfall in days and goes on with what it can do, and says the day the source itself runs dry at the present rate.
+45. **Escort, cover and what the enemy may do to a convoy are not in stage 1.** A ship lost is an interrupt and a new plan.
 
 ## The tools
 
-30. **A seat with a staff has these tools,** beside the ones that exist. Each takes and returns JSON with a schema, and the agent interface's version rises:
+46. **A seat with a staff has these,** beside the tools that exist. Each has a schema, and the agent interface's version rises.
 
    | Tool | What it does |
    | --- | --- |
+   | `command_state` | Reads what is in force: intents, limits, holds, leaves and interrupts |
    | `set_intent`, `withdraw_intent` | State or remove an intent |
    | `set_limit` | Set forces, area, priority, a protected commitment, a reserve or risk |
-   | `hold`, `release` | Hold a setting, a unit or a base; release it |
-   | `plans` | The side's plans, each with its state, baseline, amendments and what it is doing now |
+   | `set_leave` | Give or withhold leave to prepare, and leave to launch |
+   | `hold`, `release` | Hold a setting, a unit or a force; release it |
+   | `plans` | The side's plans: state, baseline, amendments, runs and what each is doing |
    | `propose` | The staff's draft for an intent: the plan, the reasons, what binds, what it displaces |
-   | `preview` | What an amendment or a changed limit would cost, tied to a revision. Changes nothing |
-   | `approve` | Prepare a draft, release a plan that is preparing, apply a previewed amendment, cancel |
+   | `preview` | What a changed intent or limit would cost, tied to a revision. Changes nothing |
+   | `approve` | Prepare a draft, release a plan that is preparing, or apply what was previewed |
+   | `cancel_plan` | Cancel a plan; its ships come home |
+   | `staff_orders` | The orders the staff would give for the coming day, each with its reason |
    | `set_interrupt`, `acknowledge` | Set a condition; acknowledge one that fired |
    | `run` | Resolve up to so many days, stopping for an interrupt |
    | `report` | The command report: what changed, what is open, each item leading to its reasons |
-   | `why` | The reason for a staff decision, given or withheld |
+   | `why` | The reason for a staff decision, by its number. A decision to give no order has a number too |
 
-31. **The command report keeps one identity for a matter that lasts.** A convoy that is late for a week is one open matter with a history, not seven.
-32. **Unit orders still work.** A commander may give any order he could before. An order to a unit the staff is using is an override: the unit is held from then, by the spec's rule, until he releases it.
+47. **Days of supply is in what exists already:** the list of bases and the briefing.
+48. **Unit orders still work.** An order from the commander to a unit in an intent's forces limit is an override and holds the unit (step 2 of the day).
+49. **A language model must be able to command through these from their descriptions alone.** That is tested in step 4 by a recorded game, as scenario 9 was.
 
 ## Built in four steps
 
-The spec's order. Each ends with something that runs and has its own pull request.
-
 | Step | What is built | What runs at the end |
 | --- | --- | --- |
-| 1 | The three rules. Command state, commands, the view. Days of supply. The doctrine for one intent. `set_intent`, `set_limit`, `propose`, `approve`, `why` | One convoy plan, proposed, explained, approved and carried out, on a placeholder map |
-| 2 | Priority, commitments of ships and of stock, a second intent, displaced demand reported | Two bases and one pool: the higher intent is met, the lower's shortfall is stated with its cause, and a changed priority moves the ships from the next day |
-| 3 | Holds and release, overrides, amendments with their previews, the two leaves | A hold, a changed intent, a week, a release; a plan brought ready to launch that has not sailed |
-| 4 | Interrupts, `run`, the command report, saving and resuming | A quiet week in one call; a shortage that stops the clock; a save in the middle, resumed, matching play that was not interrupted |
+| 1 | The four rules. Command state, commands, staff commands, the day's order, the staff passed in, events, the save and the check. Days of supply. Commitments of ships. The doctrine for one intent. `command_state`, `set_intent`, `set_limit`, `propose`, `approve`, `staff_orders`, `why` | One convoy plan, proposed, explained, approved and carried out, saved and replayed |
+| 2 | Priority, commitments of stock, a second intent, displaced demand reported | Two hexes and one pool: the higher intent is met, the lower's shortfall is stated with its cause, and a changed priority moves the ships as they come free |
+| 3 | Holds and release, overrides, previews and amendments, the two leaves, cancelling | A hold, a changed intent, a week, a release. A plan brought ready to launch that has not sailed; and with leave given, the same plan run through unattended |
+| 4 | Interrupts, `run`, the command report, resuming under the doctrine's version | A quiet week in one call; a shortage that stops the clock; a save in the middle, resumed, matching play that was not interrupted; a model commanding by the tools alone |
 
 ## What it must pass
 
-Each case below gets its numbers in the hand calculation or the test plan of its step, written before the code.
+Each case gets its numbers in a hand calculation or in the test plan of its step, written before the code.
 
-- **Hand calculations:** days of supply (the four cases); one convoy schedule from stock, use, passage and unloading times; an allocation of one pool between two bases; a load of a stated weight and a refuelling stopped at a reserve, with a second force refuelling the same morning.
-- **The contract's cases of the spec** that stage 1 can reach: two bases and one convoy; a hold, a changed intent, a week, a release; a sunk supply ship; an objective that cannot be met; a plan cancelled with ships at sea; the save case.
-- **Properties:** the staff never orders what it does not own or what is held, directly or through another unit; it never plans below a reserve or outside the area; every order given or withheld has a reason that resolves; the same inputs give the same orders; a staff with no intent gives no order.
-- **No truth:** two worlds that differ only in what the side cannot see give the same orders, proposals, reasons, previews, interrupts and reports.
-- **Against no orders:** over 30 days on the placeholder supply scenario, with the same start, a side with the staff keeps its base at or above its days of supply, less one run's load, on every day after the first run lands, and a side given no orders has run out by a day the hand calculation gives. Both are exact: the scenario has no enemy and no dice.
-- **Speed:** a day's staff decisions for one side, and a quiet week in one call, on the machine and by the command of decision 0100, inside times the designer accepts once they are measured.
+- **Hand calculations:** days of supply (the four cases); one convoy from stock, use, rates and passage; one pool between two hexes; a load up to a weight with two forces loading from one base without both counting the same stock, and a refuelling stopped at a reserve with a second force refuelling the same morning.
+- **The contract's cases of the spec** that stage 1 can reach: two bases and one convoy; a hold, a changed intent, a week, a release; a sunk supply ship; an intent that cannot be met; a plan cancelled with ships at sea; the save case. "A missed date" does not arise: a supply intent has no date.
+- **Running time:** a quiet week in one call; a condition already true at the start; a shortage that lasts; two reasons on one day; an intent changed after a preview.
+- **Properties:** the staff never orders what it does not own or what is held, directly or through a parent force; it never plans below a reserve or outside the area; every order given or withheld has a reason that resolves, also after its intent is replaced; the same inputs give the same orders; a staff with no intent gives no order; a staffed game's check passes.
+- **No truth:** two worlds that differ only in what the side cannot see give the same orders, staff commands, proposals, reasons, previews, interrupts and reports.
+- **Against no orders:** on a placeholder scenario with no enemy, no aircraft and so no dice, over 30 days: with the staff, from the day the first run lands, the hex's days of supply never fall below the intent's less the days one round trip takes; with no orders, it has run out by the day the hand calculation gives.
+- **Legibility:** a cheap model, given the reason of each of a set of stage 1's decisions, says what the staff was trying to do and what would change its mind, at a pass mark written in step 4's test plan before the run.
+- **Speed** is measured and reported, by the command of decision 0100: a day's staff decisions for one side and a quiet week in one call. It is not a test in stage 1: no number has been agreed to fail against.
 
 ## What it costs
 
-- **A new crate,** `sim-staff`, and a line for it in `docs/engineering/layout.md`.
-- **New state** for each side's command state, in the hash; the hash version and the rules label rise with each step that adds to it.
-- **Three rule changes** and the lines of the rulebook for them; a new chapter of the rulebook, "The staff", which stage 1 begins.
-- **Eleven tools** with their schemas, and the MCP text that tells a player how to command by intent.
-- **A placeholder scenario or two** for supply, and the hand calculations.
+- **A new crate,** `sim-staff`, and the lines for it and for the staff passed in, in `docs/engineering/layout.md`.
+- **New state** for each side's command state, in the hash. The state version rises when the layout does. The rules label rises only where an existing game's result could change, which a day with no command never does.
+- **Four rule changes** with their records, and a new chapter of the rulebook, "The staff", which stage 1 begins.
+- **The tools** with their schemas, and the text that tells a player how to command by intent.
+- **Placeholder scenarios** for supply, and the hand calculations.
 
 ## What it leaves for later stages
 
-- Every intent but supply; escort and cover; the risk level's numbers; the enemy played by the staff (stage 2).
+- Every intent but supply; fuel; strikes in planned use; escort and cover; recalling a run; several sources; the risk level's numbers; the enemy played by the staff (stage 2).
 - Landing, marching, units made ready, bases built up (stage 3).
 - The trial, and with it the finding of stage 0 that a world built from one side's view holds no enemy the side has not seen (stage 4).
-- The day from which a force may be used, which the staff setup of the campaign needs (stage 2).
 
 ## Questions for the designer
 
-1. **Refuelling and time.** Decision 0102 puts "refuelling that costs time and a berth" before stage 3. Stage 1 already changes the refuelling rule, for reserves. I recommend doing both at once: a ship refuels through the port's rate as cargo does, taking hours and a berth, and stops at the reserve. It is one change to the rule instead of two, and the supply staff then plans with the real cost from its first day. The other choice is reserves only now, and the time cost as its own change before stage 3.
-2. **A reserve and the commander's own orders.** The spec makes a reserve hard for the staff's planning. I recommend that it also binds automatic refuelling, as decision 7 has it, and does not bind an order the commander gives himself: his load order may take stock below his own reserve, and the tools say that it does. The other choice is that a reserve binds every order until he lowers it.
-3. **The whole plan.** Whether stage 1 may be built as laid out here, in its four steps.
+Answered on Nov 14, 2026, each as the architect recommended.
+
+1. **Refuelling and time:** reserves only now. Refuelling that costs time is its own decision, after step 1 and before stage 3, as decision 0102 orders it.
+2. **A reserve and the commander's own orders:** a reserve binds the staff and automatic refuelling. It does not bind a load order the commander gives himself; the tools tell him when his order goes below it, and what it takes from stock the staff had committed is reported as displaced.
+3. **What the staff may change alone in a supply plan:** adding, sizing and timing runs inside the approved limits is the staff's alone. The baseline is the intent and its limits. A change to the days, the base or a limit, and cancelling, come to the commander.
+4. **The whole plan:** approved, to be built after the two hand calculations. If writing them shows a rule still open, it comes back to the designer before any code.
