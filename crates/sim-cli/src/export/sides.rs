@@ -137,7 +137,15 @@ pub fn events(world: &World, side: Side) -> Vec<SideEventOut> {
                 }
             }
             let hidden_causes = event.hidden_causes;
-            let (kind, data, cut) = describe_side(&event.kind, &key);
+            // The code is the log's code for the event this one was made
+            // from, so that a side's copy and the log cannot name one kind
+            // two ways (decision 0108, item 6).
+            let source = world
+                .events()
+                .get(event.id)
+                .expect("a side's event is an event of the log");
+            let (kind, _) = describe(&source.kind, &key);
+            let (data, cut) = describe_side(&event.kind, &key);
             let pulse = event.pulse.map(Pulse::name);
             let cause_text: Vec<String> = causes
                 .iter()
@@ -193,23 +201,20 @@ fn breakdown(breakdown: &SideBreakdown) -> BreakdownOut {
     }
 }
 
-/// The kind's code, its data, and whether it was cut. A whole event is
-/// described as the full log describes it; a cut one has only the fields the
-/// engine left it.
-fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, bool) {
+/// The event's data, and whether it was cut. A whole event is described as
+/// the full log describes it; a cut one has only the fields the engine left
+/// it. The kind's code is not here: it is the log's, taken from the event the
+/// side's copy was made from.
+fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (Data, bool) {
     let d = Data::new();
     match kind {
-        SideEventKind::Whole(kind) => {
-            let (code, data) = describe(kind, key);
-            (code, data, false)
-        }
+        SideEventKind::Whole(kind) => (describe(kind, key).1, false),
         SideEventKind::Salvo {
             round,
             firer,
             weapon,
             shots,
         } => (
-            "salvo",
             d.int("round", *round)
                 .id("firer", *firer)
                 .text("weapon", names::weapon(*weapon))
@@ -221,7 +226,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             target,
             weapon,
         } => (
-            "salvo",
             d.int("round", *round)
                 .id("target", *target)
                 .text("weapon", names::weapon(*weapon)),
@@ -232,7 +236,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             ship,
             shots,
         } => (
-            "air_attack",
             d.id("task_force", *task_force)
                 .id("ship", *ship)
                 .num("shots", *shots),
@@ -243,7 +246,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             weapon,
             shots,
         } => (
-            "air_attack",
             d.id("air_group", *air_group)
                 .text("weapon", names::weapon(*weapon))
                 .num("shots", *shots),
@@ -256,7 +258,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             shots,
             after_attack,
         } => (
-            "air_fight",
             d.id("firer", *firer)
                 .text("firing", firing.name())
                 .text("at", at.name())
@@ -269,7 +270,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             shots,
             after_attack,
         } => (
-            "anti_aircraft_fire",
             d.id("task_force", *task_force)
                 .num("shots", *shots)
                 .flag_when_true("after_attack", *after_attack),
@@ -280,7 +280,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             shots,
             after_attack,
         } => (
-            "base_anti_aircraft_fire",
             d.id("base", *base)
                 .num("shots", *shots)
                 .flag_when_true("after_attack", *after_attack),
@@ -291,7 +290,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             base,
             shots,
         } => (
-            "base_attacked",
             d.id("air_group", *air_group)
                 .id("base", *base)
                 .num("shots", *shots),
@@ -307,7 +305,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             hits_on_supply,
             hits_on_men,
         } => (
-            "base_attacked",
             d.id("base", *base)
                 .num("shots", *shots)
                 .num("chance", *chance)
@@ -318,15 +315,12 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
                 .int_when_nonzero("hits_on_men", *hits_on_men),
             true,
         ),
-        SideEventKind::SearchAttempt { air_group } => {
-            ("search_attempt", d.id("air_group", *air_group), true)
-        }
+        SideEventKind::SearchAttempt { air_group } => (d.id("air_group", *air_group), true),
         SideEventKind::EngagementBegun {
             task_force,
             hex,
             elapsed_hours,
         } => (
-            "engagement_begun",
             d.id("task_force", *task_force)
                 .hex("hex", *hex)
                 .num("elapsed_hours", *elapsed_hours),
@@ -338,7 +332,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             hex,
             reason,
         } => (
-            "engagement_ended",
             d.int("round", *round)
                 .id("task_force", *task_force)
                 .hex("hex", *hex)
@@ -361,40 +354,26 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             } else {
                 d.num("fatigue_factor", *fatigue_factor)
             };
-            ("sighting_roll", d, true)
+            (d, true)
         }
-        SideEventKind::ForceSurprised { round, task_force } => (
-            "force_surprised",
-            d.int("round", *round).id("task_force", *task_force),
-            true,
-        ),
-        SideEventKind::ForceSlippedAway { round, task_force } => (
-            "force_slipped_away",
-            d.int("round", *round).id("task_force", *task_force),
-            true,
-        ),
-        SideEventKind::AlarmRoll { task_force, chance } => (
-            "alarm_roll",
-            d.id("task_force", *task_force).num("chance", *chance),
-            true,
-        ),
-        SideEventKind::GroundFight { hex } => ("ground_fight", d.hex("hex", *hex), true),
-        // The same kind code as the log's event (decision 0105).
-        SideEventKind::GroundAttackFailed { hex } => {
-            ("ground_attack_failed", d.hex("hex", *hex), true)
+        SideEventKind::ForceSurprised { round, task_force } => {
+            (d.int("round", *round).id("task_force", *task_force), true)
         }
-        SideEventKind::EnemySurrendered { hex, men } => (
-            "men_surrendered_ashore",
-            d.hex("hex", *hex).int("men", *men),
-            true,
-        ),
+        SideEventKind::ForceSlippedAway { round, task_force } => {
+            (d.int("round", *round).id("task_force", *task_force), true)
+        }
+        SideEventKind::AlarmRoll { task_force, chance } => {
+            (d.id("task_force", *task_force).num("chance", *chance), true)
+        }
+        SideEventKind::GroundFight { hex } => (d.hex("hex", *hex), true),
+        SideEventKind::GroundAttackFailed { hex } => (d.hex("hex", *hex), true),
+        SideEventKind::EnemySurrendered { hex, men } => (d.hex("hex", *hex).int("men", *men), true),
         SideEventKind::GroundFire {
             unit,
             hex,
             firing_men,
             shots,
         } => (
-            "ground_fire",
             d.id("unit", *unit)
                 .hex("hex", *hex)
                 .int("firing_men", *firing_men)
@@ -408,7 +387,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             weighed_shots,
             rounds_left,
         } => (
-            "bombardment_fire",
             d.id("ship", *ship)
                 .id("base", *base)
                 .num("shells", *shells)
@@ -423,7 +401,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             shells,
             weighed_shots,
         } => (
-            "shore_bombardment",
             d.id("task_force", *task_force)
                 .id("base", *base)
                 .hex("hex", *hex)
@@ -441,7 +418,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             hits_on_supply,
             hits_on_men,
         } => (
-            "shore_bombardment",
             d.id("base", *base)
                 .hex("hex", *hex)
                 .num("shells", *shells)
@@ -458,7 +434,6 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             from,
             to,
         } => (
-            "base_changed_side",
             d.id("base", *base)
                 .hex("hex", *hex)
                 .text("from", names::side(*from))
