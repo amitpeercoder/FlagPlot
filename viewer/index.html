@@ -583,7 +583,7 @@ function snapshot(cur, aux) {
   }
   // Land units (decision 0066): the men of each ashore and where, rebuilt from the events; the formed bases by hex.
   const landUnits = new Map();
-  for (const [id, u] of cur.landUnits) landUnits.set(id, { id, name: u.name, side: u.side, men_ashore: u.men_ashore, hex: u.hex ? u.hex.slice() : null, posture: u.posture, fatigue: u.fatigue, fed_share: u.fed_share, march: u.march ? { to: u.march.to.slice(), days: u.march.days, of: u.march.of } : null });
+  for (const [id, u] of cur.landUnits) landUnits.set(id, { id, name: u.name, side: u.side, men_ashore: u.men_ashore, hex: u.hex ? u.hex.slice() : null, posture: u.posture, fatigue: u.fatigue, fieldworks: u.fieldworks || 0, fed_share: u.fed_share, march: u.march ? { to: u.march.to.slice(), days: u.march.days, of: u.march.of } : null });
   // What each side believes of the enemy's men ashore (decision 0092): the last ground report of each hex.
   const estimates = {};
   for (const side of Object.keys(cur.estimates)) estimates[side] = new Map([...cur.estimates[side]].map(([k, e]) => [k, { hex: e.hex.slice(), men: e.men, day: e.day }]));
@@ -797,7 +797,7 @@ function buildModel(replay) {
 
   // Rebuild
   const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, estimates: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map(), landUnits: new Map(), formedBases: new Map(), baseSide: new Map() };
-  for (const u of initial.land_units || []) cur.landUnits.set(u.id, { id: u.id, name: u.name, side: u.side, men_ashore: u.men_ashore || 0, hex: Array.isArray(u.hex) ? u.hex.slice() : (u.hex ? [u.hex.q, u.hex.r] : null), posture: u.posture || 'defend', fatigue: u.fatigue || 0, fed_share: u.fed_share !== undefined ? u.fed_share : 1, march: u.march ? { to: Array.isArray(u.march.to) ? u.march.to.slice() : [u.march.to.q, u.march.to.r], days: u.march.days, of: null } : null });
+  for (const u of initial.land_units || []) cur.landUnits.set(u.id, { id: u.id, name: u.name, side: u.side, men_ashore: u.men_ashore || 0, hex: Array.isArray(u.hex) ? u.hex.slice() : (u.hex ? [u.hex.q, u.hex.r] : null), posture: u.posture || 'defend', fatigue: u.fatigue || 0, fieldworks: u.fieldworks || 0, fed_share: u.fed_share !== undefined ? u.fed_share : 1, march: u.march ? { to: Array.isArray(u.march.to) ? u.march.to.slice() : [u.march.to.q, u.march.to.r], days: u.march.days, of: null } : null });
   // Who holds each base (decision 0090): the side the replay starts it with, changed by base_changed_side events.
   for (const b of replay.bases || []) cur.baseSide.set(b.id, b.side);
   cur.groupBase = new Map();
@@ -937,14 +937,14 @@ function buildModel(replay) {
         case 'men_lost_in_fight':
         case 'men_lost_to_fire': {
           let u = cur.landUnits.get(d.unit);
-          if (!u) { u = { id: d.unit, name: 'land unit ' + d.unit, side: d.side, men_ashore: 0, hex: null, posture: 'defend', fatigue: 0, fed_share: 1 }; cur.landUnits.set(d.unit, u); }
+          if (!u) { u = { id: d.unit, name: 'land unit ' + d.unit, side: d.side, men_ashore: 0, hex: null, posture: 'defend', fatigue: 0, fieldworks: 0, fed_share: 1 }; cur.landUnits.set(d.unit, u); }
           u.men_ashore = d.ashore || 0;
           if (Array.isArray(d.hex)) u.hex = u.men_ashore > 0 ? d.hex.slice() : null;
           break;
         }
         case 'unit_divided': {
           const from = cur.landUnits.get(d.from);
-          cur.landUnits.set(d.unit, { id: d.unit, name: (from ? from.name : 'land unit ' + d.from) + ' (part)', side: from ? from.side : undefined, men_ashore: 0, hex: null, posture: 'defend', fatigue: 0, fed_share: 1 });
+          cur.landUnits.set(d.unit, { id: d.unit, name: (from ? from.name : 'land unit ' + d.from) + ' (part)', side: from ? from.side : undefined, men_ashore: 0, hex: null, posture: 'defend', fatigue: 0, fieldworks: from ? from.fieldworks || 0 : 0, fed_share: 1 });
           break;
         }
         // A march (decision 0094): each day marched, the arrival (the men are in the new hex; the supply they carried
@@ -981,6 +981,10 @@ function buildModel(replay) {
           break;
         }
         case 'fed_share_restored': { const u = cur.landUnits.get(d.unit); if (u) u.fed_share = 1; break; }
+        // A unit's fieldworks (decision 0106): dug where it stands, worn by fire, or lost when it leaves them. A strained unit's
+        // fatigue (a land_unit_fatigue with change strained) is rebuilt as any other change of fatigue. Defences_worn is a base's
+        // defences, which the viewer does not rebuild.
+        case 'fieldworks_changed': { const u = cur.landUnits.get(d.unit); if (u) u.fieldworks = d.fieldworks; break; }
         case 'land_unit_fatigue': { const u = cur.landUnits.get(d.unit); if (u) u.fatigue = d.fatigue; break; }
         // A falling back, after a defeat (decision 0104) or of a spent attacker (decision 0105), tires the unit and puts it on the defence.
         case 'unit_fell_back': case 'spent_unit_fell_back': { const u = cur.landUnits.get(d.unit); if (u) { u.posture = 'defend'; u.fatigue = d.fatigue; } break; }
@@ -1197,6 +1201,7 @@ function compareWithFinal(model) {
     if (!r) continue;
     if (r.posture !== (u.posture || 'defend')) problems.push('land unit ' + u.id + ' posture rebuilt as ' + r.posture + ' but final says ' + (u.posture || 'defend'));
     if (!numEq(r.fatigue, u.fatigue || 0)) problems.push('land unit ' + u.id + ' fatigue rebuilt as ' + r.fatigue + ' but final says ' + (u.fatigue || 0));
+    if (!numEq(r.fieldworks || 0, u.fieldworks || 0)) problems.push('land unit ' + u.id + ' fieldworks rebuilt as ' + (r.fieldworks || 0) + ' but final says ' + (u.fieldworks || 0));
     const fed = u.fed_share !== undefined ? u.fed_share : 1;
     if (Math.abs(r.fed_share - fed) > 2e-6) problems.push('land unit ' + u.id + ' fed share rebuilt as ' + r.fed_share + ' but final says ' + fed);
     // A march (decision 0094): the hex it marches to and the days marched, rebuilt from the orders and the march events.
@@ -2111,7 +2116,7 @@ function renderReadout() {
   for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + holderOf(st, b) + (b.side !== holderOf(st, b) ? ', taken from the ' + b.side + ' side' : '') + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')');
   const formed = st.formedBases && st.formedBases.get(S.hoverKey);
   if (formed) line('Base ' + formed.id + ' (' + formed.side + '): formed by a landing');
-  if (st.landUnits) for (const u of st.landUnits.values()) if (u.hex && u.hex[0] === q && u.hex[1] === r && u.men_ashore > 0) line('Land unit: ' + u.name + (u.side ? ' (' + u.side + ')' : '') + ', ' + u.men_ashore + ' men ashore' + (u.posture === 'attack' ? ', on attack' : '') + (u.fatigue > 0 ? ', fatigue ' + u.fatigue : '') + (u.fed_share !== undefined && u.fed_share < 1 ? ', fed share ' + u.fed_share : '') + (u.march ? ', marching to (' + u.march.to[0] + ',' + u.march.to[1] + '), ' + u.march.days + (u.march.of ? ' of ' + u.march.of : '') + ' days marched' : ''));
+  if (st.landUnits) for (const u of st.landUnits.values()) if (u.hex && u.hex[0] === q && u.hex[1] === r && u.men_ashore > 0) line('Land unit: ' + u.name + (u.side ? ' (' + u.side + ')' : '') + ', ' + u.men_ashore + ' men ashore' + (u.posture === 'attack' ? ', on attack' : '') + (u.fatigue > 0 ? ', fatigue ' + u.fatigue : '') + (u.fieldworks > 0 ? ', fieldworks ' + u.fieldworks : '') + (u.fed_share !== undefined && u.fed_share < 1 ? ', fed share ' + u.fed_share : '') + (u.march ? ', marching to (' + u.march.to[0] + ',' + u.march.to[1] + '), ' + u.march.days + (u.march.of ? ' of ' + u.march.of : '') + ' days marched' : ''));
   for (const f of st.forces.values()) if (f.q === q && f.r === r) line('Force: TF' + f.id + ' ' + f.name + ' (' + f.side + '), ' + f.ships.length + ' ship(s) afloat');
   if (S.belief !== 'truth' && st.contacts[S.belief]) {
     for (const c of st.contacts[S.belief].values()) if (c.hex[0] === q && c.hex[1] === r) line('Contact (' + S.belief + ' belief): ' + ghostText(c));

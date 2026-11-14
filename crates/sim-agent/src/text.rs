@@ -857,8 +857,8 @@ impl Briefing {
                     (true, _) => "an airfield".to_string(),
                 };
                 o.sub(format!(
-                    "Works: {airfield}; defences {}; yesterday's work on the port {}, on the aircraft {}",
-                    w.defences.0, w.port_work_yesterday.0, w.aircraft_work_yesterday.0
+                    "Works: {airfield}; defences {} ({}); yesterday's work on the port {}, on the aircraft {}",
+                    w.defences.0, w.grade, w.port_work_yesterday.0, w.aircraft_work_yesterday.0
                 ));
             }
             if let Some(d) = &b.airfield_damage {
@@ -1249,6 +1249,12 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             "; posture {}, fatigue {}, fed share {}",
             u.posture, u.fatigue.0, u.fed_share.0
         ));
+        if let Some(fieldworks) = &u.fieldworks {
+            s.push_str(&format!("; fieldworks {}", fieldworks.0));
+        }
+        if let Some(cover) = &u.cover {
+            s.push_str(&format!("; cover {}", cover.0));
+        }
         if let Some(order) = u.posture_order {
             s.push_str(&format!(" (posture set by your order {order})"));
         }
@@ -1509,10 +1515,37 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
                 "marched" => "marched and tired",
                 "marched_and_attacked" => "marched, attacked and tired",
                 "landed" => "landed and tired",
+                "strained" => "was under fire, did not rest, and tired",
                 _ => "rested",
             },
             f.fatigue.0,
             ev(f.event)
+        ));
+    }
+    for f in &land.fieldworks_yesterday {
+        o.line(format!(
+            "Fieldworks yesterday: {} {}{}",
+            f.land_unit.text(),
+            match f.change {
+                "dug" => format!("dug in, fieldworks now {}", f.fieldworks.0),
+                "worn" => format!(
+                    "had its fieldworks worn by fire, fieldworks now {}",
+                    f.fieldworks.0
+                ),
+                _ => "left its fieldworks".to_string(),
+            },
+            ev(f.event)
+        ));
+    }
+    for d in &land.defences_worn_yesterday {
+        o.line(format!(
+            "Defences worn yesterday: {} hit{} on your men at {} wore the defences of {} down to {}{}",
+            d.hits,
+            if d.hits == 1 { "" } else { "s" },
+            at(&d.place),
+            d.base.text(),
+            d.defences.0,
+            ev(d.event)
         ));
     }
     for b in &land.back_to_defend_yesterday {
