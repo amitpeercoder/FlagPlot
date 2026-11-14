@@ -430,9 +430,11 @@ A side sees: the attacker sees `AirAttack` for its own group, cut to the aircraf
 
 Each strike group with bombers left attacks, in group order. The stream is keyed on (the air group, the base). Each bomber drops one bomb at `air_combat.toml: bomb_hit_chance`, whatever weapon its type carries against ships: a torpedo bomber sent at an airfield carries bombs. The size of the bomb does not matter. Each shot is rolled.
 
-Then one draw for each hit decides where it lands, in the order: below `air_combat.toml: [base_hit] aircraft` it lands on aircraft on the ground; else below that plus `[base_hit] supply` it lands on supply; else it lands on nothing.
+Then one draw for each hit decides where it lands, in the order: below `air_combat.toml: [base_hit] aircraft` it lands on aircraft on the ground; else below that plus `[base_hit] supply` it lands on supply; else below that plus `[base_hit] men` it lands on men; else it lands on nothing.
 
-`BaseAttacked` is recorded (group, base, shots, chance, expected, hits, hits on aircraft, hits on supply), caused by the strike's launch and the group's `AircraftLost` events. [0034]
+The share for men (`air_combat.toml: [base_hit] men`, `0.2`) counts only if the ground figures are loaded with `men_lost_per_base_hit` above 0 and the base's side has men ashore in the base's hex at the start of the attack. Otherwise it is 0 and the share lands on nothing, so a raid on a base with no men ashore draws and lands its hits as it did before decision 0092. A file that gives no `[base_hit] men` gives 0. The three shares add to 1 at most, and the loader refuses a file in which they add to more. Shells land by the same table (chapter 4, Shore bombardment). The raid's breakdown names the factor `hit_on_men_chance` only when the share counts, so a raid with no men ashore reads exactly as before. [0092]
+
+`BaseAttacked` is recorded (group, base, shots, chance, expected, hits, hits on aircraft, hits on supply, hits on men), caused by the strike's launch and the group's `AircraftLost` events. [0034, 0092]
 
 **Aircraft on the ground.** At the start of the step, for each attacked base, a pool is made. For each group located at the base, in group number order: its damaged aircraft first (whatever the group is doing), then its ready aircraft less the aircraft flying in the pulse. The aircraft flying in the pulse are: for a search group with a search arc and light, the aircraft it is able to fly; for each strike, the aircraft launched; and for a fighter group, its patrol and the escorts that go. So the aircraft a tired group leaves behind, the fighters that neither patrol nor escort, a stood-down group, a resting group and a base strike group in the afternoon are all on the ground. A pool made for a base is shared by all the raids on it in the pulse. [0034, 0035, 0036]
 
@@ -440,9 +442,11 @@ Then one draw for each hit decides where it lands, in the order: below `air_comb
 
 **Hits on supply.** Each hit on supply destroys `air_combat.toml: base_supply_destroyed_per_hit_t` tons, no more than the base has. If any is destroyed, `BaseSupplyDestroyed` is recorded with the tons destroyed and the stock left, caused by `BaseAttacked`. [0034]
 
+**Hits on men.** Each hit on men removes `ground.toml: men_lost_per_base_hit` men from the base's side's land units in the base's hex. `MenLostToFire` is recorded for each unit that lost men, caused by `BaseAttacked` (chapter 7, Men lost to fire). [0092]
+
 **Hits on nothing** change nothing. A side holds no belief about a base's contents, so no report follows. Nothing in the rules damages a base's port or airfield. [0034, 0052]
 
-A side sees: the attacker sees `BaseAttacked` cut to the aircraft and shots. The side that holds the base sees it with the hits and where they landed and without the raiding group (decision 0065), and its own `AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround` and `BaseSupplyDestroyed`.
+A side sees: the attacker sees `BaseAttacked` cut to the aircraft and shots. The side that holds the base sees it with the hits and where they landed (on men too) and without the raiding group (decision 0065), and its own `AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround`, `BaseSupplyDestroyed` and `MenLostToFire`. The raider is told nothing of men hit. [0092]
 
 ### The report and the claim
 

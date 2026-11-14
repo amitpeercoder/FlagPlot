@@ -84,11 +84,22 @@ pub enum Draw {
     /// stream for each firing unit and day, with no pulse, in the ground
     /// combat subsystem, keyed on the unit.
     GroundFire,
+    /// A ship's shells in a night's shore bombardment and where each hit
+    /// lands (decision 0092, 3 and 4), and after the first firing ship's
+    /// hits the sighting report its fire gives the base's side (decision
+    /// 7): one stream for each firing ship and night, in the surface combat
+    /// subsystem, keyed on the ship and the base.
+    Bombardment,
+    /// The error of a daily ground report (decision 0092, 14): one stream
+    /// for each reporting side, hex and day, with no pulse, in the
+    /// intelligence subsystem, keyed on the reporting side's lowest-numbered
+    /// unit in the hex.
+    GroundReport,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 7] = [
+    pub const ALL: [Draw; 9] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -96,6 +107,8 @@ impl Draw {
         Draw::NoDeck,
         Draw::TorpedoOtherSide,
         Draw::GroundFire,
+        Draw::Bombardment,
+        Draw::GroundReport,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -109,6 +122,8 @@ impl Draw {
             Draw::NoDeck => 4,
             Draw::TorpedoOtherSide => 5,
             Draw::GroundFire => 6,
+            Draw::Bombardment => 7,
+            Draw::GroundReport => 8,
         }
     }
 }

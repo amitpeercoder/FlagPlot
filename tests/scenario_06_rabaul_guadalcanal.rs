@@ -1918,6 +1918,8 @@ fn work_the_raid(
                 hits,
                 hits_on_aircraft: on_aircraft,
                 hits_on_supply: on_supply,
+                // No men ashore at the base (decision 0092, 8).
+                hits_on_men: 0,
             },
             causes,
         );

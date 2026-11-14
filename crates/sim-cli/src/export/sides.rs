@@ -305,6 +305,7 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             hits,
             hits_on_aircraft,
             hits_on_supply,
+            hits_on_men,
         } => (
             "base_attacked",
             d.id("base", *base)
@@ -313,7 +314,8 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
                 .num("expected", *expected)
                 .int("hits", *hits)
                 .int("hits_on_aircraft", *hits_on_aircraft)
-                .int("hits_on_supply", *hits_on_supply),
+                .int("hits_on_supply", *hits_on_supply)
+                .int_when_nonzero("hits_on_men", *hits_on_men),
             true,
         ),
         SideEventKind::SearchAttempt { air_group } => {
@@ -388,6 +390,57 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
                 .hex("hex", *hex)
                 .int("firing_men", *firing_men)
                 .num("shots", *shots),
+            true,
+        ),
+        SideEventKind::BombardmentFire {
+            ship,
+            base,
+            shells,
+            weighed_shots,
+            rounds_left,
+        } => (
+            "bombardment_fire",
+            d.id("ship", *ship)
+                .id("base", *base)
+                .num("shells", *shells)
+                .num("weighed_shots", *weighed_shots)
+                .num("rounds_left", *rounds_left),
+            true,
+        ),
+        SideEventKind::ShoreBombardment {
+            task_force,
+            base,
+            hex,
+            shells,
+            weighed_shots,
+        } => (
+            "shore_bombardment",
+            d.id("task_force", *task_force)
+                .id("base", *base)
+                .hex("hex", *hex)
+                .num("shells", *shells)
+                .num("weighed_shots", *weighed_shots),
+            true,
+        ),
+        SideEventKind::ShoreBombardmentAgainst {
+            base,
+            hex,
+            shells,
+            weighed_shots,
+            hits,
+            hits_on_aircraft,
+            hits_on_supply,
+            hits_on_men,
+        } => (
+            "shore_bombardment",
+            d.id("base", *base)
+                .hex("hex", *hex)
+                .num("shells", *shells)
+                .num("weighed_shots", *weighed_shots)
+                .int("hits", *hits)
+                .int("hits_on_aircraft", *hits_on_aircraft)
+                .int("hits_on_supply", *hits_on_supply)
+                .int("hits_on_men", *hits_on_men),
             true,
         ),
         SideEventKind::BaseChangedSide {

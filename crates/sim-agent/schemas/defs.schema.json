@@ -419,6 +419,19 @@
         }
       }
     },
+    "ground_estimate_line": {
+      "description": "The side's estimate of the enemy's men ashore in one hex (decision 0092): the count of the last ground report there, which can be wrong by up to half either way, never aged and never corrected until a new report replaces it. day is the day it was reported (0 for an opening estimate) and age_days the days from then to the last day resolved. The true count and the error of the report are never given.",
+      "type": "object",
+      "required": ["place", "men", "day", "age_days", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "place": { "$ref": "#/$defs/place" },
+        "men": { "type": "integer" },
+        "day": { "type": "integer" },
+        "age_days": { "type": "integer" },
+        "event": { "description": "The side's number of the report; explain on it shows what the side may know of it.", "type": "integer" }
+      }
+    },
     "contact_line": {
       "type": "object",
       "required": [

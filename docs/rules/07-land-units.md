@@ -1,6 +1,6 @@
 # Land units
 
-This chapter covers men: the land unit, the troop capacity of a ship, the load order that takes a unit aboard, the landing that puts it ashore and forms a base for it, a unit divided, men lost with a ship, the men's daily supply and the loss of the unfed, the posture of a unit and its order, the day's fight ashore, fatigue, a side beaten in a hex and a base that changes side. Shore bombardment, bombs on men and a side's knowledge of the enemy ashore are not built (the last section).
+This chapter covers men: the land unit, the troop capacity of a ship, the load order that takes a unit aboard, the landing that puts it ashore and forms a base for it, a unit divided, men lost with a ship, the men's daily supply and the loss of the unfed, the posture of a unit and its order, the day's fight ashore, fatigue, a side beaten in a hex, a base that changes side, men lost to the fire of bombs and shells, and what a side knows of the enemy's men ashore.
 
 Men are worked through the cargo rule of chapter 2 and fed through the base supply rule of chapter 5. This chapter gives only what is new in them. Every quantity is a fixed-point number except men, which are whole numbers. "Cut" means cut toward zero (chapter 1, Numbers and chance).
 
@@ -12,7 +12,8 @@ Where these rules run in a day (chapter 1, The order in which a day resolves, gi
 | Night pulse, after the daily supply for aircraft | The men's supply: feeding, the unfed and the loss |
 | Loading phase, last in each pulse | Men are taken aboard and landed with the cargo; units are divided and bases formed |
 | Whenever a ship sinks | The men aboard are lost with her |
-| After the third pulse, before the day's base count | The ground combat phase: for each hex with men ashore, the fight, fatigue, a side beaten and a base that changes side |
+| Night pulse, in the shore bombardment phase, and in the air combat phase of a daylight pulse | Bombs and shells that hit men ashore: men lost to fire (below) |
+| After the third pulse, before the day's base count | The ground combat phase: for each hex with men ashore, the fight, fatigue, a side beaten, a base that changes side and the ground reports |
 
 A scenario that names no ground figures has no land units, and every rule here does nothing in it (chapter 1, Where figures come from and when a rule is loaded). [0066, 0090]
 
@@ -110,7 +111,7 @@ A side sees: `MenLanded` and `UnloadingComplete`, whole, for its own unit and fo
 
 When a force lands its first man in a hex where its side has no base, a base of the side is formed there before the men land. It has the next free base number, counted over all the bases of both sides (the highest plus one), the name "Landing at (q,r)" with the hex, the port of the hex, no supply or fuel, no guns, no repairs and no aircraft. It is the side's lowest-numbered base in the hex only if it has no lower. `BaseFormed` records it, with the side, hex and force, citing the unload order and the arrival. A force with no men aboard forms no base, so a supply run to an empty hex changes nothing. A hex that holds a base of the side already, formed or not, forms none. [0066 item 11]
 
-A base formed by a landing is not on the enemy's map until it changes side (below, A base that changes side). It is on its own side's, in every list and answer a side is given of its own bases, and it works as any other base of its side in a rule that reads a base: it holds the stocks unloaded into it, it feeds the men ashore (below), it can be loaded from and unloaded to, and a base count is recorded for it at the end of each day. The other side is told nothing of it: chapter 1, What a side may know, gives the map and the base strike refusal. [0066 item 12, 0090 item 18]
+A base formed by a landing is not on the enemy's map until it changes side (below, A base that changes side) or a ground report finds it (below, What a side knows of the enemy ashore). It is on its own side's, in every list and answer a side is given of its own bases, and it works as any other base of its side in a rule that reads a base: it holds the stocks unloaded into it, it feeds the men ashore (below), it can be loaded from and unloaded to, and a base count is recorded for it at the end of each day. The other side is told nothing of it until then: chapter 1, What a side may know, gives the map and the base strike refusal. [0066 item 12, 0090 item 18, 0092]
 
 A side sees: `BaseFormed`, whole, for its own base. The enemy sees nothing.
 
@@ -158,7 +159,7 @@ A side sees: `MenLostUnfed`, whole, for its own unit.
 
 ### Destroyed
 
-A unit that has lost its last man, ashore or aboard, by the loss at sea, by the unfed or in a fight, is destroyed. `LandUnitDestroyed` records it, citing the event that took the last men. The unit keeps its number and stays in the state with no men. [0066 item 1]
+A unit that has lost its last man, ashore or aboard, by the loss at sea, by the unfed, in a fight or to fire, is destroyed. `LandUnitDestroyed` records it, citing the event that took the last men. The unit keeps its number and stays in the state with no men. [0066 item 1]
 
 A side sees: `LandUnitDestroyed`, whole, for its own unit.
 
@@ -182,7 +183,7 @@ A side sees: its own `OrderAccepted` or `OrderRejected`, with the reason, whole.
 
 ### The ground combat phase
 
-If the ground figures are loaded, the ground combat phase runs once a day, after the third pulse and before the day's base count (chapter 1, After the pulses). It takes the hexes that hold men ashore at its start, in hex order (by q, then by r), and finishes one hex before the next. In each hex it does, in this order: the day's fight, if the hex is contested; each unit's fatigue and the tired units back to defend; the test of a side beaten; and the bases of a beaten side changing side. [0090 items 4, 12, 14, 15 and 17]
+If the ground figures are loaded, the ground combat phase runs once a day, after the third pulse and before the day's base count (chapter 1, After the pulses). It takes the hexes that hold men ashore at its start, in hex order (by q, then by r), and finishes one hex before the next. In each hex it does, in this order: the day's fight, if the hex is contested; each unit's fatigue and the tired units back to defend; the test of a side beaten; and the bases of a beaten side changing side. Last, the ground reports of the hex (below, What a side knows of the enemy ashore). [0090 items 4, 12, 14, 15 and 17]
 
 ### A hex is contested
 
@@ -253,11 +254,39 @@ A side sees: `BaseChangedSide`, both sides, at its place in the log: whole to th
 
 Events of a base are seen by the side that held it when they were recorded. The holder at the time of each event is worked out from the log: the side the base had before its first change of side, handed on at each `BaseChangedSide` event. A base's past, and the numbers a side was given for it, are therefore not handed to its taker or renumbered. [0090 item 24, 0086]
 
+## Men lost to fire
+
+A bomb or a shell that hits men ashore removes men. This is the share for men of the table of where a hit on a base lands (chapter 5, The attack on a base; chapter 4, Shore bombardment). [0092]
+
+**When a hit lands on men.** The table's share for men, `air_combat.toml: [base_hit] men` (`0.2`), counts only if the ground figures are loaded with `men_lost_per_base_hit` above 0 and the base's side has men ashore in the base's hex when the attack begins. When it does not, the share lands on nothing, so a raid on a base with no men ashore gives the hits it gave before. [0092]
+
+**What a hit does.** Each hit on men removes `ground.toml: men_lost_per_base_hit` men (`10`), as many as are there, from the base's side's units with men ashore in the base's hex. The men are taken in proportion by the rule of Taking men in proportion. A raid or a bombardment may therefore remove all the men in the hex, and no more. [0092]
+
+**The events.** Each unit that loses men records `MenLostToFire`: the unit, the base, the hex, the men lost and the men left ashore. It cites the raid's `BaseAttacked` or the force's `ShoreBombardment`. Its breakdown has the factors `hits_on_men`, `men_lost_per_base_hit`, `loss_in_hex`, `unit_men_ashore` and `men_ashore_in_hex`, and its result is the men the unit lost. A unit left with no man is destroyed (above, Destroyed). [0092]
+
+**Who sees it.** The unit's own side sees it whole. The raider is told nothing of men hit: the side that bombed or shelled is given neither the hits on men nor the men lost. [0092]
+
+**What counts.** Men lost to fire count in the `men_lost` objective of chapter 6, as men lost by any other cause do, and in the batch record's `men_lost` tally under the cause `fire`. [0092]
+
+A side sees: `MenLostToFire`, whole, for its own unit.
+
+## What a side knows of the enemy ashore
+
+A side holds an estimate of the enemy's men ashore, one for each hex, written only by a ground report (chapter 3, The ground report and the estimate). This section says when the reports are made and what they tell. [0092]
+
+**When.** In the ground combat phase, at the end of each hex's part, after the day's fight, its losses, fatigue and any base that changed side (above). A report is made for a hex if both sides still have men ashore there, whether or not there was a fight. The Allied side's report comes first. Each side is given a report of the other's men: the true count times an error, between `ground.toml: report_error_low` (`0.5`) and `report_error_high` (`1.5`). A report is made only if both figures are given. [0092]
+
+**What it does.** It makes or replaces the side's estimate for the hex: the count, the day and the report's event. It puts on the side's map every enemy base in the hex that is not on it, a base formed by a landing and a base a scenario holds off the map alike, and so a force may then bombard it and a base strike may name it. [0092]
+
+**What a side can judge.** An estimate is not a count: it may be half the truth or one and a half times it, and it is never corrected until the next report replaces it. A side that watches a hex for some days sees roughly where the truth lies, because each day's error is new. A side with no men in a hex gets no report of it, and aircraft report nothing of men. A scenario may give an opening estimate (chapter 3, The ground report and the estimate). [0092]
+
+A side sees: `GroundReportReceived` and `BaseFound`, whole, for its own reports. Its estimates are in its view, by hex, and the true count and the error are not. It never sees the enemy's estimate of its own men.
+
 ## What a side knows and sees
 
-A side knows its own land units exactly: the men ashore and where, the men aboard and in which ships, each unit's posture, fatigue and fed share. Its view lists them and its ships show the men aboard. The enemy's land units are not in the view at all: there is no report of them yet, so there is no belief. A base the enemy formed by a landing is not among the enemy's bases the view lists, until it is taken: a base that changes side is on both sides' maps (above). [0066 items 21 and 22, 0090 items 18 and 29]
+A side knows its own land units exactly: the men ashore and where, the men aboard and in which ships, each unit's posture, fatigue and fed share. Its view lists them and its ships show the men aboard. The enemy's land units are not in the view at all. A side knows of the enemy's men ashore only by an estimate (next section). A base the enemy formed by a landing, or that a scenario holds off the map, is not among the enemy's bases the view lists, until a ground report finds it or it is taken: a base that changes side is on both sides' maps (above). [0066 items 21 and 22, 0090 items 18 and 29, 0092]
 
-Every event of this chapter is seen whole by its own side and not at all by the enemy, except those the sections above cut: men embarked and landed, a base formed, a unit divided, men lost with a ship, men fed, men lost unfed, a unit destroyed, a unit's loading complete, a fed share restored, fatigue, a unit back to defend, men lost in a fight, an air group lost with a base and its strike mission cleared, a ship lost with a base and a home port lost. The fight itself and a unit's fire are cut, and a base changing side is told to both sides. The test of a side beaten is told to neither. A side's number for its own land units, and the leak that a gap in its own numbers can show, are in chapter 1, What a side may know. [0066 item 23, 0090 items 28 to 30]
+Every event of this chapter is seen whole by its own side and not at all by the enemy, except those the sections above cut: men embarked and landed, a base formed, a unit divided, men lost with a ship, men fed, men lost unfed, a unit destroyed, a unit's loading complete, a fed share restored, fatigue, a unit back to defend, men lost in a fight, men lost to fire, an air group lost with a base and its strike mission cleared, a ship lost with a base and a home port lost. The fight itself and a unit's fire are cut, and a base changing side is told to both sides. The test of a side beaten is told to neither. A ground report and a base found are seen whole by the side that was given them and by no other. A side's number for its own land units, and the leak that a gap in its own numbers can show, are in chapter 1, What a side may know. [0066 item 23, 0090 items 28 to 30, 0092]
 
 A side sees: as each section says. The briefing, the list and detail queries and the events show a side its own units, the days of supply its base holds at the present charge for aircraft and men together, and whether its men were fed last night.
 
@@ -281,16 +310,22 @@ A side sees: as each section says. The briefing, the list and detail queries and
 | `ground.toml` | `attack_fatigue_limit` | Above this a unit on attack goes back to defend. From 0 to 100 |
 | `ground.toml` | `beaten_share` | A side attacked is beaten below this share of the attacker's men. From 0 to below 1 |
 | `ground.toml` | `captured_stock_share` | The share of a base's supply and fuel its taker keeps. From 0 to 1 |
+| `ground.toml` | `men_lost_per_base_hit` | Men a bomb or shell hit on men removes. A whole number, 0 or more. Missing gives 0 (decision 0092) |
+| `ground.toml` | `report_error_low`, `report_error_high` | The least and the most a ground report can be, as a share of the truth, `0.5` and `1.5`. Both or neither: with neither no ground report is made, and one alone is refused. The low is 0 or more and not above the high (decision 0092) |
+| `air_combat.toml` | `[base_hit] men` | The share of hits on a base that land on men, `0.2`. Missing gives 0 (decision 0092) |
+| Scenario file | `[[base]]` `on_map` | `true` by default. `false` puts the base off the enemy's map at the start (decision 0092) |
+| Scenario file | `[[estimate]]` | `side`, `q`, `r` and `men`: an opening estimate (chapter 3, The ground report and the estimate) |
 | Scenario file | `[[land_unit]]` `posture`, `fatigue` | The unit's posture at the start (`defend` by default or `attack`) and its fatigue (0 to 100, 0 by default) |
 | Scenario file | `[[order]]` of kind `set_posture` | `land_unit` (a land unit's number) and `posture` (`attack` or `defend`) |
 | Scenario file | objective of kind `base_held` | `base` and `points` (chapter 6) |
 | Scenario file | objective of kind `men_lost` | `points_per_100_men` (chapter 6) |
 
-The ground file is a TOML file with `placeholder = true` and the twelve keys, each a whole number or a decimal string. A TOML float, an unknown key and a missing key are refused. `World::new` and the loader refuse a figure outside the ranges above. The frozen step 1 copy (`data/reference/step1/ground.toml`) holds the same first values. Every figure is a placeholder that rests on no source. [0066, 0090, 0057]
+The ground file is a TOML file with `placeholder = true` and the twelve keys, each a whole number or a decimal string, and may hold the three of decision 0092. A TOML float, an unknown key and a missing one of the twelve are refused. The report error figures need the search figures: a world with them and no search figures is refused when it is set up, because belief is written with the search figures. `World::new` and the loader refuse a figure outside the ranges above. The frozen step 1 copy (`data/reference/step1/ground.toml`) holds the same first values. Every figure is a placeholder that rests on no source. [0066, 0090, 0092, 0057]
 
 ## Limits
 
-- **Shore bombardment, bombs on men and a side's knowledge of the enemy ashore** are stage 3: the enemy learns of a base formed by a landing only when it is taken, and by no report, since there is none; a side is told nothing of the enemy's men ashore but what a fight gives it. [0066, 0090]
+- **A side knows the enemy's men ashore only by an estimate.** It is made daily, where both sides have men ashore, and may be wrong by up to half either way. A side with no men in a hex gets no report of it, and there are no patrols or scouts ashore. [0092]
+- **A bombardment does not close a field.** It destroys aircraft, supply and men, and does not damage the runway. [0092]
 - **No retreat.** A beaten side's men stay in the hex; no unit moves overland. [0090]
 - **Guns ashore do not fire on ships,** and artillery does not close an airfield. [0090]
 - **No terrain, no dug-in defence that grows, and no kinds of unit.** A man is a man, and the defender's advantage is one figure. [0090]
@@ -309,5 +344,5 @@ The ground file is a TOML file with `placeholder = true` and the twelve keys, ea
 - The cargo rule, berths and lighters, and the rates of a port: chapter 2, Cargo.
 - Supply stocks, the daily supply for aircraft and a base out of supply: chapter 5.
 - Orders in general, and what a side may know and see: chapter 1.
-- What a side learns of the enemy's men from a fight, the estimate and the ground report, shore bombardment and bombs on men: not built.
+- The ground report and the estimate as belief, and the opening estimate: chapter 3. Shore bombardment: chapter 4. The share of a hit that lands on men: chapter 5.
 - Objectives on a base held and on men lost: chapter 6. Aircraft lost with a base and a group's refusal of orders: chapter 5.

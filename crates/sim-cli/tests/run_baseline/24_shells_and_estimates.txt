@@ -1,0 +1,26 @@
+Scenario 24: Shells and bombs on a base, and an attack on a wrong estimate
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 0fba8344eb1bfff3  34 events
+day   2  hash 5a12e8c66ac8cd9b  24 events
+day   3  hash 8b00663005d24561  22 events
+day   4  hash 4b382efd1d338c6c  7 events
+
+task_force:1 "Placeholder bombardment force" (Japanese): Arrived at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Placeholder fighter squadron at X" (Allied) at base:1: 20 ready, 1 damaged, mission Rest, no arc
+ship:1 "Placeholder cruiser": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes ready; 1960 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes ready; 480 t of fuel, 0 t of supply
+base:1 "Placeholder airfield X, Allied" (Allied) at (0,0): 1381.65 t of supply in stock
+base:2 "Placeholder airfield Y, Allied" (Allied) at (8,0): 940.9 t of supply in stock
+base:3 "Placeholder airfield Y, Japanese" (Japanese) at (8,0): 93.7 t of supply in stock
+land_unit:1 "Placeholder Allied regiment at X" (Allied): 880 men ashore at (0,0)
+land_unit:2 "Placeholder Allied division at Y" (Allied): 2940 men ashore at (8,0)
+land_unit:3 "Placeholder Japanese battalion at Y" (Japanese): no men ashore, on attack, fatigue 40
+Allied: no contacts
+Allied: no battle claims
+Allied estimate at (8,0): 39 enemy men ashore, reported day 2
+Japanese: no contacts
+Japanese claim from the sea at (0,0): 20 aircraft destroyed on the ground, day 1 night
+Japanese claim from the sea at (0,0): 1 aircraft destroyed on the ground, day 2 night
+Japanese estimate at (8,0): 2794 enemy men ashore, reported day 2

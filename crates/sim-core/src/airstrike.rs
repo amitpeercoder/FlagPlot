@@ -239,6 +239,7 @@ struct BaseAttack {
     hits: u32,
     hits_on_aircraft: u32,
     hits_on_supply: u32,
+    hits_on_men: u32,
     breakdown: Option<Breakdown>,
 }
 
@@ -257,10 +258,19 @@ enum RaidTarget {
 /// 0034).
 type Ground = BTreeMap<BaseId, Vec<(AirGroupId, Stock, u32)>>;
 
+/// Where the hits on a base landed (decision 7 of 0034, decision 8 of
+/// 0092). The rest landed on nothing.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub(crate) struct BaseHits {
+    pub(crate) aircraft: u32,
+    pub(crate) supply: u32,
+    pub(crate) men: u32,
+}
+
 /// Which of a group's aircraft a ground pool entry counts (decision 11 of
 /// 0035).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum Stock {
+pub(crate) enum Stock {
     Damaged,
     Ready,
 }
@@ -580,7 +590,10 @@ fn take_hits(hits: u32, pool: &mut [(AirGroupId, u32)]) -> Vec<(AirGroupId, u32)
 /// Takes `hits` from a ground pool in its order (decision 11 of 0035): the
 /// lowest group first, a group's damaged aircraft before its ready ones. Hits
 /// beyond what is there are wasted. Returns what was taken, in pool order.
-fn take_ground(hits: u32, pool: &mut [(AirGroupId, Stock, u32)]) -> Vec<(AirGroupId, Stock, u32)> {
+pub(crate) fn take_ground(
+    hits: u32,
+    pool: &mut [(AirGroupId, Stock, u32)],
+) -> Vec<(AirGroupId, Stock, u32)> {
     let mut left = hits;
     let mut taken = Vec::new();
     for (group, stock, count) in pool.iter_mut() {
@@ -1097,6 +1110,7 @@ impl World {
                             hits: attack.hits,
                             hits_on_aircraft: attack.hits_on_aircraft,
                             hits_on_supply: attack.hits_on_supply,
+                            hits_on_men: attack.hits_on_men,
                         },
                         causes,
                         attack.breakdown.clone(),
@@ -1246,7 +1260,21 @@ impl World {
             let attack = match outcome {
                 Outcome::Attack(attack) => attack,
                 Outcome::BaseAttack(attack) => {
-                    let destroyed = self.apply_base_hits(day, pulse, &attack, event, &mut ground);
+                    let pool = ground
+                        .get_mut(&attack.base)
+                        .expect("a base that is attacked has its ground counted");
+                    let destroyed = self.apply_base_hits(
+                        day,
+                        Some(pulse),
+                        attack.base,
+                        BaseHits {
+                            aircraft: attack.hits_on_aircraft,
+                            supply: attack.hits_on_supply,
+                            men: attack.hits_on_men,
+                        },
+                        event,
+                        pool,
+                    );
                     if let Some(index) = tally_of.get(&attack.air_group) {
                         tallies[*index].attacker.real_on_ground += destroyed;
                     }
@@ -1460,6 +1488,7 @@ impl World {
                     claimed_shot_down,
                     claimed_on_ground,
                     from_air: true,
+                    from_bombardment: false,
                     received_event: self.events.next_id(),
                 };
                 let outcome = self
@@ -1562,6 +1591,7 @@ impl World {
                         claimed_shot_down,
                         claimed_on_ground,
                         from_air: true,
+                        from_bombardment: false,
                     },
                     part.causes.iter().copied().map(Cause::Event).collect(),
                     breakdown,
@@ -1654,46 +1684,45 @@ impl World {
         ground
     }
 
-    /// Applies the hits of one strike group's bombs on a base (decisions 8
-    /// and 9 of 0034): aircraft are destroyed on the ground, the lowest
-    /// group first, no more than `ground` says were there at the start of
-    /// the step, and supply is destroyed, no more than the base has. Records
-    /// each, citing `attack_event`.
-    fn apply_base_hits(
+    /// Applies the hits of one strike group's bombs, or of one force's
+    /// shells, on a base (decisions 8 and 9 of 0034, decisions 4 and 9 of
+    /// 0092): aircraft are destroyed on the ground, the lowest group first,
+    /// no more than `pool` says were there at the start, supply is
+    /// destroyed, no more than the base has, and men ashore are lost, no
+    /// more than are there. Records each, citing `attack_event`.
+    pub(crate) fn apply_base_hits(
         &mut self,
         day: u32,
-        pulse: Pulse,
-        attack: &BaseAttack,
+        pulse: Option<Pulse>,
+        base: BaseId,
+        hits: BaseHits,
         attack_event: EventId,
-        ground: &mut Ground,
+        pool: &mut [(AirGroupId, Stock, u32)],
     ) -> u32 {
         let per_hit = self
             .ref_data
             .air_combat
             .as_ref()
-            .expect("a strike needs the air combat figures")
+            .expect("hits on a base need the air combat figures")
             .base_supply_destroyed_per_hit_t;
-        let pool = ground
-            .get_mut(&attack.base)
-            .expect("a base that is attacked has its ground counted");
         let on_ground: u32 = pool.iter().map(|(_, _, aircraft)| aircraft).sum();
         let breakdown = self.config.record_breakdowns.then(|| Breakdown {
             factors: vec![
                 Factor {
                     name: "hits_on_aircraft",
-                    value: Fixed::from_int(i64::from(attack.hits_on_aircraft)),
+                    value: Fixed::from_int(i64::from(hits.aircraft)),
                 },
                 Factor {
                     name: "aircraft_on_ground",
                     value: Fixed::from_int(i64::from(on_ground)),
                 },
             ],
-            result: Fixed::from_int(i64::from(attack.hits_on_aircraft.min(on_ground))),
+            result: Fixed::from_int(i64::from(hits.aircraft.min(on_ground))),
         });
         // The lowest group first, its damaged aircraft before its ready ones
         // (decision 11 of 0035): one event for each kind of aircraft hit.
         let mut destroyed_in_all = 0;
-        for (group, stock, destroyed) in take_ground(attack.hits_on_aircraft, pool) {
+        for (group, stock, destroyed) in take_ground(hits.aircraft, pool) {
             let air_group = self
                 .truth
                 .air_groups
@@ -1706,7 +1735,7 @@ impl World {
                     destroyed_in_all += destroyed;
                     EventKind::AircraftDestroyedOnGround {
                         air_group: group,
-                        base: attack.base,
+                        base,
                         aircraft: destroyed,
                         remaining: air_group.ready,
                     }
@@ -1717,7 +1746,7 @@ impl World {
                     destroyed_in_all += destroyed;
                     EventKind::DamagedAircraftDestroyedOnGround {
                         air_group: group,
-                        base: attack.base,
+                        base,
                         aircraft: destroyed,
                         remaining: air_group.damaged,
                     }
@@ -1725,20 +1754,16 @@ impl World {
             };
             self.events.record(
                 day,
-                Some(pulse),
+                pulse,
                 event,
                 vec![Cause::Event(attack_event)],
                 breakdown.clone(),
             );
         }
 
-        let target = self
-            .truth
-            .bases
-            .get_mut(&attack.base)
-            .expect("the base exists");
+        let target = self.truth.bases.get_mut(&base).expect("the base exists");
         let before = target.supply_t;
-        let wanted = per_hit * Fixed::from_int(i64::from(attack.hits_on_supply));
+        let wanted = per_hit * Fixed::from_int(i64::from(hits.supply));
         let destroyed = wanted.min(before);
         if destroyed > Fixed::ZERO {
             target.supply_t = before - destroyed;
@@ -1747,7 +1772,7 @@ impl World {
                 factors: vec![
                     Factor {
                         name: "hits_on_supply",
-                        value: Fixed::from_int(i64::from(attack.hits_on_supply)),
+                        value: Fixed::from_int(i64::from(hits.supply)),
                     },
                     Factor {
                         name: "tons_per_hit",
@@ -1762,9 +1787,9 @@ impl World {
             });
             self.events.record(
                 day,
-                Some(pulse),
+                pulse,
                 EventKind::BaseSupplyDestroyed {
-                    base: attack.base,
+                    base,
                     destroyed_t: destroyed,
                     supply_t: after,
                 },
@@ -1772,6 +1797,7 @@ impl World {
                 breakdown,
             );
         }
+        self.apply_hits_on_men(day, pulse, base, hits.men, attack_event);
         destroyed_in_all
     }
 
@@ -1980,7 +2006,7 @@ impl World {
     /// ship was attacked (chapter 3, What a report holds).
     /// The most important kind among `ships` (decision 0012: the smallest
     /// kind is the most important).
-    fn most_important_kind_of(&self, ships: &[ShipId]) -> ShipKind {
+    pub(crate) fn most_important_kind_of(&self, ships: &[ShipId]) -> ShipKind {
         ships
             .iter()
             .map(|ship| self.kind_of(*ship))
@@ -2705,19 +2731,9 @@ impl World {
             EntityRef::Base(base),
         );
         let hits = roll_shots(&mut stream, shots, chance);
-        let on_aircraft_below = raw_u64(air.base_hit_aircraft);
-        let on_supply_below = on_aircraft_below + raw_u64(air.base_hit_supply);
-        let (mut hits_on_aircraft, mut hits_on_supply) = (0, 0);
-        for _ in 0..hits {
-            let draw = stream.below(Fixed::SCALE.unsigned_abs());
-            if draw < on_aircraft_below {
-                hits_on_aircraft += 1;
-            } else if draw < on_supply_below {
-                hits_on_supply += 1;
-            }
-        }
-        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-            factors: vec![
+        let landed = self.land_base_hits(&mut stream, hits, base, air);
+        let breakdown = self.config.record_breakdowns.then(|| {
+            let mut factors = vec![
                 Factor {
                     name: "aircraft",
                     value: shots,
@@ -2734,9 +2750,26 @@ impl World {
                     name: "hit_on_supply_chance",
                     value: air.base_hit_supply,
                 },
-            ],
-            result: expected,
+            ];
+            // The share for men is named only where it can land on men
+            // (decision 0092, 8), so a raid on a base with no men reads as
+            // it did before.
+            if let Some(share) = self.base_hit_men_share(base) {
+                factors.push(Factor {
+                    name: "hit_on_men_chance",
+                    value: share,
+                });
+            }
+            Breakdown {
+                factors,
+                result: expected,
+            }
         });
+        let BaseHits {
+            aircraft: hits_on_aircraft,
+            supply: hits_on_supply,
+            men: hits_on_men,
+        } = landed;
         Outcome::BaseAttack(Box::new(BaseAttack {
             air_group: strike.air_group,
             base,
@@ -2747,6 +2780,7 @@ impl World {
             hits,
             hits_on_aircraft,
             hits_on_supply,
+            hits_on_men,
             breakdown,
         }))
     }

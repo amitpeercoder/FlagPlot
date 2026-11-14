@@ -93,6 +93,16 @@ impl Data {
         }
     }
 
+    /// A count written only when it is above 0, so that a file made where it
+    /// is always 0 is unchanged (decision 0092: hits on men).
+    pub fn int_when_nonzero(self, key: &'static str, n: u32) -> Data {
+        if n > 0 {
+            self.int(key, n)
+        } else {
+            self
+        }
+    }
+
     pub fn text(self, key: &'static str, t: &'static str) -> Data {
         self.with(key, Field::Text(t))
     }

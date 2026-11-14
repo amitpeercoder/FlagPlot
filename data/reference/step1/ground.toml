@@ -51,3 +51,11 @@ beaten_share = "0.2"
 
 # The share of a base's supply and fuel its taker keeps.
 captured_stock_share = "0.5"
+
+# Placeholders set by the architect for decision 0092, resting on no source.
+# Men a bomb or shell hit removes.
+men_lost_per_base_hit = 10
+
+# The least and the most a ground report can be, as a share of the truth.
+report_error_low = "0.5"
+report_error_high = "1.5"

@@ -217,7 +217,7 @@ struct Shot {
 /// not ready fires, 1 for a force that is ready: decision 0068), then capped
 /// by the ammunition aboard (decision 6 of
 /// `docs/decisions/0016-systems-and-stragglers.md`).
-fn gun_shots(
+pub(crate) fn gun_shots(
     ship: &Ship,
     class: &ShipClass,
     minutes: u32,
@@ -1629,6 +1629,7 @@ impl World {
             claimed_shot_down: 0,
             claimed_on_ground: 0,
             from_air: false,
+            from_bombardment: false,
             received_event: self.events.next_id(),
         };
         let outcome = self
@@ -1648,6 +1649,7 @@ impl World {
                 claimed_shot_down: 0,
                 claimed_on_ground: 0,
                 from_air: false,
+                from_bombardment: false,
             },
             vec![Cause::Event(ended)],
             None,

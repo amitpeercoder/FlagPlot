@@ -203,6 +203,7 @@ pub enum SideEventKind {
         hits: u32,
         hits_on_aircraft: u32,
         hits_on_supply: u32,
+        hits_on_men: u32,
     },
     /// The side's own search that sighted a force: which group. Not the
     /// distance or the chance, which are worked from where the force really
@@ -263,6 +264,37 @@ pub enum SideEventKind {
         hex: Hex,
         from: Side,
         to: Side,
+    },
+    /// The side's own ship fired in a shore bombardment (decision 0092, 17):
+    /// its shells and weighed shots and the rounds it has left. Not the
+    /// chance or the hits.
+    BombardmentFire {
+        ship: ShipId,
+        base: BaseId,
+        shells: Fixed,
+        weighed_shots: Fixed,
+        rounds_left: Fixed,
+    },
+    /// The side's own force bombarded an enemy base (decision 0092, 17): its
+    /// shells and weighed shots. Not the hits or where they landed.
+    ShoreBombardment {
+        task_force: TaskForceId,
+        base: BaseId,
+        hex: Hex,
+        shells: Fixed,
+        weighed_shots: Fixed,
+    },
+    /// The side's own base was bombarded (decision 0092, 18): everything the
+    /// log has but the force that fired.
+    ShoreBombardmentAgainst {
+        base: BaseId,
+        hex: Hex,
+        shells: Fixed,
+        weighed_shots: Fixed,
+        hits: u32,
+        hits_on_aircraft: u32,
+        hits_on_supply: u32,
+        hits_on_men: u32,
     },
 }
 
@@ -334,7 +366,14 @@ impl SideEventKind {
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
             SideEventKind::GroundFight { .. } => Vec::new(),
             SideEventKind::GroundFire { unit, .. } => vec![EntityRef::LandUnit(*unit)],
-            SideEventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
+            SideEventKind::BaseChangedSide { base, .. }
+            | SideEventKind::ShoreBombardmentAgainst { base, .. } => vec![EntityRef::Base(*base)],
+            SideEventKind::BombardmentFire { ship, base, .. } => {
+                vec![EntityRef::Ship(*ship), EntityRef::Base(*base)]
+            }
+            SideEventKind::ShoreBombardment {
+                task_force, base, ..
+            } => vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)],
         }
     }
 }
@@ -410,12 +449,23 @@ impl fmt::Display for SideEventKind {
                 hits,
                 hits_on_aircraft,
                 hits_on_supply,
-            } => write!(
-                f,
-                "bombs at {base}: {shots} shots x {chance} = {expected} expected, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply, {} on nothing",
-                if *hits == 1 { "hit" } else { "hits" },
-                hits - hits_on_aircraft - hits_on_supply
-            ),
+                hits_on_men,
+            } => {
+                write!(
+                    f,
+                    "bombs at {base}: {shots} shots x {chance} = {expected} expected, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply, ",
+                    if *hits == 1 { "hit" } else { "hits" },
+                )?;
+                // Named only when a hit landed on men (decision 0092).
+                if *hits_on_men > 0 {
+                    write!(f, "{hits_on_men} on men, ")?;
+                }
+                write!(
+                    f,
+                    "{} on nothing",
+                    hits - hits_on_aircraft - hits_on_supply - hits_on_men
+                )
+            }
             SideEventKind::SearchAttempt { air_group } => {
                 write!(f, "{air_group} searched and sighted a force")
             }
@@ -480,6 +530,41 @@ impl fmt::Display for SideEventKind {
                 "{base} at {hex} changed from the {} side to the {} side",
                 from.name(),
                 to.name()
+            ),
+            SideEventKind::BombardmentFire {
+                ship,
+                base,
+                shells,
+                weighed_shots,
+                rounds_left,
+            } => write!(
+                f,
+                "{ship} shelled {base}: {shells} shells, {weighed_shots} weighed shots; {rounds_left} rounds left"
+            ),
+            SideEventKind::ShoreBombardment {
+                task_force,
+                base,
+                hex,
+                shells,
+                weighed_shots,
+            } => write!(
+                f,
+                "{task_force} bombarded {base} at {hex}: {shells} shells, {weighed_shots} weighed shots"
+            ),
+            SideEventKind::ShoreBombardmentAgainst {
+                base,
+                hex,
+                shells,
+                weighed_shots,
+                hits,
+                hits_on_aircraft,
+                hits_on_supply,
+                hits_on_men,
+            } => write!(
+                f,
+                "{base} at {hex} bombarded from the sea: {shells} shells, {weighed_shots} weighed shots, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply, {hits_on_men} on men, {} on nothing",
+                if *hits == 1 { "hit" } else { "hits" },
+                hits - hits_on_aircraft - hits_on_supply - hits_on_men
             ),
         }
     }
@@ -915,6 +1000,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             hits,
             hits_on_aircraft,
             hits_on_supply,
+            hits_on_men,
         } => {
             if own_base(base) {
                 Seen::Cut(SideEventKind::BaseAttackedAgainst {
@@ -925,6 +1011,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
                     hits: *hits,
                     hits_on_aircraft: *hits_on_aircraft,
                     hits_on_supply: *hits_on_supply,
+                    hits_on_men: *hits_on_men,
                 })
             } else {
                 cut_if(
@@ -991,6 +1078,70 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         EventKind::ShipLostWithBase { ship, .. } => whole_if(own_ship(ship)),
         EventKind::HomePortLost { task_force, .. } => whole_if(own_force(task_force)),
 
+        // Shore bombardment (decision 0092, 17 and 18). The firing side sees
+        // its ships' shells and its force's, and no hit. The base's side
+        // sees the force's fire whole but for the force, and not each
+        // ship's, which would say which ships fired and how many.
+        EventKind::BombardmentFire {
+            ship,
+            base,
+            shells,
+            weighed_shots,
+            rounds_left,
+            ..
+        } => cut_if(
+            own_ship(ship),
+            SideEventKind::BombardmentFire {
+                ship: *ship,
+                base: *base,
+                shells: *shells,
+                weighed_shots: *weighed_shots,
+                rounds_left: *rounds_left,
+            },
+        ),
+        EventKind::ShoreBombardment {
+            task_force,
+            base,
+            hex,
+            shells,
+            weighed_shots,
+            hits,
+            hits_on_aircraft,
+            hits_on_supply,
+            hits_on_men,
+        } => {
+            if own_base(base) {
+                Seen::Cut(SideEventKind::ShoreBombardmentAgainst {
+                    base: *base,
+                    hex: *hex,
+                    shells: *shells,
+                    weighed_shots: *weighed_shots,
+                    hits: *hits,
+                    hits_on_aircraft: *hits_on_aircraft,
+                    hits_on_supply: *hits_on_supply,
+                    hits_on_men: *hits_on_men,
+                })
+            } else {
+                cut_if(
+                    own_force(task_force),
+                    SideEventKind::ShoreBombardment {
+                        task_force: *task_force,
+                        base: *base,
+                        hex: *hex,
+                        shells: *shells,
+                        weighed_shots: *weighed_shots,
+                    },
+                )
+            }
+        }
+        // Men lost to a bomb or a shell: seen whole by their own side, and
+        // the raider is told nothing of them (decision 0092, 20).
+        EventKind::MenLostToFire { unit, .. } => whole_if(own_unit(unit)),
+        // A side's own estimates and the reports that made them (decision
+        // 0092, 19), and the enemy base its report found (decision 15).
+        EventKind::GroundReportReceived { side: owner, .. }
+        | EventKind::BaseFound { side: owner, .. } => whole_if(*owner == side),
+
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
 
@@ -1028,7 +1179,23 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
         | SideEventKind::AirAttackAgainst { .. }
         // A fight ashore has no breakdown; a base lost is given none.
         | SideEventKind::GroundFight { .. }
-        | SideEventKind::BaseChangedSide { .. } => &[],
+        | SideEventKind::BaseChangedSide { .. }
+        // A force's bombardment has no breakdown.
+        | SideEventKind::ShoreBombardment { .. }
+        | SideEventKind::ShoreBombardmentAgainst { .. } => &[],
+        // The side's own ship's guns, rounds and shells, without the chance
+        // (decision 0092, 17).
+        SideEventKind::BombardmentFire { .. } => &[
+            "rate",
+            "guns",
+            "minutes",
+            "main_battery_factor",
+            "rounds_aboard",
+            "shells",
+            "gun_damage",
+            "reference_gun_damage",
+            "weighed_shots",
+        ],
         // The side's own unit's firing men and shots, without the chance
         // (decision 0090, 28).
         SideEventKind::GroundFire { .. } => &[
@@ -1091,6 +1258,14 @@ fn side_breakdown(kind: &SideEventKind, breakdown: &Option<Breakdown>) -> Option
     // real hits. The result is the claim's own counts added, which the event
     // already carries. The breakdown is the umpire's.
     if matches!(kind, SideEventKind::Whole(EventKind::ClaimReceived { .. })) {
+        return None;
+    }
+    // A ground report is seen whole, and its breakdown not at all (decision
+    // 0092, 19): it holds the true count and the error drawn.
+    if matches!(
+        kind,
+        SideEventKind::Whole(EventKind::GroundReportReceived { .. })
+    ) {
         return None;
     }
     // A raw random draw is never given to a side (decision 0085, C): it is
@@ -1437,7 +1612,10 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
         | SideEventKind::AlarmRoll { .. }
         | SideEventKind::GroundFight { .. }
         | SideEventKind::GroundFire { .. }
-        | SideEventKind::BaseChangedSide { .. }) => other,
+        | SideEventKind::BaseChangedSide { .. }
+        | SideEventKind::BombardmentFire { .. }
+        | SideEventKind::ShoreBombardment { .. }
+        | SideEventKind::ShoreBombardmentAgainst { .. }) => other,
     }
 }
 
@@ -1469,7 +1647,11 @@ fn may_have_hidden_causes(kind: &SideEventKind) -> bool {
         | SideEventKind::BaseAttacked { .. }
         | SideEventKind::SearchAttempt { .. }
         // An own unit's fire cites the fight and its own feeding.
-        | SideEventKind::GroundFire { .. } => false,
+        | SideEventKind::GroundFire { .. }
+        // An own ship's bombardment cites its own force's route and arrival,
+        // and its force's cites its ships' fire (decision 0092).
+        | SideEventKind::BombardmentFire { .. }
+        | SideEventKind::ShoreBombardment { .. } => false,
         // Surprised: cites the enemy's sighting roll. A fight's beginning:
         // the steaming that brought the enemy in, and both sides' orders. Its
         // end: the enemy's sinking, break-off or slipping away. An alarm: the
@@ -1487,7 +1669,9 @@ fn may_have_hidden_causes(kind: &SideEventKind) -> bool {
         // A fight ashore cites both sides' posture orders; a base lost, the
         // test that beat its side.
         | SideEventKind::GroundFight { .. }
-        | SideEventKind::BaseChangedSide { .. } => true,
+        | SideEventKind::BaseChangedSide { .. }
+        // A bombardment of the side's base cites the enemy's ships' fire.
+        | SideEventKind::ShoreBombardmentAgainst { .. } => true,
     }
 }
 
@@ -1579,7 +1763,14 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::AirGroupLostWithBase { .. }
         | EventKind::ShipLostWithBase { .. }
         | EventKind::HomePortLost { .. }
-        | EventKind::StrikeMissionCleared { .. } => false,
+        | EventKind::StrikeMissionCleared { .. }
+        // Men lost to fire cite the raid or the bombardment, which the side
+        // is given cut; a ground report cites the day's fight, which both
+        // sides are given; a base found cites the side's own report
+        // (decision 0092).
+        | EventKind::MenLostToFire { .. }
+        | EventKind::GroundReportReceived { .. }
+        | EventKind::BaseFound { .. } => false,
 
         // Men lost in a fight cite the enemy's fire; a base taken cites the
         // test that beat the other side (decision 0090).
@@ -1604,7 +1795,9 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::BaseAttacked { .. }
         | EventKind::GroundFight { .. }
         | EventKind::GroundFire { .. }
-        | EventKind::SideBeatenAshore { .. } => true,
+        | EventKind::SideBeatenAshore { .. }
+        | EventKind::BombardmentFire { .. }
+        | EventKind::ShoreBombardment { .. } => true,
     }
 }
 
@@ -1793,7 +1986,7 @@ mod tests {
             .collect()
     }
 
-    // ---- the table of the 90 kinds ----
+    // ---- the table of the 95 kinds ----
 
     /// What a side sees of an event.
     #[derive(Clone, Copy, Debug)]
@@ -2181,6 +2374,7 @@ mod tests {
                     claimed_shot_down: 0,
                     claimed_on_ground: 0,
                     from_air: false,
+                    from_bombardment: false,
                 },
                 Whole,
                 Nothing,
@@ -2505,6 +2699,7 @@ mod tests {
                     hits: 3,
                     hits_on_aircraft: 2,
                     hits_on_supply: 1,
+                    hits_on_men: 0,
                 },
                 Cut(
                     "BaseAttacked",
@@ -2514,6 +2709,7 @@ mod tests {
                         "hits",
                         "hits_on_aircraft",
                         "hits_on_supply",
+                        "hits_on_men",
                     ],
                 ),
                 Cut("BaseAttackedAgainst", &["air_group"]),
@@ -2889,6 +3085,84 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // Shore bombardment, men lost to fire and the ground report
+            // (decision 0092, 17 to 20). The Allied ship and force bombard
+            // the Japanese base 2.
+            row(
+                EventKind::BombardmentFire {
+                    ship: ship(1),
+                    base: base(2),
+                    shells: fx(720),
+                    weighed_shots: fx(720),
+                    chance: Fixed::from_ratio(1, 20),
+                    expected: fx(36),
+                    hits: 30,
+                    hits_on_aircraft: 9,
+                    hits_on_supply: 9,
+                    hits_on_men: 6,
+                    rounds_left: fx(80),
+                },
+                Cut(
+                    "BombardmentFire",
+                    &[
+                        "chance",
+                        "expected",
+                        "hits",
+                        "hits_on_aircraft",
+                        "hits_on_supply",
+                        "hits_on_men",
+                    ],
+                ),
+                Nothing,
+            ),
+            row(
+                EventKind::ShoreBombardment {
+                    task_force: force(1),
+                    base: base(2),
+                    hex: hex(),
+                    shells: fx(1320),
+                    weighed_shots: fx(870),
+                    hits: 40,
+                    hits_on_aircraft: 12,
+                    hits_on_supply: 12,
+                    hits_on_men: 8,
+                },
+                Cut(
+                    "ShoreBombardment",
+                    &["hits", "hits_on_aircraft", "hits_on_supply", "hits_on_men"],
+                ),
+                Cut("ShoreBombardmentAgainst", &["task_force"]),
+            ),
+            row(
+                EventKind::MenLostToFire {
+                    unit: unit(1),
+                    base: base(1),
+                    hex: hex(),
+                    lost: 60,
+                    ashore: 940,
+                },
+                Whole,
+                Nothing,
+            ),
+            sided(row(
+                EventKind::GroundReportReceived {
+                    side: Side::Allied,
+                    hex: hex(),
+                    men: 640,
+                    replaced: true,
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::BaseFound {
+                    side: Side::Allied,
+                    base: base(2),
+                    hex: hex(),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -2929,7 +3203,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 90, "the log has 90 kinds of event");
+        assert_eq!(all.len(), 95, "the log has 95 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
@@ -3305,6 +3579,7 @@ mod tests {
             claimed_shot_down: 30,
             claimed_on_ground: 0,
             from_air: true,
+            from_bombardment: false,
         };
         let mut events = log(vec![claim.clone()]);
         events[0].breakdown = Some(Breakdown {

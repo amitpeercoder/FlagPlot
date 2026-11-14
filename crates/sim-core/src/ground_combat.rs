@@ -221,6 +221,10 @@ impl World {
                 self.change_side(day, base, other(side), causes.clone(), figures);
             }
         }
+
+        // The ground reports, after the fight and its losses (decision 13 of
+        // 0092).
+        self.report_ashore(day, hex, fight_event);
     }
 
     /// The day's fight in a contested hex (decisions 4 to 10). Returns the

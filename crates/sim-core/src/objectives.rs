@@ -61,8 +61,8 @@
 //! - `base_held`: the named base is the side's own at the end (decision
 //!   0090, 25).
 //! - `men_lost`: enemy men lost, by any cause, from these events:
-//!   `MenLostWithShip`, `MenLostUnfed` and `MenLostInFight` (decision 0090,
-//!   26). The points are the objective's points for each 100 men, a part of
+//!   `MenLostWithShip`, `MenLostUnfed`, `MenLostInFight` (decision 0090,
+//!   26) and `MenLostToFire` (decision 0092, 20). The points are the objective's points for each 100 men, a part of
 //!   100 scoring its part.
 
 use core::fmt;
@@ -518,7 +518,9 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
             // enemy of the unit's side.
             EventKind::MenLostWithShip { unit, men: lost, .. }
             | EventKind::MenLostUnfed { unit, lost, .. }
-            | EventKind::MenLostInFight { unit, lost, .. } => {
+            | EventKind::MenLostInFight { unit, lost, .. }
+            // Men lost to a bomb or a shell count too (decision 0092, 20).
+            | EventKind::MenLostToFire { unit, lost, .. } => {
                 if let Some(unit) = truth.land_units.get(unit) {
                     out.get_mut(&other(unit.side))
                         .expect("both sides")
@@ -1472,6 +1474,7 @@ mod tests {
                 claimed_shot_down: 0,
                 claimed_on_ground: 0,
                 from_air: false,
+                from_bombardment: false,
             }),
             causes: Vec::new(),
             hidden_causes: false,
@@ -1509,6 +1512,7 @@ mod tests {
                 claimed_shot_down: shot_down,
                 claimed_on_ground: on_ground,
                 from_air: true,
+                from_bombardment: false,
             }),
             causes: Vec::new(),
             hidden_causes: false,

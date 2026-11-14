@@ -50,6 +50,12 @@ pub struct Briefing {
     pub orders: OrdersPart,
     /// 3. Contacts that changed yesterday, then every contact held now.
     pub contacts: ContactsPart,
+    /// 3b. What the side believes of the enemy's men ashore, from its
+    /// ground reports (decision 0092, 19), and enemy bases a report found
+    /// yesterday. Left out when the side holds no estimate and found no
+    /// base, so a scenario with no men ashore is briefed as it was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enemy_ashore: Option<EnemyAshorePart>,
     /// 4. Fights, strikes, raids and attacks yesterday.
     pub action: ActionPart,
     /// 5. Ships and aircraft lost, and what the side claims.
@@ -165,6 +171,42 @@ pub struct NotThere {
     pub event: u32,
 }
 
+/// The side's estimates of the enemy's men ashore (decision 0092, 11 and
+/// 19). An estimate is the count of the last ground report of a hex, which
+/// can be wrong by up to half either way, never aged: its day says how old it
+/// is. The true count and the error of a report are never given.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct EnemyAshorePart {
+    /// One estimate for each hex, in hex order.
+    pub estimates: Vec<GroundEstimateLine>,
+    /// Enemy bases a ground report put on the side's map yesterday (decision
+    /// 0092, 15). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub bases_found_yesterday: Vec<BaseFoundLine>,
+}
+
+/// An estimate of the enemy's men ashore in one hex.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct GroundEstimateLine {
+    pub place: Place,
+    /// The men the last report gave. An estimate, which may be wrong.
+    pub men: u32,
+    /// The day it was reported; 0 for an opening estimate.
+    pub day: u32,
+    /// Days from that day to the last day resolved.
+    pub age_days: u32,
+    /// The side's number of the event that gave it.
+    pub event: u32,
+}
+
+/// An enemy base a ground report found.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct BaseFoundLine {
+    pub base: Handle,
+    pub place: Place,
+    pub event: u32,
+}
+
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct ActionPart {
     /// Surface fights the side knew of, from the event that ended each.
@@ -181,6 +223,54 @@ pub struct ActionPart {
     pub raids_on_bases: Vec<Raid>,
     /// Attacks on the side's ships, by target and weapon.
     pub attacks_on_ships: Vec<AttackOnShip>,
+    /// Shore bombardments the side's own forces made last night (decision
+    /// 0092, 17): shells and weighed shots, never a hit. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub bombardments: Vec<Bombardment>,
+    /// What each of the side's own ships fired in those bombardments and the
+    /// rounds it has left. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub shell_fire: Vec<ShellFire>,
+    /// Shore bombardments of the side's bases (decision 0092, 18): the fire
+    /// and where it landed, never the force that fired. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub bombardments_against: Vec<BombardmentAgainst>,
+}
+
+/// The side's own force bombarded an enemy base.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct Bombardment {
+    pub force: Handle,
+    pub base: Handle,
+    pub place: Place,
+    pub shells: Dec,
+    pub weighed_shots: Dec,
+    pub event: u32,
+}
+
+/// The side's own ship fired in a shore bombardment.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ShellFire {
+    pub ship: Handle,
+    pub base: Handle,
+    pub shells: Dec,
+    pub weighed_shots: Dec,
+    pub rounds_left: Dec,
+    pub event: u32,
+}
+
+/// The side's own base was bombarded from the sea.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct BombardmentAgainst {
+    pub base: Handle,
+    pub place: Place,
+    pub shells: Dec,
+    pub weighed_shots: Dec,
+    pub hits: u32,
+    pub hits_on_aircraft: u32,
+    pub hits_on_supply: u32,
+    pub hits_on_men: u32,
+    pub event: u32,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -271,6 +361,10 @@ pub struct Raid {
     pub hits: u32,
     pub hits_on_aircraft: u32,
     pub hits_on_supply: u32,
+    /// Hits that landed on men ashore (decision 0092, 10). Left out when 0,
+    /// so a raid that hit no man reads as it did.
+    #[serde(skip_serializing_if = "is_zero")]
+    pub hits_on_men: u32,
     pub event: u32,
 }
 
@@ -368,6 +462,10 @@ fn is_zero(n: &u32) -> bool {
     *n == 0
 }
 
+fn is_false(b: &bool) -> bool {
+    !*b
+}
+
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct AircraftLoss {
     pub air_group: Handle,
@@ -406,6 +504,11 @@ pub struct Claim {
     pub claimed_on_ground: u32,
     /// True for a claim of a raid, false for one of a fight at sea.
     pub from_air: bool,
+    /// True for the claim of a shore bombardment (decision 0092, 17): aircraft
+    /// believed destroyed on the ground, by ships' guns. `from_air` is then
+    /// false. Left out when false.
+    #[serde(skip_serializing_if = "is_false")]
+    pub from_bombardment: bool,
     /// The event that told the side. `explain` on it shows the side's own
     /// firing it rests on.
     pub event: u32,
@@ -585,7 +688,8 @@ pub struct FedLine {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct MenLostLine {
     pub land_unit: Handle,
-    /// `unfed`, `lost_with_ship` or `fight` (decision 0090, 9).
+    /// `unfed`, `lost_with_ship`, `fight` (decision 0090, 9) or `fire`: a bomb
+    /// or a shell on the base (decision 0092, 20).
     pub cause: &'static str,
     pub men: u32,
     /// The ship lost with, for `lost_with_ship`.
@@ -978,6 +1082,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
 
     let land_units = land_units_part(&ctx, view, std::mem::take(&mut day.ground));
     let base_changes = Some(std::mem::take(&mut day.base_changes)).filter(|c| !c.is_empty());
+    let enemy_ashore = enemy_ashore_part(&ctx, view, std::mem::take(&mut day.bases_found));
 
     let arrivals = ArrivalsPart {
         due: view
@@ -1032,6 +1137,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                 .collect(),
             ..day.contacts
         },
+        enemy_ashore,
         action: day.action,
         losses: day.losses,
         task_forces,
@@ -1043,6 +1149,42 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         arrivals,
         warnings,
     }
+}
+
+/// The side's estimates of enemy men ashore, in hex order, in `within` if a
+/// test of the hex is given. The context must have its events set.
+pub(crate) fn ground_estimate_lines(
+    ctx: &Ctx<'_>,
+    view: &SideView<'_>,
+    within: Option<&dyn Fn(Hex) -> bool>,
+) -> Vec<GroundEstimateLine> {
+    view.ground_estimates()
+        .filter(|e| within.is_none_or(|f| f(e.hex)))
+        .map(|e| GroundEstimateLine {
+            place: ctx.place(e.hex),
+            men: e.men,
+            day: e.day,
+            age_days: view.day().saturating_sub(e.day),
+            event: ctx.number(e.report_event),
+        })
+        .collect()
+}
+
+/// The estimates part, or `None` when the side holds no estimate and found no
+/// base yesterday (decision 0092, 19).
+fn enemy_ashore_part(
+    ctx: &Ctx<'_>,
+    view: &SideView<'_>,
+    bases_found: Vec<BaseFoundLine>,
+) -> Option<EnemyAshorePart> {
+    let estimates = ground_estimate_lines(ctx, view, None);
+    if estimates.is_empty() && bases_found.is_empty() {
+        return None;
+    }
+    Some(EnemyAshorePart {
+        estimates,
+        bases_found_yesterday: bases_found,
+    })
 }
 
 /// The land units part, or `None` when the side has no land unit (decision
@@ -1154,6 +1296,7 @@ struct Day {
     returned: BTreeMap<BaseId, Vec<ReturnedForce>>,
     ground: GroundDay,
     base_changes: BaseChangesPart,
+    bases_found: Vec<BaseFoundLine>,
 }
 
 /// What yesterday's events of the side say of its land units (decision
@@ -1345,6 +1488,10 @@ impl Day {
         let mut returned: BTreeMap<BaseId, Vec<ReturnedForce>> = BTreeMap::new();
         let mut ground = GroundDay::default();
         let mut base_changes = BaseChangesPart::default();
+        let mut bases_found: Vec<BaseFoundLine> = Vec::new();
+        let mut bombardments: Vec<Bombardment> = Vec::new();
+        let mut shell_fire: Vec<ShellFire> = Vec::new();
+        let mut bombardments_against: Vec<BombardmentAgainst> = Vec::new();
 
         for e in events {
             let id = ctx.number(e.id);
@@ -1609,6 +1756,7 @@ impl Day {
                         claimed_shot_down,
                         claimed_on_ground,
                         from_air,
+                        from_bombardment,
                         ..
                     } => claims.push(Claim {
                         place: ctx.place(*hex),
@@ -1618,6 +1766,7 @@ impl Day {
                         claimed_shot_down: *claimed_shot_down,
                         claimed_on_ground: *claimed_on_ground,
                         from_air: *from_air,
+                        from_bombardment: *from_bombardment,
                         event: id,
                     }),
                     EventKind::BaseSupplySpent {
@@ -1852,6 +2001,26 @@ impl Day {
                         ashore: Some(*ashore),
                         event: id,
                     }),
+                    EventKind::MenLostToFire {
+                        unit,
+                        hex,
+                        lost,
+                        ashore,
+                        ..
+                    } => ground.lost.push(MenLostLine {
+                        land_unit: ctx.land_unit(*unit),
+                        cause: "fire",
+                        men: *lost,
+                        ship: None,
+                        place: Some(ctx.place(*hex)),
+                        ashore: Some(*ashore),
+                        event: id,
+                    }),
+                    EventKind::BaseFound { base, hex, .. } => bases_found.push(BaseFoundLine {
+                        base: ctx.base(*base),
+                        place: ctx.place(*hex),
+                        event: id,
+                    }),
                     EventKind::LandUnitFatigue {
                         unit,
                         change,
@@ -2025,6 +2194,7 @@ impl Day {
                     hits,
                     hits_on_aircraft,
                     hits_on_supply,
+                    hits_on_men,
                     ..
                 } => raids.push(Raid {
                     base: ctx.base(*base),
@@ -2032,6 +2202,55 @@ impl Day {
                     hits: *hits,
                     hits_on_aircraft: *hits_on_aircraft,
                     hits_on_supply: *hits_on_supply,
+                    hits_on_men: *hits_on_men,
+                    event: id,
+                }),
+                SideEventKind::BombardmentFire {
+                    ship,
+                    base,
+                    shells,
+                    weighed_shots,
+                    rounds_left,
+                } => shell_fire.push(ShellFire {
+                    ship: ctx.ship(*ship),
+                    base: ctx.base(*base),
+                    shells: Dec(*shells),
+                    weighed_shots: Dec(*weighed_shots),
+                    rounds_left: Dec(*rounds_left),
+                    event: id,
+                }),
+                SideEventKind::ShoreBombardment {
+                    task_force,
+                    base,
+                    hex,
+                    shells,
+                    weighed_shots,
+                } => bombardments.push(Bombardment {
+                    force: ctx.force(*task_force),
+                    base: ctx.base(*base),
+                    place: ctx.place(*hex),
+                    shells: Dec(*shells),
+                    weighed_shots: Dec(*weighed_shots),
+                    event: id,
+                }),
+                SideEventKind::ShoreBombardmentAgainst {
+                    base,
+                    hex,
+                    shells,
+                    weighed_shots,
+                    hits,
+                    hits_on_aircraft,
+                    hits_on_supply,
+                    hits_on_men,
+                } => bombardments_against.push(BombardmentAgainst {
+                    base: ctx.base(*base),
+                    place: ctx.place(*hex),
+                    shells: Dec(*shells),
+                    weighed_shots: Dec(*weighed_shots),
+                    hits: *hits,
+                    hits_on_aircraft: *hits_on_aircraft,
+                    hits_on_supply: *hits_on_supply,
+                    hits_on_men: *hits_on_men,
                     event: id,
                 }),
                 SideEventKind::AirFight {
@@ -2123,6 +2342,9 @@ impl Day {
                     .into_values()
                     .chain(air_attacks.into_values())
                     .collect(),
+                bombardments,
+                shell_fire,
+                bombardments_against,
             },
             losses: LossesPart {
                 ships_sunk: sunk,
@@ -2139,6 +2361,7 @@ impl Day {
             returned,
             ground,
             base_changes,
+            bases_found,
         }
     }
 }
@@ -2198,6 +2421,7 @@ fn reports_of(
                 hex,
                 claimed_sunk,
                 from_air: false,
+                from_bombardment: false,
                 ..
             }) => StrikeReport {
                 result: "claim",

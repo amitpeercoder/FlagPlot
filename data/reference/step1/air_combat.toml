@@ -101,3 +101,6 @@ main_battery = "0.2"
 [base_hit]
 aircraft = "0.3"
 supply = "0.3"
+# Placeholder set by the architect for decision 0092, resting on no source: the
+# share of hits on a base that land on men.
+men = "0.2"

@@ -98,8 +98,8 @@ function checkSideViews(replay, umpireModel) {
         else assert(Number.isInteger(c.order), label + ': event ' + e.n + ' has a cause that is neither an order nor an event');
       }
       // An event cut of nothing but the enemy's name keeps its own figures (decision 0065): a raid on the
-      // side's own base (which has no air group), its own sighting and the alarm its force heard.
-      const nameOnly = e.kind === 'sighting_roll' || e.kind === 'alarm_roll' || (e.kind === 'base_attacked' && !(e.data && 'air_group' in e.data));
+      // side's own base (which has no air group), a bombardment of it (which has no task force), its own sighting and the alarm its force heard.
+      const nameOnly = e.kind === 'sighting_roll' || e.kind === 'alarm_roll' || (e.kind === 'base_attacked' && !(e.data && 'air_group' in e.data)) || (e.kind === 'shore_bombardment' && !(e.data && 'task_force' in e.data));
       if (e.cut && !nameOnly) for (const k of ['chance', 'expected', 'hits', 'hits_on_aircraft']) assert(!(e.data && k in e.data), label + ': cut event ' + e.n + ' carries ' + k);
       // No event a side is given names an enemy ship, task force or air group, in its entities or its
       // text (decision 0065). The exception is the target the side wrote in its own order.

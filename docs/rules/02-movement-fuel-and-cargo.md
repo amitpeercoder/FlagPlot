@@ -347,4 +347,4 @@ A task force's readiness, whether it is alert, the alarm, and the fatigue that a
 - Objectives, missions and results: chapter 6. No rule here reads a task force's mission.
 - Ship repair, forward and at the yard, and a force away at the yard: chapter 4, Repair.
 - Land units, men worked as cargo, troop capacity and the men's supply: chapter 7.
-- Shore bombardment, base orders and port damage: not built (0052, 0066). The fight ashore and a base that changes side: chapter 7.
+- Base orders and port damage: not built (0052, 0066). The fight ashore and a base that changes side: chapter 7. Shore bombardment: chapter 4.

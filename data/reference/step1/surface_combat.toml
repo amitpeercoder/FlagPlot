@@ -78,6 +78,17 @@ yard_days_per_flotation_point = "2"
 yard_days_per_system_degraded = "5"
 yard_days_per_system_out = "30"
 
+# Bombardment of a base (decision 0092). Placeholders set by the architect for
+# decision 0092: no source sizes any of the four.
+# Minutes a ship fires in a night's bombardment.
+bombardment_minutes = 30
+# The chance a weighed shot hits something the table names.
+bombardment_hit_chance = "0.05"
+# The gun damage of a shell that counts as one shot.
+bombardment_reference_gun_damage = 20
+# The chance a weighed shot that destroyed no aircraft is claimed as one.
+bombardment_false_claim_chance = "0.01"
+
 # Which system a system hit lands on. Each table adds to 1.
 [gun_system_hit]
 propulsion = "0.2"

@@ -1,6 +1,8 @@
 //! What `batch` counts from one run's event log and end state (decision
 //! 0062; `shots_by` was added at version 3, and who sighted first in each
-//! fight at version 4, and the strike launches at version 5). It only reads: the log, the truth after each day and at the end.
+//! fight at version 4, and the strike launches at version 5; `men_lost` and
+//! `bombardment_shells` (decision 0092) are left out of a run with none, as
+//! `base_changes` is, so the version stays 5). It only reads: the log, the truth after each day and at the end.
 //! Every quantity is a whole number or, for a `Fixed`, a decimal string. A
 //! list is empty when there is nothing, and every key is always written, so
 //! a reader can tell an old file (key missing) from a run with none.
@@ -428,6 +430,41 @@ pub struct RunCounts {
     /// side.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub base_changes: Vec<BaseChangeOut>,
+    /// Men lost by side and by cause (decision 0092): in a fight ashore,
+    /// unfed, with a ship sunk, and to the fire of shells and bombs. Left
+    /// out of a run where no man was lost, so a file made before it is
+    /// unchanged.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub men_lost: Option<MenLostBySide>,
+    /// Shells fired in shore bombardments by side, whole shells as a decimal
+    /// string (decision 0092). Left out of a run with no bombardment.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bombardment_shells: Option<BombardmentShells>,
+}
+
+/// The men a side lost, by cause. A side's own men: the side of the unit.
+#[derive(Serialize)]
+pub struct MenLostBySide {
+    japanese: MenLostByCause,
+    allied: MenLostByCause,
+}
+
+#[derive(Default, Serialize)]
+pub struct MenLostByCause {
+    /// In a fight ashore.
+    fight: u64,
+    /// Unfed.
+    unfed: u64,
+    /// With a ship that sank.
+    lost_with_ship: u64,
+    /// To a bomb or a shell on a base.
+    fire: u64,
+}
+
+#[derive(Serialize)]
+pub struct BombardmentShells {
+    japanese: String,
+    allied: String,
 }
 
 /// A base that changed side, from the `BaseChangedSide` event.
@@ -465,6 +502,10 @@ pub fn count(
     let mut shots_by: BTreeMap<ShipId, [Fixed; 2]> = BTreeMap::new();
     let mut losses: BTreeMap<AirGroupId, AirLoss> = BTreeMap::new();
     let mut claims = [[0u64; 4]; 2];
+    // Men lost by side (Japanese, Allied) and cause: fight, unfed, with a
+    // ship, to fire. Shells fired in bombardments by side.
+    let mut men_lost = [[0u64; 4]; 2];
+    let mut shells = [Fixed::ZERO; 2];
     let mut attacks = Vec::new();
     let mut escorts = Vec::new();
     // The strike launches, each with its place (a ship or a base) for the
@@ -752,6 +793,35 @@ pub fn count(
                     place_of_group.insert(*to, place);
                 }
             }
+            EventKind::MenLostInFight { unit, lost, .. } => {
+                if let Some(u) = truth.land_units.get(unit) {
+                    men_lost[slot(u.side)][0] += u64::from(*lost);
+                }
+            }
+            EventKind::MenLostUnfed { unit, lost, .. } => {
+                if let Some(u) = truth.land_units.get(unit) {
+                    men_lost[slot(u.side)][1] += u64::from(*lost);
+                }
+            }
+            EventKind::MenLostWithShip { unit, men, .. } => {
+                if let Some(u) = truth.land_units.get(unit) {
+                    men_lost[slot(u.side)][2] += u64::from(*men);
+                }
+            }
+            EventKind::MenLostToFire { unit, lost, .. } => {
+                if let Some(u) = truth.land_units.get(unit) {
+                    men_lost[slot(u.side)][3] += u64::from(*lost);
+                }
+            }
+            EventKind::BombardmentFire {
+                ship,
+                shells: fired,
+                ..
+            } => {
+                if let Some(side) = side_of_ship(ship) {
+                    shells[slot(side)] += *fired;
+                }
+            }
             EventKind::BaseChangedSide { base, from, to, .. } => base_changes.push(BaseChangeOut {
                 day: event.day,
                 pulse: pulse_name(event.pulse),
@@ -1022,6 +1092,25 @@ pub fn count(
             .collect(),
         formed_groups,
         base_changes,
+        men_lost: men_lost.iter().flatten().any(|n| *n > 0).then(|| {
+            let by_cause = |index: usize| MenLostByCause {
+                fight: men_lost[index][0],
+                unfed: men_lost[index][1],
+                lost_with_ship: men_lost[index][2],
+                fire: men_lost[index][3],
+            };
+            MenLostBySide {
+                japanese: by_cause(0),
+                allied: by_cause(1),
+            }
+        }),
+        bombardment_shells: shells
+            .iter()
+            .any(|n| !n.is_zero())
+            .then(|| BombardmentShells {
+                japanese: shells[0].to_string(),
+                allied: shells[1].to_string(),
+            }),
     }
 }
 

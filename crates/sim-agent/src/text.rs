@@ -8,7 +8,7 @@
 //! fixed words contain no digits, so every number in the text comes from the
 //! data.
 
-use crate::briefing::{BaseChangesPart, Briefing, LandUnitsPart, StrikeReport};
+use crate::briefing::{BaseChangesPart, Briefing, EnemyAshorePart, LandUnitsPart, StrikeReport};
 use crate::common::{Handle, Place};
 use crate::objectives::{ObjectiveLine, ResultPart, ShipKindPoints};
 
@@ -226,6 +226,10 @@ impl Briefing {
             )
         });
 
+        if let Some(ashore) = &self.enemy_ashore {
+            enemy_ashore_text(&mut o, ashore);
+        }
+
         o.heading("ACTION YESTERDAY");
         let a = &self.action;
         o.each("Fights at sea", &a.fights, |x| {
@@ -310,18 +314,63 @@ impl Briefing {
             }
         }
         o.each("Raids on bases", &a.raids_on_bases, |x| {
+            // Men are named only when a hit landed on them (decision 0092).
+            let men = if x.hits_on_men > 0 {
+                format!("{} on men, ", x.hits_on_men)
+            } else {
+                String::new()
+            };
             format!(
-                "Raid on {}: {} aircraft attacked, {} {}, {} on aircraft, {} on supply, {} on nothing{}",
+                "Raid on {}: {} aircraft attacked, {} {}, {} on aircraft, {} on supply, {men}{} on nothing{}",
                 x.base.text(),
                 x.aircraft.0,
                 x.hits,
                 if x.hits == 1 { "hit" } else { "hits" },
                 x.hits_on_aircraft,
                 x.hits_on_supply,
-                x.hits - x.hits_on_aircraft - x.hits_on_supply,
+                x.hits - x.hits_on_aircraft - x.hits_on_supply - x.hits_on_men,
                 ev(x.event)
             )
         });
+        // Shore bombardment (decision 0092): only when there is one.
+        for x in &a.bombardments {
+            o.line(format!(
+                "Shore bombardment by {} of {} at {}: {} shells, {} weighed shots; the hits are not reported to you, only the claim{}",
+                x.force.text(),
+                x.base.text(),
+                at(&x.place),
+                x.shells.0,
+                x.weighed_shots.0,
+                ev(x.event)
+            ));
+        }
+        for x in &a.shell_fire {
+            o.line(format!(
+                "Shell fire: {} fired {} shells ({} weighed shots) at {}, {} rounds left{}",
+                x.ship.text(),
+                x.shells.0,
+                x.weighed_shots.0,
+                x.base.text(),
+                x.rounds_left.0,
+                ev(x.event)
+            ));
+        }
+        for x in &a.bombardments_against {
+            o.line(format!(
+                "Bombarded from the sea: {} at {}: {} shells, {} weighed shots, {} {}, {} on aircraft, {} on supply, {} on men, {} on nothing; the ships are not known{}",
+                x.base.text(),
+                at(&x.place),
+                x.shells.0,
+                x.weighed_shots.0,
+                x.hits,
+                if x.hits == 1 { "hit" } else { "hits" },
+                x.hits_on_aircraft,
+                x.hits_on_supply,
+                x.hits_on_men,
+                x.hits - x.hits_on_aircraft - x.hits_on_supply - x.hits_on_men,
+                ev(x.event)
+            ));
+        }
         o.each("Attacks on ships", &a.attacks_on_ships, |x| {
             match x.aircraft {
                 Some(n) => {
@@ -445,7 +494,15 @@ impl Briefing {
             o.line(line);
         }
         o.each("Claims yesterday", &l.claims, |x| {
-            if x.from_air {
+            if x.from_bombardment {
+                // From the sea (decision 0092, 17): aircraft on the ground.
+                format!(
+                    "Claim from the sea at {}: {} aircraft destroyed on the ground{}",
+                    at(&x.place),
+                    x.claimed_on_ground,
+                    ev(x.event)
+                )
+            } else if x.from_air {
                 let (place, words) = sim_core::events::air_claim_words(
                     x.claimed_sunk,
                     x.claimed_hits,
@@ -920,6 +977,37 @@ impl Briefing {
     }
 }
 
+/// The side's estimates of the enemy's men ashore (decision 0092, 19).
+fn enemy_ashore_text(o: &mut Out, a: &EnemyAshorePart) {
+    o.heading("ENEMY MEN ASHORE (ESTIMATES)");
+    o.line(
+        "These are estimates from reports, not counts: each can be wrong by up to half either way, and an estimate is never corrected until a new report replaces it"
+            .to_string(),
+    );
+    for e in &a.estimates {
+        let source = if e.day == 0 {
+            format!("opening estimate, day {}", e.day)
+        } else {
+            format!("reported day {}", e.day)
+        };
+        o.line(format!(
+            "Estimate: about {} enemy men ashore at {}, {source}, {} old{}",
+            e.men,
+            at(&e.place),
+            plural(e.age_days, "day", "days"),
+            ev(e.event)
+        ));
+    }
+    for b in &a.bases_found_yesterday {
+        o.line(format!(
+            "Enemy base found yesterday: {} at {}, now on your map{}",
+            b.base.text(),
+            at(&b.place),
+            ev(b.event)
+        ));
+    }
+}
+
 /// What yesterday's change of side of bases did to the side (decision 0090,
 /// 29 and 30).
 fn base_changes_text(o: &mut Out, c: &BaseChangesPart) {
@@ -1110,6 +1198,15 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             ),
             "fight" => format!(
                 "{} lost {} men in the fight{}, {} left ashore",
+                l.land_unit.text(),
+                l.men,
+                l.place
+                    .as_ref()
+                    .map_or(String::new(), |p| format!(" at {}", at(p))),
+                l.ashore.unwrap_or(0)
+            ),
+            "fire" => format!(
+                "{} lost {} men to bombs or shells{}, {} left ashore",
                 l.land_unit.text(),
                 l.men,
                 l.place

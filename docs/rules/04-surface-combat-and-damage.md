@@ -280,6 +280,41 @@ After `EngagementEnded`, lower force first, each force sends its sighting report
 
 A side sees: its own `ReportReceived` and `ClaimReceived`, whole. It never sees the hits it scored. [0047]
 
+## Shore bombardment
+
+A force on the bombardment mission can fire its guns at an enemy base. This is the rule that reads the mission (chapter 1, Task force orders). It is not a fight: nothing ashore fires back, and the base's anti-aircraft guns do not fire at ships. It runs only if the four bombardment figures of `surface_combat.toml` are given and the air combat figures are loaded, because the table of where a hit on a base lands is in `air_combat.toml`. [0092]
+
+**When.** In the shore bombardment phase of the night pulse, after movement (chapter 1, The night pulse). Forces are taken in force order. A force bombards if its mission is bombardment, it is not away at the yard, it has a ship afloat, and its position after the night's movement is a hex that holds an enemy base that is on its side's map. The base is the lowest-numbered such base. A base the side has not found cannot be bombarded (chapter 3, The ground report). The force must end the night's movement in the hex: a force that is passing through does not fire. [0092]
+
+**Each ship fires.** Ships are taken in ship order. A ship fires its guns for `bombardment_minutes` (30), by the rule of Gun shots in a round: `shells = min(gun_rounds_per_min x main_guns x bombardment_minutes x main_battery_factor, ammunition aboard)`. The share of the guns a force that is not ready fires (decisions 0068 and 0071) is not applied: a bombardment is not a meeting. The rounds spent are the shells fired. Nothing but the yard gives them back. A ship with no shell to fire (no rounds, or its main battery out) does not fire and records nothing. A force none of whose ships fires records nothing: no bombardment, no sighting report and no claim. The first firing ship is the lowest-numbered ship that fires. [0092]
+
+**Shells are weighed by the gun.** A ship's weighed shots are its shells times its class's `gun_damage` over `bombardment_reference_gun_damage` (20). So a shell of a heavy gun counts for several shots and a shell of a light gun for a part of one. [0092]
+
+**Each weighed shot is rolled.** Each whole weighed shot hits at `bombardment_hit_chance` (`0.05`), and a part of a shot is one more draw at that chance times the part, as every shot is rolled (Each shot is rolled). The draws are one stream for each firing ship and night, keyed on the day, the night pulse, the surface combat subsystem, the draw `Bombardment`, the ship and the base. [0092]
+
+**Where each hit lands.** The same stream gives, for each hit, one draw by the table of where a hit on a base lands (chapter 5, The attack on a base): on aircraft, on supply, on men, or on nothing. The share for men is `air_combat.toml: [base_hit] men`, and it counts only when the figures are loaded and the base's side has men ashore in the base's hex. [0092]
+
+**The hits land together.** Each ship records `BombardmentFire`: its shells, weighed shots, the chance, the expected hits, the hits and where they landed, and the rounds it has left. It cites the force's route order and its arrival. Then the force records `ShoreBombardment`, citing each ship's fire, with the sums. The hits then land, citing the force's event. All the aircraft at the base are on the ground at night. A hit on aircraft destroys one, the lowest air group first and its damaged aircraft before its ready ones, no more than were there when the bombardment began. A hit on supply destroys `base_supply_destroyed_per_hit_t` tons, no more than the base holds. A hit on men removes `ground.toml: men_lost_per_base_hit` men (chapter 7, Men lost to fire). The rules are those of a raid on a base (chapter 5), and the events are the same: `AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround`, `BaseSupplyDestroyed` and `MenLostToFire`. [0092]
+
+**The report and the claim.** The base's side is given a sighting report of the force, drawn on the first firing ship's stream after its hits and where they landed (chapter 3, The report a bombardment gives). The bombarding side is given a claim of aircraft destroyed on the ground (chapter 3, The claim after a shore bombardment). Being shelled shows that ships are there, and the bombarding side is told its own shells and never the hits. [0092]
+
+**Breakdown.** A ship's `BombardmentFire` records `rate`, `guns`, `minutes`, `main_battery_factor`, `rounds_aboard`, `shells`, `gun_damage`, `reference_gun_damage`, `weighed_shots` and `chance`, and the result is the expected hits. [0092]
+
+**Figures.** All four are in `surface_combat.toml`, all placeholders, and are given all or none; with none, no force bombards. A partial set is refused when the file loads. Minutes must be above 0, the reference gun damage above 0, and the two chances from 0 to 1. [0092]
+
+| Key | Value | What it is |
+| --- | --- | --- |
+| `bombardment_minutes` | 30 | Minutes a ship fires in a night's bombardment |
+| `bombardment_hit_chance` | 0.05 | The chance a weighed shot hits something the table names |
+| `bombardment_reference_gun_damage` | 20 | The gun damage of a shell that counts as one shot |
+| `bombardment_false_claim_chance` | 0.01 | The chance a weighed shot that destroyed no aircraft is claimed as one (chapter 3) |
+
+The frozen step 1 copy holds the same four values.
+
+A side sees: its own ship's and force's fire, cut as chapter 1, What a side sees of an event, says. The base's side is given the force's event cut of the force: the shells, the weighed shots, the hits and where they landed. It is given nothing of the ships' events, which would tell it how many ships fired. [0047, 0092]
+
+Not built: runway damage (a bombardment destroys aircraft, supply and men and does not close the field), bombardment by day or by a force that is passing, fire from the shore on ships, and a claim of supply or of men. [0092]
+
 ## What damage does afterwards
 
 - **Speed.** A damaged propulsion slows the ship, and the force steams at its slowest ship's speed. A ship dead in the water stops the force, which stays under way and burns nothing. Chapter 2, Speed, gives the rule. [0005, 0016, 0021]
@@ -359,7 +394,7 @@ A base's points a day and a port's passage are not figures of this file: they ar
 
 The enemy is shown none of the three (chapter 1, What a side sees of an event). [0069]
 
-Known limit: flooding that slows a ship, magazine explosions and damage to radar are not built. Shore bombardment and ships at anchor as targets are not built. Repair of a ship lying in port and of port damage is not built, nor is sending part of a force to the yard. Real hit chances, damage and repair figures come from sources in step 2. [0014, 0016, 0052, 0069]
+Known limit: flooding that slows a ship, magazine explosions and damage to radar are not built. Ships at anchor as targets are not built. Shore bombardment is built (above). Repair of a ship lying in port and of port damage is not built, nor is sending part of a force to the yard. Real hit chances, damage and repair figures come from sources in step 2. [0014, 0016, 0052, 0069, 0092]
 
 ## Random draws
 
@@ -370,6 +405,7 @@ Known limit: flooding that slows a ship, magazine explosions and damage to radar
 | The second side's torpedoes (`Draw::TorpedoOtherSide`) | The firing ship and the enemy force | One stream for that one salvo: the shots, then for each hit its system. After the ship's gun salvo of the round [0083] |
 | Alarm | The force alone | One for each fight it hears in a pulse, in the order the fights end |
 | Report error | The force and the enemy force, subsystem intelligence | Chapter 3, How each part is drawn |
+| Bombardment (`Draw::Bombardment`) | The firing ship and the base | One stream for each firing ship and night: the weighed shots, then for each hit where it lands, then, on the first firing ship's stream only, the sighting report [0092] |
 
 All randomness goes through `World::rng` or `World::rng_pair`. [0003, 0013, 0014, 0021]
 

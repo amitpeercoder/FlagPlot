@@ -9,7 +9,7 @@
 //! It detects divergence. It is not a security feature. See
 //! `docs/decisions/0004-state-hash.md`.
 
-use crate::belief::{BattleClaim, Contact};
+use crate::belief::{BattleClaim, Contact, GroundEstimate};
 use crate::orders::{AirMission, Mission, SpeedSetting};
 use crate::refdata::ShipKind;
 use crate::state::Side;
@@ -133,8 +133,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `last_base_strike_day` (decision 0091);
 /// version 12 adds a land unit's `posture`, `posture_order`, `fatigue` and
 /// `fed_share` after its hex, and the air group location `Lost` (code 3)
-/// (decision 0090).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v12";
+/// (decision 0090);
+/// version 13 adds a claim's `from_bombardment` after its `from_air`, and a
+/// side's ground estimates after its claims (decision 0092).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v13";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -365,8 +367,16 @@ fn name_every_field(world: &World) {
             claimed_shot_down: _,
             claimed_on_ground: _,
             from_air: _,
+            from_bombardment: _,
             received_event: _,
         }) = belief.claims().first()
+        {}
+        if let Some(GroundEstimate {
+            hex: _,
+            men: _,
+            day: _,
+            report_event: _,
+        }) = belief.ground_estimates().next()
         {}
     }
 }
@@ -664,6 +674,17 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.u32(claim.claimed_shot_down);
             h.u32(claim.claimed_on_ground);
             h.u8(u8::from(claim.from_air));
+            // After `from_air` (decision 0092).
+            h.u8(u8::from(claim.from_bombardment));
+        }
+        // After the claims (decision 0092), in hex order.
+        h.count(belief.ground_estimates().count());
+        for estimate in belief.ground_estimates() {
+            h.i32(estimate.hex.q);
+            h.i32(estimate.hex.r);
+            h.u32(estimate.men);
+            h.u32(estimate.day);
+            h.u32(estimate.report_event.raw());
         }
     }
 
