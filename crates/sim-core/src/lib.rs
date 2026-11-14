@@ -37,6 +37,7 @@ mod damage;
 mod estimate;
 #[cfg(test)]
 mod falling_back_tests;
+mod forming;
 mod ground;
 mod ground_combat;
 mod invariants;

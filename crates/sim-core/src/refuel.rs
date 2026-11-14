@@ -8,6 +8,7 @@
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
 use crate::ids::{BaseId, ShipId, TaskForceId};
+use crate::orders::Cargo;
 use crate::state::{ShipLocation, TaskForceStatus};
 use crate::world::World;
 
@@ -15,13 +16,15 @@ impl World {
     /// Refuels every task force stopped at a base of its own side (decisions
     /// 2 to 6 of 0045). Forces are served in order of their number and the
     /// ships of a force in order of theirs, each up to its class's fuel
-    /// capacity or what the base has left.
+    /// capacity or what the bases have left above their fuel reserves
+    /// (decision 7 of 0111).
     ///
     /// A force is stopped when it is not under way and sits exactly at the
     /// centre of a hex: it arrived, never left, or ran dry there. A force
     /// that ran dry between two hexes is adrift and takes nothing. Where two
     /// bases of the side share the hex, the lowest-numbered base that has
-    /// fuel serves it.
+    /// fuel above its reserve serves each ship: so a force draws on them in
+    /// base order, each down to its reserve (decision 7 of 0111).
     pub(crate) fn refuel_in_port(&mut self, day: u32) {
         let forces: Vec<TaskForceId> = self.truth.task_forces.keys().copied().collect();
         for id in forces {
@@ -47,19 +50,30 @@ impl World {
             // first refuelling event says so.
             let mut restore = was_dry;
             for ship_id in ships {
-                let Some(base_id): Option<BaseId> = self
+                // The lowest-numbered base of the side here that has fuel
+                // above its reserve serves the ship, down to that reserve
+                // (decision 7 of 0111). With no reserve it is the lowest
+                // that has fuel, as before.
+                let serving: Option<BaseId> = self
                     .truth
                     .bases
                     .values()
-                    .find(|base| base.side == side && base.hex == hex && base.fuel_t > Fixed::ZERO)
-                    .map(|base| base.id)
-                else {
-                    break;
-                };
+                    .find(|base| {
+                        base.side == side
+                            && base.hex == hex
+                            && base.above_reserve(Cargo::Fuel) > Fixed::ZERO
+                    })
+                    .map(|base| base.id);
                 let ship = &self.truth.ships[&ship_id];
                 let capacity = self.ref_data.ship_classes[&ship.class].fuel_capacity_t;
                 let lacks = capacity - ship.fuel_t;
-                let base_fuel = self.truth.bases[&base_id].fuel_t;
+                let Some(base_id) = serving else {
+                    // No base above its reserve: the ship takes nothing, and
+                    // if a base here holds fuel the reserve held it back.
+                    self.held_at_reserve(day, (ship_id, id, hex), lacks, None, &causes);
+                    continue;
+                };
+                let base_fuel = self.truth.bases[&base_id].above_reserve(Cargo::Fuel);
                 let taken = if lacks < base_fuel { lacks } else { base_fuel };
                 if taken <= Fixed::ZERO {
                     continue;
@@ -80,7 +94,7 @@ impl World {
                     force.route = crate::state::Route::default();
                     force.route_order = None;
                 }
-                self.events.record(
+                let refuelled = self.events.record(
                     day,
                     None,
                     EventKind::ShipRefuelled {
@@ -96,7 +110,48 @@ impl World {
                     None,
                 );
                 restore = false;
+                self.held_at_reserve(
+                    day,
+                    (ship_id, id, hex),
+                    lacks - taken,
+                    Some(base_id),
+                    &[Cause::Event(refuelled)],
+                );
             }
+        }
+    }
+
+    /// Records that a ship's refuelling stopped at a reserve (decision 7 of
+    /// 0111): it is `short` of full, and the base that served it, or with
+    /// none any base of the side here, still holds fuel, which is at or
+    /// below its reserve. With no reserve a base that served a ship short is
+    /// empty, so nothing is recorded.
+    fn held_at_reserve(
+        &mut self,
+        day: u32,
+        (ship, task_force, hex): (ShipId, TaskForceId, crate::hex::Hex),
+        short: Fixed,
+        served_by: Option<BaseId>,
+        causes: &[Cause],
+    ) {
+        let side = self.truth.task_forces[&task_force].side;
+        let held = self.truth.bases.values().any(|base| {
+            served_by.map_or(base.side == side && base.hex == hex, |id| base.id == id)
+                && base.fuel_t > Fixed::ZERO
+        });
+        if short > Fixed::ZERO && held {
+            self.events.record(
+                day,
+                None,
+                EventKind::RefuellingHeldAtReserve {
+                    ship,
+                    task_force,
+                    hex,
+                    short_t: short,
+                },
+                causes.to_vec(),
+                None,
+            );
         }
     }
 }

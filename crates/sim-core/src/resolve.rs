@@ -17,8 +17,8 @@ use crate::ids::{BaseId, EventId, LandUnitId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::map::HexKind;
 use crate::orders::{
-    Activity, AirGroupOrder, AirMission, CargoAction, LandUnitOrder, Order, OrderKind,
-    OrderRequest, Posture, Reach, RejectReason, SpeedSetting, TaskForceOrder,
+    Activity, AirGroupOrder, AirMission, BaseOrder, CargoAction, Issuer, LandUnitOrder, Order,
+    OrderKind, OrderRequest, Posture, Reach, RejectReason, SpeedSetting, TaskForceOrder,
 };
 use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
@@ -336,7 +336,10 @@ impl World {
     fn intake_orders(&mut self, day: u32) {
         let pending = std::mem::take(&mut self.pending);
         for (side, mut requests) in pending {
-            requests.sort_by_key(|request| request.kind.target());
+            // Forming orders first (decision 0111, As built), so that an
+            // order to the new force on the same day finds it.
+            requests
+                .sort_by_key(|request| (!request.kind.forms_task_force(), request.kind.target()));
             for request in requests {
                 self.take_in_order(day, None, side, request, Vec::new());
             }
@@ -582,9 +585,13 @@ impl World {
                 } else {
                     &task_force.ships
                 };
-                // A force whose every ship is sunk has nothing to order.
+                // A force joined to another or stood down has ceased to be
+                // (decisions 13 and 14 of 0111); one whose every ship is
+                // sunk has nothing to order.
                 if afloat.is_empty() {
-                    return Err(RejectReason::NoShipAfloat);
+                    return Err(self
+                        .force_ceased(*target)
+                        .unwrap_or(RejectReason::NoShipAfloat));
                 }
                 match task_force_order {
                     TaskForceOrder::SetRoute { waypoints, act_at } => {
@@ -598,7 +605,12 @@ impl World {
                             None => Ok(()),
                         }
                     }
-                    TaskForceOrder::Load | TaskForceOrder::LoadFuel => {
+                    TaskForceOrder::LoadTo { weight_t, .. } if *weight_t <= Fixed::ZERO => {
+                        Err(RejectReason::WeightNotAboveZero(*weight_t))
+                    }
+                    TaskForceOrder::Load
+                    | TaskForceOrder::LoadFuel
+                    | TaskForceOrder::LoadTo { .. } => {
                         if task_force.status == TaskForceStatus::Underway {
                             return Err(RejectReason::UnderWay);
                         }
@@ -723,6 +735,35 @@ impl World {
                         }
                         Ok(())
                     }
+                    TaskForceOrder::JoinTo(into) => {
+                        // Decision 15 of 0111: both forces stopped at a base of
+                        // the side, the same base.
+                        if into == target {
+                            return Err(RejectReason::CannotJoinItself);
+                        }
+                        let other = match self.truth.task_forces.get(into) {
+                            Some(other) if other.side == order.side => other,
+                            _ => return Err(RejectReason::NotYourUnit),
+                        };
+                        if other
+                            .yard_trip
+                            .is_some_and(|trip| trip.return_day > order.day_issued)
+                        {
+                            return Err(RejectReason::AwayAtYard);
+                        }
+                        if other.ships.is_empty() {
+                            return Err(self
+                                .force_ceased(*into)
+                                .unwrap_or(RejectReason::NoShipAfloat));
+                        }
+                        let here = self.stopped_at_own_base(task_force)?;
+                        let there = self.stopped_at_own_base(other)?;
+                        if here != there {
+                            return Err(RejectReason::NotAtSameBase(*into));
+                        }
+                        Ok(())
+                    }
+                    TaskForceOrder::StandDown => self.stopped_at_own_base(task_force).map(|_| ()),
                     TaskForceOrder::SetSpeed(SpeedSetting::Knots(knots)) => {
                         if *knots <= Fixed::ZERO {
                             Err(RejectReason::SpeedNotAboveZero(*knots))
@@ -948,7 +989,74 @@ impl World {
                 }
                 Ok(())
             }
+            OrderKind::Base {
+                target,
+                order: BaseOrder::FormTaskForce { ships },
+            } => {
+                // Decision 15 of 0111, in this order: the base the side's;
+                // ships listed; each once; each the side's, in port at this
+                // base and in no force.
+                match self.truth.bases.get(target) {
+                    Some(base) if base.side == order.side => {}
+                    _ => return Err(RejectReason::NotYourBase),
+                }
+                if ships.is_empty() {
+                    return Err(RejectReason::NoShipsToForm);
+                }
+                for (index, ship) in ships.iter().enumerate() {
+                    if ships[..index].contains(ship) {
+                        return Err(RejectReason::ShipNamedTwice(*ship));
+                    }
+                }
+                for ship in ships {
+                    match self.truth.ships.get(ship) {
+                        Some(record)
+                            if record.side == order.side
+                                && record.location == ShipLocation::Port(*target) => {}
+                        _ => return Err(RejectReason::ShipNotInPortHere(*ship)),
+                    }
+                }
+                Ok(())
+            }
         }
+    }
+
+    /// The base of its side a force is stopped at, for an order that needs
+    /// one (decision 15 of 0111): the lowest-numbered base of the side in its
+    /// hex. Refused under way, with a route to follow, out of fuel, or away
+    /// from a base of the side (at sea, part-way along a leg, or at a base
+    /// of the other side).
+    fn stopped_at_own_base(&self, force: &TaskForce) -> Result<BaseId, RejectReason> {
+        match force.status {
+            TaskForceStatus::Underway => return Err(RejectReason::UnderWay),
+            TaskForceStatus::Halted => return Err(RejectReason::RouteToFollow),
+            TaskForceStatus::OutOfFuel => return Err(RejectReason::OutOfFuel),
+            TaskForceStatus::Idle | TaskForceStatus::Arrived => {}
+        }
+        if force.toward_hex.is_some() {
+            return Err(RejectReason::NoOwnBaseHere);
+        }
+        self.truth
+            .bases
+            .values()
+            .find(|base| base.side == force.side && base.hex == force.from_hex)
+            .map(|base| base.id)
+            .ok_or(RejectReason::NoOwnBaseHere)
+    }
+
+    /// Why a force with no ship has ceased to be, if it was joined to
+    /// another or stood down (decisions 13 and 14 of 0111), read from the
+    /// log; `None` for a force emptied by sinking.
+    fn force_ceased(&self, force: TaskForceId) -> Option<RejectReason> {
+        self.events.iter().find_map(|event| match event.kind {
+            EventKind::TaskForceJoined { joined, into, .. } if joined == force => {
+                Some(RejectReason::ForceWasJoined { into })
+            }
+            EventKind::TaskForceStoodDownInPort { task_force, .. } if task_force == force => {
+                Some(RejectReason::ForceWasStoodDown)
+            }
+            _ => None,
+        })
     }
 
     /// Makes an accepted order the standing one. It stays in force until
@@ -989,6 +1097,21 @@ impl World {
                 if let TaskForceOrder::PrepareLanding { hex, roster } = task_force_order {
                     return self.apply_prepare_landing(*target, *hex, roster, order.id);
                 }
+                if let TaskForceOrder::JoinTo(into) = task_force_order {
+                    return self.join_task_force(*target, *into);
+                }
+                if let TaskForceOrder::StandDown = task_force_order {
+                    return self.stand_down_task_force(*target);
+                }
+                // A load the staff orders heeds the base's reserve; one the
+                // commander orders does not, and is told what it may take
+                // below the reserve (decisions 8 and 9 of 0111).
+                let heeds_reserve = order.origin.issuer == Issuer::Staff;
+                let below_reserve = if heeds_reserve {
+                    None
+                } else {
+                    self.load_below_reserve(*target, task_force_order)
+                };
                 if let TaskForceOrder::SendToYard = task_force_order {
                     // The ships leave the force and the map; the caller
                     // records the event and notes its number in the trip.
@@ -1068,31 +1191,35 @@ impl World {
                     }
                     TaskForceOrder::Load => {
                         task_force.cargo_order = Some(CargoOrder {
-                            action: CargoAction::Load,
-                            order: order.id,
-                            unit: None,
+                            heeds_reserve,
+                            ..CargoOrder::new(CargoAction::Load, order.id, None)
                         });
                     }
                     TaskForceOrder::LoadFuel => {
                         task_force.cargo_order = Some(CargoOrder {
-                            action: CargoAction::LoadFuel,
-                            order: order.id,
-                            unit: None,
+                            heeds_reserve,
+                            ..CargoOrder::new(CargoAction::LoadFuel, order.id, None)
+                        });
+                    }
+                    TaskForceOrder::LoadTo { cargo, weight_t } => {
+                        task_force.cargo_order = Some(CargoOrder {
+                            weight_t: Some(*weight_t),
+                            heeds_reserve,
+                            ..CargoOrder::new(CargoAction::load_of(Some(*cargo)), order.id, None)
                         });
                     }
                     TaskForceOrder::Unload => {
-                        task_force.cargo_order = Some(CargoOrder {
-                            action: CargoAction::Unload,
-                            order: order.id,
-                            unit: None,
-                        });
+                        task_force.cargo_order =
+                            Some(CargoOrder::new(CargoAction::Unload, order.id, None));
                     }
                     TaskForceOrder::LoadUnit { unit, cargo } => {
                         task_force.cargo_order = Some(CargoOrder {
-                            action: CargoAction::load_of(*cargo),
-                            order: order.id,
-                            unit: Some(*unit),
+                            heeds_reserve,
+                            ..CargoOrder::new(CargoAction::load_of(*cargo), order.id, Some(*unit))
                         });
+                    }
+                    TaskForceOrder::JoinTo(_) | TaskForceOrder::StandDown => {
+                        unreachable!("join and stand-down orders are applied above")
                     }
                     TaskForceOrder::SetRulesOfEngagement {
                         stance,
@@ -1125,8 +1252,12 @@ impl World {
                         unreachable!("yard orders are applied above")
                     }
                 }
-                follow_up.into_iter().collect()
+                follow_up.into_iter().chain(below_reserve).collect()
             }
+            OrderKind::Base {
+                target,
+                order: BaseOrder::FormTaskForce { ships },
+            } => vec![self.form_task_force(*target, ships)],
             OrderKind::AirGroup {
                 target,
                 order: air_group_order,
@@ -3958,11 +4089,11 @@ mod tests {
             force.rules_order = Some(crate::ids::OrderId::new(40));
             force.speed_order = Some(crate::ids::OrderId::new(41));
             force.route_order = Some(crate::ids::OrderId::new(42));
-            force.cargo_order = Some(CargoOrder {
-                action: CargoAction::Load,
-                order: crate::ids::OrderId::new(43),
-                unit: None,
-            });
+            force.cargo_order = Some(CargoOrder::new(
+                CargoAction::Load,
+                crate::ids::OrderId::new(43),
+                None,
+            ));
             force.arrived_at_hours = Some(nm(5));
             force.arrival_event = Some(EventId::new(3));
         }

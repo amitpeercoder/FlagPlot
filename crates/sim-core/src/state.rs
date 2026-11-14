@@ -352,6 +352,14 @@ pub struct Base {
     /// 0 for a base with no airfield. A hit on the airfield adds to it,
     /// work on the airfield lowers it, and nothing else changes it.
     pub airfield_damage: Fixed,
+    /// The supply the base keeps in reserve, in tons (decision 6 of 0111): a
+    /// load the staff orders never takes the supply below it. 0 unless set.
+    /// It stays with the base when the base changes side (decision 11).
+    pub supply_reserve_t: Fixed,
+    /// The fuel the base keeps in reserve, in tons (decision 6 of 0111):
+    /// refuelling and a load of fuel the staff orders never take the fuel
+    /// below it. 0 unless set.
+    pub fuel_reserve_t: Fixed,
 }
 
 /// The work made at a base on one day for the two jobs the next day reads
@@ -388,7 +396,31 @@ impl Base {
             defences: Fixed::ZERO,
             day_work: None,
             airfield_damage: Fixed::ZERO,
+            supply_reserve_t: Fixed::ZERO,
+            fuel_reserve_t: Fixed::ZERO,
         }
+    }
+
+    /// The reserve of `cargo` (decision 6 of 0111).
+    pub fn reserve_of(&self, cargo: crate::orders::Cargo) -> Fixed {
+        match cargo {
+            crate::orders::Cargo::Supply => self.supply_reserve_t,
+            crate::orders::Cargo::Fuel => self.fuel_reserve_t,
+        }
+    }
+
+    /// The stock of `cargo`: supply, or fuel for ships.
+    pub fn stock_of(&self, cargo: crate::orders::Cargo) -> Fixed {
+        match cargo {
+            crate::orders::Cargo::Supply => self.supply_t,
+            crate::orders::Cargo::Fuel => self.fuel_t,
+        }
+    }
+
+    /// What the base holds of `cargo` above its reserve, never below 0
+    /// (decision 8 of 0111).
+    pub fn above_reserve(&self, cargo: crate::orders::Cargo) -> Fixed {
+        (self.stock_of(cargo) - self.reserve_of(cargo)).max(Fixed::ZERO)
     }
 
     /// The work of `job` made at the base on `day`, for the day after to
@@ -503,6 +535,27 @@ pub struct CargoOrder {
     /// The land unit a load order takes aboard with its cargo (decision
     /// 0066, 5). `None` for a load with no unit and for an unload.
     pub unit: Option<LandUnitId>,
+    /// The tons of the named cargo the force is to have aboard, all its
+    /// ships together (decision 1 of 0111). `None` fills the room, as a load
+    /// did before. Only for a load of supply or fuel with no unit.
+    pub weight_t: Option<Fixed>,
+    /// Whether the load keeps the base's stock above its reserve: a load the
+    /// staff ordered (decision 8 of 0111). False for every other order.
+    pub heeds_reserve: bool,
+}
+
+impl CargoOrder {
+    /// A cargo order with no weight that does not heed a reserve: what every
+    /// cargo order was before decision 0111.
+    pub fn new(action: CargoAction, order: OrderId, unit: Option<LandUnitId>) -> CargoOrder {
+        CargoOrder {
+            action,
+            order,
+            unit,
+            weight_t: None,
+            heeds_reserve: false,
+        }
+    }
 }
 
 /// How a task force behaves in a surface fight: whether it fights or tries
