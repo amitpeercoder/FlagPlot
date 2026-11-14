@@ -545,7 +545,10 @@ fn objectives_change_no_hash_and_no_event() {
     // And it was 66549bf6335032e6 until the state went to version 15
     // (decision 0096, a force that acts and steams on); the event log did
     // not change.
-    assert!(baseline.contains("hash 852e6e622f5fd737"));
+    // And it was 852e6e622f5fd737 until the state went to version 16
+    // (decisions 0095 and 0097, preparing a landing and the experience of a
+    // land unit); the event log did not change.
+    assert!(baseline.contains("hash 7aabfe163b7239ec"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

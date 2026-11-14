@@ -1,0 +1,40 @@
+Scenario 27: Preparing a landing
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash e84ac976bb5cb855  16 events
+day   2  hash 5a23a157b86cd1b1  12 events
+day   3  hash 55e1231e01af02ce  13 events
+day   4  hash a0e15cf9855be827  12 events
+day   5  hash 5ce40c8a024d0016  12 events
+day   6  hash 8730dd38f177de0b  18 events
+day   7  hash 660ce7728b1f731b  13 events
+day   8  hash 582100a2aad4a595  13 events
+day   9  hash 520acd1f4cc9aff1  13 events
+day  10  hash 178082947045d5b6  13 events
+day  11  hash 0810bae6b2bb8c0e  52 events
+day  12  hash 3d438ef17aa61082  23 events
+
+task_force:1 "Placeholder transport force 1" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder transport force 2" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder transport force 3" (Allied): Arrived at (0,6); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Placeholder transport force 4" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:5 "Placeholder transport force 5" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 984 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 984 t of fuel, 0 t of supply
+ship:3 "Placeholder fast transport 3": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 470 t of fuel, 0 t of supply
+ship:4 "Placeholder troop transport 4": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 600 men of land_unit:4 aboard
+ship:5 "Placeholder troop transport 5": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 300 men of land_unit:5 aboard
+base:1 "Placeholder base A" (Allied) at (0,0): 982 t of supply in stock
+base:2 "Placeholder base B" (Allied) at (4,0): 156 t of supply in stock
+base:3 "Landing at (0,6)" (Allied) at (0,6): 0 t of supply in stock, formed in play, on its own side's map only
+land_unit:1 "Placeholder battalion 1" (Allied): 600 men ashore at (4,0), fatigue 10
+land_unit:2 "Placeholder battalion 2" (Allied): 600 men ashore at (4,0), fatigue 30
+land_unit:3 "Placeholder battalion 3" (Allied): 190 men ashore at (0,6), fatigue 30
+land_unit:4 "Placeholder battalion 4" (Allied): no men ashore
+land_unit:5 "Placeholder battalion 5" (Allied): no men ashore
+land_unit:6 "Placeholder battalion 6" (Allied): 300 men ashore at (0,0)
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

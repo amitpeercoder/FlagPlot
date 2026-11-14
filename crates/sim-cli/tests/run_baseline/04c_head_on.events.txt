@@ -2,7 +2,7 @@ Scenario 4c2b: Head on
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0e416b21f936d4f8  78 events
+day   1  hash bf4264c4272b1795  78 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:2  <- order:2

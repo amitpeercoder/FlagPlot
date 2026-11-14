@@ -28,7 +28,7 @@
 //! ## Inputs
 //!
 //! A placeholder map with three coast hexes: A at (0,0) with port size 5, B
-//! at (4,0) with port size 0 and C at (4,2) with port size 0. The game is 12
+//! at (4,0) with port size 0 and C at (0,6) with port size 0. The game is 12
 //! days. Day d begins at hour 24 x (d - 1): day 11 at hour 240 and day 12 at
 //! hour 264. The night pulse is 12 hours and each daylight pulse 6.
 //!
@@ -173,10 +173,8 @@ use sim_data::{LoadOptions, Scenario};
 
 // ------------------------------------------------------------------ Helpers
 
-/// A is at (0,0), B at (4,0) and C at (0,6). The calculation's inputs name C
-/// at (4,2); that is 6 hexes from A but a straight line of 212 nm, which the
-/// map charges (decision 0058), and the calculation's passage is 240 nm, so
-/// the map has C on the axis, at (0,6): see `data/map/placeholder_preparing.toml`.
+/// A is at (0,0), B at (4,0) and C at (0,6). Why C is on an axis:
+/// `data/map/placeholder_preparing.toml`.
 const A: Hex = Hex::new(0, 0);
 const B: Hex = Hex::new(4, 0);
 const C: Hex = Hex::new(0, 6);

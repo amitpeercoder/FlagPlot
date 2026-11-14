@@ -2,7 +2,7 @@ Scenario 15b: Night action, a force that is not ready fires part of its torpedoe
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2bd7ac3f13028ad9  73 events
+day   1  hash 2e5983ee9ea3c0f0  73 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
