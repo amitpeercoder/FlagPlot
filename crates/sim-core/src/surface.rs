@@ -30,7 +30,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::belief::{ApplyOutcome, BattleClaim, Report};
+use crate::belief::{ApplyOutcome, BattleClaim, Contact, Report};
+use crate::choices::surface::{AlertChoice, SurfaceAnswer, SurfaceQuestion};
+use crate::choices::{Answer, Question};
 use crate::damage::{
     damage_per_hit, raw_u64, roll_shots, system_for_draw, system_hit_chance, DamageSite, HitSet,
 };
@@ -40,12 +42,12 @@ use crate::events::{
 };
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use crate::ids::{EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::{Readiness, Stance};
 use crate::refdata::{experience_factor, ShipClass, ShipKind, SurfaceCombatFigures};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::build_sighting_report;
-use crate::state::{Ship, ShipLocation, ShipSystem, Side};
+use crate::state::{RulesOfEngagement, Ship, ShipLocation, ShipSystem, Side, TaskForce};
 use crate::time::{self, Pulse};
 use crate::world::World;
 
@@ -259,6 +261,109 @@ fn torpedo_shots(
     Fixed::from_int(i64::from(torpedo_salvo_tubes(ship, class))) * factor * share
 }
 
+/// What alert from belief does to a force as a pulse begins (decision 3 of
+/// `docs/decisions/0021-readiness-and-alarm.md`, decision 0100, 1). `None`
+/// for a force the rule skips: one with no ship afloat, or at battle
+/// readiness, which a contact neither alerts nor stands down. Otherwise the
+/// nearest of `contacts` no older than `fresh_max_age` pulses and within
+/// `alert_distance` hexes of the force alerts it if it is not alerted
+/// (the lowest ID on a tie, as the contacts come in ID order), and with
+/// none near an alerted force stands down. The caller hands in the belief
+/// of the force's own side. It reads nothing else and draws nothing.
+pub(crate) fn alert_choice<'a>(
+    force: &TaskForce,
+    contacts: impl Iterator<Item = &'a Contact>,
+    alert_distance: u32,
+    fresh_max_age: u32,
+) -> Option<AlertChoice> {
+    if force.ships.is_empty() || force.readiness == Readiness::Battle {
+        return None;
+    }
+    let position = force.position();
+    // Contacts come in ID order and min_by_key keeps the first minimum, so a
+    // tie goes to the lowest ID.
+    let nearest = contacts
+        .filter(|contact| {
+            contact.age_pulses <= fresh_max_age
+                && contact.estimated_hex.distance(position) <= alert_distance
+        })
+        .min_by_key(|contact| contact.estimated_hex.distance(position))
+        .map(|contact| contact.id);
+    Some(match (force.alerted, nearest) {
+        (false, Some(contact)) => AlertChoice::AlertedBy(contact),
+        (true, None) => AlertChoice::StandDown,
+        (true, Some(_)) | (false, None) => AlertChoice::NoChange,
+    })
+}
+
+/// Whether a force is ready for action as a fight begins in `pulse` of `day`
+/// (decision 0068, 2): at battle readiness by order, or alert since before
+/// the present pulse began. `alerted_at` is the day and pulse of the event
+/// that alerted the force (its `alerted_by`), `None` where it has none or the
+/// log does not hold it: an alerted force with none counts as alerted
+/// before. It reads the force only.
+pub(crate) fn force_ready(
+    force: &TaskForce,
+    alerted_at: Option<(u32, Option<Pulse>)>,
+    day: u32,
+    pulse: Pulse,
+) -> bool {
+    if force.readiness == Readiness::Battle {
+        return true;
+    }
+    if !force.alerted {
+        return false;
+    }
+    alerted_at.is_none_or(|(alerted_day, alerted_pulse)| {
+        alerted_day < day || (alerted_day == day && alerted_pulse.is_none_or(|p| p < pulse))
+    })
+}
+
+/// The test of whether a force breaks off after a round (decision 9 of
+/// `docs/decisions/0022-meeting-and-breaking-off.md`), with the counts it
+/// was made on.
+pub(crate) struct BreakOffTest {
+    /// Of the ships it began with, how many are sunk or crippled.
+    pub(crate) lost: i64,
+    /// The ships it began with.
+    pub(crate) began: i64,
+    pub(crate) breaks_off: bool,
+}
+
+/// A force breaks off when the share of the ships it began with (`began_with`)
+/// that are sunk or at or past `crippled_flotation` reaches its break-off
+/// level, or when it avoids and was fired on this round. It avoids if
+/// `already_avoiding` (it broke off or slipped away earlier in the pulse) or
+/// its ordered stance is to avoid. The share is compared without dividing:
+/// count x 1 >= break-off x ships. `ships` must hold every ship of
+/// `began_with`; only those are read.
+pub(crate) fn break_off_test(
+    rules: &RulesOfEngagement,
+    began_with: &[ShipId],
+    ships: &BTreeMap<ShipId, Ship>,
+    crippled_flotation: Fixed,
+    (already_avoiding, fired_on): (bool, bool),
+) -> BreakOffTest {
+    let began = i64::try_from(began_with.len()).expect("few ships");
+    let lost = i64::try_from(
+        began_with
+            .iter()
+            .filter(|id| {
+                let ship = &ships[*id];
+                ship.location == ShipLocation::Sunk || ship.flotation_damage >= crippled_flotation
+            })
+            .count(),
+    )
+    .expect("few ships");
+    let over_level = Fixed::from_int(lost) >= rules.break_off * began;
+    let avoids = already_avoiding || rules.stance == Stance::Avoid;
+    BreakOffTest {
+        lost,
+        began,
+        breaks_off: over_level || (avoids && fired_on),
+    }
+}
+
 impl World {
     /// One meeting of two opposing task forces (decision 0022): the fight of
     /// decision 0014 in full, then the alarm for any bystander in the hex if
@@ -302,18 +407,11 @@ impl World {
     /// (a state a rule never makes) counts as alerted before.
     fn force_is_ready(&self, id: TaskForceId, day: u32, pulse: Pulse) -> bool {
         let force = &self.truth.task_forces[&id];
-        if force.readiness == Readiness::Battle {
-            return true;
-        }
-        if !force.alerted {
-            return false;
-        }
-        force
+        let alerted_at = force
             .alerted_by
             .and_then(|event| self.events.get(event))
-            .is_none_or(|event| {
-                event.day < day || (event.day == day && event.pulse.is_none_or(|p| p < pulse))
-            })
+            .map(|event| (event.day, event.pulse));
+        force_ready(force, alerted_at, day, pulse)
     }
 
     /// The stance a force takes in a fight: avoid if it broke off or slipped
@@ -431,34 +529,37 @@ impl World {
             .search
             .as_ref()
             .map_or(0, |search| search.fresh_contact_max_age_pulses);
-        let decisions: Vec<(TaskForceId, Option<(ContactId, EventId)>)> = self
+        let decisions: Vec<(TaskForceId, AlertChoice)> = self
             .truth
             .task_forces
             .values()
-            .filter(|force| !force.ships.is_empty() && force.readiness != Readiness::Battle)
-            .map(|force| {
-                let position = force.position();
-                // Contacts come in ID order and min_by_key keeps the first
-                // minimum, so a tie goes to the lowest ID.
-                let nearest = self.beliefs[&force.side]
-                    .contacts()
-                    .filter(|contact| {
-                        contact.age_pulses <= fresh_max_age
-                            && contact.estimated_hex.distance(position)
-                                <= figures.alert_contact_distance_hexes
-                    })
-                    .min_by_key(|contact| contact.estimated_hex.distance(position))
-                    .map(|contact| (contact.id, contact.last_report_event));
-                (force.id, nearest)
+            .filter_map(|force| {
+                let choice = alert_choice(
+                    force,
+                    self.beliefs[&force.side].contacts(),
+                    figures.alert_contact_distance_hexes,
+                    fresh_max_age,
+                )?;
+                self.trace_choice(force.side, || {
+                    (
+                        Question::Surface(SurfaceQuestion::Alert {
+                            task_force: force.id,
+                        }),
+                        Answer::Surface(SurfaceAnswer::Alert(choice)),
+                    )
+                });
+                Some((force.id, choice))
             })
             .collect();
-        for (id, nearest) in decisions {
-            let (alerted, alerted_by) = {
-                let force = &self.truth.task_forces[&id];
-                (force.alerted, force.alerted_by)
-            };
-            match (alerted, nearest) {
-                (false, Some((contact, report))) => {
+        for (id, choice) in decisions {
+            let alerted_by = self.truth.task_forces[&id].alerted_by;
+            match choice {
+                AlertChoice::AlertedBy(contact) => {
+                    let side = self.truth.task_forces[&id].side;
+                    let report = self.beliefs[&side]
+                        .contact(contact)
+                        .expect("the contact is in the belief")
+                        .last_report_event;
                     let event = self.events.record(
                         day,
                         Some(pulse),
@@ -473,7 +574,7 @@ impl World {
                     force.alerted = true;
                     force.alerted_by = Some(event);
                 }
-                (true, None) => {
+                AlertChoice::StandDown => {
                     self.events.record(
                         day,
                         Some(pulse),
@@ -487,7 +588,7 @@ impl World {
                 }
                 // Still alerted by a contact: alerted_by stays. Not alerted
                 // and no contact: nothing.
-                (true, Some(_)) | (false, None) => {}
+                AlertChoice::NoChange => {}
             }
         }
     }
@@ -641,7 +742,20 @@ impl World {
                 fired_on_last_round: false,
                 began_with: force.ships.iter().copied().collect(),
                 fired_this_fight: false,
-                ready: world.force_is_ready(id, day, pulse),
+                ready: {
+                    let ready = world.force_is_ready(id, day, pulse);
+                    world.trace_choice(force.side, || {
+                        (
+                            Question::Surface(SurfaceQuestion::Ready {
+                                task_force: id,
+                                day,
+                                pulse,
+                            }),
+                            Answer::Surface(SurfaceAnswer::Ready(ready)),
+                        )
+                    });
+                    ready
+                },
                 sunk_in_fight: BTreeSet::new(),
                 sighting_stream: world.rng_pair(
                     day,
@@ -1431,26 +1545,30 @@ impl World {
         let force = &fight.forces[index];
         let task_force = force.id;
         let rules = self.truth.task_forces[&force.id].rules_of_engagement;
-        let began = i64::try_from(force.began_with.len()).expect("few ships");
-        let lost = i64::try_from(
-            force
-                .began_with
-                .iter()
-                .filter(|id| {
-                    let ship = &self.truth.ships[*id];
-                    ship.location == ShipLocation::Sunk
-                        || ship.flotation_damage >= fight.figures.crippled_flotation
-                })
-                .count(),
-        )
-        .expect("few ships");
-
-        let over_level = Fixed::from_int(lost) >= rules.break_off * began;
-        let avoiding_under_fire =
-            self.effective_stance(fight, force.id) == Stance::Avoid && round.forces[index].fired_on;
-        if !(over_level || avoiding_under_fire) {
+        let already_avoiding = fight.avoiding.contains(&force.id);
+        let fired_on = round.forces[index].fired_on;
+        let test = break_off_test(
+            &rules,
+            &force.began_with,
+            &self.truth.ships,
+            fight.figures.crippled_flotation,
+            (already_avoiding, fired_on),
+        );
+        self.trace_choice(force.side, || {
+            (
+                Question::Surface(SurfaceQuestion::BreakOff {
+                    task_force,
+                    began_with: force.began_with.clone(),
+                    fired_on,
+                    already_avoiding,
+                }),
+                Answer::Surface(SurfaceAnswer::BreakOff(test.breaks_off)),
+            )
+        });
+        if !test.breaks_off {
             return None;
         }
+        let (lost, began) = (test.lost, test.began);
 
         let share = Fixed::from_ratio(lost, began);
         let breakdown = self.config.record_breakdowns.then(|| Breakdown {
@@ -1676,7 +1794,7 @@ impl World {
 mod tests {
     use super::*;
     use crate::events::Event;
-    use crate::ids::ShipClassId;
+    use crate::ids::{ContactId, ShipClassId};
     use crate::invariants;
     use crate::map::{HexData, Map};
     use crate::orders::{Mission, Readiness};
@@ -6587,5 +6705,380 @@ mod tests {
             world
         };
         assert_eq!(build(true).state_hash(), build(false).state_hash());
+    }
+
+    // ---- the choices a side can ask (decision 0100) ----
+
+    use crate::choices::surface::{AlertChoice, SurfaceAnswer, SurfaceQuestion};
+    use crate::choices::{Answer, Moment, Question};
+
+    fn ask_surface(world: &World, side: Side, question: &SurfaceQuestion) -> Option<SurfaceAnswer> {
+        world.side_view(side).ask_surface(question)
+    }
+
+    fn alert_question(id: u32) -> SurfaceQuestion {
+        SurfaceQuestion::Alert {
+            task_force: TaskForceId::new(id),
+        }
+    }
+
+    #[test]
+    fn alert_choice_takes_the_nearest_fresh_contact_and_the_lowest_id_on_a_tie() {
+        // Force 1 (normal readiness, not alerted) at (0,0), alert distance 3.
+        // Contact 1 at (3,0) is 3 away, contact 2 at (0,2) is 2 away, contact
+        // 3 at (2,0) is also 2 away. The nearest are 2 and 3 at distance 2;
+        // the lower ID, contact 2, is the one cited.
+        let mut world = lone_allied();
+        // No merging of reports into one contact, so each stays its own.
+        world
+            .ref_data
+            .search
+            .as_mut()
+            .expect("search figures")
+            .merge_distance_hexes = 0;
+        let (far, _) = give_contact(&mut world, Side::Allied, Hex::new(3, 0));
+        let (near_low, _) = give_contact(&mut world, Side::Allied, Hex::new(0, 2));
+        give_contact(&mut world, Side::Allied, Hex::new(2, 0));
+        assert!(far < near_low);
+        assert_eq!(
+            ask_surface(&world, Side::Allied, &alert_question(1)),
+            Some(SurfaceAnswer::Alert(AlertChoice::AlertedBy(near_low)))
+        );
+    }
+
+    #[test]
+    fn alert_choice_is_no_change_stand_down_or_skipped() {
+        // No contact, not alerted: no change.
+        let mut world = lone_allied();
+        assert_eq!(
+            ask_surface(&world, Side::Allied, &alert_question(1)),
+            Some(SurfaceAnswer::Alert(AlertChoice::NoChange))
+        );
+        // Alerted and still no contact near: stands down.
+        force_mut(&mut world, 1).alerted = true;
+        assert_eq!(
+            ask_surface(&world, Side::Allied, &alert_question(1)),
+            Some(SurfaceAnswer::Alert(AlertChoice::StandDown))
+        );
+        // A fresh contact near keeps it alerted: no change.
+        give_contact(&mut world, Side::Allied, Hex::new(1, 0));
+        assert_eq!(
+            ask_surface(&world, Side::Allied, &alert_question(1)),
+            Some(SurfaceAnswer::Alert(AlertChoice::NoChange))
+        );
+        // At battle readiness the rule skips the force: no answer. The
+        // enemy's force is not the side's: no answer.
+        force_mut(&mut world, 1).readiness = Readiness::Battle;
+        assert_eq!(ask_surface(&world, Side::Allied, &alert_question(1)), None);
+        assert_eq!(
+            ask_surface(&world, Side::Japanese, &alert_question(1)),
+            None
+        );
+    }
+
+    #[test]
+    fn ready_is_asked_with_the_day_and_pulse_of_the_fight() {
+        // Alerted by an event of day 1, morning: ready from the afternoon,
+        // not in the morning or before, as `force_is_ready` has it.
+        let mut world = lone_allied();
+        give_contact(&mut world, Side::Allied, Hex::new(1, 0));
+        world.alert_from_belief(1, Pulse::Morning);
+        let ready = |day, pulse| {
+            ask_surface(
+                &world,
+                Side::Allied,
+                &SurfaceQuestion::Ready {
+                    task_force: TaskForceId::new(1),
+                    day,
+                    pulse,
+                },
+            )
+        };
+        assert_eq!(ready(1, Pulse::Night), Some(SurfaceAnswer::Ready(false)));
+        assert_eq!(ready(1, Pulse::Morning), Some(SurfaceAnswer::Ready(false)));
+        assert_eq!(ready(1, Pulse::Afternoon), Some(SurfaceAnswer::Ready(true)));
+        assert_eq!(ready(2, Pulse::Night), Some(SurfaceAnswer::Ready(true)));
+    }
+
+    fn break_off_question(
+        id: u32,
+        began_with: &[u32],
+        fired_on: bool,
+        avoiding: bool,
+    ) -> SurfaceQuestion {
+        SurfaceQuestion::BreakOff {
+            task_force: TaskForceId::new(id),
+            began_with: began_with.iter().map(|n| ShipId::new(*n)).collect(),
+            fired_on,
+            already_avoiding: avoiding,
+        }
+    }
+
+    #[test]
+    fn break_off_compares_the_lost_ships_with_the_level_and_an_avoider_breaks_when_fired_on() {
+        // Force 1 has ships 1, 2, 3 (cruisers) and a break-off level of 0.5:
+        // 3 x 0.5 = 1.5, so 2 lost ships break it off and 1 does not. Crippled
+        // is flotation damage of 50 or more (the figure of the test data).
+        // Ship 1 crippled: 1 lost < 1.5, no break-off. Ship 2 sunk as well:
+        // 2 >= 1.5, break-off. With one lost and the force avoiding (asked as
+        // already avoiding) it breaks off only if it was fired on.
+        let scene = Scene::new(
+            1,
+            Pulse::Night,
+            vec![ForceSpec::new(1, Side::Allied, Hex::new(0, 0), &[1, 1, 1])
+                .break_off("0.5".parse().expect("decimal"))],
+        );
+        let mut world = scene.world();
+        let asked = |world: &World, fired, avoiding| {
+            ask_surface(
+                world,
+                Side::Allied,
+                &break_off_question(1, &[1, 2, 3], fired, avoiding),
+            )
+        };
+        let no = Some(SurfaceAnswer::BreakOff(false));
+        let yes = Some(SurfaceAnswer::BreakOff(true));
+        assert_eq!(asked(&world, false, false), no);
+        assert_eq!(asked(&world, true, false), no, "fired on but not avoiding");
+        ship_mut(&mut world, 1).flotation_damage = Fixed::from_int(50);
+        assert_eq!(asked(&world, false, false), no);
+        assert_eq!(asked(&world, false, true), no, "avoiding but not fired on");
+        assert_eq!(asked(&world, true, true), yes, "avoiding and fired on");
+        ship_mut(&mut world, 2).location = ShipLocation::Sunk;
+        assert_eq!(asked(&world, false, false), yes);
+        // A ship that is not the side's own, or a force that is not, gets no
+        // answer.
+        assert_eq!(
+            ask_surface(
+                &world,
+                Side::Japanese,
+                &break_off_question(1, &[1, 2, 3], false, false)
+            ),
+            None
+        );
+    }
+
+    #[test]
+    fn a_force_ordered_to_avoid_breaks_off_when_fired_on_and_one_that_fights_does_not() {
+        let scene = Scene::new(
+            1,
+            Pulse::Night,
+            vec![
+                ForceSpec::new(1, Side::Allied, Hex::new(0, 0), &[1, 1]).stance(Stance::Avoid),
+                ForceSpec::new(2, Side::Allied, Hex::new(1, 0), &[1, 1]),
+            ],
+        );
+        let world = scene.world();
+        assert_eq!(
+            ask_surface(
+                &world,
+                Side::Allied,
+                &break_off_question(1, &[1, 2], true, false)
+            ),
+            Some(SurfaceAnswer::BreakOff(true))
+        );
+        assert_eq!(
+            ask_surface(
+                &world,
+                Side::Allied,
+                &break_off_question(2, &[3, 4], true, false)
+            ),
+            Some(SurfaceAnswer::BreakOff(false))
+        );
+    }
+
+    /// The engine's answers, and the view's from an identical world before
+    /// the step, for every choice of one traced run. Returns the traced
+    /// choices.
+    fn traced_step(
+        scene: &Scene,
+        pulse_begins: bool,
+        setup: &dyn Fn(&mut World),
+    ) -> (Vec<crate::choices::TracedChoice>, World) {
+        let mut world = scene.world();
+        setup(&mut world);
+        world.trace_choices(true);
+        if pulse_begins {
+            world.pass_moment(Moment::PulseBegins {
+                day: 1,
+                pulse: scene.pulse,
+            });
+            world.alert_from_belief(1, scene.pulse);
+        }
+        world.pass_moment(Moment::Phase {
+            day: 1,
+            pulse: scene.pulse,
+            phase: PulsePhase::Movement,
+        });
+        scene.run_step(&mut world);
+        let trace = world.take_choice_trace();
+        let mut before = scene.world();
+        setup(&mut before);
+        (trace, before)
+    }
+
+    #[test]
+    fn the_view_gives_the_alert_the_engine_gave() {
+        // Force 1 (normal) with a fresh contact near, force 3 (normal and
+        // alerted) with none: one is alerted by the contact, one stands
+        // down, one at battle readiness is not asked.
+        let scene = Scene::new(
+            1,
+            Pulse::Night,
+            vec![
+                ForceSpec::new(1, Side::Allied, Hex::new(0, 0), &[1]).not_alert(),
+                ForceSpec::new(2, Side::Allied, Hex::new(-4, 0), &[1]),
+                ForceSpec::new(3, Side::Allied, Hex::new(4, 4), &[1]).not_alert(),
+            ],
+        );
+        let setup = |w: &mut World| {
+            give_contact(w, Side::Allied, Hex::new(1, 0));
+            force_mut(w, 3).alerted = true;
+        };
+        let (trace, before) = traced_step(&scene, true, &setup);
+        let alerts: Vec<_> = trace
+            .iter()
+            .filter(|t| matches!(t.question, Question::Surface(SurfaceQuestion::Alert { .. })))
+            .collect();
+        assert_eq!(alerts.len(), 2);
+        assert!(matches!(
+            alerts[0].answer,
+            Answer::Surface(SurfaceAnswer::Alert(AlertChoice::AlertedBy(_)))
+        ));
+        assert_eq!(
+            alerts[1].answer,
+            Answer::Surface(SurfaceAnswer::Alert(AlertChoice::StandDown))
+        );
+        for traced in &trace {
+            let (Question::Surface(question), Answer::Surface(answer)) =
+                (&traced.question, &traced.answer)
+            else {
+                continue;
+            };
+            if matches!(question, SurfaceQuestion::Alert { .. }) {
+                assert_eq!(
+                    ask_surface(&before, traced.side, question).as_ref(),
+                    Some(answer)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_view_gives_the_readiness_and_the_break_off_the_engine_gave_when_nothing_changes_in_the_fight(
+    ) {
+        // Force 1 (Japanese, ready, ships 1 to 3, all crippled already, level
+        // 0.5) and force 2 (Allied, normal, not alerted, ships 4 to 6): the
+        // fight begins with force 1 ready and 2 not. Nobody sights (night
+        // chance 0), so nothing changes inside the fight, and force 1 breaks
+        // off in round 1 as its ships are crippled while force 2 does not.
+        let hex = Hex::new(5, 0);
+        let scene = Scene::new(
+            1,
+            Pulse::Night,
+            vec![
+                ForceSpec::new(1, Side::Japanese, hex, &[1, 1, 1])
+                    .break_off("0.5".parse().expect("decimal")),
+                ForceSpec::new(2, Side::Allied, hex, &[1, 1, 1]).not_alert(),
+            ],
+        );
+        let setup = |w: &mut World| {
+            figures_mut(w).sighting_chance_night = Fixed::ZERO;
+            for ship in 1..=3 {
+                ship_mut(w, ship).flotation_damage = Fixed::from_int(60);
+            }
+        };
+        let (trace, before) = traced_step(&scene, false, &setup);
+        let mut ready = 0;
+        let mut break_offs = Vec::new();
+        for traced in &trace {
+            let (Question::Surface(question), Answer::Surface(answer)) =
+                (&traced.question, &traced.answer)
+            else {
+                continue;
+            };
+            match question {
+                SurfaceQuestion::Ready { .. } => {
+                    ready += 1;
+                    assert_eq!(
+                        ask_surface(&before, traced.side, question).as_ref(),
+                        Some(answer)
+                    );
+                }
+                SurfaceQuestion::BreakOff { task_force, .. } => {
+                    break_offs.push((*task_force, answer.clone()));
+                    assert_eq!(
+                        ask_surface(&before, traced.side, question).as_ref(),
+                        Some(answer)
+                    );
+                }
+                _ => {}
+            }
+        }
+        assert_eq!(ready, 2);
+        assert!(break_offs.contains(&(TaskForceId::new(1), SurfaceAnswer::BreakOff(true))));
+        assert!(break_offs.contains(&(TaskForceId::new(2), SurfaceAnswer::BreakOff(false))));
+    }
+
+    #[test]
+    fn what_the_enemy_has_and_where_it_is_does_not_change_the_answers_of_a_side() {
+        // Two worlds that differ only in the enemy: in one a Japanese force
+        // of three cruisers sits at (4,4) with a hurt ship, in the other a
+        // force of one destroyer at (-4,-4) with an unhurt one, and a Japanese
+        // force of a different size and place with other rules. The Allied
+        // side holds the same contact (an old one at (2,2)) in both. Every
+        // question of its list is answered the same from both.
+        let build = |japanese: Vec<ForceSpec>, hurt: bool| {
+            let mut forces = vec![
+                ForceSpec::new(1, Side::Allied, Hex::new(0, 0), &[1, 2]).not_alert(),
+                ForceSpec::new(2, Side::Allied, Hex::new(2, 0), &[1]),
+            ];
+            forces.extend(japanese);
+            let mut world = Scene::new(1, Pulse::Night, forces).world();
+            give_contact(&mut world, Side::Allied, Hex::new(2, 2));
+            if hurt {
+                for ship in world.truth.ships.values_mut() {
+                    if ship.side == Side::Japanese {
+                        ship.flotation_damage = Fixed::from_int(80);
+                        ship.systems.propulsion = SystemState::Degraded;
+                    }
+                }
+            }
+            world
+        };
+        let one = build(
+            vec![
+                ForceSpec::new(3, Side::Japanese, Hex::new(4, 4), &[1, 1, 1]).stance(Stance::Avoid),
+            ],
+            true,
+        );
+        let other = build(
+            vec![ForceSpec::new(3, Side::Japanese, Hex::new(-4, -4), &[2])],
+            false,
+        );
+        let questions = one.side_view(Side::Allied).surface_questions();
+        assert_eq!(questions, other.side_view(Side::Allied).surface_questions());
+        assert!(!questions.is_empty());
+        for question in &questions {
+            assert_eq!(
+                ask_surface(&one, Side::Allied, question),
+                ask_surface(&other, Side::Allied, question),
+                "{question:?}"
+            );
+            assert!(
+                ask_surface(&one, Side::Allied, question).is_some()
+                    || matches!(question, SurfaceQuestion::Alert { task_force } if task_force.raw() == 2)
+            );
+        }
+        // A question naming the enemy's force or ship is not answered.
+        assert_eq!(ask_surface(&one, Side::Allied, &alert_question(3)), None);
+        assert_eq!(
+            ask_surface(
+                &one,
+                Side::Allied,
+                &break_off_question(1, &[4, 5], false, false)
+            ),
+            None
+        );
     }
 }

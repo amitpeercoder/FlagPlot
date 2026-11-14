@@ -27,12 +27,13 @@ use crate::state::{
 };
 use std::collections::BTreeSet;
 
+use crate::choices::Moment;
 use crate::time::Pulse;
 use crate::world::{DaySummary, SimError, World};
 
 /// A step inside a pulse.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(crate) enum PulsePhase {
+pub enum PulsePhase {
     Movement,
     NightSearch,
     AirSearch,
@@ -69,7 +70,7 @@ pub(crate) enum PulsePhase {
 
 /// A step after the last pulse.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum EndOfDayPhase {
+pub enum EndOfDayPhase {
     /// The day's fight ashore, fatigue of land units, a side beaten and a
     /// base that changes side (decision 0090).
     GroundCombat,
@@ -125,9 +126,27 @@ impl World {
     /// the three pulses and the end-of-day phases, checks the invariants and
     /// records the state hash.
     pub fn resolve_day(&mut self) -> Result<DaySummary, SimError> {
+        self.resolve_day_watched(&mut |_, _| {})
+    }
+
+    /// Resolves the next day as [`World::resolve_day`] does, and hands the
+    /// world, read only, to `watch` at each [`Moment`] of the day, before
+    /// the step it names (decision 0100, 7). Nothing `watch` can do changes
+    /// the day: it is how a test asks a side's questions at the moment the
+    /// engine answers them. It is the umpire's: the world it is handed is
+    /// the truth.
+    pub fn resolve_day_watched(
+        &mut self,
+        watch: &mut dyn FnMut(&World, Moment),
+    ) -> Result<DaySummary, SimError> {
         let day = self.truth.day + 1;
         let first_event = self.events.len();
+        let mut pass = |world: &World, moment: Moment| {
+            world.pass_moment(moment);
+            watch(world, moment);
+        };
 
+        pass(self, Moment::DayBegins { day });
         // Forces back from the yard are home first, so that they are at their
         // base for the day's refuelling and orders (decision 0069). Fuel comes
         // before the day's orders (decision 2 of 0045). Forward repair comes
@@ -136,10 +155,12 @@ impl World {
         // (decision 0069, 2).
         self.return_from_yard(day);
         self.refuel_in_port(day);
+        pass(self, Moment::Orders { day });
         self.intake_orders(day);
         self.repair_in_port(day);
 
         for pulse in Pulse::ALL {
+            pass(self, Moment::PulseBegins { day, pulse });
             // Alert from belief comes before the pulse's first phase
             // (decision 3 of `docs/decisions/0021-readiness-and-alarm.md`).
             self.alert_from_belief(day, pulse);
@@ -150,11 +171,20 @@ impl World {
             // in it (decision 7 of 0039).
             self.work_out_grounded_bases();
             for phase in pulse_sequence(pulse) {
+                pass(
+                    self,
+                    Moment::Phase {
+                        day,
+                        pulse,
+                        phase: *phase,
+                    },
+                );
                 self.run_pulse_phase(day, pulse, *phase);
             }
             self.age_contacts_at_end_of_pulse(day, pulse);
         }
         for phase in END_OF_DAY_SEQUENCE {
+            pass(self, Moment::EndOfDay { day, phase });
             self.run_end_of_day_phase(day, phase);
         }
 
@@ -947,6 +977,36 @@ impl World {
                     // records the event and notes its number in the trip.
                     return vec![self.send_force_to_yard(*target, order.day_issued)];
                 }
+                // Turning back is decided on the state the order found
+                // (decision 0100, 1), before the order changes anything.
+                let reroute = if let TaskForceOrder::SetRoute { waypoints, .. } = task_force_order {
+                    let force = &self.truth.task_forces[target];
+                    let first_waypoint = waypoints.first().copied();
+                    let answer = force.reroute_centre(&self.map, first_waypoint);
+                    self.trace_choice(force.side, || {
+                        (
+                            crate::choices::Question::Movement(
+                                crate::choices::movement::MovementQuestion::Reroute {
+                                    force: *target,
+                                    first_waypoint,
+                                },
+                            ),
+                            crate::choices::Answer::Movement(
+                                crate::choices::movement::MovementAnswer::Reroute(answer.map(
+                                    |(turns_back, steers_from)| {
+                                        crate::choices::movement::Rerouted {
+                                            turns_back,
+                                            steers_from,
+                                        }
+                                    },
+                                )),
+                            ),
+                        )
+                    });
+                    Some(answer)
+                } else {
+                    None
+                };
                 let task_force = self
                     .truth
                     .task_forces
@@ -955,10 +1015,8 @@ impl World {
                 let mut follow_up = None;
                 match task_force_order {
                     TaskForceOrder::SetRoute { waypoints, act_at } => {
-                        // Turning back is decided on the state the order
-                        // found, and the leg is then finished by movement.
-                        let (turns_back, _) = task_force
-                            .reroute_centre(&self.map, waypoints.first().copied())
+                        let (turns_back, _) = reroute
+                            .flatten()
                             .expect("order was validated: the first waypoint is reachable");
                         if turns_back {
                             task_force.turn_back();

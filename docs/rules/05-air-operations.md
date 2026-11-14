@@ -132,6 +132,8 @@ Search, strike launch and the split of fighters into patrol and escorts all use 
 
 The cut is applied once, to the product. Chapter 1, Where figures come from and when a rule is loaded, says what "loaded" means. A group of 6 aircraft with fatigue 1 and a working deck flies 5. A group aboard a carrier with a degraded deck and fatigue 20, 10 ready and 10 pilots, flies 10 times the degraded factor times 0.8: with a degraded factor of 0.5 (an example, not the figure) that is 4. A group's flight deck is worked group by group, not for the ship. [0026, 0036, 0038, 0039, 0091]
 
+A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `aircraft_able_to_fly`): the answer is the number of aircraft the group is able to fly now, from the group, its base's supply, its ship's flight deck, its fatigue and the day it moved. [0100]
+
 A side sees: the number it flew in its own events (`SearchFlown`, `StrikeLaunched`, `EscortsSent`). It is not told the limits that produced it.
 
 ### A base out of supply
@@ -245,6 +247,8 @@ A group with no threshold is never stood down. A stood-down group flies nothing 
 
 This is the staff's rest. The player sets the threshold and the staff applies it. [0036]
 
+A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `rest`): the answer is whether a tired group would stand down or return now, from its fatigue and threshold. [0100]
+
 A side sees: `AirGroupStoodDown` and `AirGroupReturned` for its own groups, whole.
 
 ## The strike decision
@@ -277,11 +281,15 @@ This choice is one function, which takes the side's belief and the group's own s
 
 It launches every aircraft it is able to fly. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order, by the group's reach order if it is on extended reach, by the group's target order if it has one (a group with none cites nothing new), and by the event of the report that last refreshed the contact. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. [0026, 0032, 0040, 0059, 0063]
 
+This is the choice a side can ask as `measure`'s `choices`, `strike`: the answer is the contact the group would strike now, or none. [0100]
+
 A side sees: `StrikeLaunched` for its own group, whole. The enemy sees nothing at launch.
 
 ### Base strike
 
 A base strike group launches in a daylight pulse, morning or afternoon, once a game day: it launches in the first daylight pulse of the day in which the base is within its reach, and not again that day. It needs no contact and reads no belief. It launches if it has not launched at its base that game day, and the base exists, is held by the other side, and is within the group's reach by air distance from where the group is when the pulse begins. A group that can launch in the morning does, so a group whose base is in reach every morning flies as it did. A group whose base comes into reach during the day, as a carrier's does as she closes it, launches in the afternoon. The group keeps the game day of its last base strike (`last_base_strike_day`, in the state hash), and a launch sets it. It launches every aircraft it is able to fly and records `BaseStrikeLaunched` (group, base, hex, aircraft, one-way distance), caused by the group's mission order and, on extended reach, its reach order. [0034, 0059, 0063]
+
+A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `base_strike`): the answer is whether the group would launch a base strike this pulse, from the group, its target, its reach and the base on the map. [0100]
 
 A side sees: `BaseStrikeLaunched` for its own group, whole.
 
@@ -295,6 +303,8 @@ Nothing in these rules keeps aircraft that flew in the morning from flying in th
 
 At the start of the air combat step each fighter group on combat air patrol that has ready aircraft is split. Let F be the aircraft it is able to fly. The patrol is F times the group's patrol share, cut to a whole number. The escorts are F minus the patrol. The patrol stays over the group's own hex. The escorts go with a raid launched from the group's own place, if there is one and it is within the group's reach (see Which raid the escorts join, and the reach). A fighter group that is not on combat air patrol is not split and flies nothing. [0027, 0036]
 
+A side can ask this choice for its own fighter groups before it is made (`measure`'s `choices`, `fighter_split`): the answer is how the group would split into patrol and escorts now, from the group and its patrol share. [0100]
+
 The patrol defends the hex the group is in, against every enemy raid that attacks that side's forces or base there, in a daylight pulse. [0027]
 
 A side sees: nothing of the split itself.
@@ -306,6 +316,8 @@ The strikes launched in one pulse from one place at one hex are one raid. A plac
 ### Which raid the escorts join, and the reach
 
 All the escorts at a place go with one raid from that place: the raid with the most bombers launched, and of those the one whose first group has the lowest number. They look for no nearer raid. The raid is tested for the reach: the escorts go only if the raid's hex is within the fighter group's reach (its type's strike radius on normal reach) of the fighter group's hex, by air distance. If the raid is beyond the reach, the whole group that can fly is its patrol for the pulse: its patrol rises by its escorts and its escorts fall to 0. If no raid launches from the place, its escorts fly nothing and are on the ground. A group that is split has ready aircraft, so it is at a base or aboard a ship that is afloat, and always has a position: a group aboard a sunk ship has no aircraft and is not split. The test is made on the hex the raid is sent to, which is where its side believes the enemy is, so a group whose escorts go with a raid to an empty hex has still sent them. [0027, 0030]
+
+A side can ask this choice for its own fighter groups before it is made (`measure`'s `choices`, `escort`): the answer is which raid the group's escorts would go with, or that they stay, from the side's own raids of the pulse. [0100]
 
 `EscortsSent` is recorded for each fighter group whose escorts go (group, the raid's first strike group, aircraft), caused by the group's mission order, its share order, its reach order if it is on extended reach, and the raid's `StrikeLaunched` or `BaseStrikeLaunched` event. It is recorded only when escorts go. [0027, 0030, 0059]
 
@@ -319,6 +331,8 @@ When more than one raid attacks forces of one side in one hex in a pulse, that s
 - The patrol left over, patrol less the shares, goes one fighter each to the raids in order of size, the largest first (aircraft, bombers and escorts), and on a tie the one whose first strike group has the lower number. The shares add up to the patrol.
 
 With one raid the share is the whole patrol. A raid whose share is 0 meets no patrol: its escorts do not fire at the patrol either. [0033]
+
+How a patrol divides between the raids over it, and between escorts and bombers, is made at the point of contact from the true size of each raid, and a side cannot ask it. [0100]
 
 A side sees: nothing of the division. The factors of the patrol's own fire (below) show the side its own patrol and share.
 
@@ -341,6 +355,8 @@ Both sides' strikes land in this one step. A group aboard a ship that sinks in s
 ### A strike that finds nothing
 
 A raid's target is found on the truth at the start of the step. For a raid at ships, the target is the enemy task force at the raid's hex that holds the best ranked ship afloat by the target list of the raid's first strike group (see "The attack on a ship"), and on a tie the lowest task force number. With the default list that is the force with the most important ship, as it was before target lists. Position is read before the pulse's movement, because movement follows air combat in the daylight pulse. If no enemy task force is at the hex, the raid finds nothing. It does not search neighbouring hexes. A base strike always finds its base, because the launch checked it exists and is held by the other side.
+
+Which enemy force a raid attacks, and whether it finds anything, is made at the point of contact from the enemy forces truly in the hex, and a side cannot ask it. [0100]
 
 A raid that finds nothing meets nobody: no escorts fire, no patrol fires, no guns fire, and it takes no share of a patrol. Every strike group in it records `StrikeFoundNothing` (group, hex), caused by the strike's launch. Then, in group order and with no random number, the side's belief is told nothing is there. If the side still holds the contact the strike was sent at and that contact still names that hex, the contact is dropped and `ContactNotThere` is recorded, caused by that group's `StrikeFoundNothing`. If the contact has gone or a later report has moved it, nothing is dropped and nothing is recorded. A dropped contact's number is not used again. A strike group that has no bomber left does not find nothing: it records nothing, and the contact stays. [0026, 0027, 0028, 0063]
 
@@ -406,6 +422,8 @@ A side sees: `AircraftLost` and `PilotsLost` for its own groups, whole. It never
 Each strike group with bombers left attacks, in group order, each with what it has left. The attack is worked out from one stream keyed on (the air group, the task force attacked), in the air combat subsystem.
 
 **The target ship.** All the aircraft of the group attack one ship: the ship afloat in the task force that ranks first by the group's own target list, and on a tie the lowest ship number. A group ranks ships by its target list first, in the list's order, and then by the kinds not on its list, in the order of importance. So a group sent at a "carrier" that turns out to be a cruiser attacks the cruiser: a strike that has flown attacks what it finds. The force is the one the raid found, the same for every strike group in the raid, but each group picks its own ship in it, so two groups of one raid may attack different ships. With the default list every group attacks the most important ship afloat in the force, as before target lists. Ranks are worked on the ships afloat at the start of the step.
+
+Which ship each strike group attacks is made at the point of contact from the true ships of the force, and a side cannot ask it. [0100]
 
 **The weapon and its chance.** A type's `attack_weapon` sets the chance: `air_combat.toml: bomb_hit_chance` for a bomb, `torpedo_hit_chance` for a torpedo. Each aircraft is one shot, and each shot is rolled.
 
@@ -505,6 +523,8 @@ Groups are worked in group number order, each group's aircraft as one body that 
 1. **Another carrier of the group's side in the same hex**: the hex of the group's ship, or where it sank (noted when she sank). She must be afloat with her flight deck not out, in any task force of her side; ships are taken in ship number order, lowest first. She takes as many as fit under her aircraft capacity, the ready and damaged aircraft of the groups aboard her counted at that moment, and the rest go on to the next such carrier.
 2. **A base of the group's side with an airfield (chapter 7, Units that work and what they build) within the aircraft type's strike radius of that hex**, by air distance (the radius, not the reach). For a type with no strike radius (some scout types have none), the search range stands for it. The nearest base, then the lowest number. A base takes any number.
 3. **The sea.** The aircraft left are ditched and `AircraftDitchedNoDeck` is recorded. Where the group's pilots are counted, each crew is recovered with `air_combat.toml: crew_recovered_beside_own_force` if any ship of the group's side is afloat in that hex at that moment (the group's own ship counts if she is afloat with her deck out), and otherwise with `crew_recovered_open_sea`. A crew not recovered is a pilot lost, never below 0, with `PilotsLost` caused by the ditching event. The draws are one stream of the upkeep subsystem with its own value of `Draw` (`NoDeck`, code 4), keyed on the source group, one draw for each aircraft ditched, taken after the group's landings. No other draw is made: the choice of a place is not random.
+
+A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `landing`): the answer is where a group's aircraft would land now if its deck were gone, from the side's carriers in the hex and its bases in reach. [0100]
 
 Aircraft that land join the lowest-numbered group of their aircraft type and side located at that ship or base, whose ready aircraft and strength rise by them (and its pilots, if they are tracked); if there is none, a new group is formed there: the next air group number of its side's series (the Allied side's from 1,000,001, the Japanese side's from 2,000,001; units made in play are numbered by side, so the number depends on its own side's history only), the same aircraft type and side, a name made of the old one, "landed at" and the place (for example "Placeholder dive bombers landed at ship:6"), mission rest, reach normal, no search arc, the source group's fatigue, strength equal to what it received, and pilots counted if the source group's are, one with each aircraft. The source group keeps what it has aboard, its orders and its number; it loses the aircraft and, with each, a pilot. A sortie goes with its aircraft to the group that has them, so wear, fatigue and supply are worked for that group. `AircraftLandedElsewhere` is recorded for each landing (from group, to group, the ship or base, aircraft, pilots, whether the group was formed), and `AircraftDitchedNoDeck` for the ditching (group, hex, aircraft, whether beside own ships, the chance, crews recovered, pilots lost, ready after, with a breakdown of the aircraft, the chance and whether a ship was in the hex). Both are caused by the event that closed the deck (the `ShipSunk`, or the `SystemHit` that put the deck out) and by the events that say the group flew. No carrier ends a pulse over her aircraft capacity. A ditched aircraft counts for the enemy's `aircraft_destroyed` objective; an aircraft that lands elsewhere does not. [0059, 0086]
 

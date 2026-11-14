@@ -91,6 +91,8 @@ The effective stance of a force is avoid if it broke off or slipped away earlier
 
 If both forces have sighted, neither slips, whatever their stances. [0014]
 
+Whether a force that avoids slips away is made at the point of contact, from whether the enemy has truly sighted it, and a side cannot ask it. [0100]
+
 A side sees: `ForceSlippedAway` for the force that slipped, without the force it slipped away from. The other side does not see it. [0047, 0065]
 
 ### Who fires
@@ -98,6 +100,8 @@ A side sees: `ForceSlippedAway` for the force that slipped, without the force it
 Every ship afloat at the start of the round, of every force that has sighted, fires. A ship that is sunk in the round still fires in it. [0014]
 
 A ship chooses a target for its guns and a target for its torpedoes at the start of the round, among the enemy ships afloat. Kinds are in the order of importance: carrier, battleship, cruiser, destroyer, transport, auxiliary. **Guns:** a ship fires at enemy ships of its own kind; if none is afloat, at those of the nearest more important kind; if none of those, at those of the most important kind afloat. Among them, in ship ID order, it takes the ship in place (p modulo their number), where p is the firing ship's place among the ships afloat of its own kind in its force, in ship ID order. **Torpedoes:** a ship fires at the enemy ships of the most important kind afloat, taking the ship in place (i modulo their number), where i is the firing ship's place among the ships afloat in its force, in ship ID order. Places are counted from 0: the first ship is in place 0, so with three targets the firer in place 4 takes the second. Every ship afloat counts for its place, armed or not, and an unarmed ship fires nothing. Burning or nearer ships do not draw fire. A ship fires its gun salvo first and then its torpedo salvo. [0014, 0078]
+
+Who fires at whom is made at the point of contact, from the enemy ships truly afloat, and a side cannot ask it. [0100]
 
 Known limit: there is no range. There is one night chance and one day chance, and no opening or closing of the range. Target choice is by kind, as above; choice by value, fire or distance is not built. [0014, 0078]
 
@@ -134,6 +138,8 @@ A force is ready for action, or not, once, as a fight begins, and the answer is 
 - A force that is not ready fires every ship's guns at `unready_gun_share` of their shots in every round of that fight, and every ship's torpedoes at `unready_torpedo_share` of their shots in each round in which a side of them is fired, as the formulas above and below say. [0083] Being ready changes the shots and nothing else: the chance to hit, surprise, the alarm and breaking off do not read it, and sighting reads whether the force is alert (Sighting, above, and chapter 3), not whether it is ready. A force at normal readiness that is not alert is both not ready and not alert, so it fires at the shares and sights at `not_alert_sighting_factor`, each by its own rule. The force's readiness does not rise during the fight: a force that becomes alert in a fight is not ready in a later fight of the same pulse either, and is ready in a fight of a later pulse only if it is still alert then (chapter 3, Alert from belief, says when it stands down). [0068, 0071]
 - Each figure is a placeholder (0.5 in the live file, 1 in the frozen step 1 file, at which the rule does nothing). The gun share's 0.5 is the half of the armament manned that Condition II means; the torpedo share's first value mirrors it and has no row of its own, and the one count the record states is Bagley's four of sixteen tubes. Each is one figure for both sides and every battle. [0068, 0071]
 - The torpedo share does not carry how many tubes bear on a broadside, how many ships fire, the range or the chance to hit. [0071]
+
+A side can ask this choice for its own forces before it is made (`measure`'s `choices`, `ready`): the answer is whether the force would be ready as a fight begins in a given pulse, from its readiness and when it was alerted. [0100]
 
 **Torpedo shots**
 
@@ -259,6 +265,8 @@ At the end of each round, after damage and alertness, the checks run in this ord
 3. **The last round.** In the last round, if neither force has sighted, `ForcesPassedUnseen` is recorded and the fight ends with reason passed unseen. Otherwise the fight ends with reason reached the last round.
 
 The count is over the ships the force had when the fight began, so a ship sunk in an earlier fight of the pulse has already left the force and is not counted. A force that lost ships in an earlier fight may not break off from the next one at once, though it still avoids action. [0033]
+
+A side can ask this choice for its own forces before it is made (`measure`'s `choices`, `break_off`): the side states the ships the force began the fight with and whether it was fired on in the round, and the answer is whether the force would break off now, from what the side holds. [0100]
 
 If neither force sights the enemy in `max_rounds` rounds, they pass unseen. [0014]
 

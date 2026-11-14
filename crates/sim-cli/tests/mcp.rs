@@ -439,6 +439,9 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "\"leaves\" at the start of the coming day's night pulse, which is 18:00 on the evening before the day",
         "one place alone is taken as a list of one",
         "one such place anywhere in the question makes the whole answer \"not known\"",
+        // Decision 0100: the choices of an own unit.
+        "\"choices\" {unit: \"air_group:N\", \"task_force:N\" or \"land_unit:N\"}",
+        "the five choices made at the point of contact",
     ] {
         assert!(measure_description.contains(phrase), "measure lacks: {phrase}");
     }
@@ -505,6 +508,17 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         json!({"question": "air_distance", "from": "task_force:1", "to": "base:1"}),
     );
     assert!(!bad && measure.contains("distance_nm"));
+    let (choices, bad) = c.call(
+        "measure",
+        json!({"question": "choices", "unit": "task_force:1"}),
+    );
+    assert!(!bad, "{choices}");
+    let choices: Value = serde_json::from_str(&choices).unwrap();
+    assert_eq!(choices["question"], "choices");
+    assert_eq!(choices["unit"]["handle"], "task_force:1");
+    assert!(choices["choices"].as_array().is_some_and(|c| !c.is_empty()));
+    let (unknown, bad) = c.call("measure", json!({"question": "choices", "unit": "ship:1"}));
+    assert!(!bad && unknown.contains("not_known"), "{unknown}");
     let (explain, bad) = c.call("explain", json!({"event": 999}));
     assert!(!bad && explain.contains("not_known"));
 

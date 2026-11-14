@@ -384,6 +384,37 @@ Units made in play are numbered by side. A task force made by a detach and an ai
 
 Limit: there are no claims for aircraft shot down in an air fight except the raid claim of decision 0056. A side sees its own air fight losses and nothing of the enemy's. [0047, 0056]
 
+### What a commander decides and what is decided at the point of contact
+
+Inside a day the rules make choices for a side's units: how many aircraft fly, whether a strike launches, where a straggler goes. Each choice the rules make for a side's own unit from what the side knows (its own units, its standing orders, its belief and the figures) is one function of that and nothing else, and the engine makes the choice by that function. A side can ask any of them for its own unit before it is made, through its view, and the answer is what the engine would choose at that moment with what the side holds. It is not a forecast: it says nothing of what the enemy will do or what the dice will give, and something that changes inside the day (a ship sunk that morning, a contact reported at noon) can change the choice. Asking changes nothing. The agent asks them with `measure`'s `choices` question. [0100]
+
+| Choice | Question | Chapter |
+| --- | --- | --- |
+| The contact a naval strike group would strike | `strike` | 5, Naval strike: the contact |
+| How many aircraft of a group can fly | `aircraft_able_to_fly` | 5, The order of the limits |
+| Whether a base strike launches in a pulse | `base_strike` | 5, Base strike |
+| How a fighter group splits into patrol and escort | `fighter_split` | 5, The split |
+| Which raid the escorts go with, or whether they stay | `escort` | 5, Which raid the escorts join, and the reach |
+| Where aircraft land when their deck is gone | `landing` | 5, Coming home to no deck |
+| Whether a tired group stands down or returns | `rest` | 5, Stand-down and return |
+| Whether a force is alerted by a contact | `alert` | 3, Alert from belief |
+| Whether a force is ready when a fight begins | `ready` | 4, Ready, and the shares of the guns and the torpedoes |
+| Whether a force breaks off | `break_off` | 4, The ending checks |
+| What a force does with its stragglers | `stragglers` | 2, Stragglers |
+| Where a straggler or a retiring force goes | `head_home` | 2, Stragglers |
+| Whether a force turns back or goes on when its route changes | `reroute` | 2, Turning back and re-routing |
+| Whether a force halts at a marked waypoint, and when it steams on | `halt`, `steam_on` | 2, Halting at a marked waypoint and steaming on |
+| Whether a land unit goes back to defend | `back_to_defend` | 7, The tired stop attacking |
+| What a land unit's day is | `unit_day` | 7, One activity a day |
+
+A choice that needs a fact only the step that makes it has, such as the ships a fight began with, the fatigue after the day's change, or whether a unit marched or its hex is contested, takes it as part of the question: the side states it, and a side cannot know for certain whether its hex is contested. [0100]
+
+Five choices are made at the point of contact, by the men who see what is there, and read what is truly there: which enemy force a raid attacks when it arrives and whether it finds anything; which ship each strike group attacks; how a patrol divides between the raids over it and between escorts and bombers; whether a force that avoids slips away; and who fires at whom in a surface fight. They stay with the rules. A side cannot ask them. [0100]
+
+Which base feeds, refuels or repairs is not a choice: it is a fixed rule of allocation (the lowest-numbered base of the side in the hex, in order), and a side reads the rule. [0100]
+
+The figures these choices use are reference data, the same for both sides, and a side's view hands them over in full: the surface combat, air combat, air wear and fatigue figures among them. [0100]
+
 ## What a side sees of an event
 
 ### The rule
@@ -629,19 +660,21 @@ Shuffling means the order the data and the orders are given in, not the order th
 
 A saved game is a file with: the scenario file's name and its hash; each data file the scenario names with its hash; the seed; who held each seat (player or script); the orders of each day for both sides as they were handed in, with their unit, order and origin; and the daily hashes of the run. It holds no state. The starting state is the scenario's. The orders a rule gave inside a day are not saved, because the rules give them again. [0043, 0050]
 
+A saved game also records what it was played under: the version of the state's layout (the version string of the state hash) and the rules label, a number that began at 1 with decision 0100 and that a change raises when it changes a rule in a way that changes what an existing game would do. This is the saved game's version 2. [0100]
+
 A saved game made before seats existed is read as both seats held by the script. [0050]
 
 A batch summary and a replay file for the viewer carry `inputs`: the version of the hash layout, the hash of the scenario file, and each data file the scenario names with its hash. This lets a reader see that two files were made from different inputs. `batch --label` adds the caller's own name for the engine that ran, since the engine does not know its own revision. [0057]
 
 ### Replay
 
-`replay` loads the scenario the saved game names, refuses a scenario file or data file whose hash has changed or whose list of data files has changed, hands in the saved orders day by day with no player present, and compares each day's hash with the saved one. It fails on the first day that differs. [0043, 0050]
+`replay`, and every command that reads a saved game, first refuses a saved game whose state layout or rules label differs from the engine's, naming both, and a saved game of version 1, made before the rules label existed, which is not converted. Then `replay` loads the scenario the saved game names, refuses a scenario file or data file whose hash has changed or whose list of data files has changed, hands in the saved orders day by day with no player present, and compares each day's hash with the saved one. It fails on the first day that differs. [0043, 0050]
 
 A replay must reproduce every daily hash. [0043]
 
-Limit: a saved game is not promised to survive a change of rules. After a rule change a replay may fail partway with a hash that does not match. [0055]
+Limit: a saved game does not survive a change of rules. A change that raises the rules label is refused before the replay runs; a change that should have raised it and did not shows as a daily hash that does not match. A game in progress is not carried over a change of rules. [0055, 0100]
 
-Limit: a game cannot be saved in the middle and resumed. It is replayed from the start. The version of the hash layout is not written into a saved game, only the hashes of the files. A saved game made before the change to hash version 2 fails at day 1. [0043, 0057]
+Limit: a game cannot be saved in the middle and resumed. It is replayed from the start. [0043, 0057]
 
 A side sees: none of this. A saved game, the hashes and the seed belong to the umpire.
 

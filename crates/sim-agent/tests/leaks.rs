@@ -32,7 +32,8 @@ use sim_core::state::{Arrival, Side};
 use sim_core::World;
 use support::check::{normalised_answers, sample_questions, without_event_numbers};
 use support::{
-    force_handle, group_handle, load, load_text, play, scenario_path, scenario_text, ship_handle,
+    force_handle, group_handle, land_unit_handle, load, load_text, play, scenario_path,
+    scenario_text, ship_handle,
 };
 
 const SIDES: [Side; 2] = [Side::Allied, Side::Japanese];
@@ -674,6 +675,19 @@ fn answers(view: &sim_core::view::SideView<'_>, name: &str) -> BTreeMap<String, 
     // forces and groups to a few bases and contacts (decision 0049).
     for (key, question) in sample_questions(view, 3, 2) {
         out.insert(key, json(&measure(view, &question)));
+    }
+    // The choices the rules would make now for each own air group, task
+    // force and land unit (decision 0100): what each reads is the side's own.
+    for handle in view
+        .air_groups()
+        .map(|s| group_handle(view, s.id))
+        .chain(view.task_forces().map(|s| force_handle(view, s.id)))
+        .chain(view.land_units().map(|s| land_unit_handle(view, s.id)))
+    {
+        out.insert(
+            format!("measure:choices:{handle}"),
+            json(&measure(view, &Question::Choices { unit: handle })),
+        );
     }
     out
 }

@@ -13,10 +13,16 @@
 //! command-line runner and hashing, and must never be passed to anything that
 //! plays the game.
 
-use std::collections::BTreeMap;
+mod air_choices;
+mod ground_choices;
+mod movement_choices;
+mod surface_choices;
 
-use crate::airstrike::StrikeChoice;
+use std::collections::{BTreeMap, BTreeSet};
+
+use crate::airstrike::{StrikeChoice, StrikeInFlight};
 use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate};
+use crate::choices::{Answer, Question};
 use crate::events::EventLog;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
@@ -24,18 +30,21 @@ use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, ContactId, EventId, LandUnitId, OrderId, ShipClassId,
     ShipId, TaskForceId,
 };
+use crate::landing::DeckLoss;
 use crate::map::{HexData, Map};
 use crate::movement::{self, PassageForecast};
 use crate::objectives::{self, KnownProgress, Objective, SideObjectives};
 use crate::orders::{AirMission, Order, SpeedSetting};
 use crate::refdata::{
-    AirSupplyFigures, AircraftType, BombardmentFigures, GroundFigures, PortSize, RefData,
-    SearchFigures, ShipClass,
+    AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftType, BombardmentFigures,
+    FatigueFigures, GroundFigures, PortSize, RefData, SearchFigures, ShipClass,
+    SurfaceCombatFigures,
 };
 use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{
     AirGroup, Arrival, Base, LandUnit, Replacement, Ship, Side, TaskForce, TruthState,
 };
+use crate::upkeep::Sortie;
 
 /// Which optional rules have their figures loaded: air wear and repair
 /// (decision 0035), fatigue and rest (0036), and base supply use (0039).
@@ -74,6 +83,22 @@ pub struct SideView<'a> {
     log: &'a EventLog,
     orders: &'a BTreeMap<OrderId, Order>,
     objectives: Option<&'a crate::objectives::Objectives>,
+    /// The scratch of the pulse in hand, which the choices of the air steps
+    /// read (decision 0100): the bases grounded at the pulse's start, the
+    /// strikes launched and not landed, what each group flew and the decks
+    /// lost. Each holds both sides' entries, so whatever reads them keeps
+    /// this side's own and nothing else.
+    pulse: PulseScratch<'a>,
+}
+
+/// The world's scratch state of one pulse, by reference (see
+/// [`SideView`]'s field `pulse`). Every list holds both sides.
+#[derive(Clone, Copy)]
+pub(crate) struct PulseScratch<'a> {
+    pub(crate) grounded_bases: &'a BTreeSet<crate::ids::BaseId>,
+    pub(crate) strikes_in_flight: &'a [StrikeInFlight],
+    pub(crate) sorties: &'a [Sortie],
+    pub(crate) deck_losses: &'a [DeckLoss],
 }
 
 impl std::fmt::Debug for SideView<'_> {
@@ -97,6 +122,7 @@ impl<'a> SideView<'a> {
         log: &'a EventLog,
         orders: &'a BTreeMap<OrderId, Order>,
         objectives: Option<&'a crate::objectives::Objectives>,
+        pulse: PulseScratch<'a>,
     ) -> SideView<'a> {
         SideView {
             side,
@@ -107,6 +133,7 @@ impl<'a> SideView<'a> {
             log,
             orders,
             objectives,
+            pulse,
         }
     }
 
@@ -672,6 +699,67 @@ impl<'a> SideView<'a> {
     /// Port handling figures are reference data, so common knowledge.
     pub fn port_size(&self, size: u8) -> Option<&'a PortSize> {
         self.ref_data.port_sizes.get(&size)
+    }
+
+    /// The surface combat figures, if the scenario names them: among them
+    /// the ones a side's own choices use (how near a contact alerts a force,
+    /// when a ship counts as crippled, the escorts a straggler takes). They
+    /// are rules, the same for both sides, so common knowledge (decision
+    /// 0100, 3).
+    pub fn surface_combat_figures(&self) -> Option<&'a SurfaceCombatFigures> {
+        self.ref_data.surface_combat.as_ref()
+    }
+
+    /// The air combat figures, if the scenario names them. Rules, so common
+    /// knowledge (decision 0100, 3).
+    pub fn air_combat_figures(&self) -> Option<&'a AirCombatFigures> {
+        self.ref_data.air_combat.as_ref()
+    }
+
+    /// The air wear and repair figures, if the scenario names them. Rules,
+    /// so common knowledge (decision 0100, 3).
+    pub fn air_upkeep_figures(&self) -> Option<&'a AirUpkeepFigures> {
+        self.ref_data.air_upkeep.as_ref()
+    }
+
+    /// The fatigue figures, if the scenario names them. Rules, so common
+    /// knowledge (decision 0100, 3).
+    pub fn fatigue_figures(&self) -> Option<&'a FatigueFigures> {
+        self.ref_data.fatigue.as_ref()
+    }
+
+    /// The answer to `question`: what the engine would choose now for one of
+    /// this side's own units, from what this side holds (decision 0100, 2).
+    /// The engine makes the same choice by the same function. `None` where
+    /// the question names no unit of this side or the choice does not arise.
+    /// It reads nothing of the enemy but what the side holds of it.
+    pub fn ask(&self, question: &Question) -> Option<Answer> {
+        match question {
+            Question::Air(question) => self.ask_air(question).map(Answer::Air),
+            Question::Surface(question) => self.ask_surface(question).map(Answer::Surface),
+            Question::Movement(question) => self.ask_movement(question).map(Answer::Movement),
+            Question::Ground(question) => self.ask_ground(question).map(Answer::Ground),
+        }
+    }
+
+    /// Every question this side could ask now, one for each of its units
+    /// each choice applies to, in a fixed order: air, surface, movement,
+    /// ground (decision 0100, 12: a staff's daily decisions at their
+    /// dearest).
+    pub fn questions(&self) -> Vec<Question> {
+        let mut questions: Vec<Question> = self
+            .air_questions()
+            .into_iter()
+            .map(Question::Air)
+            .collect();
+        questions.extend(self.surface_questions().into_iter().map(Question::Surface));
+        questions.extend(
+            self.movement_questions()
+                .into_iter()
+                .map(Question::Movement),
+        );
+        questions.extend(self.ground_questions().into_iter().map(Question::Ground));
+        questions
     }
 }
 

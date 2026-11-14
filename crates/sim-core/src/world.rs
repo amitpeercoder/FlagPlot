@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::airstrike::StrikeInFlight;
 use crate::belief::BeliefState;
+use crate::choices::{Answer, Moment, Question, Trace, TraceCell, TracedChoice};
 use crate::events::EventLog;
 use crate::hash;
 use crate::ids::{AirGroupId, BaseId, EntityRef, IdAllocator, OrderId, TaskForceId};
@@ -17,7 +18,7 @@ use crate::rng::{Draw, RngKey, RngStream, Subsystem};
 use crate::state::{ShipSystem, Side, SystemState, TruthState};
 use crate::time::Pulse;
 use crate::upkeep::Sortie;
-use crate::view::SideView;
+use crate::view::{PulseScratch, SideView};
 
 /// The first number of a side's task forces and air groups made during play
 /// (decision 0086): the Allied side's series starts at 1,000,001 and the
@@ -87,6 +88,14 @@ impl Default for MadeIds {
 }
 
 /// Switches that change what is recorded, never what happens.
+/// The label of the rules a game is played under (decision 0100, 8). A
+/// saved game records it with the version of the state's layout, and a
+/// replay under other rules is refused before it runs. It began at 1 with
+/// decision 0100. A pull request raises it by one when it changes a rule in
+/// a way that changes what an existing game would do; a change that leaves
+/// every existing game as it was leaves it alone.
+pub const RULES_VERSION: u32 = 1;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
     /// Record the factors behind each computed quantity. Batch validation can
@@ -183,6 +192,10 @@ pub struct World {
     /// in it changes, so it is not state and is not hashed. The result is a
     /// function of the final truth and the event log.
     pub(crate) objectives: Option<Objectives>,
+    /// The trace of the choices made, while it is on (decision 0100, 7).
+    /// Not state: how to record, never what happens, like `config`. A cell,
+    /// because the choices are made by functions that only read the world.
+    pub(crate) choice_trace: TraceCell,
 }
 
 impl World {
@@ -354,6 +367,7 @@ impl World {
             grounded_bases: BTreeSet::new(),
             deck_losses: Vec::new(),
             objectives: None,
+            choice_trace: TraceCell::default(),
         })
     }
 
@@ -399,6 +413,47 @@ impl World {
         ))
     }
 
+    /// Turns the trace of choices on or off (decision 0100, 7). Turning it
+    /// on starts an empty trace; turning it off drops it. It changes nothing
+    /// that happens and no hash.
+    pub fn trace_choices(&mut self, on: bool) {
+        *self.choice_trace.get_mut() = on.then(Trace::default);
+    }
+
+    /// The choices traced since the trace was turned on or last taken, in
+    /// the order they were made. Empty when the trace is off.
+    pub fn take_choice_trace(&mut self) -> Vec<TracedChoice> {
+        match self.choice_trace.get_mut() {
+            Some(trace) => std::mem::take(&mut trace.entries),
+            None => Vec::new(),
+        }
+    }
+
+    /// Records a choice the engine made, if the trace is on. The question
+    /// and answer are built only then.
+    pub(crate) fn trace_choice(&self, side: Side, choice: impl FnOnce() -> (Question, Answer)) {
+        let mut cell = self.choice_trace.lock();
+        if let Some(trace) = cell.as_mut() {
+            let (question, answer) = choice();
+            if let Some(moment) = trace.moment {
+                trace.entries.push(TracedChoice {
+                    moment,
+                    side,
+                    question,
+                    answer,
+                });
+            }
+        }
+    }
+
+    /// Marks the moment of the day the resolution has reached, for the
+    /// trace.
+    pub(crate) fn pass_moment(&self, moment: Moment) {
+        if let Some(trace) = self.choice_trace.lock().as_mut() {
+            trace.moment = Some(moment);
+        }
+    }
+
     pub fn set_config(&mut self, config: SimConfig) {
         self.config = config;
     }
@@ -434,6 +489,12 @@ impl World {
             &self.events,
             &self.orders,
             self.objectives.as_ref(),
+            PulseScratch {
+                grounded_bases: &self.grounded_bases,
+                strikes_in_flight: &self.strikes_in_flight,
+                sorties: &self.sorties,
+                deck_losses: &self.deck_losses,
+            },
         )
     }
 

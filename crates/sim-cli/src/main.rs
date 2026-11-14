@@ -11,6 +11,7 @@ mod mcp;
 mod play;
 mod save;
 mod serve;
+mod timing;
 mod validate;
 
 use std::env;
@@ -39,13 +40,18 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
                      [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
        sim-cli mcp <scenario.toml> --seat allied|japanese
                    [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
+       sim-cli time --machine TEXT [--repeats N] [--games N] [--days N] [--slice FILE] [--soak FILE]
+                    [--early-day N] [--late-day N] [--soak-late-day N] [--reference DIR]
        sim-cli play --game FILE ... (run `sim-cli play` for its usage)
 
   run       Runs a scenario to its last day and prints the state hash of
             each day, then where every task force and ship ended up, and for a
             scenario with objectives (decision 0054) the result.
-  replay    Runs a saved game: loads the scenario the file names, refuses it if
-            the scenario file or any data file it names has changed, submits
+  replay    Runs a saved game: refuses it, before it runs, if it was saved
+            under another state layout or rules label, or before saved games
+            recorded them (decision 0100); loads the scenario the file names,
+            refuses it if the scenario file or any data file it names has
+            changed, submits
             the saved orders day by day in place of the scenario's own, prints
             each day's hash and compares it with the saved one. Exits with an
             error on the first day that differs.
@@ -59,6 +65,16 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             in, marked `via task_force:N`. --day N keeps one day. --why EVENT
             prints that event and its causes down to orders, as a tree, with
             each event's breakdown.
+  time      Times what a day costs, outside the game (decision 0100, 11 to 13):
+            one day of the slice (default 07_full_slice: day 2 from day 1 and
+            day 13 from day 12) resolved, and resolved with every question of
+            both sides asked at every moment of it; a copy of the world with
+            and without its event log; and --games (100) games of --days (30)
+            from the start of the soak and from its day 150. Each is a spread
+            (min, median, max) over --repeats (20) runs, except the games, one
+            run each. --machine names the machine in the report. It ends with
+            the totals that matter. Use a release build; it changes nothing in
+            any scenario, save or hash.
   validate  The umpire's judge of a batch (decision 0062's file, version 5)
             against a measures file of data/validation (docs/step2-spec.md):
             takes each measure's number from every run and writes a markdown
@@ -286,6 +302,7 @@ fn main() -> ExitCode {
         Some("export") => with_reference(&args[1..], |a, o| export::command(a, USAGE, o)),
         Some("batch") => with_reference(&args[1..], |a, o| batch::command(a, USAGE, o)),
         Some("validate") => with_reference(&args[1..], |a, o| validate::command(a, USAGE, o)),
+        Some("time") => with_reference(&args[1..], |a, o| timing::command(a, USAGE, o)),
         Some("replay") => with_reference(&args[1..], replay),
         Some("serve") => serve::command(&args[1..], USAGE),
         Some("mcp") => mcp::command(&args[1..], USAGE),

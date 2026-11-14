@@ -15,7 +15,7 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `list_contacts` | `list_contacts.schema.json` | `list_contacts` |
 | `entity` | `entity.schema.json` | `get_entity` |
 | `explain` | `explain.schema.json` | `explain` |
-| `measure` | `measure.schema.json` | `measure`: one of five answers, told apart by `question` (`air_distance`, `sea_route`, `passage`, `yard`, `air_reach`) |
+| `measure` | `measure.schema.json` | `measure`: one of six answers, told apart by `question` (`air_distance`, `sea_route`, `passage`, `yard`, `air_reach`, `choices`) |
 | `not_known` | `not_known.schema.json` | `get_entity`, `explain` and `measure`, for anything the side does not know of |
 | `briefing_text` | `briefing_text.schema.json` | `get_briefing` with `{"text": true}` |
 | `issue_orders` | `issue_orders.schema.json` | `issue_orders` (its arguments: `issue_orders_arguments.schema.json`) |

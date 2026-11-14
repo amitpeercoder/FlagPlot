@@ -587,6 +587,7 @@
       "unit": "air_group:19"
     }
   ],
+  "rules_version": 1,
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
     "hash": "a9443b066a393e0b"
@@ -596,5 +597,6 @@
     "japanese": "script"
   },
   "seed": 1942,
-  "version": 1
+  "state_version": "flagplot-state-v18",
+  "version": 2
 }

@@ -23,7 +23,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{EventId, LandUnitId, OrderId, TaskForceId};
 use crate::refdata::GroundFigures;
-use crate::state::{Preparation, Skills, TaskForceStatus};
+use crate::state::{Preparation, Skills, TaskForce, TaskForceStatus, TruthState};
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
 
@@ -304,27 +304,7 @@ impl World {
             .truth
             .task_forces
             .values()
-            .filter(|force| {
-                let Some(preparation) = &force.preparation else {
-                    return false;
-                };
-                !preparation.roster.is_empty()
-                    && force.yard_trip.is_none()
-                    && matches!(
-                        force.status,
-                        TaskForceStatus::Idle | TaskForceStatus::Arrived | TaskForceStatus::Halted
-                    )
-                    && force.toward_hex.is_none()
-                    && self
-                        .truth
-                        .bases
-                        .values()
-                        .any(|base| base.side == force.side && base.hex == force.from_hex)
-                    && force
-                        .arrived_at_hours
-                        .is_none_or(|arrived| arrived < day_start)
-                    && force.halt.is_none_or(|halt| halt.at_hours < day_start)
-            })
+            .filter(|force| qualifies_for_loading(&self.truth, force, day_start))
             .map(|force| force.id)
             .collect();
         for id in &qualifying {
@@ -581,4 +561,53 @@ impl World {
         }
         rostered
     }
+}
+
+/// Whether `force` qualifies to gain loading on the day that starts at
+/// `day_start` (decision 4 of 0095): with the order and a roster that is not
+/// empty, stopped at a base of its side in the centre of its hex, and not
+/// under way at any hour of the day. Reads only the force and the bases'
+/// sides and hexes, which a side holds of its own. The engine's loading and
+/// a side's view both ask it (decision 1 of 0100).
+pub(crate) fn qualifies_for_loading(
+    truth: &TruthState,
+    force: &TaskForce,
+    day_start: Fixed,
+) -> bool {
+    let Some(preparation) = &force.preparation else {
+        return false;
+    };
+    !preparation.roster.is_empty()
+        && force.yard_trip.is_none()
+        && matches!(
+            force.status,
+            TaskForceStatus::Idle | TaskForceStatus::Arrived | TaskForceStatus::Halted
+        )
+        && force.toward_hex.is_none()
+        && truth
+            .bases
+            .values()
+            .any(|base| base.side == force.side && base.hex == force.from_hex)
+        && force
+            .arrived_at_hours
+            .is_none_or(|arrived| arrived < day_start)
+        && force.halt.is_none_or(|halt| halt.at_hours < day_start)
+}
+
+/// The force, among `forces` taken in order, whose roster holds `unit`: the
+/// last one if more than one does, as [`World::rostered_with`] finds it.
+pub(crate) fn rostered_among(
+    truth: &TruthState,
+    forces: impl IntoIterator<Item = TaskForceId>,
+    unit: LandUnitId,
+) -> Option<TaskForceId> {
+    let mut found = None;
+    for id in forces {
+        if let Some(preparation) = &truth.task_forces[&id].preparation {
+            if preparation.roster.contains(&unit) {
+                found = Some(id);
+            }
+        }
+    }
+    found
 }
