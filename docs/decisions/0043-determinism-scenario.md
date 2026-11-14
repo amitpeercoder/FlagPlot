@@ -39,7 +39,7 @@ The spec's scenario 7 is "Determinism: the full slice run twice, and once with s
 
 ### As built
 
-- **A saved game stores a scenario's scripted orders,** in the order they will be taken in. Orders a player or a model gives during a game are not yet saved: nothing gives any. The agent interface will need the runner to record orders as they are submitted.
+- **A saved game stores a scenario's scripted orders,** in the order they will be taken in. Orders a player or a model gives during a game are not yet saved: nothing gives any. The agent interface will need the runner to record orders as they are submitted. *(Nov 14, 2026: a saved game holds the orders as they were handed in, by decision 0050, item 11)*
 - **Paths in a saved game are as given on the command line,** so a game is replayed from the directory it was saved in.
 - **The full slice produces every kind of event the engine can record,** 58 of them, and a test reads the list from the code so that a new kind without a place in the slice fails. Two things are in the slice only for that: six damaged fighters at the start, and one order sent to the wrong side's force.
 - **The shuffle test fails with the sort of 4b turned off,** in all four scenarios it runs on. So it does detect what it was written for.
@@ -57,7 +57,7 @@ The spec's scenario 7 is "Determinism: the full slice run twice, and once with s
 ## Deferred
 
 - Saving in the middle of a game.
-- `query events` and `serve` in the runner.
+- `query events` and `serve` in the runner. *(Nov 14, 2026: built: `sim-cli serve` by decision 0050 and `sim-cli events` by decision 0052, item 9)*
 
 ## Rule card
 

@@ -64,7 +64,7 @@ A is of the order of South Dakota's 16 days in October. B is near Shokaku's 125.
 - **A ship sent alone from a force.** Forming and merging forces by order is not built (decision 0052, item 7), so a force goes and returns as it is.
 - **Attacks on a repair ship,** and a repair ship that moves between bases. The figure belongs to the base.
 - **Refits that improve a ship.** She returns as her class has her.
-- **A carrier's air group flying ashore when she leaves.** In the record a carrier's group often did: Enterprise's went to Henderson Field. That needs air groups that can change base, which is not built; until then a group goes and returns with its ship (as planned for the build, below).
+- **A carrier's air group flying ashore when she leaves.** In the record a carrier's group often did: Enterprise's went to Henderson Field. That needs air groups that can change base, which is not built; until then a group goes and returns with its ship (as planned for the build, below). *(Nov 14, 2026: rebasing is built by decision 0091 for land-based groups; a group aboard a ship is refused, so this case is still not built)*
 
 ## What it does for "out of the campaign"
 

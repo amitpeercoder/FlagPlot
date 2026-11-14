@@ -11,6 +11,9 @@ The review found three rules whose results nobody would defend: results that har
 ### A system hit depends on the damage the hit does
 
 1. **A hit also knocks a system down one level with a chance of its damage points times one figure, 1 at most.** Damage points are what the hit already does: 100 x the weapon's damage / the target's toughness. This replaces three flat chances, for a gun, a torpedo and a bomb. Which system is hit is chosen as before.
+
+   *Nov 14, 2026: every hit makes one system draw, even when its chance is 0, so the number of draws is fixed by the hits (`docs/rules/differences.md`, row 4).*
+
 2. **The figure is 0.06 for each point,** a placeholder. It is chosen so that the placeholder cruiser's gun hit on its like, 5 points, keeps the 0.3 it had.
 
    | Hit | Points | Chance before | Chance now |
@@ -33,7 +36,13 @@ The review found three rules whose results nobody would defend: results that har
 ### A patrol divides among the raids on its hex
 
 7. **When more than one raid attacks forces of one side in one hex in a pulse, that side's patrol over the hex is shared among them** in proportion to each raid's aircraft, bombers and escorts together. A raid's share is the patrol times its aircraft over all the raids' aircraft, rounded down. Fighters left over go one each to the raids in order of size, the largest first, the lower first group on a tie. This replaces decision 0027, 12, in which every raid met the whole patrol.
+
+   *Nov 14, 2026: a raid's share of the patrol fires as decisions 0080 and 0087 set it (item 8).*
+
 8. **Each raid then fights its share** as decision 0027 has it: its escorts fire at the patrol, its share of the patrol fires at the escorts one for one, and what is left of the share fires at the bombers.
+
+   *Nov 14, 2026: the escorts draw off a share of the patrol one for one, by decision 0080, and a share of the patrol's shots at the bombers is worked before the attack, by decision 0087.*
+
 9. **With one raid nothing changes,** and the order the raids are taken in still does not matter: the shares are worked from the state at the start of the step.
 10. **Losses to the patrol are added up and taken from its groups, the lowest number first,** as before.
 

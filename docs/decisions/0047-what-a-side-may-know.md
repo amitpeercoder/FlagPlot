@@ -1,6 +1,6 @@
 # 0047: What a side may know of what happened
 
-Status: confirmed. The designer approved the plan for the agent interface on Nov 11, 2026, with this rule as its first choice. The table of event kinds is the architect's working out of it. Amended by decision 0065 (no enemy unit named) and decision 0085 (a fight's ending and start as the side knew them, the rounds counted from there, hidden causes flagged by kind).
+Status: confirmed. The designer approved the plan for the agent interface on Nov 11, 2026, with this rule as its first choice. The table of event kinds is the architect's working out of it. Amended by decision 0065 (no enemy unit named) and decision 0085 (a fight's ending and start as the side knew them, the rounds counted from there, hidden causes flagged by kind). *(Nov 14, 2026: also amended by decisions 0060, 0061 and 0086)*
 
 ## The gap
 
@@ -49,12 +49,12 @@ A side knows of a surface fight from the earliest of: its own force sighting, a 
 
 ## What it costs
 
-- **Fighters get no word of what they shot down.** There is no claim for aircraft yet. A side sees its own losses in an air fight and nothing of the enemy's. An air claim is the remedy and is deferred.
+- **Fighters get no word of what they shot down.** There is no claim for aircraft yet. A side sees its own losses in an air fight and nothing of the enemy's. An air claim is the remedy and is deferred. *(Nov 14, 2026: air claims are built by decision 0056)*
 - **A side knows the log's numbers for enemy ships it fought.** It could tell that the cruiser of Tuesday is the cruiser of Thursday. Contacts are meant to hide that. It is accepted for the length of step 1. Ended by decision 0065.
 - **The log's numbers are not shown to a player.** Gaps in them would tell a side that something happened it cannot see, and a hidden event of the enemy's shifts every later number. So what a player is shown numbers a side's events 1, 2, 3 in the side's own order (decision 0048, 14). The log's number stays on the event for the umpire.
 
 - **A force can break off from a fight its side never knew of.** A force over its break-off level breaks off at the end of a round whatever happened in it (decision 0014). If its ships were crippled before the meeting and it neither sights nor is fired on, its own side is not shown the break-off: showing it would say an enemy was there. The force's state still changes. The two rules pull against each other and decision 5 is given the last word.
-- **The numbers of forces made during a game leak a count.** A detached force takes the next free number, and the enemy's forces use the same numbers. So a side's new force has a number that depends on how many forces the enemy has, and because random draws are keyed on a force's number, an enemy force that does nothing changes the luck of forces made later. A test shows it and is kept, switched off. The remedy is to number the forces each side makes from its own range. It changes the hashes of every scenario with a detachment, and is left for now.
+- **The numbers of forces made during a game leak a count.** A detached force takes the next free number, and the enemy's forces use the same numbers. So a side's new force has a number that depends on how many forces the enemy has, and because random draws are keyed on a force's number, an enemy force that does nothing changes the luck of forces made later. A test shows it and is kept, switched off. The remedy is to number the forces each side makes from its own range. It changes the hashes of every scenario with a detachment, and is left for now. *(Nov 14, 2026: closed by decision 0086, part 2)*
 
 ## Deferred
 

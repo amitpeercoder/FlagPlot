@@ -25,8 +25,17 @@ Decision 0026 lets a strike fly and hit with nobody opposing it and nobody lost.
    - The escorts fire at the patrol: one shot each.
    - The patrol fires as many shots at the escorts as there are escorts, or as there are patrol fighters if those are fewer. Any patrol fighters left over fire at the bombers.
    So escorts draw the patrol off the bombers one for one, and a raid with no escort takes the whole patrol.
+
+   *Nov 14, 2026: escorts draw off a share of the patrol one for one, by decision 0080, and a share of the patrol's shots at the bombers is worked before the attack, by decision 0087.*
+
 7. **Then every ship afloat in the task force attacked fires its anti-aircraft guns at the bombers that are left.** A class has a number of anti-aircraft shots. Each hits with the guns' chance, and a hit is a bomber lost.
+
+   *Nov 14, 2026: a share of the anti-aircraft shots is worked before the attack and the rest after it, by decision 0079.*
+
 8. **Then the bombers that are left attack,** by decision 0026. A raid's groups attack in order of group number, each with what it has left.
+
+   *Nov 14, 2026: the order of fire before and after the attack is as decisions 0079 and 0087 set it.*
+
 9. **Hits on a raid's bombers, from fighters and then from guns, are taken from its groups in order of group number,** the lowest first, each until it has none left. Hits on a patrol or on escorts are taken from their groups the same way. Hits beyond the aircraft there are wasted.
 10. **Hits are the whole part of shots times chance, plus one more with a chance equal to the fraction,** as everywhere else.
 
@@ -34,6 +43,9 @@ Decision 0026 lets a strike fly and hit with nobody opposing it and nobody lost.
 
 11. **An aircraft lost is taken off its group's ready aircraft,** and an event says how many and to what. Nothing else can make the count fall yet.
 12. **Everything in the air combat step is worked on the state at its start** (decision 0026, 8). Every raid meets the patrol as it stood at the start of the step, and losses are applied afterwards. A patrol cannot lose more aircraft than it had.
+
+   *Nov 14, 2026: when more than one raid attacks forces of one side in one hex in a pulse, that side's patrol is shared among them, by decision 0033, item 7.*
+
 13. **A raid that finds nothing meets nobody,** and a patrol over a hex where no raid attacks fires nothing.
 
 ### Random numbers
@@ -61,8 +73,8 @@ Decision 0026 lets a strike fly and hit with nobody opposing it and nobody lost.
 - How good one fighter type is against another, and how much punishment an aircraft takes: stage 5e, from facts.
 - Radar warning, and a patrol caught on deck.
 - Fighters strafing ships. Bombers shooting back.
-- Aircraft damaged and not lost; operational losses; pilots: scenario 6.
-- Where aircraft land when their carrier is sunk or its deck is closed while they are away. Today they are lost only with the ship (decision 0025).
+- Aircraft damaged and not lost; operational losses; pilots: scenario 6. *(Nov 14, 2026: built: damaged aircraft and operational losses by decision 0035, pilots by decision 0038)*
+- Where aircraft land when their carrier is sunk or its deck is closed while they are away. Today they are lost only with the ship (decision 0025). *(Nov 14, 2026: built by decision 0059)*
 - Anti-aircraft ammunition.
 
 ## Rule card

@@ -27,6 +27,9 @@ Stage 6b adds aircraft that come back unfit to fly, their repair, and aircraft l
 ### Repair
 
 9. **A base repairs a number of damaged aircraft each day,** given for the base, at the start of the day *(confirmed by the designer, Nov 12, 2026)*. It repairs the lowest-numbered group's first. A repaired aircraft is ready. A carrier repairs a number given once for all carriers, for the groups aboard it.
+
+   *Nov 14, 2026: each carrier repairs its own allowance, given to each ship that carries a group (`docs/rules/differences.md`, row 16).*
+
 10. **Repair costs nothing yet.** The supply it uses comes with base supply consumption in stage 6d.
 
 ### On the ground

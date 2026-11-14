@@ -29,10 +29,10 @@ Each figure the simulation needs, and where it comes from:
 | Cruise speed, endurance | The sourced endurance and the speed it is quoted at |
 | Fuel capacity | The sourced fuel capacity, in long tons |
 | Main guns | The number of guns of the main battery fitted on the date |
-| Rounds per gun per minute | The sourced practical rate of fire of that gun. A theoretical or maximum rate is not read, unless a written exception names it (decision 0023) |
+| Rounds per gun per minute | The sourced practical rate of fire of that gun. A theoretical or maximum rate is not read, unless a written exception names it (decision 0023) *(Nov 14, 2026: decision 0070 reads the lesser of the sourced rate and the median rate achieved by that kind of battery)* |
 | Rounds per gun | The sourced ammunition carried per gun |
-| Torpedo tubes | The number fitted on the date |
-| Radar | Yes if a search radar is fitted on the date. Unknown is an error, unless the scenario's working assumption (decision 0019, 5) is given to the tool |
+| Torpedo tubes | The number fitted on the date *(Nov 14, 2026: decision 0074: the tubes that bear on one side)* |
+| Radar | Yes if a search radar is fitted on the date. Unknown is an error, unless the scenario's working assumption (decision 0019, 5) is given to the tool *(Nov 14, 2026: decision 0077: yes only for a surface-search set whose display has a plan position indicator)* |
 | Gun damage | Shell weight in kg x the gun constant |
 | Torpedo damage | Warhead weight in kg x the torpedo constant |
 | Toughness | Standard displacement in long tons x the toughness constant |

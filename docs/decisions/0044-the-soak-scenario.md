@@ -39,7 +39,7 @@ The spec's scenario 8 is "Soak: 180 days with scripted orders on both sides", pr
 
 **Three things found and left, for the designer to know.**
 
-- **Ships cannot refuel.** Fuel only falls. A transport lasts about eight round trips between Espiritu Santo and Lunga Point and its escort runs dry on day 38. The spec lists refuelling under logistics; it has not been built, and no campaign longer than a few weeks can be played without it.
+- **Ships cannot refuel.** Fuel only falls. A transport lasts about eight round trips between Espiritu Santo and Lunga Point and its escort runs dry on day 38. The spec lists refuelling under logistics; it has not been built, and no campaign longer than a few weeks can be played without it. *(Nov 14, 2026: built by decision 0045)*
 - **Two forces left in one hex fight every pulse.** A force with no home port stays where it fought (decision 0016, 14). One pair met 303 times in the run with the orders that part them taken out, and 6 times with them in. What a force does after a fight is a staff rule that is still deferred.
 - **A stranded force can be ordered again** and records that it is out of fuel again. Only its route changes.
 

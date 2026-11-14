@@ -47,7 +47,7 @@ Stage 6b made flying cost aircraft. It still costs the people nothing: a group f
 
 ## Deferred
 
-- Fatigue for a task force held at battle readiness (the next stage, with the same number and the same file).
+- Fatigue for a task force held at battle readiness (the next stage, with the same number and the same file). *(Nov 14, 2026: built by decision 0037)*
 - Pilots as people, and experience.
 - Rest that is better at a well-found base.
 - Weather and climate.

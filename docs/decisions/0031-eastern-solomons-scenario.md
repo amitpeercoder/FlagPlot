@@ -12,6 +12,9 @@ Status: confirmed. The designer approved the forces with the plan for stage 5e o
 6. **Air groups are the squadrons and their aircraft operational on the day,** or on hand where no operational figure is sourced. Each cites its row.
 7. **Each of Tone and Chikuma carries five E13A1 floatplanes.** This rests on an establishment of June 1942, not a count on the day. The battleships' and other cruisers' floatplanes are left out: their numbers are not sourced.
 8. **Who searches.** Enterprise's scouting squadron searches the northern half, 290 to 090, to 200 miles, as it did. The cruisers' floatplanes search 110 to 200. No source gives the Japanese sectors; a quarter-circle toward the south-east is an assumption.
+
+   *Nov 14, 2026: the Japanese search is set from the record by decision 0073, and the remaining orders by decision 0081.*
+
 9. **Who strikes.** Every dive bomber and torpedo squadron is ordered to strike ships. The Japanese attack planes are within reach of nothing where it really is, and almost always stay on deck, which is what they did.
 10. **Fighters.** American fighters all patrol: with a radius of 105 miles they could not escort (decision 0030). The Japanese carriers keep four fifths overhead and send the rest; the first wave had ten Zeros of about fifty. Ryujo keeps three tenths; the rest were for her raid on Henderson Field, which is not modelled, so they fly nothing.
 11. **In step 1 the scenario is run and its spread reported, not judged,** as at Savo Island (decision 0024, 12).

@@ -107,11 +107,11 @@ Scenario 23, of made-up units and bases marked placeholder, in two parts: an att
 ## What it leaves out
 
 - **Flying out on the day a base falls.** The fight is after the last pulse and a rebase order is given at the start of a day, so the move must be ordered a day ahead.
-- **Retreat.** A beaten side's men stay in the hex; there is no movement overland.
+- **Retreat.** A beaten side's men stay in the hex; there is no movement overland. *(Nov 14, 2026: marching overland is built by decision 0094; retreat by rule is still not built)*
 - **Guns ashore firing on ships, and artillery closing an airfield.**
 - **Terrain, dug-in defence that grows, and kinds of unit.**
 - **A base damaged by the fight for it.** It is taken whole but for its stocks.
-- **Shore bombardment, bombs on men, the ground report and the estimate:** stage 3.
+- **Shore bombardment, bombs on men, the ground report and the estimate:** stage 3. *(Nov 14, 2026: built by decision 0092)*
 
 ## What it costs
 
