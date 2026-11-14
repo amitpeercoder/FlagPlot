@@ -1,0 +1,38 @@
+Scenario 32: A beaten side falls back
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash a3e5e42704bfe376  45 events
+day   2  hash 0c3c39b9738e414c  31 events
+day   3  hash 2ab3ef427168119a  29 events
+day   4  hash 47b6594d5ef0769c  27 events
+day   5  hash b1697f417525a000  24 events
+day   6  hash 7a20e825ac80bc09  23 events
+
+base:1 "Placeholder base 1, Japanese, at P" (Allied) at (0,0): 486.75 t of supply in stock
+base:2 "Placeholder base 2, Japanese, at R" (Japanese) at (1,0): 97.42 t of supply in stock
+base:3 "Placeholder base 3, Allied, at P" (Allied) at (0,0): 997.5 t of supply in stock
+base:4 "Placeholder base 4, Japanese, at T" (Allied) at (10,0): 350.5 t of supply in stock
+base:5 "Placeholder base 5, Allied, at T" (Allied) at (10,0): 4970 t of supply in stock
+base:6 "Placeholder base 6, Allied, at U" (Allied) at (10,1): 997 t of supply in stock
+base:7 "Placeholder base 7, Japanese, at S" (Allied) at (20,0): 497 t of supply in stock
+base:8 "Placeholder base 8, Allied, at S" (Allied) at (20,0): 999.5 t of supply in stock
+land_unit:1 "Placeholder Japanese working unit at P" (Japanese): 258 men ashore at (1,0), fatigue 50
+land_unit:2 "Placeholder Allied regiment at P" (Allied): 500 men ashore at (0,0)
+land_unit:3 "Placeholder Japanese battalion at T" (Japanese): 481 men ashore at (11,0), fatigue 50
+land_unit:4 "Placeholder Allied division at T" (Allied): 5880 men ashore at (10,0)
+land_unit:5 "Placeholder Allied company at U" (Allied): 100 men ashore at (10,1)
+land_unit:6 "Placeholder Japanese working unit at S" (Japanese): no men ashore
+land_unit:7 "Placeholder Allied platoon at S" (Allied): 100 men ashore at (20,0), on attack
+Allied: no contacts
+Allied: no battle claims
+Allied estimate at (0,0): 252 enemy men ashore, reported day 3
+Allied estimate at (10,0): 760 enemy men ashore, reported day 3
+Japanese: no contacts
+Japanese: no battle claims
+Japanese estimate at (0,0): 451 enemy men ashore, reported day 3
+Japanese estimate at (10,0): 2946 enemy men ashore, reported day 3
+
+Result (the placeholder scale of decision 0054):
+Allied: 7.61 points (men_lost 761 = 7.61), margin 7.61, minor victory
+Japanese: 0 points (base_held at base:1 0 = 0), margin -7.61, minor defeat

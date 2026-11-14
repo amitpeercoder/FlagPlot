@@ -1208,7 +1208,7 @@ impl World {
                             to: *to,
                             days,
                             counted,
-                            order: order.id,
+                            cause: Cause::Order(order.id),
                         });
                         Vec::new()
                     }

@@ -1,0 +1,197 @@
+# Scenario 32: a beaten side falls back (decision 0104).
+#
+# Proves decision 0104 against a hand calculation, in three places. At P a
+# Japanese working unit, its side beaten with no fight, falls back to R, where
+# its side has a base, in preference to Q, which comes first in hex order and
+# holds nothing; it marches carrying nothing, tired by the defeat, and works
+# the port at R when it arrives. At T a Japanese fighting unit beaten in a
+# fight falls back to V, passing U, which holds Allied fighting men. At S, a
+# hex with no land link, a Japanese working unit beaten with no fight has
+# nowhere to go and surrenders. The Allied side's objective counts Japanese
+# men lost. The hand calculation is in tests/scenario_32_falling_back.rs, which
+# runs the scenario on the frozen step 1 figures. Only the hits of the one
+# fight, at T on day 1, are the dice; the test reads them.
+#
+# No air combat, wear, fatigue or air supply figures are named, so no aircraft
+# flies and nothing wears, tires or is grounded. Each night the men's supply is
+# the first thing charged. Every base has an airfield (the default).
+#
+# PLACEHOLDER DATA. The units, bases and map are invented.
+
+name = "Scenario 32: A beaten side falls back"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_falling_back.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base 1, Japanese, at P"
+side = "japanese"
+q = 0
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 2
+name = "Placeholder base 2, Japanese, at R"
+side = "japanese"
+q = 1
+r = 0
+supply_t = 100
+
+[[base]]
+id = 3
+name = "Placeholder base 3, Allied, at P"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 4
+name = "Placeholder base 4, Japanese, at T"
+side = "japanese"
+q = 10
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 5
+name = "Placeholder base 5, Allied, at T"
+side = "allied"
+q = 10
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 6
+name = "Placeholder base 6, Allied, at U"
+side = "allied"
+q = 10
+r = 1
+supply_t = 1000
+
+[[base]]
+id = 7
+name = "Placeholder base 7, Japanese, at S"
+side = "japanese"
+q = 20
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 8
+name = "Placeholder base 8, Allied, at S"
+side = "allied"
+q = 20
+r = 0
+supply_t = 1000
+
+[[land_unit]]
+id = 1
+name = "Placeholder Japanese working unit at P"
+side = "japanese"
+working = true
+men = 300
+q = 0
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder Allied regiment at P"
+side = "allied"
+men = 500
+q = 0
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 3
+name = "Placeholder Japanese battalion at T"
+side = "japanese"
+men = 1000
+q = 10
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 4
+name = "Placeholder Allied division at T"
+side = "allied"
+men = 6000
+q = 10
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 5
+name = "Placeholder Allied company at U"
+side = "allied"
+men = 100
+q = 10
+r = 1
+posture = "defend"
+
+[[land_unit]]
+id = 6
+name = "Placeholder Japanese working unit at S"
+side = "japanese"
+working = true
+men = 200
+q = 20
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 7
+name = "Placeholder Allied platoon at S"
+side = "allied"
+men = 100
+q = 20
+r = 0
+posture = "attack"
+
+# Day 2: the Allied units at P and T go on the defence, so that there is no
+# fight at T while unit 3 is still there.
+
+[[order]]
+day = 2
+side = "allied"
+land_unit = 2
+kind = "set_posture"
+posture = "defend"
+
+[[order]]
+day = 2
+side = "allied"
+land_unit = 4
+kind = "set_posture"
+posture = "defend"
+
+[objectives]
+minor = 5
+major = 10
+decisive = 20
+
+[objectives.allied]
+mission = "Placeholder: count the Japanese men lost."
+
+[[objectives.allied.objective]]
+kind = "men_lost"
+points_per_100_men = 1
+
+[objectives.japanese]
+mission = "Placeholder: hold the bases."
+
+[[objectives.japanese.objective]]
+kind = "base_held"
+base = 1
+points = 10

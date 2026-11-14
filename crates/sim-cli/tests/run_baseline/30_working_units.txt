@@ -2,12 +2,12 @@ Scenario 30: Units that work, and what they build
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e63b7eefff5e0cc8  54 events
-day   2  hash 7d93b4109dadf439  48 events
-day   3  hash 3884106052ef9d23  49 events
-day   4  hash 0d9b082e2a010e07  48 events
-day   5  hash 2992211a21d727ff  42 events
-day   6  hash 839f538ef387bcf3  35 events
+day   1  hash d718381549353f8c  55 events
+day   2  hash 7faff01a4a426ca5  44 events
+day   3  hash dced16f9ecf6f70f  45 events
+day   4  hash 3c89a4db2691542d  44 events
+day   5  hash 68a15fa343b485b4  38 events
+day   6  hash 22f799f22c791ce1  31 events
 
 task_force:1 "Placeholder force 1" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder force 2" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -34,15 +34,13 @@ land_unit:5 "Placeholder unit 5" (Allied): 556 men ashore at (10,0)
 land_unit:6 "Placeholder unit 6" (Allied): 938 men ashore at (15,0)
 land_unit:7 "Placeholder unit 7" (Allied): 1882 men ashore at (15,0)
 land_unit:8 "Placeholder unit 8" (Japanese): 600 men ashore at (15,0), fatigue 70
-land_unit:9 "Placeholder unit 9" (Allied): 389 men ashore at (20,0)
+land_unit:9 "Placeholder unit 9" (Allied): no men ashore
 land_unit:10 "Placeholder unit 10" (Japanese): 100 men ashore at (20,0), on attack
 land_unit:11 "Placeholder unit 11" (Allied): 900 men ashore at (0,0)
 land_unit:12 "Placeholder unit 12" (Allied): 600 men ashore at (5,0)
 Allied: no contacts
 Allied: no battle claims
 Allied estimate at (15,0): 336 enemy men ashore, reported day 6
-Allied estimate at (20,0): 88 enemy men ashore, reported day 6
 Japanese: no contacts
 Japanese: no battle claims
 Japanese estimate at (15,0): 3685 enemy men ashore, reported day 6
-Japanese estimate at (20,0): 407 enemy men ashore, reported day 6

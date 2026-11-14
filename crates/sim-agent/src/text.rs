@@ -1253,15 +1253,27 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             s.push_str(&format!(" (posture set by your order {order})"));
         }
         if let Some(m) = &u.march {
-            s.push_str(&format!(
-                "; marching to {}, {} of {} days marched ({} counted)",
-                at(&m.to),
-                m.days_marched,
-                m.of_days,
-                m.days_counted.0
-            ));
-            if let Some(order) = m.order {
-                s.push_str(&format!(" (by your order {order})"));
+            if let Some(f) = &m.falling_back {
+                s.push_str(&format!(
+                    "; falling back to {} after the defeat at {}, day {} of {}; carries no supply ({} counted){}",
+                    at(&m.to),
+                    at(&f.from),
+                    m.days_marched + 1,
+                    m.of_days,
+                    m.days_counted.0,
+                    ev(f.event)
+                ));
+            } else {
+                s.push_str(&format!(
+                    "; marching to {}, {} of {} days marched ({} counted)",
+                    at(&m.to),
+                    m.days_marched,
+                    m.of_days,
+                    m.days_counted.0
+                ));
+                if let Some(order) = m.order {
+                    s.push_str(&format!(" (by your order {order})"));
+                }
             }
         }
         if !u.march_to.is_empty() {
@@ -1554,6 +1566,34 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             at(&m.to),
             plural(m.days, "day", "days"),
             ev(m.event)
+        ));
+    }
+    for f in &land.fell_back_yesterday {
+        o.line(format!(
+            "Fell back yesterday: {} fell back from {} to {} after the defeat, {} men, fatigue {}{}",
+            f.land_unit.text(),
+            at(&f.from),
+            at(&f.to),
+            f.men,
+            f.fatigue.0,
+            ev(f.event)
+        ));
+    }
+    for f in &land.surrendered_yesterday {
+        o.line(format!(
+            "Surrendered yesterday: {} surrendered at {}, {} men, with nowhere to fall back to{}",
+            f.land_unit.text(),
+            at(&f.place),
+            f.men,
+            ev(f.event)
+        ));
+    }
+    for p in &land.prisoners_taken_yesterday {
+        o.line(format!(
+            "An enemy unit surrendered at {}: {} men taken prisoner{}",
+            at(&p.place),
+            p.men,
+            ev(p.event)
         ));
     }
     for l in &land.loading_yesterday {

@@ -257,5 +257,9 @@ name = "scenario_31_airfield_damage"
 path = "scenario_31_airfield_damage.rs"
 
 [[test]]
+name = "scenario_32_falling_back"
+path = "scenario_32_falling_back.rs"
+
+[[test]]
 name = "choices_asked_and_run"
 path = "choices_asked_and_run.rs"

@@ -12,7 +12,7 @@ Decided by the designer at the close, Nov 13, 2026 ("Reported only; repair first
 
 The designer confirmed on Nov 13, 2026 that land units and basic ground combat stay before step 3. The step 3 spec is confirmed by the designer (Nov 14, 2026): `docs/step3-spec.md`.
 
-What comes next is the spec's order, not item 2's. Decisions 0095, 0097, 0098, 0099 and 0103 are built (scenarios 27 to 31); the others are confirmed and not built:
+What comes next is the spec's order, not item 2's. Decisions 0095, 0097, 0098, 0099, 0103 and 0104 are built (scenarios 27 to 32); the others are confirmed and not built:
 
 1. Decision 0098, what a land unit is good at: four skills, fixed for a unit, given by the scenario. Built (scenario 29); the skills of real units wait on research.
 2. Decision 0099, units that work and what they build: the airfield, the port, repairs and defences, by a unit's own job. Built (scenario 30); no real unit has a value yet, and that waits on research. The spec needed 0098 and 0099 before its stage 3.
@@ -20,6 +20,8 @@ What comes next is the spec's order, not item 2's. Decisions 0095, 0097, 0098, 0
 4. The 39-day slice with the landings, stage 4 of ground combat (decision 0093). Not built.
 
 5. Decision 0103, an airfield damaged and mended. Built (scenario 31). Its four figures are placeholders that rest on no source: `[base_hit] airfield`, `airfield_damage_per_hit`, `work_per_airfield_damage_point` and `airfield_landing_refused_at`. The record has rows to tune them on, for stage 4 of ground combat: the field at Henderson was "never out of operation for more than four hours" once the construction battalion had it (`place_facts`, row 72), and the shellings of 25 August, 5 September and 12 to 14 September have rows. No real base has a damage at the start, and no real working unit has a value (item 2). The rules label is 2 since this decision.
+
+6. Decision 0104, a beaten side falls back. Built (scenario 32). A side beaten in a hex no longer leaves its men there, unfed: each unit falls back along a land link or, with none to go to, surrenders. This closes the garrison staying where it was beaten, which decision 0101 listed as a thing the lengthened slice would show wrong (its note on the construction units at Lunga and its item 7 say so). Its one figure, `beaten_fatigue` (30), is a placeholder that rests on no source: to tune on the record, for stage 4 of ground combat (the garrison of Lunga marched west on 7 August; nearly all of Tulagi's men died fighting and a few were taken). It leaves out prisoners as anything but men lost (none held, fed or exchanged), a choice of where to fall back to beyond a march order the next day, disorder beyond fatigue, and a retreat by sea (men are taken off only by order, and before the defeat). The real map still has no land links file (item 3), so on it every beaten unit surrenders until one is made. The rules label is 3 since this decision.
 
 The scale (item 2 above) is not a condition of step 3's stages 0 to 2.
 

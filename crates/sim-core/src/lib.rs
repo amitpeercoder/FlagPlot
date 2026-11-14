@@ -34,6 +34,8 @@ mod bombardment;
 mod cargo;
 mod damage;
 mod estimate;
+#[cfg(test)]
+mod falling_back_tests;
 mod ground;
 mod ground_combat;
 mod invariants;

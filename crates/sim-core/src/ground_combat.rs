@@ -36,7 +36,7 @@ use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, LandUnitId, ShipId, Tas
 use crate::orders::{Activity, AirMission, Posture};
 use crate::refdata::GroundFigures;
 use crate::rng::{Draw, Subsystem};
-use crate::state::{AirGroupLocation, LandUnit, ShipLocation, Side, Skills, TruthState};
+use crate::state::{AirGroupLocation, LandUnit, March, ShipLocation, Side, Skills, TruthState};
 use crate::world::World;
 
 /// The other side.
@@ -587,6 +587,18 @@ impl World {
             for base in bases {
                 self.change_side(day, base, other(side), causes.clone(), figures);
             }
+            // Its men fall back, or surrender (decision 0104). The first
+            // cause is the test that beat the side.
+            if let Some(Cause::Event(beaten_event)) = causes.first().copied() {
+                self.fall_back(
+                    day,
+                    hex,
+                    side,
+                    beaten_event,
+                    &units.units[at(side)],
+                    figures,
+                );
+            }
         }
 
         // The ground reports, after the fight and its losses (decision 13 of
@@ -1026,6 +1038,160 @@ impl World {
                 breakdown,
             );
         }
+    }
+
+    /// The units of a side beaten in `hex` fall back (decisions 1 to 4 and 7
+    /// of 0104), in unit order, after its bases have changed side. Each unit
+    /// with men ashore is set to march to the first hex joined by a land
+    /// link that holds a base of its side, else the first that holds no man
+    /// ashore of an enemy fighting unit, tired by the defeat and on the
+    /// defence; a unit that has no such hex surrenders. A unit already
+    /// marching is left as it is.
+    fn fall_back(
+        &mut self,
+        day: u32,
+        hex: Hex,
+        side: Side,
+        beaten_event: EventId,
+        units: &[LandUnitId],
+        figures: &GroundFigures,
+    ) {
+        let mut surrendering: Vec<LandUnitId> = Vec::new();
+        for unit_id in units {
+            let unit = &self.truth.land_units[unit_id];
+            if unit.hex != Some(hex) || unit.men_ashore == 0 || unit.march.is_some() {
+                continue;
+            }
+            let men = unit.men_ashore;
+            let links = self.map.land_neighbours(hex);
+            let with_base = links.iter().copied().find(|to| {
+                self.truth
+                    .bases
+                    .values()
+                    .any(|base| base.side == side && base.hex == *to)
+            });
+            let free_of_enemy = || {
+                links.iter().copied().find(|to| {
+                    !self.truth.land_units.values().any(|other_unit| {
+                        other_unit.side == other(side)
+                            && other_unit.hex == Some(*to)
+                            && !other_unit.working
+                            && other_unit.men_ashore > 0
+                    })
+                })
+            };
+            let Some(to) = with_base.or_else(free_of_enemy) else {
+                surrendering.push(*unit_id);
+                continue;
+            };
+            let unit = self
+                .truth
+                .land_units
+                .get_mut(unit_id)
+                .expect("the land unit exists");
+            let before = unit.fatigue;
+            let after = (before + figures.beaten_fatigue).min(Fixed::from_int(100));
+            unit.fatigue = after;
+            if unit.posture == Posture::Attack {
+                unit.posture = Posture::Defend;
+                unit.posture_order = None;
+            }
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "fatigue_before",
+                        value: before,
+                    },
+                    Factor {
+                        name: "beaten_fatigue",
+                        value: figures.beaten_fatigue,
+                    },
+                ],
+                result: after,
+            });
+            let fell_back = self.events.record(
+                day,
+                None,
+                EventKind::UnitFellBack {
+                    unit: *unit_id,
+                    side,
+                    from: hex,
+                    to,
+                    men,
+                    fatigue: after,
+                },
+                vec![Cause::Event(beaten_event)],
+                breakdown,
+            );
+            self.truth
+                .land_units
+                .get_mut(unit_id)
+                .expect("the land unit exists")
+                .march = Some(March {
+                to,
+                days: 0,
+                counted: Fixed::ZERO,
+                cause: Cause::Event(fell_back),
+            });
+        }
+        if surrendering.is_empty() {
+            return;
+        }
+        // One event tells the hex's surrender as a whole, so that what the
+        // enemy is told shows no count of units (truth and belief).
+        let total: u32 = surrendering
+            .iter()
+            .map(|unit_id| self.truth.land_units[unit_id].men_ashore)
+            .sum();
+        let together = self.events.record(
+            day,
+            None,
+            EventKind::MenSurrenderedAshore {
+                side,
+                hex,
+                men: total,
+            },
+            vec![Cause::Event(beaten_event)],
+            None,
+        );
+        for unit_id in surrendering {
+            self.surrender(day, hex, side, unit_id, together);
+        }
+    }
+
+    /// A unit of a beaten side with nowhere to fall back to surrenders
+    /// (decision 7 of 0104): every man ashore is lost, and the unit is
+    /// destroyed if it has none aboard. `together` is the event that tells
+    /// the hex's surrender as a whole.
+    fn surrender(
+        &mut self,
+        day: u32,
+        hex: Hex,
+        side: Side,
+        unit_id: LandUnitId,
+        together: EventId,
+    ) {
+        let unit = self
+            .truth
+            .land_units
+            .get_mut(&unit_id)
+            .expect("the land unit exists");
+        let men = unit.men_ashore;
+        unit.men_ashore = 0;
+        unit.hex = None;
+        let surrendered = self.events.record(
+            day,
+            None,
+            EventKind::UnitSurrendered {
+                unit: unit_id,
+                side,
+                hex,
+                men,
+            },
+            vec![Cause::Event(together)],
+            None,
+        );
+        self.destroy_if_no_men(day, None, unit_id, surrendered);
     }
 
     // One argument more than clippy likes: the counts of both sides and

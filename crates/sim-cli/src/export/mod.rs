@@ -205,7 +205,7 @@ fn build(
         bases: state::bases(&executed.initial),
         base_changes: base_changes(world, &key),
         aircraft_types: state::aircraft_types(world.ref_data()),
-        initial: state::snapshot(&executed.initial, world.ref_data()),
+        initial: state::snapshot(&executed.initial, world.ref_data(), &key),
         orders: world
             .orders()
             .map(|order| orders::order(order, &key))

@@ -6,7 +6,8 @@
 //! it leaves and enters (decision 4 of 0098); when the days counted reach
 //! `march_days_per_hex` its men ashore are in the new hex, with the supply
 //! it carried from its side's bases in the hex it left, and its order is
-//! spent. The fatigue of a day's march is gained in the phase's fatigue
+//! spent. A march made by a unit falling back (decision 0104) has an event
+//! for its cause in place of an order and carries nothing. The fatigue of a day's march is gained in the phase's fatigue
 //! step, after the fights (`ground_combat.rs`). There is no randomness.
 //!
 //! Reads: a land unit's men ashore, hex, side, march and skills; the map's
@@ -111,7 +112,7 @@ impl World {
                         days: march.days,
                         reason,
                     },
-                    vec![Cause::Order(march.order)],
+                    vec![march.cause],
                     None,
                 );
                 continue;
@@ -178,7 +179,7 @@ impl World {
                     counted,
                     of,
                 },
-                vec![Cause::Order(march.order)],
+                vec![march.cause],
                 breakdown,
             );
             marched.insert(unit_id, day_event);
@@ -215,12 +216,18 @@ impl World {
     ) {
         let unit = &self.truth.land_units[&unit_id];
         let (side, men) = (unit.side, unit.men_ashore);
+        let cause = unit.march.expect("a unit arriving is marching").cause;
         // Its men's daily charge, times its weight factor (decision 5 of
         // 0098).
         let weight = unit.skills.weight;
         let weight_factor = Skills::factor(weight, figures.weight_strength);
         let per_man = figures.daily_supply_t_per_man * weight_factor;
-        let wanted = figures.march_supply_days * per_man * i64::from(men);
+        // A unit that fell back (decision 3 of 0104) carries nothing: its
+        // side has just lost its bases in the hex it left.
+        let wanted = match cause {
+            Cause::Order(_) => figures.march_supply_days * per_man * i64::from(men),
+            Cause::Event(_) => Fixed::ZERO,
+        };
         let weighted = weight_factor != Fixed::ONE;
 
         // Taken from the bases of the hex left, in base order (decision 9).

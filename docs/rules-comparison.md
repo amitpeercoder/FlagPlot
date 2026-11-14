@@ -176,11 +176,11 @@ Land units, sea transport, supply, marching, combat, capture, fatigue, training,
 | Terrain | Changes movement, supply and combat | Changes marching through movement skills; no combat terrain effect |
 | Defeat | Adjusted assault odds, forts, retreat and surrender | Surviving fighting-man ratio determines defeat and base capture |
 | Losses | Disabled and destroyed devices, recovery and replacements | Permanent manpower losses; no scheduled land replacements |
-| Movement | Routes, roads, railways, rivers and controlled hexsides | One adjacent land link per order; no comparable transport network or retreat-path system |
+| Movement | Routes, roads, railways, rivers and controlled hexsides | One adjacent land link per order; no comparable transport network or retreat-path system. *Note, Nov 14, 2026: a beaten side's units now fall back along a land link by the one rule of decision 0104, with no retreat path to choose.* |
 
 Other consequential differences:
 
-- Defeated troops remain in the hex after a base falls; they do not automatically retreat or surrender.
+- Defeated troops remain in the hex after a base falls; they do not automatically retreat or surrender. *Note, Nov 14, 2026: no longer so (decision 0104). A beaten side's units with men ashore fall back by marching to a linked hex that holds a base of their side or no enemy fighting men, tired by the defeat and carrying no supply; a unit with no hex to go to surrenders and its men are lost. There is still no retreat path chosen by the player, no retreat by sea, and no prisoners held.*
 - Troops aboard ships consume no supply and gain no passage fatigue. AE models transport-related fatigue and disruption.
 - Aircraft and men share a base's supply stock, with aircraft upkeep charged first; no order changes this priority.
 - Preparation applies to a landing place. It does not provide a general operation-preparation system for bombardments, strikes or convoys.
@@ -236,7 +236,7 @@ This ranking is an assessment of operational consequences, not an approved imple
 3. **Sustained fleet operations.** Replenishment, rearming, machinery wear and repair-facility constraints are much thinner.
 4. **Threats to shipping.** Submarines and mines are absent.
 5. **Developing battle damage.** Fires and flooding do not evolve after an attack.
-6. **Land-campaign dynamics.** Terrain, equipment, disruption, retreat and replacements are largely absent.
+6. **Land-campaign dynamics.** Terrain, equipment, disruption, retreat and replacements are largely absent. *Note, Nov 14, 2026: a beaten side's falling back and surrender are built (decision 0104); the rest stands.*
 7. **Weather.** Plans face no weather-driven loss of air cover or cancellation of offensive missions.
 
 Importance depends on the scenario. Missing industry barely affects a one-night Savo scenario; missing engagement range and participation rules directly affect it. Across Guadalcanal, airfield suppression, replenishment, weather and accumulated damage become much harder to omit without changing the commander's decisions.

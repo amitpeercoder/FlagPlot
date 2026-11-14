@@ -1,5 +1,5 @@
 //! Scenario 23: three places ashore. An attack on a fed defender that fails
-//! and stops by fatigue; an unfed defender beaten on the first day, whose
+//! and stops by fatigue; an unfed defender beaten on the first day, who surrenders and whose
 //! base changes side; and an empty base that falls without a fight.
 //!
 //! Proves decision 0090 (the fight ashore, and a base that changes side)
@@ -118,26 +118,17 @@
 //! Allied: supply 0, fuel 80 x 0.5 = 40 t. Air group 1 is lost with 9 + 2 =
 //! 11 aircraft. Ship 1 is sunk. Task force 1 has no home port.
 //!
-//! After day 1 the Japanese side has no base at Y. Each night what is left
-//! of unit 3 is unfed, loses its men times 0.05, cut, and one man at least,
-//! and its fed share is 0, so it never fires. The Allied side has two bases
-//! at Y. Each night its 2000 men ask 10 t: base 3 has no supply and is asked
-//! nothing, and base 4 pays 10 t. All are fed.
+//! Y has no land link, so what is left of unit 3 has nowhere to fall back
+//! to. It surrenders in the same phase (decision 0104, 7): its 285 less 20 x
+//! b1 men, if any are left, are lost, and the unit is destroyed on day 1
+//! whatever b1 is. The Japanese side has lost 300 men at Y in all: 15 unfed,
+//! and the rest to hits or by surrender.
 //!
-//! While unit 3 has a man ashore the hex is contested and unit 4 fires:
-//!
-//! | Day | Unit 4's fatigue before | Firing men          | Shots at 0.3 | Fatigue after |
-//! | --- | ----------------------- | ------------------- | ------------ | ------------- |
-//! | 1   | 0                       | 2000                | 20           | 20            |
-//! | 2   | 20                      | 2000 x 80/100 = 1600 | 16          | 40            |
-//! | 3   | 40                      | 2000 x 60/100 = 1200 | 12          | 60            |
-//! | 4   | 60                      | 2000 x 40/100 = 800  | 8           | 80, and it goes to defend |
-//!
-//! On a day when unit 3 has no man left there is no fight: unit 4 does not
-//! fire, gains nothing and loses 5, and stays on attack. Unit 3 is destroyed
-//! when its last man is lost, to a hit or unfed. The test reads each day's
-//! hits and unit 3's men, and asserts each row above for the days there was
-//! a fight, and the rest for the days there was none.
+//! From day 2 the Japanese side has no man at Y and there is no fight. Unit
+//! 4 stays on attack, fires nothing and rests 5 a day: its fatigue is 20
+//! after day 1 and 15, 10, 5, 0 and 0 after days 2 to 6. The Allied side
+//! has two bases at Y. Each night its 2000 men ask 10 t: base 3 has no
+//! supply and is asked nothing, and base 4 pays 10 t. All are fed.
 //!
 //! Whatever the dice: unit 4 has 2000 men at the end; base 4's supply is 90,
 //! 80, 70, 60, 50 and 40 t after the nights of days 1 to 6; base 3 is Allied
@@ -610,10 +601,11 @@ fn z_unit_5_is_fed_by_base_5_from_the_night_of_day_2() {
 
 // ----------------------------------------------- The hand calculation: Y
 
-/// The hand calculation's Y, worked from the hits the run rolled, and
-/// asserted against the log and the truth on every day.
+/// The hand calculation's Y, worked from the hits the run rolled: unit 3 is
+/// beaten on day 1, has nowhere to fall back to and surrenders (decision 0104,
+/// 7); from day 2 there is no fight and unit 4 rests.
 #[test]
-fn y_unit_4_beats_the_unfed_unit_3_day_by_day_as_the_table_says() {
+fn y_unit_3_surrenders_on_day_1_and_unit_4_rests_from_day_2_as_the_text_says() {
     let run = Run::of(load());
     let events = run.events();
     let all = fires(&events);
@@ -629,137 +621,141 @@ fn y_unit_4_beats_the_unfed_unit_3_day_by_day_as_the_table_says() {
         Some((Some(base(4)), 2000, 2000, 0))
     );
 
-    let mut men3 = 300u32;
-    let mut fatigue4: i64 = 0;
-    let mut attacking = true;
-    let mut destroyed_on = None;
-    for day in 1..=6u32 {
-        let mut ctx = format!("day {day}");
-        if men3 > 0 {
-            // Unfed: its men times 0.05, cut, one man at least.
-            let lost = (men3 * 5 / 100).max(1);
-            assert_eq!(
-                lost_unfed(&events, day, 3),
-                Some((lost, men3 - lost)),
-                "{ctx}"
-            );
-            men3 -= lost;
-            if men3 == 0 {
-                destroyed_on = Some(day);
-            }
-        } else {
-            assert!(lost_unfed(&events, day, 3).is_none(), "{ctx}");
+    // Day 1: unit 3 loses its men times 0.05 unfed, 15 of 300.
+    assert_eq!(lost_unfed(&events, 1, 3), Some((15, 285)));
+    assert_eq!(fight_events(&events, 1, Y).len(), 1);
+    // Unit 4: firing men 2000, 20 shots at 0.3. Unit 3: fed share 0, so no
+    // firing man and no shot.
+    let f4 = fire_of(&all, 1, 4).expect("unit 4 fires");
+    assert_eq!((f4.hex, f4.firing_men, f4.shots), (Y, 2000, n(20)));
+    assert_eq!(f4.chance, fx("0.3"));
+    assert_eq!(
+        f4.factors,
+        vec![
+            ("men_ashore", n(2000)),
+            ("fed_share", n(1)),
+            ("fatigue_factor", n(1)),
+            ("firing_men", n(2000)),
+            ("men_per_shot", n(100)),
+            ("shots", n(20)),
+            ("chance", fx("0.3")),
+        ]
+    );
+    assert!(f4.hits <= 20);
+    let f3 = fire_of(&all, 1, 3).expect("unit 3 fires");
+    assert_eq!(
+        (f3.firing_men, f3.shots, f3.chance, f3.hits),
+        (0, Fixed::ZERO, fx("0.6"), 0)
+    );
+    assert_eq!(f3.factors[0], ("men_ashore", n(285)));
+    assert_eq!(f3.factors[1], ("fed_share", Fixed::ZERO));
+    // Unit 3 loses 20 for each hit, or all it has. Unit 4 loses none.
+    let hit_loss = (20 * f4.hits).min(285);
+    assert_eq!(
+        lost_in_fight(&events, 1, 3),
+        (hit_loss > 0).then_some((hit_loss, 285 - hit_loss))
+    );
+    assert!(lost_in_fight(&events, 1, 4).is_none());
+    let left = 285 - hit_loss;
+    // Beaten: at most 285 men against 0.2 x 2000 = 400, whatever the hits.
+    let beaten = only_on(
+        &events,
+        1,
+        |k| matches!(k, EventKind::SideBeatenAshore { hex, .. } if *hex == Y),
+    );
+    assert_eq!(
+        beaten.kind,
+        EventKind::SideBeatenAshore {
+            side: Side::Japanese,
+            hex: Y,
+            men: left,
+            enemy_men: 2000,
+            fought: true,
         }
-        let fought = men3 > 0 && attacking;
+    );
+    // Y has no land link: what is left of unit 3 surrenders, and the unit is
+    // destroyed on day 1 whatever the hits. A unit with no man left to
+    // surrender was destroyed by the hits.
+    let surrendered: Vec<&Event> = events
+        .iter()
+        .filter(|e| matches!(&e.kind, EventKind::UnitSurrendered { unit, .. } if unit.raw() == 3))
+        .collect();
+    if left > 0 {
+        assert_eq!(surrendered.len(), 1);
         assert_eq!(
-            fight_events(&events, day, Y).len(),
-            usize::from(fought),
-            "{ctx}"
+            surrendered[0].kind,
+            EventKind::UnitSurrendered {
+                unit: unit(3),
+                side: Side::Japanese,
+                hex: Y,
+                men: left,
+            }
         );
-        if fought {
-            // Unit 4: firing men 2000 x (100 - fatigue) / 100, shots over
-            // 100 at 0.3. Unit 3: fed share 0, so no firing man and no shot.
-            let firing = u32::try_from(2000 * (100 - fatigue4) / 100).unwrap();
-            let f4 = fire_of(&all, day, 4).expect("unit 4 fires");
-            ctx = format!("{ctx} (unit 4 fires with {firing})");
-            assert_eq!(f4.hex, Y);
-            assert_eq!(f4.firing_men, firing, "{ctx}");
-            assert_eq!(f4.shots, n(i64::from(firing)) / n(100), "{ctx}");
-            assert_eq!(f4.chance, fx("0.3"), "{ctx}");
-            assert_eq!(
-                f4.factors,
-                vec![
-                    ("men_ashore", n(2000)),
-                    ("fed_share", n(1)),
-                    ("fatigue_factor", n(100 - fatigue4) / n(100)),
-                    ("firing_men", n(i64::from(firing))),
-                    ("men_per_shot", n(100)),
-                    ("shots", n(i64::from(firing)) / n(100)),
-                    ("chance", fx("0.3")),
-                ],
-                "{ctx}"
-            );
-            assert!(f4.hits <= 20);
-            let f3 = fire_of(&all, day, 3).expect("unit 3 fires");
-            assert_eq!(
-                (f3.firing_men, f3.shots, f3.chance, f3.hits),
-                (0, Fixed::ZERO, fx("0.6"), 0),
-                "{ctx}"
-            );
-            assert_eq!(f3.factors[0], ("men_ashore", n(i64::from(men3))), "{ctx}");
-            assert_eq!(f3.factors[1], ("fed_share", Fixed::ZERO), "{ctx}");
-            // Unit 3 loses 20 for each hit, or all it has. Unit 4 loses none.
-            let loss = (20 * f4.hits).min(men3);
-            assert_eq!(
-                lost_in_fight(&events, day, 3),
-                (loss > 0).then_some((loss, men3 - loss)),
-                "{ctx}"
-            );
-            assert!(lost_in_fight(&events, day, 4).is_none(), "{ctx}");
-            men3 -= loss;
-            if men3 == 0 && destroyed_on.is_none() {
-                destroyed_on = Some(day);
+        assert_eq!(surrendered[0].day, 1);
+        // One event tells the hex's surrender, citing the test that beat the
+        // side; the unit's own surrender cites it.
+        let together = only_on(&events, 1, |k| {
+            matches!(k, EventKind::MenSurrenderedAshore { .. })
+        });
+        assert_eq!(
+            together.kind,
+            EventKind::MenSurrenderedAshore {
+                side: Side::Japanese,
+                hex: Y,
+                men: left,
             }
-            // Fatigue: 20 gained a day; above 60 it goes to defend.
-            fatigue4 += 20;
+        );
+        assert_eq!(together.causes, vec![Cause::Event(beaten.id)]);
+        assert_eq!(surrendered[0].causes, vec![Cause::Event(together.id)]);
+    } else {
+        assert!(surrendered.is_empty());
+    }
+    assert!(!events
+        .iter()
+        .any(|e| matches!(&e.kind, EventKind::UnitFellBack { unit, .. } if unit.raw() == 3)));
+    let destroyed: Vec<u32> = events
+        .iter()
+        .filter(|e| matches!(&e.kind, EventKind::LandUnitDestroyed { unit } if unit.raw() == 3))
+        .map(|e| e.day)
+        .collect();
+    assert_eq!(destroyed, vec![1]);
+    // The Japanese side lost 300 men at Y in all: 15 unfed, the rest to hits
+    // or by surrender.
+    assert_eq!(15 + hit_loss + left, 300);
+
+    // Unit 4 stays on attack and rests 5 a day after day 1's 20: 15, 10, 5,
+    // 0 and 0 after days 2 to 6.
+    let fatigue4 = [20, 15, 10, 5, 0, 0];
+    for day in 1..=6u32 {
+        let ctx = format!("day {day}");
+        if day == 1 {
             assert_eq!(
-                fatigue_events(&events, day, 4),
-                vec![(LandFatigueChange::Gained, n(fatigue4))],
-                "{ctx}"
-            );
-            if fatigue4 > 60 {
-                attacking = false;
-                assert_eq!(back_to_defend(&events, day, 4), vec![n(fatigue4)], "{ctx}");
-            } else {
-                assert!(back_to_defend(&events, day, 4).is_empty(), "{ctx}");
-            }
-            // Beaten: at most 285 men against 0.2 x 2000 = 400, whatever the
-            // hits; and unit 3 rests, at 0.
-            assert!(men3 < 400);
-            let beaten = only_on(
-                &events,
-                day,
-                |k| matches!(k, EventKind::SideBeatenAshore { hex, .. } if *hex == Y),
-            );
-            assert_eq!(
-                beaten.kind,
-                EventKind::SideBeatenAshore {
-                    side: Side::Japanese,
-                    hex: Y,
-                    men: men3,
-                    enemy_men: 2000,
-                    fought: true,
-                },
+                fatigue_events(&events, 1, 4),
+                vec![(LandFatigueChange::Gained, n(20))],
                 "{ctx}"
             );
         } else {
-            // No fight: unit 4 does not fire, gains nothing and loses 5.
+            // No Japanese man at Y and no fight: unit 4 fires nothing.
+            assert!(lost_unfed(&events, day, 3).is_none(), "{ctx}");
+            assert!(fight_events(&events, day, Y).is_empty(), "{ctx}");
             assert!(fire_of(&all, day, 4).is_none(), "{ctx}");
-            let before = fatigue4;
-            fatigue4 = (fatigue4 - 5).max(0);
-            let expected = if before == fatigue4 {
+            assert!(back_to_defend(&events, day, 4).is_empty(), "{ctx}");
+            let before = fatigue4[day as usize - 2];
+            let after = fatigue4[day as usize - 1];
+            let expected = if before == after {
                 Vec::new()
             } else {
-                vec![(LandFatigueChange::Rested, n(fatigue4))]
+                vec![(LandFatigueChange::Rested, n(after))]
             };
             assert_eq!(fatigue_events(&events, day, 4), expected, "{ctx}");
         }
-        // The end of the day.
         let u3 = run.unit_at(day, 3);
         let u4 = run.unit_at(day, 4);
-        assert_eq!(u3.men_ashore, men3, "{ctx}");
+        assert_eq!((u3.men_ashore, u3.hex), (0, None), "{ctx}");
         assert_eq!(u3.fatigue, Fixed::ZERO, "{ctx}");
         assert_eq!(u4.men_ashore, 2000, "{ctx}");
-        assert_eq!(u4.fatigue, n(fatigue4), "{ctx}");
-        assert_eq!(
-            u4.posture,
-            if attacking {
-                Posture::Attack
-            } else {
-                Posture::Defend
-            },
-            "{ctx}"
-        );
+        assert_eq!(u4.fatigue, n(fatigue4[day as usize - 1]), "{ctx}");
+        assert_eq!(u4.posture, Posture::Attack, "{ctx}");
         // Base 4 paid 10 t a night: 90, 80, 70, 60, 50 and 40 t.
         assert_eq!(
             run.at(day).bases[&base(4)].supply_t,
@@ -774,18 +770,15 @@ fn y_unit_4_beats_the_unfed_unit_3_day_by_day_as_the_table_says() {
             "{ctx}"
         );
     }
-    // Unit 3 is destroyed when its last man is lost, to a hit or unfed.
-    let destroyed: Vec<u32> = events
-        .iter()
-        .filter(|e| matches!(&e.kind, EventKind::LandUnitDestroyed { unit } if unit.raw() == 3))
-        .map(|e| e.day)
-        .collect();
-    assert_eq!(destroyed, destroyed_on.into_iter().collect::<Vec<_>>());
+    // No Japanese event of any unit at Y after day 1.
+    assert!(!events.iter().any(|e| e.day > 1
+        && matches!(&e.kind,
+            EventKind::MenLostInFight { unit, .. } | EventKind::MenLostUnfed { unit, .. }
+                if unit.raw() == 3 || unit.raw() == 4)));
     // The Allied side lost no man at Y.
     assert!(!events.iter().any(|e| matches!(&e.kind,
         EventKind::MenLostInFight { unit, .. } | EventKind::MenLostUnfed { unit, .. } if unit.raw() == 4)));
     // Day 1 is a fight: 2000 firing men, 20 shots at 0.3, and the base falls.
-    let f4 = fire_of(&all, 1, 4).unwrap();
     assert_eq!((f4.firing_men, f4.shots), (2000, n(20)));
 }
 
@@ -1083,6 +1076,8 @@ fn the_result_is_what_the_hand_calculation_says() {
     let men3 = end.land_units[&unit(3)].men_ashore;
     let men2 = end.land_units[&unit(2)].men_ashore;
     let men1 = end.land_units[&unit(1)].men_ashore;
+    // Unit 3 surrendered on day 1: all its 300 men are lost (decision 0104, 7).
+    assert_eq!(men3, 0);
     let japanese_lost = (300 - men3) + (600 - men2);
     let allied_lost = 2 + (1000 - men1);
     let result = run
@@ -1167,6 +1162,9 @@ fn men_accounted(run: &Run, events: &[Event], day: u32, id: u32) -> u32 {
                 total += lost;
             }
             EventKind::MenLostWithShip { unit, men, .. } if unit.raw() == id => total += men,
+            // A surrender loses every man ashore, with its own event (decision
+            // 0104, 7).
+            EventKind::UnitSurrendered { unit, men, .. } if unit.raw() == id => total += men,
             _ => {}
         }
     }
@@ -1851,6 +1849,10 @@ fn property_the_enemy_sees_the_same_fight_whatever_the_other_sides_fatigue_and_u
         {
             continue;
         }
+        // A side beaten here has no land link, so its units surrender
+        // (decision 0104, 7). The enemy is told once for the hex, with the
+        // men in all, so one world's one unit and the other's two show the
+        // same events: the whole Allied view is compared on every seed.
         matched += 1;
         // The worlds really differ.
         assert_ne!(a.scenario.world.day_hashes(), b.scenario.world.day_hashes());

@@ -379,6 +379,11 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
             true,
         ),
         SideEventKind::GroundFight { hex } => ("ground_fight", d.hex("hex", *hex), true),
+        SideEventKind::EnemySurrendered { hex, men } => (
+            "enemy_surrendered",
+            d.hex("hex", *hex).int("men", *men),
+            true,
+        ),
         SideEventKind::GroundFire {
             unit,
             hex,

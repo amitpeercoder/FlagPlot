@@ -1096,6 +1096,52 @@
             }
           }
         },
+        "fell_back_yesterday": {
+          "description": "The side's own units that fell back yesterday after a defeat (decision 0104): from, to, the men and the fatigue after. Left out when none. An enemy unit's falling back is never told.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "from", "to", "men", "fatigue", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "from": { "$ref": "defs.schema.json#/$defs/place" },
+              "to": { "$ref": "defs.schema.json#/$defs/place" },
+              "men": { "type": "integer" },
+              "fatigue": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "surrendered_yesterday": {
+          "description": "The side's own units that surrendered yesterday with nowhere to fall back to (decision 0104). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "place", "men", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "men": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "prisoners_taken_yesterday": {
+          "description": "Enemy men who surrendered yesterday, as the side learns of it (decision 0104): where and how many, never which unit. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "men", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "men": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
         "loading_yesterday": {
           "description": "Loading gained or lost yesterday by the side's forces preparing a landing (decision 0095, 4, 5, 8 and 10). Left out when none.",
           "type": "array",

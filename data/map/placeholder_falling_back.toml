@@ -1,0 +1,90 @@
+# PLACEHOLDER MAP. Open sea with seven coast hexes, all clear, port size 0,
+# used by scenario 32 (decision 0104, a beaten side falls back). Group one: P
+# at (0,0) with land links to Q at (0,1) and to R at (1,0); in hex order Q
+# comes before R. Group two: T at (10,0) with land links to U at (10,1) and to
+# V at (11,0); in hex order U comes before V. S at (20,0) has no land link. No
+# force sails. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 21]
+r = [-1, 2]
+
+# P.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# Q.
+[[hex]]
+q = 0
+r = 1
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# R.
+[[hex]]
+q = 1
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# T.
+[[hex]]
+q = 10
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# U.
+[[hex]]
+q = 10
+r = 1
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# V.
+[[hex]]
+q = 11
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# S.
+[[hex]]
+q = 20
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+[[land_link]]
+a = [0, 0]
+b = [0, 1]
+note = "Placeholder: P and Q are on one landmass."
+
+[[land_link]]
+a = [0, 0]
+b = [1, 0]
+note = "Placeholder: P and R are on one landmass."
+
+[[land_link]]
+a = [10, 0]
+b = [10, 1]
+note = "Placeholder: T and U are on one landmass."
+
+[[land_link]]
+a = [10, 0]
+b = [11, 0]
+note = "Placeholder: T and V are on one landmass."

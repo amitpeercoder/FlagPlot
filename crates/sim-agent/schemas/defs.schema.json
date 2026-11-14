@@ -171,7 +171,17 @@
             "days_marched": { "description": "The days marched so far, below of_days.", "type": "integer" },
             "days_counted": { "description": "The days counted toward of_days (decision 0098, 4): each day marched counts as the unit's movement factor for the hexes it leaves and enters. Equal to days_marched for a unit of standard movement.", "$ref": "#/$defs/dec" },
             "of_days": { "description": "The days a march takes: the scenario's march_days_per_hex.", "type": "integer" },
-            "order": { "description": "The number of the side's march order, when it is still known.", "type": "integer" }
+            "order": { "description": "The number of the side's march order, when it is still known.", "type": "integer" },
+            "falling_back": {
+              "description": "Set when the march is a falling back after a defeat (decision 0104), which has no order: the hex of the defeat and the event that records it. The unit carries no supply.",
+              "type": "object",
+              "required": ["from", "event"],
+              "additionalProperties": false,
+              "properties": {
+                "from": { "$ref": "#/$defs/place" },
+                "event": { "type": "integer" }
+              }
+            }
           }
         },
         "march_to": {

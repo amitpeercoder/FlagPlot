@@ -698,6 +698,19 @@ pub struct LandUnitsPart {
     /// Marches that stopped short yesterday, and why. Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub marches_stopped_yesterday: Vec<MarchStoppedLine>,
+    /// The side's own units that fell back yesterday after a defeat (decision
+    /// 0104). Left out when none. The enemy's falling back is never told.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fell_back_yesterday: Vec<FellBackLine>,
+    /// The side's own units that surrendered yesterday (decision 0104). Left
+    /// out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub surrendered_yesterday: Vec<SurrenderedLine>,
+    /// Enemy men who surrendered yesterday, as the side learns of it: where
+    /// and how many, counted as prisoners taken (decision 0104, 8). Left out
+    /// when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub prisoners_taken_yesterday: Vec<PrisonersLine>,
     /// Loading gained or lost yesterday by the side's forces preparing a
     /// landing (decision 0095). Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -779,6 +792,35 @@ pub struct MarchStoppedLine {
     pub days: u32,
     /// `ordered`, `no_men_ashore` or `no_land_link`.
     pub reason: &'static str,
+    pub event: u32,
+}
+
+/// A unit of the side fell back after a defeat (decision 0104).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FellBackLine {
+    pub land_unit: Handle,
+    pub from: Place,
+    pub to: Place,
+    pub men: u32,
+    /// The unit's fatigue after the defeat.
+    pub fatigue: Dec,
+    pub event: u32,
+}
+
+/// A unit of the side surrendered, with nowhere to go (decision 0104).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct SurrenderedLine {
+    pub land_unit: Handle,
+    pub place: Place,
+    pub men: u32,
+    pub event: u32,
+}
+
+/// Enemy men surrendered; the side holds them as prisoners (decision 0104).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct PrisonersLine {
+    pub place: Place,
+    pub men: u32,
     pub event: u32,
 }
 
@@ -1588,6 +1630,9 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         march_arrivals_yesterday: ground.march_arrivals,
         bases_formed_by_march_yesterday: ground.march_bases_formed,
         marches_stopped_yesterday: ground.marches_stopped,
+        fell_back_yesterday: ground.fell_back,
+        surrendered_yesterday: ground.surrendered,
+        prisoners_taken_yesterday: ground.prisoners,
         loading_yesterday: ground.loading,
         rehearsal_yesterday: ground.rehearsal,
         roster_left_yesterday: ground.roster_left,
@@ -1663,6 +1708,9 @@ struct GroundDay {
     march_arrivals: Vec<MarchArrivedLine>,
     march_bases_formed: Vec<MarchBaseFormedLine>,
     marches_stopped: Vec<MarchStoppedLine>,
+    fell_back: Vec<FellBackLine>,
+    surrendered: Vec<SurrenderedLine>,
+    prisoners: Vec<PrisonersLine>,
     loading: Vec<LoadingLine>,
     rehearsal: Vec<RehearsalChangeLine>,
     roster_left: Vec<RosterLeftLine>,
@@ -2354,6 +2402,29 @@ impl Day {
                         reason: reason.name(),
                         event: id,
                     }),
+                    EventKind::UnitFellBack {
+                        unit,
+                        from,
+                        to,
+                        men,
+                        fatigue,
+                        ..
+                    } => ground.fell_back.push(FellBackLine {
+                        land_unit: ctx.land_unit(*unit),
+                        from: ctx.place(*from),
+                        to: ctx.place(*to),
+                        men: *men,
+                        fatigue: Dec(*fatigue),
+                        event: id,
+                    }),
+                    EventKind::UnitSurrendered { unit, hex, men, .. } => {
+                        ground.surrendered.push(SurrenderedLine {
+                            land_unit: ctx.land_unit(*unit),
+                            place: ctx.place(*hex),
+                            men: *men,
+                            event: id,
+                        })
+                    }
                     EventKind::LoadingGained {
                         task_force,
                         hex,
@@ -2754,6 +2825,13 @@ impl Day {
                     }
                     _ => {}
                 },
+                SideEventKind::EnemySurrendered { hex, men } => {
+                    ground.prisoners.push(PrisonersLine {
+                        place: ctx.place(*hex),
+                        men: *men,
+                        event: id,
+                    })
+                }
                 SideEventKind::GroundFight { hex } => ground.fights.push(FightLine {
                     place: ctx.place(*hex),
                     event: id,
