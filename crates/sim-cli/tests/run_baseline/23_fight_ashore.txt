@@ -2,12 +2,12 @@ Scenario 23: The fight ashore, and a base that changes side
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash edd72340c777c12e  36 events
-day   2  hash 968337b39059af7b  27 events
-day   3  hash 833e21bf83ae508f  27 events
-day   4  hash 58c7786b59db3129  21 events
-day   5  hash 509b8221b2d073d2  15 events
-day   6  hash 851a648b8b30781e  15 events
+day   1  hash f836f2ed196bef83  40 events
+day   2  hash 0f7354ffde6397ea  31 events
+day   3  hash adc675e087adc1c9  29 events
+day   4  hash 811158ee17c222d4  23 events
+day   5  hash 351056e2a6eb87e2  17 events
+day   6  hash 7e26ba61ad539c55  17 events
 
 task_force:1 "Placeholder destroyer patrol" (Japanese): Idle at (3,1); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder fighter squadron at Y" (Japanese) lost with its base: 0 ready, mission Rest, no arc
@@ -27,8 +27,12 @@ land_unit:4 "Placeholder Allied regiment at Y" (Allied): 2000 men ashore at (6,0
 land_unit:5 "Placeholder Allied platoon at Z" (Allied): 48 men ashore at (10,0), on attack
 Allied: no contacts
 Allied: no battle claims
+Allied estimate at (0,0): 334 enemy men ashore, reported day 6
+Allied estimate at (6,0): 19 enemy men ashore, reported day 2
 Japanese: no contacts
 Japanese: no battle claims
+Japanese estimate at (0,0): 770 enemy men ashore, reported day 6
+Japanese estimate at (6,0): 1900 enemy men ashore, reported day 2
 
 Result (the placeholder scale of decision 0054):
 Allied: 23.6 points (base_held at base:3 1 = 10; base_held at base:5 1 = 5; ships_sunk 1 = 2; men_lost 660 = 6.6), margin 22.58, decisive victory

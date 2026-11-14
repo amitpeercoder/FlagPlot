@@ -10,6 +10,8 @@ A check of the spec against the code, made as step 1 closes, found things the sp
 
 1. **Ground combat, land units and their orders are deferred** to the step whose scenario first needs them. The spec lists "simplified land units" and "ground combat" in scope, a `LandUnit` in the data model, ground combat as step 5 of the day, and land unit orders (posture, move, embark, disembark). None is built. The day keeps its empty ground combat phase so the order of resolution does not change when the rule arrives. A base's garrison waits with them.
 2. **Shore bombardment is deferred** in the same way. The night pulse keeps its empty phase, and `bombardment` stays a task force mission that changes nothing yet. Decision 0014 listed it as not built; this says when: with the scenario that needs it.
+
+   *Nov 14, 2026: shore bombardment is now built, by decision 0092.*
 3. **The ground support air mission is deferred** with ground combat. Escort is not a mission of its own: fighters escort a raid by the staff's choice (decisions 0027 and 0030).
 4. **Base orders are deferred.** Reserve levels were deferred by decision 0050. Repair priority joins them: repairs are made lowest-numbered group first (decision 0035), and an order to change that waits for the staff, which is what would use it.
 5. **Pilots are a count for each air group, not people** (decision 0038). Skills by mission, experience and status for each pilot wait for step 2, where pilot quality is tuned against the record. This was built so and is now recorded as a choice.

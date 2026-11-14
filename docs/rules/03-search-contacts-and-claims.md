@@ -14,7 +14,9 @@ Chapter 1, The order in which a day resolves, holds the whole sequence. Before e
 | Morning, afternoon | Strike decisions | Read contacts; write nothing |
 | Morning, afternoon | Air combat | Strikes make sighting reports, "nothing there" reports and claims |
 | All three | Movement | Forces meet and fight in time order. A fight makes sighting reports and claims |
+| Night | Shore bombardment | A bombardment gives the base's side a sighting report and the bombarding side a claim |
 | All three | End of the pulse | Every side's contacts age or are dropped |
+| End of the day | Ground combat | Each hex where both sides have men ashore gives each side a ground report, which replaces its estimate |
 
 The night pulse has an empty search phase. The end-of-day intelligence step is empty: ageing and merging are done as above. [0001, 0012, 0022]
 
@@ -126,6 +128,12 @@ A force sights in a fight when it rolls a sighting in a round, or when it is fir
 
 A side sees: its own report whole. It learns of the fight from the first round in which its force sights or is fired on. [0047]
 
+### The report a bombardment gives
+
+A force that bombards a base (chapter 4, Shore bombardment) is sighted by the base's side. The report is of the force: at the force's true hex, with the number of its ships afloat and the most important kind among them. It goes through the error model above, from the first firing ship's stream of the bombardment, after that ship's hits and where they landed. The `ReportReceived` event cites the force's `ShoreBombardment` event. The base's side makes or refreshes a contact by the rule of A sighting report makes or refreshes a contact. [0092]
+
+A side sees: its own report whole. The bombarding side sees nothing of it. [0047, 0092]
+
 ### Reports from a strike
 
 A strike that finds ships sends a report of the force it attacked. Its draws are taken when the attack is worked out, from the strike's own stream (keyed in the air combat subsystem, on the day, the pulse, the striking group and the task force attacked), after the hit draws: position error, then count, then kind, as for any report. The number of draws does not depend on what is reported. After all the strikes' findings are recorded, each attack's damage lands and then its report goes in, in group number order, and the report is read then, against the force after the damage. The true hex is the hex the strike was sent to. The true count is the number of ships of the force attacked still afloat once that attack's damage, and the damage of every attack before it in the step, has landed, so a ship the attack sinks is not counted. The true kind is the most important kind among those ships. If no ship of the force is left afloat, the report reads the ships the force had at the start of the step, as a fight's report already does: it is the one mechanism, the rule of Reports from a surface fight by which a force reports the ships the enemy left afloat, or began with if none are left. The `ReportReceived` event cites the `AirAttack` event. A strike on a base makes no sighting report. [0026, 0028; differences.md row 7, done]
@@ -140,7 +148,7 @@ A side sees: its own report whole. The enemy sees nothing of it. [0047]
 
 ### What a side holds
 
-Belief holds two things for a side: contacts and claims. Both come only from a report. The only way to write them is `BeliefState::apply_report`. The one other change is ageing, which takes no truth and no report. [0007, 0012, 0055]
+Belief holds three things for a side: contacts, claims and estimates of the enemy's men ashore. All come only from a report. The only way to write them is `BeliefState::apply_report`. The one other change is ageing, which takes no truth and no report. [0007, 0012, 0055]
 
 A contact holds an ID, an estimated hex, an estimated ship count, an estimated kind, an age in pulses, and the event that recorded the report that last made or refreshed it. Contact numbers are allocated for the side in order, and a number is never used again, including after a contact is dropped. [0012, 0028, 0032]
 
@@ -263,11 +271,27 @@ A side sees: `TaskForceFatigue` whole, its own force's. [0047]
 
 Not built: a rest threshold for forces, and fatigue from steaming or fighting. [0037]
 
+### The ground report and the estimate
+
+Belief holds an estimate of the enemy's men ashore for a hex: a count of men, the day it was reported and the event that recorded the report. A side holds one for a hex, and a new report replaces it. An estimate is never aged or dropped, and never corrected: its day says how old it is. It is written only by a ground report, through `BeliefState::apply_report`, as every belief is. A side's estimates are in hex order. [0092]
+
+**The daily report.** A ground report is made for each hex where both sides still have men ashore at the end of that hex's part of the ground combat phase, after the day's fight, its losses, fatigue and any base that changed side (chapter 7). It is made whether or not there was a fight. The Allied side's report comes first, then the Japanese side's. Each side is given a report of the other's men there. It is made only if `ground.toml: report_error_low` and `report_error_high` are given; with neither, no ground report is made. A side that has no men in the hex gets no report of it. [0092]
+
+**What it says.** The count is the true count of the enemy's men ashore in the hex, times an error, cut to a whole man. The error is drawn as a whole number of millionths from `report_error_low` to `report_error_high`, both included (`ground.toml`: 0.5 and 1.5). So a report is never below half the truth nor above one and a half times it. The draw is one stream for each reporting side, hex and day, keyed on the day, no pulse, the intelligence subsystem, the draw `GroundReport` and the reporting side's lowest-numbered unit in the hex (chapter 1, Every draw is keyed). [0092]
+
+**The event.** `GroundReportReceived` records the report, the count and whether it replaced an estimate. It cites the day's fight in the hex if there was one, and otherwise nothing. Its breakdown holds the true count, the two bounds and the error drawn. The breakdown is the umpire's: a side is given the report with no breakdown, as it is given a claim (chapter 1, Causes and breakdowns). [0092]
+
+**Bases found.** A ground report puts on the reporting side's map every enemy base in the hex that is not on it: a base formed by a landing, and a base a scenario holds off the map (`on_map = false`). Each is put on with a `BaseFound` event citing the report. The side sees it as it sees any base on its map: an order may name it, and a force may bombard it. This is the report decision 0066 left to this stage. [0092]
+
+**The opening estimate.** A scenario may give a side an estimate of enemy men in a hex when the game begins: an `[[estimate]]` entry with `side`, `q`, `r` and `men`. It goes in through `apply_report` on day 0 with no error, as a starting contact does, and is dated day 0. It is what that side believed, right or wrong. Its `GroundReportReceived` event is on day 0, with no cause and no breakdown. The scenario fails to load if an entry is off the map, is a second for the same side and hex, is given with no search figures (belief is written with them), or is given after day 1 has begun. [0092]
+
+A side sees: its own `GroundReportReceived` and `BaseFound` whole, and no breakdown of the first. It never sees the enemy's estimates of its own men. [0047, 0092]
+
 ## Claims
 
 ### What a claim is
 
-A claim is a report to the claimant's belief of what its own people believe they did. It holds, each as a count that is 0 when the claim is not about it: ships believed sunk, hits believed scored on ships, the kind of ship believed attacked (or none), aircraft believed shot down, and aircraft believed destroyed on the ground. It holds the hex, the day and the pulse, whether it is from the air, and the event that records it. It holds no identity of an enemy unit. [0014, 0056]
+A claim is a report to the claimant's belief of what its own people believe they did. It holds, each as a count that is 0 when the claim is not about it: ships believed sunk, hits believed scored on ships, the kind of ship believed attacked (or none), aircraft believed shot down, and aircraft believed destroyed on the ground. It holds the hex, the day and the pulse, whether it is from the air or from the sea (`from_bombardment`), and the event that records it. It holds no identity of an enemy unit. [0014, 0056]
 
 A claim never ages. A claim is never corrected: if a ship claimed sunk is sighted again, the contact shows it, and the claim stands. Setting claims against later intelligence is left to a later step. [0012, 0056]
 
@@ -314,7 +338,17 @@ The `ClaimReceived` event cites every firing event of the claimant's own that th
 
 A side sees: its own `ClaimReceived` whole, with the firing events it rests on and without its breakdown. The enemy sees none. [0047, 0056, 0060]
 
-Not built: a claim of ships crippled, a claim of supply destroyed, and setting claims against later intelligence. The chances are the same for both sides and are placeholders for step 2. [0056]
+Not built: a claim of ships crippled, a claim of supply destroyed or of men lost, and setting claims against later intelligence. The chances are the same for both sides and are placeholders for step 2. [0056]
+
+### The claim after a shore bombardment
+
+One claim is made for a force for a night's bombardment, straight after the force's hits have landed and its base's side has been given its sighting report (chapter 4, Shore bombardment). It holds aircraft believed destroyed on the ground and nothing else: no ships, no hits, no aircraft shot down. It is marked `from_bombardment`, and `from_air` is false. Its text reads "claim from the sea at (q,r): N aircraft destroyed on the ground". [0092]
+
+The count is the aircraft really destroyed plus false ones. The misses are the force's weighed shots less the aircraft really destroyed, never below 0. Each miss is one draw at `surface_combat.toml: bombardment_false_claim_chance` (`0.01`), from a stream in the intelligence subsystem with the claim draw tag, keyed on the day, the night pulse, the force's first firing ship and the base. So the claim is never below the truth, and it is never corrected. There is no claim of supply destroyed or of enemy men lost. [0092]
+
+The `ClaimReceived` event cites each firing ship's `BombardmentFire` event, in the order recorded. Its breakdown (`real_on_ground`, `weighed_shots`, `false_claim_chance`, `false_on_ground`) is the umpire's. [0092]
+
+A side sees: its own `ClaimReceived` whole, without its breakdown. The enemy sees none. [0047, 0092]
 
 ### What reads claims
 

@@ -461,7 +461,12 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // `AirGroupLostWithBase`, `ShipLostWithBase`, `HomePortLost` and
     // `StrikeMissionCleared`: the full slice has no land unit. Scenario 23
     // records them, and its own test reads them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 28] = [
+    //
+    // The five kinds of decision 0092, `BombardmentFire`, `ShoreBombardment`,
+    // `MenLostToFire`, `GroundReportReceived` and `BaseFound`: the full slice
+    // has no bombardment mission and no land unit. Scenario 24 records them,
+    // and its own test reads them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 33] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -490,6 +495,11 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "ShipLostWithBase",
         "HomePortLost",
         "StrikeMissionCleared",
+        "BombardmentFire",
+        "ShoreBombardment",
+        "MenLostToFire",
+        "GroundReportReceived",
+        "BaseFound",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

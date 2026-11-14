@@ -1090,6 +1090,9 @@ fn certain_supply_hits() -> Scenario {
             ("bomb_hit_chance = \"0.2\"", "bomb_hit_chance = \"1\""),
             ("aircraft = \"0.3\"", "aircraft = \"0\""),
             ("supply = \"0.3\"", "supply = \"1\""),
+            // The table's share for men (decision 0092) goes too, or the
+            // shares would add to more than 1. No man is ashore here.
+            ("men = \"0.2\"", "men = \"0\""),
         ],
     )
 }
