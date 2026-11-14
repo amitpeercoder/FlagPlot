@@ -1,6 +1,6 @@
 # 0101: The data of the August landings
 
-Status: settled by the architect on Nov 14, 2026. It settles the data that decision 0093 left to "when the scenario is written", for the full slice lengthened to 39 days, 7 August to 14 September 1942. Data is the architect's to settle (CLAUDE.md, "Who decides what"); every choice has its reason and the rows it rests on. Nothing is built. Three points change what decision 0093 said and are marked **Changes 0093**.
+Status: settled by the architect on Nov 14, 2026. It settles the data that decision 0093 left to "when the scenario is written", for the full slice lengthened to 39 days, 7 August to 14 September 1942. Data is the architect's to settle (CLAUDE.md, "Who decides what"); every choice has its reason and the rows it rests on. Nothing is built. Three points change what decision 0093 said and are marked **Changes 0093**. Amended the same day from the rows of `docs/research/oob/outside-research-nov-14-slice.md`: see "Amended from new rows" at the end.
 
 Rows are cited by the `id` column of their table: LUF is `land_unit_facts.csv`, TL `troop_lift_facts.csv`, EO `engagement_outcomes.csv`, PF `place_facts.csv`, PP `place_positions.csv`. Every row cited is unconfirmed unless a derivation already reads it. The rows were gathered by a team and about sixty were checked by its lead; each is read again when the scenario file is written, and a row that does not say what this record says goes back to the architect.
 
@@ -117,3 +117,18 @@ Beside the list in decision 0093:
 - Every day number in the slice moves by 14.
 - Files remade: the slice's run baselines, the test of scenario 7's hashes, the export, saved-game and agent tests that read the live slice, and the recorded game that plays it. The frozen copy is not touched.
 - The arrival rule of decision 8 is a small change to a rule, with its line in the rulebook.
+
+## Amended from new rows
+
+On Nov 14, 2026 a second research pass was read against its sources and keyed (`docs/research/oob/outside-research-nov-14-slice.md`). Where it fills a gap or bears on a choice above, this section rules, and it stands over the text above.
+
+1. **Positions hold.** A second source for Kokumbona, Tassafaronga, Taivu Point and Tasimboko moves none of them to another hex (PP 86 to 89, 66, 72). Kamimbo now has a position and falls in (2,-5) (PP 73, 62), as item 4 put it. Gavutu and Tanambogo fall in Tulagi's hex and Kukum in the airfield's (PP 74 to 76).
+2. **The Oka group is in, with 333 men.** The one source that counts it from the Japanese side has some 1,000 men setting out in barges and one third of them left under Oka's command on the island (LUF 916 to 918): 1,000 / 3, cut to a whole man. Lower-grade rows say about 1,000 landed and about 650 attacked (LUF 929 to 931, 925); they are kept as the dispute and the measures take the range. It lands in (2,-5) on day 32, 7 September, the day by which a row has it west of the perimeter (LUF 931), from placeholder fast transports, since barges have no class. It is ordered to march on day 37 so that it arrives on day 39 and attacks on 14 September, the day two sources give (LUF 1007, 949). Item 15 and the line "the west is quiet" no longer hold.
+3. **The landing of 29 August stays as it is,** 900 men at Tassafaronga (TL 45, 148), which a derivation reads. Another source has 450 men and 300 men landed at Taivu that day (LUF 939 to 941; TL 173, 174). Nothing read shows whether they are the same landing told differently. They are not added: the main body's 3,090 is the row for its strength (LUF 310), whichever run brought which men.
+4. **The 1st Engineer Battalion and the day Kawaguchi set out are still gaps.** No document read gives the battalion's men or the day the main body left Taivu. Items 10 and 14 stand.
+5. **Japanese stocks are now sized from rows,** turned into tons by the game's charge for a man, and are no longer plain placeholders:
+   - In (3,-4): two weeks of food for the Kawaguchi main body (LUF 975), 3,090 x 0.005 x 14 = 216.3 t; and seven days for the Ichiki echelon, the two days on the man, three in the unit and two at division that a Japanese officer gave as the practice (LUF 1044), 916 x 0.005 x 7 = 32.06 t. Together 248 t, cut to a whole ton.
+   - In (2,-5): seven days by the same practice for the 2,070 men landed there (200, 900, 637 and 333): 72 t, cut to a whole ton.
+   - Row 1044 states a practice and not what these units were issued, and the note on each stock says so. Tulagi's 35 t is still a placeholder: no row gives a quantity there.
+6. **An arrival waits.** Item 8 is changed by decision 0103, item 5: the squadrons due on day 14 are delivered on the first night Lunga is American, has its airfield and is below the level of damage that refuses aircraft. The measure "the squadrons of 20 August are delivered" becomes "the day the squadrons of 20 August are delivered", reported against day 14.
+7. **Falling back and surrender** (decision 0104) change what the slice shows: the garrison of Lunga marches west and the garrison of Tulagi surrenders. The line "the construction units stay at Lunga" no longer holds.
