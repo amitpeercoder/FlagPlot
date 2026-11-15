@@ -4,8 +4,8 @@ seed 1942
 
 day   1  hash 9bb490bd31aa9915  56 events
 day   2  hash 6f99e5846a4eacff  39 events
-day   3  hash 18528edbaf8e9370  18 events
-day   4  hash 2c7b0eff6f58bb2a  12 events
+day   3  hash 6068f5ee98130973  20 events
+day   4  hash 2c7b0eff6f58bb2a  10 events
 day   5  hash dfa7470623be68d8  10 events
 
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1

@@ -1,0 +1,146 @@
+# Scenario 44: refuelling that takes time (decision 0112).
+#
+# Proves, against a hand calculation, that a ship in port takes fuel through
+# the hours of each pulse at the port's fuelling rate, at a berth or by
+# lighter, in the cargo rule's queue. At S, with one berth, force 1 loads
+# supply and then fuels and force 2 fuels by lighter until the berth is free;
+# at U, which has no berth, a cruiser fuels by lighter, sails on day 2 with the
+# fuel she has and finishes fuelling at S; at V, a base's reserve holds a
+# destroyer short, recorded once. The hand calculation is in
+# tests/scenario_44_fuelling_takes_time.rs. There is no enemy, no search and no
+# random draw. It runs on the frozen step 1 figures, with the fuelling rates set
+# in this scenario's own port sizes.
+#
+# Class 1 is the placeholder cruiser (2000 t of fuel, 16 kn at cruise, 0.25 t a
+# mile), class 2 the placeholder destroyer (500 t of fuel), class 3 the
+# placeholder cargo ship (3000 t of cargo, 1000 t of fuel).
+#
+# PLACEHOLDER DATA. The bases, ships, port sizes and map are invented.
+
+name = "Scenario 44: Refuelling that takes time"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_fuelling.toml"
+ship_classes = ["../reference/ship_classes.csv"]
+port_sizes = "../reference/port_sizes_placeholder_fuelling.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+# S: port size 1, one berth.
+[[base]]
+id = 1
+name = "Placeholder base S, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 2000
+fuel_t = 5000
+
+# U: port size 0, no berth.
+[[base]]
+id = 2
+name = "Placeholder base U, Allied"
+side = "allied"
+q = 5
+r = 0
+fuel_t = 3000
+
+# V: port size 0, no berth, with a reserve of fuel.
+[[base]]
+id = 3
+name = "Placeholder base V, Allied"
+side = "allied"
+q = 0
+r = 5
+fuel_t = 300
+fuel_reserve_t = 100
+
+# Force 1: a cargo ship stopped at S, loads supply.
+[[task_force]]
+id = 1
+name = "Placeholder cargo force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 600
+task_force = 1
+
+# Force 2: a cruiser stopped at S, fuels.
+[[task_force]]
+id = 2
+name = "Placeholder cruiser force 2"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser 2"
+class = 1
+side = "allied"
+fuel_t = 800
+task_force = 2
+
+# Force 3: a cruiser stopped at U, fuels by lighter and sails on day 2.
+[[task_force]]
+id = 3
+name = "Placeholder cruiser force 3"
+side = "allied"
+at_base = 2
+mission = "transport"
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser 3"
+class = 1
+side = "allied"
+fuel_t = 500
+task_force = 3
+
+# Force 4: a destroyer with no fuel aboard, stopped at V, whose base keeps a
+# reserve.
+[[task_force]]
+id = 4
+name = "Placeholder destroyer force 4"
+side = "allied"
+at_base = 3
+mission = "transport"
+
+[[ship]]
+id = 4
+name = "Placeholder destroyer 4"
+class = 2
+side = "allied"
+fuel_t = 0
+task_force = 4
+
+# Day 1: force 1 loads supply up to 500 t.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "load"
+weight_t = 500
+
+# Day 2: force 3 steams to S at cruise speed, with the fuel it has.
+[[order]]
+day = 2
+side = "allied"
+task_force = 3
+kind = "set_route"
+waypoints = [[0, 0]]
+
+[[order]]
+day = 2
+side = "allied"
+task_force = 3
+kind = "set_speed"
+speed = "cruise"

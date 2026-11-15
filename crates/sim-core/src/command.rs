@@ -1355,7 +1355,9 @@ impl StaffDecisions {
 /// view: `&self`, so that asked twice on the same view it gives the same
 /// answer, which `replay --check-staff` tests. It is asked once a day, at
 /// step 4 of the day's order, after the commander's commands are taken in
-/// and ships in port have refuelled, and before any order is taken in.
+/// and forces back from the yard are home, and before any order is taken in
+/// (ships in port take fuel in the pulses, not before this step: decision
+/// 0112).
 pub trait Staff {
     fn decide(&self, view: SideView<'_>) -> StaffDecisions;
 

@@ -11,15 +11,23 @@
 # berth_rate_t_per_h: tons per hour moved by one ship on a berth.
 # lighter_rate_t_per_h: tons per hour moved by one ship without a berth.
 # See docs/decisions/0011-cargo-handling.md.
-port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h
-0,0,0,20
-1,1,50,20
-2,1,75,20
-3,2,100,20
-4,3,125,20
-5,4,150,20
-6,5,200,20
-7,6,250,20
-8,8,300,20
-9,10,350,20
-10,12,400,20
+#
+# fuel_berth_rate_t_per_h, fuel_lighter_rate_t_per_h (decision 0112): tons of
+# fuel an hour one ship takes at a berth, and by lighter. Empty is not given:
+# no limit. These two figures are not placeholders in the sense of invented:
+# each is sized from rows of docs/research/oob/fuelling-in-port.md, and is not
+# checked against any battle. See "The first figures" in
+# docs/decisions/0112-refuelling-that-takes-time.md. The rest of this file is
+# still placeholder data. Size 0 has no berth, so no berth rate.
+port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h,fuel_berth_rate_t_per_h,fuel_lighter_rate_t_per_h
+0,0,0,20,,130
+1,1,50,20,200,130
+2,1,75,20,200,130
+3,2,100,20,200,130
+4,3,125,20,200,130
+5,4,150,20,200,130
+6,5,200,20,200,130
+7,6,250,20,200,130
+8,8,300,20,200,130
+9,10,350,20,200,130
+10,12,400,20,200,130

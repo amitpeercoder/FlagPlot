@@ -3,44 +3,44 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 8f08afd38d94f87a  245 events
-day   2  hash c85d8eba28fd6ee8  159 events
-day   3  hash 8e6fa76ec5353e1b  147 events
-day   4  hash 49761ba7e6ed6f6c  152 events
-day   5  hash e264b4a1e85f40a5  130 events
-day   6  hash df81a57fe481407f  45 events
-day   7  hash 54f65a4a8db7bc5a  30 events
-day   8  hash ca12d2601b6d381a  43 events
-day   9  hash c6a5f2ab42bffb59  48 events
-day  10  hash e0edd15a7a98802f  52 events
-day  11  hash 9d5211fca61fe630  79 events
-day  12  hash 8be79738c658ee48  68 events
-day  13  hash 25d744e2b3224af5  102 events
-day  14  hash c35636b8e1083d71  79 events
-day  15  hash 788764e3c91168b6  92 events
-day  16  hash 6230752b7eb1c918  87 events
-day  17  hash f50e209f37ed06a8  49 events
-day  18  hash 54de7336865f8985  210 events
-day  19  hash e0bc6102c8ae8974  158 events
-day  20  hash bba2c7c2c62fbe33  195 events
-day  21  hash aae8702c136d75d3  231 events
-day  22  hash 398b36c876f60f69  114 events
-day  23  hash 01050b31e317fc9c  195 events
-day  24  hash b01c2ecad4a42d7f  209 events
-day  25  hash fa346e8522b2312c  220 events
-day  26  hash 649f39f0bdcbc413  165 events
-day  27  hash 5469646e5764df76  186 events
-day  28  hash 61af5218b207dee6  137 events
-day  29  hash fa0768910ea102b1  136 events
-day  30  hash a94142c11accd859  170 events
-day  31  hash f9031b0100470f82  169 events
-day  32  hash b408546180044f0e  153 events
-day  33  hash 930d49c086f504f8  108 events
-day  34  hash cbe20e3b29f723f1  138 events
-day  35  hash b28dedfab570d816  152 events
-day  36  hash 17ccc942431e4628  144 events
-day  37  hash a040c4f5bd6a58f6  217 events
-day  38  hash a3d0521240e387bd  150 events
-day  39  hash 95ca99c2e0bba2b6  123 events
+day   2  hash 3fc6a345d55aabe4  146 events
+day   3  hash f5539c821e81e9aa  147 events
+day   4  hash 758e1d8595ff9b85  152 events
+day   5  hash 6f81891333e51f6e  140 events
+day   6  hash 2ae149c44de6b7a0  34 events
+day   7  hash 1d79312debb5ddcd  30 events
+day   8  hash b2223e0fd4782f49  43 events
+day   9  hash f13b49933948e6e8  48 events
+day  10  hash 912ce3e9bfd6db46  55 events
+day  11  hash aa13b799c57f35ef  79 events
+day  12  hash 54d9bde22a41e3f8  68 events
+day  13  hash ce14459e138c2055  102 events
+day  14  hash 04f99e4a52cdd946  79 events
+day  15  hash 6ca4489cd8b09614  92 events
+day  16  hash 68df386d920bec61  87 events
+day  17  hash f9517ce2d9d79263  49 events
+day  18  hash ca44777dec546afe  210 events
+day  19  hash 436eee1f1f630ace  158 events
+day  20  hash 2e5a5dff7b5def04  195 events
+day  21  hash 1f43cec4016d0ff4  231 events
+day  22  hash f5949b793370057f  114 events
+day  23  hash f898e3e368c29d37  195 events
+day  24  hash 5d369f332a67f2c3  209 events
+day  25  hash 0bfa8416d4f971bf  220 events
+day  26  hash eaa544564e8ffa4f  165 events
+day  27  hash 492185ca1edcc7e7  186 events
+day  28  hash 128babd45dd65d21  137 events
+day  29  hash a60d73740d957f17  136 events
+day  30  hash 706cdcf5f79ffe59  170 events
+day  31  hash dfafedf46c250ed8  169 events
+day  32  hash 6b5e483e563232a2  153 events
+day  33  hash aa9dccd60c5095ca  108 events
+day  34  hash 06244cfe68cf8f04  138 events
+day  35  hash dca6fb58cf7fc100  152 events
+day  36  hash d6bd73ad1c3981aa  144 events
+day  37  hash ffeae6e10d3cdcac  217 events
+day  38  hash ec0e3b054c1ff59d  150 events
+day  39  hash 02b680a8c7b65561  123 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -157,19 +157,19 @@ ship:48 "Placeholder cruiser D1": afloat in task_force:11; damage flotation 75, 
 ship:49 "Placeholder cruiser D2": afloat in task_force:11; damage flotation 60, fire 5; propulsion degraded, fire control degraded; 800 gun rounds, torpedoes ready; 1965 t of fuel, 0 t of supply
 ship:50 "Placeholder cruiser E1": SUNK; damage flotation 100, fire 10; propulsion out, fire control degraded, main battery degraded; 800 gun rounds, torpedoes ready; 1860 t of fuel, 0 t of supply
 ship:51 "Placeholder cruiser F1": afloat in task_force:13; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1680 t of fuel, 0 t of supply
-ship:52 "Placeholder troop transport, Guadalcanal 1": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:53 "Placeholder troop transport, Guadalcanal 2": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:54 "Placeholder troop transport, Guadalcanal 3": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:55 "Placeholder troop transport, Guadalcanal 4": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:56 "Placeholder troop transport, Guadalcanal 5": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:57 "Placeholder troop transport, Guadalcanal 6": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:58 "Placeholder troop transport, Guadalcanal 7": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:59 "Placeholder troop transport, Guadalcanal 8": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:60 "Placeholder troop transport, Guadalcanal 9": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:61 "Placeholder troop transport, Guadalcanal 10": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:62 "Placeholder troop transport, Guadalcanal 11": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 964.2 t of fuel, 0 t of supply
-ship:63 "Placeholder troop transport, Guadalcanal 12": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 942.2 t of fuel, 0 t of supply
-ship:64 "Placeholder troop transport, Guadalcanal 13": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
+ship:52 "Placeholder troop transport, Guadalcanal 1": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:53 "Placeholder troop transport, Guadalcanal 2": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:54 "Placeholder troop transport, Guadalcanal 3": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:55 "Placeholder troop transport, Guadalcanal 4": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:56 "Placeholder troop transport, Guadalcanal 5": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:57 "Placeholder troop transport, Guadalcanal 6": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:58 "Placeholder troop transport, Guadalcanal 7": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:59 "Placeholder troop transport, Guadalcanal 8": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:60 "Placeholder troop transport, Guadalcanal 9": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:61 "Placeholder troop transport, Guadalcanal 10": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:62 "Placeholder troop transport, Guadalcanal 11": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:63 "Placeholder troop transport, Guadalcanal 12": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
+ship:64 "Placeholder troop transport, Guadalcanal 13": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
 ship:65 "Placeholder troop transport, Guadalcanal 14": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
 ship:66 "Placeholder troop transport, Guadalcanal 15": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
 ship:67 "Placeholder troop transport, Guadalcanal 16": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
@@ -178,21 +178,21 @@ ship:69 "Placeholder troop transport, Guadalcanal 18": afloat in task_force:20; 
 ship:70 "Placeholder troop transport, Guadalcanal 19": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
 ship:71 "Placeholder troop transport, Guadalcanal 20": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
 ship:72 "Placeholder troop transport, Guadalcanal 21": afloat in task_force:20; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 926.2 t of fuel, 0 t of supply
-ship:73 "Placeholder troop transport, Tulagi 1": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:74 "Placeholder troop transport, Tulagi 2": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:75 "Placeholder troop transport, Tulagi 3": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:76 "Placeholder troop transport, Tulagi 4": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:77 "Placeholder troop transport, Tulagi 5": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:78 "Placeholder troop transport, Tulagi 6": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:79 "Placeholder troop transport, Tulagi 7": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:80 "Placeholder troop transport, Tulagi 8": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:81 "Placeholder troop transport, Tulagi 9": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:82 "Placeholder troop transport, Tulagi 10": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
+ship:73 "Placeholder troop transport, Tulagi 1": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:74 "Placeholder troop transport, Tulagi 2": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:75 "Placeholder troop transport, Tulagi 3": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:76 "Placeholder troop transport, Tulagi 4": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:77 "Placeholder troop transport, Tulagi 5": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:78 "Placeholder troop transport, Tulagi 6": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:79 "Placeholder troop transport, Tulagi 7": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:80 "Placeholder troop transport, Tulagi 8": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:81 "Placeholder troop transport, Tulagi 9": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:82 "Placeholder troop transport, Tulagi 10": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 942 t of fuel, 0 t of supply
 ship:83 "Placeholder troop transport, Tulagi 11": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
 ship:84 "Placeholder troop transport, Tulagi 12": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 934.2 t of fuel, 0 t of supply
-ship:85 "Placeholder fast transport with cargo 1": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 349.125 t of fuel, 0 t of supply
-ship:86 "Placeholder fast transport with cargo 2": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 349.125 t of fuel, 0 t of supply
-ship:87 "Placeholder fast transport with cargo 3": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 349.125 t of fuel, 0 t of supply
+ship:85 "Placeholder fast transport with cargo 1": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 427.75 t of fuel, 0 t of supply
+ship:86 "Placeholder fast transport with cargo 2": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 427.75 t of fuel, 0 t of supply
+ship:87 "Placeholder fast transport with cargo 3": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 391.875 t of fuel, 0 t of supply
 ship:88 "Placeholder fast transport with cargo 4": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 349.125 t of fuel, 0 t of supply
 ship:89 "Placeholder cargo ship, run of 21 August 1": afloat in task_force:23; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 937.1 t of fuel, 0 t of supply
 ship:90 "Placeholder cargo ship, run of 21 August 2": afloat in task_force:23; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 937.1 t of fuel, 0 t of supply

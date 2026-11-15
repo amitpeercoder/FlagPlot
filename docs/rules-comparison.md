@@ -48,12 +48,12 @@ Flag Plot source: [chapter 1](rules/01-the-day-orders-and-what-a-side-knows.md),
 | Damage and speed | Engine, system and flotation damage can reduce speed | Named propulsion-system condition determines damage-related speed reduction |
 | Fuel expenditure | Movement, undocked activity, combat and aircraft operations consume endurance | Distance steamed consumes fuel; stationary ships burn nothing |
 | High speed | Increased endurance expenditure and operational damage | A speed-dependent fuel multiplier, without steaming-related machinery wear |
-| Refuelling | In port or at sea, with transfer limits and time costs | Automatic at friendly bases at day start, from the base's fuel stock; no handling time, berth use or port-rate limit |
+| Refuelling | In port or at sea, with transfer limits and time costs | In port only, automatic at friendly bases, from the base's fuel stock, in the hours of each pulse (decision 0112, scenario 44): at the port size's fuel rate, on a berth that cargo shares or by lighter, down to the base's fuel reserve. No refuelling at sea |
 | Mission behaviour | Mission types shape approach, reaction, retirement and movement | Mission currently affects bombardment; most behaviour comes from explicit orders and engagement settings |
 
 Flag Plot has waypoints, action at intermediate waypoints, break-off rules and straggler handling. Those are not missing systems. However, it lacks AE's reactive movement, underway replenishment, operational wear and general operations-time budget.
 
-AE's operation points charge time for refuelling, rearming and cargo work. Flag Plot accounts for cargo time directly, but refuelling has no corresponding cost and ordinary rearming is absent.
+AE's operation points charge time for refuelling, rearming and cargo work. Flag Plot accounts for cargo time directly, and since decision 0112 refuelling in port takes hours at the port's rate, but there is no refuelling at sea and ordinary rearming is absent.
 
 Flag Plot resolves a day as night, morning and afternoon pulses. It keeps elapsed time, but has no engine calendar date or geographic daylight calculation. AE's naval movement has night/day phases and its air operations have morning/afternoon phases; its calendar also drives period-specific rules.
 
@@ -72,7 +72,7 @@ Flag Plot carries cargo and troops aboard individual ships, shares berths, disti
 | Capacity | Troop, cargo and liquid spaces, with compatibility and cross-loading rules | Separate troop capacity and a shared supply/fuel cargo capacity |
 | Troops and equipment | Equipment load costs and loading methods affect capacity use | Men occupy troop capacity independently of cargo; equipment is abstracted |
 | Docking | Limits individual ship size and total docked tonnage | Berth count, without individual ship-size or total docked-tonnage limits |
-| Port throughput | Shared port ceilings, including separate fuel constraints | Per-ship berth/lighter rates, without another overall daily port ceiling |
+| Port throughput | Shared port ceilings, including separate fuel constraints | Per-ship berth/lighter rates, for cargo and for fuel (fuel shares the berths), without another overall daily port ceiling |
 | Port damage | Reduces handling, refuelling and repair capabilities | Absent |
 | Amphibious operations | Ship type, landing craft, loading method and landing circumstances matter | A simpler handling rate modified by landing preparation |
 | Supply distribution | Automatic overland redistribution along supply paths | Local stocks and explicit carriage; no equivalent overland distribution network |
@@ -80,7 +80,7 @@ Flag Plot carries cargo and troops aboard individual ships, shares berths, disti
 
 At this baseline the generated South Pacific map gives every hex port size zero. Its bases therefore use lighter handling unless other scenario/map data supplies different sizes. The port mechanism exists, but the generated real-map data does not exercise its full range.
 
-**Operational effect:** AE makes a port a constrained fleet-support facility. Flag Plot chiefly makes it a cargo-handling location, with separately configured repair capabilities. In particular, a large force can refuel without consuming the time or throughput another force needs.
+**Operational effect:** AE makes a port a constrained fleet-support facility. Flag Plot chiefly makes it a cargo-handling location, with separately configured repair capabilities. Refuelling shares its berths and takes hours at the port's rate (decision 0112), so a large force that fuels can keep another from a berth and a small port fuels it slowly; a port's size does not otherwise cap its fuel, and a damaged port is not modelled.
 
 AE references: 6.3, 9.3.1–9.3.3, 15.1, 15.7; pp. 109–128, 210–213, 250, 254.
 

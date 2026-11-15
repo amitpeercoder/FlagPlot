@@ -23,8 +23,11 @@
 //! that has cargo to move. The placeholder cargo ship: 3000 t of cargo,
 //! 1000 t of fuel. The placeholder fast transport with cargo: 30 t of
 //! cargo. A day is a night pulse of 12 hours and two daylight pulses of 6.
-//! Forces stopped at a base of their side refuel at the start of a day, in
-//! force order, before the day's orders.
+//! A ship of a force stopped at a base of its side takes the fuel it lacks
+//! in the pulse, in force order, after its cargo (decision 0112; restated by
+//! the architect on Nov 15, 2026: it was at the start of a day, before the
+//! day's orders. On these figures no fuelling rate is given, so a ship is
+//! filled in the first pulse. No quantity moved).
 //!
 //! ## Inputs
 //!
@@ -59,7 +62,7 @@
 //!
 //! ## At S: a reserve
 //!
-//! Day 1, the refuelling. Base 1 holds 500 t of fuel and may give 200 t,
+//! Day 1, the refuelling, in the night pulse. Base 1 holds 500 t of fuel and may give 200 t,
 //! down to its reserve of 300.
 //!
 //! - Force 1: ship 1 wants 150 t and takes it. Base 1 holds 350 t.
@@ -79,7 +82,8 @@
 //! t aboard, not 500: the staff's load never takes the stock below 400.
 //!
 //! Day 2, the refuelling. Base 1 is at its fuel reserve. Ship 2 wants 50 t
-//! and takes none.
+//! and takes none. It was recorded as held at the reserve on day 1, 50 t
+//! short, and is not recorded again while nothing changes.
 //!
 //! Day 2, force 1's second order, the commander's. Force 1 has 250 t aboard
 //! and is to have 450: it wants 200 t more. Base 1 holds nothing above its
@@ -515,14 +519,14 @@ fn refuelling_stops_at_the_fuel_reserve_and_a_second_force_takes_what_is_left() 
         ]
     );
     assert_eq!(run.held_refuelling(1), vec![(2, n(50))]);
-    // Day 2: base 1 is at its fuel reserve. Ship 2 wants 50 and takes none:
-    // nothing is taken, and the event says it is 50 t short.
+    // Day 2: base 1 is at its fuel reserve. Ship 2 wants 50 and takes none.
+    // It was recorded as held on day 1 and nothing has changed, so it is
+    // not recorded again (decision 0112).
     assert!(run.refuelled(2).is_empty());
-    assert_eq!(run.held_refuelling(2), vec![(2, n(50))]);
+    assert!(run.held_refuelling(2).is_empty());
     // Nothing is taken on any later day either.
     assert!(run.refuelled(3).is_empty() && run.refuelled(4).is_empty());
-    // The held event cites the ship's refuelling on day 1 and no cause on
-    // day 2 (nothing was taken).
+    // The held event cites the ship's refuelling on day 1.
     let held_1 = run.one_on_day(1, |k| {
         matches!(k, EventKind::RefuellingHeldAtReserve { .. })
     });

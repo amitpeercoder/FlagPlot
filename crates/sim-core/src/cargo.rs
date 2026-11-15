@@ -25,7 +25,10 @@ use crate::movement::HaltGround;
 use crate::orders::{Activity, Cargo, Job};
 use crate::preparation::landing_rate_factor;
 use crate::refdata::PortSize;
-use crate::state::{Base, CargoOrder, LandUnit, Side, TaskForce, TaskForceStatus, Troops};
+use crate::refuel::FuelStop;
+use crate::state::{
+    Base, CargoOrder, LandUnit, ShipLocation, Side, TaskForce, TaskForceStatus, Troops,
+};
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
 
@@ -37,6 +40,23 @@ struct LandingRate {
     share: Fixed,
     loading: Fixed,
     factor: Fixed,
+}
+
+/// A task force that is stopped in a hex and may work cargo or take fuel in
+/// this pulse (decision 0112): the cargo work, if it has any, and what the
+/// fuelling needs.
+struct Stop {
+    task_force: TaskForceId,
+    side: Side,
+    hex: Hex,
+    /// The hours it works: from the later of the pulse start and its stop to
+    /// the pulse's end.
+    hours: Fixed,
+    /// Every ship the force lists, in ship order.
+    ships: Vec<ShipId>,
+    port: PortSize,
+    arrival_event: Option<EventId>,
+    cargo_work: Option<Participant>,
 }
 
 /// A task force that works cargo in this pulse.
@@ -273,19 +293,18 @@ impl World {
         let end = start + Fixed::from_int(pulse.hours());
         let men_rules = self.ref_data.ground.is_some();
 
-        let mut participants: Vec<Participant> = Vec::new();
+        let mut stops: Vec<Stop> = Vec::new();
         for task_force in self.truth.task_forces.values() {
-            let Some(cargo) = task_force.cargo_order else {
-                continue;
-            };
-            // Only a task force that has stopped on purpose works cargo:
-            // idle, arrived, or halted at a marked waypoint (decision 0096,
-            // 3). One that ran dry may be miles from any base, whatever hex
-            // it is nearest to.
-            if !matches!(
+            // Only a task force that has stopped on purpose works cargo or
+            // takes fuel: idle, arrived, or halted at a marked waypoint
+            // (decision 0096, 3); a force out of fuel takes fuel only. One
+            // that ran dry may be miles from any base, whatever hex it is
+            // nearest to.
+            let may_work_cargo = matches!(
                 task_force.status,
                 TaskForceStatus::Idle | TaskForceStatus::Arrived | TaskForceStatus::Halted
-            ) {
+            );
+            if !may_work_cargo && task_force.status != TaskForceStatus::OutOfFuel {
                 continue;
             }
             // Cargo asks what refuelling asks: the force is exactly at the
@@ -294,10 +313,32 @@ impl World {
             if task_force.toward_hex.is_some() {
                 continue;
             }
-            let hex = task_force.from_hex;
-            let Some((base, coast)) = self.cargo_place(task_force, cargo, hex) else {
+            // A force with no ship afloat does nothing.
+            if !task_force
+                .ships
+                .iter()
+                .any(|ship| self.truth.ships[ship].location != ShipLocation::Sunk)
+            {
                 continue;
-            };
+            }
+            let hex = task_force.from_hex;
+            let cargo_place = task_force
+                .cargo_order
+                .filter(|_| may_work_cargo)
+                .and_then(|cargo| {
+                    self.cargo_place(task_force, cargo, hex)
+                        .map(|place| (cargo, place))
+                });
+            // A force may take fuel where a base of its side lies (decision
+            // 0112).
+            let fuels_here = self
+                .truth
+                .bases
+                .values()
+                .any(|base| base.side == task_force.side && base.hex == hex);
+            if cargo_place.is_none() && !fuels_here {
+                continue;
+            }
             // From its arrival, or from its halt (decision 0096, 3).
             let stopped_at = task_force
                 .halt
@@ -311,8 +352,28 @@ impl World {
             if hours <= Fixed::ZERO {
                 continue;
             }
+            // A force that ran dry in this pulse takes no fuel in it: the
+            // hour it ran dry is not known, and it fuels from the next
+            // pulse (decision 0112).
+            if task_force.status == TaskForceStatus::OutOfFuel
+                && self
+                    .events
+                    .of_day_latest_first(day)
+                    .any(|event| {
+                        event.pulse == Some(pulse)
+                            && matches!(event.kind, EventKind::TaskForceOutOfFuel { task_force: id, .. } if id == task_force.id)
+                    })
+            {
+                continue;
+            }
             let size = self.map.get(hex).map_or(0, |data| data.port_size);
-            participants.push(Participant {
+            let port = self.ref_data.port_sizes[&size];
+            let arrival_event = task_force
+                .halt
+                .map(|halt| halt.event)
+                .or(task_force.arrival_event);
+            let ships: Vec<ShipId> = task_force.ships.iter().copied().collect();
+            let cargo_work = cargo_place.map(|(cargo, (base, coast))| Participant {
                 task_force: task_force.id,
                 side: task_force.side,
                 hex,
@@ -321,69 +382,105 @@ impl World {
                 cargo,
                 work_start,
                 hours,
-                ships: task_force.ships.iter().copied().collect(),
-                port: self.ref_data.port_sizes[&size],
-                arrival_event: task_force
-                    .halt
-                    .map(|halt| halt.event)
-                    .or(task_force.arrival_event),
+                ships: ships.clone(),
+                port,
+                arrival_event,
+            });
+            stops.push(Stop {
+                task_force: task_force.id,
+                side: task_force.side,
+                hex,
+                hours,
+                ships,
+                port,
+                arrival_event,
+                cargo_work,
             });
         }
 
-        // Berths are given out before any cargo moves, for each side's
-        // landing place in a hex: the lowest-numbered base of the side
-        // there, or the one a landing will form.
+        // Berths are given out before any cargo moves or fuel is taken, for
+        // each side's landing place in a hex: the lowest-numbered base of the
+        // side there, or the one a landing will form. A berth goes to a ship
+        // that has cargo to move or fuel to take (decision 0112).
         let mut berths_used: BTreeMap<(Side, Hex), u32> = BTreeMap::new();
         let mut berthed: Vec<ShipId> = Vec::new();
-        for participant in &participants {
+        for stop in &stops {
             // The stock a load draws on: supply or fuel (decision 0046), above
             // the reserve for a load that heeds it, and what its weight still
             // allows (decisions 2 and 8 of 0111).
-            let named = participant.cargo.action.loads().unwrap_or(Cargo::Supply);
-            let ground = self.halt_ground();
-            let stock = participant.base.map_or(Fixed::ZERO, |id| {
-                ground.stock_for(participant.cargo, id, named)
-            });
-            let weight_left = ground.weight_left(participant.cargo, &participant.ships, named);
-            let stock = weight_left.map_or(stock, |left| stock.min(left));
-            let unit_ashore = match participant.cargo.unit {
-                Some(unit) if men_rules => self.men_ashore_in(unit, participant.hex),
-                _ => 0,
+            let (stock, unit_ashore) = match &stop.cargo_work {
+                Some(participant) => {
+                    let named = participant.cargo.action.loads().unwrap_or(Cargo::Supply);
+                    let ground = self.halt_ground();
+                    let stock = participant.base.map_or(Fixed::ZERO, |id| {
+                        ground.stock_for(participant.cargo, id, named)
+                    });
+                    let weight_left =
+                        ground.weight_left(participant.cargo, &participant.ships, named);
+                    let stock = weight_left.map_or(stock, |left| stock.min(left));
+                    let unit_ashore = match participant.cargo.unit {
+                        Some(unit) if men_rules => self.men_ashore_in(unit, participant.hex),
+                        _ => 0,
+                    };
+                    (stock, unit_ashore)
+                }
+                None => (Fixed::ZERO, 0),
             };
-            for ship_id in &participant.ships {
-                let used = berths_used
-                    .entry((participant.side, participant.hex))
-                    .or_insert(0);
-                if *used >= participant.port.berths {
+            for ship_id in &stop.ships {
+                let used = berths_used.entry((stop.side, stop.hex)).or_insert(0);
+                if *used >= stop.port.berths {
                     break;
                 }
                 let ship = &self.truth.ships[ship_id];
-                let capacity = self.ref_data.ship_classes[&ship.class].cargo_capacity_t;
-                let has_cargo_to_move = if participant.cargo.action.is_load() {
-                    // A ship has cargo to move if it has men to move
-                    // (decision 0066, 7).
-                    let men = participant
-                        .cargo
-                        .unit
-                        .is_some_and(|unit| unit_ashore > 0 && self.berths_for(*ship_id, unit) > 0);
-                    let cargo = participant.cargo.action.loads().is_some()
-                        && participant.base.is_some()
-                        && capacity - ship.supply_t - ship.cargo_fuel_t > Fixed::ZERO
-                        && stock > Fixed::ZERO;
-                    men || cargo
-                } else {
-                    let men = men_rules && participant.coast && ship.troops.is_some();
-                    men || ship.supply_t > Fixed::ZERO || ship.cargo_fuel_t > Fixed::ZERO
-                };
-                if has_cargo_to_move {
+                let has_cargo_to_move = stop.cargo_work.as_ref().is_some_and(|participant| {
+                    let capacity = self.ref_data.ship_classes[&ship.class].cargo_capacity_t;
+                    if participant.cargo.action.is_load() {
+                        // A ship has cargo to move if it has men to move
+                        // (decision 0066, 7).
+                        let men = participant.cargo.unit.is_some_and(|unit| {
+                            unit_ashore > 0 && self.berths_for(*ship_id, unit) > 0
+                        });
+                        let cargo = participant.cargo.action.loads().is_some()
+                            && participant.base.is_some()
+                            && capacity - ship.supply_t - ship.cargo_fuel_t > Fixed::ZERO
+                            && stock > Fixed::ZERO;
+                        men || cargo
+                    } else {
+                        let men = men_rules && participant.coast && ship.troops.is_some();
+                        men || ship.supply_t > Fixed::ZERO || ship.cargo_fuel_t > Fixed::ZERO
+                    }
+                });
+                if has_cargo_to_move
+                    || self.has_fuel_to_take(stop.side, stop.hex, &stop.port, *ship_id)
+                {
                     *used += 1;
                     berthed.push(*ship_id);
                 }
             }
         }
 
-        for participant in &participants {
-            self.work_cargo(day, pulse, participant, &berthed);
+        // Then each force works, in force order: its cargo first, then the
+        // fuel its ships take in the hours left (decision 0112).
+        for stop in &stops {
+            let mut cargo_hours: BTreeMap<ShipId, Fixed> = BTreeMap::new();
+            if let Some(participant) = &stop.cargo_work {
+                self.work_cargo(day, pulse, participant, &berthed, &mut cargo_hours);
+            }
+            self.take_fuel(
+                day,
+                pulse,
+                &FuelStop {
+                    task_force: stop.task_force,
+                    side: stop.side,
+                    hex: stop.hex,
+                    port: stop.port,
+                    hours: stop.hours,
+                    ships: &stop.ships,
+                    arrival_event: stop.arrival_event,
+                },
+                &berthed,
+                &cargo_hours,
+            );
         }
     }
 
@@ -516,7 +613,17 @@ impl World {
         (divided, Some(formed), id)
     }
 
-    fn work_cargo(&mut self, day: u32, pulse: Pulse, p: &Participant, berthed: &[ShipId]) {
+    /// Works the force's cargo, and records in `hours` for each ship the
+    /// hours its cargo work took in this pulse: the tons it moved, men
+    /// included, over its rate (nothing where it moved nothing).
+    fn work_cargo(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        p: &Participant,
+        berthed: &[ShipId],
+        hours: &mut BTreeMap<ShipId, Fixed>,
+    ) {
         let mut causes = vec![Cause::Order(p.cargo.order)];
         if let Some(arrival) = p.arrival_event {
             causes.push(Cause::Event(arrival));
@@ -640,6 +747,7 @@ impl World {
             let Some(base_id) = base else {
                 if ship_total > Fixed::ZERO {
                     longest = longest.max(ship_total / rate);
+                    hours.insert(*ship_id, ship_total / rate);
                 }
                 continue;
             };
@@ -792,6 +900,7 @@ impl World {
             }
             if ship_total > Fixed::ZERO {
                 longest = longest.max(ship_total / rate);
+                hours.insert(*ship_id, ship_total / rate);
             }
         }
 
@@ -1215,6 +1324,8 @@ mod tests {
                     berths: number,
                     berth_rate_t_per_h: Fixed::from_int(rate),
                     lighter_rate_t_per_h: Fixed::from_int(20),
+                    fuel_berth_rate_t_per_h: None,
+                    fuel_lighter_rate_t_per_h: None,
                 },
             );
         }

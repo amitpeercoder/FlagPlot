@@ -7,6 +7,13 @@
 //!
 //! # Hand calculation
 //!
+//! Restated by the architect on Nov 15, 2026, for decision 0112: a ship in
+//! port takes fuel in the pulses of the day and no longer at its start. On
+//! these figures no fuelling rate is given, so a ship that arrives in a
+//! pulse is filled in that pulse. Each refuelling below is on the day and in
+//! the pulse the force arrived, a day earlier than first written; the tons
+//! taken and the end states are unchanged.
+//!
 //! ## The setting
 //!
 //! It is scenario 1 (`tests/scenario_01_transit.rs`) carried on for two
@@ -37,10 +44,11 @@
 //!
 //! ## The rule
 //!
-//! At the start of each day, before the day's orders are taken in, a task
-//! force stopped at the hex of a base its side holds refuels: each ship,
-//! in order of its number, takes what it lacks up to its capacity, or what
-//! the base has left if that is less.
+//! In each pulse, in the loading phase, a task force stopped at the hex of a
+//! base its side holds refuels: each ship, in order of its number, takes
+//! what it lacks up to its capacity, or what the base has left if that is
+//! less. No fuelling rate is given on these figures, so a ship takes all of
+//! that in the pulse it stops. Nothing is done at the start of a day.
 //!
 //! ## Day by day
 //!
@@ -55,34 +63,38 @@
 //! does not refuel. It arrives at Espiritu Santo after 10 nm more, 0.625
 //! hours into the night pulse, 24.625 hours after the start: D2 18:38 on the
 //! clock. The cruiser has burned 98.5 t and has 1,901.5 t; the destroyer has
-//! burned 49.25 t and has 450.75 t.
-//!
-//! **Day 3.** At the start the force is stopped at Espiritu Santo, which
-//! has 120 t.
+//! burned 49.25 t and has 450.75 t. In that pulse the force is stopped at
+//! Espiritu Santo, which has 120 t, and it refuels there, each event citing
+//! the arrival:
 //!
 //! | Ship | Lacks | Takes | Has | Espiritu Santo has left |
 //! | ---- | ----- | ----- | --- | ----------------------- |
 //! | 1, the cruiser | 98.5 t | 98.5 t | 2,000 t | 21.5 t |
 //! | 2, the destroyer | 49.25 t | 21.5 t, all that is left | 472.25 t | none |
 //!
-//! Then the day's order is taken in and the force steams for Noumea: 384 nm
-//! in the day, to 30 nm along the step from (1,0) to (0,0) (centres at 27,
+//! At the end of day 2 the cruiser has 2,000 t, the destroyer 472.25 t and
+//! Espiritu Santo none.
+//!
+//! **Day 3.** The force is stopped at Espiritu Santo, which has none, and
+//! nothing is refuelled. The day's order is taken in and the force steams
+//! for Noumea: 384 nm in the day, to 30 nm along the step from (1,0) to (0,0) (centres at 27,
 //! 52, 74, 114, ..., 354 and 394 nm; 384 is 30 past the one at 354). The
 //! cruiser has 2,000 - 96 = 1,904 t and the destroyer 472.25 - 48 = 424.25 t.
 //!
 //! **Day 4.** At the start the force is under way and does not refuel. It
 //! arrives at Noumea after 10 nm more, at 18:38 on day 4 (72.625 hours after
 //! the start), 394 nm from Espiritu Santo. The cruiser has 2,000 - 98.5 =
-//! 1,901.5 t and the destroyer 472.25 - 49.25 = 423 t.
-//!
-//! **Day 5.** At the start the force is stopped at Noumea, which has 100 t.
+//! 1,901.5 t and the destroyer 472.25 - 49.25 = 423 t. In that night pulse
+//! the force is stopped at Noumea, which has 100 t, and it refuels there,
+//! each event citing the arrival:
 //!
 //! | Ship | Lacks | Takes | Has | Noumea has left |
 //! | ---- | ----- | ----- | --- | --------------- |
 //! | 1, the cruiser | 98.5 t | 98.5 t | 2,000 t | 1.5 t |
 //! | 2, the destroyer | 77 t | 1.5 t, all there is | 424.5 t | none |
 //!
-//! No order is given on day 5 and the force does not move.
+//! **Day 5.** No order is given and the force does not move; nothing is
+//! refuelled.
 //!
 //! ## At the end
 //!
@@ -98,7 +110,7 @@
 //! 2,424.5 t there at the end: 2,000 + 424.5.
 //!
 //! Four ships are refuelled in the run, so four refuelling events are
-//! recorded: two at the start of day 3 and two at the start of day 5. Each
+//! recorded: two on day 2 and two on day 4, each in the night pulse. Each
 //! names the ship, the base, the tons taken, what the ship then has and
 //! what the base has left.
 //!
@@ -107,9 +119,9 @@
 //! | Variant | What changes |
 //! | ------- | ------------ |
 //! | Neither base has fuel | Nothing is refuelled. Until the order to return on day 3 the log is scenario 1's, event for event, and the force steams back on what it has: 2,000 - 197 = 1,803 t and 500 - 98.5 = 401.5 t at the end |
-//! | Espiritu Santo has 1,000 t | Both ships fill up on day 3: 98.5 t and 49.25 t, leaving 852.25 t. The destroyer returns to Noumea with 500 - 49.25 = 450.75 t, and at Noumea takes the 1.5 t left after the cruiser's 98.5 t: 452.25 t |
-//! | Espiritu Santo is Japanese | The force does not refuel there. At Noumea on day 5 the cruiser has 1,803 t, lacks 197 t and takes the 100 t: 1,903 t. The destroyer, 401.5 t, takes nothing |
-//! | A second Allied force, task force 2 with one cruiser at 1,900 t, lies stopped at Espiritu Santo from the start | It is there before task force 1 arrives: it lacks 100 t and takes it at the start of day 1, leaving 20 t, and lacks nothing after. On day 3 task force 1's cruiser takes the 20 t (1,921.5 t) and its destroyer nothing. At Noumea on day 5 the cruiser has 1,921.5 - 98.5 = 1,823 t, lacks 177 t and takes the 100 t: 1,923 t; the destroyer, 450.75 - 49.25 = 401.5 t, takes nothing |
+//! | Espiritu Santo has 1,000 t | Both ships fill up on day 2: 98.5 t and 49.25 t, leaving 852.25 t. The destroyer returns to Noumea with 500 - 49.25 = 450.75 t, and at Noumea takes the 1.5 t left after the cruiser's 98.5 t: 452.25 t |
+//! | Espiritu Santo is Japanese | The force does not refuel there. At Noumea on day 4 the cruiser has 1,803 t, lacks 197 t and takes the 100 t: 1,903 t. The destroyer, 401.5 t, takes nothing |
+//! | A second Allied force, task force 2 with one cruiser at 1,900 t, lies stopped at Espiritu Santo from the start | It is there before task force 1 arrives: it lacks 100 t and takes it in the night pulse of day 1, leaving 20 t, and lacks nothing after. On day 2 task force 1's cruiser takes the 20 t (1,921.5 t) and its destroyer nothing. At Noumea on day 4 the cruiser has 1,921.5 - 98.5 = 1,823 t, lacks 177 t and takes the 100 t: 1,923 t; the destroyer, 450.75 - 49.25 = 401.5 t, takes nothing |
 //!
 //! ## What cannot happen
 //!
@@ -117,7 +129,8 @@
 //!   no base has less than none.
 //! - No ship is refuelled while its force is under way, at a base of the
 //!   other side, or in a hex with no base.
-//! - Nothing is refuelled in the middle of a day.
+//! - A refuelling is recorded in the pulse it happens, after its force
+//!   stopped.
 //! - No fuel appears from nowhere: fuel is conserved as "At the end" has it.
 //!
 //! # Properties
@@ -255,16 +268,15 @@ fn assert_within_limits(scenario: &Scenario) {
 
 /// Runs the scenario to its end a day at a time. After each day it checks
 /// what cannot happen: nothing out of range; fuel conserved; every
-/// refuelling event is at the start of the day, before the day's orders and
-/// pulses, by a force that was stopped at a centre (not under way) in the hex
-/// of a base of its own side at the start of the day. Returns the fuel in
-/// ships and bases together at the start.
+/// refuelling event is recorded in a pulse (decision 0112), by a force of the
+/// ship that is stopped in the hex of a base of its own side, after the
+/// arrival that stopped it, which it cites (a force that never moved has no
+/// arrival and its refuelling has no cause). Returns the fuel in ships and
+/// bases together at the start.
 fn run_checked(scenario: &mut Scenario) -> Fixed {
     let start_total = fuel_total(scenario);
     assert_within_limits(scenario);
     while scenario.world.day() < scenario.days {
-        // What the day starts with.
-        let before = scenario.world.umpire().clone();
         let summary = scenario
             .next_day()
             .expect("the day resolves")
@@ -276,8 +288,8 @@ fn run_checked(scenario: &mut Scenario) -> Fixed {
             "fuel is conserved after day {}",
             summary.day
         );
+        let after = scenario.world.umpire().clone();
         let day_events = scenario.world.events().from_index(summary.first_event);
-        let mut seen_other = false;
         for event in day_events {
             let EventKind::ShipRefuelled {
                 ship,
@@ -286,20 +298,33 @@ fn run_checked(scenario: &mut Scenario) -> Fixed {
                 ..
             } = &event.kind
             else {
-                seen_other = true;
                 continue;
             };
-            // Nothing is refuelled in the middle of a day: the refuelling is
-            // the first thing the day does.
-            assert_eq!(event.pulse, None);
-            assert!(!seen_other, "a refuelling after another event of the day");
-            let force = &before.task_forces[task_force];
+            // A refuelling is recorded in the pulse it happens, after its
+            // force stopped.
+            assert!(event.pulse.is_some(), "a refuelling has its pulse");
+            let force = &after.task_forces[task_force];
             assert!(force.ships.contains(ship));
             assert_ne!(force.status, TaskForceStatus::Underway);
             assert_eq!(force.toward_hex, None);
-            let base = &before.bases[base];
+            let base = &after.bases[base];
             assert_eq!(base.side, force.side);
             assert_eq!(base.hex, force.position());
+            // The force's arrival comes earlier in the log and is the
+            // event's cause; a force that never moved has none.
+            let arrivals: Vec<&Event> = scenario
+                .world
+                .events()
+                .iter()
+                .filter(|other| {
+                    other.id < event.id
+                        && matches!(&other.kind, EventKind::TaskForceArrived { task_force: of, .. } if of == task_force)
+                })
+                .collect();
+            match arrivals.last() {
+                Some(arrival) => assert_eq!(event.causes, vec![Cause::Event(arrival.id)]),
+                None => assert!(event.causes.is_empty()),
+            }
         }
     }
     start_total
@@ -381,11 +406,11 @@ fn the_run_matches_the_hand_calculation_day_by_day() {
     assert_eq!(fuel(&scenario, CRUISER), tons(2000 - 96));
     assert_eq!(fuel(&scenario, DESTROYER), tons(500 - 48));
 
-    // Day 2: under way at the start, so no refuelling. It arrives at
-    // Espiritu Santo at 18:38 (24.625 hours) after 394 nm in all (10 nm
-    // today).
+    // Day 2: under way at the start. It arrives at Espiritu Santo at 18:38
+    // (24.625 hours) after 394 nm in all (10 nm today), and fuels in that
+    // night pulse (decision 0112).
     let day2 = scenario.next_day().expect("day 2").expect("exists");
-    assert!(refuellings(&scenario).is_empty());
+    assert_eq!(refuellings(&scenario).len(), 2);
     assert_eq!(steamed_nm(&scenario, &day2), 10);
     let arrivals = scenario
         .world
@@ -412,42 +437,52 @@ fn the_run_matches_the_hand_calculation_day_by_day() {
         assert_eq!(force.status, TaskForceStatus::Arrived);
         assert_eq!(force.position(), Hex::new(8, 3));
     }
-    assert_eq!(fuel(&scenario, CRUISER), Fixed::from_ratio(3803, 2));
-    assert_eq!(fuel(&scenario, DESTROYER), Fixed::from_ratio(1803, 4));
-    assert_eq!(stock(&scenario, SANTO), tons(120));
-    let arrival_day2 = scenario
-        .world
-        .events()
-        .from_index(day2.first_event)
-        .iter()
-        .find(|event| matches!(event.kind, EventKind::TaskForceArrived { .. }))
-        .expect("arrival")
-        .id;
+    assert_eq!(fuel(&scenario, CRUISER), tons(2000));
+    assert_eq!(fuel(&scenario, DESTROYER), Fixed::from_ratio(1889, 4));
+    assert_eq!(stock(&scenario, SANTO), Fixed::ZERO);
+    {
+        // The two refuellings are on day 2, in the night pulse, after the
+        // arrival, each citing it.
+        let events = scenario.world.events().from_index(day2.first_event);
+        let at = events
+            .iter()
+            .position(|event| matches!(event.kind, EventKind::TaskForceArrived { .. }))
+            .expect("arrival");
+        let arrival_day2 = events[at].id;
+        let refuelled: Vec<&Event> = events
+            .iter()
+            .filter(|event| matches!(event.kind, EventKind::ShipRefuelled { .. }))
+            .collect();
+        assert_eq!(refuelled.len(), 2);
+        for event in refuelled {
+            assert_eq!(event.day, 2);
+            assert_eq!(event.pulse, Some(Pulse::Night));
+            assert!(event.id > arrival_day2);
+            assert_eq!(event.causes, vec![Cause::Event(arrival_day2)]);
+        }
+    }
 
-    // Day 3: stopped at Espiritu Santo with 120 t. The cruiser lacks 98.5 t
-    // and takes it, leaving 21.5 t. The destroyer lacks 49.25 t and takes the
-    // 21.5 t left. Then the order is taken in and the force steams 384 nm.
+    // Day 2's night pulse: stopped at Espiritu Santo with 120 t, the cruiser
+    // lacks 98.5 t and takes it, leaving 21.5 t. The destroyer lacks 49.25 t
+    // and takes the 21.5 t left. Day 3: the order is taken in and the force
+    // steams 384 nm.
     let day3 = scenario.next_day().expect("day 3").expect("exists");
     assert_eq!(
         refuellings(&scenario),
         vec![
-            (3, CRUISER, SANTO, 98, 2000, 21),
-            (3, DESTROYER, SANTO, 21, 472, 0),
+            (2, CRUISER, SANTO, 98, 2000, 21),
+            (2, DESTROYER, SANTO, 21, 472, 0),
         ]
     );
     assert_eq!(stock(&scenario, SANTO), Fixed::ZERO);
     assert_eq!(steamed_nm(&scenario, &day3), 384);
     {
-        // The refuelling comes first in the day, before the order is taken in.
+        // The refuelling is not in day 3: its first event is the order.
         let events = scenario.world.events().from_index(day3.first_event);
-        assert!(matches!(events[0].kind, EventKind::ShipRefuelled { .. }));
-        assert!(matches!(events[1].kind, EventKind::ShipRefuelled { .. }));
-        assert!(matches!(events[2].kind, EventKind::OrderAccepted { .. }));
-        for event in &events[..2] {
-            assert_eq!(event.day, 3);
-            assert_eq!(event.pulse, None);
-            assert_eq!(event.causes, vec![Cause::Event(arrival_day2)]);
-        }
+        assert!(matches!(events[0].kind, EventKind::OrderAccepted { .. }));
+        assert!(events
+            .iter()
+            .all(|event| !matches!(event.kind, EventKind::ShipRefuelled { .. })));
     }
     assert_eq!(fuel(&scenario, CRUISER), tons(2000 - 96));
     assert_eq!(fuel(&scenario, DESTROYER), Fixed::from_ratio(1697, 4));
@@ -464,10 +499,11 @@ fn the_run_matches_the_hand_calculation_day_by_day() {
         assert_eq!(force.position(), Hex::new(0, 0));
     }
 
-    // Day 4: under way at the start, no refuelling. It arrives at Noumea at
-    // 18:38, 394 nm from Espiritu Santo, with 1,901.5 t and 423 t.
+    // Day 4: under way at the start. It arrives at Noumea at 18:38, 394 nm
+    // from Espiritu Santo, with 1,901.5 t and 423 t, and fuels in that night
+    // pulse.
     let day4 = scenario.next_day().expect("day 4").expect("exists");
-    assert_eq!(refuellings(&scenario).len(), 2);
+    assert_eq!(refuellings(&scenario).len(), 4);
     assert_eq!(steamed_nm(&scenario, &day4), 10);
     let arrival_day4 = scenario
         .world
@@ -492,32 +528,45 @@ fn the_run_matches_the_hand_calculation_day_by_day() {
         steamed_nm(&scenario, &day3) + steamed_nm(&scenario, &day4),
         384 + 10
     );
-    assert_eq!(fuel(&scenario, CRUISER), Fixed::from_ratio(3803, 2));
-    assert_eq!(fuel(&scenario, DESTROYER), tons(423));
-    assert_eq!(stock(&scenario, NOUMEA), tons(100));
+    assert_eq!(fuel(&scenario, CRUISER), tons(2000));
+    assert_eq!(fuel(&scenario, DESTROYER), Fixed::from_ratio(849, 2));
+    assert_eq!(stock(&scenario, NOUMEA), Fixed::ZERO);
+    {
+        // The two refuellings are on day 4, in the night pulse, after the
+        // arrival, each citing it.
+        let events = scenario.world.events().from_index(day4.first_event);
+        let refuelled: Vec<&Event> = events
+            .iter()
+            .filter(|event| matches!(event.kind, EventKind::ShipRefuelled { .. }))
+            .collect();
+        assert_eq!(refuelled.len(), 2);
+        for event in refuelled {
+            assert_eq!(event.day, 4);
+            assert_eq!(event.pulse, Some(Pulse::Night));
+            assert!(event.id > arrival_day4.0);
+            assert_eq!(event.causes, vec![Cause::Event(arrival_day4.0)]);
+        }
+    }
 
-    // Day 5: stopped at Noumea with 100 t. The cruiser lacks 98.5 t and takes
-    // it, leaving 1.5 t; the destroyer lacks 77 t and takes the 1.5 t. No
-    // order is given and the force does not move.
+    // Day 4's night pulse: stopped at Noumea with 100 t, the cruiser lacks
+    // 98.5 t and takes it, leaving 1.5 t; the destroyer lacks 77 t and takes
+    // the 1.5 t. Day 5: no order is given and the force does not move.
     let day5 = scenario.next_day().expect("day 5").expect("exists");
     assert_eq!(
         refuellings(&scenario),
         vec![
-            (3, CRUISER, SANTO, 98, 2000, 21),
-            (3, DESTROYER, SANTO, 21, 472, 0),
-            (5, CRUISER, NOUMEA, 98, 2000, 1),
-            (5, DESTROYER, NOUMEA, 1, 424, 0),
+            (2, CRUISER, SANTO, 98, 2000, 21),
+            (2, DESTROYER, SANTO, 21, 472, 0),
+            (4, CRUISER, NOUMEA, 98, 2000, 1),
+            (4, DESTROYER, NOUMEA, 1, 424, 0),
         ]
     );
-    // The two refuellings, and the two bases' counts at the end of the day
-    // (decision 0067).
-    assert_eq!(day5.event_count, 2 + 2);
+    // Only the two bases' counts at the end of the day (decision 0067).
+    assert_eq!(day5.event_count, 2);
     let last = scenario.world.events().from_index(day5.first_event);
-    assert!(last[2..]
+    assert!(last
         .iter()
         .all(|event| matches!(event.kind, EventKind::BaseAtDayEnd { .. })));
-    assert_eq!(last[0].causes, vec![Cause::Event(arrival_day4.0)]);
-    assert_eq!(last[1].causes, vec![Cause::Event(arrival_day4.0)]);
     assert_eq!(steamed_nm(&scenario, &day5), 0);
     assert_eq!(
         scenario.world.umpire().task_forces[&FORCE].position(),
@@ -538,8 +587,8 @@ fn the_run_matches_the_hand_calculation_day_by_day() {
         Fixed::from_ratio(4849, 2)
     );
 
-    // Four ships refuelled, so four events: two at the start of day 3 and
-    // two at the start of day 5.
+    // Four ships refuelled, so four events: two on day 2 and two on day 4,
+    // each in the night pulse.
     assert_eq!(refuellings(&scenario).len(), 4);
     assert!(scenario.next_day().expect("past the end").is_none());
 }
@@ -654,9 +703,40 @@ fn the_refuelling_events_say_what_the_hand_calculation_says() {
     // Their causes lead back through the movement to the orders.
     let trace = scenario.world.events().trace(events[0].id);
     assert!(trace.iter().any(|cause| matches!(cause, Cause::Order(_))));
-    // A refuelling is recorded for no ship that took nothing, and no
-    // breakdown is recorded for it.
-    assert!(events.iter().all(|event| event.breakdown.is_none()));
+    // A refuelling is recorded for no ship that took nothing. Each has a
+    // breakdown: the cruiser's at Espiritu Santo lacked 98.5 t, the base had
+    // 120 t above its reserve (none), no fuelling rate is given on these
+    // figures (so no rate factor), the force worked the night pulse's hours
+    // from its arrival at 0.625 h, no cargo used any, and the result is the
+    // tons taken.
+    assert!(events.iter().all(|event| event.breakdown.is_some()));
+    let breakdown = events[0].breakdown.as_ref().expect("a breakdown");
+    let factor = |name: &str| {
+        breakdown
+            .factors
+            .iter()
+            .find(|factor| factor.name == name)
+            .map(|factor| factor.value)
+    };
+    assert_eq!(factor("lacks_t"), Some(half(197)));
+    assert_eq!(factor("base_above_reserve_t"), Some(tons(120)));
+    assert_eq!(factor("rate_t_per_h"), None);
+    assert_eq!(factor("hours_worked"), Some(Fixed::from_ratio(91, 8)));
+    assert_eq!(factor("cargo_hours"), Some(Fixed::ZERO));
+    assert_eq!(factor("hours_left"), Some(Fixed::from_ratio(91, 8)));
+    assert_eq!(breakdown.result, half(197));
+    // The destroyer's: it lacked 49.25 t and the base had the 21.5 t left.
+    let breakdown = events[1].breakdown.as_ref().expect("a breakdown");
+    let factor = |name: &str| {
+        breakdown
+            .factors
+            .iter()
+            .find(|factor| factor.name == name)
+            .map(|factor| factor.value)
+    };
+    assert_eq!(factor("lacks_t"), Some(Fixed::from_ratio(197, 4)));
+    assert_eq!(factor("base_above_reserve_t"), Some(half(43)));
+    assert_eq!(breakdown.result, half(43));
 }
 
 #[test]
@@ -698,16 +778,17 @@ fn recording_breakdowns_changes_neither_the_events_nor_the_hashes() {
     let (with_hashes, with_events) = run(true);
     let (without_hashes, without_events) = run(false);
     assert_eq!(with_hashes, without_hashes);
-    // The events are equal apart from the breakdowns of the steaming, which
+    // The events are equal apart from the breakdowns of the steaming and the
+    // refuelling, which
     // are there in one and not the other.
     assert!(with_events.iter().any(|event| event.breakdown.is_some()));
     assert!(without_events.iter().all(|event| event.breakdown.is_none()));
     assert_eq!(without_breakdowns(&with_events), without_events);
-    // A refuelling never has one either way.
+    // A refuelling has one when they are recorded, and none when not.
     assert!(with_events
         .iter()
         .filter(|event| matches!(event.kind, EventKind::ShipRefuelled { .. }))
-        .all(|event| event.breakdown.is_none()));
+        .all(|event| event.breakdown.is_some()));
 }
 
 #[test]
@@ -743,7 +824,7 @@ fn a_replay_reproduces_every_daily_hash() {
     let mut second = load();
     second.run_to_end().expect("second run");
     assert_eq!(second.world.day_hashes(), hashes.as_slice());
-    // The fuel changes on days 3 and 5, so those hashes differ from the one
+    // The fuel changes on days 2 and 4, so those hashes differ from the one
     // before, as every day's does.
     let distinct: BTreeSet<u64> = hashes.iter().copied().collect();
     assert_eq!(distinct.len(), 5);
@@ -806,13 +887,13 @@ fn espiritu_santo_with_a_thousand_tons_fills_both_ships() {
     assert_eq!(
         refuellings(&scenario),
         vec![
-            (3, CRUISER, SANTO, 98, 2000, 901),
-            (3, DESTROYER, SANTO, 49, 500, 852),
-            // At Noumea on day 5: the cruiser lacks 98.5 t and takes it,
+            (2, CRUISER, SANTO, 98, 2000, 901),
+            (2, DESTROYER, SANTO, 49, 500, 852),
+            // At Noumea on day 4: the cruiser lacks 98.5 t and takes it,
             // leaving 1.5 t; the destroyer, 450.75 t on arrival, lacks 49.25
             // t and gets the 1.5 t.
-            (5, CRUISER, NOUMEA, 98, 2000, 1),
-            (5, DESTROYER, NOUMEA, 1, 452, 0),
+            (4, CRUISER, NOUMEA, 98, 2000, 1),
+            (4, DESTROYER, NOUMEA, 1, 452, 0),
         ]
     );
     assert_eq!(stock(&scenario, SANTO), Fixed::from_ratio(3409, 4));
@@ -831,11 +912,11 @@ fn a_force_does_not_refuel_at_a_base_of_the_other_side() {
     });
     assert_eq!(scenario.world.umpire().bases[&SANTO].side, Side::Japanese);
     run_checked(&mut scenario);
-    // Nothing at Espiritu Santo; at Noumea on day 5 the cruiser, 1,803 t,
+    // Nothing at Espiritu Santo; at Noumea on day 4 the cruiser, 1,803 t,
     // lacks 197 t and takes the 100 t.
     assert_eq!(
         refuellings(&scenario),
-        vec![(5, CRUISER, NOUMEA, 100, 1903, 0)]
+        vec![(4, CRUISER, NOUMEA, 100, 1903, 0)]
     );
     assert_eq!(stock(&scenario, SANTO), tons(120));
     assert_eq!(fuel(&scenario, DESTROYER), Fixed::from_ratio(803, 2));
@@ -853,7 +934,7 @@ fn a_force_does_not_refuel_in_a_hex_with_no_base() {
     run_checked(&mut scenario);
     assert_eq!(
         refuellings(&scenario),
-        vec![(5, CRUISER, NOUMEA, 100, 1903, 0)]
+        vec![(4, CRUISER, NOUMEA, 100, 1903, 0)]
     );
     assert_eq!(stock(&scenario, SANTO), tons(120));
 }
@@ -868,17 +949,17 @@ fn a_second_force_already_at_espiritu_santo_is_served_first() {
     let ship3 = ShipId::new(3);
     let total = run_checked(&mut scenario);
     assert_eq!(total, tons(2720 + 1900));
-    // It lacks 100 t and takes it at the start of day 1, leaving 20 t; then
-    // it lacks nothing. On day 3 force 1's cruiser takes the 20 t (1,921.5 t)
+    // It lacks 100 t and takes it in the night pulse of day 1, leaving 20 t;
+    // then it lacks nothing. On day 2 force 1's cruiser takes the 20 t (1,921.5 t)
     // and its destroyer nothing.
     assert_eq!(
         refuellings(&scenario),
         vec![
             (1, ship3, SANTO, 100, 2000, 20),
-            (3, CRUISER, SANTO, 20, 1921, 0),
-            // On day 5 at Noumea: the cruiser, 1,823 t, lacks 177 t and takes
+            (2, CRUISER, SANTO, 20, 1921, 0),
+            // On day 4 at Noumea: the cruiser, 1,823 t, lacks 177 t and takes
             // the 100 t; the destroyer nothing.
-            (5, CRUISER, NOUMEA, 100, 1923, 0),
+            (4, CRUISER, NOUMEA, 100, 1923, 0),
         ]
     );
     // No arrival, no order: the first refuelling has no cause.

@@ -111,10 +111,12 @@ impl Default for MadeIds {
 /// has left) and 10 from step 3 of decision 0107 (an order of the commander's
 /// to a unit in an intent's forces limit holds it, and the staff's orders to
 /// what is held are refused: a game saved under the old rules could play
-/// differently). A pull request raises it by one when
-/// it changes a rule in a way that changes what an existing game would do; a
+/// differently) and 11 from decision 0112 (refuelling takes the hours of a
+/// pulse at the port's fuelling rate, in the cargo rule's queue, which changes
+/// every live scenario with a force in port). A pull request raises it by one
+/// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 10;
+pub const RULES_VERSION: u32 = 11;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

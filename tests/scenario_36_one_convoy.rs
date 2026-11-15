@@ -21,6 +21,12 @@
 //! not the hour its unloading ends. The rows of days 3, 4 and 18 and the
 //! end of day 18 say so; nothing else moved.
 //!
+//! Restated by the architect on Nov 15, 2026, for decision 0112: a ship in
+//! port takes fuel in the pulses of the day and no longer at its start. On
+//! these figures no fuelling rate is given, so a ship that arrives in a
+//! pulse is filled in that pulse. Each refuelling below is a day earlier
+//! than first written; no other number moved.
+//!
 //! ## Figures
 //!
 //! `daily_supply_t_per_man` 0.005. A size 1 port has one berth, at 50 t an
@@ -29,7 +35,7 @@
 //! t of fuel. A day is 24 hours: a night pulse of 12 and two daylight
 //! pulses of 6. Day d begins at hour 24 x (d - 1). In a pulse ships move
 //! before cargo is worked. The men's supply is paid at the start of the
-//! night pulse. Ships in port refuel at the start of a day. A force that
+//! night pulse. A ship in port takes the fuel it lacks in the pulse. A force that
 //! acts at a place and steams on does so at the start of the first pulse
 //! after its work is done (decision 0096).
 //!
@@ -68,8 +74,8 @@
 //!   without it, the figure read on the day after it would arrive, day d +
 //!   2, would be below the intent's floor.
 //! - **Its ships** are the pool's free ships in number order until their
-//!   room covers the load. A ship is free when it is back at the source and
-//!   has refuelled there.
+//!   room covers the load. A ship is free on the morning after it is back
+//!   at the source and has refuelled there.
 //! - **Its load** is the floor's stock, less the stock projected for the
 //!   reading on the day it arrives and not below 0, plus the planned use of
 //!   one interval between shipments. The intent's interval is 15 days: 150
@@ -86,8 +92,8 @@
 //! | 1   | 100 t, 10              | Form a force of ship 1. Load 360 t of supply at base 1 | Loaded in 360 / 50 = 7.2 hours. Base 1 holds 4640 t. T pays 10 t |
 //! | 2   | 90 t, 9                | Route to T and back, acting at T, with an unload order | Sails at hour 24, arrives at hour 44. T pays 10 t. 4 hours of the afternoon at 20 t an hour: 80 t landed |
 //! | 3   | 160 t, 16              | none                                  | T pays 10 t. The last 280 t take 14 hours: the 12 of the night and 2 of the morning. Unloaded at hour 62. The force steams for S at hour 66, the start of the next pulse |
-//! | 4   | 430 t, 43              | none                                  | T pays 10 t. The force arrives at S at hour 86 |
-//! | 5   | 420 t, 42              | none                                  | Ship 1 refuels 40 t: base 1 holds 1960 t of fuel. T pays 10 t |
+//! | 4   | 430 t, 43              | none                                  | T pays 10 t. The force arrives at S at hour 86. Ship 1 refuels 40 t in that pulse: base 1 holds 1960 t of fuel |
+//! | 5   | 420 t, 42              | none                                  | T pays 10 t. Ship 1 is free |
 //! | 6 to 15 | 410 t falling to 320 t, 41 to 32 | none                    | T pays 10 t a day |
 //! | 16  | 310 t, 31              | Load 150 t of supply at base 1        | Loaded in 3 hours. Base 1 holds 4490 t of supply. T pays 10 t |
 //! | 17  | 300 t, 30              | Route to T and back, acting at T, with an unload order | Sails at hour 384, arrives at hour 404. T pays 10 t. 80 t landed |
@@ -107,7 +113,7 @@
 //! - **Day 16.** A run ordered today arrives on day 17, and without it the
 //!   reading of day 18 is 290 t, below 300: a run is needed. The stock
 //!   projected for the reading of day 17 is 300 t. The load is 0 + 150 =
-//!   150 t. Ship 1 has been back and refuelled since day 5, and is the
+//!   150 t. Ship 1 has been back and refuelled since day 4, and is the
 //!   first free ship in number order.
 //!
 //! At the end of day 18: base 2 holds 430 t; base 1 holds 4490 t of supply
@@ -661,10 +667,12 @@ fn what_happens_follows_the_table_exactly() {
     // `the_hours_at_which_the_force_comes_home`).
     assert!(played.arrived_at(4, FORCE, S).is_some());
     assert_eq!(played.base_supply(4, 2), n(420));
-    // Day 5: ship 1 refuels 40 t: base 1 holds 1960 t of fuel.
-    assert_eq!(played.base_fuel(4, 1), n(2000));
+    // Ship 1 refuels 40 t in the pulse it arrives, on day 4: base 1 holds
+    // 1960 t of fuel (decision 0112).
+    assert_eq!(played.base_fuel(3, 1), n(2000));
+    assert_eq!(played.base_fuel(4, 1), n(1960));
     assert_eq!(played.base_fuel(5, 1), n(1960));
-    assert_eq!(played.at(4).ships[&ship(1)].fuel_t, n(960));
+    assert_eq!(played.at(4).ships[&ship(1)].fuel_t, n(1000));
     assert_eq!(played.at(5).ships[&ship(1)].fuel_t, n(1000));
     // Days 6 to 15: T pays 10 t a day.
     for day in 4..=15 {

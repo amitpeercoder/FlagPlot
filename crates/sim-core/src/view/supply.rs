@@ -15,8 +15,8 @@
 //! aircraft the day before gives).
 //!
 //! It is right when read where a staff is asked: at the start of a day,
-//! after ships in port have refuelled and before the day's orders are taken
-//! in. Read between days it gives the same, since nothing between the end of
+//! after forces back from the yard are home and before the day's orders are
+//! taken in. Read between days it gives the same, since nothing between the end of
 //! a day and that step changes a stock or a use.
 
 use crate::fixed::Fixed;

@@ -568,6 +568,8 @@ mod tests {
                 berths: 0,
                 berth_rate_t_per_h: Fixed::ZERO,
                 lighter_rate_t_per_h: Fixed::from_int(20),
+                fuel_berth_rate_t_per_h: None,
+                fuel_lighter_rate_t_per_h: None,
             },
         );
         ref_data.search = Some(SearchFigures::from_search_toml());

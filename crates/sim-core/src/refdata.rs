@@ -934,6 +934,12 @@ pub struct PortSize {
     pub berth_rate_t_per_h: Fixed,
     /// Tons per hour moved by one ship without a berth, working by lighter.
     pub lighter_rate_t_per_h: Fixed,
+    /// Tons of fuel an hour one ship takes at a berth (decision 0112). `None`
+    /// is not given: no limit.
+    pub fuel_berth_rate_t_per_h: Option<Fixed>,
+    /// Tons of fuel an hour one ship takes by lighter (decision 0112). `None`
+    /// is not given: no limit, and a berth cannot speed the fuelling.
+    pub fuel_lighter_rate_t_per_h: Option<Fixed>,
 }
 
 impl PortSize {
@@ -945,6 +951,16 @@ impl PortSize {
         }
         if self.lighter_rate_t_per_h.is_negative() {
             return Some(format!("port size {size} has a negative lighter rate"));
+        }
+        for (name, rate) in [
+            ("berth", self.fuel_berth_rate_t_per_h),
+            ("lighter", self.fuel_lighter_rate_t_per_h),
+        ] {
+            if rate.is_some_and(|rate| rate.is_negative() || rate.is_zero()) {
+                return Some(format!(
+                    "port size {size} has a fuel {name} rate that is not positive"
+                ));
+            }
         }
         if self.berths > 0 && self.berth_rate_t_per_h.is_zero() {
             return Some(format!(

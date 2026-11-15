@@ -3,10 +3,10 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 61fae88006062149  13 events
-day   2  hash 05deb25fd425fd62  6 events
-day   3  hash 66a41649eee36aa9  14 events
-day   4  hash e44573af09a41c89  6 events
-day   5  hash cc500c21181acd6d  4 events
+day   2  hash 922b3e998747fa73  8 events
+day   3  hash 66a41649eee36aa9  12 events
+day   4  hash ce195721243f3a7e  8 events
+day   5  hash cc500c21181acd6d  2 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
@@ -25,10 +25,10 @@ day   5  hash cc500c21181acd6d  4 events
 #15 D2 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #14
 #16 D2 night     ship:2 burned 1.25 t, 450.75 t remaining  <- #14
 #17 D2 night     task_force:1 arrived at (8,3) at D2 18:38  <- #14
-#18 D2 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#19 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#20 D3 -         ship:1 took 98.5 t of fuel at base:2, 2000 t aboard, base:2 has 21.5 t left  <- #17
-#21 D3 -         ship:2 took 21.5 t of fuel at base:2, 472.25 t aboard, base:2 is out of fuel  <- #17
+#18 D2 night     ship:1 took 98.5 t of fuel at base:2, 2000 t aboard, base:2 has 21.5 t left  <- #17
+#19 D2 night     ship:2 took 21.5 t of fuel at base:2, 472.25 t aboard, base:2 is out of fuel  <- #17
+#20 D2 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#21 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 #22 D3 -         order:3 accepted for task_force:1  <- order:3
 #23 D3 night     task_force:1 steamed 192 nm at 16 kn from (8,3) to (5,0)  <- order:3, order:2
 #24 D3 night     ship:1 burned 48 t, 1952 t remaining  <- #23
@@ -45,10 +45,10 @@ day   5  hash cc500c21181acd6d  4 events
 #35 D4 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #34
 #36 D4 night     ship:2 burned 1.25 t, 423 t remaining  <- #34
 #37 D4 night     task_force:1 arrived at (0,0) at D4 18:38  <- #34
-#38 D4 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#39 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#40 D5 -         ship:1 took 98.5 t of fuel at base:1, 2000 t aboard, base:1 has 1.5 t left  <- #37
-#41 D5 -         ship:2 took 1.5 t of fuel at base:1, 424.5 t aboard, base:1 is out of fuel  <- #37
+#38 D4 night     ship:1 took 98.5 t of fuel at base:1, 2000 t aboard, base:1 has 1.5 t left  <- #37
+#39 D4 night     ship:2 took 1.5 t of fuel at base:1, 424.5 t aboard, base:1 is out of fuel  <- #37
+#40 D4 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#41 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 #42 D5 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 #43 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 

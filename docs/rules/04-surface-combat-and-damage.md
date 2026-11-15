@@ -364,7 +364,7 @@ When the order is taken in, the ships leave the force (their location becomes aw
 
 **While away,** a force is on no hex of the map as far as any rule goes: it is not moved, fought, sighted, searched for, struck or alerted, takes no fatigue, is not refuelled or repaired forward, and takes no order (chapter 1, Every reason an order is refused). Its ships are afloat, with the damage they left with. Chapter 2 says what the enemy knows of it.
 
-**When it returns,** at the start of its day of return, before refuelling, each ship of the force in number order is made whole:
+**When it returns,** at the start of its day of return, each ship of the force in number order is made whole:
 
 | Field | Becomes |
 | --- | --- |
@@ -376,7 +376,7 @@ When the order is taken in, the ships leave the force (their location becomes aw
 | Side fired (`torpedoes_one_side_fired`) | No |
 | Cargo aboard, experience | Unchanged |
 
-The force is idle at its base's hex, with no route, cargo order, alert or fatigue. Its mission, speed, readiness, rules of engagement and home port are as they were when it left. Its arrival event is the `ForceReturnedFromYard` that is then recorded, citing the departure, so the day's refuelling and forward repair cite it. The force's orders are taken as for any force.
+The force is idle at its base's hex, with no route, cargo order, alert or fatigue. Its mission, speed, readiness, rules of engagement and home port are as they were when it left. Its arrival event is the `ForceReturnedFromYard` that is then recorded, citing the departure, so the refuelling of a later pulse and forward repair cite it. The force's orders are taken as for any force.
 
 A force whose day of return is after the last day of the game never returns: its ships end the game afloat at the yard, with the damage they left with. The engine does not hold the last day; the session that plays the game does, and tells it in the briefing and in `measure`. A whole force goes and returns together, until forces can be formed by order. [0069]
 

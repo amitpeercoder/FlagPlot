@@ -1,0 +1,30 @@
+# FROZEN: a copy of data/reference/port_sizes_placeholder_fuelling.csv
+# as it stood when scenario 44 was built, on Nov 15, 2026, for the hand-calculation test
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. These figures are invented for scenario 44, the hand
+# calculation of decision 0112 (tests/scenario_44_fuelling_takes_time.rs). They
+# are not historical and must not be used for validation.
+#
+# Sizes 0 and 1 are the two the scenario uses: size 0 has no berth and fuels by
+# lighter at 40 t an hour; size 1 has one berth at 100 t an hour for fuel and 50
+# t an hour for cargo, and 40 t an hour by lighter. Sizes 2 to 10 are unused: the
+# loader needs sizes 0 to 10, so they carry the frozen file's cargo figures and
+# the fuel rates of size 1.
+#
+# berths: ships that can work cargo alongside at once.
+# berth_rate_t_per_h, lighter_rate_t_per_h: tons of cargo an hour at a berth,
+# and by lighter. fuel_berth_rate_t_per_h, fuel_lighter_rate_t_per_h: tons of
+# fuel an hour at a berth, and by lighter; empty is not given.
+port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h,fuel_berth_rate_t_per_h,fuel_lighter_rate_t_per_h
+0,0,0,20,,40
+1,1,50,20,100,40
+2,1,75,20,100,40
+3,2,100,20,100,40
+4,3,125,20,100,40
+5,4,150,20,100,40
+6,5,200,20,100,40
+7,6,250,20,100,40
+8,8,300,20,100,40
+9,10,350,20,100,40
+10,12,400,20,100,40

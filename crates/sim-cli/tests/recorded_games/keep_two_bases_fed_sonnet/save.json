@@ -97,7 +97,7 @@
     },
     {
       "file": "data/scenarios/../reference/port_sizes.csv",
-      "hash": "53811d71d5b18b81"
+      "hash": "bf78df85d94172ae"
     },
     {
       "file": "data/scenarios/../reference/aircraft_types.csv",
@@ -116,7 +116,7 @@
       "hash": "5ef7d142f1faa97f"
     }
   ],
-  "doctrine_version": "supply-5",
+  "doctrine_version": "supply-6",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -129,7 +129,7 @@
     },
     {
       "day": 3,
-      "hash": "a5f9184c2b21ece0"
+      "hash": "b148e31b0785f871"
     },
     {
       "day": 4,
@@ -189,7 +189,7 @@
     },
     {
       "day": 18,
-      "hash": "bf4bae16c261c2b0"
+      "hash": "33ac5d590c75e86a"
     },
     {
       "day": 19,
@@ -201,7 +201,7 @@
     }
   ],
   "orders": [],
-  "rules_version": 10,
+  "rules_version": 11,
   "scenario": {
     "file": "data/scenarios/43_keep_two_bases_fed.toml",
     "hash": "0a6c6a34dbb4fcd2"
@@ -299,7 +299,7 @@
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). The staff adds this run to the plan.",
+              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. The staff adds this run to the plan.",
               "would_change": [
                 "a reading of day 3 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -334,7 +334,7 @@
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). The ships are committed from day 1 to day 4, the day before they are free.",
+              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. The ships are committed from day 1 to day 4, the day before they are free.",
               "would_change": [
                 "a reading of day 3 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -429,7 +429,7 @@
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). The staff adds this run to the plan.",
+              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. The staff adds this run to the plan.",
               "would_change": [
                 "a reading of day 3 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -464,7 +464,7 @@
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). The ships are committed from day 1 to day 4, the day before they are free.",
+              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. The ships are committed from day 1 to day 4, the day before they are free.",
               "would_change": [
                 "a reading of day 3 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -508,7 +508,7 @@
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Form ship:1 lying in port at base:1 in no force into a force.",
+              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. Form ship:1 lying in port at base:1 in no force into a force.",
               "would_change": [
                 "a reading of day 3 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -545,7 +545,7 @@
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Form ship:2 lying in port at base:1 in no force into a force.",
+              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. Form ship:2 lying in port at base:1 in no force into a force.",
               "would_change": [
                 "a reading of day 3 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -581,7 +581,7 @@
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Load order: until 16 t is aboard (0 t aboard now + the load of 16 t); ship:1 16 t at 50 t an hour = 0.32 hours.",
+              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. Load order: until 16 t is aboard (0 t aboard now + the load of 16 t); ship:1 16 t at 50 t an hour = 0.32 hours.",
               "would_change": [
                 "a reading of day 3 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -617,7 +617,7 @@
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Load order: until 16 t is aboard (0 t aboard now + the load of 16 t); ship:2 16 t at 50 t an hour = 0.32 hours.",
+              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. Load order: until 16 t is aboard (0 t aboard now + the load of 16 t); ship:2 16 t at 50 t an hour = 0.32 hours.",
               "would_change": [
                 "a reading of day 3 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -1532,7 +1532,7 @@
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:2: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:2 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:2 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). The staff adds this run to the plan.",
+              "worked": "Reading today at base:2: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:2 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:2 = 0.75 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 20, the morning after the day the fuelling ends. The staff adds this run to the plan.",
               "would_change": [
                 "a reading of day 18 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -1567,7 +1567,7 @@
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:2: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:2 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:2 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). The ships are committed from day 16 to day 19, the day before they are free.",
+              "worked": "Reading today at base:2: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:2 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:2 = 0.75 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 20, the morning after the day the fuelling ends. The ships are committed from day 16 to day 19, the day before they are free.",
               "would_change": [
                 "a reading of day 18 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -1610,7 +1610,7 @@
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:3: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:3 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:3 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). The staff adds this run to the plan.",
+              "worked": "Reading today at base:3: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:3 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:3 = 0.75 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 20, the morning after the day the fuelling ends. The staff adds this run to the plan.",
               "would_change": [
                 "a reading of day 18 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -1645,7 +1645,7 @@
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:3: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:3 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:3 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). The ships are committed from day 16 to day 19, the day before they are free.",
+              "worked": "Reading today at base:3: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:3 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:3 = 0.75 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 20, the morning after the day the fuelling ends. The ships are committed from day 16 to day 19, the day before they are free.",
               "would_change": [
                 "a reading of day 18 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -1688,7 +1688,7 @@
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:2: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:2 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:2 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). Load order: until 15 t is aboard (0 t aboard now + the load of 15 t); ship:1 15 t at 50 t an hour = 0.3 hours.",
+              "worked": "Reading today at base:2: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:2 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:2 = 0.75 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 20, the morning after the day the fuelling ends. Load order: until 15 t is aboard (0 t aboard now + the load of 15 t); ship:1 15 t at 50 t an hour = 0.3 hours.",
               "would_change": [
                 "a reading of day 18 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"
@@ -1724,7 +1724,7 @@
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
-              "worked": "Reading today at base:3: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:3 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:3 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). Load order: until 15 t is aboard (0 t aboard now + the load of 15 t); ship:2 15 t at 50 t an hour = 0.3 hours.",
+              "worked": "Reading today at base:3: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:3 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:3 = 0.75 hours, 1 day. Back at the source at hour 60.5 of the run and fuelled by hour 60.75 (0.25 hours at 200 t an hour), its ships are free on day 20, the morning after the day the fuelling ends. Load order: until 15 t is aboard (0 t aboard now + the load of 15 t); ship:2 15 t at 50 t an hour = 0.3 hours.",
               "would_change": [
                 "a reading of day 18 at or above 10 t would call no run",
                 "a free ship of the pool earlier in number order would carry it instead"

@@ -68,8 +68,8 @@ pub enum Moment {
     /// Before anything of the day: the orders submitted for it are not yet
     /// taken in.
     DayBegins { day: u32 },
-    /// After forces back from the yard are home and ships have refuelled in
-    /// port, before the day's orders are taken in.
+    /// After forces back from the yard are home, before the day's orders are
+    /// taken in. (Ships in port take fuel in the pulses: decision 0112.)
     Orders { day: u32 },
     /// After the orders and forward repair, before the pulse's alert from
     /// belief, fatigue of forces and grounded bases.
