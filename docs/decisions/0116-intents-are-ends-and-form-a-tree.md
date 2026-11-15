@@ -44,7 +44,7 @@ The designer saw it first in reconnaissance: a commander who orders a place take
 ## One staff, and the levels kept
 
 18. **One staff walks the tree.** A side has one picture of itself and of the enemy, and an order takes effect the next morning whoever gives it. Staffs at each level would decide what one staff decides. So the levels are recorded in the intents and not built as separate staffs.
-19. **Friction in command is not in this decision.** Delay in passing an order down, a subordinate's narrower view, and his initiative would make the levels real. They are a question for the pillars and for a later step; the level on each intent is where they would attach.
+19. **Friction in command is not in this decision.** Delay in passing an order down, a subordinate's narrower view, and his initiative would make the levels real. They are a question for the pillars and for a later step; the level on each intent is where they would attach. The designer took the question up the same day: `docs/design/command-levels.md` has his direction, that a staff at every level interprets and splits intent on its own picture and that levels differ in what they know and report, with what it would take to build.
 
 ## What it changes in the spec
 
