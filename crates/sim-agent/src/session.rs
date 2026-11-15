@@ -12,10 +12,12 @@
 use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
+use sim_core::command::{CommandKind, Staff, StaffDecisions, Staffs};
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{OrderKind, OrderRequest, Origin, RejectReason, TaskForceOrder};
 use sim_core::state::Side;
+use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::World;
 
 use crate::answer::{FORMAT, VERSION};
@@ -147,6 +149,17 @@ pub struct Session {
     days: u32,
     seats: BTreeMap<Side, SeatState>,
     handed_in: BTreeMap<u32, Vec<(Side, OrderRequest)>>,
+    /// The staff each side is given, if any (decision 0107). The caller
+    /// hands them in: this crate holds no doctrine.
+    staffs: BTreeMap<Side, Box<dyn Staff + Send>>,
+    /// The commands still to be given, by day: the script's, since a seat
+    /// cannot issue a command yet.
+    commands: BTreeMap<u32, Vec<(Side, CommandKind)>>,
+    /// The commands handed in to the engine, by day, for the saved game.
+    commands_handed_in: BTreeMap<u32, Vec<(Side, CommandKind)>>,
+    /// What each side's staff handed in, by day, for the saved game. A side
+    /// or a day with nothing handed in is not in it.
+    staff_handed_in: BTreeMap<u32, BTreeMap<Side, StaffDecisions>>,
     transcript: Vec<TranscriptEntry>,
 }
 
@@ -180,8 +193,28 @@ impl Session {
             days,
             seats,
             handed_in: BTreeMap::new(),
+            staffs: BTreeMap::new(),
+            commands: BTreeMap::new(),
+            commands_handed_in: BTreeMap::new(),
+            staff_handed_in: BTreeMap::new(),
             transcript: Vec::new(),
         }
+    }
+
+    /// This session with a staff for each side in `staffs`, asked on its
+    /// view each day as the engine resolves it (decision 0107). A session
+    /// made with [`Session::new`] has none.
+    pub fn with_staffs(mut self, staffs: BTreeMap<Side, Box<dyn Staff + Send>>) -> Session {
+        self.staffs = staffs;
+        self
+    }
+
+    /// This session with the commands the script gives, by day, submitted
+    /// as the commander's before each day resolves. They are kept with what
+    /// was handed in, whoever holds the seats.
+    pub fn with_commands(mut self, commands: BTreeMap<u32, Vec<(Side, CommandKind)>>) -> Session {
+        self.commands = commands;
+        self
     }
 
     /// Who holds a seat.
@@ -219,6 +252,18 @@ impl Session {
     /// seat gave them. A saved game made from these replays with no player.
     pub fn handed_in(&self) -> &BTreeMap<u32, Vec<(Side, OrderRequest)>> {
         &self.handed_in
+    }
+
+    /// The commands handed in to the engine, by day, side by side in the
+    /// order given. A saved game keeps them beside the orders.
+    pub fn commands_handed_in(&self) -> &BTreeMap<u32, Vec<(Side, CommandKind)>> {
+        &self.commands_handed_in
+    }
+
+    /// What each side's staff handed in, by day, for the days and sides that
+    /// handed in anything. A saved game keeps it beside the orders.
+    pub fn staff_handed_in(&self) -> &BTreeMap<u32, BTreeMap<Side, StaffDecisions>> {
+        &self.staff_handed_in
     }
 
     /// Every call a player's seat made, in order.
@@ -401,54 +446,58 @@ impl Session {
                 .queued
                 .clear();
         }
-        // Each order is judged against the state as it is now, which queuing
-        // the others does not change, so the judging is done first.
-        let judged: Vec<Result<OrderRequest, String>> = {
-            let ctx = Ctx::new(self.world.side_view(side));
-            entries
-                .iter()
-                .map(|entry| self.judge(side, &ctx, entry))
-                .collect()
-        };
+        // Each order is judged against the state as it is now and beside the
+        // orders already queued, the seat's and this call's before it
+        // (decision 0107, "As built": `World::check_order_queued`), so that
+        // an order to the force a queued forming order makes is accepted. A
+        // forming order after the order that names its force does not
+        // help it: orders are judged in the order given.
+        let mut accepted: Vec<OrderRequest> = Vec::new();
         let mut results = Vec::new();
-        for (index, judgement) in judged.into_iter().enumerate() {
-            match judgement {
-                Ok(request) => {
-                    // A yard order's acceptance states the day of return,
-                    // worked by the function the order itself uses on the
-                    // state as it stands (decision 0069).
-                    let mut result = json!({ "index": index, "status": "queued" });
-                    if let OrderKind::TaskForce {
-                        target,
-                        order: TaskForceOrder::SendToYard,
-                    } = &request.kind
-                    {
-                        if let Some(plan) = self.world.side_view(side).yard_plan(*target) {
-                            let day = plan.return_day(self.world.day() + 1);
-                            result["day_of_return"] = json!(day);
-                            result["returns"] = json!(day <= self.days);
+        {
+            let ctx = Ctx::new(self.world.side_view(side));
+            let seat_queue = self.seats[&side].queued.clone();
+            for (index, entry) in entries.iter().enumerate() {
+                let queued: Vec<OrderRequest> =
+                    seat_queue.iter().chain(accepted.iter()).cloned().collect();
+                match self.judge(side, &ctx, entry, &queued) {
+                    Ok(request) => {
+                        // A yard order's acceptance states the day of return,
+                        // worked by the function the order itself uses on the
+                        // state as it stands (decision 0069).
+                        let mut result = json!({ "index": index, "status": "queued" });
+                        if let OrderKind::TaskForce {
+                            target,
+                            order: TaskForceOrder::SendToYard,
+                        } = &request.kind
+                        {
+                            if let Some(plan) = self.world.side_view(side).yard_plan(*target) {
+                                let day = plan.return_day(self.world.day() + 1);
+                                result["day_of_return"] = json!(day);
+                                result["returns"] = json!(day <= self.days);
+                            }
                         }
+                        // A load the commander gives may take a stock below
+                        // its reserve; the answer says so (decision 9 of
+                        // 0111).
+                        if let Some(below) = crate::orders::below_reserve(&ctx, &request.kind) {
+                            result["below_reserve"] = below;
+                        }
+                        accepted.push(request);
+                        results.push(result);
                     }
-                    // A load the commander gives may take a stock below its
-                    // reserve; the answer says so (decision 9 of 0111).
-                    if let Some(below) = crate::orders::below_reserve(
-                        &Ctx::new(self.world.side_view(side)),
-                        &request.kind,
-                    ) {
-                        result["below_reserve"] = below;
+                    Err(reason) => {
+                        results
+                            .push(json!({ "index": index, "status": "refused", "reason": reason }));
                     }
-                    self.seats
-                        .get_mut(&side)
-                        .expect("both seats exist")
-                        .queued
-                        .push(request);
-                    results.push(result);
-                }
-                Err(reason) => {
-                    results.push(json!({ "index": index, "status": "refused", "reason": reason }));
                 }
             }
         }
+        self.seats
+            .get_mut(&side)
+            .expect("both seats exist")
+            .queued
+            .extend(accepted);
         let refused = results.iter().filter(|r| r["status"] == "refused").count();
         let accepted = results.len() - refused;
         let queued = self.seats[&side].queued.len();
@@ -478,7 +527,13 @@ impl Session {
     /// reason: it is the engine's `NotYourUnit` for an enemy unit and for a
     /// number that is nothing, and a unit not written as an orderable one is
     /// given the same.
-    fn judge(&self, side: Side, ctx: &Ctx<'_>, entry: &Value) -> Result<OrderRequest, String> {
+    fn judge(
+        &self,
+        side: Side,
+        ctx: &Ctx<'_>,
+        entry: &Value,
+        queued: &[OrderRequest],
+    ) -> Result<OrderRequest, String> {
         let unit = entry
             .get("unit")
             .and_then(Value::as_str)
@@ -497,13 +552,33 @@ impl Session {
             .split_once(':')
             .expect("an orderable unit is kind:number");
         let number: u32 = number.parse().expect("an orderable unit has a number");
+        let mut new_force: Option<(u32, u32)> = None;
         let raw = match kind_of_unit {
             // A base keeps its number (decision 0086): the side's own only.
             "base" => ctx
                 .bases
                 .contains_key(&BaseId::new(number))
                 .then_some(number),
-            "task_force" => ctx.own_force(number).map(|f| f.id.raw()),
+            "task_force" => ctx.own_force(number).map(|f| f.id.raw()).or_else(|| {
+                // A number just past the side's forces names the force a
+                // queued forming order will make, in the order intake takes
+                // them in (decision 0111); any other number names nothing.
+                let k = number.checked_sub(ctx.force_count() + 1)?;
+                let forming = queued
+                    .iter()
+                    .filter(|queued| queued.kind.forms_task_force())
+                    .count();
+                if usize::try_from(k).ok()? >= forming {
+                    return None;
+                }
+                let floor = match side {
+                    Side::Allied => MADE_IDS_FLOOR,
+                    Side::Japanese => 2 * MADE_IDS_FLOOR,
+                };
+                let raw = ctx.next_made_force(floor) + k;
+                new_force = Some((raw, number));
+                Some(raw)
+            }),
             "land_unit" => ctx.own_land_unit(number).map(|u| u.id.raw()),
             _ => ctx.own_group(number).map(|g| g.id.raw()),
         }
@@ -516,7 +591,7 @@ impl Session {
             kind,
             origin: Origin::PLAYER,
         };
-        match self.world.check_order(side, &request) {
+        match self.world.check_order_queued(side, &request, queued) {
             Ok(()) => Ok(request),
             Err(RejectReason::NotYourUnit) => Err(NOT_KNOWN.to_string()),
             // A posture order for a land unit that is not the side's own
@@ -535,7 +610,9 @@ impl Session {
                         .get(&raw)
                         .copied()
                         .or_else(|| ctx.ship_number(ShipId::new(raw))),
-                    "task_force" => ctx.force_number(TaskForceId::new(raw)),
+                    "task_force" => ctx.force_number(TaskForceId::new(raw)).or_else(|| {
+                        new_force.and_then(|(made, number)| (made == raw).then_some(number))
+                    }),
                     "land_unit" => ctx.land_unit_number(LandUnitId::new(raw)),
                     _ => ctx.group_number(AirGroupId::new(raw)),
                 },
@@ -589,7 +666,8 @@ impl Session {
     }
 
     /// Hands in every seat's orders for the coming day through the engine's
-    /// own `submit_orders` and resolves the day.
+    /// own `submit_orders`, the script's commands through `submit_commands`,
+    /// and resolves the day, asking each side's staff (decision 0107).
     fn resolve(&mut self) -> Result<(), CallError> {
         let day = self.world.day() + 1;
         for side in Side::ALL {
@@ -607,7 +685,29 @@ impl Session {
             }
             self.world.submit_orders(side, orders);
         }
-        self.world.resolve_day().map(|_| ()).map_err(|e| {
+        // The commands of the script (a seat cannot issue one yet), in the
+        // order the script gives them.
+        for (side, command) in self.commands.remove(&day).unwrap_or_default() {
+            self.commands_handed_in
+                .entry(day)
+                .or_default()
+                .push((side, command.clone()));
+            self.world.submit_commands(side, vec![command]);
+        }
+        let mut staffs = Staffs::none();
+        for (side, staff) in &self.staffs {
+            staffs = staffs.with(*side, staff.as_ref());
+        }
+        let resolved = self.world.resolve_day_staffed(staffs);
+        for (side, decisions) in self.world.staff_handed_in() {
+            if !decisions.is_empty() {
+                self.staff_handed_in
+                    .entry(day)
+                    .or_default()
+                    .insert(*side, decisions.clone());
+            }
+        }
+        resolved.map(|_| ()).map_err(|e| {
             // The engine's own words may name the other side's units: they go
             // to the umpire's stderr, and the caller is told one fixed thing.
             eprintln!("operator: the day could not be resolved: {e}");

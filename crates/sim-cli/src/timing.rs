@@ -106,6 +106,11 @@ struct Start {
         u32,
         Vec<(sim_core::state::Side, sim_core::orders::OrderRequest)>,
     >,
+    /// The commander's commands of the days after it (decision 0107).
+    commands: crate::save::Commands,
+    /// The staff each side is given, from the doctrine.
+    staffs:
+        std::collections::BTreeMap<sim_core::state::Side, Box<dyn sim_core::command::Staff + Send>>,
     days: u32,
 }
 
@@ -118,22 +123,28 @@ fn start_at(path: &str, day: u32, options: &LoadOptions) -> Result<Start, String
             scenario.days
         ));
     }
+    let staffs = crate::doctrine::staffs_for(&scenario);
     while scenario.world.day() < day {
         scenario
-            .next_day()
+            .next_day_staffed(crate::doctrine::as_staffs(&staffs))
             .map_err(|e| e.to_string())?
             .ok_or_else(|| format!("{path} ended before day {day}"))?;
     }
     Ok(Start {
         script: scenario.scripted_orders().clone(),
+        commands: scenario.scripted_commands().clone(),
+        staffs,
         days: scenario.days,
         world: scenario.world,
     })
 }
 
 impl Start {
-    /// Hands in the scripted orders of `day` to `world`.
+    /// Hands in the scripted commands and orders of `day` to `world`.
     fn submit(&self, world: &mut World, day: u32) {
+        for (side, command) in self.commands.get(&day).cloned().unwrap_or_default() {
+            world.submit_commands(side, vec![command]);
+        }
         for (side, request) in self.script.get(&day).cloned().unwrap_or_default() {
             world.submit_orders(side, vec![request]);
         }
@@ -156,7 +167,9 @@ impl Start {
                 break;
             }
             self.submit(world, day);
-            world.resolve_day().map_err(|e| e.to_string())?;
+            world
+                .resolve_day_staffed(crate::doctrine::as_staffs(&self.staffs))
+                .map_err(|e| e.to_string())?;
             played += 1;
         }
         Ok(played)
@@ -224,7 +237,11 @@ fn repeat(n: u32, mut one: impl FnMut() -> Duration) -> Spread {
 fn resolve_one_day(start: &Start, repeats: u32) -> Spread {
     repeat(repeats, || {
         let mut world = start.ready();
-        timed(|| world.resolve_day().map(|s| s.state_hash))
+        timed(|| {
+            world
+                .resolve_day_staffed(crate::doctrine::as_staffs(&start.staffs))
+                .map(|s| s.state_hash)
+        })
     })
 }
 
@@ -238,10 +255,13 @@ fn resolve_asking(start: &Start, repeats: u32) -> (Spread, usize, usize) {
         let mut count = 0;
         let mut seen = 0;
         let t = timed(|| {
-            world.resolve_day_watched(sim_core::Staffs::none(), &mut |w, _moment| {
-                seen += 1;
-                count += ask_everything(w);
-            })
+            world.resolve_day_watched(
+                crate::doctrine::as_staffs(&start.staffs),
+                &mut |w, _moment| {
+                    seen += 1;
+                    count += ask_everything(w);
+                },
+            )
         });
         asked = count;
         moments = seen;

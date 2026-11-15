@@ -17,6 +17,7 @@ use serde_json::{json, Value};
 use sim_agent::{parse_seat, seat_name, SeatKind};
 use sim_core::state::Side;
 
+use crate::doctrine::DOCTRINE_VERSION;
 use crate::mcp::{tool_list, Server};
 use crate::serve::{self, Kept};
 
@@ -58,6 +59,10 @@ struct Header {
     scenario: String,
     seat: Side,
     seed: Option<u64>,
+    /// The doctrine whose staff the game was begun under (decision 0107). A
+    /// game file made before doctrines were recorded has none, which is read
+    /// as `"none"`: no doctrine existed.
+    doctrine_version: String,
 }
 
 impl Header {
@@ -67,6 +72,7 @@ impl Header {
             "scenario": self.scenario,
             "seat": seat_name(self.seat),
             "seed": self.seed,
+            "doctrine_version": self.doctrine_version,
         }))
         .expect("a header serialises")
     }
@@ -81,7 +87,12 @@ impl Header {
             Some(Value::Null) | None => None,
             Some(n) => Some(n.as_u64().ok_or_else(bad)?),
         };
+        let doctrine_version = match v.get("doctrine_version") {
+            None => "none".to_string(),
+            Some(version) => version.as_str().ok_or_else(bad)?.to_string(),
+        };
         Ok(Header {
+            doctrine_version,
             scenario: v
                 .get("scenario")
                 .and_then(Value::as_str)
@@ -313,6 +324,15 @@ pub fn command(args: &[String]) -> Result<(), String> {
                 return Err(format!("--seed {n} is not the game's seed (in {game})"));
             }
         }
+        // A game is resumed under the doctrine it was begun under: the staff
+        // is rebuilt from its calls, and another doctrine would play another
+        // game. It is not converted.
+        if header.doctrine_version != DOCTRINE_VERSION {
+            return Err(format!(
+                "{game} was begun under doctrine version \"{}\", and this program has doctrine version \"{DOCTRINE_VERSION}\"; the game is not converted, so begin it again",
+                header.doctrine_version
+            ));
+        }
         (header, calls)
     } else {
         if exporting {
@@ -328,6 +348,7 @@ pub fn command(args: &[String]) -> Result<(), String> {
                 format!("{game} is a new game: --scenario and --seat are needed\n\n{USAGE}")
             })?,
             seed,
+            doctrine_version: DOCTRINE_VERSION.to_string(),
         };
         (header, Vec::new())
     };

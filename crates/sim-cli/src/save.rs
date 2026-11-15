@@ -13,13 +13,27 @@
 //! whoever gave them, so a game played by a player replays with none. The
 //! key is an addition: a file without it (every game saved before) is read as
 //! both seats held by the script, and the version is unchanged.
+//!
+//! Version 3 (decision 0107, "As built") adds, beside the orders, `"commands"`
+//! (the commander's commands handed in, by day, each as
+//! `sim_agent::command_to_json` writes it), `"staff"` (what each side's staff
+//! handed in, by day and side, as `sim_agent::staff_decisions_to_json` writes
+//! it; only the days and sides that handed in anything) and
+//! `"doctrine_version"` (the doctrine whose staff was passed in). A replay
+//! hands in the orders, the commands and the staff's decisions and asks no
+//! staff; `replay --check-staff` asks the doctrine's staff as well and says
+//! where it first differs.
 
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde_json::{json, Value};
-use sim_agent::{order_from_json, order_to_json, unit_text, SeatKind};
+use sim_agent::{
+    command_from_json, command_to_json, order_from_json, order_to_json, staff_decisions_from_json,
+    staff_decisions_to_json, unit_text, SeatKind,
+};
+use sim_core::command::{CommandKind, StaffDecisions};
 use sim_core::hash::StateHasher;
 use sim_core::ids::IntentId;
 use sim_core::orders::{Issuer, OrderRequest, Origin};
@@ -28,16 +42,40 @@ use sim_data::Scenario;
 
 pub const FORMAT: &str = "flagplot-saved-game";
 /// Version 2 (decision 0100, 8) adds `"state_version"` and `"rules_version"`:
-/// what the game was played under. A game of version 1 has neither and is
-/// refused, not converted.
-pub const VERSION: u32 = 2;
+/// what the game was played under. Version 3 (decision 0107) adds
+/// `"commands"`, `"staff"` and `"doctrine_version"`. A game of an older
+/// version lacks them and is refused, not converted.
+pub const VERSION: u32 = 3;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
+
+/// The commander's commands handed in, by day, in the order given.
+pub type Commands = BTreeMap<u32, Vec<(Side, CommandKind)>>;
+
+/// What each side's staff handed in, by day: only the days and sides that
+/// handed in anything.
+pub type StaffHandIns = BTreeMap<u32, BTreeMap<Side, StaffDecisions>>;
+
+fn side_name(side: Side) -> &'static str {
+    match side {
+        Side::Allied => "allied",
+        Side::Japanese => "japanese",
+    }
+}
+
+fn side_from(name: &str) -> Result<Side, String> {
+    match name {
+        "allied" => Ok(Side::Allied),
+        "japanese" => Ok(Side::Japanese),
+        other => Err(format!("unknown side \"{other}\"")),
+    }
+}
 
 /// What a run needs to remember to be saved: read before it starts, since the
 /// scenario spends its script as it runs.
 pub struct Remembered {
     script: Script,
+    commands: Commands,
     files: Vec<(String, String)>,
 }
 
@@ -104,6 +142,7 @@ pub fn remember(scenario: &Scenario) -> Result<Remembered, String> {
     }
     Ok(Remembered {
         script: scenario.scripted_orders().clone(),
+        commands: scenario.scripted_commands().clone(),
         files,
     })
 }
@@ -121,16 +160,26 @@ impl Remembered {
     pub fn script(&self) -> &Script {
         &self.script
     }
+
+    /// The scenario's own commands, as they will be submitted.
+    pub fn commands(&self) -> &Commands {
+        &self.commands
+    }
 }
 
 /// Writes a saved game. `orders` are the orders as handed in to the engine,
-/// by day, for both sides; `hashes` are `(day, hash)` for each day resolved.
+/// by day, for both sides; `commands` the commander's commands as handed in;
+/// `staff` what each side's staff handed in; `hashes` are `(day, hash)` for
+/// each day resolved.
+#[allow(clippy::too_many_arguments)]
 pub fn write(
     file: &str,
     scenario_path: &str,
     seed: u64,
     remembered: &Remembered,
     orders: &Script,
+    commands: &Commands,
+    staff: &StaffHandIns,
     seats: &BTreeMap<Side, SeatKind>,
     hashes: &[(u32, u64)],
 ) -> Result<(), String> {
@@ -140,10 +189,7 @@ pub fn write(
         for (side, request) in list {
             order_list.push(json!({
                 "day": day,
-                "side": match side {
-                    Side::Allied => "allied",
-                    Side::Japanese => "japanese",
-                },
+                "side": side_name(*side),
                 "unit": unit_text(&request.kind),
                 "order": order_to_json(&request.kind),
                 "origin": {
@@ -157,6 +203,33 @@ pub fn write(
             }));
         }
     }
+    let command_list: Vec<Value> = commands
+        .iter()
+        .flat_map(|(day, list)| {
+            list.iter().map(move |(side, command)| {
+                json!({
+                    "day": day,
+                    "side": side_name(*side),
+                    "command": command_to_json(command),
+                })
+            })
+        })
+        .collect();
+    let staff_list: Vec<Value> = staff
+        .iter()
+        .flat_map(|(day, by_side)| {
+            by_side
+                .iter()
+                .filter(|(_, decisions)| !decisions.is_empty())
+                .map(move |(side, decisions)| {
+                    json!({
+                        "day": day,
+                        "side": side_name(*side),
+                        "decisions": staff_decisions_to_json(decisions),
+                    })
+                })
+        })
+        .collect();
     let value = json!({
         "format": FORMAT,
         "version": VERSION,
@@ -169,11 +242,14 @@ pub fn write(
         "seed": seed,
         "state_version": engine_state_version(),
         "rules_version": sim_core::world::RULES_VERSION,
+        "doctrine_version": crate::doctrine::DOCTRINE_VERSION,
         "seats": {
             "allied": seats.get(&Side::Allied).copied().unwrap_or(SeatKind::Script).name(),
             "japanese": seats.get(&Side::Japanese).copied().unwrap_or(SeatKind::Script).name(),
         },
         "orders": order_list,
+        "commands": command_list,
+        "staff": staff_list,
         "hashes": hashes
             .iter()
             .map(|(day, hash)| json!({ "day": day, "hash": format!("{hash:016x}") }))
@@ -207,6 +283,12 @@ pub struct Saved {
     pub seed: u64,
     pub seats: BTreeMap<Side, SeatKind>,
     pub script: Script,
+    /// The commander's commands handed in, by day.
+    pub commands: Commands,
+    /// What each side's staff handed in, by day.
+    pub staff: StaffHandIns,
+    /// The doctrine whose staff was passed in when the game was saved.
+    pub doctrine_version: String,
     pub hashes: Vec<(u32, String)>,
 }
 
@@ -221,10 +303,16 @@ pub fn read(file: &str) -> Result<Saved, String> {
     }
     match value.get("version").and_then(Value::as_u64) {
         Some(v) if v == u64::from(VERSION) => {}
-        Some(v) if v < u64::from(VERSION) => {
+        Some(v) if v < 2 => {
             return Err(bad(format!(
                 "this game was saved before saved games recorded the rules they were played under \
                  (saved game version {v}, now {VERSION}); it is not converted, so play it again"
+            )));
+        }
+        Some(v) if v < u64::from(VERSION) => {
+            return Err(bad(format!(
+                "this game was saved before saved games kept the commander's commands, what the staff handed in \
+                 and the doctrine (saved game version {v}, now {VERSION}); it is not converted, so play it again"
             )));
         }
         _ => return Err(bad(format!("saved game version is not {VERSION}"))),
@@ -248,6 +336,7 @@ pub fn read(file: &str) -> Result<Saved, String> {
              it is not converted, so play it again"
         )));
     }
+    let doctrine_version = text(&value, "doctrine_version").map_err(&bad)?.to_string();
     let scenario = value
         .get("scenario")
         .ok_or_else(|| bad("no scenario".into()))?;
@@ -289,11 +378,7 @@ pub fn read(file: &str) -> Result<Saved, String> {
         .ok_or_else(|| bad("no orders".into()))?
     {
         let day = small(entry, "day").map_err(&bad)?;
-        let side = match text(entry, "side").map_err(&bad)? {
-            "allied" => Side::Allied,
-            "japanese" => Side::Japanese,
-            other => return Err(bad(format!("unknown side \"{other}\""))),
-        };
+        let side = side_from(text(entry, "side").map_err(&bad)?).map_err(&bad)?;
         let unit = text(entry, "unit").map_err(&bad)?;
         let order = entry
             .get("order")
@@ -325,6 +410,48 @@ pub fn read(file: &str) -> Result<Saved, String> {
             },
         ));
     }
+    let mut commands: Commands = BTreeMap::new();
+    for entry in value
+        .get("commands")
+        .and_then(Value::as_array)
+        .ok_or_else(|| bad("no commands".into()))?
+    {
+        let day = small(entry, "day").map_err(&bad)?;
+        let side = side_from(text(entry, "side").map_err(&bad)?).map_err(&bad)?;
+        let command = command_from_json(
+            entry
+                .get("command")
+                .ok_or_else(|| bad("a command entry has no command".into()))?,
+        )
+        .map_err(|e| bad(format!("command on day {day}: {e}")))?;
+        commands.entry(day).or_default().push((side, command));
+    }
+    let mut staff: StaffHandIns = BTreeMap::new();
+    for entry in value
+        .get("staff")
+        .and_then(Value::as_array)
+        .ok_or_else(|| bad("no staff".into()))?
+    {
+        let day = small(entry, "day").map_err(&bad)?;
+        let side = side_from(text(entry, "side").map_err(&bad)?).map_err(&bad)?;
+        let decisions = staff_decisions_from_json(
+            entry
+                .get("decisions")
+                .ok_or_else(|| bad("a staff entry has no decisions".into()))?,
+        )
+        .map_err(|e| bad(format!("staff hand-in on day {day}: {e}")))?;
+        if staff
+            .entry(day)
+            .or_default()
+            .insert(side, decisions)
+            .is_some()
+        {
+            return Err(bad(format!(
+                "the {} staff handed in twice on day {day}",
+                side_name(side)
+            )));
+        }
+    }
     let mut hashes = Vec::new();
     for entry in value
         .get("hashes")
@@ -343,6 +470,9 @@ pub fn read(file: &str) -> Result<Saved, String> {
         seed,
         seats,
         script,
+        commands,
+        staff,
+        doctrine_version,
         hashes,
     })
 }
@@ -453,6 +583,7 @@ mod tests {
         let scenario = concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml");
         let remembered = Remembered {
             script: BTreeMap::new(),
+            commands: BTreeMap::new(),
             files: Vec::new(),
         };
         write(
@@ -461,6 +592,8 @@ mod tests {
             9,
             &remembered,
             &script,
+            &BTreeMap::new(),
+            &BTreeMap::new(),
             &script_seats(),
             &[],
         )
@@ -477,6 +610,206 @@ mod tests {
             })
             .collect();
         assert_eq!(back, kinds);
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Decision 0107: the commander's commands handed in by day, and what a
+    /// side's staff handed in (an order with its intent and its five-part
+    /// reason, a command, a decision to give no order), are written and read
+    /// back exactly, and the doctrine is recorded.
+    #[test]
+    fn commands_and_a_staffs_hand_in_round_trip_through_a_saved_game() {
+        use sim_core::command::{
+            Evidence, ForcesLimit, IntentKind, Leave, Limit, PlanId, Reason, Risk, RunDays,
+            RunSpec, Serves, StaffOrder,
+        };
+        use sim_core::fixed::Fixed;
+        use sim_core::hex::Hex;
+        use sim_core::ids::{BaseId, ShipId, TaskForceId};
+        use sim_core::orders::{Cargo, OrderKind, TaskForceOrder};
+
+        let intent = IntentId::new(1);
+        let mut commands: Commands = BTreeMap::new();
+        commands.insert(
+            1,
+            vec![
+                (
+                    Side::Allied,
+                    CommandKind::SetIntent {
+                        intent,
+                        kind: IntentKind::KeepSupplied {
+                            base: BaseId::new(2),
+                            floor_days: 10,
+                            interval_days: Some(15),
+                        },
+                    },
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Forces {
+                        intent,
+                        limit: ForcesLimit {
+                            ships: [ShipId::new(3), ShipId::new(4)].into_iter().collect(),
+                            task_forces: [TaskForceId::new(1)].into_iter().collect(),
+                            source: BaseId::new(1),
+                        },
+                    }),
+                ),
+            ],
+        );
+        commands.insert(
+            3,
+            vec![
+                (
+                    Side::Japanese,
+                    CommandKind::SetLimit(Limit::Area {
+                        intent,
+                        hexes: [Hex::new(2, -1), Hex::new(0, 0)].into_iter().collect(),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Reserve {
+                        base: BaseId::new(1),
+                        supply_t: Fixed::from_raw(400_500_001),
+                        fuel_t: Fixed::from_int(300),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Risk {
+                        intent,
+                        risk: Risk::Preserve,
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLeave {
+                        leave: Leave::Launch,
+                        given: true,
+                    },
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::Approve {
+                        plan: PlanId::new(1),
+                    },
+                ),
+            ],
+        );
+        let reason = Reason {
+            serves: Serves {
+                intent: Some(intent),
+                plan: Some(PlanId::new(1)),
+                amendment: None,
+            },
+            evidence: vec![Evidence {
+                what: "base 2 holds 40 t".to_string(),
+                day: 2,
+            }],
+            binding: vec!["the pool holds ship 3".to_string()],
+            worked: "10 days x 12 t = 120 t".to_string(),
+            would_change: vec!["a second ship in the pool".to_string()],
+        };
+        let decisions = StaffDecisions {
+            orders: vec![StaffOrder {
+                kind: OrderKind::TaskForce {
+                    target: TaskForceId::new(1),
+                    order: TaskForceOrder::LoadTo {
+                        cargo: Cargo::Supply,
+                        weight_t: Fixed::from_raw(120_000_001),
+                    },
+                },
+                intent,
+                reason: reason.clone(),
+            }],
+            commands: vec![CommandKind::AddRun {
+                plan: PlanId::new(1),
+                run: RunSpec {
+                    ships: [ShipId::new(3)].into_iter().collect(),
+                    load_t: Fixed::from_int(120),
+                    days: RunDays {
+                        load: 3,
+                        sail: 4,
+                        arrive: 9,
+                        free: 14,
+                    },
+                },
+            }],
+            no_orders: vec![reason],
+        };
+        let mut staff: StaffHandIns = BTreeMap::new();
+        staff
+            .entry(3)
+            .or_default()
+            .insert(Side::Allied, decisions.clone());
+        // A side that handed in nothing is not written.
+        staff
+            .entry(4)
+            .or_default()
+            .insert(Side::Japanese, StaffDecisions::default());
+
+        let dir = std::env::temp_dir().join(format!("flagplot-save-0107-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("make the folder");
+        let file = dir.join("game.save.json");
+        let file = file.to_string_lossy().into_owned();
+        let scenario = concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml");
+        let remembered = Remembered {
+            script: BTreeMap::new(),
+            commands: BTreeMap::new(),
+            files: Vec::new(),
+        };
+        write(
+            &file,
+            scenario,
+            9,
+            &remembered,
+            &BTreeMap::new(),
+            &commands,
+            &staff,
+            &script_seats(),
+            &[],
+        )
+        .expect("writes");
+        let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
+            .expect("the file is JSON");
+        assert_eq!(written["version"], 3);
+        assert_eq!(
+            written["doctrine_version"],
+            crate::doctrine::DOCTRINE_VERSION
+        );
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 7);
+        assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
+        let saved = read(&file).expect("reads");
+        assert_eq!(saved.commands, commands);
+        assert_eq!(saved.staff.len(), 1, "an empty hand-in is not kept");
+        assert_eq!(saved.staff[&3][&Side::Allied], decisions);
+        assert_eq!(saved.doctrine_version, crate::doctrine::DOCTRINE_VERSION);
+        // A second write of what was read is the same bytes.
+        let again = dir.join("again.save.json");
+        let again = again.to_string_lossy().into_owned();
+        write(
+            &again,
+            scenario,
+            9,
+            &remembered,
+            &BTreeMap::new(),
+            &saved.commands,
+            &saved.staff,
+            &script_seats(),
+            &[],
+        )
+        .expect("writes again");
+        assert_eq!(
+            fs::read_to_string(&file).expect("reads"),
+            fs::read_to_string(&again).expect("reads")
+        );
+        // An older version is refused, not converted.
+        let mut old = written.clone();
+        old["version"] = json!(2);
+        fs::write(&file, old.to_string()).expect("writes");
+        let error = read(&file).err().expect("version 2 is refused");
+        assert!(error.contains("not converted"), "{error}");
         fs::remove_dir_all(&dir).ok();
     }
 }
