@@ -30,6 +30,7 @@
 mod answer;
 mod briefing;
 mod choices;
+mod commands;
 mod common;
 mod explain;
 mod lines;
@@ -61,6 +62,9 @@ pub use briefing::{
     ForceChangesPart, FormedLine, JoinedLine, LoadReserveLine, RefuellingHeldLine, StoodDownLine,
 };
 pub use choices::{ChoiceLine, Choices};
+pub use commands::{
+    command_from_json, command_to_json, staff_decisions_from_json, staff_decisions_to_json,
+};
 pub use common::{Dec, Handle, Place};
 pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,

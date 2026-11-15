@@ -213,6 +213,24 @@ impl<'a> Ctx<'a> {
         self.force_ids.binary_search(&id).ok().map(position_number)
     }
 
+    /// How many task forces the side has had, the ceased ones counted: its
+    /// last force's number.
+    pub fn force_count(&self) -> u32 {
+        u32::try_from(self.force_ids.len()).expect("few forces")
+    }
+
+    /// The number the side's next task force made in play will have: one
+    /// past its last of the series that starts above `floor`, or the first
+    /// of the series (decision 0086).
+    pub fn next_made_force(&self, floor: u32) -> u32 {
+        self.force_ids
+            .iter()
+            .map(|id| id.raw())
+            .filter(|raw| *raw > floor && *raw < floor + sim_core::world::MADE_IDS_FLOOR)
+            .max()
+            .map_or(floor + 1, |last| last + 1)
+    }
+
     pub fn group_number(&self, id: AirGroupId) -> Option<u32> {
         self.group_ids.binary_search(&id).ok().map(position_number)
     }

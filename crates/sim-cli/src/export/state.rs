@@ -634,6 +634,12 @@ pub struct FinalOut {
     /// estimate.
     #[serde(skip_serializing_if = "PerSide::is_empty")]
     ground_estimates: PerSide<GroundEstimateOut>,
+    /// Each side's command state (decision 0107): its intents with their
+    /// limits, leaves, plans, runs and commitments. Left out for a side whose
+    /// command state is empty, so a replay of a run with no command is as it
+    /// was.
+    #[serde(skip_serializing_if = "super::commands::CommandsOut::is_empty")]
+    commands: super::commands::CommandsOut,
 }
 
 #[derive(Serialize)]
@@ -828,5 +834,6 @@ pub fn final_state(world: &World) -> FinalOut {
             japanese: claims(Side::Japanese),
         },
         ground_estimates,
+        commands: super::commands::commands(world),
     }
 }
