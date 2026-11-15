@@ -122,7 +122,7 @@ done
 if xargs -P "$jobs" -L 1 sh -c '
     name="$1"; file="$2"; base="'"$baselines"'"
     "'"$bin"'" run "$file" > "$base/$name.txt" || exit 255
-    if [ "$name" != 08_soak ]; then
+    if [ "$name" != 08_soak ] && [ "$name" != 45_soak_ashore ]; then
         "'"$bin"'" run "$file" --events > "$base/$name.events.txt" || exit 255
     fi
 ' sh < "$list"; then :; else fail "1 run baselines"; fi

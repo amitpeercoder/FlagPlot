@@ -78,7 +78,7 @@ new_bin="$top/target/release/sim-cli"
 live_jobs() {
     for f in data/scenarios/*.toml; do
         name=$(basename "$f" .toml)
-        if [ "$name" = 08_soak ]; then
+        if [ "$name" = 08_soak ] || [ "$name" = 45_soak_ashore ]; then
             echo "live-$name $f"
         else
             echo "live-$name $f --events"
@@ -117,6 +117,7 @@ for f in $(git ls-tree --name-only "$rev" "$baselines/"); do
     case "$base" in
         *.events.txt) name=${base%.events.txt} ;;
         08_soak.txt) name=08_soak ;;
+        45_soak_ashore.txt) name=45_soak_ashore ;;
         *) continue ;;
     esac
     git show "$rev:$f" > "$work/old/live-$name"

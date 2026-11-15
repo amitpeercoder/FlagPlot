@@ -79,10 +79,14 @@ pub(crate) fn decide(view: SideView<'_>) -> StaffDecisions {
     let mut out = Out::default();
     let mut morning = Morning::begin(&view, &fleet);
     morning.hand_in_aside(&view, &mut out, None);
+    // The ships of an ended plan are freed before any intent is served: the
+    // doctrine reads them as free, so an intent served this morning may
+    // commit them, and the engine refuses a commitment that meets one still
+    // standing (found by the soak ashore, scenario 45, seed 79).
+    free_ended(&view, &mut out);
     for intent in priority_order(state) {
         serve(&view, &fleet, intent, Mode::Live, &mut out, &mut morning);
     }
-    free_ended(&view, &mut out);
     out.finish(view.next_task_force_id())
 }
 

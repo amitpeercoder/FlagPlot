@@ -2136,6 +2136,8 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 && !stem.starts_with("07_")
                 // And the soak, which carries it on for 180 days (decision 0044).
                 && !stem.starts_with("08_")
+                // And the soak ashore, which runs with both staffs (scenario 45).
+                && !stem.starts_with("45_")
                 // Scenario 12a gives its bombing squadron pilots (decision 0059).
                 && !stem.starts_with("12a_")
                 // And 12b and 12c, which count pilots for their groups.

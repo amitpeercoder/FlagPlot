@@ -13,11 +13,15 @@
 use core::fmt;
 use std::collections::BTreeMap;
 
+use crate::command::{
+    CommandState, HoldTarget, InterruptRef, InterruptStatus, PlanId, StandingSubject,
+};
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, IntentId, LandUnitId, ShipId, TaskForceId};
 use crate::map::Map;
 use crate::refdata::RefData;
+use crate::state::Side;
 use crate::state::{
     AirGroupLocation, ShipLocation, ShipSystem, SystemState, TaskForceStatus, TruthState,
 };
@@ -171,6 +175,40 @@ pub enum InvariantViolation {
     /// on attack or marching (decisions 5 and 6 of 0106). Added at the end
     /// of the enum.
     FieldworksUnsound(LandUnitId),
+    /// Two commitments of one ship of a side cover a common day (decision
+    /// 0107, 27: a ship holds at most one commitment on any day; the days are
+    /// inclusive). Added at the end of the enum.
+    CommitmentsOverlap(Side, ShipId),
+    /// A commitment whose last day is before its first, or that names a plan
+    /// the side does not have or a run its plan does not have (decisions 0107
+    /// and 0111). Added at the end of the enum.
+    CommitmentUnsound(Side, ShipId),
+    /// A ship named by a side's commitment, a run of its plans or a standing
+    /// interrupt that does not exist or is not the side's own (decisions 0107
+    /// and 0111). Added at the end of the enum.
+    CommandNamesStrayShip(Side, ShipId),
+    /// An intent whose plan does not exist or does not name the intent back
+    /// (decision 0107). Added at the end of the enum.
+    IntentPlanUnsound(Side, IntentId),
+    /// A plan whose intent does not exist, or does not name the plan back
+    /// while the plan is in force; an ended plan whose intent was set again
+    /// is replaced by a newer plan and is sound (decision 0107). Added at the
+    /// end of the enum.
+    PlanIntentUnsound(Side, PlanId),
+    /// A run whose days are not in order `load <= sail <= arrive <= free`, or
+    /// that ended on a day after today (decision 0107, 22 and ruling 20).
+    /// Added at the end of the enum.
+    RunUnsound(Side, PlanId, u32),
+    /// A hold on a ship, task force or air group that does not exist or is
+    /// not the side's own, or made on a day after today (decision 0107,
+    /// ruling 17). Nothing is removed from the truth, so a sunk ship or an
+    /// empty force still exists. Added at the end of the enum.
+    HoldUnsound(Side, HoldTarget),
+    /// An interrupt, set or standing, that was set or last fired after today,
+    /// that is acknowledged or disarmed without ever having fired, or a
+    /// standing one about a ship that is not the side's own (decisions 0107
+    /// and 0111, rulings 31 to 33). Added at the end of the enum.
+    InterruptUnsound(Side, InterruptRef),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -409,6 +447,38 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::FieldworksUnsound(unit) => write!(
                 f,
                 "{unit} has fieldworks below 0 or above the limit, or has fieldworks while working, on attack or marching"
+            ),
+            InvariantViolation::CommitmentsOverlap(side, ship) => write!(
+                f,
+                "{side:?} has two commitments of {ship} that cover a common day"
+            ),
+            InvariantViolation::CommitmentUnsound(side, ship) => write!(
+                f,
+                "{side:?} has a commitment of {ship} with its days reversed or naming a plan or run that does not exist"
+            ),
+            InvariantViolation::CommandNamesStrayShip(side, ship) => write!(
+                f,
+                "{side:?} command state names {ship}, which does not exist or is not its own"
+            ),
+            InvariantViolation::IntentPlanUnsound(side, intent) => write!(
+                f,
+                "{side:?} {intent} has a plan that does not exist or does not name it"
+            ),
+            InvariantViolation::PlanIntentUnsound(side, plan) => write!(
+                f,
+                "{side:?} {plan} has an intent that does not exist or does not name it"
+            ),
+            InvariantViolation::RunUnsound(side, plan, run) => write!(
+                f,
+                "{side:?} run {run} of {plan} has days out of order or ended after today"
+            ),
+            InvariantViolation::HoldUnsound(side, target) => write!(
+                f,
+                "{side:?} holds {target}, which does not exist, is not its own, or was held after today"
+            ),
+            InvariantViolation::InterruptUnsound(side, interrupt) => write!(
+                f,
+                "{side:?} has {interrupt} in a state its rules do not allow"
             ),
         }
     }
@@ -881,6 +951,137 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
             .map_or(0, |class| class.aircraft_capacity);
         if aircraft > capacity {
             violations.push(InvariantViolation::ShipOverAircraftCapacity(ship_id));
+        }
+    }
+
+    violations
+}
+
+/// Returns every invariant the command state of `side` breaks on `day`, the
+/// day being closed (decisions 0107 and 0111). Reads the state and the truth
+/// only; nothing here changes either. Every rule asserted holds on every
+/// state the commands and the day's resolution can reach: nothing is ever
+/// removed from the truth (a ship that is lost stays, location `Sunk`; a
+/// force that is emptied stays), and plans, runs and intents are never
+/// removed from the command state.
+pub(crate) fn check_command(
+    side: Side,
+    command: &CommandState,
+    truth: &TruthState,
+    day: u32,
+) -> Vec<InvariantViolation> {
+    let mut violations = Vec::new();
+    let own_ship = |ship: &ShipId| truth.ships.get(ship).is_some_and(|s| s.side == side);
+
+    for (ship, list) in &command.commitments {
+        if !own_ship(ship) {
+            violations.push(InvariantViolation::CommandNamesStrayShip(side, *ship));
+        }
+        let mut unsound = false;
+        for commitment in list {
+            let run_found = match (command.plans.get(&commitment.plan), commitment.run) {
+                (None, _) => false,
+                (Some(_), None) => true,
+                (Some(plan), Some(run)) => plan.runs.contains_key(&run),
+            };
+            if !run_found || commitment.from_day > commitment.to_day {
+                unsound = true;
+            }
+        }
+        if unsound {
+            violations.push(InvariantViolation::CommitmentUnsound(side, *ship));
+        }
+        let overlap = list.iter().enumerate().any(|(i, a)| {
+            list[i + 1..]
+                .iter()
+                .any(|b| a.from_day <= b.to_day && b.from_day <= a.to_day)
+        });
+        if overlap {
+            violations.push(InvariantViolation::CommitmentsOverlap(side, *ship));
+        }
+    }
+
+    for intent in command.intents.values() {
+        let named_back = command
+            .plans
+            .get(&intent.plan)
+            .is_some_and(|plan| plan.intent == intent.id);
+        if !named_back {
+            violations.push(InvariantViolation::IntentPlanUnsound(side, intent.id));
+        }
+    }
+
+    for plan in command.plans.values() {
+        let named_back = command.intents.get(&plan.intent).is_some_and(|intent| {
+            // An intent set again after its plan ended serves a newer
+            // plan; the ended one stays, naming the intent (chapter 8,
+            // Intents). Found by the soak ashore (scenario 45).
+            intent.plan == plan.id || (plan.state.ended() && intent.plan > plan.id)
+        });
+        if !named_back {
+            violations.push(InvariantViolation::PlanIntentUnsound(side, plan.id));
+        }
+        for run in plan.runs.values() {
+            let days = run.days;
+            let ordered =
+                days.load <= days.sail && days.sail <= days.arrive && days.arrive <= days.free;
+            let ended_ok = run.ended.is_none_or(|ended| ended <= day);
+            if !(ordered && ended_ok) {
+                violations.push(InvariantViolation::RunUnsound(side, plan.id, run.number));
+            }
+            for ship in &run.ships {
+                if !own_ship(ship) {
+                    violations.push(InvariantViolation::CommandNamesStrayShip(side, *ship));
+                }
+            }
+        }
+    }
+
+    for (target, hold) in &command.holds {
+        let own = match target {
+            HoldTarget::Ship(ship) => own_ship(ship),
+            HoldTarget::TaskForce(force) => truth
+                .task_forces
+                .get(force)
+                .is_some_and(|found| found.side == side),
+            HoldTarget::Setting { group, .. } => truth
+                .air_groups
+                .get(group)
+                .is_some_and(|found| found.side == side),
+        };
+        if !own || hold.day > day {
+            violations.push(InvariantViolation::HoldUnsound(side, *target));
+        }
+    }
+
+    let status_sound = |status: &InterruptStatus| {
+        let fired_ok = status.last_fired.is_none_or(|fired| fired <= day);
+        let history_ok = status.last_fired.is_some() || (status.armed && !status.acknowledged);
+        fired_ok && history_ok
+    };
+    for interrupt in command.interrupts.values() {
+        if interrupt.set_day > day || !status_sound(&interrupt.status) {
+            violations.push(InvariantViolation::InterruptUnsound(
+                side,
+                InterruptRef::Set(interrupt.id),
+            ));
+        }
+    }
+    for ((kind, subject), status) in &command.standing {
+        // A plan subject is not checked: a staff notice may name a plan the
+        // side does not have, and the engine records its firing all the same.
+        let subject_ok = match subject {
+            StandingSubject::Plan(_) => true,
+            StandingSubject::Ship(ship) => own_ship(ship),
+        };
+        if !subject_ok || !status_sound(status) {
+            violations.push(InvariantViolation::InterruptUnsound(
+                side,
+                InterruptRef::Standing {
+                    kind: *kind,
+                    subject: *subject,
+                },
+            ));
         }
     }
 
@@ -1666,6 +1867,406 @@ mod tests {
             vec![InvariantViolation::AirGroupOnUnknownShip(
                 AirGroupId::new(1),
                 ShipId::new(9)
+            )]
+        );
+    }
+
+    // ---- Command state (decisions 0107 and 0111) ----
+
+    use crate::command::{
+        Baseline, Commitment, Hold, HoldMaker, Intent, IntentKind, IntentLimits, Plan, PlanState,
+        Run, RunDays, SetInterrupt, StandingKind,
+    };
+    use crate::ids::InterruptId;
+    use std::collections::BTreeSet;
+
+    const INTENT: IntentId = IntentId::new(1);
+    const PLAN: PlanId = PlanId::new(1);
+
+    fn run_days(load: u32, sail: u32, arrive: u32, free: u32) -> RunDays {
+        RunDays {
+            load,
+            sail,
+            arrive,
+            free,
+        }
+    }
+
+    /// A command state with one intent, its plan, one run, and the ship
+    /// committed to the run on days 2 to 4, all sound. The truth is
+    /// `setup_with_ship`'s: an allied ship and force.
+    fn command_setup() -> (CommandState, TruthState) {
+        let (truth, _) = setup_with_ship();
+        let mut command = CommandState::new();
+        command.intents.insert(
+            INTENT,
+            Intent {
+                id: INTENT,
+                kind: IntentKind::KeepSupplied {
+                    base: BaseId::new(1),
+                    floor_days: 5,
+                    interval_days: None,
+                },
+                limits: IntentLimits::default(),
+                set_day: 1,
+                plan: PLAN,
+                withdrawn_day: None,
+            },
+        );
+        let mut runs = BTreeMap::new();
+        runs.insert(
+            1,
+            Run {
+                number: 1,
+                ships: BTreeSet::from([SHIP]),
+                load_t: Fixed::from_int(10),
+                source: BaseId::new(1),
+                days: run_days(2, 2, 3, 4),
+                ended: None,
+            },
+        );
+        command.plans.insert(
+            PLAN,
+            Plan {
+                id: PLAN,
+                intent: INTENT,
+                state: PlanState::Released,
+                baseline: None::<Baseline>,
+                amendments: Vec::new(),
+                runs,
+            },
+        );
+        command.next_plan = 2;
+        command.commitments.insert(
+            SHIP,
+            vec![Commitment {
+                plan: PLAN,
+                run: Some(1),
+                from_day: 2,
+                to_day: 4,
+            }],
+        );
+        (command, truth)
+    }
+
+    fn command_violations(command: &CommandState, truth: &TruthState) -> Vec<InvariantViolation> {
+        check_command(Side::Allied, command, truth, 5)
+    }
+
+    #[test]
+    fn a_sound_command_state_breaks_nothing() {
+        let (command, truth) = command_setup();
+        assert_eq!(command_violations(&command, &truth), Vec::new());
+        // A sunk ship and an emptied force still exist, so a commitment and
+        // a hold on them stand.
+        let (mut command, mut truth) = command_setup();
+        command.holds.insert(
+            HoldTarget::Ship(SHIP),
+            Hold {
+                day: 5,
+                by: HoldMaker::Command,
+            },
+        );
+        command.holds.insert(
+            HoldTarget::TaskForce(TF),
+            Hold {
+                day: 1,
+                by: HoldMaker::Command,
+            },
+        );
+        sink(&mut truth);
+        assert_eq!(command_violations(&command, &truth), Vec::new());
+        // An empty command state is sound.
+        assert_eq!(
+            check_command(Side::Japanese, &CommandState::new(), &truth, 1),
+            Vec::new()
+        );
+    }
+
+    #[test]
+    fn commitments_that_share_a_day_are_caught_and_back_to_back_ones_are_not() {
+        let (mut command, truth) = command_setup();
+        let list = command.commitments.get_mut(&SHIP).expect("list");
+        // Days 5 to 6 follow days 2 to 4: sound.
+        list.push(Commitment {
+            plan: PLAN,
+            run: None,
+            from_day: 5,
+            to_day: 6,
+        });
+        assert_eq!(command_violations(&command, &truth), Vec::new());
+        // Days 4 to 6 share day 4 (the last day is inclusive).
+        command.commitments.get_mut(&SHIP).expect("list")[1].from_day = 4;
+        assert_eq!(
+            command_violations(&command, &truth),
+            vec![InvariantViolation::CommitmentsOverlap(Side::Allied, SHIP)]
+        );
+    }
+
+    #[test]
+    fn a_commitment_naming_nothing_or_with_reversed_days_is_caught() {
+        let (command, truth) = command_setup();
+        let broken = |edit: &dyn Fn(&mut Commitment)| {
+            let mut command = command.clone();
+            edit(&mut command.commitments.get_mut(&SHIP).expect("list")[0]);
+            command_violations(&command, &truth)
+        };
+        let unsound = vec![InvariantViolation::CommitmentUnsound(Side::Allied, SHIP)];
+        assert_eq!(broken(&|c| c.plan = PlanId::new(7)), unsound);
+        assert_eq!(broken(&|c| c.run = Some(9)), unsound);
+        assert_eq!(broken(&|c| c.to_day = 1), unsound);
+        // No run is as sound as a run that exists.
+        assert_eq!(broken(&|c| c.run = None), Vec::new());
+    }
+
+    #[test]
+    fn a_ship_that_is_missing_or_the_other_sides_is_caught_in_commitments_and_runs() {
+        let (mut command, mut truth) = command_setup();
+        truth.ships.get_mut(&SHIP).expect("ship").side = Side::Japanese;
+        // Named by the commitment and by the run.
+        assert_eq!(
+            command_violations(&command, &truth),
+            vec![
+                InvariantViolation::CommandNamesStrayShip(Side::Allied, SHIP),
+                InvariantViolation::CommandNamesStrayShip(Side::Allied, SHIP),
+            ]
+        );
+        truth.ships.remove(&SHIP);
+        command.commitments.clear();
+        command
+            .plans
+            .get_mut(&PLAN)
+            .expect("plan")
+            .runs
+            .get_mut(&1)
+            .expect("run")
+            .ships = BTreeSet::from([ShipId::new(40)]);
+        assert_eq!(
+            command_violations(&command, &truth),
+            vec![InvariantViolation::CommandNamesStrayShip(
+                Side::Allied,
+                ShipId::new(40)
+            )]
+        );
+    }
+
+    #[test]
+    fn intents_and_plans_must_name_each_other() {
+        let (mut command, truth) = command_setup();
+        // A withdrawn intent and an ended plan are still sound.
+        command
+            .intents
+            .get_mut(&INTENT)
+            .expect("intent")
+            .withdrawn_day = Some(3);
+        command.plans.get_mut(&PLAN).expect("plan").state = PlanState::Cancelled;
+        assert_eq!(command_violations(&command, &truth), Vec::new());
+        // The intent set again after its plan ended serves a newer plan; the
+        // ended plan still names it, and that is sound (found by scenario 45).
+        let mut newer = command.plans[&PLAN].clone();
+        let newer_id = PlanId::new(PLAN.raw() + 1);
+        newer.id = newer_id;
+        newer.state = PlanState::Draft;
+        command.plans.insert(newer_id, newer);
+        command.intents.get_mut(&INTENT).expect("intent").plan = newer_id;
+        assert_eq!(command_violations(&command, &truth), Vec::new());
+        // A plan still in force whose intent names another is caught.
+        command.plans.get_mut(&PLAN).expect("plan").state = PlanState::Draft;
+        assert_eq!(
+            command_violations(&command, &truth),
+            vec![InvariantViolation::PlanIntentUnsound(Side::Allied, PLAN)]
+        );
+        command.plans.remove(&newer_id);
+        command.intents.get_mut(&INTENT).expect("intent").plan = PLAN;
+        command.plans.get_mut(&PLAN).expect("plan").state = PlanState::Cancelled;
+        // The plan is gone: the intent names nothing.
+        let plan = command.plans.remove(&PLAN).expect("plan");
+        let violations = command_violations(&command, &truth);
+        assert!(violations.contains(&InvariantViolation::IntentPlanUnsound(Side::Allied, INTENT)));
+        // The intent is gone: the plan names nothing.
+        command.plans.insert(PLAN, plan);
+        command.intents.clear();
+        assert_eq!(
+            command_violations(&command, &truth),
+            vec![InvariantViolation::PlanIntentUnsound(Side::Allied, PLAN)]
+        );
+    }
+
+    #[test]
+    fn a_run_must_have_its_days_in_order_and_not_have_ended_after_today() {
+        let (mut command, truth) = command_setup();
+        let run = |command: &mut CommandState| {
+            command
+                .plans
+                .get_mut(&PLAN)
+                .expect("plan")
+                .runs
+                .get_mut(&1)
+                .expect("run")
+                .clone()
+        };
+        // Equal days are in order; ending today is sound.
+        let mut sound = run(&mut command);
+        sound.days = run_days(3, 3, 3, 3);
+        sound.ended = Some(5);
+        command
+            .plans
+            .get_mut(&PLAN)
+            .expect("plan")
+            .runs
+            .insert(1, sound);
+        assert_eq!(command_violations(&command, &truth), Vec::new());
+        let unsound = vec![InvariantViolation::RunUnsound(Side::Allied, PLAN, 1)];
+        // Sails before it loads.
+        let mut broken = run(&mut command);
+        broken.days = run_days(4, 3, 5, 6);
+        command
+            .plans
+            .get_mut(&PLAN)
+            .expect("plan")
+            .runs
+            .insert(1, broken);
+        assert_eq!(command_violations(&command, &truth), unsound);
+        // Ended tomorrow.
+        let mut broken = run(&mut command);
+        broken.days = run_days(3, 3, 3, 3);
+        broken.ended = Some(6);
+        command
+            .plans
+            .get_mut(&PLAN)
+            .expect("plan")
+            .runs
+            .insert(1, broken);
+        assert_eq!(command_violations(&command, &truth), unsound);
+    }
+
+    #[test]
+    fn a_hold_must_be_on_a_thing_the_side_owns_and_made_by_today() {
+        let (mut command, mut truth) = command_setup();
+        let held = |day| Hold {
+            day,
+            by: HoldMaker::Command,
+        };
+        command.holds.insert(HoldTarget::Ship(SHIP), held(5));
+        assert_eq!(command_violations(&command, &truth), Vec::new());
+        // On a ship that does not exist, a force of the other side, a group
+        // that does not exist.
+        command
+            .holds
+            .insert(HoldTarget::Ship(ShipId::new(40)), held(1));
+        truth.task_forces.get_mut(&TF).expect("force").side = Side::Japanese;
+        command.holds.insert(HoldTarget::TaskForce(TF), held(1));
+        command.holds.insert(
+            HoldTarget::Setting {
+                group: AirGroupId::new(40),
+                setting: crate::command::HeldSetting::SearchArc,
+            },
+            held(1),
+        );
+        // Made tomorrow.
+        command.holds.insert(
+            HoldTarget::Setting {
+                group: AirGroupId::new(1),
+                setting: crate::command::HeldSetting::SearchArc,
+            },
+            held(6),
+        );
+        let caught = command_violations(&command, &truth);
+        assert_eq!(caught.len(), 4, "{caught:?}");
+        assert!(caught
+            .iter()
+            .all(|v| matches!(v, InvariantViolation::HoldUnsound(Side::Allied, _))));
+    }
+
+    #[test]
+    fn an_interrupts_history_must_be_consistent() {
+        let (mut command, truth) = command_setup();
+        let id = InterruptId::new(1);
+        let set = |status| SetInterrupt {
+            id,
+            condition: crate::command::InterruptCondition::SupplyBelow {
+                base: BaseId::new(1),
+                days: 3,
+            },
+            set_day: 2,
+            status,
+        };
+        // Never fired, fired and acknowledged, fired and armed again.
+        for status in [
+            InterruptStatus::default(),
+            InterruptStatus {
+                armed: false,
+                last_fired: Some(5),
+                acknowledged: true,
+            },
+            InterruptStatus {
+                armed: true,
+                last_fired: Some(3),
+                acknowledged: false,
+            },
+        ] {
+            command.interrupts.insert(id, set(status));
+            assert_eq!(command_violations(&command, &truth), Vec::new());
+        }
+        let unsound = vec![InvariantViolation::InterruptUnsound(
+            Side::Allied,
+            InterruptRef::Set(id),
+        )];
+        for status in [
+            // Acknowledged without a firing.
+            InterruptStatus {
+                armed: true,
+                last_fired: None,
+                acknowledged: true,
+            },
+            // Disarmed without a firing.
+            InterruptStatus {
+                armed: false,
+                last_fired: None,
+                acknowledged: false,
+            },
+            // Fired tomorrow.
+            InterruptStatus {
+                armed: false,
+                last_fired: Some(6),
+                acknowledged: false,
+            },
+        ] {
+            command.interrupts.insert(id, set(status));
+            assert_eq!(command_violations(&command, &truth), unsound);
+        }
+        // Standing: a fired record about a ship of the side, and one about a
+        // plan the side does not have (a notice may name one: sound).
+        command.interrupts.clear();
+        let fired = InterruptStatus {
+            armed: false,
+            last_fired: Some(4),
+            acknowledged: false,
+        };
+        command.standing.insert(
+            (
+                StandingKind::CannotMeet,
+                StandingSubject::Plan(PlanId::new(7)),
+            ),
+            fired,
+        );
+        command
+            .standing
+            .insert((StandingKind::ShipLost, StandingSubject::Ship(SHIP)), fired);
+        assert_eq!(command_violations(&command, &truth), Vec::new());
+        // A ship lost that is not the side's own.
+        let stray = StandingSubject::Ship(ShipId::new(40));
+        command
+            .standing
+            .insert((StandingKind::ShipLost, stray), fired);
+        assert_eq!(
+            command_violations(&command, &truth),
+            vec![InvariantViolation::InterruptUnsound(
+                Side::Allied,
+                InterruptRef::Standing {
+                    kind: StandingKind::ShipLost,
+                    subject: stray
+                }
             )]
         );
     }

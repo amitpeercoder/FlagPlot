@@ -52,7 +52,11 @@ use sim_core::view::SideView;
 /// free (decision 0112): the morning after the day it has finished fuelling,
 /// at the source's fuel berth rate or lighter rate; with no rate given, as
 /// before, the morning after it is back.
-pub const DOCTRINE_VERSION: &str = "supply-6";
+/// `supply-7` frees the ships of a plan that has ended first in the
+/// morning, before any intent is served, where it freed them last; an intent
+/// served that morning may then commit them (found by the soak ashore,
+/// scenario 45, decision 0093 item 10).
+pub const DOCTRINE_VERSION: &str = "supply-7";
 
 /// The staff of stage 1: the doctrine for keeping a base supplied. A side
 /// with no intent in force and no commitment to free gets nothing from it.
