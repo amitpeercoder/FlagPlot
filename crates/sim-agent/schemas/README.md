@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 4` and a `"kind"` that names it.
+`"version": 5` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -50,7 +50,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 4. A field removed from an answer, or a field whose meaning
+`version` is 5. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -69,6 +69,26 @@ and `why`, with an answer for each (above). A session made without staffs has
 none of them and answers as it did. The version was raised for the new
 answers and the new `why` value of `not_known`'s `query`; no field of an
 earlier answer changed.
+
+Version 5 (decision 0110, items 1 to 9 and 11) tells a side what it already
+holds of its own affairs, and changes four things that were there. In the
+briefing the warning `base_without_fuel_with_force` is now one for each force
+(`task_force`, with its `least_fuelled` ship and a `home_passage`) and no
+longer one for each base with a list of forces (`task_forces`); the day's
+`planned_days_of_supply` of a base, and `days_of_supply` of a base line in
+`list_bases`, `get_entity` and the briefing, are left out for a base in a hex
+where the side holds more than one base, the figure being in `shared_hexes`,
+once; an arrival in `arrivals.due` lists every arrival still due, those held
+past their day included, and no longer only the next three days; and a loss
+line of aircraft written off gives `written_off_by`. Fields added: in the
+briefing `free_forces`, `shared_hexes`, `land_units.fatigue_rule`,
+`land_units.no_activity_yesterday`, `land_units.landings_yesterday`, an
+objective's `open_now`, a base's `formed_by`, an arrival's `at`,
+`held_past_day`, `can_be_delivered` and `waits_for`; in a land unit line
+`firing_men_now` and `after_another_attack_day`; in an air group line
+`awaiting_arrival`; and in `list_bases` `shared_hexes` and `formed_by`.
+`landed_yesterday` is kept in the data, a line for each ship, and the briefing's
+text gives `landings_yesterday` in its place.
 
 Version 3 (decision 0067) changed what two counts mean. The `count` of
 `cargo_landed` is the tons unloaded at the base less the tons loaded back

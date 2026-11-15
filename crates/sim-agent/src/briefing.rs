@@ -17,11 +17,12 @@ use serde::Serialize;
 use sim_core::events::{EventKind, LandFatigueChange, SupplyUse, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId};
+use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId, TaskForceId};
 use sim_core::orders::{AirMission, Cargo, Reach};
 use sim_core::side_events::{SideEvent, SideEventKind};
 use sim_core::state::{ShipLocation, TaskForceStatus};
 use sim_core::view::SideView;
+use sim_core::PassageEnd;
 
 use crate::answer::{FORMAT, VERSION};
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
@@ -62,6 +63,11 @@ pub struct Briefing {
     pub losses: LossesPart,
     /// 6. Task forces with a ship afloat, and those away at the yard.
     pub task_forces: Vec<ForceLine>,
+    /// 6a. Forces that have nothing left to do: an unload that has landed
+    /// everything, or a load that is complete (decision 0110, item 6). Left
+    /// out when there are none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub free_forces: Vec<FreeForceLine>,
     /// 6b. The forces away at the yard (decision 0069), with the day each is
     /// back. Empty, and left out of the data and the text, when none is away,
     /// so a side that has nothing at the yard sees no such part.
@@ -80,6 +86,11 @@ pub struct Briefing {
     pub air_groups: Vec<AirGroupLine>,
     /// 8. Bases.
     pub bases: Vec<BriefingBase>,
+    /// 8a. Each hex where the side holds more than one base, as one place:
+    /// the stock of all its bases there and the days of supply for the hex
+    /// (decision 0110, item 8). Left out when there is none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub shared_hexes: Vec<SharedHexLine>,
     /// 8b. The side's land units and what happened to their men yesterday
     /// (decision 0066, 21). Left out of the data and the text when the side
     /// has no land unit, so a scenario without any is briefed as it was.
@@ -498,6 +509,10 @@ pub struct AircraftLoss {
     pub shot_down: u32,
     pub destroyed_on_ground: u32,
     pub written_off: u32,
+    /// Why they were written off, by cause (decision 0110, item 9): wear
+    /// after a sortie, or damaged aircraft left behind by a rebase. Their
+    /// total is `written_off`.
+    pub written_off_by: Vec<WrittenOffBy>,
     pub lost_with_ship: u32,
     /// Aircraft that ran out of fuel on the way home from a sortie beyond
     /// their radius (decision 0059). Left out when 0, so a game with no
@@ -510,6 +525,21 @@ pub struct AircraftLoss {
     pub no_deck: u32,
     pub pilots_lost: u32,
     pub events: Vec<u32>,
+}
+
+/// Aircraft written off for one cause (decision 0110, item 9).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct WrittenOffBy {
+    /// `wear` (after a sortie) or `rebase` (left damaged at the base the
+    /// group moved from).
+    pub cause: &'static str,
+    /// For `wear`: the sortie, such as `patrol` or `base strike`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sortie: Option<&'static str>,
+    /// For `rebase`: the base left.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base: Option<Handle>,
+    pub aircraft: u32,
 }
 
 /// What the side's own people believe they did in a fight or a raid
@@ -617,7 +647,15 @@ pub struct BriefingBase {
     /// The side's days of supply in the base's hex, today's figure over the
     /// planned use (decision 0107, 31 to 36). Not `days_of_supply`, which is
     /// the stock over yesterday's spending.
-    pub planned_days_of_supply: crate::lines::DaysOfSupplyLine,
+    /// Left out for a base in a hex the side holds more than one base in:
+    /// the hex's figure is in `shared_hexes`, once (decision 0110, item 8).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub planned_days_of_supply: Option<crate::lines::DaysOfSupplyLine>,
+    /// How the base came to be, when a landing or a march formed it: the
+    /// side's own events say so (decision 0110, item 8). Left out for a
+    /// base that was there at the start.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub formed_by: Option<BaseFormedBy>,
     /// The side's ships in port at the base in no force, which a forming
     /// order may take. Left out when there are none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -679,8 +717,20 @@ pub struct ArrivalWaitingLine {
 /// its base holds.
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct LandUnitsPart {
+    /// The rule of fatigue of this scenario (decision 0110, item 3). Left
+    /// out where the scenario has no ground figures.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fatigue_rule: Option<FatigueRule>,
     /// Every land unit of the side, in number order, destroyed ones too.
     pub units: Vec<LandUnitLine>,
+    /// Units that were to work, train or rehearse yesterday and did not,
+    /// and why (decision 0110, item 1). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub no_activity_yesterday: Vec<NoActivityLine>,
+    /// What each force's landing came to yesterday (decision 0110, item
+    /// 7). Left out when none landed anything.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub landings_yesterday: Vec<LandingLine>,
     /// Men put ashore yesterday.
     pub landed_yesterday: Vec<MenMoved>,
     /// Men taken aboard from the shore yesterday.
@@ -1370,9 +1420,130 @@ pub struct HexSupply {
     pub days_of_supply: Option<Dec>,
 }
 
+/// How a base of the side was formed (decision 0110, item 8).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct BaseFormedBy {
+    /// `landing` or `march`.
+    pub how: &'static str,
+    /// The force that landed, or the unit that marched.
+    pub by: Handle,
+    /// The day it was formed.
+    pub day: u32,
+    pub event: u32,
+}
+
+/// A hex where the side holds more than one base, shown as one place
+/// (decision 0110, item 8): the stock of its bases together, the days of
+/// supply for the hex, and the bases under it. They are still separate bases.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct SharedHexLine {
+    pub place: Place,
+    /// The side's bases in the hex, in base order.
+    pub bases: Vec<Handle>,
+    /// The supply of all of them together.
+    pub supply_t: Dec,
+    /// The fuel of all of them together.
+    pub fuel_t: Dec,
+    /// The days of supply for the hex.
+    pub days_of_supply: crate::lines::DaysOfSupplyLine,
+}
+
+/// A force with nothing left to do (decision 0110, item 6).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FreeForceLine {
+    pub task_force: Handle,
+    pub place: Place,
+    /// `unloading` (everything landed, men and cargo) or `loading` (the
+    /// load is complete).
+    pub finished: &'static str,
+    /// The base it worked at.
+    pub base: Option<Handle>,
+    /// What it still carries.
+    pub carries_supply_t: Dec,
+    pub carries_fuel_t: Dec,
+    pub carries_men: u32,
+    /// The side's number of the event that said so, when it was yesterday's.
+    /// Left out for a force that finished on an earlier day.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub event: Option<u32>,
+}
+
+/// What a landing of one force came to yesterday (decision 0110, item 7).
+/// The ships' lines are in `landed_yesterday` and `explain` gives each.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct LandingLine {
+    pub task_force: Handle,
+    pub place: Place,
+    /// Men put ashore yesterday, all the force's ships together.
+    pub men_landed: u32,
+    /// Supply put ashore yesterday, in tons.
+    pub supply_landed_t: Dec,
+    /// Fuel put ashore yesterday, in tons.
+    pub fuel_landed_t: Dec,
+    /// Men still aboard its ships.
+    pub men_aboard: u32,
+    pub supply_aboard_t: Dec,
+    pub fuel_aboard_t: Dec,
+    /// True when nothing is left aboard.
+    pub finished: bool,
+    /// Days to land the rest at yesterday's rate (men and tons each at their
+    /// own rate, the longer of the two, rounded up). Left out when finished
+    /// and when some part of the rest was not landed yesterday, so that no
+    /// rate shows it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub finishes_in_days: Option<u32>,
+    /// The side's number of the first event of the landing yesterday.
+    pub event: u32,
+}
+
+/// A unit made no work, no training or no rehearsal yesterday and the reason
+/// (decision 0110, item 1).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct NoActivityLine {
+    pub land_unit: Handle,
+    /// `work`, `training` or `rehearsal`.
+    pub activity: &'static str,
+    pub place: Place,
+    /// `marched`, `contested`, `no_base`, `not_fed`, `men_aboard`,
+    /// `at_ceiling`, `rehearsal_full` or `force_not_ready`.
+    pub reason: &'static str,
+    /// For `contested`: whose attack, `own_attack` or `enemy_attack`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub by: Option<&'static str>,
+    /// For `at_ceiling`: the experience training stops at.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub up_to: Option<u32>,
+    /// The side's number of the event that shows the reason (the march, the
+    /// fight or the feeding), where one does.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub event: Option<u32>,
+}
+
+/// The rule of fatigue of this scenario (decision 0110, item 3): what a day
+/// adds and takes off. Left out where the scenario has no ground figures.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FatigueRule {
+    /// Added by a day of attack.
+    pub attack_day: Dec,
+    /// Added besides, on a day the side's attack failed. Left out when 0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub failed_attack: Option<Dec>,
+    /// Added by a day of march.
+    pub march_day: Dec,
+    /// The most a day under fire adds (strain). Left out where the strain
+    /// rule is off.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strain_per_day: Option<Dec>,
+    /// Taken off by a day of rest.
+    pub rest_per_day: Dec,
+    /// Above this a unit on attack goes back to defend.
+    pub attack_limit: Dec,
+}
+
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct ArrivalsPart {
-    /// Arrivals due today and on the next two days.
+    /// Every arrival the side still has to receive: those due today or
+    /// later, and those held past their day.
     pub due: Vec<DueArrival>,
     pub replacements: Vec<ReplacementStream>,
 }
@@ -1383,6 +1554,15 @@ pub struct DueArrival {
     pub air_group: Handle,
     pub aircraft: u32,
     pub pilots: u32,
+    /// The base or ship the group is at.
+    pub at: Option<Handle>,
+    /// True for an arrival past its day that was held back.
+    pub held_past_day: bool,
+    /// Whether it would be delivered if its night came now.
+    pub can_be_delivered: bool,
+    /// What holds it, when it cannot be delivered.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub waits_for: Option<crate::lines::ArrivalWaits>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -1488,10 +1668,38 @@ pub struct SupplyWarning {
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct FuelWarning {
+    /// The side's lowest-numbered base in the force's hex; none of its
+    /// bases there has any fuel.
     pub base: Handle,
+    /// The side's other bases in the hex, in base order. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub other_bases: Vec<Handle>,
+    /// The fuel at the base: 0 (the hex's fuel in all).
     pub fuel_t: Dec,
-    /// The own task forces stopped at the base.
-    pub task_forces: Vec<Handle>,
+    /// The own task force stopped there.
+    pub task_force: Handle,
+    /// Its least fuelled ship and her fuel.
+    pub least_fuelled: Option<crate::lines::FuelLine>,
+    /// The passage to its home port, by `measure`'s own forecast. Left out
+    /// when the force has no home port of the side's or cannot be forecast.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub home_passage: Option<HomePassage>,
+}
+
+/// The passage of a force to its home port (decision 0110, item 5).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct HomePassage {
+    pub port: Handle,
+    /// The length of the route in miles.
+    pub route_nm: Dec,
+    /// `arrives`, `runs_out_of_fuel`, `cannot_move` or `does_not_sail`.
+    pub outcome: &'static str,
+    /// For `arrives`: the fuel the least fuelled ship burns on the way.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub needs_t: Option<Dec>,
+    /// For `runs_out_of_fuel`: the miles steamed before a ship is dry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub steamed_nm: Option<Dec>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -1595,7 +1803,9 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                 works: crate::lines::base_works_line(&ctx, b),
                 airfield_damage: crate::lines::base_airfield_damage_line(&ctx, b),
                 reserves: crate::lines::base_reserves_line(b),
-                planned_days_of_supply: crate::lines::days_of_supply_line(&ctx, b.hex),
+                planned_days_of_supply: (!ctx.shares_hex(b))
+                    .then(|| crate::lines::days_of_supply_line(&ctx, b.hex)),
+                formed_by: ctx.formed_by(b.id),
                 ships_in_port: ctx
                     .ships
                     .values()
@@ -1607,7 +1817,9 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         })
         .collect();
 
-    let land_units = land_units_part(&ctx, view, std::mem::take(&mut day.ground));
+    let shared_hexes = shared_hexes(&ctx);
+    let free_forces = free_forces(&ctx, &day.finished);
+    let land_units = land_units_part(&ctx, view, std::mem::take(&mut day.ground), &day.landing);
     let base_changes = Some(std::mem::take(&mut day.base_changes)).filter(|c| !c.is_empty());
     let halts = Some(std::mem::take(&mut day.halts)).filter(|h| !h.is_empty());
     let force_changes = Some(std::mem::take(&mut day.force_changes)).filter(|c| !c.is_empty());
@@ -1621,12 +1833,27 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
     let arrivals = ArrivalsPart {
         due: view
             .arrivals()
-            .filter(|a| a.day >= today && a.day < today + 3)
-            .map(|a| DueArrival {
-                day: a.day,
-                air_group: ctx.group(a.air_group),
-                aircraft: a.aircraft,
-                pilots: a.pilots,
+            .filter(|a| a.day >= today || a.waiting)
+            .filter_map(|a| {
+                let group = ctx.groups.get(&a.air_group)?;
+                if !crate::lines::arrival_is_deliverable_to(&ctx, group) {
+                    return None;
+                }
+                let waits_for = crate::lines::arrival_waits(&ctx, group);
+                Some(DueArrival {
+                    day: a.day,
+                    air_group: ctx.group(a.air_group),
+                    aircraft: a.aircraft,
+                    pilots: a.pilots,
+                    at: match group.location {
+                        sim_core::state::AirGroupLocation::Base(base) => Some(ctx.base(base)),
+                        sim_core::state::AirGroupLocation::Ship(ship) => Some(ctx.ship(ship)),
+                        sim_core::state::AirGroupLocation::Lost => None,
+                    },
+                    held_past_day: a.day < today,
+                    can_be_delivered: waits_for.is_none(),
+                    waits_for,
+                })
             })
             .collect(),
         replacements: view
@@ -1675,11 +1902,13 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         action: day.action,
         losses: day.losses,
         task_forces,
+        free_forces,
         away_at_yard,
         halts,
         force_changes,
         air_groups,
         bases,
+        shared_hexes,
         land_units,
         base_changes,
         arrivals,
@@ -1727,10 +1956,26 @@ fn enemy_ashore_part(
 
 /// The land units part, or `None` when the side has no land unit (decision
 /// 0066, 21).
-fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Option<LandUnitsPart> {
+fn land_units_part(
+    ctx: &Ctx<'_>,
+    view: &SideView<'_>,
+    ground: GroundDay,
+    landing: &BTreeMap<TaskForceId, LandingTally>,
+) -> Option<LandUnitsPart> {
     if ctx.land_units.is_empty() {
         return None;
     }
+    let no_activity_yesterday = no_activity_lines(ctx, view, &ground);
+    let landings_yesterday = landing_lines(ctx, landing);
+    let fatigue_rule = view.ground_figures().map(|f| FatigueRule {
+        attack_day: Dec(f.fatigue_per_attack_day),
+        failed_attack: (f.failed_attack_fatigue > Fixed::ZERO)
+            .then_some(Dec(f.failed_attack_fatigue)),
+        march_day: Dec(f.fatigue_per_march_day),
+        strain_per_day: (f.strain_per_hit > Fixed::ZERO).then_some(Dec(f.strain_per_day)),
+        rest_per_day: Dec(f.rest_per_day),
+        attack_limit: Dec(f.attack_fatigue_limit),
+    });
     let fed = fed_last_night(ctx);
     let units: Vec<LandUnitLine> = ctx
         .land_units
@@ -1795,7 +2040,10 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         })
         .collect();
     Some(LandUnitsPart {
+        fatigue_rule,
         units,
+        no_activity_yesterday,
+        landings_yesterday,
         landed_yesterday: ground.landed,
         embarked_yesterday: ground.embarked,
         bases_formed_yesterday: ground.bases_formed,
@@ -1829,6 +2077,277 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         airfields_built_yesterday: ground.airfields_built,
         supply_by_hex,
     })
+}
+
+/// Each hex where the side holds more than one base, as one place (decision
+/// 0110, item 8).
+pub(crate) fn shared_hexes(ctx: &Ctx<'_>) -> Vec<SharedHexLine> {
+    let hexes: BTreeSet<Hex> = ctx
+        .bases
+        .values()
+        .filter(|b| ctx.shares_hex(b))
+        .map(|b| b.hex)
+        .collect();
+    hexes
+        .into_iter()
+        .map(|hex| {
+            let bases: Vec<&sim_core::state::Base> = ctx
+                .bases
+                .values()
+                .copied()
+                .filter(|b| b.hex == hex)
+                .collect();
+            SharedHexLine {
+                place: ctx.place(hex),
+                bases: bases.iter().map(|b| ctx.base(b.id)).collect(),
+                supply_t: Dec(bases.iter().fold(Fixed::ZERO, |t, b| t + b.supply_t)),
+                fuel_t: Dec(bases.iter().fold(Fixed::ZERO, |t, b| t + b.fuel_t)),
+                days_of_supply: crate::lines::days_of_supply_line(ctx, hex),
+            }
+        })
+        .collect()
+}
+
+/// What the force's ships still carry: supply and fuel in tons, and men.
+fn carried(ctx: &Ctx<'_>, force: &sim_core::state::TaskForce) -> (Fixed, Fixed, u32) {
+    ctx.afloat_in(force)
+        .fold((Fixed::ZERO, Fixed::ZERO, 0), |(s, f, m), ship| {
+            (
+                s + ship.supply_t,
+                f + ship.cargo_fuel_t,
+                m + ship.troops.map_or(0, |t| t.men),
+            )
+        })
+}
+
+/// The forces with nothing left to do (decision 0110, item 6): those whose
+/// unloading or loading was finished yesterday, and those that stand at a
+/// base of the side with an unload order and nothing aboard.
+fn free_forces(
+    ctx: &Ctx<'_>,
+    finished: &BTreeMap<TaskForceId, (&'static str, Option<BaseId>, u32)>,
+) -> Vec<FreeForceLine> {
+    let mut out = Vec::new();
+    for force in ctx.forces.values() {
+        if !is_afloat(ctx, force) || force.yard_trip.is_some() {
+            continue;
+        }
+        let (supply, fuel, men) = carried(ctx, force);
+        let line =
+            |finished: &'static str, base: Option<BaseId>, event: Option<u32>| FreeForceLine {
+                task_force: ctx.force(force.id),
+                place: ctx.place(force.position()),
+                finished,
+                base: base.map(|b| ctx.base(b)),
+                carries_supply_t: Dec(supply),
+                carries_fuel_t: Dec(fuel),
+                carries_men: men,
+                event,
+            };
+        if let Some((what, base, event)) = finished.get(&force.id) {
+            out.push(line(what, *base, Some(*event)));
+            continue;
+        }
+        let unloading = force
+            .cargo_order
+            .is_some_and(|c| c.action == sim_core::orders::CargoAction::Unload);
+        let here = ctx.bases.values().find(|b| b.hex == force.position());
+        if unloading
+            && force.status != TaskForceStatus::Underway
+            && supply.is_zero()
+            && fuel.is_zero()
+            && men == 0
+        {
+            if let Some(base) = here {
+                out.push(line("unloading", Some(base.id), None));
+            }
+        }
+    }
+    out
+}
+
+/// What each force landed yesterday and what it has left to land (decision
+/// 0110, item 7).
+fn landing_lines(ctx: &Ctx<'_>, landing: &BTreeMap<TaskForceId, LandingTally>) -> Vec<LandingLine> {
+    landing
+        .iter()
+        .filter_map(|(id, tally)| {
+            let force = ctx.forces.get(id)?;
+            let (supply_aboard, fuel_aboard, men_aboard) = carried(ctx, force);
+            let tons_landed = tally.supply_t + tally.fuel_t;
+            let tons_aboard = supply_aboard + fuel_aboard;
+            let finished = men_aboard == 0 && tons_aboard.is_zero();
+            // The rest at yesterday's rate: men and tons each at their own,
+            // the longer of the two, rounded up; none where a part of the
+            // rest was not landed yesterday.
+            let mut days: Option<u32> = Some(0);
+            if men_aboard > 0 {
+                days = (tally.men > 0)
+                    .then(|| days.map(|d| d.max(men_aboard.div_ceil(tally.men))))
+                    .flatten();
+            }
+            if !tons_aboard.is_zero() {
+                days = (tons_landed > Fixed::ZERO)
+                    .then(|| {
+                        let (rest, rate) = (tons_aboard.raw(), tons_landed.raw());
+                        let needed = (rest + rate - 1) / rate;
+                        days.map(|d| d.max(u32::try_from(needed).unwrap_or(u32::MAX)))
+                    })
+                    .flatten();
+            }
+            Some(LandingLine {
+                task_force: ctx.force(*id),
+                place: ctx.place(tally.hex),
+                men_landed: tally.men,
+                supply_landed_t: Dec(tally.supply_t),
+                fuel_landed_t: Dec(tally.fuel_t),
+                men_aboard,
+                supply_aboard_t: Dec(supply_aboard),
+                fuel_aboard_t: Dec(fuel_aboard),
+                finished,
+                finishes_in_days: if finished { None } else { days },
+                event: tally.first_event,
+            })
+        })
+        .collect()
+}
+
+/// The units that were to work, train or rehearse yesterday and did not,
+/// with the reason, in the order the engine tests them (`unit_day`, then
+/// the work rule or the training rule): marched, the hex contested, then
+/// what the job needs (decision 0110, item 1). The reasons come from the
+/// side's own events and state.
+fn no_activity_lines(
+    ctx: &Ctx<'_>,
+    view: &SideView<'_>,
+    ground: &GroundDay,
+) -> Vec<NoActivityLine> {
+    use sim_core::orders::{Activity, Posture};
+    let Some(figures) = view.ground_figures() else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for unit in ctx.land_units.values() {
+        let Some(hex) = unit.hex.filter(|_| unit.men_ashore > 0) else {
+            continue;
+        };
+        let handle = ctx.land_unit(unit.id);
+        let works = unit.working || matches!(unit.activity, Activity::Work(_));
+        let trains = !unit.working && unit.activity == Activity::Train;
+        let rostered =
+            !unit.working && unit.activity == Activity::Ready && view.roster_of(unit.id).is_some();
+        if !(works || trains || rostered) {
+            continue;
+        }
+        let mine = |h: &Handle| *h == handle;
+        let did = if works {
+            ground.work.iter().any(|w| mine(&w.land_unit))
+        } else if trains {
+            ground
+                .experience_days
+                .iter()
+                .any(|d| d.source == "training" && mine(&d.land_unit))
+        } else {
+            ground
+                .rehearsal
+                .iter()
+                .any(|r| r.change == "gained" && mine(&r.land_unit))
+        };
+        if did {
+            continue;
+        }
+        let activity = if works {
+            "work"
+        } else if trains {
+            "training"
+        } else {
+            "rehearsal"
+        };
+        let line = |reason: &'static str| NoActivityLine {
+            land_unit: handle.clone(),
+            activity,
+            place: ctx.place(hex),
+            reason,
+            by: None,
+            up_to: None,
+            event: None,
+        };
+        // The engine's order: it marched, then its hex was contested.
+        if let Some(march) = ground.marches.iter().find(|m| mine(&m.land_unit)) {
+            out.push(NoActivityLine {
+                event: Some(march.event),
+                ..line("marched")
+            });
+            continue;
+        }
+        if let Some(fight) = ground
+            .fights
+            .iter()
+            .find(|f| f.place.q == hex.q && f.place.r == hex.r)
+        {
+            // The contest needs an attack by one side or the other: the
+            // side's own if a unit of its own in the hex fired on attack.
+            let own_attack = ctx.land_units.values().any(|other| {
+                let h = ctx.land_unit(other.id);
+                other.hex == Some(hex)
+                    && other.men_ashore > 0
+                    && ground.fire.iter().any(|f| f.land_unit == h)
+                    && (other.posture == Posture::Attack
+                        || ground.back_to_defend.iter().any(|b| b.land_unit == h)
+                        || ground.fatigue.iter().any(|f| {
+                            f.land_unit == h
+                                && matches!(f.change, "gained" | "marched_and_attacked")
+                        }))
+            });
+            out.push(NoActivityLine {
+                by: Some(if own_attack {
+                    "own_attack"
+                } else {
+                    "enemy_attack"
+                }),
+                event: Some(fight.event),
+                ..line("contested")
+            });
+            continue;
+        }
+        let in_base = ctx.bases.values().any(|b| b.hex == hex);
+        let fed_event = ground
+            .fed
+            .iter()
+            .find(|f| f.place.q == hex.q && f.place.r == hex.r)
+            .map(|f| f.event);
+        if works {
+            if !in_base {
+                out.push(line("no_base"));
+            } else if unit.fed_share.is_zero() {
+                out.push(NoActivityLine {
+                    event: fed_event,
+                    ..line("not_fed")
+                });
+            }
+        } else if trains {
+            if view.men_aboard(unit.id).unwrap_or(0) > 0 {
+                out.push(line("men_aboard"));
+            } else if !in_base {
+                out.push(line("no_base"));
+            } else if unit.fed_share != Fixed::ONE {
+                out.push(NoActivityLine {
+                    event: fed_event,
+                    ..line("not_fed")
+                });
+            } else if u32::from(unit.experience) >= figures.training_ceiling {
+                out.push(NoActivityLine {
+                    up_to: Some(figures.training_ceiling),
+                    ..line("at_ceiling")
+                });
+            }
+        } else if unit.rehearsal >= Fixed::from_int(100) && unit.rehearsal_hex.is_some() {
+            out.push(line("rehearsal_full"));
+        } else {
+            out.push(line("force_not_ready"));
+        }
+    }
+    out
 }
 
 impl Briefing {
@@ -1873,6 +2392,21 @@ struct Day {
     force_changes: ForceChangesPart,
     bases_found: Vec<BaseFoundLine>,
     found_empty: Vec<FoundEmptyLine>,
+    /// What each force landed yesterday, men and cargo (decision 0110,
+    /// item 7).
+    landing: BTreeMap<TaskForceId, LandingTally>,
+    /// The forces whose unloading or loading was finished yesterday, with
+    /// the base and the event (decision 0110, item 6).
+    finished: BTreeMap<TaskForceId, (&'static str, Option<BaseId>, u32)>,
+}
+
+/// What one force put ashore yesterday.
+struct LandingTally {
+    hex: Hex,
+    men: u32,
+    supply_t: Fixed,
+    fuel_t: Fixed,
+    first_event: u32,
 }
 
 /// What yesterday's events of the side say of its land units (decision
@@ -2104,6 +2638,9 @@ impl Day {
         let mut force_changes = ForceChangesPart::default();
         let mut bases_found: Vec<BaseFoundLine> = Vec::new();
         let mut found_empty: Vec<FoundEmptyLine> = Vec::new();
+        let mut landing: BTreeMap<TaskForceId, LandingTally> = BTreeMap::new();
+        let mut finished: BTreeMap<TaskForceId, (&'static str, Option<BaseId>, u32)> =
+            BTreeMap::new();
         let mut bombardments: Vec<Bombardment> = Vec::new();
         let mut shell_fire: Vec<ShellFire> = Vec::new();
         let mut bombardments_against: Vec<BombardmentAgainst> = Vec::new();
@@ -2286,16 +2823,21 @@ impl Day {
                     EventKind::AircraftWorn {
                         air_group,
                         written_off,
+                        sortie,
                         ..
                     } if *written_off > 0 => {
-                        loss(ctx, &mut aircraft, *air_group, id).written_off += written_off;
+                        let entry = loss(ctx, &mut aircraft, *air_group, id);
+                        entry.written_off += written_off;
+                        entry.note_written_off("wear", Some(sortie.name()), None, *written_off);
                     }
                     EventKind::AircraftWrittenOff {
                         air_group,
+                        base,
                         aircraft: n,
-                        ..
                     } if *n > 0 => {
-                        loss(ctx, &mut aircraft, *air_group, id).written_off += n;
+                        let entry = loss(ctx, &mut aircraft, *air_group, id);
+                        entry.written_off += n;
+                        entry.note_written_off("rebase", None, Some(ctx.base(*base)), *n);
                     }
                     EventKind::AirGroupRebased {
                         air_group,
@@ -2419,10 +2961,24 @@ impl Day {
                     }
                     EventKind::CargoUnloaded {
                         base,
+                        task_force,
                         cargo,
                         unloaded_t,
                         ..
                     } => {
+                        if let Some(hex) = ctx.bases.get(base).map(|b| b.hex) {
+                            let tally = landing.entry(*task_force).or_insert(LandingTally {
+                                hex,
+                                men: 0,
+                                supply_t: Fixed::ZERO,
+                                fuel_t: Fixed::ZERO,
+                                first_event: id,
+                            });
+                            match cargo {
+                                Cargo::Supply => tally.supply_t += *unloaded_t,
+                                Cargo::Fuel => tally.fuel_t += *unloaded_t,
+                            }
+                        }
                         let moves = stocks.entry(*base).or_default();
                         match cargo {
                             Cargo::Supply => moves.supply_landed += *unloaded_t,
@@ -2517,16 +3073,26 @@ impl Day {
                         men,
                         aboard,
                         ashore,
-                    } => ground.landed.push(MenMoved {
-                        land_unit: ctx.land_unit(*unit),
-                        ship: ctx.ship(*ship),
-                        task_force: ctx.force(*task_force),
-                        place: ctx.place(*hex),
-                        men: *men,
-                        aboard: *aboard,
-                        ashore: *ashore,
-                        event: id,
-                    }),
+                    } => {
+                        let tally = landing.entry(*task_force).or_insert(LandingTally {
+                            hex: *hex,
+                            men: 0,
+                            supply_t: Fixed::ZERO,
+                            fuel_t: Fixed::ZERO,
+                            first_event: id,
+                        });
+                        tally.men += *men;
+                        ground.landed.push(MenMoved {
+                            land_unit: ctx.land_unit(*unit),
+                            ship: ctx.ship(*ship),
+                            task_force: ctx.force(*task_force),
+                            place: ctx.place(*hex),
+                            men: *men,
+                            aboard: *aboard,
+                            ashore: *ashore,
+                            event: id,
+                        });
+                    }
                     EventKind::BaseFormed {
                         base,
                         hex,
@@ -2830,13 +3396,16 @@ impl Day {
                         base,
                         cargo,
                         ..
-                    } => ground.loading_complete.push(LoadingCompleteLine {
-                        task_force: ctx.force(*task_force),
-                        land_unit: ctx.land_unit(*unit),
-                        base: base.map(|b| ctx.base(b)),
-                        cargo: cargo.map(Cargo::name),
-                        event: id,
-                    }),
+                    } => {
+                        finished.insert(*task_force, ("loading", *base, id));
+                        ground.loading_complete.push(LoadingCompleteLine {
+                            task_force: ctx.force(*task_force),
+                            land_unit: ctx.land_unit(*unit),
+                            base: base.map(|b| ctx.base(b)),
+                            cargo: cargo.map(Cargo::name),
+                            event: id,
+                        });
+                    }
                     EventKind::MenFed {
                         hex,
                         base,
@@ -2912,6 +3481,16 @@ impl Day {
                         ashore: Some(*ashore),
                         event: id,
                     }),
+                    EventKind::UnloadingComplete {
+                        task_force, base, ..
+                    } => {
+                        finished.insert(*task_force, ("unloading", Some(*base), id));
+                    }
+                    EventKind::LoadingComplete {
+                        task_force, base, ..
+                    } => {
+                        finished.insert(*task_force, ("loading", Some(*base), id));
+                    }
                     EventKind::GroundFoundEmpty {
                         hex,
                         men,
@@ -3149,8 +3728,6 @@ impl Day {
                     | EventKind::FuelBurned { .. }
                     | EventKind::TaskForceArrived { .. }
                     | EventKind::TaskForceOutOfFuel { .. }
-                    | EventKind::LoadingComplete { .. }
-                    | EventKind::UnloadingComplete { .. }
                     | EventKind::SearchFlown { .. }
                     | EventKind::SearchAttempt { .. }
                     | EventKind::ContactAged { .. }
@@ -3483,6 +4060,8 @@ impl Day {
             force_changes,
             bases_found,
             found_empty,
+            landing,
+            finished,
         }
     }
 }
@@ -3560,6 +4139,32 @@ fn reports_of(
     out
 }
 
+impl AircraftLoss {
+    /// Adds `n` aircraft written off for a cause to the line, joining a
+    /// cause already there.
+    fn note_written_off(
+        &mut self,
+        cause: &'static str,
+        sortie: Option<&'static str>,
+        base: Option<Handle>,
+        n: u32,
+    ) {
+        match self
+            .written_off_by
+            .iter_mut()
+            .find(|w| w.cause == cause && w.sortie == sortie && w.base == base)
+        {
+            Some(found) => found.aircraft += n,
+            None => self.written_off_by.push(WrittenOffBy {
+                cause,
+                sortie,
+                base,
+                aircraft: n,
+            }),
+        }
+    }
+}
+
 /// The entry of a group in the losses, made on first use, with the event
 /// that told of the loss added.
 fn loss<'m>(
@@ -3573,6 +4178,7 @@ fn loss<'m>(
         shot_down: 0,
         destroyed_on_ground: 0,
         written_off: 0,
+        written_off_by: Vec::new(),
         lost_with_ship: 0,
         ditched: 0,
         no_deck: 0,
@@ -3655,25 +4261,66 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
                 reason,
             });
         }
-        if base.fuel_t.is_zero() {
-            let stopped: Vec<Handle> = ctx
-                .forces
-                .values()
-                .filter(|f| {
-                    f.position() == base.hex
-                        && f.status != TaskForceStatus::Underway
-                        && is_afloat(ctx, f)
-                })
-                .map(|f| ctx.force(f.id))
-                .collect();
-            if !stopped.is_empty() {
-                base_without_fuel_with_force.push(FuelWarning {
-                    base: ctx.base(base.id),
-                    fuel_t: Dec(base.fuel_t),
-                    task_forces: stopped,
-                });
-            }
+    }
+    // 3. One line for each force stopped in a hex where none of the side's
+    // bases has any fuel: the fuel it has, the passage to its home port and
+    // whether it can make it (decision 0110, item 5).
+    for force in ctx.forces.values() {
+        if force.status == TaskForceStatus::Underway || !is_afloat(ctx, force) {
+            continue;
         }
+        let here: Vec<&sim_core::state::Base> = ctx
+            .bases
+            .values()
+            .copied()
+            .filter(|b| b.hex == force.position())
+            .collect();
+        if here.is_empty() || here.iter().any(|b| !b.fuel_t.is_zero()) {
+            continue;
+        }
+        let least = ctx.afloat_in(force).min_by_key(|s| (s.fuel_t, s.id));
+        let home_passage = force.home_port.and_then(|port| {
+            let base = ctx.bases.get(&port)?;
+            let forecast = ctx.view.forecast_passage(force.id, base.hex, None)?;
+            let (outcome, needs_t, steamed_nm) = match forecast.end {
+                PassageEnd::Refused
+                    if forecast.refusal == Some(sim_core::orders::RejectReason::EmptyRoute) =>
+                {
+                    ("already_there", None, None)
+                }
+                PassageEnd::Refused => ("does_not_sail", None, None),
+                PassageEnd::CannotMove => ("cannot_move", None, None),
+                PassageEnd::Arrives { .. } => (
+                    "arrives",
+                    least.and_then(|l| {
+                        forecast
+                            .ships
+                            .iter()
+                            .find(|p| p.ship == l.id)
+                            .map(|p| Dec(p.burned_t))
+                    }),
+                    None,
+                ),
+                PassageEnd::RunsDry { .. } => {
+                    ("runs_out_of_fuel", None, Some(Dec(forecast.steamed_nm)))
+                }
+            };
+            Some(HomePassage {
+                port: ctx.base(port),
+                route_nm: Dec(forecast.route_nm),
+                outcome,
+                needs_t,
+                steamed_nm,
+            })
+        });
+        base_without_fuel_with_force.push(FuelWarning {
+            base: ctx.base(here[0].id),
+            other_bases: here.iter().skip(1).map(|b| ctx.base(b.id)).collect(),
+            fuel_t: Dec(Fixed::ZERO),
+            task_force: ctx.force(force.id),
+            least_fuelled: least.map(|s| crate::lines::fuel_line(ctx, s)),
+            home_passage,
+        });
     }
 
     // 4 and 5. Air groups.

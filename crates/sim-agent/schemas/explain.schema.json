@@ -13,7 +13,7 @@
       "additionalProperties": false,
       "properties": {
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 4 },
+        "version": { "const": 5 },
         "kind": { "const": "explain" },
         "event": { "type": "integer" },
         "depth_limit": { "type": "integer" },

@@ -249,6 +249,44 @@ impl<'a> SideView<'a> {
         Some(crate::cover::unit_cover(self.truth, unit))
     }
 
+    /// The men of one of the side's own land units who would fire if it
+    /// fought now (decision 6 of 0090): its men ashore, cut by its fed share
+    /// and by its fatigue, by the function the fight calls. The side's own
+    /// unit only: `None` for a unit that is not the side's, or where the
+    /// scenario has no ground figures.
+    pub fn firing_men(&self, unit: LandUnitId) -> Option<u32> {
+        let land_unit = self
+            .truth
+            .land_units
+            .get(&unit)
+            .filter(|unit| unit.side == self.side)?;
+        self.ref_data.ground.as_ref()?;
+        Some(
+            crate::ground_combat::firing_men(
+                land_unit.men_ashore,
+                land_unit.fed_share,
+                land_unit.fatigue,
+            )
+            .0,
+        )
+    }
+
+    /// The fatigue one of the side's own land units would have after one
+    /// more day of attack (decision 12 of 0090): its fatigue now plus the
+    /// ground figure `fatigue_per_attack_day`, no more than 100. It leaves
+    /// out a march, a failed attack and strain, which add to it. The side's
+    /// own unit only: `None` for a unit that is not the side's, or where
+    /// the scenario has no ground figures.
+    pub fn fatigue_after_attack_day(&self, unit: LandUnitId) -> Option<Fixed> {
+        let land_unit = self
+            .truth
+            .land_units
+            .get(&unit)
+            .filter(|unit| unit.side == self.side)?;
+        let figures = self.ref_data.ground.as_ref()?;
+        Some((land_unit.fatigue + figures.fatigue_per_attack_day).min(Fixed::from_int(100)))
+    }
+
     /// The men of one of the side's own land units aboard its ships. `None`
     /// for a unit that is not the side's.
     pub fn men_aboard(&self, unit: LandUnitId) -> Option<u32> {
