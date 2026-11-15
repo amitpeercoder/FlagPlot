@@ -8,4 +8,4 @@ Run once, on Nov 15, 2026, by the team lead of step 4 of stage 1. It is not a te
 - `answers.md`: each Haiku answer verbatim, one agent per reason, given the reason alone and the two questions.
 - `marks.md`: a second model's marks against the key.
 
-Result as marked: 20 of 24 pass both questions; every order, no-order, displaced and hold reason passes; the four leave reasons fail question 1 only, because those reasons name no base. By the ruling's second part (no kind under half) the pass mark is not met. It stands only once the architect has read the key and every fail.
+Result as marked: 20 of 24 pass both questions; every order, no-order, displaced and hold reason passes; the four leave reasons fail question 1 only, because those reasons name no base. By the ruling's second part (no kind under half) the pass mark is not met. The architect read the key and every fail on Nov 15, 2026: the result stands as marked, not met. The fault it found is in the reasons, whose "serves" part gives an intent's number and not what the intent is (decision 0107, "As built (step 4)").
