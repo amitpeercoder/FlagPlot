@@ -92,3 +92,5 @@ id,key,name,kind,nation
 1288,jp-runs-1942-09-10-destroyer-transport-nights,"Japanese destroyer-transport night runs, Sep to Oct 1942, as the histories describe them in general",run,jp
 1289,jp-run-1942-09-kamimbo-destroyers,"Destroyers landing troops at Kamimbo Bay, 21 and 24 Sep (Kagero; Kawakaze and Umikaze)",run,jp
 1290,jp-run-1942-10-28-228th-infantry-express,"Tokyo Express landings of the 228th Infantry, Kokumbona to Cape Esperance, 28 Oct to 8 Nov",run,jp
+1391,us-task-force-67,"Task Force 67 (Kinkaid, then Wright): cruisers and destroyers at Espiritu Santo, Operation Plan 1-42 of 27 Nov 1942",transport-group,us
+1392,jp-run-1942-12-03-drums,"Destroyer drum run to Guadalcanal, 3 Dec 1942 (Tanaka)",run,jp
