@@ -586,7 +586,7 @@ fn dispatch(
     let mut new_days = run.days;
     new_days.sail = today;
     new_days.arrive = today + timing.out_days - 1;
-    new_days.free = today + timing.out_days + timing.unload.days + timing.back_days;
+    new_days.free = today + timing.free_after_sail();
     new_days.load = run.days.load.min(today);
     if new_days != run.days {
         out.command(
@@ -839,8 +839,7 @@ fn new_run(
         "the pool's free ships in number order"
     ));
     worked.push_str(&format!(
-        " Passage {} nm out at {} kn = {} hours, {} {}; {} nm back = {} hours, {} {}; unloading {} at {} = {} hours, {} {}. \
-         Its ships are free on day {} ({} + {} + {} + {}).",
+        " Passage {} nm out at {} kn = {} hours, {} {}; {} nm back = {} hours, {} {}; unloading {} at {} = {} hours, {} {}.{}",
         planner.route.as_ref().map_or(0, |r| r.out_nm),
         run.timing.speed_kn,
         run.timing.out_hours,
@@ -855,11 +854,7 @@ fn new_run(
         run.timing.unload.hours,
         run.timing.unload.days,
         days_word(run.timing.unload.days),
-        days.free,
-        days.sail,
-        run.timing.out_days,
-        run.timing.unload.days,
-        run.timing.back_days,
+        free_words(&run.timing, &days),
     ));
     let base_reason = |extra: &str| -> ReasonBuilder {
         let mut b = serving(intent, plan)
@@ -1598,5 +1593,30 @@ fn free_ended(view: &SideView<'_>, out: &mut Out) {
             },
             reason,
         );
+    }
+}
+
+/// How a run's free day is counted, in words (decision 0112). Where the
+/// source gives no fuel rate the ships are free the morning after they are
+/// back, as before; where it gives one, the morning after the day the
+/// fuelling ends.
+fn free_words(timing: &crate::planner::Timing, days: &sim_core::command::RunDays) -> String {
+    match timing.fuelling_rate {
+        None => format!(
+            " Its ships are free on day {} ({} + {} + {} + {}).",
+            days.free,
+            days.sail,
+            timing.out_days,
+            timing.unload.days,
+            timing.back_days,
+        ),
+        Some(rate) => format!(
+            " Back at the source at hour {} of the run and fuelled by hour {} ({} hours at {} t an hour), its ships are free on day {}, the morning after the day the fuelling ends.",
+            timing.back_and_fuelled_hour() - timing.fuelling_hours,
+            timing.back_and_fuelled_hour(),
+            timing.fuelling_hours,
+            rate,
+            days.free,
+        ),
     }
 }

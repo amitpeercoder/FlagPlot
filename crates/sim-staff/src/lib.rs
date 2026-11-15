@@ -48,7 +48,11 @@ use sim_core::view::SideView;
 /// `supply-4` adds the notices: cannot meet, waits for a leave, a run ended.
 /// `supply-5` hands in each reason with its intent's statement in words, and
 /// names a plan with what it is for where a reason's working names no base.
-pub const DOCTRINE_VERSION: &str = "supply-5";
+/// `supply-6` counts the fuelling hours at the source before it calls a ship
+/// free (decision 0112): the morning after the day it has finished fuelling,
+/// at the source's fuel berth rate or lighter rate; with no rate given, as
+/// before, the morning after it is back.
+pub const DOCTRINE_VERSION: &str = "supply-6";
 
 /// The staff of stage 1: the doctrine for keeping a base supplied. A side
 /// with no intent in force and no commitment to free gets nothing from it.

@@ -16,9 +16,18 @@
 //!   the source's berth rate (its lighter rate where it has no berth), at
 //!   least 1; each passage at cruise is `ceil(hours / 24)`; unloading as
 //!   loading at the destination. Load day today; sail day the load day plus
-//!   the loading days; arrival the sail day plus the passage out less one;
-//!   free (back at the source and refuelled) the sail day plus the passage
-//!   out, the unloading and the passage back.
+//!   the loading days; arrival the sail day plus the passage out less one.
+//!   Free (decision 0112, with ruling 8 of decision 0107): the morning after
+//!   the day the ship has finished fuelling at the source. The hours count
+//!   from the sail day's first hour: the passage out, the unloading in whole
+//!   days, the passage back at cruise, then the fuelling, at the source's
+//!   fuel berth rate where it has a berth (else its lighter rate), of what
+//!   the ship then lacks (its capacity less the fuel it has now and less
+//!   what the round trip burns), the longest ship's hours. Free is the day
+//!   that hour falls in, plus one, and never earlier than the sail day plus
+//!   the passage out, the unloading and the passage back. Where the source
+//!   gives no fuel rate (no limit) the fuelling takes no hours and free is
+//!   that sum, the morning after the ship is back.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -38,7 +47,7 @@ use crate::fleet::{force_stopped_at, held_ships, pool_ships, run_state, Fleet, R
 use crate::morning::{protected_for_others, Morning};
 use crate::projection::Readings;
 use crate::route::{route_between, RouteInfo};
-use crate::units::{ceil_days, whole};
+use crate::units::{ceil_days, whole, HOURS_PER_DAY};
 
 /// The days of use each run brings above the floor where the commander has
 /// set no interval (question 5 of decision 0107, as answered).
@@ -93,9 +102,32 @@ pub(crate) struct Timing {
     pub(crate) landed_on_arrival_t: Fixed,
     /// The hours of the arrival day left when the force arrives.
     pub(crate) hours_left_on_arrival: Fixed,
+    /// The hours the longest ship takes to fuel at the source on its return
+    /// (decision 0112): 0 where the source gives no fuel rate (no limit) or
+    /// no ship lacks any.
+    pub(crate) fuelling_hours: Fixed,
+    /// The rate it fuels at, where one is given.
+    pub(crate) fuelling_rate: Option<Fixed>,
 }
 
 impl Timing {
+    /// The hour, counted from the first hour of the sail day, at which the
+    /// ships have finished fuelling at the source: the passage out and the
+    /// unloading in whole days, the passage back, then the fuelling.
+    pub(crate) fn back_and_fuelled_hour(&self) -> Fixed {
+        Fixed::from_int(HOURS_PER_DAY) * whole(self.out_days + self.unload.days)
+            + self.back_hours
+            + self.fuelling_hours
+    }
+
+    /// The days from the sail day to the day the ships are free: the
+    /// morning after the day fuelling ends, and never fewer than the whole
+    /// days of the passages and the unloading, as before decision 0112.
+    pub(crate) fn free_after_sail(&self) -> u32 {
+        let whole_days = self.out_days + self.unload.days + self.back_days;
+        ceil_days(self.back_and_fuelled_hour()).max(whole_days)
+    }
+
     /// The four days of a run ordered on `order_day`.
     pub(crate) fn days(&self, order_day: u32) -> RunDays {
         let sail = order_day + self.load.days;
@@ -103,7 +135,7 @@ impl Timing {
             load: order_day,
             sail,
             arrive: sail + self.out_days - 1,
-            free: sail + self.out_days + self.unload.days + self.back_days,
+            free: sail + self.free_after_sail(),
         }
     }
 }
@@ -707,6 +739,7 @@ impl<'a, 'v> Planner<'a, 'v> {
             .fold(Fixed::ZERO, |sum, (_, tons, rate)| {
                 sum + (*tons).min(*rate * left)
             });
+        let (fuelling_hours, fuelling_rate) = self.fuelling_on_return(ships, route);
         Some(Timing {
             speed_kn: speed,
             load,
@@ -717,7 +750,41 @@ impl<'a, 'v> Planner<'a, 'v> {
             unload,
             landed_on_arrival_t: landed,
             hours_left_on_arrival: left,
+            fuelling_hours,
+            fuelling_rate,
         })
+    }
+
+    /// The hours `ships` take to fuel at the source on their return, and the
+    /// rate (decision 0112): each ship lacks its capacity less the fuel it
+    /// has now plus what the round trip burns at cruise, not below 0 and not
+    /// above its capacity; the rate is the source's fuel berth rate where it
+    /// has a berth, else its lighter rate. The longest ship's hours. A rate
+    /// not given is no limit: no hours, and no rate.
+    fn fuelling_on_return(&self, ships: &[ShipId], route: &RouteInfo) -> (Fixed, Option<Fixed>) {
+        let Some(port) = self.port_at(self.params.source_hex) else {
+            return (Fixed::ZERO, None);
+        };
+        let rate = if port.berths > 0 {
+            port.fuel_berth_rate_t_per_h
+        } else {
+            port.fuel_lighter_rate_t_per_h
+        };
+        let Some(rate) = rate else {
+            return (Fixed::ZERO, None);
+        };
+        let mut hours = Fixed::ZERO;
+        for ship in ships.iter().filter_map(|id| self.fleet.ships.get(id)) {
+            let Some(class) = self.view.ship_class(ship.class) else {
+                continue;
+            };
+            let on_return = (ship.fuel_t - self.fuel_need_t(ship, route))
+                .max(Fixed::ZERO)
+                .min(class.fuel_capacity_t);
+            let lacks = class.fuel_capacity_t - on_return;
+            hours = hours.max(lacks / rate);
+        }
+        (hours, Some(rate))
     }
 
     /// The units, in order, that carry `uncapped_t` (the sum's load), where
@@ -929,5 +996,96 @@ impl<'a, 'v> Planner<'a, 'v> {
             self.evaluate(readings, day, units, pending_t)
                 .filter(|evaluation| evaluation.needed)
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn work(days: u32) -> Work {
+        Work {
+            hours: Fixed::from_int(i64::from(days) * 24),
+            days,
+            lines: Vec::new(),
+        }
+    }
+
+    /// A run that sails at 20 hours out, unloads for one day and sails 20
+    /// hours back, with `fuelling_hours` to fuel at the source.
+    fn timing(out: i64, back: i64, unload_days: u32, fuelling_hours: Fixed) -> Timing {
+        Timing {
+            speed_kn: Fixed::from_int(16),
+            load: work(1),
+            out_hours: Fixed::from_int(out),
+            out_days: ceil_days(Fixed::from_int(out)).max(1),
+            back_hours: Fixed::from_int(back),
+            back_days: ceil_days(Fixed::from_int(back)).max(1),
+            unload: work(unload_days),
+            landed_on_arrival_t: Fixed::ZERO,
+            hours_left_on_arrival: Fixed::ZERO,
+            fuelling_hours,
+            fuelling_rate: None,
+        }
+    }
+
+    /// Hand figures. Out 20 hours (1 day), unloading 1 day, back 20 hours
+    /// (1 day): the ship is back at the source at hour 24 x (1 + 1) + 20 =
+    /// 68 of the run, counted from the first hour of the sail day. Today's
+    /// sum is 1 + 1 + 1 = 3 days after the sail day.
+    ///
+    /// - A source with no rate given (no limit): 0 fuelling hours, the hour
+    ///   is 68, ceil(68 / 24) = 3: free 3 days after the sail day, as before.
+    /// - A berth at 200 t an hour and a ship lacking 1000 t: 5 hours, done at
+    ///   hour 73 in the day that starts at hour 72 (the fourth day, index 3):
+    ///   free the morning after it, 4 days after the sail day.
+    /// - The same ship lacking 600 t: 3 hours, done at hour 71 in the third
+    ///   day (index 2): free 3 days after the sail day, the same as before.
+    #[test]
+    fn a_ship_is_free_the_morning_after_the_day_it_finishes_fuelling() {
+        let none = timing(20, 20, 1, Fixed::ZERO);
+        assert_eq!(none.back_and_fuelled_hour(), Fixed::from_int(68));
+        assert_eq!(none.free_after_sail(), 3);
+        assert_eq!(none.days(10).free, 10 + 1 + 3);
+
+        let long = timing(20, 20, 1, Fixed::from_int(1000) / Fixed::from_int(200));
+        assert_eq!(long.back_and_fuelled_hour(), Fixed::from_int(73));
+        assert_eq!(long.free_after_sail(), 4);
+        // Ordered on day 10 with a loading day: sails on day 11, free on 15.
+        assert_eq!(long.days(10).free, 15);
+
+        let short = timing(20, 20, 1, Fixed::from_int(600) / Fixed::from_int(200));
+        assert_eq!(short.back_and_fuelled_hour(), Fixed::from_int(71));
+        assert_eq!(short.free_after_sail(), 3);
+    }
+
+    /// With no rate given the free day is the old sum in every case: a
+    /// passage of a whole number of days, of part of one, and none.
+    #[test]
+    fn with_no_rate_given_the_free_day_is_the_whole_days_sum_as_before() {
+        for out in [1, 20, 24, 25, 48, 100] {
+            for back in [0, 1, 20, 24, 25, 48, 100] {
+                for unload_days in [1, 2, 3] {
+                    let t = timing(out, back, unload_days, Fixed::ZERO);
+                    assert_eq!(
+                        t.free_after_sail(),
+                        t.out_days + t.unload.days + t.back_days,
+                        "out {out} back {back} unload {unload_days}"
+                    );
+                }
+            }
+        }
+    }
+
+    /// Fuelling that ends after midnight pushes the day on, never back: a
+    /// ship that is back at hour 24 x 2 + 0 (no passage) and takes 30 hours
+    /// finishes at hour 78, day index 3: free 4 days after the sail day.
+    #[test]
+    fn fuelling_never_makes_a_ship_free_earlier() {
+        let t = timing(20, 0, 1, Fixed::from_int(30));
+        assert_eq!(t.back_and_fuelled_hour(), Fixed::from_int(78));
+        assert_eq!(t.free_after_sail(), 4);
+        let t = timing(20, 0, 1, Fixed::ZERO);
+        assert_eq!(t.free_after_sail(), 3);
     }
 }

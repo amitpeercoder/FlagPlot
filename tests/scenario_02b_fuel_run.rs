@@ -131,7 +131,7 @@
 //! | The load order names no cargo | It loads supply: the run is scenario 2's first four days, event for event, apart from the refuelling of day 3, which finds no fuel at Guadalcanal and does nothing |
 //! | Espiritu Santo has no fuel | The load order is accepted and loads nothing. The convoy arrives empty and lands nothing |
 //! | Espiritu Santo has 5,000 t of fuel | The stock runs short in the morning of day 1. In the night each ship loads 1,800 t, leaving 1,400 t. In the morning ship 1 loads its 900 t and ship 2 the 500 t left. They sail with 2,700 t and 2,300 t |
-//! | Each cargo ship starts with 1,000 t of supply aboard | A load of fuel fills what is left: 2,000 t each, complete after 12 + 1.333333 hours. At Guadalcanal supply is landed first: in the 4 hours of the night of day 3 ship 1 lands 200 t of supply and ship 2 80 t, and no fuel reaches the stock until a ship's supply is gone |
+//! | Each cargo ship starts with 1,000 t of supply aboard | A load of fuel fills what is left: 2,000 t each, complete after 12 + 1.333333 hours. At Guadalcanal supply is landed first: in the 4 hours of the night of day 3 ship 1 lands 200 t of supply and ship 2 80 t, and no fuel reaches the stock until a ship's supply is gone. Nothing is refuelled on day 3; in the night of day 4 ship 1 lands 400 t of fuel and the three ships then take 32 t, 32 t and 40 t of it in that pulse, leaving 368 t, 336 t and 296 t (the architect's ruling of Nov 15, 2026, for decision 0112: cargo first, then fuel, in one pulse) |
 //! | Guadalcanal is Japanese | The unload order does nothing there and nothing is refuelled |
 //!
 //! ## What cannot happen

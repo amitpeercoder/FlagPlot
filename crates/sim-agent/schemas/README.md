@@ -584,6 +584,13 @@ no preparation looks as it did.
   the engine's own `landing_rate_factor`, 1 being the port's rate) and `order`; and
   `landing_at`, the hex where it has begun landing men and its unloading is not
   complete.
+- **A force line** (the same three places) has, for a force stopped at a base of its
+  side whose ships afloat lack fuel (decision 0112, 6): `fuel_lacked_t`, the tons they
+  lack together; `fuelling_hours`, the hours it would take at that port (each ship's
+  lack over the port's fuel berth rate where it has a berth, else its lighter rate; the
+  longest ship's), left out when the port gives no rate (no limit: the force fills in the
+  first pulse it lies there); and `fuelling_at`, the base. All three are left out when
+  the force lacks nothing or is not in port. Fields added: `version` stays 7.
 - **A land unit line** always has `activity` (`ready` or `train`), `experience` (0
   to 4, 2 the standard), `training` (`days` counted, `of_days` a step takes, `up_to`
   the experience training stops at) and `fighting` (`days`, `of_days`); and

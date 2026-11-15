@@ -407,6 +407,18 @@
         "landing_at": {
           "description": "Decision 0095, 5: the hex where the force has begun landing men and its unloading is not yet complete; until it is, it works at the rate of a landing there. Left out when it is not landing.",
           "$ref": "#/$defs/place"
+        },
+        "fuel_lacked_t": {
+          "description": "Decision 0112, 6: for a force stopped at a base of its side whose ships afloat lack fuel, the tons they lack together (capacity less fuel aboard, summed). Left out when it lacks nothing or is not in port at a base of its side.",
+          "$ref": "#/$defs/dec"
+        },
+        "fuelling_hours": {
+          "description": "The hours the fuelling would take at that port: each ship's lack over the port's fuel berth rate where the port has a berth, else its fuel lighter rate; the longest ship's. Left out with fuel_lacked_t, and when the port gives no rate for it (no limit: the force fills in the first pulse it lies in port).",
+          "$ref": "#/$defs/dec"
+        },
+        "fuelling_at": {
+          "description": "The lowest-numbered base of the side in the force's hex: the port the figures are for. Set with fuel_lacked_t.",
+          "$ref": "#/$defs/handle"
         }
       }
     },

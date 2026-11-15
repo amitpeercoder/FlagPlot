@@ -7,11 +7,13 @@ use std::collections::BTreeMap;
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::EntityRef;
+use sim_core::ids::{BaseId, EntityRef};
 use sim_core::orders::{AirMission, Mission, Reach};
 use sim_core::refdata::ShipKind;
 use sim_core::side_events::SideEventKind;
-use sim_core::state::{AirGroup, Base, LandUnit, ShipLocation, SystemState, TaskForce};
+use sim_core::state::{
+    AirGroup, Base, LandUnit, ShipLocation, SystemState, TaskForce, TaskForceStatus,
+};
 use sim_core::time::Pulse;
 
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
@@ -81,6 +83,30 @@ pub struct ForceLine {
     /// rate of a landing there. Left out when it is not landing.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub landing_at: Option<Place>,
+    /// Decision 0112, 6: for a force stopped at a base of its side whose
+    /// ships afloat lack fuel, the tons they lack together. Left out when
+    /// the force lacks nothing or is not in port at a base of its side.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuel_lacked_t: Option<Dec>,
+    /// The hours the force's fuelling would take at that port: each ship's
+    /// lack over the port's fuel rate (at a berth where the port has one,
+    /// else by lighter), the longest ship's. Left out with `fuel_lacked_t`,
+    /// and when the port gives no rate: then there is no limit and the force
+    /// fills in the first pulse it lies in port.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuelling_hours: Option<Dec>,
+    /// The lowest-numbered base of the side in the force's hex, the port the
+    /// fuelling hours are for. Set with `fuel_lacked_t`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuelling_at: Option<Handle>,
+}
+
+/// What a force in port lacks of fuel and the hours it would take there
+/// (decision 0112, 6).
+struct FuelLack {
+    lacked_t: Fixed,
+    hours: Option<Fixed>,
+    base: BaseId,
 }
 
 /// A force's preparation for a landing (decision 0095).
@@ -482,7 +508,11 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
     let shows_cargo = force.mission == Mission::Transport
         || cargo_supply > Fixed::ZERO
         || cargo_fuel > Fixed::ZERO;
+    let fuel_lack = fuel_lack(ctx, force, &afloat);
     ForceLine {
+        fuel_lacked_t: fuel_lack.as_ref().map(|l| Dec(l.lacked_t)),
+        fuelling_hours: fuel_lack.as_ref().and_then(|l| l.hours.map(Dec)),
+        fuelling_at: fuel_lack.as_ref().map(|l| ctx.base(l.base)),
         cargo_supply_t: shows_cargo.then_some(Dec(cargo_supply)),
         cargo_fuel_t: shows_cargo.then_some(Dec(cargo_fuel)),
         task_force: ctx.force(force.id),
@@ -508,6 +538,63 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         preparation: preparation_line(ctx, force),
         landing_at: force.landing_at.map(|hex| ctx.place(hex)),
     }
+}
+
+/// The fuel a force lacks, when it is stopped at the centre of a hex where a
+/// base of its side lies, and the hours it would take there (decision 0112,
+/// 6): each ship's lack over the port's berth rate where the port has a berth
+/// (else its lighter rate), the longest ship's. `None` when the force lacks
+/// nothing or is not so stopped. The hours are `None` when the rate the port
+/// would use is not given (no limit).
+fn fuel_lack(
+    ctx: &Ctx<'_>,
+    force: &TaskForce,
+    afloat: &[&sim_core::state::Ship],
+) -> Option<FuelLack> {
+    let stopped = matches!(
+        force.status,
+        TaskForceStatus::Idle
+            | TaskForceStatus::Arrived
+            | TaskForceStatus::Halted
+            | TaskForceStatus::OutOfFuel
+    ) && force.toward_hex.is_none();
+    if !stopped {
+        return None;
+    }
+    let hex = force.from_hex;
+    let base = ctx
+        .bases
+        .values()
+        .filter(|b| b.hex == hex)
+        .map(|b| b.id)
+        .min()?;
+    let size = ctx.view.hex(hex).map_or(0, |data| data.port_size);
+    let port = ctx.view.port_size(size)?;
+    let rate = if port.berths > 0 {
+        port.fuel_berth_rate_t_per_h
+    } else {
+        port.fuel_lighter_rate_t_per_h
+    };
+    let lacks: Vec<Fixed> = afloat
+        .iter()
+        .map(|ship| {
+            let capacity = ctx
+                .view
+                .ship_class(ship.class)
+                .map_or(Fixed::ZERO, |class| class.fuel_capacity_t);
+            (capacity - ship.fuel_t).max(Fixed::ZERO)
+        })
+        .collect();
+    let total = lacks.iter().fold(Fixed::ZERO, |sum, l| sum + *l);
+    if total <= Fixed::ZERO {
+        return None;
+    }
+    let longest = lacks.iter().copied().max().unwrap_or(Fixed::ZERO);
+    Some(FuelLack {
+        lacked_t: total,
+        hours: rate.map(|rate| longest / rate),
+        base,
+    })
 }
 
 /// A force's preparation for a landing, with the rate it would land at in the
@@ -572,6 +659,9 @@ fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         halt: None,
         preparation: preparation_line(ctx, force),
         landing_at: force.landing_at.map(|hex| ctx.place(hex)),
+        fuel_lacked_t: None,
+        fuelling_hours: None,
+        fuelling_at: None,
     }
 }
 

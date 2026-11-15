@@ -504,14 +504,71 @@ fn the_end_of_day_2() {
 }
 
 #[test]
-#[ignore = "the tools of decision 0112 are not built yet"]
 fn asked_before_day_2_the_list_of_forces_says_what_force_3_lacks_and_how_long_it_would_take() {
-    // TODO (decision 0112, rule 6): once the tools are built, step the
-    // scenario to the end of day 1, ask `list_forces` for the Allied side
-    // before day 2 is resolved, and assert that it says force 3 lacks 540 t
-    // of fuel and that at base 2 it would take 13.5 hours (540 t at the
-    // lighter rate of 40 t an hour). Another developer builds the tools.
-    unimplemented!("the tools of decision 0112 are not built yet");
+    use serde_json::json;
+    use sim_agent::{Seat, Session};
+    use sim_core::state::Side;
+
+    // Day 1 is resolved; day 2 is not, and its scripted order (force 3 to S)
+    // is not given yet.
+    let mut scenario = common::load(&path()).expect("the scenario loads");
+    scenario.next_day().expect("day 1 resolves");
+    assert_eq!(scenario.world.day(), 1);
+    let name = scenario.name.clone();
+    let mut session = Session::new(
+        scenario.world,
+        &name,
+        scenario.days,
+        Seat::Player,
+        Seat::Script(BTreeMap::new()),
+    );
+
+    let list = session
+        .call(Side::Allied, "list_forces", &json!({}))
+        .expect("the forces are listed");
+    let forces = list["task_forces"].as_array().expect("a list of forces");
+    let line = |forces: &Vec<serde_json::Value>, number: &str| {
+        forces
+            .iter()
+            .find(|f| f["task_force"]["handle"] == format!("task_force:{number}"))
+            .unwrap_or_else(|| panic!("force {number} is listed"))
+            .clone()
+    };
+    // Force 3: 500 t aboard at the start, 960 t taken by lighter: 1460 t of
+    // 2000 t; the lack is 540 t, and with no berth at base 2 (port size 0)
+    // it is 540 / 40 = 13.5 hours.
+    let three = line(forces, "3");
+    assert_eq!(three["fuel_lacked_t"], "540");
+    assert_eq!(three["fuelling_hours"], "13.5");
+    assert_eq!(three["fuelling_at"]["handle"], "base:2");
+    // Force 4's destroyer is held at a reserve with 300 t short, at base 3
+    // (port size 0, 40 t an hour): 300 / 40 = 7.5 hours.
+    let four = line(forces, "4");
+    assert_eq!(four["fuel_lacked_t"], "300");
+    assert_eq!(four["fuelling_hours"], "7.5");
+    // Force 1 and force 2 are full at S: they lack nothing and say nothing.
+    for number in ["1", "2"] {
+        let full = line(forces, number);
+        assert!(full.get("fuel_lacked_t").is_none(), "force {number}");
+        assert!(full.get("fuelling_hours").is_none(), "force {number}");
+        assert!(full.get("fuelling_at").is_none(), "force {number}");
+    }
+
+    // The briefing's line for force 3 says it in words.
+    let briefing = session
+        .call(Side::Allied, "get_briefing", &json!({ "text": true }))
+        .expect("the briefing is given");
+    let text = briefing["text"]
+        .as_str()
+        .expect("the briefing has its text");
+    let line = text
+        .lines()
+        .find(|line| line.contains("task_force:3"))
+        .expect("the briefing has a line for force 3");
+    assert!(
+        line.contains("lacks 540 t of fuel: 13.5 hours at base:2"),
+        "{line}"
+    );
 }
 
 // -------------------------------------------------------------- Properties

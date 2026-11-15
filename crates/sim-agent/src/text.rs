@@ -588,6 +588,20 @@ impl Briefing {
                     supply.0, fuel.0
                 ));
             }
+            if let Some(lacked) = &f.fuel_lacked_t {
+                match (&f.fuelling_hours, &f.fuelling_at) {
+                    (Some(hours), Some(base)) => s.push_str(&format!(
+                        ", lacks {} t of fuel: {} hours at {}",
+                        lacked.0,
+                        hours.0,
+                        base.text()
+                    )),
+                    _ => s.push_str(&format!(
+                        ", lacks {} t of fuel, taken in its first pulse in port",
+                        lacked.0
+                    )),
+                }
+            }
             if let Some(halt) = &f.halt {
                 s.push_str(&format!(
                     ", HALTED at {} since {} to {}{}",
