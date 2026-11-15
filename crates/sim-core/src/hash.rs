@@ -11,11 +11,12 @@
 
 use crate::belief::{BattleClaim, Contact, GroundEstimate};
 use crate::command::{
-    Amendment, AmendmentChange, Baseline, CommandState, Commitment, ForcesLimit, Hold, HoldMaker,
-    HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition, InterruptStatus, Leaves,
-    Limit, Plan, Run, RunDays, SetInterrupt, StandingSubject,
+    Addressee, Amendment, AmendmentChange, Baseline, CommandState, Commitment, ForcesLimit, Hold,
+    HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition, InterruptStatus,
+    Leaves, Limit, Maker, Plan, Run, RunDays, SetInterrupt, StandingSubject,
 };
 use crate::events::Cause;
+use crate::ids::{BaseId, IntentId};
 use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent};
 use crate::refdata::ShipKind;
 use crate::state::Side;
@@ -179,8 +180,14 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// (decision 0107, step 4);
 /// version 27 adds an air group's `strike_contact_age`, `strike_age_order`,
 /// `strike_held_share` and `strike_share_order` after its `rebased_day`
-/// (decision 0114).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v27";
+/// (decision 0114);
+/// version 28 adds an intent's `parent`, `maker` and `addressee` after its
+/// kind, the kinds cover and hold (codes 2 and 3), a forces limit's
+/// `air_groups` after its task forces and its `source` as optional, the risk
+/// limit as optional (unset and balanced are told apart, since a limit not
+/// set is read up the tree), and the hold of a whole air group (code 4)
+/// (decisions 0115 and 0117).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v28";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -492,17 +499,22 @@ fn name_every_field(world: &World) {
         if let Some(Intent {
             id: _,
             kind,
+            parent: _,
+            maker,
+            addressee,
             limits,
             set_day: _,
             plan: _,
             withdrawn_day: _,
         }) = intents.values().next()
         {
-            let IntentKind::KeepSupplied {
-                base: _,
-                floor_days: _,
-                interval_days: _,
-            } = kind;
+            name_intent_kind(*kind);
+            match maker {
+                Maker::Commander | Maker::Staff => {}
+            }
+            match addressee {
+                Addressee::Area | Addressee::Base(_) => {}
+            }
             name_limits(limits);
         }
         let Leaves {
@@ -561,7 +573,7 @@ fn name_every_field(world: &World) {
         {}
         if let Some((target, Hold { day: _, by })) = holds.iter().next() {
             match target {
-                HoldTarget::Ship(_) | HoldTarget::TaskForce(_) => {}
+                HoldTarget::Ship(_) | HoldTarget::TaskForce(_) | HoldTarget::AirGroup(_) => {}
                 HoldTarget::Setting {
                     group: _,
                     setting: _,
@@ -636,6 +648,19 @@ fn name_every_field(world: &World) {
     }
 }
 
+/// Names every field of every kind of intent, with no `..`.
+fn name_intent_kind(kind: IntentKind) {
+    match kind {
+        IntentKind::KeepSupplied {
+            base: _,
+            floor_days: _,
+            interval_days: _,
+        }
+        | IntentKind::Cover { base: _ }
+        | IntentKind::Hold { base: _ } => {}
+    }
+}
+
 /// Names every field of the limits of an intent, with no `..`.
 fn name_limits(limits: &IntentLimits) {
     let IntentLimits {
@@ -648,6 +673,7 @@ fn name_limits(limits: &IntentLimits) {
     if let Some(ForcesLimit {
         ships: _,
         task_forces: _,
+        air_groups: _,
         source: _,
     }) = forces
     {}
@@ -666,6 +692,7 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
             h.u32(floor_days);
             h.optional_u32(interval_days);
         }
+        IntentKind::Cover { base } | IntentKind::Hold { base } => h.u32(base.raw()),
     }
 }
 
@@ -694,7 +721,10 @@ fn hash_limits(h: &mut StateHasher, limits: &IntentLimits) {
     for ship in &limits.protected {
         h.u32(ship.raw());
     }
-    h.u8(limits.risk.code());
+    match limits.risk {
+        Some(risk) => h.u8(risk.code()),
+        None => h.u8(0),
+    }
 }
 
 fn hash_forces(h: &mut StateHasher, forces: &ForcesLimit) {
@@ -706,7 +736,11 @@ fn hash_forces(h: &mut StateHasher, forces: &ForcesLimit) {
     for force in &forces.task_forces {
         h.u32(force.raw());
     }
-    h.u32(forces.source.raw());
+    h.count(forces.air_groups.len());
+    for group in &forces.air_groups {
+        h.u32(group.raw());
+    }
+    h.optional_u32(forces.source.map(BaseId::raw));
 }
 
 /// Hashes one limit as a command set it, for an amendment: a code for the
@@ -765,6 +799,13 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
     for intent in state.intents.values() {
         h.u32(intent.id.raw());
         hash_intent_kind(h, intent.kind);
+        h.optional_u32(intent.parent.map(IntentId::raw));
+        h.u8(intent.maker.code());
+        h.u8(intent.addressee.code());
+        match intent.addressee {
+            Addressee::Area => {}
+            Addressee::Base(base) => h.u32(base.raw()),
+        }
         hash_limits(h, &intent.limits);
         h.u32(intent.set_day);
         h.u32(intent.plan.raw());
@@ -838,6 +879,7 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
                 h.u32(group.raw());
                 h.u8(setting.code());
             }
+            HoldTarget::AirGroup(group) => h.u32(group.raw()),
         }
         h.u32(hold.day);
         match hold.by {

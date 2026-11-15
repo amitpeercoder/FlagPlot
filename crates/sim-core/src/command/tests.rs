@@ -220,7 +220,8 @@ fn forces(ship_list: &[u32], force_list: &[u32]) -> ForcesLimit {
     ForcesLimit {
         ships: ships(ship_list),
         task_forces: force_list.iter().map(|n| tf(*n)).collect(),
-        source: base(1),
+        air_groups: BTreeSet::new(),
+        source: Some(base(1)),
     }
 }
 
@@ -298,6 +299,7 @@ fn reason(intent_n: u32, worked: &str) -> Reason {
             plan: Some(plan(1)),
             amendment: None,
             statement: String::new(),
+            chain: Vec::new(),
         },
         evidence: vec![Evidence {
             what: "a stock".to_string(),
@@ -601,7 +603,7 @@ fn every_kind_of_limit_is_taken_in_and_written() {
     assert_eq!(limits.area, Some(area));
     assert_eq!(limits.priority, Some(2));
     assert_eq!(limits.protected, ships(&[1]));
-    assert_eq!(limits.risk, Risk::Press);
+    assert_eq!(limits.risk, Some(Risk::Press));
     // A rank can be taken away again.
     player(
         &mut world,
@@ -684,7 +686,7 @@ fn a_limit_is_refused_for_what_is_not_the_sides_own_or_not_sound() {
         CommandRefusal::NotYourForce(tf(99)),
     );
     let mut enemy_source = forces(&[1], &[]);
-    enemy_source.source = base(9);
+    enemy_source.source = Some(base(9));
     refused(
         &mut world,
         p,
@@ -776,7 +778,9 @@ fn a_change_of_limit_amends_an_approved_plan_and_not_a_draft() {
     // The baseline is what the plan was approved under: ship 5 alone, balanced.
     let baseline = command.plans[&plan(1)].baseline.as_ref().unwrap();
     assert_eq!(baseline.limits.forces, Some(forces(&[5], &[])));
-    assert_eq!(baseline.limits.risk, Risk::Balanced);
+    // No risk was set: the limit is unset, and read as balanced (decision
+    // 0115, 4; decision 0117, 7).
+    assert_eq!(baseline.limits.risk, None);
     assert_eq!(
         command.intents[&intent(1)].limits.forces,
         Some(forces(&[5, 6], &[]))
@@ -1385,6 +1389,9 @@ fn a_command_changes_the_hash_through_every_field_of_the_command_state() {
             Intent {
                 id: intent(1),
                 kind: keep_supplied(1),
+                parent: None,
+                maker: Maker::Commander,
+                addressee: Addressee::Area,
                 limits: IntentLimits::default(),
                 set_day: 1,
                 plan: plan(1),
@@ -1402,7 +1409,7 @@ fn a_command_changes_the_hash_through_every_field_of_the_command_state() {
         }),
         changed(&|s| {
             with_intent(s);
-            s.intents.get_mut(&intent(1)).unwrap().limits.risk = Risk::Press;
+            s.intents.get_mut(&intent(1)).unwrap().limits.risk = Some(Risk::Press);
         }),
         changed(&|s| {
             s.commitments.insert(
@@ -1962,7 +1969,8 @@ fn two_worlds_differing_in_the_other_side(other: Side) -> (World, World) {
             limit: ForcesLimit {
                 ships: [ship(enemy_ship)].into_iter().collect(),
                 task_forces: [tf(enemy_force)].into_iter().collect(),
-                source: base(enemy_base),
+                air_groups: BTreeSet::new(),
+                source: Some(base(enemy_base)),
             },
         }),
     );

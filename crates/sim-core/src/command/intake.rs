@@ -16,17 +16,17 @@
 use std::collections::BTreeMap;
 
 use crate::command::{
-    Amendment, AmendmentChange, Baseline, Command, CommandKind, CommandRefusal, CommandState,
-    Commitment, ForcesLimit, HeldSetting, Hold, HoldMaker, HoldTarget, Intent, IntentKind,
+    Addressee, Amendment, AmendmentChange, Baseline, Command, CommandKind, CommandRefusal,
+    CommandState, Commitment, ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind,
     IntentLimits, InterruptCondition, InterruptRef, InterruptSetting, InterruptStatus, Leave,
-    Limit, NoticeBasis, Plan, PlanId, PlanOutcome, PlanState, Reason, Run, SetInterrupt,
+    Limit, Maker, NoticeBasis, Plan, PlanId, PlanOutcome, PlanState, Reason, Run, SetInterrupt,
     StaffDecisions, StaffNotice, Staffs, StandingSubject,
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
-use crate::ids::{BaseId, EventId, IntentId, ShipId};
+use crate::ids::{AirGroupId, BaseId, EventId, IntentId, ShipId};
 use crate::orders::{AirGroupOrder, BaseOrder, Issuer, OrderKind, OrderRequest, RejectReason};
-use crate::state::{ShipLocation, Side};
+use crate::state::{AirGroupLocation, ShipLocation, Side};
 use crate::world::World;
 
 impl World {
@@ -122,6 +122,62 @@ impl World {
         })
     }
 
+    /// Whether `group` is one of `side`'s air groups that `intent` may use
+    /// (decisions 0115, 2, and 0117, 7 and 8): named in its forces limit read
+    /// up the tree; or, with no forces limit on it or above it, based at the
+    /// base it is addressed to. An intent addressed to the area may use no
+    /// group without a forces limit.
+    pub(crate) fn may_use_group(&self, side: Side, intent: IntentId, group: AirGroupId) -> bool {
+        let state = &self.command[&side];
+        let Some(found) = state.intents.get(&intent) else {
+            return false;
+        };
+        let own = self.truth.air_groups.get(&group).filter(|g| g.side == side);
+        let Some(own) = own else {
+            return false;
+        };
+        match state.forces_read_up(intent) {
+            Some(forces) => forces.air_groups.contains(&group),
+            None => match found.addressee {
+                Addressee::Area => false,
+                Addressee::Base(base) => own.location == AirGroupLocation::Base(base),
+            },
+        }
+    }
+
+    /// Whether a forces limit set on `intent`, which has a parent, names
+    /// only what the parent may use, read up the tree (decision 0117, 7):
+    /// each ship in the parent's pool, each task force inside its limit, each
+    /// group one the parent may use, and a source only where it is the
+    /// parent's. With no forces limit above, the parent may use only what its
+    /// addressee commands: a base's air groups, and no ship.
+    fn forces_narrow(&self, side: Side, parent: IntentId, limit: &ForcesLimit) -> bool {
+        let state = &self.command[&side];
+        let groups_ok = limit
+            .air_groups
+            .iter()
+            .all(|group| self.may_use_group(side, parent, *group));
+        match state.forces_read_up(parent) {
+            Some(above) => {
+                groups_ok
+                    && limit.ships.iter().all(|ship| self.in_pool(above, *ship))
+                    && limit
+                        .task_forces
+                        .iter()
+                        .all(|force| self.force_in_forces_limit(side, above, *force))
+                    && limit
+                        .source
+                        .is_none_or(|source| above.source == Some(source))
+            }
+            None => {
+                groups_ok
+                    && limit.ships.is_empty()
+                    && limit.task_forces.is_empty()
+                    && limit.source.is_none()
+            }
+        }
+    }
+
     /// Checks a command against the side's command state and its own units,
     /// changing nothing. The one place the rules of intake are written.
     fn check_command(
@@ -147,11 +203,15 @@ impl World {
             Ok(plan)
         };
         let forces_of = |plan: &Plan| -> Result<&ForcesLimit, CommandRefusal> {
-            state
+            let forces = state
                 .intents
                 .get(&plan.intent)
                 .and_then(|intent| intent.limits.forces.as_ref())
-                .ok_or(CommandRefusal::NoForcesLimit)
+                .ok_or(CommandRefusal::NoForcesLimit)?;
+            if forces.source.is_none() {
+                return Err(CommandRefusal::NoSource);
+            }
+            Ok(forces)
         };
         match kind {
             CommandKind::SetIntent { intent, kind } => {
@@ -163,26 +223,49 @@ impl World {
                 {
                     return Err(CommandRefusal::IntentNumberNotUsable(*intent));
                 }
-                let IntentKind::KeepSupplied {
-                    base,
-                    floor_days,
-                    interval_days,
-                } = kind;
-                if !self.own_base(side, *base) {
-                    return Err(CommandRefusal::NotYourBase(*base));
+                // A staff-made intent is the staff's (decision 0117, 5).
+                if state
+                    .intents
+                    .get(intent)
+                    .is_some_and(|existing| existing.maker == Maker::Staff)
+                {
+                    return Err(CommandRefusal::MadeByStaff(*intent));
                 }
-                if *floor_days < 1 || *interval_days == Some(0) {
-                    return Err(CommandRefusal::NoDays);
-                }
-                Ok(())
+                self.check_intent_kind(side, kind)
             }
             CommandKind::WithdrawIntent { intent } => {
-                self.in_force_intent(side, *intent)?;
+                let found = self.in_force_intent(side, *intent)?;
+                if found.maker == Maker::Staff {
+                    return Err(CommandRefusal::MadeByStaff(*intent));
+                }
                 Ok(())
             }
+            CommandKind::FormIntent { parent, kind } => {
+                let found = self.in_force_intent(side, *parent)?;
+                let plan_state = state
+                    .plans
+                    .get(&found.plan)
+                    .map_or(PlanState::Draft, |plan| plan.state);
+                if plan_state != PlanState::Released {
+                    return Err(CommandRefusal::WrongPlanState(plan_state));
+                }
+                if !kind.may_stand_under(found.kind) {
+                    return Err(CommandRefusal::CannotStandUnder(*parent));
+                }
+                self.check_intent_kind(side, kind)
+            }
             CommandKind::SetLimit(limit) => {
+                let mut parent = None;
                 if let Some(intent) = limit.intent() {
-                    self.in_force_intent(side, intent)?;
+                    let found = self.in_force_intent(side, intent)?;
+                    parent = found.parent;
+                    if let Limit::Forces { limit, .. } = limit {
+                        if matches!(found.kind, IntentKind::KeepSupplied { .. })
+                            && limit.source.is_none()
+                        {
+                            return Err(CommandRefusal::NoSource);
+                        }
+                    }
                 }
                 match limit {
                     Limit::Forces { limit, .. } => {
@@ -201,8 +284,20 @@ impl World {
                                 return Err(CommandRefusal::NotYourForce(*force));
                             }
                         }
-                        if !self.own_base(side, limit.source) {
-                            return Err(CommandRefusal::NotYourBase(limit.source));
+                        for group in &limit.air_groups {
+                            let own = self
+                                .truth
+                                .air_groups
+                                .get(group)
+                                .is_some_and(|found| found.side == side);
+                            if !own {
+                                return Err(CommandRefusal::NotYourGroup(*group));
+                            }
+                        }
+                        if let Some(source) = limit.source {
+                            if !self.own_base(side, source) {
+                                return Err(CommandRefusal::NotYourBase(source));
+                            }
                         }
                     }
                     Limit::Area { hexes, .. } => {
@@ -231,6 +326,24 @@ impl World {
                                 return Err(CommandRefusal::BadWeight(weight));
                             }
                         }
+                    }
+                }
+                // On an intent with a parent, a limit must narrow (decision
+                // 0117, 7): forces only what the parent may use, a risk no
+                // bolder than the parent's, an area inside the parent's.
+                if let Some(parent) = parent {
+                    let narrows = match limit {
+                        Limit::Forces { limit, .. } => self.forces_narrow(side, parent, limit),
+                        Limit::Risk { risk, .. } => *risk <= state.risk_read_up(parent),
+                        Limit::Area { hexes, .. } => state
+                            .area_read_up(parent)
+                            .is_none_or(|above| hexes.is_subset(above)),
+                        Limit::Priority { .. }
+                        | Limit::Protected { .. }
+                        | Limit::Reserve { .. } => true,
+                    };
+                    if !narrows {
+                        return Err(CommandRefusal::WiderThanParent(parent));
                     }
                 }
                 Ok(())
@@ -382,7 +495,7 @@ impl World {
                             return Err(CommandRefusal::NotYourForce(*force));
                         }
                     }
-                    HoldTarget::Setting { group, .. } => {
+                    HoldTarget::Setting { group, .. } | HoldTarget::AirGroup(group) => {
                         let own = self
                             .truth
                             .air_groups
@@ -478,6 +591,25 @@ impl World {
         }
     }
 
+    /// Checks the kind of an intent set or formed: its base is the side's,
+    /// and a supply intent's days are at least 1.
+    fn check_intent_kind(&self, side: Side, kind: &IntentKind) -> Result<(), CommandRefusal> {
+        if !self.own_base(side, kind.base()) {
+            return Err(CommandRefusal::NotYourBase(kind.base()));
+        }
+        if let IntentKind::KeepSupplied {
+            floor_days,
+            interval_days,
+            ..
+        } = kind
+        {
+            if *floor_days < 1 || *interval_days == Some(0) {
+                return Err(CommandRefusal::NoDays);
+            }
+        }
+        Ok(())
+    }
+
     /// The hold that keeps `ship` from the staff (ruling 18), reading the
     /// ship's force from the truth.
     pub(crate) fn hold_on_ship_of(&self, side: Side, ship: ShipId) -> Option<HoldTarget> {
@@ -536,6 +668,9 @@ impl World {
                             Intent {
                                 id: *intent,
                                 kind: *kind,
+                                parent: None,
+                                maker: Maker::Commander,
+                                addressee: kind.addressee(),
                                 limits: IntentLimits::default(),
                                 set_day: day,
                                 plan,
@@ -549,7 +684,9 @@ impl World {
                         });
                     }
                     Some(plan_id) => {
-                        state.intents.get_mut(intent).expect("intent exists").kind = *kind;
+                        let found = state.intents.get_mut(intent).expect("intent exists");
+                        found.kind = *kind;
+                        found.addressee = kind.addressee();
                         let plan_state = state.plans[&plan_id].state;
                         if plan_state.approved() {
                             let plan = state.plans.get_mut(&plan_id).expect("plan exists");
@@ -573,11 +710,24 @@ impl World {
             }
             CommandKind::WithdrawIntent { intent } => {
                 let state = self.command.get_mut(&side).expect("side has command state");
+                // Everything beneath it is withdrawn the same day, each with
+                // its own event, caused by this command's (decision 0117, 6).
+                for below in state.descendants_in_force(*intent) {
+                    let found = state.intents.get_mut(&below).expect("intent exists");
+                    found.withdrawn_day = Some(day);
+                    let parent = found.parent.unwrap_or(*intent);
+                    follow_ups.push(EventKind::IntentWithdrawn {
+                        side,
+                        intent: below,
+                        parent,
+                    });
+                }
                 let found = state.intents.get_mut(intent).expect("intent exists");
                 found.withdrawn_day = Some(day);
                 let plan_id = found.plan;
+                let is_root = found.parent.is_none();
                 let plan = state.plans.get_mut(&plan_id).expect("plan exists");
-                if !plan.state.ended() {
+                if is_root && !plan.state.ended() {
                     let from = plan.state;
                     let to = if from == PlanState::Released {
                         PlanState::Complete
@@ -613,7 +763,7 @@ impl World {
                         Limit::Protected { ships, .. } => {
                             intent.limits.protected = ships.clone();
                         }
-                        Limit::Risk { risk, .. } => intent.limits.risk = *risk,
+                        Limit::Risk { risk, .. } => intent.limits.risk = Some(*risk),
                         Limit::Reserve { .. } => {}
                     }
                     let plan_id = intent.plan;
@@ -714,8 +864,8 @@ impl World {
                     .limits
                     .forces
                     .as_ref()
-                    .expect("the forces limit was checked")
-                    .source;
+                    .and_then(|forces| forces.source)
+                    .expect("the forces limit and its source were checked");
                 let found = state.plans.get_mut(plan).expect("plan exists");
                 let number = found.runs.keys().next_back().map_or(1, |last| last + 1);
                 found.runs.insert(
@@ -812,6 +962,30 @@ impl World {
                         .expect("standing record exists"),
                 };
                 status.acknowledged = true;
+            }
+            CommandKind::FormIntent { parent, kind } => {
+                let state = self.command.get_mut(&side).expect("side has command state");
+                let id = state.next_intent_number();
+                let plan = state.intents[parent].plan;
+                state.intents.insert(
+                    id,
+                    Intent {
+                        id,
+                        kind: *kind,
+                        parent: Some(*parent),
+                        maker: Maker::Staff,
+                        addressee: kind.addressee(),
+                        limits: IntentLimits::default(),
+                        set_day: day,
+                        plan,
+                        withdrawn_day: None,
+                    },
+                );
+                follow_ups.push(EventKind::IntentFormed {
+                    side,
+                    intent: id,
+                    parent: *parent,
+                });
             }
         }
         follow_ups
@@ -992,36 +1166,46 @@ impl World {
             } => ships
                 .iter()
                 .find_map(|ship| self.hold_on_ship_of(side, *ship)),
-            OrderKind::AirGroup {
-                target,
-                order: AirGroupOrder::SetSearchArc { .. } | AirGroupOrder::SetAirMission(_),
-            } => {
+            OrderKind::AirGroup { target, order } => {
+                let whole = HoldTarget::AirGroup(*target);
+                if state.holds.contains_key(&whole) {
+                    return Some(whole);
+                }
+                let arc_or_mission = matches!(
+                    order,
+                    AirGroupOrder::SetSearchArc { .. } | AirGroupOrder::SetAirMission(_)
+                );
                 let setting = HoldTarget::Setting {
                     group: *target,
-                    setting: HeldSetting::SearchArc,
+                    setting: crate::command::HeldSetting::SearchArc,
                 };
-                state.holds.contains_key(&setting).then_some(setting)
+                (arc_or_mission && state.holds.contains_key(&setting)).then_some(setting)
             }
             _ => None,
         }
     }
 
     /// Whether a staff's order is for a unit inside the forces limit of the
-    /// intent it serves (decision 0107, "A staff's order"): the intent is in
-    /// force with a forces limit, and the unit is a task force the limit
-    /// lists or one whose every ship (and at least one) is in the pool, or
-    /// the intent's source base forming a force from ships in the pool. An
-    /// air group, a land unit or any other base order is in no forces limit.
+    /// intent it serves (decision 0107, "A staff's order"), read up the tree
+    /// (decision 0117, 7): the intent is in force, and the unit is a task
+    /// force the limit lists or one whose every ship (and at least one) is in
+    /// the pool, or the limit's source base forming a force from ships in the
+    /// pool, or an air group the intent may use (decision 0115, 2: named in
+    /// the limit, or with no limit at or above the intent, based at the base
+    /// it is addressed to). A land unit or any other base order is in no
+    /// forces limit.
     fn staff_order_in_forces_limit(&self, side: Side, request: &OrderRequest) -> bool {
         let Some(intent) = request.origin.intent else {
             return false;
         };
-        let Some(forces) = self.command[&side]
-            .intents
-            .get(&intent)
-            .filter(|intent| intent.in_force())
-            .and_then(|intent| intent.limits.forces.as_ref())
-        else {
+        let state = &self.command[&side];
+        if !state.intents.get(&intent).is_some_and(Intent::in_force) {
+            return false;
+        }
+        if let OrderKind::AirGroup { target, .. } = &request.kind {
+            return self.may_use_group(side, intent, *target);
+        }
+        let Some(forces) = state.forces_read_up(intent) else {
             return false;
         };
         match &request.kind {
@@ -1031,9 +1215,11 @@ impl World {
             OrderKind::Base {
                 target,
                 order: BaseOrder::FormTaskForce { ships },
-            } => *target == forces.source && ships.iter().all(|ship| self.in_pool(forces, *ship)),
-            // Air groups, land units and any other base order are in no
-            // forces limit in step 1.
+            } => {
+                Some(*target) == forces.source
+                    && ships.iter().all(|ship| self.in_pool(forces, *ship))
+            }
+            // Land units and any other base order are in no forces limit.
             _ => false,
         }
     }

@@ -84,7 +84,10 @@ pub(crate) fn decide(view: SideView<'_>) -> StaffDecisions {
     // commit them, and the engine refuses a commitment that meets one still
     // standing (found by the soak ashore, scenario 45, seed 79).
     free_ended(&view, &mut out);
-    for intent in priority_order(state) {
+    for intent in priority_order(state)
+        .into_iter()
+        .filter(|intent| matches!(intent.kind, IntentKind::KeepSupplied { .. }))
+    {
         serve(&view, &fleet, intent, Mode::Live, &mut out, &mut morning);
     }
     out.finish(view.next_task_force_id())
@@ -103,14 +106,23 @@ pub(crate) fn setup<'a>(view: &SideView<'_>, intent: &'a Intent, plan: &'a Plan)
         base,
         floor_days,
         interval_days,
-    } = intent.kind;
-    let Some(forces) = intent.limits.forces.as_ref() else {
+    } = intent.kind
+    else {
+        return Setup::NoForces;
+    };
+    // Intake refuses a supply intent's forces limit with no source.
+    let Some((forces, source_id)) = intent
+        .limits
+        .forces
+        .as_ref()
+        .and_then(|forces| forces.source.map(|source| (forces, source)))
+    else {
         return Setup::NoForces;
     };
     let Some(destination) = view.bases().find(|b| b.id == base) else {
         return Setup::BaseNotYours("the destination");
     };
-    let Some(source) = view.bases().find(|b| b.id == forces.source) else {
+    let Some(source) = view.bases().find(|b| b.id == source_id) else {
         return Setup::BaseNotYours("the source");
     };
     Setup::Ready(Params {
@@ -119,7 +131,7 @@ pub(crate) fn setup<'a>(view: &SideView<'_>, intent: &'a Intent, plan: &'a Plan)
         forces,
         destination: base,
         destination_hex: destination.hex,
-        source: forces.source,
+        source: source_id,
         source_hex: source.hex,
         floor_days,
         interval_days: interval_days.unwrap_or(DEFAULT_INTERVAL_DAYS),
@@ -1572,6 +1584,7 @@ fn free_ended(view: &SideView<'_>, out: &mut Out) {
                 plan: Some(plan.id),
                 amendment: plan.amendments.last().map(|a| a.number),
                 statement: String::new(),
+                chain: Vec::new(),
             },
             evidence: vec![sim_core::command::Evidence {
                 what: format!("{} is {}", plan.id, plan.state.name()),

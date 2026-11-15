@@ -79,7 +79,8 @@ impl core::fmt::Display for PlanId {
 // ---------------------------------------------------------------------------
 
 /// What an intent asks for. Stage 1 has one kind (decision 0107, 17, with
-/// question 5 as answered).
+/// question 5 as answered); step 2 of stage 2 adds covering a base from the
+/// air (decision 0115) and holding a place (decision 0117).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum IntentKind {
     /// Keep the side's stock in `base`'s hex at `floor_days` days of supply
@@ -91,6 +92,15 @@ pub enum IntentKind {
         floor_days: u32,
         interval_days: Option<u32>,
     },
+    /// Cover `base`, a base of the side, from the air (decision 0115): its
+    /// fighters fly the patrol, its search groups search, by the doctrine.
+    /// It has no date. A task: the staff forms it under "hold a place", and
+    /// a commander may state it himself as a root. Added at the end.
+    Cover { base: BaseId },
+    /// Hold `base`, a base of the side (decision 0117, 12): an end. It has no
+    /// date. Under it the staff may form a cover intent for the same base.
+    /// Added at the end.
+    Hold { base: BaseId },
 }
 
 impl IntentKind {
@@ -98,12 +108,109 @@ impl IntentKind {
     pub const fn code(self) -> u8 {
         match self {
             IntentKind::KeepSupplied { .. } => 1,
+            IntentKind::Cover { .. } => 2,
+            IntentKind::Hold { .. } => 3,
+        }
+    }
+
+    /// The kind's name as scenario files, saved games and the tools write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            IntentKind::KeepSupplied { .. } => "keep_supplied",
+            IntentKind::Cover { .. } => "cover",
+            IntentKind::Hold { .. } => "hold",
+        }
+    }
+
+    /// The base the intent names.
+    pub const fn base(self) -> BaseId {
+        match self {
+            IntentKind::KeepSupplied { base, .. }
+            | IntentKind::Cover { base }
+            | IntentKind::Hold { base } => base,
+        }
+    }
+
+    /// The level an intent of this kind is given to (decision 0117, 2): set
+    /// by the kind, chosen by nobody. Keeping a base supplied is the area's;
+    /// holding a place and covering a base are the base's.
+    pub const fn addressee(self) -> Addressee {
+        match self {
+            IntentKind::KeepSupplied { .. } => Addressee::Area,
+            IntentKind::Cover { base } | IntentKind::Hold { base } => Addressee::Base(base),
+        }
+    }
+
+    /// Whether an intent of this kind may stand under one of `parent`'s kind
+    /// (decision 0117, 3 and 12). Step 2 has one pair: cover from the air
+    /// under holding the same base.
+    pub fn may_stand_under(self, parent: IntentKind) -> bool {
+        matches!(
+            (self, parent),
+            (IntentKind::Cover { base }, IntentKind::Hold { base: held }) if base == held
+        )
+    }
+}
+
+/// Who made an intent (decision 0117, 1): the commander, by `set_intent`, or
+/// the staff, by `form_intent`.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Maker {
+    Commander,
+    Staff,
+}
+
+impl Maker {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            Maker::Commander => 1,
+            Maker::Staff => 2,
+        }
+    }
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            Maker::Commander => "commander",
+            Maker::Staff => "staff",
         }
     }
 }
 
-/// The risk level of an intent (the spec's table). Stored and shown; read by
-/// nothing in stage 1.
+/// The level an intent is given to (decision 0117, 1 and 2). The level that
+/// owns an intent is the kind of its addressee. A task force and a land
+/// formation are added with the steps that give them intents.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Addressee {
+    /// The area: what it commands is named in a forces limit, or nothing.
+    Area,
+    /// A base of the side: it commands the side's air groups based there.
+    Base(BaseId),
+}
+
+impl Addressee {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            Addressee::Area => 1,
+            Addressee::Base(_) => 2,
+        }
+    }
+}
+
+impl core::fmt::Display for Addressee {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Addressee::Area => f.write_str("the area"),
+            Addressee::Base(base) => write!(f, "{base}"),
+        }
+    }
+}
+
+/// The risk level of an intent (the spec's table). Read by nothing in stage
+/// 1; the cover doctrine reads it (decision 0115, 4, 5 and 8). Ordered from
+/// the most careful to the boldest, which is how a limit on a sub-intent
+/// narrows (decision 0117, 7).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub enum Risk {
     Preserve,
@@ -132,19 +239,26 @@ impl Risk {
 }
 
 /// The forces limit of an intent: the ships and forces the staff may use
-/// for it, the pool, and for a supply intent exactly one source base
-/// (decision 0107, 19).
+/// for it, the pool, the air groups it may use (decision 0115, 2), and for a
+/// supply intent exactly one source base (decision 0107, 19). A supply
+/// intent's forces limit must name a source; another kind's need not.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ForcesLimit {
     pub ships: BTreeSet<ShipId>,
     pub task_forces: BTreeSet<TaskForceId>,
-    pub source: BaseId,
+    /// Air groups the staff may order for the intent. Added in step 2 of
+    /// stage 2.
+    pub air_groups: BTreeSet<AirGroupId>,
+    pub source: Option<BaseId>,
 }
 
 /// The limits of one intent as they stand. A limit not set is `None` (or the
-/// default). With no forces limit the staff may use nothing. A limit the
-/// commander has not set does not bind: with no area limit the sea is open
-/// (the architect's ruling, Nov 15, 2026).
+/// default). A limit the commander has not set does not bind: with no area
+/// limit the sea is open (the architect's ruling, Nov 15, 2026). An intent
+/// with no limit of a kind has its parent's, read up the tree to the root
+/// (decision 0117, 7: [`CommandState::forces_read_up`] and the rest). With no
+/// forces limit anywhere above it, an intent may use what its addressee
+/// commands: for the area, nothing (decision 0117, 8).
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct IntentLimits {
     pub forces: Option<ForcesLimit>,
@@ -156,7 +270,9 @@ pub struct IntentLimits {
     pub priority: Option<u32>,
     /// Ships the staff may not take from this intent (the protected limit).
     pub protected: BTreeSet<ShipId>,
-    pub risk: Risk,
+    /// `None`: not set on this intent; read up the tree, and balanced where
+    /// nothing above sets it (decision 0115, 4).
+    pub risk: Option<Risk>,
 }
 
 /// One limit, as a command sets it. The reserve sets a base's reserves of
@@ -209,10 +325,17 @@ impl Limit {
 pub struct Intent {
     pub id: IntentId,
     pub kind: IntentKind,
+    /// The intent it stands under, or `None` for a root (decision 0117, 1).
+    pub parent: Option<IntentId>,
+    /// Who made it (decision 0117, 1).
+    pub maker: Maker,
+    /// The level it is given to, set by its kind (decision 0117, 2).
+    pub addressee: Addressee,
     pub limits: IntentLimits,
     /// The day it was first set.
     pub set_day: u32,
-    /// The plan that serves it, drafted when it was first set.
+    /// The plan that serves it: for a root, drafted when it was first set;
+    /// for a sub-intent, its root's (decision 0117, 9: one plan for a tree).
     pub plan: PlanId,
     /// The day it was withdrawn; `None` while it is in force. A withdrawn
     /// intent's number is never used again.
@@ -419,8 +542,9 @@ impl HeldSetting {
     }
 }
 
-/// What a hold keeps from the staff: a ship, a task force, or a setting of an
-/// air group (decision 0107, ruling 17).
+/// What a hold keeps from the staff: a ship, a task force, a setting of an
+/// air group (decision 0107, ruling 17), or a whole air group (decision 0115,
+/// 3).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum HoldTarget {
     Ship(ShipId),
@@ -429,6 +553,10 @@ pub enum HoldTarget {
         group: AirGroupId,
         setting: HeldSetting,
     },
+    /// Every setting of the group: the staff gives it no order. Made by a
+    /// `hold` command or by a commander's order to a group an intent may use.
+    /// Added at the end.
+    AirGroup(AirGroupId),
 }
 
 impl HoldTarget {
@@ -438,6 +566,7 @@ impl HoldTarget {
             HoldTarget::Ship(_) => 1,
             HoldTarget::TaskForce(_) => 2,
             HoldTarget::Setting { .. } => 3,
+            HoldTarget::AirGroup(_) => 4,
         }
     }
 }
@@ -450,6 +579,7 @@ impl core::fmt::Display for HoldTarget {
             HoldTarget::Setting { group, setting } => match setting {
                 HeldSetting::SearchArc => write!(f, "the search arc of {group}"),
             },
+            HoldTarget::AirGroup(group) => write!(f, "{group}"),
         }
     }
 }
@@ -680,6 +810,119 @@ impl CommandState {
         self.holds.get(&target)
     }
 
+    /// The hold that keeps air group `group` from the staff: on the group
+    /// itself, else on its search arc (which holds its mission too).
+    pub fn hold_on_group(&self, group: AirGroupId) -> Option<HoldTarget> {
+        [
+            HoldTarget::AirGroup(group),
+            HoldTarget::Setting {
+                group,
+                setting: HeldSetting::SearchArc,
+            },
+        ]
+        .into_iter()
+        .find(|target| self.holds.contains_key(target))
+    }
+
+    // -- The tree (decision 0117) -----------------------------------------
+
+    /// The intents above `intent`, nearest first, ending at its root. Empty
+    /// for a root or an intent that does not exist. A parent that is
+    /// missing ends the walk; a loop, which intake cannot make, is cut where
+    /// it would repeat.
+    pub fn ancestors(&self, intent: IntentId) -> Vec<&Intent> {
+        let mut found: Vec<&Intent> = Vec::new();
+        let mut next = self.intents.get(&intent).and_then(|i| i.parent);
+        while let Some(id) = next {
+            let Some(parent) = self.intents.get(&id) else {
+                break;
+            };
+            if parent.id == intent || found.iter().any(|seen| seen.id == parent.id) {
+                break;
+            }
+            found.push(parent);
+            next = parent.parent;
+        }
+        found
+    }
+
+    /// The root of `intent`'s tree: the last of its ancestors, or itself.
+    pub fn root_of(&self, intent: IntentId) -> IntentId {
+        self.ancestors(intent).last().map_or(intent, |root| root.id)
+    }
+
+    /// `intent` and the intents above it, nearest first.
+    fn up_the_tree(&self, intent: IntentId) -> impl Iterator<Item = &Intent> + '_ {
+        self.intents
+            .get(&intent)
+            .into_iter()
+            .chain(self.ancestors(intent))
+    }
+
+    /// The forces limit of `intent` read up the tree (decision 0117, 7): its
+    /// own, else the nearest above it. `None` where none is set on it or
+    /// above it: then it may use what its addressee commands (rule 8).
+    pub fn forces_read_up(&self, intent: IntentId) -> Option<&ForcesLimit> {
+        self.up_the_tree(intent)
+            .find_map(|found| found.limits.forces.as_ref())
+    }
+
+    /// The risk level of `intent` read up the tree; balanced where none is
+    /// set on it or above it (decision 0115, 4).
+    pub fn risk_read_up(&self, intent: IntentId) -> Risk {
+        self.up_the_tree(intent)
+            .find_map(|found| found.limits.risk)
+            .unwrap_or_default()
+    }
+
+    /// The rank of `intent` read up the tree; `None` where none is set on it
+    /// or above it.
+    pub fn priority_read_up(&self, intent: IntentId) -> Option<u32> {
+        self.up_the_tree(intent)
+            .find_map(|found| found.limits.priority)
+    }
+
+    /// The area of `intent` read up the tree; `None` where none is set on it
+    /// or above it.
+    pub fn area_read_up(&self, intent: IntentId) -> Option<&BTreeSet<Hex>> {
+        self.up_the_tree(intent)
+            .find_map(|found| found.limits.area.as_ref())
+    }
+
+    /// The intents in force directly under `intent`, by number.
+    pub fn children_in_force(&self, intent: IntentId) -> Vec<IntentId> {
+        self.intents_in_force()
+            .filter(|found| found.parent == Some(intent))
+            .map(|found| found.id)
+            .collect()
+    }
+
+    /// Every intent in force beneath `intent`, depth first, each branch by
+    /// number.
+    pub fn descendants_in_force(&self, intent: IntentId) -> Vec<IntentId> {
+        let mut found = Vec::new();
+        let mut stack: Vec<IntentId> = self.children_in_force(intent).into_iter().rev().collect();
+        while let Some(next) = stack.pop() {
+            if next == intent || found.contains(&next) {
+                continue;
+            }
+            found.push(next);
+            stack.extend(self.children_in_force(next).into_iter().rev());
+        }
+        found
+    }
+
+    /// The number a staff-formed intent takes: one above the highest the
+    /// side has ever used (decision 0117, 3).
+    pub fn next_intent_number(&self) -> IntentId {
+        IntentId::new(
+            self.intents
+                .keys()
+                .next_back()
+                .map_or(1, |last| last.raw() + 1),
+        )
+    }
+
     /// The hold that keeps a force from the staff: on the force itself, else
     /// on the first of its `ships` (in ship order) that is held.
     pub fn hold_on_force(
@@ -798,6 +1041,10 @@ pub enum CommandKind {
     /// The commander's: mark an interrupt's last firing seen. It arms
     /// nothing (ruling 32). Added at the end.
     Acknowledge { interrupt: InterruptRef },
+    /// The staff's: form a sub-intent of `kind` under `parent` (decision
+    /// 0117, 3). It takes the number one above the highest the side has
+    /// used, its maker is the staff, its plan its root's. Added at the end.
+    FormIntent { parent: IntentId, kind: IntentKind },
 }
 
 /// What a `set_interrupt` command sets.
@@ -837,7 +1084,8 @@ impl CommandKind {
             | CommandKind::AddRun { .. }
             | CommandKind::TimeRun { .. }
             | CommandKind::MarkPlan { .. }
-            | CommandKind::EndRun { .. } => issuer == Issuer::Staff,
+            | CommandKind::EndRun { .. }
+            | CommandKind::FormIntent { .. } => issuer == Issuer::Staff,
         }
     }
 
@@ -861,6 +1109,7 @@ impl CommandKind {
             CommandKind::EndRun { .. } => "end_run",
             CommandKind::SetInterrupt(_) => "set_interrupt",
             CommandKind::Acknowledge { .. } => "acknowledge",
+            CommandKind::FormIntent { .. } => "form_intent",
         }
     }
 }
@@ -927,6 +1176,19 @@ pub enum CommandRefusal {
     NotFired(InterruptRef),
     /// The interrupt's last firing is acknowledged already.
     AlreadyAcknowledged(InterruptRef),
+    /// The intent was made by the staff: the commander shapes it by its
+    /// limits, holds and parent, and may not set or withdraw it (decision
+    /// 0117, 5). Added at the end (step 2 of stage 2).
+    MadeByStaff(IntentId),
+    /// A limit on a sub-intent is wider than what its parent allows, read up
+    /// the tree: a force or group the parent may not use, or a risk bolder
+    /// than the parent's (decision 0117, 7).
+    WiderThanParent(IntentId),
+    /// The kind cannot stand under the parent's kind (decision 0117, 3).
+    CannotStandUnder(IntentId),
+    /// A supply intent's forces limit names no source base (decision 0107,
+    /// 19).
+    NoSource,
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -980,6 +1242,19 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::AlreadyAcknowledged(interrupt) => {
                 write!(f, "the last firing of {interrupt} is acknowledged already")
             }
+            CommandRefusal::MadeByStaff(id) => write!(
+                f,
+                "{id} was formed by the staff: the commander shapes it by its limits, holds and parent"
+            ),
+            CommandRefusal::WiderThanParent(parent) => {
+                write!(f, "the limit is wider than what its parent {parent} allows")
+            }
+            CommandRefusal::CannotStandUnder(parent) => {
+                write!(f, "an intent of that kind cannot stand under {parent}")
+            }
+            CommandRefusal::NoSource => {
+                f.write_str("a supply intent's forces limit must name a source base")
+            }
         }
     }
 }
@@ -1006,31 +1281,31 @@ impl core::fmt::Display for Count {
 impl core::fmt::Display for CommandKind {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            CommandKind::SetIntent { intent, kind } => match kind {
-                IntentKind::KeepSupplied {
-                    base,
-                    floor_days,
-                    interval_days,
-                } => {
+            CommandKind::SetIntent { intent, kind } => {
+                write!(f, "set {intent} to ")?;
+                write_intent_kind(f, *kind)
+            }
+            CommandKind::WithdrawIntent { intent } => write!(f, "withdraw {intent}"),
+            CommandKind::SetLimit(limit) => match limit {
+                Limit::Forces { intent, limit } => {
                     write!(
                         f,
-                        "set {intent} to keep {base} supplied at {floor_days} days"
+                        "limit {intent}'s forces to {} and {}",
+                        Count(limit.ships.len(), "ship", "ships"),
+                        Count(limit.task_forces.len(), "task force", "task forces"),
                     )?;
-                    match interval_days {
-                        Some(days) => write!(f, ", a run every {days} days"),
+                    if !limit.air_groups.is_empty() {
+                        write!(
+                            f,
+                            " and {}",
+                            Count(limit.air_groups.len(), "air group", "air groups")
+                        )?;
+                    }
+                    match limit.source {
+                        Some(source) => write!(f, " from {source}"),
                         None => Ok(()),
                     }
                 }
-            },
-            CommandKind::WithdrawIntent { intent } => write!(f, "withdraw {intent}"),
-            CommandKind::SetLimit(limit) => match limit {
-                Limit::Forces { intent, limit } => write!(
-                    f,
-                    "limit {intent}'s forces to {} and {} from {}",
-                    Count(limit.ships.len(), "ship", "ships"),
-                    Count(limit.task_forces.len(), "task force", "task forces"),
-                    limit.source
-                ),
                 Limit::Area { intent, hexes } => {
                     write!(
                         f,
@@ -1135,7 +1410,32 @@ impl core::fmt::Display for CommandKind {
                     kind.name()
                 ),
             },
+            CommandKind::FormIntent { parent, kind } => {
+                write!(f, "form under {parent} an intent to ")?;
+                write_intent_kind(f, *kind)
+            }
         }
+    }
+}
+
+/// An intent's kind as a command's words give it: "keep base:2 supplied at
+/// 30 days, a run every 15 days", "cover base:1 from the air", "hold
+/// base:1".
+fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core::fmt::Result {
+    match kind {
+        IntentKind::KeepSupplied {
+            base,
+            floor_days,
+            interval_days,
+        } => {
+            write!(f, "keep {base} supplied at {floor_days} days")?;
+            match interval_days {
+                Some(days) => write!(f, ", a run every {days} days"),
+                None => Ok(()),
+            }
+        }
+        IntentKind::Cover { base } => write!(f, "cover {base} from the air"),
+        IntentKind::Hold { base } => write!(f, "hold {base}"),
     }
 }
 
@@ -1165,10 +1465,24 @@ pub struct Serves {
     /// (decision 0107, item 12). Empty where a reason has none, as in a game
     /// saved before it was handed in. The engine never reads it.
     pub statement: String,
+    /// The intents above `intent`, nearest first, each as it stood when the
+    /// reason was made (decision 0117, 10). The last is one the commander
+    /// stated. Empty where the intent is a root. The engine never reads it.
+    pub chain: Vec<ChainLink>,
+}
+
+/// One intent of a reason's chain: its number, its maker and its statement
+/// in words as it stood.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct ChainLink {
+    pub intent: IntentId,
+    pub maker: Maker,
+    pub statement: String,
 }
 
 /// "intent 1: keep base:2 (Placeholder base T) at 30 days of supply, a run
-/// every 15 days; plan 1, amendment 1", each part only where there is one.
+/// every 15 days; plan 1, amendment 1", each part only where there is one,
+/// then the chain: "; under intent 1 (the commander's): hold base:1".
 impl core::fmt::Display for Serves {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut gap = "";
@@ -1189,6 +1503,19 @@ impl core::fmt::Display for Serves {
         }
         if let Some(amendment) = self.amendment {
             write!(f, "{gap}amendment {amendment}")?;
+            gap = "; ";
+        }
+        for link in &self.chain {
+            write!(
+                f,
+                "{gap}under intent {} (the {}'s)",
+                link.intent.raw(),
+                link.maker.name()
+            )?;
+            if !link.statement.is_empty() {
+                write!(f, ": {}", link.statement)?;
+            }
+            gap = "; ";
         }
         Ok(())
     }

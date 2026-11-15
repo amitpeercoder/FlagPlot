@@ -44,7 +44,10 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
     let plan = &morning.state().plans.get(&intent.plan)?.clone();
     let IntentKind::KeepSupplied {
         base, floor_days, ..
-    } = intent.kind;
+    } = intent.kind
+    else {
+        return None;
+    };
 
     // The intents before this one, served as the day would serve them.
     let order = priority_order(state);
@@ -187,7 +190,8 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
         .limits
         .forces
         .as_ref()
-        .map_or(base, |forces| forces.source);
+        .and_then(|forces| forces.source)
+        .unwrap_or(base);
     let mut worked = match (&shortfall, runs.len()) {
         (_, 0) if shortfall.is_none() => format!(
             "{} needs no run in the next {PROPOSAL_DAYS} days: the figure stays at or above {} days.",

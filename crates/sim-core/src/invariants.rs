@@ -14,7 +14,7 @@ use core::fmt;
 use std::collections::BTreeMap;
 
 use crate::command::{
-    CommandState, HoldTarget, InterruptRef, InterruptStatus, PlanId, StandingSubject,
+    CommandState, HoldTarget, InterruptRef, InterruptStatus, Maker, PlanId, StandingSubject,
 };
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
@@ -209,6 +209,13 @@ pub enum InvariantViolation {
     /// standing one about a ship that is not the side's own (decisions 0107
     /// and 0111, rulings 31 to 33). Added at the end of the enum.
     InterruptUnsound(Side, InterruptRef),
+    /// An intent whose place in the tree is unsound (decision 0117): a
+    /// sub-intent whose parent does not exist, has a number not below its
+    /// own, or serves another plan; a sub-intent the commander made, or a
+    /// root the staff made; a sub-intent in force under a withdrawn parent;
+    /// or an addressee that is not the one its kind sets. Added at the end
+    /// of the enum.
+    IntentTreeUnsound(Side, IntentId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -479,6 +486,10 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::InterruptUnsound(side, interrupt) => write!(
                 f,
                 "{side:?} has {interrupt} in a state its rules do not allow"
+            ),
+            InvariantViolation::IntentTreeUnsound(side, intent) => write!(
+                f,
+                "{side:?} {intent} has a place in the intent tree its rules do not allow"
             ),
         }
     }
@@ -1002,12 +1013,26 @@ pub(crate) fn check_command(
     }
 
     for intent in command.intents.values() {
+        // A sub-intent serves its root's plan (decision 0117, 9).
+        let root = command.root_of(intent.id);
         let named_back = command
             .plans
             .get(&intent.plan)
-            .is_some_and(|plan| plan.intent == intent.id);
+            .is_some_and(|plan| plan.intent == root);
         if !named_back {
             violations.push(InvariantViolation::IntentPlanUnsound(side, intent.id));
+        }
+        let tree_sound = match intent.parent {
+            None => intent.maker == Maker::Commander,
+            Some(parent) => command.intents.get(&parent).is_some_and(|found| {
+                found.id < intent.id
+                    && found.plan == intent.plan
+                    && intent.maker == Maker::Staff
+                    && (!intent.in_force() || found.in_force())
+            }),
+        };
+        if !tree_sound || intent.addressee != intent.kind.addressee() {
+            violations.push(InvariantViolation::IntentTreeUnsound(side, intent.id));
         }
     }
 
@@ -1044,7 +1069,7 @@ pub(crate) fn check_command(
                 .task_forces
                 .get(force)
                 .is_some_and(|found| found.side == side),
-            HoldTarget::Setting { group, .. } => truth
+            HoldTarget::Setting { group, .. } | HoldTarget::AirGroup(group) => truth
                 .air_groups
                 .get(group)
                 .is_some_and(|found| found.side == side),
@@ -1907,6 +1932,9 @@ mod tests {
                     floor_days: 5,
                     interval_days: None,
                 },
+                parent: None,
+                maker: crate::command::Maker::Commander,
+                addressee: crate::command::Addressee::Area,
                 limits: IntentLimits::default(),
                 set_day: 1,
                 plan: PLAN,

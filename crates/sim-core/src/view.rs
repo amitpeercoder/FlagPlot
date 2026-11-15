@@ -49,6 +49,17 @@ use crate::state::{
 };
 use crate::upkeep::Sortie;
 
+/// An air raid on one of the side's own bases, as its events show it
+/// ([`SideView::air_raids_on`]).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct RaidSeen {
+    pub day: u32,
+    pub pulse: Option<crate::time::Pulse>,
+    /// Whether a patrol of the side's, from a group now based there, fired
+    /// in the same pulse.
+    pub fought: bool,
+}
+
 /// Which optional rules have their figures loaded: air wear and repair
 /// (decision 0035), fatigue and rest (0036), and base supply use (0039).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -446,6 +457,67 @@ impl<'a> SideView<'a> {
         self.belief
             .contacts()
             .find(|contact| contact.id.raw() == number)
+    }
+
+    /// How many of the side's own air group `group`'s aircraft can fly now:
+    /// the engine's own count ([`crate::airstrike`]'s `able_to_fly`), on the
+    /// group's ready aircraft, pilots, deck, field and fatigue. `None` for a
+    /// number that is not one of the side's groups. Nothing of the enemy is
+    /// read.
+    pub fn able_to_fly(&self, group: AirGroupId) -> Option<u32> {
+        let found = self.air_groups().find(|own| own.id == group)?;
+        Some(self.flyable_aircraft(found))
+    }
+
+    /// The air raids on the side's own base `base` that the side knows of,
+    /// from its own events (decision 0117, 14, and 0115, 6): each daylight
+    /// pulse in which the base was bombed, in order, with whether a patrol of
+    /// the side's fought in that pulse (a patrol's fire, by a group of the
+    /// side's now based at `base`). Empty for a base that is not the side's.
+    /// What the side reads is what its events show it: the bombs that fell on
+    /// its base and its own fighters' fire, nothing of the raiders.
+    pub fn air_raids_on(&self, base: BaseId) -> Vec<RaidSeen> {
+        use crate::events::{AirFirer, EventKind};
+        use crate::side_events::SideEventKind;
+        if !self.bases().any(|own| own.id == base) {
+            return Vec::new();
+        }
+        let here: BTreeSet<AirGroupId> = self
+            .air_groups()
+            .filter(|group| group.location == crate::state::AirGroupLocation::Base(base))
+            .map(|group| group.id)
+            .collect();
+        let mut raids: BTreeMap<(u32, Option<crate::time::Pulse>), bool> = BTreeMap::new();
+        let mut patrols: BTreeSet<(u32, Option<crate::time::Pulse>)> = BTreeSet::new();
+        for event in self.events() {
+            let at = (event.day, event.pulse);
+            match &event.kind {
+                SideEventKind::BaseAttackedAgainst { base: hit, .. } if *hit == base => {
+                    raids.entry(at).or_insert(false);
+                }
+                SideEventKind::AirFight {
+                    firer,
+                    firing: AirFirer::Patrol,
+                    ..
+                }
+                | SideEventKind::Whole(EventKind::AirFight {
+                    firer,
+                    firing: AirFirer::Patrol,
+                    ..
+                }) if here.contains(firer) => {
+                    patrols.insert(at);
+                }
+                _ => {}
+            }
+        }
+        raids
+            .into_iter()
+            .map(|((day, pulse), _)| RaidSeen {
+                day,
+                pulse,
+                fought: patrols.contains(&(day, pulse)),
+            })
+            .collect()
     }
 
     fn own_objectives(&self) -> Option<&'a SideObjectives> {

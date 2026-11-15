@@ -37,14 +37,17 @@ pub(crate) fn base_words(view: &SideView<'_>, base: BaseId) -> String {
 /// What an intent is for, in words: "keep base:2 (Placeholder base T) at 30
 /// days of supply".
 pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
-    let IntentKind::KeepSupplied {
-        base, floor_days, ..
-    } = intent.kind;
-    format!(
-        "keep {} at {floor_days} {} of supply",
-        base_words(view, base),
-        days_word(floor_days)
-    )
+    match intent.kind {
+        IntentKind::KeepSupplied {
+            base, floor_days, ..
+        } => format!(
+            "keep {} at {floor_days} {} of supply",
+            base_words(view, base),
+            days_word(floor_days)
+        ),
+        IntentKind::Cover { base } => format!("cover {} from the air", base_words(view, base)),
+        IntentKind::Hold { base } => format!("hold {}", base_words(view, base)),
+    }
 }
 
 /// A plan with what it is for: "plan:1, the plan to keep base:2
@@ -57,13 +60,14 @@ pub(crate) fn plan_for(view: &SideView<'_>, intent: &Intent, plan: &Plan) -> Str
 /// base:2 (Placeholder base T) at 30 days of supply, a run every 15 days",
 /// and the day it was withdrawn if it has been.
 pub(crate) fn statement(view: &SideView<'_>, intent: &Intent) -> String {
-    let IntentKind::KeepSupplied { interval_days, .. } = intent.kind;
     let mut words = aim(view, intent);
-    match interval_days {
-        Some(days) => words.push_str(&format!(", a run every {days} {}", days_word(days))),
-        None => words.push_str(&format!(
-            ", no interval set (the staff takes {DEFAULT_INTERVAL_DAYS} days)"
-        )),
+    if let IntentKind::KeepSupplied { interval_days, .. } = intent.kind {
+        match interval_days {
+            Some(days) => words.push_str(&format!(", a run every {days} {}", days_word(days))),
+            None => words.push_str(&format!(
+                ", no interval set (the staff takes {DEFAULT_INTERVAL_DAYS} days)"
+            )),
+        }
     }
     if let Some(day) = intent.withdrawn_day {
         words.push_str(&format!(", withdrawn on day {day}"));
@@ -122,6 +126,7 @@ pub(crate) fn serving_intent(intent: IntentId, plan: &Plan) -> ReasonBuilder {
                 plan: Some(plan.id),
                 amendment: plan.amendments.last().map(|amendment| amendment.number),
                 statement: String::new(),
+                chain: Vec::new(),
             },
             ..Reason::default()
         },
