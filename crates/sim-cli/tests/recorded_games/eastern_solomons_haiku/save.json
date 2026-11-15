@@ -1,4 +1,5 @@
 {
+  "commands": [],
   "data_files": [
     {
       "file": "data/scenarios/../map/south_pacific.csv",
@@ -29,11 +30,12 @@
       "hash": "768ef8b371e81d68"
     }
   ],
+  "doctrine_version": "none",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "d9b0360991868855"
+      "hash": "ab3c93daed691333"
     }
   ],
   "orders": [
@@ -521,6 +523,7 @@
     "japanese": "script"
   },
   "seed": 1942,
-  "state_version": "flagplot-state-v23",
-  "version": 2
+  "staff": [],
+  "state_version": "flagplot-state-v24",
+  "version": 3
 }

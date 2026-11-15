@@ -2,13 +2,13 @@ Scenario 21: A landing, carried by sea and fed from a base
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 57920956cd94e3cf  19 events
-day   2  hash 0cfd4117b15611b4  22 events
-day   3  hash 70e34bcab02dac7d  25 events
-day   4  hash 6a5c9b2113a6054c  11 events
-day   5  hash a30ddedf6d28af7f  12 events
-day   6  hash f5f894dabe3951c3  11 events
-day   7  hash aaee9dbc8ad15244  11 events
+day   1  hash 1e9f7dfcec433027  19 events
+day   2  hash 70461f913920352e  22 events
+day   3  hash 273ed3e1c8e421d1  25 events
+day   4  hash 98af47d442e1c14c  11 events
+day   5  hash 2327950867e63e97  12 events
+day   6  hash 19a16f15546b0de7  11 events
+day   7  hash aadd068c6e3443a0  11 events
 
 task_force:1 "Placeholder landing convoy" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder fast transport group" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
