@@ -193,38 +193,30 @@ fn scenario_40a_cannot_meet_on_the_days_the_hand_calculation_gives() {
 }
 
 #[test]
-fn scenario_40b_plan_2_cannot_meet_on_days_1_3_4_5_and_plan_1_never() {
+fn scenario_40b_plan_2_cannot_meet_every_day_and_plan_1_never() {
     let name = "40b_one_stock_two_plans.toml";
     let p = play(name, &file(name));
     assert_eq!(p.handed.len(), 5);
-    // Day 2 is the open disagreement: see the ignored test below.
-    assert_eq!(cannot_meet(&p, 2), vec![1, 3, 4, 5]);
+    assert_eq!(cannot_meet(&p, 2), vec![1, 2, 3, 4, 5]);
     assert_eq!(cannot_meet(&p, 1), Vec::<u32>::new());
-    // Day 1 rests on the run's add_run (a cut load); days 3 to 5 on the
-    // no-order.
+    assert_eq!(p.all_notices().len(), 5);
+    // Day 1 rests on the run's add_run (a cut load); days 2 to 5 on a
+    // no-order. On day 2 the staff dispatches run 1 and also needs a run it
+    // cannot have: its no-order is about the next run.
     let day1 = p.day(1).notices[0];
     assert!(matches!(day1.rests_on, NoticeBasis::Command(i)
         if matches!(p.day(1).commands[i].kind, sim_core::command::CommandKind::AddRun { plan: pl, .. } if pl == plan(2))));
-    for d in 3..=5 {
+    for d in 2..=5 {
         assert!(
             matches!(p.day(d).notices[0].rests_on, NoticeBasis::NoOrder(_)),
             "day {d}"
         );
     }
-    assert_eq!(p.fired_days(StandingKind::CannotMeet, plan(2)), vec![1, 3]);
+    let day2 = p.day(2).notices[0];
+    assert!(p.reason_of(2, &day2).worked.starts_with("No new run: "));
+    assert!(!p.day(2).orders.is_empty());
+    assert_eq!(p.fired_days(StandingKind::CannotMeet, plan(2)), vec![1]);
     p.check_every_notice();
-}
-
-/// The brief has plan 2 cannot meet on each of days 1 to 5. On day 2 the
-/// staff needs a run for intent 2 and can have none (no ship is free), but
-/// it dispatches run 1 that day, so it gives the intent orders and no
-/// no-order reason, and the notice has no reason to rest on.
-#[test]
-#[ignore = "day 2 of 40b: needed and no run, but the intent has no no-order that day"]
-fn scenario_40b_plan_2_cannot_meet_on_each_of_days_1_to_5() {
-    let name = "40b_one_stock_two_plans.toml";
-    let p = play(name, &file(name));
-    assert_eq!(cannot_meet(&p, 2), vec![1, 2, 3, 4, 5]);
 }
 
 #[test]

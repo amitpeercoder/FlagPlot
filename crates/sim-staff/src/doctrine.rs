@@ -479,8 +479,11 @@ pub(crate) fn serve(
         }
     }
 
-    // 6. No order: one reason.
-    if !served.ordered {
+    // 6. No order: one reason. A day a loaded run is dispatched and a new
+    // run is needed and can be had by none gives one too, about the next
+    // run, for the cannot-meet notice to rest on.
+    if !served.ordered || cannot_meet {
+        let dispatched = served.ordered;
         let idle = IdleFacts {
             eff,
             underway,
@@ -493,7 +496,11 @@ pub(crate) fn serve(
             units,
             hold_note,
         };
-        let idle_index = out.no_order(idle_reason(&planner, &readings, &idle, today));
+        let mut idle_why = idle_reason(&planner, &readings, &idle, today);
+        if dispatched {
+            idle_why.worked = format!("No new run: {}", idle_why.worked);
+        }
+        let idle_index = out.no_order(idle_why);
         if cannot_meet {
             out.notice(
                 NoticeKind::CannotMeet,
