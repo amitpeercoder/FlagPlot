@@ -1,10 +1,10 @@
 # 0110: What a player commanding ashore must be told
 
-Status: a plan by the architect, written on Nov 14, 2026, from the account of a model that commanded the Allied side for the first five days of the lengthened slice with the game's tools alone (`crates/sim-cli/tests/recorded_games/full_slice_five_days_sonnet/account.md`). It landed, took both bases and built the airfield, and it named what it could not work out. Items 1 to 9 change what a side is told of its own affairs and are the architect's, inside the agent interface the designer approved (decisions 0047 to 0051). Item 10 changes what a side believes: the designer confirmed it on Nov 14, 2026. Nothing is built. No rule of the fight, of supply or of work changes.
+Status: a plan by the architect, written on Nov 14, 2026, from the account of a model that commanded the Allied side for the first five days of the lengthened slice with the game's tools alone (`crates/sim-cli/tests/recorded_games/full_slice_five_days_sonnet/account.md`). It landed, took both bases and built the airfield, and it named what it could not work out. Items 1 to 9 change what a side is told of its own affairs and are the architect's, inside the agent interface the designer approved (decisions 0047 to 0051). Item 10 changes what a side believes: the designer confirmed it on Nov 14, 2026. Built on Nov 15, 2026 (scenario 38; rules label 9, agent interface version 5): see "As built". No rule of the fight, of supply or of work changes.
 
 Summary: What a player commanding ashore must be told, from a model's five days in the Allied seat: why a unit made no work, the arrivals that are due and what they wait for, the rule of fatigue, whether a base counts as open today, what a base without fuel means for the ships there, when a force has nothing left to unload, a landing summed up for each force, and one hex's bases shown together; and a report that says when a side's men find no enemy in their hex
 
-Standing: Item 10 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Not built
+Standing: Item 10 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Built, Nov 15, 2026
 
 ## What the account showed
 
@@ -53,3 +53,28 @@ Each item below is something the side already has in its own view. None gives it
 Answered on Nov 14, 2026.
 
 1. **Item 10:** when a side's men stand in a hex and find no enemy there, the side is told so and its old estimate is cleared. Agreed.
+
+## As built
+
+Built on Nov 15, 2026, in one pull request. Scenario 38 (`data/scenarios/38_an_empty_hex.toml`, `tests/scenario_38_an_empty_hex.rs`) proves item 10 on the frozen figures; every number of its hand calculation holds.
+
+**Item 10.** A new report, `Report::NoneFound`, goes in through `BeliefState::apply_report` and removes the side's estimate for the hex; its event is `GroundFoundEmpty` (side, hex, and the men and day of the estimate it cleared), seen whole by its own side and not at all by the other. It is tried at the end of each hex's part of the ground combat phase, where today's reports are made, for a side that has men ashore where the enemy has none; it is made only if the side holds an estimate there and has men of a fighting unit there. It draws nothing. Its causes are the event of the estimate it clears and the day's fight in the hex, if there was one: an enemy's march out or surrender is not cited, since the side may not see it. There is no new state (estimates were already hashed), so the state version stays 24. The rules label is 9: a game saved under 8 where a side holds an estimate of a hex its men stand in after the enemy has gone plays differently.
+
+Read more closely than the record:
+
+- **Scenario 24's hand calculation states the old rule.** Its doc comment says that on a day unit 3 has no man left "each side keeps the estimate it had, with its day". Under item 10 the Allied men at Y find the hex empty and the estimate is cleared. Three of its tests fail as built (`y_an_attack_on_an_estimate_of_300_finds_3000_and_fails`, `p_the_formulas_hold_on_many_seeds`, `y_on_a_day_unit_3_is_gone_there_is_no_fight_and_no_report`); they are the architect's to restate. The agent's test of the same scenario (`crates/sim-agent/tests/shells.rs`) was changed to expect the cleared estimate and the "Found empty" line.
+- **The scenarios whose events change:** 7 (the full slice: the estimate at Lunga is cleared on day 4, 1,580 of day 3, and again on day 19, 686 of day 18), 32, 33 and 37 (each a garrison that falls back and leaves the hex), and 38 (new). No other scenario changes.
+
+**Items 1 to 9 and 11** change the briefing, `list_bases` and the tools' text; the agent interface's version is 5 (a field of the fuel warning changed shape). The view gains two answers of the side's own units: the men a unit would fire with now, and its fatigue after one more day of attack. Where the build read the record more closely:
+
+- **Item 1:** a finished job gives no line, because the work rule records a day's work on a built airfield or full defences: no unit makes "no work" for that reason. The side's own attack is named when an own unit in the hex fired on attack; otherwise the enemy's. Rehearsal and training not counted have their own reasons (men aboard, at the ceiling, rehearsal full, the force not with the unit all day).
+- **Item 2:** every arrival not yet delivered is listed, with whether it could be delivered now and, if not, which of the three conditions holds it. Arrivals of a group lost with its base, or on a ship sunk or at the yard, are not listed.
+- **Item 3:** the scenario's fatigue figures are given once in the land units part and the rule in the `issue_orders` text; "one more day of attack" adds only the attack day, and the text says a failed attack, a march and strain add more.
+- **Item 4:** the line says what today would give if the day ended now, and the day ends the side has seen at the base while it was its own.
+- **Item 5:** one line for each force stopped in a hex where none of the side's bases has fuel, with its least fuelled ship's fuel against the passage home that `measure` forecasts. A hex where one base has fuel and another none no longer warns.
+- **Item 6:** a force is named free on the day its unloading or loading completes, and on later days while it stands at a base with an unload order and nothing aboard.
+- **Item 7:** the line's "finishes in about N days" is the longer of the men's and the tons' rate, rounded up, and is left out when part of what remains was not landed yesterday. The ship lines stay in the data, not in the text.
+- **Item 8:** the hex's days of supply are printed once, under the hex.
+- **Item 11:** every answer already carried an estimate's day; an opening estimate now reads "the opening estimate, day 0", and the text no longer says an estimate is never corrected but by a report.
+
+The catch-all arms over event kinds that `docs/decisions/0108` named were already made exhaustive with decision 0107 ("As built"); a new kind did not compile until each place decided it, which this build confirmed.
