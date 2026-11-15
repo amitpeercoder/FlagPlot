@@ -79,6 +79,8 @@ Attachment comes from identity, history, scarcity and consequence. None of it ne
 
 ## Giving commands
 
+Since this note was written the designer has agreed what the structured intent is (decision 0116, Nov 15, 2026): an end, a state of the world the player wants, addressed to a level, with the staff forming the tasks beneath it. The player states ends and limits; a task stated by hand, or an order to a unit, is an override lower in the same tree. A reason shown to the player names the chain from an order up to an end the player stated.
+
 The pillars leave open how the player expresses intent: map gestures, structured forms or plain language. The proposal is one form with two ways in.
 
 - **The structured intent is the real thing.** An objective with a measure and a date, the forces released to it, and the constraints: "Guadalcanal held at 30 days of supply by 1 October, no carrier risked within reach of Rabaul". It is what the staff plans from, what orders name as their intent, and what a saved game holds.
