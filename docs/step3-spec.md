@@ -139,7 +139,7 @@ A commander also sets **limits**. They are few:
 
 The staff may trade a date against risk and against a lower intent. It may not cross a hard limit to meet a date, and nothing but the commander changing a limit changes it: not a higher priority, not an empty seat. When it cannot meet an intent inside its limits it says so, says which limit binds, and goes on with the rest.
 
-**A limit the orders cannot honour is not a limit.** Today a load order fills a ship from the stock and names no weight, and a force in port took fuel before the day's orders were taken (since decision 0112 it takes fuel in the hours of each pulse). Stage 1 gives the staff the orders it needs to leave a reserve where it lies: a load of a stated weight, and refuelling that stops at a base's reserve. A draw that the staff's own plan causes is never an event that excuses going below a reserve. Its acceptance case: two tasks load from one base without both counting the same stock, a convoy with room to spare leaves the reserve behind, and a force refuelling there that morning is in the sum.
+**A limit the orders cannot honour is not a limit.** Today a load order fills a ship from the stock and names no weight, and a force in port refuels before the day's orders are taken. Stage 1 gives the staff the orders it needs to leave a reserve where it lies: a load of a stated weight, and refuelling that stops at a base's reserve. A draw that the staff's own plan causes is never an event that excuses going below a reserve. Its acceptance case: two tasks load from one base without both counting the same stock, a convoy with room to spare leaves the reserve behind, and a force refuelling there that morning is in the sum.
 
 ### What the risk levels change
 
