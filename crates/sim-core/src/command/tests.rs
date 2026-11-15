@@ -1793,6 +1793,10 @@ fn what_side_sees(world: &World, side: Side) -> Vec<String> {
     seen.extend(view.ships().map(|s| format!("{s:?}")));
     seen.extend(view.task_forces().map(|f| format!("{f:?}")));
     seen.extend(view.bases().map(|b| format!("{b:?}")));
+    seen.extend(
+        view.bases()
+            .map(|b| format!("{:?}", view.days_of_supply(b.hex))),
+    );
     seen.extend(view.enemy_bases().map(|b| format!("{b:?}")));
     seen.extend(view.contacts().map(|c| format!("{c:?}")));
     seen.push(format!("{:?}", view.claims()));

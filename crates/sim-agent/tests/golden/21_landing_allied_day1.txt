@@ -47,6 +47,7 @@ AIR GROUPS
 BASES
 - base:1 "Placeholder embarkation port" at (0,0): supply 1000 t, fuel 0 t (for ships; aircraft do not use it)
   - Yesterday: 0 t supply spent, 0 t destroyed; no spending yesterday
+  - Days of supply for the hex: no figure, no supply is planned to be used there today (1000 t in stock)
 
 LAND UNITS
 - land_unit:1 "Placeholder battalion 1": 600 men aboard (ship:1 "Placeholder troop transport 1" 600); posture defend, fatigue 0, fed share 1; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2

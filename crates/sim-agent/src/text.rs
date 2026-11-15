@@ -903,6 +903,7 @@ impl Briefing {
                     "Yesterday: {} t supply spent, {} t destroyed; {}",
                     b.spent_yesterday_t.0, b.destroyed_yesterday_t.0, lasts
                 ));
+                o.sub(planned_days_text(&b.planned_days_of_supply));
             } else {
                 o.line(format!(
                     "{} at {}: fuel {} t (for ships; aircraft do not use it)",
@@ -2098,4 +2099,19 @@ fn waits_text(waits_for: &[&str]) -> String {
         })
         .collect();
     words.join(" and ")
+}
+
+/// The side's days of supply in a base's hex, in a line.
+fn planned_days_text(d: &crate::lines::DaysOfSupplyLine) -> String {
+    match d.days {
+        Some(days) => format!(
+            "Days of supply for the hex (all the side's bases there): {} days, {} t over a planned use of {} t a day (men ashore {}, men due {}, aircraft upkeep {}, repairs {}, sorties {})",
+            days.0, d.stock_t.0, d.planned_use_t.0, d.men_ashore_t.0, d.men_due_t.0,
+            d.aircraft_upkeep_t.0, d.repairs_t.0, d.sorties_t.0
+        ),
+        None => format!(
+            "Days of supply for the hex: no figure, no supply is planned to be used there today ({} t in stock)",
+            d.stock_t.0
+        ),
+    }
 }
