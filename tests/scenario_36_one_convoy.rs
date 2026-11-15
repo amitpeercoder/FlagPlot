@@ -135,7 +135,9 @@
 //! - The staff never loads the source below its reserve: with base 1's
 //!   supply set to 1100 t at the start, the first run loads 100 t and the
 //!   reason names the reserve as what binds.
-//! - With ship 1 held, the same runs are made by ship 2.
+//! - With ship 1 out of the pool, the same runs are made by ship 2; and
+//!   from step 3 of the plan, with ship 1 held. (The architect's edit, Nov
+//!   15, 2026: holds are built in step 3.)
 //! - The same start gives the same orders on every run.
 //! - With the intent withdrawn on day 5 the staff gives no order from then,
 //!   and a force at sea completes its run and comes home.
