@@ -12,8 +12,8 @@ day   7  hash 3ee07e52ca9fa541  13 events
 day   8  hash df8e8538a06fb545  13 events
 day   9  hash 4a73a0f4e58ec39f  13 events
 day  10  hash 65730be273fe839a  13 events
-day  11  hash 54c75788f62a25dc  55 events
-day  12  hash 76df4789a5088288  26 events
+day  11  hash 6e7b70be6fe87be0  58 events
+day  12  hash 9daf5bb869003cd2  19 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:3  <- order:2
@@ -179,61 +179,57 @@ day  12  hash 76df4789a5088288  26 events
 #162 D11 morning   task_force:3 steamed 48 nm at 16 kn from (0,5) to (0,6)  <- order:14, order:15
 #163 D11 morning   ship:3 burned 6 t, 470 t remaining  <- #162
 #164 D11 morning   task_force:3 arrived at (0,6) at D11 09:00  <- #162
-#165 D11 morning   ship:1 landed 120 men of land_unit:1 at (4,0): 120 ashore, 480 left aboard  <- order:10, #158
-#166 D11 morning   land_unit:1 landed: fatigue 20  <- #165
+#165 D11 morning   ship:1 landed 600 men of land_unit:1 at (4,0): 600 ashore, 0 left aboard  <- order:10, #158
+#166 D11 morning   land_unit:1 landed: fatigue 5  <- #165
 #167 D11 morning   land_unit:1 lost its rehearsal of 50 for the landing at (4,0) (landed)  <- #165
 #168 D11 morning   land_unit:1 left the roster of task_force:1 (landed)  <- #165
-#169 D11 morning   ship:2 landed 80 men of land_unit:2 at (4,0): 80 ashore, 520 left aboard  <- order:13, #161
-#170 D11 morning   land_unit:2 landed: fatigue 40  <- #169
-#171 D11 morning   base:3 formed at (0,6) for the Allied side by the landing of task_force:3  <- order:16, #164
-#172 D11 morning   ship:3 landed 120 men of land_unit:3 at (0,6): 120 ashore, 80 left aboard  <- order:16, #164, #171
-#173 D11 morning   land_unit:3 landed: fatigue 40  <- #172
-#174 D11 morning   land_unit:3 lost its rehearsal of 50 for the landing at (4,0) (landed)  <- #172
-#175 D11 morning   land_unit:3 left the roster of task_force:3 (landed)  <- #172
-#176 D11 afternoon ship:1 landed 360 men of land_unit:1 at (4,0): 480 ashore, 120 left aboard  <- order:10, #158
-#177 D11 afternoon ship:2 landed 240 men of land_unit:2 at (4,0): 320 ashore, 280 left aboard  <- order:13, #161
-#178 D11 afternoon ship:3 landed 80 men of land_unit:3 at (0,6): 200 ashore, 0 left aboard  <- order:16, #164
-#179 D11 afternoon task_force:3 completed unloading at base:3 at D11 14:00  <- #178
-#180 D11 -         land_unit:3 rested: fatigue 35
-#181 D11 -         land_unit:1 rested: fatigue 15
-#182 D11 -         land_unit:2 rested: fatigue 35
-#183 D11 -         task_force:4 loaded for the landing at (0,6): loading 30  <- order:6
-#184 D11 -         task_force:5 loaded for the landing at (4,0): loading 42.5  <- order:7
-#185 D11 -         land_unit:4 rehearsed the landing at (0,6) with task_force:4: rehearsal 30  <- order:6
-#186 D11 -         land_unit:5 rehearsed the landing at (4,0) with task_force:5: rehearsal 55  <- order:7
-#187 D11 -         land_unit:6 rehearsed the landing at (4,0) with task_force:5: rehearsal 30  <- order:7
-#188 D11 -         land_unit:1 dug in: fieldworks 10
-#189 D11 -         land_unit:2 dug in: fieldworks 10
-#190 D11 -         land_unit:3 dug in: fieldworks 10
-#191 D11 -         base:1 at the end of the day: 983.5 t of supply, 0 aircraft ready: not open
-#192 D11 -         base:2 at the end of the day: 100 t of supply, 0 aircraft ready: not open
-#193 D11 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#194 D12 night     base:1 spent 1.5 t of supply on 300 men ashore for the day, 982 t left
-#195 D12 night     Allied men ashore at (0,0): 300 of 300 fed from base:1, 0 unfed  <- #194
-#196 D12 night     Allied men ashore at (0,6): 0 of 200 fed from base:3, 200 unfed
-#197 D12 night     land_unit:3 lost 10 men unfed at (0,6), 190 left ashore  <- #196
-#198 D12 night     base:2 spent 4 t of supply on 800 men ashore for the day, 96 t left
-#199 D12 night     Allied men ashore at (4,0): 800 of 800 fed from base:2, 0 unfed  <- #198
-#200 D12 night     ship:1 landed 120 men of land_unit:1 at (4,0): 600 ashore, 0 left aboard  <- order:10, #158
-#201 D12 night     ship:1 unloaded 60 t at base:2, 0 t aboard, 156 t in stock  <- order:10, #158
-#202 D12 night     task_force:1 completed unloading at base:2 at D12 00:00  <- #200, #201
-#203 D12 night     task_force:1 completed its unloading at (4,0): loading 50 spent, its order to prepare the landing done  <- #202
-#204 D12 night     ship:2 landed 280 men of land_unit:2 at (4,0): 600 ashore, 0 left aboard  <- order:13, #161
-#205 D12 night     task_force:2 completed unloading at base:2 at D12 01:00  <- #204
-#206 D12 -         land_unit:3 rested: fatigue 30
-#207 D12 -         land_unit:1 rested: fatigue 10
-#208 D12 -         land_unit:2 rested: fatigue 30
-#209 D12 -         task_force:4 loaded for the landing at (0,6): loading 35  <- order:6
-#210 D12 -         task_force:5 loaded for the landing at (4,0): loading 47.5  <- order:7
-#211 D12 -         land_unit:4 rehearsed the landing at (0,6) with task_force:4: rehearsal 35  <- order:6
-#212 D12 -         land_unit:5 rehearsed the landing at (4,0) with task_force:5: rehearsal 60  <- order:7
-#213 D12 -         land_unit:6 rehearsed the landing at (4,0) with task_force:5: rehearsal 35  <- order:7
-#214 D12 -         land_unit:1 dug in: fieldworks 20
-#215 D12 -         land_unit:2 dug in: fieldworks 20
-#216 D12 -         land_unit:3 dug in: fieldworks 20
-#217 D12 -         base:1 at the end of the day: 982 t of supply, 0 aircraft ready: not open
-#218 D12 -         base:2 at the end of the day: 156 t of supply, 0 aircraft ready: not open
-#219 D12 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#169 D11 morning   ship:1 unloaded 10.6 t at base:2, 49.4 t aboard, 110.6 t in stock  <- order:10, #158
+#170 D11 morning   ship:2 landed 260 men of land_unit:2 at (4,0): 260 ashore, 340 left aboard  <- order:13, #161
+#171 D11 morning   land_unit:2 landed: fatigue 10  <- #170
+#172 D11 morning   base:3 formed at (0,6) for the Allied side by the landing of task_force:3  <- order:16, #164
+#173 D11 morning   ship:3 landed 200 men of land_unit:3 at (0,6): 200 ashore, 0 left aboard  <- order:16, #164, #172
+#174 D11 morning   land_unit:3 landed: fatigue 10  <- #173
+#175 D11 morning   land_unit:3 lost its rehearsal of 50 for the landing at (4,0) (landed)  <- #173
+#176 D11 morning   land_unit:3 left the roster of task_force:3 (landed)  <- #173
+#177 D11 morning   task_force:3 completed unloading at base:3 at D11 10:32  <- #173
+#178 D11 afternoon ship:1 unloaded 49.4 t at base:2, 0 t aboard, 160 t in stock  <- order:10, #158
+#179 D11 afternoon task_force:1 completed unloading at base:2 at D11 16:22  <- #178
+#180 D11 afternoon task_force:1 completed its unloading at (4,0): loading 50 spent, its order to prepare the landing done  <- #179
+#181 D11 afternoon ship:2 landed 340 men of land_unit:2 at (4,0): 600 ashore, 0 left aboard  <- order:13, #161
+#182 D11 afternoon task_force:2 completed unloading at base:2 at D11 14:37  <- #181
+#183 D11 -         land_unit:3 rested: fatigue 5
+#184 D11 -         land_unit:1 rested: fatigue 0
+#185 D11 -         land_unit:2 rested: fatigue 5
+#186 D11 -         task_force:4 loaded for the landing at (0,6): loading 30  <- order:6
+#187 D11 -         task_force:5 loaded for the landing at (4,0): loading 42.5  <- order:7
+#188 D11 -         land_unit:4 rehearsed the landing at (0,6) with task_force:4: rehearsal 30  <- order:6
+#189 D11 -         land_unit:5 rehearsed the landing at (4,0) with task_force:5: rehearsal 55  <- order:7
+#190 D11 -         land_unit:6 rehearsed the landing at (4,0) with task_force:5: rehearsal 30  <- order:7
+#191 D11 -         land_unit:1 dug in: fieldworks 10
+#192 D11 -         land_unit:2 dug in: fieldworks 10
+#193 D11 -         land_unit:3 dug in: fieldworks 10
+#194 D11 -         base:1 at the end of the day: 983.5 t of supply, 0 aircraft ready: not open
+#195 D11 -         base:2 at the end of the day: 160 t of supply, 0 aircraft ready: not open
+#196 D11 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#197 D12 night     base:1 spent 1.5 t of supply on 300 men ashore for the day, 982 t left
+#198 D12 night     Allied men ashore at (0,0): 300 of 300 fed from base:1, 0 unfed  <- #197
+#199 D12 night     Allied men ashore at (0,6): 0 of 200 fed from base:3, 200 unfed
+#200 D12 night     land_unit:3 lost 10 men unfed at (0,6), 190 left ashore  <- #199
+#201 D12 night     base:2 spent 6 t of supply on 1200 men ashore for the day, 154 t left
+#202 D12 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:2, 0 unfed  <- #201
+#203 D12 -         land_unit:3 rested: fatigue 0
+#204 D12 -         land_unit:2 rested: fatigue 0
+#205 D12 -         task_force:4 loaded for the landing at (0,6): loading 35  <- order:6
+#206 D12 -         task_force:5 loaded for the landing at (4,0): loading 47.5  <- order:7
+#207 D12 -         land_unit:4 rehearsed the landing at (0,6) with task_force:4: rehearsal 35  <- order:6
+#208 D12 -         land_unit:5 rehearsed the landing at (4,0) with task_force:5: rehearsal 60  <- order:7
+#209 D12 -         land_unit:6 rehearsed the landing at (4,0) with task_force:5: rehearsal 35  <- order:7
+#210 D12 -         land_unit:1 dug in: fieldworks 20
+#211 D12 -         land_unit:2 dug in: fieldworks 20
+#212 D12 -         land_unit:3 dug in: fieldworks 20
+#213 D12 -         base:1 at the end of the day: 982 t of supply, 0 aircraft ready: not open
+#214 D12 -         base:2 at the end of the day: 154 t of supply, 0 aircraft ready: not open
+#215 D12 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder transport force 2" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -246,11 +242,11 @@ ship:3 "Placeholder fast transport 3": afloat in task_force:3; damage flotation 
 ship:4 "Placeholder troop transport 4": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 600 men of land_unit:4 aboard
 ship:5 "Placeholder troop transport 5": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 300 men of land_unit:5 aboard
 base:1 "Placeholder base A" (Allied) at (0,0): 982 t of supply in stock
-base:2 "Placeholder base B" (Allied) at (4,0): 156 t of supply in stock
+base:2 "Placeholder base B" (Allied) at (4,0): 154 t of supply in stock
 base:3 "Landing at (0,6)" (Allied) at (0,6): 0 t of supply in stock, no airfield, formed in play, on its own side's map only
-land_unit:1 "Placeholder battalion 1" (Allied): 600 men ashore at (4,0), fatigue 10, fieldworks 20
-land_unit:2 "Placeholder battalion 2" (Allied): 600 men ashore at (4,0), fatigue 30, fieldworks 20
-land_unit:3 "Placeholder battalion 3" (Allied): 190 men ashore at (0,6), fatigue 30, fieldworks 20
+land_unit:1 "Placeholder battalion 1" (Allied): 600 men ashore at (4,0), fieldworks 20
+land_unit:2 "Placeholder battalion 2" (Allied): 600 men ashore at (4,0), fieldworks 20
+land_unit:3 "Placeholder battalion 3" (Allied): 190 men ashore at (0,6), fieldworks 20
 land_unit:4 "Placeholder battalion 4" (Allied): no men ashore
 land_unit:5 "Placeholder battalion 5" (Allied): no men ashore
 land_unit:6 "Placeholder battalion 6" (Allied): 300 men ashore at (0,0), fieldworks 30

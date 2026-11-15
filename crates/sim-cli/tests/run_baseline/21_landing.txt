@@ -3,12 +3,12 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 1e9f7dfcec433027  19 events
-day   2  hash 70461f913920352e  22 events
-day   3  hash 273ed3e1c8e421d1  25 events
-day   4  hash 98af47d442e1c14c  11 events
-day   5  hash 2327950867e63e97  12 events
-day   6  hash 19a16f15546b0de7  11 events
-day   7  hash aadd068c6e3443a0  11 events
+day   2  hash 142e0cc6398a77fc  21 events
+day   3  hash 0a89780e381ef00e  23 events
+day   4  hash 6e1fc7f1dfcad779  9 events
+day   5  hash c1dbbf3c556be652  9 events
+day   6  hash 0feebc726b9e1936  8 events
+day   7  hash 326024b48fe48aca  8 events
 
 task_force:1 "Placeholder landing convoy" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder fast transport group" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -17,10 +17,10 @@ ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation
 ship:3 "Placeholder fast transport 1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 490 t of fuel, 0 t of supply
 base:1 "Placeholder embarkation port" (Allied) at (0,0): 1000 t of supply in stock
 base:2 "Landing at (8,0)" (Allied) at (8,0): 0 t of supply in stock, no airfield, formed in play, on its own side's map only
-land_unit:1 "Placeholder battalion 1" (Allied): 527 men ashore at (8,0), fatigue 10, fieldworks 30
-land_unit:2 "Placeholder battalion 2" (Allied): 353 men ashore at (8,0), fatigue 10, fieldworks 30
+land_unit:1 "Placeholder battalion 1" (Allied): 527 men ashore at (8,0), fieldworks 30
+land_unit:2 "Placeholder battalion 2" (Allied): 353 men ashore at (8,0), fieldworks 30
 land_unit:3 "Placeholder battalion 3" (Allied): 205 men ashore at (10,0), fieldworks 30
-land_unit:4 "Placeholder battalion 3, detachment 4" (Allied): 177 men ashore at (8,0), fatigue 15, fieldworks 30
+land_unit:4 "Placeholder battalion 3, detachment 4" (Allied): 177 men ashore at (8,0), fieldworks 30
 Allied: no contacts
 Allied: no battle claims
 Japanese: no contacts

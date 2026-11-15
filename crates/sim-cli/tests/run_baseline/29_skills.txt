@@ -2,14 +2,14 @@ Scenario 29: What a land unit is good at
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 941c308fd4a0b0ed  64 events
-day   2  hash ba0452bf07bae9b7  63 events
-day   3  hash d026a7fe7bd16de8  49 events
-day   4  hash cc44c70f36284ce3  44 events
-day   5  hash 6666690d6b343f85  42 events
-day   6  hash 133942d6962d34f3  43 events
-day   7  hash aaf464aa36e1d846  36 events
-day   8  hash 83aa35af3dada629  36 events
+day   1  hash 9bf6be2f2ca6a3ed  64 events
+day   2  hash 66141219a0b9f815  63 events
+day   3  hash 5e48793803e2c302  49 events
+day   4  hash 4820d5f8423676d2  44 events
+day   5  hash c40b75774a830be9  41 events
+day   6  hash a5ab0a256c4ea2e9  42 events
+day   7  hash 30bd99c376f7be91  34 events
+day   8  hash e4cc2f0ec14010e0  34 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder transport force 2" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -26,9 +26,9 @@ base:6 "Placeholder base 6" (Allied) at (8,0): 4981.97 t of supply in stock
 base:7 "Placeholder base 7" (Japanese) at (8,0): 4983.9 t of supply in stock
 base:8 "Dump at (2,3)" (Allied) at (2,3): 0 t of supply in stock, no airfield, formed in play, on its own side's map only
 land_unit:1 "Placeholder unit 1" (Allied): 200 men ashore at (1,3), fieldworks 30
-land_unit:2 "Placeholder unit 2" (Allied): 200 men ashore at (1,3), fatigue 5, fieldworks 30
-land_unit:3 "Placeholder unit 3" (Allied): 200 men ashore at (1,3), fatigue 50, fieldworks 20
-land_unit:4 "Placeholder unit 4" (Allied): 200 men ashore at (2,3), fatigue 5, fieldworks 30
+land_unit:2 "Placeholder unit 2" (Allied): 200 men ashore at (1,3), fieldworks 30
+land_unit:3 "Placeholder unit 3" (Allied): 200 men ashore at (1,3), fatigue 20, fieldworks 20
+land_unit:4 "Placeholder unit 4" (Allied): 200 men ashore at (2,3), fieldworks 30
 land_unit:5 "Placeholder unit 5" (Allied): no men ashore
 land_unit:6 "Placeholder unit 6" (Allied): no men ashore
 land_unit:7 "Placeholder unit 7" (Allied): no men ashore
