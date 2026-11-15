@@ -2,12 +2,12 @@ Scenario 23: The fight ashore, and a base that changes side
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1cbc4bb59b92dbba  46 events
-day   2  hash 61bd744f6bed86b3  28 events
-day   3  hash fd3e1c8b787b5bed  19 events
-day   4  hash c168db8222b21120  18 events
-day   5  hash 92c0209cff704271  17 events
-day   6  hash cb14df26d7d7bd1d  16 events
+day   1  hash 6e28670cc13d1a79  46 events
+day   2  hash 95b0265604066c30  28 events
+day   3  hash c6c512fc54fd504a  19 events
+day   4  hash cd2e2715eca38f9b  18 events
+day   5  hash 5c4db1a52cf5af4a  17 events
+day   6  hash b2c0754c367a4976  16 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         air_group:3 moved from base:5 to base:2, 400 nm within its transfer range of 500 nm, with 8 ready; it flies nothing today  <- order:1

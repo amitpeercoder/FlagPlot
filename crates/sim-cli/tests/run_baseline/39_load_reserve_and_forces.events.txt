@@ -2,10 +2,10 @@ Scenario 39: A load up to a weight, a reserve, and forces formed and joined
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 12e49dafb77fd955  19 events
-day   2  hash 00fb22cc76fe5ccf  9 events
-day   3  hash 4edc723f1bda2951  6 events
-day   4  hash a5c02b54c9195766  5 events
+day   1  hash 7dd8da4b01af1a3e  19 events
+day   2  hash 59f22955888dd878  9 events
+day   3  hash b7b0b61af02e525e  6 events
+day   4  hash e540496a9fc01ee1  5 events
 
 #1 D1 -         ship:1 took 150 t of fuel at base:1, 1000 t aboard, base:1 has 350 t left
 #2 D1 -         ship:2 took 50 t of fuel at base:1, 950 t aboard, base:1 has 300 t left

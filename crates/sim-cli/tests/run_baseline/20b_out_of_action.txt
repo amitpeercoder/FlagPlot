@@ -2,12 +2,12 @@ Scenario 20b: Ships out of action
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f3da63f3c1b4eb9c  5 events
-day   2  hash b91b36e9f09ffef0  7 events
-day   3  hash 589fcf38dc67b689  5 events
-day   4  hash 99de72b6528ec0d2  7 events
-day   5  hash 056253fb91cd2908  6 events
-day   6  hash a9576d638235e60b  5 events
+day   1  hash ce0d8871c6369edd  5 events
+day   2  hash ca99ce72db3af701  7 events
+day   3  hash 05de2532e959dabc  5 events
+day   4  hash 0afe9aef5f5eedf3  7 events
+day   5  hash 2f898ebca1a5c011  6 events
+day   6  hash 5c3ac27b982d1af2  5 events
 
 task_force:1 "Placeholder force 1" (Japanese): Idle at (0,4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder force 2" (Japanese): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

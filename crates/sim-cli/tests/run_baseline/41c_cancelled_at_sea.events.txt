@@ -1,0 +1,95 @@
+Placeholder scenario 41c: Cancelled at sea
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 024a16a555832ee3  28 events
+day   2  hash cfc9775ca7846bd5  15 events
+day   3  hash 40b7c51661a2088f  18 events
+day   4  hash a68c8327ea9cfb66  8 events
+day   5  hash 80e7512bec734513  5 events
+
+#1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days
+#2 D1 -         Allied plan:1 drafted for intent:1  <- #1
+#3 D1 -         Allied the commander's command taken: limit intent:1's forces to 2 ships and 0 task forces from base:1
+#4 D1 -         Allied the commander's command taken: reserve 1000 t of supply and 0 t of fuel at base:1
+#5 D1 -         Allied the commander's command taken: give the leave to prepare
+#6 D1 -         Allied the commander's command taken: give the leave to launch
+#7 D1 -         Allied the staff's command taken: approve plan:1
+#8 D1 -         Allied plan:1 went from draft to preparing  <- #7
+#9 D1 -         Allied staff gave no order: plan:1 is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #7
+#10 D1 -         Allied the staff's command taken: approve plan:1
+#11 D1 -         Allied plan:1 went from preparing to released  <- #10
+#12 D1 -         Allied staff gave no order: plan:1 is ready and leave to launch is given: the staff releases it.  <- #10
+#13 D1 -         Allied the staff's command taken: add a run of 370 t with 1 ships to plan:1, loading day 1, due day 3
+#14 D1 -         Allied staff gave no order: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.4 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 3. Without it the reading of day 4 is 70 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 3 is 80 t. Load = max(0, 300 - 80) + 150 (15 days of use) = 370 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 360 nm out at 10 kn = 36 hours, 2 days; 360 nm back = 36 hours, 2 days; unloading 370 t at base:2 = 18.5 hours, 1 day. Its ships are free on day 7 (2 + 2 + 1 + 2). The staff adds this run to the plan.  <- #13
+#15 D1 -         Allied the staff's command taken: commit 1 ships to plan:1 run 1 from day 1 to day 6
+#16 D1 -         Allied staff gave no order: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.4 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 3. Without it the reading of day 4 is 70 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 3 is 80 t. Load = max(0, 300 - 80) + 150 (15 days of use) = 370 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 360 nm out at 10 kn = 36 hours, 2 days; 360 nm back = 36 hours, 2 days; unloading 370 t at base:2 = 18.5 hours, 1 day. Its ships are free on day 7 (2 + 2 + 1 + 2). The ships are committed from day 1 to day 6, the day before they are free.  <- #15
+#17 D1 -         order:1 accepted for base:1  <- order:1  [issued by the staff]
+#18 D1 -         ship:1 formed into task_force:1000001 at base:1  <- order:1
+#19 D1 -         Allied staff's reason for order:1: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.4 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 3. Without it the reading of day 4 is 70 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 3 is 80 t. Load = max(0, 300 - 80) + 150 (15 days of use) = 370 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 360 nm out at 10 kn = 36 hours, 2 days; 360 nm back = 36 hours, 2 days; unloading 370 t at base:2 = 18.5 hours, 1 day. Its ships are free on day 7 (2 + 2 + 1 + 2). Form ship:1 lying in port at base:1 in no force into a force.  <- order:1, #17
+#20 D1 -         order:2 accepted for task_force:1000001  <- order:2  [issued by the staff]
+#21 D1 -         Allied staff's reason for order:2: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.4 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 3. Without it the reading of day 4 is 70 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 3 is 80 t. Load = max(0, 300 - 80) + 150 (15 days of use) = 370 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 360 nm out at 10 kn = 36 hours, 2 days; 360 nm back = 36 hours, 2 days; unloading 370 t at base:2 = 18.5 hours, 1 day. Its ships are free on day 7 (2 + 2 + 1 + 2). Load order: until 370 t is aboard (0 t aboard now + the load of 370 t); ship:1 370 t at 50 t an hour = 7.4 hours.  <- order:2, #20
+#22 D1 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 90 t left
+#23 D1 night     Allied men ashore at (9,0): 2000 of 2000 fed from base:2, 0 unfed  <- #22
+#24 D1 night     ship:1 loaded 370 t from base:1, 370 t aboard, 4630 t in stock  <- order:2
+#25 D1 night     task_force:1000001 completed loading at base:1 at D1 01:24  <- #24
+#26 D1 -         land_unit:1 dug in: fieldworks 10
+#27 D1 -         base:1 at the end of the day: 4630 t of supply, 0 aircraft ready: not open
+#28 D1 -         base:2 at the end of the day: 90 t of supply, 0 aircraft ready: not open
+#29 D2 -         order:3 accepted for task_force:1000001  <- order:3  [issued by the staff]
+#30 D2 -         Allied staff's reason for order:3: Run 1 of plan:1: the 370 t aboard are its load of 370 t; the load is complete, so it sails today (day 2, hour 24). 360 nm out at 10 kn = 36 hours, so it arrives at base:2 at hour 60 (day 3); 360 nm back = 36 hours. It acts at base:2: 240 t landed in the 12 hours of day 3 left, at 20 t an hour for ship:1; unloading takes 18.5 hours, 1 day. This is the route order: out to the destination and back, acting at the destination.  <- order:3, #29
+#31 D2 -         order:4 accepted for task_force:1000001  <- order:4  [issued by the staff]
+#32 D2 -         Allied staff's reason for order:4: Run 1 of plan:1: the 370 t aboard are its load of 370 t; the load is complete, so it sails today (day 2, hour 24). 360 nm out at 10 kn = 36 hours, so it arrives at base:2 at hour 60 (day 3); 360 nm back = 36 hours. It acts at base:2: 240 t landed in the 12 hours of day 3 left, at 20 t an hour for ship:1; unloading takes 18.5 hours, 1 day. This is the unload order the route acts on.  <- order:4, #31
+#33 D2 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 80 t left
+#34 D2 night     Allied men ashore at (9,0): 2000 of 2000 fed from base:2, 0 unfed  <- #33
+#35 D2 night     task_force:1000001 steamed 120 nm at 10 kn from (0,0) to (3,0)  <- order:3
+#36 D2 night     ship:1 burned 12 t, 988 t remaining  <- #35
+#37 D2 morning   task_force:1000001 steamed 60 nm at 10 kn from (3,0) to (5,0)  <- order:3
+#38 D2 morning   ship:1 burned 6 t, 982 t remaining  <- #37
+#39 D2 afternoon task_force:1000001 steamed 60 nm at 10 kn from (5,0) to (6,0)  <- order:3
+#40 D2 afternoon ship:1 burned 6 t, 976 t remaining  <- #39
+#41 D2 -         land_unit:1 dug in: fieldworks 20
+#42 D2 -         base:1 at the end of the day: 4630 t of supply, 0 aircraft ready: not open
+#43 D2 -         base:2 at the end of the day: 80 t of supply, 0 aircraft ready: not open
+#44 D3 -         Allied the commander's command taken: cancel plan:1
+#45 D3 -         Allied plan:1 went from released to cancelled  <- #44
+#46 D3 -         Allied the staff's command taken: free 1 ships from plan:1
+#47 D3 -         Allied staff gave no order: plan:1 is cancelled and 1 of its ships are committed from today on: the staff frees them (ship:1).  <- #46
+#48 D3 -         order:5 accepted for task_force:1000001  <- order:5  [issued by the staff]
+#49 D3 -         Allied staff's reason for order:5: plan:1 is cancelled: task_force:1000001 on passage out to base:2 is sent home to base:1; its cargo stays aboard and its unload order stands, so it is put back ashore at base:1.  <- order:5, #48
+#50 D3 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 70 t left
+#51 D3 night     Allied men ashore at (9,0): 2000 of 2000 fed from base:2, 0 unfed  <- #50
+#52 D3 night     task_force:1000001 steamed 120 nm at 10 kn from (6,0) to (3,0)  <- order:5
+#53 D3 night     ship:1 burned 12 t, 964 t remaining  <- #52
+#54 D3 morning   task_force:1000001 steamed 60 nm at 10 kn from (3,0) to (1,0)  <- order:5
+#55 D3 morning   ship:1 burned 6 t, 958 t remaining  <- #54
+#56 D3 afternoon task_force:1000001 steamed 60 nm at 10 kn from (1,0) to (0,0)  <- order:5
+#57 D3 afternoon ship:1 burned 6 t, 952 t remaining  <- #56
+#58 D3 afternoon task_force:1000001 arrived at (0,0) at D4 18:00  <- #56
+#59 D3 -         land_unit:1 dug in: fieldworks 30
+#60 D3 -         base:1 at the end of the day: 4630 t of supply, 0 aircraft ready: not open
+#61 D3 -         base:2 at the end of the day: 70 t of supply, 0 aircraft ready: not open
+#62 D4 -         ship:1 took 48 t of fuel at base:1, 1000 t aboard, base:1 has 1952 t left  <- #58
+#63 D4 -         Allied staff gave no order: plan:1 is cancelled, so the staff gives no order for intent:1.
+#64 D4 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 60 t left
+#65 D4 night     Allied men ashore at (9,0): 2000 of 2000 fed from base:2, 0 unfed  <- #64
+#66 D4 night     ship:1 unloaded 370 t at base:1, 0 t aboard, 5000 t in stock  <- order:4, #58
+#67 D4 night     task_force:1000001 completed unloading at base:1 at D4 01:24  <- #66
+#68 D4 -         base:1 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
+#69 D4 -         base:2 at the end of the day: 60 t of supply, 0 aircraft ready: not open
+#70 D5 -         Allied staff gave no order: plan:1 is cancelled, so the staff gives no order for intent:1.
+#71 D5 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 50 t left
+#72 D5 night     Allied men ashore at (9,0): 2000 of 2000 fed from base:2, 0 unfed  <- #71
+#73 D5 -         base:1 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
+#74 D5 -         base:2 at the end of the day: 50 t of supply, 0 aircraft ready: not open
+
+task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Placeholder cargo ship 1": afloat in task_force:1000001; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:2 "Placeholder cargo ship 2": afloat in base:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+base:1 "Placeholder base S, Allied" (Allied) at (0,0): 5000 t of supply in stock, 1952 t of fuel in stock, reserve 1000 t of supply
+base:2 "Placeholder base T, Allied" (Allied) at (9,0): 50 t of supply in stock
+land_unit:1 "Placeholder unit 1" (Allied): 2000 men ashore at (9,0), fieldworks 30
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
