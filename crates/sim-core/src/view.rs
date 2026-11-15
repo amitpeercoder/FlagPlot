@@ -15,6 +15,9 @@
 
 mod air_choices;
 mod ground_choices;
+mod supply;
+
+pub use supply::{DaysOfSupply, PlannedUse};
 mod movement_choices;
 mod surface_choices;
 
@@ -83,6 +86,9 @@ pub struct SideView<'a> {
     log: &'a EventLog,
     orders: &'a BTreeMap<OrderId, Order>,
     objectives: Option<&'a crate::objectives::Objectives>,
+    /// The side's own command state, whole (decision 0107, 6). The other
+    /// side's is never handed over.
+    command: &'a crate::command::CommandState,
     /// The scratch of the pulse in hand, which the choices of the air steps
     /// read (decision 0100): the bases grounded at the pulse's start, the
     /// strikes launched and not landed, what each group flew and the decks
@@ -123,6 +129,7 @@ impl<'a> SideView<'a> {
         log: &'a EventLog,
         orders: &'a BTreeMap<OrderId, Order>,
         objectives: Option<&'a crate::objectives::Objectives>,
+        command: &'a crate::command::CommandState,
         pulse: PulseScratch<'a>,
     ) -> SideView<'a> {
         SideView {
@@ -134,8 +141,17 @@ impl<'a> SideView<'a> {
             log,
             orders,
             objectives,
+            command,
             pulse,
         }
+    }
+
+    /// The side's own command state, whole: its intents with their limits,
+    /// its leaves, its plans with their baselines, amendments and runs, and
+    /// the commitments of its ships (decision 0107, 6). There is no way to
+    /// the other side's.
+    pub fn command_state(&self) -> &'a crate::command::CommandState {
+        self.command
     }
 
     pub fn side(&self) -> Side {
@@ -484,8 +500,11 @@ impl<'a> SideView<'a> {
             .get(&unit)
             .filter(|land_unit| land_unit.side == self.side)?;
         let figures = self.ref_data.ground.as_ref()?;
-        let factor = crate::state::Skills::factor(land_unit.skills.weight, figures.weight_strength);
-        Some(figures.daily_supply_t_per_man * factor * i64::from(land_unit.men_ashore))
+        Some(crate::ground::daily_charge_t(
+            figures,
+            &land_unit.skills,
+            land_unit.men_ashore,
+        ))
     }
 
     /// The factor one of the side's own forces' work is multiplied by while

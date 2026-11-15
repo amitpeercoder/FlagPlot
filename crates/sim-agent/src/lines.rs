@@ -227,6 +227,58 @@ pub struct BaseLine {
     /// left out while both are 0.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reserves: Option<BaseReservesLine>,
+    /// The side's days of supply in the base's hex (decision 0107, 31 to 36).
+    pub days_of_supply: DaysOfSupplyLine,
+}
+
+/// The side's days of supply in a hex where it holds a base (decision 0107,
+/// 31 to 36): its supply there over its planned use for a day, read before
+/// the day's orders. It is the figure for the hex, so every base of the side
+/// in one hex carries the same one. `days` is null, with a note, where
+/// nothing is used: no planned use, no figure.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct DaysOfSupplyLine {
+    pub days: Option<Dec>,
+    /// Whose figure it is: the side's, for the whole hex.
+    pub scope: &'static str,
+    /// Said in words when `days` is null.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note: Option<&'static str>,
+    /// The supply of all the side's bases in the hex.
+    pub stock_t: Dec,
+    pub planned_use_t: Dec,
+    pub men_ashore_t: Dec,
+    pub men_due_t: Dec,
+    pub aircraft_upkeep_t: Dec,
+    pub repairs_t: Dec,
+    pub sorties_t: Dec,
+}
+
+/// What a null `days` says.
+const NO_PLANNED_USE: &str =
+    "No supply is planned to be used in this hex today, so there is no days-of-supply figure.";
+const HEX_FIGURE: &str =
+    "the side's figure for the hex: every base of the side in this hex carries the same one";
+
+/// The side's days of supply in the base's hex, as the side reads it.
+pub(crate) fn days_of_supply_line(ctx: &Ctx<'_>, hex: Hex) -> DaysOfSupplyLine {
+    let figure = ctx
+        .view
+        .days_of_supply(hex)
+        .expect("a side holding a base in a hex has a figure for it");
+    let used = figure.planned_use;
+    DaysOfSupplyLine {
+        days: figure.days.map(Dec),
+        scope: HEX_FIGURE,
+        note: figure.days.is_none().then_some(NO_PLANNED_USE),
+        stock_t: Dec(figure.stock_t),
+        planned_use_t: Dec(used.total_t()),
+        men_ashore_t: Dec(used.men_ashore_t),
+        men_due_t: Dec(used.men_due_t),
+        aircraft_upkeep_t: Dec(used.aircraft_upkeep_t),
+        repairs_t: Dec(used.repairs_t),
+        sorties_t: Dec(used.sorties_t),
+    }
 }
 
 /// A base's reserves, in tons (decision 0111).
@@ -497,6 +549,7 @@ pub(crate) fn base_line(ctx: &Ctx<'_>, base: &Base) -> BaseLine {
         works: base_works_line(ctx, base),
         airfield_damage: base_airfield_damage_line(ctx, base),
         reserves: base_reserves_line(base),
+        days_of_supply: days_of_supply_line(ctx, base.hex),
     }
 }
 

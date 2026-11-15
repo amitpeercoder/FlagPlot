@@ -38,6 +38,7 @@ use sim_core::choices::Moment;
 use sim_core::time::Pulse;
 use sim_core::World;
 
+use super::commands::{self, StepCommands};
 use super::state::{self, KeyedRecords, PerSide};
 
 /// What one entry lists of each kind of record: the records themselves in
@@ -80,6 +81,11 @@ pub struct StepOut {
     changed: Lists<Box<RawValue>, Box<RawValue>>,
     #[serde(skip_serializing_if = "Lists::is_empty")]
     removed: Lists<u32, (i32, i32)>,
+    /// A side's whole command state (decision 0107) where it differs from the
+    /// step before's. Left out of a step where neither side's does, so the
+    /// steps of a run with no command are as they were.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    commands: Option<StepCommands>,
 }
 
 /// The records of one kind as the last step left them, by key.
@@ -123,6 +129,8 @@ pub struct StepRecorder {
     land_units: Seen<u32>,
     contacts: [Seen<u32>; 2],
     estimates: [Seen<(i32, i32)>; 2],
+    /// Each side's command state as the last step left it, as JSON text.
+    commands: [Option<String>; 2],
 }
 
 impl StepRecorder {
@@ -138,6 +146,7 @@ impl StepRecorder {
             land_units: Seen(BTreeMap::new()),
             contacts: [Seen(BTreeMap::new()), Seen(BTreeMap::new())],
             estimates: [Seen(BTreeMap::new()), Seen(BTreeMap::new())],
+            commands: [None, None],
         }
     }
 
@@ -204,6 +213,7 @@ impl StepRecorder {
             self.estimates[0].diff(ground_estimates.allied);
         let (japanese_estimates, japanese_estimates_gone) =
             self.estimates[1].diff(ground_estimates.japanese);
+        let commands = StepCommands::diff(&mut self.commands, commands::texts(world));
         self.steps.push(StepOut {
             day,
             phase,
@@ -237,6 +247,7 @@ impl StepRecorder {
                     japanese: japanese_estimates_gone,
                 },
             },
+            commands,
         });
     }
 }

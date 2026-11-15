@@ -5,6 +5,7 @@
 
 mod batch;
 mod batch_record;
+mod doctrine;
 mod events;
 mod export;
 mod mcp;
@@ -14,6 +15,7 @@ mod serve;
 mod timing;
 mod validate;
 
+use std::collections::BTreeMap;
 use std::env;
 use std::path::Path;
 use std::process::ExitCode;
@@ -27,7 +29,7 @@ use sim_data::{LoadOptions, Scenario};
 
 const USAGE: &str = "\
 Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [--reference DIR]
-       sim-cli replay <game.json> [--reference DIR]
+       sim-cli replay <game.json> [--check-staff] [--reference DIR]
        sim-cli hash <scenario.toml> [--seed N] [--reference DIR]
        sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--seed N] [--reference DIR]
        sim-cli events <scenario.toml | game.json> --why EVENT [--seed N] [--reference DIR]
@@ -54,7 +56,14 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             changed, submits
             the saved orders day by day in place of the scenario's own, prints
             each day's hash and compares it with the saved one. Exits with an
-            error on the first day that differs.
+            error on the first day that differs. Saved game version 3 holds
+            the commander's commands and what each side's staff handed in;
+            the replay hands them in again and asks no staff. With
+            --check-staff it asks the doctrine's staff as well, on each day
+            and for each side that has one, and stops at the first day and
+            side where the staff gives something other than what was saved,
+            saying what; if every day's hashes match and the staff gave
+            what was saved on every day, it says so.
   hash      Runs a scenario and prints the state hash of each day, one a line
             as `day N <hash>`, and nothing else.
   events    The umpire's questions to a finished run (a scenario run to its
@@ -144,6 +153,9 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
 struct Executed {
     scenario: Scenario,
     summaries: Vec<DaySummary>,
+    /// What each side's staff handed in, by day, for the saved game: the
+    /// staff the run asked, or the hand-ins a replay gave back.
+    staff_handed_in: save::StaffHandIns,
     /// The truth as it stood after loading and seeding, before day 1.
     initial: TruthState,
 }
@@ -217,78 +229,192 @@ fn execute_watching(
     }
     before_run(&mut scenario);
     let initial = scenario.world.umpire().clone();
+    let held = doctrine::staffs_for(&scenario);
     let mut summaries = Vec::new();
+    let mut staff_handed_in = save::StaffHandIns::new();
     while let Some(summary) = scenario
-        .next_day_watched(watch)
+        .next_day_watched(doctrine::as_staffs(&held), watch)
         .map_err(|e| e.to_string())?
     {
+        note_staff(&scenario.world, summary.day, &mut staff_handed_in);
         summaries.push(summary);
         after_day(&scenario);
     }
     Ok(Executed {
         scenario,
         summaries,
+        staff_handed_in,
         initial,
     })
 }
 
-/// A saved game run again, the one way `replay`, `events` and `export` do it:
-/// load the scenario file the game names, refuse it if it or a data file has
-/// changed, give it the game's seed and orders, then run it day by day and
-/// compare each day's hash with the saved one, failing on the first that
-/// differs. `before_run` sees the scenario and the game before day 1;
-/// `on_day` sees each summary before it is compared. With `to_end` the run
-/// goes on to the scenario's last day after the saved days (`replay` stops
-/// with them).
-fn execute_saved(
-    file: &str,
-    options: &LoadOptions,
-    to_end: bool,
-    before_run: impl FnOnce(&Scenario, &save::Saved),
-    on_day: impl FnMut(&DaySummary),
-) -> Result<(Executed, save::Saved), String> {
-    execute_saved_watching(file, options, to_end, before_run, on_day, &mut |_, _| {})
+/// What each side's staff handed in on the day just resolved, noted for the
+/// saved game.
+fn note_staff(world: &sim_core::World, day: u32, into: &mut save::StaffHandIns) {
+    for (side, decisions) in world.staff_handed_in() {
+        if !decisions.is_empty() {
+            into.entry(day)
+                .or_default()
+                .insert(*side, decisions.clone());
+        }
+    }
 }
 
-/// [`execute_saved`], handing the world, read only, to `watch` at each
-/// moment of each day, as [`execute_watching`] does.
+/// A saved game run again, the one way `replay`, `events` and `export` do it:
+/// load the scenario file the game names, refuse it if it or a data file has
+/// changed, give it the game's seed, orders and commands and, before each
+/// day, what each side's staff handed in (no staff is asked), then run it day
+/// by day and compare each day's hash with the saved one, failing on the
+/// first that differs. `before_run` sees the scenario and the game before day
+/// 1; `on_day` sees each summary before it is compared. With `to_end` the run
+/// goes on to the scenario's last day after the saved days (`replay` stops
+/// with them). `watch` is handed the world, read only, at each moment of each
+/// day, as [`execute_watching`] does. [`execute_saved_checking`] is the same
+/// run with the doctrine's staff asked as well.
 fn execute_saved_watching(
     file: &str,
     options: &LoadOptions,
     to_end: bool,
     before_run: impl FnOnce(&Scenario, &save::Saved),
-    mut on_day: impl FnMut(&DaySummary),
+    on_day: impl FnMut(&DaySummary),
     watch: &mut dyn FnMut(&sim_core::World, sim_core::choices::Moment),
 ) -> Result<(Executed, save::Saved), String> {
+    execute_saved_checking(file, options, to_end, false, before_run, on_day, watch)
+        .map(|(executed, saved, _)| (executed, saved))
+}
+
+/// The first place the doctrine's staff gave something other than what a
+/// saved game holds, for `replay --check-staff`.
+struct StaffFinding {
+    day: u32,
+    side: Side,
+    what: String,
+}
+
+/// [`execute_saved_watching`], and with `check_staff` also asking the
+/// doctrine's staff (decision 0107, 10): on each saved day each side with a
+/// staff in [`doctrine::staffs_for`] is wrapped in a
+/// [`sim_core::command::CheckedStaff`] holding the saved hand-in (nothing if
+/// none was saved), which gives the saved hand-in back whatever the staff
+/// gave and keeps the first difference. A saved hand-in for a side the
+/// doctrine gives no staff is a difference too. The run stops at the first
+/// difference found on a day, and gives it as the third part; a difference
+/// in the staff is reported before a hash that differs on the same day.
+fn execute_saved_checking(
+    file: &str,
+    options: &LoadOptions,
+    to_end: bool,
+    check_staff: bool,
+    before_run: impl FnOnce(&Scenario, &save::Saved),
+    mut on_day: impl FnMut(&DaySummary),
+    watch: &mut dyn FnMut(&sim_core::World, sim_core::choices::Moment),
+) -> Result<(Executed, save::Saved, Option<StaffFinding>), String> {
     let saved = save::read(file)?;
     let scenario =
         Scenario::load_with(Path::new(&saved.scenario_file), options).map_err(|e| e.to_string())?;
     saved.check_files(&scenario)?;
+    let held = doctrine::staffs_for(&scenario);
     let mut scenario = scenario.with_seed(saved.seed).map_err(|e| e.to_string())?;
     scenario.replace_script(saved.script.clone());
+    scenario.replace_commands(saved.commands.clone());
     before_run(&scenario, &saved);
     let initial = scenario.world.umpire().clone();
     let mut summaries = Vec::new();
+    let mut staff_handed_in = save::StaffHandIns::new();
+    let mut finding: Option<StaffFinding> = None;
     for (day, hash) in &saved.hashes {
-        let summary = scenario
-            .next_day_watched(watch)
-            .map_err(|e| e.to_string())?
-            .ok_or_else(|| format!("the scenario has no day {day}"))?;
+        let handed = saved.staff.get(day);
+        let summary = if check_staff {
+            // Each side with a staff gives the saved hand-in back through its
+            // checked wrapper; the other sides' saved hand-ins are handed in
+            // as a replay does, and are a difference where there are any.
+            let wrapped: BTreeMap<Side, sim_core::command::CheckedStaff<'_>> = held
+                .iter()
+                .map(|(side, real)| {
+                    let saved_for_side = handed
+                        .and_then(|by_side| by_side.get(side))
+                        .cloned()
+                        .unwrap_or_default();
+                    (
+                        *side,
+                        sim_core::command::CheckedStaff::new(
+                            real.as_ref(),
+                            *side,
+                            *day,
+                            saved_for_side,
+                        ),
+                    )
+                })
+                .collect();
+            for side in Side::ALL {
+                if wrapped.contains_key(&side) {
+                    continue;
+                }
+                if let Some(decisions) = handed.and_then(|by_side| by_side.get(&side)) {
+                    scenario.world.submit_staff(side, decisions.clone());
+                    if finding.is_none() {
+                        finding = Some(StaffFinding {
+                            day: *day,
+                            side,
+                            what: format!(
+                                "the game holds what the {} staff handed in, and the doctrine ({}) gives that side no staff",
+                                side.name().to_lowercase(),
+                                doctrine::DOCTRINE_VERSION
+                            ),
+                        });
+                    }
+                }
+            }
+            let mut staffs = sim_core::Staffs::none();
+            for (side, checked) in &wrapped {
+                staffs = staffs.with(*side, checked);
+            }
+            let summary = scenario
+                .next_day_watched(staffs, watch)
+                .map_err(|e| e.to_string())?
+                .ok_or_else(|| format!("the scenario has no day {day}"))?;
+            if finding.is_none() {
+                finding = wrapped.values().find_map(|checked| {
+                    checked.difference().map(|d| StaffFinding {
+                        day: d.day,
+                        side: d.side,
+                        what: d.what,
+                    })
+                });
+            }
+            summary
+        } else {
+            for (side, decisions) in handed.into_iter().flatten() {
+                scenario.world.submit_staff(*side, decisions.clone());
+            }
+            scenario
+                .next_day_watched(sim_core::Staffs::none(), watch)
+                .map_err(|e| e.to_string())?
+                .ok_or_else(|| format!("the scenario has no day {day}"))?
+        };
+        note_staff(&scenario.world, summary.day, &mut staff_handed_in);
         on_day(&summary);
         let now = format!("{:016x}", summary.state_hash);
         let differs = summary.day != *day || &now != hash;
         summaries.push(summary);
+        // A difference in what the staff gives comes first: it is the first
+        // difference, and a hash that differs on the same day is most likely
+        // what it caused.
+        if finding.is_some() {
+            break;
+        }
         if differs {
             return Err(format!(
                 "replay differs on day {day}: saved hash {hash}, replayed hash {now}"
             ));
         }
     }
-    if to_end {
+    if to_end && finding.is_none() {
         while let Some(summary) = scenario
-            .next_day_watched(watch)
+            .next_day_watched(sim_core::Staffs::none(), watch)
             .map_err(|e| e.to_string())?
         {
+            note_staff(&scenario.world, summary.day, &mut staff_handed_in);
             on_day(&summary);
             summaries.push(summary);
         }
@@ -296,9 +422,10 @@ fn execute_saved_watching(
     let executed = Executed {
         scenario,
         summaries,
+        staff_handed_in,
         initial,
     };
-    Ok((executed, saved))
+    Ok((executed, saved, finding))
 }
 
 /// What `events` and `export` take: a scenario file, run with its own
@@ -419,6 +546,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
     let Executed {
         scenario,
         summaries,
+        staff_handed_in,
         initial: _,
     } = execute(scenario_path, seed, options, |scenario| {
         if save_path.is_some() {
@@ -448,6 +576,8 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             scenario.world.seed(),
             &remembered,
             remembered.script(),
+            remembered.commands(),
+            &staff_handed_in,
             &save::script_seats(),
             &hashes,
         )?;
@@ -878,17 +1008,29 @@ fn hash(args: &[String], options: &LoadOptions) -> Result<(), String> {
     Ok(())
 }
 
-/// `sim-cli replay <game.json>`: runs a saved game and compares every day's
-/// hash with the saved one.
+/// `sim-cli replay <game.json> [--check-staff]`: runs a saved game and
+/// compares every day's hash with the saved one. With `--check-staff` it also
+/// asks the doctrine's staff on every day, and stops at the first day and side
+/// where it gives something other than what the game holds.
 fn replay(args: &[String], options: &LoadOptions) -> Result<(), String> {
-    let file = match args {
-        [file] if !file.starts_with('-') => file.as_str(),
-        _ => return Err(format!("replay needs one saved game\n\n{USAGE}")),
-    };
-    execute_saved(
+    let mut file: Option<&str> = None;
+    let mut check_staff = false;
+    for word in args.iter().map(String::as_str) {
+        match word {
+            "--check-staff" => check_staff = true,
+            flag if flag.starts_with('-') => {
+                return Err(format!("unknown option \"{flag}\"\n\n{USAGE}"))
+            }
+            path if file.is_none() => file = Some(path),
+            _ => return Err(format!("replay needs one saved game\n\n{USAGE}")),
+        }
+    }
+    let file = file.ok_or_else(|| format!("replay needs one saved game\n\n{USAGE}"))?;
+    let (_, saved, finding) = execute_saved_checking(
         file,
         options,
         false,
+        check_staff,
         |scenario, saved| {
             println!("{}", scenario.name);
             println!("seed {}", saved.seed);
@@ -907,6 +1049,22 @@ fn replay(args: &[String], options: &LoadOptions) -> Result<(), String> {
             }
         },
         |summary| println!("day {} {:016x}", summary.day, summary.state_hash),
+        &mut |_, _| {},
     )?;
+    if let Some(finding) = finding {
+        return Err(format!(
+            "the staff differs on day {}, {} side: {}",
+            finding.day,
+            finding.side.name().to_lowercase(),
+            finding.what
+        ));
+    }
+    if check_staff {
+        println!(
+            "the staff gave what was saved on every day (doctrine {}, the game was saved under {})",
+            doctrine::DOCTRINE_VERSION,
+            saved.doctrine_version
+        );
+    }
     Ok(())
 }

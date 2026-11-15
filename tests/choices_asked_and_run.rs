@@ -162,7 +162,7 @@ fn compare(
         let mut asked_before: Vec<Option<Answer>> = vec![None; trace.len()];
         let second = scenario
             .world
-            .resolve_day_watched(&mut |world, moment| {
+            .resolve_day_watched(sim_core::Staffs::none(), &mut |world, moment| {
                 if moment == (Moment::DayBegins { day }) {
                     for (i, entry) in trace.iter().enumerate() {
                         asked_before[i] = ask(world, entry);

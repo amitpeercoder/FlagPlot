@@ -6,8 +6,9 @@ Where things are in the repository and which crate may depend on which. Moved ou
 | --- | --- |
 | `crates/sim-core` | State, rules, resolution, event log. No dependencies. No file or network access |
 | `crates/sim-data` | Loads reference data, maps and scenarios from files into `sim-core` types |
-| `crates/sim-cli` | Command-line runner |
+| `crates/sim-cli` | Command-line runner. `src/doctrine.rs` is the one place a runner gets its staffs and the doctrine version (decision 0107) |
 | `crates/sim-agent` | Agent interface: the daily briefing, the list and detail queries, `explain`, `measure`, and the session a seat plays through (`issue_orders`, `end_day`), as JSON with schemas in `schemas/` (decisions 0048 to 0050). Every tool takes a `SideView`; only `session.rs` holds the world. The MCP server that wraps it is in `sim-cli` (decision 0051) |
+| `crates/sim-staff` | Planned, not yet built (decision 0107, step 3, stage 1). The staff and the doctrine for keeping a base supplied. Depends on `sim-core` only. Forbids floating point, as `sim-core` does, because its decisions reach the hash. Every function in it takes a `SideView` and nothing else, and a test reads its source to check. It replaces `sim-cli/src/doctrine.rs` |
 | `crates/map-tool` | Generates the hex map of the slice from open coastline data, and renders it, locates points and finds sea paths. May use floats and its own dependencies. Nothing but the `tests` crate depends on it, as a dev-dependency (scenario 4b's test places the anchors with its projection) |
 | `crates/oob-check` | Checker for the order-of-battle facts in `data/oob`. Depends on nothing else in the workspace |
 | `crates/oob-derive` | Derives ship class figures for a list of real ships from `data/oob` and `data/derivation` (decision 0020). Depends only on `oob-check`; `sim-data` and `sim-core` only in its tests |
@@ -27,6 +28,7 @@ Crate boundaries:
 - Only `sim-data` reads simulation data files. The simulation never reads `data/oob`; only `oob-check` and `oob-derive` do.
 - `sim-cli` and the tests are the umpire. They may read truth through `World::umpire()`.
 - Anything that plays the game (the staff planner, an agent, the UI) gets a `SideView` and nothing else.
+- The staff is passed in. `sim-core` defines the `Staff` trait (given a side's view, it hands in orders, staff commands and reasons) and the function that resolves a day takes each side's staff or none (`Staffs`), so `sim-core` still depends on nothing. Every loop that resolves days passes the staffs it is given: the session, `run`, `batch`, `export`, `hash`, `events`, `time` and `replay --check-staff`. `sim-agent`'s session is handed its staffs by its caller and still depends on `sim-core` only. `sim-cli/src/doctrine.rs` is the one place a runner gets its staffs and the doctrine version (`DOCTRINE_VERSION`, "none" while there is no staff); the `sim-staff` crate replaces it, and the version then lives there (decision 0107).
 - `sim-agent` depends on `sim-core` only. Its library code takes a `SideView` and never the world, the umpire's view or the full event log; a test reads its source to check.
 - The replay viewer (`viewer/`) is an umpire's tool like `sim-cli`: it shows the truth. Nothing that plays the game may use it or the replay files.
 - `sim-cli validate` (`crates/sim-cli/src/validate/`) reads `data/validation` and a batch file, and writes reports under `docs/validation/`. It is the umpire's tool and shows the truth: nothing that plays the game may depend on it or read its reports. A test reads `sim-agent`'s manifest to check.

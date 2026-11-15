@@ -6,6 +6,7 @@
 //! are 16-digit lowercase hex strings. The structs below are serialised in
 //! declaration order, so the same run gives the same bytes.
 
+mod commands;
 mod data;
 mod events;
 mod map;

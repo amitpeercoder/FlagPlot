@@ -569,7 +569,8 @@
         "supply_t",
         "fuel_t",
         "port_size",
-        "airfield_size"
+        "airfield_size",
+        "days_of_supply"
       ],
       "additionalProperties": false,
       "properties": {
@@ -595,7 +596,26 @@
         },
         "works": { "$ref": "#/$defs/base_works" },
         "airfield_damage": { "$ref": "#/$defs/airfield_damage" },
-        "reserves": { "$ref": "#/$defs/base_reserves" }
+        "reserves": { "$ref": "#/$defs/base_reserves" },
+        "days_of_supply": { "$ref": "#/$defs/days_of_supply" }
+      }
+    },
+    "days_of_supply": {
+      "description": "The side's days of supply in the base's hex (decision 0107, 31 to 36): its supply in the hex over its planned use there for a day, read before the day's orders; no figure where nothing is used. It is the side's figure for the hex, so every base of the side in one hex carries the same one. Never given for an enemy base.",
+      "type": "object",
+      "required": ["days", "scope", "stock_t", "planned_use_t", "men_ashore_t", "men_due_t", "aircraft_upkeep_t", "repairs_t", "sorties_t"],
+      "additionalProperties": false,
+      "properties": {
+        "days": { "description": "Stock over planned use, cut at six decimals. Null where the planned use is 0.", "$ref": "#/$defs/dec_or_null" },
+        "scope": { "description": "Says that the figure is the side's for the whole hex.", "type": "string" },
+        "note": { "description": "Present only where days is null: says in words that nothing is planned to be used, so there is no figure.", "type": "string" },
+        "stock_t": { "description": "The supply of all the side's bases in the hex.", "$ref": "#/$defs/dec" },
+        "planned_use_t": { "description": "The five parts that follow, added.", "$ref": "#/$defs/dec" },
+        "men_ashore_t": { "description": "The men's supply for the side's men ashore in the hex.", "$ref": "#/$defs/dec" },
+        "men_due_t": { "description": "The men's supply for men aboard the side's forces ordered to land in the hex that are due, or were due and have not landed.", "$ref": "#/$defs/dec" },
+        "aircraft_upkeep_t": { "description": "The daily upkeep of the side's aircraft at its bases in the hex, ready and damaged.", "$ref": "#/$defs/dec" },
+        "repairs_t": { "description": "The supply of the repairs its bases there would make that night.", "$ref": "#/$defs/dec" },
+        "sorties_t": { "description": "The sorties of its groups there on search or patrol at the day's two daylight pulses; a strike mission counts nothing.", "$ref": "#/$defs/dec" }
       }
     },
     "base_reserves": {

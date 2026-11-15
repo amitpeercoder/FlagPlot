@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::airstrike::StrikeInFlight;
 use crate::belief::BeliefState;
 use crate::choices::{Answer, Moment, Question, Trace, TraceCell, TracedChoice};
+use crate::command::{CommandKind, CommandState, StaffDecisions};
 use crate::events::EventLog;
 use crate::fixed::Fixed;
 use crate::hash;
@@ -179,6 +180,18 @@ pub struct World {
     pub(crate) made_ids: MadeIds,
     /// Orders submitted for the coming day, not yet taken in.
     pub(crate) pending: BTreeMap<Side, Vec<OrderRequest>>,
+    /// Each side's command state (decision 0107): intents, limits, leaves,
+    /// plans and commitments. Hashed after the beliefs.
+    pub(crate) command: BTreeMap<Side, CommandState>,
+    /// The commander's commands handed in for the coming day, not yet taken
+    /// in: taken at the first step of the day.
+    pub(crate) pending_commands: BTreeMap<Side, Vec<CommandKind>>,
+    /// What a staff is to hand in for the coming day without being asked:
+    /// what a replay gives back. Taken in at the step a staff is asked.
+    pub(crate) pending_staff: BTreeMap<Side, StaffDecisions>,
+    /// What each side's staff handed in on the last day resolved, asked or
+    /// given back, for a runner to save. Not state.
+    pub(crate) staff_handed_in: BTreeMap<Side, StaffDecisions>,
     pub(crate) events: EventLog,
     pub(crate) day_hashes: Vec<u64>,
     /// Strikes launched in a pulse's decision step that have not landed yet.
@@ -375,6 +388,13 @@ impl World {
             order_ids: IdAllocator::new(),
             made_ids: MadeIds::new(),
             pending: BTreeMap::new(),
+            command: Side::ALL
+                .into_iter()
+                .map(|side| (side, CommandState::new()))
+                .collect(),
+            pending_commands: BTreeMap::new(),
+            pending_staff: BTreeMap::new(),
+            staff_handed_in: BTreeMap::new(),
             events: EventLog::default(),
             day_hashes: Vec::new(),
             strikes_in_flight: Vec::new(),
@@ -489,6 +509,41 @@ impl World {
         self.pending.entry(side).or_default().extend(requests);
     }
 
+    /// Queues the commander's commands from one side for the coming day
+    /// (decision 0107). They are taken in, or refused, at the first step of
+    /// the next day, in the order handed in.
+    pub fn submit_commands(&mut self, side: Side, commands: Vec<CommandKind>) {
+        self.pending_commands
+            .entry(side)
+            .or_default()
+            .extend(commands);
+    }
+
+    /// Queues what one side's staff hands in for the coming day, without a
+    /// staff being asked: what a replay gives back (decision 0107, 9). It is
+    /// taken in at the step a staff is asked, as if the staff had given it.
+    pub fn submit_staff(&mut self, side: Side, decisions: StaffDecisions) {
+        let pending = self.pending_staff.entry(side).or_default();
+        pending.orders.extend(decisions.orders);
+        pending.commands.extend(decisions.commands);
+        pending.no_orders.extend(decisions.no_orders);
+    }
+
+    /// What each side's staff handed in on the last day resolved, asked or
+    /// given back, by side. A side with no staff that day is not in it. For
+    /// the runner that saves the game: it is not state.
+    pub fn staff_handed_in(&self) -> &BTreeMap<Side, StaffDecisions> {
+        &self.staff_handed_in
+    }
+
+    /// One side's command state, for the umpire, the runner and hashing. A
+    /// side reads its own through [`SideView::command_state`].
+    pub fn command_state(&self, side: Side) -> &CommandState {
+        self.command
+            .get(&side)
+            .expect("both sides have a command state")
+    }
+
     /// What one side is allowed to see. This is what a player, the staff
     /// planner or an agent is given.
     pub fn side_view(&self, side: Side) -> SideView<'_> {
@@ -505,6 +560,7 @@ impl World {
             &self.events,
             &self.orders,
             self.objectives.as_ref(),
+            self.command_state(side),
             PulseScratch {
                 grounded_bases: &self.grounded_bases,
                 field_damage: &self.field_damage,

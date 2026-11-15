@@ -1,0 +1,52 @@
+# Scenario 35b: days of supply, a surge of sorties (decision 0107, 31 to 36).
+#
+# One coast hex, E, with base 5 (Allied, 400 t, an airfield) and air group 1,
+# 20 placeholder fighters. No enemy. The group has no mission until day 3,
+# when it is ordered to patrol; the order is taken in after that day's
+# figure is read, so the surge of its sorties shows on day 4. The hand
+# calculation is in tests/scenario_35_days_of_supply.rs, which runs the
+# scenario on the frozen step 1 figures.
+#
+# The air combat and air supply figures are named and no wear, fatigue or
+# ground figures: aircraft are charged for upkeep and sorties and nothing
+# wears or tires.
+#
+# PLACEHOLDER DATA. The base, air group and map are invented.
+
+name = "Placeholder scenario 35b: Days of supply, a surge of sorties"
+placeholder = true
+seed = 1942
+map = "../map/placeholder_days_of_supply.toml"
+days = 6
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+air_supply = "../reference/air_supply.toml"
+
+[[base]]
+id = 5
+name = "Placeholder base 5"
+side = "allied"
+q = 12
+r = 4
+supply_t = 400
+
+[[air_group]]
+id = 1
+name = "Placeholder fighter group 1"
+side = "allied"
+base = 5
+aircraft_type = 4
+ready = 20
+
+# Day 3: the group is ordered to patrol.
+
+[[order]]
+day = 3
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "combat_air_patrol"
