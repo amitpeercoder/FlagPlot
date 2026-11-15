@@ -60,7 +60,7 @@ It syntax-checks both script blocks of `index.html`, runs the page's own pure fu
 
 ## Shells, bombs and the estimate of the enemy ashore (decision 0092)
 
-The event list shows a shore bombardment (`bombardment_fire`, `shore_bombardment`, a claim with `from_bombardment`), men lost to fire (`men_lost_to_fire`), a ground report (`ground_report_received`) and a base a report found (`base_found`) as any event, in the engine's words; the map does not draw a bombardment. A base's side sees `shore_bombardment` without its `task_force`, and the firing side sees it without its hits. In a version 1 to 3 file the viewer rebuilds each unit's men from `men_lost_to_fire`, and each side's estimates from `ground_report_received`, and `check.js` compares them with `final.ground_estimates` (left out of a replay where no side holds an estimate); a raid's `hits_on_men` is written only when a hit landed on men.
+The event list shows a shore bombardment (`bombardment_fire`, `shore_bombardment`, a claim with `from_bombardment`), men lost to fire (`men_lost_to_fire`), a ground report (`ground_report_received`), a report that a hex is empty (`ground_found_empty`) and a base a report found (`base_found`) as any event, in the engine's words; the map does not draw a bombardment. A base's side sees `shore_bombardment` without its `task_force`, and the firing side sees it without its hits. In a version 1 to 3 file the viewer rebuilds each unit's men from `men_lost_to_fire`, and each side's estimates from `ground_report_received` and `ground_found_empty`, and `check.js` compares them with `final.ground_estimates` (left out of a replay where no side holds an estimate); a raid's `hits_on_men` is written only when a hit landed on men.
 
 ## Cover and fieldworks (decision 0106)
 

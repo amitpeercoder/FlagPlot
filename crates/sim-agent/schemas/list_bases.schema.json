@@ -17,7 +17,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 4
+      "const": 5
     },
     "kind": {
       "const": "list_bases"
@@ -29,6 +29,13 @@
       "type": "array",
       "items": {
         "$ref": "defs.schema.json#/$defs/base_line"
+      }
+    },
+    "shared_hexes": {
+      "description": "Each hex in the area where the side holds more than one base, shown as one place (decision 0110, item 8): the stock of all its bases and the days of supply for the hex, once. The bases are still listed in bases. Left out when no hex holds more than one.",
+      "type": "array",
+      "items": {
+        "$ref": "defs.schema.json#/$defs/shared_hex"
       }
     },
     "enemy_bases": {

@@ -508,7 +508,10 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // `PlanDrafted`, `PlanStateChanged`, `PlanAmended` and `StaffReason`:
     // the full slice states no command and has no staff. The command tests
     // in `sim-core` (`command/tests.rs`) record them, and read them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 72] = [
+    //
+    // The kind of decision 0110, `GroundFoundEmpty`: the frozen copy has no
+    // land unit. Scenario 38 records it, and its own test reads it.
+    const NOT_IN_THE_FULL_SLICE: [&str; 73] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -581,6 +584,7 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "PlanStateChanged",
         "PlanAmended",
         "StaffReason",
+        "GroundFoundEmpty",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

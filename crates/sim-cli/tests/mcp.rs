@@ -1147,6 +1147,103 @@ fn every_recorded_game_replays_to_its_transcript_and_save() {
     }
 }
 
+/// The briefings of the five days of the full slice that a model played
+/// from the Allied seat tell what an Allied commander ashore must be told
+/// (decision 0110, items 1 to 9): the transcript is replayed to the byte by
+/// the test above, so these lines are what the game gives.
+#[test]
+fn the_full_slice_game_tells_a_commander_ashore_what_decision_0110_asks() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/recorded_games/full_slice_five_days_sonnet/transcript.jsonl");
+    let texts: Vec<String> = fs::read_to_string(&path)
+        .expect("the transcript reads")
+        .lines()
+        .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+        .filter_map(|entry| {
+            entry["answer"]["text"]
+                .as_str()
+                .filter(|t| t.starts_with("FLAG PLOT BRIEFING"))
+                .map(str::to_string)
+        })
+        .collect();
+    let all = texts.join("\n");
+    // Item 8: a hex with two bases is one place, with its figure once.
+    assert!(
+        all.contains("- (2,-4) Lunga / Landing at (2,-4): 2 bases of yours, supply "),
+        "no shared hex"
+    );
+    assert!(
+        all.contains("formed by the landing of task_force:9 \"Placeholder transports, Guadalcanal\" on day 1"),
+        "no formed_by"
+    );
+    for text in &texts {
+        // The days of supply for a hex are given once, not once for each base
+        // in it: no two such lines in a briefing are the same.
+        let lines: Vec<&str> = text
+            .lines()
+            .filter(|l| l.contains("Days of supply for the hex: ") && !l.contains("no figure"))
+            .collect();
+        let mut unique = lines.clone();
+        unique.sort_unstable();
+        unique.dedup();
+        assert_eq!(lines.len(), unique.len(), "a hex's figure is given twice");
+    }
+    // Item 1: why the engineers made no work.
+    assert!(
+        all.contains("made no work: its hex was contested by your own side's attack"),
+        "no reason for no work"
+    );
+    // Item 2: the arrivals and the empty groups.
+    assert!(all.contains("empty: waiting for its arrival of 19 aircraft and 19 pilots due day 14"));
+    assert!(all.contains("it cannot be delivered now: the base has no airfield"));
+    assert!(all.contains("it cannot be delivered now: the base is not yet your side's"));
+    // Item 3: the rule of fatigue and the unit's own line.
+    assert!(all.contains("- Fatigue: attack day +20, failed attack +30 more"));
+    assert!(all.contains(
+        "men would fire today at its fatigue; another day of attack would make its fatigue"
+    ));
+    // Item 4: whether the base counts today.
+    assert!(all.contains("Today, if the day ended now: would not count as open: the base is not open: no aircraft ready at it"));
+    // Item 5: a force at a base without fuel can or cannot get home.
+    assert!(all.contains("the passage to its home port base:3 \"Espiritu Santo\""));
+    assert!(all.contains(": it can get there"));
+    // Items 6 and 7: free forces and one line for each landing.
+    assert!(all.contains("- Free: task_force:15 "));
+    assert!(all.contains("- Landing yesterday: task_force:9 "));
+    assert!(!all.contains("Landed yesterday"));
+    assert!(all.contains("finishes in about "));
+    // Item 9: losses name their cause.
+    assert!(all.contains("written off (3 worn out on a patrol sortie)"));
+    // Item 10 and 11: the cleared estimate and the estimate's day.
+    assert!(all.contains("Found empty: your men at (2,-4)"));
+    assert!(all.contains("reported day 3, 0 days old"));
+}
+
+/// The tools' own text says the rule of fatigue (decision 0110, item 3) and
+/// that an estimate of the enemy ashore is cleared when the side's men find
+/// the hex empty (item 11), and no longer that it is never corrected until a
+/// new report replaces it.
+#[test]
+fn the_tools_text_says_the_rule_of_fatigue_and_when_an_estimate_is_cleared() {
+    let tools = out_text(&run(&["play", "--tools", "--game", "x"]));
+    for figure in [
+        "THE RULE OF FATIGUE",
+        "fatigue_per_attack_day",
+        "failed_attack_fatigue",
+        "fatigue_per_march_day",
+        "strain_per_day",
+        "rest_per_day",
+        "attack_fatigue_limit",
+        "Fatigue cuts the men who fire",
+    ] {
+        assert!(tools.contains(figure), "the tools do not say {figure}");
+    }
+    assert!(!tools.contains("never corrected until a new report replaces it"));
+    assert!(!tools.contains("an estimate is never corrected otherwise"));
+    assert!(tools.contains("find no enemy there, which clears it"));
+    assert!(tools.contains("Each carries the day it was reported"));
+}
+
 #[test]
 fn the_recorded_game_harness_passes_a_good_game_and_fails_an_altered_one() {
     let root = temp_dir("recorded");

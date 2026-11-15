@@ -67,6 +67,48 @@ pub struct ObjectiveLine {
     /// What the side knows of its progress, from its own units and the events
     /// it may see.
     pub known: KnownLine,
+    /// For `base_open`: whether today would count, read from the side's own
+    /// facts now (decision 0110, item 4). Left out for every other kind.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub open_now: Option<OpenNow>,
+}
+
+/// Whether a base counts as open at the end of today, from the side's own
+/// facts: supply at the base above 0 and an aircraft of a group at it ready
+/// (`sim_core::events::base_is_open`, the test the umpire counts the day by).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct OpenNow {
+    /// Whether the base is the side's own now. When it is not, nothing
+    /// counts until it is.
+    pub yours: bool,
+    /// For a base of the side's own: the supply at the base now.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub supply_t: Option<Dec>,
+    /// For a base of the side's own: the aircraft ready at the groups at it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aircraft_ready: Option<u32>,
+    /// For a base of the side's own: whether it is open now.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub open: Option<bool>,
+    /// For a base of the side's own: whether today would count for the
+    /// objective as it is worded (open, or with `closed`, shut).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub counts: Option<bool>,
+    /// What is missing for it to be open: `supply`, `aircraft`, or both.
+    /// Left out when it is open.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub missing: Vec<&'static str>,
+    /// The days the side saw this base's day end while it was its own, and
+    /// the days of them that it ended open. Left out when it saw none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub days_seen: Option<OpenDays>,
+}
+
+/// The days of a base's end the side saw (decision 0110, item 4).
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize)]
+pub struct OpenDays {
+    pub days: u32,
+    pub open: u32,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -201,6 +243,7 @@ fn line(
             days: known.days,
             points: known.points.map(Dec),
         },
+        open_now: None,
     };
     match objective {
         Objective::ShipsSunk(points) | Objective::ShipsCrippled(points) => {
@@ -212,14 +255,75 @@ fn line(
         }
         Objective::AircraftDestroyed { points } => line.points = Some(Dec(*points)),
         Objective::CargoLanded { points_per_t, .. } => line.points = Some(Dec(*points_per_t)),
-        Objective::BaseOpen { closed, points, .. } => {
+        Objective::BaseOpen {
+            base,
+            closed,
+            points,
+        } => {
             line.closed = Some(*closed);
             line.points = Some(Dec(*points));
+            line.open_now = Some(open_now(ctx, *base, *closed));
         }
         Objective::BaseHeld { points, .. } => line.points = Some(Dec(*points)),
         Objective::MenLost { points_per_100_men } => line.points = Some(Dec(*points_per_100_men)),
     }
     line
+}
+
+/// Whether the base would count as open today, from the side's own facts.
+fn open_now(ctx: &Ctx<'_>, base_id: sim_core::ids::BaseId, closed: bool) -> OpenNow {
+    use sim_core::events::{base_is_open, EventKind};
+    use sim_core::side_events::SideEventKind;
+    let Some(base) = ctx.bases.get(&base_id) else {
+        return OpenNow {
+            yours: false,
+            supply_t: None,
+            aircraft_ready: None,
+            open: None,
+            counts: None,
+            missing: Vec::new(),
+            days_seen: None,
+        };
+    };
+    let ready: u32 = ctx
+        .groups
+        .values()
+        .filter(|g| g.location == sim_core::state::AirGroupLocation::Base(base_id))
+        .map(|g| g.ready)
+        .sum();
+    let open = base_is_open(base.supply_t, ready);
+    let mut missing = Vec::new();
+    if base.supply_t <= sim_core::fixed::Fixed::ZERO {
+        missing.push("supply");
+    }
+    if ready == 0 {
+        missing.push("aircraft");
+    }
+    let mut seen = OpenDays { days: 0, open: 0 };
+    for event in ctx.view.events() {
+        if let SideEventKind::Whole(EventKind::BaseAtDayEnd {
+            base,
+            supply_t,
+            aircraft_ready,
+        }) = &event.kind
+        {
+            if *base == base_id {
+                seen.days += 1;
+                if base_is_open(*supply_t, *aircraft_ready) {
+                    seen.open += 1;
+                }
+            }
+        }
+    }
+    OpenNow {
+        yours: true,
+        supply_t: Some(Dec(base.supply_t)),
+        aircraft_ready: Some(ready),
+        open: Some(open),
+        counts: Some(open != closed),
+        missing,
+        days_seen: (seen.days > 0).then_some(seen),
+    }
 }
 
 /// The part for one side's view. The side's own mission and objectives only.

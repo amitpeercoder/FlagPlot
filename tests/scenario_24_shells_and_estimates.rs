@@ -153,8 +153,14 @@
 //! with its men times 100 less its fatigue over 100, cut, as firing men
 //! (fatigue 20, then 40, then 60 before the fights of days 2, 3 and 4), and
 //! each side's estimate is replaced by a new report within the same bounds
-//! of that day's truth. On a day unit 3 has no man left there is no fight
-//! and no report, and each side keeps the estimate it had, with its day.
+//! of that day's truth. On a day unit 3 has no man left at the end of it
+//! there is no ground report, and from the next day no fight. The Japanese
+//! side, with no man at Y, keeps the estimate it had, with its day. The
+//! Allied side's men find the hex empty (decision 0110, item 10; restated by
+//! the architect on Nov 15, 2026): on the day unit 3 loses its last man the
+//! Allied side is given one report that its men find no enemy, which names
+//! the men and the day of the estimate it held, and that estimate is
+//! cleared. It holds none at Y afterwards and no further report is made.
 //!
 //! If unit 3 is destroyed on day 1, no report is made at Y that day: the
 //! Japanese side keeps its estimate of 300, the Allied side has none and
@@ -1446,17 +1452,49 @@ fn check_y(run: &Run) {
                 assert!(found.is_empty(), "day {day}: base 3 is found once");
             }
         } else {
-            // No fight is needed and no report is made: each side keeps the
-            // estimate it had, with its day.
+            // No ground report is made. A side with men at Y where the enemy
+            // has none, holding an estimate, is told its men find the hex
+            // empty and the estimate is cleared (decision 0110, item 10); a
+            // side with no man there keeps the estimate it had, with its day.
             assert!(reports.is_empty(), "day {day}: no report");
             for (index, side) in [Side::Allied, Side::Japanese].into_iter().enumerate() {
+                let (own, enemy) = match side {
+                    Side::Allied => (a1, j1),
+                    Side::Japanese => (j1, a1),
+                };
+                let empties: Vec<(u32, u32)> = day_events
+                    .iter()
+                    .filter_map(|e| match &e.kind {
+                        EventKind::GroundFoundEmpty {
+                            side: s,
+                            hex,
+                            men,
+                            reported_day,
+                        } if *s == side && *hex == Y => Some((*men, *reported_day)),
+                        _ => None,
+                    })
+                    .collect();
                 let held = run
                     .belief(day, side)
                     .estimates
                     .iter()
                     .find(|e| e.hex == Y)
                     .copied();
-                assert_eq!(held, last[index], "day {day} {side:?} keeps its estimate");
+                match last[index] {
+                    Some(before) if own > 0 && enemy == 0 => {
+                        assert_eq!(
+                            empties,
+                            vec![(before.men, before.day)],
+                            "day {day} {side:?} finds the hex empty"
+                        );
+                        assert_eq!(held, None, "day {day} {side:?}: the estimate is cleared");
+                        last[index] = None;
+                    }
+                    _ => {
+                        assert!(empties.is_empty(), "day {day} {side:?}: no empty report");
+                        assert_eq!(held, last[index], "day {day} {side:?} keeps its estimate");
+                    }
+                }
             }
         }
 
@@ -1574,7 +1612,7 @@ fn y_an_attack_on_an_estimate_of_300_finds_3000_and_fails() {
 }
 
 #[test]
-fn y_on_a_day_unit_3_is_gone_there_is_no_fight_and_no_report() {
+fn y_on_a_day_unit_3_is_gone_there_is_no_fight_and_the_hex_is_found_empty() {
     // Seed 1942 destroys unit 3 on day 3 (the run in the architect's
     // reference); the test reads it from the run and does not require it.
     let run = Run::of(load());
@@ -1592,21 +1630,34 @@ fn y_on_a_day_unit_3_is_gone_there_is_no_fight_and_no_report() {
                     | EventKind::GroundReportReceived { .. }
             )));
     }
-    // On the day it is destroyed in the fight there is no report either, and
-    // the estimates are the last ones, with their days.
+    // On the day it is destroyed in the fight there is no ground report
+    // either. The Japanese side keeps its last estimate, with its day.
     assert!(!events
         .iter()
         .any(|e| e.day == gone && matches!(e.kind, EventKind::GroundReportReceived { .. })));
-    for side in [Side::Allied, Side::Japanese] {
-        let held = run.belief(run.len(), side).estimates[0];
-        assert_eq!(
-            held.day,
-            gone - 1,
-            "{side:?} keeps the estimate of day {}",
-            gone - 1
-        );
-        assert_eq!(held, run.belief(gone - 1, side).estimates[0]);
-    }
+    let japanese = run.belief(run.len(), Side::Japanese).estimates[0];
+    assert_eq!(
+        japanese.day,
+        gone - 1,
+        "the Japanese side keeps the estimate of day {}",
+        gone - 1
+    );
+    assert_eq!(japanese, run.belief(gone - 1, Side::Japanese).estimates[0]);
+    // The Allied side's men find the hex empty on that day, once, and its
+    // estimate of the day before is cleared (decision 0110, item 10).
+    let before = run.belief(gone - 1, Side::Allied).estimates[0];
+    let empties: Vec<&Event> = events
+        .iter()
+        .filter(|e| matches!(e.kind, EventKind::GroundFoundEmpty { .. }))
+        .collect();
+    assert_eq!(empties.len(), 1, "one empty report in the game");
+    assert_eq!(empties[0].day, gone);
+    assert!(matches!(
+        empties[0].kind,
+        EventKind::GroundFoundEmpty { side: Side::Allied, hex, men, reported_day }
+            if hex == Y && men == before.men && reported_day == before.day
+    ));
+    assert!(run.belief(run.len(), Side::Allied).estimates.is_empty());
     // Base 2 is Allied at the end.
     assert_eq!(run.at(run.len()).bases[&BaseId::new(2)].side, Side::Allied);
 }

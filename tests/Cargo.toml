@@ -274,6 +274,10 @@ name = "scenario_37_men_falling_back"
 path = "scenario_37_men_falling_back.rs"
 
 [[test]]
+name = "scenario_38_an_empty_hex"
+path = "scenario_38_an_empty_hex.rs"
+
+[[test]]
 name = "scenario_39_load_reserve_and_forces"
 path = "scenario_39_load_reserve_and_forces.rs"
 

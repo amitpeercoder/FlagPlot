@@ -1196,6 +1196,10 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // 0092, 19), and the enemy base its report found (decision 15).
         EventKind::GroundReportReceived { side: owner, .. }
         | EventKind::BaseFound { side: owner, .. } => whole_if(*owner == side),
+        // A side's report that its men found a hex empty, and the estimate
+        // it cleared: seen whole by its own side, not at all by the other
+        // (decision 0110, item 10).
+        EventKind::GroundFoundEmpty { side: owner, .. } => whole_if(*owner == side),
         // A side sees its own marches whole: each day marched, the arrival,
         // the supply carried and a base formed, and a march stopped. The
         // enemy sees nothing of them (decision 0094, 11).
@@ -1393,6 +1397,7 @@ fn side_breakdown(kind: &SideEventKind, breakdown: &Option<Breakdown>) -> Option
     if matches!(
         kind,
         SideEventKind::Whole(EventKind::GroundReportReceived { .. })
+            | SideEventKind::Whole(EventKind::GroundFoundEmpty { .. })
     ) {
         return None;
     }
@@ -1560,6 +1565,7 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::ShoreBombardment { .. }
             | EventKind::MenLostToFire { .. }
             | EventKind::GroundReportReceived { .. }
+            | EventKind::GroundFoundEmpty { .. }
             | EventKind::BaseFound { .. }
             | EventKind::MarchDay { .. }
             | EventKind::MarchBaseFormed { .. }
@@ -1751,6 +1757,7 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::ShoreBombardment { .. }
         | EventKind::MenLostToFire { .. }
         | EventKind::GroundReportReceived { .. }
+        | EventKind::GroundFoundEmpty { .. }
         | EventKind::BaseFound { .. }
         | EventKind::MarchDay { .. }
         | EventKind::MarchBaseFormed { .. }
@@ -2086,6 +2093,7 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::ShoreBombardment { .. }
             | EventKind::MenLostToFire { .. }
             | EventKind::GroundReportReceived { .. }
+            | EventKind::GroundFoundEmpty { .. }
             | EventKind::BaseFound { .. }
             | EventKind::MarchDay { .. }
             | EventKind::MarchBaseFormed { .. }
@@ -2304,6 +2312,9 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::MenLostToFire { .. }
         | EventKind::GroundReportReceived { .. }
         | EventKind::BaseFound { .. }
+        // A report that a hex is empty cites the side's own estimate and
+        // the day's fight, both of which the side is given (decision 0110).
+        | EventKind::GroundFoundEmpty { .. }
         // A march cites only the side's own order, its own march and its own
         // bases' supply (decision 0094).
         | EventKind::MarchDay { .. }
@@ -2584,6 +2595,7 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::ShoreBombardment { .. }
                     | EventKind::MenLostToFire { .. }
                     | EventKind::GroundReportReceived { .. }
+                    | EventKind::GroundFoundEmpty { .. }
                     | EventKind::BaseFound { .. }
                     | EventKind::MarchDay { .. }
                     | EventKind::MarchBaseFormed { .. }
@@ -3915,6 +3927,16 @@ mod tests {
                 Nothing,
             )),
             sided(row(
+                EventKind::GroundFoundEmpty {
+                    side: Side::Allied,
+                    hex: hex(),
+                    men: 640,
+                    reported_day: 3,
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
                 EventKind::BaseFound {
                     side: Side::Allied,
                     base: base(2),
@@ -4384,7 +4406,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 134, "the log has 134 kinds of event");
+        assert_eq!(all.len(), 135, "the log has 135 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

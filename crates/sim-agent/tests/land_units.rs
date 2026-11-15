@@ -351,7 +351,7 @@ fn the_briefing_reads_the_landing_and_the_days_of_supply() {
     play_until(&mut session, &script, 3);
     let day3 = text_of(&mut session, Side::Allied);
     for expected in [
-        "Landed yesterday: 320 men of land_unit:1",
+        "Landing yesterday: task_force:1 \"Placeholder landing convoy\" at (8,0) Landing at (8,0) put ashore 1000 men, 14 t supply and 0 t fuel; 0 men aboard, 0 t supply and 0 t fuel; finished",
         "Base formed yesterday: base:2",
         "Fed last night: 275 men ashore at (10,0): none fed, no base of the side in the hex, 275 unfed",
         "Men lost yesterday: land_unit:3 \"Placeholder battalion 3\" lost 13 men unfed",

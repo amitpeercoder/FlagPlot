@@ -142,13 +142,17 @@ fn a_force_that_can_move_has_no_propulsion_warning() {
 #[test]
 fn an_arrival_due_on_a_day_is_listed_that_day_and_has_arrived_the_day_after() {
     let mut s = allied("07_full_slice.toml", 1942);
-    // The briefing lists arrivals due on the coming day and the next two:
-    // day 8 is the first that lists day 10.
+    // The briefing lists every arrival still due (decision 0110, item 2),
+    // with the base the group is at and whether it can be delivered now.
     end_days(&mut s, 7);
     let text = text_of(&mut s);
+    let due = text
+        .lines()
+        .find(|l| l.starts_with("- Due day 10: air_group:3 \"VMF-224\" at base:"))
+        .unwrap_or_else(|| panic!("{text}"));
     assert!(
-        text.contains("- Due day 10: air_group:3 \"VMF-224\", 19 aircraft, 19 pilots, arriving in the night pulse that begins that day, before its morning"),
-        "{text}"
+        due.contains(", 19 aircraft, 19 pilots, arriving in the night pulse that begins that day, before its morning; it can be delivered now"),
+        "{due}"
     );
     let ready = |text: &str| {
         text.lines()

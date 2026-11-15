@@ -162,6 +162,17 @@
         "fieldworks": { "description": "The fieldworks the unit has dug where it stands, 0 to the ground figure fieldworks_limit (decision 0106, 5). Left out when 0. Shown for the side's own units only.", "$ref": "#/$defs/dec" },
         "cover": { "description": "The unit's cover, 0 to 100 (decision 0106, 1): the higher of its fieldworks and the defences of its side's lowest-numbered base in its hex, and 0 while it marches or is on attack. It saves men from bombs and shells and in the fight. Left out when 0. Shown for the side's own units only.", "$ref": "#/$defs/dec" },
         "fed_share": { "description": "The share of the unit's men fed at the last night's charge, 0 to 1 (decision 0090, 8): 1 until the first night and for a unit with no man ashore at the charge.", "$ref": "#/$defs/dec" },
+        "firing_men_now": { "description": "For a fighting unit with men ashore (decision 0110, item 3): the men who would fire if it fought now, its men ashore cut by its fed share and its fatigue. Left out for a working unit and a unit with no man ashore.", "type": "integer" },
+        "after_another_attack_day": {
+          "description": "For the same units (decision 0110, item 3): what one more day of attack would make the unit's fatigue.",
+          "type": "object",
+          "required": ["fatigue", "stops_attacking"],
+          "additionalProperties": false,
+          "properties": {
+            "fatigue": { "description": "Its fatigue now plus a day of attack, no more than 100; a march, a failed attack and strain would add to it.", "$ref": "#/$defs/dec" },
+            "stops_attacking": { "description": "True when that is above the level at which a unit on attack goes back to defend.", "type": "boolean" }
+          }
+        },
         "posture_order": { "description": "The number of the side's standing posture order, when one is in force. Left out otherwise.", "type": "integer" },
         "when_spent": { "description": "What the unit does when its attack is spent, as its standing attack order says (decision 0105, 6): hold or fall_back. Left out when the order gave none. Shown for the side's own units only.", "enum": ["hold", "fall_back"] },
         "march": {
@@ -511,6 +522,19 @@
           "description": "Given (true) only for a group that a rebase order moved to its present base on the day just resolved (decision 0091): it flew nothing on that day, and its aircraft were on the ground at this base. Left out otherwise.",
           "const": true
         },
+        "awaiting_arrival": {
+          "description": "Given only for a group with no aircraft that has an arrival still to come (decision 0110, item 2): the earliest, with what holds it. Left out otherwise.",
+          "type": "object",
+          "required": ["day", "aircraft", "pilots", "held_past_day"],
+          "additionalProperties": false,
+          "properties": {
+            "day": { "type": "integer" },
+            "aircraft": { "type": "integer" },
+            "pilots": { "type": "integer" },
+            "held_past_day": { "description": "True for an arrival past its day that was held back.", "type": "boolean" },
+            "waits_for": { "$ref": "#/$defs/arrival_waits" }
+          }
+        },
         "kept_on_ground_by_field": {
           "description": "Given only for a group at a base whose airfield is damaged (decision 4 of 0103), when the field keeps at least one of the group's crewed aircraft on the ground: how many, and the field's damage. The field lets 100 less the damage, over 100, of the group's crewed aircraft fly. Left out otherwise.",
           "type": "object",
@@ -569,8 +593,7 @@
         "supply_t",
         "fuel_t",
         "port_size",
-        "airfield_size",
-        "days_of_supply"
+        "airfield_size"
       ],
       "additionalProperties": false,
       "properties": {
@@ -597,7 +620,49 @@
         "works": { "$ref": "#/$defs/base_works" },
         "airfield_damage": { "$ref": "#/$defs/airfield_damage" },
         "reserves": { "$ref": "#/$defs/base_reserves" },
+        "days_of_supply": {
+          "description": "The side's days of supply in the base's hex. Left out for a base in a hex where the side holds more than one base (decision 0110, item 8): the hex's figure is then in shared_hexes, once.",
+          "$ref": "#/$defs/days_of_supply"
+        },
+        "formed_by": {
+          "description": "Given when a landing or a march formed the base (decision 0110, item 8). Left out for a base that was there at the start.",
+          "$ref": "#/$defs/base_formed_by"
+        }
+      }
+    },
+    "base_formed_by": {
+      "type": "object",
+      "required": ["how", "by", "day", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "how": { "enum": ["landing", "march"] },
+        "by": { "description": "The force that landed, or the unit that marched.", "$ref": "#/$defs/handle" },
+        "day": { "type": "integer" },
+        "event": { "type": "integer" }
+      }
+    },
+    "shared_hex": {
+      "description": "A hex where the side holds more than one base, shown as one place (decision 0110, item 8): the stock of all its bases together and the days of supply for the hex. They are still separate bases, each listed with its own lines.",
+      "type": "object",
+      "required": ["place", "bases", "supply_t", "fuel_t", "days_of_supply"],
+      "additionalProperties": false,
+      "properties": {
+        "place": { "$ref": "#/$defs/place" },
+        "bases": { "type": "array", "items": { "$ref": "#/$defs/handle" } },
+        "supply_t": { "$ref": "#/$defs/dec" },
+        "fuel_t": { "$ref": "#/$defs/dec" },
         "days_of_supply": { "$ref": "#/$defs/days_of_supply" }
+      }
+    },
+    "arrival_waits": {
+      "description": "What an arrival waits for at a base that takes no aircraft (decision 0103, 5, and decision 0110, item 2).",
+      "type": "object",
+      "required": ["reason"],
+      "additionalProperties": false,
+      "properties": {
+        "reason": { "enum": ["base_not_yours", "no_airfield", "airfield_damage"] },
+        "damage": { "description": "For airfield_damage: the field's damage.", "$ref": "#/$defs/dec" },
+        "refused_at": { "description": "For airfield_damage: the damage at or above which the field takes no aircraft.", "$ref": "#/$defs/dec" }
       }
     },
     "days_of_supply": {
@@ -629,7 +694,7 @@
       }
     },
     "ground_estimate_line": {
-      "description": "The side's estimate of the enemy's men ashore in one hex (decision 0092): the count of the last ground report there, which can be wrong by up to half either way, never aged and never corrected until a new report replaces it. day is the day it was reported (0 for an opening estimate) and age_days the days from then to the last day resolved. The true count and the error of the report are never given.",
+      "description": "The side's estimate of the enemy's men ashore in one hex (decision 0092): the count of the last ground report there, which can be wrong by up to half either way, never aged and never corrected until a new report replaces it or the side's fighting men find the hex empty (decision 0110, item 10). day is the day it was reported (0 for an opening estimate) and age_days the days from then to the last day resolved. The true count and the error of the report are never given.",
       "type": "object",
       "required": ["place", "men", "day", "age_days", "event"],
       "additionalProperties": false,
@@ -692,7 +757,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 4
+          "const": 5
         },
         "kind": {
           "const": "not_known"

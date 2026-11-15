@@ -8,7 +8,10 @@
 //! fixed words contain no digits, so every number in the text comes from the
 //! data.
 
-use crate::briefing::{BaseChangesPart, Briefing, EnemyAshorePart, LandUnitsPart, StrikeReport};
+use crate::briefing::{
+    BaseChangesPart, Briefing, BriefingBase, EnemyAshorePart, LandUnitsPart, Rules, SharedHexLine,
+    StrikeReport,
+};
 use crate::common::{Handle, Place};
 use crate::objectives::{ObjectiveLine, ResultPart, ShipKindPoints};
 
@@ -441,7 +444,24 @@ impl Briefing {
                 causes.push(format!("{} destroyed on the ground", x.destroyed_on_ground));
             }
             if x.written_off > 0 {
-                causes.push(format!("{} written off", x.written_off));
+                let why: Vec<String> = x
+                    .written_off_by
+                    .iter()
+                    .map(|w| match (w.cause, w.sortie, &w.base) {
+                        ("wear", Some(sortie), _) => {
+                            format!("{} worn out on a {sortie} sortie", w.aircraft)
+                        }
+                        ("rebase", _, Some(base)) => {
+                            format!("{} left damaged at {} by a rebase", w.aircraft, base.text())
+                        }
+                        _ => format!("{} for another cause", w.aircraft),
+                    })
+                    .collect();
+                causes.push(format!(
+                    "{} written off ({})",
+                    x.written_off,
+                    why.join(", ")
+                ));
             }
             if x.lost_with_ship > 0 {
                 causes.push(format!("{} lost with their ship", x.lost_with_ship));
@@ -621,6 +641,37 @@ impl Briefing {
                     range
                 ));
             }
+        }
+
+        for f in &self.free_forces {
+            let carries = if f.carries_supply_t.0.is_zero()
+                && f.carries_fuel_t.0.is_zero()
+                && f.carries_men == 0
+            {
+                "nothing".to_string()
+            } else {
+                format!(
+                    "{} t supply, {} t fuel and {}",
+                    f.carries_supply_t.0,
+                    f.carries_fuel_t.0,
+                    plural(f.carries_men, "man", "men")
+                )
+            };
+            let place = match &f.base {
+                Some(base) => base.text(),
+                None => at(&f.place),
+            };
+            o.line(format!(
+                "Free: {} has finished {} at {}; it still carries {carries}{}",
+                f.task_force.text(),
+                if f.finished == "loading" {
+                    "loading"
+                } else {
+                    "unloading"
+                },
+                place,
+                f.event.map_or(String::new(), ev)
+            ));
         }
 
         if !self.away_at_yard.is_empty() {
@@ -820,6 +871,19 @@ impl Briefing {
                     k.aircraft, k.damage.0
                 ));
             }
+            if let Some(a) = &g.awaiting_arrival {
+                s.push_str(&format!(
+                    ", empty: {}",
+                    awaiting_text(
+                        a.aircraft,
+                        a.pilots,
+                        g.pilots.is_some(),
+                        a.day,
+                        a.held_past_day,
+                        &a.waits_for
+                    )
+                ));
+            }
             if let Some(w) = &g.would_strike {
                 s.push_str(&format!(
                     ", would strike {} now ({}, {} miles)",
@@ -843,182 +907,23 @@ impl Briefing {
         if self.bases.is_empty() {
             o.line("Bases: none".to_string());
         }
+        let mut shown: std::collections::BTreeSet<(i32, i32)> = std::collections::BTreeSet::new();
         for b in &self.bases {
-            let stocks = |o: &mut Out| {
-                let Some(stocks) = &b.stocks_yesterday else {
-                    return;
-                };
-                if let (true, Some(s)) = (rules.supply, &stocks.supply) {
-                    let causes = causes_text(&[
-                        ("landed", s.landed_t.0),
-                        ("loaded onto ships", s.loaded_onto_ships_t.0),
-                        ("sorties and upkeep", s.sorties_and_upkeep_t.0),
-                        ("repairs", s.repairs_t.0),
-                        (
-                            "feeding men ashore",
-                            s.men_fed_t.map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
-                        ),
-                        ("destroyed by raids", s.destroyed_by_raids_t.0),
-                        (
-                            "taken by marching units",
-                            s.taken_by_marches_t
-                                .map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
-                        ),
-                        (
-                            "brought by marching units",
-                            s.arrived_with_marches_t
-                                .map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
-                        ),
-                    ]);
-                    o.sub(format!(
-                        "Stocks yesterday: supply {} t to {} t ({causes})",
-                        s.start_t.0, s.end_t.0
-                    ));
-                }
-                if let Some(f) = &stocks.fuel {
-                    let causes = causes_text(&[
-                        ("landed", f.landed_t.0),
-                        ("loaded onto ships", f.loaded_onto_ships_t.0),
-                        ("refuelling ships", f.refuelling_ships_t.0),
-                    ]);
-                    o.sub(format!(
-                        "Stocks yesterday: fuel {} t to {} t ({causes})",
-                        f.start_t.0, f.end_t.0
-                    ));
-                }
-            };
-            if rules.supply {
-                o.line(format!(
-                    "{} at {}: supply {} t, fuel {} t (for ships; aircraft do not use it)",
-                    b.base.text(),
-                    b.place.coords(),
-                    b.supply_t.0,
-                    b.fuel_t.0
-                ));
-                let lasts = match b.days_of_supply {
-                    Some(d) => format!("supply lasts {} days at yesterday's spending", d.0),
-                    None => "no spending yesterday".to_string(),
-                };
-                o.sub(format!(
-                    "Yesterday: {} t supply spent, {} t destroyed; {}",
-                    b.spent_yesterday_t.0, b.destroyed_yesterday_t.0, lasts
-                ));
-                o.sub(planned_days_text(&b.planned_days_of_supply));
-            } else {
-                o.line(format!(
-                    "{} at {}: fuel {} t (for ships; aircraft do not use it)",
-                    b.base.text(),
-                    b.place.coords(),
-                    b.fuel_t.0
-                ));
-            }
-            stocks(&mut o);
-            if let Some(w) = &b.works {
-                let airfield = match (w.airfield, &w.airfield_work_needed) {
-                    (false, Some(needed)) => {
-                        format!(
-                            "no airfield, {} of {} work done",
-                            w.airfield_work.0, needed.0
-                        )
+            let key = (b.place.q, b.place.r);
+            match self
+                .shared_hexes
+                .iter()
+                .find(|h| (h.place.q, h.place.r) == key)
+            {
+                None => base_text(&mut o, b, rules, false),
+                Some(hex) => {
+                    if !shown.insert(key) {
+                        continue;
                     }
-                    (false, None) => format!("no airfield, {} work done", w.airfield_work.0),
-                    (true, _) => "an airfield".to_string(),
-                };
-                o.sub(format!(
-                    "Works: {airfield}; defences {} ({}); yesterday's work on the port {}, on the aircraft {}",
-                    w.defences.0, w.grade, w.port_work_yesterday.0, w.aircraft_work_yesterday.0
-                ));
-            }
-            if let Some(r) = &b.reserves {
-                o.sub(format!(
-                    "Reserves: {} t supply, {} t fuel (refuelling and the staff's loads never take a stock below its reserve; your own load order may)",
-                    r.supply_reserve_t.0, r.fuel_reserve_t.0
-                ));
-            }
-            if !b.ships_in_port.is_empty() {
-                o.sub(format!(
-                    "In port in no force: {} (form_task_force takes ships from here)",
-                    names(&b.ships_in_port)
-                ));
-            }
-            if let Some(d) = &b.airfield_damage {
-                let level = match (d.takes_aircraft, &d.refused_at) {
-                    (true, Some(at)) => format!(
-                        "it takes aircraft; at damage {} or more it takes none",
-                        at.0
-                    ),
-                    (true, None) => "it takes aircraft".to_string(),
-                    (false, Some(at)) => format!(
-                        "it takes no aircraft (damage {} or more): rebases to it are refused, aircraft with no deck land elsewhere and arrivals wait until the damage is below {}",
-                        at.0, at.0
-                    ),
-                    (false, None) => "it takes no aircraft".to_string(),
-                };
-                o.sub(format!(
-                    "Airfield damage {}: {} of every 100 aircraft may fly; {}",
-                    d.damage.0, d.share_that_flies.0, level
-                ));
-            }
-            if let Some(y) = &b.airfield_yesterday {
-                for a in &y.damaged {
-                    o.sub(format!(
-                        "Airfield hit yesterday: {} hit{} on the airfield, damage {}{}",
-                        a.hits,
-                        if a.hits == 1 { "" } else { "s" },
-                        a.damage.0,
-                        ev(a.event)
-                    ));
-                }
-                for a in &y.mended {
-                    o.sub(format!(
-                        "Airfield mended yesterday: {} mended {} points of damage, damage {}{}",
-                        a.land_unit.text(),
-                        a.points.0,
-                        a.damage.0,
-                        ev(a.event)
-                    ));
-                }
-                for a in &y.arrivals_waiting {
-                    o.sub(format!(
-                        "Arrival held back yesterday: {} aircraft due at {} wait, the airfield's damage {} takes no aircraft{}",
-                        a.aircraft,
-                        a.air_group.text(),
-                        a.damage.0,
-                        ev(a.event)
-                    ));
-                }
-            }
-            for r in &b.returned_yesterday {
-                o.sub(format!(
-                    "Returned yesterday from the yard: {} with {}{}",
-                    r.task_force.text(),
-                    names(&r.ships),
-                    ev(r.event)
-                ));
-            }
-            if !b.repaired_yesterday.is_empty() {
-                o.sub("Ships repaired yesterday:".to_string());
-                for r in &b.repaired_yesterday {
-                    let left = |label: &str, list: &[&'static str]| -> String {
-                        if list.is_empty() {
-                            String::new()
-                        } else {
-                            let words: Vec<String> = list.iter().map(|w| plain(w)).collect();
-                            format!(", {label} {}", words.join(", "))
-                        }
-                    };
-                    o.0.push_str("    - ");
-                    o.0.push_str(&format!(
-                        "{}: {} points, fire damage {}, flotation damage {}{}{}{}{}\n",
-                        r.ship.text(),
-                        r.points.0,
-                        r.fire_damage.0,
-                        r.flotation_damage.0,
-                        left("restored:", &r.restored),
-                        left("still degraded:", &r.systems_degraded),
-                        left("still out:", &r.systems_out),
-                        ev(r.event)
-                    ));
+                    shared_hex_text(&mut o, hex, rules);
+                    for under in self.bases.iter().filter(|u| (u.place.q, u.place.r) == key) {
+                        base_text(&mut o, under, rules, true);
+                    }
                 }
             }
         }
@@ -1032,19 +937,28 @@ impl Briefing {
         }
 
         o.heading("ARRIVALS");
-        o.each(
-            "Arrivals due on the coming day and the next two days",
-            &self.arrivals.due,
-            |x| {
-                format!(
-                    "Due day {}: {}, {} aircraft, {} pilots, arriving in the night pulse that begins that day, before its morning",
-                    x.day,
-                    x.air_group.text(),
-                    x.aircraft,
-                    x.pilots
-                )
-            },
-        );
+        o.each("Arrivals still due", &self.arrivals.due, |x| {
+            let at = x
+                .at
+                .as_ref()
+                .map_or(String::new(), |h| format!(" at {}", h.text()));
+            let state = match (&x.waits_for, x.held_past_day) {
+                (None, _) => "it can be delivered now".to_string(),
+                (Some(w), true) => format!("held past its day by: {}", waits_text_arrival(w)),
+                (Some(w), false) => format!(
+                    "it cannot be delivered now: {}",
+                    waits_text_arrival(w)
+                ),
+            };
+            format!(
+                "{} {}: {}{at}, {} aircraft, {} pilots, arriving in the night pulse that begins that day, before its morning; {state}",
+                "Due day",
+                x.day,
+                x.air_group.text(),
+                x.aircraft,
+                x.pilots
+            )
+        });
         o.each("Replacements", &self.arrivals.replacements, |x| {
             format!(
                 "Replacements: {} receives {} {} aircraft and {} pilots a day",
@@ -1095,10 +1009,57 @@ impl Briefing {
             "Bases without fuel and a force stopped there",
             &w.base_without_fuel_with_force,
             |x| {
+                let bases = if x.other_bases.is_empty() {
+                    x.base.text()
+                } else {
+                    format!("{} and {}", x.base.text(), names(&x.other_bases))
+                };
+                let have = match &x.least_fuelled {
+                    Some(f) => format!(
+                        "its least fuelled ship {} has {} t",
+                        f.ship.text(),
+                        f.fuel_t.0
+                    ),
+                    None => "it has no ship afloat".to_string(),
+                };
+                let home = match &x.home_passage {
+                    None => "it has no home port of yours to go to".to_string(),
+                    Some(h) => match (h.outcome, h.needs_t, h.steamed_nm) {
+                        ("arrives", Some(needs), _) => format!(
+                            "the passage to its home port {}, {} miles, needs {} t: it can get there",
+                            h.port.text(),
+                            h.route_nm.0,
+                            needs.0
+                        ),
+                        ("arrives", None, _) => format!(
+                            "the passage to its home port {}, {} miles: it can get there",
+                            h.port.text(),
+                            h.route_nm.0
+                        ),
+                        ("runs_out_of_fuel", _, steamed) => format!(
+                            "the passage to its home port {}, {} miles, runs a ship dry after {} miles: it cannot get there",
+                            h.port.text(),
+                            h.route_nm.0,
+                            steamed.map_or(String::new(), |d| d.0.to_string())
+                        ),
+                        ("already_there", _, _) => format!(
+                            "its home port {} is where it lies",
+                            h.port.text()
+                        ),
+                        ("cannot_move", _, _) => format!(
+                            "its passage to its home port {} cannot be made: the force cannot move",
+                            h.port.text()
+                        ),
+                        _ => format!(
+                            "no passage to its home port {} can be made",
+                            h.port.text()
+                        ),
+                    },
+                };
                 format!(
-                    "No fuel: {} has no fuel and {} stopped there",
-                    x.base.text(),
-                    names(&x.task_forces)
+                    "No fuel: {bases} {} no fuel and {} is stopped there; {have}; {home}",
+                    if x.other_bases.is_empty() { "has" } else { "have" },
+                    x.task_force.text()
                 )
             },
         );
@@ -1208,16 +1169,259 @@ impl Briefing {
     }
 }
 
+/// One base of the BASES part. A base under a hex held by more than one is
+/// `nested`: its lines go one step further in, under the hex's own.
+fn base_text(o: &mut Out, b: &BriefingBase, rules: Rules, nested: bool) {
+    let top = |o: &mut Out, text: String| {
+        if nested {
+            o.sub(text)
+        } else {
+            o.line(text)
+        }
+    };
+    let sub = |o: &mut Out, text: String| {
+        if nested {
+            o.sub_sub(text)
+        } else {
+            o.sub(text)
+        }
+    };
+    let stocks = |o: &mut Out| {
+        let Some(stocks) = &b.stocks_yesterday else {
+            return;
+        };
+        if let (true, Some(s)) = (rules.supply, &stocks.supply) {
+            let causes = causes_text(&[
+                ("landed", s.landed_t.0),
+                ("loaded onto ships", s.loaded_onto_ships_t.0),
+                ("sorties and upkeep", s.sorties_and_upkeep_t.0),
+                ("repairs", s.repairs_t.0),
+                (
+                    "feeding men ashore",
+                    s.men_fed_t.map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
+                ),
+                ("destroyed by raids", s.destroyed_by_raids_t.0),
+                (
+                    "taken by marching units",
+                    s.taken_by_marches_t
+                        .map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
+                ),
+                (
+                    "brought by marching units",
+                    s.arrived_with_marches_t
+                        .map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
+                ),
+            ]);
+            sub(
+                o,
+                format!(
+                    "Stocks yesterday: supply {} t to {} t ({causes})",
+                    s.start_t.0, s.end_t.0
+                ),
+            );
+        }
+        if let Some(f) = &stocks.fuel {
+            let causes = causes_text(&[
+                ("landed", f.landed_t.0),
+                ("loaded onto ships", f.loaded_onto_ships_t.0),
+                ("refuelling ships", f.refuelling_ships_t.0),
+            ]);
+            sub(
+                o,
+                format!(
+                    "Stocks yesterday: fuel {} t to {} t ({causes})",
+                    f.start_t.0, f.end_t.0
+                ),
+            );
+        }
+    };
+    // A base under its hex has the hex's place above it: its line leaves it
+    // out and says how it was formed.
+    let at_place = if nested {
+        String::new()
+    } else {
+        format!(" at {}", b.place.coords())
+    };
+    let formed = match &b.formed_by {
+        Some(f) => format!(
+            "; formed by the {} of {} on day {}{}",
+            if f.how == "march" { "march" } else { "landing" },
+            f.by.text(),
+            f.day,
+            ev(f.event)
+        ),
+        None => String::new(),
+    };
+    if rules.supply {
+        top(
+            o,
+            format!(
+                "{}{at_place}: supply {} t, fuel {} t (for ships; aircraft do not use it){formed}",
+                b.base.text(),
+                b.supply_t.0,
+                b.fuel_t.0
+            ),
+        );
+        let lasts = match b.days_of_supply {
+            Some(d) => format!("supply lasts {} days at yesterday's spending", d.0),
+            None => "no spending yesterday".to_string(),
+        };
+        sub(
+            o,
+            format!(
+                "Yesterday: {} t supply spent, {} t destroyed; {}",
+                b.spent_yesterday_t.0, b.destroyed_yesterday_t.0, lasts
+            ),
+        );
+        if let Some(d) = &b.planned_days_of_supply {
+            sub(o, planned_days_text(d));
+        }
+    } else {
+        top(
+            o,
+            format!(
+                "{}{at_place}: fuel {} t (for ships; aircraft do not use it){formed}",
+                b.base.text(),
+                b.fuel_t.0
+            ),
+        );
+    }
+    stocks(o);
+    if let Some(w) = &b.works {
+        let airfield = match (w.airfield, &w.airfield_work_needed) {
+            (false, Some(needed)) => {
+                format!(
+                    "no airfield, {} of {} work done",
+                    w.airfield_work.0, needed.0
+                )
+            }
+            (false, None) => format!("no airfield, {} work done", w.airfield_work.0),
+            (true, _) => "an airfield".to_string(),
+        };
+        sub(o, format!(
+            "Works: {airfield}; defences {} ({}); yesterday's work on the port {}, on the aircraft {}",
+            w.defences.0, w.grade, w.port_work_yesterday.0, w.aircraft_work_yesterday.0
+        ));
+    }
+    if let Some(r) = &b.reserves {
+        sub(o, format!(
+            "Reserves: {} t supply, {} t fuel (refuelling and the staff's loads never take a stock below its reserve; your own load order may)",
+            r.supply_reserve_t.0, r.fuel_reserve_t.0
+        ));
+    }
+    if !b.ships_in_port.is_empty() {
+        sub(
+            o,
+            format!(
+                "In port in no force: {} (form_task_force takes ships from here)",
+                names(&b.ships_in_port)
+            ),
+        );
+    }
+    if let Some(d) = &b.airfield_damage {
+        let level = match (d.takes_aircraft, &d.refused_at) {
+            (true, Some(at)) => format!(
+                "it takes aircraft; at damage {} or more it takes none",
+                at.0
+            ),
+            (true, None) => "it takes aircraft".to_string(),
+            (false, Some(at)) => format!(
+                "it takes no aircraft (damage {} or more): rebases to it are refused, aircraft with no deck land elsewhere and arrivals wait until the damage is below {}",
+                at.0, at.0
+            ),
+            (false, None) => "it takes no aircraft".to_string(),
+        };
+        sub(
+            o,
+            format!(
+                "Airfield damage {}: {} of every 100 aircraft may fly; {}",
+                d.damage.0, d.share_that_flies.0, level
+            ),
+        );
+    }
+    if let Some(y) = &b.airfield_yesterday {
+        for a in &y.damaged {
+            sub(
+                o,
+                format!(
+                    "Airfield hit yesterday: {} hit{} on the airfield, damage {}{}",
+                    a.hits,
+                    if a.hits == 1 { "" } else { "s" },
+                    a.damage.0,
+                    ev(a.event)
+                ),
+            );
+        }
+        for a in &y.mended {
+            sub(
+                o,
+                format!(
+                    "Airfield mended yesterday: {} mended {} points of damage, damage {}{}",
+                    a.land_unit.text(),
+                    a.points.0,
+                    a.damage.0,
+                    ev(a.event)
+                ),
+            );
+        }
+        for a in &y.arrivals_waiting {
+            sub(o, format!(
+                "Arrival held back yesterday: {} aircraft due at {} wait, the airfield's damage {} takes no aircraft{}",
+                a.aircraft,
+                a.air_group.text(),
+                a.damage.0,
+                ev(a.event)
+            ));
+        }
+    }
+    for r in &b.returned_yesterday {
+        sub(
+            o,
+            format!(
+                "Returned yesterday from the yard: {} with {}{}",
+                r.task_force.text(),
+                names(&r.ships),
+                ev(r.event)
+            ),
+        );
+    }
+    if !b.repaired_yesterday.is_empty() {
+        sub(o, "Ships repaired yesterday:".to_string());
+        for r in &b.repaired_yesterday {
+            let left = |label: &str, list: &[&'static str]| -> String {
+                if list.is_empty() {
+                    String::new()
+                } else {
+                    let words: Vec<String> = list.iter().map(|w| plain(w)).collect();
+                    format!(", {label} {}", words.join(", "))
+                }
+            };
+            o.0.push_str(if nested { "      - " } else { "    - " });
+            o.0.push_str(&format!(
+                "{}: {} points, fire damage {}, flotation damage {}{}{}{}{}\n",
+                r.ship.text(),
+                r.points.0,
+                r.fire_damage.0,
+                r.flotation_damage.0,
+                left("restored:", &r.restored),
+                left("still degraded:", &r.systems_degraded),
+                left("still out:", &r.systems_out),
+                ev(r.event)
+            ));
+        }
+    }
+}
+
 /// The side's estimates of the enemy's men ashore (decision 0092, 19).
 fn enemy_ashore_text(o: &mut Out, a: &EnemyAshorePart) {
     o.heading("ENEMY MEN ASHORE (ESTIMATES)");
     o.line(
-        "These are estimates from reports, not counts: each can be wrong by up to half either way, and an estimate is never corrected until a new report replaces it"
+        "These are estimates from reports, not counts: each can be wrong by up to half either way, and an estimate is never corrected until a new report replaces it or your men find the hex empty"
             .to_string(),
     );
     for e in &a.estimates {
         let source = if e.day == 0 {
-            format!("opening estimate, day {}", e.day)
+            "the opening estimate, day 0".to_string()
         } else {
             format!("reported day {}", e.day)
         };
@@ -1227,6 +1431,19 @@ fn enemy_ashore_text(o: &mut Out, a: &EnemyAshorePart) {
             at(&e.place),
             plural(e.age_days, "day", "days"),
             ev(e.event)
+        ));
+    }
+    for f in &a.found_empty_yesterday {
+        let source = if f.reported_day == 0 {
+            "the opening estimate, day 0".to_string()
+        } else {
+            format!("reported day {}", f.reported_day)
+        };
+        o.line(format!(
+            "Found empty: your men at {} find no enemy men ashore; the estimate of about {} men, {source}, is cleared{}",
+            at(&f.place),
+            f.men,
+            ev(f.event)
         ));
     }
     for b in &a.bases_found_yesterday {
@@ -1302,6 +1519,22 @@ fn base_changes_text(o: &mut Out, c: &BaseChangesPart) {
 /// what yesterday's events say happened to them, then the days of supply.
 fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
     o.heading("LAND UNITS");
+    if let Some(r) = &land.fatigue_rule {
+        let mut parts = vec![format!("attack day +{}", r.attack_day.0)];
+        if let Some(f) = r.failed_attack {
+            parts.push(format!("failed attack +{} more", f.0));
+        }
+        parts.push(format!("march day +{}", r.march_day.0));
+        if let Some(strain) = r.strain_per_day {
+            parts.push(format!("under fire up to +{} (strain)", strain.0));
+        }
+        parts.push(format!("rest -{} a day", r.rest_per_day.0));
+        o.line(format!(
+            "Fatigue: {}; above {} a unit on attack goes back to defend; fatigue cuts the men who fire",
+            parts.join(", "),
+            r.attack_limit.0
+        ));
+    }
     for u in &land.units {
         if u.destroyed {
             o.line(format!("{}: destroyed, no man left", u.land_unit.text()));
@@ -1329,6 +1562,23 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             "; posture {}, fatigue {}, fed share {}",
             u.posture, u.fatigue.0, u.fed_share.0
         ));
+        if let Some(men) = u.firing_men_now {
+            s.push_str(&format!(
+                "; {} would fire today at its fatigue",
+                plural(men, "man", "men")
+            ));
+        }
+        if let Some(a) = &u.after_another_attack_day {
+            s.push_str(&format!(
+                "; another day of attack would make its fatigue {}{}",
+                a.fatigue.0,
+                if a.stops_attacking {
+                    ", and it would then stop attacking"
+                } else {
+                    ""
+                }
+            ));
+        }
         if let Some(fieldworks) = &u.fieldworks {
             s.push_str(&format!("; fieldworks {}", fieldworks.0));
         }
@@ -1449,17 +1699,64 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
         });
         o.line(s);
     }
-    let before = o.0.len();
-    for m in &land.landed_yesterday {
+    for n in &land.no_activity_yesterday {
+        let what = match n.activity {
+            "work" => "No work yesterday",
+            "training" => "No training yesterday",
+            _ => "No rehearsal yesterday",
+        };
+        let made = match n.activity {
+            "work" => "made no work",
+            "training" => "counted no day of training",
+            _ => "counted no rehearsal",
+        };
+        let why = match (n.reason, n.by) {
+            ("marched", _) => "it marched".to_string(),
+            ("contested", Some("own_attack")) => {
+                "its hex was contested by your own side's attack".to_string()
+            }
+            ("contested", _) => "its hex was contested by the enemy's attack".to_string(),
+            ("no_base", _) => "your side holds no base in its hex".to_string(),
+            ("not_fed", _) => "it was not fed".to_string(),
+            ("men_aboard", _) => "some of its men are still aboard".to_string(),
+            ("at_ceiling", _) => format!(
+                "its experience is at the level training stops at ({})",
+                n.up_to.unwrap_or(0)
+            ),
+            ("rehearsal_full", _) => "its rehearsal is already full".to_string(),
+            _ => "its force had not stood at a base of yours for the whole day, or not all its men were with it".to_string(),
+        };
         o.line(format!(
-            "Landed yesterday: {} men of {} from {} at {}, {} ashore and {} left aboard{}",
-            m.men,
-            m.land_unit.text(),
-            m.ship.text(),
-            at(&m.place),
-            m.ashore,
-            m.aboard,
-            ev(m.event)
+            "{what}: {} {made}: {why}{}",
+            n.land_unit.text(),
+            n.event.map_or(String::new(), ev)
+        ));
+    }
+    let before = o.0.len();
+    for l in &land.landings_yesterday {
+        let rest = if l.finished {
+            "finished".to_string()
+        } else {
+            match l.finishes_in_days {
+                Some(days) => format!(
+                    "finishes in about {} at yesterday's rate",
+                    plural(days, "day", "days")
+                ),
+                None => "no rate to finish at: some of what is aboard was not landed yesterday"
+                    .to_string(),
+            }
+        };
+        o.line(format!(
+            "Landing yesterday: {} at {} put ashore {}, {} t supply and {} t fuel; {} aboard, {} t supply and {} t fuel; {rest}{}",
+            l.task_force.text(),
+            at(&l.place),
+            plural(l.men_landed, "man", "men"),
+            l.supply_landed_t.0,
+            l.fuel_landed_t.0,
+            plural(l.men_aboard, "man", "men"),
+            l.supply_aboard_t.0,
+            l.fuel_aboard_t.0,
+            ev(l.event)
         ));
     }
     for m in &land.embarked_yesterday {
@@ -2008,8 +2305,62 @@ fn objective_text(o: &mut Out, line: &ObjectiveLine) {
                 .map(|p| format!(", worth {} points for the kinds you attacked", p.0))
                 .unwrap_or_else(|| ", of kinds you were not told".to_string())
         ),
+        _ if line.open_now.is_some() => {
+            "What you know of your progress: the days are counted at the end of the game, the days before the base was yours too; what you can see is below".to_string()
+        }
         _ => "What you know of your progress: nothing you can see shows it; it is counted at the end of the game".to_string(),
     });
+    if let Some(n) = &line.open_now {
+        open_now_text(o, line, n);
+    }
+}
+
+/// Whether a base counts as open today, in words (decision 0110, item 4).
+fn open_now_text(o: &mut Out, line: &ObjectiveLine, n: &crate::objectives::OpenNow) {
+    let Some(open) = n.open else {
+        o.sub("Today: it counts only once the base is yours".to_string());
+        return;
+    };
+    let facts = format!(
+        "supply {} t, {} ready at it",
+        n.supply_t.map_or_else(String::new, |d| d.0.to_string()),
+        plural(n.aircraft_ready.unwrap_or(0), "aircraft", "aircraft")
+    );
+    let lacks: Vec<&str> = n
+        .missing
+        .iter()
+        .map(|m| match *m {
+            "supply" => "no supply at the base",
+            _ => "no aircraft ready at it",
+        })
+        .collect();
+    let state = if open {
+        format!("the base is open ({facts})")
+    } else {
+        format!("the base is not open: {} ({facts})", lacks.join(" and "))
+    };
+    let counts = if n.counts == Some(true) {
+        "would count"
+    } else {
+        "would not count"
+    };
+    let wanted = if line.closed == Some(true) {
+        "shut"
+    } else {
+        "open"
+    };
+    o.sub(format!(
+        "Today, if the day ended now: {counts} as {wanted}: {state}"
+    ));
+    if let Some(d) = &n.days_seen {
+        if line.known.basis != "exact" {
+            o.sub(format!(
+                "Day ends you have seen at this base while it was yours: {}, {} of them open",
+                plural(d.days, "day", "days"),
+                d.open
+            ));
+        }
+    }
 }
 
 fn result_text(o: &mut Out, result: &ResultPart) {
@@ -2102,10 +2453,66 @@ fn waits_text(waits_for: &[&str]) -> String {
 }
 
 /// The side's days of supply in a base's hex, in a line.
+/// What an arrival waits for, in words (decision 0110, item 2).
+fn waits_text_arrival(w: &crate::lines::ArrivalWaits) -> String {
+    match (w.reason, &w.damage, &w.refused_at) {
+        ("base_not_yours", _, _) => "the base is not yet your side's".to_string(),
+        ("no_airfield", _, _) => "the base has no airfield".to_string(),
+        (_, Some(damage), Some(level)) => format!(
+            "the airfield's damage {} is at or above {}, the level at which it takes no aircraft",
+            damage.0, level.0
+        ),
+        _ => "the airfield takes no aircraft".to_string(),
+    }
+}
+
+/// An empty group's arrival, in words (decision 0110, item 2).
+fn awaiting_text(
+    aircraft: u32,
+    pilots: u32,
+    pilots_counted: bool,
+    day: u32,
+    held_past_day: bool,
+    waits_for: &Option<crate::lines::ArrivalWaits>,
+) -> String {
+    let men = if pilots_counted {
+        format!(" and {pilots} pilots")
+    } else {
+        String::new()
+    };
+    let state = match (waits_for, held_past_day) {
+        (None, _) => String::new(),
+        (Some(w), true) => format!(", held past its day by: {}", waits_text_arrival(w)),
+        (Some(w), false) => format!(", it cannot be delivered now: {}", waits_text_arrival(w)),
+    };
+    format!("waiting for its arrival of {aircraft} aircraft{men} due day {day}{state}")
+}
+
+/// The line of a hex where the side holds more than one base (decision 0110,
+/// item 8): the stock of all together and the days of supply, once.
+fn shared_hex_text(o: &mut Out, h: &SharedHexLine, rules: Rules) {
+    let n = h.bases.len();
+    let stock = if rules.supply {
+        format!(
+            "supply {} t, fuel {} t in all (for ships; aircraft do not use it)",
+            h.supply_t.0, h.fuel_t.0
+        )
+    } else {
+        format!(
+            "fuel {} t in all (for ships; aircraft do not use it)",
+            h.fuel_t.0
+        )
+    };
+    o.line(format!("{}: {} bases of yours, {stock}", at(&h.place), n));
+    if rules.supply {
+        o.sub(planned_days_text(&h.days_of_supply));
+    }
+}
+
 fn planned_days_text(d: &crate::lines::DaysOfSupplyLine) -> String {
     match d.days {
         Some(days) => format!(
-            "Days of supply for the hex (all the side's bases there): {} days, {} t over a planned use of {} t a day (men ashore {}, men due {}, aircraft upkeep {}, repairs {}, sorties {})",
+            "Days of supply for the hex: {} days, {} t over a planned use of {} t a day (men ashore {}, men due {}, aircraft upkeep {}, repairs {}, sorties {})",
             days.0, d.stock_t.0, d.planned_use_t.0, d.men_ashore_t.0, d.men_due_t.0,
             d.aircraft_upkeep_t.0, d.repairs_t.0, d.sorties_t.0
         ),

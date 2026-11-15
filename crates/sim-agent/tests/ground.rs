@@ -198,7 +198,9 @@ fn neither_side_is_told_an_enemy_land_unit_or_the_enemys_men() {
         }
     }
     let (text, _) = briefing(&mut session, Side::Allied);
-    for men in ["600 men", "300 men", "500 men"] {
+    // Each is read as a whole number: "1600 men would fire" is the side's
+    // own firing men, not the enemy's 600.
+    for men in [" 600 men", " 300 men", " 500 men"] {
         assert!(!text.contains(men), "the Allies were told {men}");
     }
     // The 165 men of the Japanese unit that surrendered are told, as the
