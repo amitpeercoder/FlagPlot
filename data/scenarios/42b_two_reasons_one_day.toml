@@ -1,0 +1,110 @@
+# Scenario 42b: two reasons on one day (decision 0107, step 4).
+#
+# Scenario 36 with no leave set (leave to prepare is given by default, leave
+# to launch is not), and one more command on day 1: interrupt 1, base 2 below
+# 10 days of supply. On day 2 two interrupts fire together: interrupt 1 (9
+# days) and the plan waits for leave to launch. The commander's approval of
+# the plan on day 3 is not in the file: the test gives it by the approve tool.
+#
+# It proves step 4 of decision 0107 (step 3, stage 1: interrupts, a run of
+# days in one call, the command report, resuming; rulings 31 to 40 there)
+# against the hand calculation in tests/scenario_42_interrupts_and_runs.rs.
+# There is no enemy, no aircraft and no random draw. It runs on the frozen
+# step 1 figures.
+#
+# PLACEHOLDER DATA. The bases, ships, units and map are invented.
+
+name = "Placeholder scenario 42b: Two reasons on one day"
+placeholder = true
+seed = 1942
+days = 18
+map = "../map/placeholder_one_convoy.toml"
+ship_classes = ["../reference/ship_classes.csv"]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# S: the source. Port size 1, one berth at 50 t an hour.
+[[base]]
+id = 1
+name = "Placeholder base S, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 5000
+fuel_t = 2000
+
+# T: the destination. Port size 0, by lighter at 20 t an hour.
+[[base]]
+id = 2
+name = "Placeholder base T, Allied"
+side = "allied"
+q = 5
+r = 0
+supply_t = 100
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+men = 2000
+q = 5
+r = 0
+posture = "defend"
+
+# Ships 1 and 2 lie in port at S in no task force, full of fuel.
+[[ship]]
+id = 1
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+port = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+port = 1
+
+# The Allied commander's commands, in force from day 1. No leave is set: by
+# default leave to prepare is given and leave to launch is not.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+base = 2
+floor_days = 30
+interval_days = 15
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+ships = [1, 2]
+task_forces = []
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "reserve"
+base = 1
+supply_t = 1000
+fuel_t = 0
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_interrupt"
+interrupt = 1
+base = 2
+below_days = 10
