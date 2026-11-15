@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 14, 2026, from four runs of the 
 
 Summary: The first tuning round of the ground figures: before it, men who are falling back are not fired on unless the victor attacks, the Japanese runs land their own rations as cargo, and riflemen set to work make a tenth of a labourer's work; then one round on the Tenaru and the ridge, mechanism by mechanism, with the figures each may move and the direction a source supports
 
-Standing: Decision 1 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Decisions 1 to 4 built, with a new baseline, Nov 15, 2026. Round 1 run, Nov 15, 2026: four figures moved; steps 2 and 3 stopped, the two fights wanting different values; steps 4 and 5 moved nothing
+Standing: Decision 1 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Decisions 1 to 4 built, with a new baseline, Nov 15, 2026. Round 1 run, Nov 15, 2026: four figures moved; steps 2 and 3 stopped, the two fights wanting different values; steps 4 and 5 moved nothing. The Tenaru's two measures accepted by the designer as a named miss, Nov 15, 2026, to be mended with step 3's stage 3
 
 ## Where the slice stands
 
@@ -155,3 +155,15 @@ Run on Nov 15, 2026, by a team, on the slice after decisions 1 to 4, in the orde
 - **The food at Lunga at the middle of its record,** which would take the slice's later supply, which is data (step 6).
 
 **Every live scenario whose result changed** (`sh scripts/compare-scenarios.sh` against pull request 318's merge: 118 runs, 7 differ, every frozen run the same): 07, the full slice, as above; 21 and 27, whose men land sooner; 25, 29, 32 and 37, whose marches tire less. Only in 07, 25 and 37 does a fight fire with more men. No other base, loss or outcome moved, and none would have changed by more than the four figures do. The recorded game `full_slice_five_days_sonnet` lands its men faster and its supply more slowly; its orders are answered as before.
+
+## The Tenaru, a named miss
+
+Decided by the designer on Nov 15, 2026. The two measures of the Tenaru, American and Japanese men lost, are accepted as a named miss for now, as the eleven of step 2 were (`docs/validation/step2-close.md`). No figure moves for them and the ground figures are not tuned further on that fight until the rules below exist.
+
+They are mended with step 3's stage 3, the work on landings, which needs the same three things for its own sake:
+
+- **Units held back are out of the fight.** An attacker commits part of his force and the limit on engaged men counts only what is committed.
+- **Kawaguchi's force re-cut into battalions,** so that a part can be committed and a part held.
+- **A defender's counter-attack that cuts off a spent attacker.**
+
+Each gets its decision record, rule card and hand calculation before it is built. The two measures are judged again on the slice after them; until then every report of the slice lists them as the named miss and not as a fault of the figures.
