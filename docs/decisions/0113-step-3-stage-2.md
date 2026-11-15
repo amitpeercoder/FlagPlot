@@ -1,10 +1,10 @@
 # 0113: Step 3, stage 2: doctrine for the fighting tasks, and the enemy played by the staff
 
-Status: a plan by the architect, written on Nov 15, 2026, for the designer's approval, as the spec asks of every stage (`docs/step3-spec.md`, "Built in stages"). Needs review: nothing here is confirmed and nothing is built. Its seven questions are at the end. When it is confirmed, each step gets its hand calculations or test plan before any code, as stage 1 did.
+Status: a plan by the architect, written on Nov 15, 2026, for the designer's approval, as the spec asks of every stage (`docs/step3-spec.md`, "Built in stages"). Confirmed by the designer on Nov 15, 2026, who answered its seven questions as the architect recommended. Nothing is built. Each step gets its hand calculations or test plan before any code, as stage 1 did. Step 1's two rule changes are decision 0114.
 
 Summary: A plan for step 3, stage 2: seven kinds of intent beside supply (cover a place, strike what comes within reach, wear down a base, intercept, escort a run, keep a force fuelled, rest and repair), a doctrine for each on both sides, the numbers of the three risk levels set from the record, two small rule changes the doctrines need, and the proof: a battle of the slice and then a week of it with no unit order from anyone
 
-Standing: Needs review. A plan by the architect, Nov 15, 2026. Not built
+Standing: Confirmed by the designer, Nov 15, 2026. Not built
 
 ## What stage 2 is
 
@@ -58,7 +58,7 @@ The spec's table gives five choices that the risk level changes. These are its n
 
 | The staff's choice | Preserve the force | Balanced | Press | What it rests on |
 | --- | --- | --- | --- | --- |
-| The oldest contact a strike is launched on | Reported this pulse | This pulse or the one before, as the engine has it today | Any contact of the day, and in the morning one of the afternoon before | Contacts under about an hour and a half old were struck at once at Coral Sea, Midway and Santa Cruz; three strikes on reports four to seven hours old found nothing, found little, or sank a light carrier while the two large ones went unstruck |
+| The oldest contact a strike is launched on | Reported this pulse or the one before, and only of a kind worth the strike (a short target list) | This pulse or the one before, as the engine has it today | Up to two pulses older: in the morning, a contact of the day before | Contacts under about an hour and a half old were struck at once at Coral Sea, Midway and Santa Cruz; three strikes on reports four to seven hours old found nothing, found little, or sank a light carrier while the two large ones went unstruck |
 | How far it reaches | Four fifths of the type's radius | The radius | Extended reach, at the cost the rules give | Launches at 155 to 210 miles on fresh reports; 230 and 250 miles on old ones |
 | Attack aircraft held back | A third | None | None, and the escort is taken from the patrol first | The reserve carrier at Midway; the advice after it to launch "with the absolute minimum loss of time" |
 | Fighters kept overhead (the patrol share) | Three quarters | Half | A quarter | A carrier captain's call for more fighters after Coral Sea; no row gives a share |
@@ -113,6 +113,8 @@ Each case gets its numbers in a hand calculation or in the test plan of its step
 - Rearming, unless question 6 is answered otherwise.
 
 ## Questions for the designer
+
+Answered on Nov 15, 2026, each as the architect recommended: the seven kinds of intent as listed; the contact-age setting and the share of a strike held back are added (decision 0114); escorts sail in the convoy's own force; the proof is the Eastern Solomons and days 15 to 21 of the slice; rearming is left until after stage 2; and it is built in six steps. The questions as they were put:
 
 1. **The seven kinds of intent.** Is this the right list for stage 2? I recommend it as it stands. The one I weighed leaving out is wearing down a base: it is what the Japanese side did every day of the slice from Rabaul, so without it that side has nothing to do in the air.
 2. **How old a contact a strike is launched on** (decision 11): add the setting? I recommend yes. Without it the three risk levels cannot differ in the row the spec puts first, and the engine cannot do what both sides did in 1942, to their cost.
