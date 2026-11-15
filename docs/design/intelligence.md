@@ -85,8 +85,71 @@ Agreed by the designer on Nov 12, 2026, on the architect's suggestion. These are
 3. **Late confirmation is shown twice.** During the game it arrives as a report like any other, with a source and a date, and revises the earlier claim, so a long campaign is not fought on a belief that can never be corrected. After the game the history shows everything: what happened beside what each side believed on each day. How late and how complete the confirmation is are figures by side and period, and may be "never, within this scenario".
 4. **One picture, with the sources one step down.** The staff presents a single intelligence picture. Any item opens to show the reports behind it: which source, when, what each said. Where sources disagree the picture says so and does not average. A source's record so far, as this side has learned it, is shown beside its name. There is no screen or tool for each source.
 
+## Reconnaissance as part of an operation
+
+The designer's direction of Nov 15, 2026, with the architect's shaping. It is a direction for the design and not a built rule. It becomes decision records when stage 3 of step 3 is planned, where the spec already asks that a plan being prepared names what it most needs to know (`docs/step3-spec.md`, "For the stage briefs", stage 3, collection).
+
+### It is implied, not ordered
+
+A commander who says "take this island and hold it" has said that he needs to know what is on it. He should not have to order the looking. The staff plans it as part of the operation: before the landing there is a time of collection, with its own tasks, and the plan is not ready to launch until it knows what it set out to know, or says plainly what it could not find out.
+
+So reconnaissance is first of all a part of a plan and not a command. The proposal for an operation names what it needs to know, what the side has that could find it out, what that costs and what cannot be known. Leave to launch is asked with the picture beside it.
+
+### Knowledge comes in grades
+
+What a source can tell depends on how close it gets. The picture of a place should say how good it is, and where it came from.
+
+| Grade | Source | What it can tell | How good |
+| --- | --- | --- | --- |
+| 1 | Nothing seen: an old report, or what the side assumes | That something was there once | Poorest |
+| 2 | Aircraft searching or passing over | Ships in port, aircraft on the field, that there are men and works; little of their number | Coarse, and worse in poor weather |
+| 3 | Aircraft sent to look: a reconnaissance flight over the place | The same, counted; the works; roughly how many men | Fair |
+| 4 | Men watching from close by: a patrol, a team put ashore with glasses, a coastwatcher | Numbers of men, where they are, what they have built, what comes and goes | Good |
+| 5 | Men in contact: a unit ashore in the same place | What the daily ground report gives today | Best, and still wrong by a margin |
+
+Every report carries its source and its grade. The picture of a place holds the best recent one and its day, and opens to the reports behind it, as the answers above already ask.
+
+A grade must be read by a rule to earn its place, which is the lesson of decision 0032. Three things would read it:
+
+- **A plan's readiness.** A plan states the grade it wants on the things it depends on, such as the men at the place it means to take, and how fresh. The risk level sets what it will go without: a staff told to press launches on a poor picture and says so.
+- **The estimate of an operation** (stage 4). A poor picture widens the spread of what a trial assumes is there.
+- **The briefing,** which orders what it shows by grade and says how old it is.
+
+### A reconnaissance mission, and how hard it is pushed
+
+None of this says there should be no mission. There should be one, for the staff to task and for a commander who wants to give it himself. It has one setting that matters: how hard it is pushed.
+
+| How it is pushed | What it does | What it learns | What it risks |
+| --- | --- | --- | --- |
+| Covert | Looks from a distance and leaves | Least, and slowly | Little. The enemy may never know |
+| Probing | Goes close: a low pass, a patrol to the wire, a ship inshore | More, and sooner | It may be seen, fired on and lose men or aircraft |
+| In force | Goes in to be fought: a raid that draws fire and shows where the guns are | Most, and at once | Losses; and the enemy is alerted |
+
+Pushed hard, reconnaissance is also a way to hurt and tire the enemy. Men who are raided do not rest, which is the strain of decision 0106. So one mission serves two purposes, and the commander's choice is between knowing quietly and knowing by fighting.
+
+The price of being seen is not only the loss. The enemy learns that the place is of interest, and may reinforce it. That is the first place where one side's plan becomes something the other can partly read, which layer 3 of this note is about.
+
+### What it would need in the rules
+
+Each is small, and each reuses what exists.
+
+- **A source and a grade on every report,** and a picture that keeps the best recent one.
+- **A reconnaissance mission for an air group,** which reports what lies at a base, with an error set by its grade.
+- **A patrol for a land unit:** part of a unit sent to look at the next hex, or a team put ashore from a ship, which reports as grade 4 and can be caught.
+- **Being seen:** a chance, by how hard the mission is pushed, that the enemy is told a reconnaissance came, with what he could know of it.
+- **Harassment:** what a probing or forceful reconnaissance does to the men it finds, through the strain rule.
+- **A plan's need to know,** as a condition the staff plans collection to meet.
+
+### Open, to be settled when it is planned
+
+1. **How many grades.** Five are listed; fewer may serve.
+2. **Whether a grade fades with age,** or is only shown with its day, as an estimate is today.
+3. **Weather.** The game has none. A flight "in good weather" is every flight today. If weather comes, it acts on grades 2 and 3 first.
+4. **Who may be sent.** Aircraft exist. A patrol ashore needs a rule for a part of a unit acting apart from it, which stage 3 also needs for an attacker who commits part of his force.
+5. **What the enemy does when he sees it.** That needs the enemy's staff to act on a report of interest, which is stage 3 or later.
+
 ## A possible order
 
 1. Layer 1, with claims, in or just after step 1: claims revised by later sightings.
-2. Layer 2 in step 2: coastwatchers and reconnaissance change how the historical battles open, so they belong with the tuning against the record.
+2. Layer 2 in step 2: coastwatchers and reconnaissance change how the historical battles open, so they belong with the tuning against the record. Not done in step 2. Reconnaissance is now planned at the start of stage 3 of step 3, as "Reconnaissance as part of an operation" above has it; coastwatchers wait with it.
 3. Layer 3 with step 3, designed together with the staff planner so that a plan is something an enemy can partly read.
