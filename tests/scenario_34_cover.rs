@@ -262,14 +262,6 @@ fn cut(men: u32, cover: Fixed, share: Fixed) -> u32 {
     u32::try_from((n(i64::from(men)) * kept).trunc().max(0)).expect("a man count")
 }
 
-/// The pieces of a part over `hits` hits, spread evenly.
-fn pieces(part: u32, hits: u32) -> Vec<u32> {
-    let upto = |k: u32| u64::from(part) * u64::from(k) / u64::from(hits);
-    (1..=hits)
-        .map(|k| u32::try_from(upto(k) - upto(k - 1)).expect("a piece"))
-        .collect()
-}
-
 /// A loss shared between units in proportion to their men: each part is cut,
 /// and the men left over go one to each unit in unit order.
 fn shared(loss: u32, men: &[u32]) -> Vec<u32> {
@@ -291,20 +283,19 @@ fn shared(loss: u32, men: &[u32]) -> Vec<u32> {
 }
 
 /// What a unit with `cover` at the start of the call loses to `hits` hits on
-/// men sharing the part `part`: each piece cut by the cover the hit meets,
-/// which each earlier hit has worn by `wear`.
+/// men sharing the part `part`: the part spread evenly over the hits, each
+/// piece behind the cover its hit meets, which each earlier hit has worn by
+/// `wear`, not cut; the pieces added and the sum cut to a whole man once.
 fn shelling_loss(part: u32, hits: u32, cover: Fixed, wear: Fixed) -> u32 {
     if hits == 0 {
         return 0;
     }
-    pieces(part, hits)
-        .iter()
-        .enumerate()
-        .map(|(i, piece)| {
-            let cover_k = cover - wear * i64::try_from(i).expect("index");
-            cut(*piece, cover_k, fx("0.9"))
-        })
-        .sum()
+    let kept = (0..hits).fold(Fixed::ZERO, |sum, i| {
+        let cover_k = cover - wear * i64::from(i);
+        sum + (Fixed::ONE - fx("0.9").mul_div(cover_k, n(100)))
+    });
+    let lost = n(i64::from(part)).mul_div(kept, n(i64::from(hits))).trunc();
+    u32::try_from(lost.max(0)).expect("a man count")
 }
 
 /// The strain of a day: the hits, no more than 10, times 1 less the cover
@@ -543,12 +534,18 @@ fn at_a_unit_1_digs_is_shelled_leaves_its_holes_and_digs_again() {
     let part = shared(loss.min(before), &[before])[0];
     let expected = shelling_loss(part, h, cover0, fx("0.2"));
     if h >= 1 {
-        // The first hit takes 8 of 10.
-        assert_eq!(pieces(part, h)[0], 10);
-        assert_eq!(cut(10, cover0, fx("0.9")), 8);
+        // The first piece is 8.2 of 10, not cut.
+        assert_eq!(
+            n(10) * (Fixed::ONE - fx("0.9").mul_div(cover0, n(100))),
+            fx("8.2")
+        );
         // No hit takes more than the 10 it would with no cover.
         assert!(expected <= loss);
     }
+    // On the scenario's seed: 8 hits, and 66 men lost (64 when each piece
+    // was cut).
+    assert_eq!(h, 8);
+    assert_eq!(expected, 66);
     let events = run.lost_to_fire(3, 1);
     if expected == 0 {
         assert!(events.is_empty());
@@ -820,6 +817,11 @@ fn at_f_shells_wear_the_defences_and_the_strain_stops_at_its_limit() {
         .map(|p| shelling_loss(*p, g, cover0, fx("0.2")))
         .collect();
     eprintln!("F: parts {parts:?}, lost {lost:?}");
+    // On the scenario's seed: 7 hits, parts of 47 and 23, which lose 26 and
+    // 12 (21 and 9 when each piece was cut).
+    assert_eq!(g, 7);
+    assert_eq!(parts, vec![47, 23]);
+    assert_eq!(lost, vec![26, 12]);
     for (i, raw) in [6u32, 7].into_iter().enumerate() {
         let events = run.lost_to_fire(2, raw);
         if lost[i] == 0 {

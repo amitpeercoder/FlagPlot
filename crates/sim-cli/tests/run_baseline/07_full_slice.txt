@@ -21,26 +21,26 @@ day  16  hash 16f49b6bd98256fc  95 events
 day  17  hash 34a9c56f8e02e499  54 events
 day  18  hash b873db987ddee243  215 events
 day  19  hash a101beabb5d7b2ac  158 events
-day  20  hash 116d16ae9a5da6ff  194 events
-day  21  hash bae61d7969cac2a9  231 events
-day  22  hash 8fafba2805f00786  115 events
-day  23  hash 4e5d32b5d47f53fc  196 events
-day  24  hash 171b6f91c9ca9f42  209 events
-day  25  hash 375c77259fed4982  220 events
-day  26  hash 865f195bf3f0afbe  167 events
-day  27  hash 239841125978e319  187 events
-day  28  hash adacdc3be28714bf  139 events
-day  29  hash 3ad4cd2a9d905d4a  140 events
-day  30  hash 4ffa1f2535da5daa  176 events
-day  31  hash 8ec919a47dc68f20  175 events
-day  32  hash 01d5e1688bc3368e  158 events
-day  33  hash 3b187bee49be023a  115 events
-day  34  hash 9157a8bf2e9b52e7  143 events
-day  35  hash 60a34267cf98c278  153 events
-day  36  hash 65b1a3fd1e9fbfc9  146 events
-day  37  hash 089eb1c12f9e8a93  217 events
-day  38  hash d0dc42945cf946e3  145 events
-day  39  hash 526c8cc934bd44b3  124 events
+day  20  hash a24f19c04bc92740  195 events
+day  21  hash eb1a38eb4c32a4a1  231 events
+day  22  hash f54f17f2de6ccc9f  115 events
+day  23  hash 41f7fe678152497b  196 events
+day  24  hash 998d425b199c3bd6  209 events
+day  25  hash 39693b9f67f85708  220 events
+day  26  hash 15b8d8cb1ce93e34  167 events
+day  27  hash 22753b08a2ba490d  187 events
+day  28  hash b99f29433ba03f44  139 events
+day  29  hash a3d903fcff3282d3  140 events
+day  30  hash ffec56621c3fcb65  176 events
+day  31  hash 679dcbe1d1566e3f  175 events
+day  32  hash ac7491928ec27f04  158 events
+day  33  hash a44eef0d08de6ca9  115 events
+day  34  hash 083e62fe4cf69a03  143 events
+day  35  hash b7e4970684636e41  153 events
+day  36  hash 48b882f78f465115  146 events
+day  37  hash 45cb785958902b09  217 events
+day  38  hash e99155960d04c890  145 events
+day  39  hash c5de86e33bf40f38  124 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -239,7 +239,7 @@ ship:130 "Placeholder fast transport with cargo, task force 38, 3": afloat in ta
 ship:131 "Placeholder fast transport with cargo, task force 38, 4": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 ship:132 "Placeholder fast transport with cargo, task force 39, 1": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 ship:133 "Placeholder fast transport with cargo, task force 39, 2": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-base:1 "Lunga" (Allied) at (2,-4): 3478.585 t of supply in stock, 0 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day, 20063 of work done on the airfield
+base:1 "Lunga" (Allied) at (2,-4): 3479.335 t of supply in stock, 0 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day, 20063 of work done on the airfield
 base:2 "Rabaul" (Japanese) at (-5,-13): 8118.32 t of supply in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock, 0 t of fuel in stock
 base:4 "Tulagi" (Allied) at (3,-5): 771.65 t of supply in stock, no airfield
@@ -249,13 +249,13 @@ base:7 "Shortland" (Japanese) at (-2,-8): 0 t of supply in stock, no airfield
 base:8 "Landing at (2,-4)" (Allied) at (2,-4): 155.25 t of supply in stock, no airfield
 base:9 "Landing at (3,-5)" (Allied) at (3,-5): 147.15 t of supply in stock, no airfield, formed in play, on its own side's map only
 base:10 "Dump at (2,-4)" (Japanese) at (2,-4): 73.98 t of supply in stock, no airfield
-land_unit:1 "Combat Group A (5th Marines less 2/5)" (Allied): 4230 men ashore at (2,-4), fieldworks 30
-land_unit:2 "Combat Group B (1st Marines)" (Allied): 4481 men ashore at (2,-4), fieldworks 30
-land_unit:3 "Support Group, Guadalcanal" (Allied): 1350 men ashore at (2,-4), fieldworks 30
+land_unit:1 "Combat Group A (5th Marines less 2/5)" (Allied): 4227 men ashore at (2,-4), fieldworks 30
+land_unit:2 "Combat Group B (1st Marines)" (Allied): 4478 men ashore at (2,-4), fieldworks 30
+land_unit:3 "Support Group, Guadalcanal" (Allied): 1348 men ashore at (2,-4), fieldworks 30
 land_unit:4 "1st Pioneer Battalion" (Allied): 647 men ashore at (2,-4)
 land_unit:5 "1st Raider Battalion" (Allied): 811 men ashore at (2,-4), fieldworks 30
 land_unit:6 "1st Parachute Battalion" (Allied): 386 men ashore at (2,-4), fieldworks 30
-land_unit:7 "2d Battalion, 5th Marines" (Allied): 1063 men ashore at (2,-4), fieldworks 30
+land_unit:7 "2d Battalion, 5th Marines" (Allied): 1062 men ashore at (2,-4), fieldworks 30
 land_unit:8 "2d Marines and the rest of the Tulagi side" (Allied): 3732 men ashore at (3,-5), fieldworks 30
 land_unit:9 "CUB One detachment" (Allied): 122 men ashore at (2,-4)
 land_unit:10 "6th Naval Construction Battalion" (Allied): 387 men ashore at (2,-4)
@@ -317,8 +317,8 @@ Japanese claim at (2,-4): 12 aircraft shot down, 4 aircraft destroyed on the gro
 Japanese claim at (2,-4): 9 aircraft shot down, 1 aircraft destroyed on the ground, day 36 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 37 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 38 morning
-Japanese estimate at (2,-4): 19308 enemy men ashore, reported day 39
+Japanese estimate at (2,-4): 19295 enemy men ashore, reported day 39
 
 Result (the placeholder scale of decision 0054):
-Allied: 111.570416 points (ships_sunk 2 = 14; ships_crippled 0 = 0; aircraft_destroyed 90 = 4.5; cargo_landed at base:1 6194.75 = 30.97375; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 4043 = 40.43), margin 95.777083, decisive victory
-Japanese: 15.793333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 53 = 2.65; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 281 = 2.81), margin -95.777083, decisive defeat
+Allied: 111.570416 points (ships_sunk 2 = 14; ships_crippled 0 = 0; aircraft_destroyed 90 = 4.5; cargo_landed at base:1 6194.75 = 30.97375; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 4043 = 40.43), margin 95.687083, decisive victory
+Japanese: 15.883333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 53 = 2.65; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 290 = 2.9), margin -95.687083, decisive defeat
