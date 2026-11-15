@@ -1,10 +1,10 @@
 # 0120: Raids, and the end "neutralise a base"
 
-Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, the third end and doctrine 6, and step 3 of its seven), and on the designer's direction of the same day that a doctrine belongs to one level (`docs/design/command-levels.md`, decision 0119). It writes the end and its doctrine out, with the hand calculation. Not built.
+Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, the third end and doctrine 6, and step 3 of its seven), and on the designer's direction of the same day that a doctrine belongs to one level (`docs/design/command-levels.md`, decision 0119). It writes the end and its doctrine out, with the hand calculation. Built on Nov 16, 2026 ("As built" below).
 
 Summary: The end "neutralise a base", stated to the area, under which the area's staff gives each of its bases with bombers in reach the task of raiding it; and the raid doctrine at the base's level: which mornings its bombers go, by their fatigue, the weight they can send, their escort and what the last raid cost, with the risk level setting each. Every doctrine now names the level it belongs to, and its reasons say which level decided
 
-Standing: Settled by the architect, Nov 15, 2026, inside decisions 0113 and 0119. Not built
+Standing: Settled by the architect, Nov 15, 2026, inside decisions 0113 and 0119. Built
 
 ## Why
 
@@ -89,3 +89,35 @@ The Allied side flies no strike in it: nothing comes within reach of its bombers
 ## The hand calculation
 
 `tests/scenario_50_neutralise_a_base.rs`: one base with two bomber groups and a fighter group, an enemy base 200 nm away with nothing at it, over 12 days. It gives every order of every morning, every group's fatigue and the aircraft of every raid. The bombs' hits on the empty base are rolled and are not asserted.
+
+## As built
+
+Built on Nov 16, 2026, in one step. What follows is what was built and every place the build read the record more closely or differed from it.
+
+**Versions.** The state version is 29 (`flagplot-state-v29`: the two kinds of intent, codes 4 and 5, added at the end). The rules label stays 12: no game without a neutralise or raid intent plays differently, and the level of a reason is text. The saved game is version 5 (the commands and hand-ins carry the new kinds and the level; a game of version 4 is refused, not converted). The doctrine version is `supply-9`. The agent interface is version 9: an intent's `base` is null for a neutralise, which is a change in meaning.
+
+**State and intake.** `IntentKind::Neutralise { target }`, code 4, addressed to the area, and `IntentKind::Raid { base, target }`, code 5, addressed to `base`. A raid may stand under a neutralise for the same target and under nothing else. The target of either kind must be a base on the side's map that is not the side's: otherwise `set_intent` and `form_intent` are refused with a new refusal, `NotAnEnemyBase`, in the same words for a base the side may not know and one that does not exist. It is tried after "Not your base". A neutralise names no base of the side's own.
+
+**The level of a reason.** A reason's level is `Serves::level`, filled for every reason a staff hands in, from the addressee of the intent served. So stage 1's reasons now say "decided at the level of the area" too. This is text only: no order, event or hash changes with it, and a game saved before it reads each reason with none.
+
+**The neutralise doctrine** is `crates/sim-staff/src/neutralise.rs` and the raid doctrine `crates/sim-staff/src/raid.rs`; the morning's order is the supply doctrine, the leaves, the hold doctrine, the neutralise doctrine, the cover doctrine and the raid doctrine, in that order, so that the cover's order of the morning is read by the raid. Readings the build took:
+
+- **Rule 6, which bases qualify.** Every group at a base counts for whether the base qualifies, held or not, as the hold doctrine counts one. A base qualifies only if a bomber group it may use there has a reach, its type's strike radius, at least the distance. With a forces limit that names groups, a base qualifies only where a named group is, and only the groups named count there.
+- **A reason every morning.** The neutralise doctrine hands in a reason every morning: the raid that stands, the raid it forms, or that none can be formed. A cannot-meet notice, resting on the no-order reason, is handed in every morning on which no base qualifies. Where the target is no longer an enemy base on the side's map it gives a reason and no notice, and forms nothing.
+- **Rule 10, the raid's groups.** A group is the raid's to read if it is at the base, may be used by the raid, is not held as a whole, is not taken by a raid served earlier, and is the raid's by rule 16. The orders are given in group number order, a mission before a setting, and only where the group differs from what is wanted.
+- **Rule 12, the weight.** What the bombers can send is worked with the held share the doctrine wants this morning (the risk's), whatever the group has set. A raid goes only if its weight is also more than none.
+- **Rule 12, the escort at preserve the force.** "A fighter can go with them" is read as the escorts the fighters at the base can give this morning being above 0: a fighter the raid has gives all it can fly; a fighter of the base's cover gives what the patrol share the cover wants this morning leaves of what it can fly, cut to a whole aircraft, and none if the cover rests it.
+- **Rule 13, what the last raid cost.** "Lost" is the aircraft the group lost in the pulse of its last base strike launch, shot down (`AircraftLost`) or ditched (`AircraftDitched`), as the side's own events show. A group stands down only on the morning right after that raid; a group that flew its last raid earlier does not.
+- **Rest.** A bomber that does not go, and every bomber when the raid does not go, is set to rest.
+- **Rule 15.** The cannot-meet case is no bomber group at the base that the raid may use, is not held and can reach the target, or, at preserve the force, no fighter group the raid may use or draw escorts from. A fighter of the cover counts here even on a morning the cover rests it.
+- **Rule 16.** "A cover of its base" is read as a cover in force of the base that may use the group. By kind: a fighter is the cover's where such a cover is in force, and otherwise the raid's; a group that can bomb the target is the raid's, though it can also search; any other group is the cover's where there is a cover, and otherwise no one's. The cover (`crates/sim-staff/src/air.rs`) leaves a raid's bomber out and says so in its reason, and records for each fighter it has the share it is to fly at, or none where it rests it, for the raid to read.
+
+**The measure** (`sim_agent::neutralise_measure`) is worked from the side's own view: the raids flown are the distinct (day, pulse) pairs with a base strike launch at the target by the side's groups; the claims on the ground are the side's air claims at the target's hex; the raids on its own bases are summed over every base of the side; the days met are the days in force on which none was raided. It is shown in `command_state`, in `report` (as `neutralisations`) and in the summary.
+
+**The tools.** `set_intent` takes the kinds `neutralise` (with `target`) and `raid` (with `base` and `target`), and a scenario's `[[command]]` the same keys. `propose` works for the new kinds and gives the tree the staff would form. `why` and `staff_orders` print the level before the chain.
+
+**What it was checked against.** The hand calculation, `tests/scenario_50_neutralise_a_base.rs` on `data/scenarios/50_neutralise_a_base.toml`: <<SCENARIO 50 RESULT>>
+
+**The first proof of the stage.** <<PROOF>>
+
+**Compared with earlier scenarios.** <<COMPARE>>
