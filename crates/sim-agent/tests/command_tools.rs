@@ -230,7 +230,10 @@ fn a_player_commands_scenario_36_by_the_tools() {
             json!({
                 "intent": 1,
                 "plan": 1,
-                "statement": "keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days"
+                "statement": "keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days",
+                // The level that decided: keeping a base supplied is the
+                // area's (decision 0120, 2).
+                "level": "area"
             })
         );
         assert!(!reason.to_string().contains("1000001"), "{reason}");

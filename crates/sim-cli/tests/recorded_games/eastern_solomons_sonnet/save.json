@@ -30,12 +30,12 @@
       "hash": "768ef8b371e81d68"
     }
   ],
-  "doctrine_version": "supply-8",
+  "doctrine_version": "supply-9",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "b7fda249ed674097"
+      "hash": "1eecde0ebe655cae"
     }
   ],
   "orders": [
@@ -600,6 +600,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v28",
-  "version": 4
+  "state_version": "flagplot-state-v29",
+  "version": 5
 }
