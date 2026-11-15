@@ -37,6 +37,7 @@ What comes next is the spec's order, not item 2's. Decisions 0095, 0097, 0098, 0
 
 The scale (item 2 above) is not a condition of step 3's stages 0 to 2.
 
+- From decision 0112 (refuelling that takes time): the staff counts a ship's fuelling hours at the berth rate for every ship of a run, where the engine gives a berth only to as many ships as the port has; a run of more ships than berths is free later than the staff counts. To be made exact with the first doctrine that sends several ships to fuel at once (stage 2 of step 3).
 ## Not planned
 
 - `docs/rules-comparison.md` (the designer's, Nov 14, 2026, checked against the code) sets Flag Plot's rules against another game's manual and is the list of gaps to triage. Decision 0102 rules on each gap (build, defer or decline); the rows it marks "To be written" are decision records still to come.
