@@ -1,0 +1,29 @@
+# PLACEHOLDER MAP. A stretch of open sea with two coast hexes five hexes apart
+# on one row, used by scenarios 47 and 48 (decisions 0115 and 0117): Allied
+# base 1 at (0,0) and Japanese base 2 at (5,0), which lies on bearing 090 from
+# it. The hex (0,5), where the Allied side starts holding a contact, lies on
+# bearing 150 from base 1. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-3, 8]
+r = [-3, 8]
+
+# Stands in for Allied base 1.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Stands in for Japanese base 2, 5 hexes east of base 1.
+[[hex]]
+q = 5
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
