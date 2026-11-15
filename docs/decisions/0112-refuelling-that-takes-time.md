@@ -1,10 +1,10 @@
 # 0112: Refuelling that takes time
 
-Status: a plan by the architect, written on Nov 15, 2026, as decision 0102 ordered it: after stage 1 of step 3 and before stage 3. Needs review: the designer has not confirmed it. Its four questions are at the end. Nothing is built.
+Status: a plan by the architect, written on Nov 15, 2026, as decision 0102 ordered it. Confirmed by the designer on Nov 15, 2026, who answered its four questions as the architect recommended; it is built before stage 2 of step 3. The hand calculation is written (`tests/scenario_43_fuelling_takes_time.rs`). Nothing is built.
 
 Summary: A plan for refuelling that takes time: a ship in port takes fuel through the hours of the day at the port's rate, at a berth or by lighter, in the same queue as cargo, where today every ship is filled at once at the start of the day
 
-Standing: Needs review. A plan by the architect, Nov 15, 2026. Not built
+Standing: Confirmed by the designer, Nov 15, 2026. Not built
 
 ## Why
 
@@ -18,10 +18,10 @@ It reuses the cargo rule: the same berths, the same queue, the same hours.
 
 1. **Fuel is taken through the day, not at its start.** A ship of a force stopped at a base of its side takes the fuel it lacks in the hours of each pulse, at the port's fuelling rate, as cargo is worked. The morning's refuelling at the start of the day is removed.
 2. **It needs no order,** as now. Refuelling is still a rule: a ship that lacks fuel and lies where it can be had takes it. The reserve of decision 0111 binds it as it does today, and the bases of a side in a hex are drawn on in base order.
-3. **It takes a berth or a lighter.** Berths are given out at the start of each pulse, to forces in number order, to a ship that has work to do: cargo to move, or fuel to take. A ship with no berth fuels by lighter at the lighter rate. So a force that fuels can keep another from the berth, and a small port fuels a large force slowly.
+3. **It takes a berth or a lighter** (question 2). Berths are given out at the start of each pulse, to forces in number order, to a ship that has work to do: cargo to move, or fuel to take. A ship with no berth fuels by lighter at the lighter rate. So a force that fuels can keep another from the berth, and a small port fuels a large force slowly.
 4. **A ship does one thing at a time: its cargo first, then its fuel.** A ship with a cargo order works it until it is complete and then fuels with the hours left in the pulse.
-5. **The rate is a figure of the port's size,** beside the cargo rates: tons of fuel an hour at a berth, and by lighter. Question 1 asks whether it is a figure of its own or the cargo rate.
-6. **A force that sails takes what it has.** An order to sail is not held back for fuel. The measuring tool and the briefing say, for a force in port, the fuel it lacks and the hours it will take at the present rate, so that a player or a staff can time the order. Question 3 asks whether an order to sail when fuelled is wanted as well.
+5. **The rate is a figure of the port's size,** of its own, beside the cargo rates: tons of fuel an hour at a berth, and by lighter (question 1). A rate not given is no limit: the ship takes all it lacks in the first pulse it lies there.
+6. **A force that sails takes what it has.** An order to sail is not held back for fuel. The measuring tool and the briefing say, for a force in port, the fuel it lacks and the hours it will take at the present rate, so that a player or a staff can time the order. There is no order to sail when fuelled (question 3).
 7. **A force out of fuel at a base** is restored when its first ship has taken fuel, as now, which is in the first pulse and not at the start of the day.
 8. **Nothing else changes.** A ship in port in no force takes no fuel, as now. Fuel carried as cargo is still not burned. Aircraft still fly on supply.
 
@@ -49,11 +49,22 @@ It reuses the cargo rule: the same berths, the same queue, the same hours.
 
 ## The hand calculation
 
-To be written by the architect before any code, as scenario 43: two forces at one port of one berth, one loading cargo and one fuelling; a large force at a small port that sails short on the second morning; a force out of fuel restored in the first pulse; and the reserve holding a ship short through the day.
+`tests/scenario_43_fuelling_takes_time.rs`, written by the architect before any code: two forces at one port of one berth, one loading cargo and then fuelling, the other fuelling by lighter until the berth is free; a cruiser at a port with no berth that sails short on the second morning and finishes where she arrives; and a reserve holding a destroyer short, recorded once.
+
+Rulings made while writing it:
+
+- **A berth given in a pulse is that ship's for the pulse,** as for cargo. A ship that finishes early does not hand it on until the next pulse.
+- **A ship that arrives in a pulse fuels in the hours of it that are left,** as it works cargo.
+- **A ship held at a reserve is recorded once,** in the pulse it is first held, and not again while nothing changes.
+- **The tools say what a force in port lacks and the hours it would take** at that port's lighter rate, or its berth rate where the port has a berth: the list of forces and the briefing.
+- **On the frozen figures** no fuelling rate is given, so a ship fills in the first pulse it lies in port. A force that begins a game in port short of fuel and sails on day 1 now sails as it began, where before it was filled first: the build lists every scenario where that is so, and the architect restates any hand calculation it touches.
+- **The staff of stage 1** counts the hours a ship will take to fuel at the source as it counts loading, in whole days, before it calls the ship free.
 
 ## Questions for the designer
 
-1. **The rate.** A figure of its own for fuel, by size of port, or the cargo rate? I recommend its own figure: oil is pumped and cargo is lifted, and tying them would make a port that is good at one good at the other. It starts as a placeholder equal to the cargo rate until research gives a row.
-2. **A berth.** Does a ship that fuels take a berth that cargo could have had? I recommend yes. The contention is what makes a port a constraint; without it only the hours are added.
-3. **Sailing short.** A force ordered to sail leaves with the fuel it has, and the tools say what it lacks and how long it would take. Or should there also be an order to sail when fuelled? I recommend the first alone for now: the staff can time its own orders, and a second kind of sailing order is one more thing every plan must choose.
-4. **When it is built.** Before stage 2 or after it? Decision 0102 says before stage 3. I recommend before stage 2: stage 2's doctrine sends fighting forces to sea and back, and would otherwise be written and tested on free fuel and then changed.
+Answered on Nov 15, 2026, each as the architect recommended.
+
+1. **The rate:** a figure of its own for fuel, by size of port. It starts as a placeholder equal to the cargo rate until research gives a row.
+2. **A berth:** a ship that fuels takes a berth that cargo could have had.
+3. **Sailing short:** a force ordered to sail leaves with the fuel it has, and the tools say what it lacks and how long it would take. No order to sail when fuelled.
+4. **When:** before stage 2 of step 3.
