@@ -8,6 +8,9 @@ Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Not buil
 
 ## What it adds to the contract
 
+Amended on Nov 15, 2026, by decision 0116: covering a base from the air is a sub-intent the staff forms under the end "hold a place", and a commander may still state it himself. Addressed to a base, it may use the air groups at that base unless a forces limit says otherwise. The doctrine and the hand calculation below are unchanged; in scenario 47 the commander states it directly.
+
+
 1. **A kind of intent: cover a base.** It names a base of the side. It has no date: it stands until withdrawn. Its plan is drafted, made ready and released as a supply plan is, by the same leaves.
 2. **A forces limit may name air groups.** The staff gives an order to an air group only where an intent's forces limit names it, and intake refuses any other, as it does for ships. A group serves one intent: where two name it, the higher in priority has it.
 3. **A commander's order to a group in a forces limit overrides,** and holds the group, as an order to a force does (ruling 23 of decision 0107). A hold on a group, or on its search arc, is honoured as stage 1 built it.

@@ -1,8 +1,8 @@
 # 0113: Step 3, stage 2: doctrine for the fighting tasks, and the enemy played by the staff
 
-Status: a plan by the architect, written on Nov 15, 2026, for the designer's approval, as the spec asks of every stage (`docs/step3-spec.md`, "Built in stages"). Confirmed by the designer on Nov 15, 2026, who answered its seven questions as the architect recommended. Nothing is built. Each step gets its hand calculations or test plan before any code, as stage 1 did. Step 1's two rule changes are decision 0114.
+Status: a plan by the architect, written on Nov 15, 2026, for the designer's approval, as the spec asks of every stage (`docs/step3-spec.md`, "Built in stages"). Confirmed by the designer on Nov 15, 2026, and then reopened by him the same day: its intents were tasks, and decision 0116 now says what an intent is. "What the commander can say" is rewritten on it, and the seven questions are being put to the designer again. Step 1, the two strike settings (decision 0114), does not depend on the answer. Nothing else is built.
 
-Summary: A plan for step 3, stage 2: seven kinds of intent beside supply (cover a place, strike what comes within reach, wear down a base, intercept, escort a run, keep a force fuelled, rest and repair), a doctrine for each on both sides, the numbers of the three risk levels set from the record, two small rule changes the doctrines need, and the proof: a battle of the slice and then a week of it with no unit order from anyone
+Summary: A plan for step 3, stage 2: three ends beside supply (hold a place, deny an area, neutralise a base), the tasks the staff forms under them (cover, search, strike, intercept, escort, raid) with a doctrine for each on both sides, the numbers of the three risk levels set from the record, two small rule changes the doctrines need, and the proof: a battle of the slice and then a week of it with no unit order from anyone
 
 Standing: Confirmed by the designer, Nov 15, 2026. Not built
 
@@ -16,20 +16,20 @@ It does not land troops, march, bombard a base from the sea or pull out of a pla
 
 ## What the commander can say
 
-1. **Seven kinds of intent are added** to keeping a base supplied. Each names its subject and has the six limits of the contract.
+Rewritten on Nov 15, 2026, on decision 0116: an intent is an end, and the staff forms the tasks beneath it. The first draft of this section gave the commander seven kinds of intent, most of which were tasks.
 
-| Intent | The commander says | Its measure |
-| --- | --- | --- |
-| Cover a place | Keep this base, or this hex of sea, covered from the air and from the sea | The share of daylight pulses with a patrol over it; the share of the approaches searched |
-| Strike what comes within reach | Attack enemy ships that come within reach of this base or this carrier force | None. It is judged by what it sinks and what it costs |
-| Wear down a base | Raid this enemy base | Raids a week, or "as the force allows" |
-| Intercept | Meet an enemy force expected at this place, by night or by day | The place and the nights |
-| Escort a run | The runs of this supply intent are escorted, and covered from a distance | Not an intent of its own: a setting of a supply intent (decision 9) |
-| Keep a force fuelled | This force is not to go below so many days of fuel at cruise | Days of fuel |
-| Rest and repair | Keep these groups and ships fit to fight | The fatigue and the damage above which a unit is withdrawn |
+1. **Three ends are added** to keeping a base supplied. Each is addressed to a level, names its subject and has the limits of the contract.
 
-2. **An area intent is a list of these.** "Hold Guadalcanal's airfield open; deny the enemy his reinforcement; risk no carrier for it" is, for the staff of stage 2, a cover intent on Lunga, a strike intent for the groups at Henderson Field and the carrier forces, a supply intent with escort, and a forces limit that leaves the carriers out of anything inside enemy air reach. The commander states the list; stage 3 lets him state the area intent alone and has the staff draw the list.
-3. **Both sides have them.** A scenario states each side's intents as commands of day 1, as scenarios 36 to 45 do. With a staff on both sides and no order in the file, the game is played from intents alone.
+| Intent | The commander says | Its measure | The sub-intents the staff forms under it |
+| --- | --- | --- | --- |
+| Hold a place | This base stays ours and working | Days its airfield is open; raids met; its days of supply | Cover from the air; cover from the sea; search of its approaches; supply runs, escorted where there is a threat |
+| Deny an area | The enemy does not move ships through these waters | What the side believes got through | Search; strikes on what is found; interception by night |
+| Neutralise a base | This enemy base cannot hurt us | Its raids on us; the aircraft the side believes are there | Raids, and their escort |
+
+2. **The sub-intents are intents too,** a level down, made by the staff and handed in with their reasons. A commander may state one himself, to a task force or a base, and the staff fills in beneath it. The doctrines below are how each is carried out.
+3. **Rest, repair and fuel are policy,** under the risk and reserve limits. No one states them. The staff's reasons show them.
+4. **Stage 2 builds two levels:** an end and its tasks. The area intent stated alone, the operation with its phases, and taking a place are stage 3.
+5. **Both sides have them.** A scenario states each side's ends as commands of day 1. With a staff on both sides and no order in the file, the game is played from intents alone.
 
 ## The doctrines
 
