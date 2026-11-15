@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 4 },
+    "version": { "const": 5 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -23,6 +23,11 @@
     "action": { "$ref": "#/$defs/action" },
     "losses": { "$ref": "#/$defs/losses" },
     "task_forces": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/force_line" } },
+    "free_forces": {
+      "description": "Forces that have nothing left to do (decision 0110, item 6): an unload that has landed everything, men and cargo, or a load that is complete. Left out when there are none.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/free_force" }
+    },
     "away_at_yard": {
       "description": "The forces away at the yard (decision 0069), each with the day it is back. Left out when none is away.",
       "type": "array",
@@ -38,6 +43,11 @@
     },
     "air_groups": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/air_group_line" } },
     "bases": { "type": "array", "items": { "$ref": "#/$defs/base" } },
+    "shared_hexes": {
+      "description": "Each hex where the side holds more than one base, shown as one place (decision 0110, item 8): the stock of all its bases and the days of supply for the hex, once. The bases are still listed in bases. Left out when none.",
+      "type": "array",
+      "items": { "$ref": "defs.schema.json#/$defs/shared_hex" }
+    },
     "land_units": {
       "description": "The side's land units and what yesterday's events say happened to their men (decision 0066, 21). Left out when the side has no land unit.",
       "$ref": "#/$defs/land_units"
@@ -50,6 +60,22 @@
     "warnings": { "$ref": "#/$defs/warnings" }
   },
   "$defs": {
+    "free_force": {
+      "description": "A force with nothing left to do (decision 0110, item 6).",
+      "type": "object",
+      "required": ["task_force", "place", "finished", "carries_supply_t", "carries_fuel_t", "carries_men"],
+      "additionalProperties": false,
+      "properties": {
+        "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+        "place": { "$ref": "defs.schema.json#/$defs/place" },
+        "finished": { "description": "unloading (everything landed, men and cargo) or loading (the load is complete).", "enum": ["unloading", "loading"] },
+        "base": { "description": "The base it worked at.", "$ref": "defs.schema.json#/$defs/handle_or_null" },
+        "carries_supply_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "carries_fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "carries_men": { "type": "integer" },
+        "event": { "description": "The side's number of the event that said so, when it was yesterday's. Left out for a force that finished on an earlier day.", "type": "integer" }
+      }
+    },
     "objectives": {
       "description": "The side's own mission and objectives (decision 0054), its progress as far as it can know it, and the umpire's result once the game is over. mission is null and objectives empty when the scenario has none; result is null until the game is over (and always null without objectives).",
       "type": "object",
@@ -87,6 +113,34 @@
       "required": ["kind", "base", "closed", "ship_points", "points", "known"],
       "additionalProperties": false,
       "properties": {
+        "open_now": {
+          "description": "For base_open only (decision 0110, item 4): whether today would count, from the side's own facts now. Left out for every other kind.",
+          "type": "object",
+          "required": ["yours"],
+          "additionalProperties": false,
+          "properties": {
+            "yours": { "description": "Whether the base is the side's own now. When it is not, nothing counts until it is, and the other fields are left out.", "type": "boolean" },
+            "supply_t": { "description": "The supply at the base now.", "$ref": "defs.schema.json#/$defs/dec" },
+            "aircraft_ready": { "description": "The aircraft ready of the groups at the base.", "type": "integer" },
+            "open": { "description": "Whether the base is open now: supply above 0 and an aircraft ready.", "type": "boolean" },
+            "counts": { "description": "Whether today would count for the objective as it is worded: open, or with closed, shut.", "type": "boolean" },
+            "missing": {
+              "description": "What is missing for the base to be open; left out when it is open.",
+              "type": "array",
+              "items": { "enum": ["supply", "aircraft"] }
+            },
+            "days_seen": {
+              "description": "The days the side saw this base's day end while it was its own, and how many of them ended open. Left out when none.",
+              "type": "object",
+              "required": ["days", "open"],
+              "additionalProperties": false,
+              "properties": {
+                "days": { "type": "integer" },
+                "open": { "type": "integer" }
+              }
+            }
+          }
+        },
         "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost"] },
         "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
         "closed": { "type": ["boolean", "null"] },
@@ -362,6 +416,21 @@
               "event": { "type": "integer" }
             }
           }
+        },
+        "found_empty_yesterday": {
+          "description": "Hexes where the side's own men found no enemy man ashore yesterday, and the estimate cleared (decision 0110, item 10). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "men", "reported_day", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "men": { "type": "integer", "description": "The men of the estimate cleared." },
+              "reported_day": { "type": "integer", "description": "The day that estimate was reported; 0 for an opening estimate." },
+              "event": { "type": "integer" }
+            }
+          }
         }
       }
     },
@@ -608,8 +677,8 @@
           "items": {
             "type": "object",
             "required": [
-              "air_group", "shot_down", "destroyed_on_ground", "written_off", "lost_with_ship",
-              "pilots_lost", "events"
+              "air_group", "shot_down", "destroyed_on_ground", "written_off", "written_off_by",
+              "lost_with_ship", "pilots_lost", "events"
             ],
             "additionalProperties": false,
             "properties": {
@@ -617,6 +686,21 @@
               "shot_down": { "type": "integer" },
               "destroyed_on_ground": { "type": "integer" },
               "written_off": { "type": "integer" },
+              "written_off_by": {
+                "description": "Why they were written off, by cause (decision 0110, item 9): wear after a sortie, or damaged aircraft left behind by a rebase. The aircraft add up to written_off.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["cause", "aircraft"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "cause": { "enum": ["wear", "rebase"] },
+                    "sortie": { "description": "For wear: the sortie, such as patrol or base strike.", "type": "string" },
+                    "base": { "description": "For rebase: the base the group left.", "$ref": "defs.schema.json#/$defs/handle" },
+                    "aircraft": { "type": "integer" }
+                  }
+                }
+              },
               "lost_with_ship": { "type": "integer" },
               "no_deck": { "description": "Left out when 0. Aircraft that were in the air when their own deck was lost, found no other carrier with room and no base within reach, and came down in the sea.", "type": "integer" },
               "ditched": { "description": "Left out when 0. Aircraft that ran out of fuel on the way home from a strike or escort sortie beyond their radius, and are lost.", "type": "integer" },
@@ -962,7 +1046,61 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "fatigue_rule": {
+          "description": "The rule of fatigue of this scenario (decision 0110, item 3). Left out where the scenario has no ground figures.",
+          "type": "object",
+          "required": ["attack_day", "march_day", "rest_per_day", "attack_limit"],
+          "additionalProperties": false,
+          "properties": {
+            "attack_day": { "description": "Added by a day of attack.", "$ref": "defs.schema.json#/$defs/dec" },
+            "failed_attack": { "description": "Added besides on a day the side's attack failed. Left out when 0.", "$ref": "defs.schema.json#/$defs/dec" },
+            "march_day": { "description": "Added by a day of march.", "$ref": "defs.schema.json#/$defs/dec" },
+            "strain_per_day": { "description": "The most a day under fire adds (strain). Left out where the strain rule is off.", "$ref": "defs.schema.json#/$defs/dec" },
+            "rest_per_day": { "description": "Taken off by a day of rest.", "$ref": "defs.schema.json#/$defs/dec" },
+            "attack_limit": { "description": "Above this a unit on attack goes back to defend.", "$ref": "defs.schema.json#/$defs/dec" }
+          }
+        },
         "units": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/land_unit_line" } },
+        "no_activity_yesterday": {
+          "description": "Units that were to work, train or rehearse yesterday and did not, and why (decision 0110, item 1). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "activity", "place", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "activity": { "enum": ["work", "training", "rehearsal"] },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "reason": { "enum": ["marched", "contested", "no_base", "not_fed", "men_aboard", "at_ceiling", "rehearsal_full", "force_not_ready"] },
+              "by": { "description": "For contested: whose attack.", "enum": ["own_attack", "enemy_attack"] },
+              "up_to": { "description": "For at_ceiling: the experience training stops at.", "type": "integer" },
+              "event": { "description": "The side's number of the event that shows the reason (the march, the fight or the feeding), where one does.", "type": "integer" }
+            }
+          }
+        },
+        "landings_yesterday": {
+          "description": "What each force's landing came to yesterday (decision 0110, item 7). The ships' lines are in landed_yesterday and explain gives each. Left out when none landed anything.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "place", "men_landed", "supply_landed_t", "fuel_landed_t", "men_aboard", "supply_aboard_t", "fuel_aboard_t", "finished", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "men_landed": { "type": "integer" },
+              "supply_landed_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "fuel_landed_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "men_aboard": { "type": "integer" },
+              "supply_aboard_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "fuel_aboard_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "finished": { "description": "True when nothing is left aboard.", "type": "boolean" },
+              "finishes_in_days": { "description": "Days to land the rest at yesterday's rate (men and tons each at their own, the longer, rounded up). Left out when finished, and when some part of the rest was not landed yesterday.", "type": "integer" },
+              "event": { "description": "The side's number of the first event of the landing yesterday.", "type": "integer" }
+            }
+          }
+        },
         "landed_yesterday": { "type": "array", "items": { "$ref": "#/$defs/men_moved" } },
         "embarked_yesterday": { "type": "array", "items": { "$ref": "#/$defs/men_moved" } },
         "bases_formed_yesterday": {
@@ -1464,7 +1602,7 @@
       "type": "object",
       "required": [
         "base", "place", "supply_t", "fuel_t", "spent_yesterday_t", "destroyed_yesterday_t",
-        "days_of_supply", "planned_days_of_supply", "stocks_yesterday"
+        "days_of_supply", "stocks_yesterday"
       ],
       "additionalProperties": false,
       "properties": {
@@ -1481,8 +1619,12 @@
         "airfield_damage": { "$ref": "defs.schema.json#/$defs/airfield_damage" },
         "reserves": { "$ref": "defs.schema.json#/$defs/base_reserves" },
         "planned_days_of_supply": {
-          "description": "Today's days of supply in the base's hex (decision 0107, 31 to 36): the side's supply there over its planned use for a day, read before the day's orders; no figure where nothing is used. The side's figure for the hex, the same for every base of the side in it. Not days_of_supply, which is the stock over yesterday's spending.",
+          "description": "Today's days of supply in the base's hex (decision 0107, 31 to 36): the side's supply there over its planned use for a day, read before the day's orders; no figure where nothing is used. The side's figure for the hex. Left out for a base in a hex where the side holds more than one base (decision 0110, item 8): the figure is then in shared_hexes, once. Not days_of_supply, which is the stock over yesterday's spending.",
           "$ref": "defs.schema.json#/$defs/days_of_supply"
+        },
+        "formed_by": {
+          "description": "Given when a landing or a march formed the base (decision 0110, item 8). Left out for a base that was there at the start.",
+          "$ref": "defs.schema.json#/$defs/base_formed_by"
         },
         "ships_in_port": {
           "description": "The side's ships in port at the base in no force (decision 0111): form_task_force takes ships from here. Left out when there are none.",
@@ -1605,13 +1747,17 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["day", "air_group", "aircraft", "pilots"],
+            "required": ["day", "air_group", "aircraft", "pilots", "held_past_day", "can_be_delivered"],
             "additionalProperties": false,
             "properties": {
               "day": { "type": "integer" },
               "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
               "aircraft": { "type": "integer" },
-              "pilots": { "type": "integer" }
+              "pilots": { "type": "integer" },
+              "at": { "description": "The base or ship the group is at.", "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "held_past_day": { "description": "True for an arrival past its day that was held back (decision 0110, item 2).", "type": "boolean" },
+              "can_be_delivered": { "description": "Whether it would be delivered if its night came now.", "type": "boolean" },
+              "waits_for": { "description": "What holds it, when it cannot be delivered.", "$ref": "defs.schema.json#/$defs/arrival_waits" }
             }
           }
         },
@@ -1673,12 +1819,33 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["base", "fuel_t", "task_forces"],
+            "required": ["base", "fuel_t", "task_force", "least_fuelled"],
             "additionalProperties": false,
             "properties": {
-              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "description": "The side's lowest-numbered base in the force's hex; none of its bases there has any fuel.", "$ref": "defs.schema.json#/$defs/handle" },
+              "other_bases": { "description": "The side's other bases in the hex. Left out when none.", "$ref": "defs.schema.json#/$defs/handles" },
               "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
-              "task_forces": { "$ref": "defs.schema.json#/$defs/handles" }
+              "task_force": { "description": "The force stopped there: one warning for each force (decision 0110, item 5).", "$ref": "defs.schema.json#/$defs/handle" },
+              "least_fuelled": {
+                "description": "The force's least fuelled ship and her fuel.",
+                "oneOf": [
+                  { "$ref": "defs.schema.json#/$defs/fuel_line" },
+                  { "type": "null" }
+                ]
+              },
+              "home_passage": {
+                "description": "The passage to the force's home port, by measure's own forecast. Left out when the force has no home port of the side's.",
+                "type": "object",
+                "required": ["port", "route_nm", "outcome"],
+                "additionalProperties": false,
+                "properties": {
+                  "port": { "$ref": "defs.schema.json#/$defs/handle" },
+                  "route_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+                  "outcome": { "enum": ["arrives", "runs_out_of_fuel", "cannot_move", "does_not_sail", "already_there"] },
+                  "needs_t": { "description": "For arrives: the fuel the least fuelled ship burns on the way.", "$ref": "defs.schema.json#/$defs/dec" },
+                  "steamed_nm": { "description": "For runs_out_of_fuel: the miles steamed before a ship is dry.", "$ref": "defs.schema.json#/$defs/dec" }
+                }
+              }
             }
           }
         },

@@ -51,6 +51,7 @@ pub(crate) use self::defeat::is_beaten;
 pub(crate) use self::fatigue::{fed_where_it_stands, goes_back_to_defend, when_attack_spent};
 #[cfg(test)]
 pub(crate) use self::fight::experience_chance;
+pub(crate) use self::fight::firing_men;
 
 /// The other side.
 const fn other(side: Side) -> Side {

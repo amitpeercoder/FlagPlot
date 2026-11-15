@@ -48,7 +48,7 @@ BASES
 - base:2 "Placeholder airfield B" at (5,0): fuel 0 t (for ships; aircraft do not use it)
 
 ARRIVALS
-- Arrivals due on the coming day and the next two days: none
+- Arrivals still due: none
 - Replacements: none
 
 WARNINGS

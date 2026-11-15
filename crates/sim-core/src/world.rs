@@ -105,10 +105,13 @@ impl Default for MadeIds {
 /// falling back is out of a fight its own side starts, which changes every
 /// live fight where one is) and 8 from the architect's ruling on decision
 /// 0106 (a unit's loss to fire is cut to a whole man once, which changes the
-/// live scenarios with men under fire behind cover). A pull request raises it by one when
+/// live scenarios with men under fire behind cover) and 9 from decision 0110
+/// (a side's men report an empty hex, which changes every live scenario where
+/// a side holds an estimate of a hex its fighting men stand in and the enemy
+/// has left). A pull request raises it by one when
 /// it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 8;
+pub const RULES_VERSION: u32 = 9;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

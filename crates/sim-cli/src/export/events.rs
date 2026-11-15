@@ -857,6 +857,18 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .int("men", *men)
                 .flag("replaced", *replaced),
         ),
+        EventKind::GroundFoundEmpty {
+            side,
+            hex,
+            men,
+            reported_day,
+        } => (
+            "ground_found_empty",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .int("men", *men)
+                .int("reported_day", *reported_day),
+        ),
         EventKind::MarchDay {
             unit,
             from,

@@ -1,0 +1,166 @@
+# Scenario 38: a side's men report an empty hex (decision 0110, item 10).
+#
+# Proves decision 0110, items 10 and 11, against a hand calculation, in four
+# places. At P a Japanese working unit, its side beaten with no fight, is set
+# to fall back to R and stays three days (marching its third day); the Allied
+# regiment has no estimate at first, gets a daily ground report, and on the
+# day the last Japanese man is gone is told its men find none, and the
+# estimate is cleared. At Q the Allied side holds an opening estimate of men
+# who were never there; its men find none on day 1. At S the Allied side
+# holds an opening estimate and has only a working unit: no report is made.
+# At V a Japanese working unit surrenders on day 1 and the Allied platoon is
+# told its men find none. The hand calculation is in
+# tests/scenario_38_an_empty_hex.rs, which runs the scenario on the frozen
+# step 1 figures. The estimates drawn are the dice; the test reads them.
+#
+# No air combat, wear, fatigue or air supply figures are named, so no
+# aircraft flies and nothing wears, tires or is grounded. Every base has an
+# airfield (the default). No order is given.
+#
+# PLACEHOLDER DATA. The units, bases and map are invented.
+
+name = "Scenario 38: An empty hex"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_an_empty_hex.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base 1, Japanese, at P"
+side = "japanese"
+q = 0
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 2
+name = "Placeholder base 2, Japanese, at R"
+side = "japanese"
+q = 1
+r = 0
+supply_t = 100
+
+[[base]]
+id = 3
+name = "Placeholder base 3, Allied, at P"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 4
+name = "Placeholder base 4, Allied, at Q"
+side = "allied"
+q = 10
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 5
+name = "Placeholder base 5, Allied, at S"
+side = "allied"
+q = 20
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 6
+name = "Placeholder base 6, Japanese, at V"
+side = "japanese"
+q = 30
+r = 0
+supply_t = 1000
+
+[[base]]
+id = 7
+name = "Placeholder base 7, Allied, at V"
+side = "allied"
+q = 30
+r = 0
+supply_t = 1000
+
+[[land_unit]]
+id = 1
+name = "Placeholder Japanese working unit at P"
+side = "japanese"
+working = true
+men = 300
+q = 0
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder Allied regiment at P"
+side = "allied"
+men = 500
+q = 0
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 3
+name = "Placeholder Allied platoon at Q"
+side = "allied"
+men = 100
+q = 10
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 4
+name = "Placeholder Allied working unit at S"
+side = "allied"
+working = true
+men = 100
+q = 20
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 5
+name = "Placeholder Japanese working unit at V"
+side = "japanese"
+working = true
+men = 200
+q = 30
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 6
+name = "Placeholder Allied platoon at V"
+side = "allied"
+men = 100
+q = 30
+r = 0
+posture = "attack"
+
+# The Allied side's opening estimates of Japanese men: 400 at Q, where there
+# are none, 400 at S, where there are none, and 300 at V. It holds none at P.
+
+[[estimate]]
+side = "allied"
+q = 10
+r = 0
+men = 400
+
+[[estimate]]
+side = "allied"
+q = 20
+r = 0
+men = 400
+
+[[estimate]]
+side = "allied"
+q = 30
+r = 0
+men = 300

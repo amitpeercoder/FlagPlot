@@ -40,6 +40,8 @@ TASK FORCES
   - Least fuelled: ship:1 "Placeholder troop transport 1" with 968 t, range 9680 miles at cruising speed
 - task_force:2 "Placeholder fast transport group" at (8,0) Landing at (8,0): arrived, transport, speed cruise, readiness normal, not alert, 1 ship afloat, cargo aboard: 0 t supply, 0 t fuel
   - Least fuelled: ship:3 "Placeholder fast transport 1" with 490 t, range 3920 miles at cruising speed
+- Free: task_force:1 "Placeholder landing convoy" has finished unloading at base:2 "Landing at (8,0)"; it still carries nothing
+- Free: task_force:2 "Placeholder fast transport group" has finished unloading at base:2 "Landing at (8,0)"; it still carries nothing
 
 AIR GROUPS
 - Air groups: none
@@ -48,17 +50,18 @@ BASES
 - base:1 "Placeholder embarkation port" at (0,0): supply 1000 t, fuel 0 t (for ships; aircraft do not use it)
   - Yesterday: 0 t supply spent, 0 t destroyed; no spending yesterday
   - Days of supply for the hex: no figure, no supply is planned to be used there today (1000 t in stock)
-- base:2 "Landing at (8,0)" at (8,0): supply 0 t, fuel 0 t (for ships; aircraft do not use it)
+- base:2 "Landing at (8,0)" at (8,0): supply 0 t, fuel 0 t (for ships; aircraft do not use it); formed by the landing of task_force:1 "Placeholder landing convoy" on day 2 [event 25]
   - Yesterday: 3 t supply spent, 0 t destroyed; supply lasts 0 days at yesterday's spending
-  - Days of supply for the hex (all the side's bases there): 0 days, 0 t over a planned use of 5.85 t a day (men ashore 5.85, men due 0, aircraft upkeep 0, repairs 0, sorties 0)
+  - Days of supply for the hex: 0 days, 0 t over a planned use of 5.85 t a day (men ashore 5.85, men due 0, aircraft upkeep 0, repairs 0, sorties 0)
   - Stocks yesterday: supply 3 t to 0 t (feeding men ashore 3 t)
   - Works: no airfield, 0 of 20000 work done; defences 0 (improvised); yesterday's work on the port 0, on the aircraft 0
 
 LAND UNITS
-- land_unit:1 "Placeholder battalion 1": 585 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night
-- land_unit:2 "Placeholder battalion 2": 390 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night
-- land_unit:3 "Placeholder battalion 3": 226 men ashore at (10,0); posture defend, fatigue 0, fed share 0; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; unfed last night
-- land_unit:4 "Placeholder battalion 3, detachment 4": 195 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night
+- Fatigue: attack day +20, march day +10, rest -5 a day; above 60 a unit on attack goes back to defend; fatigue cuts the men who fire
+- land_unit:1 "Placeholder battalion 1": 585 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; 292 men would fire today at its fatigue; another day of attack would make its fatigue 20; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night
+- land_unit:2 "Placeholder battalion 2": 390 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; 195 men would fire today at its fatigue; another day of attack would make its fatigue 20; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night
+- land_unit:3 "Placeholder battalion 3": 226 men ashore at (10,0); posture defend, fatigue 0, fed share 0; 0 men would fire today at its fatigue; another day of attack would make its fatigue 20; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; unfed last night
+- land_unit:4 "Placeholder battalion 3, detachment 4": 195 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; 97 men would fire today at its fatigue; another day of attack would make its fatigue 20; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night
 - Fed last night: 1200 men ashore at (8,0) Landing at (8,0): 600 fed from base:2 "Landing at (8,0)", 600 unfed [event 56]
 - Fed last night: 237 men ashore at (10,0): none fed, no base of the side in the hex, 237 unfed [event 60]
 - Men lost yesterday: land_unit:1 "Placeholder battalion 1" lost 15 men unfed at (8,0) Landing at (8,0), 585 left ashore [event 57]
@@ -69,13 +72,14 @@ LAND UNITS
 - Supply at (10,0): no base of the side here, so the 226 men ashore get none
 
 ARRIVALS
-- Arrivals due on the coming day and the next two days: none
+- Arrivals still due: none
 - Replacements: none
 
 WARNINGS
 - Ships that cannot reach a base: none
 - Supply low: base:2 "Landing at (8,0)" has no supply
-- No fuel: base:2 "Landing at (8,0)" has no fuel and task_force:1 "Placeholder landing convoy", task_force:2 "Placeholder fast transport group" stopped there
+- No fuel: base:2 "Landing at (8,0)" has no fuel and task_force:1 "Placeholder landing convoy" is stopped there; its least fuelled ship ship:1 "Placeholder troop transport 1" has 968 t; it has no home port of yours to go to
+- No fuel: base:2 "Landing at (8,0)" has no fuel and task_force:2 "Placeholder fast transport group" is stopped there; its least fuelled ship ship:3 "Placeholder fast transport 1" has 490 t; it has no home port of yours to go to
 - Air groups short of pilots: none
 - Air groups tired: fatigue is not in play
 - Aircraft wear: not in play

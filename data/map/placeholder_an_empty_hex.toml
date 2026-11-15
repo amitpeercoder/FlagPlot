@@ -1,0 +1,57 @@
+# PLACEHOLDER MAP. Open sea with five coast hexes, all clear, port size 0,
+# used by scenario 38 (decision 0110, item 10, a side's men report an empty
+# hex). P at (0,0) has a land link to R at (1,0). Q at (10,0), S at (20,0) and
+# V at (30,0) have no land link. No force sails. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 31]
+r = [-1, 2]
+
+# P.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# R.
+[[hex]]
+q = 1
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# Q.
+[[hex]]
+q = 10
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# S.
+[[hex]]
+q = 20
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+# V.
+[[hex]]
+q = 30
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 0
+
+[[land_link]]
+a = [0, 0]
+b = [1, 0]
+note = "Placeholder: P and R are on one landmass."

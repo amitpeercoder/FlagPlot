@@ -57,6 +57,13 @@ pub struct ListBases {
     pub kind: &'static str,
     pub area: Option<Area>,
     pub bases: Vec<BaseLine>,
+    /// Each hex in `area` where the side holds more than one base, shown as
+    /// one place: the stock of all its bases and the days of supply for the
+    /// hex, once (decision 0110, item 8). The bases themselves are still
+    /// listed in `bases`, each with how it was formed. Left out when no hex
+    /// holds more than one.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub shared_hexes: Vec<crate::briefing::SharedHexLine>,
     /// The bases the side does not own: public facts only (decision 0050).
     pub enemy_bases: Vec<EnemyBaseLine>,
 }
@@ -124,7 +131,8 @@ pub fn list_forces(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListForces 
 
 /// A line for each of the side's bases, in `area` if one is given.
 pub fn list_bases(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListBases {
-    let ctx = Ctx::new(*view);
+    let mut ctx = Ctx::new(*view);
+    ctx.set_events(&view.events());
     ListBases {
         format: FORMAT,
         version: VERSION,
@@ -135,6 +143,14 @@ pub fn list_bases(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListBases {
             .values()
             .filter(|b| within(area, b.hex))
             .map(|b| base_line(&ctx, b))
+            .collect(),
+        shared_hexes: crate::briefing::shared_hexes(&ctx)
+            .into_iter()
+            .filter(|h| {
+                area.is_none_or(|(centre, radius)| {
+                    centre.air_distance_nm(sim_core::hex::Hex::new(h.place.q, h.place.r)) <= radius
+                })
+            })
             .collect(),
         enemy_bases: ctx
             .enemy_bases
@@ -383,7 +399,10 @@ pub fn get_entity(view: &SideView<'_>, handle: &str) -> EntityAnswer {
 fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
     let (kind, number) = handle.split_once(':')?;
     let id: u32 = number.parse().ok()?;
-    let ctx = Ctx::new(*view);
+    let mut ctx = Ctx::new(*view);
+    if kind == "base" {
+        ctx.set_events(&view.events());
+    }
     match kind {
         "ship" => {
             let ship = ctx.own_ship(id)?;

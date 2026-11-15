@@ -180,6 +180,87 @@ pub struct AirGroupLine {
     /// and keeps at least one.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub kept_on_ground_by_field: Option<KeptByField>,
+    /// Set when the group has no aircraft and an arrival is still due to it
+    /// (decision 0110, item 2): the arrival and what it waits for. Left out
+    /// otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub awaiting_arrival: Option<AwaitingArrival>,
+}
+
+/// An empty air group's arrival that is still to come (decision 0110, item
+/// 2).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AwaitingArrival {
+    pub day: u32,
+    pub aircraft: u32,
+    pub pilots: u32,
+    /// True for an arrival past its day that was held back.
+    pub held_past_day: bool,
+    /// What holds it, if it could not be delivered now.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub waits_for: Option<ArrivalWaits>,
+}
+
+/// What an arrival waits for at a base that takes no aircraft (decision
+/// 0103, 5, and decision 0110, item 2).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ArrivalWaits {
+    /// `base_not_yours` (the base is not yet the side's), `no_airfield` or
+    /// `airfield_damage` (the field's damage is at or above the level that
+    /// refuses aircraft).
+    pub reason: &'static str,
+    /// For `airfield_damage`: the field's damage.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub damage: Option<Dec>,
+    /// For `airfield_damage`: the level at which a field takes none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refused_at: Option<Dec>,
+}
+
+/// What holds an arrival due to `group`, by the delivery rule of the night
+/// step (`World::receive_arrivals`): a group at a base that is not the
+/// side's, or that takes no aircraft, waits for it. `None` when it would be
+/// delivered. Reads the side's own group, bases and ground figures.
+pub(crate) fn arrival_waits(ctx: &Ctx<'_>, group: &AirGroup) -> Option<ArrivalWaits> {
+    let sim_core::state::AirGroupLocation::Base(base_id) = group.location else {
+        return None;
+    };
+    let Some(base) = ctx.bases.get(&base_id) else {
+        return Some(ArrivalWaits {
+            reason: "base_not_yours",
+            damage: None,
+            refused_at: None,
+        });
+    };
+    if !base.airfield {
+        return Some(ArrivalWaits {
+            reason: "no_airfield",
+            damage: None,
+            refused_at: None,
+        });
+    }
+    let refused_at = ctx
+        .view
+        .ground_figures()
+        .map(|figures| figures.airfield_landing_refused_at)?;
+    (base.airfield_damage >= refused_at).then_some(ArrivalWaits {
+        reason: "airfield_damage",
+        damage: Some(Dec(base.airfield_damage)),
+        refused_at: Some(Dec(refused_at)),
+    })
+}
+
+/// Whether the night step would deliver to `group` at all: not a group lost
+/// with its base, nor one aboard a ship that is gone or away at the yard.
+pub(crate) fn arrival_is_deliverable_to(ctx: &Ctx<'_>, group: &AirGroup) -> bool {
+    match group.location {
+        sim_core::state::AirGroupLocation::Lost => false,
+        sim_core::state::AirGroupLocation::Ship(ship) => ctx
+            .ships
+            .get(&ship)
+            .is_some_and(|ship| ship.location.is_on_the_map()),
+        sim_core::state::AirGroupLocation::Base(_) => true,
+    }
 }
 
 /// Aircraft a damaged airfield keeps on the ground.
@@ -228,7 +309,15 @@ pub struct BaseLine {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reserves: Option<BaseReservesLine>,
     /// The side's days of supply in the base's hex (decision 0107, 31 to 36).
-    pub days_of_supply: DaysOfSupplyLine,
+    /// Left out for a base in a hex where the side holds more than one base:
+    /// the hex's figure is in `shared_hexes`, once (decision 0110, item 8).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub days_of_supply: Option<DaysOfSupplyLine>,
+    /// How the base came to be, when a landing or a march formed it
+    /// (decision 0110, item 8). Left out for a base that was there at the
+    /// start.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub formed_by: Option<crate::briefing::BaseFormedBy>,
 }
 
 /// The side's days of supply in a hex where it holds a base (decision 0107,
@@ -520,6 +609,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
             }),
         moved_yesterday: group.rebased_day == Some(ctx.view.day()),
         kept_on_ground_by_field: aircraft_kept_by_field(ctx, group),
+        awaiting_arrival: awaiting_arrival(ctx, group),
         air_group: ctx.group(group.id),
         aircraft_type: aircraft_type
             .map_or_else(|| group.aircraft_type.to_string(), |t| t.name.clone()),
@@ -537,6 +627,27 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
     }
 }
 
+/// The arrival of an empty group that is still to come: the earliest one,
+/// with what holds it (decision 0110, item 2).
+fn awaiting_arrival(ctx: &Ctx<'_>, group: &AirGroup) -> Option<AwaitingArrival> {
+    if group.ready + group.damaged > 0 || !arrival_is_deliverable_to(ctx, group) {
+        return None;
+    }
+    let today = ctx.view.day() + 1;
+    let arrival = ctx
+        .view
+        .arrivals()
+        .filter(|a| a.air_group == group.id && (a.day >= today || a.waiting))
+        .min_by_key(|a| a.day)?;
+    Some(AwaitingArrival {
+        day: arrival.day,
+        aircraft: arrival.aircraft,
+        pilots: arrival.pilots,
+        held_past_day: arrival.day < today,
+        waits_for: arrival_waits(ctx, group),
+    })
+}
+
 pub(crate) fn base_line(ctx: &Ctx<'_>, base: &Base) -> BaseLine {
     let data = ctx.view.hex(base.hex);
     BaseLine {
@@ -549,7 +660,8 @@ pub(crate) fn base_line(ctx: &Ctx<'_>, base: &Base) -> BaseLine {
         works: base_works_line(ctx, base),
         airfield_damage: base_airfield_damage_line(ctx, base),
         reserves: base_reserves_line(base),
-        days_of_supply: days_of_supply_line(ctx, base.hex),
+        days_of_supply: (!ctx.shares_hex(base)).then(|| days_of_supply_line(ctx, base.hex)),
+        formed_by: ctx.formed_by(base.id),
     }
 }
 
@@ -707,6 +819,17 @@ pub struct LandUnitLine {
     /// (decision 0090, 8): 1 until the first night and for a unit that had
     /// no man ashore at the charge.
     pub fed_share: Dec,
+    /// For a fighting unit with men ashore: the men who would fire if it
+    /// fought now, its men ashore cut by its fed share and its fatigue
+    /// (decision 0110, item 3): `SideView::firing_men`. Left out for a
+    /// working unit, whose men do not fire, and for a unit with no man
+    /// ashore.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub firing_men_now: Option<u32>,
+    /// For the same units: what one more day of attack would make the
+    /// unit's fatigue (decision 0110, item 3).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub after_another_attack_day: Option<AnotherAttackDay>,
     /// The number of the side's standing posture order, if one is in force.
     /// Left out when none is.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -768,6 +891,18 @@ pub struct LandUnitLine {
     /// 0095, 1). Left out otherwise.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub roster: Option<RosterLine>,
+}
+
+/// What one more day of attack would do to a unit's fatigue (decision 0110,
+/// item 3).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AnotherAttackDay {
+    /// Its fatigue after the day: now plus a day of attack, no more than
+    /// 100. A march, a failed attack and strain would add to it.
+    pub fatigue: Dec,
+    /// True when that is above the level at which a unit on attack goes
+    /// back to defend, so the unit would then stop attacking.
+    pub stops_attacking: bool,
 }
 
 /// A land unit's skills (decision 0098), 0 to 4 each.
@@ -972,6 +1107,19 @@ pub(crate) fn land_unit_line(
             .filter(|cover| *cover > Fixed::ZERO)
             .map(Dec),
         fed_share: Dec(unit.fed_share),
+        firing_men_now: (!unit.working && unit.men_ashore > 0)
+            .then(|| ctx.view.firing_men(unit.id))
+            .flatten(),
+        after_another_attack_day: (!unit.working && unit.men_ashore > 0)
+            .then(|| {
+                let fatigue = ctx.view.fatigue_after_attack_day(unit.id)?;
+                let limit = ctx.view.ground_figures()?.attack_fatigue_limit;
+                Some(AnotherAttackDay {
+                    fatigue: Dec(fatigue),
+                    stops_attacking: fatigue > limit,
+                })
+            })
+            .flatten(),
         posture_order: unit.posture_order.and_then(|o| ctx.order_number_if_own(o)),
         when_spent: unit.when_spent.map(|w| w.name()),
         march: unit.march.map(|march| MarchLine {

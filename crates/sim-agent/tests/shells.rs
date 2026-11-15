@@ -292,7 +292,7 @@ fn an_opening_estimate_is_dated_day_zero_and_a_report_replaces_it() {
     assert!(
         text.contains("ENEMY MEN ASHORE (ESTIMATES)")
             && text.contains("about 300 enemy men ashore at (8,0)")
-            && text.contains(", opening estimate, day 0, 0 days old")
+            && text.contains(", the opening estimate, day 0, 0 days old")
             && text.contains("can be wrong by up to half either way"),
         "{text}"
     );
@@ -314,16 +314,31 @@ fn an_opening_estimate_is_dated_day_zero_and_a_report_replaces_it() {
     let men = n(&estimate_at(&allied["enemy_ashore"]["estimates"], 8, 0)["men"]);
     assert!((210..=630).contains(&men), "a report of 420 men: {men}");
 
-    // An estimate is never aged or dropped: after day 3 the Japanese unit is
-    // gone and no report is made, so the day-2 estimate stands, a day old.
+    // After day 3 the Japanese unit is gone: the Allied men at Y find the hex
+    // empty and the estimate of day 2 is cleared (decision 0110, item 10).
     let mut session = after_days(3);
     let (text, data) = briefing(&mut session, Side::Allied);
-    let e = estimate_at(&data["enemy_ashore"]["estimates"], 8, 0);
-    assert_eq!(e["day"], 2);
-    assert_eq!(e["age_days"], 1);
-    let men = n(&e["men"]);
+    assert!(
+        data["enemy_ashore"]["estimates"]
+            .as_array()
+            .expect("a list")
+            .is_empty(),
+        "{data}"
+    );
+    let found = data["enemy_ashore"]["found_empty_yesterday"]
+        .as_array()
+        .expect("a list");
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert_eq!(found[0]["place"]["q"], 8);
+    assert_eq!(found[0]["reported_day"], 2);
+    let men = n(&found[0]["men"]);
     assert!((20..=60).contains(&men), "a report of 40 men: {men}");
-    assert!(text.contains("reported day 2, 1 day old"), "{text}");
+    assert!(
+        text.contains("Found empty: your men at (8,0)")
+            && text.contains("find no enemy men ashore; the estimate of about")
+            && text.contains("reported day 2, is cleared"),
+        "{text}"
+    );
 }
 
 #[test]

@@ -1761,6 +1761,18 @@ pub enum EventKind {
         order: Option<OrderId>,
         reason: Box<Reason>,
     },
+    /// A side's men, fighting men standing in a hex where it holds an
+    /// estimate of the enemy ashore, found no enemy man there (decision
+    /// 0110, item 10): the estimate is cleared. `men` and `reported_day` are
+    /// the estimate cleared. Cites the report that made the estimate and
+    /// the day's fight there, if there was one. Added at the end (decision
+    /// 0110).
+    GroundFoundEmpty {
+        side: Side,
+        hex: Hex,
+        men: u32,
+        reported_day: u32,
+    },
 }
 
 impl EventKind {
@@ -2135,6 +2147,7 @@ impl EventKind {
             | EventKind::PlanStateChanged { .. }
             | EventKind::PlanAmended { .. }
             | EventKind::StaffReason { .. } => Vec::new(),
+            EventKind::GroundFoundEmpty { .. } => Vec::new(),
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
                 air_group, base, ..
@@ -3786,6 +3799,16 @@ impl fmt::Display for EventKind {
                 ),
                 None => write!(f, "{side:?} staff gave no order: {}", reason.worked),
             },
+            EventKind::GroundFoundEmpty {
+                side,
+                hex,
+                men,
+                reported_day,
+            } => write!(
+                f,
+                "{} men at {hex} find no enemy men ashore; the estimate of {men} men of day {reported_day} is cleared",
+                side.name().to_lowercase()
+            ),
         }
     }
 }

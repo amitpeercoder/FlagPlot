@@ -90,6 +90,9 @@ pub(crate) struct Ctx<'a> {
     numbers: BTreeMap<EventId, u32>,
     /// The side's own number for each of its orders, by the log's number.
     order_numbers: BTreeMap<OrderId, u32>,
+    /// How each base the side's events say was formed came to be, from
+    /// `set_events` (decision 0110, item 8).
+    formed: BTreeMap<BaseId, crate::briefing::BaseFormedBy>,
     /// The side's own ships, task forces and air groups in the umpire's id
     /// order: a unit's number is its place in the list, counting from 1
     /// (decision 0086). Every unit the view gives is in it, sunk ships and
@@ -143,6 +146,7 @@ impl<'a> Ctx<'a> {
             enemy_bases,
             place_names,
             numbers: BTreeMap::new(),
+            formed: BTreeMap::new(),
         }
     }
 
@@ -156,6 +160,55 @@ impl<'a> Ctx<'a> {
             .enumerate()
             .map(|(i, e)| (e.id, u32::try_from(i + 1).expect("few events")))
             .collect();
+        let mut formed = BTreeMap::new();
+        for (i, e) in events.iter().enumerate() {
+            let number = u32::try_from(i + 1).expect("few events");
+            if let SideEventKind::Whole(kind) = &e.kind {
+                match kind {
+                    EventKind::BaseFormed {
+                        base, task_force, ..
+                    } => {
+                        formed.insert(
+                            *base,
+                            crate::briefing::BaseFormedBy {
+                                how: "landing",
+                                by: self.force(*task_force),
+                                day: e.day,
+                                event: number,
+                            },
+                        );
+                    }
+                    EventKind::MarchBaseFormed { base, unit, .. } => {
+                        formed.insert(
+                            *base,
+                            crate::briefing::BaseFormedBy {
+                                how: "march",
+                                by: self.land_unit(*unit),
+                                day: e.day,
+                                event: number,
+                            },
+                        );
+                    }
+                    _ => {}
+                }
+            }
+        }
+        self.formed = formed;
+    }
+
+    /// How a base the side holds was formed, when its events say a landing
+    /// or a march did it. Needs `set_events`.
+    pub fn formed_by(&self, base: BaseId) -> Option<crate::briefing::BaseFormedBy> {
+        self.formed.get(&base).cloned()
+    }
+
+    /// Whether the side holds another base in the hex of `base`.
+    pub fn shares_hex(&self, base: &Base) -> bool {
+        self.bases
+            .values()
+            .filter(|other| other.hex == base.hex)
+            .count()
+            > 1
     }
 
     /// The side's number of an event it sees.

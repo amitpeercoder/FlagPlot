@@ -5,9 +5,9 @@ seed 1942
 day   1  hash 70e8a9396e34cb7e  45 events
 day   2  hash 16efbe9c2720a40a  36 events
 day   3  hash ce56425408422e92  49 events
-day   4  hash cd29fda56dbc1c3f  28 events
-day   5  hash 8ba3e8cd4f14d02e  27 events
-day   6  hash 4871ead1b8822305  26 events
+day   4  hash eddeb60197dc6705  29 events
+day   5  hash ffa01b3be1c49642  27 events
+day   6  hash 8560a74865c0a54d  26 events
 
 #1 D1 -         order:1 accepted for land_unit:3  <- order:1
 #2 D1 night     base:3 spent 30 t of supply on 6000 men ashore for the day, 4970 t left
@@ -157,69 +157,70 @@ day   6  hash 4871ead1b8822305  26 events
 #146 D4 -         Japanese ground report at (0,0): 8194 enemy men ashore, replacing the estimate held
 #147 D4 -         land_unit:1 marched: fatigue 45  <- #139
 #148 D4 -         land_unit:5 rested: fatigue 55
-#149 D4 -         land_unit:4 marched: fatigue 45  <- #141
-#150 D4 -         land_unit:2 dug in: fieldworks 30
-#151 D4 -         land_unit:3 dug in: fieldworks 10
-#152 D4 -         base:1 at the end of the day: 409.095 t of supply, 0 aircraft ready: not open
-#153 D4 -         base:2 at the end of the day: 88 t of supply, 0 aircraft ready: not open
-#154 D4 -         base:3 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
-#155 D4 -         base:4 at the end of the day: 409.6 t of supply, 0 aircraft ready: not open
-#156 D4 -         base:5 at the end of the day: 100 t of supply, 0 aircraft ready: not open
-#157 D4 -         base:6 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
-#158 D4 -         base:7 at the end of the day: 3.005 t of supply, 0 aircraft ready: not open
-#159 D5 night     base:1 spent 29.405 t of supply on 5881 men ashore for the day, 379.69 t left
-#160 D5 night     Allied men ashore at (0,0): 5881 of 5881 fed from base:1, 0 unfed  <- #159
-#161 D5 night     base:7 spent 0.7 t of supply on 140 men ashore for the day, 2.305 t left
-#162 D5 night     Japanese men ashore at (0,0): 140 of 140 fed from base:7, 0 unfed  <- #161
-#163 D5 night     base:2 spent 3.795 t of supply on 759 men ashore for the day, 84.205 t left
-#164 D5 night     Japanese men ashore at (1,0): 759 of 759 fed from base:2, 0 unfed  <- #163
-#165 D5 night     base:4 spent 29.3 t of supply on 5860 men ashore for the day, 380.3 t left
-#166 D5 night     Allied men ashore at (10,0): 5860 of 5860 fed from base:4, 0 unfed  <- #165
-#167 D5 night     base:5 spent 2.06 t of supply on 412 men ashore for the day, 97.94 t left
-#168 D5 night     Japanese men ashore at (11,0): 412 of 412 fed from base:5, 0 unfed  <- #167
-#169 D5 -         land_unit:2 rested: fatigue 0
-#170 D5 -         land_unit:3 rested: fatigue 55
-#171 D5 -         Allied ground report at (0,0): 155 enemy men ashore, replacing the estimate held
-#172 D5 -         Japanese ground report at (0,0): 4236 enemy men ashore, replacing the estimate held
-#173 D5 -         land_unit:1 rested: fatigue 40
-#174 D5 -         land_unit:5 rested: fatigue 50
-#175 D5 -         land_unit:4 rested: fatigue 40
-#176 D5 -         land_unit:1 dug in: fieldworks 10
-#177 D5 -         land_unit:3 dug in: fieldworks 20
-#178 D5 -         land_unit:4 dug in: fieldworks 10
-#179 D5 -         base:1 at the end of the day: 379.69 t of supply, 0 aircraft ready: not open
-#180 D5 -         base:2 at the end of the day: 84.205 t of supply, 0 aircraft ready: not open
-#181 D5 -         base:3 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
-#182 D5 -         base:4 at the end of the day: 380.3 t of supply, 0 aircraft ready: not open
-#183 D5 -         base:5 at the end of the day: 97.94 t of supply, 0 aircraft ready: not open
-#184 D5 -         base:6 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
-#185 D5 -         base:7 at the end of the day: 2.305 t of supply, 0 aircraft ready: not open
-#186 D6 night     base:1 spent 29.405 t of supply on 5881 men ashore for the day, 350.285 t left
-#187 D6 night     Allied men ashore at (0,0): 5881 of 5881 fed from base:1, 0 unfed  <- #186
-#188 D6 night     base:7 spent 0.7 t of supply on 140 men ashore for the day, 1.605 t left
-#189 D6 night     Japanese men ashore at (0,0): 140 of 140 fed from base:7, 0 unfed  <- #188
-#190 D6 night     base:2 spent 3.795 t of supply on 759 men ashore for the day, 80.41 t left
-#191 D6 night     Japanese men ashore at (1,0): 759 of 759 fed from base:2, 0 unfed  <- #190
-#192 D6 night     base:4 spent 29.3 t of supply on 5860 men ashore for the day, 351 t left
-#193 D6 night     Allied men ashore at (10,0): 5860 of 5860 fed from base:4, 0 unfed  <- #192
-#194 D6 night     base:5 spent 2.06 t of supply on 412 men ashore for the day, 95.88 t left
-#195 D6 night     Japanese men ashore at (11,0): 412 of 412 fed from base:5, 0 unfed  <- #194
-#196 D6 -         land_unit:3 rested: fatigue 50
-#197 D6 -         Allied ground report at (0,0): 119 enemy men ashore, replacing the estimate held
-#198 D6 -         Japanese ground report at (0,0): 4018 enemy men ashore, replacing the estimate held
-#199 D6 -         land_unit:1 rested: fatigue 35
-#200 D6 -         land_unit:5 rested: fatigue 45
-#201 D6 -         land_unit:4 rested: fatigue 35
-#202 D6 -         land_unit:1 dug in: fieldworks 20
-#203 D6 -         land_unit:3 dug in: fieldworks 30
-#204 D6 -         land_unit:4 dug in: fieldworks 20
-#205 D6 -         base:1 at the end of the day: 350.285 t of supply, 0 aircraft ready: not open
-#206 D6 -         base:2 at the end of the day: 80.41 t of supply, 0 aircraft ready: not open
-#207 D6 -         base:3 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
-#208 D6 -         base:4 at the end of the day: 351 t of supply, 0 aircraft ready: not open
-#209 D6 -         base:5 at the end of the day: 95.88 t of supply, 0 aircraft ready: not open
-#210 D6 -         base:6 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
-#211 D6 -         base:7 at the end of the day: 1.605 t of supply, 0 aircraft ready: not open
+#149 D4 -         allied men at (10,0) find no enemy men ashore; the estimate of 406 men of day 3 is cleared  <- #118
+#150 D4 -         land_unit:4 marched: fatigue 45  <- #141
+#151 D4 -         land_unit:2 dug in: fieldworks 30
+#152 D4 -         land_unit:3 dug in: fieldworks 10
+#153 D4 -         base:1 at the end of the day: 409.095 t of supply, 0 aircraft ready: not open
+#154 D4 -         base:2 at the end of the day: 88 t of supply, 0 aircraft ready: not open
+#155 D4 -         base:3 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
+#156 D4 -         base:4 at the end of the day: 409.6 t of supply, 0 aircraft ready: not open
+#157 D4 -         base:5 at the end of the day: 100 t of supply, 0 aircraft ready: not open
+#158 D4 -         base:6 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
+#159 D4 -         base:7 at the end of the day: 3.005 t of supply, 0 aircraft ready: not open
+#160 D5 night     base:1 spent 29.405 t of supply on 5881 men ashore for the day, 379.69 t left
+#161 D5 night     Allied men ashore at (0,0): 5881 of 5881 fed from base:1, 0 unfed  <- #160
+#162 D5 night     base:7 spent 0.7 t of supply on 140 men ashore for the day, 2.305 t left
+#163 D5 night     Japanese men ashore at (0,0): 140 of 140 fed from base:7, 0 unfed  <- #162
+#164 D5 night     base:2 spent 3.795 t of supply on 759 men ashore for the day, 84.205 t left
+#165 D5 night     Japanese men ashore at (1,0): 759 of 759 fed from base:2, 0 unfed  <- #164
+#166 D5 night     base:4 spent 29.3 t of supply on 5860 men ashore for the day, 380.3 t left
+#167 D5 night     Allied men ashore at (10,0): 5860 of 5860 fed from base:4, 0 unfed  <- #166
+#168 D5 night     base:5 spent 2.06 t of supply on 412 men ashore for the day, 97.94 t left
+#169 D5 night     Japanese men ashore at (11,0): 412 of 412 fed from base:5, 0 unfed  <- #168
+#170 D5 -         land_unit:2 rested: fatigue 0
+#171 D5 -         land_unit:3 rested: fatigue 55
+#172 D5 -         Allied ground report at (0,0): 155 enemy men ashore, replacing the estimate held
+#173 D5 -         Japanese ground report at (0,0): 4236 enemy men ashore, replacing the estimate held
+#174 D5 -         land_unit:1 rested: fatigue 40
+#175 D5 -         land_unit:5 rested: fatigue 50
+#176 D5 -         land_unit:4 rested: fatigue 40
+#177 D5 -         land_unit:1 dug in: fieldworks 10
+#178 D5 -         land_unit:3 dug in: fieldworks 20
+#179 D5 -         land_unit:4 dug in: fieldworks 10
+#180 D5 -         base:1 at the end of the day: 379.69 t of supply, 0 aircraft ready: not open
+#181 D5 -         base:2 at the end of the day: 84.205 t of supply, 0 aircraft ready: not open
+#182 D5 -         base:3 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
+#183 D5 -         base:4 at the end of the day: 380.3 t of supply, 0 aircraft ready: not open
+#184 D5 -         base:5 at the end of the day: 97.94 t of supply, 0 aircraft ready: not open
+#185 D5 -         base:6 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
+#186 D5 -         base:7 at the end of the day: 2.305 t of supply, 0 aircraft ready: not open
+#187 D6 night     base:1 spent 29.405 t of supply on 5881 men ashore for the day, 350.285 t left
+#188 D6 night     Allied men ashore at (0,0): 5881 of 5881 fed from base:1, 0 unfed  <- #187
+#189 D6 night     base:7 spent 0.7 t of supply on 140 men ashore for the day, 1.605 t left
+#190 D6 night     Japanese men ashore at (0,0): 140 of 140 fed from base:7, 0 unfed  <- #189
+#191 D6 night     base:2 spent 3.795 t of supply on 759 men ashore for the day, 80.41 t left
+#192 D6 night     Japanese men ashore at (1,0): 759 of 759 fed from base:2, 0 unfed  <- #191
+#193 D6 night     base:4 spent 29.3 t of supply on 5860 men ashore for the day, 351 t left
+#194 D6 night     Allied men ashore at (10,0): 5860 of 5860 fed from base:4, 0 unfed  <- #193
+#195 D6 night     base:5 spent 2.06 t of supply on 412 men ashore for the day, 95.88 t left
+#196 D6 night     Japanese men ashore at (11,0): 412 of 412 fed from base:5, 0 unfed  <- #195
+#197 D6 -         land_unit:3 rested: fatigue 50
+#198 D6 -         Allied ground report at (0,0): 119 enemy men ashore, replacing the estimate held
+#199 D6 -         Japanese ground report at (0,0): 4018 enemy men ashore, replacing the estimate held
+#200 D6 -         land_unit:1 rested: fatigue 35
+#201 D6 -         land_unit:5 rested: fatigue 45
+#202 D6 -         land_unit:4 rested: fatigue 35
+#203 D6 -         land_unit:1 dug in: fieldworks 20
+#204 D6 -         land_unit:3 dug in: fieldworks 30
+#205 D6 -         land_unit:4 dug in: fieldworks 20
+#206 D6 -         base:1 at the end of the day: 350.285 t of supply, 0 aircraft ready: not open
+#207 D6 -         base:2 at the end of the day: 80.41 t of supply, 0 aircraft ready: not open
+#208 D6 -         base:3 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
+#209 D6 -         base:4 at the end of the day: 351 t of supply, 0 aircraft ready: not open
+#210 D6 -         base:5 at the end of the day: 95.88 t of supply, 0 aircraft ready: not open
+#211 D6 -         base:6 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
+#212 D6 -         base:7 at the end of the day: 1.605 t of supply, 0 aircraft ready: not open
 
 base:1 "Placeholder base 1, Japanese, at P" (Allied) at (0,0): 350.285 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at R" (Japanese) at (1,0): 80.41 t of supply in stock
@@ -236,7 +237,6 @@ land_unit:5 "Placeholder Allied division at T" (Allied): 5860 men ashore at (10,
 Allied: no contacts
 Allied: no battle claims
 Allied estimate at (0,0): 119 enemy men ashore, reported day 6
-Allied estimate at (10,0): 406 enemy men ashore, reported day 3
 Japanese: no contacts
 Japanese: no battle claims
 Japanese estimate at (0,0): 4018 enemy men ashore, reported day 6
