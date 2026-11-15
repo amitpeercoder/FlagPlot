@@ -90,9 +90,11 @@
 //! the run, in the order they land.
 //!
 //! - The k-th hit meets fieldworks of 20 - 0.2 x (k - 1), and base 1 has no
-//!   defences, so that is unit 1's cover. The hit would take 10 men; it
-//!   takes 10 x (1 - cover/100 x 0.9), cut to a whole man. The first hit
-//!   takes 10 x 0.82 = 8.2: 8 men.
+//!   defences, so that is unit 1's cover. The hit would take 10 men; its
+//!   piece is 10 x (1 - cover/100 x 0.9), not cut. The pieces of the
+//!   shelling are added and the sum is cut to a whole man, once. The first
+//!   piece is 10 x 0.82 = 8.2. With 8 hits the pieces are 8.2, 8.218, 8.236,
+//!   8.254, 8.272, 8.29, 8.308 and 8.326: 66.104, and 66 men are lost.
 //! - Each hit wears the fieldworks by 0.2. After the day's digging they are
 //!   20 - 0.2 x h + 10, and no more than 30.
 //! - If h is 1 or more, unit 1 does not rest on day 3. It gains h, and no
@@ -144,12 +146,13 @@
 //!
 //! - The shelling would take 10 x g men. They are shared between units 6
 //!   and 7 in proportion to their men, by the rule that serves every loss,
-//!   as a shelling's men always were. Each unit's part P is then taken hit
-//!   by hit, spread evenly: the piece for the k-th hit is P x k / g, cut,
-//!   less P x (k - 1) / g, cut. The k-th hit meets defences of 50 - 0.2 x
-//!   (k - 1), which is the cover of both units (their fieldworks are 10),
-//!   and each piece is cut by it: times 1 less cover/100 x 0.9, cut to a
-//!   whole man.
+//!   as a shelling's men always were. Each unit's part P is then spread evenly
+//!   over the hits, P / g to each. The k-th hit meets defences of 50 - 0.2
+//!   x (k - 1), which is the cover of both units (their fieldworks are 10),
+//!   and its piece is P / g times 1 less cover/100 x 0.9, not cut. A unit's
+//!   pieces are added and the sum is cut to a whole man, once. With 7 hits
+//!   the seven factors add to 3.8878: a part of 47 loses 26 men and a part
+//!   of 23 loses 12.
 //! - Base 6's defences are 50 - 0.2 x g after the day. Nobody works on
 //!   them: they stay there to the end. The fieldworks of units 6 and 7 are
 //!   10 - 0.2 x g + 10 after the day's digging.

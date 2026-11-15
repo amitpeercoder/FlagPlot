@@ -119,6 +119,14 @@ Answered on Nov 14, 2026.
 2. **Decision 5:** troops dig shallow fieldworks for themselves. Agreed.
 3. **Decision 13 of the first draft, that nothing wears cover down:** rejected. The designer ruled that long bombardment must tell, on the men above all. Decisions 10 to 12 are the answer.
 
+## The architect's ruling after the first tuning round: cut once
+
+Made on Nov 15, 2026. The first tuning round measured what cover saves (`docs/validation/tuning/ground-r1-5-cover.md`). As built, each unit's share of a shelling was taken hit by hit and each small piece was cut to a whole man. A piece is a few men, so the cut took most of a man from each: cover of 10 and of 20 both saved 38 men in 100 where the figure states 9 and 18, and cover of 30 saved about half where it states 27. The rule gave more than its figure said, and more at the shallow end, where it matters most.
+
+**The ruling:** a unit's pieces of one shelling or raid are worked without cutting, each by the cover its hit meets, added, and the sum is cut to a whole man once. Its part is spread evenly over the hits, the part over the hits to each. The loss shared between units is as before, so with the frozen figures nothing changes. The fight's losses were already cut once for each unit and are not changed.
+
+The hand calculation of scenario 34 is amended at A and at F to say so. It is a change to how a figure is applied, toward what the figure states, and it changes results on the live figures.
+
 ## As built
 
 Built on Nov 14, 2026 (scenario 34, state version 22, rules label 5; the hand calculation is in `tests/scenario_34_cover.rs`, on the placeholder map `data/map/placeholder_cover.toml`). The code is in `crates/sim-core/src/cover.rs` (cover, the cut, the pieces of a part, strain, the grades, digging and leaving fieldworks), `bombardment.rs` (`apply_hits_on_men`, which serves shells and bombs alike), `ground_combat.rs` (the fight's losses, `tire_or_rest`, the day's digging), `works.rs` (the defences job) and `resolve.rs` and `cargo.rs` (leaving fieldworks by an order or by embarking). Choices the record did not make:
