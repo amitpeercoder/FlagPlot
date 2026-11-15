@@ -90,7 +90,7 @@
 //!
 //! Why, where it is not plain:
 //!
-//! - **Day 1** has seven orders: for each fighter group the patrol mission
+//! - **Day 1** has six orders: for each fighter group the patrol mission
 //!   and the share; for group 3 the search mission and the arc. A mission
 //!   and a setting are two orders. Group 4 is given none on any day: it is
 //!   not a fighter and cannot search, and the day's reason says it is left
@@ -124,9 +124,8 @@
 //!
 //! - **The risk level.** At preserve the force the share is 0.75 and the
 //!   level 30: both fighters first reach 36 on the morning of day 7, when
-//!   group 1 rests. At press the share is 0.25 and the level 60: neither
-//!   fighter rests in the 12 days, the highest morning fatigue being 66 on
-//!   day 12, when group 1 rests.
+//!   group 1 rests. At press the share is 0.25 and the level 60: no
+//!   fighter rests before day 12, when both are at 66 and group 1 rests.
 //! - **A raid raises the share.** In a variant with a Japanese bomber group
 //!   at base 2 set to strike base 1 on day 3, the share of both fighter
 //!   groups is 0.75 on days 4, 5 and 6 and 0.5 again on day 7.
@@ -137,7 +136,8 @@
 //!   and the standing interrupt fires that day and on no later day.
 //! - **A held group is left alone:** with group 2 held from day 5, it is
 //!   given no order from then, and on day 9 group 1, now the only fighter
-//!   the staff may order, is kept on patrol.
+//!   the staff may order, is kept on patrol: the staff plans without what
+//!   is held.
 //! - **An override.** A commander's order to group 3 on day 2 holds it, and
 //!   the staff gives it no order after.
 //! - The staff never orders a group outside the intent's forces limit, and
