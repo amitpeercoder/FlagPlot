@@ -1,6 +1,6 @@
 # Design note: command levels, what each knows and what each reports
 
-Status: a note for discussion, written by the architect on Nov 15, 2026 at the designer's request, from his direction of that day. Nothing here is built. It says how a staff at every level of command could interpret the intent it is given and hand narrower intents down, each level acting on its own picture, and how reports pass between levels. It says what exists to build on, what is missing, and what the designer still has to decide. It follows decision 0116, which says intents form a tree and leaves the levels as a record on each intent.
+Status: a note written for discussion and since decided (decision 0119), written by the architect on Nov 15, 2026 at the designer's request, from his direction of that day. Nothing here is built. It says how a staff at every level of command could interpret the intent it is given and hand narrower intents down, each level acting on its own picture, and how reports pass between levels. It says what exists to build on, what is missing, and what the designer still has to decide. It follows decision 0116, which says intents form a tree and leaves the levels as a record on each intent.
 
 ## The designer's direction
 
@@ -119,14 +119,14 @@ The size of a strike (decision 0118) is the first case. The admiral gives the ca
 - A level's knowledge of its own forces also depends on reports.
 - A player may later choose a role and see only what its level has.
 
-## Open, for the designer
+## The seven questions, answered
 
-Put to him one at a time when the stage is planned.
+Put to the designer one at a time on Nov 15, 2026. His answers are decision 0119.
 
-1. **Initiative.** When a level sees that its intent is wrong (the carrier it was sent to find is not there, and another is), may it change its own task, and how far?
-2. **How stale may your own forces be?** Only a force keeping silence, or any force a level down, by the delay of its reports?
-3. **Does a superior pass his whole picture down, or only what bears on the intent?** The second is truer and makes a subordinate blinder.
-4. **Do neighbours talk?** A base's search and the carriers nearby: by standing instruction, by the chain of command only, or as the scenario says.
-5. **The player's default seat:** the area commander with the area's late picture from the first day, or one picture a side kept as an easier setting.
-6. **The clock:** reports on the pulses the game has, or a finer clock for reports alone.
-7. **Where it comes in the build:** after stage 2 of step 3 and before stage 3, or after step 3 is done.
+1. **Initiative:** a rating of each commander, with placeholder values until research; a commander may even refuse an order, at a cost to himself.
+2. **How stale your own forces may be:** any force a level down, as of its last report.
+3. **What goes down with an intent:** what bears on it.
+4. **Neighbours:** always hear each other within radio reach.
+5. **The player's default seat:** the area's picture, with a setting for one picture a side.
+6. **The clock:** the three pulses.
+7. **Where it comes:** after stage 2 of step 3 and before stage 3, as stage 2b.
