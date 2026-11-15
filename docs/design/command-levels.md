@@ -123,7 +123,7 @@ The size of a strike (decision 0118) is the first case. The admiral gives the ca
 
 Put to the designer one at a time on Nov 15, 2026. His answers are decision 0119.
 
-1. **Initiative:** a rating of each commander, with placeholder values until research; a commander may even refuse an order, at a cost to himself.
+1. **Initiative:** a rating of each commander, with placeholder values until research; a commander may even refuse an order. A departure with cause, on what he knew, is not held against him; one without cause may cost him his command. The rule for it waits.
 2. **How stale your own forces may be:** any force a level down, as of its last report.
 3. **What goes down with an intent:** what bears on it.
 4. **Neighbours:** always hear each other within radio reach.
