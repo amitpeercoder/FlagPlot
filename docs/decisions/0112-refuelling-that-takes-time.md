@@ -1,6 +1,6 @@
 # 0112: Refuelling that takes time
 
-Status: a plan by the architect, written on Nov 15, 2026, as decision 0102 ordered it. Confirmed by the designer on Nov 15, 2026, who answered its four questions as the architect recommended; it is built before stage 2 of step 3. The hand calculation is written (`tests/scenario_43_fuelling_takes_time.rs`). Nothing is built.
+Status: a plan by the architect, written on Nov 15, 2026, as decision 0102 ordered it. Confirmed by the designer on Nov 15, 2026, who answered its four questions as the architect recommended; it is built before stage 2 of step 3. The hand calculation is written (`tests/scenario_44_fuelling_takes_time.rs`). Nothing is built.
 
 Summary: A plan for refuelling that takes time: a ship in port takes fuel through the hours of the day at the port's rate, at a berth or by lighter, in the same queue as cargo, where today every ship is filled at once at the start of the day
 
@@ -49,7 +49,7 @@ It reuses the cargo rule: the same berths, the same queue, the same hours.
 
 ## The hand calculation
 
-`tests/scenario_43_fuelling_takes_time.rs`, written by the architect before any code: two forces at one port of one berth, one loading cargo and then fuelling, the other fuelling by lighter until the berth is free; a cruiser at a port with no berth that sails short on the second morning and finishes where she arrives; and a reserve holding a destroyer short, recorded once.
+`tests/scenario_44_fuelling_takes_time.rs`, written by the architect before any code: two forces at one port of one berth, one loading cargo and then fuelling, the other fuelling by lighter until the berth is free; a cruiser at a port with no berth that sails short on the second morning and finishes where she arrives; and a reserve holding a destroyer short, recorded once.
 
 Rulings made while writing it:
 

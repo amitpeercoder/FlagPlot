@@ -1,4 +1,4 @@
-//! Scenario 43: refuelling that takes time. A ship in port takes fuel
+//! Scenario 44: refuelling that takes time. A ship in port takes fuel
 //! through the hours of the day at the port's fuelling rate, at a berth or
 //! by lighter, in the cargo rule's queue. Two forces share one berth, one
 //! of them loading; a cruiser at a port with no berth sails short and
@@ -6,7 +6,7 @@
 //! short.
 //!
 //! Proves decision 0112 against a hand calculation. The data is placeholder
-//! data: see `data/scenarios/43_fuelling_takes_time.toml`. It runs on the
+//! data: see `data/scenarios/44_fuelling_takes_time.toml`. It runs on the
 //! frozen step 1 figures, with the fuelling rates set in the scenario's own
 //! port sizes, since the frozen figures give none (no limit). There is no
 //! enemy, no search and no random draw.
