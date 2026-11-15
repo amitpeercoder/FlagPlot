@@ -276,3 +276,34 @@ Each step's trials: 1,000 runs on a scratch copy of the reference files with the
 The firing men, weights, limits, days of attack, fed shares, landing and supply read from `export --seed N` for N = 1 to 1,000, by scripts in the session's scratch folder, not in the repository. The men lost by side and cause of every seed agree with the batch.
 
 Step 5's table is from the same logs, with the rule's arithmetic reproduced in exact fractions and checked against every event. Figures not readable from the logs: none were estimated.
+
+## After the cover ruling
+
+Written by hand on Nov 15, 2026, after the architect's ruling on decision 0106 ("cut once"): a unit's pieces of one raid or shelling are worked by the cover each hit meets, added, and cut to a whole man once. The figures are those of round 1; none moved. Batch `ground-r1-cut`, 1,000 runs, seeds 1 to 1,000 (file hash ccdac417be26bd79, state version flagplot-state-v24, rules label 8), then `sim-cli validate` with `data/validation/guadalcanal_landings.toml`. The batch before is the same command on the build of main before the ruling (label `ground-r1`, the runs of this report).
+
+**The measures that moved.** Only two. `tenaru_american_men_lost` goes from 14 to 86 (median 46) to 14 to 90 (median 49), and still misses, with 1 run of 1,000 holding the record of 109 to 110: the Americans lose a few more men to the bombs that fall on Lunga on those days. The Allied margin goes from 73.97, 92.15, 105.62 to 73.94, 92.04, 105.52 (5th, median, 95th), because the Allied men lost count against it. All 1,000 runs are still a decisive Allied victory. Every other measure is as it was, to its percentiles, and so are the American men lost in the fight (162, 242, 330 against 162, 242, 329) and every Japanese loss.
+
+**American men lost to bombs and shells over the 39 days** (5th, median, 95th, from the batch): 20, 43, 67 before, and 22, 50, 85 after. In all, 42,409 men before and 51,640 after over the 1,000 runs, a fifth more.
+
+**What cover now saves.** The table of step 5 (`docs/validation/tuning/ground-r1-5-cover.md`), redone by the new rule: the calls, units and hits of the 1,000 runs (`export --seed N`), with the cover set at each call's first hit and worn 0.2 a hit after. The arithmetic was reproduced in exact fractions and checked against the runs' events: of 5,642 calls, 5,616 were rebuilt and matched every `men_lost_to_fire` event in them (each unit's part and the men lost); 26 could not be rebuilt from the state between phases (a unit's men changed within the day) and are left out.
+
+| Cover | Share the figure states | Share the rule gives now | Before the ruling | Men lost, of 87,610 |
+| --- | --- | --- | --- | --- |
+| 10 | 0.090 | 0.269 | 0.383 | 64,040 |
+| 20 | 0.180 | 0.321 | 0.383 | 59,495 |
+| 30 | 0.270 | 0.444 | 0.549 | 48,699 |
+| 50 | 0.450 | 0.538 | 0.583 | 40,476 |
+| 100 | 0.900 | 0.984 | 1.000 | 1,417 |
+
+By the size of a unit's part (share saved):
+
+| Part P | Parts | Men before | Cover 10 | 20 | 30 | 50 | 100 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 to 4 | 18,395 | 47,255 | 0.389 | 0.389 | 0.546 | 0.561 | 1.000 |
+| 5 to 9 | 3,093 | 23,234 | 0.133 | 0.265 | 0.339 | 0.529 | 1.000 |
+| 10 to 19 | 1,403 | 16,966 | 0.122 | 0.208 | 0.306 | 0.486 | 0.917 |
+| 20 and over | 7 | 155 | 0.090 | 0.200 | 0.290 | 0.465 | 0.910 |
+
+In the runs as they are (the cover each unit met, about 30 less wear), the Allied units at Lunga lost 51,510 of 87,610 men before cover: 0.412 saved, where the figure states 0.259. Before the ruling it was 0.517.
+
+**What it says.** Cover now grades: 10, 20, 30 and 50 save different shares, and a part of 10 men or more saves close to what the figure states. It still saves more than the figure at Lunga, because most of a raid's parts there are of 1 to 4 men (18,395 of 22,898), and a part is still cut to a whole man once for each unit: a part of 1 man behind any cover above 0 loses nothing (0.91 of a man at cover 10, cut), and a part of 4 behind cover 30 loses 2 (2.92, cut). The cut that remains is one per unit and call, not one per hit. Nothing was tuned.

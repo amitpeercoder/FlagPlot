@@ -32,7 +32,7 @@
 
 use crate::airstrike::{BaseHits, Stock};
 use crate::belief::{ApplyOutcome, BattleClaim, Report};
-use crate::cover::{after_cover, piece_of_part, unit_cover};
+use crate::cover::{kept_behind, part_after_cover, unit_cover};
 use crate::damage::{raw_u64, roll_shots};
 use crate::events::{Breakdown, Cause, EventKind, Factor, FieldworksChange};
 use crate::fixed::Fixed;
@@ -233,9 +233,11 @@ impl World {
     /// decisions 2, 10 and 12 of 0106): each removes `men_lost_per_base_hit`
     /// men, no more than the base's side has ashore in the hex, shared
     /// between its units there in proportion by the rule of decision 20 of
-    /// 0066. Each unit's part is then taken hit by hit, spread evenly over
-    /// the hits ([`piece_of_part`]), and each piece is cut by the cover the
-    /// unit has at that hit; after each hit the cover is worn: the defences
+    /// 0066. Each unit's part is then spread evenly over the hits, each piece
+    /// is worked by the cover the unit has at that hit and not cut, and the
+    /// pieces are added and cut to a whole man once ([`part_after_cover`],
+    /// the architect's ruling on decision 2); after each hit the cover is
+    /// worn: the defences
     /// of the side's lowest-numbered base in the hex and the fieldworks of
     /// each of its units there lose `cover_wear_per_hit`, not below 0. The
     /// hits are counted for the day's strain of the side in the hex. Each
@@ -279,8 +281,9 @@ impl World {
             day_hits.causes.push(cause);
         }
 
-        // Each part taken hit by hit, behind the cover of the moment, and the
-        // cover worn after each hit (decisions 2 and 12 of 0106).
+        // Each part spread over the hits, each piece behind the cover of the
+        // moment, the cover worn after each hit, and the sum cut once
+        // (decisions 2 and 12 of 0106).
         let worn_base: Option<BaseId> = self
             .truth
             .bases
@@ -293,17 +296,16 @@ impl World {
             .map(|(unit, _)| self.truth.land_units[unit].fieldworks)
             .collect();
         let wear = figures.cover_wear_per_hit;
-        let mut lost = vec![0u32; units.len()];
+        let mut kept = vec![Fixed::ZERO; units.len()];
         let mut first_cover: Vec<Option<Fixed>> = vec![None; units.len()];
-        for k in 1..=hits {
+        for _ in 0..hits {
             for (i, (unit_id, _)) in units.iter().enumerate() {
-                let piece = piece_of_part(parts[i], k, hits);
-                if piece == 0 {
+                if parts[i] == 0 {
                     continue;
                 }
                 let cover = unit_cover(&self.truth, &self.truth.land_units[unit_id]);
                 first_cover[i].get_or_insert(cover);
-                lost[i] += after_cover(piece, cover, figures.cover_from_fire);
+                kept[i] += kept_behind(cover, figures.cover_from_fire);
             }
             if wear > Fixed::ZERO {
                 if let Some(id) = worn_base {
@@ -322,7 +324,7 @@ impl World {
         }
 
         for (i, ((unit_id, unit_men), part)) in units.iter().copied().zip(parts).enumerate() {
-            let lost = lost[i];
+            let lost = part_after_cover(part, kept[i], hits);
             if lost == 0 {
                 continue;
             }

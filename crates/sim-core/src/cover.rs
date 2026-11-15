@@ -53,18 +53,32 @@ pub(crate) fn unit_cover(truth: &TruthState, unit: &LandUnit) -> Fixed {
 /// 1 less the cover over 100 times the share, cut to a whole man. Never more
 /// than `men`.
 pub(crate) fn after_cover(men: u32, cover: Fixed, share: Fixed) -> u32 {
-    let kept = Fixed::ONE - share.mul_div(cover, Fixed::from_int(100));
-    let lost = (Fixed::from_int(i64::from(men)) * kept).trunc().max(0);
+    let lost = (Fixed::from_int(i64::from(men)) * kept_behind(cover, share))
+        .trunc()
+        .max(0);
     u32::try_from(lost).unwrap_or(u32::MAX).min(men)
 }
 
-/// The piece of a unit's part `part` of a call's loss that the `k`-th of
-/// `hits` hits takes (1-based), spreading the part evenly over the hits
-/// (decision 2 of 0106, as built): `part` x k / hits, cut, less `part` x
-/// (k - 1) / hits, cut. The pieces add to the part.
-pub(crate) fn piece_of_part(part: u32, k: u32, hits: u32) -> u32 {
-    let upto = |n: u32| u64::from(part) * u64::from(n) / u64::from(hits.max(1));
-    u32::try_from(upto(k) - upto(k - 1)).expect("a piece is at most the part")
+/// The share of the men a hit would take that `cover` does not save, where
+/// full cover saves `share` (decisions 2 and 3 of 0106): 1 less the cover
+/// over 100 times the share. Not cut.
+pub(crate) fn kept_behind(cover: Fixed, share: Fixed) -> Fixed {
+    Fixed::ONE - share.mul_div(cover, Fixed::from_int(100))
+}
+
+/// The men a unit loses of its part `part` of a call's loss of `hits` hits,
+/// where `kept` is the sum over the hits of what each hit's cover does not
+/// save ([`kept_behind`]) (decision 2 of 0106, the architect's ruling to cut
+/// once): the part is spread evenly over the hits, `part` / `hits` to each,
+/// each piece is worked by its hit's cover and not cut, and the pieces are
+/// added and cut to a whole man once: `part` x `kept` / `hits`, cut. Never
+/// more than `part`.
+pub(crate) fn part_after_cover(part: u32, kept: Fixed, hits: u32) -> u32 {
+    let lost = Fixed::from_int(i64::from(part))
+        .mul_div(kept, Fixed::from_int(i64::from(hits.max(1))))
+        .trunc()
+        .max(0);
+    u32::try_from(lost).unwrap_or(u32::MAX).min(part)
 }
 
 /// The fatigue strain adds to a unit in a day (decision 10 of 0106): its
@@ -287,14 +301,26 @@ mod tests {
     }
 
     #[test]
-    fn the_pieces_of_a_part_spread_it_evenly_and_add_to_it() {
-        assert_eq!(
-            (1..=3).map(|k| piece_of_part(10, k, 3)).collect::<Vec<_>>(),
-            vec![3, 3, 4]
-        );
+    fn a_part_is_cut_to_a_whole_man_once() {
+        // With no cover saving anything the part is taken whole.
         for (part, hits) in [(0, 4), (30, 3), (7, 9), (1000, 7)] {
-            let total: u32 = (1..=hits).map(|k| piece_of_part(part, k, hits)).sum();
-            assert_eq!(total, part);
+            let kept = Fixed::from_int(i64::from(hits));
+            assert_eq!(part_after_cover(part, kept, hits), part);
+        }
+        // Ten men a hit behind cover of 20, worn 0.2 a hit, 8 hits: the
+        // pieces add to 66.104, and 66 men are lost (scenario 34 at A).
+        let kept = (0..8).fold(Fixed::ZERO, |sum, k| {
+            sum + kept_behind(fx("20") - fx("0.2") * Fixed::from_int(k), fx("0.9"))
+        });
+        assert_eq!(part_after_cover(80, kept, 8), 66);
+        // A part of 4 over 2 hits behind cover of 20 loses 3 (3.64), where
+        // cutting each piece of 2 to a whole man lost 1 and 1.
+        assert_eq!(part_after_cover(4, fx("1.82"), 2), 3);
+        for part in 0..40 {
+            for cover in [0, 13, 50, 100] {
+                let kept = kept_behind(Fixed::from_int(cover), fx("0.9")) * Fixed::from_int(3);
+                assert!(part_after_cover(part, kept, 3) <= part);
+            }
         }
     }
 

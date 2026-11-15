@@ -859,7 +859,7 @@
       "unit": "task_force:26"
     }
   ],
-  "rules_version": 7,
+  "rules_version": 8,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "5ed635ac5538b189"
