@@ -9,6 +9,9 @@ publish.workspace = true
 sim-core.workspace = true
 sim-data.workspace = true
 sim-staff.workspace = true
+# Scenario 41's preview is asked through the agent's tools.
+sim-agent = { path = "../crates/sim-agent" }
+serde_json.workspace = true
 # Part 3 of scenario 4b reads the anchors file and places each position in a
 # hex with the map tool's own projection.
 csv.workspace = true
@@ -296,3 +299,7 @@ path = "scenario_36_one_convoy.rs"
 [[test]]
 name = "scenario_40_one_pool_two_hexes"
 path = "scenario_40_one_pool_two_hexes.rs"
+
+[[test]]
+name = "scenario_41_hold_change_release"
+path = "scenario_41_hold_change_release.rs"

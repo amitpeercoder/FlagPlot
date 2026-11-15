@@ -1,0 +1,123 @@
+# Scenario 41b: an override (decision 0107, step 3, stage 1).
+#
+# Scenario 36 whole, with both leaves given, over 5 days. On day 2 the
+# Allied commander orders the force formed on day 1 to unload. The force is
+# in the intent's forces limit, so the order holds it from that morning, as an
+# override, before the staff is asked; the staff ends the run and sends ship 2
+# in its place. The hand calculation is in
+# tests/scenario_41_hold_change_release.rs. There is no enemy, no aircraft and
+# no random draw. It runs on the frozen step 1 figures, as scenario 36 does.
+#
+# Class 3 is the placeholder cargo ship: 3000 t of cargo, 10 kn at cruise,
+# 0.1 t of fuel a mile (1000 t over 10000 nm), 1000 t of fuel. Land unit 1
+# costs 2000 men x 0.005 t = 10 t a day at base 2.
+#
+# PLACEHOLDER DATA. The bases, ships, unit and map are invented.
+
+name = "Placeholder scenario 41b: An override"
+placeholder = true
+seed = 1942
+days = 5
+map = "../map/placeholder_one_convoy.toml"
+ship_classes = ["../reference/ship_classes.csv"]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# S: the source. Port size 1, one berth at 50 t an hour.
+[[base]]
+id = 1
+name = "Placeholder base S, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 5000
+fuel_t = 2000
+
+# T: the destination. Port size 0, by lighter at 20 t an hour.
+[[base]]
+id = 2
+name = "Placeholder base T, Allied"
+side = "allied"
+q = 5
+r = 0
+supply_t = 100
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+men = 2000
+q = 5
+r = 0
+posture = "defend"
+
+# Ships 1 and 2 lie in port at S in no task force, full of fuel.
+[[ship]]
+id = 1
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+port = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+port = 1
+
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+base = 2
+floor_days = 30
+interval_days = 15
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+ships = [1, 2]
+task_forces = []
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "reserve"
+base = 1
+supply_t = 1000
+fuel_t = 0
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# The commander's order of day 2: the force formed on day 1 unloads.
+[[order]]
+day = 2
+side = "allied"
+task_force = 1000001
+kind = "unload"

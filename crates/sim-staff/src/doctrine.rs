@@ -1227,7 +1227,7 @@ fn idle_reason(
     if idle.waiting_for_launch || idle.eff == PlanState::Preparing {
         builder = builder
             .binding("leave to launch is withheld")
-            .would_change("leave to launch given");
+            .would_change("leave to launch given, or the commander approving the plan");
     }
     for line in binding {
         builder = builder.binding(line);
