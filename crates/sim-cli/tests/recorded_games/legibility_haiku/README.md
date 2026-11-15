@@ -30,3 +30,5 @@ The designer decided on Nov 15, 2026 to mend the reasons and run the four leave 
 | all | 20 of 24, pass mark not met | 24 of 24 with the second run's four in place of the first's |
 
 With the four second-run marks in place of the four first-run ones, the test comes to 24 of 24 passing both questions and no kind under half, which meets ruling 39's pass mark. That whole rests on two runs: the twenty other reasons were run once, on the reasons before the mend, and the four leave reasons on the mended ones. It was run once more and only once; the other twenty were not rerun.
+
+Read by the architect on Nov 15, 2026: the four second-run answers and their marks stand. The test as a whole is 24 of 24 on two runs, twenty reasons before the mend and four after it; the first run's result, not met, stays on record above.
