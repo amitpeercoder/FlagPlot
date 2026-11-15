@@ -17,7 +17,7 @@ use sim_core::view::SideView;
 
 use crate::fleet::{run_state, Fleet, RunStatus};
 use crate::handin::Out;
-use crate::reasons::{hold_words, serving_intent};
+use crate::reasons::{hold_words, plan_for, serving_intent};
 use crate::units::tons;
 
 /// A run added this morning, for the intent served before the one now
@@ -143,7 +143,7 @@ impl Morning {
     /// Hands in the commands that set the runs aside: the end of each run
     /// and the freeing of its ships' commitment. With `only` set, those of
     /// that plan alone.
-    pub(crate) fn hand_in_aside(&self, out: &mut Out, only: Option<PlanId>) {
+    pub(crate) fn hand_in_aside(&self, view: &SideView<'_>, out: &mut Out, only: Option<PlanId>) {
         for set in self
             .aside
             .iter()
@@ -153,6 +153,10 @@ impl Morning {
                 continue;
             };
             let held = hold_words(set.target, set.hold);
+            let named = self.state.intents.get(&plan.intent).map_or_else(
+                || plan.id.to_string(),
+                |intent| plan_for(view, intent, plan),
+            );
             let aboard = if set.aboard_t.is_zero() {
                 "nothing is aboard".to_string()
             } else {
@@ -167,8 +171,8 @@ impl Morning {
                     .evidence(held.clone(), set.hold.day)
                     .binding(format!("the hold on {}", set.target))
                     .worked(format!(
-                        "Run {} of {} is ended: {held}; {aboard}.",
-                        set.run, set.plan
+                        "Run {} of {named} is ended: {held}; {aboard}.",
+                        set.run
                     ))
                     .would_change(
                         "the run not yet sailed, or the hold released before the staff is asked",
@@ -196,8 +200,8 @@ impl Morning {
                     serving_intent(plan.intent, plan)
                         .evidence(held.clone(), set.hold.day)
                         .worked(format!(
-                            "Run {} of {} is ended, so the commitment of {ships} to {} is freed; {aboard}.",
-                            set.run, set.plan, set.plan
+                            "Run {} of {named} is ended, so the commitment of {ships} to {} is freed; {aboard}.",
+                            set.run, set.plan
                         ))
                         .done(),
                 );

@@ -868,6 +868,7 @@ impl World {
                     EventKind::StaffReason {
                         side: *side,
                         order: None,
+                        command: Some(Box::new(staff_command.kind.clone())),
                         reason: Box::new(staff_command.reason.clone()),
                     },
                     vec![Cause::Event(answer)],
@@ -884,6 +885,7 @@ impl World {
                     EventKind::StaffReason {
                         side: *side,
                         order: None,
+                        command: None,
                         reason: Box::new(reason.clone()),
                     },
                     Vec::new(),
@@ -945,6 +947,7 @@ impl World {
             EventKind::StaffReason {
                 side,
                 order: Some(order),
+                command: None,
                 reason: Box::new(reason.clone()),
             },
             vec![Cause::Order(order), Cause::Event(answer)],

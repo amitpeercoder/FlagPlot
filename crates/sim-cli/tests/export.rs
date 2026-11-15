@@ -191,9 +191,16 @@ fn a_staff_command_and_its_reason_are_worded_for_the_viewer() {
     assert!(
         reasons
             .iter()
-            .any(|t| t.contains("staff's reason for the command to approve plan:1:")),
+            .any(|t| t.contains("staff's reason for the command to approve plan:1 [serves")),
         "{reasons:?}"
     );
+    // Every reason says what its intent is, in words.
+    for t in &reasons {
+        assert!(
+            t.contains("[serves intent 1: keep base:2 (Placeholder base T"),
+            "{t}"
+        );
+    }
     // One ship reads "1 ship", in the command and in the reason for it.
     let taken = text_of("command_taken");
     assert!(
@@ -216,11 +223,13 @@ fn a_staff_command_and_its_reason_are_worded_for_the_viewer() {
     // A decision to give no order still says so, and no reason for a command
     // is read as one.
     assert!(
-        reasons.iter().any(|t| t.contains("staff gave no order:")),
+        reasons
+            .iter()
+            .any(|t| t.contains("staff's reason for giving no order [serves")),
         "{reasons:?}"
     );
     for t in &reasons {
-        if t.contains("gave no order") {
+        if t.contains("giving no order") {
             assert!(!t.contains("reason for the command"), "{t}");
         }
     }

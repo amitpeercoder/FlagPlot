@@ -238,7 +238,8 @@ fn a_run_not_sailed_whose_ship_is_held_is_set_aside_and_the_staff_names_the_hold
     assert_eq!(ended.len(), 1);
     assert_eq!(
         ended[0].reason.worked,
-        "Run 1 of plan:1 is ended: ship:1 is held by the commander's hold of day 2; \
+        "Run 1 of plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days of \
+         supply, is ended: ship:1 is held by the commander's hold of day 2; \
          the 360 t aboard stay aboard."
     );
     assert!(day2.commands.iter().any(
@@ -455,9 +456,10 @@ fn a_cancelled_plan_sends_a_force_on_passage_out_home_once() {
             panic!("one reason on day {day}")
         };
         assert!(
-            no_order
-                .worked
-                .contains("plan:1 is cancelled, so the staff gives no order for intent:1"),
+            no_order.worked.contains(
+                "plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days \
+                     of supply, is cancelled, so the staff gives no order for intent:1"
+            ),
             "{}",
             no_order.worked
         );

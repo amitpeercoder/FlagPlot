@@ -3,8 +3,109 @@
 //! units as the engine writes them (`ship:1`, `task_force:1000001`,
 //! `base:2`), so a tool can show them in the side's own numbers.
 
-use sim_core::command::{Evidence, Hold, HoldMaker, HoldTarget, Intent, Plan, Reason, Serves};
-use sim_core::ids::IntentId;
+use sim_core::command::{
+    Evidence, Hold, HoldMaker, HoldTarget, Intent, IntentKind, Plan, Proposal, Reason, Serves,
+    StaffDecisions,
+};
+use sim_core::ids::{BaseId, IntentId};
+use sim_core::view::SideView;
+
+use crate::planner::DEFAULT_INTERVAL_DAYS;
+
+fn days_word(n: u32) -> &'static str {
+    if n == 1 {
+        "day"
+    } else {
+        "days"
+    }
+}
+
+/// A base as a reason names it: its handle and, where the side knows it, its
+/// name: "base:2 (Placeholder base T)".
+pub(crate) fn base_words(view: &SideView<'_>, base: BaseId) -> String {
+    let name = view
+        .bases()
+        .find(|b| b.id == base)
+        .map(|b| b.name.clone())
+        .or_else(|| view.enemy_bases().find(|b| b.id == base).map(|b| b.name));
+    match name {
+        Some(name) => format!("{base} ({name})"),
+        None => base.to_string(),
+    }
+}
+
+/// What an intent is for, in words: "keep base:2 (Placeholder base T) at 30
+/// days of supply".
+pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
+    let IntentKind::KeepSupplied {
+        base, floor_days, ..
+    } = intent.kind;
+    format!(
+        "keep {} at {floor_days} {} of supply",
+        base_words(view, base),
+        days_word(floor_days)
+    )
+}
+
+/// A plan with what it is for: "plan:1, the plan to keep base:2
+/// (Placeholder base T) at 30 days of supply,".
+pub(crate) fn plan_for(view: &SideView<'_>, intent: &Intent, plan: &Plan) -> String {
+    format!("{}, the plan to {},", plan.id, aim(view, intent))
+}
+
+/// The intent as the commander stated it: its aim and its interval, "keep
+/// base:2 (Placeholder base T) at 30 days of supply, a run every 15 days",
+/// and the day it was withdrawn if it has been.
+pub(crate) fn statement(view: &SideView<'_>, intent: &Intent) -> String {
+    let IntentKind::KeepSupplied { interval_days, .. } = intent.kind;
+    let mut words = aim(view, intent);
+    match interval_days {
+        Some(days) => words.push_str(&format!(", a run every {days} {}", days_word(days))),
+        None => words.push_str(&format!(
+            ", no interval set (the staff takes {DEFAULT_INTERVAL_DAYS} days)"
+        )),
+    }
+    if let Some(day) = intent.withdrawn_day {
+        words.push_str(&format!(", withdrawn on day {day}"));
+    }
+    words
+}
+
+/// Gives every reason of a hand-in the statement of the intent it serves,
+/// from the side's command state, so that each reason carries its intent in
+/// words wherever it is read and after the intent changes (decision 0107,
+/// item 12). The one place the staff's reasons get it.
+pub(crate) fn state_intents(view: &SideView<'_>, decisions: &mut StaffDecisions) {
+    let state = view.command_state();
+    let fill = |reason: &mut Reason| {
+        if let Some(intent) = reason.serves.intent.and_then(|id| state.intents.get(&id)) {
+            reason.serves.statement = statement(view, intent);
+        }
+    };
+    for order in &mut decisions.orders {
+        fill(&mut order.reason);
+    }
+    for command in &mut decisions.commands {
+        fill(&mut command.reason);
+    }
+    for reason in &mut decisions.no_orders {
+        fill(reason);
+    }
+}
+
+/// As [`state_intents`], for a proposal: its reason, its runs' reasons and
+/// its hand-in.
+pub(crate) fn state_intents_of_proposal(view: &SideView<'_>, proposal: &mut Proposal) {
+    state_intents(view, &mut proposal.decisions);
+    let state = view.command_state();
+    let mut reasons: Vec<&mut Reason> = vec![&mut proposal.reason];
+    reasons.extend(proposal.runs.iter_mut().map(|run| &mut run.reason));
+    for reason in reasons {
+        if let Some(intent) = reason.serves.intent.and_then(|id| state.intents.get(&id)) {
+            reason.serves.statement = statement(view, intent);
+        }
+    }
+}
 
 /// Starts a reason that serves `intent` and its `plan`, under the plan's
 /// last amendment (`None` for the baseline).
@@ -20,6 +121,7 @@ pub(crate) fn serving_intent(intent: IntentId, plan: &Plan) -> ReasonBuilder {
                 intent: Some(intent),
                 plan: Some(plan.id),
                 amendment: plan.amendments.last().map(|amendment| amendment.number),
+                statement: String::new(),
             },
             ..Reason::default()
         },

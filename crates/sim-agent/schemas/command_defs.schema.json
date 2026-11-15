@@ -150,7 +150,7 @@
       "additionalProperties": false,
       "properties": {
         "serves": {
-          "description": "What the decision serves: the intent, the plan and the plan's amendment (left out where none).",
+          "description": "What the decision serves: the intent, the plan and the plan's amendment (left out where none), and the intent's statement: the intent in words as the commander set it and as it stood when the reason was made (left out where a reason has none).",
           "type": "object",
           "required": [],
           "additionalProperties": false,
@@ -163,6 +163,9 @@
             },
             "amendment": {
               "type": "integer"
+            },
+            "statement": {
+              "type": "string"
             }
           }
         },

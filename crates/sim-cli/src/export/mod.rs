@@ -224,7 +224,7 @@ fn build(
         events: world
             .events()
             .iter()
-            .map(|event| events::event(event, &key, world.events()))
+            .map(|event| events::event(event, &key))
             .collect(),
         side_views: sides::sides(world),
         days: executed

@@ -993,6 +993,16 @@ impl Leave {
     }
 }
 
+/// A count with its noun in agreement: "1 ship", "2 ships".
+struct Count(usize, &'static str, &'static str);
+
+impl core::fmt::Display for Count {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let Count(n, one, many) = *self;
+        write!(f, "{n} {}", if n == 1 { one } else { many })
+    }
+}
+
 impl core::fmt::Display for CommandKind {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -1016,20 +1026,28 @@ impl core::fmt::Display for CommandKind {
             CommandKind::SetLimit(limit) => match limit {
                 Limit::Forces { intent, limit } => write!(
                     f,
-                    "limit {intent}'s forces to {} ships and {} task forces from {}",
-                    limit.ships.len(),
-                    limit.task_forces.len(),
+                    "limit {intent}'s forces to {} and {} from {}",
+                    Count(limit.ships.len(), "ship", "ships"),
+                    Count(limit.task_forces.len(), "task force", "task forces"),
                     limit.source
                 ),
                 Limit::Area { intent, hexes } => {
-                    write!(f, "limit {intent}'s area to {} hexes", hexes.len())
+                    write!(
+                        f,
+                        "limit {intent}'s area to {}",
+                        Count(hexes.len(), "hex", "hexes")
+                    )
                 }
                 Limit::Priority { intent, rank } => match rank {
                     Some(rank) => write!(f, "rank {intent} at {rank}"),
                     None => write!(f, "leave {intent} unranked"),
                 },
                 Limit::Protected { intent, ships } => {
-                    write!(f, "protect {} ships of {intent}", ships.len())
+                    write!(
+                        f,
+                        "protect {} of {intent}",
+                        Count(ships.len(), "ship", "ships")
+                    )
                 }
                 Limit::Reserve {
                     base,
@@ -1056,20 +1074,28 @@ impl core::fmt::Display for CommandKind {
                 from_day,
                 to_day,
             } => {
-                write!(f, "commit {} ships to {plan}", ships.len())?;
+                write!(
+                    f,
+                    "commit {} to {plan}",
+                    Count(ships.len(), "ship", "ships")
+                )?;
                 if let Some(run) = run {
                     write!(f, " run {run}")?;
                 }
                 write!(f, " from day {from_day} to day {to_day}")
             }
             CommandKind::FreeShips { plan, ships } => {
-                write!(f, "free {} ships from {plan}", ships.len())
+                write!(
+                    f,
+                    "free {} from {plan}",
+                    Count(ships.len(), "ship", "ships")
+                )
             }
             CommandKind::AddRun { plan, run } => write!(
                 f,
-                "add a run of {} t with {} ships to {plan}, loading day {}, due day {}",
+                "add a run of {} t with {} to {plan}, loading day {}, due day {}",
                 run.load_t,
-                run.ships.len(),
+                Count(run.ships.len(), "ship", "ships"),
                 run.days.load,
                 run.days.arrive
             ),
@@ -1124,13 +1150,48 @@ pub struct Command {
 // Reasons.
 // ---------------------------------------------------------------------------
 
-/// What a staff decision serves: the intent, and the plan and amendment.
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+/// What a staff decision serves: the intent, and the plan and amendment,
+/// with the intent in words.
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct Serves {
     pub intent: Option<IntentId>,
     pub plan: Option<PlanId>,
     /// The plan's amendment it was made under; `None` for the baseline.
     pub amendment: Option<u32>,
+    /// The intent as the commander stated it, in words, as it stood when the
+    /// reason was made ("keep base:2 (Placeholder base T) at 30 days of
+    /// supply, a run every 15 days"). The staff hands it in with the reason,
+    /// so the reason still says it after the intent is replaced or withdrawn
+    /// (decision 0107, item 12). Empty where a reason has none, as in a game
+    /// saved before it was handed in. The engine never reads it.
+    pub statement: String,
+}
+
+/// "intent 1: keep base:2 (Placeholder base T) at 30 days of supply, a run
+/// every 15 days; plan 1, amendment 1", each part only where there is one.
+impl core::fmt::Display for Serves {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut gap = "";
+        if let Some(intent) = self.intent {
+            write!(f, "intent {}", intent.raw())?;
+            gap = "; ";
+        }
+        if !self.statement.is_empty() {
+            if self.intent.is_some() {
+                write!(f, ": ")?;
+            }
+            write!(f, "{}", self.statement)?;
+            gap = "; ";
+        }
+        if let Some(plan) = self.plan {
+            write!(f, "{gap}plan {}", plan.raw())?;
+            gap = ", ";
+        }
+        if let Some(amendment) = self.amendment {
+            write!(f, "{gap}amendment {amendment}")?;
+        }
+        Ok(())
+    }
 }
 
 /// One piece of what the side held that mattered, with its day.

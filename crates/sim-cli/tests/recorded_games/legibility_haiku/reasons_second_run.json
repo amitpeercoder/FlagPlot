@@ -1,0 +1,74 @@
+[
+ {
+  "number": 21,
+  "kind": "leave",
+  "scenario": "36",
+  "day": 1,
+  "event": 9,
+  "serves": {
+   "intent": 1,
+   "plan": 1,
+   "statement": "keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days"
+  },
+  "evidence": "plan:1 is a draft (day 1); leave to prepare is given (day 1)",
+  "binding": "",
+  "worked": "plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days of supply, is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).",
+  "would_change": "leave to prepare withheld",
+  "serves_line": "intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1",
+  "prompt_text": "Serves: intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1\nEvidence: plan:1 is a draft (day 1); leave to prepare is given (day 1)\nBinding: (none)\nWorked: plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days of supply, is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).\nWould change: leave to prepare withheld"
+ },
+ {
+  "number": 22,
+  "kind": "leave",
+  "scenario": "36",
+  "day": 1,
+  "event": 12,
+  "serves": {
+   "intent": 1,
+   "plan": 1,
+   "statement": "keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days"
+  },
+  "evidence": "plan:1 is preparing (day 1); leave to launch is given (day 1)",
+  "binding": "",
+  "worked": "plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days of supply, is ready and leave to launch is given: the staff releases it.",
+  "would_change": "leave to launch withheld",
+  "serves_line": "intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1",
+  "prompt_text": "Serves: intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1\nEvidence: plan:1 is preparing (day 1); leave to launch is given (day 1)\nBinding: (none)\nWorked: plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days of supply, is ready and leave to launch is given: the staff releases it.\nWould change: leave to launch withheld"
+ },
+ {
+  "number": 23,
+  "kind": "leave",
+  "scenario": "40a",
+  "day": 1,
+  "event": 23,
+  "serves": {
+   "intent": 2,
+   "plan": 2,
+   "statement": "keep base:3 (Placeholder base U, Allied) at 30 days of supply, a run every 15 days"
+  },
+  "evidence": "plan:2 is a draft (day 1); leave to prepare is given (day 1)",
+  "binding": "",
+  "worked": "plan:2, the plan to keep base:3 (Placeholder base U, Allied) at 30 days of supply, is a draft inside the limits of intent:2 and leave to prepare is given: the staff makes it ready (preparing).",
+  "would_change": "leave to prepare withheld",
+  "serves_line": "intent 2: keep base:3 (Placeholder base U, Allied) at 30 days of supply, a run every 15 days; plan 2",
+  "prompt_text": "Serves: intent 2: keep base:3 (Placeholder base U, Allied) at 30 days of supply, a run every 15 days; plan 2\nEvidence: plan:2 is a draft (day 1); leave to prepare is given (day 1)\nBinding: (none)\nWorked: plan:2, the plan to keep base:3 (Placeholder base U, Allied) at 30 days of supply, is a draft inside the limits of intent:2 and leave to prepare is given: the staff makes it ready (preparing).\nWould change: leave to prepare withheld"
+ },
+ {
+  "number": 24,
+  "kind": "leave",
+  "scenario": "40a",
+  "day": 1,
+  "event": 26,
+  "serves": {
+   "intent": 2,
+   "plan": 2,
+   "statement": "keep base:3 (Placeholder base U, Allied) at 30 days of supply, a run every 15 days"
+  },
+  "evidence": "plan:2 is preparing (day 1); leave to launch is given (day 1)",
+  "binding": "",
+  "worked": "plan:2, the plan to keep base:3 (Placeholder base U, Allied) at 30 days of supply, is ready and leave to launch is given: the staff releases it.",
+  "would_change": "leave to launch withheld",
+  "serves_line": "intent 2: keep base:3 (Placeholder base U, Allied) at 30 days of supply, a run every 15 days; plan 2",
+  "prompt_text": "Serves: intent 2: keep base:3 (Placeholder base U, Allied) at 30 days of supply, a run every 15 days; plan 2\nEvidence: plan:2 is preparing (day 1); leave to launch is given (day 1)\nBinding: (none)\nWorked: plan:2, the plan to keep base:3 (Placeholder base U, Allied) at 30 days of supply, is ready and leave to launch is given: the staff releases it.\nWould change: leave to launch withheld"
+ }
+]

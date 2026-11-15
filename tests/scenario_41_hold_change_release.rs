@@ -1372,9 +1372,10 @@ fn c_the_readings_and_the_hand_in_follow_the_table() {
             panic!("one reason on day {day}")
         };
         assert!(
-            reason
-                .worked
-                .contains("plan:1 is cancelled, so the staff gives no order for intent:1"),
+            reason.worked.contains(
+                "plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days \
+                     of supply, is cancelled, so the staff gives no order for intent:1"
+            ),
             "{}",
             reason.worked
         );
@@ -1831,7 +1832,8 @@ fn a_a_run_set_aside_is_not_taken_up_again_and_its_cargo_is_carried_by_the_next(
     assert!(matches!(ended[0].kind, CommandKind::EndRun { run: 1, .. }));
     assert_eq!(
         ended[0].reason.worked,
-        "Run 1 of plan:1 is ended: ship:1 is held by the commander's hold of day 2; \
+        "Run 1 of plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days of \
+         supply, is ended: ship:1 is held by the commander's hold of day 2; \
          the 360 t aboard stay aboard."
     );
     assert!(d2.commands.iter().any(
@@ -2250,7 +2252,8 @@ fn c_cancelled_on_day_4_the_force_at_t_is_given_no_new_order() {
         panic!("one reason")
     };
     assert!(
-        reason.worked.contains("plan:1 is cancelled"),
+        reason.worked.starts_with("plan:1, the plan to keep base:2")
+            && reason.worked.contains(", is cancelled"),
         "{}",
         reason.worked
     );
