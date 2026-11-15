@@ -29,15 +29,20 @@ It is also the first doctrine written across two levels, as the designer directe
 ## The task: raid a base
 
 9. **A kind of intent: raid a base.** It names a base of the side and the target. It is addressed to the base. It may stand under "neutralise a base", and a commander may state it himself as a root.
-10. **Its doctrine, at the base's level.** Each morning, over the groups it may use that are at the base and not held and not serving an intent ranked above it, in group number order:
+10. **Its doctrine, at the base's level.** Each morning, over the groups it may use that are at the base and not held, and that are its to order by rule 16, in group number order:
     - **A bomber** is a group that is not a fighter, whose type carries a weapon and can reach the target on normal reach. It is set to strike the target on a morning the raid goes and to rest on a morning it does not.
-    - **A fighter** is set to combat air patrol with a patrol share of 0, so that every aircraft it can fly is escort. It is given no rest order: it flies only on a morning a raid goes. A fighter group that a cover intent ranked above has is left to it, and its escorts are what its patrol share leaves.
+    - **A fighter** is set to combat air patrol with a patrol share of 0, so that every aircraft it can fly is escort. It is given no rest order: it flies only on a morning a raid goes. A fighter group that the base's cover has (rule 16) is left to it, and its escorts are what its patrol share leaves.
     - **Any other group** is given no order, and the reason says so.
 11. **Which bombers go.** A bomber group goes unless its fatigue in the morning is above the level its risk gives (the cover doctrine's: 30, 45, 60), or its last raid cost it too much (rule 13).
 12. **Whether the raid goes.** It goes on a morning when the bombers that would go can send, between them, at least the weight its risk asks, and, at preserve the force, when at least one fighter at the base can go with them. What a group can send is the aircraft it is able to fly less its held share. Where the raid does not go, every bomber rests.
 13. **What the last raid cost.** A bomber group that lost, on its last raid, at least the share of the aircraft it sent that its risk gives stands down for the one morning after it.
 14. **The held share** of each bomber group is set from the risk level, where it differs from what the group has.
 15. **When it cannot.** On a morning when no bomber group it may use can reach the target, or, at preserve the force, the base has no fighter group it may use or draw escorts from, it hands in that it cannot meet the intent.
+
+16. **Whose a group is,** where a cover and a raid task at one base may both use it. It goes by the kind of the group and not by the rank of the intents, so that a base both defended and raiding does both:
+    - a fighter group is the cover's, where a cover of its base is in force, and the raid has the escorts its patrol share leaves; with no cover it is the raid's;
+    - a group that can bomb the target is the raid's, though it can also search; the cover doctrine of decision 0115 searches with the groups no raid task in force may use as bombers, which amends its rule 7;
+    - rank decides only between two tasks of the same kind that may use one group.
 
 | Set by the risk level | Preserve the force | Balanced | Press |
 | --- | --- | --- | --- |

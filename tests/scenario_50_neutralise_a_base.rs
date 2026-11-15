@@ -149,6 +149,11 @@
 //!   serving intent 3, and the raid task gives it no order; groups 1 and 3
 //!   are given the strike, serving intent 4. Four orders. The raid of day
 //!   1 has 20 bombers and 4 escorts.
+//! - **Whose a group is.** In a view built for it, with a cover of base 1
+//!   and the raid task both in force and a group at base 1 whose type can
+//!   search and can bomb base 2: the raid task orders it and the cover
+//!   doctrine does not, whichever intent ranks higher. With the neutralise
+//!   intent ranked above the hold intent, group 2 is still the cover's.
 //! - **A raid stated alone.** With the commander stating "raid base 2 from
 //!   base 1" as intent 1 and nothing else, the orders are the main case's,
 //!   each serving intent 1 with an empty chain.
