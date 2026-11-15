@@ -1,0 +1,13 @@
+{"doctrine_version":"supply-4","format":"flagplot-game","scenario":"data/scenarios/43_keep_two_bases_fed.toml","seat":"allied","seed":null}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"base":2,"floor_days":10,"interval_days":15,"reason":"keep T fed"},"tool":"set_intent"}
+{"arguments":{"base":3,"floor_days":10,"interval_days":15,"reason":"keep U fed"},"tool":"set_intent"}
+{"arguments":{"intent":1,"limit":"forces","ships":[1,2],"source":1,"task_forces":[]},"tool":"set_limit"}
+{"arguments":{"intent":2,"limit":"forces","ships":[1,2],"source":1,"task_forces":[]},"tool":"set_limit"}
+{"arguments":{"given":true,"leave":"launch"},"tool":"set_leave"}
+{"arguments":{"base":2,"below_days":3},"tool":"set_interrupt"}
+{"arguments":{"base":3,"below_days":3},"tool":"set_interrupt"}
+{"arguments":{},"tool":"staff_orders"}
+{"arguments":{"days":20,"reason":"resolve whole game on staff intents"},"tool":"run"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"report"}

@@ -1,0 +1,394 @@
+[
+ {
+  "number": 1,
+  "kind": "order",
+  "scenario": "36",
+  "day": 1,
+  "event": 19,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "base:2 holds 100 t and uses 10 t a day (day 1); the reading of day 3 is projected at 80 t (day 1)",
+  "binding": "floor of 30 days at base:2; interval of 15 days; area: none set, the sea is open",
+  "worked": "Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.2 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 80 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 90 t. Load = max(0, 300 - 90) + 150 (15 days of use) = 360 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 360 t at base:2 = 18 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Form ship:1 lying in port at base:1 in no force into a force.",
+  "would_change": "a reading of day 3 at or above 300 t would call no run; a free ship of the pool earlier in number order would carry it instead",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: base:2 holds 100 t and uses 10 t a day (day 1); the reading of day 3 is projected at 80 t (day 1)\nBinding: floor of 30 days at base:2; interval of 15 days; area: none set, the sea is open\nWorked: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.2 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 80 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 90 t. Load = max(0, 300 - 90) + 150 (15 days of use) = 360 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 360 t at base:2 = 18 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Form ship:1 lying in port at base:1 in no force into a force.\nWould change: a reading of day 3 at or above 300 t would call no run; a free ship of the pool earlier in number order would carry it instead"
+ },
+ {
+  "number": 2,
+  "kind": "order",
+  "scenario": "36",
+  "day": 1,
+  "event": 21,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "base:2 holds 100 t and uses 10 t a day (day 1); the reading of day 3 is projected at 80 t (day 1)",
+  "binding": "floor of 30 days at base:2; interval of 15 days; area: none set, the sea is open",
+  "worked": "Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.2 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 80 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 90 t. Load = max(0, 300 - 90) + 150 (15 days of use) = 360 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 360 t at base:2 = 18 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Load order: until 360 t is aboard (0 t aboard now + the load of 360 t); ship:1 360 t at 50 t an hour = 7.2 hours.",
+  "would_change": "a reading of day 3 at or above 300 t would call no run; a free ship of the pool earlier in number order would carry it instead",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: base:2 holds 100 t and uses 10 t a day (day 1); the reading of day 3 is projected at 80 t (day 1)\nBinding: floor of 30 days at base:2; interval of 15 days; area: none set, the sea is open\nWorked: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.2 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 80 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 90 t. Load = max(0, 300 - 90) + 150 (15 days of use) = 360 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 360 t at base:2 = 18 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Load order: until 360 t is aboard (0 t aboard now + the load of 360 t); ship:1 360 t at 50 t an hour = 7.2 hours.\nWould change: a reading of day 3 at or above 300 t would call no run; a free ship of the pool earlier in number order would carry it instead"
+ },
+ {
+  "number": 3,
+  "kind": "order",
+  "scenario": "40a",
+  "day": 1,
+  "event": 32,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "base:2 holds 10 t and uses 1 t a day (day 1); the reading of day 3 is projected at 8 t (day 1)",
+  "binding": "floor of 30 days at base:2; interval of 15 days; area: none set, the sea is open; the ships' room is 30 t",
+  "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (0.6 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 30 days x 1 t = 30 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 30 - 9) + 15 (15 days of use) = 36 t. It is cut to 30 t: the ships' room is 30 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 30 t at base:2 = 1.5 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Form ship:1 lying in port at base:1 in no force into a force.",
+  "would_change": "a reading of day 3 at or above 30 t would call no run; a free ship of the pool earlier in number order would carry it instead",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: base:2 holds 10 t and uses 1 t a day (day 1); the reading of day 3 is projected at 8 t (day 1)\nBinding: floor of 30 days at base:2; interval of 15 days; area: none set, the sea is open; the ships' room is 30 t\nWorked: Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (0.6 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 30 days x 1 t = 30 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 30 - 9) + 15 (15 days of use) = 36 t. It is cut to 30 t: the ships' room is 30 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 30 t at base:2 = 1.5 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Form ship:1 lying in port at base:1 in no force into a force.\nWould change: a reading of day 3 at or above 30 t would call no run; a free ship of the pool earlier in number order would carry it instead"
+ },
+ {
+  "number": 4,
+  "kind": "order",
+  "scenario": "40a",
+  "day": 1,
+  "event": 34,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "base:2 holds 10 t and uses 1 t a day (day 1); the reading of day 3 is projected at 8 t (day 1)",
+  "binding": "floor of 30 days at base:2; interval of 15 days; area: none set, the sea is open; the ships' room is 30 t",
+  "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (0.6 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 30 days x 1 t = 30 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 30 - 9) + 15 (15 days of use) = 36 t. It is cut to 30 t: the ships' room is 30 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 30 t at base:2 = 1.5 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Load order: until 30 t is aboard (0 t aboard now + the load of 30 t); ship:1 30 t at 50 t an hour = 0.6 hours.",
+  "would_change": "a reading of day 3 at or above 30 t would call no run; a free ship of the pool earlier in number order would carry it instead",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: base:2 holds 10 t and uses 1 t a day (day 1); the reading of day 3 is projected at 8 t (day 1)\nBinding: floor of 30 days at base:2; interval of 15 days; area: none set, the sea is open; the ships' room is 30 t\nWorked: Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (0.6 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 30 days x 1 t = 30 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 30 - 9) + 15 (15 days of use) = 36 t. It is cut to 30 t: the ships' room is 30 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 30 t at base:2 = 1.5 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Load order: until 30 t is aboard (0 t aboard now + the load of 30 t); ship:1 30 t at 50 t an hour = 0.6 hours.\nWould change: a reading of day 3 at or above 30 t would call no run; a free ship of the pool earlier in number order would carry it instead"
+ },
+ {
+  "number": 5,
+  "kind": "order",
+  "scenario": "36",
+  "day": 2,
+  "event": 29,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "360 t aboard run 1's ships, its load (day 2); plan:1 is released (day 2)",
+  "binding": "area: none set, the sea is open",
+  "worked": "Run 1 of plan:1: the 360 t aboard are its load of 360 t; the load is complete, so it sails today (day 2, hour 24). 200 nm out at 10 kn = 20 hours, so it arrives at base:2 at hour 44 (day 2); 200 nm back = 20 hours. It acts at base:2: 80 t landed in the 4 hours of day 2 left, at 20 t an hour for ship:1; unloading takes 18 hours, 1 day. This is the route order: out to the destination and back, acting at the destination.",
+  "would_change": "a load not complete, or a plan not released",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: 360 t aboard run 1's ships, its load (day 2); plan:1 is released (day 2)\nBinding: area: none set, the sea is open\nWorked: Run 1 of plan:1: the 360 t aboard are its load of 360 t; the load is complete, so it sails today (day 2, hour 24). 200 nm out at 10 kn = 20 hours, so it arrives at base:2 at hour 44 (day 2); 200 nm back = 20 hours. It acts at base:2: 80 t landed in the 4 hours of day 2 left, at 20 t an hour for ship:1; unloading takes 18 hours, 1 day. This is the route order: out to the destination and back, acting at the destination.\nWould change: a load not complete, or a plan not released"
+ },
+ {
+  "number": 6,
+  "kind": "order",
+  "scenario": "36",
+  "day": 2,
+  "event": 31,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "360 t aboard run 1's ships, its load (day 2); plan:1 is released (day 2)",
+  "binding": "area: none set, the sea is open",
+  "worked": "Run 1 of plan:1: the 360 t aboard are its load of 360 t; the load is complete, so it sails today (day 2, hour 24). 200 nm out at 10 kn = 20 hours, so it arrives at base:2 at hour 44 (day 2); 200 nm back = 20 hours. It acts at base:2: 80 t landed in the 4 hours of day 2 left, at 20 t an hour for ship:1; unloading takes 18 hours, 1 day. This is the unload order the route acts on.",
+  "would_change": "a load not complete, or a plan not released",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: 360 t aboard run 1's ships, its load (day 2); plan:1 is released (day 2)\nBinding: area: none set, the sea is open\nWorked: Run 1 of plan:1: the 360 t aboard are its load of 360 t; the load is complete, so it sails today (day 2, hour 24). 200 nm out at 10 kn = 20 hours, so it arrives at base:2 at hour 44 (day 2); 200 nm back = 20 hours. It acts at base:2: 80 t landed in the 4 hours of day 2 left, at 20 t an hour for ship:1; unloading takes 18 hours, 1 day. This is the unload order the route acts on.\nWould change: a load not complete, or a plan not released"
+ },
+ {
+  "number": 7,
+  "kind": "no_order",
+  "scenario": "36",
+  "day": 3,
+  "event": 44,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "base:2 holds 160 t and uses 10 t a day (day 3)",
+  "binding": "floor of 30 days at base:2; interval of 15 days",
+  "worked": "Reading today at base:2: 160 t over 10 t a day = 16 days, against a floor of 30 days (300 t). Run 1 is under way with 280 t aboard, due at base:2 on day 2. A run ordered today would be due on day 4; the reading of day 5 is projected at 420 t against 30 days x 10 t = 300 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 30 days (300 t); it is expected to be ordered on day 16, due on day 17.",
+  "would_change": "a reading of day 18 below 300 t would call a run on day 16; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: base:2 holds 160 t and uses 10 t a day (day 3)\nBinding: floor of 30 days at base:2; interval of 15 days\nWorked: Reading today at base:2: 160 t over 10 t a day = 16 days, against a floor of 30 days (300 t). Run 1 is under way with 280 t aboard, due at base:2 on day 2. A run ordered today would be due on day 4; the reading of day 5 is projected at 420 t against 30 days x 10 t = 300 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 30 days (300 t); it is expected to be ordered on day 16, due on day 17.\nWould change: a reading of day 18 below 300 t would call a run on day 16; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 8,
+  "kind": "no_order",
+  "scenario": "40a",
+  "day": 3,
+  "event": 72,
+  "serves": {
+   "intent": 1,
+   "plan": 1,
+   "amendment": 1
+  },
+  "evidence": "base:2 holds 38 t and uses 1 t a day (day 3)",
+  "binding": "floor of 30 days at base:2; interval of 15 days",
+  "worked": "Reading today at base:2: 38 t over 1 t a day = 38 days, against a floor of 30 days (30 t). Run 1 is under way with 0 t aboard, due at base:2 on day 2. A run ordered today would be due on day 4; the reading of day 5 is projected at 36 t against 30 days x 1 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 12 to fall below 30 days (30 t); it is expected to be ordered on day 10, due on day 11.",
+  "would_change": "a reading of day 12 below 30 t would call a run on day 10; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 1, plan 1, amendment 1\nEvidence: base:2 holds 38 t and uses 1 t a day (day 3)\nBinding: floor of 30 days at base:2; interval of 15 days\nWorked: Reading today at base:2: 38 t over 1 t a day = 38 days, against a floor of 30 days (30 t). Run 1 is under way with 0 t aboard, due at base:2 on day 2. A run ordered today would be due on day 4; the reading of day 5 is projected at 36 t against 30 days x 1 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 12 to fall below 30 days (30 t); it is expected to be ordered on day 10, due on day 11.\nWould change: a reading of day 12 below 30 t would call a run on day 10; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 9,
+  "kind": "no_order",
+  "scenario": "36",
+  "day": 4,
+  "event": 55,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "base:2 holds 430 t and uses 10 t a day (day 4)",
+  "binding": "floor of 30 days at base:2; interval of 15 days",
+  "worked": "Reading today at base:2: 430 t over 10 t a day = 43 days, against a floor of 30 days (300 t). Run 1 is under way with 0 t aboard, due at base:2 on day 2. A run ordered today would be due on day 5; the reading of day 6 is projected at 410 t against 30 days x 10 t = 300 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 30 days (300 t); it is expected to be ordered on day 16, due on day 17.",
+  "would_change": "a reading of day 18 below 300 t would call a run on day 16; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: base:2 holds 430 t and uses 10 t a day (day 4)\nBinding: floor of 30 days at base:2; interval of 15 days\nWorked: Reading today at base:2: 430 t over 10 t a day = 43 days, against a floor of 30 days (300 t). Run 1 is under way with 0 t aboard, due at base:2 on day 2. A run ordered today would be due on day 5; the reading of day 6 is projected at 410 t against 30 days x 10 t = 300 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 30 days (300 t); it is expected to be ordered on day 16, due on day 17.\nWould change: a reading of day 18 below 300 t would call a run on day 16; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 10,
+  "kind": "no_order",
+  "scenario": "40a",
+  "day": 4,
+  "event": 86,
+  "serves": {
+   "intent": 1,
+   "plan": 1,
+   "amendment": 1
+  },
+  "evidence": "base:2 holds 37 t and uses 1 t a day (day 4)",
+  "binding": "floor of 30 days at base:2; interval of 15 days",
+  "worked": "Reading today at base:2: 37 t over 1 t a day = 37 days, against a floor of 30 days (30 t). A run ordered today would be due on day 5; the reading of day 6 is projected at 35 t against 30 days x 1 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 12 to fall below 30 days (30 t); it is expected to be ordered on day 10, due on day 11.",
+  "would_change": "a reading of day 12 below 30 t would call a run on day 10; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 1, plan 1, amendment 1\nEvidence: base:2 holds 37 t and uses 1 t a day (day 4)\nBinding: floor of 30 days at base:2; interval of 15 days\nWorked: Reading today at base:2: 37 t over 1 t a day = 37 days, against a floor of 30 days (30 t). A run ordered today would be due on day 5; the reading of day 6 is projected at 35 t against 30 days x 1 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 12 to fall below 30 days (30 t); it is expected to be ordered on day 10, due on day 11.\nWould change: a reading of day 12 below 30 t would call a run on day 10; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 11,
+  "kind": "no_order",
+  "scenario": "41a",
+  "day": 4,
+  "event": 54,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "base:2 holds 150 t and uses 10 t a day (day 4)",
+  "binding": "floor of 30 days at base:2; interval of 15 days",
+  "worked": "Reading today at base:2: 150 t over 10 t a day = 15 days, against a floor of 30 days (300 t). Run 1 is under way with 280 t aboard, due at base:2 on day 3. A run ordered today would be due on day 5; the reading of day 6 is projected at 410 t against 30 days x 10 t = 300 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 30 days (300 t); it is expected to be ordered on day 16, due on day 17.",
+  "would_change": "a reading of day 18 below 300 t would call a run on day 16; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: base:2 holds 150 t and uses 10 t a day (day 4)\nBinding: floor of 30 days at base:2; interval of 15 days\nWorked: Reading today at base:2: 150 t over 10 t a day = 15 days, against a floor of 30 days (300 t). Run 1 is under way with 280 t aboard, due at base:2 on day 3. A run ordered today would be due on day 5; the reading of day 6 is projected at 410 t against 30 days x 10 t = 300 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 30 days (300 t); it is expected to be ordered on day 16, due on day 17.\nWould change: a reading of day 18 below 300 t would call a run on day 16; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 12,
+  "kind": "no_order",
+  "scenario": "36",
+  "day": 5,
+  "event": 66,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "base:2 holds 420 t and uses 10 t a day (day 5)",
+  "binding": "floor of 30 days at base:2; interval of 15 days",
+  "worked": "Reading today at base:2: 420 t over 10 t a day = 42 days, against a floor of 30 days (300 t). A run ordered today would be due on day 6; the reading of day 7 is projected at 400 t against 30 days x 10 t = 300 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 30 days (300 t); it is expected to be ordered on day 16, due on day 17.",
+  "would_change": "a reading of day 18 below 300 t would call a run on day 16; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: base:2 holds 420 t and uses 10 t a day (day 5)\nBinding: floor of 30 days at base:2; interval of 15 days\nWorked: Reading today at base:2: 420 t over 10 t a day = 42 days, against a floor of 30 days (300 t). A run ordered today would be due on day 6; the reading of day 7 is projected at 400 t against 30 days x 10 t = 300 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 30 days (300 t); it is expected to be ordered on day 16, due on day 17.\nWould change: a reading of day 18 below 300 t would call a run on day 16; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 13,
+  "kind": "displaced",
+  "scenario": "40a",
+  "day": 1,
+  "event": 27,
+  "serves": {
+   "intent": 2,
+   "plan": 2
+  },
+  "evidence": "base:3 holds 10 t and uses 1 t a day (day 1)",
+  "binding": "floor of 30 days at base:3; interval of 15 days; no ship of the pool is free until day 5; displaced by plan:1",
+  "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 30 days (30 t). A run ordered today would be due on day 2; the reading of day 3 is projected at 8 t against 30 days x 1 t = 30 t: below the floor. It cannot be met: no ship of the pool is free until day 5. Short 22 days at the reading of day 3: 8 t against 30 t. It is displaced by ship:1 committed to run 1 of plan:1 (intent:1) from day 1 to day 4. The next run waits for the reading of day 7 to fall below 30 days (30 t); it is expected to be ordered on day 5, due on day 6.",
+  "would_change": "a reading of day 7 below 30 t would call a run on day 5; plan:1's commitment ending: ship:1 free on day 5; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 2, plan 2\nEvidence: base:3 holds 10 t and uses 1 t a day (day 1)\nBinding: floor of 30 days at base:3; interval of 15 days; no ship of the pool is free until day 5; displaced by plan:1\nWorked: Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 30 days (30 t). A run ordered today would be due on day 2; the reading of day 3 is projected at 8 t against 30 days x 1 t = 30 t: below the floor. It cannot be met: no ship of the pool is free until day 5. Short 22 days at the reading of day 3: 8 t against 30 t. It is displaced by ship:1 committed to run 1 of plan:1 (intent:1) from day 1 to day 4. The next run waits for the reading of day 7 to fall below 30 days (30 t); it is expected to be ordered on day 5, due on day 6.\nWould change: a reading of day 7 below 30 t would call a run on day 5; plan:1's commitment ending: ship:1 free on day 5; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 14,
+  "kind": "displaced",
+  "scenario": "40a",
+  "day": 2,
+  "event": 44,
+  "serves": {
+   "intent": 2,
+   "plan": 2
+  },
+  "evidence": "base:3 holds 9 t and uses 1 t a day (day 2)",
+  "binding": "floor of 30 days at base:3; interval of 15 days; no ship of the pool is free until day 5; displaced by plan:1",
+  "worked": "Reading today at base:3: 9 t over 1 t a day = 9 days, against a floor of 30 days (30 t). A run ordered today would be due on day 3; the reading of day 4 is projected at 7 t against 30 days x 1 t = 30 t: below the floor. It cannot be met: no ship of the pool is free until day 5. Short 23 days at the reading of day 4: 7 t against 30 t. It is displaced by ship:1 committed to run 1 of plan:1 (intent:1) from day 1 to day 4. The next run waits for the reading of day 7 to fall below 30 days (30 t); it is expected to be ordered on day 5, due on day 6.",
+  "would_change": "a reading of day 7 below 30 t would call a run on day 5; plan:1's commitment ending: ship:1 free on day 5; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 2, plan 2\nEvidence: base:3 holds 9 t and uses 1 t a day (day 2)\nBinding: floor of 30 days at base:3; interval of 15 days; no ship of the pool is free until day 5; displaced by plan:1\nWorked: Reading today at base:3: 9 t over 1 t a day = 9 days, against a floor of 30 days (30 t). A run ordered today would be due on day 3; the reading of day 4 is projected at 7 t against 30 days x 1 t = 30 t: below the floor. It cannot be met: no ship of the pool is free until day 5. Short 23 days at the reading of day 4: 7 t against 30 t. It is displaced by ship:1 committed to run 1 of plan:1 (intent:1) from day 1 to day 4. The next run waits for the reading of day 7 to fall below 30 days (30 t); it is expected to be ordered on day 5, due on day 6.\nWould change: a reading of day 7 below 30 t would call a run on day 5; plan:1's commitment ending: ship:1 free on day 5; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 15,
+  "kind": "displaced",
+  "scenario": "40a",
+  "day": 3,
+  "event": 71,
+  "serves": {
+   "intent": 2,
+   "plan": 2,
+   "amendment": 1
+  },
+  "evidence": "base:3 holds 8 t and uses 1 t a day (day 3)",
+  "binding": "floor of 30 days at base:3; interval of 15 days; no ship of the pool is free until day 5; displaced by plan:1",
+  "worked": "Reading today at base:3: 8 t over 1 t a day = 8 days, against a floor of 30 days (30 t). A run ordered today would be due on day 4; the reading of day 5 is projected at 6 t against 30 days x 1 t = 30 t: below the floor. It cannot be met: no ship of the pool is free until day 5. Short 24 days at the reading of day 5: 6 t against 30 t. It is displaced by ship:1 committed to run 1 of plan:1 (intent:1) from day 1 to day 4. The next run waits for the reading of day 7 to fall below 30 days (30 t); it is expected to be ordered on day 5, due on day 6.",
+  "would_change": "a reading of day 7 below 30 t would call a run on day 5; plan:1's commitment ending: ship:1 free on day 5; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 2, plan 2, amendment 1\nEvidence: base:3 holds 8 t and uses 1 t a day (day 3)\nBinding: floor of 30 days at base:3; interval of 15 days; no ship of the pool is free until day 5; displaced by plan:1\nWorked: Reading today at base:3: 8 t over 1 t a day = 8 days, against a floor of 30 days (30 t). A run ordered today would be due on day 4; the reading of day 5 is projected at 6 t against 30 days x 1 t = 30 t: below the floor. It cannot be met: no ship of the pool is free until day 5. Short 24 days at the reading of day 5: 6 t against 30 t. It is displaced by ship:1 committed to run 1 of plan:1 (intent:1) from day 1 to day 4. The next run waits for the reading of day 7 to fall below 30 days (30 t); it is expected to be ordered on day 5, due on day 6.\nWould change: a reading of day 7 below 30 t would call a run on day 5; plan:1's commitment ending: ship:1 free on day 5; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 16,
+  "kind": "displaced",
+  "scenario": "40a",
+  "day": 4,
+  "event": 85,
+  "serves": {
+   "intent": 2,
+   "plan": 2,
+   "amendment": 1
+  },
+  "evidence": "base:3 holds 7 t and uses 1 t a day (day 4)",
+  "binding": "floor of 30 days at base:3; interval of 15 days; no ship of the pool is free until day 5; displaced by plan:1",
+  "worked": "Reading today at base:3: 7 t over 1 t a day = 7 days, against a floor of 30 days (30 t). A run ordered today would be due on day 5; the reading of day 6 is projected at 5 t against 30 days x 1 t = 30 t: below the floor. It cannot be met: no ship of the pool is free until day 5. Short 25 days at the reading of day 6: 5 t against 30 t. It is displaced by ship:1 committed to run 1 of plan:1 (intent:1) from day 1 to day 4. The next run waits for the reading of day 7 to fall below 30 days (30 t); it is expected to be ordered on day 5, due on day 6.",
+  "would_change": "a reading of day 7 below 30 t would call a run on day 5; plan:1's commitment ending: ship:1 free on day 5; a larger use at the destination would bring the next run forward",
+  "prompt_text": "Serves: intent 2, plan 2, amendment 1\nEvidence: base:3 holds 7 t and uses 1 t a day (day 4)\nBinding: floor of 30 days at base:3; interval of 15 days; no ship of the pool is free until day 5; displaced by plan:1\nWorked: Reading today at base:3: 7 t over 1 t a day = 7 days, against a floor of 30 days (30 t). A run ordered today would be due on day 5; the reading of day 6 is projected at 5 t against 30 days x 1 t = 30 t: below the floor. It cannot be met: no ship of the pool is free until day 5. Short 25 days at the reading of day 6: 5 t against 30 t. It is displaced by ship:1 committed to run 1 of plan:1 (intent:1) from day 1 to day 4. The next run waits for the reading of day 7 to fall below 30 days (30 t); it is expected to be ordered on day 5, due on day 6.\nWould change: a reading of day 7 below 30 t would call a run on day 5; plan:1's commitment ending: ship:1 free on day 5; a larger use at the destination would bring the next run forward"
+ },
+ {
+  "number": 17,
+  "kind": "hold",
+  "scenario": "41a",
+  "day": 10,
+  "event": 100,
+  "serves": {
+   "intent": 1,
+   "plan": 1,
+   "amendment": 1
+  },
+  "evidence": "base:2 holds 370 t and uses 10 t a day (day 10); the reading of day 12 is projected at 350 t (day 10); ship:1 is held by the commander's hold of day 8 (day 10)",
+  "binding": "floor of 40 days at base:2; interval of 15 days; area: none set, the sea is open; ship:1 is held by the commander's hold of day 8; the hold on ship:1",
+  "worked": "Reading today at base:2: 370 t over 10 t a day = 37 days, against a floor of 40 days. A run ordered on day 10 loads on day 10 (3.8 hours at the source = 1 day), sails on day 11, and is due at base:2 on day 11. Without it the reading of day 12 is 350 t against 40 days x 10 t = 400 t: below the floor, so a run is needed. The stock projected for the reading of day 11 is 360 t. Load = max(0, 400 - 360) + 150 (15 days of use) = 190 t. Without the hold, ship:1 would have been sent. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 190 t at base:2 = 9.5 hours, 1 day. Its ships are free on day 14 (11 + 1 + 1 + 1). The staff adds this run to the plan.",
+  "would_change": "a reading of day 12 at or above 400 t would call no run; a free ship of the pool earlier in number order would carry it instead; ship:1 released: it would then be free",
+  "prompt_text": "Serves: intent 1, plan 1, amendment 1\nEvidence: base:2 holds 370 t and uses 10 t a day (day 10); the reading of day 12 is projected at 350 t (day 10); ship:1 is held by the commander's hold of day 8 (day 10)\nBinding: floor of 40 days at base:2; interval of 15 days; area: none set, the sea is open; ship:1 is held by the commander's hold of day 8; the hold on ship:1\nWorked: Reading today at base:2: 370 t over 10 t a day = 37 days, against a floor of 40 days. A run ordered on day 10 loads on day 10 (3.8 hours at the source = 1 day), sails on day 11, and is due at base:2 on day 11. Without it the reading of day 12 is 350 t against 40 days x 10 t = 400 t: below the floor, so a run is needed. The stock projected for the reading of day 11 is 360 t. Load = max(0, 400 - 360) + 150 (15 days of use) = 190 t. Without the hold, ship:1 would have been sent. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 190 t at base:2 = 9.5 hours, 1 day. Its ships are free on day 14 (11 + 1 + 1 + 1). The staff adds this run to the plan.\nWould change: a reading of day 12 at or above 400 t would call no run; a free ship of the pool earlier in number order would carry it instead; ship:1 released: it would then be free"
+ },
+ {
+  "number": 18,
+  "kind": "hold",
+  "scenario": "41a",
+  "day": 10,
+  "event": 102,
+  "serves": {
+   "intent": 1,
+   "plan": 1,
+   "amendment": 1
+  },
+  "evidence": "base:2 holds 370 t and uses 10 t a day (day 10); the reading of day 12 is projected at 350 t (day 10); ship:1 is held by the commander's hold of day 8 (day 10)",
+  "binding": "floor of 40 days at base:2; interval of 15 days; area: none set, the sea is open; ship:1 is held by the commander's hold of day 8; the hold on ship:1",
+  "worked": "Reading today at base:2: 370 t over 10 t a day = 37 days, against a floor of 40 days. A run ordered on day 10 loads on day 10 (3.8 hours at the source = 1 day), sails on day 11, and is due at base:2 on day 11. Without it the reading of day 12 is 350 t against 40 days x 10 t = 400 t: below the floor, so a run is needed. The stock projected for the reading of day 11 is 360 t. Load = max(0, 400 - 360) + 150 (15 days of use) = 190 t. Without the hold, ship:1 would have been sent. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 190 t at base:2 = 9.5 hours, 1 day. Its ships are free on day 14 (11 + 1 + 1 + 1). The ships are committed from day 10 to day 13, the day before they are free.",
+  "would_change": "a reading of day 12 at or above 400 t would call no run; a free ship of the pool earlier in number order would carry it instead; ship:1 released: it would then be free",
+  "prompt_text": "Serves: intent 1, plan 1, amendment 1\nEvidence: base:2 holds 370 t and uses 10 t a day (day 10); the reading of day 12 is projected at 350 t (day 10); ship:1 is held by the commander's hold of day 8 (day 10)\nBinding: floor of 40 days at base:2; interval of 15 days; area: none set, the sea is open; ship:1 is held by the commander's hold of day 8; the hold on ship:1\nWorked: Reading today at base:2: 370 t over 10 t a day = 37 days, against a floor of 40 days. A run ordered on day 10 loads on day 10 (3.8 hours at the source = 1 day), sails on day 11, and is due at base:2 on day 11. Without it the reading of day 12 is 350 t against 40 days x 10 t = 400 t: below the floor, so a run is needed. The stock projected for the reading of day 11 is 360 t. Load = max(0, 400 - 360) + 150 (15 days of use) = 190 t. Without the hold, ship:1 would have been sent. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 190 t at base:2 = 9.5 hours, 1 day. Its ships are free on day 14 (11 + 1 + 1 + 1). The ships are committed from day 10 to day 13, the day before they are free.\nWould change: a reading of day 12 at or above 400 t would call no run; a free ship of the pool earlier in number order would carry it instead; ship:1 released: it would then be free"
+ },
+ {
+  "number": 19,
+  "kind": "hold",
+  "scenario": "41a",
+  "day": 10,
+  "event": 105,
+  "serves": {
+   "intent": 1,
+   "plan": 1,
+   "amendment": 1
+  },
+  "evidence": "base:2 holds 370 t and uses 10 t a day (day 10); the reading of day 12 is projected at 350 t (day 10); ship:1 is held by the commander's hold of day 8 (day 10)",
+  "binding": "floor of 40 days at base:2; interval of 15 days; area: none set, the sea is open; ship:1 is held by the commander's hold of day 8; the hold on ship:1",
+  "worked": "Reading today at base:2: 370 t over 10 t a day = 37 days, against a floor of 40 days. A run ordered on day 10 loads on day 10 (3.8 hours at the source = 1 day), sails on day 11, and is due at base:2 on day 11. Without it the reading of day 12 is 350 t against 40 days x 10 t = 400 t: below the floor, so a run is needed. The stock projected for the reading of day 11 is 360 t. Load = max(0, 400 - 360) + 150 (15 days of use) = 190 t. Without the hold, ship:1 would have been sent. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 190 t at base:2 = 9.5 hours, 1 day. Its ships are free on day 14 (11 + 1 + 1 + 1). Form ship:2 lying in port at base:1 in no force into a force.",
+  "would_change": "a reading of day 12 at or above 400 t would call no run; a free ship of the pool earlier in number order would carry it instead; ship:1 released: it would then be free",
+  "prompt_text": "Serves: intent 1, plan 1, amendment 1\nEvidence: base:2 holds 370 t and uses 10 t a day (day 10); the reading of day 12 is projected at 350 t (day 10); ship:1 is held by the commander's hold of day 8 (day 10)\nBinding: floor of 40 days at base:2; interval of 15 days; area: none set, the sea is open; ship:1 is held by the commander's hold of day 8; the hold on ship:1\nWorked: Reading today at base:2: 370 t over 10 t a day = 37 days, against a floor of 40 days. A run ordered on day 10 loads on day 10 (3.8 hours at the source = 1 day), sails on day 11, and is due at base:2 on day 11. Without it the reading of day 12 is 350 t against 40 days x 10 t = 400 t: below the floor, so a run is needed. The stock projected for the reading of day 11 is 360 t. Load = max(0, 400 - 360) + 150 (15 days of use) = 190 t. Without the hold, ship:1 would have been sent. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 190 t at base:2 = 9.5 hours, 1 day. Its ships are free on day 14 (11 + 1 + 1 + 1). Form ship:2 lying in port at base:1 in no force into a force.\nWould change: a reading of day 12 at or above 400 t would call no run; a free ship of the pool earlier in number order would carry it instead; ship:1 released: it would then be free"
+ },
+ {
+  "number": 20,
+  "kind": "hold",
+  "scenario": "41a",
+  "day": 10,
+  "event": 107,
+  "serves": {
+   "intent": 1,
+   "plan": 1,
+   "amendment": 1
+  },
+  "evidence": "base:2 holds 370 t and uses 10 t a day (day 10); the reading of day 12 is projected at 350 t (day 10); ship:1 is held by the commander's hold of day 8 (day 10)",
+  "binding": "floor of 40 days at base:2; interval of 15 days; area: none set, the sea is open; ship:1 is held by the commander's hold of day 8; the hold on ship:1",
+  "worked": "Reading today at base:2: 370 t over 10 t a day = 37 days, against a floor of 40 days. A run ordered on day 10 loads on day 10 (3.8 hours at the source = 1 day), sails on day 11, and is due at base:2 on day 11. Without it the reading of day 12 is 350 t against 40 days x 10 t = 400 t: below the floor, so a run is needed. The stock projected for the reading of day 11 is 360 t. Load = max(0, 400 - 360) + 150 (15 days of use) = 190 t. Without the hold, ship:1 would have been sent. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 190 t at base:2 = 9.5 hours, 1 day. Its ships are free on day 14 (11 + 1 + 1 + 1). Load order: until 190 t is aboard (0 t aboard now + the load of 190 t); ship:2 190 t at 50 t an hour = 3.8 hours.",
+  "would_change": "a reading of day 12 at or above 400 t would call no run; a free ship of the pool earlier in number order would carry it instead; ship:1 released: it would then be free",
+  "prompt_text": "Serves: intent 1, plan 1, amendment 1\nEvidence: base:2 holds 370 t and uses 10 t a day (day 10); the reading of day 12 is projected at 350 t (day 10); ship:1 is held by the commander's hold of day 8 (day 10)\nBinding: floor of 40 days at base:2; interval of 15 days; area: none set, the sea is open; ship:1 is held by the commander's hold of day 8; the hold on ship:1\nWorked: Reading today at base:2: 370 t over 10 t a day = 37 days, against a floor of 40 days. A run ordered on day 10 loads on day 10 (3.8 hours at the source = 1 day), sails on day 11, and is due at base:2 on day 11. Without it the reading of day 12 is 350 t against 40 days x 10 t = 400 t: below the floor, so a run is needed. The stock projected for the reading of day 11 is 360 t. Load = max(0, 400 - 360) + 150 (15 days of use) = 190 t. Without the hold, ship:1 would have been sent. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 190 t at base:2 = 9.5 hours, 1 day. Its ships are free on day 14 (11 + 1 + 1 + 1). Load order: until 190 t is aboard (0 t aboard now + the load of 190 t); ship:2 190 t at 50 t an hour = 3.8 hours.\nWould change: a reading of day 12 at or above 400 t would call no run; a free ship of the pool earlier in number order would carry it instead; ship:1 released: it would then be free"
+ },
+ {
+  "number": 21,
+  "kind": "leave",
+  "scenario": "36",
+  "day": 1,
+  "event": 9,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "plan:1 is a draft (day 1); leave to prepare is given (day 1)",
+  "binding": "",
+  "worked": "plan:1 is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).",
+  "would_change": "leave to prepare withheld",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: plan:1 is a draft (day 1); leave to prepare is given (day 1)\nBinding: (none)\nWorked: plan:1 is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).\nWould change: leave to prepare withheld"
+ },
+ {
+  "number": 22,
+  "kind": "leave",
+  "scenario": "36",
+  "day": 1,
+  "event": 12,
+  "serves": {
+   "intent": 1,
+   "plan": 1
+  },
+  "evidence": "plan:1 is preparing (day 1); leave to launch is given (day 1)",
+  "binding": "",
+  "worked": "plan:1 is ready and leave to launch is given: the staff releases it.",
+  "would_change": "leave to launch withheld",
+  "prompt_text": "Serves: intent 1, plan 1\nEvidence: plan:1 is preparing (day 1); leave to launch is given (day 1)\nBinding: (none)\nWorked: plan:1 is ready and leave to launch is given: the staff releases it.\nWould change: leave to launch withheld"
+ },
+ {
+  "number": 23,
+  "kind": "leave",
+  "scenario": "40a",
+  "day": 1,
+  "event": 23,
+  "serves": {
+   "intent": 2,
+   "plan": 2
+  },
+  "evidence": "plan:2 is a draft (day 1); leave to prepare is given (day 1)",
+  "binding": "",
+  "worked": "plan:2 is a draft inside the limits of intent:2 and leave to prepare is given: the staff makes it ready (preparing).",
+  "would_change": "leave to prepare withheld",
+  "prompt_text": "Serves: intent 2, plan 2\nEvidence: plan:2 is a draft (day 1); leave to prepare is given (day 1)\nBinding: (none)\nWorked: plan:2 is a draft inside the limits of intent:2 and leave to prepare is given: the staff makes it ready (preparing).\nWould change: leave to prepare withheld"
+ },
+ {
+  "number": 24,
+  "kind": "leave",
+  "scenario": "40a",
+  "day": 1,
+  "event": 26,
+  "serves": {
+   "intent": 2,
+   "plan": 2
+  },
+  "evidence": "plan:2 is preparing (day 1); leave to launch is given (day 1)",
+  "binding": "",
+  "worked": "plan:2 is ready and leave to launch is given: the staff releases it.",
+  "would_change": "leave to launch withheld",
+  "prompt_text": "Serves: intent 2, plan 2\nEvidence: plan:2 is preparing (day 1); leave to launch is given (day 1)\nBinding: (none)\nWorked: plan:2 is ready and leave to launch is given: the staff releases it.\nWould change: leave to launch withheld"
+ }
+]

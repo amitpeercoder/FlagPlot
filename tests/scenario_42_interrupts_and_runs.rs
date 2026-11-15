@@ -1428,3 +1428,50 @@ fn d_a_play_game_of_another_doctrine_version_is_refused_and_names_it() {
     );
     std::fs::remove_dir_all(&dir).ok();
 }
+
+// ------------------------------------------------- No truth (decision 0107)
+
+/// Two worlds that differ only in what the Allied side cannot see give the
+/// same `run` answers, interrupts and command report ("What it must pass",
+/// No truth). Added by the team lead of step 4: 42b on a map with a third
+/// coast hex holding a Japanese base, a unit and a ship that no Allied unit
+/// can see, with two different sets of numbers.
+#[test]
+fn no_truth_two_worlds_the_side_cannot_tell_apart_give_the_same_runs_and_reports() {
+    let map_text =
+        std::fs::read_to_string(common::data_dir().join("map/placeholder_one_convoy.toml"))
+            .expect("the map reads")
+            + "\n[[hex]]\nq = 3\nr = 2\nkind = \"coast\"\nport_size = 1\n";
+    let dir = std::env::temp_dir().join(format!("flag_plot_s42_truth_{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a directory");
+    let map_path = dir.join("map.toml");
+    std::fs::write(&map_path, map_text).expect("the map is written");
+    let enemy = |supply: u32, men: u32, ship_fuel: u32| {
+        format!(
+            "\n[[base]]\nid = 7\nname = \"Placeholder base U, Japanese\"\nside = \"japanese\"\nq = 3\nr = 2\nsupply_t = {supply}\nfuel_t = 100\n\n[[land_unit]]\nid = 9\nname = \"Placeholder unit 9\"\nside = \"japanese\"\nmen = {men}\nq = 3\nr = 2\nposture = \"defend\"\n\n[[ship]]\nid = 11\nname = \"Placeholder cargo ship 11\"\nclass = 3\nside = \"japanese\"\nfuel_t = {ship_fuel}\nport = 7\n"
+        )
+    };
+    let plain = varied(
+        &read(&path_b()),
+        "map = \"../map/placeholder_one_convoy.toml\"",
+        &format!("map = \"{}\"", map_path.display()),
+    );
+    let mut answers = Vec::new();
+    for text in [
+        plain.clone(),
+        format!("{plain}{}", enemy(900, 1500, 500)),
+        format!("{plain}{}", enemy(10, 4000, 900)),
+    ] {
+        let mut session = session_of(&text, &path_b());
+        let first = run(&mut session, 30);
+        let after_2 = ask(&mut session, "report", json!({}));
+        let state = ask(&mut session, "command_state", json!({}));
+        ask(&mut session, "approve", json!({"plan": 1}));
+        let second = run(&mut session, 30);
+        let at_end = ask(&mut session, "report", json!({}));
+        answers.push((first, after_2, state, second, at_end));
+    }
+    assert_eq!(answers[0], answers[1]);
+    assert_eq!(answers[0], answers[2]);
+    std::fs::remove_dir_all(&dir).ok();
+}
