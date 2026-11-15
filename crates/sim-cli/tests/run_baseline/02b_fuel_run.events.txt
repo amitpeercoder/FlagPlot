@@ -4,8 +4,8 @@ seed 1942
 
 day   1  hash 457dde0d250f33e8  10 events
 day   2  hash 4862d437d42c707c  17 events
-day   3  hash 577cb3dfd307f0d3  13 events
-day   4  hash 32220c4d5ee5ebfe  11 events
+day   3  hash 23e409cc54c542da  14 events
+day   4  hash c264ffe2a7466417  8 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 night     ship:1 loaded 1800 t of fuel cargo from base:1, 1800 t of fuel cargo aboard, 4700 t of fuel in stock  <- order:1
@@ -41,30 +41,28 @@ day   4  hash 32220c4d5ee5ebfe  11 events
 #32 D3 night     task_force:1 arrived at (8,0) at D3 02:00  <- #28
 #33 D3 night     ship:1 unloaded 200 t of fuel cargo at base:2, 2800 t of fuel cargo aboard, 200 t of fuel in stock  <- order:4, #32
 #34 D3 night     ship:2 unloaded 80 t of fuel cargo at base:2, 2920 t of fuel cargo aboard, 280 t of fuel in stock  <- order:4, #32
-#35 D3 morning   ship:1 unloaded 300 t of fuel cargo at base:2, 2500 t of fuel cargo aboard, 580 t of fuel in stock  <- order:4, #32
-#36 D3 morning   ship:2 unloaded 120 t of fuel cargo at base:2, 2800 t of fuel cargo aboard, 700 t of fuel in stock  <- order:4, #32
-#37 D3 afternoon ship:1 unloaded 300 t of fuel cargo at base:2, 2200 t of fuel cargo aboard, 1000 t of fuel in stock  <- order:4, #32
-#38 D3 afternoon ship:2 unloaded 120 t of fuel cargo at base:2, 2680 t of fuel cargo aboard, 1120 t of fuel in stock  <- order:4, #32
-#39 D3 -         base:1 at the end of the day: 10000 t of supply, 0 aircraft ready: not open
-#40 D3 -         base:2 at the end of the day: 500 t of supply, 0 aircraft ready: not open
-#41 D4 -         ship:1 took 32 t of fuel at base:2, 1000 t aboard, base:2 has 1088 t left  <- #32
-#42 D4 -         ship:2 took 32 t of fuel at base:2, 1000 t aboard, base:2 has 1056 t left  <- #32
-#43 D4 -         ship:3 took 40 t of fuel at base:2, 500 t aboard, base:2 has 1016 t left  <- #32
-#44 D4 night     ship:1 unloaded 600 t of fuel cargo at base:2, 1600 t of fuel cargo aboard, 1616 t of fuel in stock  <- order:4, #32
-#45 D4 night     ship:2 unloaded 240 t of fuel cargo at base:2, 2440 t of fuel cargo aboard, 1856 t of fuel in stock  <- order:4, #32
-#46 D4 morning   ship:1 unloaded 300 t of fuel cargo at base:2, 1300 t of fuel cargo aboard, 2156 t of fuel in stock  <- order:4, #32
-#47 D4 morning   ship:2 unloaded 120 t of fuel cargo at base:2, 2320 t of fuel cargo aboard, 2276 t of fuel in stock  <- order:4, #32
-#48 D4 afternoon ship:1 unloaded 300 t of fuel cargo at base:2, 1000 t of fuel cargo aboard, 2576 t of fuel in stock  <- order:4, #32
-#49 D4 afternoon ship:2 unloaded 120 t of fuel cargo at base:2, 2200 t of fuel cargo aboard, 2696 t of fuel in stock  <- order:4, #32
-#50 D4 -         base:1 at the end of the day: 10000 t of supply, 0 aircraft ready: not open
-#51 D4 -         base:2 at the end of the day: 500 t of supply, 0 aircraft ready: not open
+#35 D3 night     ship:3 took 40 t of fuel at base:2, 500 t aboard, base:2 has 240 t left  <- #32
+#36 D3 morning   ship:1 unloaded 300 t of fuel cargo at base:2, 2500 t of fuel cargo aboard, 540 t of fuel in stock  <- order:4, #32
+#37 D3 morning   ship:2 unloaded 120 t of fuel cargo at base:2, 2800 t of fuel cargo aboard, 660 t of fuel in stock  <- order:4, #32
+#38 D3 afternoon ship:1 unloaded 300 t of fuel cargo at base:2, 2200 t of fuel cargo aboard, 960 t of fuel in stock  <- order:4, #32
+#39 D3 afternoon ship:2 unloaded 120 t of fuel cargo at base:2, 2680 t of fuel cargo aboard, 1080 t of fuel in stock  <- order:4, #32
+#40 D3 -         base:1 at the end of the day: 10000 t of supply, 0 aircraft ready: not open
+#41 D3 -         base:2 at the end of the day: 500 t of supply, 0 aircraft ready: not open
+#42 D4 night     ship:1 unloaded 600 t of fuel cargo at base:2, 1600 t of fuel cargo aboard, 1680 t of fuel in stock  <- order:4, #32
+#43 D4 night     ship:2 unloaded 240 t of fuel cargo at base:2, 2440 t of fuel cargo aboard, 1920 t of fuel in stock  <- order:4, #32
+#44 D4 morning   ship:1 unloaded 300 t of fuel cargo at base:2, 1300 t of fuel cargo aboard, 2220 t of fuel in stock  <- order:4, #32
+#45 D4 morning   ship:2 unloaded 120 t of fuel cargo at base:2, 2320 t of fuel cargo aboard, 2340 t of fuel in stock  <- order:4, #32
+#46 D4 afternoon ship:1 unloaded 300 t of fuel cargo at base:2, 1000 t of fuel cargo aboard, 2640 t of fuel in stock  <- order:4, #32
+#47 D4 afternoon ship:2 unloaded 120 t of fuel cargo at base:2, 2200 t of fuel cargo aboard, 2760 t of fuel in stock  <- order:4, #32
+#48 D4 -         base:1 at the end of the day: 10000 t of supply, 0 aircraft ready: not open
+#49 D4 -         base:2 at the end of the day: 500 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder supply convoy" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 1000 t of fuel cargo
-ship:2 "Placeholder cargo ship 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 2200 t of fuel cargo
+ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply, 1000 t of fuel cargo
+ship:2 "Placeholder cargo ship 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply, 2200 t of fuel cargo
 ship:3 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
 base:1 "Espiritu Santo" (Allied) at (0,0): 10000 t of supply in stock, 500 t of fuel in stock
-base:2 "Guadalcanal" (Allied) at (8,0): 500 t of supply in stock, 2696 t of fuel in stock
+base:2 "Guadalcanal" (Allied) at (8,0): 500 t of supply in stock, 2760 t of fuel in stock
 Allied: no contacts
 Allied: no battle claims
 Japanese: no contacts

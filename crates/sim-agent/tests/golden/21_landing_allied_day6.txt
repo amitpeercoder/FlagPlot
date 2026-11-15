@@ -36,9 +36,9 @@ LOSSES YESTERDAY
 - Claims yesterday: none
 
 TASK FORCES
-- task_force:1 "Placeholder landing convoy" at (8,0) Landing at (8,0): arrived, transport, speed cruise, readiness normal, not alert, 2 ships afloat, cargo aboard: 0 t supply, 0 t fuel
+- task_force:1 "Placeholder landing convoy" at (8,0) Landing at (8,0): arrived, transport, speed cruise, readiness normal, not alert, 2 ships afloat, cargo aboard: 0 t supply, 0 t fuel, lacks 64 t of fuel, taken in its first pulse in port
   - Least fuelled: ship:1 "Placeholder troop transport 1" with 968 t, range 9680 miles at cruising speed
-- task_force:2 "Placeholder fast transport group" at (8,0) Landing at (8,0): arrived, transport, speed cruise, readiness normal, not alert, 1 ship afloat, cargo aboard: 0 t supply, 0 t fuel
+- task_force:2 "Placeholder fast transport group" at (8,0) Landing at (8,0): arrived, transport, speed cruise, readiness normal, not alert, 1 ship afloat, cargo aboard: 0 t supply, 0 t fuel, lacks 10 t of fuel, taken in its first pulse in port
   - Least fuelled: ship:3 "Placeholder fast transport 1" with 490 t, range 3920 miles at cruising speed
 - Free: task_force:1 "Placeholder landing convoy" has finished unloading at base:2 "Landing at (8,0)"; it still carries nothing
 - Free: task_force:2 "Placeholder fast transport group" has finished unloading at base:2 "Landing at (8,0)"; it still carries nothing

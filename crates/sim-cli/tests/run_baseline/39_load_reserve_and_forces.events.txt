@@ -3,49 +3,46 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash fc3b922ca3d3abcb  19 events
-day   2  hash dfeae7bc56c1e4dd  9 events
-day   3  hash 52664d67ce5556e7  6 events
-day   4  hash dd1504e5eb45ab04  5 events
+day   2  hash 82fa92a135f4067a  8 events
+day   3  hash 1470bf55b876c2a5  5 events
+day   4  hash 3a055a010c138967  4 events
 
-#1 D1 -         ship:1 took 150 t of fuel at base:1, 1000 t aboard, base:1 has 350 t left
-#2 D1 -         ship:2 took 50 t of fuel at base:1, 950 t aboard, base:1 has 300 t left
-#3 D1 -         ship:2 of task_force:2 is 50 t short of full: the fuel at (0,0) is at its reserve  <- #2
-#4 D1 -         order:1 accepted for base:2  <- order:1
-#5 D1 -         ship:5, ship:6 formed into task_force:1000001 at base:2  <- order:1
-#6 D1 -         order:2 accepted for task_force:1  <- order:2
-#7 D1 -         order:3 accepted for task_force:2  <- order:3  [issued by the staff]
-#8 D1 -         order:4 accepted for task_force:3  <- order:4
-#9 D1 night     ship:1 loaded 250 t from base:1, 250 t aboard, 750 t in stock  <- order:2
-#10 D1 night     task_force:1 completed loading at base:1 at D1 23:00  <- #9
-#11 D1 night     ship:2 loaded 240 t from base:1, 240 t aboard, 510 t in stock  <- order:3
-#12 D1 night     ship:3 loaded 30 t from base:2, 30 t aboard, 70 t in stock  <- order:4
-#13 D1 night     ship:4 loaded 20 t from base:2, 20 t aboard, 50 t in stock  <- order:4
-#14 D1 night     task_force:3 completed loading at base:2 at D1 19:30  <- #12, #13
-#15 D1 morning   ship:2 loaded 110 t from base:1, 350 t aboard, 400 t in stock  <- order:3
-#16 D1 morning   task_force:2 completed loading at base:1 at D1 08:12  <- #15
-#17 D1 morning   task_force:2's load of supply stopped at base:1's reserve of 400 t, with 350 t aboard  <- #16
+#1 D1 -         order:1 accepted for base:2  <- order:1
+#2 D1 -         ship:5, ship:6 formed into task_force:1000001 at base:2  <- order:1
+#3 D1 -         order:2 accepted for task_force:1  <- order:2
+#4 D1 -         order:3 accepted for task_force:2  <- order:3  [issued by the staff]
+#5 D1 -         order:4 accepted for task_force:3  <- order:4
+#6 D1 night     ship:1 loaded 250 t from base:1, 250 t aboard, 750 t in stock  <- order:2
+#7 D1 night     task_force:1 completed loading at base:1 at D1 23:00  <- #6
+#8 D1 night     ship:1 took 150 t of fuel at base:1, 1000 t aboard, base:1 has 350 t left
+#9 D1 night     ship:2 loaded 240 t from base:1, 240 t aboard, 510 t in stock  <- order:3
+#10 D1 night     ship:3 loaded 30 t from base:2, 30 t aboard, 70 t in stock  <- order:4
+#11 D1 night     ship:4 loaded 20 t from base:2, 20 t aboard, 50 t in stock  <- order:4
+#12 D1 night     task_force:3 completed loading at base:2 at D1 19:30  <- #10, #11
+#13 D1 morning   ship:2 loaded 110 t from base:1, 350 t aboard, 400 t in stock  <- order:3
+#14 D1 morning   task_force:2 completed loading at base:1 at D1 08:12  <- #13
+#15 D1 morning   task_force:2's load of supply stopped at base:1's reserve of 400 t, with 350 t aboard  <- #14
+#16 D1 morning   ship:2 took 50 t of fuel at base:1, 950 t aboard, base:1 has 300 t left
+#17 D1 morning   ship:2 of task_force:2 is 50 t short of full: the fuel at (0,0) is at its reserve  <- #16
 #18 D1 -         base:1 at the end of the day: 400 t of supply, 0 aircraft ready: not open
 #19 D1 -         base:2 at the end of the day: 50 t of supply, 0 aircraft ready: not open
-#20 D2 -         ship:2 of task_force:2 is 50 t short of full: the fuel at (0,0) is at its reserve
-#21 D2 -         order:5 accepted for task_force:1  <- order:5
-#22 D2 -         task_force:1's load of supply may take 200 t below base:1's reserve of 400 t  <- order:5
-#23 D2 -         order:6 accepted for task_force:3  <- order:6
-#24 D2 -         task_force:3 joined task_force:1000001 at base:2 with ship:3, ship:4; task_force:3 has ceased to be  <- order:6
-#25 D2 night     ship:1 loaded 200 t from base:1, 450 t aboard, 200 t in stock  <- order:5
-#26 D2 night     task_force:1 completed loading at base:1 at D2 22:00  <- #25
-#27 D2 -         base:1 at the end of the day: 200 t of supply, 0 aircraft ready: not open
-#28 D2 -         base:2 at the end of the day: 50 t of supply, 0 aircraft ready: not open
-#29 D3 -         ship:2 of task_force:2 is 50 t short of full: the fuel at (0,0) is at its reserve
-#30 D3 -         order:7 accepted for task_force:1000001  <- order:7
-#31 D3 night     ship:4 loaded 10 t from base:2, 30 t aboard, 40 t in stock  <- order:7
-#32 D3 night     task_force:1000001 completed loading at base:2 at D3 18:30  <- #31
-#33 D3 -         base:1 at the end of the day: 200 t of supply, 0 aircraft ready: not open
-#34 D3 -         base:2 at the end of the day: 40 t of supply, 0 aircraft ready: not open
-#35 D4 -         ship:2 of task_force:2 is 50 t short of full: the fuel at (0,0) is at its reserve
-#36 D4 -         order:8 accepted for task_force:1000001  <- order:8
-#37 D4 -         task_force:1000001 stood down at base:2: ship:3, ship:4, ship:5, ship:6 lie in port in no force; task_force:1000001 has ceased to be  <- order:8
-#38 D4 -         base:1 at the end of the day: 200 t of supply, 0 aircraft ready: not open
-#39 D4 -         base:2 at the end of the day: 40 t of supply, 0 aircraft ready: not open
+#20 D2 -         order:5 accepted for task_force:1  <- order:5
+#21 D2 -         task_force:1's load of supply may take 200 t below base:1's reserve of 400 t  <- order:5
+#22 D2 -         order:6 accepted for task_force:3  <- order:6
+#23 D2 -         task_force:3 joined task_force:1000001 at base:2 with ship:3, ship:4; task_force:3 has ceased to be  <- order:6
+#24 D2 night     ship:1 loaded 200 t from base:1, 450 t aboard, 200 t in stock  <- order:5
+#25 D2 night     task_force:1 completed loading at base:1 at D2 22:00  <- #24
+#26 D2 -         base:1 at the end of the day: 200 t of supply, 0 aircraft ready: not open
+#27 D2 -         base:2 at the end of the day: 50 t of supply, 0 aircraft ready: not open
+#28 D3 -         order:7 accepted for task_force:1000001  <- order:7
+#29 D3 night     ship:4 loaded 10 t from base:2, 30 t aboard, 40 t in stock  <- order:7
+#30 D3 night     task_force:1000001 completed loading at base:2 at D3 18:30  <- #29
+#31 D3 -         base:1 at the end of the day: 200 t of supply, 0 aircraft ready: not open
+#32 D3 -         base:2 at the end of the day: 40 t of supply, 0 aircraft ready: not open
+#33 D4 -         order:8 accepted for task_force:1000001  <- order:8
+#34 D4 -         task_force:1000001 stood down at base:2: ship:3, ship:4, ship:5, ship:6 lie in port in no force; task_force:1000001 has ceased to be  <- order:8
+#35 D4 -         base:1 at the end of the day: 200 t of supply, 0 aircraft ready: not open
+#36 D4 -         base:2 at the end of the day: 40 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder cargo force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder cargo force 2" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

@@ -1,0 +1,22 @@
+Scenario 44: Refuelling that takes time
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash b60f00b1fe00205d  16 events
+day   2  hash 689c458a988064e9  12 events
+
+task_force:1 "Placeholder cargo force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder cruiser force 2" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder cruiser force 3" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Placeholder destroyer force 4" (Allied): Idle at (0,5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 500 t of supply
+ship:2 "Placeholder cruiser 2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:3 "Placeholder cruiser 3": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:4 "Placeholder destroyer 4": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 200 t of fuel, 0 t of supply
+base:1 "Placeholder base S, Allied" (Allied) at (0,0): 1500 t of supply in stock, 2810 t of fuel in stock
+base:2 "Placeholder base U, Allied" (Allied) at (5,0): 0 t of supply in stock, 2040 t of fuel in stock
+base:3 "Placeholder base V, Allied" (Allied) at (0,5): 0 t of supply in stock, 100 t of fuel in stock, reserve 100 t of fuel
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
