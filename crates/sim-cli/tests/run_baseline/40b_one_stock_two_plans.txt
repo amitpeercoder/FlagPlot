@@ -1,0 +1,23 @@
+Placeholder scenario 40b: One stock and two plans
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 4fd7a5fc84fcfba8  54 events
+day   2  hash 66fa1e0e471083aa  37 events
+day   3  hash 05fb63c3a21d66d0  17 events
+day   4  hash 606145fd729f9d79  11 events
+day   5  hash 7def154692d53a7e  9 events
+
+task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+task_force:1000002 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Placeholder fast transport 1": afloat in task_force:1000001; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
+ship:2 "Placeholder fast transport 2": afloat in task_force:1000002; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
+base:1 "Placeholder base S, Allied" (Allied) at (0,0): 1000 t of supply in stock, 900 t of fuel in stock, reserve 1000 t of supply
+base:2 "Placeholder base T, Allied" (Allied) at (5,0): 31 t of supply in stock
+base:3 "Placeholder base U, Allied" (Allied) at (0,5): 19 t of supply in stock
+land_unit:1 "Placeholder unit 1" (Allied): 200 men ashore at (5,0), fieldworks 30
+land_unit:2 "Placeholder unit 2" (Allied): 200 men ashore at (0,5), fieldworks 30
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

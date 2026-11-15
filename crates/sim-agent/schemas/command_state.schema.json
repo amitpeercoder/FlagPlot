@@ -78,7 +78,9 @@
           "withdrawn_day",
           "plan",
           "limits",
-          "projection"
+          "projection",
+          "served",
+          "displaced_by"
         ],
         "additionalProperties": false,
         "properties": {
@@ -131,6 +133,20 @@
                 "type": "null"
               }
             ]
+          },
+          "served": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Its place in the order the staff serves the intents in force, 1 first; null where withdrawn."
+          },
+          "displaced_by": {
+            "type": "array",
+            "items": {
+              "$ref": "command_defs.schema.json#/$defs/displacement"
+            },
+            "description": "The commitments to other plans that keep the intent from a run today or cut its load, from the proposal's shortfall; empty where none."
           }
         }
       }

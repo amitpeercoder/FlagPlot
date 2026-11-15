@@ -2837,7 +2837,10 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 && !stem.starts_with("35c_")
                 // Scenario 36's baseline is a run with its supply staff
                 // asked, which this test does not pass (decision 0107).
-                && !stem.starts_with("36_"))
+                && !stem.starts_with("36_")
+                // So are scenario 40's (decision 0107, step 2).
+                && !stem.starts_with("40a_")
+                && !stem.starts_with("40b_"))
             .then(|| stem.to_string())
         })
         .collect();

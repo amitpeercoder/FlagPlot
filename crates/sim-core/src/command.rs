@@ -862,6 +862,40 @@ pub struct Shortfall {
     pub shortfall_days: Fixed,
     /// The day the source falls to its reserve at the present rate.
     pub source_dry_day: Option<u32>,
+    /// The day whose reading the shortfall was taken at.
+    pub check_day: u32,
+    /// The commitments to a plan that keep the intent from a run or cut its
+    /// load. Empty where nothing of the sort does. Not state: not hashed,
+    /// not saved.
+    pub displaced_by: Vec<Displacement>,
+}
+
+/// What a commitment to a plan holds: ships, or tons at the source still to
+/// be loaded.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum Committed {
+    Ships(BTreeSet<ShipId>),
+    Tons(Fixed),
+}
+
+/// A commitment that keeps an intent from a run or cuts its load.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Displacement {
+    pub intent: IntentId,
+    pub plan: PlanId,
+    pub run: u32,
+    pub committed: Committed,
+    pub from_day: u32,
+    pub to_day: u32,
+}
+
+/// An intent a proposal would displace, with its shortfall (whose
+/// `displaced_by` names only the proposing plan's commitments).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Displaced {
+    pub intent: IntentId,
+    pub plan: PlanId,
+    pub shortfall: Shortfall,
 }
 
 /// What the staff would do for one intent, worked from the view and stored
@@ -875,6 +909,8 @@ pub struct Proposal {
     pub decisions: StaffDecisions,
     pub runs: Vec<ProposedRun>,
     pub shortfall: Option<Shortfall>,
+    /// The lower intents this proposal would displace.
+    pub displaces: Vec<Displaced>,
     pub reason: Reason,
 }
 

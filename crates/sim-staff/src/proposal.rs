@@ -2,18 +2,29 @@
 //! and stored nowhere (decision 0107, 5 and "A proposal"). It is what the
 //! staff would hand in today as if the plan were released, the runs the same
 //! rules give over the next 30 days on the projection, the projection, what
-//! binds, and a reason. In step 1 it displaces nothing: there is one intent.
+//! binds, and a reason.
+//!
+//! From step 2 of stage 1 it is worked as `decide` would work the day: the
+//! intents that come before this one in priority order are served first (into
+//! a hand-in thrown away), then this one as if released, then those after it,
+//! so that the proposal says what this intent is displaced by (a ship or
+//! tons committed this morning to a higher intent) and which lower intents
+//! it would displace (ruling 14, "both directions"). With one intent it
+//! displaces nothing and is displaced by nothing.
 
 use std::collections::BTreeMap;
 
-use sim_core::command::{IntentKind, Proposal, ProposedRun, Reason};
+use sim_core::command::{Displaced, IntentKind, Proposal, ProposedRun, Reason, Shortfall};
 use sim_core::fixed::Fixed;
-use sim_core::ids::{IntentId, ShipId};
+use sim_core::ids::{IntentId, ShipId, TaskForceId};
 use sim_core::view::SideView;
 
-use crate::doctrine::{pending_loads, serve, setup, Mode, Setup, LOOK_AHEAD_DAYS};
+use crate::doctrine::{
+    displaced_sentence, pending_loads, serve, setup, Mode, Setup, LOOK_AHEAD_DAYS,
+};
 use crate::fleet::Fleet;
 use crate::handin::Out;
+use crate::morning::{priority_order, Morning};
 use crate::planner::{Planner, Unit};
 use crate::projection::Readings;
 use crate::reasons::serving;
@@ -32,9 +43,62 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
         base, floor_days, ..
     } = intent.kind;
 
+    // The intents before this one, served as the day would serve them.
+    let order = priority_order(state);
+    let position = order
+        .iter()
+        .position(|other| other.id == intent.id)
+        .unwrap_or(order.len());
+    let mut morning = Morning::default();
+    let mut scratch = Out::default();
+    for earlier in &order[..position] {
+        serve(
+            &view,
+            &fleet,
+            earlier,
+            Mode::Live,
+            &mut scratch,
+            &mut morning,
+        );
+    }
+    // What those intents hold this morning, for the forward look below.
+    let before = morning.clone();
     let mut out = Out::default();
-    let served = serve(&view, &fleet, intent, Mode::AsReleased, &mut out);
-    let decisions = out.finish(view.next_task_force_id());
+    let served = serve(
+        &view,
+        &fleet,
+        intent,
+        Mode::AsReleased,
+        &mut out,
+        &mut morning,
+    );
+    let next = view.next_task_force_id();
+    let decisions = out.finish(TaskForceId::new(next.raw() + scratch.formed() as u32));
+
+    // The intents after it, to see which the run it takes would displace.
+    let mut displaces: Vec<Displaced> = Vec::new();
+    let mut later = Out::default();
+    for after in order.iter().skip(position + 1) {
+        let found = serve(&view, &fleet, after, Mode::Live, &mut later, &mut morning);
+        if let Some(short) = found.shortfall {
+            let by: Vec<_> = short
+                .displaced_by
+                .iter()
+                .filter(|d| d.plan == plan.id)
+                .cloned()
+                .collect();
+            if !by.is_empty() {
+                displaces.push(Displaced {
+                    intent: after.id,
+                    plan: after.plan,
+                    shortfall: Shortfall {
+                        displaced_by: by,
+                        ..short
+                    },
+                });
+            }
+        }
+    }
 
     let destination_hex = view.bases().find(|b| b.id == base).map(|b| b.hex);
     let projection = destination_hex.and_then(|hex| {
@@ -45,7 +109,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
     let mut runs: Vec<ProposedRun> = Vec::new();
     let mut shortfall = served.shortfall.clone();
     if let Setup::Ready(params) = setup(&view, intent, plan) {
-        let planner = Planner::new(&view, &fleet, params);
+        let planner = Planner::new(&view, &fleet, params, &before);
         if let Some(mut readings) = Readings::build(
             &view,
             &fleet,
@@ -57,6 +121,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
                 &fleet,
                 planner.params.source,
                 planner.params.source_hex,
+                &before,
             );
             // The units free today; one used by a proposed run is free again
             // on that run's free day.
@@ -102,6 +167,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
                                 &ev,
                                 Fixed::ZERO,
                                 base_pending + taken,
+                                None,
                             ));
                         }
                         day += 1;
@@ -112,10 +178,23 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
         }
     }
 
-    let worked = match (&shortfall, runs.len()) {
+    let source = intent
+        .limits
+        .forces
+        .as_ref()
+        .map_or(base, |forces| forces.source);
+    let mut worked = match (&shortfall, runs.len()) {
         (_, 0) if shortfall.is_none() => format!(
             "{} needs no run in the next {PROPOSAL_DAYS} days: the figure stays at or above {} days.",
             intent.id, floor_days
+        ),
+        (Some(s), 0) => format!(
+            "To keep the base at {} days the staff would send no run in the next {PROPOSAL_DAYS} days. It cannot meet the intent in full: {} binds, {} {} short at the reading of day {}.",
+            floor_days,
+            s.binds,
+            s.shortfall_days,
+            crate::units::days_word_of(s.shortfall_days),
+            s.check_day
         ),
         _ => format!(
             "To keep the base at {} days the staff would send {} run{} in the next {PROPOSAL_DAYS} days: {}.{}",
@@ -136,13 +215,27 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
                 .join("; "),
             match &shortfall {
                 Some(s) => format!(
-                    " It cannot meet the intent in full: {} binds, {} days short.",
-                    s.binds, s.shortfall_days
+                    " It cannot meet the intent in full: {} binds, {} {} short.",
+                    s.binds,
+                    s.shortfall_days,
+                    crate::units::days_word_of(s.shortfall_days)
                 ),
                 None => String::new(),
             }
         ),
     };
+    if let Some(s) = &shortfall {
+        worked.push_str(&displaced_sentence(&s.displaced_by, source));
+    }
+    for later in &displaces {
+        worked.push_str(&format!(
+            " It displaces {}: short {} {} at the reading of day {}.",
+            later.intent,
+            later.shortfall.shortfall_days,
+            crate::units::days_word_of(later.shortfall.shortfall_days),
+            later.shortfall.check_day
+        ));
+    }
     let mut builder = serving(intent, plan)
         .evidence(
             format!(
@@ -173,6 +266,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
         decisions,
         runs,
         shortfall,
+        displaces,
         reason,
     })
 }

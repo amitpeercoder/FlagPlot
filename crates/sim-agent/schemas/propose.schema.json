@@ -15,6 +15,8 @@
     "runs",
     "binds",
     "displaces",
+    "displaced_by",
+    "displaced_intents",
     "would_hand_in",
     "reason"
   ],
@@ -109,7 +111,9 @@
           "required": [
             "binds",
             "shortfall_days",
-            "source_dry_day"
+            "source_dry_day",
+            "check_day",
+            "displaced_by"
           ],
           "additionalProperties": false,
           "properties": {
@@ -124,6 +128,15 @@
                 "integer",
                 "null"
               ]
+            },
+            "check_day": {
+              "type": "integer"
+            },
+            "displaced_by": {
+              "type": "array",
+              "items": {
+                "$ref": "command_defs.schema.json#/$defs/displacement"
+              }
             }
           }
         },
@@ -133,13 +146,56 @@
       ]
     },
     "displaces": {
-      "type": "string"
+      "type": "string",
+      "description": "What the proposal is displaced by and what it displaces, in a sentence; \"nothing: one intent\" where one intent is in force."
     },
     "would_hand_in": {
       "$ref": "command_defs.schema.json#/$defs/decisions"
     },
     "reason": {
       "$ref": "command_defs.schema.json#/$defs/reason"
+    },
+    "displaced_by": {
+      "type": "array",
+      "items": {
+        "$ref": "command_defs.schema.json#/$defs/displacement"
+      },
+      "description": "The commitments to other plans that keep this intent from a run or cut its load."
+    },
+    "displaced_intents": {
+      "type": "array",
+      "description": "The lower intents this proposal would displace, each with its shortfall at the reading it checked and the commitments of this plan that cause it.",
+      "items": {
+        "type": "object",
+        "required": [
+          "intent",
+          "plan",
+          "shortfall_days",
+          "check_day",
+          "by"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "intent": {
+            "type": "integer"
+          },
+          "plan": {
+            "type": "integer"
+          },
+          "shortfall_days": {
+            "$ref": "defs.schema.json#/$defs/dec"
+          },
+          "check_day": {
+            "type": "integer"
+          },
+          "by": {
+            "type": "array",
+            "items": {
+              "$ref": "command_defs.schema.json#/$defs/displacement"
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -1,0 +1,174 @@
+# Scenario 40b: One stock and two plans (decision 0107, step 3, stage 1, step 2).
+#
+# Proves two plans loading from one stock on the same morning without both
+# counting the same ton. Intents 1 and 2 keep bases 2 and 3 at a floor of 30
+# days; the pool is ships 1 and 2 and the source is base 1 at S, which keeps
+# a reserve of 1000 t and holds 40 t above it.
+# The hand calculation is in tests/scenario_40_one_pool_two_hexes.rs. There
+# is no enemy, no aircraft and no random draw. It runs on the frozen step 1
+# figures.
+#
+# Class 12 is the placeholder fast transport with cargo: 30 t of cargo, 16 kn
+# at cruise, 0.125 t of fuel a mile (500 t over 4000 nm), 500 t of fuel. Land
+# units 1 and 2, 200 men each, cost 1 t a day at bases 2 and 3.
+#
+# PLACEHOLDER DATA. The bases, ships, units and map are invented.
+
+name = "Placeholder scenario 40b: One stock and two plans"
+placeholder = true
+seed = 1942
+days = 5
+map = "../map/placeholder_one_pool_two_hexes.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# S: the source. Port size 1, one berth at 50 t an hour.
+[[base]]
+id = 1
+name = "Placeholder base S, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1040
+fuel_t = 1000
+
+# T: port size 0, by lighter at 20 t an hour.
+[[base]]
+id = 2
+name = "Placeholder base T, Allied"
+side = "allied"
+q = 5
+r = 0
+supply_t = 10
+
+# U: port size 0, by lighter at 20 t an hour.
+[[base]]
+id = 3
+name = "Placeholder base U, Allied"
+side = "allied"
+q = 0
+r = 5
+supply_t = 10
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+men = 200
+q = 5
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder unit 2"
+side = "allied"
+men = 200
+q = 0
+r = 5
+posture = "defend"
+
+# Ship 1 lies in port at S in no task force, full of fuel.
+[[ship]]
+id = 1
+name = "Placeholder fast transport 1"
+class = 12
+side = "allied"
+fuel_t = 500
+port = 1
+
+# Ship 2 lies in port at S in no task force, full of fuel.
+[[ship]]
+id = 2
+name = "Placeholder fast transport 2"
+class = 12
+side = "allied"
+fuel_t = 500
+port = 1
+
+
+# The Allied commander's commands, in force from day 1.
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+base = 2
+floor_days = 30
+interval_days = 5
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 2
+base = 3
+floor_days = 30
+interval_days = 15
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+ships = [1, 2]
+task_forces = []
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 2
+ships = [1, 2]
+task_forces = []
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "priority"
+intent = 1
+rank = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "priority"
+intent = 2
+rank = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "reserve"
+base = 1
+supply_t = 1000
+fuel_t = 0
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

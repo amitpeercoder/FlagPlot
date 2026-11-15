@@ -546,6 +546,56 @@
           }
         }
       }
+    },
+    "displacement": {
+      "type": "object",
+      "description": "A commitment to another plan that keeps an intent from a run or cuts its load: ships, or tons at the source still to be loaded, with the plan, the run and the days.",
+      "required": [
+        "intent",
+        "plan",
+        "run",
+        "ships",
+        "tons_t",
+        "from_day",
+        "to_day"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "intent": {
+          "type": "integer"
+        },
+        "plan": {
+          "type": "integer"
+        },
+        "run": {
+          "type": "integer"
+        },
+        "ships": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "integer"
+          }
+        },
+        "tons_t": {
+          "oneOf": [
+            {
+              "$ref": "defs.schema.json#/$defs/dec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "from_day": {
+          "type": "integer"
+        },
+        "to_day": {
+          "type": "integer"
+        }
+      }
     }
   }
 }

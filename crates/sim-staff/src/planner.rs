@@ -22,16 +22,19 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sim_core::command::{CommandState, ForcesLimit, Intent, Plan, RunDays};
+use sim_core::command::{
+    CommandState, Committed, Displacement, ForcesLimit, Intent, Plan, PlanId, RunDays,
+};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, ShipId, TaskForceId};
+use sim_core::ids::{BaseId, IntentId, ShipId, TaskForceId};
 use sim_core::orders::Cargo;
 use sim_core::refdata::PortSize;
 use sim_core::state::{Ship, ShipLocation};
 use sim_core::view::SideView;
 
 use crate::fleet::{force_stopped_at, held_ships, pool_ships, run_state, Fleet, RunStatus};
+use crate::morning::{protected_for_others, Morning};
 use crate::projection::Readings;
 use crate::route::{route_between, RouteInfo};
 use crate::units::{ceil_days, whole};
@@ -193,7 +196,6 @@ pub(crate) struct Evaluation {
     pub(crate) check_use_t: Fixed,
     pub(crate) needed: bool,
     pub(crate) stock_at_arrival_t: Fixed,
-    pub(crate) use_at_arrival_t: Fixed,
     /// The floor's stock on the arrival day.
     pub(crate) floor_t: Fixed,
     pub(crate) interval_use_t: Fixed,
@@ -205,7 +207,6 @@ pub(crate) struct Evaluation {
 struct Pass {
     arrive: u32,
     stock_a: Fixed,
-    use_a: Fixed,
     floor_t: Fixed,
     interval_use_t: Fixed,
     uncapped_t: Fixed,
@@ -235,11 +236,13 @@ pub(crate) struct Planner<'a, 'v> {
     pub(crate) today: u32,
     /// The route and its miles, `None` where ships cannot go at all.
     pub(crate) route: Option<RouteInfo>,
-    /// The ships of the pool afloat.
+    /// The ships of the pool afloat that no other intent in force protects.
     pub(crate) pool: BTreeSet<ShipId>,
     /// The day each busy ship of the pool is free again.
     busy_until: BTreeMap<ShipId, u32>,
     held: BTreeSet<ShipId>,
+    /// What the staff handed in this morning for intents served before.
+    morning: Morning,
 }
 
 impl<'a, 'v> Planner<'a, 'v> {
@@ -247,11 +250,14 @@ impl<'a, 'v> Planner<'a, 'v> {
         view: &'a SideView<'v>,
         fleet: &'a Fleet<'v>,
         params: Params<'a>,
+        morning: &Morning,
     ) -> Planner<'a, 'v> {
         let state = view.command_state();
         let today = view.day() + 1;
         let route = route_between(view, params.source_hex, params.destination_hex, params.area);
-        let pool = pool_ships(fleet, params.forces);
+        let protected = protected_for_others(state, params.intent.id);
+        let mut pool = pool_ships(fleet, params.forces);
+        pool.retain(|ship| !protected.contains_key(ship));
         let held = held_ships(view, fleet, state, today);
         let mut busy_until: BTreeMap<ShipId, u32> = BTreeMap::new();
         for ship in &pool {
@@ -278,6 +284,12 @@ impl<'a, 'v> Planner<'a, 'v> {
                 }
             }
         }
+        for run in &morning.runs {
+            for ship in run.ships.iter().filter(|s| pool.contains(s)) {
+                let entry = busy_until.entry(*ship).or_insert(0);
+                *entry = (*entry).max(run.days.free.max(today + 1));
+            }
+        }
         Planner {
             view,
             fleet,
@@ -288,6 +300,7 @@ impl<'a, 'v> Planner<'a, 'v> {
             pool,
             busy_until,
             held,
+            morning: morning.clone(),
         }
     }
 
@@ -301,7 +314,9 @@ impl<'a, 'v> Planner<'a, 'v> {
     /// both, held by no unfinished run and covered by no commitment today.
     pub(crate) fn free_units(&self) -> Vec<Unit> {
         let free = |ship: ShipId| {
-            !self.held.contains(&ship) && self.state.commitment_on(ship, self.today).is_none()
+            !self.held.contains(&ship)
+                && self.state.commitment_on(ship, self.today).is_none()
+                && self.morning.holding(ship).is_none()
         };
         let mut seen: BTreeSet<ShipId> = BTreeSet::new();
         let mut units = Vec::new();
@@ -343,6 +358,125 @@ impl<'a, 'v> Planner<'a, 'v> {
             }
         }
         units
+    }
+
+    /// The plan, run and days that hold `ship` today, and the plan's intent:
+    /// a run of this morning, else the commitment that covers today, else an
+    /// unfinished run that holds it. `None` where nothing does.
+    fn holder_of(&self, ship: ShipId) -> Option<(IntentId, PlanId, u32, u32, u32)> {
+        if let Some(run) = self.morning.holding(ship) {
+            return Some((
+                run.intent,
+                run.plan,
+                run.run,
+                self.today,
+                run.days.free.saturating_sub(1).max(self.today),
+            ));
+        }
+        if let Some(c) = self.state.commitment_on(ship, self.today) {
+            let intent = self.state.plans.get(&c.plan)?.intent;
+            return Some((intent, c.plan, c.run.unwrap_or(0), c.from_day, c.to_day));
+        }
+        for plan in self.state.plans.values() {
+            for run in plan.runs.values().filter(|run| run.ships.contains(&ship)) {
+                let Some(base) = self.view.bases().find(|b| b.id == run.source) else {
+                    continue;
+                };
+                let found = run_state(self.fleet, self.state, plan.id, run, base.hex, self.today);
+                if found.status != RunStatus::Finished {
+                    return Some((
+                        plan.intent,
+                        plan.id,
+                        run.number,
+                        run.days.load,
+                        run.days.free.saturating_sub(1).max(run.days.load),
+                    ));
+                }
+            }
+        }
+        None
+    }
+
+    /// The commitments that hold the ships of the pool that are not in
+    /// `free`, one for each plan and run, with its days.
+    pub(crate) fn ship_holders(&self, free: &[Unit]) -> Vec<Displacement> {
+        let free: BTreeSet<ShipId> = free
+            .iter()
+            .flat_map(|unit| unit.ships.iter().copied())
+            .collect();
+        let mut groups: BTreeMap<(PlanId, u32), Displacement> = BTreeMap::new();
+        for ship in self.pool.iter().filter(|ship| !free.contains(ship)) {
+            let Some((intent, plan, run, from_day, to_day)) = self.holder_of(*ship) else {
+                continue;
+            };
+            let entry = groups.entry((plan, run)).or_insert_with(|| Displacement {
+                intent,
+                plan,
+                run,
+                committed: Committed::Ships(BTreeSet::new()),
+                from_day,
+                to_day,
+            });
+            if let Committed::Ships(ships) = &mut entry.committed {
+                ships.insert(*ship);
+            }
+            entry.from_day = entry.from_day.min(from_day);
+            entry.to_day = entry.to_day.max(to_day);
+        }
+        groups.into_values().collect()
+    }
+
+    /// The runs loading at the source with tons still to take: those of the
+    /// command state and those of this morning.
+    pub(crate) fn tons_holders(&self) -> Vec<Displacement> {
+        let mut found = Vec::new();
+        for plan in self.state.plans.values() {
+            for run in plan
+                .runs
+                .values()
+                .filter(|run| run.source == self.params.source)
+            {
+                let state = run_state(
+                    self.fleet,
+                    self.state,
+                    plan.id,
+                    run,
+                    self.params.source_hex,
+                    self.today,
+                );
+                if state.status != RunStatus::Loading {
+                    continue;
+                }
+                let left = (run.load_t - state.aboard_t).max(Fixed::ZERO);
+                if left.is_zero() {
+                    continue;
+                }
+                found.push(Displacement {
+                    intent: plan.intent,
+                    plan: plan.id,
+                    run: run.number,
+                    committed: Committed::Tons(left),
+                    from_day: run.days.load,
+                    to_day: run.days.sail.saturating_sub(1).max(run.days.load),
+                });
+            }
+        }
+        for run in self
+            .morning
+            .runs
+            .iter()
+            .filter(|run| run.source == self.params.source)
+        {
+            found.push(Displacement {
+                intent: run.intent,
+                plan: run.plan,
+                run: run.run,
+                committed: Committed::Tons(run.load_t),
+                from_day: run.days.load,
+                to_day: run.days.sail.saturating_sub(1).max(run.days.load),
+            });
+        }
+        found
     }
 
     /// Every unit of the pool at the source, free or not: what a forward
@@ -572,7 +706,6 @@ impl<'a, 'v> Planner<'a, 'v> {
         Some(Pass {
             arrive,
             stock_a,
-            use_a,
             floor_t,
             interval_use_t,
             uncapped_t,
@@ -615,7 +748,6 @@ impl<'a, 'v> Planner<'a, 'v> {
         let Pass {
             arrive,
             stock_a,
-            use_a,
             floor_t,
             interval_use_t,
             uncapped_t,
@@ -679,7 +811,6 @@ impl<'a, 'v> Planner<'a, 'v> {
             check_use_t,
             needed,
             stock_at_arrival_t: stock_a,
-            use_at_arrival_t: use_a,
             floor_t,
             interval_use_t,
             uncapped_t,

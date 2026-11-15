@@ -18,10 +18,23 @@
 //!    source runs dry.
 //! 6. A day it gives an intent no order has one reason.
 //! 7. An ended plan's ships committed from today on are freed.
+//!
+//! Step 2 of stage 1 (doctrine `supply-2`) adds, for more than one intent:
+//!
+//! - A [`Morning`] holds the runs this call has added for an intent served
+//!   before: their ships are not free for a later intent and their tons at
+//!   the source are still to be taken (rulings 11 to 13).
+//! - A ship protected for another intent in force is in no pool but that
+//!   intent's; an intent whose pool holds only such ships gives no order and
+//!   says so (ruling 16).
+//! - An intent that needs a run and cannot have one, or has its load cut,
+//!   because a ship or stock at the source is committed to another plan,
+//!   says what displaced it, and its shortfall in days at the reading it
+//!   checked (ruling 14).
 
 use sim_core::command::{
-    CommandKind, Intent, IntentKind, Plan, PlanOutcome, PlanState, Reason, RunSpec, Shortfall,
-    StaffDecisions,
+    CommandKind, Committed, Displacement, Intent, IntentKind, Plan, PlanId, PlanOutcome, PlanState,
+    Reason, RunSpec, Shortfall, StaffDecisions,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -31,6 +44,7 @@ use std::collections::BTreeSet;
 
 use crate::fleet::{pool_ships, run_state, Fleet, RunState, RunStatus};
 use crate::handin::{Out, Step, Who};
+use crate::morning::{priority_order, protected_for_others, Morning, TakenRun};
 use crate::planner::DEFAULT_INTERVAL_DAYS;
 use crate::planner::{Blocker, Evaluation, Params, Planner, RunPlan, Timing, Unit};
 use crate::projection::Readings;
@@ -61,16 +75,9 @@ pub(crate) fn decide(view: SideView<'_>) -> StaffDecisions {
     let state = view.command_state();
     let fleet = Fleet::of(&view);
     let mut out = Out::default();
-    let mut intents: Vec<&Intent> = state.intents_in_force().collect();
-    intents.sort_by_key(|intent| {
-        (
-            intent.limits.priority.is_none(),
-            intent.limits.priority.unwrap_or(0),
-            intent.id,
-        )
-    });
-    for intent in intents {
-        serve(&view, &fleet, intent, Mode::Live, &mut out);
+    let mut morning = Morning::default();
+    for intent in priority_order(state) {
+        serve(&view, &fleet, intent, Mode::Live, &mut out, &mut morning);
     }
     free_ended(&view, &mut out);
     out.finish(view.next_task_force_id())
@@ -115,15 +122,16 @@ pub(crate) fn setup<'a>(view: &SideView<'_>, intent: &'a Intent, plan: &'a Plan)
 }
 
 /// The tons the runs of every plan still loading at `source` have yet to
-/// take.
+/// take, and the loads of the runs of this morning there.
 pub(crate) fn pending_loads(
     view: &SideView<'_>,
     fleet: &Fleet<'_>,
     source: BaseId,
     source_hex: Hex,
+    morning: &Morning,
 ) -> Fixed {
     let today = view.day() + 1;
-    let mut pending = Fixed::ZERO;
+    let mut pending = morning.pending_at(source);
     for plan in view.command_state().plans.values() {
         for run in plan.runs.values().filter(|run| run.source == source) {
             let found = run_state(fleet, view.command_state(), plan.id, run, source_hex, today);
@@ -142,6 +150,7 @@ pub(crate) fn serve(
     intent: &Intent,
     mode: Mode,
     out: &mut Out,
+    morning: &mut Morning,
 ) -> Served {
     let state = view.command_state();
     let today = view.day() + 1;
@@ -241,6 +250,35 @@ pub(crate) fn serve(
         return Served::default();
     }
 
+    let protected = protected_for_others(state, intent.id);
+    if pool.iter().all(|ship| protected.contains_key(ship)) {
+        let list = pool
+            .iter()
+            .filter_map(|ship| {
+                protected
+                    .get(ship)
+                    .map(|other| format!("{ship} is protected for {other}"))
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        out.no_order(
+            serving(intent, plan)
+                .evidence(
+                    "every ship of the pool is protected for another intent",
+                    today,
+                )
+                .binding("no ship of the pool may be taken")
+                .worked(format!(
+                    "No ship of the pool of {} may be taken: {list}.",
+                    intent.id
+                ))
+                .would_change("a ship of the pool no longer protected for another intent")
+                .would_change("a ship added to the pool")
+                .done(),
+        );
+        return Served::default();
+    }
+
     // 2. The leaves.
     let leaves = state.leaves;
     let mut eff = if mode == Mode::AsReleased {
@@ -293,13 +331,13 @@ pub(crate) fn serve(
         eff = PlanState::Released;
     }
 
-    let planner = Planner::new(view, fleet, params);
+    let planner = Planner::new(view, fleet, params, morning);
     let params = &planner.params;
     let Some(readings) = Readings::build(view, fleet, params.destination_hex, LOOK_AHEAD_DAYS)
     else {
         return Served::default();
     };
-    let pending_t = pending_loads(view, fleet, params.source, params.source_hex);
+    let pending_t = pending_loads(view, fleet, params.source, params.source_hex, morning);
     let mut served = Served::default();
     let mut loading = false;
     let mut waiting_for_launch = false;
@@ -359,16 +397,32 @@ pub(crate) fn serve(
             if ev.needed {
                 match (&ev.run, &ev.blocker) {
                     (Some(run), _) => {
-                        new_run(&planner, out, &readings, ev, run, today);
-                        served.ordered = true;
                         if !run.cuts.is_empty() {
-                            served.shortfall =
-                                Some(shortfall(&planner, &readings, ev, run.load_t, pending_t));
+                            served.shortfall = Some(shortfall(
+                                &planner,
+                                &readings,
+                                ev,
+                                run.load_t,
+                                pending_t,
+                                Some(&units),
+                            ));
                         }
+                        let displaced = served
+                            .shortfall
+                            .as_ref()
+                            .map_or(&[][..], |s| s.displaced_by.as_slice());
+                        new_run(&planner, out, morning, &readings, ev, run, displaced);
+                        served.ordered = true;
                     }
                     (None, Some(_)) => {
-                        served.shortfall =
-                            Some(shortfall(&planner, &readings, ev, Fixed::ZERO, pending_t));
+                        served.shortfall = Some(shortfall(
+                            &planner,
+                            &readings,
+                            ev,
+                            Fixed::ZERO,
+                            pending_t,
+                            Some(&units),
+                        ));
                     }
                     (None, None) => {}
                 }
@@ -385,6 +439,7 @@ pub(crate) fn serve(
             waiting_for_launch,
             cannot_sail,
             evaluation,
+            shortfall: served.shortfall.clone(),
             pending_t,
             units,
         };
@@ -612,15 +667,26 @@ fn slowest_line(work: &crate::planner::Work) -> String {
 fn new_run(
     planner: &Planner<'_, '_>,
     out: &mut Out,
+    morning: &mut Morning,
     readings: &Readings,
     ev: &Evaluation,
     run: &RunPlan,
-    today: u32,
+    displaced: &[Displacement],
 ) {
+    let today = planner.today;
     let params = &planner.params;
     let intent = params.intent;
     let plan = params.plan;
     let number = plan.runs.keys().next_back().map_or(1, |last| last + 1);
+    morning.push(TakenRun {
+        intent: intent.id,
+        plan: plan.id,
+        run: number,
+        ships: run.ships.iter().copied().collect(),
+        source: params.source,
+        load_t: run.load_t,
+        days: run.days,
+    });
     let days = run.days;
     let stock_today = readings.stock(today).unwrap_or(Fixed::ZERO);
     let use_today = readings.use_on(today).unwrap_or(Fixed::ZERO);
@@ -661,6 +727,7 @@ fn new_run(
             tons(run.load_t),
             run.cuts.join("; ")
         ));
+        worked.push_str(&displaced_sentence(displaced, params.source));
     }
     worked.push_str(&format!(
         " Ships {}: {} x {} = a room that covers the load.",
@@ -733,6 +800,9 @@ fn new_run(
             .would_change("a free ship of the pool earlier in number order would carry it instead");
         for cut in &run.cuts {
             b = b.binding(cut.clone());
+        }
+        for other in other_plans(displaced, plan.id) {
+            b = b.binding(format!("displaced by {other}"));
         }
         b
     };
@@ -876,6 +946,8 @@ struct IdleFacts {
     waiting_for_launch: bool,
     cannot_sail: Option<String>,
     evaluation: Option<Evaluation>,
+    /// The shortfall of the evaluation, where it has a blocker.
+    shortfall: Option<Shortfall>,
     pending_t: Fixed,
     units: Vec<Unit>,
 }
@@ -935,6 +1007,17 @@ fn idle_reason(
                     format!(" ({detail})")
                 }
             ));
+            if let Some(short) = &idle.shortfall {
+                worked.push_str(&format!(
+                    " Short {} {} at the reading of day {}: {} against {}.",
+                    short.shortfall_days,
+                    crate::units::days_word_of(short.shortfall_days),
+                    short.check_day,
+                    tons(ev.check_stock_t),
+                    tons(floor_check)
+                ));
+                worked.push_str(&displaced_sentence(&short.displaced_by, params.source));
+            }
         }
     }
     let mut binding = vec![
@@ -960,10 +1043,25 @@ fn idle_reason(
             }
         }
     }
+    let displaced: &[Displacement] = idle
+        .shortfall
+        .as_ref()
+        .map_or(&[][..], |s| s.displaced_by.as_slice());
+    for other in other_plans(displaced, params.plan.id) {
+        binding.push(format!("displaced by {other}"));
+    }
     // The next run: the first day from tomorrow on that a run ordered would
-    // be needed, from the projection.
+    // be needed, from the projection, and not before a ship of the pool is
+    // free where none is today.
     let units: Vec<Unit> = idle.units.clone();
-    let next = planner.next_needed(readings, today + 1, &units, idle.pending_t);
+    let from = if units.is_empty() {
+        planner
+            .earliest_free()
+            .map_or(today + 1, |free| free.max(today + 1))
+    } else {
+        today + 1
+    };
+    let next = planner.next_needed(readings, from, &units, idle.pending_t);
     let mut builder = serving(params.intent, params.plan).evidence(
         format!(
             "{} holds {} and uses {} a day",
@@ -1004,6 +1102,9 @@ fn idle_reason(
     for line in binding {
         builder = builder.binding(line);
     }
+    for change in displacement_changes(displaced, params.plan.id) {
+        builder = builder.would_change(change);
+    }
     builder =
         builder.would_change("a larger use at the destination would bring the next run forward");
     builder.worked(worked).done()
@@ -1018,6 +1119,7 @@ pub(crate) fn shortfall(
     ev: &Evaluation,
     sent_t: Fixed,
     pending_t: Fixed,
+    units: Option<&[Unit]>,
 ) -> Shortfall {
     let params = &planner.params;
     let binds = match &ev.blocker {
@@ -1039,8 +1141,7 @@ pub(crate) fn shortfall(
             None => "the intent cannot be met".to_string(),
         },
     };
-    let use_a = ev.use_at_arrival_t;
-    let have_days = over(ev.stock_at_arrival_t + sent_t, use_a);
+    let have_days = over(ev.check_stock_t + sent_t, ev.check_use_t);
     let shortfall_days = (whole(params.floor_days) - have_days).max(Fixed::ZERO);
     let own_use = if params.source_hex == params.destination_hex {
         Fixed::ZERO
@@ -1054,11 +1155,138 @@ pub(crate) fn shortfall(
     let (available, _, _) = planner.source_available(pending_t);
     let source_dry_day =
         (!rate.is_zero()).then(|| readings.today + crate::units::floor_whole(available / rate));
+    let displaced_by = units.map_or_else(Vec::new, |units| displacements(planner, ev, units));
     Shortfall {
         binds,
         shortfall_days,
         source_dry_day,
+        check_day: ev.check_day,
+        displaced_by,
     }
+}
+
+/// The commitments to other plans that keep the intent from a run or cut
+/// its load, listed whole (the intent's own plan's among them) where at
+/// least one is another plan's; none where none is (ruling 14). A ship held
+/// where no ship is free or the room cuts the load; tons where the source
+/// binds or cuts it.
+fn displacements(planner: &Planner<'_, '_>, ev: &Evaluation, units: &[Unit]) -> Vec<Displacement> {
+    let cut_by = |prefix: &str| {
+        ev.run
+            .as_ref()
+            .is_some_and(|run| run.cuts.iter().any(|cut| cut.starts_with(prefix)))
+    };
+    let (ships_held, tons_held) = match &ev.blocker {
+        Some(Blocker::NoShip { .. }) => (true, false),
+        Some(Blocker::Source { .. }) => (false, true),
+        Some(_) => (false, false),
+        None => (cut_by("the ships' room"), cut_by("the source")),
+    };
+    let mut holders = Vec::new();
+    if ships_held {
+        holders.extend(planner.ship_holders(units));
+    }
+    if tons_held {
+        holders.extend(planner.tons_holders());
+    }
+    if holders.iter().any(|h| h.plan != planner.params.plan.id) {
+        holders
+    } else {
+        Vec::new()
+    }
+}
+
+/// The plans, other than `own`, that the displacements name, in order.
+fn other_plans(displaced: &[Displacement], own: PlanId) -> BTreeSet<PlanId> {
+    displaced
+        .iter()
+        .map(|d| d.plan)
+        .filter(|plan| *plan != own)
+        .collect()
+}
+
+/// One commitment in words: "ship:1 committed to run 1 of plan:1 (intent:1)
+/// from day 1 to day 4", or "30 t at base:1 still to be taken by run 1 of
+/// plan:1 (intent:1), committed from day 1 to day 1".
+pub(crate) fn displacement_words(d: &Displacement, source: BaseId) -> String {
+    match &d.committed {
+        Committed::Ships(ships) => {
+            let ships = ships
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
+            let to = if d.run == 0 {
+                format!("{} ({})", d.plan, d.intent)
+            } else {
+                format!("run {} of {} ({})", d.run, d.plan, d.intent)
+            };
+            format!(
+                "{ships} committed to {to} from day {} to day {}",
+                d.from_day, d.to_day
+            )
+        }
+        Committed::Tons(t) => format!(
+            "{} at {source} still to be taken by run {} of {} ({}), committed from day {} to day {}",
+            tons(*t),
+            d.run,
+            d.plan,
+            d.intent,
+            d.from_day,
+            d.to_day
+        ),
+    }
+}
+
+/// " It is displaced by A; B." or nothing where nothing displaces.
+pub(crate) fn displaced_sentence(displaced: &[Displacement], source: BaseId) -> String {
+    if displaced.is_empty() {
+        return String::new();
+    }
+    format!(
+        " It is displaced by {}.",
+        displaced
+            .iter()
+            .map(|d| displacement_words(d, source))
+            .collect::<Vec<_>>()
+            .join("; ")
+    )
+}
+
+/// What would change it, for each other plan that displaces: its commitment
+/// of ships ending, with the earliest day a ship is free, or its run loading
+/// its tons.
+fn displacement_changes(displaced: &[Displacement], own: PlanId) -> Vec<String> {
+    let mut changes = Vec::new();
+    for other in other_plans(displaced, own) {
+        let ships = displaced
+            .iter()
+            .filter(|d| d.plan == other && matches!(d.committed, Committed::Ships(_)))
+            .min_by_key(|d| d.to_day);
+        if let Some(Displacement {
+            committed: Committed::Ships(ships),
+            to_day,
+            ..
+        }) = ships
+        {
+            changes.push(format!(
+                "{other}'s commitment ending: {} free on day {}",
+                ships
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                to_day + 1
+            ));
+        }
+        if displaced
+            .iter()
+            .any(|d| d.plan == other && matches!(d.committed, Committed::Tons(_)))
+        {
+            changes.push(format!("{other}'s run loading its tons"));
+        }
+    }
+    changes
 }
 
 /// Step 7: the ships of a plan that has ended, committed from today on, are

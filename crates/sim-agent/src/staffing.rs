@@ -18,8 +18,8 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    AmendmentChange, CommandKind, CommandRefusal, Intent, IntentKind, IntentLimits, Plan,
-    PlanState, Run, RunDays, Staff, StaffDecisions, SupplyProjection,
+    AmendmentChange, CommandKind, CommandRefusal, Committed, Displacement, Intent, IntentKind,
+    IntentLimits, Plan, PlanState, Proposal, Run, RunDays, Staff, StaffDecisions, SupplyProjection,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -257,15 +257,40 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
         Some(days) => days.to_string(),
         None => format!("not set: the staff uses {STAFF_DEFAULT_INTERVAL_DAYS}"),
     };
-    let projection = if intent.in_force() {
-        staff
-            .propose(*view, intent.id)
-            .and_then(|p| p.projection)
-            .as_ref()
-            .map(projection_summary)
+    let proposal = if intent.in_force() {
+        staff.propose(*view, intent.id)
     } else {
         None
     };
+    let displaced_by: Vec<Value> = proposal
+        .as_ref()
+        .and_then(|p| p.shortfall.as_ref())
+        .map(|s| {
+            s.displaced_by
+                .iter()
+                .map(|d| displacement_json(n, d))
+                .collect()
+        })
+        .unwrap_or_default();
+    let projection = proposal
+        .and_then(|p| p.projection)
+        .as_ref()
+        .map(projection_summary);
+    // Its place in the order the staff serves: ranked first, then by number.
+    let served = intent.in_force().then(|| {
+        let mut order: Vec<&Intent> = view.command_state().intents_in_force().collect();
+        order.sort_by_key(|i| {
+            (
+                i.limits.priority.is_none(),
+                i.limits.priority.unwrap_or(0),
+                i.id,
+            )
+        });
+        order
+            .iter()
+            .position(|i| i.id == intent.id)
+            .map_or(0, |at| at + 1)
+    });
     json!({
         "number": intent.id.raw(),
         "in_force": intent.in_force(),
@@ -279,6 +304,8 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
         "plan": intent.plan.raw(),
         "limits": limits_json(n, &intent.limits),
         "projection": projection,
+        "served": served,
+        "displaced_by": displaced_by,
     })
 }
 
@@ -679,8 +706,31 @@ pub fn propose(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result<Va
     let displaces = if in_force <= 1 {
         "nothing: one intent".to_string()
     } else {
-        "not worked out: the staff does not yet weigh one intent against another".to_string()
+        displaces_text(&n, &proposal)
     };
+    let displaced_by: Vec<Value> = proposal
+        .shortfall
+        .as_ref()
+        .map(|s| {
+            s.displaced_by
+                .iter()
+                .map(|d| displacement_json(&n, d))
+                .collect()
+        })
+        .unwrap_or_default();
+    let displaced_intents: Vec<Value> = proposal
+        .displaces
+        .iter()
+        .map(|d| {
+            json!({
+                "intent": d.intent.raw(),
+                "plan": d.plan.raw(),
+                "shortfall_days": dec(d.shortfall.shortfall_days),
+                "check_day": d.shortfall.check_day,
+                "by": d.shortfall.displaced_by.iter().map(|b| displacement_json(&n, b)).collect::<Vec<_>>(),
+            })
+        })
+        .collect();
     Ok(answer(
         "propose",
         json!({
@@ -704,12 +754,89 @@ pub fn propose(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result<Va
                 "binds": n.text(&s.binds),
                 "shortfall_days": dec(s.shortfall_days),
                 "source_dry_day": s.source_dry_day,
+                "check_day": s.check_day,
+                "displaced_by": s.displaced_by.iter().map(|d| displacement_json(&n, d)).collect::<Vec<_>>(),
             })),
             "displaces": displaces,
+            "displaced_by": displaced_by,
+            "displaced_intents": displaced_intents,
             "would_hand_in": with_day(decisions_json(&n, &proposal.decisions), today),
             "reason": n.value(&reason_to_json(&proposal.reason)),
         }),
     ))
+}
+
+/// One commitment that displaces, in the side's numbers.
+fn displacement_json(n: &Names<'_>, d: &Displacement) -> Value {
+    let (ships, tons_t) = match &d.committed {
+        Committed::Ships(ships) => (Some(n.ships(ships)), None),
+        Committed::Tons(t) => (None, Some(dec(*t))),
+    };
+    json!({
+        "intent": d.intent.raw(),
+        "plan": d.plan.raw(),
+        "run": d.run,
+        "ships": ships,
+        "tons_t": tons_t,
+        "from_day": d.from_day,
+        "to_day": d.to_day,
+    })
+}
+
+/// A commitment in words, in the side's numbers.
+fn displacement_text(n: &Names<'_>, d: &Displacement) -> String {
+    let what = match &d.committed {
+        Committed::Ships(ships) => {
+            let numbers: Vec<String> = n.ships(ships).iter().map(u32::to_string).collect();
+            format!(
+                "{} {}",
+                if numbers.len() == 1 { "ship" } else { "ships" },
+                numbers.join(", ")
+            )
+        }
+        Committed::Tons(t) => format!("{t} t at the source"),
+    };
+    format!(
+        "run {} of plan {} (intent {}): {what}, days {} to {}",
+        d.run,
+        d.plan.raw(),
+        d.intent.raw(),
+        d.from_day,
+        d.to_day
+    )
+}
+
+/// What a proposal is displaced by and what it displaces, in a sentence.
+fn displaces_text(n: &Names<'_>, proposal: &Proposal) -> String {
+    let by = match proposal.shortfall.as_ref().map(|s| &s.displaced_by) {
+        Some(list) if !list.is_empty() => format!(
+            "displaced by {}",
+            list.iter()
+                .map(|d| displacement_text(n, d))
+                .collect::<Vec<_>>()
+                .join("; ")
+        ),
+        _ => "displaced by nothing".to_string(),
+    };
+    let displaces = if proposal.displaces.is_empty() {
+        "displaces nothing".to_string()
+    } else {
+        proposal
+            .displaces
+            .iter()
+            .map(|d| {
+                let days = d.shortfall.shortfall_days;
+                format!(
+                    "displaces intent {}: {days} {} short at the reading of day {}",
+                    d.intent.raw(),
+                    if days == Fixed::ONE { "day" } else { "days" },
+                    d.shortfall.check_day
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("; ")
+    };
+    format!("{by}; {displaces}")
 }
 
 fn decisions_json(n: &Names<'_>, decisions: &StaffDecisions) -> Value {
