@@ -1,0 +1,182 @@
+# Scenario 46: two settings of a strike group.
+#
+# Decision 0114. Six Allied groups of placeholder dive bombers, all on naval
+# strike, at two airfields 800 nm apart. Three at airfield 1 differ only in
+# the oldest contact they launch on (not set, 1 pulse, 3 pulses); three at
+# airfield 2 differ only in the share of their aircraft they hold back (0.333333,
+# 0.25, none). The Allied side starts holding three contacts, of different
+# ages and kinds, and there is no enemy at all: every strike flies to a
+# contact's hex, finds nothing and rolls no die. The hand calculation is in
+# tests/scenario_46_two_strike_settings.rs. The test runs this file on the
+# frozen step 1 figures, and with variants it builds from the parsed text.
+#
+# The two settings come from the air group keys strike_contact_age_pulses and
+# strike_held_share, which give a group its starting setting. There is no
+# order that sets either ("There is no order" in the hand calculation): the
+# only orders are the six day-1 mission orders, since an air group has no key
+# for its mission.
+#
+# The upkeep, wear, fatigue and supply figures are not loaded here: only the
+# test's variant that asks for them loads them.
+#
+# The last property of the hand calculation, that every existing scenario's
+# events and end states are what they were, is checked by the compare script
+# (scripts/compare.sh), not by a test.
+#
+# PLACEHOLDER DATA. The bases, aircraft, figures and map are invented.
+
+name = "Scenario 46: Two strike settings"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_two_strike_settings.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# Allied airfield 1.
+[[base]]
+id = 1
+name = "Placeholder airfield 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+# Allied airfield 2, 800 nm east of airfield 1.
+[[base]]
+id = 2
+name = "Placeholder airfield 2"
+side = "allied"
+q = 20
+r = 0
+supply_t = 1000
+
+[[air_group]]
+id = 1
+name = "Placeholder dive bombers 1"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+
+[[air_group]]
+id = 2
+name = "Placeholder dive bombers 2"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 1
+
+[[air_group]]
+id = 3
+name = "Placeholder dive bombers 3"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 3
+
+[[air_group]]
+id = 4
+name = "Placeholder dive bombers 4"
+side = "allied"
+base = 2
+aircraft_type = 3
+ready = 12
+strike_contact_age_pulses = 1
+strike_held_share = "0.333333"
+
+[[air_group]]
+id = 5
+name = "Placeholder dive bombers 5"
+side = "allied"
+base = 2
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 1
+strike_held_share = "0.25"
+
+[[air_group]]
+id = 6
+name = "Placeholder dive bombers 6"
+side = "allied"
+base = 2
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 1
+
+# What the Allied side starts holding, as contacts 1, 2 and 3 in this order.
+# Contact 1 is 3 hexes from airfield 1, contact 2 is 4 hexes from it, contact 3
+# is 2 hexes from airfield 2. Nothing is really there.
+[[contact]]
+side = "allied"
+q = 3
+r = 0
+ship_count = 3
+kind = "transport"
+age_pulses = 0
+
+[[contact]]
+side = "allied"
+q = 0
+r = 4
+ship_count = 1
+kind = "carrier"
+age_pulses = 2
+
+[[contact]]
+side = "allied"
+q = 22
+r = 0
+ship_count = 2
+kind = "cruiser"
+age_pulses = 0
+
+# Every group is on naval strike.
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 4
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 5
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 6
+kind = "set_air_mission"
+mission = "naval_strike"

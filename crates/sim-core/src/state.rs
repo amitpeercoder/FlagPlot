@@ -947,6 +947,18 @@ pub struct AirGroup {
     /// (decision 0091). On that day it flies nothing. `None` until it has
     /// moved.
     pub rebased_day: Option<u32>,
+    /// The oldest contact, in pulses, the group launches a naval strike on
+    /// (decision 0114). `None` means the figure `air_combat.toml:
+    /// strike_contact_max_age_pulses`. It does not apply to a base strike.
+    pub strike_contact_age: Option<u32>,
+    /// The standing order that set the strike contact age, if any
+    /// (decision 0114).
+    pub strike_age_order: Option<OrderId>,
+    /// The share of its aircraft able to fly that the group holds back from
+    /// a naval or base strike, 0 to 1 (decision 0114). The default is none.
+    pub strike_held_share: Fixed,
+    /// The standing order that set the held share, if any (decision 0114).
+    pub strike_share_order: Option<OrderId>,
 }
 
 impl AirGroup {
@@ -1003,6 +1015,10 @@ impl AirGroup {
             target_order: None,
             last_base_strike_day: None,
             rebased_day: None,
+            strike_contact_age: None,
+            strike_age_order: None,
+            strike_held_share: Fixed::ZERO,
+            strike_share_order: None,
         }
     }
 }

@@ -733,10 +733,12 @@ impl World {
     /// decides at [`World::decide_base_strike`]). Each group on the naval strike mission, in group order, that
     /// has aircraft, a position, light and a flight deck that lets it launch
     /// at least one aircraft, takes the contact its side holds that is no
-    /// older than the figures allow, within its reach and of a kind on its
-    /// target list: the kind first on the list, then the nearest, then the
-    /// lowest contact number ([`contact_to_strike`]). With no such contact it
-    /// launches nothing. It launches every aircraft it can.
+    /// older than the group's strike contact age allows ([`strike_age_limit`]),
+    /// within its reach and of a kind on its target list: the kind first on
+    /// the list, then the nearest, then the lowest contact number
+    /// ([`contact_to_strike`]). With no such contact it launches nothing. It
+    /// launches the aircraft it can fly less the share it holds back
+    /// ([`strike_aircraft`]; decision 0114).
     ///
     /// The decision reads the group's own side's belief and the group's own
     /// state. It never reads the enemy.
@@ -774,10 +776,30 @@ impl World {
             // How far the group may strike: its type's radius on normal
             // reach, more on extended (decision 2 of 0059). The one function.
             let reach_nm = self.ref_data.reach_nm(group.aircraft_type, group.reach);
-            let aircraft = self.aircraft_able_to_fly(&group);
+            let able = self.aircraft_able_to_fly(&group);
+            if able == 0 {
+                continue;
+            }
+            // The share the group holds back (decision 0114, 8): applied
+            // once, to the whole number the limits gave. A strike of none is
+            // not launched and nothing is recorded.
+            let aircraft = strike_aircraft(able, group.strike_held_share);
             if aircraft == 0 {
                 continue;
             }
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "aircraft_able_to_fly",
+                        value: Fixed::from_int(i64::from(able)),
+                    },
+                    Factor {
+                        name: "share_held_back",
+                        value: group.strike_held_share,
+                    },
+                ],
+                result: Fixed::from_int(i64::from(aircraft)),
+            });
 
             if let AirMission::BaseStrike(base) = group.mission {
                 // The base's side and hex are public facts (decision 0034, 2).
@@ -807,7 +829,7 @@ impl World {
                     )
                 });
                 if let Some(launch) = launch {
-                    self.launch_base_strike(day, pulse, &group, launch);
+                    self.launch_base_strike(day, pulse, &group, launch, breakdown);
                 }
                 continue;
             }
@@ -819,7 +841,7 @@ impl World {
                 &group,
                 origin,
                 reach_nm,
-                figures.strike_contact_max_age_pulses,
+                strike_age_limit(&group, &figures),
             );
             self.trace_choice(group.side, || {
                 (
@@ -845,6 +867,8 @@ impl World {
                 .chain(reach_cause(&group))
                 .chain(target_cause(&group))
                 .chain([Cause::Event(report_event)])
+                .chain(group.strike_age_order.map(Cause::Order))
+                .chain(group.strike_share_order.map(Cause::Order))
                 .collect();
             let launched = self.events.record(
                 day,
@@ -857,7 +881,7 @@ impl World {
                     distance_nm,
                 },
                 causes,
-                None,
+                breakdown,
             );
             self.strikes_in_flight.push(StrikeInFlight {
                 air_group: group.id,
@@ -883,6 +907,7 @@ impl World {
         pulse: Pulse,
         group: &AirGroup,
         launch: BaseStrikeLaunch,
+        breakdown: Option<Breakdown>,
     ) {
         let BaseStrikeLaunch {
             base,
@@ -895,6 +920,7 @@ impl World {
             .map(Cause::Order)
             .into_iter()
             .chain(reach_cause(group))
+            .chain(group.strike_share_order.map(Cause::Order))
             .collect();
         self.truth
             .air_groups
@@ -912,7 +938,7 @@ impl World {
                 distance_nm,
             },
             causes,
-            None,
+            breakdown,
         );
         self.strikes_in_flight.push(StrikeInFlight {
             air_group: group.id,
@@ -2995,6 +3021,24 @@ fn reach_cause(group: &AirGroup) -> Option<Cause> {
 /// a game with no target order changes.
 fn target_cause(group: &AirGroup) -> Option<Cause> {
     group.target_order.map(Cause::Order)
+}
+
+/// The oldest contact, in pulses, `group` launches a naval strike on
+/// (decision 0114): its own setting, or the figure of the air combat
+/// figures. The strike decision and a side's view both read it.
+pub(crate) fn strike_age_limit(group: &AirGroup, figures: &AirCombatFigures) -> u32 {
+    group
+        .strike_contact_age
+        .unwrap_or(figures.strike_contact_max_age_pulses)
+}
+
+/// The aircraft a strike launches when the group is able to fly `able` and
+/// holds back `held_share` of them (decision 0114, 8): the able aircraft
+/// times one less the share, cut to a whole number toward zero. The strike
+/// decision and a side's view both call it (decision 0100, 1).
+pub(crate) fn strike_aircraft(able: u32, held_share: Fixed) -> u32 {
+    let sent = (Fixed::from_int(i64::from(able)) * (Fixed::ONE - held_share)).trunc();
+    u32::try_from(sent).expect("a share of the aircraft is not negative")
 }
 
 /// The contact a naval strike group would launch at: what
@@ -11984,6 +12028,335 @@ mod tests {
         }
     }
 
+    // ---- two strike settings of an air group (decision 0114) ----
+
+    mod strike_settings {
+        use super::*;
+
+        fn age_order(group: AirGroupId, pulses: i64) -> OrderRequest {
+            OrderRequest {
+                kind: OrderKind::AirGroup {
+                    target: group,
+                    order: AirGroupOrder::SetStrikeContactAge { pulses },
+                },
+                origin: Origin::PLAYER,
+            }
+        }
+
+        fn held_order(group: AirGroupId, share: Fixed) -> OrderRequest {
+            OrderRequest {
+                kind: OrderKind::AirGroup {
+                    target: group,
+                    order: AirGroupOrder::SetStrikeHeldShare { share },
+                },
+                origin: Origin::PLAYER,
+            }
+        }
+
+        #[test]
+        fn strike_aircraft_cuts_the_able_aircraft_by_the_share_toward_zero() {
+            assert_eq!(strike_aircraft(12, fixed(333_333, 1_000_000)), 8);
+            assert_eq!(strike_aircraft(10, fixed(1, 4)), 7);
+            assert_eq!(strike_aircraft(1, fixed(1, 2)), 0);
+            for able in [0, 1, 7, 18, 60] {
+                assert_eq!(strike_aircraft(able, Fixed::ONE), 0, "{able} held whole");
+                assert_eq!(strike_aircraft(able, Fixed::ZERO), able, "{able} none held");
+            }
+        }
+
+        #[test]
+        fn the_age_order_is_checked_against_the_drop_age_and_stands() {
+            // The test figures drop a contact at 5 pulses, so 4 is the top.
+            let mut world = self::world(1, vec![]);
+            world.submit_orders(
+                Side::Allied,
+                vec![
+                    age_order(BOMBERS, 4),
+                    age_order(BOMBERS, 5),
+                    age_order(BOMBERS, -1),
+                    age_order(BOMBERS, 0),
+                ],
+            );
+            world.resolve_day().expect("day resolves");
+            assert_eq!(
+                rejections(&world),
+                vec![
+                    RejectReason::StrikeContactAgeOutOfRange {
+                        pulses: 5,
+                        max: Some(4)
+                    },
+                    RejectReason::StrikeContactAgeOutOfRange {
+                        pulses: -1,
+                        max: Some(4)
+                    },
+                ]
+            );
+            assert_eq!(
+                rejections(&world)[0].to_string(),
+                "strike contact age 5 is not between 0 and 4 pulses"
+            );
+            // The last accepted order stands, and its number is recorded.
+            let group = group_mut(&mut world, BOMBERS);
+            assert_eq!(group.strike_contact_age, Some(0));
+            assert!(group.strike_age_order.is_some());
+            assert_eq!(group.strike_held_share, Fixed::ZERO);
+
+            // With no search figures only a negative age is refused.
+            let mut world = self::world(1, vec![]);
+            world.ref_data.search = None;
+            world.submit_orders(
+                Side::Allied,
+                vec![age_order(BOMBERS, 40), age_order(BOMBERS, -1)],
+            );
+            world.resolve_day().expect("day resolves");
+            assert_eq!(
+                rejections(&world),
+                vec![RejectReason::StrikeContactAgeOutOfRange {
+                    pulses: -1,
+                    max: None
+                }]
+            );
+            assert_eq!(
+                rejections(&world)[0].to_string(),
+                "strike contact age -1 is not 0 or more pulses"
+            );
+
+            // No air combat figures, no order.
+            let mut world = self::world(1, vec![]);
+            world.ref_data.air_combat = None;
+            world.submit_orders(Side::Allied, vec![age_order(BOMBERS, 1)]);
+            world.resolve_day().expect("day resolves");
+            assert_eq!(rejections(&world), vec![RejectReason::NoAirCombatFigures]);
+        }
+
+        #[test]
+        fn the_held_share_order_is_checked_and_stands() {
+            let mut world = self::world(1, vec![]);
+            world.submit_orders(
+                Side::Allied,
+                vec![
+                    held_order(BOMBERS, fixed(3, 2)),
+                    held_order(BOMBERS, fixed(-1, 10)),
+                    held_order(BOMBERS, Fixed::ZERO),
+                    held_order(BOMBERS, Fixed::ONE),
+                ],
+            );
+            world.resolve_day().expect("day resolves");
+            assert_eq!(
+                rejections(&world),
+                vec![
+                    RejectReason::StrikeHeldShareOutOfRange(fixed(3, 2)),
+                    RejectReason::StrikeHeldShareOutOfRange(fixed(-1, 10)),
+                ]
+            );
+            assert_eq!(
+                rejections(&world)[0].to_string(),
+                "held share 1.5 is not between 0 and 1"
+            );
+            let group = group_mut(&mut world, BOMBERS);
+            assert_eq!(group.strike_held_share, Fixed::ONE);
+            assert!(group.strike_share_order.is_some());
+            assert_eq!(group.strike_contact_age, None);
+        }
+
+        #[test]
+        fn the_hash_sees_both_settings_and_their_orders() {
+            let base = self::world(1, vec![]).state_hash();
+            let changed = |change: fn(&mut AirGroup)| {
+                let mut world = self::world(1, vec![]);
+                change(group_mut(&mut world, BOMBERS));
+                world.state_hash()
+            };
+            let hashes = [
+                changed(|g| g.strike_contact_age = Some(0)),
+                changed(|g| g.strike_contact_age = Some(1)),
+                changed(|g| g.strike_age_order = Some(OrderId::new(3))),
+                changed(|g| g.strike_held_share = fixed(1, 4)),
+                changed(|g| g.strike_share_order = Some(OrderId::new(3))),
+            ];
+            for (index, hash) in hashes.iter().enumerate() {
+                assert_ne!(*hash, base, "setting {index}");
+                for other in &hashes[..index] {
+                    assert_ne!(hash, other, "setting {index}");
+                }
+            }
+        }
+
+        #[test]
+        fn a_group_that_holds_back_everything_launches_nothing_and_records_nothing() {
+            let mut world = world_with_a_good_contact(1);
+            group_mut(&mut world, BOMBERS).strike_held_share = Fixed::ONE;
+            let before = world.events().len();
+            world.decide_strikes(1, Pulse::Morning);
+            assert_eq!(world.events().len(), before);
+            assert!(world.strikes_in_flight.is_empty());
+
+            // A base strike too: nothing is launched and the day is not used.
+            let mut world = raid_world(1);
+            group_mut(&mut world, AirGroupId::new(1)).strike_held_share = Fixed::ONE;
+            let before = world.events().len();
+            world.decide_strikes(1, Pulse::Morning);
+            assert_eq!(world.events().len(), before);
+            assert!(world.strikes_in_flight.is_empty());
+            assert_eq!(
+                world.truth.air_groups[&AirGroupId::new(1)].last_base_strike_day,
+                None
+            );
+            // And it launches in the afternoon when the share is lifted.
+            group_mut(&mut world, AirGroupId::new(1)).strike_held_share = Fixed::ZERO;
+            world.decide_strikes(1, Pulse::Afternoon);
+            assert_eq!(base_launches(&world).len(), 1);
+        }
+
+        #[test]
+        fn a_naval_strike_sends_the_aircraft_the_share_leaves_citing_both_orders() {
+            let mut world = world_with_a_good_contact(1);
+            world.set_config(crate::world::SimConfig {
+                record_breakdowns: true,
+            });
+            let group = group_mut(&mut world, BOMBERS);
+            group.mission_order = Some(OrderId::new(7));
+            group.strike_held_share = fixed(1, 4);
+            group.strike_share_order = Some(OrderId::new(9));
+            group.strike_contact_age = Some(1);
+            group.strike_age_order = Some(OrderId::new(8));
+            let report = world.beliefs[&Side::Allied]
+                .contacts()
+                .next()
+                .expect("a contact")
+                .last_report_event;
+            world.decide_strikes(1, Pulse::Morning);
+            let all = launches(&world);
+            assert_eq!(all.len(), 1);
+            // 18 able, a quarter held, 13 sent (13.5 cut down).
+            assert_eq!(launch_of(&all[0]).3, 13);
+            assert_eq!(world.strikes_in_flight[0].aircraft, 13);
+            assert_eq!(
+                all[0].causes,
+                vec![
+                    Cause::Order(OrderId::new(7)),
+                    Cause::Event(report),
+                    Cause::Order(OrderId::new(8)),
+                    Cause::Order(OrderId::new(9)),
+                ]
+            );
+            let breakdown = all[0].breakdown.as_ref().expect("a breakdown");
+            assert_eq!(
+                breakdown.factors,
+                vec![
+                    Factor {
+                        name: "aircraft_able_to_fly",
+                        value: Fixed::from_int(18)
+                    },
+                    Factor {
+                        name: "share_held_back",
+                        value: fixed(1, 4)
+                    },
+                ]
+            );
+            assert_eq!(breakdown.result, Fixed::from_int(13));
+        }
+
+        #[test]
+        fn the_age_setting_replaces_the_figure_in_the_one_test_that_reads_it() {
+            // The figure is one pulse. A contact 3 pulses old is struck only
+            // by a group set to 3 or more; a contact 1 pulse old is not
+            // struck by a group set to 0.
+            for (contact_age, setting, launches_at) in [
+                (3, None, false),
+                (3, Some(3), true),
+                (3, Some(2), false),
+                (4, Some(3), false),
+                (1, None, true),
+                (1, Some(0), false),
+                (0, Some(0), true),
+                (1, Some(1), true),
+            ] {
+                let mut world = world(
+                    1,
+                    vec![held(Hex::new(5, 0), ShipKind::Cruiser, contact_age)],
+                );
+                group_mut(&mut world, BOMBERS).strike_contact_age = setting;
+                world.decide_strikes(1, Pulse::Morning);
+                assert_eq!(
+                    launches(&world).len(),
+                    usize::from(launches_at),
+                    "age {contact_age}, setting {setting:?}"
+                );
+            }
+            // The view asks the same function.
+            let mut world = world(1, vec![held(Hex::new(5, 0), ShipKind::Cruiser, 3)]);
+            let view_says = |world: &World| {
+                world
+                    .side_view(Side::Allied)
+                    .strike_choice(BOMBERS)
+                    .is_some()
+            };
+            assert!(!view_says(&world));
+            group_mut(&mut world, BOMBERS).strike_contact_age = Some(3);
+            assert!(view_says(&world));
+        }
+
+        #[test]
+        fn the_age_does_not_apply_to_a_base_strike() {
+            let mut world = raid_world(1);
+            group_mut(&mut world, AirGroupId::new(1)).strike_contact_age = Some(0);
+            world.decide_strikes(1, Pulse::Morning);
+            assert_eq!(base_launches(&world).len(), 1);
+        }
+
+        #[test]
+        fn a_base_strike_sends_the_aircraft_the_share_leaves_with_a_breakdown_that_changes_nothing()
+        {
+            let run = |record: bool| {
+                let mut world = raid_world(1);
+                world.set_config(crate::world::SimConfig {
+                    record_breakdowns: record,
+                });
+                let group = group_mut(&mut world, AirGroupId::new(1));
+                group.strike_held_share = fixed(1, 4);
+                group.strike_share_order = Some(OrderId::new(9));
+                world.decide_strikes(1, Pulse::Morning);
+                world.resolve_strikes(1, Pulse::Morning);
+                world
+            };
+            let with = run(true);
+            let without = run(false);
+            let launched = base_launches(&with);
+            assert_eq!(launched.len(), 1);
+            assert_eq!(
+                launched[0].kind,
+                EventKind::BaseStrikeLaunched {
+                    air_group: AirGroupId::new(1),
+                    base: BASE_JAPANESE,
+                    hex: Hex::new(5, 0),
+                    aircraft: 13,
+                    distance_nm: Fixed::from_int(200),
+                }
+            );
+            assert_eq!(
+                launched[0].causes,
+                vec![Cause::Order(OrderId::new(7)), Cause::Order(OrderId::new(9))]
+            );
+            let breakdown = launched[0].breakdown.as_ref().expect("a breakdown");
+            assert_eq!(
+                breakdown
+                    .factors
+                    .iter()
+                    .map(|factor| (factor.name, factor.value))
+                    .collect::<Vec<_>>(),
+                vec![
+                    ("aircraft_able_to_fly", Fixed::from_int(18)),
+                    ("share_held_back", fixed(1, 4)),
+                ]
+            );
+            assert_eq!(breakdown.result, Fixed::from_int(13));
+            assert!(base_launches(&without)[0].breakdown.is_none());
+            assert_eq!(with.events().len(), without.events().len());
+            assert_eq!(with.state_hash(), without.state_hash());
+        }
+    }
+
     // ---- the choices of the air steps a side can ask (decision 0100) ----
 
     mod choices {
@@ -12145,6 +12518,38 @@ mod tests {
                 .iter()
                 .any(|c| matches!(c.question, Question::Air(AirQuestion::FighterSplit { .. }))));
             assert_same(&at_step, &fought);
+        }
+
+        /// A group that holds back a share of its aircraft from a strike
+        /// gets the same base strike answer from the view as from the engine
+        /// (decision 0114, 6): the aircraft the share leaves.
+        #[test]
+        fn the_views_base_strike_answer_is_the_engines_with_a_share_held_back() {
+            let held = || {
+                let mut world = rich_world();
+                group_mut(&mut world, RAIDERS).strike_held_share = fixed(1, 4);
+                world
+            };
+            let mut engine = held();
+            begin(&mut engine);
+            engine.decide_strikes(1, Pulse::Morning);
+            let decided = air_trace(&mut engine);
+            let sent = decided
+                .iter()
+                .find_map(|choice| match &choice.answer {
+                    Answer::Air(AirAnswer::BaseStrike(Some(launch))) => Some(launch.aircraft),
+                    _ => None,
+                })
+                .expect("a base strike launch");
+            assert_eq!(sent, 13);
+            assert_same(&held(), &decided);
+            // The able count is still the able count.
+            assert_eq!(
+                held()
+                    .side_view(Side::Allied)
+                    .ask_air(&AirQuestion::AircraftAbleToFly { group: RAIDERS }),
+                Some(AirAnswer::AircraftAbleToFly(18))
+            );
         }
 
         /// The escorts of group 20 (6 of its 12 fly as escorts) go with the

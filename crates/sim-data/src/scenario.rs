@@ -342,6 +342,15 @@ struct AirGroupSpec {
     /// of 0038). Defaults to the aircraft the group starts with, ready and
     /// damaged.
     strength: Option<u32>,
+    /// The oldest contact, in pulses, the group launches a naval strike on
+    /// at the start (decision 0114). A whole number from 0 up to one less
+    /// than the search figures' contact drop age. Without it the group uses
+    /// the air combat figure. Signed so that a negative number is refused
+    /// here with a message that names the range.
+    strike_contact_age_pulses: Option<i64>,
+    /// The share of its aircraft the group holds back from a strike at the
+    /// start, 0 to 1 (decision 0114). Defaults to 0.
+    strike_held_share: Option<Quantity>,
 }
 
 /// A stream of replacements for a side at a base (decision 6 of 0038).
@@ -548,6 +557,17 @@ enum ActionSpec {
     /// the order reaches intake, as an out-of-range value is.
     SetTargetPriority {
         kinds: Vec<String>,
+    },
+    /// The oldest contact, in pulses, the group launches a naval strike on
+    /// (decision 0114). The range is checked at intake, as for the patrol
+    /// share.
+    SetStrikeContactAge {
+        pulses: i64,
+    },
+    /// The share of its aircraft the group holds back from a strike
+    /// (decision 0114).
+    SetStrikeHeldShare {
+        share: Quantity,
     },
     /// Move the air group to the named base of its side (decision 0091). A
     /// base that is not the side's, or out of reach, is refused at intake.
@@ -1843,6 +1863,44 @@ impl Scenario {
                 target_order: None,
                 last_base_strike_day: None,
                 rebased_day: None,
+                strike_contact_age: match spec.strike_contact_age_pulses {
+                    Some(pulses) => {
+                        // Decision 0114, 3: from 0 up to one less than the
+                        // age at which a contact is dropped, where the
+                        // search figures are loaded.
+                        let max = ref_data
+                            .search
+                            .as_ref()
+                            .map(|search| search.contact_drop_age_pulses.saturating_sub(1));
+                        if pulses < 0 || max.is_some_and(|max| pulses > i64::from(max)) {
+                            let range = match max {
+                                Some(max) => format!("between 0 and {max}"),
+                                None => "0 or more".to_string(),
+                            };
+                            return Err(fail(format!(
+                                "{id} has a strike_contact_age_pulses of {pulses}, not {range}"
+                            )));
+                        }
+                        Some(u32::try_from(pulses).expect("the age was checked"))
+                    }
+                    None => None,
+                },
+                strike_age_order: None,
+                strike_held_share: match &spec.strike_held_share {
+                    Some(quantity) => {
+                        let share = quantity
+                            .to_fixed()
+                            .map_err(|e| fail(format!("{id} strike_held_share {e}")))?;
+                        if share < Fixed::ZERO || share > Fixed::ONE {
+                            return Err(fail(format!(
+                                "{id} has a strike_held_share of {share}, not between 0 and 1"
+                            )));
+                        }
+                        share
+                    }
+                    None => Fixed::ZERO,
+                },
+                strike_share_order: None,
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -2108,6 +2166,12 @@ impl Scenario {
                         ActionSpec::SetTargetPriority { .. } => {
                             return Err(wrong_target("set_target_priority", "air_group"))
                         }
+                        ActionSpec::SetStrikeContactAge { .. } => {
+                            return Err(wrong_target("set_strike_contact_age", "air_group"))
+                        }
+                        ActionSpec::SetStrikeHeldShare { .. } => {
+                            return Err(wrong_target("set_strike_held_share", "air_group"))
+                        }
                         ActionSpec::Rebase {} => {
                             return Err(wrong_target("rebase", "air_group"))
                         }
@@ -2218,12 +2282,22 @@ impl Scenario {
                             }
                             AirGroupOrder::SetTargetPriority { kinds: parsed }
                         }
+                        ActionSpec::SetStrikeContactAge { pulses } => {
+                            AirGroupOrder::SetStrikeContactAge { pulses: *pulses }
+                        }
+                        ActionSpec::SetStrikeHeldShare { share } => {
+                            AirGroupOrder::SetStrikeHeldShare {
+                                share: share
+                                    .to_fixed()
+                                    .map_err(|e| fail(format!("share on day {day} {e}")))?,
+                            }
+                        }
                         ActionSpec::Rebase {} => AirGroupOrder::Rebase {
                             base: BaseId::new(need_base("rebase")?),
                         },
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority or rebase"
+                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority, set_strike_contact_age, set_strike_held_share or rebase"
                             )))
                         }
                     };
@@ -3481,6 +3555,75 @@ r = 0
         assert!(parse_with(&order(
             "air_group = 1",
             &format!("{}\nextra = 1", list("[\"cruiser\"]"))
+        ))
+        .is_err());
+    }
+
+    #[test]
+    fn an_air_group_takes_optional_strike_settings_checked_at_load() {
+        let group = |extra: &str| {
+            let text = air_group(1, 3).replace("ready = ", &format!("{extra}ready = "));
+            parse_with(&text).map(|scenario| {
+                let group = scenario.world.umpire().air_groups[&AirGroupId::new(1)].clone();
+                (
+                    group.strike_contact_age,
+                    group.strike_held_share,
+                    group.strike_age_order,
+                    group.strike_share_order,
+                )
+            })
+        };
+        assert_eq!(group("").expect("loads"), (None, Fixed::ZERO, None, None));
+        assert_eq!(
+            group("strike_contact_age_pulses = 0\nstrike_held_share = \"0.25\"\n").expect("loads"),
+            (Some(0), Fixed::from_ratio(1, 4), None, None)
+        );
+        // The search figures drop a contact at 5 pulses, so 4 is the top.
+        assert_eq!(
+            group("strike_contact_age_pulses = 4\n").expect("loads").0,
+            Some(4)
+        );
+        assert!(
+            error_of_group(&group("strike_contact_age_pulses = 5\n")).contains("between 0 and 4")
+        );
+        assert!(group("strike_contact_age_pulses = -1\n").is_err());
+        assert!(group("strike_contact_age_pulses = 1.5\n").is_err());
+        assert_eq!(
+            group("strike_held_share = 1\n").expect("loads").1,
+            Fixed::ONE
+        );
+        assert!(group("strike_held_share = \"1.5\"\n").is_err());
+        assert!(group("strike_held_share = \"-0.1\"\n").is_err());
+        assert!(group("strike_held_share = 0.5\n").is_err());
+    }
+
+    fn error_of_group<T>(result: &Result<T, DataError>) -> String {
+        match result {
+            Ok(_) => panic!("expected an error"),
+            Err(error) => error.to_string(),
+        }
+    }
+
+    #[test]
+    fn the_strike_setting_orders_load_for_an_air_group_and_are_checked_at_intake() {
+        let age = |pulses: &str| format!("kind = \"set_strike_contact_age\"\npulses = {pulses}");
+        let share = |share: &str| format!("kind = \"set_strike_held_share\"\nshare = {share}");
+        parse_with(&order("air_group = 1", &age("1"))).expect("an age loads");
+        // The range is the world's to refuse, at intake.
+        parse_with(&order("air_group = 1", &age("99"))).expect("too old loads");
+        parse_with(&order("air_group = 1", &age("-1"))).expect("negative loads");
+        assert!(parse_with(&order("air_group = 1", &age("1.5"))).is_err());
+        assert!(parse_with(&order("air_group = 1", "kind = \"set_strike_contact_age\"")).is_err());
+        assert!(error_of(&order("task_force = 1", &age("1"))).contains("air_group"));
+        assert!(parse_with(&order("air_group = 1", &format!("{}\nextra = 1", age("1")))).is_err());
+        parse_with(&order("air_group = 1", &share("\"0.25\""))).expect("a share loads");
+        parse_with(&order("air_group = 1", &share("\"1.5\""))).expect("a share out of range loads");
+        assert!(parse_with(&order("air_group = 1", &share("0.25"))).is_err());
+        assert!(parse_with(&order("air_group = 1", "kind = \"set_strike_held_share\"")).is_err());
+        assert!(error_of(&order("task_force = 1", &share("\"0.25\""))).contains("air_group"));
+        assert!(parse_with(&order(
+            "air_group = 1",
+            &format!("{}\nextra = 1", share("\"0.25\""))
         ))
         .is_err());
     }

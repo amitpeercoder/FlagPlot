@@ -140,7 +140,7 @@ A strike that finds ships sends a report of the force it attacked. Its draws are
 
 **What the report does to the contact.** The report goes through the same rule as any sighting report (A sighting report makes or refreshes a contact). Its hex is the hex the strike was sent to, or a neighbour of it if the position error struck, which is the hex of the contact the strike was sent at or one next to it. So it normally refreshes that contact: the contact keeps its number, takes the report's hex, count and kind, and has its age set to 0 and marked, so the ageing at the end of the pulse skips it. If the nearest fresh contact within `merge_distance_hexes` of the reported hex is another, that one is refreshed instead. If none is, a new contact is made. A strike that found nothing works differently (A strike that finds nothing).
 
-The consequence is that the contact is at age 0 when the next pulse's strike decision is made. A group that struck it in the morning, and that can still fly aircraft (chapter 5, What a group can fly in a pulse), can be launched at it again in the afternoon pulse, if the contact's hex is within the group's reach (the type's strike radius on normal reach). A strike made in the afternoon leaves the contact at age 1 after the night's ageing, so the group can strike it again the next morning only if `air_combat.toml: strike_contact_max_age_pulses` is at least 1. [0012, 0026, 0032]
+The consequence is that the contact is at age 0 when the next pulse's strike decision is made. A group that struck it in the morning, and that can still fly aircraft (chapter 5, What a group can fly in a pulse), can be launched at it again in the afternoon pulse, if the contact's hex is within the group's reach (the type's strike radius on normal reach). A strike made in the afternoon leaves the contact at age 1 after the night's ageing, so the group can strike it again the next morning only if the oldest contact it launches on is at least 1: its own setting, or `air_combat.toml: strike_contact_max_age_pulses` with none set (chapter 5, Naval strike: the contact). [0012, 0026, 0032, 0114]
 
 A side sees: its own report whole. The enemy sees nothing of it. [0047]
 
@@ -177,7 +177,7 @@ There are three ages that matter, and each is its own test:
 | Test | Limit | Read by |
 | --- | --- | --- |
 | Fresh | `search.toml: fresh_contact_max_age_pulses` | A new report merging into it; a force being alerted by it |
-| Can be struck | `air_combat.toml: strike_contact_max_age_pulses` | The strike decision (chapter 5, Naval strike: the contact) |
+| Can be struck | The group's strike contact age, or `air_combat.toml: strike_contact_max_age_pulses` with none set | The strike decision (chapter 5, Naval strike: the contact) [0114] |
 | Forgotten | `search.toml: contact_drop_age_pulses` | Ageing |
 
 [0032, 0026]

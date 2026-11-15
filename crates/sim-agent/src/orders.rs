@@ -163,6 +163,12 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 "kind": "set_target_priority",
                 "kinds": kinds.iter().map(|kind| kind.name()).collect::<Vec<_>>(),
             }),
+            AirGroupOrder::SetStrikeContactAge { pulses } => {
+                json!({ "kind": "set_strike_contact_age", "pulses": pulses })
+            }
+            AirGroupOrder::SetStrikeHeldShare { share } => {
+                json!({ "kind": "set_strike_held_share", "share": fixed_text(*share) })
+            }
             AirGroupOrder::Rebase { base } => json!({
                 "kind": "rebase",
                 "base": base.raw(),
@@ -582,6 +588,12 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                     }
                     AirGroupOrder::SetTargetPriority { kinds }
                 }
+                "set_strike_contact_age" => AirGroupOrder::SetStrikeContactAge {
+                    pulses: whole(value, "pulses")?,
+                },
+                "set_strike_held_share" => AirGroupOrder::SetStrikeHeldShare {
+                    share: fixed(value, "share")?,
+                },
                 "rebase" => AirGroupOrder::Rebase {
                     base: BaseId::new(small(value, "base")?),
                 },

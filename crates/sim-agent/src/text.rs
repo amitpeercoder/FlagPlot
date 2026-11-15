@@ -872,6 +872,18 @@ impl Briefing {
             if let Some(list) = &g.target_priority {
                 s.push_str(&format!(", target priority {}", list.join(", ")));
             }
+            if let Some(age) = g.strike_contact_age {
+                s.push_str(&format!(
+                    ", launches on a contact up to {age} {} old",
+                    if age == 1 { "pulse" } else { "pulses" }
+                ));
+            }
+            if let Some(share) = &g.strike_held_share {
+                s.push_str(&format!(
+                    ", holds back {} of its aircraft from a strike",
+                    share.0
+                ));
+            }
             s.push_str(&format!(", mission {}", plain(g.mission)));
             if let Some(t) = &g.target {
                 s.push_str(&format!(" at {}", t.text()));

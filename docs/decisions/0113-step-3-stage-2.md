@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 15, 2026, for the designer's app
 
 Summary: A plan for step 3, stage 2: seven kinds of intent beside supply (cover a place, strike what comes within reach, wear down a base, intercept, escort a run, keep a force fuelled, rest and repair), a doctrine for each on both sides, the numbers of the three risk levels set from the record, two small rule changes the doctrines need, and the proof: a battle of the slice and then a week of it with no unit order from anyone
 
-Standing: Confirmed by the designer, Nov 15, 2026. Not built
+Standing: Confirmed by the designer, Nov 15, 2026. Step 1 built Nov 15, 2026 (decision 0114; scenario 46; state version 27, rules label 12)
 
 ## What stage 2 is
 

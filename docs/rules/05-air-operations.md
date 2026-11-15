@@ -85,9 +85,11 @@ The orders that act on an air group, and every reason one is refused, are in cha
 - A rest threshold order sets `rest_above`, which only Stand-down and return reads. It does nothing when the fatigue figures are not loaded.
 - A reach order sets `reach` to normal or extended, which the strike decision, the base strike and the escorts read (see "Radius and reach"), and which a sortie beyond the radius pays for (see "Running out of fuel"). It does nothing for a group that does not strike or escort.
 - A target priority order sets `target_priority`, a list of kinds of ship, and `target_order`. The strike decision reads it to choose a contact, and the raid reads it to choose what to attack (see "Naval strike: the contact" and "The attack on a ship"). It does nothing for a group that does not strike, and it is accepted for any group.
+- A strike contact age order sets `strike_contact_age`, the oldest contact in pulses the group launches a naval strike on, which only the strike decision reads (see "Naval strike: the contact"). With none set the figure `air_combat.toml: strike_contact_max_age_pulses` serves. It does nothing for a base strike, which needs no contact. [0114]
+- A strike held share order sets `strike_held_share`, a share from 0 to 1 (0 until one is set) of the aircraft the group is able to fly that a naval strike or a base strike holds back (see "Held back from a strike"). It does nothing for search, patrol or escorts. [0114]
 - A rebase order is not a standing order. It is applied when it is taken in and is then spent (see "Rebasing an air group").
 
-The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050, 0059, 0063, 0091]
+The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050, 0059, 0063, 0091, 0114]
 
 A side sees: `OrderAccepted` or `OrderRejected` for its own orders, whole.
 
@@ -132,6 +134,8 @@ Search, strike launch and the split of fighters into patrol and escorts all use 
 7. Cut the result to a whole number once, toward zero. The multiplications of steps 4, 5 and 6 are fixed-point, so no rounding happens before this cut.
 
 The cut is applied once, to the product. Chapter 1, Where figures come from and when a rule is loaded, says what "loaded" means. A group of 6 aircraft with fatigue 1 and a working deck flies 5. A group aboard a carrier with a degraded deck and fatigue 20, 10 ready and 10 pilots, flies 10 times the degraded factor times 0.8: with a degraded factor of 0.5 (an example, not the figure) that is 4. A group of 12 ready and crewed aircraft at a base whose airfield has damage 30 flies 12 times 70 over 100, which is 8; with fatigue 50 as well it flies 12 times 0.7 times 0.5, which is 4.2, cut to 4. A group's flight deck is worked group by group, not for the ship. [0026, 0036, 0038, 0039, 0091, 0103]
+
+The held share of a strike group ("Held back from a strike") is applied after these limits, once, to the number they give; it is not one of them. [0114]
 
 A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `aircraft_able_to_fly`): the answer is the number of aircraft the group is able to fly now, from the group, its base's supply and airfield damage, its ship's flight deck, its fatigue and the day it moved. [0100, 0103]
 
@@ -297,15 +301,15 @@ A side sees: nothing of a decision that launched nothing.
 
 A naval strike group considers each contact its side holds. A contact qualifies if both hold:
 
-- Its age in pulses is at most `air_combat.toml: strike_contact_max_age_pulses`. A contact is not aged in the pulse it was reported in, so with the figure at 0 a contact reported this pulse or the one before qualifies, and no older one.
+- Its age in pulses is at most the group's strike contact age, the standing order of that name (see "Air group orders"), or, if the group has none, `air_combat.toml: strike_contact_max_age_pulses`. A contact is not aged in the pulse it was reported in, so with the setting at 0 a contact reported this pulse or the one before qualifies, and no older one; at 1 a contact reported the afternoon before qualifies in the morning, and at 2 one of the morning before. [0114]
 - Its estimated hex is within the group's reach (the type's strike radius on normal reach) of the group's hex, by air distance.
 - Its estimated kind is on the group's target list. The list is a standing order (see "Air group orders"), and its default is all six kinds in the order of importance (chapter 3, What a report holds). A kind that is not on the list is never launched at, so a short list holds the strike back: a group whose list is "carrier" stays on deck until a carrier is reported in reach.
 
 From the contacts that qualify the group takes the one whose estimated kind comes first on its list, then the nearest by air distance, then the lowest contact number. With none it does nothing, and nothing is recorded. A report that names the wrong kind sends the strike wrong.
 
-This choice is one function, which takes the side's belief and the group's own state and orders and nothing else. The strike decision calls it, and the side's view offers it (`SideView::strike_choice`), so the briefing and a planner can ask what a group would strike now. The view takes the group's number and answers only for the side's own groups. [0085]
+This choice is one function, which takes the side's belief and the group's own state and orders and nothing else. The strike decision calls it, and the side's view offers it (`SideView::strike_choice`), so the briefing and a planner can ask what a group would strike now. The view takes the group's number and answers only for the side's own groups. The group's own setting is read there too, since it is the same function. [0085, 0114]
 
-It launches every aircraft it is able to fly. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order, by the group's reach order if it is on extended reach, by the group's target order if it has one (a group with none cites nothing new), and by the event of the report that last refreshed the contact. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. [0026, 0032, 0040, 0059, 0063]
+It launches the aircraft it is able to fly less the share it holds back (see "Held back from a strike"), which is every aircraft it is able to fly when no share is set. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order, by the group's reach order if it is on extended reach, by the group's target order if it has one (a group with none cites nothing new), by the event of the report that last refreshed the contact, by the group's strike contact age order if it has one and by its held share order if it has one. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. When breakdowns are on, the launch's breakdown gives the aircraft able to fly, the share held back and the aircraft sent. [0026, 0032, 0040, 0059, 0063, 0114]
 
 This is the choice a side can ask as `measure`'s `choices`, `strike`: the answer is the contact the group would strike now, or none. [0100]
 
@@ -313,9 +317,17 @@ A side sees: `StrikeLaunched` for its own group, whole. The enemy sees nothing a
 
 ### Base strike
 
-A base strike group launches in a daylight pulse, morning or afternoon, once a game day: it launches in the first daylight pulse of the day in which the base is within its reach, and not again that day. It needs no contact and reads no belief. It launches if it has not launched at its base that game day, and the base exists, is held by the other side, and is within the group's reach by air distance from where the group is when the pulse begins. A group that can launch in the morning does, so a group whose base is in reach every morning flies as it did. A group whose base comes into reach during the day, as a carrier's does as she closes it, launches in the afternoon. The group keeps the game day of its last base strike (`last_base_strike_day`, in the state hash), and a launch sets it. It launches every aircraft it is able to fly and records `BaseStrikeLaunched` (group, base, hex, aircraft, one-way distance), caused by the group's mission order and, on extended reach, its reach order. [0034, 0059, 0063]
+A base strike group launches in a daylight pulse, morning or afternoon, once a game day: it launches in the first daylight pulse of the day in which the base is within its reach, and not again that day. It needs no contact and reads no belief. It launches if it has not launched at its base that game day, and the base exists, is held by the other side, and is within the group's reach by air distance from where the group is when the pulse begins. A group that can launch in the morning does, so a group whose base is in reach every morning flies as it did. A group whose base comes into reach during the day, as a carrier's does as she closes it, launches in the afternoon. The group keeps the game day of its last base strike (`last_base_strike_day`, in the state hash), and a launch sets it. It launches the aircraft it is able to fly less the share it holds back (see "Held back from a strike"), and records `BaseStrikeLaunched` (group, base, hex, aircraft, one-way distance), caused by the group's mission order, on extended reach its reach order and, if it has one, its held share order; its breakdown, when breakdowns are on, is the naval strike's. The strike contact age does not apply: a base strike needs no contact. If the share leaves no aircraft, nothing launches, nothing is recorded and the launch does not count as the day's. [0034, 0059, 0063, 0114]
 
-A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `base_strike`): the answer is whether the group would launch a base strike this pulse, from the group, its target, its reach and the base on the map. [0100]
+A side can ask this choice for its own air groups before it is made (`measure`'s `choices`, `base_strike`): the answer is whether the group would launch a base strike this pulse, from the group, its target, its reach, its held share and the base on the map; the aircraft it gives are those the share leaves. [0100, 0114]
+
+### Held back from a strike
+
+A group has a held share, from 0 to 1, set by the strike held share order (see "Air group orders"). It is 0 until set. A naval strike and a base strike launch the aircraft the group is able to fly times one less the share, cut to a whole number toward zero. The share is applied once, after the limits of "The order of the limits", to the whole number they give. If that comes to none, the group does not launch and nothing is recorded; a base strike that does not launch has not used the day's launch. It applies to nothing else: not to search, patrol or escorts.
+
+The aircraft held do nothing in that pulse: they stay where they are, and at a base a raid on it can find them as it finds any aircraft on the ground ("The attack on a base"). They are not counted as flown ("What counts as a sortie"): no sortie, wear, fatigue or supply for them. They are as able to fly in the next pulse as any other. A group of 18 able to fly that holds back a quarter launches 13 (13.5, cut). The aircraft able to fly that a side can ask (chapter 1, What a commander decides) is the number before the share. [0114]
+
+A side sees: its own group's share, whole, and its orders; the enemy sees neither and learns nothing new of a raid.
 
 A side sees: `BaseStrikeLaunched` for its own group, whole.
 
@@ -517,7 +529,7 @@ When any of the wear, fatigue, air supply or air combat figures are loaded, the 
 | Kind | Aircraft | Distance |
 | --- | --- | --- |
 | Search | Aircraft that searched | Twice the range of the group's search arc |
-| Strike (at a contact or a base) | Aircraft launched | Twice the air distance from the group's hex to the hex it was sent to |
+| Strike (at a contact or a base) | Aircraft launched (those a held share keeps back are not launched and are not counted) | Twice the air distance from the group's hex to the hex it was sent to |
 | Patrol | The group's patrol (all it can fly where its escorts do not go), noted in every daylight pulse, raid or not | 0 |
 | Escort | Escorts that went | Twice the air distance from the group's hex to the raid's hex |
 
