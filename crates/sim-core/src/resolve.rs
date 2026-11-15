@@ -264,7 +264,15 @@ impl World {
         // The invariants are checked before the day counter advances, so a
         // day that breaks one is not counted. Nothing the check reads uses
         // `truth.day`.
-        let violations = invariants::check(&self.truth, &self.map, &self.ref_data);
+        let mut violations = invariants::check(&self.truth, &self.map, &self.ref_data);
+        for side in Side::ALL {
+            violations.extend(invariants::check_command(
+                side,
+                self.command_state(side),
+                &self.truth,
+                day,
+            ));
+        }
         if !violations.is_empty() {
             return Err(SimError::InvariantsViolated { day, violations });
         }
