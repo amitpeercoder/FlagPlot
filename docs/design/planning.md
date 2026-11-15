@@ -47,6 +47,8 @@ What follows from doing it this way:
 
 ## The plan as an object
 
+Since this note was written the designer has agreed what an intent is (decision 0116, Nov 15, 2026): an end, with the staff forming the tasks beneath it as sub-intents, in a tree. A plan is that tree with its order in time, and its phases are the branches that run in sequence. Collection is one of the branches: the staff forms the reconnaissance a plan needs without being told to (`intelligence.md`, "Reconnaissance as part of an operation"). Read the phases below in that light.
+
 A plan has phases. An invasion might have four: build up, wear down the enemy's airfields, escort and land, sustain. Each phase states:
 
 | Part | What it says | Example |

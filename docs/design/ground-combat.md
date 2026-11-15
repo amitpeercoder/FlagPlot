@@ -112,6 +112,8 @@ Two kinds are added to the five of decision 0054, each a count read from state:
 
 ## What is left out, on purpose
 
+Three rules were added to this list's follow-on work on Nov 15, 2026, when the designer accepted the losses at the Tenaru as a named miss (decision 0109, "The Tenaru, a named miss"). They are for step 3's stage 3, each with its own record first: units held back are out of the fight; Kawaguchi's force is re-cut into battalions; and a defender's counter-attack cuts off a spent attacker. Decision 0116 adds a need of the same stage: land formations get an order of battle with parents (division, regiment, battalion), so that an intent can be addressed to a formation.
+
 Each of these is real and was considered. None is needed for a naval or air decision in the first build, and each can be added later as its own rule.
 
 | Left out | What it costs | When it might come |
