@@ -1029,8 +1029,10 @@ pub enum EventKind {
         progress_nm: Fixed,
         position: Hex,
     },
-    /// A ship took fuel aboard from a base at the start of a day (decision
-    /// 0045). `taken_t` is what it took, `fuel_t` what it has afterwards and
+    /// A ship took fuel aboard from a base in the loading phase of a pulse
+    /// (decision 0045, as amended by 0112: through the hours of the pulse at
+    /// the port's fuelling rate). `taken_t` is what it took, `fuel_t` what it
+    /// has afterwards and
     /// `base_fuel_t` what the base has left. Nothing is recorded for a ship
     /// that takes nothing. `force_restored` is true on the first refuelling
     /// of a task force that had run out of fuel in the hex of the base: the
@@ -1698,7 +1700,8 @@ pub enum EventKind {
     /// A ship's refuelling stopped at the fuel reserve of its side's bases in
     /// the hex (decision 7 of 0111): it still lacks `short_t` tons, and those
     /// bases hold fuel no longer above their reserves. Recorded after the
-    /// ship's refuelling, if it took any. Added at the end.
+    /// ship's refuelling, if it took any, in the pulse it is first held and
+    /// not again while nothing changes (decision 0112). Added at the end.
     RefuellingHeldAtReserve {
         ship: ShipId,
         task_force: TaskForceId,

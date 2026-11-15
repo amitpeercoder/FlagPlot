@@ -99,6 +99,8 @@ fn world(bases: Vec<Base>, forces: Vec<Force>) -> World {
             berths: 0,
             berth_rate_t_per_h: Fixed::ZERO,
             lighter_rate_t_per_h: fx(20),
+            fuel_berth_rate_t_per_h: None,
+            fuel_lighter_rate_t_per_h: None,
         },
     );
     ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());

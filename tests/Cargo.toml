@@ -285,6 +285,10 @@ name = "scenario_39_load_reserve_and_forces"
 path = "scenario_39_load_reserve_and_forces.rs"
 
 [[test]]
+name = "scenario_44_fuelling_takes_time"
+path = "scenario_44_fuelling_takes_time.rs"
+
+[[test]]
 name = "choices_asked_and_run"
 path = "choices_asked_and_run.rs"
 

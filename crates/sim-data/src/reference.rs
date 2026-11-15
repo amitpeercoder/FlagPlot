@@ -60,6 +60,13 @@ struct PortSizeRow {
     berths: u32,
     berth_rate_t_per_h: String,
     lighter_rate_t_per_h: String,
+    /// Optional columns (decision 0112), after `lighter_rate_t_per_h`: tons
+    /// of fuel an hour at a berth and by lighter. A file without a column,
+    /// or a row with an empty cell, gives no rate: no limit.
+    #[serde(default)]
+    fuel_berth_rate_t_per_h: String,
+    #[serde(default)]
+    fuel_lighter_rate_t_per_h: String,
 }
 
 pub(crate) fn parse_kind(text: &str) -> Option<ShipKind> {
@@ -174,10 +181,25 @@ pub fn load_port_sizes(path: &Path) -> Result<BTreeMap<u8, PortSize>, DataError>
                 )
             })
         };
+        let optional_rate = |field: &str, text: &str| -> Result<Option<Fixed>, DataError> {
+            if text.is_empty() {
+                Ok(None)
+            } else {
+                rate(field, text).map(Some)
+            }
+        };
         let port = PortSize {
             berths: row.berths,
             berth_rate_t_per_h: rate("berth_rate_t_per_h", &row.berth_rate_t_per_h)?,
             lighter_rate_t_per_h: rate("lighter_rate_t_per_h", &row.lighter_rate_t_per_h)?,
+            fuel_berth_rate_t_per_h: optional_rate(
+                "fuel_berth_rate_t_per_h",
+                &row.fuel_berth_rate_t_per_h,
+            )?,
+            fuel_lighter_rate_t_per_h: optional_rate(
+                "fuel_lighter_rate_t_per_h",
+                &row.fuel_lighter_rate_t_per_h,
+            )?,
         };
         if let Some(problem) = port.problem(size) {
             return Err(DataError::in_file(path, problem));
@@ -1581,6 +1603,49 @@ mod tests {
     fn berths_without_a_berth_rate_are_rejected() {
         let text = message(load("rate", &format!("{HEADER}0,1,0,20\n")));
         assert!(text.contains("berth rate"), "{text}");
+    }
+
+    #[test]
+    fn fuel_rates_are_optional_and_an_empty_cell_is_not_given() {
+        let fuel_header = "port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h,fuel_berth_rate_t_per_h,fuel_lighter_rate_t_per_h\n";
+        // Absent columns: not given.
+        let sizes = load("fuel_absent", &format!("{HEADER}{}", full_rows())).expect("loads");
+        assert_eq!(sizes[&1].fuel_berth_rate_t_per_h, None);
+        assert_eq!(sizes[&1].fuel_lighter_rate_t_per_h, None);
+        // A value, and an empty cell.
+        let rows: String = (0..=10)
+            .map(|size| match size {
+                0 => "0,0,0,20,,40\n".to_string(),
+                _ => format!("{size},1,50,20,200,130.5\n"),
+            })
+            .collect();
+        let sizes = load("fuel_given", &format!("{fuel_header}{rows}")).expect("loads");
+        assert_eq!(sizes[&0].fuel_berth_rate_t_per_h, None);
+        assert_eq!(
+            sizes[&0].fuel_lighter_rate_t_per_h,
+            Some(Fixed::from_int(40))
+        );
+        assert_eq!(
+            sizes[&3].fuel_berth_rate_t_per_h,
+            Some(Fixed::from_int(200))
+        );
+        assert_eq!(
+            sizes[&3].fuel_lighter_rate_t_per_h,
+            Some("130.5".parse::<Fixed>().expect("fixed"))
+        );
+    }
+
+    #[test]
+    fn a_fuel_rate_that_is_given_must_be_positive() {
+        let fuel_header = "port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h,fuel_berth_rate_t_per_h,fuel_lighter_rate_t_per_h\n";
+        for (name, row) in [
+            ("fuel_zero_berth", "0,1,50,20,0,40\n"),
+            ("fuel_zero_lighter", "0,1,50,20,200,0\n"),
+            ("fuel_negative", "0,1,50,20,200,-5\n"),
+        ] {
+            let text = message(load(name, &format!("{fuel_header}{row}")));
+            assert!(text.contains("fuel"), "{text}");
+        }
     }
 
     #[test]

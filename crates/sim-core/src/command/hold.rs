@@ -2,9 +2,9 @@
 //! commander's order to a unit that lies in the forces limit of an intent in
 //! force is taken in at once, before the staff is asked, and holds the unit:
 //! the staff's orders to it are refused for as long as the hold stands
-//! (rulings 18 and 30). It runs after refuelling on purpose: an order taken in
-//! sets a route, and a force under way is not refuelled, so taken in before it
-//! the order would change that morning's refuelling.
+//! (rulings 18 and 30). It once ran after the morning's refuelling on purpose;
+//! since decision 0112 ships take fuel in the pulses and the order of the two
+//! no longer matters.
 //!
 //! Reads: the side's pending orders, its intents in force and their forces
 //! limits, the truth's ships and forces. Writes: the orders taken in, the

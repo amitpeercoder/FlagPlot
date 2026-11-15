@@ -93,6 +93,8 @@ fn world() -> World {
             berths: 0,
             berth_rate_t_per_h: Fixed::ZERO,
             lighter_rate_t_per_h: t(20),
+            fuel_berth_rate_t_per_h: None,
+            fuel_lighter_rate_t_per_h: None,
         },
     );
     let mut truth = TruthState::default();
