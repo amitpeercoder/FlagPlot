@@ -45,7 +45,7 @@ It reuses the cargo rule: the same berths, the same queue, the same hours.
 - **The staff's timing.** The doctrine of stage 1 counts a ship free the morning after it is back. It counts the fuelling hours instead, by the same rule as loading. The doctrine's version rises.
 - **No new state.** A ship's fuel and a base's fuel are state already; the berths of a pulse are worked within it. The state version does not rise unless the build finds otherwise.
 - **The rulebook:** chapter 2 (Refuelling in port, Cargo orders, Port size) and the table of the day's order in chapter 1; the glossary.
-- **Research.** A fuelling rate by size of port has no row. The first values are placeholders. A prompt for the outside research asks what the record gives: the hours a carrier force, a cruiser force and a destroyer division took to fuel at Noumea, Espiritu Santo, Tulagi, Truk and Rabaul in 1942, from an oiler alongside and from a shore depot.
+- **Research.** Done for a first value: `docs/research/oob/fuelling-in-port.md`, and "The first figures" below.
 
 ## The hand calculation
 
@@ -59,6 +59,21 @@ Rulings made while writing it:
 - **The tools say what a force in port lacks and the hours it would take** at that port's lighter rate, or its berth rate where the port has a berth: the list of forces and the briefing.
 - **On the frozen figures** no fuelling rate is given, so a ship fills in the first pulse it lies in port. A force that begins a game in port short of fuel and sails on day 1 now sails as it began, where before it was filled first: the build lists every scenario where that is so, and the architect restates any hand calculation it touches.
 - **The staff of stage 1** counts the hours a ship will take to fuel at the source as it counts loading, in whole days, before it calls the ship free.
+
+## The first figures
+
+Settled by the architect on Nov 15, 2026, from the rows of `docs/research/oob/fuelling-in-port.md` (`place_facts` 241 to 295). They are sized from rows, each resting on one event, and are not checked against any battle.
+
+| Figure | Value | What it rests on |
+| --- | --- | --- |
+| Fuel by lighter: a ship with no berth, fed by an oiler, a tanker or a barge alongside | 130 t an hour, at every size of port | Thirteen fuellings of one ship by a Japanese oiler run from 46 to 259 t an hour with a median of 131. A heavy cruiser took at least 120 and at least 164 t an hour from tankers alongside at Espiritu Santo and Noumea (246, 241). Shore pumps outside the theatre gave 125 in practice (290) |
+| Fuel at a berth | 200 t an hour, at every size of port that has a berth | A heavy cruiser took at least 204 t an hour from the dock at Pearl Harbor (248), between 107 and 429 from the dock at Pago Pago (247), and between 215 and 487 from a tanker at Noumea (242) |
+
+- **One value for every size of port.** No row tells a large port's pumps from a small one's. A port's size acts through its berths, as for cargo.
+- **By these figures** a destroyer of 500 t fills in about 4 hours by lighter, a heavy cruiser that lacks 1,400 t in 7 to 11 hours, and a carrier that lacks 3,000 t in 15 to 23. The record agrees in kind: a destroyer alongside an oiler took from half an hour to two and a half hours (249 to 251), and two heavy cruisers took 1,126 t and 1,360 t in 12 hours 38 minutes and 5 hours 15 minutes (277).
+- **What they do not carry.** How many ships an oiler or a barge could serve at once, and how many were on station, is a gap: by this rule every ship without a berth is fed by lighter at once, as cargo is. No rate of a United States fleet oiler in harbour was found, nor any 1942 statement that fuelling held a berth another ship needed. Both are in `gaps.csv`.
+- **Tons.** The rows turn barrels and gallons to tons at 277 gallons to the ton, read as long tons, and take Japanese tons as printed. The game's ton is not told apart from either.
+- The hand calculation of scenario 44 sets its own rates in its port sizes and does not move.
 
 ## Questions for the designer
 
