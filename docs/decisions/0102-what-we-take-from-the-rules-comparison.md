@@ -16,7 +16,7 @@ The comparison ends with it: a missing mechanism needs attention when it changes
 | --- | --- | --- | --- |
 | An airfield cannot be closed by bombs or shells | Closing the field was the purpose of the raids and shellings of the period. Today the holder of the airfield flies whatever lands on it | Before the slice is lengthened | 0103 |
 | Men of a beaten side stay in the hex | The garrison of 7 August left the field. Today it stays, unfed, among the men who beat it | Before the slice is lengthened | 0104 |
-| Refuelling costs no time and no berth | A staff that plans by trial will find that fuel is free at a base and plan on it | Before stage 3 of step 3, where the staff issues orders | To be written |
+| Refuelling costs no time and no berth | A staff that plans by trial will find that fuel is free at a base and plan on it | Before stage 3 of step 3, where the staff issues orders | Decision 0112, a plan that needs review |
 | A claim is never below the truth | A claim of nothing is certain knowledge, and a planner can lean on it | Decided with stage 4 of step 3, the trial | To be written |
 | Submarines | A carrier was torpedoed inside the period, and the threat shaped how carriers were handled. The research is in (`docs/research/oob/outside-research-nov-14.md`) | After stage 5 of step 3, before the campaign runs past 14 September | To be written |
 
