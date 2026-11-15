@@ -18,6 +18,12 @@
 //! change a number here to make a test pass. A mismatch goes back to the
 //! architect.
 //!
+//! Restated by the architect on Nov 15, 2026, for decision 0112: a ship in
+//! port takes fuel in the pulses of the day and no longer at its start. On
+//! these figures no fuelling rate is given, so a ship that arrives in a
+//! pulse is filled in that pulse. Each refuelling below is a day earlier
+//! than first written; no other number moved.
+//!
 //! ## Figures
 //!
 //! `daily_supply_t_per_man` 0.005. A size 1 port has one berth, at 50 t an
@@ -27,7 +33,7 @@
 //! mile. A day is 24 hours: a night pulse of 12 and two daylight pulses of
 //! 6. Day d begins at hour 24 x (d - 1). In a pulse ships move before cargo
 //! is worked. The men's supply is paid at the start of the night pulse.
-//! Ships in port refuel at the start of a day. A force that acts at a place
+//! A ship in port takes the fuel it lacks in the pulse. A force that acts at a place
 //! and steams on does so at the start of the first pulse after its work is
 //! done (decision 0096).
 //!
@@ -90,9 +96,9 @@
 //! force sails at hour 24 x d, steams the 12 hours of the night and arrives
 //! half an hour into the morning. It lands its load by lighter in the
 //! morning (30 t in 1.5 hours), steams for S at the start of the afternoon,
-//! and arrives at S 6.5 hours into the night of day d + 2. Ship 1 has 450 t
-//! of fuel then. It lies there on day d + 3, when it refuels 50 t at the
-//! start of the day, and is free on day d + 4.
+//! and arrives at S 6.5 hours into the night of day d + 2, with 450 t of
+//! fuel. It refuels 50 t in that pulse. It lies there on day d + 3 and is
+//! free on day d + 4.
 //!
 //! ## Day by day
 //!
@@ -102,20 +108,20 @@
 //! | --- | --------- | --------- | ------------------ | ------------ |
 //! | 1   | 10 t, 10 days | 10 t, 10 days | Intent 1: form a force of ship 1; load 30 t. Intent 2: none, displaced | Base 1 holds 970 t. T and U pay 1 t each, as on every night |
 //! | 2   | 9 t       | 9 t       | Intent 1: route to T and back, acting at T, with an unload order. Intent 2: none, displaced | Sails at hour 24, arrives at hour 36.5, 30 t landed by hour 38, steams for S at hour 42 |
-//! | 3   | 38 t      | 8 t       | none; intent 2 displaced | The priorities are changed. The force arrives at S at hour 54.5 |
-//! | 4   | 37 t      | 7 t       | none; intent 2 displaced | Ship 1 refuels 50 t: base 1 holds 950 t of fuel |
+//! | 3   | 38 t      | 8 t       | none; intent 2 displaced | The priorities are changed. The force arrives at S at hour 54.5. Ship 1 refuels 50 t: base 1 holds 950 t of fuel |
+//! | 4   | 37 t      | 7 t       | none; intent 2 displaced | |
 //! | 5   | 36 t      | 6 t       | Intent 2: load 30 t. Intent 1: none, no run needed | Base 1 holds 940 t |
 //! | 6   | 35 t      | 5 t       | Intent 2: route to U and back, acting at U, with an unload order | Sails at hour 120, arrives at hour 132.5, 30 t landed by hour 134, steams for S at hour 138 |
-//! | 7   | 34 t      | 34 t      | none               | The force arrives at S at hour 150.5 |
-//! | 8   | 33 t      | 33 t      | none               | Ship 1 refuels 50 t: 900 t of fuel at base 1 |
+//! | 7   | 34 t      | 34 t      | none               | The force arrives at S at hour 150.5. Ship 1 refuels 50 t: 900 t of fuel at base 1 |
+//! | 8   | 33 t      | 33 t      | none               | |
 //! | 9   | 32 t      | 32 t      | none: ship 1 is free, and neither intent needs a run | |
 //! | 10  | 31 t      | 31 t      | Intent 2: load 15 t. Intent 1: none, displaced | Base 1 holds 925 t |
 //! | 11  | 30 t      | 30 t      | Intent 2: route to U and back, acting at U, with an unload order. Intent 1: none, displaced | Sails at hour 240, arrives at hour 252.5, 15 t landed by hour 253.25, steams for S at hour 258 |
-//! | 12  | 29 t, 29 days | 44 t  | none; intent 1 displaced | The force arrives at S at hour 270.5 |
-//! | 13  | 28 t      | 43 t      | none; intent 1 displaced | Ship 1 refuels 50 t: 850 t of fuel at base 1 |
+//! | 12  | 29 t, 29 days | 44 t  | none; intent 1 displaced | The force arrives at S at hour 270.5. Ship 1 refuels 50 t: 850 t of fuel at base 1 |
+//! | 13  | 28 t      | 43 t      | none; intent 1 displaced | |
 //! | 14  | 27 t      | 42 t      | Intent 1: load 19 t. Intent 2: none, no run needed | Base 1 holds 906 t |
 //! | 15  | 26 t, 26 days | 41 t  | Intent 1: route to T and back, acting at T, with an unload order | Sails at hour 336, arrives at hour 348.5, 19 t landed by hour 349.45, steams for S at hour 354 |
-//! | 16  | 44 t      | 40 t      | none               | The force arrives at S at hour 366.5 |
+//! | 16  | 44 t      | 40 t      | none               | The force arrives at S at hour 366.5. Ship 1 refuels 50 t: 800 t of fuel at base 1 |
 //!
 //! Why each run, its size, and what is displaced:
 //!
@@ -153,8 +159,8 @@
 //!   day 15 is 26 t: the load is 30 - 26 + 15 = 19 t.
 //!
 //! At the end of day 16: base 2 holds 43 t (10 + 30 + 19 - 16) and base 3
-//! holds 39 t (10 + 30 + 15 - 16). Base 1 holds 906 t of supply and 850 t
-//! of fuel. Ship 1 is stopped at base 1, empty, with 450 t of fuel. Intent
+//! holds 39 t (10 + 30 + 15 - 16). Base 1 holds 906 t of supply and 800 t
+//! of fuel. Ship 1 is stopped at base 1, empty, with 500 t of fuel. Intent
 //! 1's plan has made two runs, of 30 t and 19 t, ordered on days 1 and 14;
 //! intent 2's plan two, of 30 t and 15 t, ordered on days 5 and 10. No
 //! staff order was refused. The reading at T was below its floor on days 12
@@ -234,7 +240,7 @@
 //!   1000 t, nothing still to be taken. It gives no order.
 //!
 //! At the end of day 5: base 1 holds 1000 t of supply and 900 t of fuel
-//! (each ship refuelled 50 t on day 4); base 2 holds 31 t and base 3 holds
+//! (each ship refuelled 50 t on day 3, when it arrived); base 2 holds 31 t and base 3 holds
 //! 19 t; both forces are stopped at base 1, empty.
 //!
 //! ## Property of 40b

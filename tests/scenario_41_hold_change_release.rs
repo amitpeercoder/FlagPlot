@@ -18,6 +18,12 @@
 //! change a number here to make a test pass. A mismatch goes back to the
 //! architect.
 //!
+//! Restated by the architect on Nov 15, 2026, for decision 0112: a ship in
+//! port takes fuel in the pulses of the day and no longer at its start. On
+//! these figures no fuelling rate is given, so a ship that arrives in a
+//! pulse is filled in that pulse. Each refuelling below is a day earlier
+//! than first written; no other number moved.
+//!
 //! ## Figures and the rules the staff works by
 //!
 //! Those of scenario 36: the placeholder cargo ship (3000 t of cargo, 10
@@ -66,16 +72,16 @@
 //! | 2   | 90 t      | No order: run 1 is loaded and waits for leave to launch | |
 //! | 3   | 80 t      | The plan is released. Run 1 is timed again: sails day 3, due day 3, free day 6. Route to T and back, acting at T, with an unload order | Sails at hour 48, arrives at hour 68, 80 t landed |
 //! | 4   | 150 t     | none      | The last 280 t take 14 hours: unloaded at hour 86. Steams for S at hour 90 |
-//! | 5   | 420 t     | none      | Arrives at S at hour 110 |
-//! | 6   | 410 t     | none      | Ship 1 refuels 40 t: 1960 t of fuel at base 1. Ship 1 is free |
+//! | 5   | 420 t     | none      | Arrives at S at hour 110. Ship 1 refuels 40 t: 1960 t of fuel at base 1 |
+//! | 6   | 410 t     | none      | Ship 1 is free |
 //! | 7   | 400 t     | none      | |
 //! | 8   | 390 t     | none      | Ship 1 is held |
 //! | 9   | 380 t     | none      | |
 //! | 10  | 370 t, 37 days | The floor is 40 days: amendment 1. Forms a force of ship 2; load 190 t | Loaded in 3.8 hours. Base 1 holds 4450 t |
 //! | 11  | 360 t     | Route to T and back, acting at T, with an unload order | Sails at hour 240, arrives at hour 260, 80 t landed |
 //! | 12  | 430 t     | none      | The last 110 t take 5.5 hours: unloaded at hour 269.5. Steams for S at hour 276 |
-//! | 13  | 530 t     | none      | Arrives at S at hour 296 |
-//! | 14  | 520 t     | none      | Ship 2 refuels 40 t: 1920 t of fuel at base 1 |
+//! | 13  | 530 t     | none      | Arrives at S at hour 296. Ship 2 refuels 40 t: 1920 t of fuel at base 1 |
+//! | 14  | 520 t     | none      | |
 //! | 15 to 24 | 510 t falling to 420 t | none | Ship 1 is released on day 17 |
 //! | 25  | 410 t     | Load 150 t on ship 1's force | Loaded in 3 hours. Base 1 holds 4300 t |
 //! | 26  | 400 t     | Route to T and back, acting at T, with an unload order | Sails at hour 600, arrives at hour 620, 80 t landed |
@@ -189,12 +195,12 @@
 //!   t landed.
 //! - **Day 4.** The last 290 t take 14.5 hours: unloaded at hour 86.5. It
 //!   steams for S at hour 90.
-//! - **Day 5.** It arrives at S at hour 110.
+//! - **Day 5.** It arrives at S at hour 110 and ship 2 refuels 40 t.
 //!
 //! Readings at T: 100, 90, 80, 150 and 430 t on days 1 to 5. At the end of
-//! day 5: base 2 holds 420 t; base 1 holds 4630 t of supply and 2000 t of
+//! day 5: base 2 holds 420 t; base 1 holds 4630 t of supply and 1960 t of
 //! fuel; ship 1 is at base 1, empty, with 1000 t of fuel, its force held;
-//! ship 2 is at base 1, empty, with 960 t of fuel.
+//! ship 2 is at base 1, empty, with 1000 t of fuel.
 //!
 //! ## Property of 41b
 //!
