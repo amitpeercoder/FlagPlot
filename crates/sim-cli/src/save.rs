@@ -23,6 +23,15 @@
 //! hands in the orders, the commands and the staff's decisions and asks no
 //! staff; `replay --check-staff` asks the doctrine's staff as well and says
 //! where it first differs.
+//!
+//! Version 4 (decisions 0115, 0116 and 0117) adds the intent tree: in
+//! `"commands"` and in what the staff handed in, the commands `set_intent`
+//! with `intent_kind` (`keep_supplied`, left out, `cover` or `hold`) and the
+//! staff's `form_intent` (`parent`, `intent_kind`, `base`); a forces limit with
+//! `air_groups` and a `source` that may be left out; a hold on a whole air
+//! group (`hold` or `release` with `air_group` and no `setting`); and in a
+//! reason's `serves` a `chain` of the intents above it. A game saved before
+//! reads none of these and is refused, not converted.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -43,9 +52,12 @@ use sim_data::Scenario;
 pub const FORMAT: &str = "flagplot-saved-game";
 /// Version 2 (decision 0100, 8) adds `"state_version"` and `"rules_version"`:
 /// what the game was played under. Version 3 (decision 0107) adds
-/// `"commands"`, `"staff"` and `"doctrine_version"`. A game of an older
-/// version lacks them and is refused, not converted.
-pub const VERSION: u32 = 3;
+/// `"commands"`, `"staff"` and `"doctrine_version"`. Version 4 adds the
+/// intent tree (decisions 0115 to 0117): the intent kinds `cover` and `hold`,
+/// the staff's `form_intent`, `air_groups` and an optional `source` in a
+/// forces limit, a hold on a whole air group and a reason's `chain`. A game
+/// of an older version lacks them and is refused, not converted.
+pub const VERSION: u32 = 4;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -311,8 +323,8 @@ pub fn read(file: &str) -> Result<Saved, String> {
         }
         Some(v) if v < u64::from(VERSION) => {
             return Err(bad(format!(
-                "this game was saved before saved games kept the commander's commands, what the staff handed in \
-                 and the doctrine (saved game version {v}, now {VERSION}); it is not converted, so play it again"
+                "this game was saved before saved games kept the commander's commands, what the staff handed in, \
+                 the doctrine and the intent tree (saved game version {v}, now {VERSION}); it is not converted, so play it again"
             )));
         }
         _ => return Err(bad(format!("saved game version is not {VERSION}"))),
@@ -651,7 +663,8 @@ mod tests {
                         limit: ForcesLimit {
                             ships: [ShipId::new(3), ShipId::new(4)].into_iter().collect(),
                             task_forces: [TaskForceId::new(1)].into_iter().collect(),
-                            source: BaseId::new(1),
+                            air_groups: [sim_core::ids::AirGroupId::new(5)].into_iter().collect(),
+                            source: Some(BaseId::new(1)),
                         },
                     }),
                 ),
@@ -707,6 +720,23 @@ mod tests {
                 ),
                 (
                     Side::Allied,
+                    CommandKind::SetIntent {
+                        intent: IntentId::new(7),
+                        kind: IntentKind::Hold {
+                            base: BaseId::new(2),
+                        },
+                    },
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::Hold {
+                        target: sim_core::command::HoldTarget::AirGroup(
+                            sim_core::ids::AirGroupId::new(5),
+                        ),
+                    },
+                ),
+                (
+                    Side::Allied,
                     CommandKind::Acknowledge {
                         interrupt: sim_core::command::InterruptRef::Standing {
                             kind: sim_core::command::StandingKind::CannotMeet,
@@ -722,6 +752,11 @@ mod tests {
                 plan: Some(PlanId::new(1)),
                 amendment: None,
                 statement: "keep base:2 at 30 days of supply, a run every 15 days".to_string(),
+                chain: vec![sim_core::command::ChainLink {
+                    intent: IntentId::new(7),
+                    maker: sim_core::command::Maker::Commander,
+                    statement: "hold base:2".to_string(),
+                }],
             },
             evidence: vec![Evidence {
                 what: "base 2 holds 40 t".to_string(),
@@ -743,22 +778,33 @@ mod tests {
                 intent,
                 reason: reason.clone(),
             }],
-            commands: vec![StaffCommand {
-                kind: CommandKind::AddRun {
-                    plan: PlanId::new(1),
-                    run: RunSpec {
-                        ships: [ShipId::new(3)].into_iter().collect(),
-                        load_t: Fixed::from_int(120),
-                        days: RunDays {
-                            load: 3,
-                            sail: 4,
-                            arrive: 9,
-                            free: 14,
+            commands: vec![
+                StaffCommand {
+                    kind: CommandKind::AddRun {
+                        plan: PlanId::new(1),
+                        run: RunSpec {
+                            ships: [ShipId::new(3)].into_iter().collect(),
+                            load_t: Fixed::from_int(120),
+                            days: RunDays {
+                                load: 3,
+                                sail: 4,
+                                arrive: 9,
+                                free: 14,
+                            },
                         },
                     },
+                    reason: reason.clone(),
                 },
-                reason: reason.clone(),
-            }],
+                StaffCommand {
+                    kind: CommandKind::FormIntent {
+                        parent: IntentId::new(7),
+                        kind: IntentKind::Cover {
+                            base: BaseId::new(2),
+                        },
+                    },
+                    reason: reason.clone(),
+                },
+            ],
             no_orders: vec![reason],
             notices: vec![
                 sim_core::command::StaffNotice {
@@ -810,9 +856,9 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 3);
+        assert_eq!(written["version"], 4);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 9);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 11);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

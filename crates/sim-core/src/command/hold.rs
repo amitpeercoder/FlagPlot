@@ -7,7 +7,7 @@
 //! no longer matters.
 //!
 //! Reads: the side's pending orders, its intents in force and their forces
-//! limits, the truth's ships and forces. Writes: the orders taken in, the
+//! limits, the truth's ships, forces and air groups. Writes: the orders taken in, the
 //! side's holds, and a `HeldByOrder` event for each hold, citing the order and
 //! its acceptance. Draws no random number.
 
@@ -97,7 +97,9 @@ impl World {
     /// What taking in `request` would hold, if it is an override: its unit
     /// lies in the forces limit of some intent of the side in force (a task
     /// force listed, or one whose every ship the limit lists; a forming order
-    /// naming at least one ship of a pool). `None` if it is not an override.
+    /// naming at least one ship of a pool; an air group some intent in force
+    /// may use, which holds the whole group). `None` if it is not an
+    /// override.
     fn override_targets(&self, side: Side, request: &OrderRequest) -> Option<Vec<HoldTarget>> {
         // Only the commander's own orders override: a scenario's scripted
         // order with the issuer `staff` is a statement of the scenario, not
@@ -109,6 +111,14 @@ impl World {
             .intents_in_force()
             .filter_map(|intent| intent.limits.forces.as_ref())
             .collect();
+        // An air group an intent in force may use, by its forces limit read
+        // up the tree or by its addressee (decision 0115, 3).
+        if let OrderKind::AirGroup { target, .. } = &request.kind {
+            let usable = self.command[&side]
+                .intents_in_force()
+                .any(|intent| self.may_use_group(side, intent.id, *target));
+            return usable.then(|| vec![HoldTarget::AirGroup(*target)]);
+        }
         match &request.kind {
             OrderKind::TaskForce { target, .. } => limits
                 .iter()

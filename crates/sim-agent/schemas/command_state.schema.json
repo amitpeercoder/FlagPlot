@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/command_state",
   "title": "command_state: the side's command state as it will stand when the coming day begins",
-  "description": "Intents with their limits and the staff's projection, the leaves, the bases' reserves, plans, commitments, the interrupts set, the commands queued for the coming day and the staff's decisions of yesterday with their numbers for why. The staff does nothing for a side until an intent with a forces limit is set.",
+  "description": "Intents with their limits and the staff's projection, the leaves, the bases' reserves, plans, commitments, the interrupts set, the commands queued for the coming day and the staff's decisions of yesterday with their numbers for why. The staff does nothing for a side until an intent is set (a supply intent needs a forces limit; a hold or cover intent may use the groups at its base).",
   "type": "object",
   "required": [
     "format",
@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 7
+      "const": 8
     },
     "kind": {
       "const": "command_state"
@@ -82,7 +82,13 @@
           "limits",
           "projection",
           "served",
-          "displaced_by"
+          "displaced_by",
+          "parent",
+          "maker",
+          "addressee",
+          "children",
+          "depth",
+          "limits_read_up"
         ],
         "additionalProperties": false,
         "properties": {
@@ -93,13 +99,20 @@
             "type": "boolean"
           },
           "kind": {
-            "const": "keep_supplied"
+            "enum": [
+              "keep_supplied",
+              "cover",
+              "hold"
+            ]
           },
           "base": {
             "$ref": "defs.schema.json#/$defs/handle"
           },
           "floor_days": {
-            "type": "integer"
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "interval_days": {
             "type": [
@@ -108,8 +121,11 @@
             ]
           },
           "interval": {
-            "type": "string",
-            "description": "The days between shipments, or \"not set: the staff uses 15\"."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "For keep_supplied: the days between shipments, or \"not set: the staff uses 15\"; null for the other kinds."
           },
           "set_day": {
             "type": "integer"
@@ -149,9 +165,45 @@
               "$ref": "command_defs.schema.json#/$defs/displacement"
             },
             "description": "The commitments to other plans that keep the intent from a run today or cut its load, from the proposal's shortfall; empty where none."
+          },
+          "parent": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The intent it stands under; null for a root."
+          },
+          "maker": {
+            "enum": [
+              "commander",
+              "staff"
+            ]
+          },
+          "addressee": {
+            "type": "string",
+            "description": "The level it is given to: \"the area\" or a base."
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "The intents in force directly under it."
+          },
+          "depth": {
+            "type": "integer",
+            "description": "How many intents are above it; 0 for a root."
+          },
+          "limits_read_up": {
+            "$ref": "command_defs.schema.json#/$defs/limits_read_up"
+          },
+          "measure": {
+            "$ref": "command_defs.schema.json#/$defs/hold_measure",
+            "description": "A hold intent only."
           }
         }
-      }
+      },
+      "description": "Every intent of the side, each root by number with the intents under it listed after it (a sub-intent under its parent); a withdrawn one stays in the list."
     },
     "reserves": {
       "type": "array",

@@ -25,7 +25,9 @@
         "day",
         "pulse",
         "for",
-        "reason"
+        "reason",
+        "serves",
+        "chain"
       ],
       "additionalProperties": false,
       "properties": {
@@ -33,7 +35,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 7
+          "const": 8
         },
         "kind": {
           "const": "why"
@@ -175,6 +177,17 @@
         },
         "reason": {
           "$ref": "command_defs.schema.json#/$defs/reason"
+        },
+        "serves": {
+          "type": "string",
+          "description": "What the decision serves in words, ending with the chain of intents above it."
+        },
+        "chain": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The intents above the one served, nearest first, the last the commander's: \"under intent 1 (the commander's): hold base 1\"."
         }
       }
     }

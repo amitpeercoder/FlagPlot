@@ -1,0 +1,27 @@
+Placeholder scenario 47: Cover from the air
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 27c9ef265dde177f  37 events
+day   2  hash 8dfdc9e06464e759  13 events
+day   3  hash a4536cdba98f1ce0  15 events
+day   4  hash 98ba7c30bbabd7a4  11 events
+day   5  hash 1fbb61fe5b90c46e  9 events
+day   6  hash 9e50ced059c219ef  9 events
+day   7  hash 97d1def215a89221  9 events
+day   8  hash 44041a0bbc6d7f4b  9 events
+day   9  hash c211f211d9bc9e4f  11 events
+day  10  hash a4f4533a04508069  17 events
+day  11  hash eeb9be7f149d7c79  13 events
+day  12  hash 498b7431c6f0b9d9  11 events
+
+air_group:1 "Placeholder fighters 1" (Allied) at base:1: 12 ready, mission Rest, fatigue 40, no arc
+air_group:2 "Placeholder fighters 2" (Allied) at base:1: 8 ready, mission CombatAirPatrol, patrol share 0.5, fatigue 56, no arc
+air_group:3 "Placeholder flying boats 3" (Allied) at base:1: 6 ready, mission Rest, fatigue 72, arc 050-120 to 600 nm
+air_group:4 "Placeholder dive bombers 4" (Allied) at base:1: 10 ready, mission Rest, no arc
+base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock
+base:2 "Placeholder base 2" (Japanese) at (5,0): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

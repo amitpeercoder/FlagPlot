@@ -15,7 +15,7 @@ use serde::Serialize;
 use serde_json::value::RawValue;
 use sim_core::command::{
     Amendment, AmendmentChange, Baseline, CommandState, Commitment, Intent, IntentKind,
-    IntentLimits, Limit, Plan, Run, RunDays,
+    IntentLimits, Limit, Maker, Plan, Run, RunDays,
 };
 use sim_core::ids::ShipId;
 use sim_core::state::Side;
@@ -24,12 +24,14 @@ use sim_core::World;
 use super::num::Num;
 
 /// What an intent asks for: `{ "kind": "keep_supplied", base, floor_days,
-/// interval_days }`, the interval left out where the commander has not set it.
+/// interval_days }`, the interval left out where the commander has not set it;
+/// or `{ "kind": "cover" | "hold", base }`, with no days.
 #[derive(Serialize)]
 struct IntentKindOut {
     kind: &'static str,
     base: u32,
-    floor_days: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    floor_days: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     interval_days: Option<u32>,
 }
@@ -43,8 +45,14 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         } => IntentKindOut {
             kind: "keep_supplied",
             base: base.raw(),
-            floor_days: *floor_days,
+            floor_days: Some(*floor_days),
             interval_days: *interval_days,
+        },
+        IntentKind::Cover { base } | IntentKind::Hold { base } => IntentKindOut {
+            kind: kind.name(),
+            base: base.raw(),
+            floor_days: None,
+            interval_days: None,
         },
     }
 }
@@ -53,7 +61,13 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
 struct ForcesOut {
     ships: Vec<u32>,
     task_forces: Vec<u32>,
-    source: u32,
+    /// Left out where the limit names none, as it was before air groups.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    air_groups: Vec<u32>,
+    /// Left out where the limit names none (a cover or hold intent's need
+    /// not).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    source: Option<u32>,
 }
 
 /// An intent's limits as they stand. A limit not set is left out; the
@@ -68,7 +82,9 @@ struct LimitsOut {
     priority: Option<u32>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     protected: Vec<u32>,
-    risk: &'static str,
+    /// Left out where the intent sets none: it is read up the tree.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    risk: Option<&'static str>,
 }
 
 fn ships(set: &BTreeSet<ShipId>) -> Vec<u32> {
@@ -80,7 +96,8 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
         forces: limits.forces.as_ref().map(|forces| ForcesOut {
             ships: ships(&forces.ships),
             task_forces: forces.task_forces.iter().map(|f| f.raw()).collect(),
-            source: forces.source.raw(),
+            air_groups: forces.air_groups.iter().map(|g| g.raw()).collect(),
+            source: forces.source.map(|source| source.raw()),
         }),
         area: limits
             .area
@@ -88,7 +105,7 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
             .map(|hexes| hexes.iter().map(|h| [h.q, h.r]).collect()),
         priority: limits.priority,
         protected: ships(&limits.protected),
-        risk: limits.risk.name(),
+        risk: limits.risk.map(|risk| risk.name()),
     }
 }
 
@@ -97,6 +114,12 @@ struct IntentOut {
     id: u32,
     #[serde(flatten)]
     kind: IntentKindOut,
+    /// The intent it stands under; left out for a root.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    parent: Option<u32>,
+    /// `"staff"` for an intent the staff formed; left out for the commander's.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    maker: Option<&'static str>,
     set_day: u32,
     plan: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -108,6 +131,8 @@ fn intent(intent: &Intent) -> IntentOut {
     IntentOut {
         id: intent.id.raw(),
         kind: intent_kind(&intent.kind),
+        parent: intent.parent.map(|parent| parent.raw()),
+        maker: (intent.maker == Maker::Staff).then(|| intent.maker.name()),
         set_day: intent.set_day,
         plan: intent.plan.raw(),
         withdrawn_day: intent.withdrawn_day,
@@ -175,7 +200,8 @@ fn limit(limit: &Limit) -> LimitOut {
             forces: Some(ForcesOut {
                 ships: ships(&limit.ships),
                 task_forces: limit.task_forces.iter().map(|f| f.raw()).collect(),
-                source: limit.source.raw(),
+                air_groups: limit.air_groups.iter().map(|g| g.raw()).collect(),
+                source: limit.source.map(|source| source.raw()),
             }),
             ..blank("forces")
         },

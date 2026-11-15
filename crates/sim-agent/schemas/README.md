@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 7` and a `"kind"` that names it.
+`"version": 8` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 7. A field removed from an answer, or a field whose meaning
+`version` is 8. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -728,3 +728,34 @@ groups; the enemy is told none of it.
   `strike_held_share` (given only when above "0").
 - **What the enemy is told.** Nothing of either setting or of the orders that set them; a raid's
   aircraft are seen as before.
+
+## The intent tree, holding a place and cover from the air (decisions 0115 and 0117)
+
+`version` is 8: a field changed in meaning (an intent's `limits.risk` is `null` where none is set
+on it, read up the tree in `limits_read_up`), so the version rises. Everything here is of the
+side's own command state; the enemy is told none of it.
+
+- **Commands.** `set_intent` takes `intent_kind`: `"keep_supplied"` (left out when written, and
+  read so where absent), `"cover"` or `"hold"`, the last two with `base` alone. `set_limit` of
+  forces takes `air_groups` (written only when not empty) and `source` only where set; it may name
+  any intent in force, one the staff formed too. `hold` and `release` with `air_group` and no
+  `setting` hold the whole group. The staff's `form_intent` has `parent`, `intent_kind` and
+  `base`. New refusals, by the engine's words: made by the staff, wider than its parent, cannot
+  stand under, no source, kind cannot change.
+- **`command_state`.** Each intent has `parent`, `maker` (`"commander"` or `"staff"`),
+  `addressee`, `children` (in force), `depth`, and `limits_read_up`: what binds it up the tree,
+  where every limit on the chain binds (the least bold `risk`, the hexes in every `area`,
+  `air_groups_binding`, the groups named in every forces limit on the chain), the nearest
+  `forces` and `priority`, each `_from` the intent it is read from, and words for what holds where
+  nothing is set (`forces_if_unset`, `risk_if_unset`, `risk_set`). A hold intent has `measure`:
+  `days_in_force`, `days_met`, `raids`, `raids_fought` and `days_of_supply` (a decimal string, or
+  `null` where there is no figure). Supply intents' `floor_days` and interval fields are `null`
+  for the other kinds. Intents are listed root by root, each followed by those beneath it.
+- **`propose`.** `tree` (`null` for a supply intent): `sub_intents` the staff would form, each
+  with its number, parent, words and reason; `groups`, the groups each intent would use with their
+  orders; `arcs`, each search arc with `from_deg`, `to_deg`, `range_nm`, `whole_circle` and `how`
+  (the reason's working, which names the threats); and `no_orders`.
+- **`why`.** `serves`, the reason's serves part in words, and `chain`, the intents above the one
+  served, nearest first, each "under intent N (the commander's): ...". A reason's JSON has
+  `serves.chain`, a list of `{intent, maker, statement}`, left out when empty.
+- **`report`.** `holds`: each hold intent in force with its `intent`, `base` and `measure`.

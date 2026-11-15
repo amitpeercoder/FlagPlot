@@ -1416,10 +1416,7 @@ fn a_seat_with_a_staff_lists_the_staff_tools_and_commands_through_them() {
         .as_str()
         .unwrap()
         .contains("takes effect at the start of day N"));
-    assert_eq!(
-        intent["inputSchema"]["required"],
-        json!(["base", "floor_days"])
-    );
+    assert_eq!(intent["inputSchema"]["required"], json!(["base"]));
 
     // A player commands through the protocol.
     let (a, error) = c.call(

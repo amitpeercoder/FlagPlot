@@ -220,7 +220,9 @@ fn run_landings(
         let Some(intent) = state.intents.get(&plan.intent) else {
             continue;
         };
-        let IntentKind::KeepSupplied { base, .. } = intent.kind;
+        let IntentKind::KeepSupplied { base, .. } = intent.kind else {
+            continue;
+        };
         let Some(destination) = view.bases().find(|b| b.id == base) else {
             continue;
         };
