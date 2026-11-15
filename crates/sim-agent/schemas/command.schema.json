@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/command",
+  "title": "command: a command queued for the coming day, or refused with the engine's reason",
+  "description": "The answer of set_intent, withdraw_intent, set_limit, set_leave, approve and cancel_plan. The command is checked at once by taking it in after the commands already queued; a refused command is not queued. A command queued can still be refused when the day begins if the state has changed.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "tool",
+    "for_day",
+    "command",
+    "text",
+    "queued",
+    "status",
+    "notes",
+    "summary"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 4
+    },
+    "kind": {
+      "const": "command"
+    },
+    "tool": {
+      "enum": [
+        "set_intent",
+        "withdraw_intent",
+        "set_limit",
+        "set_leave",
+        "approve",
+        "cancel_plan"
+      ]
+    },
+    "for_day": {
+      "type": "integer"
+    },
+    "command": {
+      "$ref": "command_defs.schema.json#/$defs/command_body"
+    },
+    "text": {
+      "type": "string"
+    },
+    "queued": {
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "refused"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "description": "For a refused command: the engine's reason in words, in your numbers."
+    },
+    "intent": {
+      "type": "integer",
+      "description": "For a set_intent with no number given: the number chosen."
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "summary": {
+      "type": "string"
+    }
+  }
+}

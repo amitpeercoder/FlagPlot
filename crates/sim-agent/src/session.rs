@@ -28,7 +28,8 @@ use crate::measure::{measure_in, MeasureContext, Question};
 use crate::objectives::result_part;
 use crate::orders::{is_orderable_unit, land_unit_number, order_from_json};
 use crate::queries::{get_entity, list_bases, list_contacts, list_forces};
-use crate::record::{seat_name, CallError, Seat, SeatKind, TranscriptEntry, TOOLS};
+use crate::record::{seat_name, CallError, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS};
+use crate::staffing;
 
 /// The umpire's number given to a unit the side named that is none of its
 /// own: no unit has it.
@@ -137,6 +138,9 @@ struct SeatState {
     seat: Seat,
     /// The orders queued for the coming day, in the order given.
     queued: Vec<OrderRequest>,
+    /// The commands queued for the coming day, in the order given, with the
+    /// umpire's ids inside (decision 0107, "The tools").
+    commands: Vec<CommandKind>,
     /// The seat has said it has finished its orders for the coming day.
     ended: bool,
 }
@@ -152,8 +156,8 @@ pub struct Session {
     /// The staff each side is given, if any (decision 0107). The caller
     /// hands them in: this crate holds no doctrine.
     staffs: BTreeMap<Side, Box<dyn Staff + Send>>,
-    /// The commands still to be given, by day: the script's, since a seat
-    /// cannot issue a command yet.
+    /// The commands still to be given, by day: the script's. A seat's own are
+    /// queued in its [`SeatState`].
     commands: BTreeMap<u32, Vec<(Side, CommandKind)>>,
     /// The commands handed in to the engine, by day, for the saved game.
     commands_handed_in: BTreeMap<u32, Vec<(Side, CommandKind)>>,
@@ -183,6 +187,7 @@ impl Session {
                 SeatState {
                     seat,
                     queued: Vec::new(),
+                    commands: Vec::new(),
                     ended: false,
                 },
             );
@@ -215,6 +220,22 @@ impl Session {
     pub fn with_commands(mut self, commands: BTreeMap<u32, Vec<(Side, CommandKind)>>) -> Session {
         self.commands = commands;
         self
+    }
+
+    /// Whether the side has a staff in this session, and with it the tools
+    /// of [`COMMAND_TOOLS`].
+    pub fn has_staff(&self, side: Side) -> bool {
+        self.staffs.contains_key(&side)
+    }
+
+    /// The tools a seat has, in the order of the interface: [`TOOLS`], then
+    /// [`COMMAND_TOOLS`] for a side with a staff.
+    pub fn tools(&self, side: Side) -> Vec<&'static str> {
+        let mut tools: Vec<&'static str> = TOOLS.to_vec();
+        if self.has_staff(side) {
+            tools.extend(COMMAND_TOOLS);
+        }
+        tools
     }
 
     /// Who holds a seat.
@@ -401,9 +422,12 @@ impl Session {
             }
             "issue_orders" => self.issue_orders(side, &args),
             "end_day" => self.end_day(side),
+            command if COMMAND_TOOLS.contains(&command) && self.has_staff(side) => {
+                self.command_tool(side, command, &args)
+            }
             other => Err(CallError::naming(
                 format!("\"{other}\" is not a tool"),
-                &TOOLS,
+                &self.tools(side),
             )),
         }
     }
@@ -621,6 +645,151 @@ impl Session {
     }
 
     // -----------------------------------------------------------------
+    // Commands and the staff (decision 0107, "As built", "The tools").
+    // -----------------------------------------------------------------
+
+    /// A copy of the world as the coming day will find it for the staff: the
+    /// commands of the script and the queued commands and orders of every
+    /// seat handed in, and the first three steps of the day taken
+    /// ([`World::at_staff_step`]). `queue` stands in for one seat's queued
+    /// commands and `extra` is one more command at the end of one side's.
+    /// Nothing outside this module may name a world, so every tool function
+    /// is given a view of the copy and nothing else.
+    fn preview_with(
+        &self,
+        queue: Option<(Side, &[CommandKind])>,
+        extra: Option<(Side, &CommandKind)>,
+    ) -> World {
+        let mut world = self.world.clone();
+        let day = world.day() + 1;
+        for (side, command) in self.commands.get(&day).into_iter().flatten() {
+            world.submit_commands(*side, vec![command.clone()]);
+        }
+        for side in Side::ALL {
+            let state = &self.seats[&side];
+            let commands: &[CommandKind] = match queue {
+                Some((who, list)) if who == side => list,
+                _ => &state.commands,
+            };
+            world.submit_commands(side, commands.to_vec());
+            world.submit_orders(side, state.queued.clone());
+        }
+        if let Some((side, command)) = extra {
+            world.submit_commands(side, vec![command.clone()]);
+        }
+        world.at_staff_step()
+    }
+
+    /// The world as the coming day will find it, with what is queued.
+    fn preview(&self) -> World {
+        self.preview_with(None, None)
+    }
+
+    fn command_tool(
+        &mut self,
+        side: Side,
+        tool: &str,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<Value, CallError> {
+        let staff: &dyn Staff = self.staffs[&side].as_ref();
+        match tool {
+            "command_state" => {
+                let world = self.preview();
+                Ok(staffing::command_state(
+                    &world.side_view(side),
+                    staff,
+                    &self.seats[&side].commands,
+                ))
+            }
+            "plans" => Ok(staffing::plans(&self.preview().side_view(side))),
+            "staff_orders" => {
+                let world = self.preview();
+                Ok(staffing::staff_orders(&world.side_view(side), staff))
+            }
+            "propose" => {
+                let intent = args
+                    .get("intent")
+                    .and_then(Value::as_u64)
+                    .and_then(|n| u32::try_from(n).ok())
+                    .ok_or_else(|| {
+                        CallError::new("\"intent\" is needed, as the number of an intent")
+                    })?;
+                let world = self.preview();
+                staffing::propose(&world.side_view(side), staff, intent)
+            }
+            "why" => {
+                let number = args
+                    .get("number")
+                    .and_then(Value::as_u64)
+                    .and_then(|n| u32::try_from(n).ok())
+                    .ok_or_else(|| {
+                        CallError::new(
+                            "\"number\" is needed, as the number of a staff reason you were shown",
+                        )
+                    })?;
+                Ok(staffing::why(&self.world.side_view(side), number))
+            }
+            _ => self.queue_command(side, tool, args),
+        }
+    }
+
+    /// Queues one command for the coming day if the engine's own check, made
+    /// by taking it in on a copy of the world after the commands already
+    /// queued, would take it.
+    fn queue_command(
+        &mut self,
+        side: Side,
+        tool: &str,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<Value, CallError> {
+        if self.is_over() {
+            return Err(CallError::new("the game is over"));
+        }
+        if self.seats[&side].ended {
+            return Err(CallError::new("the day's orders are closed"));
+        }
+        let clear = match args.get("clear") {
+            None | Some(Value::Null) => false,
+            Some(Value::Bool(b)) => *b,
+            Some(_) => return Err(CallError::new("\"clear\" must be true or false")),
+        };
+        match args.get("reason") {
+            None | Some(Value::Null) | Some(Value::String(_)) => {}
+            Some(_) => return Err(CallError::new("\"reason\" must be text")),
+        }
+        let queue: Vec<CommandKind> = if clear {
+            Vec::new()
+        } else {
+            self.seats[&side].commands.clone()
+        };
+        let next_intent = {
+            let world = self.preview_with(Some((side, &queue)), None);
+            staffing::next_free_intent(&world.side_view(side), &queue)
+        };
+        let request = staffing::request(&self.world.side_view(side), tool, args, next_intent)?;
+        // The script's commands of the side come first on the day, then the
+        // seat's: the new command is the one after both.
+        let day = self.world.day() + 1;
+        let before = self.commands.get(&day).map_or(0, |list| {
+            list.iter().filter(|(who, _)| *who == side).count()
+        }) + queue.len();
+        let world = self.preview_with(Some((side, &queue)), Some((side, &request.kind)));
+        let view = world.side_view(side);
+        let verdict = staffing::verdict(&view, before).ok_or_else(|| {
+            CallError::new("the command could not be checked: the game has no verdict on it")
+        })?;
+        let state = self.seats.get_mut(&side).expect("both seats exist");
+        state.commands = queue;
+        if verdict.is_ok() {
+            state.commands.push(request.kind.clone());
+        }
+        let queued = state.commands.len();
+        Ok(staffing::command_answer(
+            &view, &request, tool, &verdict, queued,
+        ))
+    }
+
+    // -----------------------------------------------------------------
     // Time (decisions 8 to 10).
     // -----------------------------------------------------------------
 
@@ -685,14 +854,25 @@ impl Session {
             }
             self.world.submit_orders(side, orders);
         }
-        // The commands of the script (a seat cannot issue one yet), in the
-        // order the script gives them.
+        // The commands of the script, in the order it gives them, then each
+        // seat's queued commands, side by side in the order given.
         for (side, command) in self.commands.remove(&day).unwrap_or_default() {
             self.commands_handed_in
                 .entry(day)
                 .or_default()
                 .push((side, command.clone()));
             self.world.submit_commands(side, vec![command]);
+        }
+        for side in Side::ALL {
+            let queued =
+                std::mem::take(&mut self.seats.get_mut(&side).expect("both seats").commands);
+            for command in queued {
+                self.commands_handed_in
+                    .entry(day)
+                    .or_default()
+                    .push((side, command.clone()));
+                self.world.submit_commands(side, vec![command]);
+            }
         }
         let mut staffs = Staffs::none();
         for (side, staff) in &self.staffs {

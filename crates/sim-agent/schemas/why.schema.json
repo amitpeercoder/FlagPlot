@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/why",
+  "title": "why: a staff decision by its number, with what it is for; or not_known",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/why"
+    },
+    {
+      "$ref": "defs.schema.json#/$defs/not_known"
+    }
+  ],
+  "$defs": {
+    "why": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "flagplot-agent/why",
+      "title": "",
+      "description": "",
+      "type": "object",
+      "required": [
+        "format",
+        "version",
+        "kind",
+        "number",
+        "day",
+        "pulse",
+        "for",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "const": "flagplot-agent"
+        },
+        "version": {
+          "const": 4
+        },
+        "kind": {
+          "const": "why"
+        },
+        "number": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "pulse": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "night",
+            "morning",
+            "afternoon",
+            null
+          ]
+        },
+        "for": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "order",
+                "unit",
+                "body",
+                "intent",
+                "accepted",
+                "refusal",
+                "event"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "order"
+                },
+                "order": {
+                  "type": "integer"
+                },
+                "unit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "body": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "intent": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "accepted": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "refusal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "event": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "command",
+                "text",
+                "issuer",
+                "taken",
+                "refusal",
+                "event"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "command"
+                },
+                "command": {
+                  "$ref": "command_defs.schema.json#/$defs/command_body"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "issuer": {
+                  "enum": [
+                    "commander",
+                    "staff",
+                    "local_commander"
+                  ]
+                },
+                "taken": {
+                  "type": "boolean"
+                },
+                "refusal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "event": {
+                  "type": "integer"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "no_order"
+                }
+              }
+            }
+          ]
+        },
+        "reason": {
+          "$ref": "command_defs.schema.json#/$defs/reason"
+        }
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ mod mcp;
 mod play;
 mod save;
 mod serve;
+mod staff_tools;
 mod timing;
 mod validate;
 

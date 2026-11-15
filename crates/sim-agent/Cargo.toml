@@ -12,6 +12,7 @@ serde_json.workspace = true
 
 [dev-dependencies]
 sim-data.workspace = true
+sim-staff.workspace = true
 
 [lints]
 workspace = true

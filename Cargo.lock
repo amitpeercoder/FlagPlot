@@ -232,6 +232,7 @@ dependencies = [
  "serde_json",
  "sim-core",
  "sim-data",
+ "sim-staff",
 ]
 
 [[package]]

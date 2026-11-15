@@ -25,7 +25,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 3
+          "const": 4
         },
         "kind": {
           "const": "entity"

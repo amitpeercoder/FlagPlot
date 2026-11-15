@@ -93,8 +93,14 @@ fn every_scenario_exports_what_the_world_logged() {
         assert_eq!(replay["version"], 4);
         assert_eq!(replay["scenario"]["path"], scenario.as_str());
 
+        // Run as the exporter runs it: each side's staff is asked.
         let mut loaded = Scenario::load(&Path::new(ROOT).join(&scenario)).expect("loads");
-        loaded.run_to_end().expect("runs");
+        let held = sim_staff::staffs();
+        while loaded
+            .next_day_staffed(sim_staff::as_staffs(&held))
+            .expect("runs")
+            .is_some()
+        {}
         let world = &loaded.world;
 
         assert_eq!(replay["scenario"]["seed"], world.seed());

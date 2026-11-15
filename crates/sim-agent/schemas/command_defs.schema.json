@@ -1,0 +1,551 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/command_defs",
+  "title": "Shared definitions of the answers of the staff tools (decision 0107)",
+  "$defs": {
+    "days": {
+      "description": "The four days of a run, as the staff timed it: loading begins on load, the force sails on sail, it is due at the destination on arrive, and its ships are free (back at the source and refuelled) on free.",
+      "type": "object",
+      "required": [
+        "load",
+        "sail",
+        "arrive",
+        "free"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "load": {
+          "type": "integer"
+        },
+        "sail": {
+          "type": "integer"
+        },
+        "arrive": {
+          "type": "integer"
+        },
+        "free": {
+          "type": "integer"
+        }
+      }
+    },
+    "reading": {
+      "description": "One reading of the projection: the stock at the start of the day, the planned use of that day and the figure in days of supply (null where the use is 0).",
+      "type": "object",
+      "required": [
+        "day",
+        "stock_t",
+        "use_t",
+        "days"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "type": "integer"
+        },
+        "stock_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "use_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "days": {
+          "$ref": "defs.schema.json#/$defs/dec_or_null"
+        }
+      }
+    },
+    "projection_summary": {
+      "type": "object",
+      "required": [
+        "floor_days",
+        "today",
+        "first_day_below_floor"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "floor_days": {
+          "type": "integer"
+        },
+        "today": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/reading"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "first_day_below_floor": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "projection": {
+      "type": "object",
+      "required": [
+        "hex",
+        "floor_days",
+        "today",
+        "first_day_below_floor",
+        "readings"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "hex": {
+          "type": "object",
+          "required": [
+            "q",
+            "r"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "q": {
+              "type": "integer"
+            },
+            "r": {
+              "type": "integer"
+            }
+          }
+        },
+        "floor_days": {
+          "type": "integer"
+        },
+        "today": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/reading"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "first_day_below_floor": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "readings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reading"
+          }
+        }
+      }
+    },
+    "reason": {
+      "description": "The five parts of a staff decision: what it serves, the evidence it rests on, what binds it, the calculation and what would change it.",
+      "type": "object",
+      "required": [
+        "serves",
+        "evidence",
+        "binding",
+        "worked",
+        "would_change"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "serves": {
+          "description": "What the decision serves: the intent, the plan and the plan's amendment (left out where none).",
+          "type": "object",
+          "required": [],
+          "additionalProperties": false,
+          "properties": {
+            "intent": {
+              "type": "integer"
+            },
+            "plan": {
+              "type": "integer"
+            },
+            "amendment": {
+              "type": "integer"
+            }
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "what",
+              "day"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "what": {
+                "type": "string"
+              },
+              "day": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "binding": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "worked": {
+          "type": "string"
+        },
+        "would_change": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "forces",
+        "area",
+        "priority",
+        "protected",
+        "risk"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "forces": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "ships",
+                "task_forces",
+                "source"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "ships": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "task_forces": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "source": {
+                  "$ref": "defs.schema.json#/$defs/handle"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "area": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "priority": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "protected": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "risk": {
+          "enum": [
+            "preserve",
+            "balanced",
+            "press"
+          ]
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "number",
+        "ships",
+        "load_t",
+        "source",
+        "days"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "type": "integer"
+        },
+        "ships": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "load_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "source": {
+          "$ref": "defs.schema.json#/$defs/handle"
+        },
+        "days": {
+          "$ref": "#/$defs/days"
+        },
+        "phase": {
+          "enum": [
+            "waiting",
+            "loading",
+            "under_way",
+            "returning",
+            "finished"
+          ]
+        },
+        "doing": {
+          "type": "string"
+        },
+        "ship_states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "ship",
+              "at",
+              "supply_aboard_t"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "ship": {
+                "type": "integer"
+              },
+              "at": {
+                "type": "string"
+              },
+              "supply_aboard_t": {
+                "$ref": "defs.schema.json#/$defs/dec"
+              }
+            }
+          }
+        }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "number",
+        "intent",
+        "intent_in_force",
+        "state",
+        "baseline",
+        "baseline_day",
+        "amendments",
+        "runs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "type": "integer"
+        },
+        "intent": {
+          "type": "integer"
+        },
+        "intent_in_force": {
+          "type": "boolean"
+        },
+        "state": {
+          "enum": [
+            "draft",
+            "preparing",
+            "released",
+            "complete",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "baseline": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "day",
+                "base",
+                "floor_days",
+                "interval_days",
+                "limits"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "day": {
+                  "type": "integer"
+                },
+                "base": {
+                  "$ref": "defs.schema.json#/$defs/handle"
+                },
+                "floor_days": {
+                  "type": "integer"
+                },
+                "interval_days": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "limits": {
+                  "$ref": "#/$defs/limits"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "baseline_day": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "amendments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "number",
+              "day",
+              "change"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "number": {
+                "type": "integer"
+              },
+              "day": {
+                "type": "integer"
+              },
+              "change": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run"
+          }
+        }
+      }
+    },
+    "command_body": {
+      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, set_limit, set_leave, approve and cancel_plan), ships and task forces in your numbers.",
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "set_intent",
+            "withdraw_intent",
+            "set_limit",
+            "set_leave",
+            "approve",
+            "cancel_plan",
+            "commit_ships",
+            "free_ships",
+            "add_run",
+            "time_run",
+            "mark_plan"
+          ]
+        }
+      }
+    },
+    "staff_order": {
+      "type": "object",
+      "required": [
+        "unit",
+        "order",
+        "intent",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "type": "string"
+        },
+        "order": {
+          "type": "object"
+        },
+        "intent": {
+          "type": "integer"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        }
+      }
+    },
+    "decisions": {
+      "type": "object",
+      "required": [
+        "for_day",
+        "orders",
+        "commands",
+        "no_orders"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "for_day": {
+          "type": "integer"
+        },
+        "orders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/staff_order"
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "description": "A staff command: the command's own keys, and its reason.",
+            "type": "object",
+            "required": [
+              "kind",
+              "reason"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "reason": {
+                "$ref": "#/$defs/reason"
+              }
+            }
+          }
+        },
+        "no_orders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reason"
+          }
+        }
+      }
+    }
+  }
+}

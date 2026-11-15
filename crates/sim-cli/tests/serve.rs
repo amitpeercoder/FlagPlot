@@ -227,7 +227,8 @@ fn a_played_game_answers_line_for_line_saves_and_replays() {
         .contains("script"));
     assert_eq!(out[15]["error"]["allowed"], json!(["allied"]));
     assert_eq!(out[16]["error"]["allowed"], json!(["allied", "japanese"]));
-    assert_eq!(out[18]["error"]["allowed"].as_array().unwrap().len(), 9);
+    // The seat's side has a staff: its tools follow the nine.
+    assert_eq!(out[18]["error"]["allowed"].as_array().unwrap().len(), 20);
 
     // The saved game replays with no player.
     let replay = Command::new(env!("CARGO_BIN_EXE_sim-cli"))

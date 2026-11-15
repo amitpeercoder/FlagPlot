@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 3` and a `"kind"` that names it.
+`"version": 4` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -19,9 +19,19 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `not_known` | `not_known.schema.json` | `get_entity`, `explain` and `measure`, for anything the side does not know of |
 | `briefing_text` | `briefing_text.schema.json` | `get_briefing` with `{"text": true}` |
 | `issue_orders` | `issue_orders.schema.json` | `issue_orders` (its arguments: `issue_orders_arguments.schema.json`) |
+| `command_state` | `command_state.schema.json` | `command_state` (a seat whose side has a staff) |
+| `plans` | `plans.schema.json` | `plans` |
+| `command` | `command.schema.json` | `set_intent`, `withdraw_intent`, `set_limit`, `set_leave`, `approve`, `cancel_plan`: queued or refused |
+| `propose` | `propose.schema.json` | `propose` |
+| `staff_orders` | `staff_orders.schema.json` | `staff_orders` |
+| `why` | `why.schema.json` | `why` (or `not_known`) |
 | `end_day` | `end_day.schema.json` | `end_day` |
 | `error` | `error.schema.json` | any call refused as a whole |
 | `transcript_entry` | `transcript_entry.schema.json` | one line of a game's transcript |
+
+`command_defs.schema.json` is not an answer: it holds what the staff tools'
+answers share (a run, a plan, a projection, the five parts of a reason, a
+staff's decisions).
 
 `order.schema.json` is not an answer: it describes one order, as saved games
 and `issue_orders` write it.
@@ -40,7 +50,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 3. A field removed from an answer, or a field whose meaning
+`version` is 4. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -51,6 +61,14 @@ of a fight became `force`, the side's own; `target` left a salvo fired and a
 fighter's fire; `raid` left the guns' fire; `air_group` left a raid on a base;
 and `by` of an attack on a ship became `"ship"` or `"aircraft"`. Nothing else
 changed.
+
+Version 4 (decision 0107, step 3 stage 1) adds the tools of a seat whose side
+has a staff: `command_state`, `plans`, `set_intent`, `withdraw_intent`,
+`set_limit`, `set_leave`, `approve`, `cancel_plan`, `propose`, `staff_orders`
+and `why`, with an answer for each (above). A session made without staffs has
+none of them and answers as it did. The version was raised for the new
+answers and the new `why` value of `not_known`'s `query`; no field of an
+earlier answer changed.
 
 Version 3 (decision 0067) changed what two counts mean. The `count` of
 `cargo_landed` is the tons unloaded at the base less the tons loaded back

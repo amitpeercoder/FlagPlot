@@ -7,7 +7,7 @@ pub const FORMAT: &str = "flagplot-agent";
 
 /// The version of the format. A field removed or changed in meaning bumps it;
 /// a field added does not (see `schemas/README.md`).
-pub const VERSION: u32 = 3;
+pub const VERSION: u32 = 4;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not
@@ -18,7 +18,7 @@ pub struct NotKnown {
     pub format: &'static str,
     pub version: u32,
     pub kind: &'static str,
-    /// The tool asked: `"get_entity"` or `"explain"`.
+    /// The tool asked: `"get_entity"`, `"explain"`, `"measure"` or `"why"`.
     pub query: &'static str,
 }
 

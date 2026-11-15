@@ -550,15 +550,20 @@ fn a_scenario_with_commands_saves_them_and_replays_to_the_same_hashes() {
     let value: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
     assert_eq!(value["version"], 3);
-    assert_eq!(value["doctrine_version"], "none");
+    assert_eq!(value["doctrine_version"], sim_staff::DOCTRINE_VERSION);
     let commands = value["commands"].as_array().expect("commands");
     assert_eq!(commands.len(), 5);
     assert_eq!(commands[0]["day"], 1);
     assert_eq!(commands[0]["side"], "allied");
     assert_eq!(commands[0]["command"]["kind"], "set_intent");
     assert_eq!(commands[1]["command"]["ships"], serde_json::json!([1, 2]));
-    // No staff yet, so nothing handed in.
-    assert_eq!(value["staff"], serde_json::json!([]));
+    // The supply staff of each side is asked every day; the game's intent has
+    // a pool, so on day 1 the Allied staff prepares the draft and says so.
+    let staff = value["staff"].as_array().expect("staff");
+    assert!(!staff.is_empty());
+    assert_eq!(staff[0]["day"], 1);
+    assert_eq!(staff[0]["side"], "allied");
+    assert_eq!(staff[0]["decisions"]["commands"][0]["kind"], "approve");
 
     // The replay hands in the saved commands, and its hashes are the run's.
     let replayed = binary(&["replay", &game.to_string_lossy()]);
@@ -582,7 +587,7 @@ fn a_scenario_with_commands_saves_them_and_replays_to_the_same_hashes() {
 }
 
 #[test]
-fn replay_check_staff_finds_no_difference_where_no_staff_handed_in_anything() {
+fn replay_check_staff_finds_no_difference_where_the_staff_gives_what_it_gave() {
     let scenario = with_commands("commands-check");
     let game = save(&scenario, "commands-check-save", &[]);
     let checked = binary(&["replay", &game.to_string_lossy(), "--check-staff"]);
@@ -600,28 +605,27 @@ fn replay_check_staff_finds_no_difference_where_no_staff_handed_in_anything() {
 }
 
 #[test]
-fn replay_check_staff_names_the_first_day_and_side_where_the_saved_staff_has_no_staff_now() {
+fn replay_check_staff_names_the_first_day_and_side_where_the_doctrines_staff_gives_something_else()
+{
     let scenario = with_commands("commands-staff");
     let game = save(&scenario, "commands-staff-save", &[]);
     let mut value: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
-    // A staff hand-in on day 2 for the Allied side and one on day 3 for the
-    // Japanese: the doctrine gives neither side a staff, so the first
-    // difference is day 2, Allied.
-    let reason = serde_json::json!({
-        "serves": { "intent": 1 },
-        "evidence": [],
-        "binding": [],
-        "worked": "nothing to send",
-        "would_change": [],
-    });
-    let hand_in = serde_json::json!({
-        "orders": [], "commands": [], "no_orders": [reason],
-    });
-    value["staff"] = serde_json::json!([
-        { "day": 2, "side": "allied", "decisions": hand_in },
-        { "day": 3, "side": "japanese", "decisions": hand_in },
-    ]);
+    // The saved hand-ins are the staff's own: asked again it gives them. Two
+    // are altered, the Allied side's on day 2 and the first of day 1's
+    // reasons: the first difference is day 1, Allied, command 1.
+    let staff = value["staff"].as_array_mut().expect("staff");
+    let first = staff
+        .iter_mut()
+        .find(|e| e["day"] == 1 && e["side"] == "allied")
+        .expect("the Allied staff handed in on day 1");
+    first["decisions"]["commands"][0]["reason"]["worked"] =
+        serde_json::json!("the saved staff said something else");
+    let later = staff
+        .iter_mut()
+        .find(|e| e["day"] == 2 && e["side"] == "allied")
+        .expect("the Allied staff handed in on day 2");
+    later["decisions"]["no_orders"] = serde_json::json!([]);
     let edited = game.with_file_name("edited.json");
     fs::write(&edited, value.to_string()).expect("writes");
     let edited = edited.to_string_lossy().into_owned();
@@ -629,8 +633,7 @@ fn replay_check_staff_names_the_first_day_and_side_where_the_saved_staff_has_no_
     assert!(!checked.status.success());
     let error = text(&checked.stderr);
     assert!(
-        error.contains("the staff differs on day 2, allied side")
-            && error.contains("gives that side no staff"),
+        error.contains("the staff differs on day 1, allied side: command 1"),
         "{error}"
     );
     assert!(
@@ -638,7 +641,7 @@ fn replay_check_staff_names_the_first_day_and_side_where_the_saved_staff_has_no_
         "{}",
         text(&checked.stdout)
     );
-    assert!(!error.contains("day 3"), "stops at the first: {error}");
+    assert!(!error.contains("day 2"), "stops at the first: {error}");
 }
 
 #[test]
@@ -672,8 +675,12 @@ fn the_export_of_a_run_with_commands_carries_each_sides_command_state() {
     assert_eq!(allied["intents"][0]["limits"]["risk"], "press");
     assert_eq!(allied["intents"][0]["limits"]["forces"]["source"], 1);
     assert_eq!(allied["leaves"]["launch"], true);
-    assert_eq!(allied["plans"][0]["state"], "preparing");
-    assert_eq!(allied["plans"][0]["baseline"]["day"], 3);
+    // The staff prepares the draft on day 1 (leave to prepare is given by
+    // default) and releases it on day 2, when the commander gives leave to
+    // launch; the commander's approval on day 3 comes to a plan already
+    // released and is refused.
+    assert_eq!(allied["plans"][0]["state"], "released");
+    assert_eq!(allied["plans"][0]["baseline"]["day"], 1);
     // The Japanese side was never given a command: no key.
     assert!(replay["final"]["commands"].get("japanese").is_none());
     // The steps: the first step has none; the state appears in a step of day
@@ -744,7 +751,13 @@ fn a_game_played_through_serve_saves_the_scenarios_commands_and_replays() {
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
     assert_eq!(value["version"], 3);
     assert_eq!(value["commands"].as_array().expect("commands").len(), 5);
-    assert_eq!(value["staff"], serde_json::json!([]));
+    // The staff the session was given handed in what it decided on day 1.
+    assert_eq!(value["staff"][0]["day"], 1);
+    assert_eq!(value["staff"][0]["side"], "allied");
+    assert_eq!(
+        value["staff"][0]["decisions"]["commands"][0]["kind"],
+        "approve"
+    );
     // The game replays to the hashes it was saved with: the player gave no
     // orders, so these are not the scenario's own run's, and the commands
     // handed in are the script's.
@@ -778,34 +791,35 @@ fn a_game_file_is_resumed_only_under_the_doctrine_it_was_begun_under() {
     let content = fs::read_to_string(&game).expect("reads");
     let header: serde_json::Value =
         serde_json::from_str(content.lines().next().expect("a header")).expect("JSON");
-    assert_eq!(header["doctrine_version"], "none");
+    assert_eq!(header["doctrine_version"], sim_staff::DOCTRINE_VERSION);
     // The same doctrine resumes.
     ok(
         &binary(&["play", "--game", &game_text, "get_briefing"]),
         "resume",
     );
     // Another doctrine is refused, naming both versions.
-    let changed = content.replacen(
-        "\"doctrine_version\":\"none\"",
-        "\"doctrine_version\":\"keep-supplied-1\"",
-        1,
-    );
+    let own = format!("\"doctrine_version\":\"{}\"", sim_staff::DOCTRINE_VERSION);
+    let changed = content.replacen(&own, "\"doctrine_version\":\"keep-supplied-1\"", 1);
     assert_ne!(changed, content);
     fs::write(&game, changed).expect("writes");
     let refused = binary(&["play", "--game", &game_text, "get_briefing"]);
     assert!(!refused.status.success());
     let error = text(&refused.stderr);
     assert!(
-        error.contains("keep-supplied-1") && error.contains("\"none\""),
+        error.contains("keep-supplied-1") && error.contains(sim_staff::DOCTRINE_VERSION),
         "{error}"
     );
     // A game file made before doctrines were recorded has no version, and is
-    // read as `none`.
-    let old = content.replacen("\"doctrine_version\":\"none\",", "", 1);
+    // read as `none`: no doctrine existed, and every side has a staff now, so
+    // it is not resumed either.
+    let old = content.replacen(&format!("{own},"), "", 1);
     assert_ne!(old, content);
     fs::write(&game, old).expect("writes");
-    ok(
-        &binary(&["play", "--game", &game_text, "get_briefing"]),
-        "an old game file resumes",
+    let refused = binary(&["play", "--game", &game_text, "get_briefing"]);
+    assert!(!refused.status.success());
+    let error = text(&refused.stderr);
+    assert!(
+        error.contains("\"none\"") && error.contains(sim_staff::DOCTRINE_VERSION),
+        "{error}"
     );
 }

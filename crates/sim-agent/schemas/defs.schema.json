@@ -692,7 +692,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 3
+          "const": 4
         },
         "kind": {
           "const": "not_known"
@@ -701,7 +701,8 @@
           "enum": [
             "get_entity",
             "explain",
-            "measure"
+            "measure",
+            "why"
           ]
         }
       }

@@ -423,7 +423,7 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
 // Reasons and a staff's decisions.
 // ---------------------------------------------------------------------------
 
-fn reason_to_json(reason: &Reason) -> Value {
+pub(crate) fn reason_to_json(reason: &Reason) -> Value {
     let mut serves = Map::new();
     if let Some(intent) = reason.serves.intent {
         serves.insert("intent".into(), json!(intent.raw()));

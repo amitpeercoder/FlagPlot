@@ -14,7 +14,7 @@ use std::io::{BufRead, Write};
 use std::path::Path;
 
 use serde_json::{json, Value};
-use sim_agent::{parse_seat, CallError, Seat, SeatKind, Session, TOOLS};
+use sim_agent::{parse_seat, CallError, Seat, SeatKind, Session};
 use sim_core::orders::OrderRequest;
 use sim_core::state::Side;
 use sim_data::Scenario;
@@ -243,7 +243,10 @@ fn answer_line(session: &mut Session, line: &str) -> String {
         );
     };
     let Some(tool) = object.get("tool").and_then(Value::as_str) else {
-        return error_line(id, &CallError::naming("\"tool\" must name a tool", &TOOLS));
+        return error_line(
+            id,
+            &CallError::naming("\"tool\" must name a tool", &session.tools(side)),
+        );
     };
     let arguments = object.get("arguments").cloned().unwrap_or(Value::Null);
     match session.call(side, tool, &arguments) {

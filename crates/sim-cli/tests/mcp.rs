@@ -234,7 +234,7 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
 
     let listed = c.request("tools/list", json!({}));
     let tools = listed["result"]["tools"].as_array().expect("tools");
-    assert_eq!(tools.len(), 9);
+    assert_eq!(tools.len(), 20);
     let names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
     assert_eq!(
         names,
@@ -247,7 +247,19 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
             "measure",
             "explain",
             "issue_orders",
-            "end_day"
+            "end_day",
+            // The seat's side has a staff: its tools follow (decision 0107).
+            "command_state",
+            "plans",
+            "set_intent",
+            "withdraw_intent",
+            "set_limit",
+            "set_leave",
+            "approve",
+            "cancel_plan",
+            "propose",
+            "staff_orders",
+            "why"
         ]
     );
     for tool in tools {
@@ -661,7 +673,7 @@ fn the_modern_revision_is_served_by_per_request_metadata() {
     assert!(d["result"]["instructions"].is_string());
     assert!(d["result"]["_meta"]["io.modelcontextprotocol/serverInfo"]["name"].is_string());
     let l = c.request("tools/list", json!({"_meta": meta}));
-    assert_eq!(l["result"]["tools"].as_array().unwrap().len(), 9);
+    assert_eq!(l["result"]["tools"].as_array().unwrap().len(), 20);
     assert_eq!(l["result"]["resultType"], "complete");
     let r = c.request(
         "tools/call",
@@ -1241,4 +1253,132 @@ fn play_exports_no_enemy_order_from_a_game_that_is_not_over() {
     assert!(alone.status.success());
     assert!(!save.exists(), "no saved game is written mid-game");
     // No saved game exists, so no Japanese order was exported (the finding).
+}
+
+// ---------------------------------------------------------------------
+// The tools of a seat with a staff (decision 0107, "The tools").
+// ---------------------------------------------------------------------
+
+const S36: &str = "data/scenarios/36_one_convoy.toml";
+
+/// Scenario 36 without its `[[command]]` tables, written to a temp folder
+/// with the paths of its data made absolute: the player commands by the
+/// tools.
+fn scenario_36_without_commands(label: &str) -> String {
+    let text = fs::read_to_string(Path::new(ROOT).join(S36)).expect("scenario 36 reads");
+    let head = text
+        .split("\n# The Allied commander's commands")
+        .next()
+        .expect("a head");
+    assert!(!head.contains("[[command]]"), "the commands are cut off");
+    let data = Path::new(ROOT).join("data");
+    let head = head.replace("\"../", &format!("\"{}/", data.display()));
+    let path = temp_dir(label).join("36_no_commands.toml");
+    fs::write(&path, head).expect("writes");
+    path.to_string_lossy().into_owned()
+}
+
+#[test]
+fn a_seat_with_a_staff_lists_the_staff_tools_and_commands_through_them() {
+    let scenario = scenario_36_without_commands("tools");
+    let mut c = Client::start(&scenario, &[]);
+    let init = c.handshake();
+    // The instructions say how to command by intent.
+    let instructions = init["result"]["instructions"].as_str().unwrap();
+    assert!(instructions.contains("Commanding by intent"));
+    assert!(instructions.contains("set_intent") && instructions.contains("staff_orders"));
+    assert!(instructions.contains("does nothing for your side until you set an intent"));
+    let listed = c.request("tools/list", json!({}));
+    let tools = listed["result"]["tools"].as_array().unwrap();
+    for tool in tools.iter().skip(9) {
+        let name = tool["name"].as_str().unwrap();
+        let description = tool["description"].as_str().unwrap();
+        // Each says plainly that the staff does nothing until an intent with
+        // a forces limit is set, or is a reader of what the staff does.
+        assert!(
+            description.contains("does nothing for your side until you set an intent"),
+            "{name}: {description}"
+        );
+        assert!(!description.contains("STAFF_RULE"), "{name}");
+        assert_eq!(tool["inputSchema"]["type"], "object", "{name}");
+        assert!(!tool["inputSchema"].to_string().contains("$ref"), "{name}");
+    }
+    let find = |name: &str| tools.iter().find(|t| t["name"] == name).unwrap();
+    let state = find("command_state")["description"].as_str().unwrap();
+    assert!(state.contains("prepare, given by default") && state.contains("launch, withheld"));
+    assert!(state.contains("not set: the staff uses 15"));
+    let intent = find("set_intent");
+    assert!(intent["description"]
+        .as_str()
+        .unwrap()
+        .contains("takes effect at the start of day N"));
+    assert_eq!(
+        intent["inputSchema"]["required"],
+        json!(["base", "floor_days"])
+    );
+
+    // A player commands through the protocol.
+    let (a, error) = c.call(
+        "set_intent",
+        json!({"base": 2, "floor_days": 30, "interval_days": 15}),
+    );
+    assert!(!error, "{a}");
+    let a: Value = serde_json::from_str(&a).unwrap();
+    assert_eq!(a["status"], "queued");
+    assert_eq!(a["intent"], 1);
+    let (a, _) = c.call(
+        "set_limit",
+        json!({"limit": "forces", "intent": 1, "ships": [1, 2], "source": 1}),
+    );
+    assert!(a.contains("\"queued\""), "{a}");
+    let (a, _) = c.call("set_leave", json!({"leave": "launch", "given": true}));
+    assert!(a.contains("\"queued\""), "{a}");
+    let (a, _) = c.call("staff_orders", json!({}));
+    let a: Value = serde_json::from_str(&a).unwrap();
+    assert_eq!(a["orders"][0]["unit"], "base:1");
+    assert_eq!(a["orders"][1]["order"]["weight_t"], "360");
+    let (a, error) = c.call("propose", json!({"intent": 1}));
+    assert!(!error);
+    assert!(a.contains("\"load_t\": \"360\""));
+    // A refusal is an answer, not an error; an argument that is none of the
+    // tool's is an error that says which are.
+    let (a, error) = c.call("set_intent", json!({"base": 9, "floor_days": 30}));
+    assert!(!error);
+    assert!(a.contains("base:9 is not one of the side's bases"), "{a}");
+    let (a, error) = c.call("set_intent", json!({"base": 2, "floors": 30}));
+    assert!(error);
+    assert!(
+        a.contains("\"floors\" is not an argument of set_intent"),
+        "{a}"
+    );
+    c.finish();
+}
+
+/// Every recorded game replays under the doctrine's staff: the staff asked
+/// again on each day gives what the saved game holds (decision 0107, 10).
+#[test]
+fn replay_check_staff_passes_on_every_recorded_game() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/recorded_games");
+    let dirs = recorded_game_dirs(&root);
+    assert!(dirs.len() >= 3, "the recorded games are there");
+    for dir in dirs {
+        let save = dir.join("save.json");
+        let checked = Command::new(BIN)
+            .args(["replay", s(&save), "--check-staff"])
+            .current_dir(ROOT)
+            .output()
+            .expect("the binary runs");
+        let text = String::from_utf8_lossy(&checked.stdout).into_owned();
+        assert!(
+            checked.status.success(),
+            "{}: {text}{}",
+            dir.display(),
+            String::from_utf8_lossy(&checked.stderr)
+        );
+        assert!(
+            text.contains("the staff gave what was saved on every day"),
+            "{}: {text}",
+            dir.display()
+        );
+    }
 }
