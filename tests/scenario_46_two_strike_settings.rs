@@ -43,34 +43,39 @@
 //! | 5     | 2    | 10             | 1                             | 0.25            |
 //! | 6     | 2    | 10             | 1                             | not set         |
 //!
-//! The Allied side starts holding three contacts, in this order:
+//! The Allied side starts holding three contacts. Starting contacts are
+//! numbered from the oldest down (chapter 3, Starting contacts), so the
+//! carrier is contact 1. (Restated by the architect on Nov 15, 2026, after
+//! the build: the first draft numbered them in the order of the file. No
+//! other number moved.)
 //!
 //! | Contact | Hex    | Ships | Kind      | Age at the start | From base 1 | From base 2 |
 //! | ------- | ------ | ----- | --------- | ---------------- | ----------- | ----------- |
-//! | 1       | (3,0)  | 3     | transport | 0                | 120 nm      | 680 nm      |
-//! | 2       | (0,4)  | 1     | carrier   | 2                | 160 nm      | out of reach |
+//! | 1       | (0,4)  | 1     | carrier   | 2                | 160 nm      | out of reach |
+//! | 2       | (3,0)  | 3     | transport | 0                | 120 nm      | 680 nm      |
 //! | 3       | (22,0) | 2     | cruiser   | 0                | 880 nm      | 80 nm       |
 //!
-//! There is no order.
+//! The only orders are those of day 1 that put each group on the naval
+//! strike mission, since a scenario states a group's mission by an order.
 //!
 //! ## The night
 //!
 //! Nothing is decided at night. At its end each contact gains a pulse:
-//! contact 1 is 1 pulse old, contact 2 is 3, contact 3 is 1.
+//! contact 2 is 1 pulse old, contact 1 is 3, contact 3 is 1.
 //!
 //! ## The morning
 //!
 //! At base 1, in group order:
 //!
 //! - **Group 1** launches on a contact no older than 0. Contacts 1 and 2
-//!   are in its reach, at ages 1 and 3. Neither qualifies. It does nothing
+//!   are in its reach, at ages 3 and 1. Neither qualifies. It does nothing
 //!   and records nothing.
-//! - **Group 2** launches on a contact no older than 1. Contact 1 qualifies
-//!   and contact 2, at 3, does not. It launches its 10 aircraft at contact
-//!   1, to (3,0), 120 nm.
+//! - **Group 2** launches on a contact no older than 1. Contact 2 qualifies
+//!   and contact 1, at 3, does not. It launches its 10 aircraft at contact
+//!   2, to (3,0), 120 nm.
 //! - **Group 3** launches on a contact no older than 3. Both qualify. The
 //!   carrier comes before the transport on its list: it launches its 10
-//!   aircraft at contact 2, to (0,4), 160 nm.
+//!   aircraft at contact 1, to (0,4), 160 nm.
 //!
 //! At base 2 only contact 3 is in reach, at age 1, and all three groups
 //! launch on a contact no older than 1:
@@ -107,7 +112,7 @@
 //!   day: every contact is 1 pulse old or more in the morning. That is the
 //!   game as it was before this rule.
 //! - With every group's age set to 4, groups 1, 2 and 3 all launch at
-//!   contact 2, the carrier, in the morning, 30 aircraft in one raid.
+//!   contact 1, the carrier, in the morning, 30 aircraft in one raid.
 //! - An order for an age of 5, or of a negative number, is refused and
 //!   names the range 0 to 4. An order for a share above 1 or below 0 is
 //!   refused.
@@ -118,7 +123,7 @@
 //! - The held aircraft are not charged: with the wear, fatigue and supply
 //!   figures loaded, group 4 is charged for 8 sorties and not for 12.
 //! - The answer to the strike question for groups 1, 2 and 3 before the
-//!   morning is none, contact 1 and contact 2.
+//!   morning is none, contact 2 and contact 1.
 //! - Every existing scenario's events and end states are what they were.
 //
 // # Contact numbers
@@ -536,15 +541,6 @@ fn the_morning_launches_are_groups_2_to_6_at_the_contacts_of_the_table() {
         | EventKind::StrikeFoundNothing { air_group, .. } => air_group.raw() != 1,
         _ => true,
     }));
-}
-
-#[test]
-#[ignore = "the comment numbers the contacts in file order; the engine numbers a starting contact oldest first, so the run gives contact 1 at (0,4), 2 at (3,0), 3 at (22,0)"]
-fn the_numbers_the_comment_gives_to_the_contacts() {
-    let run = Run::the_scenario();
-    assert_eq!(run.number_at(C1), 1);
-    assert_eq!(run.number_at(C2), 2);
-    assert_eq!(run.number_at(C3), 3);
 }
 
 #[test]
