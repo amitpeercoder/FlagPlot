@@ -1027,10 +1027,12 @@ fn a_what_happens_follows_the_table_exactly() {
     assert_eq!(played.unloading_complete(4), vec![n(86)]);
     // Day 5: arrives at S at hour 110.
     assert_eq!(played.arrived_at(5, FORCE, S), Some(n(110)));
-    // Day 6: ship 1 refuels 40 t: 1960 t of fuel at base 1.
-    assert_eq!(played.base_fuel(5, 1), n(2000));
+    // Ship 1 refuels 40 t in the pulse it arrives, on day 5: 1960 t of
+    // fuel at base 1 (decision 0112).
+    assert_eq!(played.base_fuel(4, 1), n(2000));
+    assert_eq!(played.base_fuel(5, 1), n(1960));
     assert_eq!(played.base_fuel(6, 1), n(1960));
-    assert_eq!(played.at(5).ships[&ship(1)].fuel_t, n(960));
+    assert_eq!(played.at(5).ships[&ship(1)].fuel_t, n(1000));
     assert_eq!(played.at(6).ships[&ship(1)].fuel_t, n(1000));
     // Day 8: ship 1 is held, and the hold is recorded.
     assert!(played.held[&8].ships.contains(&ship(1)));
@@ -1046,8 +1048,10 @@ fn a_what_happens_follows_the_table_exactly() {
     assert_eq!(played.unloading_complete(12), vec![fx("269.5")]);
     // Day 13: arrives at S at hour 296.
     assert_eq!(played.arrived_at(13, SECOND, S), Some(n(296)));
-    // Day 14: ship 2 refuels 40 t: 1920 t of fuel at base 1.
-    assert_eq!(played.base_fuel(13, 1), n(1960));
+    // Ship 2 refuels 40 t in the pulse it arrives, on day 13: 1920 t of
+    // fuel at base 1 (decision 0112).
+    assert_eq!(played.base_fuel(12, 1), n(1960));
+    assert_eq!(played.base_fuel(13, 1), n(1920));
     assert_eq!(played.base_fuel(14, 1), n(1920));
     // Day 17: ship 1 is released.
     assert!(played.held[&16].ships.contains(&ship(1)));
@@ -1240,7 +1244,7 @@ fn b_what_happens_follows_the_table_exactly() {
     // The end of day 5.
     assert_eq!(played.base_supply(5, 2), n(420));
     assert_eq!(played.base_supply(5, 1), n(4630));
-    assert_eq!(played.base_fuel(5, 1), n(2000));
+    assert_eq!(played.base_fuel(5, 1), n(1960));
     let end = played.at(5);
     let one = &end.ships[&ship(1)];
     assert_eq!(one.location, ShipLocation::TaskForce(force(FORCE)));
@@ -1250,7 +1254,7 @@ fn b_what_happens_follows_the_table_exactly() {
     let two = &end.ships[&ship(2)];
     assert_eq!(two.location, ShipLocation::TaskForce(force(SECOND)));
     assert!(two.supply_t.is_zero() && two.cargo_fuel_t.is_zero());
-    assert_eq!(two.fuel_t, n(960));
+    assert_eq!(two.fuel_t, n(1000));
     assert_eq!(end.task_forces[&force(SECOND)].position(), S);
     // The first force is held at the end.
     let state = played.scenario.world.command_state(Side::Allied);

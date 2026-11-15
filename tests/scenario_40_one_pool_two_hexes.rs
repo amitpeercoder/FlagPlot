@@ -1250,18 +1250,20 @@ fn what_happens_follows_the_table_exactly() {
         };
         assert_eq!(played.base_supply(day, 1), n(supply), "supply, day {day}");
     }
-    // Its fuel: ship 1 refuels 50 t on days 4, 8 and 13.
+    // Its fuel: ship 1 refuels 50 t on days 3, 7, 12 and 16, each in the
+    // pulse it arrives (decision 0112).
     for day in 1..=16u32 {
         let fuel = match day {
-            1..=3 => 1000,
-            4..=7 => 950,
-            8..=12 => 900,
-            _ => 850,
+            1..=2 => 1000,
+            3..=6 => 950,
+            7..=11 => 900,
+            12..=15 => 850,
+            _ => 800,
         };
         assert_eq!(played.base_fuel(day, 1), n(fuel), "fuel, day {day}");
     }
-    // Ship 1 has 450 t when it comes home and 500 t after it refuels.
-    for (day, fuel) in [(3, 450), (4, 500), (7, 450), (8, 500), (12, 450), (13, 500)] {
+    // Ship 1 comes home with 450 t and refuels to 500 t in that pulse.
+    for (day, fuel) in [(3, 500), (7, 500), (12, 500), (16, 500)] {
         assert_eq!(
             played.at(day).ships[&ship(1)].fuel_t,
             n(fuel),
@@ -1295,12 +1297,12 @@ fn what_happens_follows_the_table_exactly() {
     assert_eq!(played.base_supply(16, 2), n(43));
     assert_eq!(played.base_supply(16, 3), n(39));
     assert_eq!(played.base_supply(16, 1), n(906));
-    assert_eq!(played.base_fuel(16, 1), n(850));
+    assert_eq!(played.base_fuel(16, 1), n(800));
     let end = played.at(16);
     let one = &end.ships[&ship(1)];
     assert_eq!(one.location, ShipLocation::TaskForce(force(FORCE)));
     assert!(one.supply_t.is_zero() && one.cargo_fuel_t.is_zero());
-    assert_eq!(one.fuel_t, n(450));
+    assert_eq!(one.fuel_t, n(500));
     let formed = &end.task_forces[&force(FORCE)];
     assert_eq!(formed.status, TaskForceStatus::Arrived);
     assert_eq!(formed.from_hex, S);
@@ -1457,7 +1459,7 @@ fn without_the_commands_of_day_3_t_and_u_change_places_from_day_10() {
     assert_eq!(played.base_supply(16, 2), n(39));
     assert_eq!(played.base_supply(16, 3), n(43));
     assert_eq!(played.base_supply(16, 1), n(906));
-    assert_eq!(played.base_fuel(16, 1), n(850));
+    assert_eq!(played.base_fuel(16, 1), n(800));
 }
 
 #[test]
@@ -1820,7 +1822,7 @@ fn in_40b_the_forces_sail_land_and_come_home_at_the_hours_of_the_table() {
     // The end of day 5.
     assert_eq!(played.base_supply(5, 1), n(1000));
     assert_eq!(played.base_fuel(5, 1), n(900));
-    assert_eq!(played.base_fuel(3, 1), n(1000));
+    assert_eq!(played.base_fuel(3, 1), n(900));
     assert_eq!(played.base_fuel(4, 1), n(900));
     assert_eq!(played.base_supply(5, 2), n(31));
     assert_eq!(played.base_supply(5, 3), n(19));
@@ -1829,7 +1831,7 @@ fn in_40b_the_forces_sail_land_and_come_home_at_the_hours_of_the_table() {
         let one = &end.ships[&ship(raw)];
         assert_eq!(one.location, ShipLocation::TaskForce(force(f)));
         assert!(one.supply_t.is_zero() && one.cargo_fuel_t.is_zero());
-        assert_eq!(one.fuel_t, n(500), "ship {raw} refuelled on day 4");
+        assert_eq!(one.fuel_t, n(500), "ship {raw} refuelled on day 3");
         let formed = &end.task_forces[&force(f)];
         assert_eq!(formed.status, TaskForceStatus::Arrived);
         assert_eq!(formed.position(), S);

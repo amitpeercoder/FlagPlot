@@ -519,14 +519,14 @@ fn refuelling_stops_at_the_fuel_reserve_and_a_second_force_takes_what_is_left() 
         ]
     );
     assert_eq!(run.held_refuelling(1), vec![(2, n(50))]);
-    // Day 2: base 1 is at its fuel reserve. Ship 2 wants 50 and takes none:
-    // nothing is taken, and the event says it is 50 t short.
+    // Day 2: base 1 is at its fuel reserve. Ship 2 wants 50 and takes none.
+    // It was recorded as held on day 1 and nothing has changed, so it is
+    // not recorded again (decision 0112).
     assert!(run.refuelled(2).is_empty());
-    assert_eq!(run.held_refuelling(2), vec![(2, n(50))]);
+    assert!(run.held_refuelling(2).is_empty());
     // Nothing is taken on any later day either.
     assert!(run.refuelled(3).is_empty() && run.refuelled(4).is_empty());
-    // The held event cites the ship's refuelling on day 1 and no cause on
-    // day 2 (nothing was taken).
+    // The held event cites the ship's refuelling on day 1.
     let held_1 = run.one_on_day(1, |k| {
         matches!(k, EventKind::RefuellingHeldAtReserve { .. })
     });

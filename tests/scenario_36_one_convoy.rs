@@ -667,10 +667,12 @@ fn what_happens_follows_the_table_exactly() {
     // `the_hours_at_which_the_force_comes_home`).
     assert!(played.arrived_at(4, FORCE, S).is_some());
     assert_eq!(played.base_supply(4, 2), n(420));
-    // Day 5: ship 1 refuels 40 t: base 1 holds 1960 t of fuel.
-    assert_eq!(played.base_fuel(4, 1), n(2000));
+    // Ship 1 refuels 40 t in the pulse it arrives, on day 4: base 1 holds
+    // 1960 t of fuel (decision 0112).
+    assert_eq!(played.base_fuel(3, 1), n(2000));
+    assert_eq!(played.base_fuel(4, 1), n(1960));
     assert_eq!(played.base_fuel(5, 1), n(1960));
-    assert_eq!(played.at(4).ships[&ship(1)].fuel_t, n(960));
+    assert_eq!(played.at(4).ships[&ship(1)].fuel_t, n(1000));
     assert_eq!(played.at(5).ships[&ship(1)].fuel_t, n(1000));
     // Days 6 to 15: T pays 10 t a day.
     for day in 4..=15 {
