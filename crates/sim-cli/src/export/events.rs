@@ -2025,6 +2025,38 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .with("target", Field::Str(target.to_string()))
                 .int("order", order.umpire_raw(key)),
         ),
+        EventKind::StaffNotice {
+            side,
+            kind,
+            plan,
+            run,
+        } => {
+            let mut data = d
+                .text("side", names::side(*side))
+                .text("notice", kind.name())
+                .int("plan", plan.raw());
+            if let Some(run) = run {
+                data = data.int("run", *run);
+            }
+            ("staff_notice", data)
+        }
+        EventKind::InterruptFired {
+            side,
+            interrupt,
+            condition,
+            figure,
+        } => {
+            let mut data = d
+                .text("side", names::side(*side))
+                .with("interrupt", Field::Str(interrupt.to_string()));
+            if let Some(condition) = condition {
+                data = data.with("condition", Field::Str(condition.to_string()));
+            }
+            if let Some(figure) = figure {
+                data = data.num("days_of_supply", *figure);
+            }
+            ("interrupt_fired", data)
+        }
     }
 }
 

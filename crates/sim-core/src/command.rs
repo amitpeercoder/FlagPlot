@@ -22,8 +22,12 @@
 //!
 //! Holds (a `hold` command, or an order of the commander's to a unit in an
 //! intent's forces limit, the override at step 2 of the day) and the end of a
-//! run are built (decision 0107, step 3 of stage 1). Interrupts are a later
-//! step: their place is marked in [`CommandState`]. Not built.
+//! run are built (decision 0107, step 3 of stage 1). So are interrupts and
+//! the staff's notices (step 4, rulings 31 to 35): the commander sets a
+//! days-of-supply threshold, three kinds stand without being set, and each
+//! is armed, fired and acknowledged; the staff's notices are recorded and
+//! tested each morning after the staff has handed in and before the day's
+//! orders (`intake::test_interrupts`).
 //!
 //! Reads: nothing of the truth but what intake checks against (the side's
 //! own ships, forces and bases). Writes: the side's command state, and a
@@ -31,6 +35,7 @@
 
 pub(crate) mod hold;
 pub(crate) mod intake;
+pub(crate) mod interrupt;
 #[cfg(test)]
 mod tests;
 
@@ -39,7 +44,7 @@ use std::sync::Mutex;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AirGroupId, BaseId, IntentId, OrderId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, IntentId, InterruptId, OrderId, ShipId, TaskForceId};
 use crate::orders::{Issuer, OrderKind};
 use crate::state::Side;
 use crate::view::SideView;
@@ -464,6 +469,169 @@ pub struct Hold {
     pub by: HoldMaker,
 }
 
+// ---------------------------------------------------------------------------
+// Interrupts.
+// ---------------------------------------------------------------------------
+
+/// What an interrupt the commander sets waits for (ruling 33). One kind in
+/// stage 1.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum InterruptCondition {
+    /// The days of supply of the side's base's hex are below `days`. It does
+    /// not hold where the hex has no figure.
+    SupplyBelow { base: BaseId, days: u32 },
+}
+
+impl InterruptCondition {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            InterruptCondition::SupplyBelow { .. } => 1,
+        }
+    }
+}
+
+impl core::fmt::Display for InterruptCondition {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            InterruptCondition::SupplyBelow { base, days } => {
+                write!(f, "{base} below {days} days of supply")
+            }
+        }
+    }
+}
+
+/// The kinds that stand without being set, until the commander switches them
+/// off (ruling 33).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum StandingKind {
+    /// The staff cannot meet a plan's intent (a notice of the staff's).
+    CannotMeet,
+    /// A plan waits for the commander's leave (a notice of the staff's).
+    WaitsForLeave,
+    /// A ship of the side was lost the day before.
+    ShipLost,
+}
+
+impl StandingKind {
+    /// Every kind, in code order.
+    pub const ALL: [StandingKind; 3] = [
+        StandingKind::CannotMeet,
+        StandingKind::WaitsForLeave,
+        StandingKind::ShipLost,
+    ];
+
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            StandingKind::CannotMeet => 1,
+            StandingKind::WaitsForLeave => 2,
+            StandingKind::ShipLost => 3,
+        }
+    }
+
+    /// The kind's name as scenario files, saved games and the tools write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            StandingKind::CannotMeet => "cannot_meet",
+            StandingKind::WaitsForLeave => "waits_for_leave",
+            StandingKind::ShipLost => "ship_lost",
+        }
+    }
+
+    /// The kind of that name.
+    pub fn from_name(name: &str) -> Option<StandingKind> {
+        StandingKind::ALL
+            .into_iter()
+            .find(|kind| kind.name() == name)
+    }
+}
+
+/// What a standing interrupt is about: a plan (the staff's notices) or a ship
+/// lost. A standing interrupt is armed apart for each subject (ruling 33).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum StandingSubject {
+    Plan(PlanId),
+    Ship(ShipId),
+}
+
+impl StandingSubject {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            StandingSubject::Plan(_) => 1,
+            StandingSubject::Ship(_) => 2,
+        }
+    }
+
+    /// The subject's number in its own series.
+    pub const fn raw(self) -> u32 {
+        match self {
+            StandingSubject::Plan(plan) => plan.raw(),
+            StandingSubject::Ship(ship) => ship.raw(),
+        }
+    }
+}
+
+impl core::fmt::Display for StandingSubject {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            StandingSubject::Plan(plan) => write!(f, "{plan}"),
+            StandingSubject::Ship(ship) => write!(f, "{ship}"),
+        }
+    }
+}
+
+/// An interrupt, set or standing, as a command or an event names it.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum InterruptRef {
+    Set(InterruptId),
+    Standing {
+        kind: StandingKind,
+        subject: StandingSubject,
+    },
+}
+
+impl core::fmt::Display for InterruptRef {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            InterruptRef::Set(id) => write!(f, "{id}"),
+            InterruptRef::Standing { kind, subject } => {
+                write!(f, "the standing interrupt {} for {subject}", kind.name())
+            }
+        }
+    }
+}
+
+/// Where an interrupt stands: armed or not, the day it last fired, whether
+/// that firing is acknowledged (ruling 32). The default is armed, never
+/// fired, not acknowledged.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct InterruptStatus {
+    pub armed: bool,
+    pub last_fired: Option<u32>,
+    pub acknowledged: bool,
+}
+
+impl Default for InterruptStatus {
+    fn default() -> InterruptStatus {
+        InterruptStatus {
+            armed: true,
+            last_fired: None,
+            acknowledged: false,
+        }
+    }
+}
+
+/// An interrupt the commander set.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct SetInterrupt {
+    pub id: InterruptId,
+    pub condition: InterruptCondition,
+    pub set_day: u32,
+    pub status: InterruptStatus,
+}
+
 /// One side's command state (decision 0107, items 1, 2 and 6).
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct CommandState {
@@ -477,8 +645,13 @@ pub struct CommandState {
     pub holds: BTreeMap<HoldTarget, Hold>,
     /// The number the side's next plan takes. Starts at 1.
     pub next_plan: u32,
-    // Interrupts (set, fired, acknowledged) go here, a field hashed and
-    // named beside the hash, in a later step of stage 1. Not built.
+    /// The interrupts the commander set, by his number (ruling 31).
+    pub interrupts: BTreeMap<InterruptId, SetInterrupt>,
+    /// Standing interrupts whose condition has held at least once; a subject
+    /// absent is armed and never fired.
+    pub standing: BTreeMap<(StandingKind, StandingSubject), InterruptStatus>,
+    /// Standing kinds the commander has switched off.
+    pub standing_off: BTreeSet<StandingKind>,
 }
 
 impl CommandState {
@@ -546,6 +719,9 @@ impl CommandState {
             && self.plans.is_empty()
             && self.commitments.is_empty()
             && self.holds.is_empty()
+            && self.interrupts.is_empty()
+            && self.standing.is_empty()
+            && self.standing_off.is_empty()
             && self.leaves == Leaves::default()
             && self.next_plan == 1
     }
@@ -616,6 +792,26 @@ pub enum CommandKind {
     Release { target: HoldTarget },
     /// The staff's: end a run of an approved plan (ruling 20).
     EndRun { plan: PlanId, run: u32 },
+    /// The commander's: set an interrupt, or switch a standing kind off or
+    /// on (rulings 31 and 33). Added at the end (decision 0107, step 4).
+    SetInterrupt(InterruptSetting),
+    /// The commander's: mark an interrupt's last firing seen. It arms
+    /// nothing (ruling 32). Added at the end.
+    Acknowledge { interrupt: InterruptRef },
+}
+
+/// What a `set_interrupt` command sets.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum InterruptSetting {
+    /// Set interrupt `interrupt` to `condition`, or set it again: a new
+    /// record, armed, never fired, set today.
+    Set {
+        interrupt: InterruptId,
+        condition: InterruptCondition,
+    },
+    /// Switch a standing kind off or on. Switching it to the state it is in
+    /// is accepted and changes nothing.
+    Standing { kind: StandingKind, on: bool },
 }
 
 impl CommandKind {
@@ -630,7 +826,9 @@ impl CommandKind {
             | CommandKind::SetLeave { .. }
             | CommandKind::CancelPlan { .. }
             | CommandKind::Hold { .. }
-            | CommandKind::Release { .. } => issuer == Issuer::Player,
+            | CommandKind::Release { .. }
+            | CommandKind::SetInterrupt(_)
+            | CommandKind::Acknowledge { .. } => issuer == Issuer::Player,
             CommandKind::Approve { .. } => {
                 matches!(issuer, Issuer::Player | Issuer::Staff)
             }
@@ -661,6 +859,8 @@ impl CommandKind {
             CommandKind::Hold { .. } => "hold",
             CommandKind::Release { .. } => "release",
             CommandKind::EndRun { .. } => "end_run",
+            CommandKind::SetInterrupt(_) => "set_interrupt",
+            CommandKind::Acknowledge { .. } => "acknowledge",
         }
     }
 }
@@ -719,6 +919,14 @@ pub enum CommandRefusal {
     RunEnded(u32),
     /// The ship is held by the commander, itself or through its force.
     Held(HoldTarget),
+    /// The interrupt's number is 0. Added at the end (decision 0107, step 4).
+    InterruptNumberNotUsable(InterruptId),
+    /// No interrupt of that number was set.
+    NoSuchInterrupt(InterruptId),
+    /// The interrupt has never fired.
+    NotFired(InterruptRef),
+    /// The interrupt's last firing is acknowledged already.
+    AlreadyAcknowledged(InterruptRef),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -764,6 +972,14 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NotHeld(target) => write!(f, "{target} is not held"),
             CommandRefusal::RunEnded(run) => write!(f, "run {run} has already ended"),
             CommandRefusal::Held(target) => write!(f, "{target} is held by the commander"),
+            CommandRefusal::InterruptNumberNotUsable(id) => {
+                write!(f, "{id} is not a number an interrupt may take")
+            }
+            CommandRefusal::NoSuchInterrupt(id) => write!(f, "{id} was not set"),
+            CommandRefusal::NotFired(interrupt) => write!(f, "{interrupt} has not fired"),
+            CommandRefusal::AlreadyAcknowledged(interrupt) => {
+                write!(f, "the last firing of {interrupt} is acknowledged already")
+            }
         }
     }
 }
@@ -873,6 +1089,26 @@ impl core::fmt::Display for CommandKind {
             CommandKind::Hold { target } => write!(f, "hold {target}"),
             CommandKind::Release { target } => write!(f, "release {target}"),
             CommandKind::EndRun { plan, run } => write!(f, "end run {run} of {plan}"),
+            CommandKind::SetInterrupt(setting) => match setting {
+                InterruptSetting::Set {
+                    interrupt,
+                    condition,
+                } => write!(f, "set {interrupt}: {condition}"),
+                InterruptSetting::Standing { kind, on } => write!(
+                    f,
+                    "switch {} the standing interrupt {}",
+                    if *on { "on" } else { "off" },
+                    kind.name()
+                ),
+            },
+            CommandKind::Acknowledge { interrupt } => match interrupt {
+                InterruptRef::Set(id) => write!(f, "acknowledge {id}"),
+                InterruptRef::Standing { kind, subject } => write!(
+                    f,
+                    "acknowledge the standing interrupt {} for {subject}",
+                    kind.name()
+                ),
+            },
         }
     }
 }
@@ -978,6 +1214,18 @@ impl NoticeKind {
             NoticeKind::RunEnded => "run_ended",
         }
     }
+
+    /// The kind of that name.
+    pub fn from_name(name: &str) -> Option<NoticeKind> {
+        [
+            NoticeKind::CannotMeet,
+            NoticeKind::WaitsForLeave(Leave::Prepare),
+            NoticeKind::WaitsForLeave(Leave::Launch),
+            NoticeKind::RunEnded,
+        ]
+        .into_iter()
+        .find(|kind| kind.name() == name)
+    }
 }
 
 /// The reason a notice rests on: an index into the same hand-in's
@@ -1014,6 +1262,26 @@ pub struct StaffDecisions {
 }
 
 impl StaffDecisions {
+    /// Adds `other` after what is already here: its orders, commands and
+    /// decisions to give no order follow ours, and each of its notices has
+    /// its basis shifted by the lengths of ours, so that it still points at
+    /// its own reason (ruling 34).
+    pub fn append(&mut self, other: StaffDecisions) {
+        let commands = self.commands.len();
+        let no_orders = self.no_orders.len();
+        self.orders.extend(other.orders);
+        self.commands.extend(other.commands);
+        self.no_orders.extend(other.no_orders);
+        self.notices
+            .extend(other.notices.into_iter().map(|mut notice| {
+                notice.rests_on = match notice.rests_on {
+                    NoticeBasis::Command(i) => NoticeBasis::Command(i + commands),
+                    NoticeBasis::NoOrder(i) => NoticeBasis::NoOrder(i + no_orders),
+                };
+                notice
+            }));
+    }
+
     pub fn is_empty(&self) -> bool {
         self.orders.is_empty()
             && self.commands.is_empty()

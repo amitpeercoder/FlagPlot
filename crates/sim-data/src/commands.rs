@@ -4,7 +4,7 @@
 //!
 //! Only the commander's kinds are written here: `set_intent`,
 //! `withdraw_intent`, `set_limit`, `set_leave`, `approve`, `cancel_plan`,
-//! `hold` and `release`. The staff's kinds (`commit_ships`, `end_run` and the
+//! `hold`, `release`, `set_interrupt` and `acknowledge`. The staff's kinds (`commit_ships`, `end_run` and the
 //! rest) are the staff's to give and a scenario cannot state
 //! them. Every table has `day`, `side` and `kind`, and the keys its kind
 //! takes; a key the kind does not take, a key that is not a key of any
@@ -19,6 +19,9 @@
 //! | `approve`, `cancel_plan` | `plan` |
 //! | `hold`, `release` | exactly one of `ship`, `task_force` and `air_group`; with `air_group`, `setting` (`"search_arc"`), which no other target takes |
 //!
+//! | `set_interrupt` | either `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`"cannot_meet"`, `"waits_for_leave"` or `"ship_lost"`) and `on` (switch a standing kind off or on); never a mixture of the two |
+//! | `acknowledge` | either `interrupt`, or `standing` with exactly one of `plan` and `ship`; never a mixture |
+//!
 //! The limits: `limit = "forces"` has `intent`, `ships`, `task_forces` and
 //! `source` (a base); `"area"` has `intent` and `hexes` as `[[q, r], ...]`;
 //! `"priority"` has `intent` and `rank`; `"protected"` has `intent` and
@@ -30,10 +33,11 @@ use std::collections::BTreeSet;
 
 use serde::Deserialize;
 use sim_core::command::{
-    CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, Leave, Limit, PlanId, Risk,
+    CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
+    InterruptRef, InterruptSetting, Leave, Limit, PlanId, Risk, StandingKind, StandingSubject,
 };
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, IntentId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, ShipId, TaskForceId};
 use sim_core::state::Side;
 
 use crate::quantity::Quantity;
@@ -68,6 +72,10 @@ pub(crate) struct CommandSpec {
     task_force: Option<u32>,
     air_group: Option<u32>,
     setting: Option<String>,
+    interrupt: Option<u32>,
+    below_days: Option<u32>,
+    standing: Option<String>,
+    on: Option<bool>,
 }
 
 impl CommandSpec {
@@ -100,6 +108,10 @@ impl CommandSpec {
         note(self.task_force.is_some(), "task_force");
         note(self.air_group.is_some(), "air_group");
         note(self.setting.is_some(), "setting");
+        note(self.interrupt.is_some(), "interrupt");
+        note(self.below_days.is_some(), "below_days");
+        note(self.standing.is_some(), "standing");
+        note(self.on.is_some(), "on");
         keys
     }
 
@@ -133,9 +145,38 @@ impl CommandSpec {
             ("set_leave", _) => &["leave", "given"],
             ("approve" | "cancel_plan", _) => &["plan"],
             ("hold" | "release", _) => &["ship", "task_force", "air_group", "setting"],
+            ("set_interrupt" | "acknowledge", _) => {
+                // The two forms: a number, or a standing kind. A table that
+                // carries keys of both is refused as a mixture, not as a key
+                // the kind does not take.
+                let (set_form, standing_form) = if self.kind == "set_interrupt" {
+                    (
+                        self.interrupt.is_some()
+                            || self.base.is_some()
+                            || self.below_days.is_some(),
+                        self.standing.is_some() || self.on.is_some(),
+                    )
+                } else {
+                    (
+                        self.interrupt.is_some(),
+                        self.standing.is_some() || self.plan.is_some() || self.ship.is_some(),
+                    )
+                };
+                if set_form && standing_form {
+                    return Err(format!(
+                        "{what} mixes the two forms: it names an interrupt by number or a standing kind, not both"
+                    ));
+                }
+                match (self.kind.as_str(), self.standing.is_some()) {
+                    ("set_interrupt", false) => &["interrupt", "base", "below_days"],
+                    ("set_interrupt", true) => &["standing", "on"],
+                    ("acknowledge", false) => &["interrupt"],
+                    (_, _) => &["standing", "plan", "ship"],
+                }
+            }
             (other, _) => {
                 return Err(format!(
-                    "the command on day {day} is \"{other}\", which is not set_intent, withdraw_intent, set_limit, set_leave, approve, cancel_plan, hold or release (the staff's commands are the staff's to give)"
+                    "the command on day {day} is \"{other}\", which is not set_intent, withdraw_intent, set_limit, set_leave, approve, cancel_plan, hold, release, set_interrupt or acknowledge (the staff's commands are the staff's to give)"
                 ))
             }
         };
@@ -160,6 +201,13 @@ impl CommandSpec {
             value
                 .to_fixed()
                 .map_err(|e| format!("{what}, \"{key}\" {e}"))
+        };
+        let standing_kind = |name: &str| {
+            StandingKind::from_name(name).ok_or_else(|| {
+                format!(
+                    "{what} has standing kind \"{name}\", which is not cannot_meet, waits_for_leave or ship_lost"
+                )
+            })
         };
         let kind = match self.kind.as_str() {
             "set_intent" => CommandKind::SetIntent {
@@ -287,6 +335,39 @@ impl CommandSpec {
                     CommandKind::Release { target }
                 }
             }
+            "set_interrupt" => match self.standing.as_deref() {
+                Some(name) => CommandKind::SetInterrupt(InterruptSetting::Standing {
+                    kind: standing_kind(name)?,
+                    on: self.on.ok_or_else(|| format!("{what} needs \"on\""))?,
+                }),
+                None => CommandKind::SetInterrupt(InterruptSetting::Set {
+                    interrupt: InterruptId::new(need(self.interrupt, "interrupt")?),
+                    condition: InterruptCondition::SupplyBelow {
+                        base: BaseId::new(need(self.base, "base")?),
+                        days: need(self.below_days, "below_days")?,
+                    },
+                }),
+            },
+            "acknowledge" => CommandKind::Acknowledge {
+                interrupt: match self.standing.as_deref() {
+                    Some(name) => {
+                        let subject = match (self.plan, self.ship) {
+                            (Some(plan), None) => StandingSubject::Plan(PlanId::new(plan)),
+                            (None, Some(ship)) => StandingSubject::Ship(ShipId::new(ship)),
+                            _ => {
+                                return Err(format!(
+                                    "{what} needs exactly one of \"plan\" and \"ship\" with \"standing\""
+                                ))
+                            }
+                        };
+                        InterruptRef::Standing {
+                            kind: standing_kind(name)?,
+                            subject,
+                        }
+                    }
+                    None => InterruptRef::Set(InterruptId::new(need(self.interrupt, "interrupt")?)),
+                },
+            },
             _ => CommandKind::CancelPlan {
                 plan: PlanId::new(need(self.plan, "plan")?),
             },

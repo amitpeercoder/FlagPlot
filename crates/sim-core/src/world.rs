@@ -531,10 +531,10 @@ impl World {
     /// staff being asked: what a replay gives back (decision 0107, 9). It is
     /// taken in at the step a staff is asked, as if the staff had given it.
     pub fn submit_staff(&mut self, side: Side, decisions: StaffDecisions) {
-        let pending = self.pending_staff.entry(side).or_default();
-        pending.orders.extend(decisions.orders);
-        pending.commands.extend(decisions.commands);
-        pending.no_orders.extend(decisions.no_orders);
+        self.pending_staff
+            .entry(side)
+            .or_default()
+            .append(decisions);
     }
 
     /// What each side's staff handed in on the last day resolved, asked or

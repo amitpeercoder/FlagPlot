@@ -3779,7 +3779,12 @@ impl Day {
                     | EventKind::PlanStateChanged { .. }
                     | EventKind::PlanAmended { .. }
                     | EventKind::StaffReason { .. }
-                    | EventKind::HeldByOrder { .. } => {}
+                    | EventKind::HeldByOrder { .. }
+                    // The staff's notices and the interrupts that fired are
+                    // the command report's, not the briefing's fold
+                    // (decision 0107, step 4).
+                    | EventKind::StaffNotice { .. }
+                    | EventKind::InterruptFired { .. } => {}
                 },
                 SideEventKind::EnemySurrendered { hex, men } => {
                     ground.prisoners.push(PrisonersLine {

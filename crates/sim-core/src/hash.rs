@@ -12,7 +12,8 @@
 use crate::belief::{BattleClaim, Contact, GroundEstimate};
 use crate::command::{
     Amendment, AmendmentChange, Baseline, CommandState, Commitment, ForcesLimit, Hold, HoldMaker,
-    HoldTarget, Intent, IntentKind, IntentLimits, Leaves, Limit, Plan, Run, RunDays,
+    HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition, InterruptStatus, Leaves,
+    Limit, Plan, Run, RunDays, SetInterrupt, StandingSubject,
 };
 use crate::events::Cause;
 use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent};
@@ -172,8 +173,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// Japanese: its intents, leaves, plans, commitments and next plan number
 /// (decision 0107);
 /// version 25 adds each side's holds after its commitments and a run's ended
-/// day after its `days.free` (decision 0107, step 3).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v25";
+/// day after its `days.free` (decision 0107, step 3);
+/// version 26 adds each side's interrupts: those set, the standing ones that
+/// have fired, and the standing kinds switched off, after its holds
+/// (decision 0107, step 4).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v26";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -474,6 +478,9 @@ fn name_every_field(world: &World) {
             commitments,
             next_plan: _,
             holds,
+            interrupts,
+            standing,
+            standing_off,
         } = state;
         if let Some(Intent {
             id: _,
@@ -557,6 +564,34 @@ fn name_every_field(world: &World) {
                 HoldMaker::Command | HoldMaker::Order(_) => {}
             }
         }
+        if let Some((
+            _,
+            SetInterrupt {
+                id: _,
+                condition,
+                set_day: _,
+                status,
+            },
+        )) = interrupts.iter().next()
+        {
+            let InterruptCondition::SupplyBelow { base: _, days: _ } = condition;
+            let InterruptStatus {
+                armed: _,
+                last_fired: _,
+                acknowledged: _,
+            } = status;
+        }
+        if let Some(((_, subject), status)) = standing.iter().next() {
+            match subject {
+                StandingSubject::Plan(_) | StandingSubject::Ship(_) => {}
+            }
+            let InterruptStatus {
+                armed: _,
+                last_fired: _,
+                acknowledged: _,
+            } = status;
+        }
+        let _ = standing_off.iter().next();
     }
     for belief in beliefs.values() {
         if let Some(Contact {
@@ -806,7 +841,39 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
             }
         }
     }
+    h.count(state.interrupts.len());
+    for interrupt in state.interrupts.values() {
+        h.u32(interrupt.id.raw());
+        match interrupt.condition {
+            InterruptCondition::SupplyBelow { base, days } => {
+                h.u8(interrupt.condition.code());
+                h.u32(base.raw());
+                h.u32(days);
+            }
+        }
+        h.u32(interrupt.set_day);
+        hash_interrupt_status(h, &interrupt.status);
+    }
+    h.count(state.standing.len());
+    for ((kind, subject), status) in &state.standing {
+        h.u8(kind.code());
+        h.u8(subject.code());
+        h.u32(subject.raw());
+        hash_interrupt_status(h, status);
+    }
+    h.count(state.standing_off.len());
+    for kind in &state.standing_off {
+        h.u8(kind.code());
+    }
     h.u32(state.next_plan);
+}
+
+/// Hashes where an interrupt stands: armed, the day it last fired,
+/// acknowledged.
+fn hash_interrupt_status(h: &mut StateHasher, status: &InterruptStatus) {
+    h.u8(u8::from(status.armed));
+    h.optional_u32(status.last_fired);
+    h.u8(u8::from(status.acknowledged));
 }
 
 /// Hashes everything that defines the state of a game. When a field is added

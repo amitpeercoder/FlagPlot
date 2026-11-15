@@ -695,6 +695,25 @@ mod tests {
                         plan: PlanId::new(1),
                     },
                 ),
+                (
+                    Side::Allied,
+                    CommandKind::SetInterrupt(sim_core::command::InterruptSetting::Set {
+                        interrupt: sim_core::ids::InterruptId::new(1),
+                        condition: sim_core::command::InterruptCondition::SupplyBelow {
+                            base: BaseId::new(2),
+                            days: 35,
+                        },
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::Acknowledge {
+                        interrupt: sim_core::command::InterruptRef::Standing {
+                            kind: sim_core::command::StandingKind::CannotMeet,
+                            subject: sim_core::command::StandingSubject::Plan(PlanId::new(1)),
+                        },
+                    },
+                ),
             ],
         );
         let reason = Reason {
@@ -740,7 +759,20 @@ mod tests {
                 reason: reason.clone(),
             }],
             no_orders: vec![reason],
-            notices: Vec::new(),
+            notices: vec![
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::CannotMeet,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                },
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::RunEnded,
+                    plan: PlanId::new(1),
+                    run: Some(2),
+                    rests_on: sim_core::command::NoticeBasis::Command(0),
+                },
+            ],
         };
         let mut staff: StaffHandIns = BTreeMap::new();
         staff
@@ -779,7 +811,7 @@ mod tests {
             .expect("the file is JSON");
         assert_eq!(written["version"], 3);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 7);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 9);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);
@@ -805,6 +837,19 @@ mod tests {
             fs::read_to_string(&file).expect("reads"),
             fs::read_to_string(&again).expect("reads")
         );
+        // A hand-in saved before notices has no `notices` key and reads as
+        // having none; the version stays 3.
+        let mut before = written.clone();
+        for entry in before["staff"].as_array_mut().expect("staff") {
+            entry["decisions"]
+                .as_object_mut()
+                .expect("decisions")
+                .remove("notices");
+        }
+        fs::write(&file, before.to_string()).expect("writes");
+        let before = read(&file).expect("an older hand-in reads");
+        assert!(before.staff[&3][&Side::Allied].notices.is_empty());
+        assert_eq!(before.staff[&3][&Side::Allied].orders, decisions.orders);
         // An older version is refused, not converted.
         let mut old = written.clone();
         old["version"] = json!(2);
