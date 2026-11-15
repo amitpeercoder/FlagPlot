@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/command_state",
+  "title": "command_state: the side's command state as it will stand when the coming day begins",
+  "description": "Intents with their limits and the staff's projection, the leaves, the bases' reserves, plans, commitments, the commands queued for the coming day and the staff's decisions of yesterday with their numbers for why. The staff does nothing for a side until an intent with a forces limit is set.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "for_day",
+    "as_at",
+    "notes",
+    "leaves",
+    "intents",
+    "reserves",
+    "plans",
+    "commitments",
+    "queued",
+    "staff_decisions_yesterday"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 4
+    },
+    "kind": {
+      "const": "command_state"
+    },
+    "for_day": {
+      "type": "integer"
+    },
+    "as_at": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "leaves": {
+      "type": "object",
+      "required": [
+        "prepare",
+        "launch",
+        "meaning"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "prepare": {
+          "type": "boolean"
+        },
+        "launch": {
+          "type": "boolean"
+        },
+        "meaning": {
+          "type": "string"
+        }
+      }
+    },
+    "intents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "number",
+          "in_force",
+          "kind",
+          "base",
+          "floor_days",
+          "interval_days",
+          "interval",
+          "set_day",
+          "withdrawn_day",
+          "plan",
+          "limits",
+          "projection"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "number": {
+            "type": "integer"
+          },
+          "in_force": {
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "keep_supplied"
+          },
+          "base": {
+            "$ref": "defs.schema.json#/$defs/handle"
+          },
+          "floor_days": {
+            "type": "integer"
+          },
+          "interval_days": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "interval": {
+            "type": "string",
+            "description": "The days between shipments, or \"not set: the staff uses 15\"."
+          },
+          "set_day": {
+            "type": "integer"
+          },
+          "withdrawn_day": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "plan": {
+            "type": "integer"
+          },
+          "limits": {
+            "$ref": "command_defs.schema.json#/$defs/limits"
+          },
+          "projection": {
+            "oneOf": [
+              {
+                "$ref": "command_defs.schema.json#/$defs/projection_summary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "reserves": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "base",
+          "supply_t",
+          "fuel_t",
+          "supply_reserve_t",
+          "fuel_reserve_t"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "$ref": "defs.schema.json#/$defs/handle"
+          },
+          "supply_t": {
+            "$ref": "defs.schema.json#/$defs/dec"
+          },
+          "fuel_t": {
+            "$ref": "defs.schema.json#/$defs/dec"
+          },
+          "supply_reserve_t": {
+            "$ref": "defs.schema.json#/$defs/dec"
+          },
+          "fuel_reserve_t": {
+            "$ref": "defs.schema.json#/$defs/dec"
+          }
+        }
+      }
+    },
+    "plans": {
+      "type": "array",
+      "items": {
+        "$ref": "command_defs.schema.json#/$defs/plan"
+      }
+    },
+    "commitments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ship",
+          "plan",
+          "run",
+          "from_day",
+          "to_day"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ship": {
+            "type": "integer"
+          },
+          "plan": {
+            "type": "integer"
+          },
+          "run": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "from_day": {
+            "type": "integer"
+          },
+          "to_day": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "queued": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "index",
+          "command",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "type": "integer"
+          },
+          "command": {
+            "$ref": "command_defs.schema.json#/$defs/command_body"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "staff_decisions_yesterday": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "number",
+          "day",
+          "for",
+          "summary",
+          "carried_out"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "number": {
+            "type": "integer"
+          },
+          "day": {
+            "type": "integer"
+          },
+          "for": {
+            "enum": [
+              "order",
+              "command",
+              "no_order"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "carried_out": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/propose",
+  "title": "propose: what the staff would do for one intent, worked from the view and stored nowhere",
+  "description": "The projection, the runs the staff would make over the next 30 days with their days, ships, loads and reasons, what binds, what it displaces and what it would hand in for the coming day.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "for_day",
+    "intent",
+    "plan",
+    "projection",
+    "runs",
+    "binds",
+    "displaces",
+    "would_hand_in",
+    "reason"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 4
+    },
+    "kind": {
+      "const": "propose"
+    },
+    "for_day": {
+      "type": "integer"
+    },
+    "intent": {
+      "type": "integer"
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "number",
+        "state"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "type": "integer"
+        },
+        "state": {
+          "enum": [
+            "draft",
+            "preparing",
+            "released",
+            "complete",
+            "failed",
+            "cancelled"
+          ]
+        }
+      }
+    },
+    "projection": {
+      "oneOf": [
+        {
+          "$ref": "command_defs.schema.json#/$defs/projection"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "index",
+          "ships",
+          "load_t",
+          "days",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "type": "integer"
+          },
+          "ships": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "load_t": {
+            "$ref": "defs.schema.json#/$defs/dec"
+          },
+          "days": {
+            "$ref": "command_defs.schema.json#/$defs/days"
+          },
+          "reason": {
+            "$ref": "command_defs.schema.json#/$defs/reason"
+          }
+        }
+      }
+    },
+    "binds": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "binds",
+            "shortfall_days",
+            "source_dry_day"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "binds": {
+              "type": "string"
+            },
+            "shortfall_days": {
+              "$ref": "defs.schema.json#/$defs/dec"
+            },
+            "source_dry_day": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "displaces": {
+      "type": "string"
+    },
+    "would_hand_in": {
+      "$ref": "command_defs.schema.json#/$defs/decisions"
+    },
+    "reason": {
+      "$ref": "command_defs.schema.json#/$defs/reason"
+    }
+  }
+}

@@ -1444,13 +1444,20 @@ fn staffed_world() -> World {
     world_with_plan(true)
 }
 
+fn staff_command(kind: CommandKind, worked: &str) -> StaffCommand {
+    StaffCommand {
+        kind,
+        reason: reason(1, worked),
+    }
+}
+
 fn decisions_for_the_day() -> StaffDecisions {
     StaffDecisions {
         orders: vec![
             staff_order(speed(1), 1, "inside: force 1 is listed"),
             staff_order(speed(2), 1, "outside: force 2 is not listed"),
         ],
-        commands: vec![commit(1, None, &[5], 1, 3)],
+        commands: vec![staff_command(commit(1, None, &[5], 1, 3), "commit ship 5")],
         no_orders: vec![reason(1, "nothing to do for ship 6")],
     }
 }
@@ -1523,9 +1530,10 @@ fn a_staffs_order_outside_its_forces_limit_is_refused_and_one_inside_accepted_ea
     // The decision to give no order is a reason with no order and no causes.
     let none = events
         .iter()
-        .find(|e| matches!(&e.kind, EventKind::StaffReason { order: None, .. }))
+        .find(|e| {
+            matches!(&e.kind, EventKind::StaffReason { order: None, .. }) && e.causes.is_empty()
+        })
         .unwrap();
-    assert!(none.causes.is_empty());
     let EventKind::StaffReason { reason, .. } = &none.kind else {
         unreachable!()
     };
@@ -1536,6 +1544,62 @@ fn a_staffs_order_outside_its_forces_limit_is_refused_and_one_inside_accepted_ea
     // What was handed in is kept for the runner.
     assert_eq!(world.staff_handed_in()[&A], decisions_for_the_day());
     assert!(!world.staff_handed_in().contains_key(&J));
+}
+
+#[test]
+fn a_staff_commands_reason_follows_the_command_and_cites_it_whether_taken_or_refused() {
+    let mut world = staffed_world();
+    let decisions = StaffDecisions {
+        commands: vec![
+            // Taken.
+            staff_command(commit(1, None, &[5], 1, 3), "reason of the taken command"),
+            // Refused: the staff may not set an intent.
+            staff_command(set_intent(3), "reason of the refused command"),
+        ],
+        ..StaffDecisions::default()
+    };
+    let staffs = Fixed_(decisions);
+    world
+        .resolve_day_staffed(Staffs::none().with(A, &staffs))
+        .unwrap();
+    let events = log(&world);
+    for (worked, taken) in [
+        ("reason of the taken command", true),
+        ("reason of the refused command", false),
+    ] {
+        let at = events
+            .iter()
+            .position(|e| {
+                matches!(&e.kind, EventKind::StaffReason { reason, .. } if reason.worked == worked)
+            })
+            .unwrap();
+        let EventKind::StaffReason { side, order, .. } = &events[at].kind else {
+            unreachable!()
+        };
+        assert_eq!((*side, *order), (A, None));
+        let [Cause::Event(cited)] = events[at].causes[..] else {
+            panic!("a staff command's reason cites exactly its command's event")
+        };
+        let cited_at = events.iter().position(|e| e.id == cited).unwrap();
+        assert!(cited_at < at, "the reason is recorded after the command");
+        match (&events[cited_at].kind, taken) {
+            (
+                EventKind::CommandTaken {
+                    issuer: Issuer::Staff,
+                    ..
+                },
+                true,
+            )
+            | (
+                EventKind::CommandRefused {
+                    issuer: Issuer::Staff,
+                    ..
+                },
+                false,
+            ) => {}
+            (other, _) => panic!("cited event is not the expected command record: {other:?}"),
+        }
+    }
 }
 
 #[test]
@@ -1689,6 +1753,65 @@ fn a_same_day_forming_order_then_a_load_order_to_the_new_force_are_both_accepted
     assert_eq!(force.ships, ships(&[5, 6]));
     assert!(force.cargo_order.is_some());
     assert_eq!(world.made_ids.next_task_force(A), new_force.raw() + 1);
+}
+
+#[test]
+fn the_world_at_the_staff_step_has_the_commands_in_and_the_original_is_untouched() {
+    let mut world = world();
+    world.submit_commands(A, vec![set_intent(1)]);
+    let before = world.state_hash();
+    let events_before = world.events.len();
+    let copy = world.at_staff_step();
+    assert!(copy
+        .side_view(A)
+        .command_state()
+        .intents
+        .contains_key(&intent(1)));
+    assert!(!world
+        .side_view(A)
+        .command_state()
+        .intents
+        .contains_key(&intent(1)));
+    // The copy is at the day before the coming one, with its orders and
+    // commands still pending, and the original is as it was.
+    assert_eq!(copy.truth.day, world.truth.day);
+    assert_eq!(world.state_hash(), before);
+    assert_eq!(world.events.len(), events_before);
+    assert!(copy.events.len() > events_before);
+    // Resolving the original day gives the same command state as the copy.
+    world.resolve_day().unwrap();
+    assert_eq!(
+        format!("{:?}", world.side_view(A).command_state()),
+        format!("{:?}", copy.side_view(A).command_state())
+    );
+}
+
+#[test]
+fn the_next_task_force_id_is_the_number_a_forming_order_then_makes() {
+    let mut world = staffed_world();
+    let view = world.side_view(A);
+    let new_force = view.next_task_force_id();
+    assert_eq!(new_force.raw(), world.made_ids.next_task_force(A));
+    // The other side's series is its own.
+    assert_ne!(world.side_view(J).next_task_force_id(), new_force);
+    let form = OrderKind::Base {
+        target: base(1),
+        order: BaseOrder::FormTaskForce {
+            ships: vec![ship(5), ship(6)],
+        },
+    };
+    let staffs = Fixed_(StaffDecisions {
+        orders: vec![staff_order(form, 1, "form")],
+        ..StaffDecisions::default()
+    });
+    world
+        .resolve_day_staffed(Staffs::none().with(A, &staffs))
+        .unwrap();
+    assert_eq!(world.truth.task_forces[&new_force].ships, ships(&[5, 6]));
+    assert_eq!(
+        world.side_view(A).next_task_force_id().raw(),
+        new_force.raw() + 1
+    );
 }
 
 #[test]
@@ -1868,7 +1991,7 @@ fn leak_test(other: Side, watcher: Side) {
                 reason: reason(1, "outside"),
             },
         ],
-        commands: vec![
+        commands: [
             CommandKind::CommitShips {
                 plan: plan(1),
                 run: None,
@@ -1891,7 +2014,10 @@ fn leak_test(other: Side, watcher: Side) {
             },
             // Refused: the staff may not set an intent.
             set_intent(3),
-        ],
+        ]
+        .into_iter()
+        .map(|kind| staff_command(kind, "a command"))
+        .collect(),
         no_orders: vec![reason(1, "no order for the idle ship")],
     };
     let busy_staff = Fixed_(decisions);

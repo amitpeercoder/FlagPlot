@@ -1,14 +1,14 @@
 # The staff
 
-This chapter holds what a side's commander says as state, the commands that change it, the staff that a side may have, the reasons the staff gives, and days of supply. It is begun by step 1 of stage 1 of step 3, the engine half: everything `sim-core`, `sim-data` and `sim-cli` need for a staff to exist. No staff is built yet. The crate that holds one, `sim-staff`, the doctrine for keeping a base supplied and the agent's tools for commanding are the second half of that step. A game with no command and no staff is played exactly as it was before this chapter, and every rule below does nothing in it. [0107, 0111]
+This chapter holds what a side's commander says as state, the commands that change it, the staff that a side may have, the reasons the staff gives, and days of supply. It is written by step 1 of stage 1 of step 3: the engine's half (command state, commands, the staff passed in, days of supply) and the staff's half (the crate `sim-staff`, the doctrine for keeping a base supplied, the reasons of staff commands, the staff's projection of days of supply, and the tools a seat commands with). Every side of every game has the supply staff; a side with no intent in force has a staff that does nothing, so a game with no command is played exactly as it was before this chapter. [0107, 0111]
 
 No rule here draws a random number. Every quantity is a fixed-point number (chapter 1, Numbers and chance).
 
 ## What is built and what is not
 
-Built: command state (intents, six limits, two leaves, plans with their states, baselines, amendments and runs, and commitments of ships); eleven commands and who may give each; the staff passed in to the function that resolves a day, and what it hands in; the check of a staff's orders against a forces limit; reasons; days of supply; the saved game of version 3, `replay --check-staff` and the doctrine version; and a scenario's commands. [0107]
+Built: command state (intents, six limits, two leaves, plans with their states, baselines, amendments and runs, and commitments of ships); eleven commands and who may give each; the staff passed in to the function that resolves a day, and what it hands in; the check of a staff's orders against a forces limit; reasons; days of supply; the saved game of version 3, `replay --check-staff` and the doctrine version; a scenario's commands; the doctrine for keeping a base supplied, with its projection of days of supply and its proposals; and the tools of step 1. [0107]
 
-Not built, and so not rules: holds on a setting, a unit or a force, and the override of a held unit by the commander's own order; interrupts and their acknowledgement; a run of days that stops for an interrupt; the command report; commitments of stock; the doctrine itself (what a staff decides, how it sizes and times a run, its projection of stock, its proposals and previews); the fallback of a cancelled plan; and a phase of a plan (below, Plans). Their places are marked in the code and in the day's order below. [0107]
+Not built, and so not rules: holds on a setting, a unit or a force, and the override of a held unit by the commander's own order; interrupts and their acknowledgement; a run of days that stops for an interrupt; the command report; commitments of stock beyond the loads still to be taken (below, The doctrine); previews; escort, cover and the recall of a run; a second source; an intent for fuel; the fallback of a cancelled plan beyond a route that already ends at the source; and a phase of a plan (below, Plans). Their places are marked in the code and in the day's order below. [0107]
 
 ## Command state
 
@@ -26,14 +26,14 @@ An intent in force carries its limits as they stand. Setting an intent that is i
 
 ### The six limits
 
-A limit says what the staff may use and where it may go. Five belong to an intent and one to a base. A limit that was never set is empty, and an intent with no forces limit lets a staff give no order for it.
+A limit says what the staff may use and where it may go. Five belong to an intent and one to a base. A limit that was never set does not bind, with one exception that follows from what it is: an intent with no forces limit gives the staff no ship, so it gives no order for it. With no area limit the sea is open. [0107; the architect's ruling, Nov 15, 2026]
 
 | Limit | What it holds | What reads it |
 | --- | --- | --- |
 | Forces | The pool: a set of ships, a set of task forces, and exactly one source base for a supply intent | The check of a staff's order and of a staff command that names ships (below) |
-| Area | A set of hexes the intent's forces may enter. It is not empty, and every hex is on the map | Nothing in the engine. The doctrine will |
-| Priority | A rank, 1 first, or none. An intent with none comes after every ranked intent, then by number | Nothing in the engine. The doctrine will |
-| Protected | A set of ships the staff may not take from the intent | Nothing in the engine. The doctrine will |
+| Area | A set of hexes the intent's forces may enter. It is not empty, and every hex is on the map. An area not set does not bind: the sea is open | The doctrine's route |
+| Priority | A rank, 1 first, or none. An intent with none comes after every ranked intent, then by number | The order in which the doctrine serves intents |
+| Protected | A set of ships the staff may not take from the intent | Nothing yet: with one intent no ship is taken from another. Stage 1's step 2 |
 | Risk | Preserve, balanced or press. Balanced is the default | Nothing. Stored and shown, and read by no rule until a later stage |
 | Reserve | For a base, a supply reserve and a fuel reserve, in tons, neither below 0 | Refuelling, and a load the staff orders (chapter 2, Refuelling in port and Cargo orders) |
 
@@ -187,7 +187,7 @@ A side sees: its own `CommandTaken`, `CommandRefused`, `PlanDrafted`, `PlanState
 A staff is code outside `sim-core`. `sim-core` defines what it is: given a side's view, it decides the day and hands in a `StaffDecisions`:
 
 - **Orders**, each with the intent it serves and its reason.
-- **Staff commands**: the commands of the staff's column above.
+- **Staff commands**: the commands of the staff's column above, each with its reason.
 - **Decisions to give no order**, each a reason.
 
 A staff is a function of the view: it is asked with a shared reference, so that a staff asked twice on the same view gives the same answer. That is what `replay --check-staff` tests. The function that resolves a day takes each side's staff or none. A side with none is not asked, and a day with no staff and no command is resolved as it was. [0107 items 4, 7 and 8]
@@ -198,7 +198,7 @@ What a replay hands in, in place of asking, is taken in at the same step as if a
 
 The staff's commands are taken in first, each side's in the order handed in, and after each side's commands its decisions to give no order are recorded. Then every order of the day is taken in: the commander's and the staff's together (chapter 1, How orders are numbered and sorted). A staff's order comes after the commander's to the same unit, so the staff's replaces the commander's in a standing slot. A staff's order is marked with the issuer staff and the intent it serves (chapter 1, Who can issue). A cargo order the staff gives heeds the reserve of a base (chapter 2, Cargo orders). [0107, 0111]
 
-Limit: no staff is built. `sim-cli/src/doctrine.rs` gives none to either side, so every game in the repository has none. [0107]
+Every runner gives both sides the supply staff (`sim_staff::staffs()`). A staff whose side has no intent in force and no commitment to free hands in nothing: nothing is taken in and nothing is saved for that day. [0107]
 
 ### The forces limit on a staff's orders
 
@@ -227,7 +227,7 @@ Every order a staff gives and every decision it makes to give none has a **reaso
 | Worked | The calculation, in words |
 | Would change | What, if different, would give a different decision |
 
-A reason is handed in with its order, or with the decision to give no order, and is recorded as a `StaffReason` event. For an order, the event cites the order and the event that accepted or refused it, and is recorded after them. For a decision to give no order it has no order and no cause. **A reason is kept, not worked out again**: it stays in the log whatever the intent has since become, so it still resolves after its intent is replaced or withdrawn. Its number is the number of its event: a reason has no number of its own. [0107 items 4 and 12]
+A reason is handed in with its order, with its staff command, or with the decision to give no order, and is recorded as a `StaffReason` event. For an order, the event cites the order and the event that accepted or refused it, and is recorded after them. For a staff command it has no order and cites the command's `CommandTaken` or `CommandRefused`, and is recorded after it and its follow-ups. For a decision to give no order it has no order and no cause. [0107; differences.md row 43] **A reason is kept, not worked out again**: it stays in the log whatever the intent has since become, so it still resolves after its intent is replaced or withdrawn. Its number is the number of its event: a reason has no number of its own. [0107 items 4 and 12]
 
 The engine stores what the staff writes in a reason and checks none of it. Evidence names a side's own ships freely and the enemy only as a contact, a claim or an estimate (chapter 3, Belief): that is the staff's to keep, and a staff is given nothing else to name. [0107, truth and belief]
 
@@ -257,9 +257,58 @@ Days of supply is a side's supply stock in a hex over its planned use of supply 
 
 **When it is read.** At the step where a staff is asked: at the start of a day, after ships in port have refuelled and before the day's orders are taken in. Read between days it gives the same figure, since nothing between the end of one day and that step changes a stock or a use. An order given today shows in the figure of tomorrow: a group set to patrol today raises the planned use read the next day. [0107 item 31, ruling 3]
 
-**Not built.** The staff's projection of the figure over the coming days, and the first day it falls below an intent's floor, are the doctrine's and are not in the engine. [0107 items 34 and 35]
+**The projection** of the figure over the coming days, and the first day it falls below an intent's floor, are the doctrine's (below, The doctrine). The engine gives it what it counts by its own rule: `SideView::men_due_by_day(hex)`, each force due in the hex with its due day and its men's charge, the rule the men-due part above uses. [0107 items 34 and 35]
 
 A side sees: its own figure, with its stock, its planned use and the five parts, in the agent's `list_bases` and `get_entity` (as `days_of_supply`) and in the briefing's entry for each of its bases (as `planned_days_of_supply`). The briefing's entry for a base also keeps its older `days_of_supply`, which is a different figure: the stock over yesterday's spending, cut to one decimal (glossary, Days of supply). The enemy sees none. [0107 item 47]
+
+## The doctrine: keep a base supplied
+
+The supply staff (`sim_staff::SupplyStaff`) decides from its side's view alone, at the step of the day where a staff is asked. It holds nothing of its own: what it remembers is the side's command state (its plans, runs and commitments) and what the view shows of its ships. Asked twice on the same view it gives the same answer. It draws no random number and uses no floating point. [0107 items 3 and 37 to 45, rulings 4 to 9]
+
+"Today" below is the day being resolved. A ship, a force and a base are named in a reason as the engine writes them (`ship:1`, `task_force:1000001`, `base:2`); the agent's tools show them in the side's own numbers.
+
+### The projection
+
+For the hex of the intent's base the staff projects a reading for each day from today. Today's reading is the view's (Days of supply, above). The reading of the next day is that day's reading, less its planned use, plus what lands that day, and never below 0. The planned use of a coming day is today's, with the men due counted from the day each force is due (`men_due_by_day`). What lands: for each run of an approved plan of the side to that hex that has not finished, its load while it has not sailed, else the supply aboard its ships, on the day after its arrival day, or today if that day is past. A reading's figure is its stock over its use; with no use it has none. The report of it is today's figure and the first day whose figure is below the floor. [0107 item 35, ruling 1]
+
+### Each day, for each intent
+
+The intents in force are served in priority order: ranked ones by rank, then those with none, each by number. For each:
+
+1. **What stops it.** With no forces limit, no order and a reason. A destination or source base that is not the side's: an approved plan is marked failed (`mark_plan`), and no order. A plan that has ended: no order. A pool with no ship afloat: an approved plan is marked failed, and no order. The staff never marks a plan complete: a supply intent ends when it is withdrawn.
+2. **The leaves.** A draft is approved to preparing when leave to prepare is given; else no order, and the reason says the plan waits for the commander. A plan that is preparing is released the same day when leave to launch is given. A plan that is preparing forms and loads its first run and does not sail it.
+3. **The runs under way.** A run whose ships are all at the source, stopped, is loading, unless its sail day is past and nothing is aboard, when it has finished; a run with a ship away from the source is under way; a run whose ships a later run has taken, or whose ships are all sunk, has finished. A run loading whose load is complete (the supply aboard is its load, or the source has nothing more above its reserve, or its ships are full), after its load day, sails if the plan is released: a route to the destination and back to the source, marked to act at the destination, and an unload order. If its sail day has passed, it is timed again first (`time_run`) and its commitment renewed (`free_ships`, `commit_ships`). A run loaded in a plan that is preparing waits for leave to launch.
+4. **A new run.** When no run of the plan is loading, a run is needed if, without it, the reading of the day after a run ordered today would arrive is below the floor's stock: the floor in days times the planned use of that day. Then:
+   - **Its ships** are the pool's free ships in number order, taken until their room covers the load. A ship is free when no unfinished run of any plan holds it, no commitment covers today, and it is stopped at the source, in port in no force or in a force there with no route. A ship in a force brings its whole force. A ship's room is its class's cargo less the supply aboard.
+   - **Its load** is the floor's stock on the day it arrives, less the reading of that day, and not below 0, plus the planned use of the interval's days from the day it arrives. The interval is the intent's, or 15 days where the commander set none. It is cut to the ships' room, and to the source's stock above its reserve and above what runs still loading there have yet to take. It is fixed when it is ordered.
+   - **Its days**, in whole days: loading takes the hours of the load at the source's berth rate (the lighter rate for a ship with no berth), rounded up to days and at least 1; the passage each way takes the hours of the charged sea distance at the class's cruise speed, rounded up to days; unloading as loading, at the destination's rate. It loads today, sails after its loading days, arrives on its sail day plus the outward passage less one, and its ships are free on the day after they are back at the source. The hour a force steams on from the destination does not move these days. [rulings 6, 8 and 9]
+   - **Its route.** The engine's sea path out and back. Where an area limit is set and the path leaves it, waypoints are added along the shortest sea path inside the area until the engine's path between them stays inside; if there is no such path, there is no route. With no area limit the sea is open.
+   - **Its fuel.** Each ship needs, in the fuel it holds after the morning's refuelling, the fuel of the round trip at cruise.
+   - **On the day,** the staff hands in `add_run` and `commit_ships` (from today to the day before the ships are free), and orders: a forming order at the source where its ships lie in port in no force (the new force's number is the view's `next_task_force_id`, in the order intake forms forces), a join where they lie in more than one force, and a load to a weight at the source, the weight being what is aboard and the load. [ruling 7]
+5. **When it cannot.** It says which binds: no ship free until a day, the source's stock, no route in the area, a ship without the fuel, or the use more than the pool can carry. It gives the shortfall in days at the reading it checked, and the day the source falls to its reserve at the present rate (its stock above its reserve over the planned use of the destination and its own). With less stock than the load it sends what it can and says how many days it brings: it slips a run before it accepts fewer days, and accepts fewer days before it stands a plan down. [0107 items 25 and 44]
+6. **A day it gives the intent no order** has one reason: what each run is doing, and the reading the next run waits for, with the day it is expected to be ordered.
+
+Last, a plan that has ended whose ships are committed from today on has them freed (`free_ships`).
+
+Every order, staff command and decision to give no order has a reason of five parts (above, Reasons). Its "worked" part is the arithmetic: the stocks, uses, days, loads and hours.
+
+A side sees: its own staff's decisions, reasons and commands whole; the enemy sees none (above).
+
+### A proposal
+
+What the staff would do for one intent, worked out and stored nowhere: what it would hand in on the coming day as if the plan were released, the runs the same rules give over the next 30 days on the projection, the projection itself, what binds if it cannot meet the intent, and a reason. In step 1 it displaces nothing: one intent. [0107 items 5 and 46]
+
+## The tools
+
+A seat whose side has a staff commands through these tools beside the others, in `sim-agent` and through the MCP server and `play`. Every seat of a game those open has one; the staff does nothing for a side until an intent with a forces limit is set. A session made with no staff has none of them. [0107 item 46]
+
+- `command_state`, `plans`: what stands, as the coming day will find it, with each intent's figure and first day below, and yesterday's staff decisions with their numbers for `why`.
+- `set_intent` (the side's next free number when none is given), `withdraw_intent`, `set_limit`, `set_leave`, `approve`, `cancel_plan`: each queues one command for the coming day, taken in at its first step. It is checked at once, by taking it in on a copy of the world after the commands already queued, and answered queued or refused with the engine's reason.
+- `propose`: the staff's proposal for an intent.
+- `staff_orders`: what the staff would hand in at the start of the coming day, each with its reason, asked on a copy of the world with the day's first three steps taken (`World::at_staff_step`). Only the session holds that copy; the staff and the tools are given its side's view.
+- `why`: one `StaffReason` by its event number, whole, with the order or command it is for, or as a decision to give no order.
+
+A tool is not a rule: what it shows is worked from the side's view, and the agent's schemas say each answer's shape (`crates/sim-agent/schemas/`).
 
 ## What is saved
 
@@ -269,9 +318,9 @@ A game is saved as it has always been, as what was handed in, and from version 3
 
 **`replay --check-staff`.** It asks the doctrine's staff as well. On each saved day, each side that the doctrine gives a staff is asked on the view the engine then holds, and what it gives is compared part by part, orders then commands then decisions to give no order, with what was saved. The saved hand-in is what is handed in, whatever the staff gave, so the replay is the saved game and its hashes are still compared. The run stops at the first day and side where they differ and says what differs. A saved hand-in for a side the doctrine gives no staff is a difference too. A difference in the staff is reported before a hash that differs on the same day. If there is none, it says so, naming the doctrine now and the one the game was saved under. It is the test that a staff is a function of the view. [0107 item 10]
 
-**The doctrine version.** The doctrine has a version of its own, `DOCTRINE_VERSION` in `sim-cli/src/doctrine.rs` (`"none"` until a doctrine exists). A change to what a staff decides from a view changes it. A saved game records it. It is checked when a game kept by `play --game` is resumed for more play, which is refused under another doctrine, and not when a game is replayed: a replay is what was saved. A `play --game` file begun before the key existed is read as `"none"`. [0107 item 11]
+**The doctrine version.** The doctrine has a version of its own, `DOCTRINE_VERSION` in `sim-staff` (`"supply-1"`; it was `"none"` before a doctrine existed). A change to what a staff decides from a view changes it. A saved game records it. It is checked when a game kept by `play --game` is resumed for more play, which is refused under another doctrine, and not when a game is replayed: a replay is what was saved. A `play --game` file begun before the key existed is read as `"none"`. [0107 item 11]
 
-Where the staff comes from. Every loop that resolves days gets its staffs from the one place, `sim-cli/src/doctrine.rs`, and passes them in: `run`, `batch`, `export`, `hash`, `events`, `time`, `replay --check-staff` and a game held open for play. `sim-agent`'s session is handed them by its caller. [0107 item 7; docs/engineering/layout.md]
+Where the staff comes from. Every loop that resolves days gets its staffs from the one place, `sim_staff::staffs()`, and passes them in: `run`, `batch`, `export`, `hash`, `events`, `time`, `replay --check-staff` and a game held open for play. `sim-agent`'s session is handed them by its caller. [0107 item 7; docs/engineering/layout.md]
 
 A side sees: none of this. A saved game belongs to the umpire (chapter 1, What a saved game holds).
 
@@ -314,10 +363,9 @@ Chapter 1 owns the sequence. Where this chapter's rules run, in the numbering of
 - **Interrupts**, their setting and acknowledgement. [0107 item 28]
 - **A run of days** that resolves up to a number of days and stops between days for an interrupt. One day of it is `end_day`. [0107 item 29]
 - **The command report**, with one identity for a matter that lasts. [0107 item 30]
-- **The doctrine**: how a staff sizes a load, times a run, picks ships, checks a route, says what binds and what it cannot meet. [0107 items 37 to 45]
 - **Commitments of stock**, and a second source base for an intent. [0107 items 19 and 27]
-- **The fallback**: a cancelled plan's ships coming home. `cancel_plan` marks the plan cancelled and frees nothing; the staff's orders do the rest, and no staff exists. [0107 item 24]
-- **The tools** a seat commands with. A seat cannot issue a command yet. [0107 item 46]
+- **The fallback**: a cancelled plan's ships turned for home. `cancel_plan` marks the plan cancelled; the staff gives it no more orders and frees its ships' commitments from that day; a force at sea keeps its route, which already ends at the source. [0107 item 24]
+- **Escort, cover, the recall of a run, a second source, an intent for fuel, a second intent competing for ships and stock, previews, holds, interrupts, `run` and the command report**: stage 1's steps 2 to 4 and stage 2. [0107]
 
 ## Not in this chapter
 

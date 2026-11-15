@@ -30,7 +30,9 @@
 use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
-use sim_agent::{parse_seat, CallError, Session, TOOLS};
+use sim_agent::{parse_seat, CallError, Session};
+
+use crate::staff_tools::{staff_tool_definitions, STAFF_INSTRUCTIONS};
 use sim_core::state::Side;
 
 pub const MODERN: &str = "2026-07-28";
@@ -275,11 +277,20 @@ fn inline(value: &Value, doc: &str, docs: &BTreeMap<&str, Value>, depth: u32) ->
     }
 }
 
-/// The tools as `tools/list` gives them, in the order of [`TOOLS`] (which is
-/// the interface's own order; it never varies).
+/// The tools as `tools/list` gives them for a seat whose side has a staff
+/// (every seat of every game `mcp`, `play` and `serve` open): the order of
+/// [`TOOLS`] and then of `COMMAND_TOOLS`, the interface's own.
 pub fn tool_list() -> Vec<Value> {
-    tool_definitions()
-        .into_iter()
+    tool_list_for(true)
+}
+
+/// The tools of a seat, with those of a staff if `has_staff`.
+pub fn tool_list_for(has_staff: bool) -> Vec<Value> {
+    let mut all = tool_definitions();
+    if has_staff {
+        all.extend(staff_tool_definitions());
+    }
+    all.into_iter()
         .map(|(name, description, schema)| {
             json!({"name": name, "description": description, "inputSchema": schema})
         })
@@ -326,6 +337,16 @@ impl Server {
             session,
             side,
             initialized: false,
+        }
+    }
+
+    /// The instructions the server gives: the game's, and for a seat whose
+    /// side has a staff how to command by intent.
+    fn instructions(&self) -> String {
+        if self.session.has_staff(self.side) {
+            format!("{INSTRUCTIONS}{STAFF_INSTRUCTIONS}")
+        } else {
+            INSTRUCTIONS.to_string()
         }
     }
 
@@ -449,7 +470,7 @@ impl Server {
                     "protocolVersion": version,
                     "capabilities": {"tools": {"listChanged": false}},
                     "serverInfo": server_info(),
-                    "instructions": INSTRUCTIONS,
+                    "instructions": self.instructions(),
                 }))
             }
             "ping" => finish(json!({})),
@@ -459,7 +480,7 @@ impl Server {
                 let mut result = json!({
                     "supportedVersions": supported,
                     "capabilities": {"tools": {"listChanged": false}},
-                    "instructions": INSTRUCTIONS,
+                    "instructions": self.instructions(),
                 });
                 result["resultType"] = json!("complete");
                 result["_meta"] = json!({ META_SERVER: server_info() });
@@ -473,7 +494,7 @@ impl Server {
                     );
                 }
                 if method == "tools/list" {
-                    finish(json!({"tools": tool_list()}))
+                    finish(json!({"tools": tool_list_for(self.session.has_staff(self.side))}))
                 } else {
                     let result = self.call_tool(params)?;
                     finish(result)
@@ -489,7 +510,7 @@ impl Server {
         let Some(name) = params.get("name").and_then(Value::as_str) else {
             return bad("\"name\" is needed: the tool to call".to_string());
         };
-        if !TOOLS.contains(&name) {
+        if !self.session.tools(self.side).contains(&name) {
             return bad(format!("Unknown tool: {name}"));
         }
         let mut arguments = match params.get("arguments") {

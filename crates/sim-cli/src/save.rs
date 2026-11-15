@@ -242,7 +242,7 @@ pub fn write(
         "seed": seed,
         "state_version": engine_state_version(),
         "rules_version": sim_core::world::RULES_VERSION,
-        "doctrine_version": crate::doctrine::DOCTRINE_VERSION,
+        "doctrine_version": sim_staff::DOCTRINE_VERSION,
         "seats": {
             "allied": seats.get(&Side::Allied).copied().unwrap_or(SeatKind::Script).name(),
             "japanese": seats.get(&Side::Japanese).copied().unwrap_or(SeatKind::Script).name(),
@@ -621,7 +621,7 @@ mod tests {
     fn commands_and_a_staffs_hand_in_round_trip_through_a_saved_game() {
         use sim_core::command::{
             Evidence, ForcesLimit, IntentKind, Leave, Limit, PlanId, Reason, Risk, RunDays,
-            RunSpec, Serves, StaffOrder,
+            RunSpec, Serves, StaffCommand, StaffOrder,
         };
         use sim_core::fixed::Fixed;
         use sim_core::hex::Hex;
@@ -723,18 +723,21 @@ mod tests {
                 intent,
                 reason: reason.clone(),
             }],
-            commands: vec![CommandKind::AddRun {
-                plan: PlanId::new(1),
-                run: RunSpec {
-                    ships: [ShipId::new(3)].into_iter().collect(),
-                    load_t: Fixed::from_int(120),
-                    days: RunDays {
-                        load: 3,
-                        sail: 4,
-                        arrive: 9,
-                        free: 14,
+            commands: vec![StaffCommand {
+                kind: CommandKind::AddRun {
+                    plan: PlanId::new(1),
+                    run: RunSpec {
+                        ships: [ShipId::new(3)].into_iter().collect(),
+                        load_t: Fixed::from_int(120),
+                        days: RunDays {
+                            load: 3,
+                            sail: 4,
+                            arrive: 9,
+                            free: 14,
+                        },
                     },
                 },
+                reason: reason.clone(),
             }],
             no_orders: vec![reason],
         };
@@ -774,17 +777,14 @@ mod tests {
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
         assert_eq!(written["version"], 3);
-        assert_eq!(
-            written["doctrine_version"],
-            crate::doctrine::DOCTRINE_VERSION
-        );
+        assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 7);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);
         assert_eq!(saved.staff.len(), 1, "an empty hand-in is not kept");
         assert_eq!(saved.staff[&3][&Side::Allied], decisions);
-        assert_eq!(saved.doctrine_version, crate::doctrine::DOCTRINE_VERSION);
+        assert_eq!(saved.doctrine_version, sim_staff::DOCTRINE_VERSION);
         // A second write of what was read is the same bytes.
         let again = dir.join("again.save.json");
         let again = again.to_string_lossy().into_owned();

@@ -17,9 +17,9 @@ use serde_json::{json, Value};
 use sim_agent::{parse_seat, seat_name, SeatKind};
 use sim_core::state::Side;
 
-use crate::doctrine::DOCTRINE_VERSION;
 use crate::mcp::{tool_list, Server};
 use crate::serve::{self, Kept};
+use sim_staff::DOCTRINE_VERSION;
 
 const FORMAT: &str = "flagplot-game";
 

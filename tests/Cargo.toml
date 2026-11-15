@@ -8,6 +8,7 @@ publish.workspace = true
 [dev-dependencies]
 sim-core.workspace = true
 sim-data.workspace = true
+sim-staff.workspace = true
 # Part 3 of scenario 4b reads the anchors file and places each position in a
 # hex with the map tool's own projection.
 csv.workspace = true
@@ -283,3 +284,7 @@ path = "choices_asked_and_run.rs"
 [[test]]
 name = "scenario_35_days_of_supply"
 path = "scenario_35_days_of_supply.rs"
+
+[[test]]
+name = "scenario_36_one_convoy"
+path = "scenario_36_one_convoy.rs"

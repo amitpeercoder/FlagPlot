@@ -18,12 +18,17 @@
 //! * [`get_entity`]: everything the side knows of one unit or contact (a
 //!   ship, task force, air group, land unit or base of its own).
 //! * [`explain`]: an event as the side may see it and its visible causes.
+//! * [`command_state`], [`plans`], [`propose`], [`staff_orders`], [`why`] and
+//!   the commands a seat queues (`set_intent`, `withdraw_intent`,
+//!   `set_limit`, `set_leave`, `approve`, `cancel_plan`): the tools of a seat
+//!   whose side has a staff (decision 0107). Each answers from a view of the
+//!   world as the coming day will find it, which only the session makes.
 //! * [`measure`]: air distance, sea route, the passage of a task force, its
 //!   days at the yard and the air reach of an air group, with the functions the rules use (decision
 //!   0049).
 //!
 //! Every answer serialises to JSON with `"format": "flagplot-agent"`,
-//! `"version": 3` and a `"kind"`, and has a schema under `schemas/`. A
+//! `"version": 4` and a `"kind"`, and has a schema under `schemas/`. A
 //! quantity of the game is a whole number if it counts things and a decimal
 //! string if it is a [`sim_core::fixed::Fixed`], never a float.
 
@@ -40,6 +45,7 @@ mod orders;
 mod queries;
 mod record;
 mod session;
+mod staffing;
 mod text;
 mod words;
 
@@ -89,5 +95,8 @@ pub use queries::{
     LandUnitDetail, ListBases, ListContacts, ListForces, ShipDetail, ShipLine, SystemStates,
     TroopsAboard,
 };
-pub use record::{parse_seat, seat_name, CallError, Seat, SeatKind, TranscriptEntry, TOOLS};
+pub use record::{
+    parse_seat, seat_name, CallError, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS,
+};
 pub use session::{Session, NOT_KNOWN};
+pub use staffing::{command_state, plans, propose, staff_orders, why, STAFF_DEFAULT_INTERVAL_DAYS};

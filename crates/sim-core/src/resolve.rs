@@ -139,6 +139,33 @@ impl World {
         self.resolve_day_watched(staffs, &mut |_, _| {})
     }
 
+    /// A copy of the world with steps 1 to 3 of the coming day taken, as
+    /// [`World::resolve_day_watched`] takes them, and nothing else: the day
+    /// is not advanced and the orders and the staff's hand-in given back
+    /// stay pending. It is the view a staff will be asked on, for listing
+    /// the staff's orders before a day and checking a seat's commands. The
+    /// copy's events are in the copy only; the world itself is unchanged.
+    pub fn at_staff_step(&self) -> World {
+        let mut copy = self.clone();
+        copy.take_steps_one_to_three(self.truth.day + 1);
+        copy
+    }
+
+    /// Steps 1 and 3 of the day: the commander's commands, so that an
+    /// intent, a limit or a reserve set today binds this morning (decision
+    /// 0107); forces back from the yard, home first so that they are at
+    /// their base for the day's refuelling and orders (decision 0069); then
+    /// refuelling down to the reserves, before the day's orders (decision 2
+    /// of 0045). Forward repair comes after the orders: a force sent to the
+    /// yard leaves with the damage its order stated, and one ordered to sail
+    /// that morning is not patched (decision 0069, 2). One function for the
+    /// day and for [`World::at_staff_step`], so that they cannot differ.
+    fn take_steps_one_to_three(&mut self, day: u32) {
+        self.intake_commands(day);
+        self.return_from_yard(day);
+        self.refuel_in_port(day);
+    }
+
     /// Resolves the next day as [`World::resolve_day_staffed`] does, and
     /// hands the world, read only, to `watch` at each [`Moment`] of the day,
     /// before the step it names (decision 0100, 7). Nothing `watch` can do
@@ -171,20 +198,11 @@ impl World {
         };
 
         pass(self, Moment::DayBegins { day });
-        // Step 1: the commander's commands, so that an intent, a limit or a
-        // reserve set today binds this morning (decision 0107).
-        self.intake_commands(day);
-        // Step 2, the override of an order to a unit in an intent's forces
-        // limit, comes here with holds, in a later step of stage 1.
-        //
-        // Step 3. Forces back from the yard are home first, so that they are
-        // at their base for the day's refuelling and orders (decision 0069).
-        // Fuel comes before the day's orders (decision 2 of 0045). Forward
-        // repair comes after them: a force sent to the yard leaves with the
-        // damage its order stated, and one ordered to sail that morning is
-        // not patched (decision 0069, 2).
-        self.return_from_yard(day);
-        self.refuel_in_port(day);
+        // Steps 1 to 3: the commander's commands, forces back from the yard
+        // and refuelling. Step 2, the override of an order to a unit in an
+        // intent's forces limit, goes between 1 and 3 inside this call, with
+        // holds, in a later step of stage 1.
+        self.take_steps_one_to_three(day);
         pass(self, Moment::Orders { day });
         // Step 4: each side's staff, on its view as it now stands.
         let handed_in = self.ask_staffs(&staffs);

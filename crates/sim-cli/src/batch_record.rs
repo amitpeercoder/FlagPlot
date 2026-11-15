@@ -1087,7 +1087,107 @@ pub fn count(
                     SupplyUse::March => {}
                 }
             }
-            _ => {}
+            // Nothing is meant for each of these kinds, and none is taken by default:
+            // a new kind of event must be decided here, in an arm above or in this one.
+            EventKind::OrderAccepted { .. }
+            | EventKind::OrderRejected { .. }
+            | EventKind::TaskForceSteamed { .. }
+            | EventKind::FuelBurned { .. }
+            | EventKind::TaskForceArrived { .. }
+            | EventKind::TaskForceOutOfFuel { .. }
+            | EventKind::CargoLoaded { .. }
+            | EventKind::CargoUnloaded { .. }
+            | EventKind::LoadingComplete { .. }
+            | EventKind::UnloadingComplete { .. }
+            | EventKind::SearchFlown { .. }
+            | EventKind::SearchAttempt { .. }
+            | EventKind::ReportReceived { .. }
+            | EventKind::ContactAged { .. }
+            | EventKind::ContactDropped { .. }
+            | EventKind::SightingRoll { .. }
+            | EventKind::ForceSurprised { .. }
+            | EventKind::ShipDamaged { .. }
+            | EventKind::ShipSunk { .. }
+            | EventKind::ForceBecameAlert { .. }
+            | EventKind::ForceSlippedAway { .. }
+            | EventKind::ForcesPassedUnseen { .. }
+            | EventKind::SystemHit { .. }
+            | EventKind::ForceRetired { .. }
+            | EventKind::ForceAlertedByContact { .. }
+            | EventKind::ForceStoodDown { .. }
+            | EventKind::AlarmRoll { .. }
+            | EventKind::AircraftRepaired { .. }
+            | EventKind::AirFight { .. }
+            | EventKind::ReplacementsReceived { .. }
+            | EventKind::ContactNotThere { .. }
+            | EventKind::BaseAntiAircraftFire { .. }
+            | EventKind::BaseSupplyDestroyed { .. }
+            | EventKind::AirGroupFatigue { .. }
+            | EventKind::AirGroupStoodDown { .. }
+            | EventKind::AirGroupReturned { .. }
+            | EventKind::TaskForceFatigue { .. }
+            | EventKind::TaskForceTurnedBack { .. }
+            | EventKind::ShipRefuelled { .. }
+            | EventKind::AircraftLandedElsewhere { .. }
+            | EventKind::BaseAtDayEnd { .. }
+            | EventKind::ShipRepaired { .. }
+            | EventKind::ForceLeftForYard { .. }
+            | EventKind::ForceReturnedFromYard { .. }
+            | EventKind::MenEmbarked { .. }
+            | EventKind::MenLanded { .. }
+            | EventKind::BaseFormed { .. }
+            | EventKind::UnitDivided { .. }
+            | EventKind::MenFed { .. }
+            | EventKind::LandUnitDestroyed { .. }
+            | EventKind::UnitLoadingComplete { .. }
+            | EventKind::AirGroupRebased { .. }
+            | EventKind::FedShareRestored { .. }
+            | EventKind::GroundFight { .. }
+            | EventKind::GroundFire { .. }
+            | EventKind::LandUnitFatigue { .. }
+            | EventKind::LandUnitBackToDefend { .. }
+            | EventKind::SideBeatenAshore { .. }
+            | EventKind::AirGroupLostWithBase { .. }
+            | EventKind::ShipLostWithBase { .. }
+            | EventKind::HomePortLost { .. }
+            | EventKind::StrikeMissionCleared { .. }
+            | EventKind::ShoreBombardment { .. }
+            | EventKind::GroundReportReceived { .. }
+            | EventKind::BaseFound { .. }
+            | EventKind::MarchDay { .. }
+            | EventKind::MarchBaseFormed { .. }
+            | EventKind::MarchArrived { .. }
+            | EventKind::MarchStopped { .. }
+            | EventKind::TaskForceHalted { .. }
+            | EventKind::TaskForceSteamedOn { .. }
+            | EventKind::LoadingGained { .. }
+            | EventKind::LoadingLost { .. }
+            | EventKind::RehearsalGained { .. }
+            | EventKind::RehearsalLost { .. }
+            | EventKind::LeftRoster { .. }
+            | EventKind::PreparationShared { .. }
+            | EventKind::TrainingDay { .. }
+            | EventKind::FightDayCounted { .. }
+            | EventKind::ExperienceRaised { .. }
+            | EventKind::UnitWorked { .. }
+            | EventKind::AirfieldDamaged { .. }
+            | EventKind::ArrivalWaiting { .. }
+            | EventKind::AirfieldMended { .. }
+            | EventKind::UnitFellBack { .. }
+            | EventKind::MenSurrenderedAshore { .. }
+            | EventKind::GroundAttackFailed { .. }
+            | EventKind::SpentUnitFellBack { .. }
+            | EventKind::FieldworksChanged { .. }
+            | EventKind::DefencesWorn { .. }
+            | EventKind::LoadBelowReserve { .. }
+            | EventKind::RefuellingHeldAtReserve { .. }
+            | EventKind::LoadHeldAtReserve { .. }
+            | EventKind::CommandTaken { .. }
+            | EventKind::CommandRefused { .. }
+            | EventKind::PlanDrafted { .. }
+            | EventKind::PlanStateChanged { .. }
+            | EventKind::PlanAmended { .. }
+            | EventKind::StaffReason { .. } => {}
         }
     }
 

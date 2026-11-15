@@ -2146,7 +2146,10 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 && !stem.starts_with("16_")
                 // Scenario 31 counts pilots for the group its arrival is for
                 // (decision 0103).
-                && !stem.starts_with("31_"))
+                && !stem.starts_with("31_")
+                // Scenario 36's baseline is a run with its supply staff
+                // asked, which this test does not pass (decision 0107).
+                && !stem.starts_with("36_"))
             .then(|| stem.to_string())
         })
         .collect();

@@ -24,7 +24,8 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 use sim_agent::{
-    briefing, get_entity, list_bases, list_contacts, list_forces, measure, PlaceArg, Question,
+    briefing, command_state, get_entity, list_bases, list_contacts, list_forces, measure, plans,
+    propose, staff_orders, why, PlaceArg, Question,
 };
 use sim_core::hex::Hex;
 use sim_core::ids::AirGroupId;
@@ -692,6 +693,40 @@ fn answers(view: &sim_core::view::SideView<'_>, name: &str) -> BTreeMap<String, 
     out
 }
 
+/// What the tools of a seat with a staff say of the world as the coming day
+/// will find it: the command state, the plans, what the staff would hand in,
+/// the proposal for each intent and `why` of every number of the side's
+/// events up to a few dozen. They are made from the preview, as the session
+/// makes them (decision 0107, "The tools").
+fn staff_answers(world: &World, side: Side) -> BTreeMap<String, String> {
+    let staff = sim_staff::SupplyStaff;
+    let preview = world.at_staff_step();
+    let view = preview.side_view(side);
+    let text = |v: &Value| serde_json::to_string(v).expect("an answer serialises");
+    let mut out = BTreeMap::new();
+    out.insert(
+        "command_state".to_string(),
+        text(&command_state(&view, &staff, &[])),
+    );
+    out.insert("plans".to_string(), text(&plans(&view)));
+    out.insert(
+        "staff_orders".to_string(),
+        text(&staff_orders(&view, &staff)),
+    );
+    for intent in 1..=3 {
+        let answer = match propose(&view, &staff, intent) {
+            Ok(value) => text(&value),
+            Err(error) => text(&error.to_json()),
+        };
+        out.insert(format!("propose:{intent}"), answer);
+    }
+    let real = world.side_view(side);
+    for number in 0..=60 {
+        out.insert(format!("why:{number}"), text(&why(&real, number)));
+    }
+    out
+}
+
 mod erased {
     pub trait Ser {
         fn to_json(&self) -> String;
@@ -721,6 +756,7 @@ fn run(text: &str, name: &str, seed: u64, side: Side) -> Run {
     play(&mut scenario, |s| {
         let view = s.world.side_view(side);
         let mut a = answers(&view, &title);
+        a.extend(staff_answers(&s.world, side));
         // What the side is told of orders it might give (stage 9d): the same
         // probes in every world, on the first day, the middle one and the end.
         let day = s.world.day();
@@ -974,6 +1010,14 @@ fn the_library_code_names_nothing_of_the_truth() {
                     i + 1
                 );
             }
+            if code.contains("at_staff_step") {
+                assert!(
+                    is_session,
+                    "{}:{} takes the staff step outside session.rs: {line}",
+                    path.display(),
+                    i + 1
+                );
+            }
             if code.contains("World") {
                 assert!(
                     is_session,
@@ -1082,4 +1126,58 @@ fn the_loader_refuses_the_arrival_that_would_overfill_a_ship() {
             && error.contains("class carries 36"),
         "{error}"
     );
+}
+
+// ---------------------------------------------------------------------
+// The tools of a seat with a staff (decision 0107, "The tools").
+// ---------------------------------------------------------------------
+
+/// Scenario 36 with an Allied commander's commands in force (the scenario's
+/// own), and a Japanese task force far out at sea whose ship carries
+/// `fuel_t` tons: the enemy, which the Allied side cannot see.
+fn convoy_with_a_distant_enemy(fuel_t: u32) -> String {
+    let mut text = scenario_text("36_one_convoy.toml");
+    text.push_str(&format!(
+        "\n[[task_force]]\nid = 5\nname = \"Placeholder far unit\"\nside = \"japanese\"\nq = -2\nr = 2\nmission = \"escort\"\n\n[[ship]]\nid = 3\nname = \"Placeholder far ship\"\nclass = 3\nside = \"japanese\"\nfuel_t = {fuel_t}\ntask_force = 5\n"
+    ));
+    text
+}
+
+/// The staff tools' answers of the Allied side at the start of each day of
+/// scenario 36, the staff asked on each day as the engine does.
+fn staff_tools_over_the_days(text: &str) -> Vec<BTreeMap<String, String>> {
+    let mut scenario = load_text(text, "36_one_convoy.toml", 1942);
+    let held = sim_staff::staffs();
+    let mut by_day = Vec::new();
+    loop {
+        by_day.push(staff_answers(&scenario.world, Side::Allied));
+        if scenario
+            .next_day_staffed(sim_staff::as_staffs(&held))
+            .expect("the day resolves")
+            .is_none()
+        {
+            break;
+        }
+    }
+    by_day
+}
+
+#[test]
+fn what_the_enemy_holds_changes_nothing_the_staff_tools_say() {
+    let one = staff_tools_over_the_days(&convoy_with_a_distant_enemy(500));
+    let two = staff_tools_over_the_days(&convoy_with_a_distant_enemy(501));
+    assert_eq!(one.len(), 19, "every day and the end");
+    assert_eq!(one, two);
+    // The answers are not empty: the staff acts on day 1.
+    let day_two = &one[1];
+    assert!(day_two["command_state"].contains("\"in_force\":true"));
+    assert!(day_two["staff_orders"].contains("task_force:1"));
+    assert!(day_two["why:1"].contains("not_known") || day_two["why:1"].contains("\"why\""));
+    // And the enemy ship cannot be named in any of them.
+    for answers in &one {
+        for (key, answer) in answers {
+            assert!(!answer.contains("far ship"), "{key}: {answer}");
+            assert!(!answer.contains("ship:3"), "{key}: {answer}");
+        }
+    }
 }

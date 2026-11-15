@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/staff_orders",
+  "title": "staff_orders: what the staff would hand in for the coming day",
+  "description": "The orders (unit and order in your numbers), the commands and the decisions to give no order the staff would hand in at the start of the coming day, each with its reason in five parts. It asks the staff on the state as the coming day will find it, with the commands you have queued taken in.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "for_day",
+    "orders",
+    "commands",
+    "no_orders",
+    "summary"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 4
+    },
+    "kind": {
+      "const": "staff_orders"
+    },
+    "for_day": {
+      "type": "integer"
+    },
+    "orders": {
+      "type": "array",
+      "items": {
+        "$ref": "command_defs.schema.json#/$defs/staff_order"
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "description": "A staff command: the command's own keys, and its reason.",
+        "type": "object",
+        "required": [
+          "kind",
+          "reason"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "command_defs.schema.json#/$defs/reason"
+          }
+        }
+      }
+    },
+    "no_orders": {
+      "type": "array",
+      "items": {
+        "$ref": "command_defs.schema.json#/$defs/reason"
+      }
+    },
+    "summary": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,705 @@
+//! Sizing and timing a run (decision 0107, 38 to 42, with rulings 4 to 6 of
+//! the hand calculations). Given the projection, the pool and the route, it
+//! says whether a run ordered on a day is needed, which ships take it, how
+//! much it loads and its four days.
+//!
+//! - **Needed** (ruling 4): without it, the figure read on the day after the
+//!   run would arrive is below the intent's floor.
+//! - **Its ships** are the pool's free ships in number order until their
+//!   room covers the load; a ship in a force brings the whole force.
+//! - **Its load** (ruling 5): the floor's stock on the arrival day, less the
+//!   stock projected for that day, not below 0, plus the planned use of the
+//!   interval's days from the arrival day. It is cut to the ships' room and
+//!   to the source's stock above its reserve and above the loads still to
+//!   be taken there.
+//! - **Its days** (ruling 6): whole days. Loading is `ceil(hours / 24)` at
+//!   the source's berth rate (its lighter rate where it has no berth), at
+//!   least 1; each passage at cruise is `ceil(hours / 24)`; unloading as
+//!   loading at the destination. Load day today; sail day the load day plus
+//!   the loading days; arrival the sail day plus the passage out less one;
+//!   free (back at the source and refuelled) the sail day plus the passage
+//!   out, the unloading and the passage back.
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use sim_core::command::{CommandState, ForcesLimit, Intent, Plan, RunDays};
+use sim_core::fixed::Fixed;
+use sim_core::hex::Hex;
+use sim_core::ids::{BaseId, ShipId, TaskForceId};
+use sim_core::orders::Cargo;
+use sim_core::refdata::PortSize;
+use sim_core::state::{Ship, ShipLocation};
+use sim_core::view::SideView;
+
+use crate::fleet::{force_stopped_at, held_ships, pool_ships, run_state, Fleet, RunStatus};
+use crate::projection::Readings;
+use crate::route::{route_between, RouteInfo};
+use crate::units::{ceil_days, whole};
+
+/// The days of use each run brings above the floor where the commander has
+/// set no interval (question 5 of decision 0107, as answered).
+pub(crate) const DEFAULT_INTERVAL_DAYS: u32 = 15;
+
+/// What the planner reads of an intent.
+pub(crate) struct Params<'a> {
+    pub(crate) intent: &'a Intent,
+    pub(crate) plan: &'a Plan,
+    pub(crate) forces: &'a ForcesLimit,
+    pub(crate) destination: BaseId,
+    pub(crate) destination_hex: Hex,
+    pub(crate) source: BaseId,
+    pub(crate) source_hex: Hex,
+    pub(crate) floor_days: u32,
+    pub(crate) interval_days: u32,
+    pub(crate) interval_set: bool,
+    pub(crate) area: Option<&'a BTreeSet<Hex>>,
+}
+
+/// Ships that move together: one ship lying in port in no force, or a
+/// force stopped at the source with all its ships.
+#[derive(Clone, Debug)]
+pub(crate) struct Unit {
+    /// In ship order.
+    pub(crate) ships: Vec<ShipId>,
+    /// The force, if the unit is one.
+    pub(crate) force: Option<TaskForceId>,
+}
+
+/// The work of a load or an unload: the ships' tons, the hours the slowest
+/// takes and the whole days that is.
+#[derive(Clone, Debug)]
+pub(crate) struct Work {
+    pub(crate) hours: Fixed,
+    pub(crate) days: u32,
+    /// Each ship, the tons it moves and the rate it moves them at.
+    pub(crate) lines: Vec<(ShipId, Fixed, Fixed)>,
+}
+
+/// The times of a run in hours and whole days.
+#[derive(Clone, Debug)]
+pub(crate) struct Timing {
+    pub(crate) speed_kn: Fixed,
+    pub(crate) load: Work,
+    pub(crate) out_hours: Fixed,
+    pub(crate) out_days: u32,
+    pub(crate) back_hours: Fixed,
+    pub(crate) back_days: u32,
+    pub(crate) unload: Work,
+    /// The tons landed on the arrival day, in the hours it has left.
+    pub(crate) landed_on_arrival_t: Fixed,
+    /// The hours of the arrival day left when the force arrives.
+    pub(crate) hours_left_on_arrival: Fixed,
+}
+
+impl Timing {
+    /// The four days of a run ordered on `order_day`.
+    pub(crate) fn days(&self, order_day: u32) -> RunDays {
+        let sail = order_day + self.load.days;
+        RunDays {
+            load: order_day,
+            sail,
+            arrive: sail + self.out_days - 1,
+            free: sail + self.out_days + self.unload.days + self.back_days,
+        }
+    }
+}
+
+/// What a run would be.
+#[derive(Clone, Debug)]
+pub(crate) struct RunPlan {
+    pub(crate) units: Vec<Unit>,
+    pub(crate) ships: Vec<ShipId>,
+    /// Tons of supply to take aboard.
+    pub(crate) load_t: Fixed,
+    /// What the load order names: the supply aboard now plus the load.
+    pub(crate) weight_t: Fixed,
+    pub(crate) aboard_before_t: Fixed,
+    pub(crate) days: RunDays,
+    pub(crate) timing: Timing,
+    /// What cut the load below what the intent called for.
+    pub(crate) cuts: Vec<String>,
+}
+
+/// Why a run that is needed cannot be made.
+#[derive(Clone, Debug)]
+pub(crate) enum Blocker {
+    /// No ship of the pool is free; the earliest day one is, if any is
+    /// expected to be.
+    NoShip { free_from: Option<u32> },
+    /// The source has nothing above its reserve to give.
+    Source {
+        stock_t: Fixed,
+        reserve_t: Fixed,
+        pending_t: Fixed,
+    },
+    /// No route lies inside the area.
+    NoRoute,
+    /// Ships that are free lack the fuel for the round trip.
+    Fuel { ships: Vec<ShipId> },
+}
+
+impl Blocker {
+    /// What binds, in a few words.
+    pub(crate) fn binds(&self) -> String {
+        match self {
+            Blocker::NoShip {
+                free_from: Some(day),
+            } => {
+                format!("no ship of the pool is free until day {day}")
+            }
+            Blocker::NoShip { free_from: None } => "no ship of the pool is free".to_string(),
+            Blocker::Source { reserve_t, .. } if *reserve_t > Fixed::ZERO => {
+                "the source's stock above its reserve".to_string()
+            }
+            Blocker::Source { .. } => "the source's stock".to_string(),
+            Blocker::NoRoute => "no route in the area".to_string(),
+            Blocker::Fuel { .. } => "ships without the fuel for the round trip".to_string(),
+        }
+    }
+}
+
+impl Blocker {
+    /// The numbers behind what binds, for a reason's worked part.
+    pub(crate) fn detail(&self) -> String {
+        match self {
+            Blocker::NoShip { .. } | Blocker::NoRoute => String::new(),
+            Blocker::Source {
+                stock_t,
+                reserve_t,
+                pending_t,
+            } => format!(
+                "the source holds {stock_t} t, keeps {reserve_t} t in reserve, and {pending_t} t are still to be taken there by runs loading"
+            ),
+            Blocker::Fuel { ships } => format!(
+                "{} lack the fuel for the round trip",
+                ships
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        }
+    }
+}
+
+/// One evaluation of a run ordered on a day.
+#[derive(Clone, Debug)]
+pub(crate) struct Evaluation {
+    pub(crate) order_day: u32,
+    pub(crate) arrive: u32,
+    /// The day after arrival, whose figure decides whether the run is needed.
+    pub(crate) check_day: u32,
+    pub(crate) check_stock_t: Fixed,
+    pub(crate) check_use_t: Fixed,
+    pub(crate) needed: bool,
+    pub(crate) stock_at_arrival_t: Fixed,
+    pub(crate) use_at_arrival_t: Fixed,
+    /// The floor's stock on the arrival day.
+    pub(crate) floor_t: Fixed,
+    pub(crate) interval_use_t: Fixed,
+    pub(crate) uncapped_t: Fixed,
+    pub(crate) run: Option<RunPlan>,
+    pub(crate) blocker: Option<Blocker>,
+}
+
+struct Pass {
+    arrive: u32,
+    stock_a: Fixed,
+    use_a: Fixed,
+    floor_t: Fixed,
+    interval_use_t: Fixed,
+    uncapped_t: Fixed,
+    chosen: Chosen,
+    load_t: Fixed,
+}
+
+/// A guess of the ships and the load, to time a run by.
+struct Guess {
+    ships: Vec<ShipId>,
+    load_t: Fixed,
+}
+
+struct Chosen {
+    units: Vec<Unit>,
+    ships: Vec<ShipId>,
+    room_t: Fixed,
+    without_fuel: Vec<ShipId>,
+}
+
+/// The planner for one intent.
+pub(crate) struct Planner<'a, 'v> {
+    pub(crate) view: &'a SideView<'v>,
+    pub(crate) fleet: &'a Fleet<'v>,
+    pub(crate) state: &'a CommandState,
+    pub(crate) params: Params<'a>,
+    pub(crate) today: u32,
+    /// The route and its miles, `None` where ships cannot go at all.
+    pub(crate) route: Option<RouteInfo>,
+    /// The ships of the pool afloat.
+    pub(crate) pool: BTreeSet<ShipId>,
+    /// The day each busy ship of the pool is free again.
+    busy_until: BTreeMap<ShipId, u32>,
+    held: BTreeSet<ShipId>,
+}
+
+impl<'a, 'v> Planner<'a, 'v> {
+    pub(crate) fn new(
+        view: &'a SideView<'v>,
+        fleet: &'a Fleet<'v>,
+        params: Params<'a>,
+    ) -> Planner<'a, 'v> {
+        let state = view.command_state();
+        let today = view.day() + 1;
+        let route = route_between(view, params.source_hex, params.destination_hex, params.area);
+        let pool = pool_ships(fleet, params.forces);
+        let held = held_ships(view, fleet, state, today);
+        let mut busy_until: BTreeMap<ShipId, u32> = BTreeMap::new();
+        for ship in &pool {
+            if let Some(list) = state.commitments.get(ship) {
+                for commitment in list.iter().filter(|c| c.to_day >= today) {
+                    let entry = busy_until.entry(*ship).or_insert(0);
+                    *entry = (*entry).max(commitment.to_day + 1);
+                }
+            }
+        }
+        for plan in state.plans.values() {
+            for run in plan.runs.values() {
+                let Some(base) = view.bases().find(|b| b.id == run.source) else {
+                    continue;
+                };
+                if run_state(fleet, state, plan.id, run, base.hex, today).status
+                    == RunStatus::Finished
+                {
+                    continue;
+                }
+                for ship in run.ships.iter().filter(|s| pool.contains(s)) {
+                    let entry = busy_until.entry(*ship).or_insert(0);
+                    *entry = (*entry).max(run.days.free.max(today + 1));
+                }
+            }
+        }
+        Planner {
+            view,
+            fleet,
+            state,
+            params,
+            today,
+            route,
+            pool,
+            busy_until,
+            held,
+        }
+    }
+
+    /// The earliest day a busy ship of the pool is expected to be free.
+    pub(crate) fn earliest_free(&self) -> Option<u32> {
+        self.busy_until.values().copied().min()
+    }
+
+    /// The units free today: a ship lying in port at the source in no force,
+    /// or a force stopped at the source whose ships are all in the pool; in
+    /// both, held by no unfinished run and covered by no commitment today.
+    pub(crate) fn free_units(&self) -> Vec<Unit> {
+        let free = |ship: ShipId| {
+            !self.held.contains(&ship) && self.state.commitment_on(ship, self.today).is_none()
+        };
+        let mut seen: BTreeSet<ShipId> = BTreeSet::new();
+        let mut units = Vec::new();
+        for ship in &self.pool {
+            if seen.contains(ship) {
+                continue;
+            }
+            let Some(found) = self.fleet.ships.get(ship) else {
+                continue;
+            };
+            match found.location {
+                ShipLocation::Port(base) if base == self.params.source => {
+                    seen.insert(*ship);
+                    if free(*ship) {
+                        units.push(Unit {
+                            ships: vec![*ship],
+                            force: None,
+                        });
+                    }
+                }
+                ShipLocation::TaskForce(id) => {
+                    let Some(force) = self.fleet.forces.get(&id) else {
+                        continue;
+                    };
+                    seen.extend(force.ships.iter().copied());
+                    let ok = force_stopped_at(force, self.params.source_hex)
+                        && force
+                            .ships
+                            .iter()
+                            .all(|s| self.pool.contains(s) && free(*s));
+                    if ok {
+                        units.push(Unit {
+                            ships: force.ships.iter().copied().collect(),
+                            force: Some(id),
+                        });
+                    }
+                }
+                _ => {}
+            }
+        }
+        units
+    }
+
+    /// Every unit of the pool at the source, free or not: what a forward
+    /// look uses where none is free today.
+    fn timing_ships(&self, units: &[Unit]) -> Vec<ShipId> {
+        match units.first() {
+            Some(unit) => unit.ships.clone(),
+            None => self
+                .pool
+                .iter()
+                .next()
+                .map(|s| vec![*s])
+                .unwrap_or_default(),
+        }
+    }
+
+    fn ship_room(&self, ship: &Ship) -> Fixed {
+        let capacity = self
+            .view
+            .ship_class(ship.class)
+            .map_or(Fixed::ZERO, |class| class.cargo_capacity_t);
+        (capacity - ship.supply_t - ship.cargo_fuel_t).max(Fixed::ZERO)
+    }
+
+    /// The fuel a ship needs for the round trip at cruise.
+    pub(crate) fn fuel_need_t(&self, ship: &Ship, route: &RouteInfo) -> Fixed {
+        let Some(class) = self.view.ship_class(ship.class) else {
+            return Fixed::ZERO;
+        };
+        whole(route.out_nm + route.back_nm).mul_div(class.fuel_capacity_t, class.endurance_nm)
+    }
+
+    /// The source's stock above its reserve, less `pending_t` still to be
+    /// taken there by runs loading; with the stock and the reserve.
+    pub(crate) fn source_available(&self, pending_t: Fixed) -> (Fixed, Fixed, Fixed) {
+        let Some(base) = self.view.bases().find(|b| b.id == self.params.source) else {
+            return (Fixed::ZERO, Fixed::ZERO, Fixed::ZERO);
+        };
+        let reserve = base.reserve_of(Cargo::Supply);
+        let above = base.above_reserve(Cargo::Supply);
+        ((above - pending_t).max(Fixed::ZERO), base.supply_t, reserve)
+    }
+
+    fn port_at(&self, hex: Hex) -> Option<&'v PortSize> {
+        let size = self.view.hex(hex)?.port_size;
+        self.view.port_size(size)
+    }
+
+    /// The work of moving `lines` (ship, tons) at the port in `hex`: the
+    /// first ships, in ship order, up to the port's berths work at the berth
+    /// rate and the rest by lighter. `None` where a ship's rate is 0.
+    fn work(&self, hex: Hex, lines: &[(ShipId, Fixed)]) -> Option<Work> {
+        let port = self.port_at(hex)?;
+        let mut hours = Fixed::ZERO;
+        let mut out = Vec::new();
+        for (index, (ship, tons)) in lines.iter().enumerate() {
+            let rate = if (index as u32) < port.berths {
+                port.berth_rate_t_per_h
+            } else {
+                port.lighter_rate_t_per_h
+            };
+            if *tons > Fixed::ZERO {
+                if rate <= Fixed::ZERO {
+                    return None;
+                }
+                hours = hours.max(*tons / rate);
+            }
+            out.push((*ship, *tons, rate));
+        }
+        Some(Work {
+            hours,
+            days: ceil_days(hours).max(1),
+            lines: out,
+        })
+    }
+
+    /// The tons each of `ships` takes in a load of `load_t`, filled in ship
+    /// order, and the supply it then holds.
+    fn distribute(&self, ships: &[ShipId], load_t: Fixed) -> Vec<(ShipId, Fixed, Fixed)> {
+        let mut left = load_t;
+        let mut lines = Vec::new();
+        for id in ships {
+            let Some(ship) = self.fleet.ships.get(id) else {
+                continue;
+            };
+            let add = left.min(self.ship_room(ship));
+            left -= add;
+            lines.push((*id, add, ship.supply_t + add));
+        }
+        lines
+    }
+
+    /// The times of a run of `ships` that takes `load_t` aboard.
+    pub(crate) fn timing(
+        &self,
+        ships: &[ShipId],
+        load_t: Fixed,
+        route: &RouteInfo,
+    ) -> Option<Timing> {
+        let lines = self.distribute(ships, load_t);
+        self.timing_of(ships, &lines, route)
+    }
+
+    /// The times of a run of `ships` that has already loaded: the load takes
+    /// no time and the unloading is of what each holds now.
+    pub(crate) fn timing_loaded(&self, ships: &[ShipId], route: &RouteInfo) -> Option<Timing> {
+        let lines: Vec<(ShipId, Fixed, Fixed)> = ships
+            .iter()
+            .filter_map(|id| self.fleet.ships.get(id))
+            .map(|ship| (ship.id, Fixed::ZERO, ship.supply_t))
+            .collect();
+        self.timing_of(ships, &lines, route)
+    }
+
+    fn timing_of(
+        &self,
+        ships: &[ShipId],
+        lines: &[(ShipId, Fixed, Fixed)],
+        route: &RouteInfo,
+    ) -> Option<Timing> {
+        let speed = ships
+            .iter()
+            .filter_map(|id| self.fleet.ships.get(id))
+            .filter_map(|ship| self.view.ship_class(ship.class))
+            .map(|class| class.cruise_speed_kn)
+            .min()?;
+        if speed <= Fixed::ZERO {
+            return None;
+        }
+        let load = self.work(
+            self.params.source_hex,
+            &lines
+                .iter()
+                .map(|(s, add, _)| (*s, *add))
+                .collect::<Vec<_>>(),
+        )?;
+        let unload_lines: Vec<(ShipId, Fixed)> =
+            lines.iter().map(|(s, _, after)| (*s, *after)).collect();
+        let unload = self.work(self.params.destination_hex, &unload_lines)?;
+        let out_hours = whole(route.out_nm) / speed;
+        let back_hours = whole(route.back_nm) / speed;
+        let out_days = ceil_days(out_hours).max(1);
+        let back_days = ceil_days(back_hours).max(1);
+        let into_last = out_hours - Fixed::from_int(24) * whole(out_days - 1);
+        let left = (Fixed::from_int(24) - into_last).max(Fixed::ZERO);
+        let landed = unload
+            .lines
+            .iter()
+            .fold(Fixed::ZERO, |sum, (_, tons, rate)| {
+                sum + (*tons).min(*rate * left)
+            });
+        Some(Timing {
+            speed_kn: speed,
+            load,
+            out_hours,
+            out_days,
+            back_hours,
+            back_days,
+            unload,
+            landed_on_arrival_t: landed,
+            hours_left_on_arrival: left,
+        })
+    }
+
+    /// The units, in order, that carry `target_t`: the free units in number
+    /// order until their room covers it, and at least one. A unit with a
+    /// ship short of fuel for the round trip is set aside.
+    fn choose(&self, units: &[Unit], target_t: Fixed, route: &RouteInfo) -> Chosen {
+        let mut chosen = Chosen {
+            units: Vec::new(),
+            ships: Vec::new(),
+            room_t: Fixed::ZERO,
+            without_fuel: Vec::new(),
+        };
+        for unit in units {
+            let short: Vec<ShipId> = unit
+                .ships
+                .iter()
+                .copied()
+                .filter(|id| {
+                    self.fleet
+                        .ships
+                        .get(id)
+                        .is_some_and(|ship| ship.fuel_t < self.fuel_need_t(ship, route))
+                })
+                .collect();
+            if !short.is_empty() {
+                chosen.without_fuel.extend(short);
+                continue;
+            }
+            chosen.units.push(unit.clone());
+            chosen.ships.extend(unit.ships.iter().copied());
+            chosen.room_t += unit
+                .ships
+                .iter()
+                .filter_map(|id| self.fleet.ships.get(id))
+                .fold(Fixed::ZERO, |sum, ship| sum + self.ship_room(ship));
+            if chosen.room_t >= target_t {
+                break;
+            }
+        }
+        chosen
+    }
+
+    /// One pass of the sizing: the times from a guess of the ships and the
+    /// load, the load that gives, and the ships that carry it.
+    fn pass(
+        &self,
+        readings: &Readings,
+        order_day: u32,
+        units: &[Unit],
+        route: &RouteInfo,
+        available_t: Fixed,
+        guess: &Guess,
+    ) -> Option<Pass> {
+        let timing = self.timing(&guess.ships, guess.load_t, route)?;
+        let arrive = order_day + timing.load.days + timing.out_days - 1;
+        let stock_a = readings.stock(arrive)?;
+        let use_a = readings.use_on(arrive)?;
+        let floor_t = whole(self.params.floor_days) * use_a;
+        let need_t = (floor_t - stock_a).max(Fixed::ZERO);
+        let interval_use_t = readings.use_over(arrive, self.params.interval_days);
+        let uncapped_t = need_t + interval_use_t;
+        let target_t = uncapped_t.min(available_t);
+        let chosen = self.choose(units, target_t, route);
+        let load_t = target_t.min(chosen.room_t);
+        Some(Pass {
+            arrive,
+            stock_a,
+            use_a,
+            floor_t,
+            interval_use_t,
+            uncapped_t,
+            chosen,
+            load_t,
+        })
+    }
+
+    /// A run ordered on `order_day`, on the projection `readings`, from the
+    /// free `units`, with `pending_t` still to be taken from the source by
+    /// runs loading. `None` where no time can be worked (no route at all,
+    /// no ship to time, or a day the projection does not reach).
+    pub(crate) fn evaluate(
+        &self,
+        readings: &Readings,
+        order_day: u32,
+        units: &[Unit],
+        pending_t: Fixed,
+    ) -> Option<Evaluation> {
+        let route = self.route.as_ref()?;
+        let (available_t, stock_t, reserve_t) = self.source_available(pending_t);
+        let mut guess = Guess {
+            ships: self.timing_ships(units),
+            load_t: Fixed::ZERO,
+        };
+        let mut last: Option<Pass> = None;
+        for _ in 0..5 {
+            let pass = self.pass(readings, order_day, units, route, available_t, &guess)?;
+            let converged = pass.load_t == guess.load_t
+                && (pass.chosen.ships == guess.ships || pass.chosen.ships.is_empty());
+            if !pass.chosen.ships.is_empty() {
+                guess.ships = pass.chosen.ships.clone();
+            }
+            guess.load_t = pass.load_t;
+            last = Some(pass);
+            if converged {
+                break;
+            }
+        }
+        let Pass {
+            arrive,
+            stock_a,
+            use_a,
+            floor_t,
+            interval_use_t,
+            uncapped_t,
+            chosen,
+            load_t,
+        } = last?;
+        let check_day = arrive + 1;
+        let check_stock_t = readings.stock(check_day)?;
+        let check_use_t = readings.use_on(check_day)?;
+        let needed = readings.below_floor(check_day, self.params.floor_days) == Some(true);
+
+        let mut blocker = None;
+        let mut run = None;
+        if needed {
+            if !route.in_area {
+                blocker = Some(Blocker::NoRoute);
+            } else if units.is_empty() {
+                blocker = Some(Blocker::NoShip {
+                    free_from: self.earliest_free(),
+                });
+            } else if chosen.ships.is_empty() {
+                blocker = Some(Blocker::Fuel {
+                    ships: chosen.without_fuel.clone(),
+                });
+            } else if available_t.is_zero() || load_t.is_zero() {
+                blocker = Some(Blocker::Source {
+                    stock_t,
+                    reserve_t,
+                    pending_t,
+                });
+            } else {
+                let mut cuts = Vec::new();
+                if uncapped_t > available_t {
+                    cuts.push(format!(
+                        "the source has {} t above its reserve of {} t to give ({} t of its stock, {} t still to be taken by runs loading)",
+                        available_t, reserve_t, stock_t, pending_t
+                    ));
+                }
+                if uncapped_t.min(available_t) > chosen.room_t {
+                    cuts.push(format!("the ships' room is {} t", chosen.room_t));
+                }
+                let days_timing = self.timing(&chosen.ships, load_t, route)?;
+                let aboard_before_t = self.fleet.supply_aboard(&chosen.ships);
+                run = Some(RunPlan {
+                    days: days_timing.days(order_day),
+                    timing: days_timing,
+                    units: chosen.units.clone(),
+                    ships: chosen.ships.clone(),
+                    load_t,
+                    weight_t: aboard_before_t + load_t,
+                    aboard_before_t,
+                    cuts,
+                });
+            }
+        }
+        Some(Evaluation {
+            order_day,
+            arrive,
+            check_day,
+            check_stock_t,
+            check_use_t,
+            needed,
+            stock_at_arrival_t: stock_a,
+            use_at_arrival_t: use_a,
+            floor_t,
+            interval_use_t,
+            uncapped_t,
+            run,
+            blocker,
+        })
+    }
+
+    /// The first day from `from` on, up to the end of the projection, on
+    /// which a run ordered would be needed, by the same rule.
+    pub(crate) fn next_needed(
+        &self,
+        readings: &Readings,
+        from: u32,
+        units: &[Unit],
+        pending_t: Fixed,
+    ) -> Option<Evaluation> {
+        (from..=readings.last_day()).find_map(|day| {
+            self.evaluate(readings, day, units, pending_t)
+                .filter(|evaluation| evaluation.needed)
+        })
+    }
+}

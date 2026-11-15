@@ -123,10 +123,10 @@ fn start_at(path: &str, day: u32, options: &LoadOptions) -> Result<Start, String
             scenario.days
         ));
     }
-    let staffs = crate::doctrine::staffs_for(&scenario);
+    let staffs = sim_staff::staffs();
     while scenario.world.day() < day {
         scenario
-            .next_day_staffed(crate::doctrine::as_staffs(&staffs))
+            .next_day_staffed(sim_staff::as_staffs(&staffs))
             .map_err(|e| e.to_string())?
             .ok_or_else(|| format!("{path} ended before day {day}"))?;
     }
@@ -168,7 +168,7 @@ impl Start {
             }
             self.submit(world, day);
             world
-                .resolve_day_staffed(crate::doctrine::as_staffs(&self.staffs))
+                .resolve_day_staffed(sim_staff::as_staffs(&self.staffs))
                 .map_err(|e| e.to_string())?;
             played += 1;
         }
@@ -239,7 +239,7 @@ fn resolve_one_day(start: &Start, repeats: u32) -> Spread {
         let mut world = start.ready();
         timed(|| {
             world
-                .resolve_day_staffed(crate::doctrine::as_staffs(&start.staffs))
+                .resolve_day_staffed(sim_staff::as_staffs(&start.staffs))
                 .map(|s| s.state_hash)
         })
     })
@@ -255,13 +255,10 @@ fn resolve_asking(start: &Start, repeats: u32) -> (Spread, usize, usize) {
         let mut count = 0;
         let mut seen = 0;
         let t = timed(|| {
-            world.resolve_day_watched(
-                crate::doctrine::as_staffs(&start.staffs),
-                &mut |w, _moment| {
-                    seen += 1;
-                    count += ask_everything(w);
-                },
-            )
+            world.resolve_day_watched(sim_staff::as_staffs(&start.staffs), &mut |w, _moment| {
+                seen += 1;
+                count += ask_everything(w);
+            })
         });
         asked = count;
         moments = seen;

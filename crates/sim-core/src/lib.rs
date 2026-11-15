@@ -59,7 +59,7 @@ mod upkeep;
 pub mod works;
 
 pub use airstrike::StrikeChoice;
-pub use command::{Staff, StaffDecisions, Staffs};
+pub use command::{Proposal, Staff, StaffCommand, StaffDecisions, Staffs};
 pub use estimate::StartingEstimate;
 pub use invariants::InvariantViolation;
 pub use movement::{PassageEnd, PassageForecast, ShipPassage};

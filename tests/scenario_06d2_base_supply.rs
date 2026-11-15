@@ -2834,7 +2834,10 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 // days of supply count aircraft upkeep, sorties and repairs
                 // (decision 0107).
                 && !stem.starts_with("35b_")
-                && !stem.starts_with("35c_"))
+                && !stem.starts_with("35c_")
+                // Scenario 36's baseline is a run with its supply staff
+                // asked, which this test does not pass (decision 0107).
+                && !stem.starts_with("36_"))
             .then(|| stem.to_string())
         })
         .collect();

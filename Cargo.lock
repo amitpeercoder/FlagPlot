@@ -159,6 +159,7 @@ dependencies = [
  "map-tool",
  "sim-core",
  "sim-data",
+ "sim-staff",
 ]
 
 [[package]]
@@ -231,6 +232,7 @@ dependencies = [
  "serde_json",
  "sim-core",
  "sim-data",
+ "sim-staff",
 ]
 
 [[package]]
@@ -243,6 +245,7 @@ dependencies = [
  "sim-agent",
  "sim-core",
  "sim-data",
+ "sim-staff",
  "toml",
 ]
 
@@ -258,6 +261,14 @@ dependencies = [
  "serde",
  "sim-core",
  "toml",
+]
+
+[[package]]
+name = "sim-staff"
+version = "0.1.0"
+dependencies = [
+ "sim-core",
+ "sim-data",
 ]
 
 [[package]]

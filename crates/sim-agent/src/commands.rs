@@ -40,7 +40,7 @@ use std::collections::BTreeSet;
 use serde_json::{json, Map, Value};
 use sim_core::command::{
     CommandKind, Evidence, ForcesLimit, IntentKind, Leave, Limit, PlanId, PlanOutcome, Reason,
-    Risk, RunDays, RunSpec, Serves, StaffDecisions, StaffOrder,
+    Risk, RunDays, RunSpec, Serves, StaffCommand, StaffDecisions, StaffOrder,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -423,7 +423,7 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
 // Reasons and a staff's decisions.
 // ---------------------------------------------------------------------------
 
-fn reason_to_json(reason: &Reason) -> Value {
+pub(crate) fn reason_to_json(reason: &Reason) -> Value {
     let mut serves = Map::new();
     if let Some(intent) = reason.serves.intent {
         serves.insert("intent".into(), json!(intent.raw()));
@@ -485,7 +485,17 @@ pub fn staff_decisions_to_json(decisions: &StaffDecisions) -> Value {
                 "reason": reason_to_json(&order.reason),
             }))
             .collect::<Vec<_>>(),
-        "commands": decisions.commands.iter().map(command_to_json).collect::<Vec<_>>(),
+        "commands": decisions
+            .commands
+            .iter()
+            .map(|command| {
+                let mut value = command_to_json(&command.kind);
+                if let Some(object) = value.as_object_mut() {
+                    object.insert("reason".to_string(), reason_to_json(&command.reason));
+                }
+                value
+            })
+            .collect::<Vec<_>>(),
         "no_orders": decisions.no_orders.iter().map(reason_to_json).collect::<Vec<_>>(),
     })
 }
@@ -510,7 +520,14 @@ pub fn staff_decisions_from_json(value: &Value) -> Result<StaffDecisions, String
         });
     }
     for entry in list(value, "commands")? {
-        decisions.commands.push(command_from_json(entry)?);
+        decisions.commands.push(StaffCommand {
+            kind: command_from_json(entry)?,
+            reason: reason_from_json(
+                entry
+                    .get("reason")
+                    .ok_or_else(|| "a command has no \"reason\"".to_string())?,
+            )?,
+        });
     }
     for entry in list(value, "no_orders")? {
         decisions.no_orders.push(reason_from_json(entry)?);
@@ -708,7 +725,14 @@ mod tests {
                 intent: IntentId::new(1),
                 reason: reason.clone(),
             }],
-            commands: every_command().into_iter().skip(14).collect(),
+            commands: every_command()
+                .into_iter()
+                .skip(14)
+                .map(|kind| StaffCommand {
+                    kind,
+                    reason: reason.clone(),
+                })
+                .collect(),
             no_orders: vec![
                 reason,
                 Reason {
