@@ -25,8 +25,9 @@
 //! list, then the nearest; the upkeep, wear, fatigue and supply figures are
 //! not loaded.
 //!
-//! Aircraft for each ship reported: carrier 24, battleship 24, cruiser 12,
-//! destroyer 6, transport 6, auxiliary 4.
+//! Aircraft for each ship reported, in this scenario's own figures and not
+//! the live ones: carrier 24, battleship 24, cruiser 12, destroyer 6,
+//! transport 6, auxiliary 4.
 //!
 //! ## Inputs
 //!
@@ -118,6 +119,11 @@
 //!   launches all it can send at contact 1: 10, 10, 10, 9, 10, 10, 20 and
 //!   10, 89 aircraft in one raid. The same with sizing on and no table of
 //!   aircraft for each ship in the figures.
+//! - **No figure, everything.** With no figure for a carrier, every group
+//!   sends all it can at contact 1, which is never served: 89 aircraft in
+//!   one raid, as with sizing off. With no figure for a transport and the
+//!   others as given, groups 1 to 6 launch as in the main case, group 7
+//!   sends all 20 at contact 3 and group 8 its 10: 78 aircraft.
 //! - **An unsized group overshoots.** With group 3's sizing off it sends 10
 //!   at contact 1, 30 there in all, and every other launch is unchanged: 72
 //!   aircraft.
