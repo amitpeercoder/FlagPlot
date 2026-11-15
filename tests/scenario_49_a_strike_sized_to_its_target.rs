@@ -122,8 +122,8 @@
 //! - **No figure, everything.** With no figure for a carrier, every group
 //!   sends all it can at contact 1, which is never served: 89 aircraft in
 //!   one raid, as with sizing off. With no figure for a transport and the
-//!   others as given, groups 1 to 7 launch as in the main case and group 8
-//!   sends its 10 at contact 3: 76 aircraft.
+//!   others as given, groups 1 to 6 launch as in the main case, group 7
+//!   sends all 20 at contact 3 and group 8 its 10: 78 aircraft.
 //! - **An unsized group overshoots.** With group 3's sizing off it sends 10
 //!   at contact 1, 30 there in all, and every other launch is unchanged: 72
 //!   aircraft.
