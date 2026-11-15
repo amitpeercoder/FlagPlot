@@ -1055,7 +1055,9 @@ fn idle_reason(
     // free where none is today.
     let units: Vec<Unit> = idle.units.clone();
     let from = if units.is_empty() {
-        planner.earliest_free().map_or(today + 1, |free| free.max(today + 1))
+        planner
+            .earliest_free()
+            .map_or(today + 1, |free| free.max(today + 1))
     } else {
         today + 1
     };
