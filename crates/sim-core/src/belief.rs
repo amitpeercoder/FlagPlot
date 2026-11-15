@@ -47,6 +47,19 @@ pub enum Report {
     /// A count of the enemy's men ashore in a hex (decision 0092, 11 to 16):
     /// it replaces the side's estimate for that hex.
     Ground(GroundReport),
+    /// A side's fighting men stood in a hex and found no enemy man there
+    /// (decision 0110, item 10): the side's estimate for the hex is cleared.
+    NoneFound(NoneFoundReport),
+}
+
+/// What a report that a hex is empty says: the hex, the day and the event
+/// that records the report.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct NoneFoundReport {
+    pub hex: Hex,
+    pub day: u32,
+    /// The event that records this report's arrival.
+    pub received_event: EventId,
 }
 
 /// What a ground report says: the enemy's men ashore in a hex, on a day
@@ -169,11 +182,15 @@ pub enum ApplyOutcome {
     /// A "nothing there" report dropped the contact.
     Dropped,
     /// A "nothing there" report changed nothing: the contact was gone or no
-    /// longer names the hex.
+    /// longer names the hex. A report that a hex is empty changed nothing:
+    /// the side held no estimate for it.
     Unchanged,
     /// A ground report made or replaced the estimate for its hex. `replaced`
     /// is true if the side held one there before.
     Estimate { replaced: bool },
+    /// A report that a hex is empty cleared the estimate the side held for
+    /// it: this one.
+    Cleared { estimate: GroundEstimate },
 }
 
 /// What [`BeliefState::age_contacts`] did to one contact.
@@ -263,7 +280,8 @@ impl BeliefState {
     /// contact. A battle claim is appended to the claims. A "nothing there"
     /// report removes the contact if it exists and names that hex (decision
     /// 0028). A ground report makes or replaces the estimate for its hex
-    /// (decision 0092, 11 and 12).
+    /// (decision 0092, 11 and 12). A report that a hex is empty removes the
+    /// estimate for it, if there is one (decision 0110, item 10).
     pub(crate) fn apply_report(
         &mut self,
         report: &Report,
@@ -305,6 +323,10 @@ impl BeliefState {
                     .is_some();
                 ApplyOutcome::Estimate { replaced }
             }
+            Report::NoneFound(none) => match self.ground_estimates.remove(&none.hex) {
+                Some(estimate) => ApplyOutcome::Cleared { estimate },
+                None => ApplyOutcome::Unchanged,
+            },
         }
     }
 

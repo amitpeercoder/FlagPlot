@@ -12,13 +12,19 @@
 //! goes into belief through [`BeliefState::apply_report`]. It then puts on
 //! the reporting side's map every enemy base in the hex not on it.
 //!
+//! Where a side holds an estimate for a hex, has men of a fighting unit
+//! there and the enemy has no man ashore there, its men report that they
+//! find none and the estimate is cleared (decision 0110, item 10); with no
+//! estimate held, no report is made. It is made at the same point, and
+//! draws nothing.
+//!
 //! Draws: one stream for each reporting side, hex and day, keyed on the
 //! day, no pulse, the intelligence subsystem, `Draw::GroundReport` and the
 //! reporting side's lowest-numbered unit in the hex: one draw, the error.
 //!
 //! [`BeliefState::apply_report`]: crate::belief::BeliefState
 
-use crate::belief::{ApplyOutcome, GroundReport, Report};
+use crate::belief::{ApplyOutcome, GroundReport, NoneFoundReport, Report};
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
@@ -75,6 +81,14 @@ impl World {
         };
         let units = [ashore(Side::Allied), ashore(Side::Japanese)];
         if units.iter().any(Vec::is_empty) {
+            // A side that holds an estimate here and has fighting men here
+            // finds the enemy gone (decision 0110, item 10).
+            for (index, side) in Side::ALL.into_iter().enumerate() {
+                if units[index].is_empty() || !units[1 - index].is_empty() {
+                    continue;
+                }
+                self.report_empty(day, hex, side, fight);
+            }
             return;
         }
         let search = self
@@ -171,6 +185,63 @@ impl World {
                 );
             }
         }
+    }
+
+    /// The report that a hex is empty (decision 0110, item 10), for a side
+    /// with men ashore in `hex` where the enemy has none: if the side holds
+    /// an estimate for the hex and has men of a fighting unit there, it is
+    /// given a report that its men find none, and the estimate is cleared.
+    /// With no estimate held, or only working men there, nothing is made.
+    /// Draws nothing.
+    fn report_empty(&mut self, day: u32, hex: Hex, side: Side, fight: Option<EventId>) {
+        let fighting = self.truth.land_units.values().any(|unit| {
+            unit.side == side && unit.hex == Some(hex) && unit.men_ashore > 0 && !unit.working
+        });
+        let Some(held) = self.beliefs[&side].ground_estimate(hex).copied() else {
+            return;
+        };
+        if !fighting {
+            return;
+        }
+        let search = self
+            .ref_data
+            .search
+            .clone()
+            .expect("World::new requires search figures with the ground report figures");
+        let report = NoneFoundReport {
+            hex,
+            day,
+            received_event: self.events.next_id(),
+        };
+        let ApplyOutcome::Cleared { estimate } = self
+            .beliefs
+            .get_mut(&side)
+            .expect("both sides have a belief state")
+            .apply_report(&Report::NoneFound(report), &search)
+        else {
+            unreachable!("a side that holds an estimate has it cleared");
+        };
+        debug_assert_eq!(estimate, held);
+        // The estimate cleared, and the day's fight if there was one: both
+        // are events the side is given.
+        let mut causes = vec![Cause::Event(estimate.report_event)];
+        causes.extend(fight.map(Cause::Event));
+        let found = self.events.record(
+            day,
+            None,
+            EventKind::GroundFoundEmpty {
+                side,
+                hex,
+                men: estimate.men,
+                reported_day: estimate.day,
+            },
+            causes,
+            None,
+        );
+        assert_eq!(
+            found, report.received_event,
+            "the report cites the event that records it"
+        );
     }
 
     /// Gives sides opening estimates of the enemy's men ashore (decision 16
@@ -557,5 +628,88 @@ mod tests {
             .men_ashore = 0;
         world.report_ashore(1, AT, None);
         assert!(log(&world).is_empty());
+    }
+
+    fn found_empty(world: &World) -> Vec<(Side, u32, u32)> {
+        log(world)
+            .iter()
+            .filter_map(|e| match e.kind {
+                EventKind::GroundFoundEmpty {
+                    side,
+                    men,
+                    reported_day,
+                    ..
+                } => Some((side, men, reported_day)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_side_with_fighting_men_and_an_estimate_finds_the_hex_empty_and_the_estimate_is_cleared() {
+        let mut world = world(true, &[(1, Side::Allied, 100, AT)], &[]);
+        world
+            .hold_starting_estimates(vec![estimate(Side::Allied, AT, 400)])
+            .expect("held");
+        let opening = world
+            .side_view(Side::Allied)
+            .ground_estimate(AT)
+            .expect("held")
+            .report_event;
+        world.report_ashore(1, AT, None);
+        assert_eq!(found_empty(&world), [(Side::Allied, 400, 0)]);
+        assert!(world.side_view(Side::Allied).ground_estimate(AT).is_none());
+        let events = log(&world);
+        let found = events.last().expect("the event");
+        assert_eq!(found.causes, [Cause::Event(opening)]);
+        assert!(found.breakdown.is_none());
+        // With no estimate held any more, no second report.
+        world.report_ashore(2, AT, None);
+        assert_eq!(found_empty(&world).len(), 1);
+    }
+
+    #[test]
+    fn no_empty_report_is_made_without_an_estimate_or_with_only_working_men() {
+        // No estimate held.
+        let mut bare = world(true, &[(1, Side::Allied, 100, AT)], &[]);
+        bare.report_ashore(1, AT, None);
+        assert!(log(&bare).is_empty());
+        // An estimate held and only a working unit there: nothing, and the
+        // estimate stays.
+        let mut working = world(true, &[(1, Side::Allied, 100, AT)], &[]);
+        working
+            .truth
+            .land_units
+            .get_mut(&LandUnitId::new(1))
+            .unwrap()
+            .working = true;
+        working
+            .hold_starting_estimates(vec![estimate(Side::Allied, AT, 400)])
+            .expect("held");
+        working.report_ashore(1, AT, None);
+        assert!(found_empty(&working).is_empty());
+        assert_eq!(
+            working
+                .side_view(Side::Allied)
+                .ground_estimate(AT)
+                .map(|e| e.men),
+            Some(400)
+        );
+        // The enemy has men ashore: an ordinary report, not an empty one.
+        let mut both = world(
+            true,
+            &[(1, Side::Allied, 100, AT), (2, Side::Japanese, 100, AT)],
+            &[],
+        );
+        both.hold_starting_estimates(vec![estimate(Side::Allied, AT, 400)])
+            .expect("held");
+        both.report_ashore(1, AT, None);
+        assert!(found_empty(&both).is_empty());
+        assert_eq!(
+            both.side_view(Side::Allied)
+                .ground_estimate(AT)
+                .map(|e| e.day),
+            Some(1)
+        );
     }
 }

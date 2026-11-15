@@ -1212,12 +1212,12 @@ impl Briefing {
 fn enemy_ashore_text(o: &mut Out, a: &EnemyAshorePart) {
     o.heading("ENEMY MEN ASHORE (ESTIMATES)");
     o.line(
-        "These are estimates from reports, not counts: each can be wrong by up to half either way, and an estimate is never corrected until a new report replaces it"
+        "These are estimates from reports, not counts: each can be wrong by up to half either way, and an estimate is never corrected until a new report replaces it or your men find the hex empty"
             .to_string(),
     );
     for e in &a.estimates {
         let source = if e.day == 0 {
-            format!("opening estimate, day {}", e.day)
+            "the opening estimate, day 0".to_string()
         } else {
             format!("reported day {}", e.day)
         };
@@ -1227,6 +1227,19 @@ fn enemy_ashore_text(o: &mut Out, a: &EnemyAshorePart) {
             at(&e.place),
             plural(e.age_days, "day", "days"),
             ev(e.event)
+        ));
+    }
+    for f in &a.found_empty_yesterday {
+        let source = if f.reported_day == 0 {
+            "the opening estimate, day 0".to_string()
+        } else {
+            format!("reported day {}", f.reported_day)
+        };
+        o.line(format!(
+            "Found empty: your men at {} find no enemy men ashore; the estimate of about {} men, {source}, is cleared{}",
+            at(&f.place),
+            f.men,
+            ev(f.event)
         ));
     }
     for b in &a.bases_found_yesterday {

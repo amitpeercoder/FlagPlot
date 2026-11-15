@@ -1439,6 +1439,10 @@ function buildModel(replay) {
         case 'ground_report_received':
           if (Array.isArray(d.hex) && cur.estimates[d.side]) cur.estimates[d.side].set(d.hex[0] + ',' + d.hex[1], { hex: d.hex.slice(), men: d.men, day: ev.day });
           break;
+        // A side's men found the hex empty: the estimate there is cleared (decision 0110, item 10).
+        case 'ground_found_empty':
+          if (Array.isArray(d.hex) && cur.estimates[d.side]) cur.estimates[d.side].delete(d.hex[0] + ',' + d.hex[1]);
+          break;
         // A ship in port at a base that changed side is sunk with it (decision 0090, 21).
         case 'ship_lost_with_base':
         case 'ship_sunk': {

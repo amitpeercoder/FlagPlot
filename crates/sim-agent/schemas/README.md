@@ -428,7 +428,10 @@ man hit by a bomb is byte for byte what it was.
 - **The briefing's `enemy_ashore` part** follows `contacts`: `estimates`, one
   for each hex where the side holds a ground estimate of the enemy's men ashore
   (`place`, `men`, `day` reported, `age_days`, `event`), and
-  `bases_found_yesterday` (an enemy base a ground report put on the side's map).
+  `bases_found_yesterday` (an enemy base a ground report put on the side's map)
+  and `found_empty_yesterday` (a hex where the side's own men found no enemy man
+  and the estimate was cleared: `place`, `men` and `reported_day` of the estimate
+  cleared, `event`; left out when none; decision 0110, item 10).
   An estimate is the count of the last report, wrong by up to half either way;
   it is never aged or corrected, and an opening estimate is dated day 0. The true
   count and the error are never given. `list_contacts` has the same estimates as

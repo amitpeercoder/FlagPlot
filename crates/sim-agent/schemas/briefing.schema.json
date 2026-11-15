@@ -362,6 +362,21 @@
               "event": { "type": "integer" }
             }
           }
+        },
+        "found_empty_yesterday": {
+          "description": "Hexes where the side's own men found no enemy man ashore yesterday, and the estimate cleared (decision 0110, item 10). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "men", "reported_day", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "men": { "type": "integer", "description": "The men of the estimate cleared." },
+              "reported_day": { "type": "integer", "description": "The day that estimate was reported; 0 for an opening estimate." },
+              "event": { "type": "integer" }
+            }
+          }
         }
       }
     },

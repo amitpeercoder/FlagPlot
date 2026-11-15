@@ -16,7 +16,7 @@ Chapter 1, The order in which a day resolves, holds the whole sequence. Before e
 | All three | Movement | Forces meet and fight in time order. A fight makes sighting reports and claims |
 | Night | Shore bombardment | A bombardment gives the base's side a sighting report and the bombarding side a claim |
 | All three | End of the pulse | Every side's contacts age or are dropped |
-| End of the day | Ground combat | Each hex where both sides have men ashore gives each side a ground report, which replaces its estimate |
+| End of the day | Ground combat | Each hex where both sides have men ashore gives each side a ground report, which replaces its estimate; a side with an estimate and fighting men in a hex where the enemy has none is told its men find none, and the estimate is cleared |
 
 The night pulse has an empty search phase. The end-of-day intelligence step is empty: ageing and merging are done as above. [0001, 0012, 0022]
 
@@ -279,6 +279,8 @@ Belief holds an estimate of the enemy's men ashore for a hex: a count of men, th
 
 **The daily report.** A ground report is made for each hex where both sides still have men ashore at the end of that hex's part of the ground combat phase, after the day's fight, its losses, fatigue and any base that changed side (chapter 7). It is made whether or not there was a fight. The Allied side's report comes first, then the Japanese side's. Each side is given a report of the other's men there. It is made only if `ground.toml: report_error_low` and `report_error_high` are given; with neither, no ground report is made. A side that has no men in the hex gets no report of it. [0092]
 
+**The empty report.** A ground report is also made where a side holds an estimate for a hex, has men of a fighting unit ashore there and the enemy has no man ashore there: it says that the side's men find none. It goes through `BeliefState::apply_report` and removes the side's estimate for the hex. It draws nothing. With no estimate held, no report is made; with only working men, none. It is made at the same point as the daily report, the Allied side first. `GroundFoundEmpty` records it, with the count and the day of the estimate cleared. It cites that estimate's own report event and the day's fight in the hex if there was one, and has no breakdown. [0110 item 10]
+
 **What it says.** The count is the true count of the enemy's men ashore in the hex, times an error, cut to a whole man. The error is drawn as a whole number of millionths from `report_error_low` to `report_error_high`, both included (`ground.toml`: 0.5 and 1.5). So a report is never below half the truth nor above one and a half times it. The draw is one stream for each reporting side, hex and day, keyed on the day, no pulse, the intelligence subsystem, the draw `GroundReport` and the reporting side's lowest-numbered unit in the hex (chapter 1, Every draw is keyed). [0092]
 
 **The event.** `GroundReportReceived` records the report, the count and whether it replaced an estimate. It cites the day's fight in the hex if there was one, and otherwise nothing. Its breakdown has the factors `true_men`, `report_error_low`, `report_error_high` and `error` (the error drawn), and its result is the count reported. The breakdown is the umpire's: a side is given the report with no breakdown, as it is given a claim (chapter 1, Causes and breakdowns). [0092]
@@ -287,7 +289,7 @@ Belief holds an estimate of the enemy's men ashore for a hex: a count of men, th
 
 **The opening estimate.** A scenario may give a side an estimate of enemy men in a hex when the game begins: an `[[estimate]]` entry with `side`, `q`, `r` and `men`. It goes in through `apply_report` on day 0 with no error, as a starting contact does, and is dated day 0. It is what that side believed, right or wrong. Its `GroundReportReceived` event is on day 0, with no cause and no breakdown. The scenario fails to load if an entry is off the map, is a second for the same side and hex, is given with no search figures (belief is written with them), or is given after day 1 has begun. [0092]
 
-A side sees: its own `GroundReportReceived` and `BaseFound` whole, and no breakdown of the first. It never sees the enemy's estimates of its own men. [0047, 0092]
+A side sees: its own `GroundReportReceived`, `GroundFoundEmpty` and `BaseFound` whole, and no breakdown of the first. It never sees the enemy's estimates of its own men. [0047, 0092, 0110 item 10]
 
 ## Claims
 

@@ -192,6 +192,23 @@ pub struct EnemyAshorePart {
     /// 0092, 15). Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub bases_found_yesterday: Vec<BaseFoundLine>,
+    /// Hexes where the side's men found no enemy man yesterday and the
+    /// estimate was cleared (decision 0110, item 10). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub found_empty_yesterday: Vec<FoundEmptyLine>,
+}
+
+/// A hex where the side's own men found no enemy man ashore, and the
+/// estimate that was cleared (decision 0110, item 10).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FoundEmptyLine {
+    pub place: Place,
+    /// The men of the estimate cleared.
+    pub men: u32,
+    /// The day that estimate was reported; 0 for an opening estimate.
+    pub reported_day: u32,
+    /// The side's number of the event.
+    pub event: u32,
 }
 
 /// An estimate of the enemy's men ashore in one hex.
@@ -1594,7 +1611,12 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
     let base_changes = Some(std::mem::take(&mut day.base_changes)).filter(|c| !c.is_empty());
     let halts = Some(std::mem::take(&mut day.halts)).filter(|h| !h.is_empty());
     let force_changes = Some(std::mem::take(&mut day.force_changes)).filter(|c| !c.is_empty());
-    let enemy_ashore = enemy_ashore_part(&ctx, view, std::mem::take(&mut day.bases_found));
+    let enemy_ashore = enemy_ashore_part(
+        &ctx,
+        view,
+        std::mem::take(&mut day.bases_found),
+        std::mem::take(&mut day.found_empty),
+    );
 
     let arrivals = ArrivalsPart {
         due: view
@@ -1685,19 +1707,21 @@ pub(crate) fn ground_estimate_lines(
 }
 
 /// The estimates part, or `None` when the side holds no estimate and found no
-/// base yesterday (decision 0092, 19).
+/// base and no empty hex yesterday (decisions 0092, 19, and 0110, item 10).
 fn enemy_ashore_part(
     ctx: &Ctx<'_>,
     view: &SideView<'_>,
     bases_found: Vec<BaseFoundLine>,
+    found_empty: Vec<FoundEmptyLine>,
 ) -> Option<EnemyAshorePart> {
     let estimates = ground_estimate_lines(ctx, view, None);
-    if estimates.is_empty() && bases_found.is_empty() {
+    if estimates.is_empty() && bases_found.is_empty() && found_empty.is_empty() {
         return None;
     }
     Some(EnemyAshorePart {
         estimates,
         bases_found_yesterday: bases_found,
+        found_empty_yesterday: found_empty,
     })
 }
 
@@ -1848,6 +1872,7 @@ struct Day {
     halts: HaltsPart,
     force_changes: ForceChangesPart,
     bases_found: Vec<BaseFoundLine>,
+    found_empty: Vec<FoundEmptyLine>,
 }
 
 /// What yesterday's events of the side say of its land units (decision
@@ -2078,6 +2103,7 @@ impl Day {
         let mut halts = HaltsPart::default();
         let mut force_changes = ForceChangesPart::default();
         let mut bases_found: Vec<BaseFoundLine> = Vec::new();
+        let mut found_empty: Vec<FoundEmptyLine> = Vec::new();
         let mut bombardments: Vec<Bombardment> = Vec::new();
         let mut shell_fire: Vec<ShellFire> = Vec::new();
         let mut bombardments_against: Vec<BombardmentAgainst> = Vec::new();
@@ -2886,6 +2912,17 @@ impl Day {
                         ashore: Some(*ashore),
                         event: id,
                     }),
+                    EventKind::GroundFoundEmpty {
+                        hex,
+                        men,
+                        reported_day,
+                        ..
+                    } => found_empty.push(FoundEmptyLine {
+                        place: ctx.place(*hex),
+                        men: *men,
+                        reported_day: *reported_day,
+                        event: id,
+                    }),
                     EventKind::BaseFound { base, hex, .. } => bases_found.push(BaseFoundLine {
                         base: ctx.base(*base),
                         place: ctx.place(*hex),
@@ -3445,6 +3482,7 @@ impl Day {
             halts,
             force_changes,
             bases_found,
+            found_empty,
         }
     }
 }

@@ -1153,6 +1153,7 @@ pub fn count(
             | EventKind::StrikeMissionCleared { .. }
             | EventKind::ShoreBombardment { .. }
             | EventKind::GroundReportReceived { .. }
+            | EventKind::GroundFoundEmpty { .. }
             | EventKind::BaseFound { .. }
             | EventKind::MarchDay { .. }
             | EventKind::MarchBaseFormed { .. }
