@@ -78,7 +78,7 @@ The spec's table gives five choices that the risk level changes. These are its n
 | --- | --- | --- |
 | 1 | The two strike settings (decision 0114). Built | Scenario 46 |
 | 2 | The intent tree in the command state (decisions 0116 and 0117): a parent, a maker and an addressee. "Hold a place", and under it cover from the air and rest (decision 0115) | Scenarios 47 and 48; then the air campaign with the Allied side given one end and no order |
-| 3 | A strike sized to its target. Strikes, raids and their escort; "neutralise a base". The risk table's first rows | The air campaign with both sides on ends: the first proof |
+| 3 | "Neutralise a base", and raids with their escort (decision 0120). Every doctrine written for one level. The doctrine for striking ships, with a strike's size (decision 0118), moves to step 4, where there are ships | The air campaign with both sides on ends: the first proof (scenario 50 first) |
 | 4 | Surface forces: cover from the sea, interception, break-off and retirement; "deny an area"; fuel as policy and the day a force may be used | A night action from ends on both sides, on placeholder forces and then on Savo Island's |
 | 5 | The escort rule, and escorted and covered runs under "keep supplied" and "hold a place" | A run escorted and covered against a force sent to stop it |
 | 6 | The rearming rule, and rounds kept in reserve as policy | A force that fights, goes back, rearms and fights again |
