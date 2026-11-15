@@ -43,13 +43,13 @@ Each is written down in the rulebook's chapter 8 as the code has it, gives its o
 9. **Escort and cover of a run.** Where the staff believes a run is threatened it forms an escort for it, a force of its own on the escort mission by the rule of decision 14, and where the risk level and the threat ask for it a covering force that stands off. It times the run by a rule the record supports: to arrive at dusk and be clear by morning, or to unload by day and stand off by night, according to who holds the air (`docs/research/oob/runs-to-guadalcanal.md`). An escort is drawn from what the end may use, as a cargo ship is, and competes with every other intent for it.
 10. **Fuel.** The staff plans every force's fuel: it sends no force where it cannot get home with the margin its risk level asks, brings a force back to fuel before it reaches that margin, counts the hours fuelling takes (decision 0112), and keeps a base's fuel above its reserve by fuel runs, which are supply runs with a cargo of fuel.
 
-## Five rule changes the doctrines need
+## The rule changes the doctrines need
 
 Each gets a decision record with a rule card and a hand calculation before it is built, and each reuses what exists.
 
 11. **How old a contact a group strikes on.** A standing setting of a group, defaulting to the figure every group shares today. Built (decision 0114).
 12. **A reserve a group will not send.** A share of a group's aircraft held back from a strike. Built (decision 0114). No player sets it: the staff sets it from the risk level, as a ceiling on what the next rule sends.
-13. **A strike sized to its target.** The designer's answer to question 3: a strike group sends what the task needs, and nobody sets a number. A strike is launched inside the day, when a contact appears, so its size is decided then, by a rule that reads what was reported: so many aircraft for each ship reported, by its kind, from a figure, and never more than the group can fly less its reserve. A wrong report sends the wrong size. Written out as decision 0118 (scenario 49). Built in step 3.
+13. **A strike sized to its target. Withdrawn.** The designer's first answer to question 3 was that a strike group sends what the task needs, and it was written out as decision 0118. The record then showed that no strike of 1942 was sized to its target at launch (`docs/research/oob/strike-sizes.md`), and on Nov 15, 2026, the designer chose the record: a group sends all it can fly less the reserve of decision 12, and the strike divides among the ships it finds on arrival, as the attack rule does today. No rule is added.
 14. **An escort force.** The designer's answer to question 4: escorts sail as a force of their own that keeps station on the force it escorts and fights for it. The escort mission of a task force exists and nothing reads it; this rule gives it its meaning: how an escort keeps station, and who is met first when an enemy comes. Built in step 5.
 15. **Rearming.** The designer's answer to question 6: a force at a base that holds ammunition takes it aboard through the hours of the day, in the port's queue, as it fuels (decision 0112). A base gains a stock of ammunition. The rates are placeholders: the research found where ammunition could be had and when, and no rate (`docs/research/oob/rearming.md`). Built in step 6.
 
@@ -78,7 +78,7 @@ The spec's table gives five choices that the risk level changes. These are its n
 | --- | --- | --- |
 | 1 | The two strike settings (decision 0114). Built | Scenario 46 |
 | 2 | The intent tree in the command state (decisions 0116 and 0117): a parent, a maker and an addressee. "Hold a place", and under it cover from the air and rest (decision 0115) | Scenarios 47 and 48; then the air campaign with the Allied side given one end and no order |
-| 3 | A strike sized to its target. Strikes, raids and their escort; "neutralise a base". The risk table's first rows | The air campaign with both sides on ends: the first proof |
+| 3 | Strikes, raids and their escort, a strike sending all it can fly less the staff's reserve; "neutralise a base". The risk table's first rows | The air campaign with both sides on ends: the first proof |
 | 4 | Surface forces: cover from the sea, interception, break-off and retirement; "deny an area"; fuel as policy and the day a force may be used | A night action from ends on both sides, on placeholder forces and then on Savo Island's |
 | 5 | The escort rule, and escorted and covered runs under "keep supplied" and "hold a place" | A run escorted and covered against a force sent to stop it |
 | 6 | The rearming rule, and rounds kept in reserve as policy | A force that fights, goes back, rearms and fights again |
@@ -121,7 +121,7 @@ Put to the designer twice on Nov 15, 2026. The first time he answered each as th
 
 1. **Which ends the commander can state:** hold a place, deny an area, neutralise a base, beside keeping a base supplied. As recommended.
 2. **How old a contact a strike is launched on:** the setting is kept. As recommended.
-3. **A strike of a stated size:** "a strike group sends the number of aircraft and ammunition as it sees fit to accomplish the task at hand". So a strike is sized to its target by a rule at launch, with the share already built kept underneath as a reserve the staff sets from the risk level (decision 13). The architect had recommended the share alone.
+3. **A strike of a stated size:** "a strike group sends the number of aircraft and ammunition as it sees fit to accomplish the task at hand". So a strike is sized to its target by a rule at launch, with the share already built kept underneath as a reserve the staff sets from the risk level (decision 13). The architect had recommended the share alone. Withdrawn by the designer the same day, on the record: decision 13 above.
 4. **Escorts:** a separate escort force with its own rule (decision 14). The architect had recommended the convoy's own force and no new rule.
 5. **The proof:** both the air campaign of 28 days and the Eastern Solomons with its week. The architect had recommended the second alone.
 6. **Rearming:** built in stage 2 (decision 15). The architect had recommended leaving it until stage 3.

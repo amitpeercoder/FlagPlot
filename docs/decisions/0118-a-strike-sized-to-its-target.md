@@ -1,10 +1,16 @@
 # 0118: A strike sized to its target
 
-Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, decision 13), on the designer's answer to its question 3: "a strike group sends the number of aircraft and ammunition as it sees fit to accomplish the task at hand". It writes the rule out with its rule card and its hand calculation. Not built. It is built in step 3 of the stage, after step 2.
+Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, decision 13), on the designer's answer to its question 3: "a strike group sends the number of aircraft and ammunition as it sees fit to accomplish the task at hand". It writes the rule out with its rule card and its hand calculation. Not built. It is built in step 3 of the stage, after step 2. Withdrawn on Nov 15, 2026, by the designer, before it was built: see "Withdrawn".
 
 Summary: A standing setting of an air group on the naval strike mission, off until set: with it on, the group sends at a contact only the aircraft the report calls for, so many for each ship reported by its kind, less what groups before it have already sent there, and goes on to the next contact on its list when one is fully served
 
-Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Not built
+Standing: Withdrawn by the designer, Nov 15, 2026, before it was built: the record shows no strike sized to its target at launch
+
+## Withdrawn
+
+The research this record asked for came in the same day (`docs/research/oob/strike-sizes.md`): twenty strikes of 1942 with the force reported before launch and the aircraft sent. No strike was sized to its target at launch. A carrier sent a whole group or all that could fly, whatever was reported: 29 to 50 attack aircraft at two carriers reported, and 34 at two cruisers and two destroyers. What was held was held for another reason: Yorktown kept 17 scout bombers at Midway for carriers not yet found. Where a strike was divided between ships, its leader divided it on arrival. No rule of the time gives aircraft for each ship.
+
+Put to the designer with that evidence, he chose the record: a group sends all it can fly, less a reserve the staff sets from the risk level, which is the held share decision 0114 built; and the strike divides among the ships it finds, as the attack rule of chapter 5 does today. So step 3 of stage 2 has no new rule for a strike's size. The hand calculation written for this record, scenario 49, is removed with it. What follows is kept as it was written.
 
 ## Why
 
