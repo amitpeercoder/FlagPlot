@@ -66,30 +66,30 @@
     },
     {
       "file": "data/scenarios/../reference/ground.toml",
-      "hash": "e5d2184223d62b2a"
+      "hash": "5ef7d142f1faa97f"
     }
   ],
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "f7cfcd83148766d1"
+      "hash": "6e21a57ac9e60932"
     },
     {
       "day": 2,
-      "hash": "48617cc27718bf5a"
+      "hash": "f75cef4b428baf59"
     },
     {
       "day": 3,
-      "hash": "337c36576c42d4ff"
+      "hash": "7e54fd149e19acdf"
     },
     {
       "day": 4,
-      "hash": "54e6a7d28cca4ada"
+      "hash": "44f4efee7f382022"
     },
     {
       "day": 5,
-      "hash": "0e5a7da573f5e9ce"
+      "hash": "fa9079506dfcc256"
     }
   ],
   "orders": [

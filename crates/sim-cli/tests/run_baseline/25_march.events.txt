@@ -2,11 +2,11 @@ Scenario 25: Marching overland
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d4aba834659a04c5  15 events
-day   2  hash e9b3db879577555b  13 events
-day   3  hash ff78902794f68aa1  28 events
-day   4  hash 527207027f927fc8  25 events
-day   5  hash 387cda52468a7980  15 events
+day   1  hash 4b25eda81e99ca37  15 events
+day   2  hash ecaefd1f3976602d  13 events
+day   3  hash af4dac9eeff5b997  28 events
+day   4  hash b1c79dd528e6d121  25 events
+day   5  hash 133791265fc38abb  15 events
 
 #1 D1 -         order:1 accepted for land_unit:1  <- order:1
 #2 D1 -         order:2 accepted for land_unit:3  <- order:2
@@ -18,8 +18,8 @@ day   5  hash 387cda52468a7980  15 events
 #8 D1 night     land_unit:3 lost 5 men unfed at (2,0), 95 left ashore  <- #7
 #9 D1 -         land_unit:1 marched from (0,0) toward (1,0): 1 of 3 days  <- order:1
 #10 D1 -         land_unit:3 marched from (2,0) toward (3,0): 1 of 3 days  <- order:2
-#11 D1 -         land_unit:1 marched: fatigue 10  <- #9
-#12 D1 -         land_unit:3 marched: fatigue 10  <- #10
+#11 D1 -         land_unit:1 marched: fatigue 5  <- #9
+#12 D1 -         land_unit:3 marched: fatigue 5  <- #10
 #13 D1 -         land_unit:2 dug in: fieldworks 10
 #14 D1 -         base:1 at the end of the day: 95 t of supply, 0 aircraft ready: not open
 #15 D1 -         base:2 at the end of the day: 48 t of supply, 0 aircraft ready: not open
@@ -31,8 +31,8 @@ day   5  hash 387cda52468a7980  15 events
 #21 D2 night     land_unit:3 lost 4 men unfed at (2,0), 91 left ashore  <- #20
 #22 D2 -         land_unit:1 marched from (0,0) toward (1,0): 2 of 3 days  <- order:1
 #23 D2 -         land_unit:3 marched from (2,0) toward (3,0): 2 of 3 days  <- order:2
-#24 D2 -         land_unit:1 marched: fatigue 20  <- #22
-#25 D2 -         land_unit:3 marched: fatigue 20  <- #23
+#24 D2 -         land_unit:1 marched: fatigue 10  <- #22
+#25 D2 -         land_unit:3 marched: fatigue 10  <- #23
 #26 D2 -         land_unit:2 dug in: fieldworks 20
 #27 D2 -         base:1 at the end of the day: 90 t of supply, 0 aircraft ready: not open
 #28 D2 -         base:2 at the end of the day: 46 t of supply, 0 aircraft ready: not open
@@ -49,15 +49,15 @@ day   5  hash 387cda52468a7980  15 events
 #39 D3 -         land_unit:3 marched from (2,0) toward (3,0): 3 of 3 days  <- order:2
 #40 D3 -         land_unit:3 arrived at (3,0) from (2,0) with 87 men, carrying no supply  <- #39
 #41 D3 -         fight ashore at (1,0): the Allied side attacks
-#42 D3 -         land_unit:1 fired at (1,0) with 800 men: 8 shots at 0.3, 1 hit  <- #41
+#42 D3 -         land_unit:1 fired at (1,0) with 900 men: 9 shots at 0.3, 1 hit  <- #41
 #43 D3 -         land_unit:2 fired at (1,0) with 400 men: 4 shots at 0.6, 3 hits  <- #41, #32
 #44 D3 -         land_unit:1 lost 60 men in the fight at (1,0), 940 left ashore  <- #43
 #45 D3 -         land_unit:2 lost 18 men in the fight at (1,0), 382 left ashore  <- #42
-#46 D3 -         land_unit:1 marched and attacked: fatigue 50  <- #42, #35
+#46 D3 -         land_unit:1 marched and attacked: fatigue 35  <- #42, #35
 #47 D3 -         Allied ground report at (1,0): 345 enemy men ashore  <- #41
 #48 D3 -         Japanese ground report at (1,0): 875 enemy men ashore  <- #41
 #49 D3 -         Japanese found enemy base:3 at (1,0): it is on the Japanese side's map  <- #48
-#50 D3 -         land_unit:3 marched: fatigue 30  <- #39
+#50 D3 -         land_unit:3 marched: fatigue 15  <- #39
 #51 D3 -         land_unit:1 fired in a fight: 1 day counted at experience 2  <- #42
 #52 D3 -         land_unit:2 fired in a fight: 1 day counted at experience 2  <- #43
 #53 D3 -         land_unit:2 dug in: fieldworks 30
@@ -72,16 +72,16 @@ day   5  hash 387cda52468a7980  15 events
 #62 D4 night     Japanese men ashore at (3,0): no base of the side, none of 87 fed, 87 unfed
 #63 D4 night     land_unit:3 lost 4 men unfed at (3,0), 83 left ashore  <- #62
 #64 D4 -         fight ashore at (1,0): the Allied side attacks
-#65 D4 -         land_unit:1 fired at (1,0) with 470 men: 4.7 shots at 0.3, 1 hit  <- #64, #59
+#65 D4 -         land_unit:1 fired at (1,0) with 611 men: 6.11 shots at 0.3, 1 hit  <- #64, #59
 #66 D4 -         land_unit:2 fired at (1,0) with 382 men: 3.82 shots at 0.6, 3 hits  <- #64, #61
-#67 D4 -         the Allied side's attack at (1,0) failed: weight of fire 1.41 against 2.292  <- #64, #65, #66
+#67 D4 -         the Allied side's attack at (1,0) failed: weight of fire 1.833 against 2.292  <- #64, #65, #66
 #68 D4 -         land_unit:1 lost 60 men in the fight at (1,0), 880 left ashore  <- #66
 #69 D4 -         land_unit:2 lost 17 men in the fight at (1,0), 365 left ashore  <- #65
-#70 D4 -         land_unit:1 attacked: fatigue 100  <- #65, #67
-#71 D4 -         land_unit:1 is too tired to attack at fatigue 100 and goes back to defend  <- #70
+#70 D4 -         land_unit:1 attacked: fatigue 85  <- #65, #67
+#71 D4 -         land_unit:1 is too tired to attack at fatigue 85 and goes back to defend  <- #70
 #72 D4 -         Allied ground report at (1,0): 299 enemy men ashore, replacing the estimate held  <- #64
 #73 D4 -         Japanese ground report at (1,0): 1010 enemy men ashore, replacing the estimate held  <- #64
-#74 D4 -         land_unit:3 rested: fatigue 25
+#74 D4 -         land_unit:3 rested: fatigue 10
 #75 D4 -         land_unit:1 fired in a fight: 2 days counted at experience 2  <- #65
 #76 D4 -         land_unit:2 fired in a fight: 2 days counted at experience 2  <- #66
 #77 D4 -         land_unit:1 dug in: fieldworks 10
@@ -95,10 +95,10 @@ day   5  hash 387cda52468a7980  15 events
 #85 D5 night     Japanese men ashore at (1,0): 365 of 365 fed from base:2, 0 unfed  <- #84
 #86 D5 night     Japanese men ashore at (3,0): no base of the side, none of 83 fed, 83 unfed
 #87 D5 night     land_unit:3 lost 4 men unfed at (3,0), 79 left ashore  <- #86
-#88 D5 -         land_unit:1 rested: fatigue 95
+#88 D5 -         land_unit:1 rested: fatigue 80
 #89 D5 -         Allied ground report at (1,0): 202 enemy men ashore, replacing the estimate held
 #90 D5 -         Japanese ground report at (1,0): 979 enemy men ashore, replacing the estimate held
-#91 D5 -         land_unit:3 rested: fatigue 20
+#91 D5 -         land_unit:3 rested: fatigue 5
 #92 D5 -         land_unit:1 dug in: fieldworks 20
 #93 D5 -         land_unit:3 dug in: fieldworks 20
 #94 D5 -         base:1 at the end of the day: 60 t of supply, 0 aircraft ready: not open
@@ -108,9 +108,9 @@ day   5  hash 387cda52468a7980  15 events
 base:1 "Placeholder base P, Allied" (Allied) at (0,0): 60 t of supply in stock
 base:2 "Placeholder base Q, Japanese" (Japanese) at (1,0): 40.265 t of supply in stock
 base:3 "Dump at (1,0)" (Allied) at (1,0): 15.9 t of supply in stock, no airfield
-land_unit:1 "Placeholder Allied regiment at P" (Allied): 880 men ashore at (1,0), fatigue 95, fieldworks 20
+land_unit:1 "Placeholder Allied regiment at P" (Allied): 880 men ashore at (1,0), fatigue 80, fieldworks 20
 land_unit:2 "Placeholder Japanese battalion at Q" (Japanese): 365 men ashore at (1,0), fieldworks 30
-land_unit:3 "Placeholder Japanese company at R" (Japanese): 79 men ashore at (3,0), fatigue 20, fieldworks 20
+land_unit:3 "Placeholder Japanese company at R" (Japanese): 79 men ashore at (3,0), fatigue 5, fieldworks 20
 Allied: no contacts
 Allied: no battle claims
 Allied estimate at (1,0): 202 enemy men ashore, reported day 5
