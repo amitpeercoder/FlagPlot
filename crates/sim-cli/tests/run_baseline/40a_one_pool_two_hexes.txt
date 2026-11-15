@@ -2,22 +2,22 @@ Placeholder scenario 40a: Two intents and one ship
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash da302dbdeaa09cf2  45 events
-day   2  hash 12437968169bf04d  25 events
-day   3  hash 555bd5a4136ee404  20 events
-day   4  hash e951ac0ee483e0ed  10 events
-day   5  hash 8cfbf9291aee41ec  16 events
-day   6  hash 07ea46911489d15f  22 events
-day   7  hash 719acb44b4bc41c1  13 events
-day   8  hash d0a05d358c447915  9 events
-day   9  hash 277b37da1ada4127  9 events
-day  10  hash cafca38e29a40e8f  18 events
-day  11  hash c48796fb56586dd9  23 events
-day  12  hash c1b2a1e4f93d3ab8  14 events
-day  13  hash 7c302c3afe7e378a  10 events
-day  14  hash 8025410a0844c118  16 events
-day  15  hash 9a0f9bdf03b8b03c  22 events
-day  16  hash 6664608b108450ad  13 events
+day   1  hash 569c47ab2e6f04c1  45 events
+day   2  hash 033d2d85850d1cea  25 events
+day   3  hash 42b4c03ee40c81f5  20 events
+day   4  hash 744d1c238b24a01c  10 events
+day   5  hash 400f849217d0d179  16 events
+day   6  hash e61a438be0020a1a  22 events
+day   7  hash 7d561e34c481c904  13 events
+day   8  hash c8c5e4ca5b460d6c  9 events
+day   9  hash a5ea171470be144e  9 events
+day  10  hash 7d9985d689111c80  18 events
+day  11  hash d48c1851077d091a  23 events
+day  12  hash 0118811c7bd6f1ab  14 events
+day  13  hash eb6b3d595303443d  10 events
+day  14  hash 446495fafadfdd95  16 events
+day  15  hash d32d1b28ad13d12d  22 events
+day  16  hash a8e290b1bf571094  13 events
 
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Placeholder fast transport 1": afloat in task_force:1000001; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply

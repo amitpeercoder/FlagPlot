@@ -255,7 +255,7 @@ fn the_saved_game_holds_orders_with_their_origin_and_the_files_it_names() {
     let value: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
     assert_eq!(value["format"], "flagplot-saved-game");
-    assert_eq!(value["version"], 3);
+    assert_eq!(value["version"], 4);
     assert_eq!(
         value["state_version"],
         std::str::from_utf8(sim_core::hash::STATE_VERSION).expect("the version is text")
@@ -549,7 +549,7 @@ fn a_scenario_with_commands_saves_them_and_replays_to_the_same_hashes() {
     let game = save(&scenario, "commands-replay-save", &[]);
     let value: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
-    assert_eq!(value["version"], 3);
+    assert_eq!(value["version"], 4);
     assert_eq!(value["doctrine_version"], sim_staff::DOCTRINE_VERSION);
     let commands = value["commands"].as_array().expect("commands");
     assert_eq!(commands.len(), 5);
@@ -653,7 +653,7 @@ fn a_saved_game_of_version_2_is_refused_not_converted() {
         map.remove("staff");
         map.remove("doctrine_version");
     });
-    assert!(error.contains("saved game version 2, now 3"), "{error}");
+    assert!(error.contains("saved game version 2, now 4"), "{error}");
     assert!(error.contains("not converted"), "{error}");
 }
 
@@ -749,7 +749,7 @@ fn a_game_played_through_serve_saves_the_scenarios_commands_and_replays() {
     ok(&output, "serve");
     let value: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
-    assert_eq!(value["version"], 3);
+    assert_eq!(value["version"], 4);
     assert_eq!(value["commands"].as_array().expect("commands").len(), 5);
     // The staff the session was given handed in what it decided on day 1.
     assert_eq!(value["staff"][0]["day"], 1);
