@@ -99,12 +99,14 @@ impl Default for MadeIds {
 /// engaged in a fight ashore and an attack that fails, which changes every
 /// live fight ashore) and 5 from decision 0106 (cover, fieldworks and
 /// strain, which changes every live scenario with men ashore under fire or
-/// in a fight) and 6 from decision 0111 (a load up to a weight, a reserve at
+/// in a fight), 6 from decision 0111 (a load up to a weight, a reserve at
 /// a base, and forces formed, joined and stood down: orders and state a game
-/// under the old rules could not hold). A pull request raises it by one when
+/// under the old rules could not hold) and 7 from decision 0109 (a unit
+/// falling back is out of a fight its own side starts, which changes every
+/// live fight where one is). A pull request raises it by one when
 /// it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 6;
+pub const RULES_VERSION: u32 = 7;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

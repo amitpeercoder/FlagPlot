@@ -2498,7 +2498,8 @@ mod tests {
         assert_eq!(figures.work_per_aircraft_repair, Fixed::from_int(200));
         assert_eq!(figures.work_per_defence_point, Fixed::from_int(200));
         assert_eq!(figures.defences_strength, Fixed::from_ratio(1, 2));
-        assert_eq!(figures.fighting_unit_work_share, Fixed::from_ratio(1, 2));
+        // 0.1 live since decision 0109, 3; the frozen copy keeps 0.5.
+        assert_eq!(figures.fighting_unit_work_share, Fixed::from_ratio(1, 10));
         for key in WORK_KEYS {
             let text = without_keys(&ground_text(), &[key]);
             assert!(

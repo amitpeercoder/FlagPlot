@@ -2,12 +2,12 @@ Scenario 30: Units that work, and what they build
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 141ba3d346a24935  60 events
-day   2  hash 55a697058c181871  51 events
-day   3  hash 16d643484d0b83b6  43 events
-day   4  hash 5896db4f5c816950  37 events
-day   5  hash aa73bcdad3503cc1  38 events
-day   6  hash 086ebf61491ea330  31 events
+day   1  hash 813cd23c7a635fd1  60 events
+day   2  hash e3c5eae65359fecb  51 events
+day   3  hash 6d3aab94b259891a  43 events
+day   4  hash 19cf5504b7b61c6d  37 events
+day   5  hash 016342e674fdb847  38 events
+day   6  hash cb0e536e8c39e571  31 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:3  <- order:2
@@ -54,7 +54,7 @@ day   6  hash 086ebf61491ea330  31 events
 #43 D1 -         land_unit:3 worked at the port of base:2: 500 of work, 500 on the port today  <- order:3, #11
 #44 D1 -         land_unit:4 trained: 1 day counted at experience 1  <- order:4, #11
 #45 D1 -         land_unit:5 worked at the aircraft of base:3: 600 of work, 600 on the aircraft today  <- order:5, #13
-#46 D1 -         land_unit:11 worked at the defences of base:1: 450 of work, defences 2.25  <- order:6, #9
+#46 D1 -         land_unit:11 worked at the defences of base:1: 90 of work, defences 0.45  <- order:6, #9
 #47 D1 -         land_unit:12 rehearsed the landing at (20,0) with task_force:3: rehearsal 5  <- order:2
 #48 D1 -         land_unit:6 fired in a fight: 1 day counted at experience 2  <- #26
 #49 D1 -         land_unit:8 fired in a fight: 1 day counted at experience 2  <- #27
@@ -103,7 +103,7 @@ day   6  hash 086ebf61491ea330  31 events
 #92 D2 -         land_unit:3 worked at the port of base:2: 500 of work, 500 on the port today  <- order:3, #66
 #93 D2 -         land_unit:4 trained: 2 days counted at experience 1  <- order:4, #66
 #94 D2 -         land_unit:5 worked at the aircraft of base:3: 600 of work, 600 on the aircraft today  <- order:5, #68
-#95 D2 -         land_unit:11 worked at the defences of base:1: 450 of work, defences 4.5  <- order:6, #64
+#95 D2 -         land_unit:11 worked at the defences of base:1: 90 of work, defences 0.9  <- order:6, #64
 #96 D2 -         land_unit:12 rehearsed the landing at (20,0) with task_force:3: rehearsal 10  <- order:2
 #97 D2 -         base:1 (Allied) at (0,0) has an airfield: 20600 of work done  <- #90, #91
 #98 D2 -         land_unit:6 fired in a fight: 2 days counted at experience 2  <- #79
@@ -146,11 +146,11 @@ day   6  hash 086ebf61491ea330  31 events
 #135 D3 -         land_unit:1 worked at the port of base:1: 1000 of work, 1000 on the port today  <- #118
 #136 D3 -         land_unit:2 worked at the port of base:1: 800 of work, 1800 on the port today  <- #118
 #137 D3 -         land_unit:3 worked at the port of base:2: 500 of work, 500 on the port today  <- order:3, #120
-#138 D3 -         land_unit:4 worked at the port of base:2: 1500 of work, 2000 on the port today  <- order:9, #120
+#138 D3 -         land_unit:4 worked at the port of base:2: 300 of work, 800 on the port today  <- order:9, #120
 #139 D3 -         land_unit:5 worked at the aircraft of base:3: 600 of work, 600 on the aircraft today  <- order:5, #122
 #140 D3 -         land_unit:7 worked at the port of base:4: 1958 of work, 1958 on the port today  <- #124
-#141 D3 -         land_unit:11 worked at the defences of base:1: 450 of work, defences 6.75  <- order:6, #118
-#142 D3 -         land_unit:12 worked at the defences of base:2: 300 of work, defences 1.5  <- order:10, #120
+#141 D3 -         land_unit:11 worked at the defences of base:1: 90 of work, defences 1.35  <- order:6, #118
+#142 D3 -         land_unit:12 worked at the defences of base:2: 60 of work, defences 0.3  <- order:10, #120
 #143 D3 -         land_unit:4 dug in: fieldworks 30
 #144 D3 -         land_unit:6 dug in: fieldworks 30
 #145 D3 -         land_unit:8 dug in: fieldworks 20
@@ -177,9 +177,9 @@ day   6  hash 086ebf61491ea330  31 events
 #166 D4 night     Japanese men ashore at (15,0): 800 of 800 fed from base:5, 0 unfed  <- #165
 #167 D4 night     base:6 spent 0.5 t of supply on 100 men ashore for the day, 497.25 t left
 #168 D4 night     Japanese men ashore at (20,0): 100 of 100 fed from base:6, 0 unfed  <- #167
-#169 D4 night     ship:2 unloaded 480 t at base:2, 520 t aboard, 6898 t in stock  <- order:11, #137, #138
-#170 D4 morning   ship:2 unloaded 240 t at base:2, 280 t aboard, 7138 t in stock  <- order:11, #137, #138
-#171 D4 afternoon ship:2 unloaded 240 t at base:2, 40 t aboard, 7378 t in stock  <- order:11, #137, #138
+#169 D4 night     ship:2 unloaded 432 t at base:2, 568 t aboard, 6850 t in stock  <- order:11, #137, #138
+#170 D4 morning   ship:2 unloaded 216 t at base:2, 352 t aboard, 7066 t in stock  <- order:11, #137, #138
+#171 D4 afternoon ship:2 unloaded 216 t at base:2, 136 t aboard, 7282 t in stock  <- order:11, #137, #138
 #172 D4 -         land_unit:8 rested: fatigue 90
 #173 D4 -         Allied ground report at (15,0): 1029 enemy men ashore, replacing the estimate held
 #174 D4 -         Japanese ground report at (15,0): 2616 enemy men ashore, replacing the estimate held
@@ -187,14 +187,14 @@ day   6  hash 086ebf61491ea330  31 events
 #176 D4 -         land_unit:1 worked at the port of base:1: 1000 of work, 1000 on the port today  <- #158
 #177 D4 -         land_unit:2 worked at the port of base:1: 800 of work, 1800 on the port today  <- #158
 #178 D4 -         land_unit:3 worked at the port of base:2: 500 of work, 500 on the port today  <- order:3, #160
-#179 D4 -         land_unit:4 worked at the port of base:2: 1500 of work, 2000 on the port today  <- order:9, #160
+#179 D4 -         land_unit:4 worked at the port of base:2: 300 of work, 800 on the port today  <- order:9, #160
 #180 D4 -         land_unit:5 worked at the aircraft of base:3: 600 of work, 600 on the aircraft today  <- order:5, #162
 #181 D4 -         land_unit:7 worked at the port of base:4: 1958 of work, 1958 on the port today  <- #164
-#182 D4 -         land_unit:11 worked at the defences of base:1: 450 of work, defences 9  <- order:6, #158
-#183 D4 -         land_unit:12 worked at the defences of base:2: 300 of work, defences 3  <- order:10, #160
+#182 D4 -         land_unit:11 worked at the defences of base:1: 90 of work, defences 1.8  <- order:6, #158
+#183 D4 -         land_unit:12 worked at the defences of base:2: 60 of work, defences 0.6  <- order:10, #160
 #184 D4 -         land_unit:8 dug in: fieldworks 30
 #185 D4 -         base:1 at the end of the day: 4954 t of supply, 12 aircraft ready: open
-#186 D4 -         base:2 at the end of the day: 7378 t of supply, 0 aircraft ready: not open
+#186 D4 -         base:2 at the end of the day: 7282 t of supply, 0 aircraft ready: not open
 #187 D4 -         base:3 at the end of the day: 1.5 t of supply, 15 aircraft ready: open
 #188 D4 -         base:4 at the end of the day: 4940.87 t of supply, 0 aircraft ready: not open
 #189 D4 -         base:5 at the end of the day: 4982.5 t of supply, 0 aircraft ready: not open
@@ -206,7 +206,7 @@ day   6  hash 086ebf61491ea330  31 events
 #195 D5 night     air_group:2 had 4 aircraft repaired at base:3, 19 ready and 3 damaged  <- #180
 #196 D5 night     base:1 spent 11.5 t of supply on 2300 men ashore for the day, 4942.5 t left
 #197 D5 night     Allied men ashore at (0,0): 2300 of 2300 fed from base:1, 0 unfed  <- #196
-#198 D5 night     base:2 spent 20.5 t of supply on 4100 men ashore for the day, 7357.5 t left
+#198 D5 night     base:2 spent 20.5 t of supply on 4100 men ashore for the day, 7261.5 t left
 #199 D5 night     Allied men ashore at (5,0): 4100 of 4100 fed from base:2, 0 unfed  <- #198
 #200 D5 night     base:3 spent 1.5 t of supply on 600 men ashore for the day: 3 t was asked and the stock could not cover it, 0 t left: base:3 is out of supply
 #201 D5 night     Allied men ashore at (10,0): 300 of 600 fed from base:3, 300 unfed  <- #200
@@ -217,8 +217,8 @@ day   6  hash 086ebf61491ea330  31 events
 #206 D5 night     Japanese men ashore at (15,0): 800 of 800 fed from base:5, 0 unfed  <- #205
 #207 D5 night     base:6 spent 0.5 t of supply on 100 men ashore for the day, 496.75 t left
 #208 D5 night     Japanese men ashore at (20,0): 100 of 100 fed from base:6, 0 unfed  <- #207
-#209 D5 night     ship:2 unloaded 40 t at base:2, 0 t aboard, 7397.5 t in stock  <- order:11, #178, #179
-#210 D5 night     task_force:2 completed unloading at base:2 at D5 19:00  <- #209
+#209 D5 night     ship:2 unloaded 136 t at base:2, 0 t aboard, 7397.5 t in stock  <- order:11, #178, #179
+#210 D5 night     task_force:2 completed unloading at base:2 at D5 21:47  <- #209
 #211 D5 -         land_unit:8 rested: fatigue 85
 #212 D5 -         Allied ground report at (15,0): 895 enemy men ashore, replacing the estimate held
 #213 D5 -         Japanese ground report at (15,0): 2611 enemy men ashore, replacing the estimate held
@@ -226,10 +226,10 @@ day   6  hash 086ebf61491ea330  31 events
 #215 D5 -         land_unit:1 worked at the port of base:1: 1000 of work, 1000 on the port today  <- #197
 #216 D5 -         land_unit:2 worked at the port of base:1: 800 of work, 1800 on the port today  <- #197
 #217 D5 -         land_unit:3 worked at the port of base:2: 500 of work, 500 on the port today  <- order:3, #199
-#218 D5 -         land_unit:4 worked at the port of base:2: 1500 of work, 2000 on the port today  <- order:9, #199
+#218 D5 -         land_unit:4 worked at the port of base:2: 300 of work, 800 on the port today  <- order:9, #199
 #219 D5 -         land_unit:5 worked at the aircraft of base:3: 292.5 of work, 292.5 on the aircraft today  <- order:5, #201
 #220 D5 -         land_unit:7 worked at the port of base:4: 1958 of work, 1958 on the port today  <- #204
-#221 D5 -         land_unit:11 worked at the defences of base:1: 450 of work, defences 11.25  <- order:6, #197
+#221 D5 -         land_unit:11 worked at the defences of base:1: 90 of work, defences 2.25  <- order:6, #197
 #222 D5 -         land_unit:12 rehearsed the landing at (20,0) with task_force:4: rehearsal 15  <- order:12, order:13
 #223 D5 -         base:1 at the end of the day: 4942.5 t of supply, 12 aircraft ready: open
 #224 D5 -         base:2 at the end of the day: 7397.5 t of supply, 0 aircraft ready: not open
@@ -258,9 +258,9 @@ day   6  hash 086ebf61491ea330  31 events
 #247 D6 -         land_unit:1 worked at the port of base:1: 1000 of work, 1000 on the port today  <- #232
 #248 D6 -         land_unit:2 worked at the port of base:1: 800 of work, 1800 on the port today  <- #232
 #249 D6 -         land_unit:3 worked at the port of base:2: 500 of work, 500 on the port today  <- order:3, #234
-#250 D6 -         land_unit:4 worked at the port of base:2: 1500 of work, 2000 on the port today  <- order:9, #234
+#250 D6 -         land_unit:4 worked at the port of base:2: 300 of work, 800 on the port today  <- order:9, #234
 #251 D6 -         land_unit:7 worked at the port of base:4: 1958 of work, 1958 on the port today  <- #238
-#252 D6 -         land_unit:11 worked at the defences of base:1: 450 of work, defences 13.5  <- order:6, #232
+#252 D6 -         land_unit:11 worked at the defences of base:1: 90 of work, defences 2.7  <- order:6, #232
 #253 D6 -         land_unit:12 rehearsed the landing at (20,0) with task_force:4: rehearsal 20  <- order:12, order:13
 #254 D6 -         base:1 at the end of the day: 4931 t of supply, 12 aircraft ready: open
 #255 D6 -         base:2 at the end of the day: 7377 t of supply, 0 aircraft ready: not open
@@ -280,8 +280,8 @@ ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, f
 ship:2 "Placeholder cargo ship 2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
 ship:3 "Placeholder troop transport 3": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
 ship:4 "Placeholder troop transport 4": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-base:1 "Placeholder base 1" (Allied) at (0,0): 4931 t of supply in stock, 20600 of work done on the airfield, defences 13.5
-base:2 "Placeholder base 2" (Allied) at (5,0): 7377 t of supply in stock, defences 3
+base:1 "Placeholder base 1" (Allied) at (0,0): 4931 t of supply in stock, 20600 of work done on the airfield, defences 2.7
+base:2 "Placeholder base 2" (Allied) at (5,0): 7377 t of supply in stock, defences 0.6
 base:3 "Placeholder base 3" (Allied) at (10,0): 0 t of supply in stock, repairs 1 aircraft a day
 base:4 "Placeholder base 4" (Allied) at (15,0): 4911.5 t of supply in stock, defences 40
 base:5 "Placeholder base 5" (Japanese) at (15,0): 4974.5 t of supply in stock

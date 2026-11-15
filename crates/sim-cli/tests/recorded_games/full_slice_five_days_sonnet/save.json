@@ -66,30 +66,30 @@
     },
     {
       "file": "data/scenarios/../reference/ground.toml",
-      "hash": "7bc7c7ffd6c4f80e"
+      "hash": "e5d2184223d62b2a"
     }
   ],
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "9451cac5f98e63de"
+      "hash": "f7cfcd83148766d1"
     },
     {
       "day": 2,
-      "hash": "a57ac0e073073653"
+      "hash": "48617cc27718bf5a"
     },
     {
       "day": 3,
-      "hash": "f77c68f603738b5a"
+      "hash": "337c36576c42d4ff"
     },
     {
       "day": 4,
-      "hash": "c3e62c6ad45e78d3"
+      "hash": "54e6a7d28cca4ada"
     },
     {
       "day": 5,
-      "hash": "cff2fff652e4d31f"
+      "hash": "0e5a7da573f5e9ce"
     }
   ],
   "orders": [
@@ -857,10 +857,10 @@
       "unit": "task_force:26"
     }
   ],
-  "rules_version": 6,
+  "rules_version": 7,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "b3d47f3433ed4a0b"
+    "hash": "5ed635ac5538b189"
   },
   "seats": {
     "allied": "player",
