@@ -102,3 +102,4 @@ id,key,name,nation,service,kind,parent
 1097,jp-3d-battalion-4th-infantry,"3d Battalion, 4th Infantry",jp,ija,formation,jp-4th-infantry
 1098,us-forces-south-pacific-area,"US forces, South Pacific Area (the Army and Navy bases and the forces afloat)",us,mixed,forces-at-place,
 1099,us-forces-southwest-pacific-area,"US forces, Southwest Pacific Area (Australia)",us,mixed,forces-at-place,
+1100,jp-3d-battalion-124th-infantry,"3d (Watanabe) Battalion, 124th Infantry",jp,ija,formation,jp-124th-infantry
