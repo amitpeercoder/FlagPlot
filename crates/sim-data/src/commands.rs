@@ -3,8 +3,9 @@
 //! a test can begin with an intent in force.
 //!
 //! Only the commander's kinds are written here: `set_intent`,
-//! `withdraw_intent`, `set_limit`, `set_leave`, `approve` and `cancel_plan`.
-//! The staff's kinds are the staff's to give and a scenario cannot state
+//! `withdraw_intent`, `set_limit`, `set_leave`, `approve`, `cancel_plan`,
+//! `hold` and `release`. The staff's kinds (`commit_ships`, `end_run` and the
+//! rest) are the staff's to give and a scenario cannot state
 //! them. Every table has `day`, `side` and `kind`, and the keys its kind
 //! takes; a key the kind does not take, a key that is not a key of any
 //! command, a TOML float and a number that is not whole are all refused.
@@ -16,6 +17,7 @@
 //! | `set_limit` | `limit` and its keys, below |
 //! | `set_leave` | `leave` (`"prepare"` or `"launch"`), `given` |
 //! | `approve`, `cancel_plan` | `plan` |
+//! | `hold`, `release` | exactly one of `ship`, `task_force` and `air_group`; with `air_group`, `setting` (`"search_arc"`), which no other target takes |
 //!
 //! The limits: `limit = "forces"` has `intent`, `ships`, `task_forces` and
 //! `source` (a base); `"area"` has `intent` and `hexes` as `[[q, r], ...]`;
@@ -27,9 +29,11 @@
 use std::collections::BTreeSet;
 
 use serde::Deserialize;
-use sim_core::command::{CommandKind, ForcesLimit, IntentKind, Leave, Limit, PlanId, Risk};
+use sim_core::command::{
+    CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, Leave, Limit, PlanId, Risk,
+};
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, IntentId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, IntentId, ShipId, TaskForceId};
 use sim_core::state::Side;
 
 use crate::quantity::Quantity;
@@ -60,6 +64,10 @@ pub(crate) struct CommandSpec {
     leave: Option<String>,
     given: Option<bool>,
     plan: Option<u32>,
+    ship: Option<u32>,
+    task_force: Option<u32>,
+    air_group: Option<u32>,
+    setting: Option<String>,
 }
 
 impl CommandSpec {
@@ -88,6 +96,10 @@ impl CommandSpec {
         note(self.leave.is_some(), "leave");
         note(self.given.is_some(), "given");
         note(self.plan.is_some(), "plan");
+        note(self.ship.is_some(), "ship");
+        note(self.task_force.is_some(), "task_force");
+        note(self.air_group.is_some(), "air_group");
+        note(self.setting.is_some(), "setting");
         keys
     }
 
@@ -120,9 +132,10 @@ impl CommandSpec {
             }
             ("set_leave", _) => &["leave", "given"],
             ("approve" | "cancel_plan", _) => &["plan"],
+            ("hold" | "release", _) => &["ship", "task_force", "air_group", "setting"],
             (other, _) => {
                 return Err(format!(
-                    "the command on day {day} is \"{other}\", which is not set_intent, withdraw_intent, set_limit, set_leave, approve or cancel_plan (the staff's commands are the staff's to give)"
+                    "the command on day {day} is \"{other}\", which is not set_intent, withdraw_intent, set_limit, set_leave, approve, cancel_plan, hold or release (the staff's commands are the staff's to give)"
                 ))
             }
         };
@@ -235,6 +248,45 @@ impl CommandSpec {
             "approve" => CommandKind::Approve {
                 plan: PlanId::new(need(self.plan, "plan")?),
             },
+            "hold" | "release" => {
+                let named = [self.ship, self.task_force, self.air_group]
+                    .iter()
+                    .filter(|n| n.is_some())
+                    .count();
+                if named != 1 {
+                    return Err(format!(
+                        "{what} needs exactly one of \"ship\", \"task_force\" and \"air_group\""
+                    ));
+                }
+                let target = if let Some(ship) = self.ship {
+                    if self.setting.is_some() {
+                        return Err(format!("{what} takes \"setting\" only with \"air_group\""));
+                    }
+                    HoldTarget::Ship(ShipId::new(ship))
+                } else if let Some(force) = self.task_force {
+                    if self.setting.is_some() {
+                        return Err(format!("{what} takes \"setting\" only with \"air_group\""));
+                    }
+                    HoldTarget::TaskForce(TaskForceId::new(force))
+                } else {
+                    let group = AirGroupId::new(self.air_group.expect("one target is named"));
+                    let setting = match self.setting.as_deref() {
+                        Some("search_arc") => HeldSetting::SearchArc,
+                        Some(other) => {
+                            return Err(format!(
+                                "{what} has setting \"{other}\", which is not search_arc"
+                            ))
+                        }
+                        None => return Err(format!("{what} needs \"setting\" with \"air_group\"")),
+                    };
+                    HoldTarget::Setting { group, setting }
+                };
+                if self.kind == "hold" {
+                    CommandKind::Hold { target }
+                } else {
+                    CommandKind::Release { target }
+                }
+            }
             _ => CommandKind::CancelPlan {
                 plan: PlanId::new(need(self.plan, "plan")?),
             },

@@ -140,7 +140,10 @@ impl World {
     }
 
     /// A copy of the world with steps 1 to 3 of the coming day taken, as
-    /// [`World::resolve_day_watched`] takes them, and nothing else: the day
+    /// [`World::resolve_day_watched`] takes them (the commands, the forces
+    /// back from the yard, refuelling and the override, which takes in the
+    /// commander's orders to units in an intent's forces limit and holds
+    /// them), and nothing else: the day
     /// is not advanced and the orders and the staff's hand-in given back
     /// stay pending. It is the view a staff will be asked on, for listing
     /// the staff's orders before a day and checking a seat's commands. The
@@ -151,19 +154,23 @@ impl World {
         copy
     }
 
-    /// Steps 1 and 3 of the day: the commander's commands, so that an
+    /// Steps 1 to 3 of the day: the commander's commands, so that an
     /// intent, a limit or a reserve set today binds this morning (decision
     /// 0107); forces back from the yard, home first so that they are at
     /// their base for the day's refuelling and orders (decision 0069); then
     /// refuelling down to the reserves, before the day's orders (decision 2
-    /// of 0045). Forward repair comes after the orders: a force sent to the
-    /// yard leaves with the damage its order stated, and one ordered to sail
+    /// of 0045); then the override (step 2 of decision 0107's order, ruling
+    /// 23): the commander's orders to units in an intent's forces limit are
+    /// taken in and hold them. It follows refuelling because an order taken
+    /// in sets a route and refuelling skips a force under way. Forward
+    /// repair comes after the orders: a force sent to the yard leaves with the damage its order stated, and one ordered to sail
     /// that morning is not patched (decision 0069, 2). One function for the
     /// day and for [`World::at_staff_step`], so that they cannot differ.
     fn take_steps_one_to_three(&mut self, day: u32) {
         self.intake_commands(day);
         self.return_from_yard(day);
         self.refuel_in_port(day);
+        self.override_by_orders(day);
     }
 
     /// Resolves the next day as [`World::resolve_day_staffed`] does, and
@@ -176,8 +183,10 @@ impl World {
     /// The day's order (decision 0107, "The order of a day"):
     ///
     /// 1. the commander's commands handed in for the day are taken in;
-    /// 2. (the override of an order to a unit in an intent's forces limit:
-    ///    a later step of stage 1, not built);
+    /// 2. the override: the commander's orders to a unit in the forces
+    ///    limit of an intent in force are taken in and hold it. In the code
+    ///    it is run after step 3's refuelling, since an order taken in sets
+    ///    a route and refuelling skips a force under way;
     /// 3. forces back from the yard are home, and ships in port refuel, each
     ///    base down to its reserve;
     /// 4. each side's staff, if it has one, is asked on its view as it now
@@ -198,10 +207,9 @@ impl World {
         };
 
         pass(self, Moment::DayBegins { day });
-        // Steps 1 to 3: the commander's commands, forces back from the yard
-        // and refuelling. Step 2, the override of an order to a unit in an
-        // intent's forces limit, goes between 1 and 3 inside this call, with
-        // holds, in a later step of stage 1.
+        // Steps 1 to 3: the commander's commands, forces back from the yard,
+        // refuelling and the override of the commander's orders to units in
+        // an intent's forces limit (decision 0107, ruling 23).
         self.take_steps_one_to_three(day);
         pass(self, Moment::Orders { day });
         // Step 4: each side's staff, on its view as it now stands.

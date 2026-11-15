@@ -5894,6 +5894,59 @@ task_force = 3
     }
 
     #[test]
+    fn a_hold_or_release_loads_with_its_one_target() {
+        use sim_core::command::{HeldSetting, HoldTarget};
+        use sim_core::ids::AirGroupId;
+        for (name, make) in [
+            (
+                "hold",
+                (|t| CommandKind::Hold { target: t }) as fn(HoldTarget) -> CommandKind,
+            ),
+            ("release", |t| CommandKind::Release { target: t }),
+        ] {
+            assert_eq!(
+                only(&command(&format!("kind = \"{name}\"\nship = 5"))),
+                make(HoldTarget::Ship(ShipId::new(5)))
+            );
+            assert_eq!(
+                only(&command(&format!(
+                    "kind = \"{name}\"\ntask_force = 1000001"
+                ))),
+                make(HoldTarget::TaskForce(TaskForceId::new(1000001)))
+            );
+            assert_eq!(
+                only(&command(&format!(
+                    "kind = \"{name}\"\nair_group = 7\nsetting = \"search_arc\""
+                ))),
+                make(HoldTarget::Setting {
+                    group: AirGroupId::new(7),
+                    setting: HeldSetting::SearchArc
+                })
+            );
+        }
+    }
+
+    #[test]
+    fn a_hold_or_release_with_a_wrong_target_or_key_is_refused_and_end_run_cannot_be_written() {
+        for name in ["hold", "release"] {
+            let with = |body: &str| error_of(&command(&format!("kind = \"{name}\"\n{body}")));
+            assert!(with("").contains("exactly one of"));
+            assert!(with("ship = 1\ntask_force = 2").contains("exactly one of"));
+            assert!(with("ship = 1\nair_group = 2\nsetting = \"search_arc\"")
+                .contains("exactly one of"));
+            assert!(with("air_group = 2").contains("needs \"setting\""));
+            assert!(with("air_group = 2\nsetting = \"mission\"").contains("not search_arc"));
+            assert!(with("ship = 1\nsetting = \"search_arc\"").contains("only with \"air_group\""));
+            assert!(with("task_force = 1\nsetting = \"search_arc\"")
+                .contains("only with \"air_group\""));
+            assert!(with("ship = 1\nplan = 1").contains("does not take \"plan\""));
+            assert!(parse_with(&command(&format!("kind = \"{name}\"\nship = 1.5"))).is_err());
+        }
+        assert!(error_of(&command("kind = \"end_run\"\nplan = 1"))
+            .contains("the staff's commands are the staff's to give"));
+    }
+
+    #[test]
     fn commands_are_kept_by_day_in_the_order_given_and_survive_a_new_seed() {
         let text = format!(
             "{}{}",

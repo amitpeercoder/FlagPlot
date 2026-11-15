@@ -7,13 +7,14 @@ use std::collections::BTreeMap;
 
 use crate::command::{
     Amendment, AmendmentChange, Baseline, Command, CommandKind, CommandRefusal, CommandState,
-    Commitment, ForcesLimit, Intent, IntentKind, IntentLimits, Leave, Limit, Plan, PlanId,
-    PlanOutcome, PlanState, Reason, Run, StaffDecisions, Staffs,
+    Commitment, ForcesLimit, HeldSetting, Hold, HoldMaker, HoldTarget, Intent, IntentKind,
+    IntentLimits, Leave, Limit, Plan, PlanId, PlanOutcome, PlanState, Reason, Run, StaffDecisions,
+    Staffs,
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
 use crate::ids::{BaseId, EventId, IntentId, ShipId};
-use crate::orders::{BaseOrder, Issuer, OrderKind, OrderRequest, RejectReason};
+use crate::orders::{AirGroupOrder, BaseOrder, Issuer, OrderKind, OrderRequest, RejectReason};
 use crate::state::{ShipLocation, Side};
 use crate::world::World;
 
@@ -97,7 +98,7 @@ impl World {
 
     /// Whether `ship` is in the pool of `forces`: listed in it, or in a task
     /// force it lists (afloat in it, or away from it at the yard).
-    fn in_pool(&self, forces: &ForcesLimit, ship: ShipId) -> bool {
+    pub(crate) fn in_pool(&self, forces: &ForcesLimit, ship: ShipId) -> bool {
         if forces.ships.contains(&ship) {
             return true;
         }
@@ -277,6 +278,9 @@ impl World {
                     if !self.in_pool(forces, *ship) {
                         return Err(CommandRefusal::NotInPool(*ship));
                     }
+                    if let Some(target) = self.hold_on_ship_of(side, *ship) {
+                        return Err(CommandRefusal::Held(target));
+                    }
                     let overlaps = state.commitments.get(ship).is_some_and(|list| {
                         list.iter()
                             .any(|c| c.from_day <= *to_day && *from_day <= c.to_day)
@@ -315,6 +319,9 @@ impl World {
                     if !self.in_pool(forces, *ship) {
                         return Err(CommandRefusal::NotInPool(*ship));
                     }
+                    if let Some(target) = self.hold_on_ship_of(side, *ship) {
+                        return Err(CommandRefusal::Held(target));
+                    }
                 }
                 if run.load_t <= Fixed::ZERO {
                     return Err(CommandRefusal::BadWeight(run.load_t));
@@ -347,7 +354,86 @@ impl World {
                 approved_plan(*plan)?;
                 Ok(())
             }
+            CommandKind::Hold { target } => {
+                match target {
+                    HoldTarget::Ship(ship) => {
+                        if !self.own_ship_afloat(side, *ship) {
+                            return Err(CommandRefusal::NotYourShip(*ship));
+                        }
+                    }
+                    HoldTarget::TaskForce(force) => {
+                        let own = self
+                            .truth
+                            .task_forces
+                            .get(force)
+                            .is_some_and(|found| found.side == side);
+                        if !own {
+                            return Err(CommandRefusal::NotYourForce(*force));
+                        }
+                    }
+                    HoldTarget::Setting { group, .. } => {
+                        let own = self
+                            .truth
+                            .air_groups
+                            .get(group)
+                            .is_some_and(|found| found.side == side);
+                        if !own {
+                            return Err(CommandRefusal::NotYourGroup(*group));
+                        }
+                    }
+                }
+                if state.holds.contains_key(target) {
+                    return Err(CommandRefusal::AlreadyHeld(*target));
+                }
+                Ok(())
+            }
+            CommandKind::Release { target } => {
+                if !state.holds.contains_key(target) {
+                    return Err(CommandRefusal::NotHeld(*target));
+                }
+                Ok(())
+            }
+            CommandKind::EndRun { plan, run } => {
+                let found = approved_plan(*plan)?;
+                let found = found.runs.get(run).ok_or(CommandRefusal::NoSuchRun(*run))?;
+                if found.ended.is_some() {
+                    return Err(CommandRefusal::RunEnded(*run));
+                }
+                Ok(())
+            }
         }
+    }
+
+    /// The hold that keeps `ship` from the staff (ruling 18), reading the
+    /// ship's force from the truth.
+    pub(crate) fn hold_on_ship_of(&self, side: Side, ship: ShipId) -> Option<HoldTarget> {
+        let state = &self.command[&side];
+        if state.holds.is_empty() {
+            return None;
+        }
+        let force = self
+            .truth
+            .ships
+            .get(&ship)
+            .and_then(|found| match found.location {
+                ShipLocation::TaskForce(force) => self
+                    .truth
+                    .task_forces
+                    .get(&force)
+                    .map(|found| (force, &found.ships)),
+                _ => None,
+            });
+        state.hold_on_ship(ship, force)
+    }
+
+    /// The hold that keeps task force `force` from the staff, if any.
+    fn hold_on_force_of(&self, side: Side, force: crate::ids::TaskForceId) -> Option<HoldTarget> {
+        let state = &self.command[&side];
+        if state.holds.is_empty() {
+            return None;
+        }
+        let ships = &self.truth.task_forces.get(&force)?.ships;
+        state.hold_on_force(force, ships)
     }
 
     /// The intent of that number if it is in force.
@@ -566,6 +652,7 @@ impl World {
                         load_t: run.load_t,
                         source,
                         days: run.days,
+                        ended: None,
                     },
                 );
             }
@@ -589,6 +676,25 @@ impl World {
                     from,
                     to,
                 });
+            }
+            CommandKind::Hold { target } => {
+                let state = self.command.get_mut(&side).expect("side has command state");
+                state.holds.insert(
+                    *target,
+                    Hold {
+                        day,
+                        by: HoldMaker::Command,
+                    },
+                );
+            }
+            CommandKind::Release { target } => {
+                let state = self.command.get_mut(&side).expect("side has command state");
+                state.holds.remove(target);
+            }
+            CommandKind::EndRun { plan, run } => {
+                let state = self.command.get_mut(&side).expect("side has command state");
+                let found = state.plans.get_mut(plan).expect("plan exists");
+                found.runs.get_mut(run).expect("run exists").ended = Some(day);
             }
         }
         follow_ups
@@ -678,7 +784,10 @@ impl World {
         request: OrderRequest,
         reason: &Reason,
     ) {
-        let forced = if self.staff_order_in_forces_limit(side, &request) {
+        // The guard of a hold comes first (decision 0107, rulings 18 and 30).
+        let forced = if let Some(target) = self.held_order_target(side, &request.kind) {
+            Some(RejectReason::Held(target))
+        } else if self.staff_order_in_forces_limit(side, &request) {
             None
         } else {
             Some(RejectReason::OutsideForcesLimit)
@@ -696,6 +805,57 @@ impl World {
             vec![Cause::Order(order), Cause::Event(answer)],
             None,
         );
+    }
+
+    /// Whether task force `target` is inside `forces`: listed in it, or a
+    /// force of the side with at least one ship, every ship of it in the
+    /// limit's ships.
+    pub(crate) fn force_in_forces_limit(
+        &self,
+        side: Side,
+        forces: &ForcesLimit,
+        target: crate::ids::TaskForceId,
+    ) -> bool {
+        if forces.task_forces.contains(&target) {
+            return true;
+        }
+        self.truth.task_forces.get(&target).is_some_and(|force| {
+            force.side == side
+                && !force.ships.is_empty()
+                && force.ships.iter().all(|ship| forces.ships.contains(ship))
+        })
+    }
+
+    /// What the commander holds that an order is for, if anything: a task
+    /// force held or with a held ship; a forming order naming a held ship (or
+    /// a ship in a held force); a search arc or air mission order to a group
+    /// whose search arc is held. A land unit is never held. The guard binds
+    /// orders a staff hands in only.
+    fn held_order_target(&self, side: Side, kind: &OrderKind) -> Option<HoldTarget> {
+        let state = &self.command[&side];
+        if state.holds.is_empty() {
+            return None;
+        }
+        match kind {
+            OrderKind::TaskForce { target, .. } => self.hold_on_force_of(side, *target),
+            OrderKind::Base {
+                order: BaseOrder::FormTaskForce { ships },
+                ..
+            } => ships
+                .iter()
+                .find_map(|ship| self.hold_on_ship_of(side, *ship)),
+            OrderKind::AirGroup {
+                target,
+                order: AirGroupOrder::SetSearchArc { .. } | AirGroupOrder::SetAirMission(_),
+            } => {
+                let setting = HoldTarget::Setting {
+                    group: *target,
+                    setting: HeldSetting::SearchArc,
+                };
+                state.holds.contains_key(&setting).then_some(setting)
+            }
+            _ => None,
+        }
     }
 
     /// Whether a staff's order is for a unit inside the forces limit of the
@@ -718,14 +878,7 @@ impl World {
         };
         match &request.kind {
             OrderKind::TaskForce { target, .. } => {
-                if forces.task_forces.contains(target) {
-                    return true;
-                }
-                self.truth.task_forces.get(target).is_some_and(|force| {
-                    force.side == side
-                        && !force.ships.is_empty()
-                        && force.ships.iter().all(|ship| forces.ships.contains(ship))
-                })
+                self.force_in_forces_limit(side, forces, *target)
             }
             OrderKind::Base {
                 target,

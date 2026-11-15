@@ -176,6 +176,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::ForceWasJoined { into } => base("force_was_joined").id("into", *into),
         RejectReason::ForceWasStoodDown => base("force_was_stood_down"),
         RejectReason::OutsideForcesLimit => base("outside_forces_limit"),
+        RejectReason::Held(target) => base("held").with("target", Field::Str(target.to_string())),
     }
 }
 
@@ -2014,6 +2015,16 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                     .with("would_change", Field::Str(reason.would_change.join("; "))),
             )
         }
+        EventKind::HeldByOrder {
+            side,
+            target,
+            order,
+        } => (
+            "held_by_order",
+            d.text("side", names::side(*side))
+                .with("target", Field::Str(target.to_string()))
+                .int("order", order.umpire_raw(key)),
+        ),
     }
 }
 

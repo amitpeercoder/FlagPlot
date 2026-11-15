@@ -6,7 +6,7 @@
 
 use core::fmt;
 
-use crate::command::{CommandKind, CommandRefusal, PlanId, PlanState, Reason};
+use crate::command::{CommandKind, CommandRefusal, HoldTarget, PlanId, PlanState, Reason};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
@@ -1773,6 +1773,15 @@ pub enum EventKind {
         men: u32,
         reported_day: u32,
     },
+    /// The commander's order to a unit in an intent's forces limit held it
+    /// from the staff, at step 2 of the day (decision 0107, step 3, ruling
+    /// 23). `target` is what is held. Cites the order and its acceptance.
+    /// Added at the end (decision 0107).
+    HeldByOrder {
+        side: Side,
+        target: HoldTarget,
+        order: OrderId,
+    },
 }
 
 impl EventKind {
@@ -2146,7 +2155,8 @@ impl EventKind {
             | EventKind::PlanDrafted { .. }
             | EventKind::PlanStateChanged { .. }
             | EventKind::PlanAmended { .. }
-            | EventKind::StaffReason { .. } => Vec::new(),
+            | EventKind::StaffReason { .. }
+            | EventKind::HeldByOrder { .. } => Vec::new(),
             EventKind::GroundFoundEmpty { .. } => Vec::new(),
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
@@ -3799,6 +3809,11 @@ impl fmt::Display for EventKind {
                 ),
                 None => write!(f, "{side:?} staff gave no order: {}", reason.worked),
             },
+            EventKind::HeldByOrder {
+                side,
+                target,
+                order,
+            } => write!(f, "{side:?} holds {target} by {}", order.shown()),
             EventKind::GroundFoundEmpty {
                 side,
                 hex,

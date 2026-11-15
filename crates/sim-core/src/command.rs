@@ -20,15 +20,16 @@
 //! a day takes each side's staff or none ([`Staffs`]). The staff itself is
 //! code outside this crate.
 //!
-//! Holds, overrides and interrupts (decision 0107, items 20, 28 and the
-//! table's step 2) are later steps of stage 1. Their place is marked where
-//! they will go: a field of [`CommandState`] each, and the step of the day in
-//! `resolve.rs`. None is built.
+//! Holds (a `hold` command, or an order of the commander's to a unit in an
+//! intent's forces limit, the override at step 2 of the day) and the end of a
+//! run are built (decision 0107, step 3 of stage 1). Interrupts are a later
+//! step: their place is marked in [`CommandState`]. Not built.
 //!
 //! Reads: nothing of the truth but what intake checks against (the side's
 //! own ships, forces and bases). Writes: the side's command state, and a
 //! base's reserves through the reserve limit. Draws no random number.
 
+pub(crate) mod hold;
 pub(crate) mod intake;
 #[cfg(test)]
 mod tests;
@@ -38,7 +39,7 @@ use std::sync::Mutex;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{BaseId, IntentId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, IntentId, OrderId, ShipId, TaskForceId};
 use crate::orders::{Issuer, OrderKind};
 use crate::state::Side;
 use crate::view::SideView;
@@ -356,6 +357,10 @@ pub struct Run {
     pub load_t: Fixed,
     pub source: BaseId,
     pub days: RunDays,
+    /// The day a staff command ended the run (decision 0107, ruling 20);
+    /// `None` while it has not ended. Nothing else follows from it: what is
+    /// aboard stays aboard, and freeing commitments is a command of its own.
+    pub ended: Option<u32>,
 }
 
 /// A plan of one side.
@@ -383,6 +388,82 @@ pub struct Commitment {
     pub to_day: u32,
 }
 
+// ---------------------------------------------------------------------------
+// Holds.
+// ---------------------------------------------------------------------------
+
+/// A setting of an air group a hold can keep from the staff.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum HeldSetting {
+    /// The group's search arc (and its mission, which sets it flying).
+    SearchArc,
+}
+
+impl HeldSetting {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            HeldSetting::SearchArc => 1,
+        }
+    }
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            HeldSetting::SearchArc => "search_arc",
+        }
+    }
+}
+
+/// What a hold keeps from the staff: a ship, a task force, or a setting of an
+/// air group (decision 0107, ruling 17).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum HoldTarget {
+    Ship(ShipId),
+    TaskForce(TaskForceId),
+    Setting {
+        group: AirGroupId,
+        setting: HeldSetting,
+    },
+}
+
+impl HoldTarget {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            HoldTarget::Ship(_) => 1,
+            HoldTarget::TaskForce(_) => 2,
+            HoldTarget::Setting { .. } => 3,
+        }
+    }
+}
+
+impl core::fmt::Display for HoldTarget {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            HoldTarget::Ship(ship) => write!(f, "{ship}"),
+            HoldTarget::TaskForce(force) => write!(f, "{force}"),
+            HoldTarget::Setting { group, setting } => match setting {
+                HeldSetting::SearchArc => write!(f, "the search arc of {group}"),
+            },
+        }
+    }
+}
+
+/// Who made a hold: the commander's `hold` command, or an order of his (the
+/// override, decision 0107, ruling 23).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum HoldMaker {
+    Command,
+    Order(OrderId),
+}
+
+/// A hold: the day it was made and by what.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Hold {
+    pub day: u32,
+    pub by: HoldMaker,
+}
+
 /// One side's command state (decision 0107, items 1, 2 and 6).
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct CommandState {
@@ -392,11 +473,12 @@ pub struct CommandState {
     pub plans: BTreeMap<PlanId, Plan>,
     /// Each ship's commitments, in order of their first day.
     pub commitments: BTreeMap<ShipId, Vec<Commitment>>,
+    /// What the commander holds from the staff (decision 0107, step 3).
+    pub holds: BTreeMap<HoldTarget, Hold>,
     /// The number the side's next plan takes. Starts at 1.
     pub next_plan: u32,
-    // Holds (a setting, a unit, a parent force) and interrupts (set,
-    // fired, acknowledged) go here, each a field hashed and named beside
-    // the hash, in the later steps of stage 1. None is built.
+    // Interrupts (set, fired, acknowledged) go here, a field hashed and
+    // named beside the hash, in a later step of stage 1. Not built.
 }
 
 impl CommandState {
@@ -420,12 +502,50 @@ impl CommandState {
             .find(|c| c.from_day <= day && day <= c.to_day)
     }
 
+    /// The hold on `target`, if any.
+    pub fn hold_of(&self, target: HoldTarget) -> Option<&Hold> {
+        self.holds.get(&target)
+    }
+
+    /// The hold that keeps a force from the staff: on the force itself, else
+    /// on the first of its `ships` (in ship order) that is held.
+    pub fn hold_on_force(
+        &self,
+        force: TaskForceId,
+        ships: &BTreeSet<ShipId>,
+    ) -> Option<HoldTarget> {
+        let whole = HoldTarget::TaskForce(force);
+        if self.holds.contains_key(&whole) {
+            return Some(whole);
+        }
+        ships
+            .iter()
+            .map(|ship| HoldTarget::Ship(*ship))
+            .find(|target| self.holds.contains_key(target))
+    }
+
+    /// The hold that keeps a ship from the staff (ruling 18): on the ship,
+    /// else, where it lies in a force (given with the force's ships), on that
+    /// force or on any ship of it.
+    pub fn hold_on_ship(
+        &self,
+        ship: ShipId,
+        force: Option<(TaskForceId, &BTreeSet<ShipId>)>,
+    ) -> Option<HoldTarget> {
+        let own = HoldTarget::Ship(ship);
+        if self.holds.contains_key(&own) {
+            return Some(own);
+        }
+        force.and_then(|(force, ships)| self.hold_on_force(force, ships))
+    }
+
     /// Whether the command state is empty: nothing was ever set. A side
     /// with an empty command state is played exactly as before stage 1.
     pub fn is_empty(&self) -> bool {
         self.intents.is_empty()
             && self.plans.is_empty()
             && self.commitments.is_empty()
+            && self.holds.is_empty()
             && self.leaves == Leaves::default()
             && self.next_plan == 1
     }
@@ -489,6 +609,13 @@ pub enum CommandKind {
     },
     /// The staff's: mark an approved plan complete or failed.
     MarkPlan { plan: PlanId, outcome: PlanOutcome },
+    /// The commander's: hold a ship, a force or a setting of an air group
+    /// from the staff. Added at the end (decision 0107, step 3).
+    Hold { target: HoldTarget },
+    /// The commander's: release a hold, whatever made it.
+    Release { target: HoldTarget },
+    /// The staff's: end a run of an approved plan (ruling 20).
+    EndRun { plan: PlanId, run: u32 },
 }
 
 impl CommandKind {
@@ -501,7 +628,9 @@ impl CommandKind {
             | CommandKind::WithdrawIntent { .. }
             | CommandKind::SetLimit(_)
             | CommandKind::SetLeave { .. }
-            | CommandKind::CancelPlan { .. } => issuer == Issuer::Player,
+            | CommandKind::CancelPlan { .. }
+            | CommandKind::Hold { .. }
+            | CommandKind::Release { .. } => issuer == Issuer::Player,
             CommandKind::Approve { .. } => {
                 matches!(issuer, Issuer::Player | Issuer::Staff)
             }
@@ -509,7 +638,8 @@ impl CommandKind {
             | CommandKind::FreeShips { .. }
             | CommandKind::AddRun { .. }
             | CommandKind::TimeRun { .. }
-            | CommandKind::MarkPlan { .. } => issuer == Issuer::Staff,
+            | CommandKind::MarkPlan { .. }
+            | CommandKind::EndRun { .. } => issuer == Issuer::Staff,
         }
     }
 
@@ -528,6 +658,9 @@ impl CommandKind {
             CommandKind::AddRun { .. } => "add_run",
             CommandKind::TimeRun { .. } => "time_run",
             CommandKind::MarkPlan { .. } => "mark_plan",
+            CommandKind::Hold { .. } => "hold",
+            CommandKind::Release { .. } => "release",
+            CommandKind::EndRun { .. } => "end_run",
         }
     }
 }
@@ -576,6 +709,16 @@ pub enum CommandRefusal {
     NoForcesLimit,
     /// A run names no ship. Added at the end (decision 0107).
     NoShips,
+    /// An air group is not one of the side's own (or does not exist).
+    NotYourGroup(AirGroupId),
+    /// The target is held already.
+    AlreadyHeld(HoldTarget),
+    /// The target is not held.
+    NotHeld(HoldTarget),
+    /// The run has ended.
+    RunEnded(u32),
+    /// The ship is held by the commander, itself or through its force.
+    Held(HoldTarget),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -612,6 +755,15 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NoSuchRun(run) => write!(f, "the plan has no run {run}"),
             CommandRefusal::NoForcesLimit => f.write_str("the intent has no forces limit"),
             CommandRefusal::NoShips => f.write_str("the run names no ship"),
+            CommandRefusal::NotYourGroup(group) => {
+                write!(f, "{group} is not one of the side's air groups")
+            }
+            CommandRefusal::AlreadyHeld(target) => {
+                write!(f, "{target} is already held by the commander")
+            }
+            CommandRefusal::NotHeld(target) => write!(f, "{target} is not held"),
+            CommandRefusal::RunEnded(run) => write!(f, "run {run} has already ended"),
+            CommandRefusal::Held(target) => write!(f, "{target} is held by the commander"),
         }
     }
 }
@@ -718,6 +870,9 @@ impl core::fmt::Display for CommandKind {
                     PlanOutcome::Failed => "failed",
                 }
             ),
+            CommandKind::Hold { target } => write!(f, "hold {target}"),
+            CommandKind::Release { target } => write!(f, "release {target}"),
+            CommandKind::EndRun { plan, run } => write!(f, "end run {run} of {plan}"),
         }
     }
 }
