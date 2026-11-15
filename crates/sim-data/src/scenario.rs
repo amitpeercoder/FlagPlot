@@ -6304,7 +6304,40 @@ task_force = 3
         assert!(error_of(&command(
             "kind = \"set_intent\"\nintent = 1\nintent_kind = \"win\"\nbase = 2"
         ))
-        .contains("not keep_supplied, cover or hold"));
+        .contains("not keep_supplied, cover, hold, neutralise or raid"));
+        // Neutralise and raid name a target; a neutralise takes no base.
+        let aimed = |kind: &str, extra: &str| {
+            command(&format!(
+                "kind = \"set_intent\"\nintent = 4\nintent_kind = \"{kind}\"\n{extra}"
+            ))
+        };
+        assert_eq!(
+            only(&aimed("neutralise", "target = 9")),
+            CommandKind::SetIntent {
+                intent: IntentId::new(4),
+                kind: sim_core::command::IntentKind::Neutralise {
+                    target: BaseId::new(9)
+                },
+            }
+        );
+        assert_eq!(
+            only(&aimed("raid", "base = 2\ntarget = 9")),
+            CommandKind::SetIntent {
+                intent: IntentId::new(4),
+                kind: sim_core::command::IntentKind::Raid {
+                    base: BaseId::new(2),
+                    target: BaseId::new(9)
+                },
+            }
+        );
+        assert!(error_of(&aimed("neutralise", "base = 2\ntarget = 9"))
+            .contains("does not take \"base\""));
+        assert!(error_of(&aimed("neutralise", "")).contains("needs \"target\""));
+        assert!(error_of(&aimed("raid", "base = 2")).contains("needs \"target\""));
+        assert!(error_of(&aimed("raid", "target = 9")).contains("needs \"base\""));
+        assert!(
+            error_of(&aimed("cover", "base = 2\ntarget = 9")).contains("does not take \"target\"")
+        );
         // A kind that is the staff's, or none, and a limit that is none.
         assert!(error_of(&command("kind = \"commit_ships\"\nplan = 1"))
             .contains("not set_intent, withdraw_intent"));

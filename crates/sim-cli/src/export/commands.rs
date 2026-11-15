@@ -25,11 +25,16 @@ use super::num::Num;
 
 /// What an intent asks for: `{ "kind": "keep_supplied", base, floor_days,
 /// interval_days }`, the interval left out where the commander has not set it;
-/// or `{ "kind": "cover" | "hold", base }`, with no days.
+/// or `{ "kind": "cover" | "hold", base }`, with no days; or
+/// `{ "kind": "neutralise", target }` (no `base`), or
+/// `{ "kind": "raid", base, target }` (decision 0120).
 #[derive(Serialize)]
 struct IntentKindOut {
     kind: &'static str,
-    base: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    base: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    target: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     floor_days: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -44,13 +49,22 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             interval_days,
         } => IntentKindOut {
             kind: "keep_supplied",
-            base: base.raw(),
+            base: Some(base.raw()),
+            target: None,
             floor_days: Some(*floor_days),
             interval_days: *interval_days,
         },
         IntentKind::Cover { base } | IntentKind::Hold { base } => IntentKindOut {
             kind: kind.name(),
-            base: base.raw(),
+            base: Some(base.raw()),
+            target: None,
+            floor_days: None,
+            interval_days: None,
+        },
+        IntentKind::Neutralise { target } | IntentKind::Raid { target, .. } => IntentKindOut {
+            kind: kind.name(),
+            base: kind.own_base().map(|base| base.raw()),
+            target: Some(target.raw()),
             floor_days: None,
             interval_days: None,
         },

@@ -12,8 +12,8 @@
 //!
 //! | `kind` | other keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `base`, `intent_kind` (`keep_supplied`, `cover` or `hold`; left out for `keep_supplied`, which is what a key's absence reads as), and for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set) |
-//! | `form_intent` | `parent`, `intent_kind` (`cover`), `base`: the staff's, a sub-intent under `parent` |
+//! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise` or `raid`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise`), `target` (`neutralise` and `raid`), and for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set) |
+//! | `form_intent` | `parent`, `intent_kind` (`cover` or `raid`), `base` (not for a neutralise), `target` (for a raid): the staff's, a sub-intent under `parent` |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve` or `risk`) and its keys, below |
 //! | `set_leave` | `leave` (`prepare` or `launch`), `given` |
@@ -44,14 +44,16 @@
 //! writes it), the `intent` it serves and its `reason`; a reason is `serves`
 //! (`intent`, `plan`, `amendment`, each left out when none; `statement`; and
 //! `chain`, left out when empty, a list of `{intent, maker, statement}`, the
-//! intents above it nearest first, `maker` being `commander` or `staff`), `evidence` (a
+//! intents above it nearest first, `maker` being `commander` or `staff`;
+//! and `level`, left out when none, the level that decided: `"area"` or
+//! `{"base": n}`), `evidence` (a
 //! list of `{what, day}`), `binding`, `worked` and `would_change`.
 
 use std::collections::BTreeSet;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget, IntentKind,
+    Addressee, ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget, IntentKind,
     InterruptCondition, InterruptRef, InterruptSetting, Leave, Limit, Maker, NoticeBasis,
     NoticeKind, PlanId, PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves, StaffCommand,
     StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject,
@@ -440,21 +442,36 @@ fn intent_kind_to_json(body: &mut Value, kind: IntentKind) {
             body["intent_kind"] = json!(kind.name());
             body["base"] = json!(base.raw());
         }
+        IntentKind::Neutralise { target } => {
+            body["intent_kind"] = json!(kind.name());
+            body["target"] = json!(target.raw());
+        }
+        IntentKind::Raid { base, target } => {
+            body["intent_kind"] = json!(kind.name());
+            body["base"] = json!(base.raw());
+            body["target"] = json!(target.raw());
+        }
     }
 }
 
 /// An intent's kind from the keys of a command's object; no `intent_kind` is
 /// keeping a base supplied.
 fn intent_kind_from_json(value: &Value) -> Result<IntentKind, String> {
-    let base = BaseId::new(small(value, "base")?);
+    let base = || small(value, "base").map(BaseId::new);
+    let target = || small(value, "target").map(BaseId::new);
     match value.get("intent_kind") {
-        None | Some(Value::Null) => keep_supplied_from_json(value, base),
+        None | Some(Value::Null) => keep_supplied_from_json(value, base()?),
         Some(_) => match text(value, "intent_kind")? {
-            "keep_supplied" => keep_supplied_from_json(value, base),
-            "cover" => Ok(IntentKind::Cover { base }),
-            "hold" => Ok(IntentKind::Hold { base }),
+            "keep_supplied" => keep_supplied_from_json(value, base()?),
+            "cover" => Ok(IntentKind::Cover { base: base()? }),
+            "hold" => Ok(IntentKind::Hold { base: base()? }),
+            "neutralise" => Ok(IntentKind::Neutralise { target: target()? }),
+            "raid" => Ok(IntentKind::Raid {
+                base: base()?,
+                target: target()?,
+            }),
             other => Err(format!(
-                "unknown intent kind \"{other}\" (keep_supplied, cover or hold)"
+                "unknown intent kind \"{other}\" (keep_supplied, cover, hold, neutralise or raid)"
             )),
         },
     }
@@ -481,7 +498,12 @@ pub fn command_to_json(command: &CommandKind) -> Value {
             // The kind's name is always written here: a formed intent has no
             // default kind.
             body["intent_kind"] = json!(kind.name());
-            body["base"] = json!(kind.base().raw());
+            if let Some(base) = kind.own_base() {
+                body["base"] = json!(base.raw());
+            }
+            if let Some(target) = kind.target() {
+                body["target"] = json!(target.raw());
+            }
             body
         }
         CommandKind::WithdrawIntent { intent } => {
@@ -588,7 +610,10 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
         "form_intent" => {
             let kind = intent_kind_from_json(value)?;
             if matches!(kind, IntentKind::KeepSupplied { .. }) {
-                return Err("form_intent needs \"intent_kind\" \"cover\" or \"hold\"".to_string());
+                return Err(
+                    "form_intent needs \"intent_kind\" \"cover\", \"hold\", \"neutralise\" or \"raid\""
+                        .to_string(),
+                );
             }
             Ok(CommandKind::FormIntent {
                 parent: IntentId::new(small(value, "parent")?),
@@ -684,6 +709,15 @@ pub(crate) fn reason_to_json(reason: &Reason) -> Value {
     if !reason.serves.statement.is_empty() {
         serves.insert("statement".into(), json!(reason.serves.statement));
     }
+    if let Some(level) = reason.serves.level {
+        serves.insert(
+            "level".into(),
+            match level {
+                Addressee::Area => json!("area"),
+                Addressee::Base(base) => json!({ "base": base.raw() }),
+            },
+        );
+    }
     if !reason.serves.chain.is_empty() {
         serves.insert(
             "chain".into(),
@@ -736,6 +770,21 @@ fn reason_from_json(value: &Value) -> Result<Reason, String> {
             statement: match serves.get("statement") {
                 None | Some(Value::Null) => String::new(),
                 Some(_) => text(serves, "statement")?.to_string(),
+            },
+            // A game saved before the level was handed in has none.
+            level: match serves.get("level") {
+                None | Some(Value::Null) => None,
+                Some(Value::String(name)) if name == "area" => Some(Addressee::Area),
+                Some(other) => match other.get("base").and_then(Value::as_u64) {
+                    Some(raw) => Some(Addressee::Base(BaseId::new(
+                        u32::try_from(raw).map_err(|_| "level base is too large".to_string())?,
+                    ))),
+                    None => {
+                        return Err(format!(
+                            "\"level\" is {other}, not \"area\" or {{\"base\": n}}"
+                        ))
+                    }
+                },
             },
             // A game saved before the tree has no chain.
             chain: match serves.get("chain") {
@@ -926,6 +975,26 @@ mod tests {
                 parent: IntentId::new(1),
                 kind: IntentKind::Cover {
                     base: BaseId::new(5),
+                },
+            },
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::Neutralise {
+                    target: BaseId::new(9),
+                },
+            },
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::Raid {
+                    base: BaseId::new(5),
+                    target: BaseId::new(9),
+                },
+            },
+            CommandKind::FormIntent {
+                parent: IntentId::new(1),
+                kind: IntentKind::Raid {
+                    base: BaseId::new(5),
+                    target: BaseId::new(9),
                 },
             },
             CommandKind::WithdrawIntent { intent },
@@ -1228,6 +1297,25 @@ mod tests {
             }),
             json!({ "kind": "form_intent", "parent": 1, "intent_kind": "cover", "base": 5 })
         );
+        assert_eq!(
+            command_to_json(&CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::Neutralise {
+                    target: BaseId::new(9)
+                }
+            }),
+            json!({ "kind": "set_intent", "intent": 2, "intent_kind": "neutralise", "target": 9 })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::FormIntent {
+                parent: IntentId::new(1),
+                kind: IntentKind::Raid {
+                    base: BaseId::new(5),
+                    target: BaseId::new(9)
+                }
+            }),
+            json!({ "kind": "form_intent", "parent": 1, "intent_kind": "raid", "base": 5, "target": 9 })
+        );
         // A key's absence reads as keep_supplied; an unknown kind is refused;
         // a formed intent has no default kind.
         assert_eq!(
@@ -1344,6 +1432,7 @@ mod tests {
                         statement: "hold base:1".to_string(),
                     },
                 ],
+                level: Some(Addressee::Base(BaseId::new(1))),
             },
             evidence: vec![
                 Evidence {

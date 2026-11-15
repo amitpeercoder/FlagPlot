@@ -13,8 +13,11 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `parent`, `maker`, `addressee`, `children` and the limits read up the tree
 /// in command_state, air groups in a forces limit and a hold on a whole air
 /// group, a reason's `chain` up to the commander's intent, and the measure of a
-/// hold intent in command_state and report.
-pub const VERSION: u32 = 8;
+/// hold intent in command_state and report. 9 adds the kinds `neutralise` and
+/// `raid` with a `target` (decision 0120), a reason's `level` (the level that
+/// decided) in why, and the measure of a neutralise intent in command_state
+/// and report; `base` of an intent is `null` for a neutralise.
+pub const VERSION: u32 = 9;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

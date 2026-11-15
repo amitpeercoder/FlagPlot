@@ -27,6 +27,7 @@
         "for",
         "reason",
         "serves",
+        "level",
         "chain"
       ],
       "additionalProperties": false,
@@ -35,7 +36,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 8
+          "const": 9
         },
         "kind": {
           "const": "why"
@@ -181,6 +182,13 @@
         "serves": {
           "type": "string",
           "description": "What the decision serves in words, ending with the chain of intents above it."
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The level that decided (decision 0120, 2): \"the area\", or the base in words (\"base:1\"); null where the reason has none. It is also in serves as \"decided at the level of ...\"."
         },
         "chain": {
           "type": "array",

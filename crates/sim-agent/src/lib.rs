@@ -28,7 +28,7 @@
 //!   0049).
 //!
 //! Every answer serialises to JSON with `"format": "flagplot-agent"`,
-//! `"version": 8` and a `"kind"`, and has a schema under `schemas/`. A
+//! `"version": 9` and a `"kind"`, and has a schema under `schemas/`. A
 //! quantity of the game is a whole number if it counts things and a decimal
 //! string if it is a [`sim_core::fixed::Fixed`], never a float.
 
@@ -41,6 +41,7 @@ mod explain;
 mod hold;
 mod lines;
 mod measure;
+mod neutralise;
 mod objectives;
 mod orders;
 mod queries;
@@ -87,6 +88,7 @@ pub use measure::{
     MeasureContext, Moment, Passage, PassageSpeed, PlaceArg, Question, ReachLine, Resolved,
     SeaRoute, ShipFuel, SpeedArg, Yard, YardCheck, YardShip,
 };
+pub use neutralise::{neutralise_measure, NeutraliseMeasure};
 pub use objectives::{
     result_part, KnownLine, LevelsPart, ObjectiveLine, ObjectivesPart, ResultPart, ScoreLine,
     ShipKindPoints, ShipsOfKind, SideResultPart,
