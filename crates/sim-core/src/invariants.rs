@@ -190,8 +190,10 @@ pub enum InvariantViolation {
     /// An intent whose plan does not exist or does not name the intent back
     /// (decision 0107). Added at the end of the enum.
     IntentPlanUnsound(Side, IntentId),
-    /// A plan whose intent does not exist or does not name the plan back
-    /// (decision 0107). Added at the end of the enum.
+    /// A plan whose intent does not exist, or does not name the plan back
+    /// while the plan is in force; an ended plan whose intent was set again
+    /// is replaced by a newer plan and is sound (decision 0107). Added at the
+    /// end of the enum.
     PlanIntentUnsound(Side, PlanId),
     /// A run whose days are not in order `load <= sail <= arrive <= free`, or
     /// that ended on a day after today (decision 0107, 22 and ruling 20).
@@ -1010,10 +1012,12 @@ pub(crate) fn check_command(
     }
 
     for plan in command.plans.values() {
-        let named_back = command
-            .intents
-            .get(&plan.intent)
-            .is_some_and(|intent| intent.plan == plan.id);
+        let named_back = command.intents.get(&plan.intent).is_some_and(|intent| {
+            // An intent set again after its plan ended serves a newer
+            // plan; the ended one stays, naming the intent (chapter 8,
+            // Intents). Found by the soak ashore (scenario 45).
+            intent.plan == plan.id || (plan.state.ended() && intent.plan > plan.id)
+        });
         if !named_back {
             violations.push(InvariantViolation::PlanIntentUnsound(side, plan.id));
         }
@@ -2057,6 +2061,24 @@ mod tests {
             .withdrawn_day = Some(3);
         command.plans.get_mut(&PLAN).expect("plan").state = PlanState::Cancelled;
         assert_eq!(command_violations(&command, &truth), Vec::new());
+        // The intent set again after its plan ended serves a newer plan; the
+        // ended plan still names it, and that is sound (found by scenario 45).
+        let mut newer = command.plans[&PLAN].clone();
+        let newer_id = PlanId::new(PLAN.raw() + 1);
+        newer.id = newer_id;
+        newer.state = PlanState::Draft;
+        command.plans.insert(newer_id, newer);
+        command.intents.get_mut(&INTENT).expect("intent").plan = newer_id;
+        assert_eq!(command_violations(&command, &truth), Vec::new());
+        // A plan still in force whose intent names another is caught.
+        command.plans.get_mut(&PLAN).expect("plan").state = PlanState::Draft;
+        assert_eq!(
+            command_violations(&command, &truth),
+            vec![InvariantViolation::PlanIntentUnsound(Side::Allied, PLAN)]
+        );
+        command.plans.remove(&newer_id);
+        command.intents.get_mut(&INTENT).expect("intent").plan = PLAN;
+        command.plans.get_mut(&PLAN).expect("plan").state = PlanState::Cancelled;
         // The plan is gone: the intent names nothing.
         let plan = command.plans.remove(&PLAN).expect("plan");
         let violations = command_violations(&command, &truth);

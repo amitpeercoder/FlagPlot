@@ -289,6 +289,10 @@ name = "scenario_44_fuelling_takes_time"
 path = "scenario_44_fuelling_takes_time.rs"
 
 [[test]]
+name = "scenario_45_soak_ashore"
+path = "scenario_45_soak_ashore.rs"
+
+[[test]]
 name = "choices_asked_and_run"
 path = "choices_asked_and_run.rs"
 

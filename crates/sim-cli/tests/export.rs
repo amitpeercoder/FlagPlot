@@ -365,7 +365,7 @@ fn run_output_matches_the_golden_files() {
     // Scenarios whose event log is too large to keep as a baseline file: the
     // soak's is 1.98 MB (decision 0044). Their summary file, with every
     // day's hash, is still compared.
-    const NO_EVENTS_BASELINE: [&str; 1] = ["08_soak"];
+    const NO_EVENTS_BASELINE: [&str; 2] = ["08_soak", "45_soak_ashore"];
     for scenario in scenarios() {
         let name = stem(&scenario);
         for (suffix, extra) in [("", None), (".events", Some("--events"))] {
