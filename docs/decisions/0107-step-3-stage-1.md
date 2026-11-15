@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 14, 2026, for the designer's app
 
 Summary: Step 3, stage 1: the command contract as state changed by commands; the staff as code outside `sim-core`, passed in to the function that resolves a day and asked after the morning's refuelling; staff commands for the state the staff makes; a saved game keeps what was handed in and a check runs the staff again; four rules it needs (a load up to a weight, a reserve at a base, forming and joining forces, a scenario's commands); days of supply for a side in a hex; the doctrine for keeping a base supplied; the tools; built in four steps
 
-Standing: Confirmed by the designer, Nov 14, 2026, after an independent review. Not built: the hand calculations come first
+Standing: Confirmed by the designer, Nov 14, 2026, after an independent review. Step 1's engine half built Nov 15, 2026 (command state, commands, the staff passed in, the saved game version 3, days of supply; scenario 35; state version 24); the staff, its doctrine and the tools are not built
 
 ## What stage 1 is
 
