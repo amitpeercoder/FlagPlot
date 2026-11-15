@@ -8,6 +8,14 @@
 //!
 //! # Hand calculation
 //!
+//! Restated by the architect on Nov 15, 2026, for decision 0112: a ship in
+//! port takes fuel in the pulses of the day and no longer at its start. On
+//! these figures no fuelling rate is given, so a ship that is stopped at a
+//! base is filled in the pulse it can. The convoy's refuelling is on day 3,
+//! in the night pulse it arrives in, a day earlier than first written; the
+//! tons taken and the end states are unchanged, and so are the unloading
+//! rows apart from Guadalcanal's stock after the refuelling.
+//!
 //! ## The setting
 //!
 //! It is scenario 2 (`tests/scenario_02_supply_run.rs`) with fuel for
@@ -28,11 +36,14 @@
 //!
 //! Fuel as cargo is not the fuel a ship steams on. Cargo moves at the end
 //! of each pulse for the hours the force was stopped at the port in it.
-//! Refuelling is at the start of a day, before the day's orders.
+//! A ship in port takes the fuel it lacks in the loading phase of a pulse,
+//! after its cargo is worked, from what its side's base has above its
+//! reserve; no fuelling rate is given here, so it takes all it lacks in the
+//! pulse it can (decision 0112). Nothing is done at the start of a day.
 //!
 //! ## Day 1: loading at Espiritu Santo
 //!
-//! At the start every ship's own fuel is full: nothing is refuelled.
+//! Every ship's own fuel is full: nothing is refuelled.
 //!
 //! Two ships load and the port has four berths, so both work at 150 t an
 //! hour, drawing on the fuel stock.
@@ -48,7 +59,7 @@
 //!
 //! ## Days 2 and 3: the passage
 //!
-//! At the start of day 2 the force is stopped at Espiritu Santo and has
+//! On day 2 the force is stopped at Espiritu Santo at the start and has
 //! burned nothing: nothing is refuelled, and the base keeps its 500 t.
 //!
 //! It steams 240 nm on day 2 and is under way at the start of day 3, so it
@@ -57,30 +68,38 @@
 //! and has 968 t of its own fuel; the destroyer has burned 40 t and has
 //! 460 t.
 //!
-//! ## Day 3: unloading at Guadalcanal
+//! ## Day 3: unloading and refuelling at Guadalcanal
 //!
 //! One berth. Ship 1 has it, at 50 t an hour, and ship 2 works by lighter
 //! at 20 t an hour. The force was stopped for the last 4 hours of the night
-//! pulse.
-//!
-//! | Pulse | Hours worked | Ship 1 lands | Ship 2 lands | Ship 1 aboard | Ship 2 aboard | Guadalcanal's fuel |
-//! | ----- | ------------ | ------------ | ------------ | ------------- | ------------- | ------------------ |
-//! | Night | 4 | 200 t | 80 t | 2,800 t | 2,920 t | 280 t |
-//! | Morning | 6 | 300 t | 120 t | 2,500 t | 2,800 t | 700 t |
-//! | Afternoon | 6 | 300 t | 120 t | 2,200 t | 2,680 t | 1,120 t |
-//!
-//! ## Day 4: the convoy refuels from what it landed
-//!
-//! At the start of day 4 the force is stopped at Guadalcanal, which has
-//! 1,120 t of fuel.
+//! pulse. In a pulse a ship's cargo is worked first and its fuel is taken
+//! after it. In the night pulse ship 1 lands 200 t and ship 2 80 t, so
+//! Guadalcanal has 280 t of fuel; the force is stopped at a base of its own
+//! side, and the three ships refuel in that pulse in ship order, each event
+//! citing the arrival:
 //!
 //! | Ship | Lacks | Takes | Own fuel | Guadalcanal has left |
 //! | ---- | ----- | ----- | -------- | -------------------- |
-//! | 1 | 32 t | 32 t | 1,000 t | 1,088 t |
-//! | 2 | 32 t | 32 t | 1,000 t | 1,056 t |
-//! | 3, the destroyer | 40 t | 40 t | 500 t | 1,016 t |
+//! | 1 | 32 t | 32 t | 1,000 t | 248 t |
+//! | 2 | 32 t | 32 t | 1,000 t | 216 t |
+//! | 3, the destroyer | 40 t | 40 t | 500 t | 176 t |
 //!
-//! Then unloading goes on:
+//! Then unloading goes on in the morning and the afternoon:
+//!
+//! | Pulse | Hours worked | Ship 1 lands | Ship 2 lands | Ship 1 aboard | Ship 2 aboard | Guadalcanal's fuel at the end of the pulse |
+//! | ----- | ------------ | ------------ | ------------ | ------------- | ------------- | ------------------------------------------ |
+//! | Night | 4 | 200 t | 80 t | 2,800 t | 2,920 t | 176 t (280 t before the refuelling) |
+//! | Morning | 6 | 300 t | 120 t | 2,500 t | 2,800 t | 596 t |
+//! | Afternoon | 6 | 300 t | 120 t | 2,200 t | 2,680 t | 1,016 t |
+//!
+//! The stock after each unload event is 200 t and 280 t in the night, 476 t
+//! and 596 t in the morning, 896 t and 1,016 t in the afternoon.
+//! The ships' own fuel at the end of day 3 is 1,000 t, 1,000 t and 500 t.
+//!
+//! ## Day 4: unloading goes on
+//!
+//! Every ship is full: nothing is refuelled. Unloading goes on from the
+//! 1,016 t Guadalcanal has; its table is unchanged.
 //!
 //! | Pulse | Hours worked | Ship 1 lands | Ship 2 lands | Ship 1 aboard | Ship 2 aboard | Guadalcanal's fuel |
 //! | ----- | ------------ | ------------ | ------------ | ------------- | ------------- | ------------------ |
@@ -109,7 +128,7 @@
 //!
 //! | Variant | What changes |
 //! | ------- | ------------ |
-//! | The load order names no cargo | It loads supply: the run is scenario 2's first four days, event for event, apart from the refuelling of day 4, which finds no fuel at Guadalcanal and does nothing |
+//! | The load order names no cargo | It loads supply: the run is scenario 2's first four days, event for event, apart from the refuelling of day 3, which finds no fuel at Guadalcanal and does nothing |
 //! | Espiritu Santo has no fuel | The load order is accepted and loads nothing. The convoy arrives empty and lands nothing |
 //! | Espiritu Santo has 5,000 t of fuel | The stock runs short in the morning of day 1. In the night each ship loads 1,800 t, leaving 1,400 t. In the morning ship 1 loads its 900 t and ship 2 the 500 t left. They sail with 2,700 t and 2,300 t |
 //! | Each cargo ship starts with 1,000 t of supply aboard | A load of fuel fills what is left: 2,000 t each, complete after 12 + 1.333333 hours. At Guadalcanal supply is landed first: in the 4 hours of the night of day 3 ship 1 lands 200 t of supply and ship 2 80 t, and no fuel reaches the stock until a ship's supply is gone |
@@ -488,11 +507,38 @@ fn the_fuel_run_matches_the_hand_calculation() {
     );
     all_events.extend(events);
 
-    // Day 3: under way at the start, so no refuelling. It arrives 8 hours
-    // into the night pulse, at 02:00 and 56 hours in, after 320 nm.
+    // Day 3: under way at the start. It arrives 8 hours into the night
+    // pulse, at 02:00 and 56 hours in, after 320 nm, unloads, and refuels in
+    // that pulse from what it landed (decision 0112).
     let (day, events) = run_day(&mut scenario);
     assert_eq!(day, 3);
-    assert!(refuellings(&events).is_empty());
+    assert_eq!(
+        refuellings(&events),
+        vec![
+            (CARGO_1, tons(32), tons(1000), tons(248)),
+            (CARGO_2, tons(32), tons(1000), tons(216)),
+            (DESTROYER, tons(40), tons(500), tons(176)),
+        ]
+    );
+    // In the night pulse a ship's fuel is taken after its cargo is worked:
+    // the refuelling events come after the unload events of that pulse.
+    {
+        let refuel_pulses: Vec<Option<Pulse>> = events
+            .iter()
+            .filter(|event| matches!(event.kind, EventKind::ShipRefuelled { .. }))
+            .map(|event| event.pulse)
+            .collect();
+        assert_eq!(refuel_pulses, vec![Some(Pulse::Night); 3]);
+        let last_night_unload = events
+            .iter()
+            .rposition(|event| is_cargo_event(event) && event.pulse == Some(Pulse::Night))
+            .expect("unloading in the night pulse");
+        let first_refuel = events
+            .iter()
+            .position(|event| matches!(event.kind, EventKind::ShipRefuelled { .. }))
+            .expect("refuelled");
+        assert!(last_night_unload < first_refuel);
+    }
     {
         let world = &scenario.world;
         let force = &world.umpire().task_forces[&TASK_FORCE];
@@ -505,9 +551,9 @@ fn the_fuel_run_matches_the_hand_calculation() {
         assert_eq!(burned(&so_far, CARGO_1), tons(32));
         assert_eq!(burned(&so_far, CARGO_2), tons(32));
         assert_eq!(burned(&so_far, DESTROYER), tons(40));
-        assert_eq!(own_fuel(world, CARGO_1), tons(968));
-        assert_eq!(own_fuel(world, CARGO_2), tons(968));
-        assert_eq!(own_fuel(world, DESTROYER), tons(460));
+        assert_eq!(own_fuel(world, CARGO_1), tons(1000));
+        assert_eq!(own_fuel(world, CARGO_2), tons(1000));
+        assert_eq!(own_fuel(world, DESTROYER), tons(500));
         // The cargo is exactly what it was: nothing burned it.
         assert_eq!(world.umpire().bases[&SANTO].fuel_t, tons(500));
     }
@@ -518,42 +564,25 @@ fn the_fuel_run_matches_the_hand_calculation() {
         vec![
             fuel_row(Pulse::Night, CARGO_1, 200, 2800, 200),
             fuel_row(Pulse::Night, CARGO_2, 80, 2920, 280),
-            fuel_row(Pulse::Morning, CARGO_1, 300, 2500, 580),
-            fuel_row(Pulse::Morning, CARGO_2, 120, 2800, 700),
-            fuel_row(Pulse::Afternoon, CARGO_1, 300, 2200, 1000),
-            fuel_row(Pulse::Afternoon, CARGO_2, 120, 2680, 1120),
+            fuel_row(Pulse::Morning, CARGO_1, 300, 2500, 476),
+            fuel_row(Pulse::Morning, CARGO_2, 120, 2800, 596),
+            fuel_row(Pulse::Afternoon, CARGO_1, 300, 2200, 896),
+            fuel_row(Pulse::Afternoon, CARGO_2, 120, 2680, 1016),
         ]
     );
     {
         let world = &scenario.world;
-        assert_eq!(fuel_stock(world, GUADALCANAL), tons(1120));
+        assert_eq!(fuel_stock(world, GUADALCANAL), tons(1016));
         assert_eq!(fuel_cargo(world, CARGO_1), tons(2200));
         assert_eq!(fuel_cargo(world, CARGO_2), tons(2680));
     }
     all_events.extend(events);
 
-    // Day 4: the convoy refuels from what it landed, at the start of the
-    // day, in ship order; then unloading goes on.
+    // Day 4: no refuelling (the convoy is full); unloading goes on from the
+    // 1,016 t Guadalcanal has.
     let (day, events) = run_day(&mut scenario);
     assert_eq!(day, 4);
-    assert_eq!(
-        refuellings(&events),
-        vec![
-            (CARGO_1, tons(32), tons(1000), tons(1088)),
-            (CARGO_2, tons(32), tons(1000), tons(1056)),
-            (DESTROYER, tons(40), tons(500), tons(1016)),
-        ]
-    );
-    // Refuelling comes before the day's cargo handling.
-    let first_cargo = events
-        .iter()
-        .position(is_cargo_event)
-        .expect("unloading goes on");
-    let last_refuel = events
-        .iter()
-        .rposition(|event| matches!(event.kind, EventKind::ShipRefuelled { .. }))
-        .expect("refuelled");
-    assert!(last_refuel < first_cargo);
+    assert!(refuellings(&events).is_empty());
     assert_eq!(
         moves(&events),
         vec![
@@ -761,13 +790,15 @@ fn the_log_explains_a_fuel_unload_and_the_refuelling_from_it() {
             order: TaskForceOrder::LoadFuel
         }
     );
-    // The refuelling of day 4 comes from the arrival, and its trace reaches
-    // the movement and the route.
+    // The refuelling comes from the arrival, and its trace reaches the
+    // movement and the route.
     let refuel = log
         .involving(EntityRef::Ship(CARGO_1))
         .find(|event| matches!(event.kind, EventKind::ShipRefuelled { .. }))
         .expect("ship 1 refuelled");
-    assert_eq!(refuel.day, 4);
+    // It is on day 3, in the night pulse of the arrival, not day 4 as before
+    // decision 0112: the refuelling event is recorded in the pulse it happens.
+    assert_eq!((refuel.day, refuel.pulse), (3, Some(Pulse::Night)));
     assert!(refuel.causes.contains(&Cause::Event(arrival.id)));
     // The unload breakdown: 4 hours on the berth at 50 t an hour; the fuel
     // is all the ship had to land, so no supply came first.
@@ -921,7 +952,7 @@ fn landed_fuel(run: &Run) -> Fixed {
 fn a_load_order_that_names_no_cargo_loads_supply() {
     // Without the cargo the order is scenario 2's load. With no fuel at
     // Espiritu Santo either, the world is scenario 2's for four days: the
-    // same events and the same hashes. The refuelling of day 4 finds no fuel
+    // same events and the same hashes. The refuelling of day 3 finds no fuel
     // at Guadalcanal and does nothing.
     let run = run_checked(variant(
         "no_cargo_named",
@@ -1062,8 +1093,24 @@ fn a_ship_with_supply_aboard_loads_fuel_into_what_is_left_and_lands_supply_first
         first_fuel[0],
         fuel_row(Pulse::Night, CARGO_1, 400, 1600, 400)
     );
-    // No fuel was in the stock at the start of day 4: nothing is refuelled.
-    assert!(refuellings(run.day(4)).is_empty());
+    // No fuel was in the stock on day 3: nothing is refuelled then. On day 4
+    // ship 1's 400 t reach the stock in the night pulse, and the ships fuel
+    // from it after their cargo in that pulse (decision 0112): 32 t, 32 t and
+    // 40 t, leaving 368 t, 336 t and 296 t.
+    assert!(refuellings(run.day(3)).is_empty());
+    assert_eq!(
+        refuellings(run.day(4)),
+        vec![
+            (CARGO_1, tons(32), tons(1000), tons(368)),
+            (CARGO_2, tons(32), tons(1000), tons(336)),
+            (DESTROYER, tons(40), tons(500), tons(296)),
+        ]
+    );
+    assert!(run
+        .day(4)
+        .iter()
+        .filter(|event| matches!(event.kind, EventKind::ShipRefuelled { .. }))
+        .all(|event| event.pulse == Some(Pulse::Night)));
 }
 
 #[test]
