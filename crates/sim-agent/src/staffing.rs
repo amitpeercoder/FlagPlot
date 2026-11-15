@@ -18,8 +18,9 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    AmendmentChange, CommandKind, CommandRefusal, Committed, Displacement, Intent, IntentKind,
-    IntentLimits, Plan, PlanState, Proposal, Run, RunDays, Staff, StaffDecisions, SupplyProjection,
+    AmendmentChange, CommandKind, CommandRefusal, Committed, Displacement, HoldMaker, HoldTarget,
+    Intent, IntentKind, IntentLimits, Limit, Plan, PlanState, Proposal, Run, RunDays, Staff,
+    StaffDecisions, SupplyProjection,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -78,6 +79,7 @@ impl<'a> Names<'a> {
         text: &str,
         ships: &BTreeMap<u32, u32>,
         forces: &BTreeMap<u32, u32>,
+        groups: &BTreeMap<u32, u32>,
     ) -> String {
         map_unit_tokens(text, |kind, raw| match kind {
             "ship" => ships
@@ -86,12 +88,15 @@ impl<'a> Names<'a> {
                 .or_else(|| self.ctx.ship_number(ShipId::new(raw))),
             "task_force" => forces.get(&raw).copied().or_else(|| self.force_number(raw)),
             "land_unit" => self.ctx.land_unit_number(LandUnitId::new(raw)),
-            _ => self.ctx.group_number(AirGroupId::new(raw)),
+            _ => groups
+                .get(&raw)
+                .copied()
+                .or_else(|| self.ctx.group_number(AirGroupId::new(raw))),
         })
     }
 
     pub(crate) fn text(&self, text: &str) -> String {
-        self.text_with(text, &BTreeMap::new(), &BTreeMap::new())
+        self.text_with(text, &BTreeMap::new(), &BTreeMap::new(), &BTreeMap::new())
     }
 
     /// A JSON value with every string's unit tokens, and every number under
@@ -457,6 +462,122 @@ fn leaves_json(view: &SideView<'_>) -> Value {
 }
 
 // ---------------------------------------------------------------------------
+// Holds (decision 0107, step 3, rulings 17 to 23).
+// ---------------------------------------------------------------------------
+
+/// A hold's target as the interface writes it, in the side's numbers. With
+/// the `request` it was read from, a number the side wrote that names none
+/// of its units is shown as the side wrote it.
+fn hold_target_json(n: &Names<'_>, target: HoldTarget, request: Option<&Request>) -> Value {
+    let written = |map: fn(&Request) -> &BTreeMap<u32, u32>, raw: u32| {
+        request.and_then(|r| map(r).get(&raw).copied())
+    };
+    match target {
+        HoldTarget::Ship(ship) => json!({
+            "ship": written(|r| &r.ship_stand_ins, ship.raw()).unwrap_or_else(|| n.ship(ship)),
+        }),
+        HoldTarget::TaskForce(force) => json!({
+            "task_force": written(|r| &r.force_stand_ins, force.raw())
+                .or_else(|| n.force_number(force.raw()))
+                .unwrap_or_else(|| force.raw()),
+        }),
+        HoldTarget::Setting { group, setting } => json!({
+            "air_group": written(|r| &r.group_stand_ins, group.raw())
+                .or_else(|| n.ctx.group_number(group))
+                .unwrap_or_else(|| group.raw()),
+            "setting": setting.name(),
+        }),
+    }
+}
+
+/// A command as the interface writes it, in the side's numbers.
+fn command_json(n: &Names<'_>, command: &CommandKind, request: Option<&Request>) -> Value {
+    let target = match command {
+        CommandKind::Hold { target } | CommandKind::Release { target } => Some(*target),
+        _ => None,
+    };
+    match target {
+        Some(target) => {
+            let mut body = json!({"kind": command.name()});
+            if let (Some(body), Value::Object(keys)) =
+                (body.as_object_mut(), hold_target_json(n, target, request))
+            {
+                body.extend(keys);
+            }
+            body
+        }
+        None => n.value(&command_to_json(command)),
+    }
+}
+
+/// A command in words, in the side's numbers.
+fn command_text(n: &Names<'_>, command: &CommandKind, request: Option<&Request>) -> String {
+    match request {
+        Some(r) => n.text_with(
+            &command.to_string(),
+            &r.ship_stand_ins,
+            &r.force_stand_ins,
+            &r.group_stand_ins,
+        ),
+        None => n.text(&command.to_string()),
+    }
+}
+
+/// A hold's target in words, in the side's numbers.
+fn hold_target_words(n: &Names<'_>, target: HoldTarget) -> String {
+    match target {
+        HoldTarget::Ship(ship) => format!("ship {}", n.ship(ship)),
+        HoldTarget::TaskForce(force) => format!(
+            "task force {}",
+            n.ctx.force_number(force).unwrap_or_else(|| force.raw())
+        ),
+        HoldTarget::Setting { group, setting } => format!(
+            "the {} of air group {}",
+            setting.name().replace('_', " "),
+            n.ctx.group_number(group).unwrap_or_else(|| group.raw())
+        ),
+    }
+}
+
+/// What made a hold, in words: "your hold command of day 8" or "your order
+/// 3 of day 2".
+fn hold_maker_words(n: &Names<'_>, hold: &sim_core::command::Hold) -> String {
+    match hold.by {
+        HoldMaker::Command => format!("your hold command of day {}", hold.day),
+        HoldMaker::Order(id) => match n.ctx.order_number_if_own(id) {
+            Some(number) => format!("your order {number} of day {}", hold.day),
+            None => format!("an order of yours of day {}", hold.day),
+        },
+    }
+}
+
+/// The holds of the side, each with its target, the day, what made it and
+/// the words.
+fn holds_json(n: &Names<'_>, view: &SideView<'_>) -> Vec<Value> {
+    view.command_state()
+        .holds
+        .iter()
+        .map(|(target, hold)| {
+            let (made_by, order) = match hold.by {
+                HoldMaker::Command => ("command", None),
+                HoldMaker::Order(id) => ("order", n.ctx.order_number_if_own(id)),
+            };
+            json!({
+                "target": hold_target_json(n, *target, None),
+                "day": hold.day,
+                "made_by": made_by,
+                "order": order,
+                "text": format!(
+                    "{}, held by {}",
+                    hold_target_words(n, *target),
+                    hold_maker_words(n, hold)
+                ),
+            })
+        })
+        .collect()
+}
+
+// ---------------------------------------------------------------------------
 // What the staff decided, by event.
 // ---------------------------------------------------------------------------
 
@@ -511,7 +632,7 @@ fn decision_of(
                 issuer, command, ..
             }) => json!({
                 "type": "command",
-                "command": n.value(&command_to_json(command)),
+                "command": command_json(n, command, None),
                 "text": n.text(&command.to_string()),
                 "issuer": issuer_word(*issuer),
                 "taken": true,
@@ -525,7 +646,7 @@ fn decision_of(
                 ..
             }) => json!({
                 "type": "command",
-                "command": n.value(&command_to_json(command)),
+                "command": command_json(n, command, None),
                 "text": n.text(&command.to_string()),
                 "issuer": issuer_word(*issuer),
                 "taken": false,
@@ -660,13 +781,14 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
                     "to_day": c.to_day,
                 }))
                 .collect::<Vec<_>>(),
+            "holds": holds_json(&n, view),
             "queued": queued
                 .iter()
                 .enumerate()
                 .map(|(i, command)| json!({
                     "index": i,
-                    "command": n.value(&command_to_json(command)),
-                    "text": n.text(&command.to_string()),
+                    "command": command_json(&n, command, None),
+                    "text": command_text(&n, command, None),
                 }))
                 .collect::<Vec<_>>(),
             "staff_decisions_yesterday": decisions_of_day(&n, view, view.day()),
@@ -901,11 +1023,13 @@ pub fn why(view: &SideView<'_>, number: u32) -> Value {
 /// A command as the seat wrote it, read into the engine's own, with the
 /// numbers written for ships and forces the side does not own kept so that a
 /// refusal can show them.
+#[derive(Clone)]
 pub(crate) struct Request {
     pub kind: CommandKind,
     /// A stand-in id (above any unit's) to the ship number the side wrote.
     ship_stand_ins: BTreeMap<u32, u32>,
     force_stand_ins: BTreeMap<u32, u32>,
+    group_stand_ins: BTreeMap<u32, u32>,
     /// The intent number was the side's next free one, chosen by the tool.
     pub number_chosen: bool,
 }
@@ -934,6 +1058,7 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
         ],
         "set_leave" => &["leave", "given"],
         "approve" | "cancel_plan" => &["plan"],
+        "hold" | "release" => &["ship", "task_force", "air_group", "setting"],
         _ => &[],
     }
 }
@@ -958,6 +1083,7 @@ pub(crate) fn request(
     let ctx = Ctx::new(*view);
     let mut ship_stand_ins: BTreeMap<u32, u32> = BTreeMap::new();
     let mut force_stand_ins: BTreeMap<u32, u32> = BTreeMap::new();
+    let mut group_stand_ins: BTreeMap<u32, u32> = BTreeMap::new();
     let mut made = 0;
     let mut body = Map::new();
     for (key, value) in args {
@@ -1019,12 +1145,59 @@ pub(crate) fn request(
             }
         }
     }
+    if tool == "hold" || tool == "release" {
+        if body.contains_key("setting") && !body.contains_key("air_group") {
+            return Err(CallError::new(format!(
+                "\"setting\" is an argument of {tool} only with \"air_group\" (the one setting that can be held is \"search_arc\")"
+            )));
+        }
+        // The target is named by the side's number; a number that names none
+        // of the side's units becomes one no unit has, so the engine refuses
+        // an enemy unit and one that does not exist alike.
+        for key in ["ship", "task_force", "air_group"] {
+            let Some(number) = body
+                .get(key)
+                .and_then(Value::as_u64)
+                .and_then(|n| u32::try_from(n).ok())
+            else {
+                continue;
+            };
+            let (raw, stand_ins) = match key {
+                "ship" => (
+                    ctx.own_ship(number).map(|s| s.id.raw()),
+                    &mut ship_stand_ins,
+                ),
+                "task_force" => (
+                    ctx.own_force(number).map(|f| f.id.raw()),
+                    &mut force_stand_ins,
+                ),
+                _ => (
+                    ctx.own_group(number).map(|g| g.id.raw()),
+                    &mut group_stand_ins,
+                ),
+            };
+            let id = match raw {
+                Some(raw) => raw,
+                None => match stand_ins.iter().find(|(_, written)| **written == number) {
+                    Some((id, _)) => *id,
+                    None => {
+                        let id = FIRST_STAND_IN + made;
+                        made += 1;
+                        stand_ins.insert(id, number);
+                        id
+                    }
+                },
+            };
+            body.insert(key.into(), json!(id));
+        }
+    }
     let kind = command_from_json(&Value::Object(body))
         .map_err(|e| CallError::new(format!("malformed command: {e}")))?;
     Ok(Request {
         kind,
         ship_stand_ins,
         force_stand_ins,
+        group_stand_ins,
         number_chosen,
     })
 }
@@ -1061,8 +1234,8 @@ pub(crate) fn command_answer(
 ) -> Value {
     let n = Names::new(after);
     let day = after.day() + 1;
-    let command = n.value(&command_to_json(&request.kind));
-    let text = n.text(&request.kind.to_string());
+    let command = command_json(&n, &request.kind, Some(request));
+    let text = command_text(&n, &request.kind, Some(request));
     let mut out = json!({
         "tool": tool,
         "for_day": day,
@@ -1100,6 +1273,17 @@ pub(crate) fn command_answer(
                         .to_string(),
                 );
             }
+            match &request.kind {
+                CommandKind::Hold { target } => notes.push(format!(
+                    "{} is held from the start of day {day}: the staff gives no order to it and plans without it. release lifts the hold.",
+                    hold_target_words(&n, *target)
+                )),
+                CommandKind::Release { target } => notes.push(format!(
+                    "{} is released from the start of day {day}: it is free to the staff again from that morning.",
+                    hold_target_words(&n, *target)
+                )),
+                _ => {}
+            }
             out["notes"] = json!(notes);
             out["summary"] = json!(format!(
                 "Queued for the start of day {day}. {queued} command{} queued for day {day}.",
@@ -1111,7 +1295,8 @@ pub(crate) fn command_answer(
             out["reason"] = json!(n.text_with(
                 &reason.to_string(),
                 &request.ship_stand_ins,
-                &request.force_stand_ins
+                &request.force_stand_ins,
+                &request.group_stand_ins
             ));
             out["notes"] = json!([]);
             out["summary"] = json!(format!(
@@ -1142,4 +1327,367 @@ pub(crate) fn next_free_intent(view: &SideView<'_>, queued: &[CommandKind]) -> u
         .max()
         .unwrap_or(0);
     set.max(queued) + 1
+}
+
+// ---------------------------------------------------------------------------
+// Preview (decision 0107, step 3, rulings 25 to 28).
+// ---------------------------------------------------------------------------
+
+/// What a change that was previewed leaves of the plan's runs in hand
+/// (ruling 28), written for a preview that makes no promise it cannot keep.
+const MADE_READY_LOST: &str = "nothing: in a supply plan stock aboard a ship stays aboard and is carried by its next run, and stock landed stays where it lies";
+
+/// The note a preview ends with.
+const PREVIEW_NOTE: &str = "Nothing is changed by a preview. approve with {\"preview\": <n>} queues exactly this command. The preview is void once anything is queued or a day is resolved.";
+
+/// The words for the commands in `commands`, in the side's numbers.
+pub(crate) fn commands_text(view: &SideView<'_>, commands: &[CommandKind]) -> Vec<String> {
+    let n = Names::new(view);
+    commands
+        .iter()
+        .map(|command| command_text(&n, command, None))
+        .collect()
+}
+
+/// The intent a previewed command is about: the intent set, or the intent
+/// the limit is for. A reserve is for a base, not an intent: it is read as
+/// about the lowest intent in force whose forces limit loads at that base.
+fn previewed_intent(view: &SideView<'_>, kind: &CommandKind) -> Option<IntentId> {
+    match kind {
+        CommandKind::SetIntent { intent, .. } => Some(*intent),
+        CommandKind::SetLimit(Limit::Reserve { base, .. }) => view
+            .command_state()
+            .intents_in_force()
+            .find(|i| i.limits.forces.as_ref().is_some_and(|f| f.source == *base))
+            .map(|i| i.id),
+        CommandKind::SetLimit(limit) => limit.intent(),
+        _ => None,
+    }
+}
+
+/// The staff's decisions that serve `intent`; all of them where none.
+fn decisions_for(decisions: &StaffDecisions, intent: Option<IntentId>) -> StaffDecisions {
+    let Some(intent) = intent else {
+        return decisions.clone();
+    };
+    StaffDecisions {
+        orders: decisions
+            .orders
+            .iter()
+            .filter(|o| o.intent == intent)
+            .cloned()
+            .collect(),
+        commands: decisions
+            .commands
+            .iter()
+            .filter(|c| c.reason.serves.intent == Some(intent))
+            .cloned()
+            .collect(),
+        no_orders: decisions
+            .no_orders
+            .iter()
+            .filter(|r| r.serves.intent == Some(intent))
+            .cloned()
+            .collect(),
+    }
+}
+
+fn binds_json(n: &Names<'_>, proposal: &Proposal) -> Value {
+    proposal.shortfall.as_ref().map_or(Value::Null, |s| {
+        json!({
+            "binds": n.text(&s.binds),
+            "shortfall_days": dec(s.shortfall_days),
+            "source_dry_day": s.source_dry_day,
+            "check_day": s.check_day,
+            "displaced_by": s.displaced_by.iter().map(|d| displacement_json(n, d)).collect::<Vec<_>>(),
+        })
+    })
+}
+
+/// What the staff would do for the intent on the coming day on one view: its
+/// decisions (orders, commands, decisions to give no order), the runs of its
+/// proposal, the next of them, the first day below the floor and what binds.
+fn staff_side_json(
+    n: &Names<'_>,
+    staff: &dyn Staff,
+    view: &SideView<'_>,
+    intent: Option<IntentId>,
+) -> (Value, StaffDecisions, Option<Proposal>) {
+    let decisions = decisions_for(&staff.decide(*view), intent);
+    let proposal = intent.and_then(|i| staff.propose(*view, i));
+    let shown = decisions_json(n, &decisions);
+    let runs: Vec<Value> = proposal
+        .iter()
+        .flat_map(|p| p.runs.iter())
+        .map(|run| {
+            json!({
+                "ships": n.ships(&run.ships),
+                "load_t": dec(run.load_t),
+                "days": days_json(&run.days),
+            })
+        })
+        .collect();
+    let json = json!({
+        "orders": shown["orders"],
+        "commands": shown["commands"],
+        "no_orders": shown["no_orders"],
+        "next_run": runs.first().cloned(),
+        "runs": runs,
+        "first_day_below": proposal
+            .as_ref()
+            .and_then(|p| p.projection.as_ref())
+            .and_then(|p| p.first_day_below),
+        "binds": proposal.as_ref().map_or(Value::Null, |p| binds_json(n, p)),
+    });
+    (json, decisions, proposal)
+}
+
+/// The holds that keep a ship of the intent's pool from the staff (ruling
+/// 18), in words.
+fn held_words(n: &Names<'_>, view: &SideView<'_>, intent: Option<IntentId>) -> Vec<String> {
+    let state = view.command_state();
+    let Some(forces) = intent
+        .and_then(|i| state.intents.get(&i))
+        .and_then(|i| i.limits.forces.as_ref())
+    else {
+        return Vec::new();
+    };
+    let mut pool: std::collections::BTreeSet<ShipId> = forces.ships.clone();
+    for force in &forces.task_forces {
+        if let Some(force) = n.ctx.forces.get(force) {
+            pool.extend(force.ships.iter().copied());
+        }
+    }
+    let mut by_target: BTreeMap<HoldTarget, Vec<ShipId>> = BTreeMap::new();
+    for ship in pool {
+        let in_force = match n.ctx.ships.get(&ship).map(|s| s.location) {
+            Some(ShipLocation::TaskForce(force)) => {
+                n.ctx.forces.get(&force).map(|f| (force, f.ships.clone()))
+            }
+            _ => None,
+        };
+        let target = state.hold_on_ship(ship, in_force.as_ref().map(|(f, ships)| (*f, ships)));
+        if let Some(target) = target {
+            by_target.entry(target).or_default().push(ship);
+        }
+    }
+    by_target
+        .into_iter()
+        .filter_map(|(target, ships)| {
+            let hold = state.holds.get(&target)?;
+            let maker = hold_maker_words(n, hold);
+            let numbers = |own: Option<ShipId>| -> String {
+                ships
+                    .iter()
+                    .filter(|s| Some(**s) != own)
+                    .map(|s| n.ship(*s).to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            let own = match target {
+                HoldTarget::Ship(ship) => Some(ship),
+                _ => None,
+            };
+            let others = numbers(own);
+            let mut text = format!("{} is held by {maker}", hold_target_words(n, target));
+            if !others.is_empty() {
+                text.push_str(&format!(
+                    ", so ship {others} of the pool {} not free either",
+                    if others.contains(',') { "are" } else { "is" }
+                ));
+            }
+            Some(text)
+        })
+        .collect()
+}
+
+/// For each run of the intent's plan that has not finished, what the change
+/// does to it (ruling 28): a run that has sailed goes on to the base it was
+/// sent to; a run still loading is sent to the new base; a change that is
+/// not of the base leaves every run as ordered.
+fn runs_in_hand(view: &SideView<'_>, intent: Option<IntentId>, kind: &CommandKind) -> Vec<String> {
+    let state = view.command_state();
+    let Some(intent) = intent.and_then(|i| state.intents.get(&i)) else {
+        return Vec::new();
+    };
+    let Some(plan) = state.plans.get(&intent.plan) else {
+        return Vec::new();
+    };
+    let IntentKind::KeepSupplied { base: old, .. } = intent.kind;
+    let new_base = match kind {
+        CommandKind::SetIntent {
+            kind: IntentKind::KeepSupplied { base, .. },
+            ..
+        } if *base != old => Some(*base),
+        _ => None,
+    };
+    let today = view.day() + 1;
+    plan.runs
+        .values()
+        .filter(|run| run.ended.is_none())
+        .filter_map(|run| {
+            let (phase, _) = run_phase(run, today);
+            let number = run.number;
+            Some(match (phase, new_base) {
+                ("finished", _) => return None,
+                ("under_way", Some(_)) => format!(
+                    "run {number} has sailed and goes on to base {}",
+                    old.raw()
+                ),
+                ("returning", Some(_)) => format!(
+                    "run {number} has delivered at base {} and is coming home; the change does not touch it",
+                    old.raw()
+                ),
+                ("loading" | "waiting", Some(base)) => format!(
+                    "run {number} is {} and is sent to base {}",
+                    if phase == "loading" { "loading" } else { "not yet loading" },
+                    base.raw()
+                ),
+                (phase, None) => format!(
+                    "run {number} is {} and goes on as ordered",
+                    match phase {
+                        "waiting" => "not yet loading",
+                        "loading" => "loading",
+                        "under_way" => "under way",
+                        _ => "coming home",
+                    }
+                ),
+                _ => return None,
+            })
+        })
+        .collect()
+}
+
+/// What other intents give up with the change: each other intent in force
+/// the with-change proposal newly displaces, and each whose decisions for
+/// the coming day differ between the two.
+fn other_plans_give_up(
+    staff: &dyn Staff,
+    as_is: &SideView<'_>,
+    with: &SideView<'_>,
+    intent: Option<IntentId>,
+    before: Option<&Proposal>,
+    after: Option<&Proposal>,
+) -> Vec<String> {
+    let mut words = Vec::new();
+    if let Some(after) = after {
+        for d in &after.displaces {
+            let already = before.is_some_and(|b| b.displaces.iter().any(|o| o.intent == d.intent));
+            if already {
+                continue;
+            }
+            let days = d.shortfall.shortfall_days;
+            words.push(format!(
+                "intent {} (plan {}) would be {days} {} short at the reading of day {}",
+                d.intent.raw(),
+                d.plan.raw(),
+                if days == Fixed::ONE { "day" } else { "days" },
+                d.shortfall.check_day
+            ));
+        }
+    }
+    let day = with.day() + 1;
+    let (all_before, all_after) = (staff.decide(*as_is), staff.decide(*with));
+    for other in with.command_state().intents_in_force() {
+        if Some(other.id) == intent {
+            continue;
+        }
+        let (a, b) = (
+            decisions_for(&all_before, Some(other.id)),
+            decisions_for(&all_after, Some(other.id)),
+        );
+        if a != b {
+            if words
+                .iter()
+                .any(|w| w.starts_with(&format!("intent {} ", other.id.raw())))
+            {
+                continue;
+            }
+            words.push(format!(
+                "intent {}: what the staff would do for it on day {day} differs with the change ({} orders, {} commands and {} decisions to give no order as things stand; {}, {} and {} with it)",
+                other.id.raw(),
+                a.orders.len(),
+                a.commands.len(),
+                a.no_orders.len(),
+                b.orders.len(),
+                b.commands.len(),
+                b.no_orders.len()
+            ));
+        }
+    }
+    words
+}
+
+/// `preview`: what a changed intent or limit would do, worked on two copies
+/// of the world as the coming day will find it: `as_is` with the side's
+/// queued commands, and `with` the same and the command queued last. It is
+/// stored nowhere in the game. `number` is the preview's number in the
+/// session.
+pub(crate) fn preview(
+    number: u32,
+    as_is: &SideView<'_>,
+    with: &SideView<'_>,
+    staff: &dyn Staff,
+    request: &Request,
+) -> Value {
+    let n = Names::new(with);
+    let intent = previewed_intent(with, &request.kind);
+    let (now_json, _, now_proposal) = staff_side_json(&Names::new(as_is), staff, as_is, intent);
+    let (with_json, _, with_proposal) = staff_side_json(&n, staff, with, intent);
+    answer(
+        "preview",
+        json!({
+            "preview": number,
+            "day": with.day() + 1,
+            "command": command_json(&n, &request.kind, Some(request)),
+            "shown": command_text(&n, &request.kind, Some(request)),
+            "intent": intent.map(|i| i.raw()),
+            "as_things_stand": now_json,
+            "with_change": with_json,
+            "held": held_words(&n, with, intent),
+            "runs_in_hand": runs_in_hand(as_is, intent, &request.kind),
+            "made_ready_lost": MADE_READY_LOST,
+            "other_plans_give_up": other_plans_give_up(
+                staff,
+                as_is,
+                with,
+                intent,
+                now_proposal.as_ref(),
+                with_proposal.as_ref(),
+            ),
+            "valid": true,
+            "note": PREVIEW_NOTE,
+        }),
+    )
+}
+
+/// The refusal of a command that was not taken in as the tool read it: the
+/// shape of a refused `command` answer, with words of the caller's own (a
+/// void preview).
+pub(crate) fn refused_answer(
+    view: &SideView<'_>,
+    request: &Request,
+    tool: &str,
+    reason: String,
+    queued: usize,
+) -> Value {
+    let n = Names::new(view);
+    let day = view.day() + 1;
+    answer(
+        "command",
+        json!({
+            "tool": tool,
+            "for_day": day,
+            "command": command_json(&n, &request.kind, Some(request)),
+            "text": command_text(&n, &request.kind, Some(request)),
+            "queued": queued,
+            "status": "refused",
+            "reason": reason,
+            "notes": [],
+            "summary": format!(
+                "Refused, and not queued. {queued} command{} queued for day {day}.",
+                if queued == 1 { " is" } else { "s are" }
+            ),
+        }),
+    )
 }

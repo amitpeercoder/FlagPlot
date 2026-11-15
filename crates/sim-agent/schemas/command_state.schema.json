@@ -16,6 +16,7 @@
     "reserves",
     "plans",
     "commitments",
+    "holds",
     "queued",
     "staff_decisions_yesterday"
   ],
@@ -25,7 +26,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 5
+      "const": 6
     },
     "kind": {
       "const": "command_state"
@@ -218,6 +219,45 @@
           },
           "to_day": {
             "type": "integer"
+          }
+        }
+      }
+    },
+    "holds": {
+      "type": "array",
+      "description": "What you hold from the staff: each hold with its target in your numbers, the day it was made, what made it (a hold command of yours, or an order of yours to a unit in an intent's forces limit) and that order's number, and the words.",
+      "items": {
+        "type": "object",
+        "required": [
+          "target",
+          "day",
+          "made_by",
+          "order",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "target": {
+            "$ref": "command_defs.schema.json#/$defs/hold_target"
+          },
+          "day": {
+            "type": "integer"
+          },
+          "made_by": {
+            "enum": [
+              "command",
+              "order"
+            ]
+          },
+          "order": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "For a hold made by an order: the order's number as the side is shown it; null for a hold command."
+          },
+          "text": {
+            "type": "string"
           }
         }
       }

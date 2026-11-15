@@ -454,7 +454,7 @@
       }
     },
     "command_body": {
-      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, set_limit, set_leave, approve and cancel_plan), ships and task forces in your numbers.",
+      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, set_limit, set_leave, hold, release, approve and cancel_plan), ships and task forces in your numbers.",
       "type": "object",
       "required": [
         "kind"
@@ -472,7 +472,10 @@
             "free_ships",
             "add_run",
             "time_run",
-            "mark_plan"
+            "mark_plan",
+            "hold",
+            "release",
+            "end_run"
           ]
         }
       }
@@ -596,6 +599,53 @@
           "type": "integer"
         }
       }
+    },
+    "hold_target": {
+      "description": "What a hold keeps from the staff, in your numbers: a ship, a task force, or one setting of an air group.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ship"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "ship": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "task_force"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "task_force": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "air_group",
+            "setting"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "air_group": {
+              "type": "integer"
+            },
+            "setting": {
+              "enum": [
+                "search_arc"
+              ]
+            }
+          }
+        }
+      ]
     }
   }
 }

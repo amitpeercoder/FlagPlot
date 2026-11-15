@@ -43,8 +43,9 @@ use sim_core::view::SideView;
 /// view changes it. A saved game records it; a game is resumed for more
 /// play only under the version it was begun under. `supply-2` adds the
 /// priority order with what is handed in this morning counted as committed,
-/// the protected limit, and displaced demand.
-pub const DOCTRINE_VERSION: &str = "supply-2";
+/// the protected limit, and displaced demand. `supply-3` adds holds, runs
+/// set aside, cargo aboard carried, and the fallback of a cancelled plan.
+pub const DOCTRINE_VERSION: &str = "supply-3";
 
 /// The staff of stage 1: the doctrine for keeping a base supplied. A side
 /// with no intent in force and no commitment to free gets nothing from it.

@@ -757,7 +757,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 5
+          "const": 6
         },
         "kind": {
           "const": "not_known"

@@ -6,19 +6,24 @@
 //! use of day d, plus what lands on day d, and not below 0. The planned use
 //! of a coming day is today's, with the men due counted from their due day
 //! and the aircraft of a scheduled arrival from its day. What lands: for
-//! each run of an approved plan of the side to the hex not yet finished, its
-//! load while it has not sailed, else the supply aboard its ships; it lands
-//! on the run's arrival day plus one, or today if that is past.
+//! each run of an approved plan of the side not yet finished, its load while
+//! it has not sailed, else the supply aboard its ships; it lands on the
+//! run's arrival day plus one, or today if that is past, at the hex it will
+//! land (ruling 28): a run loading at the intent's base as it now stands, a
+//! run under way at the first hex of its force's route still ahead that is
+//! marked to act at, and nowhere once that is passed; with no mark at all,
+//! at the intent's base.
 //!
 //! Everything is whole numbers of tons and days in `Fixed`.
 
-use sim_core::command::{IntentKind, ProjectedReading, SupplyProjection};
+use sim_core::command::{CommandState, IntentKind, ProjectedReading, SupplyProjection};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::state::AirGroupLocation;
 use sim_core::view::SideView;
 
 use crate::fleet::{run_state, Fleet, RunStatus};
+use crate::morning::Morning;
 use crate::units::{over, whole};
 
 /// The stock, the planned use and the landings of each day from today on.
@@ -38,6 +43,7 @@ impl Readings {
     pub(crate) fn build(
         view: &SideView<'_>,
         fleet: &Fleet<'_>,
+        state: &CommandState,
         hex: Hex,
         horizon_days: u32,
     ) -> Option<Readings> {
@@ -95,7 +101,7 @@ impl Readings {
         }
 
         let mut landing_t = vec![Fixed::ZERO; len];
-        for (day, tons) in run_landings(view, fleet, hex) {
+        for (day, tons) in run_landings(view, fleet, state, hex) {
             let index = day.saturating_sub(today) as usize;
             if index < len {
                 landing_t[index] += tons;
@@ -199,12 +205,16 @@ impl Readings {
     }
 }
 
-/// What the side's runs to `hex` will land: for each run of an approved plan
+/// What the side's runs will land in `hex`: for each run of an approved plan
 /// not finished, its load while it has not sailed, else the supply aboard
 /// its ships, on the run's arrival day plus one or today if that is past.
-fn run_landings(view: &SideView<'_>, fleet: &Fleet<'_>, hex: Hex) -> Vec<(u32, Fixed)> {
+fn run_landings(
+    view: &SideView<'_>,
+    fleet: &Fleet<'_>,
+    state: &CommandState,
+    hex: Hex,
+) -> Vec<(u32, Fixed)> {
     let today = view.day() + 1;
-    let state = view.command_state();
     let mut landings = Vec::new();
     for plan in state.plans.values().filter(|plan| plan.state.approved()) {
         let Some(intent) = state.intents.get(&plan.intent) else {
@@ -214,23 +224,49 @@ fn run_landings(view: &SideView<'_>, fleet: &Fleet<'_>, hex: Hex) -> Vec<(u32, F
         let Some(destination) = view.bases().find(|b| b.id == base) else {
             continue;
         };
-        if destination.hex != hex {
-            continue;
-        }
         for run in plan.runs.values() {
             let Some(source) = view.bases().find(|b| b.id == run.source) else {
                 continue;
             };
             let found = run_state(fleet, state, plan.id, run, source.hex, today);
-            let tons = match found.status {
+            let (tons, lands_at) = match found.status {
                 RunStatus::Finished => continue,
-                RunStatus::Loading => run.load_t,
-                RunStatus::Underway => found.aboard_t,
+                RunStatus::Loading => (run.load_t, Some(destination.hex)),
+                RunStatus::Underway => (
+                    found.aboard_t,
+                    underway_landing(fleet, &found.afloat, destination.hex),
+                ),
             };
-            landings.push(((run.days.arrive + 1).max(today), tons));
+            if lands_at == Some(hex) {
+                landings.push(((run.days.arrive + 1).max(today), tons));
+            }
         }
     }
     landings
+}
+
+/// The hex a run under way will land: the first hex of its force's route
+/// still ahead that is marked to act at, and none once that is passed; with
+/// no mark at all, the intent's base (`base_hex`).
+fn underway_landing(
+    fleet: &Fleet<'_>,
+    afloat: &[sim_core::ids::ShipId],
+    base_hex: Hex,
+) -> Option<Hex> {
+    let Some(force) = afloat.iter().find_map(|ship| fleet.force_of(*ship)) else {
+        return Some(base_hex);
+    };
+    let route = &force.route;
+    if route.act_at.is_empty() {
+        return Some(base_hex);
+    }
+    route
+        .waypoints
+        .get(route.next_index.min(route.waypoints.len())..)
+        .unwrap_or(&[])
+        .iter()
+        .find(|hex| route.act_at.contains(hex))
+        .copied()
 }
 
 /// The staff's projection of the stock in `hex` over the next `horizon_days`
@@ -245,6 +281,7 @@ pub fn project(
     horizon_days: u32,
 ) -> Option<SupplyProjection> {
     let fleet = Fleet::of(view);
-    let readings = Readings::build(view, &fleet, hex, horizon_days)?;
+    let morning = Morning::begin(view, &fleet);
+    let readings = Readings::build(view, &fleet, morning.state(), hex, horizon_days)?;
     Some(readings.projection(hex, floor_days))
 }

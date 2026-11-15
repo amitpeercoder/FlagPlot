@@ -6,8 +6,9 @@ use serde::Serialize;
 pub const FORMAT: &str = "flagplot-agent";
 
 /// The version of the format. A field removed or changed in meaning bumps it;
-/// a field added does not (see `schemas/README.md`).
-pub const VERSION: u32 = 5;
+/// a field added does not (see `schemas/README.md`). 6 adds hold, release and
+/// preview (decision 0107, step 3).
+pub const VERSION: u32 = 6;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not
