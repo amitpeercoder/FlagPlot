@@ -158,8 +158,13 @@
 //!   base 1" as intent 1 and nothing else, the orders are the main case's,
 //!   each serving intent 1 with an empty chain.
 //! - **A held group is left alone:** with group 1 held from day 3, it is
-//!   given no order from then, and group 3 goes and rests by the main
-//!   case's days: it sends 8 on day 3, against the 6 a raid asks.
+//!   given no order from then, and group 3 raids alone when it can send
+//!   the 6 a raid asks. It goes on days 3 to 7, sending 8, 8, 7, 7 and 6.
+//!   On day 8, at 42, it can send 5: the raid does not go and it rests. It
+//!   goes on days 9 and 10, at 32 and 38, sending 6 each day; rests on day
+//!   11, at 44, when it can send 5; and goes on day 12, at 34, sending 6.
+//!   It ends day 12 at 40. (Restated by the architect on Nov 16, 2026,
+//!   after the build: the first draft had it keep the main case's days.)
 //! - **Withdrawing the end** on day 5 withdraws the raid task that day,
 //!   and the staff gives no order from then. The groups keep the missions
 //!   they had.
@@ -1187,33 +1192,33 @@ fn a_held_group_is_left_alone() {
     assert_eq!(played.launched_by(3, 3), 8);
 }
 
-// IGNORED: the hand calculation says group 3 "goes and rests by the main
-// case's days". It does so on days 3 to 7, but not on day 8. On the morning
-// of day 8 group 3, at 42, is able to fly 5 (10 x 0.58 = 5.8, cut to 5), and
-// with group 1 held it is the only bomber group, so the raid sends 5 against
-// the 6 a balanced raid asks: the raid does not go, and the code gives group 3
-// the rest order on day 8 where the main case gives it none. The doc's table
-// of the main case has the two groups sending 10 between them on day 8. What
-// the code gives: day 8, [(3, rest)]; what the doc's wording gives: day 8, no
-// order. Reported to the architect; no number here is changed.
+/// The property as the architect restated it after the build: group 3
+/// raids alone when it can send the 6 a raid asks.
 #[test]
-#[ignore = "the doc says group 3 follows the main case's days; on day 8 it sends 5 against 6 and rests (code: rest order on day 8, doc: none)"]
-fn a_held_group_3_goes_and_rests_by_the_main_cases_days() {
+fn a_held_group_3_raids_alone_when_it_can_send_6() {
     let text = with(&command_table(3, "kind = \"hold\"\nair_group = 1"));
     let played = play(&text);
+    played.nothing_refused();
+    // Group 1 gets no staff order from day 3.
     for day in 3..=12 {
-        let expected: Vec<(u32, AirGroupOrder)> = table_orders()[(day - 1) as usize]
-            .iter()
-            .filter(|(g, _)| *g == 3)
-            .cloned()
-            .collect();
-        let got: Vec<(u32, AirGroupOrder)> = played
-            .air_orders(day)
-            .into_iter()
-            .filter(|(g, _)| *g == 3)
-            .collect();
-        assert_eq!(got, expected, "day {day}");
+        assert!(
+            played.air_orders(day).iter().all(|(g, _)| *g != 1),
+            "group 1 was ordered on day {day}"
+        );
     }
+    // Group 3's morning fatigue on days 3 to 12.
+    let mornings = [12, 18, 24, 30, 36, 42, 32, 38, 44, 34];
+    for (k, fatigue) in mornings.iter().enumerate() {
+        let day = k as u32 + 3;
+        assert_eq!(played.morning(day, 3), n(*fatigue), "day {day}");
+    }
+    // What group 3 sends: 0 on a day it rests.
+    let sends = [8, 8, 7, 7, 6, 0, 6, 6, 0, 6];
+    for (k, sent) in sends.iter().enumerate() {
+        let day = k as u32 + 3;
+        assert_eq!(played.launched_by(day, 3), *sent, "day {day}");
+    }
+    assert_eq!(played.at_end(3), n(40));
 }
 
 #[test]
