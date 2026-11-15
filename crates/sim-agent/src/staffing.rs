@@ -1389,6 +1389,9 @@ fn decisions_for(decisions: &StaffDecisions, intent: Option<IntentId>) -> StaffD
             .filter(|r| r.serves.intent == Some(intent))
             .cloned()
             .collect(),
+        // A notice points into the whole hand-in by index; the filtered
+        // decisions of a preview carry none.
+        notices: Vec::new(),
     }
 }
 

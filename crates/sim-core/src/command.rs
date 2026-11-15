@@ -945,20 +945,80 @@ pub struct StaffCommand {
     pub reason: Reason,
 }
 
+/// What a staff notice says (decision 0107, rulings 34 and 35).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum NoticeKind {
+    /// The staff cannot meet the plan's intent: it needs a run today and can
+    /// have none, or the run it can have leaves the reading it checks below
+    /// the floor.
+    CannotMeet,
+    /// The plan waits for the commander's leave (to prepare or to launch).
+    WaitsForLeave(Leave),
+    /// The staff has ended a run of the plan.
+    RunEnded,
+}
+
+impl NoticeKind {
+    /// A stable number. Never renumber; add new values at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            NoticeKind::CannotMeet => 1,
+            NoticeKind::WaitsForLeave(Leave::Prepare) => 2,
+            NoticeKind::WaitsForLeave(Leave::Launch) => 3,
+            NoticeKind::RunEnded => 4,
+        }
+    }
+
+    /// The kind's name as saved games and the tools write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            NoticeKind::CannotMeet => "cannot_meet",
+            NoticeKind::WaitsForLeave(Leave::Prepare) => "waits_for_leave_to_prepare",
+            NoticeKind::WaitsForLeave(Leave::Launch) => "waits_for_leave_to_launch",
+            NoticeKind::RunEnded => "run_ended",
+        }
+    }
+}
+
+/// The reason a notice rests on: an index into the same hand-in's
+/// `commands` or `no_orders`. The engine records the notice citing that
+/// reason's `StaffReason` event; it never reads the reason's words.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum NoticeBasis {
+    Command(usize),
+    NoOrder(usize),
+}
+
+/// A structured notice the staff hands in beside its orders, commands and
+/// reasons (decision 0107, ruling 34): the plan, the run where there is one,
+/// the kind and the reason it rests on. The engine records each as a
+/// `StaffNotice` event and tests the standing interrupts on them.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct StaffNotice {
+    pub kind: NoticeKind,
+    pub plan: PlanId,
+    pub run: Option<u32>,
+    pub rests_on: NoticeBasis,
+}
+
 /// What a staff hands in for one day (decision 0107, 4): orders with their
-/// reasons, staff commands, and decisions to give no order with theirs. It
-/// is what a saved game keeps for the day, and what a replay hands in again
-/// without asking the staff.
+/// reasons, staff commands, decisions to give no order with theirs, and
+/// notices (ruling 34). It is what a saved game keeps for the day, and what
+/// a replay hands in again without asking the staff.
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct StaffDecisions {
     pub orders: Vec<StaffOrder>,
     pub commands: Vec<StaffCommand>,
     pub no_orders: Vec<Reason>,
+    pub notices: Vec<StaffNotice>,
 }
 
 impl StaffDecisions {
     pub fn is_empty(&self) -> bool {
-        self.orders.is_empty() && self.commands.is_empty() && self.no_orders.is_empty()
+        self.orders.is_empty()
+            && self.commands.is_empty()
+            && self.no_orders.is_empty()
+            && self.notices.is_empty()
     }
 }
 
@@ -1199,4 +1259,5 @@ pub fn first_difference(saved: &StaffDecisions, given: &StaffDecisions) -> Optio
     part("order", &saved.orders, &given.orders)
         .or_else(|| part("command", &saved.commands, &given.commands))
         .or_else(|| part("no-order reason", &saved.no_orders, &given.no_orders))
+        .or_else(|| part("notice", &saved.notices, &given.notices))
 }

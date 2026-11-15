@@ -869,6 +869,7 @@ mod tests {
                     ..Reason::default()
                 },
             ],
+            notices: Vec::new(),
         };
         let value = staff_decisions_to_json(&decisions);
         let text = serde_json::to_string(&value).expect("writes");

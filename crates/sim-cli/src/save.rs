@@ -740,6 +740,7 @@ mod tests {
                 reason: reason.clone(),
             }],
             no_orders: vec![reason],
+            notices: Vec::new(),
         };
         let mut staff: StaffHandIns = BTreeMap::new();
         staff

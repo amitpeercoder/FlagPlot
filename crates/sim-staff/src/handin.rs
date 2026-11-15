@@ -162,6 +162,7 @@ impl Out {
             orders,
             commands: self.commands,
             no_orders: self.no_orders,
+            notices: Vec::new(),
         }
     }
 }

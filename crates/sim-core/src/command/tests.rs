@@ -1459,6 +1459,7 @@ fn decisions_for_the_day() -> StaffDecisions {
         ],
         commands: vec![staff_command(commit(1, None, &[5], 1, 3), "commit ship 5")],
         no_orders: vec![reason(1, "nothing to do for ship 6")],
+        notices: Vec::new(),
     }
 }
 
@@ -2019,6 +2020,7 @@ fn leak_test(other: Side, watcher: Side) {
         .map(|kind| staff_command(kind, "a command"))
         .collect(),
         no_orders: vec![reason(1, "no order for the idle ship")],
+        notices: Vec::new(),
     };
     let busy_staff = Fixed_(decisions);
     for day in 0..3 {
