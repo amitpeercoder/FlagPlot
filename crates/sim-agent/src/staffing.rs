@@ -383,15 +383,13 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
         .and_then(|p| p.projection)
         .as_ref()
         .map(projection_summary);
-    // Its place in the order the staff serves: ranked first, then by number.
+    // Its place in the order the staff serves: ranked first, then by number,
+    // the rank read up the tree (decision 0117, 7 and 11).
     let served = intent.in_force().then(|| {
         let mut order: Vec<&Intent> = state.intents_in_force().collect();
         order.sort_by_key(|i| {
-            (
-                i.limits.priority.is_none(),
-                i.limits.priority.unwrap_or(0),
-                i.id,
-            )
+            let rank = state.priority_read_up(i.id);
+            (rank.is_none(), rank.unwrap_or(0), i.id)
         });
         order
             .iter()

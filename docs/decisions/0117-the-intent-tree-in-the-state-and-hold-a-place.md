@@ -1,10 +1,10 @@
 # 0117: The intent tree in the command state, and the end "hold a place"
 
-Status: settled by the architect on Nov 15, 2026, inside decision 0116, which the designer agreed, and step 2 of the plan for stage 2 that he confirmed (decision 0113). It says how much of the tree step 2 builds, and writes the first end beside supply out with its doctrine and its hand calculation. Not built. It is built with decision 0115, in one step.
+Status: settled by the architect on Nov 15, 2026, inside decision 0116, which the designer agreed, and step 2 of the plan for stage 2 that he confirmed (decision 0113). It says how much of the tree step 2 builds, and writes the first end beside supply out with its doctrine and its hand calculation. Built on Nov 15, 2026, with decision 0115, in one step ("As built" below).
 
 Summary: What step 2 of stage 2 builds of the intent tree: an intent gains a parent, a maker and an addressee, the staff forms a sub-intent by a command of its own, limits are read up the tree and may only narrow, a reason names the chain above it; and the end "hold a place", under which the staff forms cover from the air
 
-Standing: Settled by the architect, Nov 15, 2026, inside decisions 0113 and 0116. Not built
+Standing: Settled by the architect, Nov 15, 2026, inside decisions 0113 and 0116. Built
 
 ## Why
 
@@ -66,3 +66,24 @@ Decision 0116 says what an intent is and that intents form a tree. It leaves to 
 ## The proof of the step
 
 As decision 0115 has it, with the Allied side of scenario 6 given one end, "hold Henderson Field", with no forces limit and both leaves, in place of a cover intent stated directly.
+
+## As built
+
+Built on Nov 15, 2026, with decision 0115. What follows is what was built and every place the build read the record more closely or differed from it.
+
+**State.** An intent has `parent`, `maker` (commander 1, staff 2) and `addressee` (the area 1, a base 2 with its number), hashed in that order after its kind; the kind "hold a place" is `IntentKind::Hold { base }`, code 3. Keep supplied is addressed to the area, hold and cover to their base, set by the kind (`IntentKind::addressee`); a commander's `set_intent` that changes a root's kind changes its addressee with it. A sub-intent's plan is its root's. The state version is 28, the rules label stays 12, the saved game version is 4, the doctrine version `supply-8`, the agent interface version 8. The invariants gain one: a sub-intent's parent exists, has a lower number and the same plan, a sub-intent is the staff's and a root the commander's, none is in force under a withdrawn parent, and the addressee is the kind's.
+
+**Commands and events.** `form_intent { parent, kind }` is the staff's, added at the end; it takes `next_intent_number` (one above the highest the side has used) and is recorded by its `CommandTaken` and a new event `IntentFormed` (intent, parent) caused by it. It is refused where the parent is not in force ("is not in force"), its plan is not released ("the plan is ..., which the command does not apply to"), or the kind cannot stand under the parent's (new refusal `CannotStandUnder`). The commander's `set_intent` and `withdraw_intent` on a staff-made intent are refused with a new refusal, `MadeByStaff`. Withdrawing an intent records an `IntentWithdrawn` (intent, parent) for each intent in force beneath it, depth first, each caused by the withdrawal's `CommandTaken`; the plan ends only when the intent withdrawn is a root. Both new events are the side's own, whole, and the enemy's not at all.
+
+**Limits up the tree** are `CommandState::forces_read_up`, `risk_read_up`, `priority_read_up` and `area_read_up`; the protected limit is not read up. A limit set on an intent with a parent must narrow, else the new refusal `WiderThanParent`: a forces limit names only ships in the parent's pool, task forces inside its limit, groups the parent may use and no source but the parent's (with no forces limit above, no ship, no force and no source); a risk no bolder than the parent's; and, reading decision 0116, 9, which says a child has part of its parent's area, an area inside the parent's. Priority and protected are not checked. A limit on a sub-intent amends its root's plan as any limit on an approved plan does.
+
+**Holding a place** (rule 13) runs after the leaves and before the cover doctrine, in `crates/sim-staff/src/air.rs`. Readings: the hold doctrine hands in its reason every morning (the cover that stands, or nothing to cover with), serving the hold intent with an empty chain; the test of what is at the base counts every group the hold may use there, held or not, which the cover doctrine then leaves out; "a cover intent for the same base" is any in force on the side, in any tree.
+
+**Reasons.** `Serves` gains `chain`, the intents above, nearest first, each with its number, maker and statement; the staff fills it from the command state as it stands after its own commands of the morning, so a sub-intent formed that morning is named. `why` prints it.
+
+**The measure** (rule 14) is `sim_agent::hold_measure`, shown in `command_state` and the command report. It reads the side's own events: a day is met when the side's events have the base's `BaseAtDayEnd` that day and its airfield's damage at that day's end (from `AirfieldDamaged` and `AirfieldMended`) is below the ground figures' level. One limit of that reading: the side sees a base's end-of-day record only while the base is its own, so a hold whose base has been lost shows none of its earlier days met.
+
+**What it was checked against.** Scenario 48 (`data/scenarios/48_hold_a_place.toml`, placeholder data) came out as the hand calculation has it in every number: the tree, the 17 orders by day (6, 1, 2, 1, 0, 0, 0, 0, 1, 3, 2, 1), each serving intent 2 and plan 1 with a chain of intent 1, the measure (12 days in force, 12 met, no raid), and every property. One reading of the calculation: "the reason of every morning without an order serves intent 2" is taken as the cover doctrine's reason; the hold doctrine's own daily reason serves intent 1 and is asserted apart. Stage 1 is unchanged: `sh scripts/compare-scenarios.sh --against origin/main` shows no scenario of stage 1 different with the hashes cut (the result is in the pull request).
+
+**Left as the record leaves it.** A commander may re-set a root that has sub-intents to another kind; intake does not check the sub-intents against it. `command_state` gives an intent's place in the order served by the rank read up the tree, as the doctrine serves it.
+
