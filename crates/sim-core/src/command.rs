@@ -136,11 +136,14 @@ pub struct ForcesLimit {
 }
 
 /// The limits of one intent as they stand. A limit not set is `None` (or the
-/// default): the staff may use nothing, go nowhere.
+/// default). With no forces limit the staff may use nothing. A limit the
+/// commander has not set does not bind: with no area limit the sea is open
+/// (the architect's ruling, Nov 15, 2026).
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct IntentLimits {
     pub forces: Option<ForcesLimit>,
-    /// The hexes the intent's forces may enter. `None`: no area set.
+    /// The hexes the intent's forces may enter. `None`: no area set, and the
+    /// intent's forces may go anywhere at sea.
     pub area: Option<BTreeSet<Hex>>,
     /// The intent's rank, 1 first. `None`: after every ranked intent, then
     /// by intent number.
