@@ -103,7 +103,7 @@ kind = "set_intent"
 intent = 1
 base = 2
 floor_days = 30
-interval_days = 15
+interval_days = 5
 
 [[command]]
 day = 1

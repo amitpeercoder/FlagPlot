@@ -1051,9 +1051,15 @@ fn idle_reason(
         binding.push(format!("displaced by {other}"));
     }
     // The next run: the first day from tomorrow on that a run ordered would
-    // be needed, from the projection.
+    // be needed, from the projection, and not before a ship of the pool is
+    // free where none is today.
     let units: Vec<Unit> = idle.units.clone();
-    let next = planner.next_needed(readings, today + 1, &units, idle.pending_t);
+    let from = if units.is_empty() {
+        planner.earliest_free().map_or(today + 1, |free| free.max(today + 1))
+    } else {
+        today + 1
+    };
+    let next = planner.next_needed(readings, from, &units, idle.pending_t);
     let mut builder = serving(params.intent, params.plan).evidence(
         format!(
             "{} holds {} and uses {} a day",

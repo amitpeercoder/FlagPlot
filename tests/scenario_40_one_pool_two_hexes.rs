@@ -191,48 +191,57 @@
 //! with cargo, lie in port at base 1 in no task force, full of fuel. The
 //! game is 5 days.
 //!
-//! Commands of day 1: intents 1 and 2 as in 40a, with priorities 1 and 2;
-//! the forces limit of each is ships 1 and 2 with base 1 as the source; a
-//! reserve at base 1 of 1000 t of supply; both leaves given.
+//! Commands of day 1: intents 1 and 2 as in 40a, with priorities 1 and 2,
+//! but intent 1's interval is 5 days; the forces limit of each is ships 1
+//! and 2 with base 1 as the source; a reserve at base 1 of 1000 t of
+//! supply; both leaves given.
+//!
+//! Corrected by the architect on Nov 15, 2026, after the build: the first
+//! draft gave intent 1 an interval of 15 days and a load of 36 t, and had
+//! it cut to ship 1's room. By decision 39 a run takes the free ships in
+//! number order until their room covers the load, so that run took both
+//! ships. Intent 1's interval is now 5 days, so that its load fits ship 1.
 //!
 //! ## Day by day
 //!
 //! - **Day 1.** Base 1 has 40 t above its reserve. Intent 1 is first: its
-//!   load is 36 t, cut to the room of ship 1, the first free ship: 30 t.
-//!   The staff forms a force of ship 1. Intent 2: ship 2 is free. Its load
-//!   is 36 t; the source has 40 t above its reserve, of which 30 t are
-//!   still to be taken by intent 1's run: 10 t. It forms a force of ship 2
-//!   and orders a load of 10 t. Its reason names the source as what cut the
-//!   load, with the three numbers: 1040 t of stock, the reserve of 1000 t,
-//!   and 30 t still to be taken by a run loading. The two forces take the
-//!   side's next two force numbers, ship 1's the lower.
-//! - In the night ship 1's force has the berth and loads 30 t in 0.6
-//!   hours; ship 2's force loads 10 t by lighter in half an hour. Base 1
+//!   load is 30 - 9 + 5 = 26 t, on ship 1, the first free ship, whose room
+//!   covers it. The staff forms a force of ship 1. Intent 2: ship 2 is
+//!   free. Its load is 30 - 9 + 15 = 36 t; the source has 40 t above its
+//!   reserve, of which 26 t are still to be taken by intent 1's run: 14 t.
+//!   It forms a force of ship 2 and orders a load of 14 t. Its reason names
+//!   the source as what cut the load, with the three numbers: 1040 t of
+//!   stock, the reserve of 1000 t, and 26 t still to be taken by run 1 of
+//!   intent 1's plan. The two forces take the side's next two force
+//!   numbers, ship 1's the lower.
+//! - In the night ship 1's force has the berth and loads 26 t in 0.52
+//!   hours; ship 2's force loads 14 t by lighter in 0.7 hours. Base 1
 //!   holds 1000 t, its reserve, and never less on any day.
 //! - **Day 2.** Both forces are routed, sail at hour 24 and arrive at hour
-//!   36.5. T has 30 t landed by hour 38 and U 10 t by hour 37. Both steam
-//!   for S at hour 42 and arrive at hour 54.5.
-//! - **Readings.** At T: 10, 9, 38, 37, 36 t on days 1 to 5. At U: 10, 9,
-//!   18, 17, 16 t.
-//! - **Days 3 and 4.** Intent 2 needs a run (the reading it checks, of day
-//!   5 and of day 6, is 16 t and 15 t) and has no ship free until day 5:
-//!   its own run holds ship 2 and intent 1's holds ship 1. Its reason
-//!   names both commitments.
-//! - **Day 5.** Both ships are free. Intent 1 needs no run. Intent 2 needs
-//!   one, the reading of day 7 being 14 t, a shortfall of 16 days; the
-//!   source has nothing above its reserve, and its reason says so: 1000 t
-//!   of stock, a reserve of 1000 t, nothing still to be taken. It gives no
-//!   order.
+//!   36.5. T has 26 t landed by hour 37.8 and U 14 t by hour 37.2. Both
+//!   steam for S at hour 42 and arrive at hour 54.5.
+//! - **Readings.** At T: 10, 9, 34, 33, 32 t on days 1 to 5. At U: 10, 9,
+//!   22, 21, 20 t.
+//! - **Days 3 and 4.** Intent 1 needs no run (the readings it checks are
+//!   32 t and 31 t). Intent 2 needs one (the reading it checks, of day 5
+//!   and of day 6, is 20 t and 19 t) and has no ship free until day 5: its
+//!   own run holds ship 2 and intent 1's holds ship 1. Its reason names
+//!   both commitments.
+//! - **Day 5.** Both ships are free. Intent 1 needs no run: the reading of
+//!   day 7 is 30 t, not below the floor. Intent 2 needs one, the reading of
+//!   day 7 being 18 t, a shortfall of 12 days; the source has nothing above
+//!   its reserve, and its reason says so: 1000 t of stock, a reserve of
+//!   1000 t, nothing still to be taken. It gives no order.
 //!
 //! At the end of day 5: base 1 holds 1000 t of supply and 900 t of fuel
-//! (each ship refuelled 50 t on day 4); base 2 holds 35 t and base 3 holds
-//! 15 t; both forces are stopped at base 1, empty.
+//! (each ship refuelled 50 t on day 4); base 2 holds 31 t and base 3 holds
+//! 19 t; both forces are stopped at base 1, empty.
 //!
 //! ## Property of 40b
 //!
-//! - With no reserve at base 1, intent 2's first load is 30 t, and with
-//!   the reserve at 1010 t it is 0: intent 2 gives no order on day 1 and
-//!   names the source.
+//! - With no reserve at base 1, intent 2's first load is 36 t cut to the
+//!   30 t of ship 2's room, and with the reserve at 1014 t it is 0: intent
+//!   2 gives no order on day 1 and names the source.
 
 // ------------------------------------------------------------------ The tests
 //
@@ -373,6 +382,8 @@ struct Commands {
     protected: Option<(u32, &'static str)>,
     /// Ranks given later, `(day, intent, rank)`.
     later_ranks: Vec<(u32, u32, u32)>,
+    /// Intent 1's interval in days (intent 2's is 15).
+    interval_1: u32,
 }
 
 impl Commands {
@@ -384,6 +395,7 @@ impl Commands {
             day_1_ranks: vec![(1, 1), (2, 2)],
             protected: None,
             later_ranks: vec![(3, 2, 1), (3, 1, 2)],
+            interval_1: 15,
         }
     }
 
@@ -395,16 +407,17 @@ impl Commands {
             day_1_ranks: vec![(1, 1), (2, 2)],
             protected: None,
             later_ranks: vec![],
+            interval_1: 5,
         }
     }
 
     fn render(&self) -> String {
         let mut out = String::new();
-        for (intent, base) in [(1, 2), (2, 3)] {
+        for (intent, base, interval) in [(1, 2, self.interval_1), (2, 3, 15)] {
             out += &command_table(
                 1,
                 &format!(
-                    "kind = \"set_intent\"\nintent = {intent}\nbase = {base}\nfloor_days = 30\ninterval_days = 15"
+                    "kind = \"set_intent\"\nintent = {intent}\nbase = {base}\nfloor_days = 30\ninterval_days = {interval}"
                 ),
             );
         }
@@ -1619,29 +1632,28 @@ port = 7
 // ------------------------------------------------------------------ 40b
 
 #[test]
-#[ignore = "40b, day 1: the comment cuts intent 1's 36 t to ship 1's room and leaves ship 2 to intent 2; decision 0107 item 39 (ships in number order until their room covers the load) gives intent 1 both ships and 36 t. Sent back to the architect with the figures the run gives"]
 fn on_day_1_two_plans_load_from_one_stock_and_do_not_count_a_ton_twice() {
     let played = play(Which::B, &text_b());
     played.nothing_refused();
     let d1 = played.decisions(1);
 
-    // Intent 1 forms ship 1 into the first force and loads 30 t.
+    // Intent 1 forms ship 1 into the first force and loads 26 t.
     let one: Vec<OrderKind> = played
         .orders_of(1, 1)
         .iter()
         .map(|o| o.kind.clone())
         .collect();
-    assert_eq!(one, vec![form(1), load_to(FORCE, 30)]);
-    // Intent 2 forms ship 2 into the second and loads 10 t.
+    assert_eq!(one, vec![form(1), load_to(FORCE, 26)]);
+    // Intent 2 forms ship 2 into the second and loads 14 t.
     let two: Vec<OrderKind> = played
         .orders_of(1, 2)
         .iter()
         .map(|o| o.kind.clone())
         .collect();
-    assert_eq!(two, vec![form(2), load_to(FORCE_2, 10)]);
+    assert_eq!(two, vec![form(2), load_to(FORCE_2, 14)]);
     assert!(d1.no_orders.is_empty());
 
-    // The runs: plan 1 loads 30 t in ship 1, plan 2 10 t in ship 2.
+    // The runs: plan 1 loads 26 t in ship 1, plan 2 14 t in ship 2.
     let adds = played.add_runs(1);
     assert_eq!(adds.len(), 2);
     assert_eq!(adds[0].0, plan(1));
@@ -1649,7 +1661,7 @@ fn on_day_1_two_plans_load_from_one_stock_and_do_not_count_a_ton_twice() {
         adds[0].1,
         &RunSpec {
             ships: ships(&[1]),
-            load_t: n(30),
+            load_t: n(26),
             days: run_days(1),
         }
     );
@@ -1658,7 +1670,7 @@ fn on_day_1_two_plans_load_from_one_stock_and_do_not_count_a_ton_twice() {
         adds[1].1,
         &RunSpec {
             ships: ships(&[2]),
-            load_t: n(10),
+            load_t: n(14),
             days: run_days(1),
         }
     );
@@ -1673,11 +1685,15 @@ fn on_day_1_two_plans_load_from_one_stock_and_do_not_count_a_ton_twice() {
     serves(adds[1].2, 2);
 
     // Intent 2's reason names the source with its three numbers: 1040 t of
-    // stock, a reserve of 1000 t, 30 t still to be taken by a run loading; and
-    // the run that is taking it.
+    // stock, a reserve of 1000 t, 26 t still to be taken by run 1 of intent
+    // 1's plan.
     let load = played.orders_of(1, 2)[1];
     for reason in [adds[1].2, &load.reason] {
-        mentions(reason, &["1040 t", "1000 t", "30 t"]);
+        mentions(
+            reason,
+            &["1040 t", "1000 t", "26 t still to be taken", "36"],
+        );
+        assert!(reason.binding.iter().any(|b| b == "displaced by plan:1"));
     }
     assert!(
         adds[1].2.worked.contains("run 1 of plan:1")
@@ -1686,19 +1702,21 @@ fn on_day_1_two_plans_load_from_one_stock_and_do_not_count_a_ton_twice() {
         adds[1].2.worked,
         load.reason.worked
     );
-    // Intent 1's load is cut by the room of its ship, 30 t.
-    mentions(adds[0].2, &["36", "30"]);
+    // Intent 1's load is 30 - 9 + 5 = 26 t, on ship 1, uncut.
+    mentions(adds[0].2, &["Load = max(0, 30 - 9) + 5", "= 26 t"]);
+    assert!(!adds[0].2.worked.contains("It is cut"));
 
-    // In the night: 30 t by the berth in 0.6 hours, 10 t by lighter in half an
-    // hour. Base 1 holds 1000 t, its reserve, and never less.
-    assert_eq!(played.loading_complete(1), vec![fx("0.5"), fx("0.6")]);
+    // In the night: 26 t by the berth in 0.52 hours, 14 t by lighter in 0.7
+    // hours. Base 1 holds 1000 t, its reserve, and never less.
+    let mut hours = played.loading_complete(1);
+    hours.sort();
+    assert_eq!(hours, vec![fx("0.52"), fx("0.7")]);
     for day in 1..=5 {
         assert_eq!(played.base_supply(day, 1), n(1000), "day {day}");
     }
 }
 
 #[test]
-#[ignore = "40b, day 1: the comment cuts intent 1's 36 t to ship 1's room and leaves ship 2 to intent 2; decision 0107 item 39 (ships in number order until their room covers the load) gives intent 1 both ships and 36 t. Sent back to the architect with the figures the run gives"]
 fn in_40b_the_forces_sail_land_and_come_home_at_the_hours_of_the_table() {
     let played = play(Which::B, &text_b());
     played.nothing_refused();
@@ -1729,12 +1747,15 @@ fn in_40b_the_forces_sail_land_and_come_home_at_the_hours_of_the_table() {
     );
     assert!(played.steamed_from(2, FORCE, S));
     assert!(played.steamed_from(2, FORCE_2, S));
-    // Sail at hour 24, arrive at hour 36.5; T has 30 t landed by hour 38 and
-    // U 10 t by hour 37; both steam for S at hour 42 and arrive at hour 54.5.
+    // Sail at hour 24, arrive at hour 36.5; T has 26 t landed by hour 37.8
+    // and U 14 t by hour 37.2; both steam for S at hour 42 and arrive at hour
+    // 54.5.
     assert_eq!(played.halted_at(2, FORCE, T), Some(fx("36.5")));
     assert_eq!(played.halted_at(2, FORCE_2, U), Some(fx("36.5")));
     assert_eq!(played.unloaded(2), n(40));
-    assert_eq!(played.unloading_complete(2), vec![n(37), n(38)]);
+    let mut landed = played.unloading_complete(2);
+    landed.sort();
+    assert_eq!(landed, vec![fx("37.2"), fx("37.8")]);
     assert_eq!(played.arrived_at(3, FORCE, S), Some(fx("54.5")));
     assert_eq!(played.arrived_at(3, FORCE_2, S), Some(fx("54.5")));
 
@@ -1742,9 +1763,9 @@ fn in_40b_the_forces_sail_land_and_come_home_at_the_hours_of_the_table() {
     for (day, t, u) in [
         (1u32, 10i64, 10i64),
         (2, 9, 9),
-        (3, 38, 18),
-        (4, 37, 17),
-        (5, 36, 16),
+        (3, 34, 22),
+        (4, 33, 21),
+        (5, 32, 20),
     ] {
         assert_eq!(played.at_t(day).stock_t, n(t), "T, day {day}");
         assert_eq!(played.at_t(day).days, Some(n(t)), "T, day {day}");
@@ -1771,13 +1792,16 @@ fn in_40b_the_forces_sail_land_and_come_home_at_the_hours_of_the_table() {
         assert_eq!(played.no_orders_of(day, 1).len(), 1, "day {day}");
     }
     // Day 5: both ships are free; intent 1 needs no run; intent 2 needs one,
-    // the reading of day 7 being 14 t, a shortfall of 16 days, and the source
+    // the reading of day 7 being 18 t, a shortfall of 12 days, and the source
     // has nothing above its reserve. It gives no order.
     assert_eq!(played.no_orders_of(5, 1).len(), 1);
     let reasons = played.no_orders_of(5, 2);
     assert_eq!(reasons.len(), 1);
     serves(reasons[0], 2);
-    mentions(reasons[0], &["Short 16 days", "day 7", "1000 t", "0 t"]);
+    mentions(
+        reasons[0],
+        &["Short 12 days", "day 7", "18 t", "1000 t", "0 t"],
+    );
     assert!(
         reasons[0]
             .binding
@@ -1792,8 +1816,8 @@ fn in_40b_the_forces_sail_land_and_come_home_at_the_hours_of_the_table() {
     assert_eq!(played.base_fuel(5, 1), n(900));
     assert_eq!(played.base_fuel(3, 1), n(1000));
     assert_eq!(played.base_fuel(4, 1), n(900));
-    assert_eq!(played.base_supply(5, 2), n(35));
-    assert_eq!(played.base_supply(5, 3), n(15));
+    assert_eq!(played.base_supply(5, 2), n(31));
+    assert_eq!(played.base_supply(5, 3), n(19));
     let end = played.at(5);
     for (raw, f) in [(1u32, FORCE), (2, FORCE_2)] {
         let one = &end.ships[&ship(raw)];
@@ -1811,10 +1835,9 @@ fn in_40b_the_forces_sail_land_and_come_home_at_the_hours_of_the_table() {
 }
 
 #[test]
-#[ignore = "40b, day 1: the comment cuts intent 1's 36 t to ship 1's room and leaves ship 2 to intent 2; decision 0107 item 39 (ships in number order until their room covers the load) gives intent 1 both ships and 36 t. Sent back to the architect with the figures the run gives"]
-fn with_no_reserve_intent_2s_first_load_is_30_t_and_with_a_reserve_of_1010_t_it_is_none() {
-    // No reserve: base 1 holds 1040 t, intent 1 takes 30 t and intent 2 has
-    // 1010 t left: its load is 36 t, cut to the room of ship 2, 30 t.
+fn with_no_reserve_intent_2s_first_load_is_30_t_and_with_a_reserve_of_1014_t_it_is_none() {
+    // No reserve: base 1 holds 1040 t, intent 1 takes 26 t and intent 2 has
+    // 1014 t left: its load is 36 t, cut to the room of ship 2, 30 t.
     let none = Commands {
         reserve: None,
         ..Commands::b()
@@ -1831,11 +1854,12 @@ fn with_no_reserve_intent_2s_first_load_is_30_t_and_with_a_reserve_of_1010_t_it_
     let adds = played.add_runs(1);
     assert_eq!(adds[1].0, plan(2));
     assert_eq!(adds[1].1.load_t, n(30));
-    assert_eq!(played.base_supply(1, 1), n(980));
+    mentions(adds[1].2, &["the ships' room is 30 t"]);
+    assert_eq!(played.base_supply(1, 1), n(984));
 
-    // A reserve of 1010 t: 30 t are above it, and intent 1 has them.
+    // A reserve of 1014 t: 26 t are above it, and intent 1 has them.
     let more = Commands {
-        reserve: Some(1010),
+        reserve: Some(1014),
         ..Commands::b()
     }
     .on(Which::B);
@@ -1846,7 +1870,7 @@ fn with_no_reserve_intent_2s_first_load_is_30_t_and_with_a_reserve_of_1010_t_it_
         .iter()
         .map(|o| o.kind.clone())
         .collect();
-    assert_eq!(one, vec![form(1), load_to(FORCE, 30)]);
+    assert_eq!(one, vec![form(1), load_to(FORCE, 26)]);
     assert!(played.orders_of(1, 2).is_empty());
     let adds = played.add_runs(1);
     assert_eq!(adds.len(), 1);
@@ -1854,60 +1878,8 @@ fn with_no_reserve_intent_2s_first_load_is_30_t_and_with_a_reserve_of_1010_t_it_
     let reasons = played.no_orders_of(1, 2);
     assert_eq!(reasons.len(), 1);
     serves(reasons[0], 2);
-    mentions(reasons[0], &["1040 t", "1010 t", "30 t"]);
-    assert_eq!(played.base_supply(1, 1), n(1010));
-}
-
-/// What 40b shows that does not rest on day 1's allotment, which is sent
-/// back to the architect (the tests above are ignored): no staff order or
-/// command is refused, and base 1 is never below its reserve of 1000 t.
-#[test]
-fn in_40b_base_1_is_never_below_its_reserve_and_nothing_is_refused() {
-    let played = play(Which::B, &text_b());
-    played.nothing_refused();
-    for day in 0..=5 {
-        assert!(played.base_supply(day, 1) >= n(1000), "day {day}");
-    }
-}
-
-/// Not the architect's table: a variation of 40b written by the team lead
-/// to show ruling 12 while 40b's day 1 is with the architect. With intent
-/// 1's interval at 5 days its load is 30 - 9 + 5 = 26 t, which ship 1's room
-/// covers, so ship 2 is free for intent 2. The source has 40 t above its
-/// reserve, of which this morning's run of intent 1 has 26 t still to take:
-/// intent 2 loads 14 t, and its reason names those 26 t of run 1 of plan:1.
-/// Base 1 ends the night at its reserve.
-#[test]
-fn two_plans_on_one_morning_do_not_count_a_ton_twice() {
-    let text = Commands::b()
-        .on(Which::B)
-        .replacen("interval_days = 15", "interval_days = 5", 1);
-    let played = play(Which::B, &text);
-    played.nothing_refused();
-    let runs = played.add_runs(1);
-    assert_eq!(runs.len(), 2);
-    assert_eq!(
-        (runs[0].0, runs[0].1.ships.clone(), runs[0].1.load_t),
-        (plan(1), ships(&[1]), n(26))
-    );
-    assert_eq!(
-        (runs[1].0, runs[1].1.ships.clone(), runs[1].1.load_t),
-        (plan(2), ships(&[2]), n(14))
-    );
-    mentions(
-        runs[1].2,
-        &[
-            "1040 t",
-            "1000 t",
-            "26 t still to be taken",
-            "run 1 of plan:1",
-        ],
-    );
-    assert!(runs[1].2.binding.iter().any(|b| b == "displaced by plan:1"));
-    let orders = &played.decisions(1).orders;
-    assert!(orders.iter().any(|o| o.kind == load_to(1_000_001, 26)));
-    assert!(orders.iter().any(|o| o.kind == load_to(1_000_002, 14)));
-    assert_eq!(played.base_supply(1, 1), n(1000));
+    mentions(reasons[0], &["1040 t", "1014 t", "26 t"]);
+    assert_eq!(played.base_supply(1, 1), n(1014));
 }
 
 // --------------------------------------------------- A save in the middle
