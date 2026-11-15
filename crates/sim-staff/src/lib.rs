@@ -19,6 +19,18 @@
 
 #![deny(clippy::float_arithmetic)]
 
+mod doctrine;
+mod fleet;
+mod handin;
+mod planner;
+mod projection;
+mod proposal;
+mod reasons;
+mod route;
+mod units;
+
+pub use projection::project;
+
 use std::collections::BTreeMap;
 
 use sim_core::command::{Proposal, Staff, StaffDecisions, Staffs};
@@ -37,12 +49,12 @@ pub const DOCTRINE_VERSION: &str = "supply-1";
 pub struct SupplyStaff;
 
 impl Staff for SupplyStaff {
-    fn decide(&self, _view: SideView<'_>) -> StaffDecisions {
-        StaffDecisions::default()
+    fn decide(&self, view: SideView<'_>) -> StaffDecisions {
+        doctrine::decide(view)
     }
 
-    fn propose(&self, _view: SideView<'_>, _intent: IntentId) -> Option<Proposal> {
-        None
+    fn propose(&self, view: SideView<'_>, intent: IntentId) -> Option<Proposal> {
+        proposal::propose(view, intent)
     }
 }
 

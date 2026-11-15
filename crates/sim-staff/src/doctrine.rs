@@ -1,0 +1,1107 @@
+//! The doctrine: keep a base supplied (decision 0107, 37 to 45, and "As
+//! built (step 1, the staff)"). Each day, for each supply intent in force,
+//! in priority order:
+//!
+//! 1. No forces limit, a source or destination not the side's, a plan
+//!    ended: no order, a reason. A plan whose pool has no ship afloat is
+//!    marked failed.
+//! 2. A draft with leave to prepare is approved; a plan preparing with
+//!    leave to launch is released, the same day. Without the leave, a
+//!    no-order reason says what waits.
+//! 3. Each run not finished is carried on: on the first day its load is
+//!    complete, and the plan is released, a route to the destination and
+//!    back, acting at the destination, and an unload order.
+//! 4. If no run of the plan is loading, a run is needed when, without a new
+//!    one, the figure of the day after it would arrive is below the floor.
+//!    Its ships, its load and its days are the planner's.
+//! 5. When it cannot, it says which binds, the shortfall and the day the
+//!    source runs dry.
+//! 6. A day it gives an intent no order has one reason.
+//! 7. An ended plan's ships committed from today on are freed.
+
+use sim_core::command::{
+    CommandKind, Intent, IntentKind, Plan, PlanOutcome, PlanState, Reason, RunSpec, Shortfall,
+    StaffDecisions,
+};
+use sim_core::fixed::Fixed;
+use sim_core::hex::Hex;
+use sim_core::ids::{BaseId, ShipId};
+use sim_core::view::SideView;
+use std::collections::BTreeSet;
+
+use crate::fleet::{pool_ships, run_state, Fleet, RunState, RunStatus};
+use crate::handin::{Out, Step, Who};
+use crate::planner::DEFAULT_INTERVAL_DAYS;
+use crate::planner::{Blocker, Evaluation, Params, Planner, RunPlan, Timing, Unit};
+use crate::projection::Readings;
+use crate::reasons::{serving, ReasonBuilder};
+use crate::units::{days_word, over, tons, whole};
+
+/// The days the staff looks ahead, to size a run and to say when the next
+/// is expected.
+pub(crate) const LOOK_AHEAD_DAYS: u32 = 120;
+
+/// Whether the plan is taken as it stands or as if it were released (what a
+/// proposal shows).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) enum Mode {
+    Live,
+    AsReleased,
+}
+
+/// What `serve` found, for a proposal to build on.
+#[derive(Default)]
+pub(crate) struct Served {
+    pub(crate) shortfall: Option<Shortfall>,
+    pub(crate) ordered: bool,
+}
+
+/// The staff's decisions for the day, from the view alone.
+pub(crate) fn decide(view: SideView<'_>) -> StaffDecisions {
+    let state = view.command_state();
+    let fleet = Fleet::of(&view);
+    let mut out = Out::default();
+    let mut intents: Vec<&Intent> = state.intents_in_force().collect();
+    intents.sort_by_key(|intent| {
+        (
+            intent.limits.priority.is_none(),
+            intent.limits.priority.unwrap_or(0),
+            intent.id,
+        )
+    });
+    for intent in intents {
+        serve(&view, &fleet, intent, Mode::Live, &mut out);
+    }
+    free_ended(&view, &mut out);
+    out.finish(view.next_task_force_id())
+}
+
+/// The parameters of a supply intent: its base and limits, or why it has
+/// none (as a reason's first words).
+pub(crate) enum Setup<'a> {
+    Ready(Params<'a>),
+    NoForces,
+    BaseNotYours(&'static str),
+}
+
+pub(crate) fn setup<'a>(view: &SideView<'_>, intent: &'a Intent, plan: &'a Plan) -> Setup<'a> {
+    let IntentKind::KeepSupplied {
+        base,
+        floor_days,
+        interval_days,
+    } = intent.kind;
+    let Some(forces) = intent.limits.forces.as_ref() else {
+        return Setup::NoForces;
+    };
+    let Some(destination) = view.bases().find(|b| b.id == base) else {
+        return Setup::BaseNotYours("the destination");
+    };
+    let Some(source) = view.bases().find(|b| b.id == forces.source) else {
+        return Setup::BaseNotYours("the source");
+    };
+    Setup::Ready(Params {
+        intent,
+        plan,
+        forces,
+        destination: base,
+        destination_hex: destination.hex,
+        source: forces.source,
+        source_hex: source.hex,
+        floor_days,
+        interval_days: interval_days.unwrap_or(DEFAULT_INTERVAL_DAYS),
+        interval_set: interval_days.is_some(),
+        area: intent.limits.area.as_ref(),
+    })
+}
+
+/// The tons the runs of every plan still loading at `source` have yet to
+/// take.
+pub(crate) fn pending_loads(
+    view: &SideView<'_>,
+    fleet: &Fleet<'_>,
+    source: BaseId,
+    source_hex: Hex,
+) -> Fixed {
+    let today = view.day() + 1;
+    let mut pending = Fixed::ZERO;
+    for plan in view.command_state().plans.values() {
+        for run in plan.runs.values().filter(|run| run.source == source) {
+            let found = run_state(fleet, view.command_state(), plan.id, run, source_hex, today);
+            if found.status == RunStatus::Loading {
+                pending += (run.load_t - found.aboard_t).max(Fixed::ZERO);
+            }
+        }
+    }
+    pending
+}
+
+/// Serves one intent for the day.
+pub(crate) fn serve(
+    view: &SideView<'_>,
+    fleet: &Fleet<'_>,
+    intent: &Intent,
+    mode: Mode,
+    out: &mut Out,
+) -> Served {
+    let state = view.command_state();
+    let today = view.day() + 1;
+    let Some(plan) = state.plans.get(&intent.plan) else {
+        return Served::default();
+    };
+    let params = match setup(view, intent, plan) {
+        Setup::Ready(params) => params,
+        Setup::NoForces => {
+            out.no_order(
+                serving(intent, plan)
+                    .evidence("the intent has no forces limit", today)
+                    .binding("no forces limit: the staff may use no ship")
+                    .worked(format!(
+                        "{} has no forces limit, so the staff has no ship to send and gives no order.",
+                        intent.id
+                    ))
+                    .would_change("a forces limit naming ships and a source base")
+                    .done(),
+            );
+            return Served::default();
+        }
+        Setup::BaseNotYours(which) => {
+            if plan.state.approved() && mode == Mode::Live {
+                out.command(
+                    CommandKind::MarkPlan {
+                        plan: plan.id,
+                        outcome: PlanOutcome::Failed,
+                    },
+                    serving(intent, plan)
+                        .evidence(format!("{which} base is not one of the side's"), today)
+                        .binding(format!("{which} base is not the side's"))
+                        .worked(format!(
+                            "{} cannot be carried out: {which} base is not one of the side's bases, so {} is marked failed.",
+                            intent.id, plan.id
+                        ))
+                        .would_change("a new intent with a base of the side")
+                        .done(),
+                );
+            }
+            out.no_order(
+                serving(intent, plan)
+                    .evidence(format!("{which} base is not one of the side's"), today)
+                    .binding(format!("{which} base is not the side's"))
+                    .worked(format!(
+                        "{which} base of {} is not one of the side's bases, so there is nothing to send.",
+                        intent.id
+                    ))
+                    .would_change("a base of the side")
+                    .done(),
+            );
+            return Served::default();
+        }
+    };
+    if plan.state.ended() {
+        out.no_order(
+            serving(intent, plan)
+                .evidence(format!("{} is {}", plan.id, plan.state.name()), today)
+                .binding(format!("{} is {}", plan.id, plan.state.name()))
+                .worked(format!(
+                    "{} is {}, so the staff gives no order for {}.",
+                    plan.id,
+                    plan.state.name(),
+                    intent.id
+                ))
+                .would_change("a new plan for the intent")
+                .done(),
+        );
+        return Served::default();
+    }
+    let pool = pool_ships(fleet, params.forces);
+    if pool.is_empty() {
+        let reason = |text: String| {
+            serving(intent, plan)
+                .evidence("no ship of the pool is afloat", today)
+                .binding("the pool has no ship afloat")
+                .worked(text)
+                .would_change("a ship afloat in the forces limit")
+                .done()
+        };
+        if plan.state.approved() && mode == Mode::Live {
+            out.command(
+                CommandKind::MarkPlan {
+                    plan: plan.id,
+                    outcome: PlanOutcome::Failed,
+                },
+                reason(format!(
+                    "No ship of the pool of {} is afloat: {} cannot be carried out and is marked failed.",
+                    intent.id, plan.id
+                )),
+            );
+        }
+        out.no_order(reason(format!(
+            "No ship of the pool of {} is afloat, so there is nothing to send.",
+            intent.id
+        )));
+        return Served::default();
+    }
+
+    // 2. The leaves.
+    let leaves = state.leaves;
+    let mut eff = if mode == Mode::AsReleased {
+        PlanState::Released
+    } else {
+        plan.state
+    };
+    if eff == PlanState::Draft {
+        if !leaves.prepare {
+            out.no_order(
+                serving(intent, plan)
+                    .evidence(format!("{} is a draft", plan.id), today)
+                    .binding("leave to prepare is withheld")
+                    .worked(format!(
+                        "{} is a draft and the commander has not given leave to prepare, so it waits for him.",
+                        plan.id
+                    ))
+                    .would_change("leave to prepare given, or the commander approving the plan")
+                    .done(),
+            );
+            return Served::default();
+        }
+        out.command(
+            CommandKind::Approve { plan: plan.id },
+            serving(intent, plan)
+                .evidence(format!("{} is a draft", plan.id), today)
+                .evidence("leave to prepare is given", today)
+                .worked(format!(
+                    "{} is a draft inside the limits of {} and leave to prepare is given: the staff makes it ready (preparing).",
+                    plan.id, intent.id
+                ))
+                .would_change("leave to prepare withheld")
+                .done(),
+        );
+        eff = PlanState::Preparing;
+    }
+    if eff == PlanState::Preparing && leaves.launch && mode == Mode::Live {
+        out.command(
+            CommandKind::Approve { plan: plan.id },
+            serving(intent, plan)
+                .evidence(format!("{} is preparing", plan.id), today)
+                .evidence("leave to launch is given", today)
+                .worked(format!(
+                    "{} is ready and leave to launch is given: the staff releases it.",
+                    plan.id
+                ))
+                .would_change("leave to launch withheld")
+                .done(),
+        );
+        eff = PlanState::Released;
+    }
+
+    let planner = Planner::new(view, fleet, params);
+    let params = &planner.params;
+    let Some(readings) = Readings::build(view, fleet, params.destination_hex, LOOK_AHEAD_DAYS)
+    else {
+        return Served::default();
+    };
+    let pending_t = pending_loads(view, fleet, params.source, params.source_hex);
+    let mut served = Served::default();
+    let mut loading = false;
+    let mut waiting_for_launch = false;
+    let mut cannot_sail: Option<String> = None;
+    let mut underway: Vec<String> = Vec::new();
+
+    // 3. Each run not finished is carried on.
+    for run in plan.runs.values() {
+        let found = run_state(fleet, state, plan.id, run, params.source_hex, today);
+        match found.status {
+            RunStatus::Finished => {}
+            RunStatus::Underway => underway.push(format!(
+                "Run {} is under way with {} aboard, due at {} on day {}.",
+                run.number,
+                tons(found.aboard_t),
+                params.destination,
+                run.days.arrive
+            )),
+            RunStatus::Loading => {
+                let ready = today > run.days.load && load_complete(&planner, run.load_t, &found);
+                if !ready {
+                    loading = true;
+                    underway.push(format!(
+                        "Run {} is loading at {}: {} of {} aboard.",
+                        run.number,
+                        params.source,
+                        tons(found.aboard_t),
+                        tons(run.load_t)
+                    ));
+                } else if eff != PlanState::Released {
+                    loading = true;
+                    waiting_for_launch = true;
+                    underway.push(format!(
+                        "Run {} is loaded ({} aboard) and waits for leave to launch.",
+                        run.number,
+                        tons(found.aboard_t)
+                    ));
+                } else {
+                    match dispatch(&planner, out, run.number, &found, today) {
+                        Ok(()) => served.ordered = true,
+                        Err(why) => {
+                            loading = true;
+                            cannot_sail = Some(why);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 4. A new run, if none is loading and one is needed.
+    let units = planner.free_units();
+    let mut evaluation: Option<Evaluation> = None;
+    if !loading {
+        evaluation = planner.evaluate(&readings, today, &units, pending_t);
+        if let Some(ev) = &evaluation {
+            if ev.needed {
+                match (&ev.run, &ev.blocker) {
+                    (Some(run), _) => {
+                        new_run(&planner, out, &readings, ev, run, today);
+                        served.ordered = true;
+                        if !run.cuts.is_empty() {
+                            served.shortfall =
+                                Some(shortfall(&planner, &readings, ev, run.load_t, pending_t));
+                        }
+                    }
+                    (None, Some(_)) => {
+                        served.shortfall =
+                            Some(shortfall(&planner, &readings, ev, Fixed::ZERO, pending_t));
+                    }
+                    (None, None) => {}
+                }
+            }
+        }
+    }
+
+    // 6. No order: one reason.
+    if !served.ordered {
+        let idle = IdleFacts {
+            eff,
+            underway,
+            loading,
+            waiting_for_launch,
+            cannot_sail,
+            evaluation,
+            pending_t,
+            units,
+        };
+        out.no_order(idle_reason(&planner, &readings, &idle, today));
+    }
+    served
+}
+
+/// Whether a run's load is complete: the supply aboard is its load, or the
+/// load cannot grow (the source has nothing above its reserve, or the ships
+/// are full), and something is aboard.
+fn load_complete(planner: &Planner<'_, '_>, load_t: Fixed, found: &RunState) -> bool {
+    if found.aboard_t.is_zero() {
+        return false;
+    }
+    if found.aboard_t >= load_t {
+        return true;
+    }
+    let (available, _, _) = planner.source_available(Fixed::ZERO);
+    let room = found
+        .afloat
+        .iter()
+        .filter_map(|id| planner.fleet.ships.get(id))
+        .fold(Fixed::ZERO, |sum, ship| {
+            let capacity = planner
+                .view
+                .ship_class(ship.class)
+                .map_or(Fixed::ZERO, |class| class.cargo_capacity_t);
+            sum + (capacity - ship.supply_t - ship.cargo_fuel_t).max(Fixed::ZERO)
+        });
+    available.is_zero() || room.is_zero()
+}
+
+/// The orders that send a loaded run: time it again if its sail day is not
+/// today (renewing its commitment), then the route out and back acting at
+/// the destination, and the unload order.
+fn dispatch(
+    planner: &Planner<'_, '_>,
+    out: &mut Out,
+    number: u32,
+    found: &RunState,
+    today: u32,
+) -> Result<(), String> {
+    let params = &planner.params;
+    let intent = params.intent;
+    let plan = params.plan;
+    let run = plan
+        .runs
+        .get(&number)
+        .ok_or_else(|| "the run is not in the plan".to_string())?;
+    let mut forces = BTreeSet::new();
+    for ship in &found.afloat {
+        match planner.fleet.force_of(*ship) {
+            Some(force) => {
+                forces.insert(force.id);
+            }
+            None => return Err(format!("{ship} lies in no force")),
+        }
+    }
+    let [force] = forces.iter().copied().collect::<Vec<_>>()[..] else {
+        return Err("the run's ships lie in more than one force".to_string());
+    };
+    let route = match &planner.route {
+        Some(route) if route.in_area => route,
+        _ => return Err("no route in the area".to_string()),
+    };
+    let timing = planner
+        .timing_loaded(&found.afloat, route)
+        .ok_or_else(|| "no time can be worked for the passage".to_string())?;
+    let mut new_days = run.days;
+    new_days.sail = today;
+    new_days.arrive = today + timing.out_days - 1;
+    new_days.free = today + timing.out_days + timing.unload.days + timing.back_days;
+    new_days.load = run.days.load.min(today);
+    if new_days != run.days {
+        out.command(
+            CommandKind::TimeRun {
+                plan: plan.id,
+                run: number,
+                days: new_days,
+            },
+            serving(intent, plan)
+                .evidence(
+                    format!("run {number} is loaded and ready on day {today}"),
+                    today,
+                )
+                .worked(format!(
+                    "Run {number} was timed to sail on day {}; it is ready on day {today}, so it sails today, is due at {} on day {} and its ships are free on day {}.",
+                    run.days.sail, params.destination, new_days.arrive, new_days.free
+                ))
+                .would_change("a load that was not yet complete")
+                .done(),
+        );
+        if new_days.free != run.days.free {
+            let ships: BTreeSet<ShipId> = found.afloat.iter().copied().collect();
+            out.command(
+                CommandKind::FreeShips {
+                    plan: plan.id,
+                    ships: ships.clone(),
+                },
+                serving(intent, plan)
+                    .worked(format!(
+                        "The commitment of run {number}'s ships is made again for the new timing."
+                    ))
+                    .done(),
+            );
+            out.command(
+                CommandKind::CommitShips {
+                    plan: plan.id,
+                    run: Some(number),
+                    ships,
+                    from_day: today,
+                    to_day: new_days.free - 1,
+                },
+                serving(intent, plan)
+                    .worked(format!(
+                        "Run {number}'s ships are committed from day {today} to day {}, the day before they are free.",
+                        new_days.free - 1
+                    ))
+                    .done(),
+            );
+        }
+    }
+    let mut waypoints = route.out.clone();
+    waypoints.extend(route.back.iter().copied());
+    let act_at: BTreeSet<Hex> = BTreeSet::from([params.destination_hex]);
+    let hour_of_sail = Fixed::from_int(24) * whole(today - 1);
+    let arrival_hour = hour_of_sail + timing.out_hours;
+    let worked = format!(
+        "Run {number} of {}: the {} aboard are its load of {}; the load is complete, so it sails today (day {today}, hour {hour_of_sail}). \
+         {} nm out at {} kn = {} hours, so it arrives at {} at hour {arrival_hour} (day {}); {} nm back = {} hours. \
+         It acts at {}: {} landed in the {} hours of day {} left, at {}; unloading takes {} hours, {} {}.",
+        plan.id,
+        tons(found.aboard_t),
+        tons(run.load_t),
+        route.out_nm,
+        timing.speed_kn,
+        timing.out_hours,
+        params.destination,
+        new_days.arrive,
+        route.back_nm,
+        timing.back_hours,
+        params.destination,
+        tons(timing.landed_on_arrival_t),
+        timing.hours_left_on_arrival,
+        new_days.arrive,
+        rates(&timing.unload.lines),
+        timing.unload.hours,
+        timing.unload.days,
+        days_word(timing.unload.days),
+    );
+    let reason = |extra: &str| -> Reason {
+        serving(intent, plan)
+            .evidence(
+                format!(
+                    "{} aboard run {number}'s ships, its load",
+                    tons(found.aboard_t)
+                ),
+                today,
+            )
+            .evidence(format!("{} is released", plan.id), today)
+            .binding(format!("area: {}", area_text(params.area)))
+            .worked(format!("{worked} {extra}"))
+            .would_change("a load not complete, or a plan not released")
+            .done()
+    };
+    out.task(
+        intent.id,
+        Who::Existing(force),
+        Step::Route { waypoints, act_at },
+        reason(
+            "This is the route order: out to the destination and back, acting at the destination.",
+        ),
+    );
+    out.task(
+        intent.id,
+        Who::Existing(force),
+        Step::Unload,
+        reason("This is the unload order the route acts on."),
+    );
+    Ok(())
+}
+
+fn area_text(area: Option<&BTreeSet<Hex>>) -> String {
+    match area {
+        None => "none set, the sea is open".to_string(),
+        Some(area) => format!("{} hexes", area.len()),
+    }
+}
+
+fn rates(lines: &[(ShipId, Fixed, Fixed)]) -> String {
+    let mut text = String::new();
+    for (i, (ship, _, rate)) in lines.iter().enumerate() {
+        if i > 0 {
+            text.push_str(", ");
+        }
+        text.push_str(&format!("{rate} t an hour for {ship}"));
+    }
+    text
+}
+
+/// The slowest ship's load line, for the words: "ship:1 360 t at 50 t an
+/// hour = 7.2 hours".
+fn slowest_line(work: &crate::planner::Work) -> String {
+    let mut best: Option<(ShipId, Fixed, Fixed, Fixed)> = None;
+    for (ship, tons, rate) in &work.lines {
+        if *tons <= Fixed::ZERO || *rate <= Fixed::ZERO {
+            continue;
+        }
+        let hours = *tons / *rate;
+        if best.is_none_or(|(_, _, _, h)| hours > h) {
+            best = Some((*ship, *tons, *rate, hours));
+        }
+    }
+    match best {
+        Some((ship, tons, rate, hours)) => {
+            format!("{ship} {tons} t at {rate} t an hour = {hours} hours")
+        }
+        None => "nothing to move".to_string(),
+    }
+}
+
+/// The commands and orders of a new run: the plan's next run, its ships
+/// committed, the force formed or joined, and the load.
+fn new_run(
+    planner: &Planner<'_, '_>,
+    out: &mut Out,
+    readings: &Readings,
+    ev: &Evaluation,
+    run: &RunPlan,
+    today: u32,
+) {
+    let params = &planner.params;
+    let intent = params.intent;
+    let plan = params.plan;
+    let number = plan.runs.keys().next_back().map_or(1, |last| last + 1);
+    let days = run.days;
+    let stock_today = readings.stock(today).unwrap_or(Fixed::ZERO);
+    let use_today = readings.use_on(today).unwrap_or(Fixed::ZERO);
+    let figure = match readings.days(today) {
+        Some(days) => format!(" = {days} days"),
+        None => " (no figure)".to_string(),
+    };
+    let mut worked = format!(
+        "Reading today at {}: {} over {} a day{figure}, against a floor of {} days. \
+         A run ordered on day {today} loads on day {today} ({}), sails on day {}, and is due at {} on day {}. \
+         Without it the reading of day {} is {} against {} days x {} = {}: below the floor, so a run is needed. \
+         The stock projected for the reading of day {} is {}. \
+         Load = max(0, {} - {}) + {} ({} days of use) = {} t.",
+        params.destination,
+        tons(stock_today),
+        tons(use_today),
+        params.floor_days,
+        loading_words(&run.timing),
+        days.sail,
+        params.destination,
+        days.arrive,
+        ev.check_day,
+        tons(ev.check_stock_t),
+        params.floor_days,
+        tons(ev.check_use_t),
+        tons(whole(params.floor_days) * ev.check_use_t),
+        ev.arrive,
+        tons(ev.stock_at_arrival_t),
+        ev.floor_t,
+        ev.stock_at_arrival_t,
+        ev.interval_use_t,
+        params.interval_days,
+        ev.uncapped_t,
+    );
+    if !run.cuts.is_empty() {
+        worked.push_str(&format!(
+            " It is cut to {}: {}.",
+            tons(run.load_t),
+            run.cuts.join("; ")
+        ));
+    }
+    worked.push_str(&format!(
+        " Ships {}: {} x {} = a room that covers the load.",
+        ships_text(&run.ships),
+        run.ships.len(),
+        "the pool's free ships in number order"
+    ));
+    worked.push_str(&format!(
+        " Passage {} nm out at {} kn = {} hours, {} {}; {} nm back = {} hours, {} {}; unloading {} at {} = {} hours, {} {}. \
+         Its ships are free on day {} ({} + {} + {} + {}).",
+        planner.route.as_ref().map_or(0, |r| r.out_nm),
+        run.timing.speed_kn,
+        run.timing.out_hours,
+        run.timing.out_days,
+        days_word(run.timing.out_days),
+        planner.route.as_ref().map_or(0, |r| r.back_nm),
+        run.timing.back_hours,
+        run.timing.back_days,
+        days_word(run.timing.back_days),
+        tons(run.weight_t),
+        params.destination,
+        run.timing.unload.hours,
+        run.timing.unload.days,
+        days_word(run.timing.unload.days),
+        days.free,
+        days.sail,
+        run.timing.out_days,
+        run.timing.unload.days,
+        run.timing.back_days,
+    ));
+    let base_reason = |extra: &str| -> ReasonBuilder {
+        let mut b = serving(intent, plan)
+            .evidence(
+                format!(
+                    "{} holds {} and uses {} a day",
+                    params.destination,
+                    tons(stock_today),
+                    tons(use_today)
+                ),
+                today,
+            )
+            .evidence(
+                format!(
+                    "the reading of day {} is projected at {}",
+                    ev.check_day,
+                    tons(ev.check_stock_t)
+                ),
+                today,
+            )
+            .binding(format!(
+                "floor of {} days at {}",
+                params.floor_days, params.destination
+            ))
+            .binding(format!(
+                "interval of {} days{}",
+                params.interval_days,
+                if params.interval_set {
+                    ""
+                } else {
+                    " (the staff's, none set)"
+                }
+            ))
+            .binding(format!("area: {}", area_text(params.area)))
+            .worked(format!("{worked} {extra}"))
+            .would_change(format!(
+                "a reading of day {} at or above {} would call no run",
+                ev.check_day,
+                tons(whole(params.floor_days) * ev.check_use_t)
+            ))
+            .would_change("a free ship of the pool earlier in number order would carry it instead");
+        for cut in &run.cuts {
+            b = b.binding(cut.clone());
+        }
+        b
+    };
+    out.command(
+        CommandKind::AddRun {
+            plan: plan.id,
+            run: RunSpec {
+                ships: run.ships.iter().copied().collect(),
+                load_t: run.load_t,
+                days,
+            },
+        },
+        base_reason("The staff adds this run to the plan.").done(),
+    );
+    out.command(
+        CommandKind::CommitShips {
+            plan: plan.id,
+            run: Some(number),
+            ships: run.ships.iter().copied().collect(),
+            from_day: today,
+            to_day: days.free - 1,
+        },
+        base_reason(&format!(
+            "The ships are committed from day {today} to day {}, the day before they are free.",
+            days.free - 1
+        ))
+        .done(),
+    );
+
+    // The orders: form or join, then the load.
+    let target = form_or_join(planner, out, run, &base_reason);
+    out.task(
+        intent.id,
+        target,
+        Step::LoadTo {
+            weight_t: run.weight_t,
+        },
+        base_reason(&format!(
+            "Load order: until {} is aboard ({} aboard now + the load of {}); {}.",
+            tons(run.weight_t),
+            tons(run.aboard_before_t),
+            tons(run.load_t),
+            slowest_line(&run.timing.load)
+        ))
+        .done(),
+    );
+}
+
+fn loading_words(timing: &Timing) -> String {
+    format!(
+        "{} hours at the source = {} {}",
+        timing.load.hours,
+        timing.load.days,
+        days_word(timing.load.days)
+    )
+}
+
+fn ships_text(ships: &[ShipId]) -> String {
+    ships
+        .iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Forms the run's ships lying loose into a force, and joins forces that lie
+/// apart; returns the force that will load.
+fn form_or_join(
+    planner: &Planner<'_, '_>,
+    out: &mut Out,
+    run: &RunPlan,
+    base_reason: &dyn Fn(&str) -> ReasonBuilder,
+) -> Who {
+    let params = &planner.params;
+    let forces: Vec<&Unit> = run.units.iter().filter(|u| u.force.is_some()).collect();
+    let loose: Vec<ShipId> = run
+        .units
+        .iter()
+        .filter(|u| u.force.is_none())
+        .flat_map(|u| u.ships.iter().copied())
+        .collect();
+    let intent = params.intent.id;
+    let home = forces.first().and_then(|u| u.force);
+    match (home, loose.is_empty()) {
+        (None, _) => out.form(
+            intent,
+            params.source,
+            loose.clone(),
+            base_reason(&format!(
+                "Form {} lying in port at {} in no force into a force.",
+                ships_text(&loose),
+                params.source
+            ))
+            .done(),
+        ),
+        (Some(home), loose_empty) => {
+            if !loose_empty {
+                let formed = out.form(
+                    intent,
+                    params.source,
+                    loose.clone(),
+                    base_reason(&format!(
+                        "Form {} lying in port at {} in no force into a force, to join it to the force that loads.",
+                        ships_text(&loose),
+                        params.source
+                    ))
+                    .done(),
+                );
+                out.task(
+                    intent,
+                    formed,
+                    Step::Join {
+                        into: Who::Existing(home),
+                    },
+                    base_reason("Join the new force to the force that loads.").done(),
+                );
+            }
+            for unit in forces.iter().skip(1) {
+                if let Some(other) = unit.force {
+                    out.task(
+                        intent,
+                        Who::Existing(other),
+                        Step::Join {
+                            into: Who::Existing(home),
+                        },
+                        base_reason("Join this force to the force that loads, so the run's ships are one force.")
+                            .done(),
+                    );
+                }
+            }
+            Who::Existing(home)
+        }
+    }
+}
+
+/// What the staff found on a day it gave an intent no order.
+struct IdleFacts {
+    eff: PlanState,
+    underway: Vec<String>,
+    loading: bool,
+    waiting_for_launch: bool,
+    cannot_sail: Option<String>,
+    evaluation: Option<Evaluation>,
+    pending_t: Fixed,
+    units: Vec<Unit>,
+}
+
+/// The one reason of a day with no order: what the runs are doing, and the
+/// reading the next run waits for with the day it is expected to be ordered.
+fn idle_reason(
+    planner: &Planner<'_, '_>,
+    readings: &Readings,
+    idle: &IdleFacts,
+    today: u32,
+) -> Reason {
+    let params = &planner.params;
+    let stock = readings.stock(today).unwrap_or(Fixed::ZERO);
+    let used = readings.use_on(today).unwrap_or(Fixed::ZERO);
+    let figure = match readings.days(today) {
+        Some(days) => format!(" = {days} days"),
+        None => " (no figure)".to_string(),
+    };
+    let mut worked = format!(
+        "Reading today at {}: {} over {} a day{figure}, against a floor of {} days ({}).",
+        params.destination,
+        tons(stock),
+        tons(used),
+        params.floor_days,
+        tons(whole(params.floor_days) * used)
+    );
+    for line in &idle.underway {
+        worked.push(' ');
+        worked.push_str(line);
+    }
+    if let Some(why) = &idle.cannot_sail {
+        worked.push_str(&format!(" The loaded run cannot sail: {why}."));
+    }
+    if idle.loading {
+        worked.push_str(" One run loads at a time, so no new run is considered.");
+    } else if let Some(ev) = &idle.evaluation {
+        let floor_check = whole(params.floor_days) * ev.check_use_t;
+        worked.push_str(&format!(
+            " A run ordered today would be due on day {}; the reading of day {} is projected at {} against {} days x {} = {}: {}.",
+            ev.arrive,
+            ev.check_day,
+            tons(ev.check_stock_t),
+            params.floor_days,
+            tons(ev.check_use_t),
+            tons(floor_check),
+            if ev.needed { "below the floor" } else { "not below the floor, so no run is needed" }
+        ));
+        if let Some(blocker) = &ev.blocker {
+            let detail = blocker.detail();
+            worked.push_str(&format!(
+                " It cannot be met: {}{}.",
+                blocker.binds(),
+                if detail.is_empty() {
+                    String::new()
+                } else {
+                    format!(" ({detail})")
+                }
+            ));
+        }
+    }
+    let mut binding = vec![
+        format!(
+            "floor of {} days at {}",
+            params.floor_days, params.destination
+        ),
+        format!(
+            "interval of {} days{}",
+            params.interval_days,
+            if params.interval_set {
+                ""
+            } else {
+                " (the staff's, none set)"
+            }
+        ),
+    ];
+    if let Some(ev) = &idle.evaluation {
+        if let Some(blocker) = &ev.blocker {
+            binding.push(blocker.binds());
+            if matches!(blocker, Blocker::NoRoute) {
+                binding.push("no route in the area".to_string());
+            }
+        }
+    }
+    // The next run: the first day from tomorrow on that a run ordered would
+    // be needed, from the projection.
+    let units: Vec<Unit> = idle.units.clone();
+    let next = planner.next_needed(readings, today + 1, &units, idle.pending_t);
+    let mut builder = serving(params.intent, params.plan).evidence(
+        format!(
+            "{} holds {} and uses {} a day",
+            params.destination,
+            tons(stock),
+            tons(used)
+        ),
+        today,
+    );
+    match &next {
+        Some(next) => {
+            worked.push_str(&format!(
+                " The next run waits for the reading of day {} to fall below {} days ({}); it is expected to be ordered on day {}, due on day {}.",
+                next.check_day,
+                params.floor_days,
+                tons(whole(params.floor_days) * next.check_use_t),
+                next.order_day,
+                next.arrive
+            ));
+            builder = builder.would_change(format!(
+                "a reading of day {} below {} would call a run on day {}",
+                next.check_day,
+                tons(whole(params.floor_days) * next.check_use_t),
+                next.order_day
+            ));
+        }
+        None => {
+            worked.push_str(&format!(
+                " No run is expected within {LOOK_AHEAD_DAYS} days of the projection."
+            ));
+        }
+    }
+    if idle.waiting_for_launch || idle.eff == PlanState::Preparing {
+        builder = builder
+            .binding("leave to launch is withheld")
+            .would_change("leave to launch given");
+    }
+    for line in binding {
+        builder = builder.binding(line);
+    }
+    builder =
+        builder.would_change("a larger use at the destination would bring the next run forward");
+    builder.worked(worked).done()
+}
+
+/// The shortfall of a run that cannot be met in full: what binds, the days
+/// short on the day the run would arrive and the day the source falls to its
+/// reserve at the present rate.
+pub(crate) fn shortfall(
+    planner: &Planner<'_, '_>,
+    readings: &Readings,
+    ev: &Evaluation,
+    sent_t: Fixed,
+    pending_t: Fixed,
+) -> Shortfall {
+    let params = &planner.params;
+    let binds = match &ev.blocker {
+        Some(blocker) => blocker.binds(),
+        None => match &ev.run {
+            Some(run) if run.cuts.iter().any(|c| c.starts_with("the source")) => {
+                if planner
+                    .view
+                    .bases()
+                    .find(|b| b.id == params.source)
+                    .is_some_and(|b| b.reserve_of(sim_core::orders::Cargo::Supply) > Fixed::ZERO)
+                {
+                    "the source's stock above its reserve".to_string()
+                } else {
+                    "the source's stock".to_string()
+                }
+            }
+            Some(_) => "the hex uses more than the pool can carry".to_string(),
+            None => "the intent cannot be met".to_string(),
+        },
+    };
+    let use_a = ev.use_at_arrival_t;
+    let have_days = over(ev.stock_at_arrival_t + sent_t, use_a);
+    let shortfall_days = (whole(params.floor_days) - have_days).max(Fixed::ZERO);
+    let own_use = if params.source_hex == params.destination_hex {
+        Fixed::ZERO
+    } else {
+        planner
+            .view
+            .days_of_supply(params.source_hex)
+            .map_or(Fixed::ZERO, |figure| figure.planned_use.total_t())
+    };
+    let rate = readings.use_on(readings.today).unwrap_or(Fixed::ZERO) + own_use;
+    let (available, _, _) = planner.source_available(pending_t);
+    let source_dry_day =
+        (!rate.is_zero()).then(|| readings.today + crate::units::floor_whole(available / rate));
+    Shortfall {
+        binds,
+        shortfall_days,
+        source_dry_day,
+    }
+}
+
+/// Step 7: the ships of a plan that has ended, committed from today on, are
+/// freed.
+fn free_ended(view: &SideView<'_>, out: &mut Out) {
+    let state = view.command_state();
+    let today = view.day() + 1;
+    for plan in state.plans.values().filter(|plan| plan.state.ended()) {
+        let ships: BTreeSet<ShipId> = state
+            .commitments
+            .iter()
+            .filter(|(_, list)| list.iter().any(|c| c.plan == plan.id && c.to_day >= today))
+            .map(|(ship, _)| *ship)
+            .collect();
+        if ships.is_empty() {
+            continue;
+        }
+        let reason = Reason {
+            serves: sim_core::command::Serves {
+                intent: Some(plan.intent),
+                plan: Some(plan.id),
+                amendment: plan.amendments.last().map(|a| a.number),
+            },
+            evidence: vec![sim_core::command::Evidence {
+                what: format!("{} is {}", plan.id, plan.state.name()),
+                day: today,
+            }],
+            binding: vec![format!("{} is {}", plan.id, plan.state.name())],
+            worked: format!(
+                "{} is {} and {} of its ships are committed from today on: the staff frees them ({}).",
+                plan.id,
+                plan.state.name(),
+                ships.len(),
+                ships.iter().map(|s| s.to_string()).collect::<Vec<_>>().join(", ")
+            ),
+            would_change: vec!["a plan that was not ended".to_string()],
+        };
+        out.command(
+            CommandKind::FreeShips {
+                plan: plan.id,
+                ships,
+            },
+            reason,
+        );
+    }
+}

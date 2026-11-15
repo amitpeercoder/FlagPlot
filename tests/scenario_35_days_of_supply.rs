@@ -429,6 +429,49 @@ fn at_c_a_regiment_at_sea_counts_from_the_day_it_is_due() {
 }
 
 #[test]
+fn the_staffs_projection_at_c_worked_on_day_1_first_falls_below_the_floor_on_day_3() {
+    // The force's route is ordered on day 1, so the view at the staff's own
+    // moment of day 1 does not yet see it. "Worked on day 1" is the view
+    // after the day's orders are taken in: the start of the night pulse. The
+    // projection counts the regiment from the day it is due, day 3, as the
+    // table above does: 295 t on day 2 over 5 t is 59 days; on day 3 the
+    // stock is 290 t over 5 + 22.5 t, below the floor of 30 days.
+    let mut scenario = scenario_a(&text("35a_days_of_supply.toml"));
+    let mut projection = None;
+    scenario
+        .next_day_watched(Staffs::none(), &mut |world, moment| {
+            if moment
+                == (Moment::PulseBegins {
+                    day: 1,
+                    pulse: sim_core::time::Pulse::Night,
+                })
+            {
+                projection = sim_staff::project(&world.side_view(Side::Allied), C, 30, 6);
+            }
+        })
+        .expect("day 1 resolves");
+    let projection = projection.expect("the side holds a base at C");
+    assert_eq!(projection.hex, C);
+    assert_eq!(projection.floor_days, 30);
+    assert_eq!(projection.readings.len(), 7);
+    let first = &projection.readings[0];
+    assert_eq!(
+        (first.day, first.stock_t, first.days),
+        (1, n(300), Some(n(60)))
+    );
+    let second = &projection.readings[1];
+    assert_eq!(
+        (second.day, second.stock_t, second.days),
+        (2, n(295), Some(n(59)))
+    );
+    let third = &projection.readings[2];
+    assert_eq!(third.day, 3);
+    assert_eq!(third.stock_t, n(290));
+    assert!(third.days.expect("a figure") < n(30));
+    assert_eq!(projection.first_day_below, Some(3));
+}
+
+#[test]
 fn the_men_due_by_day_lists_a_force_on_its_way_with_its_due_day_and_agrees_with_the_men_due() {
     let mut scenario = scenario_a(&text("35a_days_of_supply.toml"));
     let script = scenario.scripted_orders().clone();

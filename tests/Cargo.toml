@@ -284,3 +284,7 @@ path = "choices_asked_and_run.rs"
 [[test]]
 name = "scenario_35_days_of_supply"
 path = "scenario_35_days_of_supply.rs"
+
+[[test]]
+name = "scenario_36_one_convoy"
+path = "scenario_36_one_convoy.rs"
