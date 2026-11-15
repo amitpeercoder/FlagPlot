@@ -52,13 +52,17 @@ jobs:
         if: steps.changes.outputs.needed == 'true'
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
+      # Tests run in the `checked` profile (Cargo.toml): optimized, with
+      # debug assertions and overflow checks on. Unoptimized, running the
+      # tests was 15 of a check's 17 minutes. The two steps after it use the
+      # same profile so that the command-line program is built once.
       - name: Test
         if: steps.changes.outputs.needed == 'true'
-        run: cargo test --workspace --locked
+        run: cargo test --workspace --locked --profile checked
 
       - name: Run scenario 1 from the command line
         if: steps.changes.outputs.needed == 'true'
-        run: cargo run --locked -p sim-cli -- run data/scenarios/01_transit.toml --events
+        run: cargo run --locked --profile checked -p sim-cli -- run data/scenarios/01_transit.toml --events
 
       # The export carries the state at each step (replay version 4); the
       # viewer's own rebuild from the events, in JavaScript, is what it
@@ -69,6 +73,6 @@ jobs:
         run: |
           mkdir -p viewer/replays
           for scenario in data/scenarios/*.toml; do
-            cargo run --locked -p sim-cli -- export "$scenario" --out "viewer/replays/$(basename "$scenario" .toml).json"
+            cargo run --locked --profile checked -p sim-cli -- export "$scenario" --out "viewer/replays/$(basename "$scenario" .toml).json"
           done
           node viewer/check.js viewer/replays/*.json

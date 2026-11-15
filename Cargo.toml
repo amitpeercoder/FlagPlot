@@ -41,3 +41,11 @@ overflow-checks = true
 
 [profile.bench]
 overflow-checks = true
+
+# The profile the checks run tests in: optimized, as release is, with debug
+# assertions and overflow checks on. The simulation is several times slower
+# unoptimized, and running the tests was most of a check run.
+[profile.checked]
+inherits = "release"
+debug-assertions = true
+overflow-checks = true
