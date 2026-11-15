@@ -64,6 +64,11 @@ impl Out {
         self.commands.push(StaffCommand { kind, reason });
     }
 
+    /// The forming orders drafted so far.
+    pub(crate) fn formed(&self) -> usize {
+        self.formed
+    }
+
     pub(crate) fn no_order(&mut self, reason: Reason) {
         self.no_orders.push(reason);
     }

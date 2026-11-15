@@ -46,6 +46,15 @@ pub(crate) fn tons(value: Fixed) -> String {
 }
 
 /// "day" or "days".
+/// "day" for exactly one, else "days", for a quantity of days in `Fixed`.
+pub(crate) fn days_word_of(n: Fixed) -> &'static str {
+    if n == Fixed::from_int(1) {
+        "day"
+    } else {
+        "days"
+    }
+}
+
 pub(crate) fn days_word(n: u32) -> &'static str {
     if n == 1 {
         "day"

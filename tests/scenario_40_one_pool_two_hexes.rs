@@ -233,3 +233,1756 @@
 //! - With no reserve at base 1, intent 2's first load is 30 t, and with
 //!   the reserve at 1010 t it is 0: intent 2 gives no order on day 1 and
 //!   names the source.
+
+// ------------------------------------------------------------------ The tests
+//
+// As in scenario 36 the staff is asked as the engine asks it: each day
+// through `next_day_watched(as_staffs(..))`, at the step after the
+// commander's commands and the morning's refuelling. A watcher reads the
+// figures at T and U at that moment (`Moment::Orders`), asks the staff twice
+// on the same view, and asks for the proposal of each intent. What the staff
+// handed in each day is read from `staff_handed_in`.
+
+mod common;
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
+use std::process::Command;
+
+use sim_core::choices::Moment;
+use sim_core::command::{
+    CommandKind, Committed, Displacement, PlanId, PlanState, Proposal, Reason, RunDays, RunSpec,
+    StaffDecisions, StaffOrder,
+};
+use sim_core::events::{Event, EventKind};
+use sim_core::fixed::Fixed;
+use sim_core::hex::Hex;
+use sim_core::ids::{BaseId, IntentId, ShipId, TaskForceId};
+use sim_core::orders::{BaseOrder, Cargo, OrderKind, TaskForceOrder};
+use sim_core::state::{ShipLocation, Side, TaskForceStatus, TruthState};
+use sim_core::{DaysOfSupply, Staff};
+use sim_data::Scenario;
+use sim_staff::{as_staffs, staffs, SupplyStaff};
+
+const S: Hex = Hex::new(0, 0);
+const T: Hex = Hex::new(5, 0);
+const U: Hex = Hex::new(0, 5);
+
+/// The numbers the engine gives the forces formed on day 1: the first and
+/// second of the Allied made series (decision 0086).
+const FORCE: u32 = 1_000_001;
+const FORCE_2: u32 = 1_000_002;
+
+const COMMANDS_MARKER: &str = "# The Allied commander's commands";
+
+const MAP: &str = "map/placeholder_one_pool_two_hexes.toml";
+
+/// Which of the two scenario files.
+#[derive(Clone, Copy)]
+enum Which {
+    A,
+    B,
+}
+
+fn path(which: Which) -> PathBuf {
+    let name = match which {
+        Which::A => "scenarios/40a_one_pool_two_hexes.toml",
+        Which::B => "scenarios/40b_one_stock_two_plans.toml",
+    };
+    common::data_dir().join(name)
+}
+
+fn text(which: Which) -> String {
+    std::fs::read_to_string(path(which)).expect("the scenario file reads")
+}
+
+fn text_a() -> String {
+    text(Which::A)
+}
+
+fn text_b() -> String {
+    text(Which::B)
+}
+
+fn n(whole: i64) -> Fixed {
+    Fixed::from_int(whole)
+}
+
+fn fx(text: &str) -> Fixed {
+    text.parse().expect("a decimal")
+}
+
+fn ship(raw: u32) -> ShipId {
+    ShipId::new(raw)
+}
+
+fn base(raw: u32) -> BaseId {
+    BaseId::new(raw)
+}
+
+fn force(raw: u32) -> TaskForceId {
+    TaskForceId::new(raw)
+}
+
+fn intent(raw: u32) -> IntentId {
+    IntentId::new(raw)
+}
+
+fn plan(raw: u32) -> PlanId {
+    PlanId::new(raw)
+}
+
+fn ships(raw: &[u32]) -> BTreeSet<ShipId> {
+    raw.iter().map(|r| ship(*r)).collect()
+}
+
+/// The scenario's text before the commands.
+fn head(which: Which) -> String {
+    let text = text(which);
+    assert_eq!(text.matches(COMMANDS_MARKER).count(), 1);
+    text.split(COMMANDS_MARKER)
+        .next()
+        .expect("a head")
+        .to_string()
+}
+
+/// Text with one change, asserting that the original appears exactly once.
+fn changed(text: &str, original: &str, replacement: &str) -> String {
+    common::replace_once(text, original, replacement)
+}
+
+fn days(text: &str, from: u32, count: u32) -> String {
+    changed(text, &format!("days = {from}"), &format!("days = {count}"))
+}
+
+/// A command table as the scenario states it.
+fn command_table(day: u32, body: &str) -> String {
+    format!("\n[[command]]\nday = {day}\nside = \"allied\"\n{body}\n")
+}
+
+/// The Allied commander's commands, as the scenario files state them, with
+/// the changes the tests make.
+struct Commands {
+    /// The ships of both forces limits, as TOML.
+    ships: &'static str,
+    /// A reserve at base 1, in tons of supply.
+    reserve: Option<i64>,
+    /// The ranks given on day 1, `(intent, rank)`.
+    day_1_ranks: Vec<(u32, u32)>,
+    /// A protected limit given on day 1, `(intent, ships as TOML)`.
+    protected: Option<(u32, &'static str)>,
+    /// Ranks given later, `(day, intent, rank)`.
+    later_ranks: Vec<(u32, u32, u32)>,
+}
+
+impl Commands {
+    /// The commands of scenario 40a as the file has them.
+    fn a() -> Commands {
+        Commands {
+            ships: "[1]",
+            reserve: None,
+            day_1_ranks: vec![(1, 1), (2, 2)],
+            protected: None,
+            later_ranks: vec![(3, 2, 1), (3, 1, 2)],
+        }
+    }
+
+    /// The commands of scenario 40b as the file has them.
+    fn b() -> Commands {
+        Commands {
+            ships: "[1, 2]",
+            reserve: Some(1000),
+            day_1_ranks: vec![(1, 1), (2, 2)],
+            protected: None,
+            later_ranks: vec![],
+        }
+    }
+
+    fn render(&self) -> String {
+        let mut out = String::new();
+        for (intent, base) in [(1, 2), (2, 3)] {
+            out += &command_table(
+                1,
+                &format!(
+                    "kind = \"set_intent\"\nintent = {intent}\nbase = {base}\nfloor_days = 30\ninterval_days = 15"
+                ),
+            );
+        }
+        for intent in [1, 2] {
+            out += &command_table(
+                1,
+                &format!(
+                    "kind = \"set_limit\"\nlimit = \"forces\"\nintent = {intent}\nships = {}\ntask_forces = []\nsource = 1",
+                    self.ships
+                ),
+            );
+        }
+        for (intent, rank) in &self.day_1_ranks {
+            out += &command_table(
+                1,
+                &format!(
+                    "kind = \"set_limit\"\nlimit = \"priority\"\nintent = {intent}\nrank = {rank}"
+                ),
+            );
+        }
+        if let Some((intent, held)) = self.protected {
+            out += &command_table(
+                1,
+                &format!(
+                    "kind = \"set_limit\"\nlimit = \"protected\"\nintent = {intent}\nships = {held}"
+                ),
+            );
+        }
+        if let Some(supply) = self.reserve {
+            out += &command_table(
+                1,
+                &format!(
+                    "kind = \"set_limit\"\nlimit = \"reserve\"\nbase = 1\nsupply_t = {supply}\nfuel_t = 0"
+                ),
+            );
+        }
+        out += &command_table(1, "kind = \"set_leave\"\nleave = \"prepare\"\ngiven = true");
+        out += &command_table(1, "kind = \"set_leave\"\nleave = \"launch\"\ngiven = true");
+        for (day, intent, rank) in &self.later_ranks {
+            out += &command_table(
+                *day,
+                &format!(
+                    "kind = \"set_limit\"\nlimit = \"priority\"\nintent = {intent}\nrank = {rank}"
+                ),
+            );
+        }
+        out
+    }
+
+    /// The scenario's head with these commands.
+    fn on(&self, which: Which) -> String {
+        format!(
+            "{}{COMMANDS_MARKER}, in force from day 1.\n{}",
+            head(which),
+            self.render()
+        )
+    }
+}
+
+/// What the staff handed in each day, the figures it was asked on, the
+/// truth at the end of each day, the log and the hash of each day.
+struct Played {
+    scenario: Scenario,
+    /// The figures at T and at U at the staff's moment of each day.
+    readings: BTreeMap<u32, (Option<DaysOfSupply>, Option<DaysOfSupply>)>,
+    /// The proposal for each intent at the staff's moment of each day, by day
+    /// and intent number.
+    proposals: BTreeMap<(u32, u32), Option<Proposal>>,
+    handed: BTreeMap<u32, StaffDecisions>,
+    /// Whether asking the staff twice on the view gave one answer, and the
+    /// answer handed in was that answer, and a proposal asked twice gave one.
+    asked_twice_alike: bool,
+    truth: Vec<TruthState>,
+    hashes: Vec<u64>,
+    events: Vec<Event>,
+}
+
+fn play(which: Which, text: &str) -> Played {
+    play_scenario(common::from_text(text, &path(which)).expect("the scenario loads"))
+}
+
+fn play_scenario(mut scenario: Scenario) -> Played {
+    let held = staffs();
+    let mut readings = BTreeMap::new();
+    let mut proposals = BTreeMap::new();
+    let mut handed = BTreeMap::new();
+    let mut truth = vec![scenario.world.umpire().clone()];
+    let mut hashes = Vec::new();
+    let mut asked_twice_alike = true;
+    loop {
+        let mut asked: Option<StaffDecisions> = None;
+        let mut reading = None;
+        let mut proposed: Vec<(u32, Option<Proposal>)> = Vec::new();
+        let mut again = true;
+        let day = scenario.world.day() + 1;
+        let summary = scenario
+            .next_day_watched(as_staffs(&held), &mut |world, moment| {
+                if moment == (Moment::Orders { day }) {
+                    let view = world.side_view(Side::Allied);
+                    reading = Some((view.days_of_supply(T), view.days_of_supply(U)));
+                    let first = SupplyStaff.decide(view);
+                    again = first == SupplyStaff.decide(view);
+                    asked = Some(first);
+                    for raw in [1, 2] {
+                        let proposal = SupplyStaff.propose(view, intent(raw));
+                        again &= proposal == SupplyStaff.propose(view, intent(raw));
+                        proposed.push((raw, proposal));
+                    }
+                }
+            })
+            .expect("a day resolves");
+        let Some(summary) = summary else { break };
+        asked_twice_alike &= again;
+        readings.insert(day, reading.expect("the staff's moment came"));
+        for (raw, proposal) in proposed {
+            proposals.insert((day, raw), proposal);
+        }
+        let given = scenario
+            .world
+            .staff_handed_in()
+            .get(&Side::Allied)
+            .cloned()
+            .unwrap_or_default();
+        asked_twice_alike &= asked.as_ref() == Some(&given);
+        handed.insert(day, given);
+        truth.push(scenario.world.umpire().clone());
+        hashes.push(summary.state_hash);
+    }
+    Played {
+        events: scenario.world.events().iter().cloned().collect(),
+        scenario,
+        readings,
+        proposals,
+        handed,
+        asked_twice_alike,
+        truth,
+        hashes,
+    }
+}
+
+impl Played {
+    fn at(&self, day: u32) -> &TruthState {
+        &self.truth[day as usize]
+    }
+
+    fn base_supply(&self, day: u32, raw: u32) -> Fixed {
+        self.at(day).bases[&base(raw)].supply_t
+    }
+
+    fn base_fuel(&self, day: u32, raw: u32) -> Fixed {
+        self.at(day).bases[&base(raw)].fuel_t
+    }
+
+    fn on_day(&self, day: u32, pick: impl Fn(&EventKind) -> bool) -> Vec<&Event> {
+        self.events
+            .iter()
+            .filter(|e| e.day == day && pick(&e.kind))
+            .collect()
+    }
+
+    fn all(&self, pick: impl Fn(&EventKind) -> bool) -> Vec<&Event> {
+        self.events.iter().filter(|e| pick(&e.kind)).collect()
+    }
+
+    fn decisions(&self, day: u32) -> &StaffDecisions {
+        &self.handed[&day]
+    }
+
+    /// The figure at T at the staff's moment.
+    fn at_t(&self, day: u32) -> DaysOfSupply {
+        self.readings[&day].0.expect("a figure at T")
+    }
+
+    /// The figure at U at the staff's moment.
+    fn at_u(&self, day: u32) -> DaysOfSupply {
+        self.readings[&day].1.expect("a figure at U")
+    }
+
+    /// The tons unloaded on `day`.
+    fn unloaded(&self, day: u32) -> Fixed {
+        self.on_day(day, |k| matches!(k, EventKind::CargoUnloaded { .. }))
+            .iter()
+            .map(|e| match &e.kind {
+                EventKind::CargoUnloaded { unloaded_t, .. } => *unloaded_t,
+                _ => Fixed::ZERO,
+            })
+            .fold(Fixed::ZERO, |sum, t| sum + t)
+    }
+
+    fn arrived_at(&self, day: u32, raw: u32, hex: Hex) -> Option<Fixed> {
+        self.on_day(day, |k| {
+            matches!(k, EventKind::TaskForceArrived { task_force, hex: h, .. }
+                if *task_force == force(raw) && *h == hex)
+        })
+        .first()
+        .and_then(|e| match &e.kind {
+            EventKind::TaskForceArrived { elapsed_hours, .. } => Some(*elapsed_hours),
+            _ => None,
+        })
+    }
+
+    fn halted_at(&self, day: u32, raw: u32, hex: Hex) -> Option<Fixed> {
+        self.on_day(day, |k| {
+            matches!(k, EventKind::TaskForceHalted { task_force, hex: h, .. }
+                if *task_force == force(raw) && *h == hex)
+        })
+        .first()
+        .and_then(|e| match &e.kind {
+            EventKind::TaskForceHalted { elapsed_hours, .. } => Some(*elapsed_hours),
+            _ => None,
+        })
+    }
+
+    /// Whether force `raw` steamed from `from` on `day` (it sails then).
+    fn steamed_from(&self, day: u32, raw: u32, from: Hex) -> bool {
+        !self
+            .on_day(day, |k| {
+                matches!(k, EventKind::TaskForceSteamed { task_force, from: f, .. }
+                    if *task_force == force(raw) && *f == from)
+            })
+            .is_empty()
+    }
+
+    fn loading_complete(&self, day: u32) -> Vec<Fixed> {
+        let mut found: Vec<Fixed> = self
+            .on_day(day, |k| matches!(k, EventKind::LoadingComplete { .. }))
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::LoadingComplete { elapsed_hours, .. } => Some(*elapsed_hours),
+                _ => None,
+            })
+            .collect();
+        found.sort();
+        found
+    }
+
+    fn unloading_complete(&self, day: u32) -> Vec<Fixed> {
+        let mut found: Vec<Fixed> = self
+            .on_day(day, |k| matches!(k, EventKind::UnloadingComplete { .. }))
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::UnloadingComplete { elapsed_hours, .. } => Some(*elapsed_hours),
+                _ => None,
+            })
+            .collect();
+        found.sort();
+        found
+    }
+
+    /// The `(fed, unfed)` of each `MenFed` event of the Allied side at `hex`
+    /// on `day`.
+    fn fed_at(&self, day: u32, hex: Hex) -> Vec<(u32, u32)> {
+        self.on_day(
+            day,
+            |k| matches!(k, EventKind::MenFed { side: Side::Allied, hex: h, .. } if *h == hex),
+        )
+        .iter()
+        .map(|e| match &e.kind {
+            EventKind::MenFed { fed, unfed, .. } => (*fed, *unfed),
+            _ => (0, 0),
+        })
+        .collect()
+    }
+
+    /// Every staff order of the game, by day.
+    fn orders(&self) -> Vec<(u32, &StaffOrder)> {
+        self.handed
+            .iter()
+            .flat_map(|(day, d)| d.orders.iter().map(move |o| (*day, o)))
+            .collect()
+    }
+
+    /// The staff orders of one intent on one day.
+    fn orders_of(&self, day: u32, raw: u32) -> Vec<&StaffOrder> {
+        self.decisions(day)
+            .orders
+            .iter()
+            .filter(|o| o.intent == intent(raw))
+            .collect()
+    }
+
+    /// The no-order reasons of one intent on one day.
+    fn no_orders_of(&self, day: u32, raw: u32) -> Vec<&Reason> {
+        self.decisions(day)
+            .no_orders
+            .iter()
+            .filter(|r| r.serves.intent == Some(intent(raw)))
+            .collect()
+    }
+
+    /// The runs added on one day, with the plan they are added to and the
+    /// reason.
+    fn add_runs(&self, day: u32) -> Vec<(PlanId, &RunSpec, &Reason)> {
+        self.decisions(day)
+            .commands
+            .iter()
+            .filter_map(|c| match &c.kind {
+                CommandKind::AddRun { plan, run } => Some((*plan, run, &c.reason)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// The ships committed on one day: plan, run, ships, from, to.
+    fn commits(&self, day: u32) -> Vec<Committal> {
+        self.decisions(day)
+            .commands
+            .iter()
+            .filter_map(|c| match &c.kind {
+                CommandKind::CommitShips {
+                    plan,
+                    run,
+                    ships,
+                    from_day,
+                    to_day,
+                } => Some((*plan, *run, ships.clone(), *from_day, *to_day)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// No staff order was refused and no staff command was refused.
+    fn nothing_refused(&self) {
+        let refused: Vec<&Event> = self.all(|k| {
+            matches!(
+                k,
+                EventKind::OrderRejected { .. } | EventKind::CommandRefused { .. }
+            )
+        });
+        assert!(refused.is_empty(), "something was refused: {refused:?}");
+    }
+}
+
+fn route_to(waypoints: &[Hex], act_at: &[Hex]) -> TaskForceOrder {
+    TaskForceOrder::SetRoute {
+        waypoints: waypoints.to_vec(),
+        act_at: act_at.iter().copied().collect(),
+    }
+}
+
+fn to_force(raw: u32, order: TaskForceOrder) -> OrderKind {
+    OrderKind::TaskForce {
+        target: force(raw),
+        order,
+    }
+}
+
+fn load_to(raw: u32, weight: i64) -> OrderKind {
+    to_force(
+        raw,
+        TaskForceOrder::LoadTo {
+            cargo: Cargo::Supply,
+            weight_t: n(weight),
+        },
+    )
+}
+
+fn form(raw_ship: u32) -> OrderKind {
+    OrderKind::Base {
+        target: base(1),
+        order: BaseOrder::FormTaskForce {
+            ships: vec![ship(raw_ship)],
+        },
+    }
+}
+
+/// The four days of a run ordered on `day`: it loads that day, sails and
+/// arrives the next, and its ship is free on the fourth day after.
+fn run_days(day: u32) -> RunDays {
+    RunDays {
+        load: day,
+        sail: day + 1,
+        arrive: day + 1,
+        free: day + 4,
+    }
+}
+
+fn mentions(reason: &Reason, words: &[&str]) {
+    for word in words {
+        assert!(
+            reason.worked.contains(word),
+            "the reason's worked part has no \"{word}\": {}",
+            reason.worked
+        );
+    }
+}
+
+/// A reason serves intent `raw` and its plan, the plan of the same number.
+fn serves(reason: &Reason, raw: u32) {
+    assert_eq!(reason.serves.intent, Some(intent(raw)));
+    assert_eq!(reason.serves.plan, Some(plan(raw)), "{}", reason.worked);
+    // Not asserted: the amendment. Giving a rank after the plan is approved
+    // is an amendment, so a reason of day 3 on serves amendment 1.
+    assert!(!reason.worked.is_empty());
+    assert!(!reason.evidence.is_empty() || !reason.binding.is_empty());
+}
+
+/// A commitment of ships: plan, run, ships, from day, to day.
+type Committal = (PlanId, Option<u32>, BTreeSet<ShipId>, u32, u32);
+
+/// One run of 40a the staff is expected to order.
+struct Run {
+    day: u32,
+    intent: u32,
+    /// The run's number in its plan.
+    number: u32,
+    load: i64,
+    to: Hex,
+}
+
+/// The staff's orders, commands and runs of the whole game are those of
+/// `runs` and no others: each on its day, a load; on the next, a route and
+/// an unload. Force 1 is formed from ship 1 on the first run only.
+fn check_the_runs(played: &Played, runs: &[Run], last_day: u32) {
+    for day in 1..=last_day {
+        let mut expected_orders = 0;
+        let mut expected_runs = 0;
+        for run in runs {
+            let raw = run.intent;
+            if run.day == day {
+                expected_runs += 1;
+                let mut kinds = vec![];
+                if run.day == runs[0].day {
+                    kinds.push(form(1));
+                }
+                kinds.push(load_to(FORCE, run.load));
+                let got: Vec<OrderKind> = played
+                    .orders_of(day, raw)
+                    .iter()
+                    .map(|o| o.kind.clone())
+                    .collect();
+                assert_eq!(got, kinds, "orders of intent {raw}, day {day}");
+                expected_orders += kinds.len();
+                let adds = played.add_runs(day);
+                assert_eq!(adds.len(), 1, "one run added, day {day}");
+                assert_eq!(adds[0].0, plan(raw), "plan of the run, day {day}");
+                assert_eq!(
+                    adds[0].1,
+                    &RunSpec {
+                        ships: ships(&[1]),
+                        load_t: n(run.load),
+                        days: run_days(day),
+                    },
+                    "the run, day {day}"
+                );
+                serves_command(adds[0].2, raw);
+                assert_eq!(
+                    played.commits(day),
+                    vec![(plan(raw), Some(run.number), ships(&[1]), day, day + 3)],
+                    "the commitment, day {day}"
+                );
+            }
+            if run.day + 1 == day {
+                let got: Vec<OrderKind> = played
+                    .orders_of(day, raw)
+                    .iter()
+                    .map(|o| o.kind.clone())
+                    .collect();
+                assert_eq!(
+                    got,
+                    vec![
+                        to_force(FORCE, route_to(&[run.to, S], &[run.to])),
+                        to_force(FORCE, TaskForceOrder::Unload),
+                    ],
+                    "orders of intent {raw}, day {day}"
+                );
+                expected_orders += 2;
+            }
+        }
+        let d = played.decisions(day);
+        assert_eq!(d.orders.len(), expected_orders, "orders, day {day}");
+        assert_eq!(
+            played.add_runs(day).len(),
+            expected_runs,
+            "runs added, day {day}"
+        );
+        if expected_runs == 0 {
+            assert!(played.commits(day).is_empty(), "commitments, day {day}");
+        }
+        for order in &d.orders {
+            serves(&order.reason, order.intent.raw());
+        }
+    }
+}
+
+/// A command's reason serves intent `raw` and its plan.
+fn serves_command(reason: &Reason, raw: u32) {
+    serves(reason, raw);
+}
+
+/// Each intent, each day, either gives orders or gives one reason for none.
+fn each_intent_decides_once(played: &Played, last_day: u32) {
+    for day in 1..=last_day {
+        for raw in [1, 2] {
+            let orders = played.orders_of(day, raw).len();
+            let reasons = played.no_orders_of(day, raw);
+            if orders > 0 {
+                assert!(reasons.is_empty(), "intent {raw}, day {day}");
+            } else {
+                assert_eq!(reasons.len(), 1, "one reason of intent {raw}, day {day}");
+                serves(reasons[0], raw);
+                assert!(
+                    !reasons[0].would_change.is_empty(),
+                    "intent {raw}, day {day}"
+                );
+            }
+        }
+        assert_eq!(
+            played.decisions(day).no_orders.len(),
+            played
+                .decisions(day)
+                .no_orders
+                .iter()
+                .filter(|r| r.serves.intent.is_some())
+                .count()
+        );
+    }
+}
+
+/// What the staff did, without the words: orders with their intents,
+/// commands, and the intents that gave no order.
+type Signature = Vec<(
+    u32,
+    Vec<(u32, OrderKind)>,
+    Vec<CommandKind>,
+    Vec<Option<IntentId>>,
+)>;
+
+fn signature(played: &Played) -> Signature {
+    played
+        .handed
+        .iter()
+        .map(|(day, d)| {
+            (
+                *day,
+                d.orders
+                    .iter()
+                    .map(|o| (o.intent.raw(), o.kind.clone()))
+                    .collect(),
+                d.commands.iter().map(|c| c.kind.clone()).collect(),
+                {
+                    let mut intents: Vec<Option<IntentId>> =
+                        d.no_orders.iter().map(|r| r.serves.intent).collect();
+                    intents.sort();
+                    intents
+                },
+            )
+        })
+        .collect()
+}
+
+/// The runs of the table, with intent 2 given the first rank on day 3.
+fn runs_of_the_table() -> Vec<Run> {
+    vec![
+        Run {
+            day: 1,
+            intent: 1,
+            number: 1,
+            load: 30,
+            to: T,
+        },
+        Run {
+            day: 5,
+            intent: 2,
+            number: 1,
+            load: 30,
+            to: U,
+        },
+        Run {
+            day: 10,
+            intent: 2,
+            number: 2,
+            load: 15,
+            to: U,
+        },
+        Run {
+            day: 14,
+            intent: 1,
+            number: 2,
+            load: 19,
+            to: T,
+        },
+    ]
+}
+
+/// The runs without the commands of day 3: T and U change places from day 10.
+fn runs_without_day_3() -> Vec<Run> {
+    vec![
+        Run {
+            day: 1,
+            intent: 1,
+            number: 1,
+            load: 30,
+            to: T,
+        },
+        Run {
+            day: 5,
+            intent: 2,
+            number: 1,
+            load: 30,
+            to: U,
+        },
+        Run {
+            day: 10,
+            intent: 1,
+            number: 2,
+            load: 15,
+            to: T,
+        },
+        Run {
+            day: 14,
+            intent: 2,
+            number: 2,
+            load: 19,
+            to: U,
+        },
+    ]
+}
+
+// ------------------------------------------------------- The hand calculation, 40a
+
+#[test]
+fn the_scenario_files_state_the_commands_these_tests_vary() {
+    for (which, commands) in [(Which::A, Commands::a()), (Which::B, Commands::b())] {
+        let file = text(which);
+        let rest = file.split(COMMANDS_MARKER).nth(1).expect("the commands");
+        let tables: String = rest.lines().skip(1).collect::<Vec<_>>().join("\n");
+        assert_eq!(tables.trim(), commands.render().trim());
+    }
+}
+
+#[test]
+fn the_map_has_five_hexes_from_s_to_t_and_u() {
+    let map = std::fs::read_to_string(common::data_dir().join(MAP)).expect("the map reads");
+    assert!(map.contains("PLACEHOLDER MAP"));
+    assert_eq!(S.distance(T), 5);
+    assert_eq!(S.distance(U), 5);
+    // The engine's own route is 5 hexes, 200 nm, one way.
+    let played = play(Which::A, &days(&text_a(), 16, 3));
+    let state = played.at(2);
+    let formed = &state.task_forces[&force(FORCE)];
+    assert_eq!(formed.route.waypoints.first(), Some(&T));
+    let steamed = played.all(
+        |k| matches!(k, EventKind::TaskForceSteamed { from, to, .. } if *from == S || *to == T),
+    );
+    let miles = steamed
+        .iter()
+        .map(|e| match &e.kind {
+            EventKind::TaskForceSteamed { distance_nm, .. } => *distance_nm,
+            _ => Fixed::ZERO,
+        })
+        .fold(Fixed::ZERO, |sum, d| sum + d);
+    assert!(miles >= n(200), "{miles} nm steamed to T");
+}
+
+#[test]
+fn the_readings_at_t_and_u_follow_the_table() {
+    let played = play(Which::A, &text_a());
+    let t: [i64; 16] = [
+        10, 9, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 44,
+    ];
+    let u: [i64; 16] = [10, 9, 8, 7, 6, 5, 34, 33, 32, 31, 30, 44, 43, 42, 41, 40];
+    for day in 1..=16u32 {
+        for (got, stock, label) in [
+            (played.at_t(day), t[day as usize - 1], "T"),
+            (played.at_u(day), u[day as usize - 1], "U"),
+        ] {
+            assert_eq!(got.stock_t, n(stock), "stock at {label}, day {day}");
+            assert_eq!(got.days, Some(n(stock)), "days at {label}, day {day}");
+            assert_eq!(got.planned_use.total_t(), n(1), "use at {label}, day {day}");
+        }
+    }
+    // The floor is 30 days: T is below it on days 12 to 15, lowest on day 15;
+    // U is never below it after day 6.
+    for day in 3..=16u32 {
+        let days_at_t = played.at_t(day).days.expect("a figure");
+        assert_eq!(days_at_t < n(30), (12..=15).contains(&day), "T, day {day}");
+    }
+    let lowest = (3..=16u32)
+        .map(|day| (played.at_t(day).days.unwrap(), day))
+        .min()
+        .unwrap();
+    assert_eq!(lowest, (n(26), 15));
+    for day in 7..=16u32 {
+        assert!(played.at_u(day).days.unwrap() >= n(30), "U, day {day}");
+    }
+    assert!(played.asked_twice_alike, "the staff answers one view alike");
+}
+
+#[test]
+fn the_staffs_orders_follow_the_table_day_by_day() {
+    let played = play(Which::A, &text_a());
+    played.nothing_refused();
+    check_the_runs(&played, &runs_of_the_table(), 16);
+    each_intent_decides_once(&played, 16);
+
+    // The days of no order at all: 7, 8 and 9, and 16: both intents give a
+    // reason and nothing else.
+    for day in [7, 8, 9, 16] {
+        let d = played.decisions(day);
+        assert!(d.orders.is_empty() && d.commands.is_empty(), "day {day}");
+        assert_eq!(d.no_orders.len(), 2, "day {day}");
+    }
+    // The forces: one, formed on day 1, loaded and sent four times. Nothing
+    // else is formed.
+    let forms: Vec<u32> = played
+        .orders()
+        .iter()
+        .filter(|(_, o)| matches!(o.kind, OrderKind::Base { .. }))
+        .map(|(day, _)| *day)
+        .collect();
+    assert_eq!(forms, vec![1]);
+    // Every order is accepted: thirteen in all: four loads, the one forming,
+    // four routes and four unloads.
+    let accepted = played.all(|k| matches!(k, EventKind::OrderAccepted { .. }));
+    assert_eq!(accepted.len(), 13);
+}
+
+#[test]
+fn the_plans_hold_the_runs_the_table_gives() {
+    let played = play(Which::A, &text_a());
+    let state = played.scenario.world.command_state(Side::Allied);
+    for (raw, runs) in [
+        (1u32, vec![(1u32, 30i64, 1u32), (2, 19, 14)]),
+        (2, vec![(1, 30, 5), (2, 15, 10)]),
+    ] {
+        let made = &state.plans[&plan(raw)];
+        assert_eq!(made.intent, intent(raw));
+        assert_eq!(made.state, PlanState::Released);
+        assert_eq!(made.runs.len(), 2);
+        for (number, load, day) in runs {
+            let run = &made.runs[&number];
+            assert_eq!(run.load_t, n(load), "plan {raw} run {number}");
+            assert_eq!(run.ships, ships(&[1]));
+            assert_eq!(run.source, base(1));
+            assert_eq!(run.days, run_days(day), "plan {raw} run {number}");
+        }
+    }
+    assert_eq!(state.plans.len(), 2);
+}
+
+#[test]
+fn every_run_has_a_reason_with_the_numbers_of_the_table() {
+    let played = play(Which::A, &text_a());
+    // Day 1: 30 - 9 + 15 = 36 t, cut to the ship's room of 30 t.
+    let (_, _, reason) = played.add_runs(1)[0];
+    mentions(reason, &["36", "30", "9", "15"]);
+    assert!(
+        reason.worked.to_lowercase().contains("room"),
+        "the room cut it: {}",
+        reason.worked
+    );
+    // Day 5: 30 - 5 + 15 = 40 t, cut to 30 t.
+    let (_, _, reason) = played.add_runs(5)[0];
+    mentions(reason, &["40", "30", "5", "15"]);
+    // Day 10: 0 + 15 = 15 t, the stock projected for day 11 being 30 t.
+    let (_, _, reason) = played.add_runs(10)[0];
+    mentions(reason, &["15", "30"]);
+    // Day 14: 30 - 26 + 15 = 19 t.
+    let (_, _, reason) = played.add_runs(14)[0];
+    mentions(reason, &["19", "26", "30", "15"]);
+    // Each order carries the same arithmetic as its run.
+    for (day, order) in played.orders() {
+        assert!(!order.reason.worked.is_empty(), "day {day}");
+        assert!(
+            !order.reason.evidence.is_empty() || !order.reason.binding.is_empty(),
+            "day {day}"
+        );
+    }
+}
+
+#[test]
+fn what_happens_follows_the_table_exactly() {
+    let played = play(Which::A, &text_a());
+    played.nothing_refused();
+
+    // (day ordered, destination, loaded at, halted at, unloaded at, the tons,
+    // arrives at S at, the day it does).
+    let table = [
+        (1u32, T, "0.6", "36.5", "38", 30i64, "54.5", 3u32),
+        (5, U, "96.6", "132.5", "134", 30, "150.5", 7),
+        (10, U, "216.3", "252.5", "253.25", 15, "270.5", 12),
+        (14, T, "312.38", "348.5", "349.45", 19, "366.5", 16),
+    ];
+    for (day, to, loaded, halted, unloaded, tons, home, home_day) in table {
+        assert_eq!(
+            played.loading_complete(day),
+            vec![fx(loaded)],
+            "loading, day {day}"
+        );
+        // It sails at the start of the next day and halts at its destination.
+        assert!(
+            played.steamed_from(day + 1, FORCE, S),
+            "sails, day {}",
+            day + 1
+        );
+        let ashore = day + 1;
+        assert_eq!(
+            played.halted_at(ashore, FORCE, to),
+            Some(fx(halted)),
+            "halted, day {ashore}"
+        );
+        assert_eq!(played.unloaded(ashore), n(tons), "unloaded, day {ashore}");
+        assert_eq!(
+            played.unloading_complete(ashore),
+            vec![fx(unloaded)],
+            "unloading complete, day {ashore}"
+        );
+        assert_eq!(
+            played.arrived_at(home_day, FORCE, S),
+            Some(fx(home)),
+            "home, day {home_day}"
+        );
+    }
+
+    // Base 1's supply: 970 t from day 1, 940 t from day 5, 925 t from day 10,
+    // 906 t from day 14.
+    for day in 1..=16u32 {
+        let supply = match day {
+            1..=4 => 970,
+            5..=9 => 940,
+            10..=13 => 925,
+            _ => 906,
+        };
+        assert_eq!(played.base_supply(day, 1), n(supply), "supply, day {day}");
+    }
+    // Its fuel: ship 1 refuels 50 t on days 4, 8 and 13.
+    for day in 1..=16u32 {
+        let fuel = match day {
+            1..=3 => 1000,
+            4..=7 => 950,
+            8..=12 => 900,
+            _ => 850,
+        };
+        assert_eq!(played.base_fuel(day, 1), n(fuel), "fuel, day {day}");
+    }
+    // Ship 1 has 450 t when it comes home and 500 t after it refuels.
+    for (day, fuel) in [(3, 450), (4, 500), (7, 450), (8, 500), (12, 450), (13, 500)] {
+        assert_eq!(
+            played.at(day).ships[&ship(1)].fuel_t,
+            n(fuel),
+            "ship 1, day {day}"
+        );
+    }
+    // The bases: T and U each pay 1 t a night; what lands shows from the day.
+    let t_end: [i64; 16] = [
+        9, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 44, 43,
+    ];
+    let u_end: [i64; 16] = [9, 8, 7, 6, 5, 34, 33, 32, 31, 30, 44, 43, 42, 41, 40, 39];
+    for day in 1..=16u32 {
+        assert_eq!(
+            played.base_supply(day, 2),
+            n(t_end[day as usize - 1]),
+            "T, day {day}"
+        );
+        assert_eq!(
+            played.base_supply(day, 3),
+            n(u_end[day as usize - 1]),
+            "U, day {day}"
+        );
+    }
+    // Landed on the day after each run is ordered.
+    assert_eq!(
+        [2, 6, 11, 15].map(|day| played.unloaded(day)),
+        [n(30), n(30), n(15), n(19)]
+    );
+
+    // The end of day 16.
+    assert_eq!(played.base_supply(16, 2), n(43));
+    assert_eq!(played.base_supply(16, 3), n(39));
+    assert_eq!(played.base_supply(16, 1), n(906));
+    assert_eq!(played.base_fuel(16, 1), n(850));
+    let end = played.at(16);
+    let one = &end.ships[&ship(1)];
+    assert_eq!(one.location, ShipLocation::TaskForce(force(FORCE)));
+    assert!(one.supply_t.is_zero() && one.cargo_fuel_t.is_zero());
+    assert_eq!(one.fuel_t, n(450));
+    let formed = &end.task_forces[&force(FORCE)];
+    assert_eq!(formed.status, TaskForceStatus::Arrived);
+    assert_eq!(formed.from_hex, S);
+    assert_eq!(formed.position(), S);
+}
+
+#[test]
+fn the_ship_is_in_the_pool_of_both_intents_and_never_idles_for_one() {
+    // Ship 1 is committed from day 1 to 4, 5 to 8, 10 to 13 and 14 to 17 and
+    // on no other day; the commitments are to the plans in the table.
+    let played = play(Which::A, &text_a());
+    let mut given: Vec<(u32, u32, u32, u32)> = Vec::new();
+    for day in 1..=16 {
+        for (plan, run, ships_, from, to) in played.commits(day) {
+            assert_eq!(ships_, ships(&[1]));
+            given.push((plan.raw(), run.expect("a run"), from, to));
+        }
+    }
+    assert_eq!(
+        given,
+        vec![(1, 1, 1, 4), (2, 1, 5, 8), (2, 2, 10, 13), (1, 2, 14, 17)]
+    );
+}
+
+// ----------------------------------------------------------- What is displaced
+
+#[test]
+fn the_reasons_of_the_displaced_intent_name_the_shortfall_and_the_commitment() {
+    let played = play(Which::A, &text_a());
+    // Days 1 to 4: intent 2 is displaced by ship 1 on run 1 of plan 1, days 1
+    // to 4, by 22, 23, 24 and 25 days at the readings of days 3 to 6.
+    for (day, short) in [(1u32, 22u32), (2, 23), (3, 24), (4, 25)] {
+        let reasons = played.no_orders_of(day, 2);
+        assert_eq!(reasons.len(), 1, "day {day}");
+        let reason = reasons[0];
+        serves(reason, 2);
+        assert_eq!(reason.serves.plan, Some(plan(2)));
+        mentions(
+            reason,
+            &[
+                &format!("Short {short} {}", if short == 1 { "day" } else { "days" }),
+                &format!("day {}", day + 2),
+                "ship:1",
+                "run 1 of plan:1",
+                "day 1 to day 4",
+            ],
+        );
+        assert!(!reason.would_change.is_empty(), "day {day}");
+    }
+    // Days 10 to 13: intent 1 is displaced by ship 1 on run 2 of plan 2, days
+    // 10 to 13, by 1, 2, 3 and 4 days at the readings of days 12 to 15.
+    for (day, short) in [(10u32, 1u32), (11, 2), (12, 3), (13, 4)] {
+        let reasons = played.no_orders_of(day, 1);
+        assert_eq!(reasons.len(), 1, "day {day}");
+        let reason = reasons[0];
+        serves(reason, 1);
+        assert_eq!(reason.serves.plan, Some(plan(1)));
+        mentions(
+            reason,
+            &[
+                &format!("Short {short} {}", if short == 1 { "day" } else { "days" }),
+                &format!("day {}", day + 2),
+                "ship:1",
+                "run 2 of plan:2",
+                "day 10 to day 13",
+            ],
+        );
+        assert!(!reason.would_change.is_empty(), "day {day}");
+    }
+    // Neither intent names a commitment on the other days.
+    for day in 1..=16u32 {
+        for raw in [1, 2] {
+            let displaced = played
+                .no_orders_of(day, raw)
+                .iter()
+                .any(|r| r.worked.contains("is displaced by"));
+            let expected = (raw == 2 && day <= 4) || (raw == 1 && (10..=13).contains(&day));
+            assert_eq!(displaced, expected, "intent {raw}, day {day}");
+        }
+    }
+}
+
+#[test]
+fn the_proposal_for_intent_1_on_day_10_says_what_displaces_it() {
+    let played = play(Which::A, &text_a());
+    let displacement = Displacement {
+        intent: intent(2),
+        plan: plan(2),
+        run: 2,
+        committed: Committed::Ships(ships(&[1])),
+        from_day: 10,
+        to_day: 13,
+    };
+    let proposal = played.proposals[&(10, 1)].as_ref().expect("a proposal");
+    assert_eq!(proposal.intent, intent(1));
+    assert_eq!(proposal.plan, plan(1));
+    let shortfall = proposal.shortfall.as_ref().expect("a shortfall");
+    assert_eq!(shortfall.shortfall_days, n(1));
+    assert_eq!(shortfall.check_day, 12);
+    assert_eq!(shortfall.displaced_by, vec![displacement.clone()]);
+    assert!(proposal.runs.is_empty(), "no run can be sent today");
+    // Intent 2's proposal says whom it displaces, with the same displacement.
+    let second = played.proposals[&(10, 2)].as_ref().expect("a proposal");
+    assert_eq!(second.displaces.len(), 1);
+    let displaced = &second.displaces[0];
+    assert_eq!(displaced.intent, intent(1));
+    assert_eq!(displaced.plan, plan(1));
+    assert_eq!(displaced.shortfall.displaced_by, vec![displacement]);
+    assert_eq!(displaced.shortfall.check_day, 12);
+    assert_eq!(displaced.shortfall.shortfall_days, n(1));
+    // Intent 2 itself is not displaced by anything.
+    assert!(second.shortfall.is_none());
+    assert!(proposal.displaces.is_empty());
+}
+
+// ---------------------------------------------------------------- Properties of 40a
+
+#[test]
+fn without_the_commands_of_day_3_t_and_u_change_places_from_day_10() {
+    let source = Commands {
+        later_ranks: vec![],
+        ..Commands::a()
+    }
+    .on(Which::A);
+    let played = play(Which::A, &source);
+    played.nothing_refused();
+    let reference = play(Which::A, &text_a());
+    // The days to 9 are the same.
+    for day in 1..=9 {
+        assert_eq!(
+            signature(&played).iter().find(|s| s.0 == day),
+            signature(&reference).iter().find(|s| s.0 == day),
+            "day {day}"
+        );
+        assert_eq!(played.readings[&day], reference.readings[&day], "day {day}");
+    }
+    check_the_runs(&played, &runs_without_day_3(), 16);
+    each_intent_decides_once(&played, 16);
+    // Intent 2 is displaced on days 10 to 13, by run 2 of plan 1.
+    for (day, short) in [(10u32, 1u32), (11, 2), (12, 3), (13, 4)] {
+        let reason = played.no_orders_of(day, 2)[0];
+        mentions(
+            reason,
+            &[
+                &format!("Short {short} {}", if short == 1 { "day" } else { "days" }),
+                &format!("day {}", day + 2),
+                "ship:1",
+                "run 2 of plan:1",
+                "day 10 to day 13",
+            ],
+        );
+    }
+    // The end: base 2 holds 39 t, base 3 holds 43 t.
+    assert_eq!(played.base_supply(16, 2), n(39));
+    assert_eq!(played.base_supply(16, 3), n(43));
+    assert_eq!(played.base_supply(16, 1), n(906));
+    assert_eq!(played.base_fuel(16, 1), n(850));
+}
+
+#[test]
+fn with_ship_1_in_intent_1s_protected_limit_intent_2_never_has_it() {
+    let source = Commands {
+        protected: Some((1, "[1]")),
+        ..Commands::a()
+    }
+    .on(Which::A);
+    let played = play(Which::A, &source);
+    played.nothing_refused();
+    // Intent 2 gives no order and no run on any day, and says each day that
+    // no ship of its pool may be taken.
+    for day in 1..=16u32 {
+        assert!(played.orders_of(day, 2).is_empty(), "day {day}");
+        assert!(
+            played.add_runs(day).iter().all(|(p, _, _)| *p == plan(1)),
+            "day {day}"
+        );
+        assert!(
+            played.commits(day).iter().all(|c| c.0 == plan(1)),
+            "day {day}"
+        );
+        let reasons = played.no_orders_of(day, 2);
+        assert_eq!(reasons.len(), 1, "day {day}");
+        let all = format!("{} {}", reasons[0].worked, reasons[0].binding.join(" ")).to_lowercase();
+        assert!(
+            all.contains("no ship of the pool of intent:2 may be taken")
+                || all.contains("no ship of the pool may be taken"),
+            "day {day}: {all}"
+        );
+    }
+    // Base 3 holds 0 t after the night of day 10 and its 200 men are unfed on
+    // the night of day 11; they were fed on every night before.
+    for day in 1..=10 {
+        assert_eq!(
+            played.base_supply(day, 3),
+            n(10 - i64::from(day)),
+            "day {day}"
+        );
+        assert_eq!(played.fed_at(day, U), vec![(200, 0)], "fed on day {day}");
+    }
+    assert!(played.base_supply(10, 3).is_zero());
+    assert_eq!(played.fed_at(11, U), vec![(0, 200)]);
+    assert!(played.base_supply(11, 3).is_zero());
+    // Intent 1's runs are made by ship 1 and intent 1's first run is that of
+    // the table.
+    assert_eq!(played.add_runs(1)[0].0, plan(1));
+}
+
+#[test]
+fn at_equal_priority_the_days_are_those_of_the_first_property() {
+    let first = Commands {
+        later_ranks: vec![],
+        ..Commands::a()
+    }
+    .on(Which::A);
+    let reference = play(Which::A, &first);
+    for (label, commands) in [
+        (
+            "both rank 1",
+            Commands {
+                day_1_ranks: vec![(1, 1), (2, 1)],
+                later_ranks: vec![],
+                ..Commands::a()
+            },
+        ),
+        (
+            "neither ranked",
+            Commands {
+                day_1_ranks: vec![],
+                later_ranks: vec![],
+                ..Commands::a()
+            },
+        ),
+    ] {
+        let played = play(Which::A, &commands.on(Which::A));
+        played.nothing_refused();
+        assert_eq!(signature(&played), signature(&reference), "{label}");
+        check_the_runs(&played, &runs_without_day_3(), 16);
+        assert_eq!(played.base_supply(16, 2), n(39), "{label}");
+        assert_eq!(played.base_supply(16, 3), n(43), "{label}");
+    }
+}
+
+#[test]
+fn the_same_start_gives_the_same_orders_on_every_run() {
+    for which in [Which::A, Which::B] {
+        let first = play(which, &text(which));
+        let second = play(which, &text(which));
+        assert_eq!(first.handed, second.handed);
+        assert_eq!(first.hashes, second.hashes);
+        assert_eq!(first.readings, second.readings);
+        assert_eq!(first.proposals, second.proposals);
+        assert!(first.asked_twice_alike, "the staff answers one view alike");
+    }
+}
+
+#[test]
+fn two_worlds_that_differ_only_in_what_the_allied_side_cannot_see_give_the_same_decisions() {
+    // A third coast hex far from everything, with a Japanese base, a ship and
+    // a unit on it.
+    let map_text = std::fs::read_to_string(common::data_dir().join(MAP)).expect("the map reads")
+        + "\n[[hex]]\nq = 7\nr = 7\nkind = \"coast\"\nport_size = 1\n";
+    let dir = std::env::temp_dir().join(format!("flag_plot_s40_{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a directory");
+    let map_path = dir.join("map.toml");
+    std::fs::write(&map_path, map_text).expect("the map is written");
+    let enemy = |supply: u32, fuel: u32, men: u32, ship_fuel: u32| {
+        format!(
+            r#"
+[[base]]
+id = 7
+name = "Placeholder base V, Japanese"
+side = "japanese"
+q = 7
+r = 7
+supply_t = {supply}
+fuel_t = {fuel}
+
+[[land_unit]]
+id = 9
+name = "Placeholder unit 9"
+side = "japanese"
+men = {men}
+q = 7
+r = 7
+posture = "defend"
+
+[[ship]]
+id = 11
+name = "Placeholder cargo ship 11"
+class = 3
+side = "japanese"
+fuel_t = {ship_fuel}
+port = 7
+"#
+        )
+    };
+    for which in [Which::A, Which::B] {
+        let on_the_new_map = |text: &str| {
+            changed(
+                text,
+                &format!("map = \"../{MAP}\""),
+                &format!("map = \"{}\"", map_path.display()),
+            )
+        };
+        let plain = on_the_new_map(&text(which));
+        let one = format!("{}{}", plain, enemy(900, 400, 1500, 500));
+        let two = format!("{}{}", plain, enemy(10, 5, 4000, 900));
+        let alone = play(which, &plain);
+        let with_one = play(which, &one);
+        let with_two = play(which, &two);
+        let last = alone.handed.len() as u32;
+        for day in 1..=last {
+            assert_eq!(alone.handed[&day], with_one.handed[&day], "day {day}");
+            assert_eq!(alone.handed[&day], with_two.handed[&day], "day {day}");
+            assert_eq!(alone.readings[&day], with_one.readings[&day]);
+            assert_eq!(alone.readings[&day], with_two.readings[&day]);
+            for raw in [1, 2] {
+                assert_eq!(
+                    alone.proposals[&(day, raw)],
+                    with_one.proposals[&(day, raw)],
+                    "proposal {raw}, day {day}"
+                );
+                assert_eq!(
+                    alone.proposals[&(day, raw)],
+                    with_two.proposals[&(day, raw)],
+                    "proposal {raw}, day {day}"
+                );
+            }
+        }
+        assert_eq!(last, if matches!(which, Which::A) { 16 } else { 5 });
+    }
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+// ------------------------------------------------------------------ 40b
+
+#[test]
+#[ignore = "40b, day 1: the comment cuts intent 1's 36 t to ship 1's room and leaves ship 2 to intent 2; decision 0107 item 39 (ships in number order until their room covers the load) gives intent 1 both ships and 36 t. Sent back to the architect with the figures the run gives"]
+fn on_day_1_two_plans_load_from_one_stock_and_do_not_count_a_ton_twice() {
+    let played = play(Which::B, &text_b());
+    played.nothing_refused();
+    let d1 = played.decisions(1);
+
+    // Intent 1 forms ship 1 into the first force and loads 30 t.
+    let one: Vec<OrderKind> = played
+        .orders_of(1, 1)
+        .iter()
+        .map(|o| o.kind.clone())
+        .collect();
+    assert_eq!(one, vec![form(1), load_to(FORCE, 30)]);
+    // Intent 2 forms ship 2 into the second and loads 10 t.
+    let two: Vec<OrderKind> = played
+        .orders_of(1, 2)
+        .iter()
+        .map(|o| o.kind.clone())
+        .collect();
+    assert_eq!(two, vec![form(2), load_to(FORCE_2, 10)]);
+    assert!(d1.no_orders.is_empty());
+
+    // The runs: plan 1 loads 30 t in ship 1, plan 2 10 t in ship 2.
+    let adds = played.add_runs(1);
+    assert_eq!(adds.len(), 2);
+    assert_eq!(adds[0].0, plan(1));
+    assert_eq!(
+        adds[0].1,
+        &RunSpec {
+            ships: ships(&[1]),
+            load_t: n(30),
+            days: run_days(1),
+        }
+    );
+    assert_eq!(adds[1].0, plan(2));
+    assert_eq!(
+        adds[1].1,
+        &RunSpec {
+            ships: ships(&[2]),
+            load_t: n(10),
+            days: run_days(1),
+        }
+    );
+    assert_eq!(
+        played.commits(1),
+        vec![
+            (plan(1), Some(1), ships(&[1]), 1, 4),
+            (plan(2), Some(1), ships(&[2]), 1, 4),
+        ]
+    );
+    serves(adds[0].2, 1);
+    serves(adds[1].2, 2);
+
+    // Intent 2's reason names the source with its three numbers: 1040 t of
+    // stock, a reserve of 1000 t, 30 t still to be taken by a run loading; and
+    // the run that is taking it.
+    let load = played.orders_of(1, 2)[1];
+    for reason in [adds[1].2, &load.reason] {
+        mentions(reason, &["1040 t", "1000 t", "30 t"]);
+    }
+    assert!(
+        adds[1].2.worked.contains("run 1 of plan:1")
+            || load.reason.worked.contains("run 1 of plan:1"),
+        "{} / {}",
+        adds[1].2.worked,
+        load.reason.worked
+    );
+    // Intent 1's load is cut by the room of its ship, 30 t.
+    mentions(adds[0].2, &["36", "30"]);
+
+    // In the night: 30 t by the berth in 0.6 hours, 10 t by lighter in half an
+    // hour. Base 1 holds 1000 t, its reserve, and never less.
+    assert_eq!(played.loading_complete(1), vec![fx("0.5"), fx("0.6")]);
+    for day in 1..=5 {
+        assert_eq!(played.base_supply(day, 1), n(1000), "day {day}");
+    }
+}
+
+#[test]
+#[ignore = "40b, day 1: the comment cuts intent 1's 36 t to ship 1's room and leaves ship 2 to intent 2; decision 0107 item 39 (ships in number order until their room covers the load) gives intent 1 both ships and 36 t. Sent back to the architect with the figures the run gives"]
+fn in_40b_the_forces_sail_land_and_come_home_at_the_hours_of_the_table() {
+    let played = play(Which::B, &text_b());
+    played.nothing_refused();
+    // Day 2: both are routed and unloaded.
+    let one: Vec<OrderKind> = played
+        .orders_of(2, 1)
+        .iter()
+        .map(|o| o.kind.clone())
+        .collect();
+    assert_eq!(
+        one,
+        vec![
+            to_force(FORCE, route_to(&[T, S], &[T])),
+            to_force(FORCE, TaskForceOrder::Unload),
+        ]
+    );
+    let two: Vec<OrderKind> = played
+        .orders_of(2, 2)
+        .iter()
+        .map(|o| o.kind.clone())
+        .collect();
+    assert_eq!(
+        two,
+        vec![
+            to_force(FORCE_2, route_to(&[U, S], &[U])),
+            to_force(FORCE_2, TaskForceOrder::Unload),
+        ]
+    );
+    assert!(played.steamed_from(2, FORCE, S));
+    assert!(played.steamed_from(2, FORCE_2, S));
+    // Sail at hour 24, arrive at hour 36.5; T has 30 t landed by hour 38 and
+    // U 10 t by hour 37; both steam for S at hour 42 and arrive at hour 54.5.
+    assert_eq!(played.halted_at(2, FORCE, T), Some(fx("36.5")));
+    assert_eq!(played.halted_at(2, FORCE_2, U), Some(fx("36.5")));
+    assert_eq!(played.unloaded(2), n(40));
+    assert_eq!(played.unloading_complete(2), vec![n(37), n(38)]);
+    assert_eq!(played.arrived_at(3, FORCE, S), Some(fx("54.5")));
+    assert_eq!(played.arrived_at(3, FORCE_2, S), Some(fx("54.5")));
+
+    // Readings at T and U on days 1 to 5.
+    for (day, t, u) in [
+        (1u32, 10i64, 10i64),
+        (2, 9, 9),
+        (3, 38, 18),
+        (4, 37, 17),
+        (5, 36, 16),
+    ] {
+        assert_eq!(played.at_t(day).stock_t, n(t), "T, day {day}");
+        assert_eq!(played.at_t(day).days, Some(n(t)), "T, day {day}");
+        assert_eq!(played.at_u(day).stock_t, n(u), "U, day {day}");
+        assert_eq!(played.at_u(day).days, Some(n(u)), "U, day {day}");
+    }
+
+    // No order on days 3, 4 and 5, and no order on day 2 but the routes.
+    for day in [3, 4, 5] {
+        let d = played.decisions(day);
+        assert!(d.orders.is_empty() && d.commands.is_empty(), "day {day}");
+    }
+    // Days 3 and 4: intent 2 needs a run and has no ship free; its reason
+    // names both commitments.
+    for day in [3u32, 4] {
+        let reasons = played.no_orders_of(day, 2);
+        assert_eq!(reasons.len(), 1, "day {day}");
+        serves(reasons[0], 2);
+        mentions(
+            reasons[0],
+            &["ship:1", "run 1 of plan:1", "ship:2", "run 1 of plan:2"],
+        );
+        // Intent 1 needs no run.
+        assert_eq!(played.no_orders_of(day, 1).len(), 1, "day {day}");
+    }
+    // Day 5: both ships are free; intent 1 needs no run; intent 2 needs one,
+    // the reading of day 7 being 14 t, a shortfall of 16 days, and the source
+    // has nothing above its reserve. It gives no order.
+    assert_eq!(played.no_orders_of(5, 1).len(), 1);
+    let reasons = played.no_orders_of(5, 2);
+    assert_eq!(reasons.len(), 1);
+    serves(reasons[0], 2);
+    mentions(reasons[0], &["Short 16 days", "day 7", "1000 t", "0 t"]);
+    assert!(
+        reasons[0]
+            .binding
+            .iter()
+            .any(|b| b.contains("reserve") || b.contains("source")),
+        "the source binds: {:?}",
+        reasons[0].binding
+    );
+
+    // The end of day 5.
+    assert_eq!(played.base_supply(5, 1), n(1000));
+    assert_eq!(played.base_fuel(5, 1), n(900));
+    assert_eq!(played.base_fuel(3, 1), n(1000));
+    assert_eq!(played.base_fuel(4, 1), n(900));
+    assert_eq!(played.base_supply(5, 2), n(35));
+    assert_eq!(played.base_supply(5, 3), n(15));
+    let end = played.at(5);
+    for (raw, f) in [(1u32, FORCE), (2, FORCE_2)] {
+        let one = &end.ships[&ship(raw)];
+        assert_eq!(one.location, ShipLocation::TaskForce(force(f)));
+        assert!(one.supply_t.is_zero() && one.cargo_fuel_t.is_zero());
+        assert_eq!(one.fuel_t, n(500), "ship {raw} refuelled on day 4");
+        let formed = &end.task_forces[&force(f)];
+        assert_eq!(formed.status, TaskForceStatus::Arrived);
+        assert_eq!(formed.position(), S);
+    }
+    // Only two runs were made, both on day 1.
+    let state = played.scenario.world.command_state(Side::Allied);
+    assert_eq!(state.plans[&plan(1)].runs.len(), 1);
+    assert_eq!(state.plans[&plan(2)].runs.len(), 1);
+}
+
+#[test]
+#[ignore = "40b, day 1: the comment cuts intent 1's 36 t to ship 1's room and leaves ship 2 to intent 2; decision 0107 item 39 (ships in number order until their room covers the load) gives intent 1 both ships and 36 t. Sent back to the architect with the figures the run gives"]
+fn with_no_reserve_intent_2s_first_load_is_30_t_and_with_a_reserve_of_1010_t_it_is_none() {
+    // No reserve: base 1 holds 1040 t, intent 1 takes 30 t and intent 2 has
+    // 1010 t left: its load is 36 t, cut to the room of ship 2, 30 t.
+    let none = Commands {
+        reserve: None,
+        ..Commands::b()
+    }
+    .on(Which::B);
+    let played = play(Which::B, &none);
+    played.nothing_refused();
+    let two: Vec<OrderKind> = played
+        .orders_of(1, 2)
+        .iter()
+        .map(|o| o.kind.clone())
+        .collect();
+    assert_eq!(two, vec![form(2), load_to(FORCE_2, 30)]);
+    let adds = played.add_runs(1);
+    assert_eq!(adds[1].0, plan(2));
+    assert_eq!(adds[1].1.load_t, n(30));
+    assert_eq!(played.base_supply(1, 1), n(980));
+
+    // A reserve of 1010 t: 30 t are above it, and intent 1 has them.
+    let more = Commands {
+        reserve: Some(1010),
+        ..Commands::b()
+    }
+    .on(Which::B);
+    let played = play(Which::B, &more);
+    played.nothing_refused();
+    let one: Vec<OrderKind> = played
+        .orders_of(1, 1)
+        .iter()
+        .map(|o| o.kind.clone())
+        .collect();
+    assert_eq!(one, vec![form(1), load_to(FORCE, 30)]);
+    assert!(played.orders_of(1, 2).is_empty());
+    let adds = played.add_runs(1);
+    assert_eq!(adds.len(), 1);
+    assert_eq!(adds[0].0, plan(1));
+    let reasons = played.no_orders_of(1, 2);
+    assert_eq!(reasons.len(), 1);
+    serves(reasons[0], 2);
+    mentions(reasons[0], &["1040 t", "1010 t", "30 t"]);
+    assert_eq!(played.base_supply(1, 1), n(1010));
+}
+
+/// What 40b shows that does not rest on day 1's allotment, which is sent
+/// back to the architect (the tests above are ignored): no staff order or
+/// command is refused, and base 1 is never below its reserve of 1000 t.
+#[test]
+fn in_40b_base_1_is_never_below_its_reserve_and_nothing_is_refused() {
+    let played = play(Which::B, &text_b());
+    played.nothing_refused();
+    for day in 0..=5 {
+        assert!(played.base_supply(day, 1) >= n(1000), "day {day}");
+    }
+}
+
+/// Not the architect's table: a variation of 40b written by the team lead
+/// to show ruling 12 while 40b's day 1 is with the architect. With intent
+/// 1's interval at 5 days its load is 30 - 9 + 5 = 26 t, which ship 1's room
+/// covers, so ship 2 is free for intent 2. The source has 40 t above its
+/// reserve, of which this morning's run of intent 1 has 26 t still to take:
+/// intent 2 loads 14 t, and its reason names those 26 t of run 1 of plan:1.
+/// Base 1 ends the night at its reserve.
+#[test]
+fn two_plans_on_one_morning_do_not_count_a_ton_twice() {
+    let text = Commands::b()
+        .on(Which::B)
+        .replacen("interval_days = 15", "interval_days = 5", 1);
+    let played = play(Which::B, &text);
+    played.nothing_refused();
+    let runs = played.add_runs(1);
+    assert_eq!(runs.len(), 2);
+    assert_eq!(
+        (runs[0].0, runs[0].1.ships.clone(), runs[0].1.load_t),
+        (plan(1), ships(&[1]), n(26))
+    );
+    assert_eq!(
+        (runs[1].0, runs[1].1.ships.clone(), runs[1].1.load_t),
+        (plan(2), ships(&[2]), n(14))
+    );
+    mentions(
+        runs[1].2,
+        &[
+            "1040 t",
+            "1000 t",
+            "26 t still to be taken",
+            "run 1 of plan:1",
+        ],
+    );
+    assert!(runs[1].2.binding.iter().any(|b| b == "displaced by plan:1"));
+    let orders = &played.decisions(1).orders;
+    assert!(orders.iter().any(|o| o.kind == load_to(1_000_001, 26)));
+    assert!(orders.iter().any(|o| o.kind == load_to(1_000_002, 14)));
+    assert_eq!(played.base_supply(1, 1), n(1000));
+}
+
+// --------------------------------------------------- A save in the middle
+
+fn cargo() -> Command {
+    let mut command = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string()));
+    command.current_dir(common::data_dir().join(".."));
+    command
+}
+
+fn sim_cli(arguments: &[&str]) -> std::process::Output {
+    let mut command = cargo();
+    command.args(["run", "--quiet", "-p", "sim-cli"]);
+    if !cfg!(debug_assertions) {
+        command.arg("--release");
+    }
+    command.arg("--").args(arguments);
+    command.output().expect("the command runs")
+}
+
+#[test]
+fn a_game_saved_in_the_middle_replays_and_the_staff_checks() {
+    let reference = common::frozen_root();
+    let reference = reference.to_str().expect("a path");
+    let dir = std::env::temp_dir().join(format!("flag_plot_s40_save_{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a directory");
+    let data = common::data_dir()
+        .canonicalize()
+        .expect("the data directory");
+    let whole = |text: String| text.replace("\"../", &format!("\"{}/", data.display()));
+    // Both scenarios whole, and 40a in the middle, ship 1 at sea.
+    let middle = dir.join("40a_in_the_middle.toml");
+    std::fs::write(&middle, whole(days(&text_a(), 16, 11))).expect("written");
+    let full_b = dir.join("40b.toml");
+    std::fs::write(&full_b, whole(text_b())).expect("written");
+    let saves = [
+        (path(Which::A), dir.join("a.json")),
+        (middle, dir.join("a_half.json")),
+        (full_b, dir.join("b.json")),
+    ];
+    for (scenario, save) in &saves {
+        let ran = sim_cli(&[
+            "run",
+            scenario.to_str().unwrap(),
+            "--save",
+            save.to_str().unwrap(),
+            "--reference",
+            reference,
+        ]);
+        assert!(
+            ran.status.success(),
+            "run: {}",
+            String::from_utf8_lossy(&ran.stderr)
+        );
+    }
+    for (_, save) in &saves {
+        let replayed = sim_cli(&[
+            "replay",
+            save.to_str().unwrap(),
+            "--check-staff",
+            "--reference",
+            reference,
+        ]);
+        let said = String::from_utf8_lossy(&replayed.stdout).to_string();
+        assert!(
+            replayed.status.success(),
+            "replay: {} {}",
+            said,
+            String::from_utf8_lossy(&replayed.stderr)
+        );
+        assert!(
+            said.contains("the staff gave what was saved on every day"),
+            "{said}"
+        );
+        assert!(said.contains(sim_staff::DOCTRINE_VERSION), "{said}");
+    }
+    std::fs::remove_dir_all(&dir).ok();
+}

@@ -288,3 +288,7 @@ path = "scenario_35_days_of_supply.rs"
 [[test]]
 name = "scenario_36_one_convoy"
 path = "scenario_36_one_convoy.rs"
+
+[[test]]
+name = "scenario_40_one_pool_two_hexes"
+path = "scenario_40_one_pool_two_hexes.rs"
