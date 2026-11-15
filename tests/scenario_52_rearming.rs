@@ -89,8 +89,10 @@
 //! - **The game as it was.** With no ammunition at either base, or with no
 //!   ammunition rate in the port sizes, no ship takes any and nothing is
 //!   recorded.
-//! - **After cargo and fuel.** With ship 1 also ordered to load 500 t of
-//!   supply at 50 t an hour, which takes 10 hours of the night: she takes
+//! - **After cargo and fuel.** With base 1 holding 500 t of supply, cargo
+//!   worked at a berth at 50 t an hour, and ship 1 a ship that can carry
+//!   it and is ordered to load the 500 t, which takes 10 hours of the
+//!   night: she takes
 //!   100 rounds in the 2 hours left; in the morning 300 rounds in 6 hours;
 //!   in the afternoon her last 100 rounds in 2 hours and then, in the 4
 //!   hours left, her 8 torpedoes in 3.2: full at hour 23.2.
