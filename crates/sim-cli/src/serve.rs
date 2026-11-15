@@ -143,7 +143,7 @@ pub fn open(
     let (name, days) = (scenario.name.clone(), scenario.days);
     // The staff each side is given comes from the doctrine; the commands are
     // the scenario's own, given as the commander's (decision 0107).
-    let staffs = crate::doctrine::staffs_for(&scenario);
+    let staffs = sim_staff::staffs();
     let session = Session::new(scenario.world, &name, days, allied, japanese)
         .with_staffs(staffs)
         .with_commands(remembered.commands().clone());

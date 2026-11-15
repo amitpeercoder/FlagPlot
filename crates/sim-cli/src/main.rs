@@ -5,7 +5,6 @@
 
 mod batch;
 mod batch_record;
-mod doctrine;
 mod events;
 mod export;
 mod mcp;
@@ -229,11 +228,11 @@ fn execute_watching(
     }
     before_run(&mut scenario);
     let initial = scenario.world.umpire().clone();
-    let held = doctrine::staffs_for(&scenario);
+    let held = sim_staff::staffs();
     let mut summaries = Vec::new();
     let mut staff_handed_in = save::StaffHandIns::new();
     while let Some(summary) = scenario
-        .next_day_watched(doctrine::as_staffs(&held), watch)
+        .next_day_watched(sim_staff::as_staffs(&held), watch)
         .map_err(|e| e.to_string())?
     {
         note_staff(&scenario.world, summary.day, &mut staff_handed_in);
@@ -293,7 +292,7 @@ struct StaffFinding {
 
 /// [`execute_saved_watching`], and with `check_staff` also asking the
 /// doctrine's staff (decision 0107, 10): on each saved day each side with a
-/// staff in [`doctrine::staffs_for`] is wrapped in a
+/// staff in [`sim_staff::staffs`] is wrapped in a
 /// [`sim_core::command::CheckedStaff`] holding the saved hand-in (nothing if
 /// none was saved), which gives the saved hand-in back whatever the staff
 /// gave and keeps the first difference. A saved hand-in for a side the
@@ -313,7 +312,7 @@ fn execute_saved_checking(
     let scenario =
         Scenario::load_with(Path::new(&saved.scenario_file), options).map_err(|e| e.to_string())?;
     saved.check_files(&scenario)?;
-    let held = doctrine::staffs_for(&scenario);
+    let held = sim_staff::staffs();
     let mut scenario = scenario.with_seed(saved.seed).map_err(|e| e.to_string())?;
     scenario.replace_script(saved.script.clone());
     scenario.replace_commands(saved.commands.clone());
@@ -359,7 +358,7 @@ fn execute_saved_checking(
                             what: format!(
                                 "the game holds what the {} staff handed in, and the doctrine ({}) gives that side no staff",
                                 side.name().to_lowercase(),
-                                doctrine::DOCTRINE_VERSION
+                                sim_staff::DOCTRINE_VERSION
                             ),
                         });
                     }
@@ -1062,7 +1061,7 @@ fn replay(args: &[String], options: &LoadOptions) -> Result<(), String> {
     if check_staff {
         println!(
             "the staff gave what was saved on every day (doctrine {}, the game was saved under {})",
-            doctrine::DOCTRINE_VERSION,
+            sim_staff::DOCTRINE_VERSION,
             saved.doctrine_version
         );
     }

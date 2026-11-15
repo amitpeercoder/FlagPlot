@@ -5,6 +5,7 @@ members = [
     "crates/sim-data",
     "crates/sim-cli",
     "crates/sim-agent",
+    "crates/sim-staff",
     "crates/map-tool",
     "crates/oob-check",
     "crates/oob-derive",
@@ -19,6 +20,7 @@ publish = false
 [workspace.dependencies]
 sim-core = { path = "crates/sim-core" }
 sim-data = { path = "crates/sim-data" }
+sim-staff = { path = "crates/sim-staff" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
 toml = "1"

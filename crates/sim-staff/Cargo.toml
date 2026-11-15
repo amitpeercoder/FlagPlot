@@ -1,0 +1,15 @@
+[package]
+name = "sim-staff"
+description = "Flag Plot staff: the doctrine a side's staff decides by, from its view alone (decision 0107)."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+sim-core.workspace = true
+
+[dev-dependencies]
+sim-data.workspace = true
+
+[lints]
+workspace = true
