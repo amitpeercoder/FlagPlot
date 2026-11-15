@@ -20,7 +20,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 6
+      "const": 7
     },
     "kind": {
       "const": "staff_orders"
@@ -61,6 +61,51 @@
     },
     "summary": {
       "type": "string"
+    },
+    "notices": {
+      "type": "array",
+      "description": "Notices the staff hands in beside its orders: that a plan cannot meet its intent, waits for a leave, or has had a run end. Each rests on one of the commands or decisions to give no order above, by its place in the list. Left out when there is none.",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "plan",
+          "run",
+          "rests_on"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "cannot_meet",
+              "waits_for_leave_to_prepare",
+              "waits_for_leave_to_launch",
+              "run_ended"
+            ]
+          },
+          "plan": {
+            "type": "integer"
+          },
+          "run": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "rests_on": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "type": "integer"
+              },
+              "no_order": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

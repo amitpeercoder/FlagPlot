@@ -19,8 +19,8 @@ use std::collections::BTreeMap;
 use serde_json::{json, Map, Value};
 use sim_core::command::{
     AmendmentChange, CommandKind, CommandRefusal, Committed, Displacement, HoldMaker, HoldTarget,
-    Intent, IntentKind, IntentLimits, Limit, Plan, PlanState, Proposal, Run, RunDays, Staff,
-    StaffDecisions, SupplyProjection,
+    Intent, IntentKind, IntentLimits, InterruptRef, InterruptSetting, Limit, Plan, PlanState,
+    Proposal, Run, RunDays, Staff, StaffDecisions, StandingSubject, SupplyProjection,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -38,6 +38,8 @@ use crate::commands::{
 use crate::common::{map_unit_tokens, Ctx};
 use crate::orders::{order_to_json, unit_text};
 use crate::record::CallError;
+
+pub(crate) use crate::reporting::{fired_on_day, firing_words, firings_json, report};
 
 /// The days between shipments the staff uses where the commander set none.
 /// It is the doctrine's own figure (`DEFAULT_INTERVAL_DAYS` of `sim-staff`);
@@ -139,7 +141,7 @@ impl<'a> Names<'a> {
         }
     }
 
-    fn ship(&self, id: ShipId) -> u32 {
+    pub(crate) fn ship(&self, id: ShipId) -> u32 {
         self.ctx.ship_number(id).unwrap_or_else(|| id.raw())
     }
 
@@ -149,12 +151,12 @@ impl<'a> Names<'a> {
         numbers
     }
 
-    fn base(&self, id: sim_core::ids::BaseId) -> Value {
+    pub(crate) fn base(&self, id: sim_core::ids::BaseId) -> Value {
         serde_json::to_value(self.ctx.base(id)).expect("a handle serialises")
     }
 }
 
-fn dec(value: Fixed) -> Value {
+pub(crate) fn dec(value: Fixed) -> Value {
     Value::String(value.to_string())
 }
 
@@ -175,7 +177,7 @@ fn issuer_word(issuer: Issuer) -> &'static str {
     }
 }
 
-fn answer(kind: &str, mut fields: Value) -> Value {
+pub(crate) fn answer(kind: &str, mut fields: Value) -> Value {
     let map = fields.as_object_mut().expect("an answer is an object");
     let mut out = Map::new();
     out.insert("format".into(), json!(FORMAT));
@@ -496,6 +498,22 @@ fn command_json(n: &Names<'_>, command: &CommandKind, request: Option<&Request>)
         CommandKind::Hold { target } | CommandKind::Release { target } => Some(*target),
         _ => None,
     };
+    // An acknowledgement of a ship lost names the ship in the side's number,
+    // or the number the side wrote for one that is not its own.
+    if let CommandKind::Acknowledge {
+        interrupt:
+            InterruptRef::Standing {
+                subject: StandingSubject::Ship(ship),
+                ..
+            },
+    } = command
+    {
+        let mut body = n.value(&command_to_json(command));
+        body["ship"] = json!(request
+            .and_then(|r| r.ship_stand_ins.get(&ship.raw()).copied())
+            .unwrap_or_else(|| n.ship(*ship)));
+        return body;
+    }
     match target {
         Some(target) => {
             let mut body = json!({"kind": command.name()});
@@ -782,6 +800,7 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
                 }))
                 .collect::<Vec<_>>(),
             "holds": holds_json(&n, view),
+            "interrupts": crate::reporting::interrupts_json(&n, view),
             "queued": queued
                 .iter()
                 .enumerate()
@@ -1059,17 +1078,21 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
         "set_leave" => &["leave", "given"],
         "approve" | "cancel_plan" => &["plan"],
         "hold" | "release" => &["ship", "task_force", "air_group", "setting"],
+        "set_interrupt" => &["interrupt", "base", "below_days", "standing", "on"],
+        "acknowledge" => &["interrupt", "standing", "plan", "ship"],
         _ => &[],
     }
 }
 
 /// Reads a seat's arguments of a command tool into a command. `next_intent`
-/// is the side's next free intent number.
+/// is the side's next free intent number and `next_interrupt` its next free
+/// interrupt number.
 pub(crate) fn request(
     view: &SideView<'_>,
     tool: &str,
     args: &Map<String, Value>,
     next_intent: u32,
+    next_interrupt: u32,
 ) -> Result<Request, CallError> {
     let allowed = allowed_keys(tool);
     for key in args.keys() {
@@ -1096,6 +1119,29 @@ pub(crate) fn request(
     if tool == "set_intent" && !body.contains_key("intent") {
         body.insert("intent".into(), json!(next_intent));
         number_chosen = true;
+    }
+    if tool == "set_interrupt" {
+        let standing = body.contains_key("standing");
+        if standing {
+            if let Some(key) = ["interrupt", "base", "below_days"]
+                .into_iter()
+                .find(|k| body.contains_key(*k))
+            {
+                return Err(CallError::new(format!(
+                    "\"{key}\" is not an argument of set_interrupt with \"standing\": a standing interrupt takes \"standing\" and \"on\" only"
+                )));
+            }
+        } else {
+            if body.contains_key("on") {
+                return Err(CallError::new(
+                    "\"on\" is an argument of set_interrupt only with \"standing\" (cannot_meet, waits_for_leave or ship_lost)",
+                ));
+            }
+            if !body.contains_key("interrupt") {
+                body.insert("interrupt".into(), json!(next_interrupt));
+                number_chosen = true;
+            }
+        }
     }
     if tool == "set_limit" {
         let limit = body.get("limit").and_then(Value::as_str).unwrap_or("");
@@ -1145,7 +1191,7 @@ pub(crate) fn request(
             }
         }
     }
-    if tool == "hold" || tool == "release" {
+    if tool == "hold" || tool == "release" || tool == "acknowledge" {
         if body.contains_key("setting") && !body.contains_key("air_group") {
             return Err(CallError::new(format!(
                 "\"setting\" is an argument of {tool} only with \"air_group\" (the one setting that can be held is \"search_arc\")"
@@ -1274,6 +1320,28 @@ pub(crate) fn command_answer(
                 );
             }
             match &request.kind {
+                CommandKind::SetInterrupt(InterruptSetting::Set { interrupt, .. }) => {
+                    if request.number_chosen {
+                        out["interrupt"] = json!(interrupt.raw());
+                        notes.push(format!(
+                            "You gave no interrupt number: interrupt:{} is the side's next free number.",
+                            interrupt.raw()
+                        ));
+                    }
+                    notes.push(
+                        "A set interrupt is tested each morning, after the staff has handed in: it fires once when its base's days of supply are below the number (and a morning that reads no figure does not fire it), and is armed again on a morning the figure is back at or above it. run stops the clock at the end of a day on which it fired."
+                            .to_string(),
+                    );
+                }
+                CommandKind::SetInterrupt(InterruptSetting::Standing { kind, on }) => notes.push(format!(
+                    "The standing interrupt {} is {} from the start of day {day}.",
+                    kind.name(),
+                    if *on { "on" } else { "off" }
+                )),
+                CommandKind::Acknowledge { .. } => notes.push(
+                    "Acknowledging marks the last firing seen. It does not arm the interrupt again: that happens on a morning its condition does not hold."
+                        .to_string(),
+                ),
                 CommandKind::Hold { target } => notes.push(format!(
                     "{} is held from the start of day {day}: the staff gives no order to it and plans without it. release lifts the hold.",
                     hold_target_words(&n, *target)
@@ -1322,6 +1390,29 @@ pub(crate) fn next_free_intent(view: &SideView<'_>, queued: &[CommandKind]) -> u
         .iter()
         .filter_map(|c| match c {
             CommandKind::SetIntent { intent, .. } => Some(intent.raw()),
+            _ => None,
+        })
+        .max()
+        .unwrap_or(0);
+    set.max(queued) + 1
+}
+
+/// The interrupt numbers ever set, the commands in `queued` counted: the
+/// side's next free number is one past the highest.
+pub(crate) fn next_free_interrupt(view: &SideView<'_>, queued: &[CommandKind]) -> u32 {
+    let set = view
+        .command_state()
+        .interrupts
+        .keys()
+        .map(|id| id.raw())
+        .max()
+        .unwrap_or(0);
+    let queued = queued
+        .iter()
+        .filter_map(|c| match c {
+            CommandKind::SetInterrupt(InterruptSetting::Set { interrupt, .. }) => {
+                Some(interrupt.raw())
+            }
             _ => None,
         })
         .max()

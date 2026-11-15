@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/report",
+  "title": "report: what is open and what closed in your command of the staff, and the interrupts",
+  "description": "Worked from your events and stored nowhere. A matter is a plan, a run where there is one and a kind of notice. It is open if the staff handed it in on the last day resolved, else closed, on the first day after its last day. Each day of its history gives the why number of that day's reason.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "day",
+    "matters",
+    "open_matters",
+    "closed_matters",
+    "interrupts",
+    "fired_last_day",
+    "summary"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 7
+    },
+    "kind": {
+      "const": "report"
+    },
+    "day": {
+      "type": "integer",
+      "description": "The number of days resolved."
+    },
+    "matters": {
+      "type": "array",
+      "description": "Open matters first, then closed; each by first day, then plan, run and kind.",
+      "items": {
+        "type": "object",
+        "required": [
+          "plan",
+          "intent",
+          "run",
+          "kind",
+          "words",
+          "open",
+          "opened",
+          "closed",
+          "history"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "plan": {
+            "type": "integer"
+          },
+          "intent": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "run": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "cannot_meet",
+              "waits_for_leave_to_prepare",
+              "waits_for_leave_to_launch",
+              "run_ended"
+            ]
+          },
+          "words": {
+            "type": "string"
+          },
+          "open": {
+            "type": "boolean"
+          },
+          "opened": {
+            "type": "integer"
+          },
+          "closed": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The first day on which it was not handed in; null while open."
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "day",
+                "why"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "day": {
+                  "type": "integer"
+                },
+                "why": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "The number why takes for the reason that day's notice rests on."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "open_matters": {
+      "type": "integer"
+    },
+    "closed_matters": {
+      "type": "integer"
+    },
+    "interrupts": {
+      "$ref": "command_defs.schema.json#/$defs/interrupts"
+    },
+    "fired_last_day": {
+      "type": "array",
+      "items": {
+        "$ref": "command_defs.schema.json#/$defs/firing"
+      }
+    },
+    "summary": {
+      "type": "string"
+    }
+  }
+}

@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 6` and a `"kind"` that names it.
+`"version": 7` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -21,11 +21,13 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `issue_orders` | `issue_orders.schema.json` | `issue_orders` (its arguments: `issue_orders_arguments.schema.json`) |
 | `command_state` | `command_state.schema.json` | `command_state` (a seat whose side has a staff) |
 | `plans` | `plans.schema.json` | `plans` |
-| `command` | `command.schema.json` | `set_intent`, `withdraw_intent`, `set_limit`, `set_leave`, `hold`, `release`, `approve` (of a plan or of a preview), `cancel_plan`: queued or refused; also `preview` of a command the tool refuses, and `approve` of a void preview |
+| `command` | `command.schema.json` | `set_intent`, `withdraw_intent`, `set_limit`, `set_leave`, `hold`, `release`, `set_interrupt`, `acknowledge`, `approve` (of a plan or of a preview), `cancel_plan`: queued or refused; also `preview` of a command the tool refuses, and `approve` of a void preview |
 | `preview` | `preview.schema.json` | `preview` |
 | `propose` | `propose.schema.json` | `propose` |
 | `staff_orders` | `staff_orders.schema.json` | `staff_orders` |
 | `why` | `why.schema.json` | `why` (or `not_known`) |
+| `run` | `run.schema.json` | `run` (offered where exactly one seat is held by a player) |
+| `report` | `report.schema.json` | `report` |
 | `end_day` | `end_day.schema.json` | `end_day` |
 | `error` | `error.schema.json` | any call refused as a whole |
 | `transcript_entry` | `transcript_entry.schema.json` | one line of a game's transcript |
@@ -51,7 +53,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 6. A field removed from an answer, or a field whose meaning
+`version` is 7. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -62,6 +64,23 @@ of a fight became `force`, the side's own; `target` left a salvo fired and a
 fighter's fire; `raid` left the guns' fire; `air_group` left a raid on a base;
 and `by` of an attack on a ship became `"ship"` or `"aircraft"`. Nothing else
 changed.
+
+Version 7 (decision 0107, step 4) adds `set_interrupt`, `acknowledge`, `run` and
+`report` to the tools of a seat whose side has a staff. `set_interrupt` and
+`acknowledge` answer as the other commands do (the `command` kind, whose `tool`
+takes both and which gains `interrupt`, the number chosen for a `set_interrupt`
+with none given). `run` answers with the `run` kind: `staff_orders` (the
+`staff_orders` answer for the first day, worked before it was resolved),
+`days_resolved` (`first`, `last`, `count`), `stopped` (`interrupt`, `game_over` or
+`days`), `fired` (the firings of the last day resolved), `game_over`, `day`,
+`result` and `summary`. `report` answers with the `report` kind: `matters`,
+`interrupts`, `fired_last_day` and `summary`. A firing has `day`, `event`,
+`acknowledged`, `why` and `words`, and either `interrupt`, `base`, `below_days`
+and `figure` (a set interrupt) or `standing` with `plan` or `ship` (a standing
+one). `command_state` gains `interrupts` in the shape of the report's
+`interrupts`. `staff_orders` and a preview's decisions gain `notices` when the
+staff hands one in. The version was raised for the new tools and the two new
+answer kinds; no field of an earlier answer changed.
 
 Version 6 (decision 0107, step 3) adds `hold`, `release` and `preview` to the
 tools of a seat whose side has a staff, and `preview` to `approve`. `hold` and
