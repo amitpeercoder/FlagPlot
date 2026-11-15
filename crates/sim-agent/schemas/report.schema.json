@@ -14,7 +14,8 @@
     "closed_matters",
     "interrupts",
     "fired_last_day",
-    "summary"
+    "summary",
+    "holds"
   ],
   "additionalProperties": false,
   "properties": {
@@ -22,7 +23,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 7
+      "const": 8
     },
     "kind": {
       "const": "report"
@@ -131,6 +132,58 @@
     },
     "summary": {
       "type": "string"
+    },
+    "holds": {
+      "type": "array",
+      "description": "The hold intents in force with the measure of each (decision 0117, 14).",
+      "items": {
+        "type": "object",
+        "description": "The measure of a hold intent (decision 0117, 14): the days it has been in force and the days of them the base was the side's at the end of the day with its airfield open, the air raids on the base in those days and how many a patrol of the side's fought, the base's days of supply today (null where no figure), and the words.",
+        "required": [
+          "days_in_force",
+          "days_met",
+          "raids",
+          "raids_fought",
+          "days_of_supply",
+          "text",
+          "intent",
+          "base"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "days_in_force": {
+            "type": "integer"
+          },
+          "days_met": {
+            "type": "integer"
+          },
+          "raids": {
+            "type": "integer"
+          },
+          "raids_fought": {
+            "type": "integer"
+          },
+          "days_of_supply": {
+            "oneOf": [
+              {
+                "$ref": "defs.schema.json#/$defs/dec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "intent": {
+            "type": "integer"
+          },
+          "base": {
+            "$ref": "defs.schema.json#/$defs/handle"
+          }
+        }
+      }
     }
   }
 }

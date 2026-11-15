@@ -18,9 +18,9 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    AmendmentChange, CommandKind, CommandRefusal, Committed, Displacement, HoldMaker, HoldTarget,
-    Intent, IntentKind, IntentLimits, InterruptRef, InterruptSetting, Limit, Plan, PlanState,
-    Proposal, Run, RunDays, Staff, StaffDecisions, StandingSubject, SupplyProjection,
+    AmendmentChange, CommandKind, CommandRefusal, CommandState, Committed, Displacement, HoldMaker,
+    HoldTarget, Intent, IntentKind, IntentLimits, InterruptRef, InterruptSetting, Limit, Plan,
+    PlanState, Proposal, Run, RunDays, Staff, StaffDecisions, StandingSubject, SupplyProjection,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -48,7 +48,7 @@ pub const STAFF_DEFAULT_INTERVAL_DAYS: u32 = 15;
 
 /// What every answer about the staff says first: it does nothing for a side
 /// until an intent with a forces limit is set.
-const STAFF_NOTE: &str = "The staff does nothing for your side until you set an intent and give it a forces limit (set_intent, then set_limit forces). Commands you queue take effect at the start of the coming day.";
+const STAFF_NOTE: &str = "The staff does nothing for your side until you set an intent. To keep a base supplied, give the intent a forces limit (set_intent, then set_limit forces). To hold a place or cover a base from the air (intent_kind hold or cover), the staff may use the air groups based at the base unless you limit them (set_limit forces with air_groups); under a hold intent the staff forms a cover intent by itself. Commands you queue take effect at the start of the coming day.";
 
 /// The ships and forces of the umpire's ids shown in the side's numbers,
 /// from the side's view.
@@ -131,6 +131,18 @@ impl<'a> Names<'a> {
                                     })
                                     .collect(),
                             ),
+                            ("air_groups", Value::Array(ids)) => Value::Array(
+                                ids.iter()
+                                    .map(|id| {
+                                        id.as_u64()
+                                            .and_then(|n| u32::try_from(n).ok())
+                                            .and_then(|raw| {
+                                                self.ctx.group_number(AirGroupId::new(raw))
+                                            })
+                                            .map_or_else(|| id.clone(), |n| json!(n))
+                                    })
+                                    .collect(),
+                            ),
                             _ => self.value(v),
                         };
                         (key.clone(), shown)
@@ -147,6 +159,16 @@ impl<'a> Names<'a> {
 
     fn ships<'s>(&self, ids: impl IntoIterator<Item = &'s ShipId>) -> Vec<u32> {
         let mut numbers: Vec<u32> = ids.into_iter().map(|id| self.ship(*id)).collect();
+        numbers.sort_unstable();
+        numbers
+    }
+
+    /// The side's numbers of air groups, in order.
+    fn groups<'s>(&self, ids: impl IntoIterator<Item = &'s AirGroupId>) -> Vec<u32> {
+        let mut numbers: Vec<u32> = ids
+            .into_iter()
+            .map(|id| self.ctx.group_number(*id).unwrap_or_else(|| id.raw()))
+            .collect();
         numbers.sort_unstable();
         numbers
     }
@@ -200,19 +222,95 @@ fn force_numbers<'s>(n: &Names<'_>, forces: impl IntoIterator<Item = &'s TaskFor
     numbers
 }
 
+fn forces_json(n: &Names<'_>, forces: &sim_core::command::ForcesLimit) -> Value {
+    json!({
+        "ships": n.ships(&forces.ships),
+        "task_forces": force_numbers(n, &forces.task_forces),
+        "air_groups": n.groups(&forces.air_groups),
+        "source": forces.source.map(|source| n.base(source)),
+    })
+}
+
+/// The limits set on one intent itself. A limit not set on it is `null` (a
+/// risk, too: `limits_read_up` says what it is read as, from the tree).
 fn limits_json(n: &Names<'_>, limits: &IntentLimits) -> Value {
     json!({
-        "forces": limits.forces.as_ref().map(|forces| json!({
-            "ships": n.ships(&forces.ships),
-            "task_forces": force_numbers(n, &forces.task_forces),
-            "source": n.base(forces.source),
-        })),
+        "forces": limits.forces.as_ref().map(|forces| forces_json(n, forces)),
         "area": limits.area.as_ref().map(|hexes| {
             hexes.iter().map(|h| json!([h.q, h.r])).collect::<Vec<_>>()
         }),
         "priority": limits.priority,
         "protected": n.ships(&limits.protected),
-        "risk": limits.risk.name(),
+        "risk": limits.risk.map(|risk| risk.name()),
+    })
+}
+
+/// `intent` and the intents above it, nearest first.
+fn up_the_tree<'a>(state: &'a CommandState, intent: &'a Intent) -> Vec<&'a Intent> {
+    let mut chain = vec![intent];
+    chain.extend(state.ancestors(intent.id));
+    chain
+}
+
+/// The limits of an intent as the staff reads them, up the tree (decision
+/// 0117, 7): for each limit the value, the intent it is read from, and where
+/// none is set the words for what then holds.
+fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> Value {
+    let chain = up_the_tree(state, intent);
+    let from = |found: Option<&Intent>| found.map(|i| i.id.raw());
+    let forces = chain.iter().find(|i| i.limits.forces.is_some()).copied();
+    let risk = chain.iter().find(|i| i.limits.risk.is_some()).copied();
+    let priority = chain.iter().find(|i| i.limits.priority.is_some()).copied();
+    let area = chain.iter().find(|i| i.limits.area.is_some()).copied();
+    json!({
+        "forces": forces.and_then(|i| i.limits.forces.as_ref()).map(|f| forces_json(n, f)),
+        "forces_from": from(forces),
+        "forces_if_unset": if forces.is_some() {
+            Value::Null
+        } else {
+            json!(match intent.addressee {
+                sim_core::command::Addressee::Area =>
+                    "not set on it or above it: the staff may use nothing (the area commands nothing)",
+                sim_core::command::Addressee::Base(_) =>
+                    "not set on it or above it: the staff may use the air groups based at its base that are not held",
+            })
+        },
+        "risk": risk.and_then(|i| i.limits.risk).map_or_else(
+            || state.risk_read_up(intent.id).name(),
+            |risk| risk.name(),
+        ),
+        "risk_from": from(risk),
+        "risk_set": risk.is_some(),
+        "risk_if_unset": if risk.is_some() {
+            Value::Null
+        } else {
+            json!("not set on it or above it: balanced")
+        },
+        "area": area.and_then(|i| i.limits.area.as_ref()).map(|hexes| {
+            hexes.iter().map(|h| json!([h.q, h.r])).collect::<Vec<_>>()
+        }),
+        "area_from": from(area),
+        "priority": priority.and_then(|i| i.limits.priority),
+        "priority_from": from(priority),
+    })
+}
+
+/// An intent's kind as the interface writes it: its name, its base, and for
+/// keeping a base supplied the days (`null` for the other kinds).
+fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
+    let (floor_days, interval_days) = match kind {
+        IntentKind::KeepSupplied {
+            floor_days,
+            interval_days,
+            ..
+        } => (Some(floor_days), interval_days),
+        IntentKind::Cover { .. } | IntentKind::Hold { .. } => (None, None),
+    };
+    json!({
+        "kind": kind.name(),
+        "base": n.base(kind.base()),
+        "floor_days": floor_days,
+        "interval_days": interval_days,
     })
 }
 
@@ -255,14 +353,16 @@ fn projection_summary(projection: &SupplyProjection) -> Value {
 }
 
 fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &Intent) -> Value {
-    let IntentKind::KeepSupplied {
-        base,
-        floor_days,
-        interval_days,
-    } = intent.kind;
-    let interval = match interval_days {
-        Some(days) => days.to_string(),
-        None => format!("not set: the staff uses {STAFF_DEFAULT_INTERVAL_DAYS}"),
+    let state = view.command_state();
+    let interval = match intent.kind {
+        IntentKind::KeepSupplied {
+            interval_days: Some(days),
+            ..
+        } => Some(days.to_string()),
+        IntentKind::KeepSupplied { .. } => Some(format!(
+            "not set: the staff uses {STAFF_DEFAULT_INTERVAL_DAYS}"
+        )),
+        _ => None,
     };
     let proposal = if intent.in_force() {
         staff.propose(*view, intent.id)
@@ -285,7 +385,7 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
         .map(projection_summary);
     // Its place in the order the staff serves: ranked first, then by number.
     let served = intent.in_force().then(|| {
-        let mut order: Vec<&Intent> = view.command_state().intents_in_force().collect();
+        let mut order: Vec<&Intent> = state.intents_in_force().collect();
         order.sort_by_key(|i| {
             (
                 i.limits.priority.is_none(),
@@ -298,21 +398,57 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
             .position(|i| i.id == intent.id)
             .map_or(0, |at| at + 1)
     });
-    json!({
+    let mut body = json!({
         "number": intent.id.raw(),
         "in_force": intent.in_force(),
-        "kind": "keep_supplied",
-        "base": n.base(base),
-        "floor_days": floor_days,
-        "interval_days": interval_days,
         "interval": interval,
         "set_day": intent.set_day,
         "withdrawn_day": intent.withdrawn_day,
         "plan": intent.plan.raw(),
+        "parent": intent.parent.map(|p| p.raw()),
+        "maker": intent.maker.name(),
+        "addressee": n.text(&intent.addressee.to_string()),
+        "children": state
+            .children_in_force(intent.id)
+            .iter()
+            .map(|c| c.raw())
+            .collect::<Vec<_>>(),
+        "depth": state.ancestors(intent.id).len(),
         "limits": limits_json(n, &intent.limits),
+        "limits_read_up": limits_read_up_json(n, state, intent),
         "projection": projection,
         "served": served,
         "displaced_by": displaced_by,
+    });
+    if let (Some(map), Value::Object(kind)) = (body.as_object_mut(), kind_json(n, intent.kind)) {
+        map.extend(kind);
+    }
+    if matches!(intent.kind, IntentKind::Hold { .. }) {
+        body["measure"] = hold_measure_json(&crate::hold_measure(view, intent.id));
+    }
+    body
+}
+
+/// The measure of a hold intent as the interface writes it, with its words
+/// (decision 0117, 14): `null` where it is not a hold intent.
+pub(crate) fn hold_measure_json(measure: &Option<crate::HoldMeasure>) -> Value {
+    let Some(m) = measure else {
+        return Value::Null;
+    };
+    let supply = match m.days_of_supply {
+        Some(days) => format!("{days} days of supply at the base today"),
+        None => "no figure for the base's days of supply".to_string(),
+    };
+    json!({
+        "days_in_force": m.days_in_force,
+        "days_met": m.days_met,
+        "raids": m.raids,
+        "raids_fought": m.raids_fought,
+        "days_of_supply": m.days_of_supply.map(dec),
+        "text": format!(
+            "held on {} of {} days in force (the base the side's at the end of the day with its airfield open); {} air raids, {} fought by a patrol of the side's; {supply}",
+            m.days_met, m.days_in_force, m.raids, m.raids_fought
+        ),
     })
 }
 
@@ -427,14 +563,14 @@ fn plan_json(n: &Names<'_>, view: &SideView<'_>, plan: &Plan, doing: bool) -> Va
         "intent_in_force": intent_in_force,
         "state": plan.state.name(),
         "baseline": plan.baseline.as_ref().map(|b| {
-            let IntentKind::KeepSupplied { base, floor_days, interval_days } = b.kind;
-            json!({
+            let mut body = json!({
                 "day": b.day,
-                "base": n.base(base),
-                "floor_days": floor_days,
-                "interval_days": interval_days,
                 "limits": limits_json(n, &b.limits),
-            })
+            });
+            if let (Some(map), Value::Object(kind)) = (body.as_object_mut(), kind_json(n, b.kind)) {
+                map.extend(kind);
+            }
+            body
         }),
         "baseline_day": plan.baseline.as_ref().map(|b| b.day),
         "amendments": plan
@@ -488,6 +624,11 @@ fn hold_target_json(n: &Names<'_>, target: HoldTarget, request: Option<&Request>
                 .or_else(|| n.ctx.group_number(group))
                 .unwrap_or_else(|| group.raw()),
             "setting": setting.name(),
+        }),
+        HoldTarget::AirGroup(group) => json!({
+            "air_group": written(|r| &r.group_stand_ins, group.raw())
+                .or_else(|| n.ctx.group_number(group))
+                .unwrap_or_else(|| group.raw()),
         }),
     }
 }
@@ -552,6 +693,10 @@ fn hold_target_words(n: &Names<'_>, target: HoldTarget) -> String {
         HoldTarget::Setting { group, setting } => format!(
             "the {} of air group {}",
             setting.name().replace('_', " "),
+            n.ctx.group_number(group).unwrap_or_else(|| group.raw())
+        ),
+        HoldTarget::AirGroup(group) => format!(
+            "air group {}",
             n.ctx.group_number(group).unwrap_or_else(|| group.raw())
         ),
     }
@@ -730,10 +875,22 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
     let today = view.day() + 1;
     let mut notes: Vec<String> = vec![STAFF_NOTE.to_string()];
     for intent in state.intents_in_force() {
-        if intent.limits.forces.is_none() {
+        // An intent given to the area commands nothing without a forces
+        // limit, its own or one above it; one given to a base may use the
+        // groups based there (decision 0117, 8).
+        if intent.addressee == sim_core::command::Addressee::Area
+            && state.forces_read_up(intent.id).is_none()
+        {
             notes.push(format!(
                 "intent:{} has no forces limit: the staff gives no order for it until you set one (set_limit forces).",
                 intent.id.raw()
+            ));
+        }
+        if intent.maker == sim_core::command::Maker::Staff {
+            notes.push(format!(
+                "intent:{} was formed by the staff under intent:{}: you shape it by its limits and holds, or by withdrawing the intent it stands under; set_intent and withdraw_intent are refused for it.",
+                intent.id.raw(),
+                intent.parent.map_or(0, |p| p.raw())
             ));
         }
     }
@@ -767,9 +924,8 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
             "as_at": format!("the start of day {today}, with the commands you have queued taken in"),
             "notes": notes,
             "leaves": leaves_json(view),
-            "intents": state
-                .intents
-                .values()
+            "intents": in_tree_order(state)
+                .into_iter()
                 .map(|intent| intent_json(&n, staff, view, intent))
                 .collect::<Vec<_>>(),
             "reserves": view
@@ -813,6 +969,35 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
             "staff_decisions_yesterday": decisions_of_day(&n, view, view.day()),
         }),
     )
+}
+
+/// Every intent of the side, each root by number with the intents beneath it
+/// after it, depth first, each branch by number (decision 0117, 14: a
+/// sub-intent is listed under its parent). With no tree it is by number.
+fn in_tree_order(state: &CommandState) -> Vec<&Intent> {
+    fn walk<'a>(state: &'a CommandState, intent: &'a Intent, out: &mut Vec<&'a Intent>) {
+        out.push(intent);
+        for child in state
+            .intents
+            .values()
+            .filter(|c| c.parent == Some(intent.id))
+        {
+            // A parent is always a lower number than its child, so this
+            // cannot loop.
+            if child.id != intent.id {
+                walk(state, child, out);
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for root in state
+        .intents
+        .values()
+        .filter(|i| i.parent.is_none_or(|p| !state.intents.contains_key(&p)))
+    {
+        walk(state, root, &mut out);
+    }
+    out
 }
 
 /// `plans`: the plans with their runs and what each run is doing.
@@ -901,10 +1086,112 @@ pub fn propose(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result<Va
             "displaces": displaces,
             "displaced_by": displaced_by,
             "displaced_intents": displaced_intents,
+            "tree": tree_json(&n, view, &proposal),
             "would_hand_in": with_day(decisions_json(&n, &proposal.decisions), today),
             "reason": n.value(&reason_to_json(&proposal.reason)),
         }),
     ))
+}
+
+/// The tree the staff would form for a hold or a cover intent (decision
+/// 0117, 14), read from the decisions of its proposal and nothing else: the
+/// sub-intents it would form (each `form_intent` command, numbered as the
+/// side's next free numbers), the air groups each intent would order and the
+/// order each is given (a mission, a search arc, a patrol share, a rest), and
+/// the search arc with its threats as the reason of its order words them.
+/// `null` for an intent that is not a hold or a cover intent.
+fn tree_json(n: &Names<'_>, view: &SideView<'_>, proposal: &Proposal) -> Value {
+    let state = view.command_state();
+    let Some(found) = state.intents.get(&proposal.intent) else {
+        return Value::Null;
+    };
+    if matches!(found.kind, IntentKind::KeepSupplied { .. }) {
+        return Value::Null;
+    }
+    let mut next = state.next_intent_number().raw();
+    let mut sub_intents: Vec<Value> = Vec::new();
+    for command in &proposal.decisions.commands {
+        let CommandKind::FormIntent { parent, kind } = &command.kind else {
+            continue;
+        };
+        let mut entry = json!({
+            "number": next,
+            "parent": parent.raw(),
+            "maker": "staff",
+            "text": command_text(n, &command.kind, None),
+            "reason": n.value(&reason_to_json(&command.reason)),
+        });
+        if let (Some(map), Value::Object(kind)) = (entry.as_object_mut(), kind_json(n, *kind)) {
+            map.extend(kind);
+        }
+        sub_intents.push(entry);
+        next += 1;
+    }
+    // The orders to air groups, by the intent each serves: the groups that
+    // intent would use, with their missions and settings.
+    let mut by_intent: BTreeMap<u32, Vec<Value>> = BTreeMap::new();
+    let mut arcs: Vec<Value> = Vec::new();
+    for order in &proposal.decisions.orders {
+        let sim_core::orders::OrderKind::AirGroup {
+            target,
+            order: body,
+        } = &order.kind
+        else {
+            continue;
+        };
+        let group = n.ctx.group_number(*target).unwrap_or_else(|| target.raw());
+        by_intent
+            .entry(order.intent.raw())
+            .or_default()
+            .push(json!({
+                "air_group": group,
+                "order": n.value(&order_to_json(&order.kind)),
+                "text": n.text(&unit_text(&order.kind)),
+                "worked": n.text(&order.reason.worked),
+            }));
+        if let sim_core::orders::AirGroupOrder::SetSearchArc {
+            from_deg,
+            to_deg,
+            range_nm,
+        } = body
+        {
+            arcs.push(json!({
+                "intent": order.intent.raw(),
+                "air_group": group,
+                "from_deg": from_deg,
+                "to_deg": to_deg,
+                "whole_circle": from_deg == to_deg,
+                "range_nm": dec(*range_nm),
+                "how": n.text(&order.reason.worked),
+            }));
+        }
+    }
+    let groups: Vec<Value> = by_intent
+        .into_iter()
+        .map(|(intent, orders)| {
+            let mut used: Vec<u64> = orders
+                .iter()
+                .filter_map(|o| o["air_group"].as_u64())
+                .collect();
+            used.sort_unstable();
+            used.dedup();
+            json!({"intent": intent, "air_groups": used, "orders": orders})
+        })
+        .collect();
+    json!({
+        "intent": proposal.intent.raw(),
+        "kind": found.kind.name(),
+        "sub_intents": sub_intents,
+        "groups": groups,
+        "arcs": arcs,
+        "no_orders": proposal
+            .decisions
+            .no_orders
+            .iter()
+            .map(|r| n.text(&r.worked))
+            .collect::<Vec<_>>(),
+        "note": "The tree the staff would form on the coming day if the plan were released; nothing is formed until the day is resolved.",
+    })
 }
 
 /// One commitment that displaces, in the side's numbers.
@@ -1023,6 +1310,32 @@ pub fn why(view: &SideView<'_>, number: u32) -> Value {
     let Some((for_json, reason)) = decision_of(&n, view, &events, event) else {
         return unknown();
     };
+    // What the reason serves, in words, and the intents above it, nearest
+    // first, the last the commander's (decision 0117, 10).
+    let (serves, chain) = match &event.kind {
+        SideEventKind::Whole(EventKind::StaffReason { reason, .. }) => (
+            n.text(&reason.serves.to_string()),
+            reason
+                .serves
+                .chain
+                .iter()
+                .map(|link| {
+                    let statement = n.text(&link.statement);
+                    let head = format!(
+                        "under intent {} (the {}'s)",
+                        link.intent.raw(),
+                        link.maker.name()
+                    );
+                    if statement.is_empty() {
+                        head
+                    } else {
+                        format!("{head}: {statement}")
+                    }
+                })
+                .collect::<Vec<_>>(),
+        ),
+        _ => (String::new(), Vec::new()),
+    };
     answer(
         "why",
         json!({
@@ -1031,6 +1344,8 @@ pub fn why(view: &SideView<'_>, number: u32) -> Value {
             "pulse": event.pulse.map(|p| p.name()),
             "for": for_json,
             "reason": reason,
+            "serves": serves,
+            "chain": chain,
         }),
     )
 }
@@ -1060,13 +1375,20 @@ const COMMON_KEYS: [&str; 2] = ["clear", "reason"];
 
 fn allowed_keys(tool: &str) -> &'static [&'static str] {
     match tool {
-        "set_intent" => &["intent", "base", "floor_days", "interval_days"],
+        "set_intent" => &[
+            "intent",
+            "intent_kind",
+            "base",
+            "floor_days",
+            "interval_days",
+        ],
         "withdraw_intent" => &["intent"],
         "set_limit" => &[
             "limit",
             "intent",
             "ships",
             "task_forces",
+            "air_groups",
             "source",
             "hexes",
             "rank",
@@ -1115,6 +1437,20 @@ pub(crate) fn request(
         }
     }
     body.insert("kind".into(), json!(tool));
+    if tool == "set_intent" {
+        let kind = body.get("intent_kind").and_then(Value::as_str);
+        if matches!(kind, Some("cover" | "hold")) {
+            if let Some(key) = ["floor_days", "interval_days"]
+                .into_iter()
+                .find(|k| body.contains_key(*k))
+            {
+                return Err(CallError::new(format!(
+                    "\"{key}\" is an argument of set_intent only for intent_kind keep_supplied: {} takes a base and nothing else",
+                    kind.unwrap_or("")
+                )));
+            }
+        }
+    }
     let mut number_chosen = false;
     if tool == "set_intent" && !body.contains_key("intent") {
         body.insert("intent".into(), json!(next_intent));
@@ -1156,7 +1492,7 @@ pub(crate) fn request(
                 body.insert(key.into(), json!(whole.to_string()));
             }
         }
-        for (key, own_force) in [("ships", false), ("task_forces", true)] {
+        for key in ["ships", "task_forces", "air_groups"] {
             let Some(Value::Array(numbers)) = body.get_mut(key) else {
                 continue;
             };
@@ -1164,16 +1500,19 @@ pub(crate) fn request(
                 let Some(number) = item.as_u64().and_then(|n| u32::try_from(n).ok()) else {
                     continue;
                 };
-                let (raw, stand_ins) = if own_force {
-                    (
+                let (raw, stand_ins) = match key {
+                    "task_forces" => (
                         ctx.own_force(number).map(|f| f.id.raw()),
                         &mut force_stand_ins,
-                    )
-                } else {
-                    (
+                    ),
+                    "air_groups" => (
+                        ctx.own_group(number).map(|g| g.id.raw()),
+                        &mut group_stand_ins,
+                    ),
+                    _ => (
                         ctx.own_ship(number).map(|s| s.id.raw()),
                         &mut ship_stand_ins,
-                    )
+                    ),
                 };
                 let id = match raw {
                     Some(raw) => raw,
@@ -1301,16 +1640,30 @@ pub(crate) fn command_answer(
                         intent.raw()
                     ));
                 }
-                let has_forces = after
-                    .command_state()
-                    .intents
-                    .get(intent)
-                    .is_some_and(|i| i.limits.forces.is_some());
-                if !has_forces {
-                    notes.push(format!(
-                        "intent:{} has no forces limit yet: the staff gives no order for it until you set one (set_limit forces).",
+                let state = after.command_state();
+                match request.kind {
+                    CommandKind::SetIntent {
+                        kind: IntentKind::Hold { .. },
+                        ..
+                    } => notes.push(format!(
+                        "intent:{} is an end: the staff forms a cover intent for the base under it by itself. Its forces are the air groups based at the base that are not held, unless you limit them (set_limit forces with air_groups, or hold an air group). command_state shows the tree and the measure of the hold.",
                         intent.raw()
-                    ));
+                    )),
+                    CommandKind::SetIntent {
+                        kind: IntentKind::Cover { .. },
+                        ..
+                    } => notes.push(format!(
+                        "intent:{} covers the base from the air: its fighters fly the patrol and its search groups search. Its forces are the air groups based at the base that are not held, unless you limit them (set_limit forces with air_groups).",
+                        intent.raw()
+                    )),
+                    _ => {
+                        if state.forces_read_up(*intent).is_none() {
+                            notes.push(format!(
+                                "intent:{} has no forces limit yet: the staff gives no order for it until you set one (set_limit forces).",
+                                intent.raw()
+                            ));
+                        }
+                    }
                 }
             }
             if matches!(request.kind, CommandKind::Approve { .. }) {
@@ -1449,7 +1802,12 @@ fn previewed_intent(view: &SideView<'_>, kind: &CommandKind) -> Option<IntentId>
         CommandKind::SetLimit(Limit::Reserve { base, .. }) => view
             .command_state()
             .intents_in_force()
-            .find(|i| i.limits.forces.as_ref().is_some_and(|f| f.source == *base))
+            .find(|i| {
+                i.limits
+                    .forces
+                    .as_ref()
+                    .is_some_and(|f| f.source == Some(*base))
+            })
             .map(|i| i.id),
         CommandKind::SetLimit(limit) => limit.intent(),
         _ => None,
@@ -1540,10 +1898,7 @@ fn staff_side_json(
 /// 18), in words.
 fn held_words(n: &Names<'_>, view: &SideView<'_>, intent: Option<IntentId>) -> Vec<String> {
     let state = view.command_state();
-    let Some(forces) = intent
-        .and_then(|i| state.intents.get(&i))
-        .and_then(|i| i.limits.forces.as_ref())
-    else {
+    let Some(forces) = intent.and_then(|i| state.forces_read_up(i)) else {
         return Vec::new();
     };
     let mut pool: std::collections::BTreeSet<ShipId> = forces.ships.clone();
@@ -1565,9 +1920,21 @@ fn held_words(n: &Names<'_>, view: &SideView<'_>, intent: Option<IntentId>) -> V
             by_target.entry(target).or_default().push(ship);
         }
     }
-    by_target
+    let mut groups: Vec<String> = Vec::new();
+    for group in &forces.air_groups {
+        if let Some(target) = state.hold_on_group(*group) {
+            if let Some(hold) = state.holds.get(&target) {
+                groups.push(format!(
+                    "{}, one of the groups the intent may use, is held by {}: the staff gives it no order",
+                    hold_target_words(n, target),
+                    hold_maker_words(n, hold)
+                ));
+            }
+        }
+    }
+    groups
         .into_iter()
-        .filter_map(|(target, ships)| {
+        .chain(by_target.into_iter().filter_map(|(target, ships)| {
             let hold = state.holds.get(&target)?;
             let maker = hold_maker_words(n, hold);
             let numbers = |own: Option<ShipId>| -> String {
@@ -1591,7 +1958,7 @@ fn held_words(n: &Names<'_>, view: &SideView<'_>, intent: Option<IntentId>) -> V
                 ));
             }
             Some(text)
-        })
+        }))
         .collect()
 }
 
@@ -1607,7 +1974,9 @@ fn runs_in_hand(view: &SideView<'_>, intent: Option<IntentId>, kind: &CommandKin
     let Some(plan) = state.plans.get(&intent.plan) else {
         return Vec::new();
     };
-    let IntentKind::KeepSupplied { base: old, .. } = intent.kind;
+    let IntentKind::KeepSupplied { base: old, .. } = intent.kind else {
+        return Vec::new();
+    };
     let new_base = match kind {
         CommandKind::SetIntent {
             kind: IntentKind::KeepSupplied { base, .. },

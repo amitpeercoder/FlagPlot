@@ -28,7 +28,7 @@
 //!   0049).
 //!
 //! Every answer serialises to JSON with `"format": "flagplot-agent"`,
-//! `"version": 7` and a `"kind"`, and has a schema under `schemas/`. A
+//! `"version": 8` and a `"kind"`, and has a schema under `schemas/`. A
 //! quantity of the game is a whole number if it counts things and a decimal
 //! string if it is a [`sim_core::fixed::Fixed`], never a float.
 
@@ -38,6 +38,7 @@ mod choices;
 mod commands;
 mod common;
 mod explain;
+mod hold;
 mod lines;
 mod measure;
 mod objectives;
@@ -76,6 +77,7 @@ pub use common::{Dec, Handle, Place};
 pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
 };
+pub use hold::{hold_measure, HoldMeasure};
 pub use lines::{
     AboardLine, AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, HaltLine, LandUnitLine,
     PropulsionLine,

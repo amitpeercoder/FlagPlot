@@ -118,7 +118,7 @@ fn the_three_tools_are_in_the_list_after_set_leave_and_before_approve() {
     assert_eq!(at("preview"), at("release") + 1);
     assert_eq!(at("approve"), at("preview") + 1);
     assert_eq!(COMMAND_TOOLS.len(), 18);
-    assert_eq!(sim_agent::VERSION, 7);
+    assert_eq!(sim_agent::VERSION, 8);
 }
 
 #[test]
@@ -176,7 +176,6 @@ fn a_hold_and_a_release_are_queued_and_refused_as_the_other_commands_are() {
     for bad in [
         json!({}),
         json!({"ship": 1, "task_force": 1}),
-        json!({"air_group": 1}),
         json!({"air_group": 1, "setting": "mission"}),
         json!({"ship": 1, "setting": "search_arc"}),
         json!({"ship": 1, "plan": 1}),

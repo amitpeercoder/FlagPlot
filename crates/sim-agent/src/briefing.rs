@@ -3784,7 +3784,9 @@ impl Day {
                     // the command report's, not the briefing's fold
                     // (decision 0107, step 4).
                     | EventKind::StaffNotice { .. }
-                    | EventKind::InterruptFired { .. } => {}
+                    | EventKind::InterruptFired { .. }
+                    | EventKind::IntentFormed { .. }
+                    | EventKind::IntentWithdrawn { .. } => {}
                 },
                 SideEventKind::EnemySurrendered { hex, men } => {
                     ground.prisoners.push(PrisonersLine {

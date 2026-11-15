@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 7` and a `"kind"` that names it.
+`"version": 8` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 7. A field removed from an answer, or a field whose meaning
+`version` is 8. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a

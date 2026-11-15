@@ -19,6 +19,7 @@
 
 #![deny(clippy::float_arithmetic)]
 
+mod air;
 mod doctrine;
 mod fleet;
 mod handin;
@@ -56,10 +57,18 @@ use sim_core::view::SideView;
 /// morning, before any intent is served, where it freed them last; an intent
 /// served that morning may then commit them (found by the soak ashore,
 /// scenario 45, decision 0093 item 10).
-pub const DOCTRINE_VERSION: &str = "supply-7";
+/// `supply-8` adds the air doctrine after the supply doctrine (decisions
+/// 0115 and 0117): the leaves for a hold or cover intent, forming cover from
+/// the air under a held base, and each cover intent's patrol, search and rest
+/// orders for the air groups at its base. A side with no hold or cover
+/// intent gets exactly what `supply-7` gave.
+pub const DOCTRINE_VERSION: &str = "supply-8";
 
-/// The staff of stage 1: the doctrine for keeping a base supplied. A side
-/// with no intent in force and no commitment to free gets nothing from it.
+/// The staff: the doctrine for keeping a base supplied (stage 1) and, after
+/// it, the air doctrine for holding a place and covering a base from the air
+/// (step 2 of stage 2). A side with no intent in force and no commitment to
+/// free gets nothing from it; one with no hold or cover intent gets nothing
+/// from the air doctrine.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct SupplyStaff;
 
@@ -67,10 +76,26 @@ impl Staff for SupplyStaff {
     fn decide(&self, view: SideView<'_>) -> StaffDecisions {
         let mut decisions = doctrine::decide(view);
         reasons::state_intents(&view, &mut decisions);
+        // The air doctrine states its own reasons on the state it planned.
+        decisions.append(air::decide(&view));
         decisions
     }
 
     fn propose(&self, view: SideView<'_>, intent: IntentId) -> Option<Proposal> {
+        if view
+            .command_state()
+            .intents
+            .get(&intent)
+            .is_some_and(|found| {
+                matches!(
+                    found.kind,
+                    sim_core::command::IntentKind::Hold { .. }
+                        | sim_core::command::IntentKind::Cover { .. }
+                )
+            })
+        {
+            return air::propose(&view, intent);
+        }
         let mut proposal = proposal::propose(view, intent)?;
         reasons::state_intents_of_proposal(&view, &mut proposal);
         Some(proposal)

@@ -12,18 +12,20 @@
 //!
 //! | `kind` | keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `base`, `floor_days`, `interval_days` (optional) |
+//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` and its keys, below |
 //! | `set_leave` | `leave` (`"prepare"` or `"launch"`), `given` |
 //! | `approve`, `cancel_plan` | `plan` |
-//! | `hold`, `release` | exactly one of `ship`, `task_force` and `air_group`; with `air_group`, `setting` (`"search_arc"`), which no other target takes |
+//! | `hold`, `release` | exactly one of `ship`, `task_force` and `air_group`; with `air_group`, `setting` (`"search_arc"`) holds that setting alone, and with no `setting` the whole group is held; no other target takes `setting` |
 //!
 //! | `set_interrupt` | either `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`"cannot_meet"`, `"waits_for_leave"` or `"ship_lost"`) and `on` (switch a standing kind off or on); never a mixture of the two |
 //! | `acknowledge` | either `interrupt`, or `standing` with exactly one of `plan` and `ship`; never a mixture |
 //!
-//! The limits: `limit = "forces"` has `intent`, `ships`, `task_forces` and
-//! `source` (a base); `"area"` has `intent` and `hexes` as `[[q, r], ...]`;
+//! The limits: `limit = "forces"` has `intent` and, each optional (a list
+//! not given is empty), `ships`, `task_forces` and `air_groups`, and `source`
+//! (a base; a supply intent's forces limit must name one, another kind's
+//! need not); `"area"` has `intent` and `hexes` as `[[q, r], ...]`;
 //! `"priority"` has `intent` and `rank`; `"protected"` has `intent` and
 //! `ships`; `"reserve"` has `base`, `supply_t` and `fuel_t` as whole numbers
 //! or decimal strings; `"risk"` has `intent` and `risk` (`"preserve"`,
@@ -54,11 +56,13 @@ pub(crate) struct CommandSpec {
     kind: String,
     limit: Option<String>,
     intent: Option<u32>,
+    intent_kind: Option<String>,
     base: Option<u32>,
     floor_days: Option<u32>,
     interval_days: Option<u32>,
     ships: Option<Vec<u32>>,
     task_forces: Option<Vec<u32>>,
+    air_groups: Option<Vec<u32>>,
     source: Option<u32>,
     hexes: Option<Vec<[i32; 2]>>,
     rank: Option<u32>,
@@ -90,11 +94,13 @@ impl CommandSpec {
         };
         note(self.limit.is_some(), "limit");
         note(self.intent.is_some(), "intent");
+        note(self.intent_kind.is_some(), "intent_kind");
         note(self.base.is_some(), "base");
         note(self.floor_days.is_some(), "floor_days");
         note(self.interval_days.is_some(), "interval_days");
         note(self.ships.is_some(), "ships");
         note(self.task_forces.is_some(), "task_forces");
+        note(self.air_groups.is_some(), "air_groups");
         note(self.source.is_some(), "source");
         note(self.hexes.is_some(), "hexes");
         note(self.rank.is_some(), "rank");
@@ -126,9 +132,26 @@ impl CommandSpec {
         let what = format!("the {} command on day {day}", self.kind);
         // The keys the kind takes, and so the keys it refuses.
         let allowed: &[&str] = match (self.kind.as_str(), self.limit.as_deref()) {
-            ("set_intent", _) => &["intent", "base", "floor_days", "interval_days"],
+            ("set_intent", _) => match self.intent_kind.as_deref() {
+                None | Some("keep_supplied") => {
+                    &["intent", "intent_kind", "base", "floor_days", "interval_days"]
+                }
+                Some("cover" | "hold") => &["intent", "intent_kind", "base"],
+                Some(other) => {
+                    return Err(format!(
+                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover or hold"
+                    ))
+                }
+            },
             ("withdraw_intent", _) => &["intent"],
-            ("set_limit", Some("forces")) => &["limit", "intent", "ships", "task_forces", "source"],
+            ("set_limit", Some("forces")) => &[
+                "limit",
+                "intent",
+                "ships",
+                "task_forces",
+                "air_groups",
+                "source",
+            ],
             ("set_limit", Some("area")) => &["limit", "intent", "hexes"],
             ("set_limit", Some("priority")) => &["limit", "intent", "rank"],
             ("set_limit", Some("protected")) => &["limit", "intent", "ships"],
@@ -210,29 +233,48 @@ impl CommandSpec {
             })
         };
         let kind = match self.kind.as_str() {
-            "set_intent" => CommandKind::SetIntent {
-                intent: intent()?,
-                kind: IntentKind::KeepSupplied {
-                    base: BaseId::new(need(self.base, "base")?),
-                    floor_days: need(self.floor_days, "floor_days")?,
-                    interval_days: self.interval_days,
-                },
-            },
+            "set_intent" => {
+                let base = BaseId::new(need(self.base, "base")?);
+                CommandKind::SetIntent {
+                    intent: intent()?,
+                    kind: match self.intent_kind.as_deref() {
+                        Some("cover") => IntentKind::Cover { base },
+                        Some("hold") => IntentKind::Hold { base },
+                        _ => IntentKind::KeepSupplied {
+                            base,
+                            floor_days: need(self.floor_days, "floor_days")?,
+                            interval_days: self.interval_days,
+                        },
+                    },
+                }
+            }
             "withdraw_intent" => CommandKind::WithdrawIntent { intent: intent()? },
             "set_limit" => CommandKind::SetLimit(match self.limit.as_deref() {
                 Some("forces") => Limit::Forces {
                     intent: intent()?,
                     limit: ForcesLimit {
-                        ships: ships(&self.ships, "ships")?,
+                        ships: self
+                            .ships
+                            .iter()
+                            .flatten()
+                            .copied()
+                            .map(ShipId::new)
+                            .collect(),
                         task_forces: self
                             .task_forces
-                            .as_ref()
-                            .ok_or_else(|| format!("{what} needs \"task_forces\""))?
                             .iter()
+                            .flatten()
                             .copied()
                             .map(TaskForceId::new)
                             .collect(),
-                        source: BaseId::new(need(self.source, "source")?),
+                        air_groups: self
+                            .air_groups
+                            .iter()
+                            .flatten()
+                            .copied()
+                            .map(AirGroupId::new)
+                            .collect(),
+                        source: self.source.map(BaseId::new),
                     },
                 },
                 Some("area") => Limit::Area {
@@ -318,16 +360,19 @@ impl CommandSpec {
                     HoldTarget::TaskForce(TaskForceId::new(force))
                 } else {
                     let group = AirGroupId::new(self.air_group.expect("one target is named"));
-                    let setting = match self.setting.as_deref() {
-                        Some("search_arc") => HeldSetting::SearchArc,
+                    match self.setting.as_deref() {
+                        Some("search_arc") => HoldTarget::Setting {
+                            group,
+                            setting: HeldSetting::SearchArc,
+                        },
                         Some(other) => {
                             return Err(format!(
                                 "{what} has setting \"{other}\", which is not search_arc"
                             ))
                         }
-                        None => return Err(format!("{what} needs \"setting\" with \"air_group\"")),
-                    };
-                    HoldTarget::Setting { group, setting }
+                        // No setting: the whole group is held.
+                        None => HoldTarget::AirGroup(group),
+                    }
                 };
                 if self.kind == "hold" {
                     CommandKind::Hold { target }

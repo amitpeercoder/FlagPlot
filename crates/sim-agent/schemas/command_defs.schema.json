@@ -150,7 +150,7 @@
       "additionalProperties": false,
       "properties": {
         "serves": {
-          "description": "What the decision serves: the intent, the plan and the plan's amendment (left out where none), and the intent's statement: the intent in words as the commander set it and as it stood when the reason was made (left out where a reason has none).",
+          "description": "What the decision serves: the intent, the plan and the plan's amendment (left out where none), and the intent's statement: the intent in words as the commander set it and as it stood when the reason was made (left out where a reason has none). And chain: the intents above it, nearest first.",
           "type": "object",
           "required": [],
           "additionalProperties": false,
@@ -166,6 +166,33 @@
             },
             "statement": {
               "type": "string"
+            },
+            "chain": {
+              "type": "array",
+              "description": "The intents above the one served, nearest first, each as it stood when the reason was made; the last is one you stated. Left out where the intent is a root (decision 0117, 10).",
+              "items": {
+                "type": "object",
+                "required": [
+                  "intent",
+                  "maker",
+                  "statement"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "intent": {
+                    "type": "integer"
+                  },
+                  "maker": {
+                    "enum": [
+                      "commander",
+                      "staff"
+                    ]
+                  },
+                  "statement": {
+                    "type": "string"
+                  }
+                }
+              }
             }
           }
         },
@@ -223,6 +250,7 @@
               "required": [
                 "ships",
                 "task_forces",
+                "air_groups",
                 "source"
               ],
               "additionalProperties": false,
@@ -240,7 +268,20 @@
                   }
                 },
                 "source": {
-                  "$ref": "defs.schema.json#/$defs/handle"
+                  "oneOf": [
+                    {
+                      "$ref": "defs.schema.json#/$defs/handle"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "air_groups": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
                 }
               }
             },
@@ -274,11 +315,17 @@
           }
         },
         "risk": {
+          "type": [
+            "string",
+            "null"
+          ],
           "enum": [
             "preserve",
             "balanced",
-            "press"
-          ]
+            "press",
+            null
+          ],
+          "description": "The risk level set on this intent itself; null where none is set (limits_read_up gives what it is read as)."
         }
       }
     },
@@ -387,6 +434,7 @@
               "type": "object",
               "required": [
                 "day",
+                "kind",
                 "base",
                 "floor_days",
                 "interval_days",
@@ -401,7 +449,10 @@
                   "$ref": "defs.schema.json#/$defs/handle"
                 },
                 "floor_days": {
-                  "type": "integer"
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
                 },
                 "interval_days": {
                   "type": [
@@ -411,6 +462,13 @@
                 },
                 "limits": {
                   "$ref": "#/$defs/limits"
+                },
+                "kind": {
+                  "enum": [
+                    "keep_supplied",
+                    "cover",
+                    "hold"
+                  ]
                 }
               }
             },
@@ -457,7 +515,7 @@
       }
     },
     "command_body": {
-      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, set_limit, set_leave, hold, release, approve, cancel_plan, set_interrupt and acknowledge), ships and task forces in your numbers.",
+      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, form_intent, set_limit, set_leave, hold, release, approve, cancel_plan, set_interrupt and acknowledge), ships and task forces in your numbers.",
       "type": "object",
       "required": [
         "kind"
@@ -480,7 +538,8 @@
             "release",
             "end_run",
             "set_interrupt",
-            "acknowledge"
+            "acknowledge",
+            "form_intent"
           ]
         }
       }
@@ -651,7 +710,7 @@
       }
     },
     "hold_target": {
-      "description": "What a hold keeps from the staff, in your numbers: a ship, a task force, or one setting of an air group.",
+      "description": "What a hold keeps from the staff, in your numbers: a ship, a task force, one setting of an air group, or a whole air group.",
       "oneOf": [
         {
           "type": "object",
@@ -692,6 +751,18 @@
               "enum": [
                 "search_arc"
               ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "air_group"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "air_group": {
+              "type": "integer"
             }
           }
         }
@@ -881,6 +952,177 @@
             "type": "string"
           },
           "description": "One line for each interrupt, record and switched-off kind, those fired and not acknowledged first."
+        }
+      }
+    },
+    "limits_read_up": {
+      "type": "object",
+      "description": "An intent's limits as the staff reads them, up the tree: each limit's value, the intent it is read from, and for forces and risk what holds where none is set (decision 0117, 7 and 8).",
+      "required": [
+        "forces",
+        "forces_from",
+        "forces_if_unset",
+        "risk",
+        "risk_from",
+        "risk_set",
+        "risk_if_unset",
+        "area",
+        "area_from",
+        "priority",
+        "priority_from"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "forces": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "ships",
+                "task_forces",
+                "air_groups",
+                "source"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "ships": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "task_forces": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "source": {
+                  "oneOf": [
+                    {
+                      "$ref": "defs.schema.json#/$defs/handle"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "air_groups": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forces_from": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "forces_if_unset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "risk": {
+          "enum": [
+            "preserve",
+            "balanced",
+            "press"
+          ]
+        },
+        "risk_from": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "risk_set": {
+          "type": "boolean"
+        },
+        "risk_if_unset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "area": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "area_from": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "priority": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "priority_from": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "hold_measure": {
+      "type": "object",
+      "description": "The measure of a hold intent (decision 0117, 14): the days it has been in force and the days of them the base was the side's at the end of the day with its airfield open, the air raids on the base in those days and how many a patrol of the side's fought, the base's days of supply today (null where no figure), and the words.",
+      "required": [
+        "days_in_force",
+        "days_met",
+        "raids",
+        "raids_fought",
+        "days_of_supply",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "days_in_force": {
+          "type": "integer"
+        },
+        "days_met": {
+          "type": "integer"
+        },
+        "raids": {
+          "type": "integer"
+        },
+        "raids_fought": {
+          "type": "integer"
+        },
+        "days_of_supply": {
+          "oneOf": [
+            {
+              "$ref": "defs.schema.json#/$defs/dec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "text": {
+          "type": "string"
         }
       }
     }
