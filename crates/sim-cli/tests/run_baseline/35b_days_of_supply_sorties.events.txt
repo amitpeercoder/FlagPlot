@@ -1,0 +1,39 @@
+Placeholder scenario 35b: Days of supply, a surge of sorties
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 099149df0748b574  2 events
+day   2  hash f1d62c053ec896d3  2 events
+day   3  hash fa0b940c9cbc1006  5 events
+day   4  hash 033ad68d2f0f3f0c  4 events
+day   5  hash c998568f0acc2093  4 events
+day   6  hash 00d14712278a2ca4  4 events
+
+#1 D1 night     base:5 spent 4 t of supply on 20 aircraft at the base for the day, 396 t left
+#2 D1 -         base:5 at the end of the day: 396 t of supply, 20 aircraft ready: open
+#3 D2 night     base:5 spent 4 t of supply on 20 aircraft at the base for the day, 392 t left
+#4 D2 -         base:5 at the end of the day: 392 t of supply, 20 aircraft ready: open
+#5 D3 -         order:1 accepted for air_group:1  <- order:1
+#6 D3 night     base:5 spent 4 t of supply on 20 aircraft at the base for the day, 388 t left
+#7 D3 morning   base:5 spent 10 t of supply on 20 aircraft sent on sorties, 378 t left  <- order:1
+#8 D3 afternoon base:5 spent 10 t of supply on 20 aircraft sent on sorties, 368 t left  <- order:1
+#9 D3 -         base:5 at the end of the day: 368 t of supply, 20 aircraft ready: open
+#10 D4 night     base:5 spent 4 t of supply on 20 aircraft at the base for the day, 364 t left
+#11 D4 morning   base:5 spent 10 t of supply on 20 aircraft sent on sorties, 354 t left  <- order:1
+#12 D4 afternoon base:5 spent 10 t of supply on 20 aircraft sent on sorties, 344 t left  <- order:1
+#13 D4 -         base:5 at the end of the day: 344 t of supply, 20 aircraft ready: open
+#14 D5 night     base:5 spent 4 t of supply on 20 aircraft at the base for the day, 340 t left
+#15 D5 morning   base:5 spent 10 t of supply on 20 aircraft sent on sorties, 330 t left  <- order:1
+#16 D5 afternoon base:5 spent 10 t of supply on 20 aircraft sent on sorties, 320 t left  <- order:1
+#17 D5 -         base:5 at the end of the day: 320 t of supply, 20 aircraft ready: open
+#18 D6 night     base:5 spent 4 t of supply on 20 aircraft at the base for the day, 316 t left
+#19 D6 morning   base:5 spent 10 t of supply on 20 aircraft sent on sorties, 306 t left  <- order:1
+#20 D6 afternoon base:5 spent 10 t of supply on 20 aircraft sent on sorties, 296 t left  <- order:1
+#21 D6 -         base:5 at the end of the day: 296 t of supply, 20 aircraft ready: open
+
+air_group:1 "Placeholder fighter group 1" (Allied) at base:5: 20 ready, mission CombatAirPatrol, patrol share 1, no arc
+base:5 "Placeholder base 5" (Allied) at (12,4): 296 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

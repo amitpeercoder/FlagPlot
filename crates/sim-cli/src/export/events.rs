@@ -175,6 +175,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::CannotJoinItself => base("cannot_join_itself"),
         RejectReason::ForceWasJoined { into } => base("force_was_joined").id("into", *into),
         RejectReason::ForceWasStoodDown => base("force_was_stood_down"),
+        RejectReason::OutsideForcesLimit => base("outside_forces_limit"),
     }
 }
 
@@ -1922,5 +1923,93 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .num("aboard_t", *aboard_t)
                 .num("reserve_t", *reserve_t),
         ),
+        EventKind::CommandTaken {
+            side,
+            issuer,
+            command,
+        } => (
+            "command_taken",
+            d.text("side", names::side(*side))
+                .text("issuer", issuer_code(*issuer))
+                .text("command", command.name())
+                .with("detail", Field::Str(command.to_string())),
+        ),
+        EventKind::CommandRefused {
+            side,
+            issuer,
+            command,
+            reason,
+        } => (
+            "command_refused",
+            d.text("side", names::side(*side))
+                .text("issuer", issuer_code(*issuer))
+                .text("command", command.name())
+                .with("detail", Field::Str(command.to_string()))
+                .with("reason", Field::Str(reason.to_string())),
+        ),
+        EventKind::PlanDrafted { side, plan, intent } => (
+            "plan_drafted",
+            d.text("side", names::side(*side))
+                .int("plan", plan.raw())
+                .id("intent", *intent),
+        ),
+        EventKind::PlanStateChanged {
+            side,
+            plan,
+            from,
+            to,
+        } => (
+            "plan_state_changed",
+            d.text("side", names::side(*side))
+                .int("plan", plan.raw())
+                .text("from", from.name())
+                .text("to", to.name()),
+        ),
+        EventKind::PlanAmended { side, plan, number } => (
+            "plan_amended",
+            d.text("side", names::side(*side))
+                .int("plan", plan.raw())
+                .int("number", *number),
+        ),
+        EventKind::StaffReason {
+            side,
+            order,
+            reason,
+        } => {
+            let mut data = d.text("side", names::side(*side));
+            if let Some(order) = order {
+                data = data.int("order", order.umpire_raw(key));
+            }
+            if let Some(intent) = reason.serves.intent {
+                data = data.id("intent", intent);
+            }
+            if let Some(plan) = reason.serves.plan {
+                data = data.int("plan", plan.raw());
+            }
+            if let Some(amendment) = reason.serves.amendment {
+                data = data.int("amendment", amendment);
+            }
+            let evidence: Vec<String> = reason
+                .evidence
+                .iter()
+                .map(|piece| format!("{} (day {})", piece.what, piece.day))
+                .collect();
+            (
+                "staff_reason",
+                data.with("evidence", Field::Str(evidence.join("; ")))
+                    .with("binding", Field::Str(reason.binding.join("; ")))
+                    .with("worked", Field::Str(reason.worked.clone()))
+                    .with("would_change", Field::Str(reason.would_change.join("; "))),
+            )
+        }
+    }
+}
+
+/// An issuer's code in the replay export.
+fn issuer_code(issuer: sim_core::orders::Issuer) -> &'static str {
+    match issuer {
+        sim_core::orders::Issuer::Player => "player",
+        sim_core::orders::Issuer::Staff => "staff",
+        sim_core::orders::Issuer::LocalCommander => "local_commander",
     }
 }

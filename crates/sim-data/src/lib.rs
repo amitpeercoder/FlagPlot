@@ -71,6 +71,7 @@
 //! `"0.25"`. TOML floats are rejected, so no value passes through floating
 //! point on its way into the simulation.
 
+mod commands;
 mod error;
 mod map;
 mod quantity;

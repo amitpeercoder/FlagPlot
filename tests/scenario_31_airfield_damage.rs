@@ -308,7 +308,7 @@ impl Run {
             }
             scenario
                 .world
-                .resolve_day_watched(&mut |world, moment| {
+                .resolve_day_watched(sim_core::Staffs::none(), &mut |world, moment| {
                     let (day, pulse, label) = match moment {
                         Moment::PulseBegins { day, pulse } => (day, pulse, "begins"),
                         Moment::Phase {

@@ -1,0 +1,207 @@
+# Scenario 35a: days of supply, men (decision 0107, 31 to 36).
+#
+# Proves a side's days of supply in a hex against a hand calculation: no
+# figure where there is no use (A), men ashore at their weight (B), a regiment
+# at sea counted from the day it is due (C, by the transport force bound there
+# from D), a base taken (G) and a base lost (H). The hand calculation is in
+# tests/scenario_35_days_of_supply.rs, which runs the scenario on the frozen
+# step 1 figures with the weight strength set to 0.25. Nothing in it has a
+# dice roll that matters: the fights are won without a shot.
+#
+# No air combat, wear, fatigue or air supply figures are named, so no aircraft
+# flies and none is here. The force is five placeholder troop transports.
+#
+# PLACEHOLDER DATA. The units, bases, ships and map are invented.
+
+name = "Placeholder scenario 35a: Days of supply, men"
+placeholder = true
+seed = 1942
+map = "../map/placeholder_days_of_supply.toml"
+days = 6
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 4
+supply_t = 500
+
+[[base]]
+id = 2
+name = "Placeholder base 2"
+side = "allied"
+q = 3
+r = 4
+supply_t = 600
+
+[[base]]
+id = 3
+name = "Placeholder base 3"
+side = "allied"
+q = 0
+r = 0
+supply_t = 300
+
+[[base]]
+id = 4
+name = "Placeholder base 4"
+side = "allied"
+q = 14
+r = 0
+supply_t = 5000
+
+[[base]]
+id = 7
+name = "Placeholder base 7"
+side = "japanese"
+q = 6
+r = 4
+supply_t = 200
+
+[[base]]
+id = 8
+name = "Placeholder base 8"
+side = "allied"
+q = 9
+r = 4
+supply_t = 200
+
+[[base]]
+id = 9
+name = "Placeholder base 9"
+side = "japanese"
+q = 9
+r = 4
+supply_t = 50
+
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 4
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder troop transport 3"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder troop transport 4"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 5
+name = "Placeholder troop transport 5"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+men = 2000
+q = 3
+r = 4
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder unit 2"
+side = "allied"
+men = 1000
+q = 0
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 3
+name = "Placeholder unit 3"
+side = "allied"
+men = 3000
+task_force = 1
+posture = "defend"
+skills = { weight = 4 }
+[[land_unit]]
+id = 4
+name = "Placeholder unit 4"
+side = "allied"
+men = 100
+q = 6
+r = 4
+posture = "attack"
+
+[[land_unit]]
+id = 6
+name = "Placeholder unit 6"
+side = "allied"
+men = 100
+q = 9
+r = 4
+posture = "defend"
+working = true
+[[land_unit]]
+id = 7
+name = "Placeholder unit 7"
+side = "japanese"
+men = 100
+q = 9
+r = 4
+posture = "attack"
+
+# Day 1: the force sails to C at cruise and unloads there.
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[0, 0]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "unload"

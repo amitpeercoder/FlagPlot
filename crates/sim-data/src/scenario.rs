@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 use sim_core::choices::Moment;
+use sim_core::command::CommandKind;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
@@ -22,8 +23,9 @@ use sim_core::state::{
     ShipSystem, ShipSystems, Side, Skills, SystemState, TaskForce, TruthState,
 };
 use sim_core::world::MADE_IDS_FLOOR;
-use sim_core::{DaySummary, StartingContact, StartingEstimate, World};
+use sim_core::{DaySummary, Staffs, StartingContact, StartingEstimate, World};
 
+use crate::commands::CommandSpec;
 use crate::error::DataError;
 use crate::map::{load_land_links, load_map};
 use crate::quantity::Quantity;
@@ -108,6 +110,9 @@ struct ScenarioFile {
     ship: Vec<ShipSpec>,
     #[serde(default)]
     order: Vec<OrderSpec>,
+    /// What a side's commander says, by day (decision 0107, item 16).
+    #[serde(default)]
+    command: Vec<CommandSpec>,
     #[serde(default)]
     contact: Vec<ContactSpec>,
     /// Opening estimates of the enemy's men ashore (decision 0092, 16).
@@ -726,7 +731,7 @@ enum AirMissionSpec {
 
 #[derive(Deserialize, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
-enum SideSpec {
+pub(crate) enum SideSpec {
     Allied,
     Japanese,
 }
@@ -956,6 +961,9 @@ pub struct Scenario {
     pub days: u32,
     pub world: World,
     script: BTreeMap<u32, Vec<(Side, OrderRequest)>>,
+    /// The commander's commands still to be given, by day, as they will be
+    /// submitted (decision 0107, item 16).
+    commands: BTreeMap<u32, Vec<(Side, CommandKind)>>,
     /// The contacts the sides start with, kept so that a world built afresh
     /// for another seed holds them too.
     contacts: Vec<StartingContact>,
@@ -2305,6 +2313,12 @@ impl Scenario {
                 .push((spec.side.into(), request));
         }
 
+        let mut commands: BTreeMap<u32, Vec<(Side, CommandKind)>> = BTreeMap::new();
+        for spec in &file.command {
+            let (day, side, kind) = spec.build(file.days).map_err(&fail)?;
+            commands.entry(day).or_default().push((side, kind));
+        }
+
         // Replacements and arrivals are lists in the state and the hash, so
         // they are kept in one order whatever order the file lists them in
         // (decision 0043, 4c). Orders are put in order where they are taken
@@ -2372,6 +2386,7 @@ impl Scenario {
             days: file.days,
             world,
             script,
+            commands,
             contacts,
             estimates,
             data_files,
@@ -2393,6 +2408,19 @@ impl Scenario {
     /// given are submitted day by day in place of the scenario's own.
     pub fn replace_script(&mut self, script: BTreeMap<u32, Vec<(Side, OrderRequest)>>) {
         self.script = script;
+    }
+
+    /// The commander's commands still to be given, by day, as they will be
+    /// submitted (decision 0107, item 16).
+    pub fn scripted_commands(&self) -> &BTreeMap<u32, Vec<(Side, CommandKind)>> {
+        &self.commands
+    }
+
+    /// Replaces the scripted commands, for replaying a saved game: the
+    /// commands it handed in are submitted day by day in place of the
+    /// scenario's own.
+    pub fn replace_commands(&mut self, commands: BTreeMap<u32, Vec<(Side, CommandKind)>>) {
+        self.commands = commands;
     }
 
     /// A copy of this scenario with a different seed, for a run of its own.
@@ -2426,33 +2454,51 @@ impl Scenario {
             days: self.days,
             world,
             script: self.script.clone(),
+            commands: self.commands.clone(),
             contacts: self.contacts.clone(),
             estimates: self.estimates.clone(),
             data_files: self.data_files.clone(),
         })
     }
 
-    /// Submits the scripted orders for the next day and resolves it. Returns
-    /// `None` once the scenario has run all its days.
+    /// Submits the scripted orders for the next day and resolves it, with no
+    /// staff for either side. Returns `None` once the scenario has run all
+    /// its days.
     pub fn next_day(&mut self) -> Result<Option<DaySummary>, DataError> {
-        self.next_day_watched(&mut |_, _| {})
+        self.next_day_watched(Staffs::none(), &mut |_, _| {})
     }
 
-    /// [`Scenario::next_day`], handing the world, read only, to `watch` at
-    /// each moment of the day as [`World::resolve_day_watched`] does. The day
-    /// is the same day: `next_day` is this with a watcher that does nothing.
+    /// [`Scenario::next_day`], with each side's staff in `staffs` asked at
+    /// its step of the day (decision 0107).
+    pub fn next_day_staffed(
+        &mut self,
+        staffs: Staffs<'_>,
+    ) -> Result<Option<DaySummary>, DataError> {
+        self.next_day_watched(staffs, &mut |_, _| {})
+    }
+
+    /// [`Scenario::next_day_staffed`], handing the world, read only, to
+    /// `watch` at each moment of the day as [`World::resolve_day_watched`]
+    /// does. The day is the same day: `next_day_staffed` is this with a
+    /// watcher that does nothing.
     pub fn next_day_watched(
         &mut self,
+        staffs: Staffs<'_>,
         watch: &mut dyn FnMut(&World, Moment),
     ) -> Result<Option<DaySummary>, DataError> {
         let day = self.world.day() + 1;
         if day > self.days {
             return Ok(None);
         }
+        // The commander's commands are handed in before the day resolves and
+        // taken in at its first step (decision 0107).
+        for (side, command) in self.commands.remove(&day).unwrap_or_default() {
+            self.world.submit_commands(side, vec![command]);
+        }
         for (side, request) in self.script.remove(&day).unwrap_or_default() {
             self.world.submit_orders(side, vec![request]);
         }
-        Ok(Some(self.world.resolve_day_watched(watch)?))
+        Ok(Some(self.world.resolve_day_watched(staffs, watch)?))
     }
 
     /// Runs every remaining day and returns their summaries.
@@ -5711,5 +5757,231 @@ task_force = 3
             "{error}"
         );
         fs::remove_dir_all(&dir).ok();
+    }
+
+    // -----------------------------------------------------------------
+    // A scenario's commands (decision 0107, item 16).
+    // -----------------------------------------------------------------
+
+    fn command(body: &str) -> String {
+        format!("\n[[command]]\nday = 1\nside = \"allied\"\n{body}\n")
+    }
+
+    fn only(extra: &str) -> CommandKind {
+        let scenario = parse_with(extra).expect("loads");
+        let list = &scenario.scripted_commands()[&1];
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0].0, Side::Allied);
+        list[0].1.clone()
+    }
+
+    #[test]
+    fn every_commander_command_loads_as_the_command_it_names() {
+        use sim_core::command::{ForcesLimit, IntentKind, Leave, Limit, PlanId, Risk};
+        let intent = IntentId::new(1);
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 1\nbase = 2\nfloor_days = 10\ninterval_days = 15"
+            )),
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::KeepSupplied {
+                    base: BaseId::new(2),
+                    floor_days: 10,
+                    interval_days: Some(15),
+                },
+            }
+        );
+        // The interval is optional.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 1\nbase = 2\nfloor_days = 10"
+            )),
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::KeepSupplied {
+                    base: BaseId::new(2),
+                    floor_days: 10,
+                    interval_days: None,
+                },
+            }
+        );
+        assert_eq!(
+            only(&command("kind = \"withdraw_intent\"\nintent = 1")),
+            CommandKind::WithdrawIntent { intent }
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\nships = [4, 3]\ntask_forces = [2]\nsource = 1"
+            )),
+            CommandKind::SetLimit(Limit::Forces {
+                intent,
+                limit: ForcesLimit {
+                    ships: [ShipId::new(3), ShipId::new(4)].into_iter().collect(),
+                    task_forces: [TaskForceId::new(2)].into_iter().collect(),
+                    source: BaseId::new(1),
+                },
+            })
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_limit\"\nlimit = \"area\"\nintent = 1\nhexes = [[0, 0], [1, -1]]"
+            )),
+            CommandKind::SetLimit(Limit::Area {
+                intent,
+                hexes: [Hex::new(0, 0), Hex::new(1, -1)].into_iter().collect(),
+            })
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_limit\"\nlimit = \"priority\"\nintent = 1\nrank = 2"
+            )),
+            CommandKind::SetLimit(Limit::Priority {
+                intent,
+                rank: Some(2)
+            })
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_limit\"\nlimit = \"protected\"\nintent = 1\nships = [3]"
+            )),
+            CommandKind::SetLimit(Limit::Protected {
+                intent,
+                ships: [ShipId::new(3)].into_iter().collect(),
+            })
+        );
+        // A weight is a whole number or a decimal string.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_limit\"\nlimit = \"reserve\"\nbase = 1\nsupply_t = 400\nfuel_t = \"12.5\""
+            )),
+            CommandKind::SetLimit(Limit::Reserve {
+                base: BaseId::new(1),
+                supply_t: Fixed::from_int(400),
+                fuel_t: "12.5".parse().expect("a weight"),
+            })
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_limit\"\nlimit = \"risk\"\nintent = 1\nrisk = \"press\""
+            )),
+            CommandKind::SetLimit(Limit::Risk {
+                intent,
+                risk: Risk::Press
+            })
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_leave\"\nleave = \"launch\"\ngiven = true"
+            )),
+            CommandKind::SetLeave {
+                leave: Leave::Launch,
+                given: true
+            }
+        );
+        assert_eq!(
+            only(&command("kind = \"approve\"\nplan = 1")),
+            CommandKind::Approve {
+                plan: PlanId::new(1)
+            }
+        );
+        assert_eq!(
+            only(&command("kind = \"cancel_plan\"\nplan = 3")),
+            CommandKind::CancelPlan {
+                plan: PlanId::new(3)
+            }
+        );
+    }
+
+    #[test]
+    fn commands_are_kept_by_day_in_the_order_given_and_survive_a_new_seed() {
+        let text = format!(
+            "{}{}",
+            command("kind = \"approve\"\nplan = 1"),
+            "\n[[command]]\nday = 2\nside = \"japanese\"\nkind = \"withdraw_intent\"\nintent = 4\n\n[[command]]\nday = 1\nside = \"japanese\"\nkind = \"cancel_plan\"\nplan = 2\n"
+        );
+        let scenario = parse_with(&text).expect("loads");
+        assert_eq!(scenario.scripted_commands().len(), 2);
+        let first: Vec<Side> = scenario.scripted_commands()[&1]
+            .iter()
+            .map(|(side, _)| *side)
+            .collect();
+        assert_eq!(first, [Side::Allied, Side::Japanese]);
+        let again = scenario.with_seed(77).expect("a new seed");
+        assert_eq!(again.scripted_commands(), scenario.scripted_commands());
+        // A scenario with none has none.
+        assert!(parse_with("")
+            .expect("loads")
+            .scripted_commands()
+            .is_empty());
+    }
+
+    #[test]
+    fn a_command_with_a_wrong_key_or_value_is_refused() {
+        let ok = "kind = \"set_intent\"\nintent = 1\nbase = 2\nfloor_days = 10";
+        parse_with(&command(ok)).expect("loads");
+        // A key no command has, and a key the kind does not take.
+        assert!(parse_with(&command(&format!("{ok}\nspeed = 3"))).is_err());
+        assert!(error_of(&command(&format!("{ok}\nplan = 3"))).contains("does not take \"plan\""));
+        // A TOML float is refused for a number of days and for a weight.
+        assert!(parse_with(&command(
+            &ok.replace("floor_days = 10", "floor_days = 10.5")
+        ))
+        .is_err());
+        assert!(parse_with(&command(
+            "kind = \"set_limit\"\nlimit = \"reserve\"\nbase = 1\nsupply_t = 4.5\nfuel_t = 3"
+        ))
+        .is_err());
+        // A missing key.
+        assert!(
+            error_of(&command("kind = \"set_intent\"\nintent = 1\nbase = 2"))
+                .contains("needs \"floor_days\"")
+        );
+        assert!(error_of(&command("kind = \"approve\"")).contains("needs \"plan\""));
+        // A kind that is the staff's, or none, and a limit that is none.
+        assert!(error_of(&command("kind = \"commit_ships\"\nplan = 1"))
+            .contains("not set_intent, withdraw_intent"));
+        assert!(error_of(&command("kind = \"set_limit\"\nintent = 1")).contains("needs a limit"));
+        assert!(error_of(&command(
+            "kind = \"set_limit\"\nlimit = \"speed\"\nintent = 1"
+        ))
+        .contains("not forces, area"));
+        assert!(error_of(&command(
+            "kind = \"set_limit\"\nlimit = \"risk\"\nintent = 1\nrisk = \"rash\""
+        ))
+        .contains("not preserve, balanced or press"));
+        assert!(error_of(&command(
+            "kind = \"set_leave\"\nleave = \"sail\"\ngiven = true"
+        ))
+        .contains("not prepare or launch"));
+        // A day outside the scenario's days.
+        assert!(error_of(
+            "\n[[command]]\nday = 3\nside = \"allied\"\nkind = \"approve\"\nplan = 1\n"
+        )
+        .contains("outside days 1 to 2"));
+        assert!(error_of(
+            "\n[[command]]\nday = 0\nside = \"allied\"\nkind = \"approve\"\nplan = 1\n"
+        )
+        .contains("outside days 1 to 2"));
+    }
+
+    #[test]
+    fn a_scenarios_commands_are_taken_in_on_their_day() {
+        // An intent set on day 1 is in force after it, and one withdrawn on
+        // day 2 is withdrawn.
+        let text = format!(
+            "{}{}",
+            command("kind = \"set_intent\"\nintent = 1\nbase = 1\nfloor_days = 10"),
+            "\n[[command]]\nday = 2\nside = \"allied\"\nkind = \"withdraw_intent\"\nintent = 1\n"
+        );
+        let mut scenario = parse_with(&text).expect("loads");
+        scenario.next_day().expect("day 1");
+        let state = scenario.world.command_state(Side::Allied);
+        assert!(state.intents[&IntentId::new(1)].in_force());
+        assert!(scenario.scripted_commands().get(&1).is_none());
+        scenario.next_day().expect("day 2");
+        let state = scenario.world.command_state(Side::Allied);
+        assert_eq!(state.intents[&IntentId::new(1)].withdrawn_day, Some(2));
+        assert!(scenario.world.command_state(Side::Japanese).is_empty());
     }
 }

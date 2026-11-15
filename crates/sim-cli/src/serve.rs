@@ -141,7 +141,12 @@ pub fn open(
     let (allied, japanese) = (seat(Side::Allied), seat(Side::Japanese));
     let seed = scenario.world.seed();
     let (name, days) = (scenario.name.clone(), scenario.days);
-    let session = Session::new(scenario.world, &name, days, allied, japanese);
+    // The staff each side is given comes from the doctrine; the commands are
+    // the scenario's own, given as the commander's (decision 0107).
+    let staffs = crate::doctrine::staffs_for(&scenario);
+    let session = Session::new(scenario.world, &name, days, allied, japanese)
+        .with_staffs(staffs)
+        .with_commands(remembered.commands().clone());
     Ok((
         session,
         Kept {
@@ -170,6 +175,8 @@ impl Kept {
                 self.seed,
                 &self.remembered,
                 session.handed_in(),
+                session.commands_handed_in(),
+                session.staff_handed_in(),
                 &self.seats,
                 &hashes,
             )?;

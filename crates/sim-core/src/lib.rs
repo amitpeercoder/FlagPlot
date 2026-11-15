@@ -12,6 +12,7 @@
 pub mod bearing;
 pub mod belief;
 pub mod choices;
+pub mod command;
 pub mod events;
 pub mod fixed;
 pub mod hash;
@@ -58,8 +59,10 @@ mod upkeep;
 pub mod works;
 
 pub use airstrike::StrikeChoice;
+pub use command::{Staff, StaffDecisions, Staffs};
 pub use estimate::StartingEstimate;
 pub use invariants::InvariantViolation;
 pub use movement::{PassageEnd, PassageForecast, ShipPassage};
 pub use start::StartingContact;
+pub use view::DaysOfSupply;
 pub use world::{DaySummary, SimConfig, SimError, World};

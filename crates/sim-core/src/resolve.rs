@@ -18,14 +18,16 @@ use crate::invariants;
 use crate::map::HexKind;
 use crate::orders::{
     Activity, AirGroupOrder, AirMission, BaseOrder, CargoAction, Issuer, LandUnitOrder, Order,
-    OrderKind, OrderRequest, Posture, Reach, RejectReason, SpeedSetting, TaskForceOrder,
+    OrderKind, OrderRequest, Origin, Posture, Reach, RejectReason, SpeedSetting, TaskForceOrder,
 };
 use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
     CargoOrder, March, Preparation, Route, RulesOfEngagement, SearchArc, ShipLocation, Side,
     TaskForce, TaskForceStatus,
 };
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
+
+use crate::command::{StaffDecisions, StaffOrder, Staffs};
 
 use crate::choices::Moment;
 use crate::time::Pulse;
@@ -122,21 +124,43 @@ const fn pulse_sequence(pulse: Pulse) -> &'static [PulsePhase] {
 }
 
 impl World {
-    /// Resolves the next day: takes in the orders both sides submitted, runs
-    /// the three pulses and the end-of-day phases, checks the invariants and
-    /// records the state hash.
+    /// Resolves the next day with no staff for either side: takes in the
+    /// commands and orders both sides submitted, runs the three pulses and
+    /// the end-of-day phases, checks the invariants and records the state
+    /// hash. A day with no staff and no command is resolved exactly as it was
+    /// before decision 0107.
     pub fn resolve_day(&mut self) -> Result<DaySummary, SimError> {
-        self.resolve_day_watched(&mut |_, _| {})
+        self.resolve_day_watched(Staffs::none(), &mut |_, _| {})
     }
 
-    /// Resolves the next day as [`World::resolve_day`] does, and hands the
-    /// world, read only, to `watch` at each [`Moment`] of the day, before
-    /// the step it names (decision 0100, 7). Nothing `watch` can do changes
-    /// the day: it is how a test asks a side's questions at the moment the
-    /// engine answers them. It is the umpire's: the world it is handed is
-    /// the truth.
+    /// Resolves the next day as [`World::resolve_day`] does, asking each
+    /// side's staff in `staffs` at step 4 of the day's order (decision 0107).
+    pub fn resolve_day_staffed(&mut self, staffs: Staffs<'_>) -> Result<DaySummary, SimError> {
+        self.resolve_day_watched(staffs, &mut |_, _| {})
+    }
+
+    /// Resolves the next day as [`World::resolve_day_staffed`] does, and
+    /// hands the world, read only, to `watch` at each [`Moment`] of the day,
+    /// before the step it names (decision 0100, 7). Nothing `watch` can do
+    /// changes the day: it is how a test asks a side's questions at the
+    /// moment the engine answers them. It is the umpire's: the world it is
+    /// handed is the truth.
+    ///
+    /// The day's order (decision 0107, "The order of a day"):
+    ///
+    /// 1. the commander's commands handed in for the day are taken in;
+    /// 2. (the override of an order to a unit in an intent's forces limit:
+    ///    a later step of stage 1, not built);
+    /// 3. forces back from the yard are home, and ships in port refuel, each
+    ///    base down to its reserve;
+    /// 4. each side's staff, if it has one, is asked on its view as it now
+    ///    stands (and what a replay gives back is taken as its answer);
+    /// 5. the staff's commands are taken in, then all orders, the
+    ///    commander's and the staff's;
+    /// 6. the rest of the day.
     pub fn resolve_day_watched(
         &mut self,
+        staffs: Staffs<'_>,
         watch: &mut dyn FnMut(&World, Moment),
     ) -> Result<DaySummary, SimError> {
         let day = self.truth.day + 1;
@@ -147,16 +171,27 @@ impl World {
         };
 
         pass(self, Moment::DayBegins { day });
-        // Forces back from the yard are home first, so that they are at their
-        // base for the day's refuelling and orders (decision 0069). Fuel comes
-        // before the day's orders (decision 2 of 0045). Forward repair comes
-        // after them: a force sent to the yard leaves with the damage its
-        // order stated, and one ordered to sail that morning is not patched
-        // (decision 0069, 2).
+        // Step 1: the commander's commands, so that an intent, a limit or a
+        // reserve set today binds this morning (decision 0107).
+        self.intake_commands(day);
+        // Step 2, the override of an order to a unit in an intent's forces
+        // limit, comes here with holds, in a later step of stage 1.
+        //
+        // Step 3. Forces back from the yard are home first, so that they are
+        // at their base for the day's refuelling and orders (decision 0069).
+        // Fuel comes before the day's orders (decision 2 of 0045). Forward
+        // repair comes after them: a force sent to the yard leaves with the
+        // damage its order stated, and one ordered to sail that morning is
+        // not patched (decision 0069, 2).
         self.return_from_yard(day);
         self.refuel_in_port(day);
         pass(self, Moment::Orders { day });
-        self.intake_orders(day);
+        // Step 4: each side's staff, on its view as it now stands.
+        let handed_in = self.ask_staffs(&staffs);
+        // Step 5: the staff's commands, then every order.
+        self.intake_staff_commands(day, &handed_in);
+        self.intake_orders(day, &handed_in);
+        self.staff_handed_in = handed_in;
         self.repair_in_port(day);
 
         for pulse in Pulse::ALL {
@@ -327,21 +362,53 @@ impl World {
         }
     }
 
-    /// Takes in every order submitted since the last day. Sides are handled
+    /// Takes in every order submitted since the last day, and the orders
+    /// each side's staff handed in, after its commander's. Sides are handled
     /// in a fixed order. Each side's orders are put in order of the unit they
     /// are for (task forces before air groups, then by number) before they
     /// are numbered, so the numbers do not depend on the order they were
     /// handed in. One unit's orders keep their order, so a later one still
-    /// replaces an earlier one (decision 0043, 4a to 4b).
-    fn intake_orders(&mut self, day: u32) {
-        let pending = std::mem::take(&mut self.pending);
-        for (side, mut requests) in pending {
+    /// replaces an earlier one (decision 0043, 4a to 4b), and a staff's order
+    /// comes after the commander's to the same unit. A staff's order is
+    /// checked against its intent's forces limit, and its reason recorded
+    /// after it (`take_in_staff_order`).
+    fn intake_orders(&mut self, day: u32, staff: &BTreeMap<Side, StaffDecisions>) {
+        let mut pending = std::mem::take(&mut self.pending);
+        for side in staff.keys() {
+            pending.entry(*side).or_default();
+        }
+        for (side, requests) in pending {
+            let mut all: Vec<(OrderRequest, Option<&StaffOrder>)> = requests
+                .into_iter()
+                .map(|request| (request, None))
+                .collect();
+            if let Some(decisions) = staff.get(&side) {
+                for order in &decisions.orders {
+                    all.push((
+                        OrderRequest {
+                            kind: order.kind.clone(),
+                            origin: Origin {
+                                issuer: Issuer::Staff,
+                                intent: Some(order.intent),
+                            },
+                        },
+                        Some(order),
+                    ));
+                }
+            }
             // Forming orders first (decision 0111, As built), so that an
-            // order to the new force on the same day finds it.
-            requests
-                .sort_by_key(|request| (!request.kind.forms_task_force(), request.kind.target()));
-            for request in requests {
-                self.take_in_order(day, None, side, request, Vec::new());
+            // order to the new force on the same day finds it. The sort is
+            // stable.
+            all.sort_by_key(|(request, _)| {
+                (!request.kind.forms_task_force(), request.kind.target())
+            });
+            for (request, staff_order) in all {
+                match staff_order {
+                    None => {
+                        self.take_in_order(day, None, side, request, Vec::new());
+                    }
+                    Some(order) => self.take_in_staff_order(day, side, request, &order.reason),
+                }
             }
         }
     }
@@ -361,6 +428,22 @@ impl World {
         request: OrderRequest,
         extra_causes: Vec<Cause>,
     ) -> (OrderId, EventId, bool) {
+        self.take_in_order_checked(day, pulse, side, request, extra_causes, None)
+    }
+
+    /// [`World::take_in_order`] with a rejection decided beforehand: where
+    /// `forced` is `Some`, the order is numbered, stored and rejected for
+    /// that reason without being checked (a staff's order outside its
+    /// intent's forces limit, decision 0107). With `None` it is the same.
+    pub(crate) fn take_in_order_checked(
+        &mut self,
+        day: u32,
+        pulse: Option<Pulse>,
+        side: Side,
+        request: OrderRequest,
+        extra_causes: Vec<Cause>,
+        forced: Option<RejectReason>,
+    ) -> (OrderId, EventId, bool) {
         let id = self.order_ids.alloc();
         let order = Order {
             id,
@@ -370,7 +453,10 @@ impl World {
             origin: request.origin,
         };
         let target = order.kind.target();
-        let result = self.validate_order(&order);
+        let result = match forced {
+            Some(reason) => Err(reason),
+            None => self.validate_order(&order),
+        };
         let accepted = result.is_ok();
         let mut follow_ups: Vec<EventKind> = Vec::new();
         let kind = match result {
@@ -542,6 +628,46 @@ impl World {
             origin: request.origin,
         };
         self.validate_order(&order)
+    }
+
+    /// [`World::check_order`] for an order handed in beside `queued`, the
+    /// other orders of the same side for the same day not yet taken in
+    /// (decision 0111's open point, settled in decision 0107, "As built").
+    /// An order to a task force that does not exist yet, where a forming
+    /// order is queued (in `queued` or already submitted), is checked as
+    /// intake will check it: on a copy of the world into which the queued
+    /// forming orders have been taken, in intake's order, so that the force
+    /// they make is there with the number it will have. Any other order is
+    /// checked as `check_order` checks it. Changes nothing.
+    pub fn check_order_queued(
+        &self,
+        side: Side,
+        request: &OrderRequest,
+        queued: &[OrderRequest],
+    ) -> Result<(), RejectReason> {
+        let target_missing = matches!(
+            &request.kind,
+            OrderKind::TaskForce { target, .. } if !self.truth.task_forces.contains_key(target)
+        );
+        let mut forming: Vec<OrderRequest> = self
+            .pending
+            .get(&side)
+            .into_iter()
+            .flatten()
+            .chain(queued)
+            .filter(|queued| queued.kind.forms_task_force())
+            .cloned()
+            .collect();
+        if !target_missing || forming.is_empty() {
+            return self.check_order(side, request);
+        }
+        forming.sort_by_key(|queued| queued.kind.target());
+        let day = self.truth.day + 1;
+        let mut copy = self.clone();
+        for queued in forming {
+            copy.take_in_order(day, None, side, queued, Vec::new());
+        }
+        copy.check_order(side, request)
     }
 
     /// Orders are checked against the truth, as the spec says. Note that a
@@ -2911,7 +3037,7 @@ mod tests {
     fn take_in(world: &mut World, orders: Vec<OrderRequest>) {
         world.submit_orders(Side::Allied, orders);
         let day = world.truth.day + 1;
-        world.intake_orders(day);
+        world.intake_orders(day, &BTreeMap::new());
     }
 
     /// Resolves days until the force stops, and returns the miles steamed.
@@ -3115,7 +3241,7 @@ mod tests {
         take_in(&mut world, vec![route_to(0, 1)]);
         assert_eq!(leg(&world), (hx(1, 0), Some(hx(0, 0)), nm(30)));
         world.submit_orders(Side::Allied, vec![route_to(2, 0)]);
-        world.intake_orders(2);
+        world.intake_orders(2, &BTreeMap::new());
         assert_eq!(leg(&world), original);
         assert_sound(&world);
     }

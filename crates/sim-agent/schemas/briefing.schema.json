@@ -1464,7 +1464,7 @@
       "type": "object",
       "required": [
         "base", "place", "supply_t", "fuel_t", "spent_yesterday_t", "destroyed_yesterday_t",
-        "days_of_supply", "stocks_yesterday"
+        "days_of_supply", "planned_days_of_supply", "stocks_yesterday"
       ],
       "additionalProperties": false,
       "properties": {
@@ -1480,6 +1480,10 @@
         "works": { "$ref": "defs.schema.json#/$defs/base_works" },
         "airfield_damage": { "$ref": "defs.schema.json#/$defs/airfield_damage" },
         "reserves": { "$ref": "defs.schema.json#/$defs/base_reserves" },
+        "planned_days_of_supply": {
+          "description": "Today's days of supply in the base's hex (decision 0107, 31 to 36): the side's supply there over its planned use for a day, read before the day's orders; no figure where nothing is used. The side's figure for the hex, the same for every base of the side in it. Not days_of_supply, which is the stock over yesterday's spending.",
+          "$ref": "defs.schema.json#/$defs/days_of_supply"
+        },
         "ships_in_port": {
           "description": "The side's ships in port at the base in no force (decision 0111): form_task_force takes ships from here. Left out when there are none.",
           "type": "array",

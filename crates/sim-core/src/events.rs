@@ -6,12 +6,14 @@
 
 use core::fmt;
 
+use crate::command::{CommandKind, CommandRefusal, PlanId, PlanState, Reason};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
-    AirGroupId, BaseId, ContactId, EntityRef, EventId, LandUnitId, OrderId, ShipId, TaskForceId,
+    AirGroupId, BaseId, ContactId, EntityRef, EventId, IntentId, LandUnitId, OrderId, ShipId,
+    TaskForceId,
 };
-use crate::orders::{Cargo, Job, RejectReason};
+use crate::orders::{Cargo, Issuer, Job, RejectReason};
 use crate::refdata::ShipKind;
 use crate::state::{AirGroupLocation, HaltWork, ShipSystem, Side, SystemState};
 use crate::time::{ClockTime, Pulse};
@@ -1711,6 +1713,54 @@ pub enum EventKind {
         aboard_t: Fixed,
         reserve_t: Fixed,
     },
+    /// A command was taken in and applied (decision 0107). The root record
+    /// of the change it made: no causes. Added at the end (decision 0107).
+    CommandTaken {
+        side: Side,
+        issuer: Issuer,
+        command: CommandKind,
+    },
+    /// A command was refused, with the reason; nothing changed (decision
+    /// 0107). No causes. Added at the end (decision 0107).
+    CommandRefused {
+        side: Side,
+        issuer: Issuer,
+        command: CommandKind,
+        reason: CommandRefusal,
+    },
+    /// A plan was drafted for an intent, when its number was first set or
+    /// set again after its plan ended. Cites the `CommandTaken`. Added at
+    /// the end (decision 0107).
+    PlanDrafted {
+        side: Side,
+        plan: PlanId,
+        intent: IntentId,
+    },
+    /// A plan changed state. Cites the `CommandTaken`. Added at the end
+    /// (decision 0107).
+    PlanStateChanged {
+        side: Side,
+        plan: PlanId,
+        from: PlanState,
+        to: PlanState,
+    },
+    /// A plan that is approved was amended by a change to its intent or one
+    /// of its limits; `number` is the amendment's. Cites the `CommandTaken`.
+    /// Added at the end (decision 0107).
+    PlanAmended {
+        side: Side,
+        plan: PlanId,
+        number: u32,
+    },
+    /// The reason for a staff decision: for the order it handed in, or, with
+    /// no order, for giving none (decision 0107). Cites the order and its
+    /// acceptance or refusal, if there is an order. Added at the end
+    /// (decision 0107).
+    StaffReason {
+        side: Side,
+        order: Option<OrderId>,
+        reason: Box<Reason>,
+    },
 }
 
 impl EventKind {
@@ -2078,6 +2128,13 @@ impl EventKind {
             EventKind::RefuellingHeldAtReserve {
                 ship, task_force, ..
             } => vec![EntityRef::Ship(*ship), EntityRef::TaskForce(*task_force)],
+            // The side's command state is not an entity of the world.
+            EventKind::CommandTaken { .. }
+            | EventKind::CommandRefused { .. }
+            | EventKind::PlanDrafted { .. }
+            | EventKind::PlanStateChanged { .. }
+            | EventKind::PlanAmended { .. }
+            | EventKind::StaffReason { .. } => Vec::new(),
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
                 air_group, base, ..
@@ -3687,7 +3744,58 @@ impl fmt::Display for EventKind {
                 "{task_force}'s load of {} stopped at {base}'s reserve of {reserve_t} t, with {aboard_t} t aboard",
                 cargo.name()
             ),
+            EventKind::CommandTaken {
+                side,
+                issuer,
+                command,
+            } => write!(f, "{side:?} {} command taken: {command}", issuer_name(*issuer)),
+            EventKind::CommandRefused {
+                side,
+                issuer,
+                command,
+                reason,
+            } => write!(
+                f,
+                "{side:?} {} command refused ({reason}): {command}",
+                issuer_name(*issuer)
+            ),
+            EventKind::PlanDrafted {
+                side,
+                plan,
+                intent,
+            } => write!(f, "{side:?} {plan} drafted for {intent}"),
+            EventKind::PlanStateChanged {
+                side,
+                plan,
+                from,
+                to,
+            } => write!(f, "{side:?} {plan} went from {} to {}", from.name(), to.name()),
+            EventKind::PlanAmended { side, plan, number } => {
+                write!(f, "{side:?} {plan} amended, amendment {number}")
+            }
+            EventKind::StaffReason {
+                side,
+                order,
+                reason,
+            } => match order {
+                Some(order) => write!(
+                    f,
+                    "{side:?} staff's reason for {}: {}",
+                    order.shown(),
+                    reason.worked
+                ),
+                None => write!(f, "{side:?} staff gave no order: {}", reason.worked),
+            },
         }
+    }
+}
+
+/// An issuer's name in words, for the log's text.
+fn issuer_name(issuer: Issuer) -> &'static str {
+    match issuer {
+        Issuer::Player => "the commander's",
+        Issuer::Staff => "the staff's",
+        Issuer::LocalCommander => "the local commander's",
     }
 }
 

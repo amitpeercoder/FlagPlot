@@ -22,35 +22,38 @@ The rules of Flag Plot as they stand in the code today, each stated once, in the
 
 ## The order of a day
 
-Chapter 1 owns the sequence. This table is its summary. Each phase names the chapter and section that hold its rules.
+Chapter 1 owns the sequence. This table is its summary. Each phase names the chapter and section that hold its rules. Steps 1, 2, 4 and the first part of step 5 are those of decision 0107, and do nothing for a side with no command and no staff.
 
 | Step | When | What runs | Where |
 | --- | --- | --- | --- |
-| 1 | Day start | Refuelling in port | Chapter 2, Refuelling in port |
-| 2 | Day start | Orders intake: numbering, checks, refusals; a yard order, a rebase order, a posture order, a march order, a prepare-landing order and an activity order are applied at their acceptance | Chapter 1, Orders; chapter 4, Repair; chapter 5, Rebasing an air group; chapter 7, The posture and its order; Marching overland; Preparing a landing; The day's activity |
-| 3 | Start of each pulse | Alert from belief | Chapter 3, Alert from belief |
-| 4 | Start of each pulse | Fatigue of task forces | Chapter 3, Fatigue of a force |
-| 5 | Start of each pulse | Bases out of supply fixed, and the damage to each base's airfield read | Chapter 5, A base out of supply and A damaged airfield |
-| 6 | Night pulse | Aircraft repair | Chapter 5, Repair |
-| 7 | Night pulse | Aircraft arrivals (one due at a field that takes no aircraft waits) | Chapter 5, Aircraft that arrive on a day |
-| 8 | Night pulse | Replacements, from day 2 | Chapter 5, Replacements |
-| 9 | Night pulse | Daily supply for aircraft | Chapter 5, Daily supply |
-| 10 | Night pulse | Men's supply: the men ashore are fed from every base of their side in the hex, the unfed are lost in part | Chapter 7, The men's supply |
-| 11 | Night pulse | Stand-down and return of tired air groups | Chapter 5, Stand-down and return |
-| 12 | Night pulse | Movement: halted forces whose work is done steam on, the straggler pass, forces move in order of clock time (a force with a marked waypoint and work there halts at it), fights where they meet | Chapter 2, Movement, Halting at a marked waypoint and steaming on, and Stragglers; chapter 4, Meeting |
-| 13 | Night pulse | Night search and surface engagements: empty. Shore bombardment: a force on the bombardment mission, in the hex of an enemy base on its side's map (a halted force is in it), fires at the base: it destroys aircraft, supply and men there (the men less the men cover saves), wears the cover of the defenders and damages its airfield, the base's side is given a sighting report of the force, and the bombarding side a claim | Chapter 1, The night pulse; chapter 4, Shore bombardment; chapter 3, Claims |
-| 14 | Night pulse | Loading and unloading, with men taken aboard and landed, units divided and bases formed; a force that lands men works at the rate its loading gives, and a unit's first men landing spend its rehearsal | Chapter 2, Cargo; chapter 7, Landing men; Preparing a landing |
-| 15 | Morning and afternoon | Air search and its sighting reports | Chapter 3, Air search |
-| 16 | Morning and afternoon | Strike decisions and launches | Chapter 5, The strike decision |
-| 17 | Morning and afternoon | Air combat: escorts, patrols, guns, attacks (a hit on a base may land on men ashore there, which cover cuts and which tire them and wear the cover, or on its airfield), damage, reports, claims | Chapter 5, The raid, step by step |
-| 18 | Morning and afternoon | Running out of fuel, then coming home to no deck, then wear, then fatigue, then supply for sorties | Chapter 5, The end of a daylight pulse for aircraft |
-| 19 | Morning and afternoon | Movement, as in step 12 | Chapter 2, Movement; chapter 4, Meeting |
-| 20 | Morning and afternoon | Surface engagements: an empty slot | Chapter 1, The morning and afternoon pulses |
-| 21 | Morning and afternoon | Loading and unloading, as in step 14 | Chapter 2, Cargo; chapter 7 |
-| 22 | End of each pulse | Contacts age and are dropped | Chapter 3, Ageing and dropping |
-| 23 | After the third pulse | Ground combat: first the marches (a day marched, an arrival with its supply and any dump formed; a unit that fell back carries none); then for each hex with men ashore, the fight (each side's fire limited, an attack that fails, a defender's losses cut by its cover), fatigue (men under fire do not rest but tire), a spent attacker holding or falling back, a side beaten, a base that changes side, the beaten side's men falling back or surrendering, the ground reports; then the day's activity: each force's loading, each unit's rehearsal, training or work (the work of the airfield also mends its damage), the days of fighting counted; then digging (each fighting unit on defend that did not march gains fieldworks); last, the day's hits on men are emptied | Chapter 7, Marching overland; The fight ashore (Shots and chance, An attack that fails); What a spent attacker does; A base that changes side; A beaten side's men; What a side knows of the enemy ashore; The day's activity; Cover and fieldworks; Preparing a landing; Experience and training |
-| 24 | After the third pulse | Logistics, air group upkeep, intelligence update: empty. Then the base count | Chapter 1, After the pulses |
-| 25 | Day close | The day counter advances, the invariants are checked, the state hash is recorded | Chapter 1, Invariants; The state hash and saved games |
+| 1 | Day start | The commander's commands are taken in: intents, limits (a reserve set here binds this morning's refuelling), leaves, approvals, cancelling | Chapter 8, Commands |
+| 2 | Day start | The override of a held unit by the commander's order: not built | Chapter 8, Not built |
+| 3 | Day start | Forces back from the yard are home, then refuelling in port, each base down to its fuel reserve | Chapter 4, Repair; chapter 2, Refuelling in port |
+| 4 | Day start | Each side's staff, if it has one, is asked on its view as it now stands. What a replay saved is taken as its answer | Chapter 8, The staff |
+| 5 | Day start | The staff's commands are taken in; then orders intake for both issuers: numbering, checks, refusals (a staff's order also against its intent's forces limit); a yard order, a rebase order, a posture order, a march order, a prepare-landing order and an activity order are applied at their acceptance. Forward repair follows | Chapter 8, The staff; chapter 1, Orders; chapter 4, Repair; chapter 5, Rebasing an air group; chapter 7, The posture and its order; Marching overland; Preparing a landing; The day's activity |
+| 6 | Start of each pulse | Alert from belief | Chapter 3, Alert from belief |
+| 7 | Start of each pulse | Fatigue of task forces | Chapter 3, Fatigue of a force |
+| 8 | Start of each pulse | Bases out of supply fixed, and the damage to each base's airfield read | Chapter 5, A base out of supply and A damaged airfield |
+| 9 | Night pulse | Aircraft repair | Chapter 5, Repair |
+| 10 | Night pulse | Aircraft arrivals (one due at a field that takes no aircraft waits) | Chapter 5, Aircraft that arrive on a day |
+| 11 | Night pulse | Replacements, from day 2 | Chapter 5, Replacements |
+| 12 | Night pulse | Daily supply for aircraft | Chapter 5, Daily supply |
+| 13 | Night pulse | Men's supply: the men ashore are fed from every base of their side in the hex, the unfed are lost in part | Chapter 7, The men's supply |
+| 14 | Night pulse | Stand-down and return of tired air groups | Chapter 5, Stand-down and return |
+| 15 | Night pulse | Movement: halted forces whose work is done steam on, the straggler pass, forces move in order of clock time (a force with a marked waypoint and work there halts at it), fights where they meet | Chapter 2, Movement, Halting at a marked waypoint and steaming on, and Stragglers; chapter 4, Meeting |
+| 16 | Night pulse | Night search and surface engagements: empty. Shore bombardment: a force on the bombardment mission, in the hex of an enemy base on its side's map (a halted force is in it), fires at the base: it destroys aircraft, supply and men there (the men less the men cover saves), wears the cover of the defenders and damages its airfield, the base's side is given a sighting report of the force, and the bombarding side a claim | Chapter 1, The night pulse; chapter 4, Shore bombardment; chapter 3, Claims |
+| 17 | Night pulse | Loading and unloading, with men taken aboard and landed, units divided and bases formed; a force that lands men works at the rate its loading gives, and a unit's first men landing spend its rehearsal | Chapter 2, Cargo; chapter 7, Landing men; Preparing a landing |
+| 18 | Morning and afternoon | Air search and its sighting reports | Chapter 3, Air search |
+| 19 | Morning and afternoon | Strike decisions and launches | Chapter 5, The strike decision |
+| 20 | Morning and afternoon | Air combat: escorts, patrols, guns, attacks (a hit on a base may land on men ashore there, which cover cuts and which tire them and wear the cover, or on its airfield), damage, reports, claims | Chapter 5, The raid, step by step |
+| 21 | Morning and afternoon | Running out of fuel, then coming home to no deck, then wear, then fatigue, then supply for sorties | Chapter 5, The end of a daylight pulse for aircraft |
+| 22 | Morning and afternoon | Movement, as in step 15 | Chapter 2, Movement; chapter 4, Meeting |
+| 23 | Morning and afternoon | Surface engagements: an empty slot | Chapter 1, The morning and afternoon pulses |
+| 24 | Morning and afternoon | Loading and unloading, as in step 17 | Chapter 2, Cargo; chapter 7 |
+| 25 | End of each pulse | Contacts age and are dropped | Chapter 3, Ageing and dropping |
+| 26 | After the third pulse | Ground combat: first the marches (a day marched, an arrival with its supply and any dump formed; a unit that fell back carries none); then for each hex with men ashore, the fight (each side's fire limited, an attack that fails, a defender's losses cut by its cover), fatigue (men under fire do not rest but tire), a spent attacker holding or falling back, a side beaten, a base that changes side, the beaten side's men falling back or surrendering, the ground reports; then the day's activity: each force's loading, each unit's rehearsal, training or work (the work of the airfield also mends its damage), the days of fighting counted; then digging (each fighting unit on defend that did not march gains fieldworks); last, the day's hits on men are emptied | Chapter 7, Marching overland; The fight ashore (Shots and chance, An attack that fails); What a spent attacker does; A base that changes side; A beaten side's men; What a side knows of the enemy ashore; The day's activity; Cover and fieldworks; Preparing a landing; Experience and training |
+| 27 | After the third pulse | Logistics, air group upkeep, intelligence update: empty. Then the base count | Chapter 1, After the pulses |
+| 28 | Day close | The day counter advances, the invariants are checked, the state hash is recorded | Chapter 1, Invariants; The state hash and saved games |
 
 The result of a game is worked out from the final state and the log. It is not a phase and no rule reads it (chapter 6).
 
@@ -63,6 +66,7 @@ The result of a game is worked out from the final state and the log. It is not a
 5. **Air operations.** Air groups, missions, rebasing a group to another base (one with an airfield that takes aircraft), a group lost with its base, what a group can fly, a damaged airfield and what it keeps on the ground, air distance, the night's upkeep, the strike decision, escorts and patrol, the raid step by step (with the shares of a hit on a base that land on men and on the airfield), wear, fatigue and the supply that flying costs.
 6. **Objectives and results.** A scenario's mission and objectives (including a base held and men lost), points, the margin and the seven outcomes, what a side knows of its progress, and the result at the end.
 7. **Land units.** The land unit and troop capacity, the load order with a unit, men worked as cargo, a landing, a base formed by it, a unit divided, men lost with a ship, the men's supply and the loss of the unfed, the posture of a unit and its order, marching overland, the day's fight ashore and the limit on the men engaged, the cut of a defender's losses by cover, fatigue and the strain of fire, an attack that fails, what a spent attacker does, a side beaten, a base that changes side, a beaten side's men falling back or surrendering, the day's activity, units that work and what they build (the airfield and the mending of its damage, the port, aircraft repair and defences, with their three grades), cover and fieldworks, preparing a landing, experience and training, what a land unit is good at (its skills), men lost to the fire of bombs and shells (cut by cover, counted for the strain, wearing cover), and what a side knows of its own men and of the enemy's.
+8. **The staff.** What a side's commander says as state (intents, six limits, two leaves, plans with baselines, amendments and runs, commitments of ships), the commands that change it and every reason one is refused, what a staff is and when it is asked, the check of a staff's orders against a forces limit, reasons, days of supply, what a saved game keeps of it and `replay --check-staff`, and a scenario's commands. It is begun by the engine half of step 3's stage 1; no staff is built.
 
 ## Kept true
 

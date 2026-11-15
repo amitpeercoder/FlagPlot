@@ -1,0 +1,34 @@
+Placeholder scenario 35a: Days of supply, men
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash fb10f4af5f834429  47 events
+day   2  hash c7cea9bde39eff4c  35 events
+day   3  hash a7675a5224da638f  36 events
+day   4  hash 1feaf85201ad7a7b  17 events
+day   5  hash db180742a3a647a9  16 events
+day   6  hash f4862f930d1f61c3  15 events
+
+task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply
+ship:3 "Placeholder troop transport 3": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply
+ship:4 "Placeholder troop transport 4": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply
+ship:5 "Placeholder troop transport 5": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply
+base:1 "Placeholder base 1" (Allied) at (0,4): 500 t of supply in stock
+base:2 "Placeholder base 2" (Allied) at (3,4): 540 t of supply in stock
+base:3 "Placeholder base 3" (Allied) at (0,0): 202.5 t of supply in stock
+base:4 "Placeholder base 4" (Allied) at (14,0): 5000 t of supply in stock
+base:7 "Placeholder base 7" (Allied) at (6,4): 97.625 t of supply in stock
+base:8 "Placeholder base 8" (Japanese) at (9,4): 97.25 t of supply in stock
+base:9 "Placeholder base 9" (Japanese) at (9,4): 49.5 t of supply in stock
+land_unit:1 "Placeholder unit 1" (Allied): 2000 men ashore at (3,4), fieldworks 30
+land_unit:2 "Placeholder unit 2" (Allied): 1000 men ashore at (0,0), fieldworks 30
+land_unit:3 "Placeholder unit 3" (Allied): 3000 men ashore at (0,0), fieldworks 30
+land_unit:4 "Placeholder unit 4" (Allied): 95 men ashore at (6,4), on attack
+land_unit:6 "Placeholder unit 6" (Allied): no men ashore
+land_unit:7 "Placeholder unit 7" (Japanese): 100 men ashore at (9,4), on attack
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

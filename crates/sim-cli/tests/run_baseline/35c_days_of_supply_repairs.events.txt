@@ -1,0 +1,28 @@
+Placeholder scenario 35c: Days of supply, repairs
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 44595adaff309a9d  4 events
+day   2  hash 1835f10af0091901  4 events
+day   3  hash 45fb142ba622f809  2 events
+day   4  hash c4ccf32ae4bed4fe  2 events
+
+#1 D1 night     air_group:2 had 3 aircraft repaired at base:6, 13 ready and 2 damaged
+#2 D1 night     base:6 spent 3 t of supply on 3 repairs, 97 t left  <- #1
+#3 D1 night     base:6 spent 3 t of supply on 15 aircraft at the base for the day, 94 t left
+#4 D1 -         base:6 at the end of the day: 94 t of supply, 13 aircraft ready: open
+#5 D2 night     air_group:2 had 2 aircraft repaired at base:6, 15 ready and 0 damaged
+#6 D2 night     base:6 spent 2 t of supply on 2 repairs, 92 t left  <- #5
+#7 D2 night     base:6 spent 3 t of supply on 15 aircraft at the base for the day, 89 t left
+#8 D2 -         base:6 at the end of the day: 89 t of supply, 15 aircraft ready: open
+#9 D3 night     base:6 spent 3 t of supply on 15 aircraft at the base for the day, 86 t left
+#10 D3 -         base:6 at the end of the day: 86 t of supply, 15 aircraft ready: open
+#11 D4 night     base:6 spent 3 t of supply on 15 aircraft at the base for the day, 83 t left
+#12 D4 -         base:6 at the end of the day: 83 t of supply, 15 aircraft ready: open
+
+air_group:2 "Placeholder fighter group 2" (Allied) at base:6: 15 ready, mission Rest, no arc
+base:6 "Placeholder base 6" (Allied) at (15,4): 83 t of supply in stock, repairs 3 aircraft a day
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

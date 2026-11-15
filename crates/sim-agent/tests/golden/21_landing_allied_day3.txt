@@ -47,8 +47,10 @@ AIR GROUPS
 BASES
 - base:1 "Placeholder embarkation port" at (0,0): supply 1000 t, fuel 0 t (for ships; aircraft do not use it)
   - Yesterday: 0 t supply spent, 0 t destroyed; no spending yesterday
+  - Days of supply for the hex: no figure, no supply is planned to be used there today (1000 t in stock)
 - base:2 "Landing at (8,0)" at (8,0): supply 14 t, fuel 0 t (for ships; aircraft do not use it)
   - Yesterday: 0 t supply spent, 0 t destroyed; no spending yesterday
+  - Days of supply for the hex (all the side's bases there): 2.8 days, 14 t over a planned use of 5 t a day (men ashore 5, men due 0, aircraft upkeep 0, repairs 0, sorties 0)
   - Stocks yesterday: supply 0 t to 14 t (landed 14 t)
   - Works: no airfield, 0 of 20000 work done; defences 0 (improvised); yesterday's work on the port 0, on the aircraft 0
 

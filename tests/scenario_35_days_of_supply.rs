@@ -200,3 +200,416 @@
 //!   its parts what it counted, so that the reason can be read.
 //! - Where the planned use is 0 the tools say that there is no figure, and
 //!   never show a number.
+
+// ---------------------------------------------------------------- The tests
+//
+// The figure is read where the staff would be asked: at the start of each
+// day, before that day's orders are taken in. The tests resolve each day with
+// `resolve_day_watched(Staffs::none(), ..)` and read at `Moment::Orders {
+// day }` (after the refuelling in port, before the orders are taken in), with
+// the day's scripted orders already handed to the world as the scenario's
+// `next_day` hands them. Reading before each `next_day` gives the same.
+
+mod common;
+
+use std::collections::BTreeMap;
+use std::path::PathBuf;
+
+use sim_core::choices::Moment;
+use sim_core::fixed::Fixed;
+use sim_core::hex::Hex;
+use sim_core::state::Side;
+use sim_core::{DaysOfSupply, Staffs};
+use sim_data::Scenario;
+
+// A to H as the placeholder map has them.
+const A: Hex = Hex::new(0, 4);
+const B: Hex = Hex::new(3, 4);
+const C: Hex = Hex::new(0, 0);
+const G: Hex = Hex::new(6, 4);
+const H: Hex = Hex::new(9, 4);
+const E: Hex = Hex::new(12, 4);
+const F: Hex = Hex::new(15, 4);
+const D: Hex = Hex::new(14, 0);
+
+fn path(file: &str) -> PathBuf {
+    common::data_dir().join("scenarios").join(file)
+}
+
+fn text(file: &str) -> String {
+    std::fs::read_to_string(path(file)).expect("the scenario file reads")
+}
+
+fn fx(text: &str) -> Fixed {
+    text.parse().expect("a decimal")
+}
+
+fn n(whole: i64) -> Fixed {
+    Fixed::from_int(whole)
+}
+
+/// 35a's figures: the frozen ones with the weight strength of the
+/// calculation.
+fn working() -> sim_data::LoadOptions {
+    common::altered_reference("days_of_supply", |dir| {
+        common::edit_file_by(
+            dir,
+            "ground.toml",
+            &[("weight_strength = 0", "weight_strength = \"0.25\"")],
+        );
+    })
+}
+
+fn scenario_a(source: &str) -> Scenario {
+    common::from_text_with(source, &path("35a_days_of_supply.toml"), &working()).expect("35a loads")
+}
+
+fn scenario_b(source: &str) -> Scenario {
+    common::from_text(source, &path("35b_days_of_supply_sorties.toml")).expect("35b loads")
+}
+
+fn scenario_c(source: &str) -> Scenario {
+    common::from_text(source, &path("35c_days_of_supply_repairs.toml")).expect("35c loads")
+}
+
+/// Every figure of both sides in each of `hexes`, read at the start of each
+/// day before its orders, by day. Also the stock of each base at that moment,
+/// by the truth, to check what the figure says it holds.
+struct Readings {
+    figures: BTreeMap<(u32, Side, Hex), Option<DaysOfSupply>>,
+    truth_stock: BTreeMap<(u32, Side, Hex), Fixed>,
+}
+
+impl Readings {
+    fn of(mut scenario: Scenario, hexes: &[Hex]) -> Readings {
+        let script = scenario.scripted_orders().clone();
+        let mut figures = BTreeMap::new();
+        let mut truth_stock = BTreeMap::new();
+        for day in 1..=scenario.days {
+            for (side, request) in script.get(&day).cloned().unwrap_or_default() {
+                scenario.world.submit_orders(side, vec![request]);
+            }
+            scenario
+                .world
+                .resolve_day_watched(Staffs::none(), &mut |world, moment| {
+                    let Moment::Orders { day: now } = moment else {
+                        return;
+                    };
+                    assert_eq!(now, day);
+                    for side in [Side::Allied, Side::Japanese] {
+                        let view = world.side_view(side);
+                        for hex in hexes {
+                            figures.insert((day, side, *hex), view.days_of_supply(*hex));
+                        }
+                        for base in view.bases() {
+                            *truth_stock
+                                .entry((day, side, base.hex))
+                                .or_insert(Fixed::ZERO) += base.supply_t;
+                        }
+                    }
+                })
+                .expect("a day resolves");
+        }
+        Readings {
+            figures,
+            truth_stock,
+        }
+    }
+
+    fn at(&self, day: u32, side: Side, hex: Hex) -> Option<DaysOfSupply> {
+        self.figures[&(day, side, hex)]
+    }
+
+    /// The figure of a side that holds a base in the hex, with its stock
+    /// checked against the bases' own.
+    fn some(&self, day: u32, side: Side, hex: Hex) -> DaysOfSupply {
+        let figure = self
+            .at(day, side, hex)
+            .unwrap_or_else(|| panic!("a figure for {side:?} at {hex:?} on day {day}"));
+        assert_eq!(
+            figure.stock_t,
+            self.truth_stock[&(day, side, hex)],
+            "the stock is the bases' own, day {day}"
+        );
+        figure
+    }
+}
+
+const ALL_HEXES: [Hex; 9] = [A, B, C, D, G, H, E, F, Hex::new(1, 1)];
+
+fn readings_a() -> Readings {
+    Readings::of(scenario_a(&text("35a_days_of_supply.toml")), &ALL_HEXES)
+}
+
+fn readings_b() -> Readings {
+    Readings::of(
+        scenario_b(&text("35b_days_of_supply_sorties.toml")),
+        &ALL_HEXES,
+    )
+}
+
+fn readings_c() -> Readings {
+    Readings::of(
+        scenario_c(&text("35c_days_of_supply_repairs.toml")),
+        &ALL_HEXES,
+    )
+}
+
+/// A check of one reading: the stock, the planned use in its parts, the
+/// figure.
+#[allow(clippy::too_many_arguments)]
+fn check(
+    got: DaysOfSupply,
+    day: u32,
+    stock: &str,
+    ashore: &str,
+    due: &str,
+    upkeep: &str,
+    repairs: &str,
+    sorties: &str,
+    figure: Option<&str>,
+) {
+    assert_eq!(got.stock_t, fx(stock), "stock, day {day}");
+    let used = got.planned_use;
+    assert_eq!(used.men_ashore_t, fx(ashore), "men ashore, day {day}");
+    assert_eq!(used.men_due_t, fx(due), "men due, day {day}");
+    assert_eq!(used.aircraft_upkeep_t, fx(upkeep), "upkeep, day {day}");
+    assert_eq!(used.repairs_t, fx(repairs), "repairs, day {day}");
+    assert_eq!(used.sorties_t, fx(sorties), "sorties, day {day}");
+    assert_eq!(got.days, figure.map(fx), "figure, day {day}");
+}
+
+// -------------------------------------------------------------- 35a: men
+
+#[test]
+fn at_a_there_is_no_use_and_so_no_figure_on_any_day() {
+    let read = readings_a();
+    for day in 1..=6 {
+        let got = read.some(day, Side::Allied, A);
+        check(got, day, "500", "0", "0", "0", "0", "0", None);
+    }
+}
+
+#[test]
+fn at_b_the_figure_falls_a_day_by_ten_tons() {
+    let read = readings_a();
+    for day in 1..=6u32 {
+        let stock = 600 - 10 * i64::from(day - 1);
+        let got = read.some(day, Side::Allied, B);
+        check(
+            got,
+            day,
+            &stock.to_string(),
+            "10",
+            "0",
+            "0",
+            "0",
+            "0",
+            Some(&(60 - (day - 1)).to_string()),
+        );
+    }
+}
+
+#[test]
+fn at_c_a_regiment_at_sea_counts_from_the_day_it_is_due() {
+    let read = readings_a();
+    // Day, stock, men ashore, men due, figure.
+    let table = [
+        (1, "300", "5", "0", "60"),
+        (2, "295", "5", "0", "59"),
+        (3, "290", "5", "22.5", "10.545454"),
+        (4, "285", "27.5", "0", "10.363636"),
+        (5, "257.5", "27.5", "0", "9.363636"),
+        (6, "230", "27.5", "0", "8.363636"),
+    ];
+    for (day, stock, ashore, due, figure) in table {
+        let got = read.some(day, Side::Allied, C);
+        check(got, day, stock, ashore, due, "0", "0", "0", Some(figure));
+    }
+}
+
+#[test]
+fn at_g_a_base_taken_gives_a_figure_to_the_side_that_took_it() {
+    let read = readings_a();
+    // Day 1: the Allied side holds no base there; the Japanese side holds
+    // base 7 and has no man there.
+    assert_eq!(read.at(1, Side::Allied, G), None);
+    let japanese = read.some(1, Side::Japanese, G);
+    check(japanese, 1, "200", "0", "0", "0", "0", "0", None);
+    // From day 2 the Allied side holds it, and the Japanese side does not.
+    let table = [
+        (2, "100", "210.526315"),
+        (3, "99.525", "209.526315"),
+        (4, "99.05", "208.526315"),
+    ];
+    for (day, stock, figure) in table {
+        let got = read.some(day, Side::Allied, G);
+        check(got, day, stock, "0.475", "0", "0", "0", "0", Some(figure));
+        assert_eq!(read.at(day, Side::Japanese, G), None, "day {day}");
+    }
+}
+
+#[test]
+fn at_h_a_base_lost_gives_no_figure_and_the_other_side_counts_both_bases() {
+    let read = readings_a();
+    let allied = read.some(1, Side::Allied, H);
+    check(allied, 1, "200", "0.5", "0", "0", "0", "0", Some("400"));
+    let japanese = read.some(1, Side::Japanese, H);
+    check(japanese, 1, "50", "0.5", "0", "0", "0", "0", Some("100"));
+    let table = [(2, "149.25", "298.5"), (3, "148.75", "297.5")];
+    for (day, stock, figure) in table {
+        assert_eq!(read.at(day, Side::Allied, H), None, "day {day}");
+        let got = read.some(day, Side::Japanese, H);
+        check(got, day, stock, "0.5", "0", "0", "0", "0", Some(figure));
+    }
+}
+
+// ------------------------------------------------ 35b: a surge of sorties
+
+#[test]
+fn a_surge_of_sorties_shows_the_day_after_the_order() {
+    let read = readings_b();
+    // Day, stock, upkeep, sorties, figure.
+    let table = [
+        (1, "400", "4", "0", "100"),
+        (2, "396", "4", "0", "99"),
+        (3, "392", "4", "0", "98"),
+        (4, "368", "4", "20", "15.333333"),
+        (5, "344", "4", "20", "14.333333"),
+        (6, "320", "4", "20", "13.333333"),
+    ];
+    for (day, stock, upkeep, sorties, figure) in table {
+        let got = read.some(day, Side::Allied, E);
+        check(
+            got,
+            day,
+            stock,
+            "0",
+            "0",
+            upkeep,
+            "0",
+            sorties,
+            Some(figure),
+        );
+    }
+}
+
+// ------------------------------------------------------- 35c: repairs
+
+#[test]
+fn repairs_count_the_smaller_of_the_base_figure_and_the_damaged_aircraft() {
+    let read = readings_c();
+    // Day, stock, repairs that night, figure (upkeep is 3 on every day).
+    let table = [
+        (1, "100", "3", "16.666666"),
+        (2, "94", "2", "18.8"),
+        (3, "89", "0", "29.666666"),
+        (4, "86", "0", "28.666666"),
+    ];
+    for (day, stock, repairs, figure) in table {
+        let got = read.some(day, Side::Allied, F);
+        check(got, day, stock, "0", "0", "3", repairs, "0", Some(figure));
+    }
+}
+
+// ------------------------------------------------------------ Properties
+
+#[test]
+fn two_worlds_that_differ_only_in_what_the_side_cannot_see_give_one_figure() {
+    // The Japanese side's stocks and its man at H differ (an enemy man, an
+    // enemy base's stock), and so does an enemy base with its man in a hex
+    // where the Allied side holds a base and no man. None of it changes an
+    // Allied figure.
+    let plain = text("35a_days_of_supply.toml");
+    let mut changed = plain.clone();
+    changed = changed.replace("supply_t = 200\n", "supply_t = 9000\n");
+    changed = changed.replace("supply_t = 50\n", "supply_t = 77\n");
+    assert_ne!(plain, changed);
+    // Unit 7's men: 100 to 90.
+    let unit7 = "name = \"Placeholder unit 7\"\nside = \"japanese\"\nmen = 100";
+    assert!(changed.contains(unit7));
+    changed = changed.replace(
+        unit7,
+        "name = \"Placeholder unit 7\"\nside = \"japanese\"\nmen = 90",
+    );
+    // The Japanese side also holds a base with 5000 t and 500 men, on defence,
+    // at A, where the Allied side holds base 1 and has no man.
+    changed.push_str(
+        "\n[[base]]\nid = 10\nname = \"Placeholder base 10\"\nside = \"japanese\"\nq = 0\nr = 4\nsupply_t = 5000\n\n[[land_unit]]\nid = 8\nname = \"Placeholder unit 8\"\nside = \"japanese\"\nmen = 500\nq = 0\nr = 4\nposture = \"defend\"\n",
+    );
+    let one = Readings::of(scenario_a(&plain), &ALL_HEXES);
+    let two = Readings::of(scenario_a(&changed), &ALL_HEXES);
+    // The hexes whose Allied figure no enemy fight or capture reaches.
+    for day in 1..=6 {
+        for hex in [B, C, D] {
+            assert_eq!(
+                one.at(day, Side::Allied, hex),
+                two.at(day, Side::Allied, hex),
+                "{hex:?} on day {day}"
+            );
+        }
+    }
+    // The Japanese side's own figure does see its own stock and its own men.
+    assert_ne!(one.at(1, Side::Japanese, G), two.at(1, Side::Japanese, G));
+}
+
+#[test]
+fn a_side_never_has_a_figure_for_a_hex_without_a_base_of_its_own() {
+    let a = readings_a();
+    // The Allied side holds no base at G on day 1, nor the Japanese at A, B,
+    // C or D on any day; neither has one for a hex with no base at all.
+    assert_eq!(a.at(1, Side::Allied, G), None);
+    for day in 1..=6 {
+        for hex in [A, B, C, D] {
+            assert_eq!(a.at(day, Side::Japanese, hex), None, "{hex:?}, day {day}");
+        }
+        for hex in [E, F, Hex::new(1, 1)] {
+            assert_eq!(a.at(day, Side::Allied, hex), None);
+            assert_eq!(a.at(day, Side::Japanese, hex), None);
+        }
+    }
+    // And never the enemy's: at H on day 1 each side gets its own.
+    assert_eq!(a.some(1, Side::Allied, H).days, Some(n(400)));
+    assert_eq!(a.some(1, Side::Japanese, H).days, Some(n(100)));
+    // No figure at all for the other side in 35b and 35c.
+    for day in 1..=6 {
+        assert_eq!(readings_b().at(day, Side::Japanese, E), None);
+    }
+}
+
+#[test]
+fn resting_a_group_lowers_the_planned_use_and_the_figure_says_what_it_counted() {
+    let patrol = text("35b_days_of_supply_sorties.toml");
+    let rest = patrol.replace("mission = \"combat_air_patrol\"", "mission = \"rest\"");
+    assert_ne!(patrol, rest);
+    let on = Readings::of(scenario_b(&patrol), &ALL_HEXES);
+    let off = Readings::of(scenario_b(&rest), &ALL_HEXES);
+    for day in 4..=6 {
+        let flying = on.some(day, Side::Allied, E).planned_use;
+        let resting = off.some(day, Side::Allied, E).planned_use;
+        assert!(resting.total_t() < flying.total_t(), "day {day}");
+        assert_eq!(resting.sorties_t, Fixed::ZERO);
+        assert_eq!(flying.sorties_t, n(20));
+        // Only the sorties differ: the rest of what it counted is the same.
+        assert_eq!(resting.aircraft_upkeep_t, flying.aircraft_upkeep_t);
+    }
+}
+
+#[test]
+fn where_the_planned_use_is_nothing_there_is_no_figure() {
+    // 35a at A: a base and no use.
+    let a = readings_a();
+    assert_eq!(a.some(1, Side::Allied, A).days, None);
+    // 35b with no air group at all: the base holds 400 t and uses nothing.
+    let source = text("35b_days_of_supply_sorties.toml");
+    let empty = source
+        .split("[[air_group]]")
+        .next()
+        .expect("text before the group")
+        .to_string();
+    let read = Readings::of(scenario_b(&empty), &ALL_HEXES);
+    for day in 1..=6 {
+        let got = read.some(day, Side::Allied, E);
+        check(got, day, "400", "0", "0", "0", "0", "0", None);
+    }
+}

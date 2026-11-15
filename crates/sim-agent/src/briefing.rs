@@ -597,6 +597,10 @@ pub struct BriefingBase {
     /// The base's reserves (decision 0111). Left out while both are 0.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reserves: Option<crate::lines::BaseReservesLine>,
+    /// The side's days of supply in the base's hex, today's figure over the
+    /// planned use (decision 0107, 31 to 36). Not `days_of_supply`, which is
+    /// the stock over yesterday's spending.
+    pub planned_days_of_supply: crate::lines::DaysOfSupplyLine,
     /// The side's ships in port at the base in no force, which a forming
     /// order may take. Left out when there are none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -1574,6 +1578,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                 works: crate::lines::base_works_line(&ctx, b),
                 airfield_damage: crate::lines::base_airfield_damage_line(&ctx, b),
                 reserves: crate::lines::base_reserves_line(b),
+                planned_days_of_supply: crate::lines::days_of_supply_line(&ctx, b.hex),
                 ships_in_port: ctx
                     .ships
                     .values()

@@ -503,7 +503,12 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // `RefuellingHeldAtReserve` and `LoadHeldAtReserve`: the full slice
     // gives none of the new orders and no base a reserve. Scenario 39
     // records them, and its own test reads them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 66] = [
+    //
+    // The six kinds of decision 0107, `CommandTaken`, `CommandRefused`,
+    // `PlanDrafted`, `PlanStateChanged`, `PlanAmended` and `StaffReason`:
+    // the full slice states no command and has no staff. The command tests
+    // in `sim-core` (`command/tests.rs`) record them, and read them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 72] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -570,6 +575,12 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "LoadBelowReserve",
         "RefuellingHeldAtReserve",
         "LoadHeldAtReserve",
+        "CommandTaken",
+        "CommandRefused",
+        "PlanDrafted",
+        "PlanStateChanged",
+        "PlanAmended",
+        "StaffReason",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

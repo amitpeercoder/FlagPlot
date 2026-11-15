@@ -1,0 +1,81 @@
+# PLACEHOLDER MAP. Coast hexes far apart with no land link, used by the three
+# scenarios of scenario 35 (days of supply, decision 0107, 31 to 36): C at
+# (0,0) and D at (14,0), 14 hexes or 560 nm apart on one axis with open sea
+# between, where the transports of 35a sail; A, B, G and H, the other hexes of
+# 35a; E, the hex of 35b; and F, the hex of 35c. The coast hexes off the strip
+# of sea are not joined to it. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 15]
+r = [-1, 1]
+
+# C, where the regiment is bound.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 3
+anchorage = true
+
+# D, where it embarks.
+[[hex]]
+q = 14
+r = 0
+kind = "coast"
+terrain = "clear"
+port_size = 3
+anchorage = true
+
+# A, B, G, H, E and F, each alone.
+[[hex]]
+q = 0
+r = 4
+kind = "coast"
+terrain = "clear"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 3
+r = 4
+kind = "coast"
+terrain = "clear"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 6
+r = 4
+kind = "coast"
+terrain = "clear"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 9
+r = 4
+kind = "coast"
+terrain = "clear"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 12
+r = 4
+kind = "coast"
+terrain = "clear"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 15
+r = 4
+kind = "coast"
+terrain = "clear"
+port_size = 3
+anchorage = true
