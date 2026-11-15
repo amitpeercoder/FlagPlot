@@ -62,7 +62,7 @@ Built on Nov 15, 2026, in one pull request. Scenario 38 (`data/scenarios/38_an_e
 
 Read more closely than the record:
 
-- **Scenario 24's hand calculation states the old rule.** Its doc comment says that on a day unit 3 has no man left "each side keeps the estimate it had, with its day". Under item 10 the Allied men at Y find the hex empty and the estimate is cleared. Three of its tests fail as built (`y_an_attack_on_an_estimate_of_300_finds_3000_and_fails`, `p_the_formulas_hold_on_many_seeds`, `y_on_a_day_unit_3_is_gone_there_is_no_fight_and_no_report`); they are the architect's to restate. The agent's test of the same scenario (`crates/sim-agent/tests/shells.rs`) was changed to expect the cleared estimate and the "Found empty" line.
+- **Scenario 24's hand calculation stated the old rule:** that each side keeps its estimate once the enemy's last man is gone. Three of its tests failed on the build. The architect restated it on Nov 15, 2026: on the day unit 3 loses its last man the Allied side's men find the hex empty and its estimate is cleared; the Japanese side, with no man there, keeps its own. No other number of that calculation moved.
 - **The scenarios whose events change:** 7 (the full slice: the estimate at Lunga is cleared on day 4, 1,580 of day 3, and again on day 19, 686 of day 18), 32, 33 and 37 (each a garrison that falls back and leaves the hex), and 38 (new). No other scenario changes.
 
 **Items 1 to 9 and 11** change the briefing, `list_bases` and the tools' text; the agent interface's version is 5 (a field of the fuel warning changed shape). The view gains two answers of the side's own units: the men a unit would fire with now, and its fatigue after one more day of attack. Where the build read the record more closely:
