@@ -2829,7 +2829,12 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 && !stem.starts_with("08_")
                 // Scenario 16 names the supply figures (an air supply file for
                 // its field); nothing else changed here.
-                && !stem.starts_with("16_"))
+                && !stem.starts_with("16_")
+                // Scenarios 35b and 35c name the air supply figures: their
+                // days of supply count aircraft upkeep, sorties and repairs
+                // (decision 0107).
+                && !stem.starts_with("35b_")
+                && !stem.starts_with("35c_"))
             .then(|| stem.to_string())
         })
         .collect();
