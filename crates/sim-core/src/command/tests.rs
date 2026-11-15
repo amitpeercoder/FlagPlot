@@ -1672,11 +1672,12 @@ fn a_staffs_order_is_outside_when_its_intent_is_gone_or_has_no_limit_or_is_not_a
 }
 
 #[test]
-fn the_staff_is_asked_after_the_commanders_commands_and_the_refuelling() {
+fn the_staff_is_asked_after_the_commanders_commands_on_the_fuel_of_the_day_before() {
     let mut world = staffed_world();
     // The commander's reserve is taken in at step 1: base 1 may give down to
-    // 450 t of fuel, so of the 200 t the two ships lack it gives 50 t, to
-    // ship 1, before the staff is asked.
+    // 450 t of fuel. Nothing is refuelled before the staff is asked
+    // (decision 0112): it sees the fuel as it stood at the end of the day
+    // before, 500 t at base 1 and the two ships 200 t short.
     world.submit_commands(
         A,
         vec![CommandKind::SetLimit(Limit::Reserve {
@@ -1695,13 +1696,13 @@ fn the_staff_is_asked_after_the_commanders_commands_and_the_refuelling() {
             "the reserve set by command is in force"
         );
         assert_eq!(home.supply_reserve_t, t(400));
-        assert_eq!(home.fuel_t, t(450), "the stock is what refuelling left");
+        assert_eq!(home.fuel_t, t(500), "nothing is refuelled before the staff");
         let ships: Vec<Fixed> = view
             .ships()
             .filter(|s| s.id == ship(1) || s.id == ship(2))
             .map(|s| s.fuel_t)
             .collect();
-        assert_eq!(ships, vec![t(1950), t(1900)]);
+        assert_eq!(ships, vec![t(1900), t(1900)]);
         // The commander's commands are in the command state, and the day
         // is the day being resolved.
         assert_eq!(view.day(), 0);
