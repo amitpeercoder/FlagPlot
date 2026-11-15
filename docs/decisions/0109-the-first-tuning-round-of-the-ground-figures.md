@@ -1,10 +1,10 @@
 # 0109: The first tuning round of the ground figures: what is settled first, and the plan
 
-Status: a plan by the architect, written on Nov 14, 2026, from four runs of the lengthened slice (`docs/validation/full-slice-39-days-baseline.md`, `-after-0105.md`, `-after-0106.md`, `-after-stock-fix.md`) and a model's five days in the Allied seat. It follows the rules of tuning in `docs/step2-spec.md`. Decision 1 corrects a rule: the designer confirmed it on Nov 14, 2026. Decisions 2 to 4 settle data and are the architect's. The round itself is run after them. Nothing is built and no figure has moved. *(Nov 15, 2026: decisions 1 to 4 are built and a new baseline is taken; see As built. The round is not run.)*
+Status: a plan by the architect, written on Nov 14, 2026, from four runs of the lengthened slice (`docs/validation/full-slice-39-days-baseline.md`, `-after-0105.md`, `-after-0106.md`, `-after-stock-fix.md`) and a model's five days in the Allied seat. It follows the rules of tuning in `docs/step2-spec.md`. Decision 1 corrects a rule: the designer confirmed it on Nov 14, 2026. Decisions 2 to 4 settle data and are the architect's. The round itself is run after them. Nothing is built and no figure has moved. *(Nov 15, 2026: decisions 1 to 4 are built and a new baseline is taken; see As built. The round is not run.)* *(Nov 15, 2026: round 1 is run; see As built: round 1.)*
 
 Summary: The first tuning round of the ground figures: before it, men who are falling back are not fired on unless the victor attacks, the Japanese runs land their own rations as cargo, and riflemen set to work make a tenth of a labourer's work; then one round on the Tenaru and the ridge, mechanism by mechanism, with the figures each may move and the direction a source supports
 
-Standing: Decision 1 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Decisions 1 to 4 built, with a new baseline, Nov 15, 2026; the round not run
+Standing: Decision 1 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Decisions 1 to 4 built, with a new baseline, Nov 15, 2026. Round 1 run, Nov 15, 2026: four figures moved; steps 2 and 3 stopped, the two fights wanting different values; steps 4 and 5 moved nothing
 
 ## Where the slice stands
 
@@ -126,3 +126,32 @@ Decision 0101 has dated notes where these make a line of it untrue: its items 17
 
 **The new baseline** is `docs/validation/full-slice-39-days-before-tuning.md`: 1,000 runs, beside the four earlier reports, with the figures the round will need. Of 6 judged measures 4 agree and 2 miss, the Tenaru's, which none of the three changes touches. The ridge's Japanese losses fall from a median of 1,900 to 1,220 (the record, 600 to 1,138, is now inside the middle 90 percent); the Kawaguchi men lose no man on day 39 in any run, where they lost 709; the Oka group attacks fed, with 188 firing men; every Japanese attacker has a fed share of 1 on its day of attack. The airfield is still built on day 11 and the food at Lunga is still 68 days: what the Americans do is the slice's scripted orders, which set no fighting unit to work.
 
+
+## As built: round 1
+
+Run on Nov 15, 2026, by a team, on the slice after decisions 1 to 4, in the order of the table. Each step has its record under `docs/validation/tuning/` (`ground-r1-1-who-can-fire.md` to `ground-r1-6-landing.md`). The report after the round is `docs/validation/full-slice-39-days-ground-r1.md`: every measure before and after, a typical run, the scenarios that changed, and what the round could not reach. No code, order, unit, stock or rule changed; four figures of `data/reference/ground.toml` moved. The frozen figures and every hand calculation stand. Each figure moved is a placeholder, fitted on the two fights of the slice and not checked.
+
+| Step | Figure | Before | After | Why |
+| --- | --- | --- | --- | --- |
+| 1. Who can fire | `unprepared_landing_fatigue` | 40 | 10 | The Ichiki echelon landed unopposed at night, marched two days and attacked in strength (land_unit_facts 1049, 994, 1020): it fires with 778 of 916 men, not 412. Not 0: a hurried landing still costs something |
+| 1. Who can fire | `fatigue_per_march_day` | 10 | 5 | The same rows. Not lower: a march must tire, and the ridge's week inland is longer than the game's two days |
+| 2. The limit | `engagement_ratio` | 3 | 3, **stopped** | The rows support down at both fights. The Tenaru's Japanese losses want about 8, the ridge's about 1.5 to 2.5 |
+| 3. What a hit does | `men_per_hit` | 20 | 20, **stopped** | At 50 both Tenaru measures are in the middle half and the ridge loses 3,000 Japanese against 600 to 1,138. The chances to hit scale both fights alike and cannot part them |
+| 4. When an attack stops | `attack_fatigue_limit`, `failed_attack_fatigue` | 60, 30 | the same, **left** | 65, or 25, gives one day at the Tenaru and two at the ridge, on a margin of five points of fatigue, and takes the ridge's Japanese losses to 1,920 |
+| 5. Cover | none | | | A report: the cut of each piece to a whole man saves 0.517 of a raid's men at cover 30 against 0.27 stated; cover 10 and 20 save the same, full cover saves all. For the architect's ruling on the rule |
+| 6. The landing | `unprepared_landing_share` | 0.5 | 0.13 | Less than half the supply landed (land_unit_facts 465, 773): 36 days of food at Lunga when the transports sail, against 17 to 37 (68 before). Every lower value tried leaves Americans unfed later, first at Tulagi |
+| 6. The landing | `handling_t_per_man` | 0.25 | 0.02 | So the men still land in a day: 10,880 at Lunga at the end of day 1 (10,000 by 2000 on 7 August, 688) |
+
+**The measures.** Of 6 judged measures 4 agree and 2 miss, as before: the Tenaru's two. The Americans there lose 46 (median) against 109 to 110, where they lost 23. The Japanese lose 340 against 800 to 900, unchanged. The ridge's American losses move into the middle half of their record (148 against 134 to 253); its Japanese losses are where they were (1,220 against 600 to 1,138). The food at Lunga is 36 days. Every run is a decisive Allied victory; the median margin is 92.15, where it was 101.64.
+
+**The two stops have one cause, the rule and not a figure.** While the limit on engaged men binds, which it does at both fights for a ratio up to 4, the defender's fire is the ratio times every man the attacker has ashore in the hex. So the ridge's Japanese losses are 3,090 / 916 = 3.37 times the Tenaru's whatever the figures are, and the American 3.6 times by the firing men; the record has both near 1 to 2. The architect confirmed both stops on Nov 15, 2026.
+
+**What the round could not reach**, set out in full with every row in the round report, for the designer:
+
+- **A defender's counter-attack that destroys a spent attacker.** At the Tenaru the 1st Battalion, 1st Marines was taken out of reserve, Company G counter-attacked, the howitzers fired and light tanks crossed the bar at 1500 (engagement_outcomes 1935). The Japanese record has the counter-attack of the afternoon killing most of the Advance Unit (1921). No row says where the 1st Battalion went. The slice's Americans stand on the defence from days 3 and 4 with no later order. In the rules the fight is once a day, a unit cannot be behind another in a hex, and a beaten side falls back to any linked hex with a base of its side.
+- **An attacker who commits part of his force and holds the rest.** At the ridge one battalion probed on the first night (land_unit_facts 859), two attacked on the second (1004, 1018), about 2,000 of 3,090 (engagement_outcomes 2013). Others struck the Ilu flank (land_unit_facts 1006, 1014, 1019), sat on the Tenaru line and fired nothing (988), or attacked in the west a day later (1007). In the slice all five parts attack together. In the rules the perimeter is one hex, every unit of a side in it fights as one body, and the limit counts every man ashore.
+- **Two nights at the ridge,** which needs the above, not a figure (step 4).
+- **Cover that grades,** which is the rule's arithmetic (step 5).
+- **The food at Lunga at the middle of its record,** which would take the slice's later supply, which is data (step 6).
+
+**Every live scenario whose result changed** (`sh scripts/compare-scenarios.sh` against pull request 318's merge: 118 runs, 7 differ, every frozen run the same): 07, the full slice, as above; 21 and 27, whose men land sooner; 25, 29, 32 and 37, whose marches tire less. Only in 07, 25 and 37 does a fight fire with more men. No other base, loss or outcome moved, and none would have changed by more than the four figures do. The recorded game `full_slice_five_days_sonnet` lands its men faster and its supply more slowly; its orders are answered as before.

@@ -4,10 +4,10 @@ seed 1942
 
 day   1  hash fb10f4af5f834429  47 events
 day   2  hash c7cea9bde39eff4c  35 events
-day   3  hash 73367250e6f1153f  37 events
-day   4  hash 775bfbb1f59a7405  17 events
-day   5  hash 77a2ce69249a2339  17 events
-day   6  hash 96393186bd1cb00f  16 events
+day   3  hash a7675a5224da638f  36 events
+day   4  hash 1feaf85201ad7a7b  17 events
+day   5  hash db180742a3a647a9  16 events
+day   6  hash f4862f930d1f61c3  15 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
@@ -107,77 +107,74 @@ day   6  hash 96393186bd1cb00f  16 events
 #96 D3 night     ship:5 burned 8 t, 944 t remaining  <- #91
 #97 D3 night     task_force:1 arrived at (0,0) at D3 02:00  <- #91
 #98 D3 night     ship:1 landed 600 men of land_unit:3 at (0,0): 600 ashore, 0 left aboard  <- order:3, #97
-#99 D3 night     land_unit:3 landed: fatigue 40  <- #98
+#99 D3 night     land_unit:3 landed: fatigue 10  <- #98
 #100 D3 night     ship:2 landed 600 men of land_unit:3 at (0,0): 1200 ashore, 0 left aboard  <- order:3, #97
-#101 D3 night     ship:3 landed 160 men of land_unit:3 at (0,0): 1360 ashore, 440 left aboard  <- order:3, #97
-#102 D3 night     ship:4 landed 160 men of land_unit:3 at (0,0): 1520 ashore, 440 left aboard  <- order:3, #97
-#103 D3 night     ship:5 landed 160 men of land_unit:3 at (0,0): 1680 ashore, 440 left aboard  <- order:3, #97
-#104 D3 morning   ship:3 landed 440 men of land_unit:3 at (0,0): 2120 ashore, 0 left aboard  <- order:3, #97
-#105 D3 morning   ship:4 landed 440 men of land_unit:3 at (0,0): 2560 ashore, 0 left aboard  <- order:3, #97
-#106 D3 morning   ship:5 landed 240 men of land_unit:3 at (0,0): 2800 ashore, 200 left aboard  <- order:3, #97
-#107 D3 afternoon ship:5 landed 200 men of land_unit:3 at (0,0): 3000 ashore, 0 left aboard  <- order:3, #97
-#108 D3 afternoon task_force:1 completed unloading at base:3 at D3 13:00  <- #107
-#109 D3 -         land_unit:3 rested: fatigue 35
-#110 D3 -         land_unit:1 dug in: fieldworks 30
-#111 D3 -         land_unit:2 dug in: fieldworks 30
-#112 D3 -         land_unit:3 dug in: fieldworks 10
-#113 D3 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
-#114 D3 -         base:2 at the end of the day: 570 t of supply, 0 aircraft ready: not open
-#115 D3 -         base:3 at the end of the day: 285 t of supply, 0 aircraft ready: not open
-#116 D3 -         base:4 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
-#117 D3 -         base:7 at the end of the day: 99.05 t of supply, 0 aircraft ready: not open
-#118 D3 -         base:8 at the end of the day: 98.75 t of supply, 0 aircraft ready: not open
-#119 D3 -         base:9 at the end of the day: 49.5 t of supply, 0 aircraft ready: not open
-#120 D4 night     base:3 spent 27.5 t of supply on 4000 men ashore for the day, 257.5 t left
-#121 D4 night     Allied men ashore at (0,0): 4000 of 4000 fed from base:3, 0 unfed  <- #120
-#122 D4 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 560 t left
-#123 D4 night     Allied men ashore at (3,4): 2000 of 2000 fed from base:2, 0 unfed  <- #122
-#124 D4 night     base:7 spent 0.475 t of supply on 95 men ashore for the day, 98.575 t left
-#125 D4 night     Allied men ashore at (6,4): 95 of 95 fed from base:7, 0 unfed  <- #124
-#126 D4 night     base:8 spent 0.5 t of supply on 100 men ashore for the day, 98.25 t left
-#127 D4 night     Japanese men ashore at (9,4): 100 of 100 fed from base:8, 0 unfed  <- #126
-#128 D4 -         land_unit:3 rested: fatigue 30
-#129 D4 -         land_unit:3 dug in: fieldworks 20
-#130 D4 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
-#131 D4 -         base:2 at the end of the day: 560 t of supply, 0 aircraft ready: not open
-#132 D4 -         base:3 at the end of the day: 257.5 t of supply, 0 aircraft ready: not open
-#133 D4 -         base:4 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
-#134 D4 -         base:7 at the end of the day: 98.575 t of supply, 0 aircraft ready: not open
-#135 D4 -         base:8 at the end of the day: 98.25 t of supply, 0 aircraft ready: not open
-#136 D4 -         base:9 at the end of the day: 49.5 t of supply, 0 aircraft ready: not open
-#137 D5 night     base:3 spent 27.5 t of supply on 4000 men ashore for the day, 230 t left
-#138 D5 night     Allied men ashore at (0,0): 4000 of 4000 fed from base:3, 0 unfed  <- #137
-#139 D5 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 550 t left
-#140 D5 night     Allied men ashore at (3,4): 2000 of 2000 fed from base:2, 0 unfed  <- #139
-#141 D5 night     base:7 spent 0.475 t of supply on 95 men ashore for the day, 98.1 t left
-#142 D5 night     Allied men ashore at (6,4): 95 of 95 fed from base:7, 0 unfed  <- #141
-#143 D5 night     base:8 spent 0.5 t of supply on 100 men ashore for the day, 97.75 t left
-#144 D5 night     Japanese men ashore at (9,4): 100 of 100 fed from base:8, 0 unfed  <- #143
-#145 D5 -         land_unit:3 rested: fatigue 25
-#146 D5 -         land_unit:3 dug in: fieldworks 30
-#147 D5 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
-#148 D5 -         base:2 at the end of the day: 550 t of supply, 0 aircraft ready: not open
-#149 D5 -         base:3 at the end of the day: 230 t of supply, 0 aircraft ready: not open
-#150 D5 -         base:4 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
-#151 D5 -         base:7 at the end of the day: 98.1 t of supply, 0 aircraft ready: not open
-#152 D5 -         base:8 at the end of the day: 97.75 t of supply, 0 aircraft ready: not open
-#153 D5 -         base:9 at the end of the day: 49.5 t of supply, 0 aircraft ready: not open
-#154 D6 night     base:3 spent 27.5 t of supply on 4000 men ashore for the day, 202.5 t left
-#155 D6 night     Allied men ashore at (0,0): 4000 of 4000 fed from base:3, 0 unfed  <- #154
-#156 D6 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 540 t left
-#157 D6 night     Allied men ashore at (3,4): 2000 of 2000 fed from base:2, 0 unfed  <- #156
-#158 D6 night     base:7 spent 0.475 t of supply on 95 men ashore for the day, 97.625 t left
-#159 D6 night     Allied men ashore at (6,4): 95 of 95 fed from base:7, 0 unfed  <- #158
-#160 D6 night     base:8 spent 0.5 t of supply on 100 men ashore for the day, 97.25 t left
-#161 D6 night     Japanese men ashore at (9,4): 100 of 100 fed from base:8, 0 unfed  <- #160
-#162 D6 -         land_unit:3 rested: fatigue 20
-#163 D6 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
-#164 D6 -         base:2 at the end of the day: 540 t of supply, 0 aircraft ready: not open
-#165 D6 -         base:3 at the end of the day: 202.5 t of supply, 0 aircraft ready: not open
-#166 D6 -         base:4 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
-#167 D6 -         base:7 at the end of the day: 97.625 t of supply, 0 aircraft ready: not open
-#168 D6 -         base:8 at the end of the day: 97.25 t of supply, 0 aircraft ready: not open
-#169 D6 -         base:9 at the end of the day: 49.5 t of supply, 0 aircraft ready: not open
+#101 D3 night     ship:3 landed 520 men of land_unit:3 at (0,0): 1720 ashore, 80 left aboard  <- order:3, #97
+#102 D3 night     ship:4 landed 520 men of land_unit:3 at (0,0): 2240 ashore, 80 left aboard  <- order:3, #97
+#103 D3 night     ship:5 landed 520 men of land_unit:3 at (0,0): 2760 ashore, 80 left aboard  <- order:3, #97
+#104 D3 morning   ship:3 landed 80 men of land_unit:3 at (0,0): 2840 ashore, 0 left aboard  <- order:3, #97
+#105 D3 morning   ship:4 landed 80 men of land_unit:3 at (0,0): 2920 ashore, 0 left aboard  <- order:3, #97
+#106 D3 morning   ship:5 landed 80 men of land_unit:3 at (0,0): 3000 ashore, 0 left aboard  <- order:3, #97
+#107 D3 morning   task_force:1 completed unloading at base:3 at D3 06:37  <- #104, #105, #106
+#108 D3 -         land_unit:3 rested: fatigue 5
+#109 D3 -         land_unit:1 dug in: fieldworks 30
+#110 D3 -         land_unit:2 dug in: fieldworks 30
+#111 D3 -         land_unit:3 dug in: fieldworks 10
+#112 D3 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
+#113 D3 -         base:2 at the end of the day: 570 t of supply, 0 aircraft ready: not open
+#114 D3 -         base:3 at the end of the day: 285 t of supply, 0 aircraft ready: not open
+#115 D3 -         base:4 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
+#116 D3 -         base:7 at the end of the day: 99.05 t of supply, 0 aircraft ready: not open
+#117 D3 -         base:8 at the end of the day: 98.75 t of supply, 0 aircraft ready: not open
+#118 D3 -         base:9 at the end of the day: 49.5 t of supply, 0 aircraft ready: not open
+#119 D4 night     base:3 spent 27.5 t of supply on 4000 men ashore for the day, 257.5 t left
+#120 D4 night     Allied men ashore at (0,0): 4000 of 4000 fed from base:3, 0 unfed  <- #119
+#121 D4 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 560 t left
+#122 D4 night     Allied men ashore at (3,4): 2000 of 2000 fed from base:2, 0 unfed  <- #121
+#123 D4 night     base:7 spent 0.475 t of supply on 95 men ashore for the day, 98.575 t left
+#124 D4 night     Allied men ashore at (6,4): 95 of 95 fed from base:7, 0 unfed  <- #123
+#125 D4 night     base:8 spent 0.5 t of supply on 100 men ashore for the day, 98.25 t left
+#126 D4 night     Japanese men ashore at (9,4): 100 of 100 fed from base:8, 0 unfed  <- #125
+#127 D4 -         land_unit:3 rested: fatigue 0
+#128 D4 -         land_unit:3 dug in: fieldworks 20
+#129 D4 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
+#130 D4 -         base:2 at the end of the day: 560 t of supply, 0 aircraft ready: not open
+#131 D4 -         base:3 at the end of the day: 257.5 t of supply, 0 aircraft ready: not open
+#132 D4 -         base:4 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
+#133 D4 -         base:7 at the end of the day: 98.575 t of supply, 0 aircraft ready: not open
+#134 D4 -         base:8 at the end of the day: 98.25 t of supply, 0 aircraft ready: not open
+#135 D4 -         base:9 at the end of the day: 49.5 t of supply, 0 aircraft ready: not open
+#136 D5 night     base:3 spent 27.5 t of supply on 4000 men ashore for the day, 230 t left
+#137 D5 night     Allied men ashore at (0,0): 4000 of 4000 fed from base:3, 0 unfed  <- #136
+#138 D5 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 550 t left
+#139 D5 night     Allied men ashore at (3,4): 2000 of 2000 fed from base:2, 0 unfed  <- #138
+#140 D5 night     base:7 spent 0.475 t of supply on 95 men ashore for the day, 98.1 t left
+#141 D5 night     Allied men ashore at (6,4): 95 of 95 fed from base:7, 0 unfed  <- #140
+#142 D5 night     base:8 spent 0.5 t of supply on 100 men ashore for the day, 97.75 t left
+#143 D5 night     Japanese men ashore at (9,4): 100 of 100 fed from base:8, 0 unfed  <- #142
+#144 D5 -         land_unit:3 dug in: fieldworks 30
+#145 D5 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
+#146 D5 -         base:2 at the end of the day: 550 t of supply, 0 aircraft ready: not open
+#147 D5 -         base:3 at the end of the day: 230 t of supply, 0 aircraft ready: not open
+#148 D5 -         base:4 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
+#149 D5 -         base:7 at the end of the day: 98.1 t of supply, 0 aircraft ready: not open
+#150 D5 -         base:8 at the end of the day: 97.75 t of supply, 0 aircraft ready: not open
+#151 D5 -         base:9 at the end of the day: 49.5 t of supply, 0 aircraft ready: not open
+#152 D6 night     base:3 spent 27.5 t of supply on 4000 men ashore for the day, 202.5 t left
+#153 D6 night     Allied men ashore at (0,0): 4000 of 4000 fed from base:3, 0 unfed  <- #152
+#154 D6 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 540 t left
+#155 D6 night     Allied men ashore at (3,4): 2000 of 2000 fed from base:2, 0 unfed  <- #154
+#156 D6 night     base:7 spent 0.475 t of supply on 95 men ashore for the day, 97.625 t left
+#157 D6 night     Allied men ashore at (6,4): 95 of 95 fed from base:7, 0 unfed  <- #156
+#158 D6 night     base:8 spent 0.5 t of supply on 100 men ashore for the day, 97.25 t left
+#159 D6 night     Japanese men ashore at (9,4): 100 of 100 fed from base:8, 0 unfed  <- #158
+#160 D6 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
+#161 D6 -         base:2 at the end of the day: 540 t of supply, 0 aircraft ready: not open
+#162 D6 -         base:3 at the end of the day: 202.5 t of supply, 0 aircraft ready: not open
+#163 D6 -         base:4 at the end of the day: 5000 t of supply, 0 aircraft ready: not open
+#164 D6 -         base:7 at the end of the day: 97.625 t of supply, 0 aircraft ready: not open
+#165 D6 -         base:8 at the end of the day: 97.25 t of supply, 0 aircraft ready: not open
+#166 D6 -         base:9 at the end of the day: 49.5 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply
@@ -194,7 +191,7 @@ base:8 "Placeholder base 8" (Japanese) at (9,4): 97.25 t of supply in stock
 base:9 "Placeholder base 9" (Japanese) at (9,4): 49.5 t of supply in stock
 land_unit:1 "Placeholder unit 1" (Allied): 2000 men ashore at (3,4), fieldworks 30
 land_unit:2 "Placeholder unit 2" (Allied): 1000 men ashore at (0,0), fieldworks 30
-land_unit:3 "Placeholder unit 3" (Allied): 3000 men ashore at (0,0), fatigue 20, fieldworks 30
+land_unit:3 "Placeholder unit 3" (Allied): 3000 men ashore at (0,0), fieldworks 30
 land_unit:4 "Placeholder unit 4" (Allied): 95 men ashore at (6,4), on attack
 land_unit:6 "Placeholder unit 6" (Allied): no men ashore
 land_unit:7 "Placeholder unit 7" (Japanese): 100 men ashore at (9,4), on attack

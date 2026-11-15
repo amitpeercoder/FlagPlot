@@ -2299,9 +2299,22 @@ mod tests {
         );
     }
 
+    /// The frozen step 1 ground figures. The tests of the ground file read
+    /// the frozen copy, not the live one, so that a tuning round that moves a
+    /// live figure changes no test (the architect's ruling of Nov 15, 2026,
+    /// on round 1 of decision 0109). The live file is checked to load by
+    /// `the_live_ground_figures_load`, which asserts no value.
     fn ground_text() -> String {
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/step1/ground.toml");
+        fs::read_to_string(path).expect("the frozen file reads")
+    }
+
+    #[test]
+    fn the_live_ground_figures_load() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/ground.toml");
-        fs::read_to_string(path).expect("the shipped file reads")
+        let text = fs::read_to_string(path).expect("the shipped file reads");
+        parse_ground_figures(&text, here()).expect("the live figures parse");
     }
 
     #[test]
@@ -2412,10 +2425,10 @@ mod tests {
     fn the_preparation_and_experience_figures_are_read_and_each_is_required() {
         let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
         assert_eq!(figures.preparation_per_day, Fixed::from_int(5));
-        assert_eq!(figures.unprepared_landing_share, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.unprepared_landing_share, Fixed::ONE);
         assert_eq!(figures.preparation_kept_on_change, Fixed::from_ratio(1, 2));
-        assert_eq!(figures.unprepared_landing_fatigue, Fixed::from_int(40));
-        assert_eq!(figures.experience_fire_strength, Fixed::from_ratio(1, 4));
+        assert_eq!(figures.unprepared_landing_fatigue, Fixed::ZERO);
+        assert_eq!(figures.experience_fire_strength, Fixed::ZERO);
         assert_eq!(figures.training_days_per_level, 30);
         assert_eq!(figures.training_ceiling, 2);
         assert_eq!(figures.fight_days_per_level, 10);
@@ -2441,10 +2454,10 @@ mod tests {
     #[test]
     fn the_skill_strengths_are_read_and_each_is_required() {
         let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
-        assert_eq!(figures.assault_skill_strength, Fixed::from_ratio(1, 4));
-        assert_eq!(figures.movement_skill_strength, Fixed::from_ratio(1, 4));
-        assert_eq!(figures.holding_skill_strength, Fixed::from_ratio(15, 100));
-        assert_eq!(figures.weight_strength, Fixed::from_ratio(1, 4));
+        assert_eq!(figures.assault_skill_strength, Fixed::ZERO);
+        assert_eq!(figures.movement_skill_strength, Fixed::ZERO);
+        assert_eq!(figures.holding_skill_strength, Fixed::ZERO);
+        assert_eq!(figures.weight_strength, Fixed::ZERO);
         for key in SKILL_KEYS {
             let text = without_keys(&ground_text(), &[key]);
             assert!(
@@ -2498,8 +2511,8 @@ mod tests {
         assert_eq!(figures.work_per_aircraft_repair, Fixed::from_int(200));
         assert_eq!(figures.work_per_defence_point, Fixed::from_int(200));
         assert_eq!(figures.defences_strength, Fixed::from_ratio(1, 2));
-        // 0.1 live since decision 0109, 3; the frozen copy keeps 0.5.
-        assert_eq!(figures.fighting_unit_work_share, Fixed::from_ratio(1, 10));
+        // The frozen copy keeps 0.5 (0.1 live since decision 0109, 3).
+        assert_eq!(figures.fighting_unit_work_share, Fixed::from_ratio(1, 2));
         for key in WORK_KEYS {
             let text = without_keys(&ground_text(), &[key]);
             assert!(
@@ -2538,8 +2551,8 @@ mod tests {
     #[test]
     fn the_engagement_figures_are_read_required_and_in_range() {
         let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
-        assert_eq!(figures.engagement_ratio, Fixed::from_int(3));
-        assert_eq!(figures.failed_attack_fatigue, Fixed::from_int(30));
+        assert_eq!(figures.engagement_ratio, Fixed::from_int(1_000_000));
+        assert_eq!(figures.failed_attack_fatigue, Fixed::ZERO);
         for key in ["engagement_ratio", "failed_attack_fatigue"] {
             let text = without_keys(&ground_text(), &[key]);
             assert!(parse_ground_figures(&text, here())
@@ -2586,19 +2599,20 @@ mod tests {
     #[test]
     fn the_cover_figures_are_read_and_each_is_required() {
         let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
-        assert_eq!(figures.cover_from_fire, Fixed::from_ratio(9, 10));
-        assert_eq!(figures.cover_in_fight, Fixed::from_ratio(1, 2));
-        assert_eq!(figures.fieldworks_per_day, Fixed::from_int(10));
-        assert_eq!(figures.fieldworks_limit, Fixed::from_int(30));
+        // The frozen copy, which switches the rule off.
+        assert_eq!(figures.cover_from_fire, Fixed::ZERO);
+        assert_eq!(figures.cover_in_fight, Fixed::ZERO);
+        assert_eq!(figures.fieldworks_per_day, Fixed::ZERO);
+        assert_eq!(figures.fieldworks_limit, Fixed::ZERO);
         assert_eq!(figures.prepared_from, Fixed::from_int(30));
         assert_eq!(figures.fortified_from, Fixed::from_int(60));
-        assert_eq!(figures.prepared_work_factor, Fixed::from_int(3));
-        assert_eq!(figures.fortified_work_factor, Fixed::from_int(10));
-        assert_eq!(figures.strain_per_hit, Fixed::ONE);
-        assert_eq!(figures.strain_per_day, Fixed::from_int(10));
+        assert_eq!(figures.prepared_work_factor, Fixed::ONE);
+        assert_eq!(figures.fortified_work_factor, Fixed::ONE);
+        assert_eq!(figures.strain_per_hit, Fixed::ZERO);
+        assert_eq!(figures.strain_per_day, Fixed::ZERO);
         assert_eq!(figures.strain_limit, Fixed::from_int(60));
-        assert_eq!(figures.cover_from_strain, Fixed::from_ratio(1, 2));
-        assert_eq!(figures.cover_wear_per_hit, Fixed::from_ratio(1, 5));
+        assert_eq!(figures.cover_from_strain, Fixed::ZERO);
+        assert_eq!(figures.cover_wear_per_hit, Fixed::ZERO);
         for key in COVER_KEYS {
             let text = without_keys(&ground_text(), &[key]);
             assert!(
@@ -2651,8 +2665,15 @@ mod tests {
         assert!(bad("fortified_from", "101").contains("fortified_from"));
         ok("fortified_from", "30");
         ok("fortified_from", "100");
-        // Lowering the prepared grade below the limit is refused too.
-        assert!(bad("prepared_from", "20").contains("fieldworks_limit"));
+        // Lowering the prepared grade below the limit is refused too (the
+        // frozen limit is 0, so it is set to 30 first).
+        let dug = with_key(&ground_text(), "fieldworks_limit", "30");
+        assert!(
+            parse_ground_figures(&with_key(&dug, "prepared_from", "20"), here())
+                .expect_err("rejected")
+                .message
+                .contains("fieldworks_limit")
+        );
         // A grade is never cheaper than the one before.
         for key in ["prepared_work_factor", "fortified_work_factor"] {
             assert!(bad(key, "\"0.5\"").contains(key), "{key} below 1");

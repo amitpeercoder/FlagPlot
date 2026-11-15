@@ -2,18 +2,18 @@ Scenario 25: Marching overland
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b5f1f65954690099  15 events
-day   2  hash d00400bc1db7096b  13 events
-day   3  hash 0d6160633897778f  28 events
-day   4  hash 099b04151feb1266  25 events
-day   5  hash 8fb8f3af30242cbe  15 events
+day   1  hash c1d70f1e281cbd4b  15 events
+day   2  hash e4feff7515a024f1  13 events
+day   3  hash f85ba0b1a95c1d45  28 events
+day   4  hash 729c648f3e362763  25 events
+day   5  hash 44232d5ad5181119  15 events
 
 base:1 "Placeholder base P, Allied" (Allied) at (0,0): 60 t of supply in stock
 base:2 "Placeholder base Q, Japanese" (Japanese) at (1,0): 40.265 t of supply in stock
 base:3 "Dump at (1,0)" (Allied) at (1,0): 15.9 t of supply in stock, no airfield
-land_unit:1 "Placeholder Allied regiment at P" (Allied): 880 men ashore at (1,0), fatigue 95, fieldworks 20
+land_unit:1 "Placeholder Allied regiment at P" (Allied): 880 men ashore at (1,0), fatigue 80, fieldworks 20
 land_unit:2 "Placeholder Japanese battalion at Q" (Japanese): 365 men ashore at (1,0), fieldworks 30
-land_unit:3 "Placeholder Japanese company at R" (Japanese): 79 men ashore at (3,0), fatigue 20, fieldworks 20
+land_unit:3 "Placeholder Japanese company at R" (Japanese): 79 men ashore at (3,0), fatigue 5, fieldworks 20
 Allied: no contacts
 Allied: no battle claims
 Allied estimate at (1,0): 202 enemy men ashore, reported day 5

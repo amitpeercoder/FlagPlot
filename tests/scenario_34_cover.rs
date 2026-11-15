@@ -90,9 +90,11 @@
 //! the run, in the order they land.
 //!
 //! - The k-th hit meets fieldworks of 20 - 0.2 x (k - 1), and base 1 has no
-//!   defences, so that is unit 1's cover. The hit would take 10 men; it
-//!   takes 10 x (1 - cover/100 x 0.9), cut to a whole man. The first hit
-//!   takes 10 x 0.82 = 8.2: 8 men.
+//!   defences, so that is unit 1's cover. The hit would take 10 men; its
+//!   piece is 10 x (1 - cover/100 x 0.9), not cut. The pieces of the
+//!   shelling are added and the sum is cut to a whole man, once. The first
+//!   piece is 10 x 0.82 = 8.2. With 8 hits the pieces are 8.2, 8.218, 8.236,
+//!   8.254, 8.272, 8.29, 8.308 and 8.326: 66.104, and 66 men are lost.
 //! - Each hit wears the fieldworks by 0.2. After the day's digging they are
 //!   20 - 0.2 x h + 10, and no more than 30.
 //! - If h is 1 or more, unit 1 does not rest on day 3. It gains h, and no
@@ -144,12 +146,13 @@
 //!
 //! - The shelling would take 10 x g men. They are shared between units 6
 //!   and 7 in proportion to their men, by the rule that serves every loss,
-//!   as a shelling's men always were. Each unit's part P is then taken hit
-//!   by hit, spread evenly: the piece for the k-th hit is P x k / g, cut,
-//!   less P x (k - 1) / g, cut. The k-th hit meets defences of 50 - 0.2 x
-//!   (k - 1), which is the cover of both units (their fieldworks are 10),
-//!   and each piece is cut by it: times 1 less cover/100 x 0.9, cut to a
-//!   whole man.
+//!   as a shelling's men always were. Each unit's part P is then spread evenly
+//!   over the hits, P / g to each. The k-th hit meets defences of 50 - 0.2
+//!   x (k - 1), which is the cover of both units (their fieldworks are 10),
+//!   and its piece is P / g times 1 less cover/100 x 0.9, not cut. A unit's
+//!   pieces are added and the sum is cut to a whole man, once. With 7 hits
+//!   the seven factors add to 3.8878: a part of 47 loses 26 men and a part
+//!   of 23 loses 12.
 //! - Base 6's defences are 50 - 0.2 x g after the day. Nobody works on
 //!   them: they stay there to the end. The fieldworks of units 6 and 7 are
 //!   10 - 0.2 x g + 10 after the day's digging.
@@ -259,14 +262,6 @@ fn cut(men: u32, cover: Fixed, share: Fixed) -> u32 {
     u32::try_from((n(i64::from(men)) * kept).trunc().max(0)).expect("a man count")
 }
 
-/// The pieces of a part over `hits` hits, spread evenly.
-fn pieces(part: u32, hits: u32) -> Vec<u32> {
-    let upto = |k: u32| u64::from(part) * u64::from(k) / u64::from(hits);
-    (1..=hits)
-        .map(|k| u32::try_from(upto(k) - upto(k - 1)).expect("a piece"))
-        .collect()
-}
-
 /// A loss shared between units in proportion to their men: each part is cut,
 /// and the men left over go one to each unit in unit order.
 fn shared(loss: u32, men: &[u32]) -> Vec<u32> {
@@ -288,20 +283,19 @@ fn shared(loss: u32, men: &[u32]) -> Vec<u32> {
 }
 
 /// What a unit with `cover` at the start of the call loses to `hits` hits on
-/// men sharing the part `part`: each piece cut by the cover the hit meets,
-/// which each earlier hit has worn by `wear`.
+/// men sharing the part `part`: the part spread evenly over the hits, each
+/// piece behind the cover its hit meets, which each earlier hit has worn by
+/// `wear`, not cut; the pieces added and the sum cut to a whole man once.
 fn shelling_loss(part: u32, hits: u32, cover: Fixed, wear: Fixed) -> u32 {
     if hits == 0 {
         return 0;
     }
-    pieces(part, hits)
-        .iter()
-        .enumerate()
-        .map(|(i, piece)| {
-            let cover_k = cover - wear * i64::try_from(i).expect("index");
-            cut(*piece, cover_k, fx("0.9"))
-        })
-        .sum()
+    let kept = (0..hits).fold(Fixed::ZERO, |sum, i| {
+        let cover_k = cover - wear * i64::from(i);
+        sum + (Fixed::ONE - fx("0.9").mul_div(cover_k, n(100)))
+    });
+    let lost = n(i64::from(part)).mul_div(kept, n(i64::from(hits))).trunc();
+    u32::try_from(lost.max(0)).expect("a man count")
 }
 
 /// The strain of a day: the hits, no more than 10, times 1 less the cover
@@ -540,12 +534,18 @@ fn at_a_unit_1_digs_is_shelled_leaves_its_holes_and_digs_again() {
     let part = shared(loss.min(before), &[before])[0];
     let expected = shelling_loss(part, h, cover0, fx("0.2"));
     if h >= 1 {
-        // The first hit takes 8 of 10.
-        assert_eq!(pieces(part, h)[0], 10);
-        assert_eq!(cut(10, cover0, fx("0.9")), 8);
+        // The first piece is 8.2 of 10, not cut.
+        assert_eq!(
+            n(10) * (Fixed::ONE - fx("0.9").mul_div(cover0, n(100))),
+            fx("8.2")
+        );
         // No hit takes more than the 10 it would with no cover.
         assert!(expected <= loss);
     }
+    // On the scenario's seed: 8 hits, and 66 men lost (64 when each piece
+    // was cut).
+    assert_eq!(h, 8);
+    assert_eq!(expected, 66);
     let events = run.lost_to_fire(3, 1);
     if expected == 0 {
         assert!(events.is_empty());
@@ -817,6 +817,11 @@ fn at_f_shells_wear_the_defences_and_the_strain_stops_at_its_limit() {
         .map(|p| shelling_loss(*p, g, cover0, fx("0.2")))
         .collect();
     eprintln!("F: parts {parts:?}, lost {lost:?}");
+    // On the scenario's seed: 7 hits, parts of 47 and 23, which lose 26 and
+    // 12 (21 and 9 when each piece was cut).
+    assert_eq!(g, 7);
+    assert_eq!(parts, vec![47, 23]);
+    assert_eq!(lost, vec![26, 12]);
     for (i, raw) in [6u32, 7].into_iter().enumerate() {
         let events = run.lost_to_fire(2, raw);
         if lost[i] == 0 {

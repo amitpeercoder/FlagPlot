@@ -6,9 +6,13 @@
 
 placeholder = true
 
-# The tons of a ship's work in a pulse that moving one man takes. Placeholder:
-# rests on no source.
-handling_t_per_man = "0.25"
+# The tons of a ship's work in a pulse that moving one man takes. PLACEHOLDER,
+# 0.02 from 0.25, fitted on the two fights of the full slice in ground tuning
+# round 1 and not checked (docs/validation/tuning/ground-r1-6-landing.md): with
+# unprepared_landing_share it lands the men of 7 August on the first day, as the
+# record has 10,000 ashore by 2000 that day (land_unit_facts 688), while less
+# than half the supply was landed (465, 773). The frozen figure stays 0.25.
+handling_t_per_man = "0.02"
 
 # Supply a man ashore costs his base a day, in tons. Placeholder: rests on no
 # source. The record's one hint, 120 tons for about three and a half days, is
@@ -64,8 +68,12 @@ report_error_high = "1.5"
 # Days to march from a hex to a neighbour, a whole number of 1 or more.
 march_days_per_hex = 3
 
-# Fatigue a unit gains on a day it marches.
-fatigue_per_march_day = 10
+# Fatigue a unit gains on a day it marches. PLACEHOLDER, 5 from 10, fitted on
+# the two fights of the full slice in ground tuning round 1 and not checked
+# (docs/validation/tuning/ground-r1-1-who-can-fire.md): the Ichiki echelon
+# marched two days and attacked in strength (land_unit_facts 994, 1020). The
+# frozen figure stays 10.
+fatigue_per_march_day = 5
 
 # Days of its daily charge a marching unit takes with it.
 march_supply_days = 5
@@ -77,15 +85,25 @@ march_supply_days = 5
 preparation_per_day = 5
 
 # The share of a ship's unloading rate a force with no loading works at while
-# it lands men, from 0 to 1.
-unprepared_landing_share = "0.5"
+# it lands men, from 0 to 1. PLACEHOLDER, 0.13 from 0.5, fitted on the two
+# fights of the full slice in ground tuning round 1 and not checked
+# (docs/validation/tuning/ground-r1-6-landing.md): less than half the supply was
+# landed in 26 hours of unloading (land_unit_facts 465, 773). 36 days of food at
+# Lunga when the transports sail, against 17 to 37; a lower share leaves
+# Americans unfed later in the slice. The frozen figure stays 0.5.
+unprepared_landing_share = "0.13"
 
 # The share of its loading a force keeps when a unit is added to its roster,
 # from 0 to 1.
 preparation_kept_on_change = "0.5"
 
 # Fatigue a unit gains on landing with no rehearsal, from 0 to 100.
-unprepared_landing_fatigue = 40
+# PLACEHOLDER, 10 from 40, fitted on the two fights of the full slice in ground
+# tuning round 1 and not checked (docs/validation/tuning/ground-r1-1-who-can-fire.md):
+# the Ichiki echelon landed unopposed at night, marched two days and attacked in
+# strength (land_unit_facts 1049, 994, 1020). Not 0: a landing with no
+# rehearsal still costs something. The frozen figure stays 40.
+unprepared_landing_fatigue = 10
 
 # How much a step of experience moves the chance a shot hits, from 0 to 0.5.
 experience_fire_strength = "0.25"

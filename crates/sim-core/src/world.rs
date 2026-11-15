@@ -103,10 +103,12 @@ impl Default for MadeIds {
 /// a base, and forces formed, joined and stood down: orders and state a game
 /// under the old rules could not hold) and 7 from decision 0109 (a unit
 /// falling back is out of a fight its own side starts, which changes every
-/// live fight where one is). A pull request raises it by one when
+/// live fight where one is) and 8 from the architect's ruling on decision
+/// 0106 (a unit's loss to fire is cut to a whole man once, which changes the
+/// live scenarios with men under fire behind cover). A pull request raises it by one when
 /// it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 7;
+pub const RULES_VERSION: u32 = 8;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

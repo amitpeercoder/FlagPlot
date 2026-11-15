@@ -12,8 +12,8 @@ day   7  hash 3ee07e52ca9fa541  13 events
 day   8  hash df8e8538a06fb545  13 events
 day   9  hash 4a73a0f4e58ec39f  13 events
 day  10  hash 65730be273fe839a  13 events
-day  11  hash 54c75788f62a25dc  55 events
-day  12  hash 76df4789a5088288  26 events
+day  11  hash 6e7b70be6fe87be0  58 events
+day  12  hash 9daf5bb869003cd2  19 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder transport force 2" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -26,11 +26,11 @@ ship:3 "Placeholder fast transport 3": afloat in task_force:3; damage flotation 
 ship:4 "Placeholder troop transport 4": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 600 men of land_unit:4 aboard
 ship:5 "Placeholder troop transport 5": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 300 men of land_unit:5 aboard
 base:1 "Placeholder base A" (Allied) at (0,0): 982 t of supply in stock
-base:2 "Placeholder base B" (Allied) at (4,0): 156 t of supply in stock
+base:2 "Placeholder base B" (Allied) at (4,0): 154 t of supply in stock
 base:3 "Landing at (0,6)" (Allied) at (0,6): 0 t of supply in stock, no airfield, formed in play, on its own side's map only
-land_unit:1 "Placeholder battalion 1" (Allied): 600 men ashore at (4,0), fatigue 10, fieldworks 20
-land_unit:2 "Placeholder battalion 2" (Allied): 600 men ashore at (4,0), fatigue 30, fieldworks 20
-land_unit:3 "Placeholder battalion 3" (Allied): 190 men ashore at (0,6), fatigue 30, fieldworks 20
+land_unit:1 "Placeholder battalion 1" (Allied): 600 men ashore at (4,0), fieldworks 20
+land_unit:2 "Placeholder battalion 2" (Allied): 600 men ashore at (4,0), fieldworks 20
+land_unit:3 "Placeholder battalion 3" (Allied): 190 men ashore at (0,6), fieldworks 20
 land_unit:4 "Placeholder battalion 4" (Allied): no men ashore
 land_unit:5 "Placeholder battalion 5" (Allied): no men ashore
 land_unit:6 "Placeholder battalion 6" (Allied): 300 men ashore at (0,0), fieldworks 30

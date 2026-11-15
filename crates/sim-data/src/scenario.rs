@@ -4657,8 +4657,12 @@ task_force = 3
         );
         let scenario = landing(true, &extra).expect("loads");
         let truth = scenario.world.umpire();
-        let ground = scenario.world.ref_data().ground.expect("the figures load");
-        assert_eq!(ground.handling_t_per_man, Fixed::from_ratio(1, 4));
+        // The live figures load; no value of them is asserted, so a tuning
+        // round changes nothing here (the architect's ruling of Nov 15, 2026).
+        assert!(
+            scenario.world.ref_data().ground.is_some(),
+            "the figures load"
+        );
         assert_eq!(truth.land_units.len(), 3);
         let first = &truth.land_units[&LandUnitId::new(1)];
         assert_eq!((first.men_ashore, first.hex), (0, None));
