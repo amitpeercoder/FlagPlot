@@ -128,12 +128,31 @@ impl SideView<'_> {
     /// force with an unload order that is stopped in the hex with men still
     /// aboard, or whose route ends there and whose passage, forecast as the
     /// measuring tool forecasts it, ends on or before the day. A force
-    /// counts from the day it is due until its men are ashore.
+    /// counts from the day it is due until its men are ashore. It is the
+    /// sum of the charges of [`SideView::men_due_by_day`] due by today.
     fn men_due_use(&self, hex: Hex) -> Fixed {
-        let Some(figures) = self.ref_data.ground.as_ref() else {
-            return Fixed::ZERO;
-        };
         let today = self.truth.day + 1;
+        self.men_due_by_day(hex)
+            .into_iter()
+            .filter(|(day, _)| *day <= today)
+            .fold(Fixed::ZERO, |sum, (_, charge)| sum + charge)
+    }
+
+    /// For each of the side's own forces that has an unload order, is not
+    /// at the yard and carries men for `hex`, the day its men are due there
+    /// and the daily charge of those men, in force order (decision 0107, "As
+    /// built"). A force stopped in the hex with its unload able to work and
+    /// men aboard is due today (the day being planned, [`SideView::day`] +
+    /// 1); one whose route ends in the hex is due on the day its passage,
+    /// forecast as the measuring tool forecasts it, arrives. A charge is the
+    /// sum over the land units aboard the force, each at the engine's own
+    /// function of its men aboard. A day may be later than today: such a
+    /// force is on its way and not yet counted in the planned use. The
+    /// planned use's men due is the sum of the charges due today or earlier.
+    pub fn men_due_by_day(&self, hex: Hex) -> Vec<(u32, Fixed)> {
+        let Some(figures) = self.ref_data.ground.as_ref() else {
+            return Vec::new();
+        };
         let ground = HaltGround {
             ref_data: self.ref_data,
             map: self.map,
@@ -141,7 +160,7 @@ impl SideView<'_> {
             bases: &self.truth.bases,
             land_units: &self.truth.land_units,
         };
-        let mut aboard: BTreeMap<LandUnitId, u32> = BTreeMap::new();
+        let mut due = Vec::new();
         for force in self.task_forces() {
             let unloads = force
                 .cargo_order
@@ -149,26 +168,35 @@ impl SideView<'_> {
             if !unloads || force.yard_trip.is_some() {
                 continue;
             }
-            if !self.is_due_at(&ground, force, hex, today) {
+            let Some(day) = self.due_day(&ground, force, hex) else {
                 continue;
-            }
+            };
+            let mut aboard: BTreeMap<LandUnitId, u32> = BTreeMap::new();
             for ship in &force.ships {
                 if let Some(troops) = self.truth.ships.get(ship).and_then(|ship| ship.troops) {
                     *aboard.entry(troops.unit).or_insert(0) += troops.men;
                 }
             }
+            let charges: Vec<Fixed> = aboard
+                .into_iter()
+                .filter_map(|(unit, men)| {
+                    let unit = self.truth.land_units.get(&unit)?;
+                    Some(crate::ground::daily_charge_t(figures, &unit.skills, men))
+                })
+                .collect();
+            if charges.is_empty() {
+                continue;
+            }
+            due.push((day, charges.into_iter().fold(Fixed::ZERO, |sum, c| sum + c)));
         }
-        aboard
-            .into_iter()
-            .filter_map(|(unit, men)| {
-                let unit = self.truth.land_units.get(&unit)?;
-                Some(crate::ground::daily_charge_t(figures, &unit.skills, men))
-            })
-            .fold(Fixed::ZERO, |sum, charge| sum + charge)
+        due
     }
 
-    /// Whether `force`, with an unload order, is due in `hex` by day `today`.
-    fn is_due_at(&self, ground: &HaltGround, force: &TaskForce, hex: Hex, today: u32) -> bool {
+    /// The day `force`, with an unload order, is due in `hex`: today if it
+    /// is stopped there with its unload able to work and men aboard, the
+    /// day of its forecast arrival if its route ends there, else `None`.
+    fn due_day(&self, ground: &HaltGround, force: &TaskForce, hex: Hex) -> Option<u32> {
+        let today = self.truth.day + 1;
         let stopped = matches!(
             force.status,
             TaskForceStatus::Idle | TaskForceStatus::Arrived | TaskForceStatus::Halted
@@ -176,16 +204,15 @@ impl SideView<'_> {
         if stopped && force.from_hex == hex {
             // Stopped in the hex: due if the unload can work there and men
             // are still aboard (the cargo rule's own test).
-            let Some(cargo) = force.cargo_order else {
-                return false;
-            };
-            return ground.cargo_place(force, cargo, hex).is_some()
+            let cargo = force.cargo_order?;
+            let able = ground.cargo_place(force, cargo, hex).is_some()
                 && force.ships.iter().any(|ship| {
                     self.truth
                         .ships
                         .get(ship)
                         .is_some_and(|s| s.troops.is_some())
                 });
+            return able.then_some(today);
         }
         if force.route.waypoints.last() != Some(&hex)
             || !matches!(
@@ -193,14 +220,11 @@ impl SideView<'_> {
                 TaskForceStatus::Underway | TaskForceStatus::Halted
             )
         {
-            return false;
+            return None;
         }
-        match self.forecast_passage(force.id, hex, None) {
-            Some(forecast) => match forecast.end {
-                PassageEnd::Arrives { day, .. } => day <= today,
-                _ => false,
-            },
-            None => false,
+        match self.forecast_passage(force.id, hex, None)?.end {
+            PassageEnd::Arrives { day, .. } => Some(day),
+            _ => None,
         }
     }
 

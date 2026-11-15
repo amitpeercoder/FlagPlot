@@ -89,6 +89,9 @@ pub struct SideView<'a> {
     /// The side's own command state, whole (decision 0107, 6). The other
     /// side's is never handed over.
     command: &'a crate::command::CommandState,
+    /// The number the side's next made task force will take (its own
+    /// counter; the other side's is never handed over).
+    next_task_force: TaskForceId,
     /// The scratch of the pulse in hand, which the choices of the air steps
     /// read (decision 0100): the bases grounded at the pulse's start, the
     /// strikes launched and not landed, what each group flew and the decks
@@ -130,6 +133,7 @@ impl<'a> SideView<'a> {
         orders: &'a BTreeMap<OrderId, Order>,
         objectives: Option<&'a crate::objectives::Objectives>,
         command: &'a crate::command::CommandState,
+        next_task_force: TaskForceId,
         pulse: PulseScratch<'a>,
     ) -> SideView<'a> {
         SideView {
@@ -142,8 +146,16 @@ impl<'a> SideView<'a> {
             orders,
             objectives,
             command,
+            next_task_force,
             pulse,
         }
+    }
+
+    /// The number the side's next made task force will take: what a
+    /// `FormTaskForce` order given now would make, if no other forming
+    /// order is taken in first. Its own series only.
+    pub fn next_task_force_id(&self) -> TaskForceId {
+        self.next_task_force
     }
 
     /// The side's own command state, whole: its intents with their limits,

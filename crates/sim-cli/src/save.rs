@@ -621,7 +621,7 @@ mod tests {
     fn commands_and_a_staffs_hand_in_round_trip_through_a_saved_game() {
         use sim_core::command::{
             Evidence, ForcesLimit, IntentKind, Leave, Limit, PlanId, Reason, Risk, RunDays,
-            RunSpec, Serves, StaffOrder,
+            RunSpec, Serves, StaffCommand, StaffOrder,
         };
         use sim_core::fixed::Fixed;
         use sim_core::hex::Hex;
@@ -723,18 +723,21 @@ mod tests {
                 intent,
                 reason: reason.clone(),
             }],
-            commands: vec![CommandKind::AddRun {
-                plan: PlanId::new(1),
-                run: RunSpec {
-                    ships: [ShipId::new(3)].into_iter().collect(),
-                    load_t: Fixed::from_int(120),
-                    days: RunDays {
-                        load: 3,
-                        sail: 4,
-                        arrive: 9,
-                        free: 14,
+            commands: vec![StaffCommand {
+                kind: CommandKind::AddRun {
+                    plan: PlanId::new(1),
+                    run: RunSpec {
+                        ships: [ShipId::new(3)].into_iter().collect(),
+                        load_t: Fixed::from_int(120),
+                        days: RunDays {
+                            load: 3,
+                            sail: 4,
+                            arrive: 9,
+                            free: 14,
+                        },
                     },
                 },
+                reason: reason.clone(),
             }],
             no_orders: vec![reason],
         };

@@ -429,6 +429,43 @@ fn at_c_a_regiment_at_sea_counts_from_the_day_it_is_due() {
 }
 
 #[test]
+fn the_men_due_by_day_lists_a_force_on_its_way_with_its_due_day_and_agrees_with_the_men_due() {
+    let mut scenario = scenario_a(&text("35a_days_of_supply.toml"));
+    let script = scenario.scripted_orders().clone();
+    let mut seen: BTreeMap<u32, Vec<(u32, Fixed)>> = BTreeMap::new();
+    for day in 1..=scenario.days {
+        for (side, request) in script.get(&day).cloned().unwrap_or_default() {
+            scenario.world.submit_orders(side, vec![request]);
+        }
+        scenario
+            .world
+            .resolve_day_watched(Staffs::none(), &mut |world, moment| {
+                let Moment::Orders { day: now } = moment else {
+                    return;
+                };
+                let view = world.side_view(Side::Allied);
+                let due = view.men_due_by_day(C);
+                let counted = due
+                    .iter()
+                    .filter(|(due_day, _)| *due_day <= now)
+                    .fold(Fixed::ZERO, |sum, (_, charge)| sum + *charge);
+                let figure = view.days_of_supply(C).expect("a base at C");
+                assert_eq!(counted, figure.planned_use.men_due_t, "day {now}");
+                seen.insert(now, due);
+            })
+            .expect("a day resolves");
+    }
+    // Day 1: the orders of the day are not yet taken in, so nothing is on
+    // its way. From day 2 the regiment is on its way and due on day 3, at
+    // 22.5 t a day.
+    assert!(seen[&1].is_empty());
+    assert_eq!(seen[&2], vec![(3, fx("22.5"))]);
+    assert_eq!(seen[&3], vec![(3, fx("22.5"))]);
+    // Once it is ashore nothing is due.
+    assert!(seen[&4].is_empty());
+}
+
+#[test]
 fn at_g_a_base_taken_gives_a_figure_to_the_side_that_took_it() {
     let read = readings_a();
     // Day 1: the Allied side holds no base there; the Japanese side holds

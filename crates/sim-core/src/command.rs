@@ -778,6 +778,15 @@ pub struct StaffOrder {
     pub reason: Reason,
 }
 
+/// A command the staff gives, with its reason. Intake records the reason as
+/// a `StaffReason` with no order, citing the command's `CommandTaken` or
+/// `CommandRefused`.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct StaffCommand {
+    pub kind: CommandKind,
+    pub reason: Reason,
+}
+
 /// What a staff hands in for one day (decision 0107, 4): orders with their
 /// reasons, staff commands, and decisions to give no order with theirs. It
 /// is what a saved game keeps for the day, and what a replay hands in again
@@ -785,7 +794,7 @@ pub struct StaffOrder {
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct StaffDecisions {
     pub orders: Vec<StaffOrder>,
-    pub commands: Vec<CommandKind>,
+    pub commands: Vec<StaffCommand>,
     pub no_orders: Vec<Reason>,
 }
 
@@ -802,6 +811,68 @@ impl StaffDecisions {
 /// and ships in port have refuelled, and before any order is taken in.
 pub trait Staff {
     fn decide(&self, view: SideView<'_>) -> StaffDecisions;
+
+    /// What the staff would do for one intent, worked from the view and
+    /// stored nowhere (decision 0107, 5). `None` by default: a staff with no
+    /// doctrine for the intent proposes nothing.
+    fn propose(&self, _view: SideView<'_>, _intent: IntentId) -> Option<Proposal> {
+        None
+    }
+}
+
+/// One reading of the staff's projection: the stock at the start of `day`,
+/// the planned use of that day, and the figure (`None` where the use is 0).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct ProjectedReading {
+    pub day: u32,
+    pub stock_t: Fixed,
+    pub use_t: Fixed,
+    pub days: Option<Fixed>,
+}
+
+/// The staff's projection of days of supply in a hex (decision 0107, 35).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct SupplyProjection {
+    pub hex: Hex,
+    pub floor_days: u32,
+    pub readings: Vec<ProjectedReading>,
+    /// The first day whose figure is below `floor_days`.
+    pub first_day_below: Option<u32>,
+}
+
+/// A run the staff proposes: its ships, its load in tons of supply, its
+/// four days and why.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct ProposedRun {
+    pub ships: BTreeSet<ShipId>,
+    pub load_t: Fixed,
+    pub days: RunDays,
+    pub reason: Reason,
+}
+
+/// What stops the staff meeting an intent.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Shortfall {
+    /// What binds, in words.
+    pub binds: String,
+    /// The shortfall in days at the reading it checked.
+    pub shortfall_days: Fixed,
+    /// The day the source falls to its reserve at the present rate.
+    pub source_dry_day: Option<u32>,
+}
+
+/// What the staff would do for one intent, worked from the view and stored
+/// nowhere (decision 0107, 5).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Proposal {
+    pub intent: IntentId,
+    pub plan: PlanId,
+    pub plan_state: PlanState,
+    pub projection: Option<SupplyProjection>,
+    pub decisions: StaffDecisions,
+    pub runs: Vec<ProposedRun>,
+    pub shortfall: Option<Shortfall>,
+    pub reason: Reason,
 }
 
 /// Each side's staff, or none. The function that resolves a day takes it.
@@ -903,6 +974,10 @@ impl Staff for CheckedStaff<'_> {
             }
         }
         self.saved.clone()
+    }
+
+    fn propose(&self, view: SideView<'_>, intent: IntentId) -> Option<Proposal> {
+        self.real.propose(view, intent)
     }
 }
 

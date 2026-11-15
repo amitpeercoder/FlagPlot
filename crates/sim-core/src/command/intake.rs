@@ -12,7 +12,7 @@ use crate::command::{
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
-use crate::ids::{BaseId, IntentId, ShipId};
+use crate::ids::{BaseId, EventId, IntentId, ShipId};
 use crate::orders::{BaseOrder, Issuer, OrderKind, OrderRequest, RejectReason};
 use crate::state::{ShipLocation, Side};
 use crate::world::World;
@@ -42,23 +42,21 @@ impl World {
     /// refused command changes nothing. `CommandTaken` and `CommandRefused`
     /// have no causes: they are the root record. Each follow-up cites the
     /// `CommandTaken` and is recorded after it.
-    pub(crate) fn take_in_command(&mut self, day: u32, side: Side, command: Command) {
+    pub(crate) fn take_in_command(&mut self, day: u32, side: Side, command: Command) -> EventId {
         let Command { kind, issuer } = command;
         match self.check_command(day, side, issuer, &kind) {
-            Err(reason) => {
-                self.events.record(
-                    day,
-                    None,
-                    EventKind::CommandRefused {
-                        side,
-                        issuer,
-                        command: kind,
-                        reason,
-                    },
-                    Vec::new(),
-                    None,
-                );
-            }
+            Err(reason) => self.events.record(
+                day,
+                None,
+                EventKind::CommandRefused {
+                    side,
+                    issuer,
+                    command: kind,
+                    reason,
+                },
+                Vec::new(),
+                None,
+            ),
             Ok(()) => {
                 let follow_ups = self.apply_command(day, side, &kind);
                 let taken = self.events.record(
@@ -76,6 +74,7 @@ impl World {
                     self.events
                         .record(day, None, follow_up, vec![Cause::Event(taken)], None);
                 }
+                taken
             }
         }
     }
@@ -626,14 +625,27 @@ impl World {
             return;
         }
         for (side, decisions) in handed_in {
-            for kind in &decisions.commands {
-                self.take_in_command(
+            for staff_command in &decisions.commands {
+                let answer = self.take_in_command(
                     day,
                     *side,
                     Command {
-                        kind: kind.clone(),
+                        kind: staff_command.kind.clone(),
                         issuer: Issuer::Staff,
                     },
+                );
+                // The command's reason, after the command and its
+                // follow-ups, citing the command's event.
+                self.events.record(
+                    day,
+                    None,
+                    EventKind::StaffReason {
+                        side: *side,
+                        order: None,
+                        reason: Box::new(staff_command.reason.clone()),
+                    },
+                    vec![Cause::Event(answer)],
+                    None,
                 );
             }
             // A decision to give no order is a reason with no order and no

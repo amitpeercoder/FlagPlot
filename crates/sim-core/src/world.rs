@@ -561,6 +561,7 @@ impl World {
             &self.orders,
             self.objectives.as_ref(),
             self.command_state(side),
+            TaskForceId::new(self.made_ids.next_task_force(side)),
             PulseScratch {
                 grounded_bases: &self.grounded_bases,
                 field_damage: &self.field_damage,
