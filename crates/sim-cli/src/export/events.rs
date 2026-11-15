@@ -2017,6 +2017,24 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             if !reason.serves.statement.is_empty() {
                 data = data.with("statement", Field::Str(reason.serves.statement.clone()));
             }
+            // The intents above it, nearest first: "1 (commander): hold
+            // base:1; ...", left out where it is a root.
+            if !reason.serves.chain.is_empty() {
+                let chain: Vec<String> = reason
+                    .serves
+                    .chain
+                    .iter()
+                    .map(|link| {
+                        format!(
+                            "{} ({}): {}",
+                            link.intent.raw(),
+                            link.maker.name(),
+                            link.statement
+                        )
+                    })
+                    .collect();
+                data = data.with("chain", Field::Str(chain.join("; ")));
+            }
             let evidence: Vec<String> = reason
                 .evidence
                 .iter()
@@ -2072,6 +2090,26 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             }
             ("interrupt_fired", data)
         }
+        EventKind::IntentFormed {
+            side,
+            intent,
+            parent,
+        } => (
+            "intent_formed",
+            d.text("side", names::side(*side))
+                .int("intent", intent.raw())
+                .int("parent", parent.raw()),
+        ),
+        EventKind::IntentWithdrawn {
+            side,
+            intent,
+            parent,
+        } => (
+            "intent_withdrawn",
+            d.text("side", names::side(*side))
+                .int("intent", intent.raw())
+                .int("parent", parent.raw()),
+        ),
     }
 }
 

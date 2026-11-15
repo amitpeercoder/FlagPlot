@@ -1191,7 +1191,9 @@ pub fn count(
             | EventKind::StaffReason { .. }
             | EventKind::HeldByOrder { .. }
             | EventKind::StaffNotice { .. }
-            | EventKind::InterruptFired { .. } => {}
+            | EventKind::InterruptFired { .. }
+            | EventKind::IntentFormed { .. }
+            | EventKind::IntentWithdrawn { .. } => {}
         }
     }
 

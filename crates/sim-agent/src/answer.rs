@@ -8,8 +8,13 @@ pub const FORMAT: &str = "flagplot-agent";
 /// The version of the format. A field removed or changed in meaning bumps it;
 /// a field added does not (see `schemas/README.md`). 6 adds hold, release and
 /// preview (decision 0107, step 3). 7 adds set_interrupt, acknowledge, run and
-/// report and the `interrupts` of command_state (decision 0107, step 4).
-pub const VERSION: u32 = 7;
+/// report and the `interrupts` of command_state (decision 0107, step 4). 8 adds
+/// the tree of intents (decisions 0116 and 0117): the kinds `cover` and `hold`,
+/// `parent`, `maker`, `addressee`, `children` and the limits read up the tree
+/// in command_state, air groups in a forces limit and a hold on a whole air
+/// group, a reason's `chain` up to the commander's intent, and the measure of a
+/// hold intent in command_state and report.
+pub const VERSION: u32 = 8;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

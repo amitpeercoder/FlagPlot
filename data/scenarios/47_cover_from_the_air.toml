@@ -1,0 +1,125 @@
+# Scenario 47: the staff covers a base from the air.
+#
+# Decision 0115. Two fighter groups, a flying boat group and a dive bomber
+# group rest at Allied base 1; the Allied commander states one intent, cover
+# base 1 from the air, limited to the four groups, and gives both leaves. The
+# staff gives the missions, the patrol share and the search arc, and rests the
+# tired, for 12 days. The only Japanese thing is base 2, with nothing at it,
+# 5 hexes east on the Allied map; the Allied side starts holding one contact,
+# a cruiser at (0,5), that it loses on day 2. Nothing is ever sighted, no raid
+# comes and no die is rolled. The hand calculation is in
+# tests/scenario_47_cover_from_the_air.rs. The test runs this file on the
+# frozen step 1 figures, with the fatigue figures loaded and the wear, upkeep
+# and supply figures not, and with variants it builds from the parsed text.
+#
+# Scenario 48 is this file with the commander's commands changed.
+#
+# PLACEHOLDER DATA. The bases, aircraft, figures and map are invented.
+
+name = "Placeholder scenario 47: Cover from the air"
+placeholder = true
+seed = 1942
+days = 12
+map = "../map/placeholder_cover_from_the_air.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+fatigue = "../reference/fatigue.toml"
+
+# Allied base 1.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+# Japanese base 2, 5 hexes east of base 1, with nothing at it.
+[[base]]
+id = 2
+name = "Placeholder base 2"
+side = "japanese"
+q = 5
+r = 0
+supply_t = 0
+
+# Fighters, 12 ready.
+[[air_group]]
+id = 1
+name = "Placeholder fighters 1"
+side = "allied"
+base = 1
+aircraft_type = 4
+ready = 12
+
+# Fighters, 8 ready.
+[[air_group]]
+id = 2
+name = "Placeholder fighters 2"
+side = "allied"
+base = 1
+aircraft_type = 4
+ready = 8
+
+# Flying boats, 6 ready (search range 600 nm).
+[[air_group]]
+id = 3
+name = "Placeholder flying boats 3"
+side = "allied"
+base = 1
+aircraft_type = 1
+ready = 6
+
+# Dive bombers, 10 ready: not a fighter and cannot search.
+[[air_group]]
+id = 4
+name = "Placeholder dive bombers 4"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+
+# What the Allied side starts holding, as contact 1: a cruiser 5 hexes from
+# base 1, on bearing 150. Nothing is really there.
+[[contact]]
+side = "allied"
+q = 0
+r = 5
+ship_count = 2
+kind = "cruiser"
+age_pulses = 0
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "cover"
+base = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+air_groups = [1, 2, 3, 4]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

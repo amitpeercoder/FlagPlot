@@ -2,10 +2,10 @@ Placeholder scenario 35c: Days of supply, repairs
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash dd03c20ee26cf850  4 events
-day   2  hash bc6b717ce8589ecc  4 events
-day   3  hash b70866bc4c7779c4  2 events
-day   4  hash 4832547faed4fa0d  2 events
+day   1  hash 38918002ef2de1c1  4 events
+day   2  hash b631958438d51785  4 events
+day   3  hash b82ecd2217320851  2 events
+day   4  hash 8992bcc5c0235964  2 events
 
 #1 D1 night     air_group:2 had 3 aircraft repaired at base:6, 13 ready and 2 damaged
 #2 D1 night     base:6 spent 3 t of supply on 3 repairs, 97 t left  <- #1

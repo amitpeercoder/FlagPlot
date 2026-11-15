@@ -1811,6 +1811,23 @@ pub enum EventKind {
         condition: Option<InterruptCondition>,
         figure: Option<Fixed>,
     },
+    /// The staff formed a sub-intent (decision 0117, 3): `intent` is its
+    /// number, `parent` the intent it stands under. Cites the
+    /// `CommandTaken` of the staff's `form_intent`. Added at the end (step 2
+    /// of stage 2).
+    IntentFormed {
+        side: Side,
+        intent: IntentId,
+        parent: IntentId,
+    },
+    /// An intent was withdrawn because an intent above it was (decision
+    /// 0117, 6): `parent` is the one it stood under. Cites the `CommandTaken`
+    /// of the withdrawal. Added at the end.
+    IntentWithdrawn {
+        side: Side,
+        intent: IntentId,
+        parent: IntentId,
+    },
 }
 
 impl EventKind {
@@ -2187,7 +2204,9 @@ impl EventKind {
             | EventKind::StaffReason { .. }
             | EventKind::HeldByOrder { .. }
             | EventKind::StaffNotice { .. }
-            | EventKind::InterruptFired { .. } => Vec::new(),
+            | EventKind::InterruptFired { .. }
+            | EventKind::IntentFormed { .. }
+            | EventKind::IntentWithdrawn { .. } => Vec::new(),
             EventKind::GroundFoundEmpty { .. } => Vec::new(),
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
@@ -3910,6 +3929,16 @@ impl fmt::Display for EventKind {
                 "{} men at {hex} find no enemy men ashore; the estimate of {men} men of day {reported_day} is cleared",
                 side.name().to_lowercase()
             ),
+            EventKind::IntentFormed {
+                side,
+                intent,
+                parent,
+            } => write!(f, "{side:?} staff forms {intent} under {parent}"),
+            EventKind::IntentWithdrawn {
+                side,
+                intent,
+                parent,
+            } => write!(f, "{side:?} {intent} is withdrawn with {parent}"),
         }
     }
 }

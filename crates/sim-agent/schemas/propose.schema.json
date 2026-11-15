@@ -18,7 +18,8 @@
     "displaced_by",
     "displaced_intents",
     "would_hand_in",
-    "reason"
+    "reason",
+    "tree"
   ],
   "additionalProperties": false,
   "properties": {
@@ -26,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 7
+      "const": 8
     },
     "kind": {
       "const": "propose"
@@ -196,6 +197,186 @@
           }
         }
       }
+    },
+    "tree": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "description": "For a hold or cover intent: the tree the staff would form on the coming day (decision 0117, 14): the sub-intents (each form_intent, numbered as the side's next free numbers), the air groups each intent would order with the order each is given, the search arcs with how their threats gave them, and the decisions to give no order.",
+          "required": [
+            "intent",
+            "kind",
+            "sub_intents",
+            "groups",
+            "arcs",
+            "no_orders",
+            "note"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "intent": {
+              "type": "integer"
+            },
+            "kind": {
+              "enum": [
+                "cover",
+                "hold"
+              ]
+            },
+            "sub_intents": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "number",
+                  "parent",
+                  "maker",
+                  "text",
+                  "reason",
+                  "kind",
+                  "base",
+                  "floor_days",
+                  "interval_days"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "number": {
+                    "type": "integer"
+                  },
+                  "parent": {
+                    "type": "integer"
+                  },
+                  "maker": {
+                    "const": "staff"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "$ref": "command_defs.schema.json#/$defs/reason"
+                  },
+                  "kind": {
+                    "enum": [
+                      "cover",
+                      "hold"
+                    ]
+                  },
+                  "base": {
+                    "$ref": "defs.schema.json#/$defs/handle"
+                  },
+                  "floor_days": {
+                    "type": "null"
+                  },
+                  "interval_days": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            "groups": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "intent",
+                  "air_groups",
+                  "orders"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "intent": {
+                    "type": "integer"
+                  },
+                  "air_groups": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "orders": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "air_group",
+                        "order",
+                        "text",
+                        "worked"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "air_group": {
+                          "type": "integer"
+                        },
+                        "order": {
+                          "type": "object"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "worked": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "arcs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "intent",
+                  "air_group",
+                  "from_deg",
+                  "to_deg",
+                  "whole_circle",
+                  "range_nm",
+                  "how"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "intent": {
+                    "type": "integer"
+                  },
+                  "air_group": {
+                    "type": "integer"
+                  },
+                  "from_deg": {
+                    "type": "integer"
+                  },
+                  "to_deg": {
+                    "type": "integer"
+                  },
+                  "whole_circle": {
+                    "type": "boolean"
+                  },
+                  "range_nm": {
+                    "$ref": "defs.schema.json#/$defs/dec"
+                  },
+                  "how": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "no_orders": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        }
+      ]
     }
   }
 }

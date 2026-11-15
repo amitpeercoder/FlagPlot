@@ -12,7 +12,8 @@
 //!
 //! | `kind` | other keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `base`, `floor_days`, `interval_days` (left out when not set) |
+//! | `set_intent` | `intent`, `base`, `intent_kind` (`keep_supplied`, `cover` or `hold`; left out for `keep_supplied`, which is what a key's absence reads as), and for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set) |
+//! | `form_intent` | `parent`, `intent_kind` (`cover`), `base`: the staff's, a sub-intent under `parent` |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve` or `risk`) and its keys, below |
 //! | `set_leave` | `leave` (`prepare` or `launch`), `given` |
@@ -22,12 +23,14 @@
 //! | `add_run` | `plan`, `ships`, `load_t`, `days` (`load`, `sail`, `arrive`, `free`) |
 //! | `time_run` | `plan`, `run`, `days` |
 //! | `mark_plan` | `plan`, `outcome` (`complete` or `failed`) |
-//! | `hold`, `release` | one of `ship`, `task_force`, or `air_group` with `setting` (`search_arc`) |
+//! | `hold`, `release` | one of `ship`, `task_force`, or `air_group`; with `air_group`, `setting` (`search_arc`) holds that setting alone and no `setting` holds the whole group |
 //! | `end_run` | `plan`, `run` |
 //! | `set_interrupt` | `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`cannot_meet`, `waits_for_leave` or `ship_lost`) and `on` |
 //! | `acknowledge` | `interrupt`, or `standing` with one of `plan` or `ship` |
 //!
-//! The limits: `forces` has `intent`, `ships`, `task_forces`, `source`;
+//! The limits: `forces` has `intent` and `ships`, `task_forces`, `air_groups`
+//! and `source` (each left out when empty or not set, and each read as empty
+//! or not set when absent);
 //! `area` has `intent`, `hexes` as `[[q, r], ...]`; `priority` has `intent`
 //! and `rank` (`null` for unranked); `protected` has `intent`, `ships`;
 //! `reserve` has `base`, `supply_t`, `fuel_t`; `risk` has `intent` and `risk`
@@ -39,17 +42,19 @@
 //! it rests on as `{"command": i}` or `{"no_order": i}`):
 //! an order is its `unit`, its `order` body (as [`crate::order_to_json`]
 //! writes it), the `intent` it serves and its `reason`; a reason is `serves`
-//! (`intent`, `plan`, `amendment`, each left out when none), `evidence` (a
+//! (`intent`, `plan`, `amendment`, each left out when none; `statement`; and
+//! `chain`, left out when empty, a list of `{intent, maker, statement}`, the
+//! intents above it nearest first, `maker` being `commander` or `staff`), `evidence` (a
 //! list of `{what, day}`), `binding`, `worked` and `would_change`.
 
 use std::collections::BTreeSet;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
-    InterruptRef, InterruptSetting, Leave, Limit, NoticeBasis, NoticeKind, PlanId, PlanOutcome,
-    Reason, Risk, RunDays, RunSpec, Serves, StaffCommand, StaffDecisions, StaffNotice, StaffOrder,
-    StandingKind, StandingSubject,
+    ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget, IntentKind,
+    InterruptCondition, InterruptRef, InterruptSetting, Leave, Limit, Maker, NoticeBasis,
+    NoticeKind, PlanId, PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves, StaffCommand,
+    StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -113,6 +118,14 @@ fn numbers(value: &Value, key: &str) -> Result<Vec<u32>, String> {
                 .ok_or_else(|| format!("\"{key}\" holds something that is not a whole number"))
         })
         .collect()
+}
+
+/// A list of whole numbers that may be left out or `null`: then it is empty.
+fn numbers_or_none(value: &Value, key: &str) -> Result<Vec<u32>, String> {
+    match value.get(key) {
+        None | Some(Value::Null) => Ok(Vec::new()),
+        Some(_) => numbers(value, key),
+    }
 }
 
 fn ship_set(value: &Value, key: &str) -> Result<BTreeSet<ShipId>, String> {
@@ -198,6 +211,7 @@ fn setting_from(name: &str) -> Result<HeldSetting, String> {
 /// or `air_group` with `setting`.
 fn target_to_json(body: &mut Value, target: HoldTarget) {
     match target {
+        HoldTarget::AirGroup(group) => body["air_group"] = json!(group.raw()),
         HoldTarget::Ship(ship) => body["ship"] = json!(ship.raw()),
         HoldTarget::TaskForce(force) => body["task_force"] = json!(force.raw()),
         HoldTarget::Setting { group, setting } => {
@@ -218,10 +232,16 @@ fn target_from_json(value: &Value) -> Result<HoldTarget, String> {
             value,
             "task_force",
         )?))),
-        ["air_group"] => Ok(HoldTarget::Setting {
-            group: AirGroupId::new(small(value, "air_group")?),
-            setting: setting_from(text(value, "setting")?)?,
-        }),
+        ["air_group"] => {
+            let group = AirGroupId::new(small(value, "air_group")?);
+            match value.get("setting") {
+                None | Some(Value::Null) => Ok(HoldTarget::AirGroup(group)),
+                Some(_) => Ok(HoldTarget::Setting {
+                    group,
+                    setting: setting_from(text(value, "setting")?)?,
+                }),
+            }
+        }
         [] => Err("a hold names one of \"ship\", \"task_force\" or \"air_group\"".to_string()),
         _ => Err("a hold names only one of \"ship\", \"task_force\" and \"air_group\"".to_string()),
     }
@@ -297,14 +317,25 @@ fn days_from_json(value: &Value, key: &str) -> Result<RunDays, String> {
 
 fn limit_to_json(limit: &Limit) -> Value {
     match limit {
-        Limit::Forces { intent, limit } => json!({
-            "kind": "set_limit",
-            "limit": "forces",
-            "intent": intent.raw(),
-            "ships": raws(&limit.ships),
-            "task_forces": limit.task_forces.iter().map(|f| f.raw()).collect::<Vec<_>>(),
-            "source": limit.source.raw(),
-        }),
+        Limit::Forces { intent, limit } => {
+            let mut body = json!({
+                "kind": "set_limit",
+                "limit": "forces",
+                "intent": intent.raw(),
+                "ships": raws(&limit.ships),
+                "task_forces": limit.task_forces.iter().map(|f| f.raw()).collect::<Vec<_>>(),
+            });
+            // Left out when empty or not set, so a limit with neither is
+            // written as it always was.
+            if !limit.air_groups.is_empty() {
+                body["air_groups"] =
+                    json!(limit.air_groups.iter().map(|g| g.raw()).collect::<Vec<_>>());
+            }
+            if let Some(source) = limit.source {
+                body["source"] = json!(source.raw());
+            }
+            body
+        }
         Limit::Area { intent, hexes } => json!({
             "kind": "set_limit",
             "limit": "area",
@@ -349,12 +380,19 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
         "forces" => Ok(Limit::Forces {
             intent: intent()?,
             limit: ForcesLimit {
-                ships: ship_set(value, "ships")?,
-                task_forces: numbers(value, "task_forces")?
+                ships: numbers_or_none(value, "ships")?
+                    .into_iter()
+                    .map(ShipId::new)
+                    .collect(),
+                task_forces: numbers_or_none(value, "task_forces")?
                     .into_iter()
                     .map(TaskForceId::new)
                     .collect(),
-                source: BaseId::new(small(value, "source")?),
+                air_groups: numbers_or_none(value, "air_groups")?
+                    .into_iter()
+                    .map(AirGroupId::new)
+                    .collect(),
+                source: small_opt(value, "source")?.map(BaseId::new),
             },
         }),
         "area" => Ok(Limit::Area {
@@ -382,27 +420,70 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
     }
 }
 
+/// An intent's kind as the keys of a command's object: `intent_kind` (left
+/// out for keeping a base supplied), `base`, and for that kind `floor_days`
+/// and `interval_days` (left out when not set).
+fn intent_kind_to_json(body: &mut Value, kind: IntentKind) {
+    match kind {
+        IntentKind::KeepSupplied {
+            base,
+            floor_days,
+            interval_days,
+        } => {
+            body["base"] = json!(base.raw());
+            body["floor_days"] = json!(floor_days);
+            if let Some(days) = interval_days {
+                body["interval_days"] = json!(days);
+            }
+        }
+        IntentKind::Cover { base } | IntentKind::Hold { base } => {
+            body["intent_kind"] = json!(kind.name());
+            body["base"] = json!(base.raw());
+        }
+    }
+}
+
+/// An intent's kind from the keys of a command's object; no `intent_kind` is
+/// keeping a base supplied.
+fn intent_kind_from_json(value: &Value) -> Result<IntentKind, String> {
+    let base = BaseId::new(small(value, "base")?);
+    match value.get("intent_kind") {
+        None | Some(Value::Null) => keep_supplied_from_json(value, base),
+        Some(_) => match text(value, "intent_kind")? {
+            "keep_supplied" => keep_supplied_from_json(value, base),
+            "cover" => Ok(IntentKind::Cover { base }),
+            "hold" => Ok(IntentKind::Hold { base }),
+            other => Err(format!(
+                "unknown intent kind \"{other}\" (keep_supplied, cover or hold)"
+            )),
+        },
+    }
+}
+
+fn keep_supplied_from_json(value: &Value, base: BaseId) -> Result<IntentKind, String> {
+    Ok(IntentKind::KeepSupplied {
+        base,
+        floor_days: small(value, "floor_days")?,
+        interval_days: small_opt(value, "interval_days")?,
+    })
+}
+
 /// A command as JSON.
 pub fn command_to_json(command: &CommandKind) -> Value {
     match command {
-        CommandKind::SetIntent { intent, kind } => match kind {
-            IntentKind::KeepSupplied {
-                base,
-                floor_days,
-                interval_days,
-            } => {
-                let mut body = json!({
-                    "kind": "set_intent",
-                    "intent": intent.raw(),
-                    "base": base.raw(),
-                    "floor_days": floor_days,
-                });
-                if let Some(days) = interval_days {
-                    body["interval_days"] = json!(days);
-                }
-                body
-            }
-        },
+        CommandKind::SetIntent { intent, kind } => {
+            let mut body = json!({ "kind": "set_intent", "intent": intent.raw() });
+            intent_kind_to_json(&mut body, *kind);
+            body
+        }
+        CommandKind::FormIntent { parent, kind } => {
+            let mut body = json!({ "kind": "form_intent", "parent": parent.raw() });
+            // The kind's name is always written here: a formed intent has no
+            // default kind.
+            body["intent_kind"] = json!(kind.name());
+            body["base"] = json!(kind.base().raw());
+            body
+        }
         CommandKind::WithdrawIntent { intent } => {
             json!({ "kind": "withdraw_intent", "intent": intent.raw() })
         }
@@ -502,12 +583,18 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
     match text(value, "kind")? {
         "set_intent" => Ok(CommandKind::SetIntent {
             intent: IntentId::new(small(value, "intent")?),
-            kind: IntentKind::KeepSupplied {
-                base: BaseId::new(small(value, "base")?),
-                floor_days: small(value, "floor_days")?,
-                interval_days: small_opt(value, "interval_days")?,
-            },
+            kind: intent_kind_from_json(value)?,
         }),
+        "form_intent" => {
+            let kind = intent_kind_from_json(value)?;
+            if matches!(kind, IntentKind::KeepSupplied { .. }) {
+                return Err("form_intent needs \"intent_kind\" \"cover\" or \"hold\"".to_string());
+            }
+            Ok(CommandKind::FormIntent {
+                parent: IntentId::new(small(value, "parent")?),
+                kind,
+            })
+        }
         "withdraw_intent" => Ok(CommandKind::WithdrawIntent {
             intent: IntentId::new(small(value, "intent")?),
         }),
@@ -597,6 +684,25 @@ pub(crate) fn reason_to_json(reason: &Reason) -> Value {
     if !reason.serves.statement.is_empty() {
         serves.insert("statement".into(), json!(reason.serves.statement));
     }
+    if !reason.serves.chain.is_empty() {
+        serves.insert(
+            "chain".into(),
+            Value::Array(
+                reason
+                    .serves
+                    .chain
+                    .iter()
+                    .map(|link| {
+                        json!({
+                            "intent": link.intent.raw(),
+                            "maker": link.maker.name(),
+                            "statement": link.statement,
+                        })
+                    })
+                    .collect(),
+            ),
+        );
+    }
     json!({
         "serves": Value::Object(serves),
         "evidence": reason
@@ -630,6 +736,24 @@ fn reason_from_json(value: &Value) -> Result<Reason, String> {
             statement: match serves.get("statement") {
                 None | Some(Value::Null) => String::new(),
                 Some(_) => text(serves, "statement")?.to_string(),
+            },
+            // A game saved before the tree has no chain.
+            chain: match serves.get("chain") {
+                None | Some(Value::Null) => Vec::new(),
+                Some(_) => list(serves, "chain")?
+                    .iter()
+                    .map(|link| {
+                        Ok(ChainLink {
+                            intent: IntentId::new(small(link, "intent")?),
+                            maker: match text(link, "maker")? {
+                                "commander" => Maker::Commander,
+                                "staff" => Maker::Staff,
+                                other => return Err(format!("unknown maker \"{other}\"")),
+                            },
+                            statement: text(link, "statement")?.to_string(),
+                        })
+                    })
+                    .collect::<Result<_, String>>()?,
             },
         },
         evidence,
@@ -786,6 +910,24 @@ mod tests {
                     interval_days: None,
                 },
             },
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::Cover {
+                    base: BaseId::new(5),
+                },
+            },
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::Hold {
+                    base: BaseId::new(5),
+                },
+            },
+            CommandKind::FormIntent {
+                parent: IntentId::new(1),
+                kind: IntentKind::Cover {
+                    base: BaseId::new(5),
+                },
+            },
             CommandKind::WithdrawIntent { intent },
             CommandKind::SetLimit(Limit::Forces {
                 intent,
@@ -794,7 +936,28 @@ mod tests {
                     task_forces: [TaskForceId::new(3), TaskForceId::new(1)]
                         .into_iter()
                         .collect(),
-                    source: BaseId::new(2),
+                    air_groups: BTreeSet::new(),
+                    source: Some(BaseId::new(2)),
+                },
+            }),
+            CommandKind::SetLimit(Limit::Forces {
+                intent,
+                limit: ForcesLimit {
+                    ships: BTreeSet::new(),
+                    task_forces: BTreeSet::new(),
+                    air_groups: [AirGroupId::new(8), AirGroupId::new(2)]
+                        .into_iter()
+                        .collect(),
+                    source: None,
+                },
+            }),
+            CommandKind::SetLimit(Limit::Forces {
+                intent,
+                limit: ForcesLimit {
+                    ships: ships(&[4]),
+                    task_forces: BTreeSet::new(),
+                    air_groups: [AirGroupId::new(2)].into_iter().collect(),
+                    source: Some(BaseId::new(1)),
                 },
             }),
             CommandKind::SetLimit(Limit::Area {
@@ -883,6 +1046,12 @@ mod tests {
                     group: AirGroupId::new(7),
                     setting: HeldSetting::SearchArc,
                 },
+            },
+            CommandKind::Hold {
+                target: HoldTarget::AirGroup(AirGroupId::new(7)),
+            },
+            CommandKind::Release {
+                target: HoldTarget::AirGroup(AirGroupId::new(7)),
             },
             CommandKind::Release {
                 target: HoldTarget::Ship(ShipId::new(5)),
@@ -999,6 +1168,16 @@ mod tests {
             json!({ "kind": "hold", "air_group": 3, "setting": "search_arc" })
         );
         assert_eq!(
+            hold(HoldTarget::AirGroup(AirGroupId::new(3))),
+            json!({ "kind": "hold", "air_group": 3 })
+        );
+        assert_eq!(
+            command_from_json(&json!({ "kind": "release", "air_group": 3 })),
+            Ok(CommandKind::Release {
+                target: HoldTarget::AirGroup(AirGroupId::new(3))
+            })
+        );
+        assert_eq!(
             command_to_json(&CommandKind::EndRun {
                 plan: PlanId::new(1),
                 run: 2
@@ -1008,13 +1187,106 @@ mod tests {
         for bad in [
             json!({ "kind": "hold" }),
             json!({ "kind": "hold", "ship": 1, "task_force": 2 }),
-            json!({ "kind": "release", "air_group": 3 }),
             json!({ "kind": "release", "air_group": 3, "setting": "mission" }),
             json!({ "kind": "hold", "ship": -1 }),
             json!({ "kind": "end_run", "plan": 1 }),
         ] {
             assert!(command_from_json(&bad).is_err(), "{bad}");
         }
+    }
+
+    #[test]
+    fn the_intent_kinds_and_the_forces_limit_are_written_as_the_scenario_keys_are() {
+        let intent = IntentId::new(2);
+        // Keeping supplied has no `intent_kind` key, as before the kinds.
+        assert_eq!(
+            command_to_json(&CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::KeepSupplied {
+                    base: BaseId::new(5),
+                    floor_days: 12,
+                    interval_days: None
+                }
+            }),
+            json!({ "kind": "set_intent", "intent": 2, "base": 5, "floor_days": 12 })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::Hold {
+                    base: BaseId::new(5)
+                }
+            }),
+            json!({ "kind": "set_intent", "intent": 2, "intent_kind": "hold", "base": 5 })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::FormIntent {
+                parent: IntentId::new(1),
+                kind: IntentKind::Cover {
+                    base: BaseId::new(5)
+                }
+            }),
+            json!({ "kind": "form_intent", "parent": 1, "intent_kind": "cover", "base": 5 })
+        );
+        // A key's absence reads as keep_supplied; an unknown kind is refused;
+        // a formed intent has no default kind.
+        assert_eq!(
+            command_from_json(
+                &json!({ "kind": "set_intent", "intent": 1, "base": 2, "floor_days": 9 })
+            ),
+            Ok(CommandKind::SetIntent {
+                intent: IntentId::new(1),
+                kind: IntentKind::KeepSupplied {
+                    base: BaseId::new(2),
+                    floor_days: 9,
+                    interval_days: None
+                }
+            })
+        );
+        for bad in [
+            json!({ "kind": "set_intent", "intent": 1, "intent_kind": "win", "base": 2 }),
+            json!({ "kind": "set_intent", "intent": 1, "intent_kind": "keep_supplied", "base": 2 }),
+            json!({ "kind": "form_intent", "parent": 1, "base": 2 }),
+            json!({ "kind": "form_intent", "parent": 1, "intent_kind": "keep_supplied", "base": 2, "floor_days": 3 }),
+            json!({ "kind": "form_intent", "intent_kind": "cover", "base": 2 }),
+        ] {
+            assert!(command_from_json(&bad).is_err(), "{bad}");
+        }
+        // A forces limit written before air groups, with ships, task forces
+        // and a source, reads as before; each key is optional now.
+        assert_eq!(
+            command_from_json(&json!({
+                "kind": "set_limit", "limit": "forces", "intent": 1,
+                "ships": [4], "task_forces": [], "source": 2
+            })),
+            Ok(CommandKind::SetLimit(Limit::Forces {
+                intent: IntentId::new(1),
+                limit: ForcesLimit {
+                    ships: ships(&[4]),
+                    task_forces: BTreeSet::new(),
+                    air_groups: BTreeSet::new(),
+                    source: Some(BaseId::new(2)),
+                }
+            }))
+        );
+        let only_groups = command_to_json(&CommandKind::SetLimit(Limit::Forces {
+            intent,
+            limit: ForcesLimit {
+                ships: BTreeSet::new(),
+                task_forces: BTreeSet::new(),
+                air_groups: [AirGroupId::new(3), AirGroupId::new(1)]
+                    .into_iter()
+                    .collect(),
+                source: None,
+            },
+        }));
+        assert_eq!(
+            only_groups,
+            json!({
+                "kind": "set_limit", "limit": "forces", "intent": 2,
+                "ships": [], "task_forces": [], "air_groups": [1, 3]
+            })
+        );
     }
 
     #[test]
@@ -1060,6 +1332,18 @@ mod tests {
                 statement:
                     "keep base:2 (Placeholder base T) at 30 days of supply, a run every 15 days"
                         .to_string(),
+                chain: vec![
+                    ChainLink {
+                        intent: IntentId::new(2),
+                        maker: Maker::Staff,
+                        statement: "cover base:1 from the air".to_string(),
+                    },
+                    ChainLink {
+                        intent: IntentId::new(1),
+                        maker: Maker::Commander,
+                        statement: "hold base:1".to_string(),
+                    },
+                ],
             },
             evidence: vec![
                 Evidence {
@@ -1153,6 +1437,23 @@ mod tests {
         // was before notices; and a hand-in saved before them, with no key,
         // reads as none.
         assert!(none.get("notices").is_none());
+        // A reason with no chain writes none and reads as none; so does one
+        // saved before the tree.
+        assert!(reason_to_json(&Reason::default())["serves"]
+            .get("chain")
+            .is_none());
+        assert_eq!(
+            reason_from_json(&json!({
+                "serves": {}, "evidence": [], "binding": [], "worked": "", "would_change": []
+            }))
+            .map(|r| r.serves.chain),
+            Ok(Vec::new())
+        );
+        let chain = &value["orders"][0]["reason"]["serves"]["chain"];
+        assert_eq!(
+            chain[1],
+            json!({ "intent": 1, "maker": "commander", "statement": "hold base:1" })
+        );
         let old = json!({ "orders": [], "commands": [], "no_orders": [] });
         assert_eq!(
             staff_decisions_from_json(&old),

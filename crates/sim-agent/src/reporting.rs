@@ -11,8 +11,8 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
 use sim_core::command::{
-    InterruptCondition, InterruptRef, InterruptStatus, NoticeKind, PlanId, StandingKind,
-    StandingSubject,
+    IntentKind, InterruptCondition, InterruptRef, InterruptStatus, NoticeKind, PlanId,
+    StandingKind, StandingSubject,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -449,11 +449,31 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
     } else {
         summary.push_str(&format!("Interrupts: {}.", interrupt_texts.join("; ")));
     }
+    // The hold intents in force and the measure of each (decision 0117, 14).
+    let holds: Vec<Value> = state
+        .intents_in_force()
+        .filter(|intent| matches!(intent.kind, IntentKind::Hold { .. }))
+        .filter_map(|intent| {
+            let measure = crate::hold_measure(view, intent.id)?;
+            let mut entry = crate::staffing::hold_measure_json(&Some(measure));
+            entry["intent"] = json!(intent.id.raw());
+            entry["base"] = n.base(intent.kind.base());
+            Some(entry)
+        })
+        .collect();
+    for hold in &holds {
+        summary.push_str(&format!(
+            " Hold intent:{}: {}.",
+            hold["intent"],
+            hold["text"].as_str().unwrap_or("")
+        ));
+    }
     answer(
         "report",
         json!({
             "day": today,
             "matters": matters_json,
+            "holds": holds,
             "open_matters": open_words.len(),
             "closed_matters": closed,
             "interrupts": interrupts,

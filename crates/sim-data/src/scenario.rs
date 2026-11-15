@@ -2589,6 +2589,7 @@ impl Scenario {
 mod tests {
     use super::*;
     use sim_core::state::RulesOfEngagement;
+    use std::collections::BTreeSet;
 
     #[derive(Deserialize)]
     struct Holder {
@@ -5962,9 +5963,65 @@ task_force = 3
                 limit: ForcesLimit {
                     ships: [ShipId::new(3), ShipId::new(4)].into_iter().collect(),
                     task_forces: [TaskForceId::new(2)].into_iter().collect(),
-                    source: BaseId::new(1),
+                    air_groups: BTreeSet::new(),
+                    source: Some(BaseId::new(1)),
                 },
             })
+        );
+        // The step 2 shapes: air groups, no source, no ships, no task forces.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 2\nair_groups = [9, 7]"
+            )),
+            CommandKind::SetLimit(Limit::Forces {
+                intent: IntentId::new(2),
+                limit: ForcesLimit {
+                    ships: BTreeSet::new(),
+                    task_forces: BTreeSet::new(),
+                    air_groups: [AirGroupId::new(7), AirGroupId::new(9)]
+                        .into_iter()
+                        .collect(),
+                    source: None,
+                },
+            })
+        );
+        // The intent kinds: cover and hold name a base and nothing else.
+        for (name, kind) in [
+            (
+                "cover",
+                IntentKind::Cover {
+                    base: BaseId::new(2),
+                },
+            ),
+            (
+                "hold",
+                IntentKind::Hold {
+                    base: BaseId::new(2),
+                },
+            ),
+        ] {
+            assert_eq!(
+                only(&command(&format!(
+                    "kind = \"set_intent\"\nintent = 3\nintent_kind = \"{name}\"\nbase = 2"
+                ))),
+                CommandKind::SetIntent {
+                    intent: IntentId::new(3),
+                    kind
+                }
+            );
+        }
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 1\nintent_kind = \"keep_supplied\"\nbase = 2\nfloor_days = 10"
+            )),
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::KeepSupplied {
+                    base: BaseId::new(2),
+                    floor_days: 10,
+                    interval_days: None,
+                },
+            }
         );
         assert_eq!(
             only(&command(
@@ -6066,6 +6123,11 @@ task_force = 3
                     setting: HeldSetting::SearchArc
                 })
             );
+            // With no setting the whole group is held.
+            assert_eq!(
+                only(&command(&format!("kind = \"{name}\"\nair_group = 7"))),
+                make(HoldTarget::AirGroup(AirGroupId::new(7)))
+            );
         }
     }
 
@@ -6077,7 +6139,6 @@ task_force = 3
             assert!(with("ship = 1\ntask_force = 2").contains("exactly one of"));
             assert!(with("ship = 1\nair_group = 2\nsetting = \"search_arc\"")
                 .contains("exactly one of"));
-            assert!(with("air_group = 2").contains("needs \"setting\""));
             assert!(with("air_group = 2\nsetting = \"mission\"").contains("not search_arc"));
             assert!(with("ship = 1\nsetting = \"search_arc\"").contains("only with \"air_group\""));
             assert!(with("task_force = 1\nsetting = \"search_arc\"")
@@ -6230,6 +6291,20 @@ task_force = 3
                 .contains("needs \"floor_days\"")
         );
         assert!(error_of(&command("kind = \"approve\"")).contains("needs \"plan\""));
+        // A cover or hold intent takes no days; a kind that is none is refused.
+        for name in ["cover", "hold"] {
+            let with = |extra: &str| {
+                error_of(&command(&format!(
+                    "kind = \"set_intent\"\nintent = 1\nintent_kind = \"{name}\"\nbase = 2\n{extra}"
+                )))
+            };
+            assert!(with("floor_days = 10").contains("does not take \"floor_days\""));
+            assert!(with("interval_days = 5").contains("does not take \"interval_days\""));
+        }
+        assert!(error_of(&command(
+            "kind = \"set_intent\"\nintent = 1\nintent_kind = \"win\"\nbase = 2"
+        ))
+        .contains("not keep_supplied, cover or hold"));
         // A kind that is the staff's, or none, and a limit that is none.
         assert!(error_of(&command("kind = \"commit_ships\"\nplan = 1"))
             .contains("not set_intent, withdraw_intent"));

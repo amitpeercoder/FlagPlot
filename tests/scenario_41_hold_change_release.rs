@@ -413,7 +413,7 @@ impl Held {
                 HoldTarget::TaskForce(f) => {
                     held.forces.insert(*f);
                 }
-                HoldTarget::Setting { .. } => held.settings += 1,
+                HoldTarget::Setting { .. } | HoldTarget::AirGroup(_) => held.settings += 1,
             }
         }
         for s in view.ships() {
