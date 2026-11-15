@@ -1,10 +1,10 @@
 # 0114: Two settings of a strike group: how old a contact it launches on, and a share held back
 
-Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2, that the designer confirmed (decision 0113, decisions 11 and 12 and his answers to questions 2 and 3). It writes the two rules out with their rule cards. Not built.
+Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2, that the designer confirmed (decision 0113, decisions 11 and 12 and his answers to questions 2 and 3). It writes the two rules out with their rule cards. Built on Nov 15, 2026 (scenario 46; state version 27, rules label 12, agent interface version 7): see "As built".
 
 Summary: Two standing settings of an air group on a strike mission, each defaulting to the present rule: the oldest contact it will launch a naval strike on, in pulses, where today one figure serves every group; and a share of its aircraft it holds back from a strike, where today every aircraft that can fly goes
 
-Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Not built
+Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Built Nov 15, 2026
 
 ## Why
 
@@ -57,3 +57,22 @@ Both rules reuse what exists: the test of a contact's age, and the share a fight
 ## The hand calculation
 
 `tests/scenario_46_two_strike_settings.rs`: three groups at one base that differ only in the age they launch on, two contacts of different ages and kinds, and no enemy, so that each strike finds nothing and no die is rolled; and three groups at a second base that differ only in the share they hold back.
+
+## As built
+
+Built on Nov 15, 2026, as written. What follows is what was built and every place the build read the record more closely or differed from it.
+
+**State.** An air group has four new fields, not two: each setting with the order that set it, as the patrol share and the target list have. `strike_contact_age` (none, or a whole number of pulses), `strike_age_order`, `strike_held_share` (a share, 0 until set; "none set" and 0 are the same) and `strike_share_order`, written in that order after `rebased_day` in the hash. The state version is 27 and the rules label 12.
+
+**The orders.** `set_strike_contact_age {pulses}` and `set_strike_held_share {share}`, standing orders of their own kinds, added at the end of the air group orders. The age is taken as a signed number so a negative one reaches intake and is refused there. It is refused "this scenario has no air combat figures, so no air group can strike" without the air combat figures, as extended reach is. Its range is 0 to `search.toml: contact_drop_age_pulses` less one, refused as "strike contact age P is not between 0 and M pulses"; without the search figures nothing drops a contact, so only a negative age is refused ("strike contact age P is not 0 or more pulses"). The share is refused below 0 or above 1: "held share S is not between 0 and 1". Two new refusal reasons; no new event kind.
+
+**The scenario keys.** `[[air_group]]` takes `strike_contact_age_pulses` and `strike_held_share` (a decimal string), checked at load against the same ranges; a scenario's setting has no order.
+
+**The strike decision.** The age is read by one function, `strike_age_limit`, which both the strike decision and `SideView::strike_choice` call. The share is applied by `strike_aircraft` after `aircraft_able_to_fly`: when it leaves none, the group is passed over before its strike choice is traced, as a group able to fly none is, so a base strike that holds back all does not use the day's launch. A strike launches the aircraft sent; the sorties, wear, fatigue and supply all read the strike's aircraft, so the held aircraft are charged nothing. They stay on the ground, and at a base a raid on it can find them as it finds any aircraft there. The `base_strike` question a side asks answers with the share applied, by the same function; the `strike` question and the briefing's `would_strike` name the contact, which the share does not change, so a group holding back all still says what it would strike.
+
+**The launch event.** When breakdowns are on, every `StrikeLaunched` and `BaseStrikeLaunched` carries a breakdown, a share of 0 included: `aircraft_able_to_fly`, `share_held_back` and, as the result, the aircraft sent. A launch's causes gain, after its existing causes, the age order (a naval strike) and the share order, each only where the group has one, so no existing log changes.
+
+**What a side sees.** Its view holds both settings and the orders that set them. The briefing's air group line and `get_entity` give (`list_forces` lists no air group, so there is no third place) `strike_contact_age` when the group has a setting and `strike_held_share` when it is above 0, as the target list is given only when it is not the default; the text line reads "launches on a contact up to 1 pulse old, holds back 0.333333 of its aircraft from a strike". The tools' instructions and `issue_orders` describe both orders (a paragraph STRIKE SETTINGS), and the sentences that said a contact must be reported in that pulse or the one before now say that is the default. **The agent interface version stays 7:** two order kinds and two line fields were added and no field was removed or changed in meaning, which is the schema's rule; decision 0107 raised it for new tools and answer kinds only (versions 4, 6 and 7), and no tool was added.
+
+**What it was checked against.** Scenario 46 came out as the hand calculation has it in every number but one: the contacts' numbers. The comment numbers the starting contacts in the order listed, the transport 1 and the carrier 2; the rulebook enters starting contacts from the oldest down (chapter 3, Starting contacts), so the carrier, at age 2, is contact 1 and the transport contact 2. The test names the contacts by hex; one test, asserting the comment's numbers, is marked ignored. The ages after the night are 1, 3 and 1; the three starting contacts load as three; contact 3 is dropped once, by group 4's strike, the first of its raid. A base strike at a Japanese base draws dice even with no unit there, so that property is tested on the launch event alone (8 of 12, with its breakdown). The missions of the six groups are given by orders on day 1, since a scenario has no key for a mission; the settings are the scenario keys, so "There is no order" holds of the settings. `sh scripts/compare-scenarios.sh --against 1e38bf49`: 154 runs, 152 the same with the hashes cut; the 2 that differ are scenario 46, live and frozen, which is new. The recorded games changed only in their saves' versions and hashes, and `replay --check-staff` passes on each.
+

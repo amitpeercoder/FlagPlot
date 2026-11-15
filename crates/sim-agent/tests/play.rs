@@ -176,9 +176,11 @@ fn ag_index(order: &AirGroupOrder) -> usize {
         AirGroupOrder::SetReach { .. } => 8,
         AirGroupOrder::SetTargetPriority { .. } => 9,
         AirGroupOrder::Rebase { .. } => 10,
+        AirGroupOrder::SetStrikeContactAge { .. } => 11,
+        AirGroupOrder::SetStrikeHeldShare { .. } => 12,
     }
 }
-const AG_KINDS: usize = 11;
+const AG_KINDS: usize = 13;
 
 fn examples() -> Vec<OrderKind> {
     let tf = |order| OrderKind::TaskForce {
@@ -284,6 +286,9 @@ fn examples() -> Vec<OrderKind> {
         ag(AirGroupOrder::Rebase {
             base: BaseId::new(3),
         }),
+        ag(AirGroupOrder::SetStrikeContactAge { pulses: 1 }),
+        ag(AirGroupOrder::SetStrikeContactAge { pulses: -1 }),
+        ag(AirGroupOrder::SetStrikeHeldShare { share: fx("0.25") }),
     ];
     for mission in [
         Mission::Transport,
@@ -744,6 +749,14 @@ fn every_reject_reason_is_shown_as_it_is_except_the_one_that_is_folded() {
         (
             json!({"kind": "set_air_mission", "mission": "base_strike", "target_base": 99999}),
             "does not exist or is held by your side",
+        ),
+        (
+            json!({"kind": "set_strike_contact_age", "pulses": -1}),
+            "strike contact age -1 is not between 0 and",
+        ),
+        (
+            json!({"kind": "set_strike_held_share", "share": "1.5"}),
+            "held share 1.5 is not between 0 and 1",
         ),
     ] {
         let answer = one_order(&mut session, Side::Allied, &group, body.clone());

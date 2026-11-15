@@ -2,8 +2,8 @@ Scenario 5d: Carrier duel
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9e951de41acdbfc1  42 events
-day   2  hash adb165b7325621ae  7 events
+day   1  hash 7227b61f08268bc2  42 events
+day   2  hash 9e5800c71df89719  7 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2

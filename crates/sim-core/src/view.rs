@@ -738,7 +738,7 @@ impl<'a> SideView<'a> {
             group,
             origin,
             self.reach_nm(group),
-            figures.strike_contact_max_age_pulses,
+            crate::airstrike::strike_age_limit(group, figures),
         )
     }
 

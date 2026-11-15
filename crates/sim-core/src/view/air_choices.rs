@@ -6,7 +6,7 @@
 //! this pulse, and the figures. Nothing of the enemy is read.
 
 use crate::airstrike::{
-    able_to_fly, base_strike_launch, escort_choice, fighter_split, raids_of_side,
+    able_to_fly, base_strike_launch, escort_choice, fighter_split, raids_of_side, strike_aircraft,
 };
 use crate::choices::air::{AirAnswer, AirQuestion};
 use crate::fixed::Fixed;
@@ -135,7 +135,7 @@ impl SideView<'_> {
                     *pulse,
                     origin,
                     weapon,
-                    self.flyable_aircraft(group),
+                    strike_aircraft(self.flyable_aircraft(group), group.strike_held_share),
                     self.reach_nm(group),
                     self.public_base_target(base),
                 );

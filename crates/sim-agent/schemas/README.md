@@ -712,3 +712,19 @@ the enemy is told none of it.
   `strained`: the unit was under fire and did not rest.
 - **What the enemy is told.** Nothing of a side's fieldworks, cover, grades, strain or wear, and
   nothing of what fire did to its men's state.
+
+## Two strike settings of an air group (decision 0114)
+
+Orders and fields added only, so `version` stays 7. Everything here is of the side's own air
+groups; the enemy is told none of it.
+
+- **Two order kinds** for an air group: `set_strike_contact_age` (`pulses`, a whole number: the
+  oldest contact a naval strike group launches on, from 0 up to one less than the scenario's
+  contact drop age) and `set_strike_held_share` (`share`, a decimal string from "0" to "1": the
+  share of its aircraft able to fly that a group holds back from a naval or a base strike). A
+  value out of range is refused at intake, with the reasons `strike_contact_age_out_of_range` and
+  `strike_held_share_out_of_range`.
+- **An air group line** has `strike_contact_age` (given only when the group has a setting) and
+  `strike_held_share` (given only when above "0").
+- **What the enemy is told.** Nothing of either setting or of the orders that set them; a raid's
+  aircraft are seen as before.

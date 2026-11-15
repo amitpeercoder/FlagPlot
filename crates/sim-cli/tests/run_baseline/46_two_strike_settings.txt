@@ -1,0 +1,18 @@
+Scenario 46: Two strike settings
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 1053b76752214176  24 events
+
+air_group:1 "Placeholder dive bombers 1" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
+air_group:2 "Placeholder dive bombers 2" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
+air_group:3 "Placeholder dive bombers 3" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
+air_group:4 "Placeholder dive bombers 4" (Allied) at base:2: 12 ready, mission NavalStrike, no arc
+air_group:5 "Placeholder dive bombers 5" (Allied) at base:2: 10 ready, mission NavalStrike, no arc
+air_group:6 "Placeholder dive bombers 6" (Allied) at base:2: 10 ready, mission NavalStrike, no arc
+base:1 "Placeholder airfield 1" (Allied) at (0,0): 1000 t of supply in stock
+base:2 "Placeholder airfield 2" (Allied) at (20,0): 1000 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

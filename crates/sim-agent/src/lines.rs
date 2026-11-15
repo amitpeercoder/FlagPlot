@@ -190,6 +190,15 @@ pub struct AirGroupLine {
     /// importance; decision 0063).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target_priority: Option<Vec<&'static str>>,
+    /// The oldest contact, in pulses, the group launches a naval strike on,
+    /// given only when the group has a setting (decision 0114); left out
+    /// where it uses the scenario's figure.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strike_contact_age: Option<u32>,
+    /// The share of its aircraft the group holds back from a strike, given
+    /// only when it is above 0 (decision 0114).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strike_held_share: Option<Dec>,
     /// The contact the group would launch a strike at if the strike decision
     /// were made now (decision 6 of 0063): `SideView::strike_choice`, the
     /// function the decision itself calls. Left out for a group that is not
@@ -687,6 +696,9 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
                 .map(|kind| kind.name())
                 .collect()
         }),
+        strike_contact_age: group.strike_contact_age,
+        strike_held_share: (group.strike_held_share > Fixed::ZERO)
+            .then_some(Dec(group.strike_held_share)),
         would_strike: ctx
             .view
             .strike_choice(group.id)

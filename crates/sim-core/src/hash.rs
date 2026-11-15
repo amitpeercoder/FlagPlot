@@ -176,8 +176,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// day after its `days.free` (decision 0107, step 3);
 /// version 26 adds each side's interrupts: those set, the standing ones that
 /// have fired, and the standing kinds switched off, after its holds
-/// (decision 0107, step 4).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v26";
+/// (decision 0107, step 4);
+/// version 27 adds an air group's `strike_contact_age`, `strike_age_order`,
+/// `strike_held_share` and `strike_share_order` after its `rebased_day`
+/// (decision 0114).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v27";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -404,6 +407,10 @@ fn name_every_field(world: &World) {
             target_order: _,
             last_base_strike_day: _,
             rebased_day: _,
+            strike_contact_age: _,
+            strike_age_order: _,
+            strike_held_share: _,
+            strike_share_order: _,
         } = group;
         if let Some(SearchArc {
             from_deg: _,
@@ -1166,6 +1173,11 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.optional_u32(group.last_base_strike_day);
         // Last in the group (decision 0091).
         h.optional_u32(group.rebased_day);
+        // Last in the group (decision 0114).
+        h.optional_u32(group.strike_contact_age);
+        h.optional_u32(group.strike_age_order.map(|id| id.raw()));
+        h.i64(group.strike_held_share.raw());
+        h.optional_u32(group.strike_share_order.map(|id| id.raw()));
     }
 
     h.count(truth.replacements.len());
