@@ -1,0 +1,33 @@
+Placeholder scenario 42a: A shortage stops the clock
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 90b7cd7f552ee411  30 events
+day   2  hash 103448d3a117f963  17 events
+day   3  hash fd046a8800d8bb91  12 events
+day   4  hash c383d4b682aae470  10 events
+day   5  hash e830895676557794  6 events
+day   6  hash ea6648ec6652ef4c  5 events
+day   7  hash e2b569e17c6dd3f2  5 events
+day   8  hash 38389115daa33713  5 events
+day   9  hash 81863e24180867cd  5 events
+day  10  hash e4aa02c19461fbe2  5 events
+day  11  hash d68528afeac2d5e7  5 events
+day  12  hash 7a9bdd21e1c16bea  5 events
+day  13  hash 08cfa5c6d9b331fc  6 events
+day  14  hash e1722899e10edc8d  5 events
+day  15  hash 96cfd7f0ba2304ef  5 events
+day  16  hash 16f3fa722a390ec5  12 events
+day  17  hash 66f38d22b714604a  16 events
+day  18  hash 0b166533215e4129  12 events
+
+task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Underway at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Placeholder cargo ship 1": afloat in task_force:1000001; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:2 "Placeholder cargo ship 2": afloat in base:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+base:1 "Placeholder base S, Allied" (Allied) at (0,0): 4490 t of supply in stock, 1960 t of fuel in stock, reserve 1000 t of supply
+base:2 "Placeholder base T, Allied" (Allied) at (5,0): 430 t of supply in stock
+land_unit:1 "Placeholder unit 1" (Allied): 2000 men ashore at (5,0), fieldworks 30
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

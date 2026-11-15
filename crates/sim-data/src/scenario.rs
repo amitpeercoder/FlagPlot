@@ -5947,6 +5947,102 @@ task_force = 3
     }
 
     #[test]
+    fn an_interrupt_command_loads_in_each_of_its_forms() {
+        use sim_core::command::{
+            InterruptCondition, InterruptRef, InterruptSetting, StandingKind, StandingSubject,
+        };
+        use sim_core::ids::InterruptId;
+        assert_eq!(
+            only(&command(
+                "kind = \"set_interrupt\"\ninterrupt = 1\nbase = 2\nbelow_days = 35"
+            )),
+            CommandKind::SetInterrupt(InterruptSetting::Set {
+                interrupt: InterruptId::new(1),
+                condition: InterruptCondition::SupplyBelow {
+                    base: BaseId::new(2),
+                    days: 35
+                }
+            })
+        );
+        for (name, kind) in [
+            ("cannot_meet", StandingKind::CannotMeet),
+            ("waits_for_leave", StandingKind::WaitsForLeave),
+            ("ship_lost", StandingKind::ShipLost),
+        ] {
+            assert_eq!(
+                only(&command(&format!(
+                    "kind = \"set_interrupt\"\nstanding = \"{name}\"\non = false"
+                ))),
+                CommandKind::SetInterrupt(InterruptSetting::Standing { kind, on: false })
+            );
+        }
+        assert_eq!(
+            only(&command("kind = \"acknowledge\"\ninterrupt = 3")),
+            CommandKind::Acknowledge {
+                interrupt: InterruptRef::Set(InterruptId::new(3))
+            }
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"acknowledge\"\nstanding = \"waits_for_leave\"\nplan = 1"
+            )),
+            CommandKind::Acknowledge {
+                interrupt: InterruptRef::Standing {
+                    kind: StandingKind::WaitsForLeave,
+                    subject: StandingSubject::Plan(sim_core::command::PlanId::new(1))
+                }
+            }
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"acknowledge\"\nstanding = \"ship_lost\"\nship = 4"
+            )),
+            CommandKind::Acknowledge {
+                interrupt: InterruptRef::Standing {
+                    kind: StandingKind::ShipLost,
+                    subject: StandingSubject::Ship(ShipId::new(4))
+                }
+            }
+        );
+    }
+
+    #[test]
+    fn an_interrupt_command_with_a_wrong_key_or_value_is_refused() {
+        let set = |body: &str| error_of(&command(&format!("kind = \"set_interrupt\"\n{body}")));
+        let ack = |body: &str| error_of(&command(&format!("kind = \"acknowledge\"\n{body}")));
+        // A missing key.
+        assert!(set("interrupt = 1\nbase = 2").contains("needs \"below_days\""));
+        assert!(set("interrupt = 1\nbelow_days = 5").contains("needs \"base\""));
+        assert!(set("base = 2\nbelow_days = 5").contains("needs \"interrupt\""));
+        assert!(set("standing = \"cannot_meet\"").contains("needs \"on\""));
+        assert!(ack("").contains("needs \"interrupt\""));
+        assert!(ack("standing = \"cannot_meet\"").contains("exactly one of"));
+        assert!(ack("standing = \"cannot_meet\"\nplan = 1\nship = 2").contains("exactly one of"));
+        // A key the kind does not take.
+        assert!(set("interrupt = 1\nbase = 2\nbelow_days = 5\nplan = 1")
+            .contains("does not take \"plan\""));
+        assert!(ack("interrupt = 1\nbase = 2").contains("does not take \"base\""));
+        // A mixture of the two forms.
+        assert!(set(
+            "interrupt = 1\nbase = 2\nbelow_days = 5\nstanding = \"ship_lost\"\non = true"
+        )
+        .contains("mixes the two forms"));
+        assert!(set("interrupt = 1\nstanding = \"ship_lost\"\non = true")
+            .contains("mixes the two forms"));
+        assert!(ack("interrupt = 1\nstanding = \"cannot_meet\"\nplan = 1")
+            .contains("mixes the two forms"));
+        // An unknown standing kind.
+        assert!(set("standing = \"cannot_swim\"\non = true").contains("not cannot_meet"));
+        assert!(ack("standing = \"cannot_swim\"\nplan = 1").contains("not cannot_meet"));
+        // A TOML float.
+        assert!(parse_with(&command(
+            "kind = \"set_interrupt\"\ninterrupt = 1\nbase = 2\nbelow_days = 5.5"
+        ))
+        .is_err());
+        assert!(parse_with(&command("kind = \"acknowledge\"\ninterrupt = 1.5")).is_err());
+    }
+
+    #[test]
     fn commands_are_kept_by_day_in_the_order_given_and_survive_a_new_seed() {
         let text = format!(
             "{}{}",

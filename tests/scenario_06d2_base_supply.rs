@@ -2844,7 +2844,12 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 // And scenario 41's (decision 0107, step 3).
                 && !stem.starts_with("41a_")
                 && !stem.starts_with("41b_")
-                && !stem.starts_with("41c_"))
+                && !stem.starts_with("41c_")
+                // And scenario 42's (decision 0107, step 4).
+                && !stem.starts_with("42a_")
+                && !stem.starts_with("42b_")
+                && !stem.starts_with("42c_")
+                && !stem.starts_with("42d_"))
             .then(|| stem.to_string())
         })
         .collect();

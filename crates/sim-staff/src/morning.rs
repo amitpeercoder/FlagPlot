@@ -8,7 +8,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sim_core::command::{CommandKind, CommandState, Hold, HoldTarget, Intent, PlanId, RunDays};
+use sim_core::command::{
+    CommandKind, CommandState, Hold, HoldTarget, Intent, NoticeBasis, NoticeKind, PlanId, RunDays,
+};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{BaseId, IntentId, ShipId};
 use sim_core::view::SideView;
@@ -156,7 +158,7 @@ impl Morning {
             } else {
                 format!("the {} aboard stay aboard", tons(set.aboard_t))
             };
-            out.command(
+            let ended = out.command(
                 CommandKind::EndRun {
                     plan: set.plan,
                     run: set.run,
@@ -172,6 +174,12 @@ impl Morning {
                         "the run not yet sailed, or the hold released before the staff is asked",
                     )
                     .done(),
+            );
+            out.notice(
+                NoticeKind::RunEnded,
+                set.plan,
+                Some(set.run),
+                NoticeBasis::Command(ended),
             );
             if !set.freed.is_empty() {
                 let ships = set

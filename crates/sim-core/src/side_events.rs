@@ -1257,7 +1257,12 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::PlanStateChanged { side: owner, .. }
         | EventKind::PlanAmended { side: owner, .. }
         | EventKind::StaffReason { side: owner, .. }
- | EventKind::HeldByOrder { side: owner, .. } => whole_if(*owner == side),
+        | EventKind::HeldByOrder { side: owner, .. }
+        // The staff's notices and the interrupts that fire are the side's
+        // own too: seen whole by it, not at all by the enemy (decision 0107,
+        // ruling 31).
+        | EventKind::StaffNotice { side: owner, .. }
+        | EventKind::InterruptFired { side: owner, .. } => whole_if(*owner == side),
 
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
@@ -1607,7 +1612,9 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::PlanStateChanged { .. }
             | EventKind::PlanAmended { .. }
             | EventKind::StaffReason { .. }
-            | EventKind::HeldByOrder { .. } => None,
+            | EventKind::HeldByOrder { .. }
+            | EventKind::StaffNotice { .. }
+            | EventKind::InterruptFired { .. } => None,
         })
         .min()
 }
@@ -1800,7 +1807,9 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::PlanStateChanged { .. }
         | EventKind::PlanAmended { .. }
         | EventKind::StaffReason { .. }
-        | EventKind::HeldByOrder { .. } => None,
+        | EventKind::HeldByOrder { .. }
+        | EventKind::StaffNotice { .. }
+        | EventKind::InterruptFired { .. } => None,
     }
 }
 
@@ -2137,7 +2146,9 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::PlanStateChanged { .. }
             | EventKind::PlanAmended { .. }
             | EventKind::StaffReason { .. }
-            | EventKind::HeldByOrder { .. }) => other,
+            | EventKind::HeldByOrder { .. }
+            | EventKind::StaffNotice { .. }
+            | EventKind::InterruptFired { .. }) => other,
         }),
         // No other kind a side is given carries a round of a fight.
         other @ (SideEventKind::AirAttackAgainst { .. }
@@ -2376,7 +2387,9 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::PlanStateChanged { .. }
         | EventKind::PlanAmended { .. }
         | EventKind::StaffReason { .. }
- | EventKind::HeldByOrder { .. } => false,
+ | EventKind::HeldByOrder { .. }
+            | EventKind::StaffNotice { .. }
+            | EventKind::InterruptFired { .. } => false,
 
         // Men lost in a fight cite the enemy's fire; a base taken cites the
         // test that beat the other side (decision 0090).
@@ -2641,7 +2654,9 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::PlanStateChanged { .. }
                     | EventKind::PlanAmended { .. }
                     | EventKind::StaffReason { .. }
-                    | EventKind::HeldByOrder { .. },
+                    | EventKind::HeldByOrder { .. }
+                    | EventKind::StaffNotice { .. }
+                    | EventKind::InterruptFired { .. },
                 )
                 | SideEventKind::Salvo { .. }
                 | SideEventKind::SalvoAgainst { .. }
@@ -4381,6 +4396,29 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            sided(row(
+                EventKind::StaffNotice {
+                    side: Side::Allied,
+                    kind: crate::command::NoticeKind::CannotMeet,
+                    plan: crate::command::PlanId::new(1),
+                    run: None,
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::InterruptFired {
+                    side: Side::Allied,
+                    interrupt: crate::command::InterruptRef::Set(crate::ids::InterruptId::new(1)),
+                    condition: Some(crate::command::InterruptCondition::SupplyBelow {
+                        base: BaseId::new(1),
+                        days: 10,
+                    }),
+                    figure: Some(Fixed::from_int(9)),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -4421,7 +4459,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 136, "the log has 136 kinds of event");
+        assert_eq!(all.len(), 138, "the log has 138 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

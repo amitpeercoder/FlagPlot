@@ -233,6 +233,12 @@ define_id!(
     IntentId,
     "intent"
 );
+define_id!(
+    /// An interrupt the commander set, in his own numbering from 1 (decision
+    /// 0107, ruling 31).
+    InterruptId,
+    "interrupt"
+);
 
 /// Hands out IDs of one kind, counting upward from 1.
 #[derive(Clone, Debug)]

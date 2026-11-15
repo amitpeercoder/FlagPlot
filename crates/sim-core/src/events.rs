@@ -6,7 +6,10 @@
 
 use core::fmt;
 
-use crate::command::{CommandKind, CommandRefusal, HoldTarget, PlanId, PlanState, Reason};
+use crate::command::{
+    CommandKind, CommandRefusal, HoldTarget, InterruptCondition, InterruptRef, NoticeKind, PlanId,
+    PlanState, Reason, StandingKind, StandingSubject,
+};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
@@ -1782,6 +1785,27 @@ pub enum EventKind {
         target: HoldTarget,
         order: OrderId,
     },
+    /// A notice the staff handed in beside its orders (decision 0107, ruling
+    /// 34): the plan, the run where there is one, and the kind. Cites the
+    /// `StaffReason` it rests on, if its basis resolves to one. Added at the
+    /// end (decision 0107, step 4).
+    StaffNotice {
+        side: Side,
+        kind: NoticeKind,
+        plan: PlanId,
+        run: Option<u32>,
+    },
+    /// An interrupt fired at the morning's test (decision 0107, rulings 31
+    /// to 33). A set one carries its condition and the figure it was
+    /// tested on; a standing one carries neither. Cites the command that set
+    /// it, the staff's notices of the morning, or the event that sank the
+    /// ship. Added at the end (decision 0107, step 4).
+    InterruptFired {
+        side: Side,
+        interrupt: InterruptRef,
+        condition: Option<InterruptCondition>,
+        figure: Option<Fixed>,
+    },
 }
 
 impl EventKind {
@@ -2156,7 +2180,9 @@ impl EventKind {
             | EventKind::PlanStateChanged { .. }
             | EventKind::PlanAmended { .. }
             | EventKind::StaffReason { .. }
-            | EventKind::HeldByOrder { .. } => Vec::new(),
+            | EventKind::HeldByOrder { .. }
+            | EventKind::StaffNotice { .. }
+            | EventKind::InterruptFired { .. } => Vec::new(),
             EventKind::GroundFoundEmpty { .. } => Vec::new(),
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
@@ -3814,6 +3840,55 @@ impl fmt::Display for EventKind {
                 target,
                 order,
             } => write!(f, "{side:?} holds {target} by {}", order.shown()),
+            EventKind::StaffNotice {
+                side,
+                kind,
+                plan,
+                run,
+            } => {
+                write!(f, "{side:?} staff's notice: ")?;
+                match (kind, run) {
+                    (NoticeKind::CannotMeet, _) => write!(f, "{plan} cannot meet its intent"),
+                    (NoticeKind::WaitsForLeave(leave), _) => {
+                        write!(f, "{plan} waits for leave to {}", leave.name())
+                    }
+                    (NoticeKind::RunEnded, Some(run)) => {
+                        write!(f, "run {run} of {plan} has ended")
+                    }
+                    (NoticeKind::RunEnded, None) => write!(f, "a run of {plan} has ended"),
+                }
+            }
+            EventKind::InterruptFired {
+                side,
+                interrupt,
+                condition,
+                figure,
+            } => match (interrupt, condition) {
+                (InterruptRef::Set(id), Some(InterruptCondition::SupplyBelow { base, days })) => {
+                    write!(f, "{side:?} {id} fired: {base} at ")?;
+                    match figure {
+                        Some(figure) => write!(f, "{figure}")?,
+                        None => write!(f, "no figure of")?,
+                    }
+                    write!(f, " days of supply, below {days}")
+                }
+                (InterruptRef::Set(id), None) => write!(f, "{side:?} {id} fired"),
+                (InterruptRef::Standing { kind, subject }, _) => {
+                    write!(f, "{side:?} standing interrupt fired: ")?;
+                    match (kind, subject) {
+                        (StandingKind::CannotMeet, subject) => {
+                            write!(f, "{subject} cannot meet its intent")
+                        }
+                        (StandingKind::WaitsForLeave, subject) => {
+                            write!(f, "{subject} waits for the commander's leave")
+                        }
+                        (StandingKind::ShipLost, StandingSubject::Ship(ship)) => {
+                            write!(f, "{ship} was lost")
+                        }
+                        (StandingKind::ShipLost, subject) => write!(f, "{subject} was lost"),
+                    }
+                }
+            },
             EventKind::GroundFoundEmpty {
                 side,
                 hex,
@@ -3962,6 +4037,16 @@ impl EventLog {
             .rev()
             .find(|event| keep(&event.kind))
             .map(|event| event.id)
+    }
+
+    /// The events of one day, latest first, walked back from the end of the
+    /// log (days run in order, so the walk stops at the day before).
+    pub(crate) fn of_day_latest_first(&self, day: u32) -> impl Iterator<Item = &Event> {
+        self.events
+            .iter()
+            .rev()
+            .take_while(move |event| event.day >= day)
+            .filter(move |event| event.day == day)
     }
 
     /// The ID the next recorded event will get.

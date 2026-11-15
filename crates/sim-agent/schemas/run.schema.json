@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/run",
+  "title": "run: days resolved, stopping for an interrupt",
+  "description": "The answer of run: the staff's orders for its first day, worked before that day was resolved (as staff_orders gives them), the days resolved, why it stopped and everything that fired on the last day, together.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "staff_orders",
+    "days_resolved",
+    "stopped",
+    "fired",
+    "game_over",
+    "day",
+    "result",
+    "summary"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 7
+    },
+    "kind": {
+      "const": "run"
+    },
+    "staff_orders": {
+      "$ref": "staff_orders.schema.json"
+    },
+    "days_resolved": {
+      "type": "object",
+      "required": [
+        "first",
+        "last",
+        "count"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "first": {
+          "type": "integer"
+        },
+        "last": {
+          "type": "integer"
+        },
+        "count": {
+          "type": "integer"
+        }
+      }
+    },
+    "stopped": {
+      "enum": [
+        "interrupt",
+        "game_over",
+        "days"
+      ],
+      "description": "interrupt: an interrupt of yours fired on the last day resolved; game_over: the game ended; days: the number of days asked for was resolved."
+    },
+    "fired": {
+      "type": "array",
+      "items": {
+        "$ref": "command_defs.schema.json#/$defs/firing"
+      }
+    },
+    "game_over": {
+      "type": "boolean"
+    },
+    "day": {
+      "type": "integer",
+      "description": "The number of days resolved: the day now."
+    },
+    "result": {
+      "description": "When game_over is true and the scenario has objectives, the umpire's result for both sides; otherwise null.",
+      "oneOf": [
+        {
+          "$ref": "briefing.schema.json#/$defs/result"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "summary": {
+      "type": "string"
+    }
+  }
+}

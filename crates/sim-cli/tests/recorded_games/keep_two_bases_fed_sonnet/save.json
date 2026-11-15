@@ -1,0 +1,2012 @@
+{
+  "commands": [
+    {
+      "command": {
+        "base": 2,
+        "floor_days": 10,
+        "intent": 1,
+        "interval_days": 15,
+        "kind": "set_intent"
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "base": 3,
+        "floor_days": 10,
+        "intent": 2,
+        "interval_days": 15,
+        "kind": "set_intent"
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "intent": 1,
+        "kind": "set_limit",
+        "limit": "forces",
+        "ships": [
+          1,
+          2
+        ],
+        "source": 1,
+        "task_forces": []
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "intent": 2,
+        "kind": "set_limit",
+        "limit": "forces",
+        "ships": [
+          1,
+          2
+        ],
+        "source": 1,
+        "task_forces": []
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "given": true,
+        "kind": "set_leave",
+        "leave": "launch"
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "base": 2,
+        "below_days": 3,
+        "interrupt": 1,
+        "kind": "set_interrupt"
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "base": 3,
+        "below_days": 3,
+        "interrupt": 2,
+        "kind": "set_interrupt"
+      },
+      "day": 1,
+      "side": "allied"
+    }
+  ],
+  "data_files": [
+    {
+      "file": "data/scenarios/../map/placeholder_one_pool_two_hexes.toml",
+      "hash": "95c781f63ecc91d4"
+    },
+    {
+      "file": "data/scenarios/../reference/ship_classes.csv",
+      "hash": "0701cb1c6c75b124"
+    },
+    {
+      "file": "data/scenarios/../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+      "hash": "3ae71c9874889886"
+    },
+    {
+      "file": "data/scenarios/../reference/port_sizes.csv",
+      "hash": "53811d71d5b18b81"
+    },
+    {
+      "file": "data/scenarios/../reference/aircraft_types.csv",
+      "hash": "30727a9a96e2e601"
+    },
+    {
+      "file": "data/scenarios/../reference/search.toml",
+      "hash": "8d5c49f5f0d4a40c"
+    },
+    {
+      "file": "data/scenarios/../reference/surface_combat.toml",
+      "hash": "851083b54e6c45a3"
+    },
+    {
+      "file": "data/scenarios/../reference/ground.toml",
+      "hash": "5ef7d142f1faa97f"
+    }
+  ],
+  "doctrine_version": "supply-4",
+  "format": "flagplot-saved-game",
+  "hashes": [
+    {
+      "day": 1,
+      "hash": "30afd6ecd5457d50"
+    },
+    {
+      "day": 2,
+      "hash": "089eaa2077e0028b"
+    },
+    {
+      "day": 3,
+      "hash": "a5f9184c2b21ece0"
+    },
+    {
+      "day": 4,
+      "hash": "f68ebe245ad7fa43"
+    },
+    {
+      "day": 5,
+      "hash": "c7139df2403cd801"
+    },
+    {
+      "day": 6,
+      "hash": "63834e4be84adccf"
+    },
+    {
+      "day": 7,
+      "hash": "361f339655193edd"
+    },
+    {
+      "day": 8,
+      "hash": "34cf67282e2a5b6b"
+    },
+    {
+      "day": 9,
+      "hash": "61de9f7d62879919"
+    },
+    {
+      "day": 10,
+      "hash": "05e361418fb665c5"
+    },
+    {
+      "day": 11,
+      "hash": "3d5f742dcaad588b"
+    },
+    {
+      "day": 12,
+      "hash": "73f9e583ac7fb869"
+    },
+    {
+      "day": 13,
+      "hash": "7668a7797d8462ff"
+    },
+    {
+      "day": 14,
+      "hash": "365aa8d6aac81811"
+    },
+    {
+      "day": 15,
+      "hash": "25fd4e2aad3e85ab"
+    },
+    {
+      "day": 16,
+      "hash": "38a694ac2378e2bc"
+    },
+    {
+      "day": 17,
+      "hash": "4a83707ae4dacaeb"
+    },
+    {
+      "day": 18,
+      "hash": "bf4bae16c261c2b0"
+    },
+    {
+      "day": 19,
+      "hash": "59dc7abe10a9c0d8"
+    },
+    {
+      "day": 20,
+      "hash": "4bf1cd2f9accee02"
+    }
+  ],
+  "orders": [],
+  "rules_version": 10,
+  "scenario": {
+    "file": "data/scenarios/43_keep_two_bases_fed.toml",
+    "hash": "0a6c6a34dbb4fcd2"
+  },
+  "seats": {
+    "allied": "player",
+    "japanese": "script"
+  },
+  "seed": 1942,
+  "staff": [
+    {
+      "day": 1,
+      "decisions": {
+        "commands": [
+          {
+            "kind": "approve",
+            "plan": 1,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:1 is a draft"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to prepare is given"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "plan:1 is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).",
+              "would_change": [
+                "leave to prepare withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 1,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:1 is preparing"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to launch is given"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "plan:1 is ready and leave to launch is given: the staff releases it.",
+              "would_change": [
+                "leave to launch withheld"
+              ]
+            }
+          },
+          {
+            "days": {
+              "arrive": 2,
+              "free": 5,
+              "load": 1,
+              "sail": 2
+            },
+            "kind": "add_run",
+            "load_t": "16",
+            "plan": 1,
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:2",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "base:2 holds 10 t and uses 1 t a day"
+                },
+                {
+                  "day": 1,
+                  "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). The staff adds this run to the plan.",
+              "would_change": [
+                "a reading of day 3 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "ships": [
+              1
+            ]
+          },
+          {
+            "from_day": 1,
+            "kind": "commit_ships",
+            "plan": 1,
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:2",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "base:2 holds 10 t and uses 1 t a day"
+                },
+                {
+                  "day": 1,
+                  "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). The ships are committed from day 1 to day 4, the day before they are free.",
+              "would_change": [
+                "a reading of day 3 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "run": 1,
+            "ships": [
+              1
+            ],
+            "to_day": 4
+          },
+          {
+            "kind": "approve",
+            "plan": 2,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:2 is a draft"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to prepare is given"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "plan:2 is a draft inside the limits of intent:2 and leave to prepare is given: the staff makes it ready (preparing).",
+              "would_change": [
+                "leave to prepare withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 2,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:2 is preparing"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to launch is given"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "plan:2 is ready and leave to launch is given: the staff releases it.",
+              "would_change": [
+                "leave to launch withheld"
+              ]
+            }
+          },
+          {
+            "days": {
+              "arrive": 2,
+              "free": 5,
+              "load": 1,
+              "sail": 2
+            },
+            "kind": "add_run",
+            "load_t": "16",
+            "plan": 2,
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:3",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "base:3 holds 10 t and uses 1 t a day"
+                },
+                {
+                  "day": 1,
+                  "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). The staff adds this run to the plan.",
+              "would_change": [
+                "a reading of day 3 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "ships": [
+              2
+            ]
+          },
+          {
+            "from_day": 1,
+            "kind": "commit_ships",
+            "plan": 2,
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:3",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "base:3 holds 10 t and uses 1 t a day"
+                },
+                {
+                  "day": 1,
+                  "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). The ships are committed from day 1 to day 4, the day before they are free.",
+              "would_change": [
+                "a reading of day 3 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "run": 1,
+            "ships": [
+              2
+            ],
+            "to_day": 4
+          }
+        ],
+        "no_orders": [],
+        "orders": [
+          {
+            "intent": 1,
+            "order": {
+              "kind": "form_task_force",
+              "ships": [
+                1
+              ]
+            },
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:2",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "base:2 holds 10 t and uses 1 t a day"
+                },
+                {
+                  "day": 1,
+                  "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Form ship:1 lying in port at base:1 in no force into a force.",
+              "would_change": [
+                "a reading of day 3 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "unit": "base:1"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "form_task_force",
+              "ships": [
+                2
+              ]
+            },
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:3",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "base:3 holds 10 t and uses 1 t a day"
+                },
+                {
+                  "day": 1,
+                  "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Form ship:2 lying in port at base:1 in no force into a force.",
+              "would_change": [
+                "a reading of day 3 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "unit": "base:1"
+          },
+          {
+            "intent": 1,
+            "order": {
+              "cargo": "supply",
+              "kind": "load",
+              "weight_t": "16"
+            },
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:2",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "base:2 holds 10 t and uses 1 t a day"
+                },
+                {
+                  "day": 1,
+                  "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Reading today at base:2: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:2 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Load order: until 16 t is aboard (0 t aboard now + the load of 16 t); ship:1 16 t at 50 t an hour = 0.32 hours.",
+              "would_change": [
+                "a reading of day 3 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "unit": "task_force:1000001"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "cargo": "supply",
+              "kind": "load",
+              "weight_t": "16"
+            },
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:3",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "base:3 holds 10 t and uses 1 t a day"
+                },
+                {
+                  "day": 1,
+                  "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Reading today at base:3: 10 t over 1 t a day = 10 days, against a floor of 10 days. A run ordered on day 1 loads on day 1 (0.32 hours at the source = 1 day), sails on day 2, and is due at base:3 on day 2. Without it the reading of day 3 is 8 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 9 t. Load = max(0, 10 - 9) + 15 (15 days of use) = 16 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 16 t at base:3 = 0.8 hours, 1 day. Its ships are free on day 5 (2 + 1 + 1 + 1). Load order: until 16 t is aboard (0 t aboard now + the load of 16 t); ship:2 16 t at 50 t an hour = 0.32 hours.",
+              "would_change": [
+                "a reading of day 3 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "unit": "task_force:1000002"
+          }
+        ]
+      },
+      "side": "allied"
+    },
+    {
+      "day": 2,
+      "decisions": {
+        "commands": [],
+        "no_orders": [],
+        "orders": [
+          {
+            "intent": 1,
+            "order": {
+              "act_at": [
+                [
+                  5,
+                  0
+                ]
+              ],
+              "kind": "set_route",
+              "waypoints": [
+                [
+                  5,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "reason": {
+              "binding": [
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 2,
+                  "what": "16 t aboard run 1's ships, its load"
+                },
+                {
+                  "day": 2,
+                  "what": "plan:1 is released"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Run 1 of plan:1: the 16 t aboard are its load of 16 t; the load is complete, so it sails today (day 2, hour 24). 200 nm out at 16 kn = 12.5 hours, so it arrives at base:2 at hour 36.5 (day 2); 200 nm back = 12.5 hours. It acts at base:2: 16 t landed in the 11.5 hours of day 2 left, at 20 t an hour for ship:1; unloading takes 0.8 hours, 1 day. This is the route order: out to the destination and back, acting at the destination.",
+              "would_change": [
+                "a load not complete, or a plan not released"
+              ]
+            },
+            "unit": "task_force:1000001"
+          },
+          {
+            "intent": 1,
+            "order": {
+              "kind": "unload"
+            },
+            "reason": {
+              "binding": [
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 2,
+                  "what": "16 t aboard run 1's ships, its load"
+                },
+                {
+                  "day": 2,
+                  "what": "plan:1 is released"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Run 1 of plan:1: the 16 t aboard are its load of 16 t; the load is complete, so it sails today (day 2, hour 24). 200 nm out at 16 kn = 12.5 hours, so it arrives at base:2 at hour 36.5 (day 2); 200 nm back = 12.5 hours. It acts at base:2: 16 t landed in the 11.5 hours of day 2 left, at 20 t an hour for ship:1; unloading takes 0.8 hours, 1 day. This is the unload order the route acts on.",
+              "would_change": [
+                "a load not complete, or a plan not released"
+              ]
+            },
+            "unit": "task_force:1000001"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "act_at": [
+                [
+                  0,
+                  5
+                ]
+              ],
+              "kind": "set_route",
+              "waypoints": [
+                [
+                  0,
+                  5
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "reason": {
+              "binding": [
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 2,
+                  "what": "16 t aboard run 1's ships, its load"
+                },
+                {
+                  "day": 2,
+                  "what": "plan:2 is released"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Run 1 of plan:2: the 16 t aboard are its load of 16 t; the load is complete, so it sails today (day 2, hour 24). 200 nm out at 16 kn = 12.5 hours, so it arrives at base:3 at hour 36.5 (day 2); 200 nm back = 12.5 hours. It acts at base:3: 16 t landed in the 11.5 hours of day 2 left, at 20 t an hour for ship:2; unloading takes 0.8 hours, 1 day. This is the route order: out to the destination and back, acting at the destination.",
+              "would_change": [
+                "a load not complete, or a plan not released"
+              ]
+            },
+            "unit": "task_force:1000002"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "unload"
+            },
+            "reason": {
+              "binding": [
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 2,
+                  "what": "16 t aboard run 1's ships, its load"
+                },
+                {
+                  "day": 2,
+                  "what": "plan:2 is released"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Run 1 of plan:2: the 16 t aboard are its load of 16 t; the load is complete, so it sails today (day 2, hour 24). 200 nm out at 16 kn = 12.5 hours, so it arrives at base:3 at hour 36.5 (day 2); 200 nm back = 12.5 hours. It acts at base:3: 16 t landed in the 11.5 hours of day 2 left, at 20 t an hour for ship:2; unloading takes 0.8 hours, 1 day. This is the unload order the route acts on.",
+              "would_change": [
+                "a load not complete, or a plan not released"
+              ]
+            },
+            "unit": "task_force:1000002"
+          }
+        ]
+      },
+      "side": "allied"
+    },
+    {
+      "day": 3,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 3,
+                "what": "base:2 holds 24 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 24 t over 1 t a day = 24 days, against a floor of 10 days (10 t). Run 1 is under way with 0 t aboard, due at base:2 on day 2. A run ordered today would be due on day 4; the reading of day 5 is projected at 22 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 3,
+                "what": "base:3 holds 24 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 24 t over 1 t a day = 24 days, against a floor of 10 days (10 t). Run 1 is under way with 0 t aboard, due at base:3 on day 2. A run ordered today would be due on day 4; the reading of day 5 is projected at 22 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 4,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 4,
+                "what": "base:2 holds 23 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 23 t over 1 t a day = 23 days, against a floor of 10 days (10 t). A run ordered today would be due on day 5; the reading of day 6 is projected at 21 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 4,
+                "what": "base:3 holds 23 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 23 t over 1 t a day = 23 days, against a floor of 10 days (10 t). A run ordered today would be due on day 5; the reading of day 6 is projected at 21 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 5,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 5,
+                "what": "base:2 holds 22 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 22 t over 1 t a day = 22 days, against a floor of 10 days (10 t). A run ordered today would be due on day 6; the reading of day 7 is projected at 20 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 5,
+                "what": "base:3 holds 22 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 22 t over 1 t a day = 22 days, against a floor of 10 days (10 t). A run ordered today would be due on day 6; the reading of day 7 is projected at 20 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 6,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 6,
+                "what": "base:2 holds 21 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 21 t over 1 t a day = 21 days, against a floor of 10 days (10 t). A run ordered today would be due on day 7; the reading of day 8 is projected at 19 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 6,
+                "what": "base:3 holds 21 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 21 t over 1 t a day = 21 days, against a floor of 10 days (10 t). A run ordered today would be due on day 7; the reading of day 8 is projected at 19 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 7,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 7,
+                "what": "base:2 holds 20 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 20 t over 1 t a day = 20 days, against a floor of 10 days (10 t). A run ordered today would be due on day 8; the reading of day 9 is projected at 18 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 7,
+                "what": "base:3 holds 20 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 20 t over 1 t a day = 20 days, against a floor of 10 days (10 t). A run ordered today would be due on day 8; the reading of day 9 is projected at 18 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 8,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 8,
+                "what": "base:2 holds 19 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 19 t over 1 t a day = 19 days, against a floor of 10 days (10 t). A run ordered today would be due on day 9; the reading of day 10 is projected at 17 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 8,
+                "what": "base:3 holds 19 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 19 t over 1 t a day = 19 days, against a floor of 10 days (10 t). A run ordered today would be due on day 9; the reading of day 10 is projected at 17 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 9,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 9,
+                "what": "base:2 holds 18 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 18 t over 1 t a day = 18 days, against a floor of 10 days (10 t). A run ordered today would be due on day 10; the reading of day 11 is projected at 16 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 9,
+                "what": "base:3 holds 18 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 18 t over 1 t a day = 18 days, against a floor of 10 days (10 t). A run ordered today would be due on day 10; the reading of day 11 is projected at 16 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 10,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 10,
+                "what": "base:2 holds 17 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 17 t over 1 t a day = 17 days, against a floor of 10 days (10 t). A run ordered today would be due on day 11; the reading of day 12 is projected at 15 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 10,
+                "what": "base:3 holds 17 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 17 t over 1 t a day = 17 days, against a floor of 10 days (10 t). A run ordered today would be due on day 11; the reading of day 12 is projected at 15 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 11,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 11,
+                "what": "base:2 holds 16 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 16 t over 1 t a day = 16 days, against a floor of 10 days (10 t). A run ordered today would be due on day 12; the reading of day 13 is projected at 14 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 11,
+                "what": "base:3 holds 16 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 16 t over 1 t a day = 16 days, against a floor of 10 days (10 t). A run ordered today would be due on day 12; the reading of day 13 is projected at 14 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 12,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 12,
+                "what": "base:2 holds 15 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 15 t over 1 t a day = 15 days, against a floor of 10 days (10 t). A run ordered today would be due on day 13; the reading of day 14 is projected at 13 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 12,
+                "what": "base:3 holds 15 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 15 t over 1 t a day = 15 days, against a floor of 10 days (10 t). A run ordered today would be due on day 13; the reading of day 14 is projected at 13 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 13,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 13,
+                "what": "base:2 holds 14 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 14 t over 1 t a day = 14 days, against a floor of 10 days (10 t). A run ordered today would be due on day 14; the reading of day 15 is projected at 12 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 13,
+                "what": "base:3 holds 14 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 14 t over 1 t a day = 14 days, against a floor of 10 days (10 t). A run ordered today would be due on day 14; the reading of day 15 is projected at 12 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 14,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 14,
+                "what": "base:2 holds 13 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 13 t over 1 t a day = 13 days, against a floor of 10 days (10 t). A run ordered today would be due on day 15; the reading of day 16 is projected at 11 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 14,
+                "what": "base:3 holds 13 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 13 t over 1 t a day = 13 days, against a floor of 10 days (10 t). A run ordered today would be due on day 15; the reading of day 16 is projected at 11 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 15,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 15,
+                "what": "base:2 holds 12 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 12 t over 1 t a day = 12 days, against a floor of 10 days (10 t). A run ordered today would be due on day 16; the reading of day 17 is projected at 10 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 15,
+                "what": "base:3 holds 12 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 12 t over 1 t a day = 12 days, against a floor of 10 days (10 t). A run ordered today would be due on day 16; the reading of day 17 is projected at 10 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 18 to fall below 10 days (10 t); it is expected to be ordered on day 16, due on day 17.",
+            "would_change": [
+              "a reading of day 18 below 10 t would call a run on day 16",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 16,
+      "decisions": {
+        "commands": [
+          {
+            "days": {
+              "arrive": 17,
+              "free": 20,
+              "load": 16,
+              "sail": 17
+            },
+            "kind": "add_run",
+            "load_t": "15",
+            "plan": 1,
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:2",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 16,
+                  "what": "base:2 holds 11 t and uses 1 t a day"
+                },
+                {
+                  "day": 16,
+                  "what": "the reading of day 18 is projected at 9 t"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Reading today at base:2: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:2 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:2 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). The staff adds this run to the plan.",
+              "would_change": [
+                "a reading of day 18 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "ships": [
+              1
+            ]
+          },
+          {
+            "from_day": 16,
+            "kind": "commit_ships",
+            "plan": 1,
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:2",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 16,
+                  "what": "base:2 holds 11 t and uses 1 t a day"
+                },
+                {
+                  "day": 16,
+                  "what": "the reading of day 18 is projected at 9 t"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Reading today at base:2: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:2 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:2 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). The ships are committed from day 16 to day 19, the day before they are free.",
+              "would_change": [
+                "a reading of day 18 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "run": 2,
+            "ships": [
+              1
+            ],
+            "to_day": 19
+          },
+          {
+            "days": {
+              "arrive": 17,
+              "free": 20,
+              "load": 16,
+              "sail": 17
+            },
+            "kind": "add_run",
+            "load_t": "15",
+            "plan": 2,
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:3",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 16,
+                  "what": "base:3 holds 11 t and uses 1 t a day"
+                },
+                {
+                  "day": 16,
+                  "what": "the reading of day 18 is projected at 9 t"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Reading today at base:3: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:3 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:3 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). The staff adds this run to the plan.",
+              "would_change": [
+                "a reading of day 18 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "ships": [
+              2
+            ]
+          },
+          {
+            "from_day": 16,
+            "kind": "commit_ships",
+            "plan": 2,
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:3",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 16,
+                  "what": "base:3 holds 11 t and uses 1 t a day"
+                },
+                {
+                  "day": 16,
+                  "what": "the reading of day 18 is projected at 9 t"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Reading today at base:3: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:3 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:3 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). The ships are committed from day 16 to day 19, the day before they are free.",
+              "would_change": [
+                "a reading of day 18 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "run": 2,
+            "ships": [
+              2
+            ],
+            "to_day": 19
+          }
+        ],
+        "no_orders": [],
+        "orders": [
+          {
+            "intent": 1,
+            "order": {
+              "cargo": "supply",
+              "kind": "load",
+              "weight_t": "15"
+            },
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:2",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 16,
+                  "what": "base:2 holds 11 t and uses 1 t a day"
+                },
+                {
+                  "day": 16,
+                  "what": "the reading of day 18 is projected at 9 t"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Reading today at base:2: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:2 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:2 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). Load order: until 15 t is aboard (0 t aboard now + the load of 15 t); ship:1 15 t at 50 t an hour = 0.3 hours.",
+              "would_change": [
+                "a reading of day 18 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "unit": "task_force:1000001"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "cargo": "supply",
+              "kind": "load",
+              "weight_t": "15"
+            },
+            "reason": {
+              "binding": [
+                "floor of 10 days at base:3",
+                "interval of 15 days",
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 16,
+                  "what": "base:3 holds 11 t and uses 1 t a day"
+                },
+                {
+                  "day": 16,
+                  "what": "the reading of day 18 is projected at 9 t"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Reading today at base:3: 11 t over 1 t a day = 11 days, against a floor of 10 days. A run ordered on day 16 loads on day 16 (0.3 hours at the source = 1 day), sails on day 17, and is due at base:3 on day 17. Without it the reading of day 18 is 9 t against 10 days x 1 t = 10 t: below the floor, so a run is needed. The stock projected for the reading of day 17 is 10 t. Load = max(0, 10 - 10) + 15 (15 days of use) = 15 t. Ships ship:2: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 16 kn = 12.5 hours, 1 day; 200 nm back = 12.5 hours, 1 day; unloading 15 t at base:3 = 0.75 hours, 1 day. Its ships are free on day 20 (17 + 1 + 1 + 1). Load order: until 15 t is aboard (0 t aboard now + the load of 15 t); ship:2 15 t at 50 t an hour = 0.3 hours.",
+              "would_change": [
+                "a reading of day 18 at or above 10 t would call no run",
+                "a free ship of the pool earlier in number order would carry it instead"
+              ]
+            },
+            "unit": "task_force:1000002"
+          }
+        ]
+      },
+      "side": "allied"
+    },
+    {
+      "day": 17,
+      "decisions": {
+        "commands": [],
+        "no_orders": [],
+        "orders": [
+          {
+            "intent": 1,
+            "order": {
+              "act_at": [
+                [
+                  5,
+                  0
+                ]
+              ],
+              "kind": "set_route",
+              "waypoints": [
+                [
+                  5,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "reason": {
+              "binding": [
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 17,
+                  "what": "15 t aboard run 2's ships, its load"
+                },
+                {
+                  "day": 17,
+                  "what": "plan:1 is released"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Run 2 of plan:1: the 15 t aboard are its load of 15 t; the load is complete, so it sails today (day 17, hour 384). 200 nm out at 16 kn = 12.5 hours, so it arrives at base:2 at hour 396.5 (day 17); 200 nm back = 12.5 hours. It acts at base:2: 15 t landed in the 11.5 hours of day 17 left, at 20 t an hour for ship:1; unloading takes 0.75 hours, 1 day. This is the route order: out to the destination and back, acting at the destination.",
+              "would_change": [
+                "a load not complete, or a plan not released"
+              ]
+            },
+            "unit": "task_force:1000001"
+          },
+          {
+            "intent": 1,
+            "order": {
+              "kind": "unload"
+            },
+            "reason": {
+              "binding": [
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 17,
+                  "what": "15 t aboard run 2's ships, its load"
+                },
+                {
+                  "day": 17,
+                  "what": "plan:1 is released"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "plan": 1
+              },
+              "worked": "Run 2 of plan:1: the 15 t aboard are its load of 15 t; the load is complete, so it sails today (day 17, hour 384). 200 nm out at 16 kn = 12.5 hours, so it arrives at base:2 at hour 396.5 (day 17); 200 nm back = 12.5 hours. It acts at base:2: 15 t landed in the 11.5 hours of day 17 left, at 20 t an hour for ship:1; unloading takes 0.75 hours, 1 day. This is the unload order the route acts on.",
+              "would_change": [
+                "a load not complete, or a plan not released"
+              ]
+            },
+            "unit": "task_force:1000001"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "act_at": [
+                [
+                  0,
+                  5
+                ]
+              ],
+              "kind": "set_route",
+              "waypoints": [
+                [
+                  0,
+                  5
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "reason": {
+              "binding": [
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 17,
+                  "what": "15 t aboard run 2's ships, its load"
+                },
+                {
+                  "day": 17,
+                  "what": "plan:2 is released"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Run 2 of plan:2: the 15 t aboard are its load of 15 t; the load is complete, so it sails today (day 17, hour 384). 200 nm out at 16 kn = 12.5 hours, so it arrives at base:3 at hour 396.5 (day 17); 200 nm back = 12.5 hours. It acts at base:3: 15 t landed in the 11.5 hours of day 17 left, at 20 t an hour for ship:2; unloading takes 0.75 hours, 1 day. This is the route order: out to the destination and back, acting at the destination.",
+              "would_change": [
+                "a load not complete, or a plan not released"
+              ]
+            },
+            "unit": "task_force:1000002"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "unload"
+            },
+            "reason": {
+              "binding": [
+                "area: none set, the sea is open"
+              ],
+              "evidence": [
+                {
+                  "day": 17,
+                  "what": "15 t aboard run 2's ships, its load"
+                },
+                {
+                  "day": 17,
+                  "what": "plan:2 is released"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "plan": 2
+              },
+              "worked": "Run 2 of plan:2: the 15 t aboard are its load of 15 t; the load is complete, so it sails today (day 17, hour 384). 200 nm out at 16 kn = 12.5 hours, so it arrives at base:3 at hour 396.5 (day 17); 200 nm back = 12.5 hours. It acts at base:3: 15 t landed in the 11.5 hours of day 17 left, at 20 t an hour for ship:2; unloading takes 0.75 hours, 1 day. This is the unload order the route acts on.",
+              "would_change": [
+                "a load not complete, or a plan not released"
+              ]
+            },
+            "unit": "task_force:1000002"
+          }
+        ]
+      },
+      "side": "allied"
+    },
+    {
+      "day": 18,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 18,
+                "what": "base:2 holds 24 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 24 t over 1 t a day = 24 days, against a floor of 10 days (10 t). Run 2 is under way with 0 t aboard, due at base:2 on day 17. A run ordered today would be due on day 19; the reading of day 20 is projected at 22 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 33 to fall below 10 days (10 t); it is expected to be ordered on day 31, due on day 32.",
+            "would_change": [
+              "a reading of day 33 below 10 t would call a run on day 31",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 18,
+                "what": "base:3 holds 24 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 24 t over 1 t a day = 24 days, against a floor of 10 days (10 t). Run 2 is under way with 0 t aboard, due at base:3 on day 17. A run ordered today would be due on day 19; the reading of day 20 is projected at 22 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 33 to fall below 10 days (10 t); it is expected to be ordered on day 31, due on day 32.",
+            "would_change": [
+              "a reading of day 33 below 10 t would call a run on day 31",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 19,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 19,
+                "what": "base:2 holds 23 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 23 t over 1 t a day = 23 days, against a floor of 10 days (10 t). A run ordered today would be due on day 20; the reading of day 21 is projected at 21 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 33 to fall below 10 days (10 t); it is expected to be ordered on day 31, due on day 32.",
+            "would_change": [
+              "a reading of day 33 below 10 t would call a run on day 31",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 19,
+                "what": "base:3 holds 23 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 23 t over 1 t a day = 23 days, against a floor of 10 days (10 t). A run ordered today would be due on day 20; the reading of day 21 is projected at 21 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 33 to fall below 10 days (10 t); it is expected to be ordered on day 31, due on day 32.",
+            "would_change": [
+              "a reading of day 33 below 10 t would call a run on day 31",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    },
+    {
+      "day": 20,
+      "decisions": {
+        "commands": [],
+        "no_orders": [
+          {
+            "binding": [
+              "floor of 10 days at base:2",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 20,
+                "what": "base:2 holds 22 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "plan": 1
+            },
+            "worked": "Reading today at base:2: 22 t over 1 t a day = 22 days, against a floor of 10 days (10 t). A run ordered today would be due on day 21; the reading of day 22 is projected at 20 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 33 to fall below 10 days (10 t); it is expected to be ordered on day 31, due on day 32.",
+            "would_change": [
+              "a reading of day 33 below 10 t would call a run on day 31",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [
+              "floor of 10 days at base:3",
+              "interval of 15 days"
+            ],
+            "evidence": [
+              {
+                "day": 20,
+                "what": "base:3 holds 22 t and uses 1 t a day"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "plan": 2
+            },
+            "worked": "Reading today at base:3: 22 t over 1 t a day = 22 days, against a floor of 10 days (10 t). A run ordered today would be due on day 21; the reading of day 22 is projected at 20 t against 10 days x 1 t = 10 t: not below the floor, so no run is needed. The next run waits for the reading of day 33 to fall below 10 days (10 t); it is expected to be ordered on day 31, due on day 32.",
+            "would_change": [
+              "a reading of day 33 below 10 t would call a run on day 31",
+              "a larger use at the destination would bring the next run forward"
+            ]
+          }
+        ],
+        "orders": []
+      },
+      "side": "allied"
+    }
+  ],
+  "state_version": "flagplot-state-v26",
+  "version": 3
+}

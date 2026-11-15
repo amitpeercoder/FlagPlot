@@ -1459,6 +1459,7 @@ fn decisions_for_the_day() -> StaffDecisions {
         ],
         commands: vec![staff_command(commit(1, None, &[5], 1, 3), "commit ship 5")],
         no_orders: vec![reason(1, "nothing to do for ship 6")],
+        notices: Vec::new(),
     }
 }
 
@@ -2019,6 +2020,7 @@ fn leak_test(other: Side, watcher: Side) {
         .map(|kind| staff_command(kind, "a command"))
         .collect(),
         no_orders: vec![reason(1, "no order for the idle ship")],
+        notices: Vec::new(),
     };
     let busy_staff = Fixed_(decisions);
     for day in 0..3 {
@@ -2789,4 +2791,992 @@ fn a_hold_and_a_runs_end_change_the_hash() {
     )
     .unwrap();
     assert_ne!(world.state_hash(), open);
+}
+
+// ---------------------------------------------------------------------------
+// Interrupts and the staff's notices (decision 0107, step 4, rulings 31 to
+// 35). Base 2 (Allied, at OUT) holds 100 t. Its daily use is the upkeep of the
+// aircraft of air group 1 at it, 1 t each, so a use of 10 t a day (10
+// aircraft) is 10 days of supply at 100 t. A test sets the stock before the
+// day it resolves: the morning reads it as it is then.
+// ---------------------------------------------------------------------------
+
+fn interrupt_id(n: u32) -> InterruptId {
+    InterruptId::new(n)
+}
+
+fn set_below(n: u32, base_n: u32, days: u32) -> CommandKind {
+    CommandKind::SetInterrupt(InterruptSetting::Set {
+        interrupt: interrupt_id(n),
+        condition: InterruptCondition::SupplyBelow {
+            base: base(base_n),
+            days,
+        },
+    })
+}
+
+fn switch(kind: StandingKind, on: bool) -> CommandKind {
+    CommandKind::SetInterrupt(InterruptSetting::Standing { kind, on })
+}
+
+fn acknowledge_set(n: u32) -> CommandKind {
+    CommandKind::Acknowledge {
+        interrupt: InterruptRef::Set(interrupt_id(n)),
+    }
+}
+
+fn acknowledge_standing(kind: StandingKind, subject: StandingSubject) -> CommandKind {
+    CommandKind::Acknowledge {
+        interrupt: InterruptRef::Standing { kind, subject },
+    }
+}
+
+/// Puts `aircraft` aircraft of air group 1 at base 2 (an airfield), at 1 t a
+/// day each, so that the base's planned use is `aircraft` t a day.
+fn put_use_on_base_2(world: &mut World, aircraft: u32) {
+    world.ref_data.air_supply = Some(crate::refdata::AirSupplyFigures {
+        sortie_supply_t: Fixed::ZERO,
+        sortie_supply_t_per_100_nm: Fixed::ZERO,
+        daily_supply_t_per_aircraft: Fixed::ONE,
+        repair_supply_t: Fixed::ZERO,
+    });
+    world
+        .truth
+        .bases
+        .get_mut(&base(2))
+        .expect("base 2")
+        .airfield = true;
+    let group = crate::ids::AirGroupId::new(1);
+    let mut air_group = crate::state::AirGroup::new(
+        group,
+        "Group 1".to_string(),
+        A,
+        crate::state::AirGroupLocation::Base(base(2)),
+        crate::ids::AircraftTypeId::new(1),
+    );
+    air_group.ready = aircraft;
+    air_group.strength = aircraft;
+    world.truth.air_groups.insert(group, air_group);
+}
+
+fn set_stock(world: &mut World, base_n: u32, tons: i64) {
+    world
+        .truth
+        .bases
+        .get_mut(&base(base_n))
+        .expect("the base exists")
+        .supply_t = t(tons);
+}
+
+/// A world with a use of 10 t a day on base 2 and interrupt 1 set below
+/// `days` days there, taken in.
+fn world_with_interrupt(days: u32) -> World {
+    let mut world = world();
+    put_use_on_base_2(&mut world, 10);
+    player(&mut world, set_below(1, 2, days)).unwrap();
+    world
+}
+
+/// Resolves one day with the base 2 stock at `tons` when the morning reads it.
+fn day_with_stock(world: &mut World, tons: i64) {
+    set_stock(world, 2, tons);
+    world.resolve_day().unwrap();
+}
+
+/// The firings of `side` on `day`, in the order they were recorded.
+fn firings(world: &World, side: Side, day: u32) -> Vec<InterruptRef> {
+    world
+        .events
+        .iter()
+        .filter(|event| event.day == day)
+        .filter_map(|event| match &event.kind {
+            EventKind::InterruptFired {
+                side: owner,
+                interrupt,
+                ..
+            } if *owner == side => Some(*interrupt),
+            _ => None,
+        })
+        .collect()
+}
+
+fn all_firings(world: &World, side: Side) -> usize {
+    world
+        .events
+        .iter()
+        .filter(|event| matches!(&event.kind, EventKind::InterruptFired { side: owner, .. } if *owner == side))
+        .count()
+}
+
+fn status_of(world: &World, n: u32) -> InterruptStatus {
+    state(world, A).interrupts[&interrupt_id(n)].status
+}
+
+fn set_ref(n: u32) -> InterruptRef {
+    InterruptRef::Set(interrupt_id(n))
+}
+
+#[test]
+fn a_threshold_already_true_when_set_fires_that_morning_once_and_not_again_while_true() {
+    let mut world = world_with_interrupt(10);
+    assert_eq!(status_of(&world, 1), InterruptStatus::default());
+    day_with_stock(&mut world, 50); // 5 days, below 10
+    assert_eq!(firings(&world, A, 1), vec![set_ref(1)]);
+    let after = status_of(&world, 1);
+    assert_eq!(
+        after,
+        InterruptStatus {
+            armed: false,
+            last_fired: Some(1),
+            acknowledged: false
+        }
+    );
+    // True on the next two mornings too: no firing.
+    day_with_stock(&mut world, 40);
+    day_with_stock(&mut world, 30);
+    assert_eq!(all_firings(&world, A), 1);
+    assert_eq!(status_of(&world, 1), after);
+    // The enemy has none.
+    assert_eq!(all_firings(&world, J), 0);
+}
+
+#[test]
+fn an_interrupt_is_armed_again_on_a_morning_it_is_false_and_fires_on_the_next_crossing() {
+    let mut world = world_with_interrupt(10);
+    day_with_stock(&mut world, 50);
+    assert_eq!(all_firings(&world, A), 1);
+    day_with_stock(&mut world, 200); // 20 days: not below
+    assert!(status_of(&world, 1).armed);
+    assert_eq!(status_of(&world, 1).last_fired, Some(1));
+    assert_eq!(all_firings(&world, A), 1);
+    day_with_stock(&mut world, 60); // 6 days: crosses again
+    assert_eq!(firings(&world, A, 3), vec![set_ref(1)]);
+    assert_eq!(status_of(&world, 1).last_fired, Some(3));
+    assert!(!status_of(&world, 1).armed);
+}
+
+#[test]
+fn a_reading_equal_to_the_threshold_is_not_below_it() {
+    let mut world = world_with_interrupt(10);
+    day_with_stock(&mut world, 100); // exactly 10 days
+    assert_eq!(all_firings(&world, A), 0);
+    assert!(status_of(&world, 1).armed);
+    day_with_stock(&mut world, 99); // 9.9 days
+    assert_eq!(all_firings(&world, A), 1);
+    assert!(super::interrupt::figure_is_below(Some(t(9)), 10));
+    assert!(!super::interrupt::figure_is_below(Some(t(10)), 10));
+    assert!(!super::interrupt::figure_is_below(None, 10));
+}
+
+#[test]
+fn a_hex_with_no_figure_never_fires_and_arms_the_interrupt_again() {
+    // No planned use at base 2: it has no figure.
+    let mut world = world();
+    player(&mut world, set_below(1, 2, 10)).unwrap();
+    day_with_stock(&mut world, 5);
+    assert_eq!(all_firings(&world, A), 0);
+    assert!(status_of(&world, 1).armed);
+    // Fired, then the figure goes: armed again, with no firing.
+    let mut world = world_with_interrupt(10);
+    day_with_stock(&mut world, 50);
+    assert!(!status_of(&world, 1).armed);
+    world.truth.air_groups.clear();
+    day_with_stock(&mut world, 50);
+    assert!(status_of(&world, 1).armed);
+    assert_eq!(all_firings(&world, A), 1);
+}
+
+#[test]
+fn acknowledging_arms_nothing_and_a_new_firing_is_not_acknowledged() {
+    let mut world = world_with_interrupt(10);
+    // Never fired.
+    refused(
+        &mut world,
+        Issuer::Player,
+        acknowledge_set(1),
+        CommandRefusal::NotFired(set_ref(1)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        acknowledge_set(7),
+        CommandRefusal::NoSuchInterrupt(interrupt_id(7)),
+    );
+    day_with_stock(&mut world, 50);
+    player(&mut world, acknowledge_set(1)).unwrap();
+    let status = status_of(&world, 1);
+    assert!(status.acknowledged);
+    assert!(!status.armed, "acknowledging arms nothing");
+    // Still true: no new firing, the status unchanged.
+    day_with_stock(&mut world, 50);
+    assert_eq!(all_firings(&world, A), 1);
+    assert_eq!(status_of(&world, 1), status);
+    // Acknowledged already.
+    refused(
+        &mut world,
+        Issuer::Player,
+        acknowledge_set(1),
+        CommandRefusal::AlreadyAcknowledged(set_ref(1)),
+    );
+    // A new firing is not acknowledged.
+    day_with_stock(&mut world, 500);
+    day_with_stock(&mut world, 50);
+    assert_eq!(all_firings(&world, A), 2);
+    assert!(!status_of(&world, 1).acknowledged);
+    player(&mut world, acknowledge_set(1)).unwrap();
+}
+
+#[test]
+fn setting_an_interrupt_again_is_a_new_record_armed_and_never_fired() {
+    let mut world = world_with_interrupt(10);
+    day_with_stock(&mut world, 50);
+    assert!(!status_of(&world, 1).armed);
+    // Set again (a day later: the condition still holds, so it fires again
+    // that morning).
+    player(&mut world, set_below(1, 2, 20)).unwrap();
+    let record = state(&world, A).interrupts[&interrupt_id(1)];
+    assert_eq!(record.status, InterruptStatus::default());
+    assert_eq!(record.set_day, 2);
+    assert_eq!(
+        record.condition,
+        InterruptCondition::SupplyBelow {
+            base: base(2),
+            days: 20
+        }
+    );
+    day_with_stock(&mut world, 50);
+    assert_eq!(firings(&world, A, 2), vec![set_ref(1)]);
+}
+
+#[test]
+fn the_commands_that_set_and_acknowledge_interrupts_are_refused_for_these_reasons() {
+    let mut world = world();
+    refused(
+        &mut world,
+        Issuer::Player,
+        set_below(0, 2, 10),
+        CommandRefusal::InterruptNumberNotUsable(interrupt_id(0)),
+    );
+    // A base of the enemy and a base that does not exist are refused alike.
+    refused(
+        &mut world,
+        Issuer::Player,
+        set_below(1, 9, 10),
+        CommandRefusal::NotYourBase(base(9)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        set_below(1, 99, 10),
+        CommandRefusal::NotYourBase(base(99)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        set_below(1, 2, 0),
+        CommandRefusal::NoDays,
+    );
+    // The staff may not give either.
+    refused(
+        &mut world,
+        Issuer::Staff,
+        set_below(1, 2, 10),
+        CommandRefusal::NotYours,
+    );
+    refused(
+        &mut world,
+        Issuer::Staff,
+        switch(StandingKind::ShipLost, false),
+        CommandRefusal::NotYours,
+    );
+    refused(
+        &mut world,
+        Issuer::Staff,
+        acknowledge_set(1),
+        CommandRefusal::NotYours,
+    );
+    // A standing subject the side does not own, or that does not exist.
+    refused(
+        &mut world,
+        Issuer::Player,
+        acknowledge_standing(StandingKind::ShipLost, StandingSubject::Ship(ship(20))),
+        CommandRefusal::NotYourShip(ship(20)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        acknowledge_standing(StandingKind::ShipLost, StandingSubject::Ship(ship(99))),
+        CommandRefusal::NotYourShip(ship(99)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        acknowledge_standing(StandingKind::CannotMeet, StandingSubject::Plan(plan(4))),
+        CommandRefusal::NoSuchPlan(plan(4)),
+    );
+    // Switching a kind to the state it is in is accepted and changes nothing.
+    let before = world.command.clone();
+    player(&mut world, switch(StandingKind::CannotMeet, true)).unwrap();
+    assert_eq!(world.command, before);
+    player(&mut world, switch(StandingKind::CannotMeet, false)).unwrap();
+    player(&mut world, switch(StandingKind::CannotMeet, false)).unwrap();
+    assert_eq!(
+        state(&world, A).standing_off,
+        BTreeSet::from([StandingKind::CannotMeet])
+    );
+    // Their text.
+    assert_eq!(
+        set_below(1, 2, 35).to_string(),
+        "set interrupt:1: base:2 below 35 days of supply"
+    );
+    assert_eq!(
+        switch(StandingKind::CannotMeet, false).to_string(),
+        "switch off the standing interrupt cannot_meet"
+    );
+    assert_eq!(acknowledge_set(1).to_string(), "acknowledge interrupt:1");
+    assert_eq!(
+        acknowledge_standing(StandingKind::WaitsForLeave, StandingSubject::Plan(plan(1)))
+            .to_string(),
+        "acknowledge the standing interrupt waits_for_leave for plan:1"
+    );
+}
+
+/// A hand-in of the staff with one reason of no order for each notice, each
+/// notice resting on its own.
+fn hand_in_of(notices: &[(NoticeKind, u32)]) -> StaffDecisions {
+    StaffDecisions {
+        no_orders: notices
+            .iter()
+            .map(|(_, plan_n)| reason(1, &format!("a decision on plan:{plan_n}")))
+            .collect(),
+        notices: notices
+            .iter()
+            .enumerate()
+            .map(|(i, (kind, plan_n))| StaffNotice {
+                kind: *kind,
+                plan: plan(*plan_n),
+                run: None,
+                rests_on: NoticeBasis::NoOrder(i),
+            })
+            .collect(),
+        ..StaffDecisions::default()
+    }
+}
+
+fn cannot_meet() -> NoticeKind {
+    NoticeKind::CannotMeet
+}
+
+fn standing_cannot_meet(plan_n: u32) -> InterruptRef {
+    InterruptRef::Standing {
+        kind: StandingKind::CannotMeet,
+        subject: StandingSubject::Plan(plan(plan_n)),
+    }
+}
+
+fn day_with_notices(world: &mut World, notices: &[(NoticeKind, u32)]) {
+    world.submit_staff(A, hand_in_of(notices));
+    world.resolve_day().unwrap();
+}
+
+#[test]
+fn a_standing_cannot_meet_fires_the_first_morning_of_a_run_of_days_and_again_only_after_a_gap() {
+    let mut world = world();
+    day_with_notices(&mut world, &[(cannot_meet(), 1)]);
+    assert_eq!(firings(&world, A, 1), vec![standing_cannot_meet(1)]);
+    // Three more mornings with the notice: no more firings.
+    day_with_notices(&mut world, &[(cannot_meet(), 1)]);
+    day_with_notices(&mut world, &[(cannot_meet(), 1)]);
+    assert_eq!(all_firings(&world, A), 1);
+    let record =
+        state(&world, A).standing[&(StandingKind::CannotMeet, StandingSubject::Plan(plan(1)))];
+    assert!(!record.armed);
+    assert_eq!(record.last_fired, Some(1));
+    // A morning without the notice arms it; the next with it fires.
+    day_with_notices(&mut world, &[]);
+    let record =
+        state(&world, A).standing[&(StandingKind::CannotMeet, StandingSubject::Plan(plan(1)))];
+    assert!(record.armed);
+    day_with_notices(&mut world, &[(cannot_meet(), 1)]);
+    assert_eq!(firings(&world, A, 5), vec![standing_cannot_meet(1)]);
+    assert_eq!(all_firings(&world, A), 2);
+    // The enemy has none.
+    assert_eq!(all_firings(&world, J), 0);
+}
+
+#[test]
+fn a_standing_interrupt_is_armed_apart_for_each_plan() {
+    let mut world = world();
+    day_with_notices(&mut world, &[(cannot_meet(), 1)]);
+    // Plan 2 joins: it fires; plan 1, still true, does not.
+    day_with_notices(&mut world, &[(cannot_meet(), 1), (cannot_meet(), 2)]);
+    assert_eq!(firings(&world, A, 2), vec![standing_cannot_meet(2)]);
+    // Plan 1 drops out for a morning, plan 2 stays: only plan 1 is armed.
+    day_with_notices(&mut world, &[(cannot_meet(), 2)]);
+    day_with_notices(&mut world, &[(cannot_meet(), 1), (cannot_meet(), 2)]);
+    assert_eq!(firings(&world, A, 4), vec![standing_cannot_meet(1)]);
+}
+
+#[test]
+fn a_waits_for_leave_notice_of_either_leave_fires_the_standing_waits_for_leave() {
+    let mut world = world();
+    day_with_notices(&mut world, &[(NoticeKind::WaitsForLeave(Leave::Launch), 1)]);
+    let waits = InterruptRef::Standing {
+        kind: StandingKind::WaitsForLeave,
+        subject: StandingSubject::Plan(plan(1)),
+    };
+    assert_eq!(firings(&world, A, 1), vec![waits]);
+    // The other leave, the same plan, the same run of days: no new firing.
+    day_with_notices(
+        &mut world,
+        &[(NoticeKind::WaitsForLeave(Leave::Prepare), 1)],
+    );
+    assert_eq!(all_firings(&world, A), 1);
+    // A run ended is no standing kind.
+    day_with_notices(&mut world, &[(NoticeKind::RunEnded, 1)]);
+    assert_eq!(all_firings(&world, A), 1);
+    // Both kinds on one morning fire in kind order, cannot_meet first.
+    let mut world = world_for_two_kinds();
+    assert_eq!(
+        firings(&world, A, 1),
+        vec![
+            standing_cannot_meet(2),
+            InterruptRef::Standing {
+                kind: StandingKind::WaitsForLeave,
+                subject: StandingSubject::Plan(plan(1)),
+            }
+        ]
+    );
+    world.resolve_day().unwrap();
+}
+
+fn world_for_two_kinds() -> World {
+    let mut world = world();
+    day_with_notices(
+        &mut world,
+        &[
+            (NoticeKind::WaitsForLeave(Leave::Prepare), 1),
+            (cannot_meet(), 2),
+        ],
+    );
+    world
+}
+
+#[test]
+fn switching_a_standing_kind_off_stops_it_and_on_again_lets_it_fire() {
+    let mut world = world();
+    player(&mut world, switch(StandingKind::CannotMeet, false)).unwrap();
+    day_with_notices(&mut world, &[(cannot_meet(), 1)]);
+    assert_eq!(all_firings(&world, A), 0);
+    assert!(
+        state(&world, A).standing.is_empty(),
+        "a kind off is not tested"
+    );
+    // On again: the notice still comes, and it fires.
+    player(&mut world, switch(StandingKind::CannotMeet, true)).unwrap();
+    day_with_notices(&mut world, &[(cannot_meet(), 1)]);
+    assert_eq!(firings(&world, A, 2), vec![standing_cannot_meet(1)]);
+    // Off again: the record is left as it is, and a gap does not arm it.
+    player(&mut world, switch(StandingKind::CannotMeet, false)).unwrap();
+    day_with_notices(&mut world, &[]);
+    let record =
+        state(&world, A).standing[&(StandingKind::CannotMeet, StandingSubject::Plan(plan(1)))];
+    assert!(!record.armed);
+    assert_eq!(record.last_fired, Some(2));
+}
+
+#[test]
+fn a_notice_cites_its_reasons_event_and_a_firing_cites_the_notice() {
+    let mut world = world();
+    // One notice resting on a staff command (refused here), one on a
+    // decision to give no order, one resting on nothing.
+    let decisions = StaffDecisions {
+        commands: vec![StaffCommand {
+            kind: CommandKind::Approve { plan: plan(9) },
+            reason: reason(1, "the command's reason"),
+        }],
+        no_orders: vec![reason(1, "the no-order reason")],
+        notices: vec![
+            StaffNotice {
+                kind: cannot_meet(),
+                plan: plan(1),
+                run: None,
+                rests_on: NoticeBasis::Command(0),
+            },
+            StaffNotice {
+                kind: NoticeKind::RunEnded,
+                plan: plan(1),
+                run: Some(3),
+                rests_on: NoticeBasis::NoOrder(0),
+            },
+            StaffNotice {
+                kind: NoticeKind::WaitsForLeave(Leave::Launch),
+                plan: plan(2),
+                run: None,
+                rests_on: NoticeBasis::NoOrder(5),
+            },
+        ],
+        ..StaffDecisions::default()
+    };
+    world.submit_staff(A, decisions);
+    world.resolve_day().unwrap();
+    let log = log(&world);
+    let reason_event = |worked: &str| {
+        log.iter()
+            .find(|e| matches!(&e.kind, EventKind::StaffReason { reason, .. } if reason.worked == worked))
+            .expect("the reason is recorded")
+            .id
+    };
+    let notice = |kind: NoticeKind| {
+        log.iter()
+            .find(|e| matches!(&e.kind, EventKind::StaffNotice { kind: k, .. } if *k == kind))
+            .expect("the notice is recorded")
+    };
+    assert_eq!(
+        notice(cannot_meet()).causes,
+        vec![Cause::Event(reason_event("the command's reason"))]
+    );
+    assert_eq!(
+        notice(NoticeKind::RunEnded).causes,
+        vec![Cause::Event(reason_event("the no-order reason"))]
+    );
+    assert!(notice(NoticeKind::WaitsForLeave(Leave::Launch))
+        .causes
+        .is_empty());
+    // The notices follow the reasons, in the order handed in.
+    let order: Vec<usize> = log
+        .iter()
+        .enumerate()
+        .filter(|(_, e)| {
+            matches!(
+                e.kind,
+                EventKind::StaffNotice { .. } | EventKind::StaffReason { .. }
+            )
+        })
+        .map(|(i, _)| i)
+        .collect();
+    let kinds: Vec<bool> = order
+        .iter()
+        .map(|i| matches!(log[*i].kind, EventKind::StaffNotice { .. }))
+        .collect();
+    assert_eq!(kinds, vec![false, false, true, true, true]);
+    // The firing of the standing cannot_meet cites the notice of the morning.
+    let fired = log
+        .iter()
+        .find(|e| matches!(e.kind, EventKind::InterruptFired { .. }))
+        .expect("a firing");
+    assert_eq!(fired.causes, vec![Cause::Event(notice(cannot_meet()).id)]);
+    assert!(
+        fired.id > notice(cannot_meet()).id,
+        "the firing follows the notice"
+    );
+    // Their text.
+    assert_eq!(
+        notice(cannot_meet()).kind.to_string(),
+        "Allied staff's notice: plan:1 cannot meet its intent"
+    );
+    assert_eq!(
+        notice(NoticeKind::WaitsForLeave(Leave::Launch))
+            .kind
+            .to_string(),
+        "Allied staff's notice: plan:2 waits for leave to launch"
+    );
+    assert_eq!(
+        notice(NoticeKind::RunEnded).kind.to_string(),
+        "Allied staff's notice: run 3 of plan:1 has ended"
+    );
+    assert_eq!(
+        fired.kind.to_string(),
+        "Allied standing interrupt fired: plan:1 cannot meet its intent"
+    );
+}
+
+#[test]
+fn a_set_interrupts_firing_cites_the_command_that_set_it_and_carries_a_breakdown() {
+    let mut world = world();
+    put_use_on_base_2(&mut world, 10);
+    // An earlier setting of the same number, then the one that stands.
+    player(&mut world, set_below(1, 2, 5)).unwrap();
+    player(&mut world, set_below(2, 2, 9)).unwrap();
+    player(&mut world, set_below(1, 2, 10)).unwrap();
+    day_with_stock(&mut world, 90);
+    let log = log(&world);
+    let taken = |n: u32| {
+        log.iter()
+            .filter(|e| {
+                matches!(&e.kind, EventKind::CommandTaken { command, .. }
+                    if matches!(command, CommandKind::SetInterrupt(InterruptSetting::Set { interrupt, .. }) if *interrupt == interrupt_id(n)))
+            })
+            .map(|e| e.id)
+            .next_back()
+            .expect("the command was taken")
+    };
+    let fired: Vec<&Event> = log
+        .iter()
+        .filter(|e| matches!(e.kind, EventKind::InterruptFired { .. }))
+        .collect();
+    // 90 t over 10 t a day is 9 days: interrupt 1 (below 10) fires; 2
+    // (below 9) does not.
+    assert_eq!(fired.len(), 1);
+    assert_eq!(fired[0].causes, vec![Cause::Event(taken(1))]);
+    assert_eq!(
+        fired[0].kind.to_string(),
+        "Allied interrupt:1 fired: base:2 at 9 days of supply, below 10"
+    );
+    let breakdown = fired[0].breakdown.as_ref().expect("breakdowns are on");
+    let factors: Vec<(&str, Fixed)> = breakdown
+        .factors
+        .iter()
+        .map(|f| (f.name, f.value))
+        .collect();
+    assert_eq!(
+        factors,
+        vec![
+            ("stock_t", t(90)),
+            ("planned_use_t", t(10)),
+            ("days_of_supply", t(9)),
+            ("threshold_days", t(10)),
+        ]
+    );
+    assert_eq!(breakdown.result, t(9));
+}
+
+#[test]
+fn recording_the_breakdown_of_a_firing_changes_neither_what_happens_nor_the_hash() {
+    let play = |breakdowns: bool| {
+        let mut world = world_with_interrupt(10);
+        world.set_config(crate::world::SimConfig {
+            record_breakdowns: breakdowns,
+        });
+        day_with_stock(&mut world, 50);
+        day_with_stock(&mut world, 500);
+        day_with_stock(&mut world, 50);
+        world
+    };
+    let (with, without) = (play(true), play(false));
+    assert_eq!(with.state_hash(), without.state_hash());
+    assert_eq!(all_firings(&with, A), 2);
+    assert_eq!(with.day_hashes, without.day_hashes);
+    let has_breakdown = |w: &World| {
+        w.events
+            .iter()
+            .any(|e| matches!(e.kind, EventKind::InterruptFired { .. }) && e.breakdown.is_some())
+    };
+    assert!(has_breakdown(&with));
+    assert!(!has_breakdown(&without));
+}
+
+#[test]
+fn the_side_sees_its_notices_and_firings_whole_and_the_enemy_sees_none() {
+    use crate::side_events::SideEventKind;
+    let mut world = world();
+    put_use_on_base_2(&mut world, 10);
+    player(&mut world, set_below(1, 2, 10)).unwrap();
+    set_stock(&mut world, 2, 50);
+    world.submit_staff(A, hand_in_of(&[(cannot_meet(), 1)]));
+    world.resolve_day().unwrap();
+    let count = |side: Side, pick: fn(&EventKind) -> bool| {
+        world
+            .side_view(side)
+            .events()
+            .iter()
+            .filter(|e| matches!(&e.kind, SideEventKind::Whole(kind) if pick(kind)))
+            .count()
+    };
+    let notice = |k: &EventKind| matches!(k, EventKind::StaffNotice { .. });
+    let fired = |k: &EventKind| matches!(k, EventKind::InterruptFired { .. });
+    assert_eq!(count(A, notice), 1);
+    assert_eq!(count(A, fired), 2); // the set one and the standing one
+    assert_eq!(count(J, notice), 0);
+    assert_eq!(count(J, fired), 0);
+    // Nothing of them is in what the enemy sees at all.
+    assert!(texts(&world.side_view(J).events())
+        .iter()
+        .all(|text| !text.contains("interrupt") && !text.contains("notice")));
+    // The side's causes still resolve for it: the firing's causes are its own.
+    for event in world.side_view(A).events() {
+        if matches!(
+            &event.kind,
+            SideEventKind::Whole(EventKind::InterruptFired { .. })
+        ) {
+            assert!(!event.causes.is_empty());
+        }
+    }
+}
+
+#[test]
+fn the_hash_changes_when_an_interrupts_status_changes() {
+    let mut world = world_with_interrupt(10);
+    let set = world.state_hash();
+    day_with_stock(&mut world, 50);
+    // (The day's own changes move the hash too; compare states of one day.)
+    let fired = world.state_hash();
+    assert_ne!(set, fired);
+    let acknowledged = {
+        let mut copy = world.clone();
+        player(&mut copy, acknowledge_set(1)).unwrap();
+        copy.state_hash()
+    };
+    assert_ne!(fired, acknowledged, "acknowledged is hashed");
+    let rearmed = {
+        let mut copy = world.clone();
+        copy.command
+            .get_mut(&A)
+            .unwrap()
+            .interrupts
+            .get_mut(&interrupt_id(1))
+            .unwrap()
+            .status
+            .armed = true;
+        copy.state_hash()
+    };
+    assert_ne!(fired, rearmed, "armed is hashed");
+    let off = {
+        let mut copy = world.clone();
+        player(&mut copy, switch(StandingKind::ShipLost, false)).unwrap();
+        copy.state_hash()
+    };
+    assert_ne!(fired, off, "a kind switched off is hashed");
+    let standing = {
+        let mut copy = world.clone();
+        copy.command.get_mut(&A).unwrap().standing.insert(
+            (StandingKind::CannotMeet, StandingSubject::Plan(plan(1))),
+            InterruptStatus::default(),
+        );
+        copy.state_hash()
+    };
+    assert_ne!(fired, standing, "a standing record is hashed");
+    // And a state with none is not empty.
+    assert!(!state(&world, A).is_empty());
+}
+
+/// A world where ship 3 (of the side's force 2) is sunk, recorded on `day` as
+/// the engine records a sinking.
+fn sink_ship_3_on(world: &mut World, day: u32) -> crate::ids::EventId {
+    {
+        let record = world.truth.ships.get_mut(&ship(3)).expect("ship 3");
+        record.location = ShipLocation::Sunk;
+        record.flotation_damage = t(100);
+    }
+    world
+        .truth
+        .task_forces
+        .get_mut(&tf(2))
+        .expect("force 2")
+        .ships
+        .remove(&ship(3));
+    world.events.record(
+        day,
+        None,
+        EventKind::ShipSunk {
+            round: 1,
+            ship: ship(3),
+            task_force: tf(2),
+        },
+        Vec::new(),
+        None,
+    )
+}
+
+#[test]
+fn a_ship_lost_fires_once_the_morning_after_and_only_for_a_side_with_an_intent_in_force() {
+    // An intent in force: the ship sunk on day 1 fires on the morning of day 2.
+    let mut world = world();
+    player(&mut world, set_intent(1)).unwrap();
+    world.resolve_day().unwrap();
+    let sinking = sink_ship_3_on(&mut world, 1);
+    world.resolve_day().unwrap();
+    let lost = InterruptRef::Standing {
+        kind: StandingKind::ShipLost,
+        subject: StandingSubject::Ship(ship(3)),
+    };
+    assert_eq!(firings(&world, A, 2), vec![lost]);
+    let fired = log(&world)
+        .into_iter()
+        .find(|e| matches!(e.kind, EventKind::InterruptFired { .. }))
+        .unwrap();
+    assert_eq!(fired.causes, vec![Cause::Event(sinking)]);
+    assert_eq!(
+        fired.kind.to_string(),
+        "Allied standing interrupt fired: ship:3 was lost"
+    );
+    // Once: the next mornings do not fire it again.
+    world.resolve_day().unwrap();
+    world.resolve_day().unwrap();
+    assert_eq!(all_firings(&world, A), 1);
+    // A side with no intent in force gets no event, though its ship is lost.
+    let mut world = self::world();
+    world.resolve_day().unwrap();
+    sink_ship_3_on(&mut world, 1);
+    world.resolve_day().unwrap();
+    assert_eq!(all_firings(&world, A), 0);
+    assert!(state(&world, A).standing.is_empty());
+    // An intent withdrawn is no intent in force.
+    let mut world = self::world();
+    player(&mut world, set_intent(1)).unwrap();
+    world.resolve_day().unwrap();
+    player(
+        &mut world,
+        CommandKind::WithdrawIntent { intent: intent(1) },
+    )
+    .unwrap();
+    sink_ship_3_on(&mut world, 1);
+    world.resolve_day().unwrap();
+    assert_eq!(all_firings(&world, A), 0);
+    // The enemy's ship lost is not the side's.
+    let mut world = self::world();
+    player(&mut world, set_intent(1)).unwrap();
+    world.resolve_day().unwrap();
+    {
+        let record = world.truth.ships.get_mut(&ship(20)).expect("ship 20");
+        record.location = ShipLocation::Sunk;
+        record.flotation_damage = t(100);
+    }
+    world
+        .truth
+        .task_forces
+        .get_mut(&tf(20))
+        .unwrap()
+        .ships
+        .remove(&ship(20));
+    world.events.record(
+        1,
+        None,
+        EventKind::ShipSunk {
+            round: 1,
+            ship: ship(20),
+            task_force: tf(20),
+        },
+        Vec::new(),
+        None,
+    );
+    world.resolve_day().unwrap();
+    assert_eq!(all_firings(&world, A), 0);
+}
+
+#[test]
+fn a_hand_in_given_back_and_a_live_staffs_are_merged_with_the_notices_still_on_their_reasons() {
+    let mut world = world();
+    // Given back first: one no-order reason and one notice on it. The live
+    // staff then hands in the same shape: its notice rests on its own
+    // reason, which is now the second.
+    world.submit_staff(A, hand_in_of(&[(cannot_meet(), 1)]));
+    let live = Fixed_(StaffDecisions {
+        no_orders: vec![reason(1, "the live staff's reason")],
+        commands: vec![StaffCommand {
+            kind: CommandKind::Approve { plan: plan(9) },
+            reason: reason(1, "the live staff's command"),
+        }],
+        notices: vec![
+            StaffNotice {
+                kind: cannot_meet(),
+                plan: plan(2),
+                run: None,
+                rests_on: NoticeBasis::NoOrder(0),
+            },
+            StaffNotice {
+                kind: NoticeKind::RunEnded,
+                plan: plan(2),
+                run: Some(1),
+                rests_on: NoticeBasis::Command(0),
+            },
+        ],
+        ..StaffDecisions::default()
+    });
+    world
+        .resolve_day_staffed(Staffs::none().with(A, &live))
+        .unwrap();
+    let handed = &world.staff_handed_in()[&A];
+    assert_eq!(handed.no_orders.len(), 2);
+    assert_eq!(handed.commands.len(), 1);
+    assert_eq!(
+        handed
+            .notices
+            .iter()
+            .map(|n| n.rests_on)
+            .collect::<Vec<_>>(),
+        vec![
+            NoticeBasis::NoOrder(0),
+            NoticeBasis::NoOrder(1),
+            NoticeBasis::Command(0)
+        ]
+    );
+    let log = log(&world);
+    let reason_event = |worked: &str| {
+        log.iter()
+            .find(|e| matches!(&e.kind, EventKind::StaffReason { reason, .. } if reason.worked == worked))
+            .expect("the reason is recorded")
+            .id
+    };
+    let notice_of = |plan_n: u32| {
+        log.iter()
+            .find(
+                |e| matches!(&e.kind, EventKind::StaffNotice { plan: p, .. } if *p == plan(plan_n)),
+            )
+            .expect("the notice is recorded")
+            .causes
+            .clone()
+    };
+    assert_eq!(
+        notice_of(1),
+        vec![Cause::Event(reason_event("a decision on plan:1"))]
+    );
+    assert_eq!(
+        notice_of(2),
+        vec![Cause::Event(reason_event("the live staff's reason"))]
+    );
+    // The same shape handed in by one `submit_staff` after another.
+    let mut again = self::world();
+    again.submit_staff(A, hand_in_of(&[(cannot_meet(), 1)]));
+    again.submit_staff(A, hand_in_of(&[(cannot_meet(), 2)]));
+    again.resolve_day().unwrap();
+    let handed = &again.staff_handed_in()[&A];
+    assert_eq!(
+        handed
+            .notices
+            .iter()
+            .map(|n| n.rests_on)
+            .collect::<Vec<_>>(),
+        vec![NoticeBasis::NoOrder(0), NoticeBasis::NoOrder(1)]
+    );
+}
+
+#[test]
+fn a_day_with_no_notice_and_no_interrupt_records_neither() {
+    let mut world = world();
+    player(&mut world, set_intent(1)).unwrap();
+    world.resolve_day().unwrap();
+    world.resolve_day().unwrap();
+    assert!(!world.events.iter().any(|e| matches!(
+        e.kind,
+        EventKind::StaffNotice { .. } | EventKind::InterruptFired { .. }
+    )));
+}
+
+#[test]
+fn a_set_interrupt_and_a_standing_one_fire_on_one_morning_in_the_order_set_then_standing() {
+    let mut world = world();
+    put_use_on_base_2(&mut world, 10);
+    player(&mut world, set_below(2, 2, 10)).unwrap();
+    player(&mut world, set_below(1, 2, 10)).unwrap();
+    set_stock(&mut world, 2, 50);
+    world.submit_staff(A, hand_in_of(&[(cannot_meet(), 1)]));
+    world.resolve_day().unwrap();
+    assert_eq!(
+        firings(&world, A, 1),
+        vec![set_ref(1), set_ref(2), standing_cannot_meet(1)]
+    );
+    // All of them before the day's orders: the first event of the day that
+    // is an order's answer comes after the last firing (there is none here),
+    // and the firings come after the commands' records.
+    let log = log(&world);
+    let taken = log
+        .iter()
+        .rposition(|e| matches!(e.kind, EventKind::CommandTaken { .. }))
+        .unwrap();
+    let first_fired = log
+        .iter()
+        .position(|e| matches!(e.kind, EventKind::InterruptFired { .. }))
+        .unwrap();
+    assert!(taken < first_fired);
 }

@@ -511,7 +511,7 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     //
     // The kind of decision 0110, `GroundFoundEmpty`: the frozen copy has no
     // land unit. Scenario 38 records it, and its own test reads it.
-    const NOT_IN_THE_FULL_SLICE: [&str; 74] = [
+    const NOT_IN_THE_FULL_SLICE: [&str; 76] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -586,6 +586,10 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "StaffReason",
         "HeldByOrder",
         "GroundFoundEmpty",
+        // No staff hands in a notice in the full slice: it has no intent
+        // (decision 0107, step 4).
+        "StaffNotice",
+        "InterruptFired",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

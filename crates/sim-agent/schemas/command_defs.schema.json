@@ -454,7 +454,7 @@
       }
     },
     "command_body": {
-      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, set_limit, set_leave, hold, release, approve and cancel_plan), ships and task forces in your numbers.",
+      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, set_limit, set_leave, hold, release, approve, cancel_plan, set_interrupt and acknowledge), ships and task forces in your numbers.",
       "type": "object",
       "required": [
         "kind"
@@ -475,7 +475,9 @@
             "mark_plan",
             "hold",
             "release",
-            "end_run"
+            "end_run",
+            "set_interrupt",
+            "acknowledge"
           ]
         }
       }
@@ -546,6 +548,51 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/reason"
+          }
+        },
+        "notices": {
+          "type": "array",
+          "description": "Notices the staff hands in beside its orders: that a plan cannot meet its intent, waits for a leave, or has had a run end. Each rests on one of the commands or decisions to give no order above, by its place in the list. Left out when there is none.",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "plan",
+              "run",
+              "rests_on"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "cannot_meet",
+                  "waits_for_leave_to_prepare",
+                  "waits_for_leave_to_launch",
+                  "run_ended"
+                ]
+              },
+              "plan": {
+                "type": "integer"
+              },
+              "run": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "rests_on": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "command": {
+                    "type": "integer"
+                  },
+                  "no_order": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -646,6 +693,193 @@
           }
         }
       ]
+    },
+    "firing": {
+      "description": "One interrupt that fired on a morning, in your numbers: a set one (interrupt, base, below_days, figure) or a standing one (standing with plan or ship). why is the numbers why takes for the reasons the notices it rests on were handed in with (empty for a set interrupt and for a ship lost); event is the firing's own number, which explain takes.",
+      "type": "object",
+      "required": [
+        "day",
+        "event",
+        "acknowledged",
+        "why",
+        "words"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "type": "integer"
+        },
+        "event": {
+          "type": "integer"
+        },
+        "acknowledged": {
+          "type": "boolean"
+        },
+        "why": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "words": {
+          "type": "string"
+        },
+        "interrupt": {
+          "type": "integer"
+        },
+        "base": {
+          "$ref": "defs.schema.json#/$defs/handle"
+        },
+        "below_days": {
+          "type": "integer"
+        },
+        "figure": {
+          "$ref": "defs.schema.json#/$defs/dec_or_null"
+        },
+        "standing": {
+          "enum": [
+            "cannot_meet",
+            "waits_for_leave",
+            "ship_lost"
+          ]
+        },
+        "plan": {
+          "type": "integer"
+        },
+        "ship": {
+          "type": "integer"
+        }
+      }
+    },
+    "interrupts": {
+      "description": "The interrupts of your command: every numbered interrupt you set, every standing record that has fired, and the standing kinds you have switched off. Those fired and not acknowledged come first.",
+      "type": "object",
+      "required": [
+        "set",
+        "standing",
+        "switched_off",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "set": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "interrupt",
+              "base",
+              "below_days",
+              "set_day",
+              "armed",
+              "last_fired",
+              "acknowledged",
+              "needs_acknowledgement",
+              "text"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "interrupt": {
+                "type": "integer"
+              },
+              "base": {
+                "$ref": "defs.schema.json#/$defs/handle"
+              },
+              "below_days": {
+                "type": "integer"
+              },
+              "set_day": {
+                "type": "integer"
+              },
+              "armed": {
+                "type": "boolean"
+              },
+              "last_fired": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "acknowledged": {
+                "type": "boolean"
+              },
+              "needs_acknowledgement": {
+                "type": "boolean",
+                "description": "true if it has fired and the last firing is not acknowledged."
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "standing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "standing",
+              "armed",
+              "last_fired",
+              "acknowledged",
+              "needs_acknowledgement",
+              "text"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "standing": {
+                "enum": [
+                  "cannot_meet",
+                  "waits_for_leave",
+                  "ship_lost"
+                ]
+              },
+              "plan": {
+                "type": "integer"
+              },
+              "ship": {
+                "type": "integer"
+              },
+              "armed": {
+                "type": "boolean"
+              },
+              "last_fired": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "acknowledged": {
+                "type": "boolean"
+              },
+              "needs_acknowledgement": {
+                "type": "boolean",
+                "description": "true if it has fired and the last firing is not acknowledged."
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "switched_off": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "cannot_meet",
+              "waits_for_leave",
+              "ship_lost"
+            ]
+          }
+        },
+        "text": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "One line for each interrupt, record and switched-off kind, those fired and not acknowledged first."
+        }
+      }
     }
   }
 }
