@@ -262,6 +262,10 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
             "cancel_plan",
             "propose",
             "staff_orders",
+            "set_interrupt",
+            "acknowledge",
+            "run",
+            "report",
             "why"
         ]
     );
