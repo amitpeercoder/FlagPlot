@@ -120,6 +120,8 @@ In `gaps.csv`, with where each would be found. The ones that matter most to the 
 
 Attributes used in `land_unit_facts.csv`: `strength_men` and its tagged forms; `strength_men_estimated_by_enemy`; `landed_men`, `landed_at`, `landed_on`, `carried_by`; `departed_on`, `ceased_on`; `commander`, `parent_stated`; `rations_days_on_hand`, `ration_scale_note`, `supply_tons_landed`, `supply_note`; `sick_men`, `evacuated_men` and their tagged forms; `estimate_note` and `note` for statements with no number. Added on 2026-11-14 (`outside-research-nov-14.md`): `prior_combat_note`, `training_note`, `replacements_men`, `amphibious_training_note`, `terrain_training_note`, `heavy_weapons_ashore_note`, `heavy_weapons_left_note`, `quality_judgement_note`, `strength_riflemen`; `position_on`, `march_distance_miles`, `march_days`, `attack_on`, `attack_planned_on`, `carried_note`; `directive_on`, `warning_on`, `embarked_on`, `sailed_on`, `rendezvous_on`, `rehearsal_from`, `rehearsal_to`, `loading_note`, `vehicles_left_share_percent`, `preparation_note`, `intelligence_note`.
 
+Added on 2026-11-15 (`land-order-of-battle-parents.md`): `task_org_parent`, `attached_to`, `listed_under`, `direct_support_of` (each with an entity key as the value), and `parent_stated` with the parent's key rather than free text.
+
 Attributes used in `troop_lift_facts.csv`: `troop_capacity_men`, `troops_carried`, `ships_in_run`, `supply_tons_carried`, `troops_lost`, `crew_complement`, `troops_per_ship_estimated_by_enemy`, `lift_note`.
 
 ## For the architect
