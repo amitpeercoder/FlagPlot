@@ -1,9 +1,10 @@
 //! Preparing a landing and the experience of a land unit as the agent
 //! interface tells them (decisions 0095 and 0097).
 //!
-//! Scenario 27 is read on the live figures (`data/reference/ground.toml`),
-//! not the frozen ones, which switch the rule off: `preparation_per_day` 5,
-//! `unprepared_landing_share` 0.5, `unprepared_landing_fatigue` 40. Five
+//! Scenario 27 is read on the frozen step 1 figures with the figures of this
+//! calculation set by the test (`figures`), since the frozen ones switch the
+//! rule off and the live ones are tuned: `preparation_per_day` 5 (the frozen
+//! value), `unprepared_landing_share` 0.5, `unprepared_landing_fatigue` 40. Five
 //! Allied forces lie at base A (0,0); the side's `task_force:N` carries
 //! `land_unit:N` aboard for N from 1 to 5, and `land_unit:6` is ashore at A.
 //! B (4,0) and C (0,6) are coast hexes; (2,0) is open sea. None of the
@@ -28,19 +29,66 @@ use sim_agent::{Seat, Session};
 use sim_core::state::Side;
 use sim_core::World;
 use sim_data::{LoadOptions, Scenario};
+use std::fs;
+use std::path::Path;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use support::check::{check_view, valid};
-use support::{scenario_path, scenario_text, schemas};
 
-/// A scenario on the live figures, with its text changed by `edit`.
-fn live(name: &str, edit: impl Fn(String) -> String) -> Scenario {
-    Scenario::from_text_with(
-        &edit(scenario_text(name)),
-        &scenario_path(name),
-        &LoadOptions::default(),
-    )
-    .expect("the scenario loads on the live figures")
-    .with_seed(1942)
-    .expect("a seed can be set")
+use support::{scenario_path, scenario_text, schemas, ROOT};
+
+/// The frozen step 1 figures with the figures of this calculation set as the
+/// test's own: `unprepared_landing_share` 0.5 and `unprepared_landing_fatigue`
+/// 40, the live values when it was worked. The frozen copy switches the rule
+/// off, and a tuning round moves the live ones, so the test sets them (the
+/// architect's ruling of Nov 15, 2026, on round 1 of decision 0109).
+fn figures() -> LoadOptions {
+    // Tests run in parallel: each load has a folder of its own.
+    static NEXT: AtomicUsize = AtomicUsize::new(0);
+    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
+        "reference_preparing_{}_{}",
+        std::process::id(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    ));
+    fs::create_dir_all(&root).expect("make the reference folder");
+    let frozen = Path::new(ROOT).join("data/reference/step1");
+    for entry in fs::read_dir(&frozen).expect("the frozen folder reads") {
+        let entry = entry.expect("an entry reads");
+        let name = entry.file_name();
+        if name.to_string_lossy().ends_with(".md") {
+            continue;
+        }
+        fs::copy(entry.path(), root.join(&name)).expect("copy a frozen file");
+    }
+    let path = root.join("ground.toml");
+    let mut text = fs::read_to_string(&path).expect("the frozen ground figures read");
+    for (from, to) in [
+        (
+            "unprepared_landing_share = 1\n",
+            "unprepared_landing_share = \"0.5\"\n",
+        ),
+        (
+            "unprepared_landing_fatigue = 0\n",
+            "unprepared_landing_fatigue = 40\n",
+        ),
+    ] {
+        assert_eq!(
+            text.matches(from).count(),
+            1,
+            "{from} is in the frozen file once"
+        );
+        text = text.replace(from, to);
+    }
+    fs::write(&path, text).expect("write the figures");
+    LoadOptions::with_reference_root(root)
+}
+
+/// A scenario on the figures of this calculation, with its text changed by
+/// `edit`.
+fn on_figures(name: &str, edit: impl Fn(String) -> String) -> Scenario {
+    Scenario::from_text_with(&edit(scenario_text(name)), &scenario_path(name), &figures())
+        .expect("the scenario loads on the figures of the calculation")
+        .with_seed(1942)
+        .expect("a seed can be set")
 }
 
 fn session_of(scenario: Scenario) -> Session {
@@ -111,7 +159,7 @@ fn status(result: &Value) -> &str {
 
 #[test]
 fn the_two_orders_are_queued_and_refused_with_their_texts() {
-    let mut session = session_of(live("27_preparing_a_landing.toml", |t| t));
+    let mut session = session_of(on_figures("27_preparing_a_landing.toml", |t| t));
     let results = orders(
         &mut session,
         Side::Allied,
@@ -188,7 +236,7 @@ fn the_two_orders_are_queued_and_refused_with_their_texts() {
 
 #[test]
 fn a_force_shows_its_loading_and_the_rate_it_lands_at_and_a_unit_its_rehearsal() {
-    let mut session = session_of(live("27_preparing_a_landing.toml", |t| t));
+    let mut session = session_of(on_figures("27_preparing_a_landing.toml", |t| t));
     let results = orders(
         &mut session,
         Side::Allied,
@@ -319,7 +367,7 @@ fn a_force_shows_its_loading_and_the_rate_it_lands_at_and_a_unit_its_rehearsal()
 
 #[test]
 fn a_new_landing_place_a_dropped_unit_and_a_taken_unit_are_told_with_their_reasons() {
-    let mut session = session_of(live("27_preparing_a_landing.toml", |t| t));
+    let mut session = session_of(on_figures("27_preparing_a_landing.toml", |t| t));
     orders(
         &mut session,
         Side::Allied,
@@ -388,7 +436,7 @@ fn a_new_landing_place_a_dropped_unit_and_a_taken_unit_are_told_with_their_reaso
 
 #[test]
 fn training_and_fighting_count_days_and_raise_experience_and_each_is_told() {
-    let mut session = session_of(live("28_experience_and_training.toml", |t| t));
+    let mut session = session_of(on_figures("28_experience_and_training.toml", |t| t));
     let (_, data) = briefing(&mut session, Side::Allied);
     let u = unit_line(&data, "land_unit:1");
     assert_eq!(u["experience"], 0, "{u}");
@@ -451,7 +499,7 @@ fn training_and_fighting_count_days_and_raise_experience_and_each_is_told() {
 
 /// A world as the tests below build it: the scenario text with a change.
 fn world_of(name: &str, edit: impl Fn(String) -> String) -> World {
-    live(name, edit).world
+    on_figures(name, edit).world
 }
 
 /// The whole of what `side` is told each day for `days` days in a world, with
@@ -540,7 +588,7 @@ fn every_answer_of_both_sides_on_every_day_is_in_the_schemas() {
         ("27_preparing_a_landing.toml", 12),
         ("28_experience_and_training.toml", 12),
     ] {
-        let mut scenario = live(name, |t| t);
+        let mut scenario = on_figures(name, |t| t);
         let title = scenario.name.clone();
         let mut day = 0;
         support::play(&mut scenario, |s| {
