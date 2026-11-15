@@ -123,10 +123,11 @@ impl World {
     }
 
     /// Whether `group` is one of `side`'s air groups that `intent` may use
-    /// (decisions 0115, 2, and 0117, 7 and 8): named in its forces limit read
-    /// up the tree; or, with no forces limit on it or above it, based at the
-    /// base it is addressed to. An intent addressed to the area may use no
-    /// group without a forces limit.
+    /// (decisions 0115, 2, and 0117, 7 and 8): named in every forces limit on
+    /// its chain (the narrowest binds, the architect's ruling after the
+    /// build); or, with no forces limit on it or above it, based at the base
+    /// it is addressed to. An intent addressed to the area may use no group
+    /// without a forces limit.
     pub(crate) fn may_use_group(&self, side: Side, intent: IntentId, group: AirGroupId) -> bool {
         let state = &self.command[&side];
         let Some(found) = state.intents.get(&intent) else {
@@ -136,8 +137,8 @@ impl World {
         let Some(own) = own else {
             return false;
         };
-        match state.forces_read_up(intent) {
-            Some(forces) => forces.air_groups.contains(&group),
+        match state.groups_on_chain(intent) {
+            Some(allowed) => allowed.contains(&group),
             None => match found.addressee {
                 Addressee::Area => false,
                 Addressee::Base(base) => own.location == AirGroupLocation::Base(base),
@@ -145,37 +146,44 @@ impl World {
         }
     }
 
+    /// Whether `ship` is in the pool of every forces limit in `limits`.
+    fn in_every_pool(&self, limits: &[&ForcesLimit], ship: ShipId) -> bool {
+        limits.iter().all(|forces| self.in_pool(forces, ship))
+    }
+
     /// Whether a forces limit set on `intent`, which has a parent, names
     /// only what the parent may use, read up the tree (decision 0117, 7):
-    /// each ship in the parent's pool, each task force inside its limit, each
-    /// group one the parent may use, and a source only where it is the
-    /// parent's. With no forces limit above, the parent may use only what its
-    /// addressee commands: a base's air groups, and no ship.
+    /// each ship in the pool of every forces limit on the parent's chain,
+    /// each task force inside every one, each group one the parent may use,
+    /// and a source only where it is the source of every one. With no forces
+    /// limit above, the parent may use only what its addressee commands: a
+    /// base's air groups, and no ship.
     fn forces_narrow(&self, side: Side, parent: IntentId, limit: &ForcesLimit) -> bool {
         let state = &self.command[&side];
         let groups_ok = limit
             .air_groups
             .iter()
             .all(|group| self.may_use_group(side, parent, *group));
-        match state.forces_read_up(parent) {
-            Some(above) => {
-                groups_ok
-                    && limit.ships.iter().all(|ship| self.in_pool(above, *ship))
-                    && limit
-                        .task_forces
-                        .iter()
-                        .all(|force| self.force_in_forces_limit(side, above, *force))
-                    && limit
-                        .source
-                        .is_none_or(|source| above.source == Some(source))
-            }
-            None => {
-                groups_ok
-                    && limit.ships.is_empty()
-                    && limit.task_forces.is_empty()
-                    && limit.source.is_none()
-            }
+        let above = state.forces_on_chain(parent);
+        if above.is_empty() {
+            return groups_ok
+                && limit.ships.is_empty()
+                && limit.task_forces.is_empty()
+                && limit.source.is_none();
         }
+        groups_ok
+            && limit
+                .ships
+                .iter()
+                .all(|ship| self.in_every_pool(&above, *ship))
+            && limit.task_forces.iter().all(|force| {
+                above
+                    .iter()
+                    .all(|forces| self.force_in_forces_limit(side, forces, *force))
+            })
+            && limit
+                .source
+                .is_none_or(|source| above.iter().all(|forces| forces.source == Some(source)))
     }
 
     /// Checks a command against the side's command state and its own units,
@@ -230,6 +238,15 @@ impl World {
                     .is_some_and(|existing| existing.maker == Maker::Staff)
                 {
                     return Err(CommandRefusal::MadeByStaff(*intent));
+                }
+                // Its figures may change and not its kind (the architect's
+                // ruling after the build of decision 0117).
+                if state
+                    .intents
+                    .get(intent)
+                    .is_some_and(|existing| existing.kind.code() != kind.code())
+                {
+                    return Err(CommandRefusal::KindCannotChange(*intent));
                 }
                 self.check_intent_kind(side, kind)
             }
@@ -337,7 +354,7 @@ impl World {
                         Limit::Risk { risk, .. } => *risk <= state.risk_read_up(parent),
                         Limit::Area { hexes, .. } => state
                             .area_read_up(parent)
-                            .is_none_or(|above| hexes.is_subset(above)),
+                            .is_none_or(|above| hexes.is_subset(&above)),
                         Limit::Priority { .. }
                         | Limit::Protected { .. }
                         | Limit::Reserve { .. } => true,
@@ -1205,19 +1222,22 @@ impl World {
         if let OrderKind::AirGroup { target, .. } = &request.kind {
             return self.may_use_group(side, intent, *target);
         }
-        let Some(forces) = state.forces_read_up(intent) else {
+        // Every forces limit on the chain binds (the architect's ruling
+        // after the build). A root has its own alone.
+        let limits = state.forces_on_chain(intent);
+        if limits.is_empty() {
             return false;
-        };
+        }
         match &request.kind {
-            OrderKind::TaskForce { target, .. } => {
-                self.force_in_forces_limit(side, forces, *target)
-            }
+            OrderKind::TaskForce { target, .. } => limits
+                .iter()
+                .all(|forces| self.force_in_forces_limit(side, forces, *target)),
             OrderKind::Base {
                 target,
                 order: BaseOrder::FormTaskForce { ships },
             } => {
-                Some(*target) == forces.source
-                    && ships.iter().all(|ship| self.in_pool(forces, *ship))
+                limits.iter().all(|forces| Some(*target) == forces.source)
+                    && ships.iter().all(|ship| self.in_every_pool(&limits, *ship))
             }
             // Land units and any other base order are in no forces limit.
             _ => false,

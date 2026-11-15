@@ -1144,3 +1144,112 @@ fn two_worlds_that_differ_only_in_what_the_allied_side_cannot_see_give_the_same_
     assert_eq!(plain.handed, other.handed);
     assert_eq!(plain.state, other.state);
 }
+
+// ------------------------------------------- Rulings after the build
+//
+// The architect's rulings on pull request 350, after the build (decision
+// 0117, "As built"): read up the tree, the narrowest binds, so a limit set on
+// a parent after one on its child binds the child too; and a commander's
+// `set_intent` on an intent in force may change its figures and not its kind.
+
+#[test]
+fn a_parents_risk_set_after_its_childs_binds_the_child() {
+    // Intent 2's risk set to balanced on day 2 (taken: not bolder than its
+    // parent's, which is unset and so balanced), then intent 1's set to
+    // preserve on day 3: from day 3 the share ordered is 0.75 and the level
+    // 30.
+    let text = with(&format!(
+        "{}{}",
+        command_table(
+            2,
+            "kind = \"set_limit\"\nlimit = \"risk\"\nintent = 2\nrisk = \"balanced\""
+        ),
+        command_table(
+            3,
+            "kind = \"set_limit\"\nlimit = \"risk\"\nintent = 1\nrisk = \"preserve\""
+        ),
+    ));
+    let played = play(&text);
+    played.nothing_refused();
+    assert_eq!(played.air_orders(1), table_orders()[0]);
+    assert_eq!(played.air_orders(2), table_orders()[1]);
+    // Day 3: both fighters at 12 are given the share 0.75; group 3 at 44 is
+    // above 30 and rests, which it already does, so it is given no order.
+    assert_eq!(
+        played.air_orders(3),
+        vec![(1, share("0.75")), (2, share("0.75"))]
+    );
+    // Both fighters first pass 30 on the morning of day 7, at 36: group 1
+    // rests and group 2 is kept.
+    assert_eq!(played.morning(7, 1), n(36));
+    assert!(played.air_orders(7).contains(&(1, mission(REST))));
+    assert!(!played.air_orders(7).contains(&(2, mission(REST))));
+    assert_eq!(
+        played.state.intents[&intent(2)].limits.risk,
+        Some(sim_core::command::Risk::Balanced)
+    );
+    assert_eq!(
+        played.state.risk_read_up(intent(2)),
+        sim_core::command::Risk::Preserve
+    );
+    played.every_chain_ends_with_the_commander();
+}
+
+#[test]
+fn a_parents_forces_limit_set_after_its_childs_binds_the_child() {
+    // Intent 2's forces limit names groups 1, 2 and 3 on day 2 (taken: all
+    // are at base 1), then intent 1's is set to groups 1 and 3 on day 3: group
+    // 2 is given no staff order after.
+    let text = with(&format!(
+        "{}{}",
+        command_table(
+            2,
+            "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 2\nair_groups = [1, 2, 3]"
+        ),
+        command_table(
+            3,
+            "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\nair_groups = [1, 3]"
+        ),
+    ));
+    let played = play(&text);
+    played.nothing_refused();
+    assert_eq!(played.air_orders(1), table_orders()[0]);
+    assert_eq!(played.air_orders(2), table_orders()[1]);
+    for day in 3..=12 {
+        assert!(
+            played.air_orders(day).iter().all(|(g, _)| *g != 2),
+            "group 2 is given an order on day {day}"
+        );
+    }
+    // Group 1 is the only fighter the staff may order: it is kept on patrol
+    // on day 9, at 48.
+    assert_eq!(played.morning(9, 1), n(48));
+    assert!(!played.air_orders(9).contains(&(1, mission(REST))));
+    assert_eq!(
+        played.state.groups_on_chain(intent(2)),
+        Some([group(1), group(3)].into_iter().collect())
+    );
+}
+
+#[test]
+fn a_set_intent_may_not_change_the_kind_of_an_intent_in_force() {
+    // On day 2 the commander sets intent 1, a hold, to cover base 1: refused;
+    // the orders are those of the main case.
+    let text = with(&command_table(
+        2,
+        "kind = \"set_intent\"\nintent = 1\nintent_kind = \"cover\"\nbase = 1",
+    ));
+    let played = play(&text);
+    assert_eq!(
+        played.refusals(),
+        vec![(2, CommandRefusal::KindCannotChange(intent(1)))]
+    );
+    for (i, expected) in table_orders().iter().enumerate() {
+        let day = i as u32 + 1;
+        assert_eq!(&played.air_orders(day), expected, "day {day}");
+    }
+    assert!(matches!(
+        played.state.intents[&intent(1)].kind,
+        sim_core::command::IntentKind::Hold { .. }
+    ));
+}

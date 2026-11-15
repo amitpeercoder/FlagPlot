@@ -22,11 +22,11 @@ An intent is what the commander wants. Three kinds are built, and each names a b
 
 The commander names the intent's number when he sets it. It is a whole number from 1. A withdrawn intent keeps its number in the state and the number is never used again. An intent records the day it was first set, the plan that serves it, the day it was withdrawn, if it was, and, since the tree (The intent tree, below), its parent, its maker and its addressee. [0107, 0117]
 
-An intent in force carries its limits as they stand. Setting an intent that is in force again replaces its kind and base (and a supply intent's floor and interval) together, gives it the addressee of its new kind, and leaves its limits, its parent and its maker as they are. [0107, 0117]
+An intent in force carries its limits as they stand. Setting an intent that is in force again may change its figures and not its kind: it replaces its base (and a supply intent's floor and interval) together, and leaves its limits, its parent and its maker as they are. A `set_intent` that names another kind of intent than the one in force is refused as "Kind cannot change"; the commander withdraws the intent and states another. [0107, 0117, "As built", the architect's ruling after the build]
 
 ### The six limits
 
-A limit says what the staff may use and where it may go. Five belong to an intent and one to a base. A limit that was never set on an intent is read up the tree: the intent has its parent's, and so on to the root (The intent tree, below). A limit set nowhere above it does not bind, with one exception that follows from what it is: an intent with no forces limit anywhere above it may use what its addressee commands, which for an intent given to the area is nothing, so it gives the staff no ship and no order for it; for one given to a base it is the side's air groups based there. With no area limit the sea is open. [0107; the architect's ruling, Nov 15, 2026; 0117 item 8]
+A limit says what the staff may use and where it may go. Five belong to an intent and one to a base. A limit is read up the tree: every limit set on the intent or above it binds it, the narrowest binding (The intent tree, below). A limit set nowhere above it does not bind, with one exception that follows from what it is: an intent with no forces limit anywhere above it may use what its addressee commands, which for an intent given to the area is nothing, so it gives the staff no ship and no order for it; for one given to a base it is the side's air groups based there. With no area limit the sea is open. [0107; the architect's ruling, Nov 15, 2026; 0117 item 8]
 
 | Limit | What it holds | What reads it |
 | --- | --- | --- |
@@ -108,7 +108,7 @@ A command is a change to the side's command state, handed in beside orders. It i
 
 | Command | Given by | What it does |
 | --- | --- | --- |
-| `set_intent` | Commander | Sets an intent (a root), or changes one in force that the commander made |
+| `set_intent` | Commander | Sets an intent (a root), or changes the figures of one in force that the commander made, never its kind |
 | `withdraw_intent` | Commander | Withdraws an intent in force that the commander made, everything beneath it, and ends its plan |
 | `set_limit` | Commander | Sets one limit, on any intent |
 | `set_leave` | Commander | Gives or withholds leave to prepare, or leave to launch |
@@ -139,6 +139,7 @@ The reasons for one command are tried in the order written. The first that appli
 | Any | Not yours | The issuer may not give this kind of command. Tried first |
 | `set_intent` | Intent number not usable | The number is 0, or it is the number of an intent that was withdrawn |
 | `set_intent` | Made by the staff | The number is that of an intent in force that the staff formed |
+| `set_intent` | Kind cannot change | The number is that of an intent in force of another kind; it is withdrawn and another stated (the architect's ruling after the build of 0117) |
 | `set_intent` | Not your base | The base is not one of the side's |
 | `set_intent` | No days | The floor is 0, or an interval is given and is 0 |
 | `withdraw_intent` | No such intent | No intent of that number is in force |
@@ -243,7 +244,7 @@ The level that owns an intent is the kind of its addressee. [0117 items 1 and 2]
 
 **Withdrawing a tree.** A `withdraw_intent` withdraws the intent and every intent in force beneath it, depth first, each branch by number, all with the day of the command. Each intent beneath records an `IntentWithdrawn` event naming the intent it stood under, citing the command's `CommandTaken` (the intent named in the command has no event of its own: the command is its record). A withdrawn intent's plan ends as for any intent (Plans, above) when it is the root. [0117 item 6]
 
-**Limits read up the tree.** The commander may set a limit on any intent in force, a staff-made one too (`set_limit` names the intent). An intent with no limit of a kind has its parent's, and so on to the root: forces, risk, priority and area are each read from the intent itself or the nearest above it. The risk read where none is set anywhere is balanced. With no forces limit on it or above it, an intent may use what its addressee commands (The six limits, above). A limit set on an intent that is in force while its plan is approved is an amendment of the plan, whichever intent of the tree it is on. [0117 items 7 and 8]
+**Limits read up the tree.** The commander may set a limit on any intent in force, a staff-made one too (`set_limit` names the intent). Every limit set on the intent and above it binds it, so the narrowest binds: the risk is the least bold of those set on the chain, balanced where none is set; an air group may be used only where every forces limit on the chain names it, and a ship, a task force or a forming base is checked against every forces limit on the chain; the area is the hexes in every area set on the chain. The rank is the nearest set on the chain, and the protected limit is the intent's own. A limit set on a parent after one on its child binds the child from then on. (As first built, a child's own limit shadowed its parent's; the architect ruled after the build that the narrowest binds, decision 0117, "As built".) With no forces limit on it or above it, an intent may use what its addressee commands (The six limits, above). A limit set on an intent that is in force while its plan is approved is an amendment of the plan, whichever intent of the tree it is on. [0117 items 7 and 8]
 
 **A limit must narrow.** On an intent that has a parent, `set_limit` of forces, risk or area is refused as "Wider than its parent" unless it narrows what the parent may use, read up the tree from the parent:
 
@@ -350,8 +351,8 @@ Every runner gives both sides the staff of `sim-staff` (`sim_staff::staffs()`): 
 
 A staff's order that is not refused as held (Holds and the override, above) is refused as **outside the forces limit** ("the order is for a unit outside the forces limit of the intent it serves") unless the intent the order serves is in force and:
 
-- for an order to an air group, the group is one the intent may use (The six limits, above): named in its forces limit, its own or the nearest above it, or, with no forces limit on it or above it, at the base it is addressed to; or
-- for any other order, the intent has a forces limit, its own or the nearest above it, and the order is for a task force that the limit lists, or that has at least one ship and every ship of it is a ship the limit lists, or it is the limit's source base's order to form a task force from ships that are in the pool.
+- for an order to an air group, the group is one the intent may use (The six limits, above): named in every forces limit on its chain, or, with no forces limit on it or above it, at the base it is addressed to; or
+- for any other order, the intent has a forces limit on it or above it, and against every forces limit on its chain the order is for a task force that the limit lists, or that has at least one ship and every ship of it is a ship the limit lists, or it is the limit's source base's order to form a task force from ships that are in the pool.
 
 An order for a land unit or any other base order is inside no forces limit, so a staff's order for one is refused. The check does not look at the plan's state or at the area. A refused order is numbered and kept, and recorded as refused with this reason, and nothing else about it is checked. An order that passes is checked as any order is (chapter 1, Every reason an order is refused). [0107, As built]
 
@@ -535,7 +536,7 @@ The task under the end "hold a place", and an intent a commander may state himse
 
 **The groups it serves.** Each morning, for each cover intent in force whose plan is released, in priority order (the rank read up the tree, ranked first, then by number), the staff serves the air groups that:
 
-- the intent may use (The six limits, above): named in its forces limit read up the tree, or, with none, the side's groups at its base;
+- the intent may use (The six limits, above): named in every forces limit on its chain, or, with none, the side's groups at its base;
 - are at the intent's base (a group named in a forces limit that is elsewhere is given no order);
 - are not held, neither as a whole nor by their search arc (Holds and the override, above); and
 - are not taken by a cover intent served earlier the same morning: a group serves one intent, and where two may use it the higher in priority has it.

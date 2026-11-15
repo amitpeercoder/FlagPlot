@@ -593,11 +593,12 @@ impl<'v, 'a> Day<'v, 'a> {
     // -- 2. Hold a place ----------------------------------------------------
 
     /// The air groups the intent may use, at its base or not (decision 0117,
-    /// 7 and 8): its forces limit read up the tree, else, with none, the
-    /// side's groups at the base it is addressed to.
+    /// 7 and 8): those named in every forces limit on its chain (the
+    /// narrowest binds, the architect's ruling after the build), else, with
+    /// none, the side's groups at the base it is addressed to.
     fn may_use(&self, intent: &Intent) -> Vec<AirGroupId> {
-        match self.state.forces_read_up(intent.id) {
-            Some(limit) => limit.air_groups.iter().copied().collect(),
+        match self.state.groups_on_chain(intent.id) {
+            Some(allowed) => allowed.into_iter().collect(),
             None => match intent.addressee {
                 Addressee::Base(base) => self
                     .view

@@ -125,7 +125,13 @@
 //! - **The risk level.** At preserve the force the share is 0.75 and the
 //!   level 30: both fighters first reach 36 on the morning of day 7, when
 //!   group 1 rests. At press the share is 0.25 and the level 60: no
-//!   fighter rests before day 12, when both are at 66 and group 1 rests.
+//!   fighter rests before day 12, when group 1 is at 66 and rests. Group 2,
+//!   with 8 aircraft, keeps none overhead in a daylight pulse that begins
+//!   with its fatigue above 50, since a quarter of the 3 it can then fly is
+//!   cut to none, and so does not fly that pulse: its mornings from day 9
+//!   are 48, 46, 52 and 50, and on day 12 it is not above the level and
+//!   flies. (Restated by the architect on Nov 15, 2026, after the build: the
+//!   first draft had both at 66.)
 //! - **A raid raises the share.** In a variant with a Japanese bomber group
 //!   at base 2 set to strike base 1 on day 3, the share of both fighter
 //!   groups is 0.75 on days 4, 5 and 6 and 0.5 again on day 7.
@@ -781,20 +787,24 @@ fn at_press_the_force_group_1_is_at_66_on_day_12_and_rests() {
     );
 }
 
-// The hand calculation says that at press "both are at 66" on day 12. The
-// code gives group 2, whose 8 aircraft cannot keep a quarter of a whole
-// aircraft over the base once its fatigue is above 50 (8 x 0.46 is 3 aircraft
-// able to fly, a quarter of 3 cut to a whole aircraft is 0), no patrol sortie
-// in that pulse and a loss of 5 instead of a gain of 3: it is at 46 on the
-// morning of day 10 and 50 on the morning of day 12, not 66. The arithmetic of
-// the table holds at share 0.5 and does not at share 0.25. The assertion is
-// kept as the calculation has it and the test is ignored: it goes back to the
-// architect.
+// At press group 2 keeps none overhead in a pulse that begins above fatigue
+// 50 (a quarter of the 3 aircraft it can then fly is cut to none), so it does
+// not fly that pulse; the architect restated the property so after the build.
 #[test]
-#[ignore = "hand calculation: group 2 at 66 on day 12 at press; the code gives 50 (a patrol share of 0.25 cut to 0 aircraft in a pulse stops the sortie)"]
-fn at_press_the_force_group_2_is_at_66_on_day_12() {
+fn at_press_group_2_has_mornings_48_46_52_50_and_flies_on_day_12() {
     let played = play(&press_text());
-    assert_eq!(played.morning(12, 2), n(66));
+    let mornings: Vec<Fixed> = (9..=12).map(|day| played.morning(day, 2)).collect();
+    assert_eq!(mornings, vec![n(48), n(46), n(52), n(50)]);
+    // On day 12 it is not above the level of 60: no rest order, and it ends
+    // the day on the patrol.
+    assert!(
+        !played
+            .air_orders(12)
+            .iter()
+            .any(|(g, order)| *g == 2 && *order == AirGroupOrder::SetAirMission(AirMission::Rest)),
+        "group 2 is rested on day 12"
+    );
+    assert_eq!(played.mission_at_end(2), AirMission::CombatAirPatrol);
 }
 
 /// A Japanese bomber group at base 2 set to strike base 1 on day 3 and to

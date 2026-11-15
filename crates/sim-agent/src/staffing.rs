@@ -259,12 +259,21 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
     let chain = up_the_tree(state, intent);
     let from = |found: Option<&Intent>| found.map(|i| i.id.raw());
     let forces = chain.iter().find(|i| i.limits.forces.is_some()).copied();
-    let risk = chain.iter().find(|i| i.limits.risk.is_some()).copied();
+    // Every limit on the chain binds: the least bold risk and the hexes in
+    // every area (the architect's ruling after the build of decision 0117).
+    let bound_risk = state.risk_read_up(intent.id);
+    let risk = chain
+        .iter()
+        .find(|i| i.limits.risk == Some(bound_risk))
+        .copied();
+    let bound_area = state.area_read_up(intent.id);
+    let bound_groups = state.groups_on_chain(intent.id);
     let priority = chain.iter().find(|i| i.limits.priority.is_some()).copied();
     let area = chain.iter().find(|i| i.limits.area.is_some()).copied();
     json!({
         "forces": forces.and_then(|i| i.limits.forces.as_ref()).map(|f| forces_json(n, f)),
         "forces_from": from(forces),
+        "air_groups_binding": bound_groups.map(|groups| n.groups(&groups)),
         "forces_if_unset": if forces.is_some() {
             Value::Null
         } else {
@@ -275,10 +284,7 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
                     "not set on it or above it: the staff may use the air groups based at its base that are not held",
             })
         },
-        "risk": risk.and_then(|i| i.limits.risk).map_or_else(
-            || state.risk_read_up(intent.id).name(),
-            |risk| risk.name(),
-        ),
+        "risk": bound_risk.name(),
         "risk_from": from(risk),
         "risk_set": risk.is_some(),
         "risk_if_unset": if risk.is_some() {
@@ -286,7 +292,7 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
         } else {
             json!("not set on it or above it: balanced")
         },
-        "area": area.and_then(|i| i.limits.area.as_ref()).map(|hexes| {
+        "area": bound_area.map(|hexes| {
             hexes.iter().map(|h| json!([h.q, h.r])).collect::<Vec<_>>()
         }),
         "area_from": from(area),
@@ -877,7 +883,7 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
         // limit, its own or one above it; one given to a base may use the
         // groups based there (decision 0117, 8).
         if intent.addressee == sim_core::command::Addressee::Area
-            && state.forces_read_up(intent.id).is_none()
+            && state.forces_on_chain(intent.id).is_empty()
         {
             notes.push(format!(
                 "intent:{} has no forces limit: the staff gives no order for it until you set one (set_limit forces).",
@@ -1655,7 +1661,7 @@ pub(crate) fn command_answer(
                         intent.raw()
                     )),
                     _ => {
-                        if state.forces_read_up(*intent).is_none() {
+                        if state.forces_on_chain(*intent).is_empty() {
                             notes.push(format!(
                                 "intent:{} has no forces limit yet: the staff gives no order for it until you set one (set_limit forces).",
                                 intent.raw()
@@ -1896,7 +1902,7 @@ fn staff_side_json(
 /// 18), in words.
 fn held_words(n: &Names<'_>, view: &SideView<'_>, intent: Option<IntentId>) -> Vec<String> {
     let state = view.command_state();
-    let Some(forces) = intent.and_then(|i| state.forces_read_up(i)) else {
+    let Some(forces) = intent.and_then(|i| state.nearest_forces(i)) else {
         return Vec::new();
     };
     let mut pool: std::collections::BTreeSet<ShipId> = forces.ships.clone();

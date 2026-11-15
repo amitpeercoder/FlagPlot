@@ -957,10 +957,11 @@
     },
     "limits_read_up": {
       "type": "object",
-      "description": "An intent's limits as the staff reads them, up the tree: each limit's value, the intent it is read from, and for forces and risk what holds where none is set (decision 0117, 7 and 8).",
+      "description": "An intent's limits as the staff reads them, up the tree, where every limit on the chain binds: the least bold risk, the hexes in every area, the groups in every forces limit (`air_groups_binding`); `forces` is the nearest forces limit, and each `_from` names the intent it is read from, and for forces and risk what holds where none is set (decision 0117, 7 and 8).",
       "required": [
         "forces",
         "forces_from",
+        "air_groups_binding",
         "forces_if_unset",
         "risk",
         "risk_from",
@@ -1024,6 +1025,20 @@
           "type": [
             "integer",
             "null"
+          ]
+        },
+        "air_groups_binding": {
+          "description": "The air groups named in every forces limit on the chain, which are all the staff may use (the narrowest binds); null where no forces limit is set on the chain.",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "forces_if_unset": {

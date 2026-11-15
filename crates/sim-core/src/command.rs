@@ -859,19 +859,42 @@ impl CommandState {
             .chain(self.ancestors(intent))
     }
 
-    /// The forces limit of `intent` read up the tree (decision 0117, 7): its
-    /// own, else the nearest above it. `None` where none is set on it or
-    /// above it: then it may use what its addressee commands (rule 8).
-    pub fn forces_read_up(&self, intent: IntentId) -> Option<&ForcesLimit> {
+    /// The forces limits on `intent`'s chain: its own and those set above
+    /// it, nearest first (decision 0117, 7). Every one of them binds what is
+    /// beneath it: the narrowest binds (the architect's ruling after the
+    /// build). Empty where none is set on it or above it: then it may use
+    /// what its addressee commands (rule 8).
+    pub fn forces_on_chain(&self, intent: IntentId) -> Vec<&ForcesLimit> {
         self.up_the_tree(intent)
-            .find_map(|found| found.limits.forces.as_ref())
+            .filter_map(|found| found.limits.forces.as_ref())
+            .collect()
     }
 
-    /// The risk level of `intent` read up the tree; balanced where none is
-    /// set on it or above it (decision 0115, 4).
+    /// The nearest forces limit on `intent`'s chain, for words: what binds is
+    /// every limit on the chain ([`CommandState::forces_on_chain`]). For a
+    /// root, its own.
+    pub fn nearest_forces(&self, intent: IntentId) -> Option<&ForcesLimit> {
+        self.forces_on_chain(intent).into_iter().next()
+    }
+
+    /// The air groups the forces limits on `intent`'s chain allow: those
+    /// named in every one of them. `None` where none is set on the chain.
+    pub fn groups_on_chain(&self, intent: IntentId) -> Option<BTreeSet<AirGroupId>> {
+        let mut limits = self.forces_on_chain(intent).into_iter();
+        let first = limits.next()?.air_groups.clone();
+        Some(limits.fold(first, |allowed, limit| {
+            allowed.intersection(&limit.air_groups).copied().collect()
+        }))
+    }
+
+    /// The risk level of `intent` read up the tree: the least bold of those
+    /// set on it and above it, so that every risk on the chain binds (the
+    /// architect's ruling after the build); balanced where none is set
+    /// (decision 0115, 4).
     pub fn risk_read_up(&self, intent: IntentId) -> Risk {
         self.up_the_tree(intent)
-            .find_map(|found| found.limits.risk)
+            .filter_map(|found| found.limits.risk)
+            .min()
             .unwrap_or_default()
     }
 
@@ -882,11 +905,17 @@ impl CommandState {
             .find_map(|found| found.limits.priority)
     }
 
-    /// The area of `intent` read up the tree; `None` where none is set on it
-    /// or above it.
-    pub fn area_read_up(&self, intent: IntentId) -> Option<&BTreeSet<Hex>> {
-        self.up_the_tree(intent)
-            .find_map(|found| found.limits.area.as_ref())
+    /// The area of `intent` read up the tree: the hexes in every area set on
+    /// it and above it (the architect's ruling after the build); `None` where
+    /// none is set on the chain.
+    pub fn area_read_up(&self, intent: IntentId) -> Option<BTreeSet<Hex>> {
+        let mut areas = self
+            .up_the_tree(intent)
+            .filter_map(|found| found.limits.area.as_ref());
+        let first = areas.next()?.clone();
+        Some(areas.fold(first, |kept, area| {
+            kept.intersection(area).copied().collect()
+        }))
     }
 
     /// The intents in force directly under `intent`, by number.
@@ -1189,6 +1218,11 @@ pub enum CommandRefusal {
     /// A supply intent's forces limit names no source base (decision 0107,
     /// 19).
     NoSource,
+    /// A `set_intent` on an intent in force names another kind of intent: it
+    /// may change the intent's figures and not its kind (the architect's
+    /// ruling after the build of decision 0117). He withdraws it and states
+    /// another. Added at the end.
+    KindCannotChange(IntentId),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -1255,6 +1289,10 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NoSource => {
                 f.write_str("a supply intent's forces limit must name a source base")
             }
+            CommandRefusal::KindCannotChange(id) => write!(
+                f,
+                "{id} is another kind of intent: withdraw it and state a new one"
+            ),
         }
     }
 }
