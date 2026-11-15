@@ -67,7 +67,7 @@
     },
     {
       "file": "data/scenarios/../reference/ground.toml",
-      "hash": "e5d2184223d62b2a"
+      "hash": "5ef7d142f1faa97f"
     }
   ],
   "doctrine_version": "none",
@@ -75,23 +75,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "5467ee5e0249dcc7"
+      "hash": "476165f97eafbddc"
     },
     {
       "day": 2,
-      "hash": "5908bb4254d979de"
+      "hash": "56b9782b15c818a1"
     },
     {
       "day": 3,
-      "hash": "5e9ca8c3daf45bd7"
+      "hash": "7bc3567cf4db34ab"
     },
     {
       "day": 4,
-      "hash": "d1d4e0cc30edcbe4"
+      "hash": "241adacba5e41378"
     },
     {
       "day": 5,
-      "hash": "9180497418b8df78"
+      "hash": "2b7570bae87484cc"
     }
   ],
   "orders": [
