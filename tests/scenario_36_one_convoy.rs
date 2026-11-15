@@ -16,6 +16,11 @@
 //! change a number here to make a test pass. A mismatch goes back to the
 //! architect.
 //!
+//! Corrected by the architect on Nov 15, 2026, after the build: a force
+//! that acts at T steams on at the start of the next pulse (decision 0096),
+//! not the hour its unloading ends. The rows of days 3, 4 and 18 and the
+//! end of day 18 say so; nothing else moved.
+//!
 //! ## Figures
 //!
 //! `daily_supply_t_per_man` 0.005. A size 1 port has one berth, at 50 t an
@@ -24,7 +29,9 @@
 //! t of fuel. A day is 24 hours: a night pulse of 12 and two daylight
 //! pulses of 6. Day d begins at hour 24 x (d - 1). In a pulse ships move
 //! before cargo is worked. The men's supply is paid at the start of the
-//! night pulse. Ships in port refuel at the start of a day.
+//! night pulse. Ships in port refuel at the start of a day. A force that
+//! acts at a place and steams on does so at the start of the first pulse
+//! after its work is done (decision 0096).
 //!
 //! ## Inputs
 //!
@@ -78,13 +85,13 @@
 //! | --- | ---------------------- | ------------------------------------- | ------------ |
 //! | 1   | 100 t, 10              | Form a force of ship 1. Load 360 t of supply at base 1 | Loaded in 360 / 50 = 7.2 hours. Base 1 holds 4640 t. T pays 10 t |
 //! | 2   | 90 t, 9                | Route to T and back, acting at T, with an unload order | Sails at hour 24, arrives at hour 44. T pays 10 t. 4 hours of the afternoon at 20 t an hour: 80 t landed |
-//! | 3   | 160 t, 16              | none                                  | T pays 10 t. The last 280 t take 14 hours: the 12 of the night and 2 of the morning. Unloaded at hour 62. The force steams for S |
-//! | 4   | 430 t, 43              | none                                  | T pays 10 t. The force arrives at S at hour 82 |
+//! | 3   | 160 t, 16              | none                                  | T pays 10 t. The last 280 t take 14 hours: the 12 of the night and 2 of the morning. Unloaded at hour 62. The force steams for S at hour 66, the start of the next pulse |
+//! | 4   | 430 t, 43              | none                                  | T pays 10 t. The force arrives at S at hour 86 |
 //! | 5   | 420 t, 42              | none                                  | Ship 1 refuels 40 t: base 1 holds 1960 t of fuel. T pays 10 t |
 //! | 6 to 15 | 410 t falling to 320 t, 41 to 32 | none                    | T pays 10 t a day |
 //! | 16  | 310 t, 31              | Load 150 t of supply at base 1        | Loaded in 3 hours. Base 1 holds 4490 t of supply. T pays 10 t |
 //! | 17  | 300 t, 30              | Route to T and back, acting at T, with an unload order | Sails at hour 384, arrives at hour 404. T pays 10 t. 80 t landed |
-//! | 18  | 370 t, 37              | none                                  | T pays 10 t. The last 70 t take 3.5 hours of the night: unloaded at hour 411.5. The force steams for S and arrives at hour 431.5 |
+//! | 18  | 370 t, 37              | none                                  | T pays 10 t. The last 70 t take 3.5 hours of the night: unloaded at hour 411.5. The force steams for S at hour 420, the start of the next pulse, and is at sea at the end of the day |
 //!
 //! Why each run, and its size:
 //!
@@ -104,8 +111,9 @@
 //!   first free ship in number order.
 //!
 //! At the end of day 18: base 2 holds 430 t; base 1 holds 4490 t of supply
-//! and 1960 t of fuel; ship 1 is at S, empty, with 960 t of fuel, and
-//! refuels the next morning; ship 2 has not moved. The plan has made two
+//! and 1960 t of fuel; ship 1 is at sea on its way back, empty, 12
+//! hours out of T, with 968 t of fuel; it would arrive at hour 440, after
+//! the game; ship 2 has not moved. The plan has made two
 //! runs. No staff order was refused.
 //!
 //! Each order the staff gives, and each day it gives none, has a reason
@@ -649,10 +657,8 @@ fn what_happens_follows_the_table_exactly() {
     assert_eq!(played.unloading_complete(3), vec![n(62)]);
     assert_eq!(played.base_supply(3, 2), n(430));
 
-    // Day 4: the force arrives at S. (The table says at hour 82; the engine
-    // has it steam on at the start of the pulse after its unloading ends and
-    // so arrive at hour 86: see
-    // `the_hours_of_the_table_at_which_the_force_comes_home`.)
+    // Day 4: the force arrives at S at hour 86 (see
+    // `the_hours_at_which_the_force_comes_home`).
     assert!(played.arrived_at(4, FORCE, S).is_some());
     assert_eq!(played.base_supply(4, 2), n(420));
     // Day 5: ship 1 refuels 40 t: base 1 holds 1960 t of fuel.
@@ -676,8 +682,8 @@ fn what_happens_follows_the_table_exactly() {
     assert_eq!(played.halted_at(17, FORCE, T), Some(n(404)));
     assert_eq!(played.unloaded(17), n(80));
     // Day 18: the last 70 t take 3.5 hours of the night: unloaded at hour
-    // 411.5. (The table has the force arrive at S at hour 431.5; see the
-    // test of the hours below.)
+    // 411.5; the force steams for S at hour 420 (see the test of the hours
+    // below).
     assert_eq!(played.unloaded(18), n(70));
     assert_eq!(played.unloading_complete(18), vec![fx("411.5")]);
 
@@ -697,8 +703,8 @@ fn what_happens_follows_the_table_exactly() {
         );
     }
 
-    // The end state of ship 1 (at S, empty, with 960 t of fuel) is in the
-    // test of the hours below.
+    // The end state of ship 1 (at sea, empty, with 968 t of fuel) is in
+    // the test of the hours below.
 
     // The plan has made two runs.
     let state = played.scenario.world.command_state(Side::Allied);
@@ -719,34 +725,32 @@ fn what_happens_follows_the_table_exactly() {
     );
 }
 
-/// The table's hours at which the force comes home, and where ship 1 is at
-/// the end of day 18, as the architect wrote them.
-///
-/// The engine disagrees, so the test is ignored and reported to the
-/// architect, not changed. A force halted at a marked waypoint with work
-/// there steams on at the start of the first pulse after its work is done
-/// (`TaskForceSteamedOn`), not in the hour it finishes. On day 3 the unloading
-/// ends at hour 62, in the morning pulse (hours 60 to 66); the force steams on
-/// at hour 66 and arrives at S at hour 86, not 82. On day 18 the unloading
-/// ends at hour 411.5, in the night pulse (408 to 420); the force steams on at
-/// hour 420 and has made 12 hours (120 nm) by the end of the day, with 968 t
-/// of fuel: it arrives at hour 440, on day 19, after the game. Everything else
-/// of the table, including the day ships are free (day 5 and day 20), is as
-/// calculated.
+/// The hours at which the force comes home, and where ship 1 is at the end
+/// of day 18, as the architect corrected the table: a force that acts at a
+/// place steams on at the start of the first pulse after its work is done
+/// (decision 0096). On day 3 the unloading ends at hour 62, in the morning
+/// pulse; the force steams on at hour 66 and arrives at S at hour 86. On day
+/// 18 the unloading ends at hour 411.5, in the night pulse; the force steams
+/// on at hour 420 and is at sea at the end of the day, 12 hours out of T:
+/// 120 nm from T, 80 nm from S, with 968 t of fuel.
 #[test]
-#[ignore = "the table's hours of arrival at S (82 and 431.5) differ from the engine's (86 and 440): reported to the architect"]
-fn the_hours_of_the_table_at_which_the_force_comes_home() {
+fn the_hours_at_which_the_force_comes_home() {
     let played = play(&text());
-    assert_eq!(played.arrived_at(4, FORCE, S), Some(n(82)));
-    assert_eq!(played.arrived_at(18, FORCE, S), Some(fx("431.5")));
+    assert_eq!(played.arrived_at(4, FORCE, S), Some(n(86)));
+    assert_eq!(played.arrived_at(18, FORCE, S), None);
     let end = played.at(18);
     let one = &end.ships[&ship(1)];
     assert_eq!(one.location, ShipLocation::TaskForce(force(FORCE)));
     assert!(one.supply_t.is_zero() && one.cargo_fuel_t.is_zero());
-    assert_eq!(one.fuel_t, n(960));
+    assert_eq!(one.fuel_t, n(968));
     let formed = &end.task_forces[&force(FORCE)];
-    assert_eq!(formed.status, TaskForceStatus::Arrived);
-    assert_eq!(formed.from_hex, S);
+    assert_eq!(formed.status, TaskForceStatus::Underway);
+    assert_eq!(formed.route.waypoints.last(), Some(&S));
+    // 12 hours at 10 kn from T: 120 nm from T, 80 nm from S, on the line
+    // of hexes 40 nm apart: two hexes from S, and on the leg from there.
+    let from_s = |hex: Hex| i64::from(hex.distance(S)) * 40;
+    let left = from_s(formed.from_hex) - formed.progress_nm.trunc();
+    assert_eq!(left, 80, "nm still to steam to S");
 }
 
 #[test]

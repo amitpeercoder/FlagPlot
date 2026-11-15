@@ -182,6 +182,7 @@ Made on Nov 14, 2026, while writing the two hand calculations the designer asked
 6. **A round trip is counted in whole days:** the passage both ways at cruise, rounded up to whole days, and a day to load and a day to unload. It no longer sizes a load. The staff uses it to say when a ship is free and whether the pool can keep the interval.
 7. **Forming a force and its load order are given on the same day.** A side numbers its own forces, so the staff knows the number the new force will have.
 8. **A ship is free when it is back at the source and has refuelled there,** which is the morning after it arrives.
+9. **The hour a force steams on does not move a run** (Nov 15, 2026, after the build). A force that acts at a place steams on at the start of the first pulse after its work is done (decision 0096), not the hour the work ends; the table of scenario 36 first had it leave on the hour, and was corrected. The doctrine counts a round trip in whole days and a ship's free day from its arrival, so the hour a force steams on does not move a run.
 
 ## A question the hand calculation raised, and its answer
 
