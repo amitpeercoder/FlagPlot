@@ -1189,7 +1189,9 @@ pub fn count(
             | EventKind::PlanStateChanged { .. }
             | EventKind::PlanAmended { .. }
             | EventKind::StaffReason { .. }
-            | EventKind::HeldByOrder { .. } => {}
+            | EventKind::HeldByOrder { .. }
+            | EventKind::StaffNotice { .. }
+            | EventKind::InterruptFired { .. } => {}
         }
     }
 

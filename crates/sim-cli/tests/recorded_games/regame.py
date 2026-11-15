@@ -6,6 +6,8 @@
 #
 import json,subprocess,os,shutil,glob,tempfile
 for d in sorted(glob.glob('crates/sim-cli/tests/recorded_games/*/')):
+    # A folder with no game.jsonl holds no game (the legibility test's).
+    if not os.path.exists(d+'game.jsonl'): continue
     lines=[l for l in open(d+'game.jsonl').read().splitlines() if l.strip()]
     h=json.loads(lines[0])
     tmp=tempfile.mkdtemp()

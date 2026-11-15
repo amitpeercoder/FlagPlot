@@ -2,14 +2,25 @@
 //! the first step of a day, the staff's after the staff is asked. Each is
 //! checked against the side's command state and its own units, and accepted
 //! or refused with a reason, every change an event with its causes.
+//!
+//! The order of the staff's step of a day (decision 0107, step 4): the staff
+//! is asked (`ask_staffs`; a hand-in given back by a replay comes first and
+//! the notices' bases of the one asked are shifted behind it); the figure of
+//! each set interrupt's base is read on that view
+//! (`read_interrupt_figures`); the staff's commands are taken in each with its
+//! reason, then each of its notices is recorded citing the reason it rests on
+//! (`intake_staff_commands`); the interrupts are tested, side by side
+//! (`test_interrupts`, in `interrupt.rs`); and only then are the day's orders
+//! taken in (`intake_orders`).
 
 use std::collections::BTreeMap;
 
 use crate::command::{
     Amendment, AmendmentChange, Baseline, Command, CommandKind, CommandRefusal, CommandState,
     Commitment, ForcesLimit, HeldSetting, Hold, HoldMaker, HoldTarget, Intent, IntentKind,
-    IntentLimits, Leave, Limit, Plan, PlanId, PlanOutcome, PlanState, Reason, Run, StaffDecisions,
-    Staffs,
+    IntentLimits, InterruptCondition, InterruptRef, InterruptSetting, InterruptStatus, Leave,
+    Limit, NoticeBasis, Plan, PlanId, PlanOutcome, PlanState, Reason, Run, SetInterrupt,
+    StaffDecisions, StaffNotice, Staffs, StandingSubject,
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
@@ -401,6 +412,69 @@ impl World {
                 }
                 Ok(())
             }
+            CommandKind::SetInterrupt(setting) => match setting {
+                InterruptSetting::Set {
+                    interrupt,
+                    condition,
+                } => {
+                    if interrupt.raw() == 0 {
+                        return Err(CommandRefusal::InterruptNumberNotUsable(*interrupt));
+                    }
+                    let InterruptCondition::SupplyBelow { base, days } = condition;
+                    if !self.own_base(side, *base) {
+                        return Err(CommandRefusal::NotYourBase(*base));
+                    }
+                    if *days == 0 {
+                        return Err(CommandRefusal::NoDays);
+                    }
+                    Ok(())
+                }
+                InterruptSetting::Standing { .. } => Ok(()),
+            },
+            CommandKind::Acknowledge { interrupt } => {
+                let status = match interrupt {
+                    InterruptRef::Set(id) => {
+                        state
+                            .interrupts
+                            .get(id)
+                            .ok_or(CommandRefusal::NoSuchInterrupt(*id))?
+                            .status
+                    }
+                    InterruptRef::Standing { kind, subject } => {
+                        // A refusal never says that an enemy unit exists: a
+                        // ship that is not the side's is refused as any
+                        // other command refuses it, whether or not it exists.
+                        match subject {
+                            StandingSubject::Plan(plan) => {
+                                if !state.plans.contains_key(plan) {
+                                    return Err(CommandRefusal::NoSuchPlan(*plan));
+                                }
+                            }
+                            StandingSubject::Ship(ship) => {
+                                let own = self
+                                    .truth
+                                    .ships
+                                    .get(ship)
+                                    .is_some_and(|found| found.side == side);
+                                if !own {
+                                    return Err(CommandRefusal::NotYourShip(*ship));
+                                }
+                            }
+                        }
+                        match state.standing.get(&(*kind, *subject)) {
+                            Some(status) => *status,
+                            None => return Err(CommandRefusal::NotFired(*interrupt)),
+                        }
+                    }
+                };
+                if status.last_fired.is_none() {
+                    return Err(CommandRefusal::NotFired(*interrupt));
+                }
+                if status.acknowledged {
+                    return Err(CommandRefusal::AlreadyAcknowledged(*interrupt));
+                }
+                Ok(())
+            }
         }
     }
 
@@ -696,6 +770,49 @@ impl World {
                 let found = state.plans.get_mut(plan).expect("plan exists");
                 found.runs.get_mut(run).expect("run exists").ended = Some(day);
             }
+            CommandKind::SetInterrupt(setting) => {
+                let state = self.command.get_mut(&side).expect("side has command state");
+                match setting {
+                    InterruptSetting::Set {
+                        interrupt,
+                        condition,
+                    } => {
+                        state.interrupts.insert(
+                            *interrupt,
+                            SetInterrupt {
+                                id: *interrupt,
+                                condition: *condition,
+                                set_day: day,
+                                status: InterruptStatus::default(),
+                            },
+                        );
+                    }
+                    InterruptSetting::Standing { kind, on } => {
+                        if *on {
+                            state.standing_off.remove(kind);
+                        } else {
+                            state.standing_off.insert(*kind);
+                        }
+                    }
+                }
+            }
+            CommandKind::Acknowledge { interrupt } => {
+                let state = self.command.get_mut(&side).expect("side has command state");
+                let status = match interrupt {
+                    InterruptRef::Set(id) => {
+                        &mut state
+                            .interrupts
+                            .get_mut(id)
+                            .expect("interrupt exists")
+                            .status
+                    }
+                    InterruptRef::Standing { kind, subject } => state
+                        .standing
+                        .get_mut(&(*kind, *subject))
+                        .expect("standing record exists"),
+                };
+                status.acknowledged = true;
+            }
         }
         follow_ups
     }
@@ -709,10 +826,9 @@ impl World {
         for side in Side::ALL {
             if let Some(staff) = staffs.get(side) {
                 let decisions = staff.decide(self.side_view(side));
-                let entry = handed_in.entry(side).or_default();
-                entry.orders.extend(decisions.orders);
-                entry.commands.extend(decisions.commands);
-                entry.no_orders.extend(decisions.no_orders);
+                // After one given back, its notices' bases shifted to still
+                // point at their own reasons.
+                handed_in.entry(side).or_default().append(decisions);
             }
         }
         handed_in
@@ -720,17 +836,21 @@ impl World {
 
     /// Step 5 of the day, its first part: takes in each side's staff
     /// commands in the order handed in, and records each decision to give
-    /// no order with its reason. The staff's orders are taken in with the
-    /// commander's, by `intake_orders`.
+    /// no order with its reason; then records each notice the staff handed
+    /// in, in the order handed in, citing the `StaffReason` event of the
+    /// reason it rests on (decision 0107, ruling 34). A basis that points at
+    /// nothing is recorded with no cause. The engine never reads a reason's
+    /// words. The staff's orders are taken in with the commander's, by
+    /// `intake_orders`. Returns each side's notices with the events that
+    /// recorded them, for the test of the standing interrupts.
     pub(crate) fn intake_staff_commands(
         &mut self,
         day: u32,
         handed_in: &BTreeMap<Side, StaffDecisions>,
-    ) {
-        if handed_in.is_empty() {
-            return;
-        }
+    ) -> BTreeMap<Side, Vec<(StaffNotice, EventId)>> {
+        let mut recorded = BTreeMap::new();
         for (side, decisions) in handed_in {
+            let mut command_reasons = Vec::new();
             for staff_command in &decisions.commands {
                 let answer = self.take_in_command(
                     day,
@@ -742,7 +862,7 @@ impl World {
                 );
                 // The command's reason, after the command and its
                 // follow-ups, citing the command's event.
-                self.events.record(
+                command_reasons.push(self.events.record(
                     day,
                     None,
                     EventKind::StaffReason {
@@ -752,12 +872,13 @@ impl World {
                     },
                     vec![Cause::Event(answer)],
                     None,
-                );
+                ));
             }
             // A decision to give no order is a reason with no order and no
             // causes (decision 0107).
+            let mut no_order_reasons = Vec::new();
             for reason in &decisions.no_orders {
-                self.events.record(
+                no_order_reasons.push(self.events.record(
                     day,
                     None,
                     EventKind::StaffReason {
@@ -767,9 +888,33 @@ impl World {
                     },
                     Vec::new(),
                     None,
+                ));
+            }
+            let mut notices = Vec::new();
+            for notice in &decisions.notices {
+                let reason = match notice.rests_on {
+                    NoticeBasis::Command(i) => command_reasons.get(i),
+                    NoticeBasis::NoOrder(i) => no_order_reasons.get(i),
+                };
+                let event = self.events.record(
+                    day,
+                    None,
+                    EventKind::StaffNotice {
+                        side: *side,
+                        kind: notice.kind,
+                        plan: notice.plan,
+                        run: notice.run,
+                    },
+                    reason.map(|id| Cause::Event(*id)).into_iter().collect(),
+                    None,
                 );
+                notices.push((*notice, event));
+            }
+            if !notices.is_empty() {
+                recorded.insert(*side, notices);
             }
         }
+        recorded
     }
 
     /// Takes in one order a staff handed in, with its reason: refused

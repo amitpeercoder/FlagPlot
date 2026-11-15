@@ -191,8 +191,15 @@ impl World {
     ///    base down to its reserve;
     /// 4. each side's staff, if it has one, is asked on its view as it now
     ///    stands (and what a replay gives back is taken as its answer);
-    /// 5. the staff's commands are taken in, then all orders, the
-    ///    commander's and the staff's;
+    ///    4b. the figure of the base of each interrupt the commander set is
+    ///    read on that same view;
+    /// 5. the staff's commands are taken in, each with its reason, and its
+    ///    notices are recorded, each citing the reason it rests on; then
+    ///    each side's interrupts are tested, on the reading of 4b and on
+    ///    the notices handed in (side order; set interrupts by number, then
+    ///    the standing ones by kind): each that fires is an event the side
+    ///    sees and the enemy does not; then all orders, the commander's and
+    ///    the staff's;
     /// 6. the rest of the day.
     pub fn resolve_day_watched(
         &mut self,
@@ -214,8 +221,15 @@ impl World {
         pass(self, Moment::Orders { day });
         // Step 4: each side's staff, on its view as it now stands.
         let handed_in = self.ask_staffs(&staffs);
-        // Step 5: the staff's commands, then every order.
-        self.intake_staff_commands(day, &handed_in);
+        // Step 4b: the reading of each set interrupt's base now, the one the
+        // staff was asked on, kept for the test below (ruling 31).
+        let readings = self.read_interrupt_figures();
+        // Step 5: the staff's commands, with their reasons and the staff's
+        // notices recorded (ruling 34); then the interrupts are tested, each
+        // side's, before the day's orders are taken in (rulings 31 to 33);
+        // then every order.
+        let notices = self.intake_staff_commands(day, &handed_in);
+        self.test_interrupts(day, &readings, &notices);
         self.intake_orders(day, &handed_in);
         self.staff_handed_in = handed_in;
         self.repair_in_port(day);

@@ -1,0 +1,32 @@
+Placeholder scenario 42c: Displaced under a run
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 62387123e22c4cc7  45 events
+day   2  hash a895f42dd3beb930  25 events
+day   3  hash 3efddb5448c8b728  19 events
+day   4  hash bfacaf2c791c58d8  11 events
+day   5  hash 340ade52428cb595  16 events
+day   6  hash d8b427b44a319d42  22 events
+day   7  hash 72b3715b4e6fac84  12 events
+day   8  hash 3d1563fc2f6da1cc  10 events
+day   9  hash c4ea0919e302184a  9 events
+day  10  hash aff77ac03207c2b4  18 events
+day  11  hash 0a62831b5147fe7e  23 events
+day  12  hash 198d97f5de88bb0c  13 events
+day  13  hash 67227c800f649645  11 events
+day  14  hash 7c6cabf50638f8cb  16 events
+day  15  hash 0736f5ce4f542be3  22 events
+day  16  hash 0d2ca2bc47f4ad29  12 events
+
+task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Placeholder fast transport 1": afloat in task_force:1000001; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 450 t of fuel, 0 t of supply
+base:1 "Placeholder base S, Allied" (Allied) at (0,0): 906 t of supply in stock, 850 t of fuel in stock
+base:2 "Placeholder base T, Allied" (Allied) at (5,0): 43 t of supply in stock
+base:3 "Placeholder base U, Allied" (Allied) at (0,5): 39 t of supply in stock
+land_unit:1 "Placeholder unit 1" (Allied): 200 men ashore at (5,0), fieldworks 30
+land_unit:2 "Placeholder unit 2" (Allied): 200 men ashore at (0,5), fieldworks 30
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

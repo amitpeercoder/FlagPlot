@@ -24,6 +24,8 @@
 //! | `mark_plan` | `plan`, `outcome` (`complete` or `failed`) |
 //! | `hold`, `release` | one of `ship`, `task_force`, or `air_group` with `setting` (`search_arc`) |
 //! | `end_run` | `plan`, `run` |
+//! | `set_interrupt` | `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`cannot_meet`, `waits_for_leave` or `ship_lost`) and `on` |
+//! | `acknowledge` | `interrupt`, or `standing` with one of `plan` or `ship` |
 //!
 //! The limits: `forces` has `intent`, `ships`, `task_forces`, `source`;
 //! `area` has `intent`, `hexes` as `[[q, r], ...]`; `priority` has `intent`
@@ -31,7 +33,10 @@
 //! `reserve` has `base`, `supply_t`, `fuel_t`; `risk` has `intent` and `risk`
 //! (`preserve`, `balanced` or `press`).
 //!
-//! What a staff handed in for a day is `{"orders", "commands", "no_orders"}`:
+//! What a staff handed in for a day is `{"orders", "commands", "no_orders"}`
+//! and, left out when there is none, `"notices"` (each `{kind, plan, run,
+//! rests_on}`: the kind's name, the plan, the run or `null`, and the reason
+//! it rests on as `{"command": i}` or `{"no_order": i}`):
 //! an order is its `unit`, its `order` body (as [`crate::order_to_json`]
 //! writes it), the `intent` it serves and its `reason`; a reason is `serves`
 //! (`intent`, `plan`, `amendment`, each left out when none), `evidence` (a
@@ -41,12 +46,14 @@ use std::collections::BTreeSet;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget, IntentKind, Leave, Limit, PlanId,
-    PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves, StaffCommand, StaffDecisions, StaffOrder,
+    CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
+    InterruptRef, InterruptSetting, Leave, Limit, NoticeBasis, NoticeKind, PlanId, PlanOutcome,
+    Reason, Risk, RunDays, RunSpec, Serves, StaffCommand, StaffDecisions, StaffNotice, StaffOrder,
+    StandingKind, StandingSubject,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, IntentId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, ShipId, TaskForceId};
 
 use crate::orders::{order_from_json, order_to_json, unit_text};
 
@@ -217,6 +224,49 @@ fn target_from_json(value: &Value) -> Result<HoldTarget, String> {
         }),
         [] => Err("a hold names one of \"ship\", \"task_force\" or \"air_group\"".to_string()),
         _ => Err("a hold names only one of \"ship\", \"task_force\" and \"air_group\"".to_string()),
+    }
+}
+
+fn standing_from(name: &str) -> Result<StandingKind, String> {
+    StandingKind::from_name(name).ok_or_else(|| format!("unknown standing interrupt \"{name}\""))
+}
+
+/// The interrupt a command names, as the keys of its object: `interrupt`, or
+/// `standing` with one of `plan` and `ship`.
+fn interrupt_ref_to_json(body: &mut Value, interrupt: InterruptRef) {
+    match interrupt {
+        InterruptRef::Set(id) => body["interrupt"] = json!(id.raw()),
+        InterruptRef::Standing { kind, subject } => {
+            body["standing"] = json!(kind.name());
+            match subject {
+                StandingSubject::Plan(plan) => body["plan"] = json!(plan.raw()),
+                StandingSubject::Ship(ship) => body["ship"] = json!(ship.raw()),
+            }
+        }
+    }
+}
+
+fn interrupt_ref_from_json(value: &Value) -> Result<InterruptRef, String> {
+    match (value.get("interrupt"), value.get("standing")) {
+        (Some(_), None) => Ok(InterruptRef::Set(InterruptId::new(small(
+            value,
+            "interrupt",
+        )?))),
+        (None, Some(_)) => {
+            let kind = standing_from(text(value, "standing")?)?;
+            let subject = match (value.get("plan"), value.get("ship")) {
+                (Some(_), None) => StandingSubject::Plan(PlanId::new(small(value, "plan")?)),
+                (None, Some(_)) => StandingSubject::Ship(ShipId::new(small(value, "ship")?)),
+                _ => {
+                    return Err(
+                        "a standing interrupt names exactly one of \"plan\" and \"ship\""
+                            .to_string(),
+                    )
+                }
+            };
+            Ok(InterruptRef::Standing { kind, subject })
+        }
+        _ => Err("an interrupt names exactly one of \"interrupt\" and \"standing\"".to_string()),
     }
 }
 
@@ -419,6 +469,30 @@ pub fn command_to_json(command: &CommandKind) -> Value {
             "plan": plan.raw(),
             "run": run,
         }),
+        CommandKind::SetInterrupt(setting) => match setting {
+            InterruptSetting::Set {
+                interrupt,
+                condition,
+            } => {
+                let InterruptCondition::SupplyBelow { base, days } = condition;
+                json!({
+                    "kind": "set_interrupt",
+                    "interrupt": interrupt.raw(),
+                    "base": base.raw(),
+                    "below_days": days,
+                })
+            }
+            InterruptSetting::Standing { kind, on } => json!({
+                "kind": "set_interrupt",
+                "standing": kind.name(),
+                "on": on,
+            }),
+        },
+        CommandKind::Acknowledge { interrupt } => {
+            let mut body = json!({ "kind": "acknowledge" });
+            interrupt_ref_to_json(&mut body, *interrupt);
+            body
+        }
     }
 }
 
@@ -482,6 +556,25 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
             plan: plan()?,
             run: small(value, "run")?,
         }),
+        "set_interrupt" => match (value.get("interrupt"), value.get("standing")) {
+            (Some(_), None) => Ok(CommandKind::SetInterrupt(InterruptSetting::Set {
+                interrupt: InterruptId::new(small(value, "interrupt")?),
+                condition: InterruptCondition::SupplyBelow {
+                    base: BaseId::new(small(value, "base")?),
+                    days: small(value, "below_days")?,
+                },
+            })),
+            (None, Some(_)) => Ok(CommandKind::SetInterrupt(InterruptSetting::Standing {
+                kind: standing_from(text(value, "standing")?)?,
+                on: flag(value, "on")?,
+            })),
+            _ => {
+                Err("set_interrupt names exactly one of \"interrupt\" and \"standing\"".to_string())
+            }
+        },
+        "acknowledge" => Ok(CommandKind::Acknowledge {
+            interrupt: interrupt_ref_from_json(value)?,
+        }),
         other => Err(format!("unknown command \"{other}\"")),
     }
 }
@@ -541,7 +634,7 @@ fn reason_from_json(value: &Value) -> Result<Reason, String> {
 /// What a staff handed in for a day, as JSON: its orders with their intents
 /// and reasons, its commands, and its decisions to give no order.
 pub fn staff_decisions_to_json(decisions: &StaffDecisions) -> Value {
-    json!({
+    let mut body = json!({
         "orders": decisions
             .orders
             .iter()
@@ -564,6 +657,49 @@ pub fn staff_decisions_to_json(decisions: &StaffDecisions) -> Value {
             })
             .collect::<Vec<_>>(),
         "no_orders": decisions.no_orders.iter().map(reason_to_json).collect::<Vec<_>>(),
+    });
+    // Left out when there is none, so that a hand-in without notices is
+    // written as it always was.
+    if !decisions.notices.is_empty() {
+        body["notices"] = Value::Array(decisions.notices.iter().map(notice_to_json).collect());
+    }
+    body
+}
+
+fn notice_to_json(notice: &StaffNotice) -> Value {
+    let rests_on = match notice.rests_on {
+        NoticeBasis::Command(i) => json!({ "command": i }),
+        NoticeBasis::NoOrder(i) => json!({ "no_order": i }),
+    };
+    json!({
+        "kind": notice.kind.name(),
+        "plan": notice.plan.raw(),
+        "run": notice.run,
+        "rests_on": rests_on,
+    })
+}
+
+fn notice_from_json(value: &Value) -> Result<StaffNotice, String> {
+    let name = text(value, "kind")?;
+    let kind = NoticeKind::from_name(name).ok_or_else(|| format!("unknown notice \"{name}\""))?;
+    let rests_on = value
+        .get("rests_on")
+        .ok_or_else(|| "a notice has no \"rests_on\"".to_string())?;
+    let index = |key: &str| -> Result<usize, String> {
+        usize::try_from(small(rests_on, key)?).map_err(|_| format!("\"{key}\" is too large"))
+    };
+    let rests_on = match (rests_on.get("command"), rests_on.get("no_order")) {
+        (Some(_), None) => NoticeBasis::Command(index("command")?),
+        (None, Some(_)) => NoticeBasis::NoOrder(index("no_order")?),
+        _ => {
+            return Err("a notice rests on exactly one of \"command\" and \"no_order\"".to_string())
+        }
+    };
+    Ok(StaffNotice {
+        kind,
+        plan: PlanId::new(small(value, "plan")?),
+        run: small_opt(value, "run")?,
+        rests_on,
     })
 }
 
@@ -598,6 +734,12 @@ pub fn staff_decisions_from_json(value: &Value) -> Result<StaffDecisions, String
     }
     for entry in list(value, "no_orders")? {
         decisions.no_orders.push(reason_from_json(entry)?);
+    }
+    // A hand-in saved before notices has no key: it has none.
+    if value.get("notices").is_some() {
+        for entry in list(value, "notices")? {
+            decisions.notices.push(notice_from_json(entry)?);
+        }
     }
     Ok(decisions)
 }
@@ -747,7 +889,87 @@ mod tests {
                 plan: PlanId::new(1),
                 run: 2,
             },
+            CommandKind::SetInterrupt(InterruptSetting::Set {
+                interrupt: InterruptId::new(3),
+                condition: InterruptCondition::SupplyBelow {
+                    base: BaseId::new(2),
+                    days: 35,
+                },
+            }),
+            CommandKind::SetInterrupt(InterruptSetting::Standing {
+                kind: StandingKind::CannotMeet,
+                on: false,
+            }),
+            CommandKind::SetInterrupt(InterruptSetting::Standing {
+                kind: StandingKind::ShipLost,
+                on: true,
+            }),
+            CommandKind::Acknowledge {
+                interrupt: InterruptRef::Set(InterruptId::new(3)),
+            },
+            CommandKind::Acknowledge {
+                interrupt: InterruptRef::Standing {
+                    kind: StandingKind::WaitsForLeave,
+                    subject: StandingSubject::Plan(PlanId::new(1)),
+                },
+            },
+            CommandKind::Acknowledge {
+                interrupt: InterruptRef::Standing {
+                    kind: StandingKind::ShipLost,
+                    subject: StandingSubject::Ship(ShipId::new(4)),
+                },
+            },
         ]
+    }
+
+    #[test]
+    fn an_interrupt_command_is_written_with_its_keys_and_a_bad_one_is_refused() {
+        assert_eq!(
+            command_to_json(&CommandKind::SetInterrupt(InterruptSetting::Set {
+                interrupt: InterruptId::new(1),
+                condition: InterruptCondition::SupplyBelow {
+                    base: BaseId::new(2),
+                    days: 35
+                }
+            })),
+            json!({ "kind": "set_interrupt", "interrupt": 1, "base": 2, "below_days": 35 })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::SetInterrupt(InterruptSetting::Standing {
+                kind: StandingKind::WaitsForLeave,
+                on: false
+            })),
+            json!({ "kind": "set_interrupt", "standing": "waits_for_leave", "on": false })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::Acknowledge {
+                interrupt: InterruptRef::Standing {
+                    kind: StandingKind::CannotMeet,
+                    subject: StandingSubject::Plan(PlanId::new(2))
+                }
+            }),
+            json!({ "kind": "acknowledge", "standing": "cannot_meet", "plan": 2 })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::Acknowledge {
+                interrupt: InterruptRef::Set(InterruptId::new(7))
+            }),
+            json!({ "kind": "acknowledge", "interrupt": 7 })
+        );
+        for bad in [
+            json!({ "kind": "set_interrupt" }),
+            json!({ "kind": "set_interrupt", "interrupt": 1, "base": 2 }),
+            json!({ "kind": "set_interrupt", "interrupt": 1, "standing": "ship_lost", "on": true }),
+            json!({ "kind": "set_interrupt", "standing": "cannot_swim", "on": true }),
+            json!({ "kind": "set_interrupt", "standing": "ship_lost" }),
+            json!({ "kind": "set_interrupt", "interrupt": 1, "base": 2, "below_days": 2.5 }),
+            json!({ "kind": "acknowledge" }),
+            json!({ "kind": "acknowledge", "standing": "ship_lost" }),
+            json!({ "kind": "acknowledge", "standing": "ship_lost", "plan": 1, "ship": 2 }),
+            json!({ "kind": "acknowledge", "interrupt": 1, "standing": "ship_lost", "ship": 2 }),
+        ] {
+            assert!(command_from_json(&bad).is_err(), "{bad}");
+        }
     }
 
     #[test]
@@ -869,6 +1091,32 @@ mod tests {
                     ..Reason::default()
                 },
             ],
+            notices: vec![
+                StaffNotice {
+                    kind: NoticeKind::CannotMeet,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: NoticeBasis::Command(0),
+                },
+                StaffNotice {
+                    kind: NoticeKind::WaitsForLeave(Leave::Prepare),
+                    plan: PlanId::new(2),
+                    run: None,
+                    rests_on: NoticeBasis::NoOrder(1),
+                },
+                StaffNotice {
+                    kind: NoticeKind::WaitsForLeave(Leave::Launch),
+                    plan: PlanId::new(2),
+                    run: None,
+                    rests_on: NoticeBasis::NoOrder(0),
+                },
+                StaffNotice {
+                    kind: NoticeKind::RunEnded,
+                    plan: PlanId::new(1),
+                    run: Some(3),
+                    rests_on: NoticeBasis::NoOrder(0),
+                },
+            ],
         };
         let value = staff_decisions_to_json(&decisions);
         let text = serde_json::to_string(&value).expect("writes");
@@ -878,6 +1126,11 @@ mod tests {
             serde_json::to_string(&staff_decisions_to_json(&decisions)).expect("writes"),
             text
         );
+        assert_eq!(value["notices"][3]["run"], 3);
+        assert_eq!(value["notices"][0]["run"], Value::Null);
+        assert_eq!(value["notices"][1]["rests_on"], json!({ "no_order": 1 }));
+        assert_eq!(value["notices"][0]["rests_on"], json!({ "command": 0 }));
+        assert_eq!(value["notices"][1]["kind"], "waits_for_leave_to_prepare");
         // Nothing handed in is written as three empty lists and reads back
         // as nothing.
         let none = staff_decisions_to_json(&StaffDecisions::default());
@@ -885,5 +1138,38 @@ mod tests {
             staff_decisions_from_json(&none),
             Ok(StaffDecisions::default())
         );
+        // With no notice the key is left out, so a hand-in is written as it
+        // was before notices; and a hand-in saved before them, with no key,
+        // reads as none.
+        assert!(none.get("notices").is_none());
+        let old = json!({ "orders": [], "commands": [], "no_orders": [] });
+        assert_eq!(
+            staff_decisions_from_json(&old),
+            Ok(StaffDecisions::default())
+        );
+    }
+
+    #[test]
+    fn a_bad_notice_is_refused() {
+        let hand_in = |notice: Value| {
+            staff_decisions_from_json(&json!({
+                "orders": [], "commands": [], "no_orders": [], "notices": [notice]
+            }))
+        };
+        let good = json!({
+            "kind": "cannot_meet", "plan": 1, "run": null, "rests_on": { "no_order": 0 }
+        });
+        assert!(hand_in(good.clone()).is_ok());
+        for bad in [
+            json!({ "kind": "cannot_swim", "plan": 1, "run": null, "rests_on": { "no_order": 0 } }),
+            json!({ "kind": "cannot_meet", "plan": 1, "run": null }),
+            json!({ "kind": "cannot_meet", "plan": 1, "run": null, "rests_on": {} }),
+            json!({ "kind": "cannot_meet", "plan": 1, "run": null, "rests_on": { "command": 0, "no_order": 0 } }),
+            json!({ "kind": "cannot_meet", "run": null, "rests_on": { "no_order": 0 } }),
+            json!({ "kind": "cannot_meet", "plan": 1, "run": null, "rests_on": { "no_order": -1 } }),
+            json!({ "kind": "cannot_meet", "plan": 1, "run": 1.5, "rests_on": { "no_order": 0 } }),
+        ] {
+            assert!(hand_in(bad.clone()).is_err(), "{bad}");
+        }
     }
 }

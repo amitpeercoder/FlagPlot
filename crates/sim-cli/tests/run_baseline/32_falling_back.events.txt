@@ -2,12 +2,12 @@ Scenario 32: A beaten side falls back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3b9bb6db9aaed9ad  46 events
-day   2  hash 96fd6e09c2fc62f2  34 events
-day   3  hash b4813059d643cc48  32 events
-day   4  hash 6d768c80b5e4742a  31 events
-day   5  hash 1cb7c53455d69ad5  25 events
-day   6  hash f1d3df879fc2322a  24 events
+day   1  hash edd3f9a3024da0da  46 events
+day   2  hash f3f5c592ce80abf9  34 events
+day   3  hash cffb784c6ab65f67  32 events
+day   4  hash ed42b4fe20e22521  31 events
+day   5  hash d63ec6e0b8b3660a  25 events
+day   6  hash 4dffd8d28137e431  24 events
 
 #1 D1 night     base:3 spent 2.5 t of supply on 500 men ashore for the day, 997.5 t left
 #2 D1 night     Allied men ashore at (0,0): 500 of 500 fed from base:3, 0 unfed  <- #1

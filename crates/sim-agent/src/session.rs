@@ -259,9 +259,24 @@ impl Session {
     pub fn tools(&self, side: Side) -> Vec<&'static str> {
         let mut tools: Vec<&'static str> = TOOLS.to_vec();
         if self.has_staff(side) {
-            tools.extend(COMMAND_TOOLS);
+            // `run` is offered only where exactly one seat is held by a
+            // player (decision 0107, item 29).
+            let runnable = self.player_seats() == 1;
+            tools.extend(
+                COMMAND_TOOLS
+                    .iter()
+                    .filter(|tool| **tool != "run" || runnable),
+            );
         }
         tools
+    }
+
+    /// How many seats a player holds.
+    fn player_seats(&self) -> usize {
+        self.seats
+            .values()
+            .filter(|s| s.seat.kind() == SeatKind::Player)
+            .count()
     }
 
     /// Who holds a seat.
@@ -759,6 +774,13 @@ impl Session {
                 Ok(staffing::why(&self.world.side_view(side), number))
             }
             "preview" => self.preview_tool(side, args),
+            "run" => self.run_days(side, args),
+            "report" => {
+                if !args.is_empty() {
+                    return Err(CallError::new("report takes no arguments"));
+                }
+                Ok(staffing::report(&self.world.side_view(side)))
+            }
             "approve" if args.contains_key("preview") => self.approve_preview(side, args),
             _ => self.queue_command(side, tool, args),
         }
@@ -803,11 +825,21 @@ impl Session {
         } else {
             self.seats[&side].commands.clone()
         };
-        let next_intent = {
+        let (next_intent, next_interrupt) = {
             let world = self.preview_with(Some((side, &queue)), None);
-            staffing::next_free_intent(&world.side_view(side), &queue)
+            let view = world.side_view(side);
+            (
+                staffing::next_free_intent(&view, &queue),
+                staffing::next_free_interrupt(&view, &queue),
+            )
         };
-        let request = staffing::request(&self.world.side_view(side), tool, args, next_intent)?;
+        let request = staffing::request(
+            &self.world.side_view(side),
+            tool,
+            args,
+            next_intent,
+            next_interrupt,
+        )?;
         self.queue_request(side, tool, request, queue, None)
     }
 
@@ -876,7 +908,8 @@ impl Session {
             let world = self.preview_with(Some((side, &queue)), None);
             staffing::next_free_intent(&world.side_view(side), &queue)
         };
-        let request = staffing::request(&self.world.side_view(side), command, &rest, next_intent)?;
+        let request =
+            staffing::request(&self.world.side_view(side), command, &rest, next_intent, 0)?;
         let day = self.world.day() + 1;
         let before = self.commands.get(&day).map_or(0, |list| {
             list.iter().filter(|(who, _)| *who == side).count()
@@ -1039,6 +1072,105 @@ impl Session {
             "day": self.world.day(),
             "game_over": self.is_over(),
             "result": result,
+        }))
+    }
+
+    /// `run`: resolves up to `days` days, each exactly as `end_day` does,
+    /// and stops after a day on which an interrupt of the side fired, or at
+    /// the end of the game, or at `days` (decision 0107, item 29 and ruling
+    /// 36). The queued orders and commands go in on the first day.
+    fn run_days(
+        &mut self,
+        side: Side,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<Value, CallError> {
+        if let Some(key) = args
+            .keys()
+            .find(|k| !["days", "reason"].contains(&k.as_str()))
+        {
+            return Err(CallError::naming(
+                format!("\"{key}\" is not an argument of run"),
+                &["days", "reason"],
+            ));
+        }
+        match args.get("reason") {
+            None | Some(Value::Null) | Some(Value::String(_)) => {}
+            Some(_) => return Err(CallError::new("\"reason\" must be text")),
+        }
+        if self.player_seats() != 1 {
+            return Err(CallError::new(
+                "run is offered only where exactly one seat is held by a player: use end_day",
+            ));
+        }
+        if self.is_over() {
+            return Err(CallError::new("the game is over"));
+        }
+        let days = args
+            .get("days")
+            .and_then(Value::as_u64)
+            .and_then(|n| u32::try_from(n).ok())
+            .filter(|n| *n >= 1)
+            .ok_or_else(|| {
+                CallError::new("\"days\" is needed, as a whole number of days, at least 1")
+            })?;
+        // The staff's orders for the first day, worked before it is
+        // resolved, as staff_orders gives them.
+        let staff_orders = {
+            let world = self.preview();
+            let staff: &dyn Staff = self.staffs[&side].as_ref();
+            staffing::staff_orders(&world.side_view(side), staff)
+        };
+        let first = self.world.day() + 1;
+        let mut count = 0;
+        let stopped = loop {
+            self.resolve()?;
+            count += 1;
+            let day = self.world.day();
+            if self.is_over() {
+                break "game_over";
+            }
+            if staffing::fired_on_day(&self.world.side_view(side), day) {
+                break "interrupt";
+            }
+            if count >= days {
+                break "days";
+            }
+        };
+        let last = self.world.day();
+        let fired = staffing::firings_json(&self.world.side_view(side), last);
+        let result = match self.final_result() {
+            Some(result) => to_value(&result_part(&self.world.side_view(side), &result))?,
+            None => Value::Null,
+        };
+        let resolved = if count == 1 {
+            format!("Resolved day {first} (1 day)")
+        } else {
+            format!("Resolved days {first} to {last} ({count} days)")
+        };
+        let why_stopped = match stopped {
+            "interrupt" => staffing::firing_words(&fired),
+            "game_over" => "the game is over".to_string(),
+            _ => format!("the {days} days asked for are resolved"),
+        };
+        let mut summary = format!("{resolved}; stopped after day {last}: {why_stopped}.");
+        if stopped == "game_over" && !fired.is_empty() {
+            summary.push_str(&format!(
+                " Fired on that day: {}.",
+                staffing::firing_words(&fired)
+            ));
+        }
+        Ok(json!({
+            "format": FORMAT,
+            "version": VERSION,
+            "kind": "run",
+            "staff_orders": staff_orders,
+            "days_resolved": {"first": first, "last": last, "count": count},
+            "stopped": stopped,
+            "fired": fired,
+            "game_over": self.is_over(),
+            "day": last,
+            "result": result,
+            "summary": summary,
         }))
     }
 

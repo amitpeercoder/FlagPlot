@@ -2,11 +2,11 @@ Placeholder scenario 41c: Cancelled at sea
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 024a16a555832ee3  28 events
-day   2  hash cfc9775ca7846bd5  15 events
-day   3  hash 40b7c51661a2088f  18 events
-day   4  hash a68c8327ea9cfb66  8 events
-day   5  hash 80e7512bec734513  5 events
+day   1  hash f62fe59312cd7fd6  28 events
+day   2  hash 1036dcda6302e2f4  15 events
+day   3  hash be4f8905cdaeadcc  18 events
+day   4  hash b333bc558baae10d  8 events
+day   5  hash 6252615f67ea6390  5 events
 
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Placeholder cargo ship 1": afloat in task_force:1000001; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply

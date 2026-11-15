@@ -303,3 +303,7 @@ path = "scenario_40_one_pool_two_hexes.rs"
 [[test]]
 name = "scenario_41_hold_change_release"
 path = "scenario_41_hold_change_release.rs"
+
+[[test]]
+name = "scenario_42_interrupts_and_runs"
+path = "scenario_42_interrupts_and_runs.rs"

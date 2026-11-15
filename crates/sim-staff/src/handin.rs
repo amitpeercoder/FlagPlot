@@ -7,7 +7,10 @@
 
 use std::collections::BTreeSet;
 
-use sim_core::command::{CommandKind, Reason, StaffCommand, StaffDecisions, StaffOrder};
+use sim_core::command::{
+    CommandKind, NoticeBasis, NoticeKind, PlanId, Reason, StaffCommand, StaffDecisions,
+    StaffNotice, StaffOrder,
+};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{BaseId, IntentId, ShipId, TaskForceId};
@@ -56,12 +59,32 @@ pub(crate) struct Out {
     commands: Vec<StaffCommand>,
     drafts: Vec<DraftOrder>,
     no_orders: Vec<Reason>,
+    notices: Vec<StaffNotice>,
     formed: usize,
 }
 
 impl Out {
-    pub(crate) fn command(&mut self, kind: CommandKind, reason: Reason) {
+    /// Hands in a command and gives its index in the final hand-in.
+    pub(crate) fn command(&mut self, kind: CommandKind, reason: Reason) -> usize {
         self.commands.push(StaffCommand { kind, reason });
+        self.commands.len() - 1
+    }
+
+    /// Hands in a notice, in the order made: of `kind` for `plan` (and `run`
+    /// where there is one), resting on the reason `rests_on` names.
+    pub(crate) fn notice(
+        &mut self,
+        kind: NoticeKind,
+        plan: PlanId,
+        run: Option<u32>,
+        rests_on: NoticeBasis,
+    ) {
+        self.notices.push(StaffNotice {
+            kind,
+            plan,
+            run,
+            rests_on,
+        });
     }
 
     /// The forming orders drafted so far.
@@ -69,8 +92,11 @@ impl Out {
         self.formed
     }
 
-    pub(crate) fn no_order(&mut self, reason: Reason) {
+    /// Hands in a decision to give no order and gives its index in the
+    /// final hand-in.
+    pub(crate) fn no_order(&mut self, reason: Reason) -> usize {
         self.no_orders.push(reason);
+        self.no_orders.len() - 1
     }
 
     /// Drafts a forming order at `source` and says which force it makes.
@@ -162,6 +188,7 @@ impl Out {
             orders,
             commands: self.commands,
             no_orders: self.no_orders,
+            notices: self.notices,
         }
     }
 }

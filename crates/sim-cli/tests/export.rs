@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use serde_json::Value;
+use sim_core::events::EventKind;
 use sim_data::Scenario;
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
@@ -111,7 +112,18 @@ fn every_scenario_exports_what_the_world_logged() {
             "{scenario}: event count"
         );
         for (exported, event) in events.iter().zip(world.events().iter()) {
-            assert_eq!(exported["text"], event.to_string(), "{scenario}");
+            // The export words a staff command and its reason in its own way
+            // (see `a_staff_command_and_its_reason_are_worded_for_the_viewer`);
+            // every other event reads as the log's `Display`.
+            let reworded = matches!(
+                event.kind,
+                EventKind::CommandTaken { .. }
+                    | EventKind::CommandRefused { .. }
+                    | EventKind::StaffReason { .. }
+            );
+            if !reworded {
+                assert_eq!(exported["text"], event.to_string(), "{scenario}");
+            }
             assert_eq!(
                 exported["id"],
                 event.id.umpire_raw(&world.umpire_key()),
@@ -155,6 +167,62 @@ fn every_scenario_exports_what_the_world_logged() {
 
         let orders = replay["orders"].as_array().expect("orders is a list");
         assert_eq!(orders.len(), world.orders().count(), "{scenario}: orders");
+    }
+}
+
+#[test]
+fn a_staff_command_and_its_reason_are_worded_for_the_viewer() {
+    let replay = parse(&export(
+        "staff-words",
+        "data/scenarios/36_one_convoy.toml",
+        &["--reference", sim_data::FROZEN_REFERENCE_DIR],
+    ));
+    let events = replay["events"].as_array().expect("events is a list");
+    let text_of = |kind: &str| -> Vec<&str> {
+        events
+            .iter()
+            .filter(|event| event["kind"] == kind)
+            .map(|event| event["text"].as_str().expect("text"))
+            .collect()
+    };
+
+    // The staff's approval: its reason is for the command, not for no order.
+    let reasons = text_of("staff_reason");
+    assert!(
+        reasons
+            .iter()
+            .any(|t| t.contains("staff's reason for the command to approve plan:1:")),
+        "{reasons:?}"
+    );
+    // One ship reads "1 ship", in the command and in the reason for it.
+    let taken = text_of("command_taken");
+    assert!(
+        taken.iter().any(|t| t.contains("commit 1 ship to plan:1")),
+        "{taken:?}"
+    );
+    assert!(
+        reasons
+            .iter()
+            .any(|t| t.contains("reason for the command to commit 1 ship to plan:1")),
+        "{reasons:?}"
+    );
+    assert!(
+        taken.iter().any(|t| t.contains("with 1 ship to plan:1")),
+        "{taken:?}"
+    );
+    for t in taken.iter().chain(&reasons) {
+        assert!(!t.contains("1 ships"), "{t}");
+    }
+    // A decision to give no order still says so, and no reason for a command
+    // is read as one.
+    assert!(
+        reasons.iter().any(|t| t.contains("staff gave no order:")),
+        "{reasons:?}"
+    );
+    for t in &reasons {
+        if t.contains("gave no order") {
+            assert!(!t.contains("reason for the command"), "{t}");
+        }
     }
 }
 

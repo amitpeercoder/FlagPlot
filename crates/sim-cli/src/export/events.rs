@@ -1,9 +1,10 @@
 //! The event log as JSON.
 
 use serde::Serialize;
+use sim_core::command::{CommandKind, Limit};
 use sim_core::events::{
-    Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange, LandFatigueChange,
-    SupplyUse,
+    Breakdown, Cause, Event, EventKind, EventLog, FatigueChange, ForceFatigueChange,
+    LandFatigueChange, SupplyUse,
 };
 use sim_core::fixed::Fixed;
 use sim_core::ids::UmpireKey;
@@ -20,7 +21,8 @@ pub struct EventOut {
     day: u32,
     pulse: Option<&'static str>,
     kind: &'static str,
-    /// Exactly `Event`'s `Display`.
+    /// `Event`'s `Display`, except that a command is worded with its numbers
+    /// in agreement ("1 ship") and a staff reason for a command says so.
     text: String,
     causes: Vec<CauseOut>,
     entities: Vec<String>,
@@ -48,14 +50,113 @@ struct FactorOut {
     value: Num,
 }
 
-pub fn event(event: &Event, key: &UmpireKey) -> EventOut {
+/// The text of an event for the viewer: `Event`'s `Display`, with the kind's
+/// words replaced where the export words it better (the log's own wording is
+/// untouched). `log` is where a cited command is looked up.
+fn text(event: &Event, log: &EventLog) -> String {
+    let full = event.to_string();
+    let old = event.kind.to_string();
+    let new = match &event.kind {
+        EventKind::CommandTaken { command, .. } | EventKind::CommandRefused { command, .. } => {
+            match old.strip_suffix(&command.to_string()) {
+                Some(head) => format!("{head}{}", command_words(command)),
+                None => return full,
+            }
+        }
+        EventKind::StaffReason {
+            side,
+            order: None,
+            reason,
+        } => match cited_command(event, log) {
+            Some(command) => format!(
+                "{side:?} staff's reason for the command to {}: {}",
+                command_words(command),
+                reason.worked
+            ),
+            None => return full,
+        },
+        _ => return full,
+    };
+    full.replacen(&old, &new, 1)
+}
+
+/// The command a staff reason cites, through its `CommandTaken` or
+/// `CommandRefused`.
+fn cited_command<'a>(event: &Event, log: &'a EventLog) -> Option<&'a CommandKind> {
+    event.causes.iter().find_map(|cause| match cause {
+        Cause::Event(id) => match &log.get(*id)?.kind {
+            EventKind::CommandTaken { command, .. } | EventKind::CommandRefused { command, .. } => {
+                Some(command)
+            }
+            _ => None,
+        },
+        Cause::Order(_) => None,
+    })
+}
+
+/// "1 ship" and "2 ships".
+fn count(n: usize, one: &str, many: &str) -> String {
+    format!("{n} {}", if n == 1 { one } else { many })
+}
+
+/// A command in words, with its counts in agreement. `CommandKind`'s `Display`
+/// writes "1 ships"; the rest falls back to it.
+fn command_words(command: &CommandKind) -> String {
+    match command {
+        CommandKind::CommitShips {
+            plan,
+            run,
+            ships,
+            from_day,
+            to_day,
+        } => {
+            let mut words = format!("commit {} to {plan}", count(ships.len(), "ship", "ships"));
+            if let Some(run) = run {
+                words.push_str(&format!(" run {run}"));
+            }
+            words.push_str(&format!(" from day {from_day} to day {to_day}"));
+            words
+        }
+        CommandKind::FreeShips { plan, ships } => {
+            format!("free {} from {plan}", count(ships.len(), "ship", "ships"))
+        }
+        CommandKind::AddRun { plan, run } => format!(
+            "add a run of {} t with {} to {plan}, loading day {}, due day {}",
+            run.load_t,
+            count(run.ships.len(), "ship", "ships"),
+            run.days.load,
+            run.days.arrive
+        ),
+        CommandKind::SetLimit(Limit::Forces { intent, limit }) => format!(
+            "limit {intent}'s forces to {} and {} from {}",
+            count(limit.ships.len(), "ship", "ships"),
+            count(limit.task_forces.len(), "task force", "task forces"),
+            limit.source
+        ),
+        CommandKind::SetLimit(Limit::Area { intent, hexes }) => {
+            format!(
+                "limit {intent}'s area to {}",
+                count(hexes.len(), "hex", "hexes")
+            )
+        }
+        CommandKind::SetLimit(Limit::Protected { intent, ships }) => {
+            format!(
+                "protect {} of {intent}",
+                count(ships.len(), "ship", "ships")
+            )
+        }
+        other => other.to_string(),
+    }
+}
+
+pub fn event(event: &Event, key: &UmpireKey, log: &EventLog) -> EventOut {
     let (kind, data) = describe(&event.kind, key);
     EventOut {
         id: event.id.umpire_raw(key),
         day: event.day,
         pulse: event.pulse.map(|pulse| pulse.name()),
         kind,
-        text: event.to_string(),
+        text: text(event, log),
         causes: event
             .causes
             .iter()
@@ -2025,6 +2126,38 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .with("target", Field::Str(target.to_string()))
                 .int("order", order.umpire_raw(key)),
         ),
+        EventKind::StaffNotice {
+            side,
+            kind,
+            plan,
+            run,
+        } => {
+            let mut data = d
+                .text("side", names::side(*side))
+                .text("notice", kind.name())
+                .int("plan", plan.raw());
+            if let Some(run) = run {
+                data = data.int("run", *run);
+            }
+            ("staff_notice", data)
+        }
+        EventKind::InterruptFired {
+            side,
+            interrupt,
+            condition,
+            figure,
+        } => {
+            let mut data = d
+                .text("side", names::side(*side))
+                .with("interrupt", Field::Str(interrupt.to_string()));
+            if let Some(condition) = condition {
+                data = data.with("condition", Field::Str(condition.to_string()));
+            }
+            if let Some(figure) = figure {
+                data = data.num("days_of_supply", *figure);
+            }
+            ("interrupt_fired", data)
+        }
     }
 }
 

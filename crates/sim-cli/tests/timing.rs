@@ -57,6 +57,10 @@ fn time_reports_its_sections_and_changes_nothing() {
         "the world without its log",
         "d. 1 games of 1 days",
         "e. 1 games of 1 days",
+        "f. A day's staff decisions for one side",
+        "g. A quiet week in one call",
+        "from the start of the slice",
+        "days played",
         "What it means",
     ] {
         assert!(out.contains(section), "missing \"{section}\" in\n{out}");

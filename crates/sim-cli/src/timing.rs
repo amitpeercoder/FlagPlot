@@ -12,7 +12,10 @@
 //! every unit of both sides asked at every moment of the day, and the asking
 //! alone once before the day; a copy of the world with and without its event
 //! log; and a number of games of some days from one start, from the start of
-//! the soak and from day 150.
+//! the soak and from day 150. Two more measure the staff (decision 0107,
+//! "What it must pass", Speed): the staff's decisions for one side on each
+//! day of the slice played with the staffs, and a quiet week (seven staffed
+//! days) in one call. No number fails them.
 
 use std::hint::black_box;
 use std::time::{Duration, Instant};
@@ -279,6 +282,79 @@ fn ask_once(start: &Start, repeats: u32) -> (Spread, usize) {
     (s, asked)
 }
 
+/// A day's staff decisions for one side, for each day of the scenario as it
+/// is played with the staffs: `Staff::decide` on the side's view at the
+/// staff's step. The view (a copy of the world taken to the staff's step) is
+/// made before the clock starts. Each day's time is the median of `repeats`
+/// askings; the spread is over the days. Returns, for each side, that spread,
+/// the days counted, and the day of the longest time with that time.
+struct StaffDays {
+    side: sim_core::state::Side,
+    spread: Spread,
+    counted: u32,
+    longest_day: u32,
+    longest: Duration,
+}
+
+fn staff_days(start: &Start, repeats: u32) -> Result<Vec<StaffDays>, String> {
+    let mut per_side: std::collections::BTreeMap<_, Vec<(u32, Duration)>> =
+        std::collections::BTreeMap::new();
+    let mut world = start.world.clone();
+    while world.day() < start.days {
+        let day = world.day() + 1;
+        let mut ready = world.clone();
+        start.submit(&mut ready, day);
+        let staged = ready.at_staff_step();
+        for side in sim_core::state::Side::ALL {
+            let Some(staff) = start.staffs.get(&side) else {
+                continue;
+            };
+            let median = repeat(repeats, || {
+                let view = staged.side_view(side);
+                timed(|| staff.decide(view))
+            })
+            .median;
+            per_side.entry(side).or_default().push((day, median));
+        }
+        start.play(&mut world, 1)?;
+    }
+    Ok(per_side
+        .into_iter()
+        .map(|(side, days)| {
+            let longest = days
+                .iter()
+                .copied()
+                .max_by_key(|(_, time)| *time)
+                .unwrap_or((0, Duration::ZERO));
+            let counted = u32::try_from(days.len()).unwrap_or(u32::MAX);
+            StaffDays {
+                side,
+                spread: spread(days.into_iter().map(|(_, time)| time).collect()),
+                counted,
+                longest_day: longest.0,
+                longest: longest.1,
+            }
+        })
+        .collect())
+}
+
+/// A quiet week in one call: seven days resolved in a row with the staffs, as
+/// `run {days: 7}` does, from `start`. The copy is made before the clock
+/// starts. Returns the spread and the days played (the scenario's end may cut
+/// the week short).
+fn quiet_week(start: &Start, repeats: u32) -> Result<(Spread, u32), String> {
+    let mut played = 0;
+    let mut times = Vec::new();
+    for _ in 0..repeats {
+        let mut world = start.world.clone();
+        let begin = clock();
+        played = start.play(&mut world, 7)?;
+        black_box(&world);
+        times.push(begin.elapsed());
+    }
+    Ok((spread(times), played))
+}
+
 fn copies(start: &Start, repeats: u32) -> (Spread, Spread, Spread) {
     let whole = repeat(repeats, || timed(|| start.world.clone()));
     let log = repeat(repeats, || timed(|| start.world.events().clone()));
@@ -322,7 +398,7 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
         }
     );
     println!(
-        "repeats: {} (workloads a to c); games: {} of {} days (d and e, once each)",
+        "repeats: {} (workloads a to c, f and g); games: {} of {} days (d and e, once each)",
         s.repeats, s.games, s.days
     );
     println!("slice: {}   soak: {}", s.slice, s.soak);
@@ -424,6 +500,39 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
     );
 
     println!();
+    println!(
+        "f. A day's staff decisions for one side (Staff::decide on the side's view at the staff's step, each day of {} played with the staffs; each day's time is the median of {} askings, the spread is over the days):",
+        s.slice, s.repeats
+    );
+    let slice0 = start_at(&s.slice, 0, options)?;
+    let f = staff_days(&slice0, s.repeats)?;
+    for d in &f {
+        line(&format!("{:?}, {} days", d.side, d.counted), &d.spread);
+        println!(
+            "    the longest, day {}: {}",
+            d.longest_day,
+            show(d.longest)
+        );
+    }
+
+    println!();
+    println!(
+        "g. A quiet week in one call (seven days resolved in a row with the staffs, as run {{days: 7}} does; {} runs each):",
+        s.repeats
+    );
+    let mut g = Vec::new();
+    for (label, start) in [
+        ("from the start of the slice".to_string(), &slice0),
+        (format!("from day {} of the slice", s.early), &early),
+        (format!("from day {} of the slice", s.late), &late),
+    ] {
+        let (week, played) = quiet_week(start, s.repeats)?;
+        line(&label, &week);
+        println!("    {played} days played");
+        g.push((label, week, played));
+    }
+
+    println!();
     println!("What it means (medians; the times a designer can set \"Speed\" from):");
     println!(
         "  One day of the slice: {} early (day {}), {} late (day {}).",
@@ -460,5 +569,21 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
         show(e_total),
         show(e.median)
     );
+    for d in &f {
+        println!(
+            "  A day's staff decisions for the {:?} side: {} (median over {} days of the slice), {} the longest (day {}).",
+            d.side,
+            show(d.spread.median),
+            d.counted,
+            show(d.longest),
+            d.longest_day
+        );
+    }
+    for (label, week, played) in &g {
+        println!(
+            "  A quiet week of {played} days {label}: {} (median).",
+            show(week.median)
+        );
+    }
     Ok(())
 }

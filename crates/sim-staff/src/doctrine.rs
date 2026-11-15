@@ -33,8 +33,9 @@
 //!   checked (ruling 14).
 
 use sim_core::command::{
-    CommandKind, CommandState, Committed, Displacement, Hold, HoldTarget, Intent, IntentKind, Plan,
-    PlanId, PlanOutcome, PlanState, Reason, RunSpec, Shortfall, StaffDecisions,
+    CommandKind, CommandState, Committed, Displacement, Hold, HoldTarget, Intent, IntentKind,
+    Leave, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason, RunSpec,
+    Shortfall, StaffDecisions,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -299,7 +300,7 @@ pub(crate) fn serve(
     };
     if eff == PlanState::Draft {
         if !leaves.prepare {
-            out.no_order(
+            let waits = out.no_order(
                 serving(intent, plan)
                     .evidence(format!("{} is a draft", plan.id), today)
                     .binding("leave to prepare is withheld")
@@ -309,6 +310,12 @@ pub(crate) fn serve(
                     ))
                     .would_change("leave to prepare given, or the commander approving the plan")
                     .done(),
+            );
+            out.notice(
+                NoticeKind::WaitsForLeave(Leave::Prepare),
+                plan.id,
+                None,
+                NoticeBasis::NoOrder(waits),
             );
             return Served::default();
         }
@@ -357,6 +364,7 @@ pub(crate) fn serve(
     let mut served = Served::default();
     let mut loading = false;
     let mut waiting_for_launch = false;
+    let mut cannot_meet = false;
     let mut cannot_sail: Option<String> = None;
     let mut underway: Vec<String> = Vec::new();
 
@@ -429,7 +437,7 @@ pub(crate) fn serve(
                             .shortfall
                             .as_ref()
                             .map_or(&[][..], |s| s.displaced_by.as_slice());
-                        new_run(
+                        let added = new_run(
                             &planner,
                             out,
                             morning,
@@ -438,9 +446,23 @@ pub(crate) fn serve(
                             run,
                             (displaced, note.as_ref()),
                         );
+                        // A cut that leaves the reading below the floor.
+                        if served
+                            .shortfall
+                            .as_ref()
+                            .is_some_and(|s| s.shortfall_days > Fixed::ZERO)
+                        {
+                            out.notice(
+                                NoticeKind::CannotMeet,
+                                plan.id,
+                                None,
+                                NoticeBasis::Command(added),
+                            );
+                        }
                         served.ordered = true;
                     }
                     (None, Some(_)) => {
+                        cannot_meet = true;
                         hold_note = note;
                         served.shortfall = Some(shortfall(
                             &planner,
@@ -457,8 +479,11 @@ pub(crate) fn serve(
         }
     }
 
-    // 6. No order: one reason.
-    if !served.ordered {
+    // 6. No order: one reason. A day a loaded run is dispatched and a new
+    // run is needed and can be had by none gives one too, about the next
+    // run, for the cannot-meet notice to rest on.
+    if !served.ordered || cannot_meet {
+        let dispatched = served.ordered;
         let idle = IdleFacts {
             eff,
             underway,
@@ -471,7 +496,27 @@ pub(crate) fn serve(
             units,
             hold_note,
         };
-        out.no_order(idle_reason(&planner, &readings, &idle, today));
+        let mut idle_why = idle_reason(&planner, &readings, &idle, today);
+        if dispatched {
+            idle_why.worked = format!("No new run: {}", idle_why.worked);
+        }
+        let idle_index = out.no_order(idle_why);
+        if cannot_meet {
+            out.notice(
+                NoticeKind::CannotMeet,
+                plan.id,
+                None,
+                NoticeBasis::NoOrder(idle_index),
+            );
+        }
+        if waiting_for_launch {
+            out.notice(
+                NoticeKind::WaitsForLeave(Leave::Launch),
+                plan.id,
+                None,
+                NoticeBasis::NoOrder(idle_index),
+            );
+        }
     }
     served
 }
@@ -700,7 +745,7 @@ fn new_run(
     ev: &Evaluation,
     run: &RunPlan,
     (displaced, held): (&[Displacement], Option<&WithoutHold>),
-) {
+) -> usize {
     let today = planner.today;
     let params = &planner.params;
     let intent = params.intent;
@@ -864,7 +909,7 @@ fn new_run(
         }
         b
     };
-    out.command(
+    let added = out.command(
         CommandKind::AddRun {
             plan: plan.id,
             run: RunSpec {
@@ -910,6 +955,7 @@ fn new_run(
             .done(),
         );
     }
+    added
 }
 
 fn loading_words(timing: &Timing) -> String {

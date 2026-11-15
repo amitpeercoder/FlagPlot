@@ -1,0 +1,122 @@
+# Scenario 43: keep two bases fed, commanded by intent alone (decision 0107,
+# step 4, ruling 40).
+#
+# The game a language model plays from the tools' descriptions alone: scenario
+# 40a's map and forces with a second ship, 20 days, no command in force, and a
+# mission in the briefing. Base 2 at T and base 3 at U hold 10 t each and feed
+# 200 men each at 1 t a day, so with nothing done each runs out after the night
+# of day 10 and its men go unfed on the night of day 11. Ships 1 and 2,
+# placeholder fast transports with 30 t of cargo, lie in port at base 1 at S,
+# which holds 1000 t. There is no enemy, no aircraft and no random draw. The
+# recorded game is in crates/sim-cli/tests/recorded_games/keep_two_bases_fed_sonnet.
+#
+# PLACEHOLDER DATA. The bases, ships, units and map are invented.
+
+name = "Placeholder scenario 43: Keep two bases fed"
+placeholder = true
+seed = 1942
+days = 20
+map = "../map/placeholder_one_pool_two_hexes.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# S: the source. Port size 1, one berth at 50 t an hour.
+[[base]]
+id = 1
+name = "Placeholder base S, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 1000
+
+# T: port size 0, by lighter at 20 t an hour.
+[[base]]
+id = 2
+name = "Placeholder base T, Allied"
+side = "allied"
+q = 5
+r = 0
+supply_t = 10
+
+# U: port size 0, by lighter at 20 t an hour.
+[[base]]
+id = 3
+name = "Placeholder base U, Allied"
+side = "allied"
+q = 0
+r = 5
+supply_t = 10
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+men = 200
+q = 5
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder unit 2"
+side = "allied"
+men = 200
+q = 0
+r = 5
+posture = "defend"
+
+# Ship 1 lies in port at S in no task force, full of fuel.
+[[ship]]
+id = 1
+name = "Placeholder fast transport 1"
+class = 12
+side = "allied"
+fuel_t = 500
+port = 1
+
+[[ship]]
+id = 2
+name = "Placeholder fast transport 2"
+class = 12
+side = "allied"
+fuel_t = 500
+port = 1
+
+
+# The Allied commander's commands, in force from day 1.
+
+# The mission (decision 0054). The points are placeholders: the test of the
+# game is that no man at either base goes unfed, not the score.
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+history = "A placeholder scenario: there is no battle behind it."
+
+[objectives.allied]
+mission = "Keep both forward bases fed: base 2 at T and base 3 at U each feed 200 men and hold ten days of supply. Base 1 at S holds 1000 t and your two fast transports. Command by intent: let your staff carry it out, and give no order to a unit yourself."
+
+[[objectives.allied.objective]]
+kind = "cargo_landed"
+base = 2
+points_per_t = "0.1"
+
+[[objectives.allied.objective]]
+kind = "cargo_landed"
+base = 3
+points_per_t = "0.1"
+
+[objectives.japanese]
+mission = "There is no Japanese force in this scenario."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { transport = 2 }
