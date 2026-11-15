@@ -108,6 +108,8 @@ Each line is a capability the step needs, where it comes from and how it stands 
 
 ## The seat and the levels
 
+Changed on Nov 15, 2026, by decision 0116: the three levels of the table below are levels of one tree of intents, with the area intent at its root. One staff walks the tree; each intent records the level that owns it.
+
 The slice's seat is the area commander, South Pacific, and on the other side his opposite at Rabaul.
 
 | Level | The commander says | The staff does |
@@ -123,6 +125,8 @@ Area intent is in the first stage that has a staff, in a narrow form, and is wid
 These are the rules between the commander and the staff. They are settled here, before any stage, because every stage leans on them. Each gets its acceptance cases in the stage's decision record.
 
 ### Intent and limits
+
+Changed on Nov 15, 2026, by decision 0116, which the designer agreed: an intent is an end, a state of the world a commander wants, and not an activity. Intents form a tree. The staff breaks an end into sub-intents, which are the tasks, until the leaves are orders. An intent has a parent, a maker (the commander or the staff) and an addressee, the level it is given to, which sets what it may use. Limits pass down the tree and only narrow. Rest, repair and fuel are policy under the limits and are not intents. Decision 0117 says how much of this the first step builds. Where the text below differs, decision 0116 stands.
 
 An **intent** is a statement by a commander about one thing he commands. It has a kind, a subject, a measure where it has one and a date where it has one.
 
@@ -164,6 +168,8 @@ The numbers behind each cell are fixed in stage 2's record. Its acceptance cases
 - **A commitment counts what follows it:** the passage to the next task, loading and refuelling. A force is free when it can be where the next task starts, not when the last one ends. Stock at a base is committed by weight and by day as forces are. The tie-break is applied among the tasks a force can in fact do.
 
 ### The plan's life
+
+Changed on Nov 15, 2026, by decision 0116: a plan is the tree of an intent with its order in time. Its baseline is the stated intent and its limits. The sub-intents the staff forms beneath it are the staff's to form and change inside the limits, and forming one is not an amendment. What the plan needs to know is a branch of it (`docs/design/intelligence.md`, "Reconnaissance as part of an operation").
 
 A plan is a draft, preparing, released, complete, failed or cancelled. "Approved" below means preparing or released.
 
