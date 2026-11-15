@@ -6,8 +6,8 @@ Where these rules run in a day (chapter 1, The order in which a day resolves, gi
 
 | When | Rule |
 | --- | --- |
-| Start of the day, before orders | Refuelling in port |
-| Start of the day | Orders are taken in, including route, speed, readiness, cargo and detach orders (chapter 1, Orders) |
+| Start of the day, after the commander's commands (a reserve set that day binds), before the staff is asked and before orders | Refuelling in port |
+| Start of the day, after the staff is asked | Orders are taken in, the commander's and the staff's, including route, speed, readiness, cargo, detach, form, join and stand-down orders (chapter 1, Orders; chapter 8) |
 | Start of each pulse | Alert from belief, then fatigue of the task forces (chapter 3, Readiness, alertness and fatigue of a force) |
 | Movement phase of each pulse | Halted forces whose work is done steam on, then stragglers, then movement, meetings and fights |
 | Loading phase, last in each pulse | Cargo handling |
@@ -99,7 +99,7 @@ A side sees: its own `ShipsDetached` event whole. The enemy sees nothing.
 
 ### The task force formed, joined and stood down
 
-Three orders change which ships are in which force at a base of the side. Each is checked and done when it is taken in, at the start of the day, and records its event after the acceptance, citing the order. Chapter 1, Every reason an order is refused, gives the refusals. There is no randomness. [0111]
+Three orders change which ships are in which force at a base of the side. Each is checked and done when it is taken in, at the start of the day, and records its event after the acceptance, citing the order. An order to the force a forming order makes may be given the same day: forming orders are taken in before every other order of the day, so the new force exists for the orders that follow it, and a seat's orders queued through the agent are checked beside each other for it (chapter 1, When an order is checked, and against what). A staff's forming order and its orders to the new force are checked as a staff's orders are, against the forces limit of the intent they serve (chapter 8, The forces limit on a staff's orders). Chapter 1, Every reason an order is refused, gives the refusals. There is no randomness. [0111]
 
 **Forming.** A base order, `form_task_force` with a list of ships (in a scenario an `[[order]]` with `base = N`), forms ships of the side that lie in port at the base in no force into a new task force. Orders that form a force are taken in before every other order of the day (chapter 1, How orders are numbered and sorted). The new force takes the next number of its side's made series (chapter 1, What a side may know), as a force split off does, and is its side's next force by its own numbering. It is stopped (idle) at the base's hex, with no route, mission transport (no rule but bombardment reads a mission), cruise speed, the rules of engagement and readiness a force has when a scenario gives it none, and the base as its home port. It has no cargo order. An air group aboard a ship goes with her: its place is the ship, as for any ship of a force. `TaskForceFormed` names the force, the base and the ships. [0111, 0086]
 
@@ -300,7 +300,7 @@ A side sees: not an event. The breakdown of the steaming event holds the limit.
 
 ### Refuelling in port
 
-At the start of each day, before the day's orders are taken in, every task force that is stopped at a base of its own side refuels. Stopped means: the status is not underway and the force is exactly at a hex centre, with no hex ahead. The base must be at that centre. Cargo handling asks the same (see Cargo orders; differences.md row 32). A force that arrived, never left, or ran out of fuel at that centre is stopped. A force out of fuel between two hexes takes nothing.
+At the start of each day, after the commander's commands are taken in and before the staff is asked and the day's orders are taken in, every task force that is stopped at a base of its own side refuels. A reserve the commander set by command that day binds this morning's refuelling (chapter 8, The six limits). Stopped means: the status is not underway and the force is exactly at a hex centre, with no hex ahead. The base must be at that centre. Cargo handling asks the same (see Cargo orders; differences.md row 32). A force that arrived, never left, or ran out of fuel at that centre is stopped. A force out of fuel between two hexes takes nothing.
 
 Forces are served in order of their number and ships within a force in order of theirs. For each ship the engine takes the lowest-numbered base of the force's side in the force's hex that has fuel above its fuel reserve (`fuel_reserve_t`, 0 if the base has none). The ship takes what it lacks up to its class's `fuel_capacity_t` or what the base holds above its reserve, whichever is less, and so never takes the base's fuel below the reserve. One base serves one ship, as before: a ship the base cannot fill is left short, and the next ship is served by the lowest-numbered base that then has fuel above its reserve, so a force draws on the bases of its side in the hex in base order, each down to its reserve. The reserve holds for every force, the commander's own included: refuelling is a rule and not an order. If no base there has fuel above its reserve, the ship gets nothing. A ship that lacks nothing takes nothing and records nothing. A scenario with no reserve refuels as it did before. Each refuelling records `ShipRefuelled`, with the tons taken, the ship's fuel, the base's fuel left and whether the force was restored. It cites the force's arrival event. Nobody orders it, it takes no time and no berth, and loading cargo does not stop it. A scenario whose bases have no fuel has no refuelling.
 
