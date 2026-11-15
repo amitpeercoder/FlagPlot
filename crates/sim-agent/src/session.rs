@@ -134,6 +134,24 @@ fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32
 /// answers a unit that is not written as one an order can be for.
 pub const NOT_KNOWN: &str = "not known";
 
+/// A preview a seat was shown (decision 0107, step 3, rulings 25 and 26):
+/// what is needed to approve it and to say why it is void. It is the
+/// session's, not the world's: it is no state, no event and no hash.
+struct PreviewRecord {
+    number: u32,
+    side: Side,
+    /// The day the preview was for: the day the game was on plus one.
+    day: u32,
+    /// The side's revision when the preview was made.
+    revision: u32,
+    /// The command as the tool read it, with the numbers the side wrote.
+    request: staffing::Request,
+    /// The side's queued commands and the count of its queued orders when
+    /// the preview was made, to say what was queued after it.
+    commands: Vec<CommandKind>,
+    orders: usize,
+}
+
 struct SeatState {
     seat: Seat,
     /// The orders queued for the coming day, in the order given.
@@ -165,6 +183,12 @@ pub struct Session {
     /// or a day with nothing handed in is not in it.
     staff_handed_in: BTreeMap<u32, BTreeMap<Side, StaffDecisions>>,
     transcript: Vec<TranscriptEntry>,
+    /// Each side's revision: it rises whenever the side queues an order or a
+    /// command, or empties its queue, and whenever a day is resolved. A
+    /// preview is void when it has risen since (ruling 26).
+    revisions: BTreeMap<Side, u32>,
+    /// The previews shown, numbered 1, 2, 3... in the session.
+    previews: Vec<PreviewRecord>,
 }
 
 /// The arguments of a call as a map: an object, or nothing.
@@ -203,6 +227,8 @@ impl Session {
             commands_handed_in: BTreeMap::new(),
             staff_handed_in: BTreeMap::new(),
             transcript: Vec::new(),
+            revisions: BTreeMap::new(),
+            previews: Vec::new(),
         }
     }
 
@@ -464,11 +490,11 @@ impl Session {
             Some(_) => return Err(CallError::new("\"reason\" must be text")),
         }
         if clear {
-            self.seats
-                .get_mut(&side)
-                .expect("both seats exist")
-                .queued
-                .clear();
+            let queued = &mut self.seats.get_mut(&side).expect("both seats exist").queued;
+            if !queued.is_empty() {
+                queued.clear();
+                self.bump(side);
+            }
         }
         // Each order is judged against the state as it is now and beside the
         // orders already queued, the seat's and this call's before it
@@ -516,6 +542,9 @@ impl Session {
                     }
                 }
             }
+        }
+        if !accepted.is_empty() {
+            self.bump(side);
         }
         self.seats
             .get_mut(&side)
@@ -729,8 +758,20 @@ impl Session {
                     })?;
                 Ok(staffing::why(&self.world.side_view(side), number))
             }
+            "preview" => self.preview_tool(side, args),
+            "approve" if args.contains_key("preview") => self.approve_preview(side, args),
             _ => self.queue_command(side, tool, args),
         }
+    }
+
+    /// The side's revision, which a queued order or command and a resolved
+    /// day raise.
+    fn revision(&self, side: Side) -> u32 {
+        self.revisions.get(&side).copied().unwrap_or(0)
+    }
+
+    fn bump(&mut self, side: Side) {
+        *self.revisions.entry(side).or_insert(0) += 1;
     }
 
     /// Queues one command for the coming day if the engine's own check, made
@@ -767,6 +808,20 @@ impl Session {
             staffing::next_free_intent(&world.side_view(side), &queue)
         };
         let request = staffing::request(&self.world.side_view(side), tool, args, next_intent)?;
+        self.queue_request(side, tool, request, queue, None)
+    }
+
+    /// Takes a command read from a call (or from a preview) in after
+    /// `queue`, the commands queued before it, and queues it if the engine
+    /// would take it. `via` is the preview it was approved from.
+    fn queue_request(
+        &mut self,
+        side: Side,
+        tool: &str,
+        request: staffing::Request,
+        queue: Vec<CommandKind>,
+        via: Option<u32>,
+    ) -> Result<Value, CallError> {
         // The script's commands of the side come first on the day, then the
         // seat's: the new command is the one after both.
         let day = self.world.day() + 1;
@@ -779,14 +834,177 @@ impl Session {
             CallError::new("the command could not be checked: the game has no verdict on it")
         })?;
         let state = self.seats.get_mut(&side).expect("both seats exist");
-        state.commands = queue;
+        let was = std::mem::replace(&mut state.commands, queue);
         if verdict.is_ok() {
             state.commands.push(request.kind.clone());
         }
         let queued = state.commands.len();
-        Ok(staffing::command_answer(
-            &view, &request, tool, &verdict, queued,
-        ))
+        let changed = state.commands != was;
+        let mut out = staffing::command_answer(&view, &request, tool, &verdict, queued);
+        if changed {
+            self.bump(side);
+        }
+        if let (Some(number), Some(map)) = (via, out.as_object_mut()) {
+            map.insert("preview".into(), json!(number));
+        }
+        Ok(out)
+    }
+
+    /// `preview`: what a changed intent or limit would do, worked on copies
+    /// of the world and stored nowhere in it (rulings 25 to 28).
+    fn preview_tool(
+        &mut self,
+        side: Side,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<Value, CallError> {
+        if self.is_over() {
+            return Err(CallError::new("the game is over"));
+        }
+        let command = args.get("command").and_then(Value::as_str);
+        let (Some(command @ ("set_intent" | "set_limit")), false) =
+            (command, args.contains_key("clear"))
+        else {
+            return Err(CallError::naming(
+                "\"command\" is needed, as \"set_intent\" or \"set_limit\" (and \"clear\" is not an argument of preview)",
+                &["set_intent", "set_limit"],
+            ));
+        };
+        let mut rest = args.clone();
+        rest.remove("command");
+        let queue = self.seats[&side].commands.clone();
+        let next_intent = {
+            let world = self.preview_with(Some((side, &queue)), None);
+            staffing::next_free_intent(&world.side_view(side), &queue)
+        };
+        let request = staffing::request(&self.world.side_view(side), command, &rest, next_intent)?;
+        let day = self.world.day() + 1;
+        let before = self.commands.get(&day).map_or(0, |list| {
+            list.iter().filter(|(who, _)| *who == side).count()
+        }) + queue.len();
+        let with = self.preview_with(None, Some((side, &request.kind)));
+        let verdict = staffing::verdict(&with.side_view(side), before).ok_or_else(|| {
+            CallError::new("the command could not be checked: the game has no verdict on it")
+        })?;
+        if verdict.is_err() {
+            return Ok(staffing::command_answer(
+                &with.side_view(side),
+                &request,
+                "preview",
+                &verdict,
+                queue.len(),
+            ));
+        }
+        let as_is = self.preview();
+        let number = u32::try_from(self.previews.len() + 1).expect("few previews");
+        let staff: &dyn Staff = self.staffs[&side].as_ref();
+        let out = staffing::preview(
+            number,
+            &as_is.side_view(side),
+            &with.side_view(side),
+            staff,
+            &request,
+        );
+        self.previews.push(PreviewRecord {
+            number,
+            side,
+            day,
+            revision: self.revision(side),
+            request,
+            commands: queue,
+            orders: self.seats[&side].queued.len(),
+        });
+        Ok(out)
+    }
+
+    /// `approve` of a preview: queues exactly the command the preview
+    /// showed, if nothing was queued and no day resolved since (ruling 26).
+    fn approve_preview(
+        &mut self,
+        side: Side,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<Value, CallError> {
+        if self.is_over() {
+            return Err(CallError::new("the game is over"));
+        }
+        if self.seats[&side].ended {
+            return Err(CallError::new("the day's orders are closed"));
+        }
+        if let Some(key) = ["plan", "clear"]
+            .into_iter()
+            .find(|k| args.contains_key(*k))
+        {
+            return Err(CallError::new(format!(
+                "\"{key}\" is not an argument of approve with a preview: the preview is approved as it was shown"
+            )));
+        }
+        match args.get("reason") {
+            None | Some(Value::Null) | Some(Value::String(_)) => {}
+            Some(_) => return Err(CallError::new("\"reason\" must be text")),
+        }
+        let number = args
+            .get("preview")
+            .and_then(Value::as_u64)
+            .and_then(|n| u32::try_from(n).ok())
+            .ok_or_else(|| {
+                CallError::new("\"preview\" is needed, as the number of a preview you were shown")
+            })?;
+        let Some(record) = self
+            .previews
+            .iter()
+            .find(|p| p.number == number && p.side == side)
+        else {
+            return Err(CallError::new(format!(
+                "preview {number} is not a preview you were shown"
+            )));
+        };
+        let (request, day, revision) = (record.request.clone(), record.day, record.revision);
+        let (was_commands, was_orders) = (record.commands.clone(), record.orders);
+        let queue = self.seats[&side].commands.clone();
+        let void = if day != self.world.day() + 1 {
+            Some(format!(
+                "preview {number} is void: a day was resolved after it"
+            ))
+        } else if revision != self.revision(side) {
+            let world = self.preview();
+            let view = world.side_view(side);
+            let mut what: Vec<String> = Vec::new();
+            if queue.len() > was_commands.len() && queue[..was_commands.len()] == was_commands[..] {
+                let words = staffing::commands_text(&view, &queue[was_commands.len()..]);
+                what.push(format!("you queued: {}", words.join("; ")));
+            } else if queue != was_commands {
+                what.push("your queued commands were changed or cleared".to_string());
+            }
+            let orders = self.seats[&side].queued.len();
+            if orders > was_orders {
+                let more = orders - was_orders;
+                what.push(format!(
+                    "{more} order{} queued",
+                    if more == 1 { " was" } else { "s were" }
+                ));
+            } else if orders < was_orders {
+                what.push("your queued orders were cleared".to_string());
+            }
+            if what.is_empty() {
+                what.push("your queued orders or commands were changed".to_string());
+            }
+            Some(format!(
+                "preview {number} is void: something was queued after it ({}); preview it again",
+                what.join("; ")
+            ))
+        } else {
+            None
+        };
+        if let Some(reason) = void {
+            let world = self.preview();
+            return Ok(staffing::refused_answer(
+                &world.side_view(side),
+                &request,
+                "approve",
+                reason,
+                queue.len(),
+            ));
+        }
+        self.queue_request(side, "approve", request, queue, Some(number))
     }
 
     // -----------------------------------------------------------------
@@ -839,6 +1057,9 @@ impl Session {
     /// and resolves the day, asking each side's staff (decision 0107).
     fn resolve(&mut self) -> Result<(), CallError> {
         let day = self.world.day() + 1;
+        for side in Side::ALL {
+            self.bump(side);
+        }
         for side in Side::ALL {
             let state = self.seats.get_mut(&side).expect("both seats exist");
             let orders = match &mut state.seat {

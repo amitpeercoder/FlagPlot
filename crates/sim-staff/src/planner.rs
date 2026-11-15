@@ -23,7 +23,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
-    CommandState, Committed, Displacement, ForcesLimit, Intent, Plan, PlanId, RunDays,
+    CommandState, Commitment, Committed, Displacement, ForcesLimit, Hold, HoldTarget, Intent, Plan,
+    PlanId, RunDays,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -112,9 +113,13 @@ impl Timing {
 pub(crate) struct RunPlan {
     pub(crate) units: Vec<Unit>,
     pub(crate) ships: Vec<ShipId>,
-    /// Tons of supply to take aboard.
+    /// What the run carries, the supply aboard now plus what it takes: the
+    /// load the plan's run records (ruling 22).
     pub(crate) load_t: Fixed,
-    /// What the load order names: the supply aboard now plus the load.
+    /// The tons to take aboard at the source: the load less what is aboard.
+    /// No load order is given where it is 0.
+    pub(crate) taken_t: Fixed,
+    /// What the load order names: the supply aboard now plus the tons taken.
     pub(crate) weight_t: Fixed,
     pub(crate) aboard_before_t: Fixed,
     pub(crate) days: RunDays,
@@ -211,19 +216,24 @@ struct Pass {
     interval_use_t: Fixed,
     uncapped_t: Fixed,
     chosen: Chosen,
-    load_t: Fixed,
+    /// The tons to take at the source.
+    taken_t: Fixed,
 }
 
-/// A guess of the ships and the load, to time a run by.
+/// A guess of the ships and the tons to take, to time a run by.
 struct Guess {
     ships: Vec<ShipId>,
-    load_t: Fixed,
+    taken_t: Fixed,
 }
 
 struct Chosen {
     units: Vec<Unit>,
     ships: Vec<ShipId>,
+    /// The room left to take supply: each ship's capacity less its cargo
+    /// fuel and the supply it holds.
     room_t: Fixed,
+    /// The supply aboard the chosen ships: it counts toward the load.
+    aboard_t: Fixed,
     without_fuel: Vec<ShipId>,
 }
 
@@ -231,7 +241,6 @@ struct Chosen {
 pub(crate) struct Planner<'a, 'v> {
     pub(crate) view: &'a SideView<'v>,
     pub(crate) fleet: &'a Fleet<'v>,
-    pub(crate) state: &'a CommandState,
     pub(crate) params: Params<'a>,
     pub(crate) today: u32,
     /// The route and its miles, `None` where ships cannot go at all.
@@ -241,7 +250,12 @@ pub(crate) struct Planner<'a, 'v> {
     /// The day each busy ship of the pool is free again.
     busy_until: BTreeMap<ShipId, u32>,
     held: BTreeSet<ShipId>,
-    /// What the staff handed in this morning for intents served before.
+    /// The ships of the pool the commander holds, and the hold that does it
+    /// (ruling 18): a held ship, a ship of a held force, and every ship of a
+    /// force that has a held ship in it.
+    pub(crate) holds: BTreeMap<ShipId, HoldTarget>,
+    /// What the staff handed in this morning for intents served before, and
+    /// the command state as the staff reads it this morning.
     morning: Morning,
 }
 
@@ -252,17 +266,24 @@ impl<'a, 'v> Planner<'a, 'v> {
         params: Params<'a>,
         morning: &Morning,
     ) -> Planner<'a, 'v> {
-        let state = view.command_state();
+        let state = morning.state();
         let today = view.day() + 1;
         let route = route_between(view, params.source_hex, params.destination_hex, params.area);
         let protected = protected_for_others(state, params.intent.id);
         let mut pool = pool_ships(fleet, params.forces);
         pool.retain(|ship| !protected.contains_key(ship));
         let held = held_ships(view, fleet, state, today);
+        let holds: BTreeMap<ShipId, HoldTarget> = pool
+            .iter()
+            .filter_map(|ship| fleet.hold_on_ship(state, *ship).map(|hold| (*ship, hold)))
+            .collect();
         let mut busy_until: BTreeMap<ShipId, u32> = BTreeMap::new();
-        for ship in &pool {
+        for ship in pool.iter().filter(|ship| !holds.contains_key(ship)) {
             if let Some(list) = state.commitments.get(ship) {
-                for commitment in list.iter().filter(|c| c.to_day >= today) {
+                // A commitment of a plan that has ended is no commitment.
+                for commitment in list.iter().filter(|c| {
+                    c.to_day >= today && !state.plans.get(&c.plan).is_some_and(|p| p.state.ended())
+                }) {
                     let entry = busy_until.entry(*ship).or_insert(0);
                     *entry = (*entry).max(commitment.to_day + 1);
                 }
@@ -278,14 +299,22 @@ impl<'a, 'v> Planner<'a, 'v> {
                 {
                     continue;
                 }
-                for ship in run.ships.iter().filter(|s| pool.contains(s)) {
+                for ship in run
+                    .ships
+                    .iter()
+                    .filter(|s| pool.contains(s) && !holds.contains_key(s))
+                {
                     let entry = busy_until.entry(*ship).or_insert(0);
                     *entry = (*entry).max(run.days.free.max(today + 1));
                 }
             }
         }
         for run in &morning.runs {
-            for ship in run.ships.iter().filter(|s| pool.contains(s)) {
+            for ship in run
+                .ships
+                .iter()
+                .filter(|s| pool.contains(s) && !holds.contains_key(s))
+            {
                 let entry = busy_until.entry(*ship).or_insert(0);
                 *entry = (*entry).max(run.days.free.max(today + 1));
             }
@@ -293,15 +322,31 @@ impl<'a, 'v> Planner<'a, 'v> {
         Planner {
             view,
             fleet,
-            state,
             params,
             today,
             route,
             pool,
             busy_until,
             held,
+            holds,
             morning: morning.clone(),
         }
+    }
+
+    /// The command state as the staff reads it this morning.
+    pub(crate) fn state(&self) -> &CommandState {
+        self.morning.state()
+    }
+
+    /// The commitment of `ship` that covers `day`, leaving out those of a
+    /// plan that has ended.
+    fn commitment_on(&self, ship: ShipId, day: u32) -> Option<&Commitment> {
+        let state = self.state();
+        state.commitments.get(&ship)?.iter().find(|c| {
+            c.from_day <= day
+                && day <= c.to_day
+                && !state.plans.get(&c.plan).is_some_and(|p| p.state.ended())
+        })
     }
 
     /// The earliest day a busy ship of the pool is expected to be free.
@@ -313,10 +358,43 @@ impl<'a, 'v> Planner<'a, 'v> {
     /// or a force stopped at the source whose ships are all in the pool; in
     /// both, held by no unfinished run and covered by no commitment today.
     pub(crate) fn free_units(&self) -> Vec<Unit> {
+        self.free_units_with(true)
+    }
+
+    /// The units that would be free if no hold existed: what the staff says
+    /// it would have done (ruling 21).
+    pub(crate) fn free_units_without_holds(&self) -> Vec<Unit> {
+        self.free_units_with(false)
+    }
+
+    /// The holds that keep the ships of `would_take` from being free, where
+    /// `real` did not take them, each with the hold: one for each target.
+    pub(crate) fn holds_on(
+        &self,
+        would_take: &[ShipId],
+        real: &[ShipId],
+    ) -> Vec<(HoldTarget, Hold)> {
+        let mut found: Vec<(HoldTarget, Hold)> = Vec::new();
+        for ship in would_take.iter().filter(|ship| !real.contains(ship)) {
+            let Some(target) = self.holds.get(ship).copied() else {
+                continue;
+            };
+            let Some(hold) = self.state().hold_of(target).copied() else {
+                continue;
+            };
+            if !found.iter().any(|(t, _)| *t == target) {
+                found.push((target, hold));
+            }
+        }
+        found
+    }
+
+    fn free_units_with(&self, respect_holds: bool) -> Vec<Unit> {
         let free = |ship: ShipId| {
             !self.held.contains(&ship)
-                && self.state.commitment_on(ship, self.today).is_none()
+                && self.commitment_on(ship, self.today).is_none()
                 && self.morning.holding(ship).is_none()
+                && (!respect_holds || !self.holds.contains_key(&ship))
         };
         let mut seen: BTreeSet<ShipId> = BTreeSet::new();
         let mut units = Vec::new();
@@ -373,16 +451,16 @@ impl<'a, 'v> Planner<'a, 'v> {
                 run.days.free.saturating_sub(1).max(self.today),
             ));
         }
-        if let Some(c) = self.state.commitment_on(ship, self.today) {
-            let intent = self.state.plans.get(&c.plan)?.intent;
+        if let Some(c) = self.commitment_on(ship, self.today) {
+            let intent = self.state().plans.get(&c.plan)?.intent;
             return Some((intent, c.plan, c.run.unwrap_or(0), c.from_day, c.to_day));
         }
-        for plan in self.state.plans.values() {
+        for plan in self.state().plans.values() {
             for run in plan.runs.values().filter(|run| run.ships.contains(&ship)) {
                 let Some(base) = self.view.bases().find(|b| b.id == run.source) else {
                     continue;
                 };
-                let found = run_state(self.fleet, self.state, plan.id, run, base.hex, self.today);
+                let found = run_state(self.fleet, self.state(), plan.id, run, base.hex, self.today);
                 if found.status != RunStatus::Finished {
                     return Some((
                         plan.intent,
@@ -430,7 +508,7 @@ impl<'a, 'v> Planner<'a, 'v> {
     /// command state and those of this morning.
     pub(crate) fn tons_holders(&self) -> Vec<Displacement> {
         let mut found = Vec::new();
-        for plan in self.state.plans.values() {
+        for plan in self.state().plans.values() {
             for run in plan
                 .runs
                 .values()
@@ -438,7 +516,7 @@ impl<'a, 'v> Planner<'a, 'v> {
             {
                 let state = run_state(
                     self.fleet,
-                    self.state,
+                    self.state(),
                     plan.id,
                     run,
                     self.params.source_hex,
@@ -493,6 +571,7 @@ impl<'a, 'v> Planner<'a, 'v> {
         }
     }
 
+    /// Taking supply on top of what is aboard.
     fn ship_room(&self, ship: &Ship) -> Fixed {
         let capacity = self
             .view
@@ -641,14 +720,25 @@ impl<'a, 'v> Planner<'a, 'v> {
         })
     }
 
-    /// The units, in order, that carry `target_t`: the free units in number
-    /// order until their room covers it, and at least one. A unit with a
-    /// ship short of fuel for the round trip is set aside.
-    fn choose(&self, units: &[Unit], target_t: Fixed, route: &RouteInfo) -> Chosen {
+    /// The units, in order, that carry `uncapped_t` (the sum's load), where
+    /// the source gives at most `available_t` more: the free units in number
+    /// order until what is aboard them and the room they have to take more
+    /// covers it, and at least one. A unit with a ship short of fuel for the
+    /// round trip is set aside. Supply aboard counts toward the load
+    /// (ruling 22), so with nothing aboard the room covers the load or the
+    /// source's tons, whichever is less, as before.
+    fn choose(
+        &self,
+        units: &[Unit],
+        uncapped_t: Fixed,
+        available_t: Fixed,
+        route: &RouteInfo,
+    ) -> Chosen {
         let mut chosen = Chosen {
             units: Vec::new(),
             ships: Vec::new(),
             room_t: Fixed::ZERO,
+            aboard_t: Fixed::ZERO,
             without_fuel: Vec::new(),
         };
         for unit in units {
@@ -674,7 +764,9 @@ impl<'a, 'v> Planner<'a, 'v> {
                 .iter()
                 .filter_map(|id| self.fleet.ships.get(id))
                 .fold(Fixed::ZERO, |sum, ship| sum + self.ship_room(ship));
-            if chosen.room_t >= target_t {
+            chosen.aboard_t += self.fleet.supply_aboard(&unit.ships);
+            let to_take = (uncapped_t - chosen.aboard_t).max(Fixed::ZERO);
+            if chosen.room_t >= to_take.min(available_t) {
                 break;
             }
         }
@@ -692,7 +784,7 @@ impl<'a, 'v> Planner<'a, 'v> {
         available_t: Fixed,
         guess: &Guess,
     ) -> Option<Pass> {
-        let timing = self.timing(&guess.ships, guess.load_t, route)?;
+        let timing = self.timing(&guess.ships, guess.taken_t, route)?;
         let arrive = order_day + timing.load.days + timing.out_days - 1;
         let stock_a = readings.stock(arrive)?;
         let use_a = readings.use_on(arrive)?;
@@ -700,9 +792,12 @@ impl<'a, 'v> Planner<'a, 'v> {
         let need_t = (floor_t - stock_a).max(Fixed::ZERO);
         let interval_use_t = readings.use_over(arrive, self.params.interval_days);
         let uncapped_t = need_t + interval_use_t;
-        let target_t = uncapped_t.min(available_t);
-        let chosen = self.choose(units, target_t, route);
-        let load_t = target_t.min(chosen.room_t);
+        let chosen = self.choose(units, uncapped_t, available_t, route);
+        // What is aboard counts toward the load: the run carries the larger
+        // of the sum's load and what is aboard, and takes the difference,
+        // within the source's tons and the ships' room (ruling 22).
+        let to_take = (uncapped_t - chosen.aboard_t).max(Fixed::ZERO);
+        let taken_t = to_take.min(available_t).min(chosen.room_t);
         Some(Pass {
             arrive,
             stock_a,
@@ -710,7 +805,7 @@ impl<'a, 'v> Planner<'a, 'v> {
             interval_use_t,
             uncapped_t,
             chosen,
-            load_t,
+            taken_t,
         })
     }
 
@@ -729,17 +824,17 @@ impl<'a, 'v> Planner<'a, 'v> {
         let (available_t, stock_t, reserve_t) = self.source_available(pending_t);
         let mut guess = Guess {
             ships: self.timing_ships(units),
-            load_t: Fixed::ZERO,
+            taken_t: Fixed::ZERO,
         };
         let mut last: Option<Pass> = None;
         for _ in 0..5 {
             let pass = self.pass(readings, order_day, units, route, available_t, &guess)?;
-            let converged = pass.load_t == guess.load_t
+            let converged = pass.taken_t == guess.taken_t
                 && (pass.chosen.ships == guess.ships || pass.chosen.ships.is_empty());
             if !pass.chosen.ships.is_empty() {
                 guess.ships = pass.chosen.ships.clone();
             }
-            guess.load_t = pass.load_t;
+            guess.taken_t = pass.taken_t;
             last = Some(pass);
             if converged {
                 break;
@@ -752,7 +847,7 @@ impl<'a, 'v> Planner<'a, 'v> {
             interval_use_t,
             uncapped_t,
             chosen,
-            load_t,
+            taken_t,
         } = last?;
         let check_day = arrive + 1;
         let check_stock_t = readings.stock(check_day)?;
@@ -772,7 +867,7 @@ impl<'a, 'v> Planner<'a, 'v> {
                 blocker = Some(Blocker::Fuel {
                     ships: chosen.without_fuel.clone(),
                 });
-            } else if available_t.is_zero() || load_t.is_zero() {
+            } else if (chosen.aboard_t + taken_t).is_zero() {
                 blocker = Some(Blocker::Source {
                     stock_t,
                     reserve_t,
@@ -780,24 +875,26 @@ impl<'a, 'v> Planner<'a, 'v> {
                 });
             } else {
                 let mut cuts = Vec::new();
-                if uncapped_t > available_t {
+                let to_take = (uncapped_t - chosen.aboard_t).max(Fixed::ZERO);
+                if to_take > available_t {
                     cuts.push(format!(
                         "the source has {} t above its reserve of {} t to give ({} t of its stock, {} t still to be taken by runs loading)",
                         available_t, reserve_t, stock_t, pending_t
                     ));
                 }
-                if uncapped_t.min(available_t) > chosen.room_t {
+                if to_take.min(available_t) > chosen.room_t {
                     cuts.push(format!("the ships' room is {} t", chosen.room_t));
                 }
-                let days_timing = self.timing(&chosen.ships, load_t, route)?;
-                let aboard_before_t = self.fleet.supply_aboard(&chosen.ships);
+                let days_timing = self.timing(&chosen.ships, taken_t, route)?;
+                let aboard_before_t = chosen.aboard_t;
                 run = Some(RunPlan {
                     days: days_timing.days(order_day),
                     timing: days_timing,
                     units: chosen.units.clone(),
                     ships: chosen.ships.clone(),
-                    load_t,
-                    weight_t: aboard_before_t + load_t,
+                    load_t: aboard_before_t + taken_t,
+                    taken_t,
+                    weight_t: aboard_before_t + taken_t,
                     aboard_before_t,
                     cuts,
                 });

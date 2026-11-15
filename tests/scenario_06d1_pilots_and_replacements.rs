@@ -2152,7 +2152,11 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 && !stem.starts_with("36_")
                 // So are scenario 40's (decision 0107, step 2).
                 && !stem.starts_with("40a_")
-                && !stem.starts_with("40b_"))
+                && !stem.starts_with("40b_")
+                // And scenario 41's (decision 0107, step 3).
+                && !stem.starts_with("41a_")
+                && !stem.starts_with("41b_")
+                && !stem.starts_with("41c_"))
             .then(|| stem.to_string())
         })
         .collect();

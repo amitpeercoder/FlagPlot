@@ -3778,7 +3778,8 @@ impl Day {
                     | EventKind::PlanDrafted { .. }
                     | EventKind::PlanStateChanged { .. }
                     | EventKind::PlanAmended { .. }
-                    | EventKind::StaffReason { .. } => {}
+                    | EventKind::StaffReason { .. }
+                    | EventKind::HeldByOrder { .. } => {}
                 },
                 SideEventKind::EnemySurrendered { hex, men } => {
                     ground.prisoners.push(PrisonersLine {

@@ -248,6 +248,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::OutsideForcesLimit => {
             " (a staff's order must be for a unit inside the forces limit of the intent it serves)"
         }
+        R::Held(_) => {
+            " (the commander holds this unit, or a ship in it: the staff may not order it until he releases it)"
+        }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
         }

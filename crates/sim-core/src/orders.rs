@@ -889,6 +889,10 @@ pub enum RejectReason {
     /// intent's forces limit, or its intent is not in force (decision 0107,
     /// "As built"). Added at the end of the enum.
     OutsideForcesLimit,
+    /// An order a staff handed in is for something the commander holds
+    /// (decision 0107, step 3, rulings 18 and 30). Added at the end of the
+    /// enum.
+    Held(crate::command::HoldTarget),
 }
 
 impl fmt::Display for RejectReason {
@@ -1035,6 +1039,9 @@ impl fmt::Display for RejectReason {
             RejectReason::OutsideForcesLimit => f.write_str(
                 "the order is for a unit outside the forces limit of the intent it serves",
             ),
+            RejectReason::Held(target) => {
+                write!(f, "the unit is held by its commander ({target})")
+            }
         }
     }
 }

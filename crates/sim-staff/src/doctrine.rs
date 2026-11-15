@@ -33,22 +33,23 @@
 //!   checked (ruling 14).
 
 use sim_core::command::{
-    CommandKind, Committed, Displacement, Intent, IntentKind, Plan, PlanId, PlanOutcome, PlanState,
-    Reason, RunSpec, Shortfall, StaffDecisions,
+    CommandKind, CommandState, Committed, Displacement, Hold, HoldTarget, Intent, IntentKind, Plan,
+    PlanId, PlanOutcome, PlanState, Reason, RunSpec, Shortfall, StaffDecisions,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, ShipId};
+use sim_core::ids::{BaseId, ShipId, TaskForceId};
 use sim_core::view::SideView;
 use std::collections::BTreeSet;
 
-use crate::fleet::{pool_ships, run_state, Fleet, RunState, RunStatus};
+use crate::fleet::{pool_ships, run_movement, run_state, Fleet, RunState, RunStatus};
 use crate::handin::{Out, Step, Who};
 use crate::morning::{priority_order, protected_for_others, Morning, TakenRun};
 use crate::planner::DEFAULT_INTERVAL_DAYS;
 use crate::planner::{Blocker, Evaluation, Params, Planner, RunPlan, Timing, Unit};
 use crate::projection::Readings;
-use crate::reasons::{serving, ReasonBuilder};
+use crate::reasons::{hold_words, serving, ReasonBuilder};
+use crate::route::route_between;
 use crate::units::{days_word, over, tons, whole};
 
 /// The days the staff looks ahead, to size a run and to say when the next
@@ -75,7 +76,8 @@ pub(crate) fn decide(view: SideView<'_>) -> StaffDecisions {
     let state = view.command_state();
     let fleet = Fleet::of(&view);
     let mut out = Out::default();
-    let mut morning = Morning::default();
+    let mut morning = Morning::begin(&view, &fleet);
+    morning.hand_in_aside(&mut out, None);
     for intent in priority_order(state) {
         serve(&view, &fleet, intent, Mode::Live, &mut out, &mut morning);
     }
@@ -132,9 +134,10 @@ pub(crate) fn pending_loads(
 ) -> Fixed {
     let today = view.day() + 1;
     let mut pending = morning.pending_at(source);
-    for plan in view.command_state().plans.values() {
+    let state = morning.state();
+    for plan in state.plans.values() {
         for run in plan.runs.values().filter(|run| run.source == source) {
-            let found = run_state(fleet, view.command_state(), plan.id, run, source_hex, today);
+            let found = run_state(fleet, state, plan.id, run, source_hex, today);
             if found.status == RunStatus::Loading {
                 pending += (run.load_t - found.aboard_t).max(Fixed::ZERO);
             }
@@ -152,7 +155,8 @@ pub(crate) fn serve(
     out: &mut Out,
     morning: &mut Morning,
 ) -> Served {
-    let state = view.command_state();
+    let state_now: CommandState = morning.state().clone();
+    let state = &state_now;
     let today = view.day() + 1;
     let Some(plan) = state.plans.get(&intent.plan) else {
         return Served::default();
@@ -206,6 +210,13 @@ pub(crate) fn serve(
         }
     };
     if plan.state.ended() {
+        if plan.state == PlanState::Cancelled && send_home(view, fleet, state, &params, out, today)
+        {
+            return Served {
+                ordered: true,
+                ..Served::default()
+            };
+        }
         out.no_order(
             serving(intent, plan)
                 .evidence(format!("{} is {}", plan.id, plan.state.name()), today)
@@ -333,8 +344,13 @@ pub(crate) fn serve(
 
     let planner = Planner::new(view, fleet, params, morning);
     let params = &planner.params;
-    let Some(readings) = Readings::build(view, fleet, params.destination_hex, LOOK_AHEAD_DAYS)
-    else {
+    let Some(readings) = Readings::build(
+        view,
+        fleet,
+        planner.state(),
+        params.destination_hex,
+        LOOK_AHEAD_DAYS,
+    ) else {
         return Served::default();
     };
     let pending_t = pending_loads(view, fleet, params.source, params.source_hex, morning);
@@ -391,10 +407,12 @@ pub(crate) fn serve(
     // 4. A new run, if none is loading and one is needed.
     let units = planner.free_units();
     let mut evaluation: Option<Evaluation> = None;
+    let mut hold_note: Option<WithoutHold> = None;
     if !loading {
         evaluation = planner.evaluate(&readings, today, &units, pending_t);
         if let Some(ev) = &evaluation {
             if ev.needed {
+                let note = without_hold(&planner, &readings, ev, pending_t);
                 match (&ev.run, &ev.blocker) {
                     (Some(run), _) => {
                         if !run.cuts.is_empty() {
@@ -411,10 +429,19 @@ pub(crate) fn serve(
                             .shortfall
                             .as_ref()
                             .map_or(&[][..], |s| s.displaced_by.as_slice());
-                        new_run(&planner, out, morning, &readings, ev, run, displaced);
+                        new_run(
+                            &planner,
+                            out,
+                            morning,
+                            &readings,
+                            ev,
+                            run,
+                            (displaced, note.as_ref()),
+                        );
                         served.ordered = true;
                     }
                     (None, Some(_)) => {
+                        hold_note = note;
                         served.shortfall = Some(shortfall(
                             &planner,
                             &readings,
@@ -442,6 +469,7 @@ pub(crate) fn serve(
             shortfall: served.shortfall.clone(),
             pending_t,
             units,
+            hold_note,
         };
         out.no_order(idle_reason(&planner, &readings, &idle, today));
     }
@@ -671,7 +699,7 @@ fn new_run(
     readings: &Readings,
     ev: &Evaluation,
     run: &RunPlan,
-    displaced: &[Displacement],
+    (displaced, held): (&[Displacement], Option<&WithoutHold>),
 ) {
     let today = planner.today;
     let params = &planner.params;
@@ -684,7 +712,7 @@ fn new_run(
         run: number,
         ships: run.ships.iter().copied().collect(),
         source: params.source,
-        load_t: run.load_t,
+        load_t: run.taken_t,
         days: run.days,
     });
     let days = run.days;
@@ -728,6 +756,33 @@ fn new_run(
             run.cuts.join("; ")
         ));
         worked.push_str(&displaced_sentence(displaced, params.source));
+    }
+    if !run.aboard_before_t.is_zero() {
+        worked.push_str(&format!(
+            " The ships have {} aboard, which counts toward the load: the run carries the {} it has aboard",
+            tons(run.aboard_before_t),
+            tons(run.aboard_before_t)
+        ));
+        if run.taken_t.is_zero() {
+            if ev.uncapped_t < run.aboard_before_t {
+                worked.push_str(&format!(
+                    "; its load is {} by the sum, which is less than is aboard, so the run carries what is aboard and no load order is needed.",
+                    tons(ev.uncapped_t)
+                ));
+            } else {
+                worked.push_str(" and no load order is needed.");
+            }
+        } else {
+            worked.push_str(&format!(
+                " and takes {} more, {} in all.",
+                tons(run.taken_t),
+                tons(run.load_t)
+            ));
+        }
+    }
+    if let Some(note) = held {
+        worked.push(' ');
+        worked.push_str(&note.sentence());
     }
     worked.push_str(&format!(
         " Ships {}: {} x {} = a room that covers the load.",
@@ -804,6 +859,9 @@ fn new_run(
         for other in other_plans(displaced, plan.id) {
             b = b.binding(format!("displaced by {other}"));
         }
+        if let Some(note) = held {
+            b = note.apply(b, today);
+        }
         b
     };
     out.command(
@@ -834,21 +892,24 @@ fn new_run(
 
     // The orders: form or join, then the load.
     let target = form_or_join(planner, out, run, &base_reason);
-    out.task(
-        intent.id,
-        target,
-        Step::LoadTo {
-            weight_t: run.weight_t,
-        },
-        base_reason(&format!(
-            "Load order: until {} is aboard ({} aboard now + the load of {}); {}.",
-            tons(run.weight_t),
-            tons(run.aboard_before_t),
-            tons(run.load_t),
-            slowest_line(&run.timing.load)
-        ))
-        .done(),
-    );
+    // Nothing to take, no load order: the supply aboard is the load.
+    if run.taken_t > Fixed::ZERO {
+        out.task(
+            intent.id,
+            target,
+            Step::LoadTo {
+                weight_t: run.weight_t,
+            },
+            base_reason(&format!(
+                "Load order: until {} is aboard ({} aboard now + the load of {}); {}.",
+                tons(run.weight_t),
+                tons(run.aboard_before_t),
+                tons(run.taken_t),
+                slowest_line(&run.timing.load)
+            ))
+            .done(),
+        );
+    }
 }
 
 fn loading_words(timing: &Timing) -> String {
@@ -950,6 +1011,70 @@ struct IdleFacts {
     shortfall: Option<Shortfall>,
     pending_t: Fixed,
     units: Vec<Unit>,
+    /// What the staff would have done with no hold, where a hold is what
+    /// keeps it from a run.
+    hold_note: Option<WithoutHold>,
+}
+
+/// What the staff would have done with no hold (ruling 21): the ships it
+/// would have sent, and the holds that kept them.
+pub(crate) struct WithoutHold {
+    pub(crate) ships: Vec<ShipId>,
+    pub(crate) holds: Vec<(HoldTarget, Hold)>,
+}
+
+impl WithoutHold {
+    /// "Without the hold, ship:1 would have been sent."
+    fn sentence(&self) -> String {
+        format!(
+            "Without the hold, {} would have been sent.",
+            ships_text(&self.ships)
+        )
+    }
+
+    /// The hold words as evidence and binding, and what would change it.
+    fn apply(&self, mut builder: ReasonBuilder, today: u32) -> ReasonBuilder {
+        for (target, hold) in &self.holds {
+            let words = hold_words(*target, *hold);
+            builder = builder
+                .evidence(words.clone(), today)
+                .binding(words)
+                .binding(format!("the hold on {target}"))
+                .would_change(format!("{target} released: it would then be free"));
+        }
+        builder
+    }
+}
+
+/// Evaluates the run again on the free units counted as if no hold existed,
+/// the same day on the same readings (ruling 21). It says something where
+/// that choice takes a held ship the real one did not, or where the real one
+/// is blocked for want of a ship and the hold-free one is not.
+fn without_hold(
+    planner: &Planner<'_, '_>,
+    readings: &Readings,
+    ev: &Evaluation,
+    pending_t: Fixed,
+) -> Option<WithoutHold> {
+    if planner.holds.is_empty() {
+        return None;
+    }
+    let free = planner.free_units_without_holds();
+    let again = planner.evaluate(readings, planner.today, &free, pending_t)?;
+    let would = again.run?;
+    let real: Vec<ShipId> = ev
+        .run
+        .as_ref()
+        .map(|run| run.ships.clone())
+        .unwrap_or_default();
+    let holds = planner.holds_on(&would.ships, &real);
+    if holds.is_empty() {
+        return None;
+    }
+    Some(WithoutHold {
+        ships: would.ships,
+        holds,
+    })
 }
 
 /// The one reason of a day with no order: what the runs are doing, and the
@@ -1071,6 +1196,11 @@ fn idle_reason(
         ),
         today,
     );
+    if let Some(note) = &idle.hold_note {
+        worked.push(' ');
+        worked.push_str(&note.sentence());
+        builder = note.apply(builder, today);
+    }
     match &next {
         Some(next) => {
             worked.push_str(&format!(
@@ -1097,7 +1227,7 @@ fn idle_reason(
     if idle.waiting_for_launch || idle.eff == PlanState::Preparing {
         builder = builder
             .binding("leave to launch is withheld")
-            .would_change("leave to launch given");
+            .would_change("leave to launch given, or the commander approving the plan");
     }
     for line in binding {
         builder = builder.binding(line);
@@ -1287,6 +1417,90 @@ fn displacement_changes(displaced: &[Displacement], own: PlanId) -> Vec<String> 
         }
     }
     changes
+}
+
+/// The fallback of a cancelled plan (ruling 29): each force of the plan on
+/// passage out (its remaining route still holds the destination, and it is
+/// not stopped there) is given a route home to the source inside the area,
+/// with no mark to act at. Its cargo stays aboard and its unload order
+/// stands, so it is put back ashore at the source. A force that has begun to
+/// unload at the destination, or is loading at the source, is given no
+/// order, and neither is a force that is held. Where it gives one it says
+/// so, and the reason of the day with no order is not needed.
+fn send_home(
+    view: &SideView<'_>,
+    fleet: &Fleet<'_>,
+    state: &CommandState,
+    params: &Params<'_>,
+    out: &mut Out,
+    today: u32,
+) -> bool {
+    let plan = params.plan;
+    let intent = params.intent;
+    let mut sent: BTreeSet<TaskForceId> = BTreeSet::new();
+    let mut gave = false;
+    for run in plan.runs.values().filter(|run| run.ended.is_none()) {
+        let found = run_movement(fleet, state, plan.id, run, params.source_hex, today);
+        if found.status != RunStatus::Underway {
+            continue;
+        }
+        let mut forces: BTreeSet<TaskForceId> = BTreeSet::new();
+        let mut loose = false;
+        for ship in &found.afloat {
+            match fleet.force_of(*ship) {
+                Some(force) => {
+                    forces.insert(force.id);
+                }
+                None => loose = true,
+            }
+        }
+        let [id] = forces.iter().copied().collect::<Vec<_>>()[..] else {
+            continue;
+        };
+        if loose || !sent.insert(id) {
+            continue;
+        }
+        let Some(force) = fleet.forces.get(&id) else {
+            continue;
+        };
+        let ahead = force
+            .route
+            .waypoints
+            .get(force.route.next_index.min(force.route.waypoints.len())..)
+            .unwrap_or(&[]);
+        let at_destination = force.toward_hex.is_none() && force.from_hex == params.destination_hex;
+        if !ahead.contains(&params.destination_hex) || at_destination {
+            continue;
+        }
+        if state.hold_on_force(id, &force.ships).is_some() {
+            continue;
+        }
+        let waypoints = route_between(view, force.position(), params.source_hex, params.area)
+            .map_or_else(|| vec![params.source_hex], |route| route.out);
+        out.task(
+            intent.id,
+            Who::Existing(id),
+            Step::Route {
+                waypoints,
+                act_at: BTreeSet::new(),
+            },
+            serving(intent, plan)
+                .evidence(format!("{} is {}", plan.id, plan.state.name()), today)
+                .evidence(
+                    format!("{id} is on passage out to {}", params.destination),
+                    today,
+                )
+                .binding(format!("area: {}", area_text(params.area)))
+                .worked(format!(
+                    "{} is cancelled: {id} on passage out to {} is sent home to {}; its cargo stays aboard and its unload order stands, so it is put back ashore at {}.",
+                    plan.id, params.destination, params.source, params.source
+                ))
+                .would_change("a plan that was not cancelled")
+                .done(),
+        );
+        gave = true;
+    }
+    gave
 }
 
 /// Step 7: the ships of a plan that has ended, committed from today on, are

@@ -36,9 +36,12 @@ pub(crate) const PROPOSAL_DAYS: u32 = 30;
 pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> {
     let state = view.command_state();
     let intent = state.intents.get(&intent).filter(|i| i.in_force())?;
-    let plan = state.plans.get(&intent.plan)?;
     let today = view.day() + 1;
     let fleet = Fleet::of(&view);
+    // The morning begins as `decide`'s does: runs set aside, the command
+    // state as the staff reads it.
+    let mut morning = Morning::begin(&view, &fleet);
+    let plan = &morning.state().plans.get(&intent.plan)?.clone();
     let IntentKind::KeepSupplied {
         base, floor_days, ..
     } = intent.kind;
@@ -49,8 +52,8 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
         .iter()
         .position(|other| other.id == intent.id)
         .unwrap_or(order.len());
-    let mut morning = Morning::default();
     let mut scratch = Out::default();
+    morning.hand_in_aside(&mut scratch, None);
     for earlier in &order[..position] {
         serve(
             &view,
@@ -64,6 +67,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
     // What those intents hold this morning, for the forward look below.
     let before = morning.clone();
     let mut out = Out::default();
+    morning.hand_in_aside(&mut out, Some(plan.id));
     let served = serve(
         &view,
         &fleet,
@@ -102,7 +106,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
 
     let destination_hex = view.bases().find(|b| b.id == base).map(|b| b.hex);
     let projection = destination_hex.and_then(|hex| {
-        Readings::build(&view, &fleet, hex, PROPOSAL_DAYS)
+        Readings::build(&view, &fleet, before.state(), hex, PROPOSAL_DAYS)
             .map(|readings| readings.projection(hex, floor_days))
     });
 
@@ -113,6 +117,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
         if let Some(mut readings) = Readings::build(
             &view,
             &fleet,
+            planner.state(),
             planner.params.destination_hex,
             LOOK_AHEAD_DAYS,
         ) {
@@ -150,7 +155,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
                             }
                         }
                         readings.add_landing(run.days.arrive + 1, run.load_t);
-                        taken += run.load_t;
+                        taken += run.taken_t;
                         runs.push(ProposedRun {
                             ships: run.ships.iter().copied().collect(),
                             load_t: run.load_t,

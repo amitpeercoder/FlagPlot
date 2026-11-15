@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/command",
   "title": "command: a command queued for the coming day, or refused with the engine's reason",
-  "description": "The answer of set_intent, withdraw_intent, set_limit, set_leave, approve and cancel_plan. The command is checked at once by taking it in after the commands already queued; a refused command is not queued. A command queued can still be refused when the day begins if the state has changed.",
+  "description": "The answer of set_intent, withdraw_intent, set_limit, set_leave, hold, release, approve and cancel_plan, and of a preview or an approve of a preview that was refused. The command is checked at once by taking it in after the commands already queued; a refused command is not queued. A command queued can still be refused when the day begins if the state has changed.",
   "type": "object",
   "required": [
     "format",
@@ -23,7 +23,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 5
+      "const": 6
     },
     "kind": {
       "const": "command"
@@ -34,6 +34,9 @@
         "withdraw_intent",
         "set_limit",
         "set_leave",
+        "hold",
+        "release",
+        "preview",
         "approve",
         "cancel_plan"
       ]
@@ -72,6 +75,10 @@
     },
     "summary": {
       "type": "string"
+    },
+    "preview": {
+      "type": "integer",
+      "description": "For an approve of a preview: the preview's number. The command is the one the preview showed."
     }
   }
 }

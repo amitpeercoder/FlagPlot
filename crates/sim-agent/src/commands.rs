@@ -22,6 +22,8 @@
 //! | `add_run` | `plan`, `ships`, `load_t`, `days` (`load`, `sail`, `arrive`, `free`) |
 //! | `time_run` | `plan`, `run`, `days` |
 //! | `mark_plan` | `plan`, `outcome` (`complete` or `failed`) |
+//! | `hold`, `release` | one of `ship`, `task_force`, or `air_group` with `setting` (`search_arc`) |
+//! | `end_run` | `plan`, `run` |
 //!
 //! The limits: `forces` has `intent`, `ships`, `task_forces`, `source`;
 //! `area` has `intent`, `hexes` as `[[q, r], ...]`; `priority` has `intent`
@@ -39,12 +41,12 @@ use std::collections::BTreeSet;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    CommandKind, Evidence, ForcesLimit, IntentKind, Leave, Limit, PlanId, PlanOutcome, Reason,
-    Risk, RunDays, RunSpec, Serves, StaffCommand, StaffDecisions, StaffOrder,
+    CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget, IntentKind, Leave, Limit, PlanId,
+    PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves, StaffCommand, StaffDecisions, StaffOrder,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, IntentId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, IntentId, ShipId, TaskForceId};
 
 use crate::orders::{order_from_json, order_to_json, unit_text};
 
@@ -175,6 +177,46 @@ fn outcome_from(name: &str) -> Result<PlanOutcome, String> {
         "complete" => Ok(PlanOutcome::Complete),
         "failed" => Ok(PlanOutcome::Failed),
         other => Err(format!("unknown plan outcome \"{other}\"")),
+    }
+}
+
+fn setting_from(name: &str) -> Result<HeldSetting, String> {
+    match name {
+        "search_arc" => Ok(HeldSetting::SearchArc),
+        other => Err(format!("unknown setting \"{other}\"")),
+    }
+}
+
+/// A hold's target as the keys of a command's object: `ship`, `task_force`,
+/// or `air_group` with `setting`.
+fn target_to_json(body: &mut Value, target: HoldTarget) {
+    match target {
+        HoldTarget::Ship(ship) => body["ship"] = json!(ship.raw()),
+        HoldTarget::TaskForce(force) => body["task_force"] = json!(force.raw()),
+        HoldTarget::Setting { group, setting } => {
+            body["air_group"] = json!(group.raw());
+            body["setting"] = json!(setting.name());
+        }
+    }
+}
+
+fn target_from_json(value: &Value) -> Result<HoldTarget, String> {
+    let named: Vec<&str> = ["ship", "task_force", "air_group"]
+        .into_iter()
+        .filter(|key| value.get(key).is_some())
+        .collect();
+    match named.as_slice() {
+        ["ship"] => Ok(HoldTarget::Ship(ShipId::new(small(value, "ship")?))),
+        ["task_force"] => Ok(HoldTarget::TaskForce(TaskForceId::new(small(
+            value,
+            "task_force",
+        )?))),
+        ["air_group"] => Ok(HoldTarget::Setting {
+            group: AirGroupId::new(small(value, "air_group")?),
+            setting: setting_from(text(value, "setting")?)?,
+        }),
+        [] => Err("a hold names one of \"ship\", \"task_force\" or \"air_group\"".to_string()),
+        _ => Err("a hold names only one of \"ship\", \"task_force\" and \"air_group\"".to_string()),
     }
 }
 
@@ -362,6 +404,21 @@ pub fn command_to_json(command: &CommandKind) -> Value {
             "plan": plan.raw(),
             "outcome": outcome_name(*outcome),
         }),
+        CommandKind::Hold { target } => {
+            let mut body = json!({ "kind": "hold" });
+            target_to_json(&mut body, *target);
+            body
+        }
+        CommandKind::Release { target } => {
+            let mut body = json!({ "kind": "release" });
+            target_to_json(&mut body, *target);
+            body
+        }
+        CommandKind::EndRun { plan, run } => json!({
+            "kind": "end_run",
+            "plan": plan.raw(),
+            "run": run,
+        }),
     }
 }
 
@@ -414,6 +471,16 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
         "mark_plan" => Ok(CommandKind::MarkPlan {
             plan: plan()?,
             outcome: outcome_from(text(value, "outcome")?)?,
+        }),
+        "hold" => Ok(CommandKind::Hold {
+            target: target_from_json(value)?,
+        }),
+        "release" => Ok(CommandKind::Release {
+            target: target_from_json(value)?,
+        }),
+        "end_run" => Ok(CommandKind::EndRun {
+            plan: plan()?,
+            run: small(value, "run")?,
         }),
         other => Err(format!("unknown command \"{other}\"")),
     }
@@ -655,7 +722,69 @@ mod tests {
                 plan: PlanId::new(1),
                 outcome: PlanOutcome::Failed,
             },
+            CommandKind::Hold {
+                target: HoldTarget::Ship(ShipId::new(5)),
+            },
+            CommandKind::Hold {
+                target: HoldTarget::TaskForce(TaskForceId::new(1_000_001)),
+            },
+            CommandKind::Hold {
+                target: HoldTarget::Setting {
+                    group: AirGroupId::new(7),
+                    setting: HeldSetting::SearchArc,
+                },
+            },
+            CommandKind::Release {
+                target: HoldTarget::Ship(ShipId::new(5)),
+            },
+            CommandKind::Release {
+                target: HoldTarget::Setting {
+                    group: AirGroupId::new(7),
+                    setting: HeldSetting::SearchArc,
+                },
+            },
+            CommandKind::EndRun {
+                plan: PlanId::new(1),
+                run: 2,
+            },
         ]
+    }
+
+    #[test]
+    fn a_hold_target_is_written_as_its_raw_id_and_a_bad_one_is_refused() {
+        let hold = |target| command_to_json(&CommandKind::Hold { target });
+        assert_eq!(
+            hold(HoldTarget::Ship(ShipId::new(5))),
+            json!({ "kind": "hold", "ship": 5 })
+        );
+        assert_eq!(
+            hold(HoldTarget::TaskForce(TaskForceId::new(9))),
+            json!({ "kind": "hold", "task_force": 9 })
+        );
+        assert_eq!(
+            hold(HoldTarget::Setting {
+                group: AirGroupId::new(3),
+                setting: HeldSetting::SearchArc,
+            }),
+            json!({ "kind": "hold", "air_group": 3, "setting": "search_arc" })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::EndRun {
+                plan: PlanId::new(1),
+                run: 2
+            }),
+            json!({ "kind": "end_run", "plan": 1, "run": 2 })
+        );
+        for bad in [
+            json!({ "kind": "hold" }),
+            json!({ "kind": "hold", "ship": 1, "task_force": 2 }),
+            json!({ "kind": "release", "air_group": 3 }),
+            json!({ "kind": "release", "air_group": 3, "setting": "mission" }),
+            json!({ "kind": "hold", "ship": -1 }),
+            json!({ "kind": "end_run", "plan": 1 }),
+        ] {
+            assert!(command_from_json(&bad).is_err(), "{bad}");
+        }
     }
 
     #[test]

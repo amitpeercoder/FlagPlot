@@ -1,0 +1,27 @@
+# PLACEHOLDER MAP. Scenario 36's map with T moved out to (9,0), used by
+# scenario 41c (a plan cancelled with its ship at sea; decision 0107): S at
+# (0,0) with port size 1, one berth, and T at (9,0) with port size 0, which
+# works by lighter only. S to T is 9 hexes on one axis, 360 nm. The geography
+# is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-2, 11]
+r = [-2, 2]
+
+# S: a base with one berth.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 1
+
+# T: a base with no berth, by lighter.
+[[hex]]
+q = 9
+r = 0
+kind = "coast"
+port_size = 0

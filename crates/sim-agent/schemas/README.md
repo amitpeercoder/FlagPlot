@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 5` and a `"kind"` that names it.
+`"version": 6` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -21,7 +21,8 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `issue_orders` | `issue_orders.schema.json` | `issue_orders` (its arguments: `issue_orders_arguments.schema.json`) |
 | `command_state` | `command_state.schema.json` | `command_state` (a seat whose side has a staff) |
 | `plans` | `plans.schema.json` | `plans` |
-| `command` | `command.schema.json` | `set_intent`, `withdraw_intent`, `set_limit`, `set_leave`, `approve`, `cancel_plan`: queued or refused |
+| `command` | `command.schema.json` | `set_intent`, `withdraw_intent`, `set_limit`, `set_leave`, `hold`, `release`, `approve` (of a plan or of a preview), `cancel_plan`: queued or refused; also `preview` of a command the tool refuses, and `approve` of a void preview |
+| `preview` | `preview.schema.json` | `preview` |
 | `propose` | `propose.schema.json` | `propose` |
 | `staff_orders` | `staff_orders.schema.json` | `staff_orders` |
 | `why` | `why.schema.json` | `why` (or `not_known`) |
@@ -50,7 +51,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 5. A field removed from an answer, or a field whose meaning
+`version` is 6. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -60,6 +61,19 @@ Version 2 (decision 0065) took the enemy's units out of the briefing: `forces`
 of a fight became `force`, the side's own; `target` left a salvo fired and a
 fighter's fire; `raid` left the guns' fire; `air_group` left a raid on a base;
 and `by` of an attack on a ship became `"ship"` or `"aircraft"`. Nothing else
+changed.
+
+Version 6 (decision 0107, step 3) adds `hold`, `release` and `preview` to the
+tools of a seat whose side has a staff, and `preview` to `approve`. `hold` and
+`release` answer as the other commands do (the `command` kind). `command_state`
+gains `holds`: each hold with its `target` in the side's numbers (`{"ship": n}`,
+`{"task_force": n}` or `{"air_group": n, "setting": "search_arc"}`), the `day`,
+`made_by` (`command`, or `order` for an order of the commander's to a unit in an
+intent's forces limit) and, for an order, its `order` number, and the words.
+`preview` answers with the `preview` kind; an `approve` of a preview that is void
+answers as a refused `command`, with `reason` saying why. The `command` kind's
+`tool` takes `hold`, `release` and `preview`, and gains `preview`. The version was
+raised for the new tools and the new answer kind; no field of an earlier answer
 changed.
 
 Version 4 (decision 0107, step 3 stage 1) adds the tools of a seat whose side

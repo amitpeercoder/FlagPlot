@@ -2165,3 +2165,628 @@ fn an_order_number_of_a_staffs_order_is_the_sides_own_whatever_the_other_side_or
     assert_eq!(quiet.side_view(A).order_number(first_order), Some(1));
     let _ = (FAR, OUT);
 }
+
+// ---------------------------------------------------------------------------
+// Holds, the override and the end of a run (decision 0107, step 3).
+// ---------------------------------------------------------------------------
+
+fn ag(n: u32) -> crate::ids::AirGroupId {
+    crate::ids::AirGroupId::new(n)
+}
+
+fn arc_of(n: u32) -> HoldTarget {
+    HoldTarget::Setting {
+        group: ag(n),
+        setting: HeldSetting::SearchArc,
+    }
+}
+
+fn hold(target: HoldTarget) -> CommandKind {
+    CommandKind::Hold { target }
+}
+
+fn release(target: HoldTarget) -> CommandKind {
+    CommandKind::Release { target }
+}
+
+/// The world with Allied air group 1 at base 1 (and Japanese air group 2).
+fn world_with_groups() -> World {
+    use crate::ids::AircraftTypeId;
+    use crate::state::{AirGroup, AirGroupLocation};
+    let mut world = staffed_world();
+    for (n, side) in [(1, A), (2, J)] {
+        world.truth.air_groups.insert(
+            ag(n),
+            AirGroup::new(
+                ag(n),
+                format!("Group {n}"),
+                side,
+                AirGroupLocation::Base(base(if side == A { 1 } else { 9 })),
+                AircraftTypeId::new(1),
+            ),
+        );
+    }
+    world
+}
+
+#[test]
+fn a_hold_is_taken_in_with_its_day_and_maker_and_a_release_removes_it_whoever_made_it() {
+    let mut world = world_with_groups();
+    for target in [
+        HoldTarget::Ship(ship(5)),
+        HoldTarget::TaskForce(tf(1)),
+        arc_of(1),
+    ] {
+        player(&mut world, hold(target)).unwrap();
+        assert_eq!(
+            state(&world, A).hold_of(target),
+            Some(&Hold {
+                day: 1,
+                by: HoldMaker::Command
+            })
+        );
+        // No follow-up event: the command's record is the record.
+        let events = log(&world);
+        assert!(matches!(
+            events.last().unwrap().kind,
+            EventKind::CommandTaken { .. }
+        ));
+        refused(
+            &mut world,
+            Issuer::Player,
+            hold(target),
+            CommandRefusal::AlreadyHeld(target),
+        );
+    }
+    player(&mut world, release(HoldTarget::Ship(ship(5)))).unwrap();
+    assert!(state(&world, A)
+        .hold_of(HoldTarget::Ship(ship(5)))
+        .is_none());
+    refused(
+        &mut world,
+        Issuer::Player,
+        release(HoldTarget::Ship(ship(5))),
+        CommandRefusal::NotHeld(HoldTarget::Ship(ship(5))),
+    );
+    // A hold an order made is released the same way.
+    world.command.get_mut(&A).unwrap().holds.insert(
+        HoldTarget::Ship(ship(6)),
+        Hold {
+            day: 1,
+            by: HoldMaker::Order(OrderId::new(1)),
+        },
+    );
+    player(&mut world, release(HoldTarget::Ship(ship(6)))).unwrap();
+    assert_eq!(state(&world, A).holds.len(), 2);
+}
+
+#[test]
+fn a_hold_or_release_is_refused_for_what_is_not_the_sides_own_or_the_wrong_issuer() {
+    let mut world = world_with_groups();
+    let p = Issuer::Player;
+    for (target, reason) in [
+        (
+            HoldTarget::Ship(ship(20)),
+            CommandRefusal::NotYourShip(ship(20)),
+        ),
+        (
+            HoldTarget::Ship(ship(99)),
+            CommandRefusal::NotYourShip(ship(99)),
+        ),
+        (
+            HoldTarget::TaskForce(tf(20)),
+            CommandRefusal::NotYourForce(tf(20)),
+        ),
+        (
+            HoldTarget::TaskForce(tf(99)),
+            CommandRefusal::NotYourForce(tf(99)),
+        ),
+        (arc_of(2), CommandRefusal::NotYourGroup(ag(2))),
+        (arc_of(99), CommandRefusal::NotYourGroup(ag(99))),
+    ] {
+        refused(&mut world, p, hold(target), reason);
+    }
+    refused(
+        &mut world,
+        Issuer::Staff,
+        hold(HoldTarget::Ship(ship(5))),
+        CommandRefusal::NotYours,
+    );
+    refused(
+        &mut world,
+        Issuer::Staff,
+        release(HoldTarget::Ship(ship(5))),
+        CommandRefusal::NotYours,
+    );
+}
+
+#[test]
+fn a_run_ends_once_by_the_staff_on_an_approved_plan_and_nothing_else_changes() {
+    let mut world = world_with_plan(true);
+    staff(
+        &mut world,
+        CommandKind::AddRun {
+            plan: plan(1),
+            run: run_spec(&[5, 6], [2, 3, 6, 8]),
+        },
+    )
+    .unwrap();
+    staff(&mut world, commit(1, Some(1), &[5], 1, 8)).unwrap();
+    let end = CommandKind::EndRun {
+        plan: plan(1),
+        run: 1,
+    };
+    assert_eq!(state(&world, A).plans[&plan(1)].runs[&1].ended, None);
+    refused(
+        &mut world,
+        Issuer::Player,
+        end.clone(),
+        CommandRefusal::NotYours,
+    );
+    let commitments = state(&world, A).commitments.clone();
+    staff(&mut world, end.clone()).unwrap();
+    assert!(matches!(
+        log(&world).last().unwrap().kind,
+        EventKind::CommandTaken { .. }
+    ));
+    let run = &state(&world, A).plans[&plan(1)].runs[&1];
+    assert_eq!(run.ended, Some(1));
+    assert_eq!(run.ships, ships(&[5, 6]));
+    assert_eq!(state(&world, A).commitments, commitments);
+    refused(&mut world, Issuer::Staff, end, CommandRefusal::RunEnded(1));
+    refused(
+        &mut world,
+        Issuer::Staff,
+        CommandKind::EndRun {
+            plan: plan(1),
+            run: 9,
+        },
+        CommandRefusal::NoSuchRun(9),
+    );
+    refused(
+        &mut world,
+        Issuer::Staff,
+        CommandKind::EndRun {
+            plan: plan(9),
+            run: 1,
+        },
+        CommandRefusal::NoSuchPlan(plan(9)),
+    );
+    // A draft plan is not approved.
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(2),
+            kind: keep_supplied(1),
+        },
+    )
+    .unwrap();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        CommandKind::EndRun {
+            plan: plan(2),
+            run: 1,
+        },
+        CommandRefusal::WrongPlanState(PlanState::Draft),
+    );
+}
+
+#[test]
+fn a_run_or_a_commitment_naming_a_held_ship_or_one_in_a_held_force_is_refused() {
+    let add = |ship_list: &[u32]| CommandKind::AddRun {
+        plan: plan(1),
+        run: run_spec(ship_list, [1, 2, 3, 4]),
+    };
+    let commit_ships = |ship_list: &[u32]| commit(1, None, ship_list, 1, 3);
+    let s = Issuer::Staff;
+    // A ship held.
+    let mut world = world_with_plan(true);
+    player(&mut world, hold(HoldTarget::Ship(ship(5)))).unwrap();
+    let held = CommandRefusal::Held(HoldTarget::Ship(ship(5)));
+    refused(&mut world, s, add(&[6, 5]), held);
+    refused(&mut world, s, commit_ships(&[5]), held);
+    staff(&mut world, add(&[6])).unwrap();
+    // A ship of a held force.
+    let mut world = world_with_plan(true);
+    player(&mut world, hold(HoldTarget::TaskForce(tf(1)))).unwrap();
+    let held = CommandRefusal::Held(HoldTarget::TaskForce(tf(1)));
+    refused(&mut world, s, add(&[1]), held);
+    refused(&mut world, s, commit_ships(&[2]), held);
+    // A ship in a force with another held ship.
+    let mut world = world_with_plan(true);
+    player(&mut world, hold(HoldTarget::Ship(ship(2)))).unwrap();
+    let held = CommandRefusal::Held(HoldTarget::Ship(ship(2)));
+    refused(&mut world, s, add(&[1]), held);
+    refused(&mut world, s, commit_ships(&[1]), held);
+    // Freeing and timing are never refused for a hold.
+    let mut world = world_with_plan(true);
+    staff(&mut world, add(&[5])).unwrap();
+    staff(&mut world, commit(1, Some(1), &[5], 1, 3)).unwrap();
+    player(&mut world, hold(HoldTarget::Ship(ship(5)))).unwrap();
+    staff(
+        &mut world,
+        CommandKind::TimeRun {
+            plan: plan(1),
+            run: 1,
+            days: RunDays {
+                load: 1,
+                sail: 2,
+                arrive: 3,
+                free: 5,
+            },
+        },
+    )
+    .unwrap();
+    staff(
+        &mut world,
+        CommandKind::FreeShips {
+            plan: plan(1),
+            ships: ships(&[5]),
+        },
+    )
+    .unwrap();
+    // Released, the ship is free for the staff again.
+    player(&mut world, release(HoldTarget::Ship(ship(5)))).unwrap();
+    staff(&mut world, commit_ships(&[5])).unwrap();
+}
+
+/// Hands a staff order in as intake does and returns why it was rejected,
+/// `None` if it was accepted.
+fn staff_order_answer(world: &mut World, kind: OrderKind) -> Option<RejectReason> {
+    let before = world.events.len();
+    world.take_in_staff_order(1, A, staff_request(kind), &reason(1, "a staff order"));
+    world
+        .events
+        .from_index(before)
+        .iter()
+        .find_map(|event| match &event.kind {
+            EventKind::OrderRejected { reason, .. } => Some(reason.clone()),
+            _ => None,
+        })
+}
+
+fn staff_request(kind: OrderKind) -> OrderRequest {
+    OrderRequest {
+        kind,
+        origin: Origin {
+            issuer: Issuer::Staff,
+            intent: Some(intent(1)),
+        },
+    }
+}
+
+fn form(ship_list: &[u32]) -> OrderKind {
+    OrderKind::Base {
+        target: base(1),
+        order: BaseOrder::FormTaskForce {
+            ships: ship_list.iter().map(|n| ship(*n)).collect(),
+        },
+    }
+}
+
+fn arc_order(group: u32) -> OrderKind {
+    OrderKind::AirGroup {
+        target: ag(group),
+        order: crate::orders::AirGroupOrder::SetSearchArc {
+            from_deg: 0,
+            to_deg: 90,
+            range_nm: t(200),
+        },
+    }
+}
+
+#[test]
+fn a_staffs_order_to_what_is_held_is_rejected_held_and_the_same_order_unheld_passes_the_guard() {
+    let not_held = |answer: Option<RejectReason>| !matches!(answer, Some(RejectReason::Held(_)));
+    // A held force, and a force with a held ship.
+    let mut world = world_with_groups();
+    assert!(not_held(staff_order_answer(&mut world, speed(1))));
+    player(&mut world, hold(HoldTarget::TaskForce(tf(1)))).unwrap();
+    assert_eq!(
+        staff_order_answer(&mut world, speed(1)),
+        Some(RejectReason::Held(HoldTarget::TaskForce(tf(1))))
+    );
+    let mut world = world_with_groups();
+    player(&mut world, hold(HoldTarget::Ship(ship(2)))).unwrap();
+    assert_eq!(
+        staff_order_answer(&mut world, speed(1)),
+        Some(RejectReason::Held(HoldTarget::Ship(ship(2))))
+    );
+    // A force with nothing held in it is not guarded.
+    assert!(not_held(staff_order_answer(&mut world, speed(2))));
+    // A forming order naming a held ship, the first found in list order.
+    player(&mut world, hold(HoldTarget::Ship(ship(6)))).unwrap();
+    assert!(not_held(staff_order_answer(&mut world, form(&[5]))));
+    assert_eq!(
+        staff_order_answer(&mut world, form(&[5, 6])),
+        Some(RejectReason::Held(HoldTarget::Ship(ship(6))))
+    );
+    // A search arc, and the mission with it, where the arc is held.
+    let mission = OrderKind::AirGroup {
+        target: ag(1),
+        order: crate::orders::AirGroupOrder::SetAirMission(crate::orders::AirMission::Rest),
+    };
+    assert!(not_held(staff_order_answer(&mut world, arc_order(1))));
+    player(&mut world, hold(arc_of(1))).unwrap();
+    let held = Some(RejectReason::Held(arc_of(1)));
+    assert_eq!(staff_order_answer(&mut world, arc_order(1)), held);
+    assert_eq!(staff_order_answer(&mut world, mission), held);
+    // The guard comes before the forces-limit check, and is on a staff's
+    // orders only: the commander's own order to a held force is not refused.
+    let mut world = world_with_groups();
+    player(&mut world, hold(HoldTarget::TaskForce(tf(1)))).unwrap();
+    let (_, _, accepted) = world.take_in_order(
+        1,
+        None,
+        A,
+        OrderRequest {
+            kind: speed(1),
+            origin: Origin::PLAYER,
+        },
+        Vec::new(),
+    );
+    assert!(accepted);
+}
+
+/// The Allied commander's order, with no intent.
+fn commander_order(kind: OrderKind) -> OrderRequest {
+    OrderRequest {
+        kind,
+        origin: Origin::PLAYER,
+    }
+}
+
+fn events_of(world: &World, pred: impl Fn(&EventKind) -> bool) -> Vec<Event> {
+    log(world).into_iter().filter(|e| pred(&e.kind)).collect()
+}
+
+fn held_by_order(kind: &EventKind) -> bool {
+    matches!(kind, EventKind::HeldByOrder { .. })
+}
+
+#[test]
+fn an_order_to_a_force_in_a_forces_limit_is_taken_in_before_the_staff_is_asked_and_holds_it() {
+    let mut world = staffed_world();
+    world.submit_orders(A, vec![commander_order(speed(1))]);
+    // The world as the staff will see it.
+    let at_step = world.at_staff_step();
+    let id = *at_step.orders.keys().next().expect("the order is numbered");
+    assert!(at_step.pending[&A].is_empty());
+    assert_eq!(
+        state(&at_step, A).holds,
+        BTreeMap::from([(
+            HoldTarget::TaskForce(tf(1)),
+            Hold {
+                day: 1,
+                by: HoldMaker::Order(id)
+            }
+        )])
+    );
+    let accepted = events_of(&at_step, |k| matches!(k, EventKind::OrderAccepted { .. }));
+    assert_eq!(accepted.len(), 1);
+    let held = events_of(&at_step, held_by_order);
+    assert_eq!(held.len(), 1);
+    assert_eq!(
+        held[0].kind,
+        EventKind::HeldByOrder {
+            side: A,
+            target: HoldTarget::TaskForce(tf(1)),
+            order: id
+        }
+    );
+    assert_eq!(
+        held[0].causes,
+        vec![Cause::Order(id), Cause::Event(accepted[0].id)]
+    );
+    // The original world is untouched.
+    assert!(state(&world, A).holds.is_empty());
+    assert_eq!(world.pending[&A].len(), 1);
+    // A staff asked in the day sees the hold, and its own order to the force
+    // is refused Held.
+    let saw = Cell::new(false);
+    let staffs = Computed(|view: SideView<'_>| {
+        saw.set(
+            view.command_state()
+                .hold_of(HoldTarget::TaskForce(tf(1)))
+                .is_some(),
+        );
+        StaffDecisions {
+            orders: vec![staff_order(speed(1), 1, "to the held force")],
+            ..StaffDecisions::default()
+        }
+    });
+    world
+        .resolve_day_staffed(Staffs::none().with(A, &staffs))
+        .unwrap();
+    assert!(saw.get(), "the hold is in force when the staff is asked");
+    let rejected = events_of(&world, |k| {
+        matches!(
+            k,
+            EventKind::OrderRejected {
+                reason: RejectReason::Held(HoldTarget::TaskForce(_)),
+                ..
+            }
+        )
+    });
+    assert_eq!(rejected.len(), 1);
+    // The commander's order was taken in once, before the staff's.
+    let accepted = events_of(&world, |k| matches!(k, EventKind::OrderAccepted { .. }));
+    assert_eq!(accepted.len(), 1);
+    assert!(accepted[0].id < rejected[0].id);
+    // The hold stands until released.
+    assert!(state(&world, A)
+        .hold_of(HoldTarget::TaskForce(tf(1)))
+        .is_some());
+}
+
+#[test]
+fn an_order_to_a_unit_in_no_forces_limit_holds_nothing_and_is_taken_in_at_step_five() {
+    let mut world = staffed_world();
+    // Force 2 is in no forces limit; the order stays pending, in the order
+    // handed in, behind or ahead of one that is an override.
+    world.submit_orders(
+        A,
+        vec![commander_order(speed(2)), commander_order(speed(1))],
+    );
+    let at_step = world.at_staff_step();
+    assert_eq!(
+        at_step.pending[&A],
+        vec![commander_order(speed(2))],
+        "only the order that is not an override stays pending"
+    );
+    assert_eq!(state(&at_step, A).holds.len(), 1);
+    world.resolve_day().unwrap();
+    assert_eq!(
+        events_of(&world, |k| matches!(k, EventKind::OrderAccepted { .. })).len(),
+        2
+    );
+    assert_eq!(events_of(&world, held_by_order).len(), 1);
+    assert!(state(&world, A)
+        .hold_of(HoldTarget::TaskForce(tf(2)))
+        .is_none());
+}
+
+#[test]
+fn an_order_to_an_already_held_force_records_no_second_hold() {
+    let mut world = staffed_world();
+    player(&mut world, hold(HoldTarget::TaskForce(tf(1)))).unwrap();
+    world.submit_orders(A, vec![commander_order(speed(1))]);
+    let at_step = world.at_staff_step();
+    assert!(events_of(&at_step, held_by_order).is_empty());
+    assert_eq!(
+        state(&at_step, A).hold_of(HoldTarget::TaskForce(tf(1))),
+        Some(&Hold {
+            day: 1,
+            by: HoldMaker::Command
+        })
+    );
+    assert_eq!(
+        events_of(&at_step, |k| matches!(k, EventKind::OrderAccepted { .. })).len(),
+        1
+    );
+}
+
+#[test]
+fn a_forming_order_naming_a_pool_ship_holds_that_ship_and_a_rejected_override_holds_nothing() {
+    let mut world = staffed_world();
+    // Ship 6 is in the pool, ship 3 is not; a forming order at base 1 names
+    // pool ships 6 and 5, in that order.
+    world.submit_orders(A, vec![commander_order(form(&[6, 5]))]);
+    let at_step = world.at_staff_step();
+    let held: Vec<EventKind> = events_of(&at_step, held_by_order)
+        .into_iter()
+        .map(|e| e.kind)
+        .collect();
+    let id = *at_step.orders.keys().next().unwrap();
+    assert_eq!(
+        held,
+        vec![
+            EventKind::HeldByOrder {
+                side: A,
+                target: HoldTarget::Ship(ship(5)),
+                order: id
+            },
+            EventKind::HeldByOrder {
+                side: A,
+                target: HoldTarget::Ship(ship(6)),
+                order: id
+            }
+        ],
+        "in ship order"
+    );
+    assert!(at_step.pending[&A].is_empty());
+    // An order the intake rejects holds nothing: a route to where the force
+    // already is.
+    let mut world = staffed_world();
+    world.submit_orders(
+        A,
+        vec![commander_order(OrderKind::TaskForce {
+            target: tf(1),
+            order: TaskForceOrder::SetRoute {
+                waypoints: vec![HOME],
+                act_at: BTreeSet::new(),
+            },
+        })],
+    );
+    let at_step = world.at_staff_step();
+    assert!(state(&at_step, A).holds.is_empty());
+    assert!(events_of(&at_step, held_by_order).is_empty());
+    assert_eq!(
+        events_of(&at_step, |k| matches!(k, EventKind::OrderRejected { .. })).len(),
+        1
+    );
+    assert!(at_step.pending[&A].is_empty());
+}
+
+#[test]
+fn a_side_with_no_intent_in_force_is_not_touched_by_the_override() {
+    let mut world = world();
+    world.submit_orders(A, vec![commander_order(speed(1))]);
+    let pending = world.pending.clone();
+    let at_step = world.at_staff_step();
+    assert_eq!(at_step.pending, pending);
+    assert!(at_step.command.values().all(CommandState::is_empty));
+    assert!(events_of(&at_step, held_by_order).is_empty());
+    // The other side's orders are not touched either, with an intent for the
+    // Allied side only.
+    let mut world = staffed_world();
+    world.submit_orders(J, vec![commander_order(speed(20))]);
+    let at_step = world.at_staff_step();
+    assert_eq!(at_step.pending[&J].len(), 1);
+    assert!(state(&at_step, J).holds.is_empty());
+}
+
+#[test]
+fn a_hold_and_a_runs_end_change_the_hash() {
+    let base_world = world();
+    let hash = base_world.state_hash();
+    let changed = |edit: &dyn Fn(&mut CommandState)| {
+        let mut world = base_world.clone();
+        edit(world.command.get_mut(&A).unwrap());
+        world.state_hash()
+    };
+    let put = |target: HoldTarget, day: u32, by: HoldMaker| {
+        move |s: &mut CommandState| {
+            s.holds.insert(target, Hold { day, by });
+        }
+    };
+    let hashes = [
+        changed(&put(HoldTarget::Ship(ship(1)), 1, HoldMaker::Command)),
+        changed(&put(HoldTarget::TaskForce(tf(1)), 1, HoldMaker::Command)),
+        changed(&put(arc_of(1), 1, HoldMaker::Command)),
+        changed(&put(HoldTarget::Ship(ship(1)), 2, HoldMaker::Command)),
+        changed(&put(
+            HoldTarget::Ship(ship(1)),
+            1,
+            HoldMaker::Order(OrderId::new(4)),
+        )),
+        changed(&put(
+            HoldTarget::Ship(ship(1)),
+            1,
+            HoldMaker::Order(OrderId::new(5)),
+        )),
+    ];
+    let distinct: BTreeSet<u64> = hashes.iter().copied().chain([hash]).collect();
+    assert_eq!(distinct.len(), hashes.len() + 1);
+    // A run's ended day.
+    let mut world = world_with_plan(true);
+    staff(
+        &mut world,
+        CommandKind::AddRun {
+            plan: plan(1),
+            run: run_spec(&[5], [1, 2, 3, 4]),
+        },
+    )
+    .unwrap();
+    let open = world.state_hash();
+    staff(
+        &mut world,
+        CommandKind::EndRun {
+            plan: plan(1),
+            run: 1,
+        },
+    )
+    .unwrap();
+    assert_ne!(world.state_hash(), open);
+}

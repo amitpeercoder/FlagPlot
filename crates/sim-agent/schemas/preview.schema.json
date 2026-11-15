@@ -1,0 +1,329 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/preview",
+  "title": "preview: what a changed intent or limit would do, worked on copies and stored nowhere",
+  "description": "The staff's answer for the coming day as things stand and with the command queued last, the holds that keep ships of the intent's pool from it, what each run in hand would do, what is lost (nothing, in a supply plan) and what another intent would give up. It changes nothing; approve {\"preview\": number} queues exactly the command shown, until something is queued or a day is resolved.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "preview",
+    "day",
+    "command",
+    "shown",
+    "intent",
+    "as_things_stand",
+    "with_change",
+    "held",
+    "runs_in_hand",
+    "made_ready_lost",
+    "other_plans_give_up",
+    "valid",
+    "note"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 6
+    },
+    "kind": {
+      "const": "preview"
+    },
+    "preview": {
+      "type": "integer",
+      "description": "The preview's number in the game, 1 up."
+    },
+    "day": {
+      "type": "integer",
+      "description": "The coming day."
+    },
+    "command": {
+      "$ref": "command_defs.schema.json#/$defs/command_body"
+    },
+    "shown": {
+      "type": "string",
+      "description": "The command in words."
+    },
+    "intent": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The intent concerned; null for a reserve at a base no intent loads from."
+    },
+    "as_things_stand": {
+      "type": "object",
+      "description": "What the staff would do for the intent on the coming day on one copy of the state: its orders, commands and decisions to give no order for the intent (as staff_orders shows them), the runs of its proposal (the same rules over the next 30 days) with the next of them, the first day the base's days of supply fall below the floor, and what binds.",
+      "required": [
+        "orders",
+        "commands",
+        "no_orders",
+        "runs",
+        "next_run",
+        "first_day_below",
+        "binds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "$ref": "command_defs.schema.json#/$defs/staff_order"
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "reason"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "reason": {
+                "$ref": "command_defs.schema.json#/$defs/reason"
+              }
+            }
+          }
+        },
+        "no_orders": {
+          "type": "array",
+          "items": {
+            "$ref": "command_defs.schema.json#/$defs/reason"
+          }
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run"
+          }
+        },
+        "next_run": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/run"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "first_day_below": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "binds": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "binds",
+                "shortfall_days",
+                "source_dry_day",
+                "check_day",
+                "displaced_by"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "binds": {
+                  "type": "string"
+                },
+                "shortfall_days": {
+                  "$ref": "defs.schema.json#/$defs/dec"
+                },
+                "source_dry_day": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "check_day": {
+                  "type": "integer"
+                },
+                "displaced_by": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "command_defs.schema.json#/$defs/displacement"
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "with_change": {
+      "type": "object",
+      "description": "What the staff would do for the intent on the coming day on one copy of the state: its orders, commands and decisions to give no order for the intent (as staff_orders shows them), the runs of its proposal (the same rules over the next 30 days) with the next of them, the first day the base's days of supply fall below the floor, and what binds.",
+      "required": [
+        "orders",
+        "commands",
+        "no_orders",
+        "runs",
+        "next_run",
+        "first_day_below",
+        "binds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "$ref": "command_defs.schema.json#/$defs/staff_order"
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "reason"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "reason": {
+                "$ref": "command_defs.schema.json#/$defs/reason"
+              }
+            }
+          }
+        },
+        "no_orders": {
+          "type": "array",
+          "items": {
+            "$ref": "command_defs.schema.json#/$defs/reason"
+          }
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run"
+          }
+        },
+        "next_run": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/run"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "first_day_below": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "binds": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "binds",
+                "shortfall_days",
+                "source_dry_day",
+                "check_day",
+                "displaced_by"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "binds": {
+                  "type": "string"
+                },
+                "shortfall_days": {
+                  "$ref": "defs.schema.json#/$defs/dec"
+                },
+                "source_dry_day": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "check_day": {
+                  "type": "integer"
+                },
+                "displaced_by": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "command_defs.schema.json#/$defs/displacement"
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "held": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "runs_in_hand": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "made_ready_lost": {
+      "type": "string"
+    },
+    "other_plans_give_up": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "valid": {
+      "const": true
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "run": {
+      "type": "object",
+      "required": [
+        "ships",
+        "load_t",
+        "days"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ships": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "load_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "days": {
+          "$ref": "command_defs.schema.json#/$defs/days"
+        }
+      }
+    }
+  }
+}

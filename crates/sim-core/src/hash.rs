@@ -11,8 +11,8 @@
 
 use crate::belief::{BattleClaim, Contact, GroundEstimate};
 use crate::command::{
-    Amendment, AmendmentChange, Baseline, CommandState, Commitment, ForcesLimit, Intent,
-    IntentKind, IntentLimits, Leaves, Limit, Plan, Run, RunDays,
+    Amendment, AmendmentChange, Baseline, CommandState, Commitment, ForcesLimit, Hold, HoldMaker,
+    HoldTarget, Intent, IntentKind, IntentLimits, Leaves, Limit, Plan, Run, RunDays,
 };
 use crate::events::Cause;
 use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent};
@@ -170,8 +170,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `airfield_damage` (decision 0111);
 /// version 24 adds each side's command state after the beliefs, Allied then
 /// Japanese: its intents, leaves, plans, commitments and next plan number
-/// (decision 0107).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v24";
+/// (decision 0107);
+/// version 25 adds each side's holds after its commitments and a run's ended
+/// day after its `days.free` (decision 0107, step 3).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v25";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -471,6 +473,7 @@ fn name_every_field(world: &World) {
             plans,
             commitments,
             next_plan: _,
+            holds,
         } = state;
         if let Some(Intent {
             id: _,
@@ -531,6 +534,7 @@ fn name_every_field(world: &World) {
                         arrive: _,
                         free: _,
                     },
+                ended: _,
             }) = runs.values().next()
             {}
         }
@@ -541,6 +545,18 @@ fn name_every_field(world: &World) {
             to_day: _,
         }) = commitments.values().flatten().next()
         {}
+        if let Some((target, Hold { day: _, by })) = holds.iter().next() {
+            match target {
+                HoldTarget::Ship(_) | HoldTarget::TaskForce(_) => {}
+                HoldTarget::Setting {
+                    group: _,
+                    setting: _,
+                } => {}
+            }
+            match by {
+                HoldMaker::Command | HoldMaker::Order(_) => {}
+            }
+        }
     }
     for belief in beliefs.values() {
         if let Some(Contact {
@@ -756,6 +772,7 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
             h.u32(run.days.sail);
             h.u32(run.days.arrive);
             h.u32(run.days.free);
+            h.optional_u32(run.ended);
         }
     }
     h.count(state.commitments.len());
@@ -767,6 +784,26 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
             h.optional_u32(commitment.run);
             h.u32(commitment.from_day);
             h.u32(commitment.to_day);
+        }
+    }
+    h.count(state.holds.len());
+    for (target, hold) in &state.holds {
+        h.u8(target.code());
+        match target {
+            HoldTarget::Ship(ship) => h.u32(ship.raw()),
+            HoldTarget::TaskForce(force) => h.u32(force.raw()),
+            HoldTarget::Setting { group, setting } => {
+                h.u32(group.raw());
+                h.u8(setting.code());
+            }
+        }
+        h.u32(hold.day);
+        match hold.by {
+            HoldMaker::Command => h.u8(1),
+            HoldMaker::Order(order) => {
+                h.u8(2);
+                h.u32(order.raw());
+            }
         }
     }
     h.u32(state.next_plan);

@@ -157,6 +157,8 @@ version = "0.1.0"
 dependencies = [
  "csv",
  "map-tool",
+ "serde_json",
+ "sim-agent",
  "sim-core",
  "sim-data",
  "sim-staff",

@@ -26,13 +26,16 @@ pub const TOOLS: [&str; 9] = [
 /// The tools of a seat whose side has a staff, beside [`TOOLS`] (decision
 /// 0107, "As built", "The tools"). A session made without staffs has none of
 /// them: calling one says it is not a tool.
-pub const COMMAND_TOOLS: [&str; 11] = [
+pub const COMMAND_TOOLS: [&str; 14] = [
     "command_state",
     "plans",
     "set_intent",
     "withdraw_intent",
     "set_limit",
     "set_leave",
+    "hold",
+    "release",
+    "preview",
     "approve",
     "cancel_plan",
     "propose",

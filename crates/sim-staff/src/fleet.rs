@@ -5,7 +5,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sim_core::command::{CommandState, ForcesLimit, PlanId, Run};
+use sim_core::command::{CommandState, ForcesLimit, HoldTarget, PlanId, Run};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{BaseId, ShipId, TaskForceId};
@@ -32,6 +32,15 @@ impl<'v> Fleet<'v> {
             ShipLocation::TaskForce(force) => self.forces.get(&force).copied(),
             _ => None,
         }
+    }
+
+    /// The hold that keeps `ship` from the staff, if any: on the ship, or on
+    /// the force it lies in or any ship of that force (ruling 18).
+    pub(crate) fn hold_on_ship(&self, state: &CommandState, ship: ShipId) -> Option<HoldTarget> {
+        if state.holds.is_empty() {
+            return None;
+        }
+        state.hold_on_ship(ship, self.force_of(ship).map(|f| (f.id, &f.ships)))
     }
 
     /// Whether the ship is afloat: not sunk.
@@ -112,8 +121,28 @@ fn superseded(state: &CommandState, plan: PlanId, run: &Run) -> bool {
 }
 
 /// The state of `run` of `plan`, whose source is at `source_hex`, on
-/// `today`. A run a later run has taken the ships of is finished.
+/// `today`. A run a later run has taken the ships of is finished, and so is
+/// a run that has ended and a run of a plan that has ended (rulings 20 and
+/// 29): such a run holds no ship, is pending no load and is counted by
+/// nothing. [`run_movement`] says what its ships are doing all the same.
 pub(crate) fn run_state(
+    fleet: &Fleet<'_>,
+    state: &CommandState,
+    plan: PlanId,
+    run: &Run,
+    source_hex: Hex,
+    today: u32,
+) -> RunState {
+    let mut found = run_movement(fleet, state, plan, run, source_hex, today);
+    if run.ended.is_some() || state.plans.get(&plan).is_some_and(|p| p.state.ended()) {
+        found.status = RunStatus::Finished;
+    }
+    found
+}
+
+/// What a run's ships are doing, whether or not the run or its plan has
+/// ended: the true movement, for the fallback of a cancelled plan.
+pub(crate) fn run_movement(
     fleet: &Fleet<'_>,
     state: &CommandState,
     plan: PlanId,

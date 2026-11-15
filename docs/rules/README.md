@@ -27,7 +27,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | Step | When | What runs | Where |
 | --- | --- | --- | --- |
 | 1 | Day start | The commander's commands are taken in: intents, limits (a reserve set here binds this morning's refuelling), leaves, approvals, cancelling | Chapter 8, Commands |
-| 2 | Day start | The override of a held unit by the commander's order: not built | Chapter 8, Not built |
+| 2 | Day start | The override: the commander's order to a unit in an intent's forces limit is taken in and holds the unit. The code runs it after step 3, before the staff is asked | Chapter 8, Holds and the override |
 | 3 | Day start | Forces back from the yard are home, then refuelling in port, each base down to its fuel reserve | Chapter 4, Repair; chapter 2, Refuelling in port |
 | 4 | Day start | Each side's staff, if it has one, is asked on its view as it now stands. What a replay saved is taken as its answer | Chapter 8, The staff |
 | 5 | Day start | The staff's commands are taken in; then orders intake for both issuers: numbering, checks, refusals (a staff's order also against its intent's forces limit); a yard order, a rebase order, a posture order, a march order, a prepare-landing order and an activity order are applied at their acceptance. Forward repair follows | Chapter 8, The staff; chapter 1, Orders; chapter 4, Repair; chapter 5, Rebasing an air group; chapter 7, The posture and its order; Marching overland; Preparing a landing; The day's activity |
