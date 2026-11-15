@@ -3106,7 +3106,65 @@ impl Day {
                                 event: id,
                             });
                     }
-                    _ => {}
+                    // Nothing is meant for each of these kinds, and none is taken by default:
+                    // a new kind of event must be decided here, in an arm above or in this one.
+                    EventKind::TaskForceSteamed { .. }
+                    | EventKind::FuelBurned { .. }
+                    | EventKind::TaskForceArrived { .. }
+                    | EventKind::TaskForceOutOfFuel { .. }
+                    | EventKind::LoadingComplete { .. }
+                    | EventKind::UnloadingComplete { .. }
+                    | EventKind::SearchFlown { .. }
+                    | EventKind::SearchAttempt { .. }
+                    | EventKind::ContactAged { .. }
+                    | EventKind::EngagementBegun { .. }
+                    | EventKind::SightingRoll { .. }
+                    | EventKind::ForceSurprised { .. }
+                    | EventKind::Salvo { .. }
+                    | EventKind::ForceBecameAlert { .. }
+                    | EventKind::ForceBrokeOff { .. }
+                    | EventKind::ForceSlippedAway { .. }
+                    | EventKind::ForcesPassedUnseen { .. }
+                    | EventKind::EngagementEnded { .. }
+                    | EventKind::ShipsDetached { .. }
+                    | EventKind::ForceRetired { .. }
+                    | EventKind::ForceAlertedByContact { .. }
+                    | EventKind::ForceStoodDown { .. }
+                    | EventKind::AlarmRoll { .. }
+                    | EventKind::AircraftWorn { .. }
+                    | EventKind::AircraftRepaired { .. }
+                    | EventKind::AirAttack { .. }
+                    | EventKind::EscortsSent { .. }
+                    | EventKind::AirFight { .. }
+                    | EventKind::AntiAircraftFire { .. }
+                    | EventKind::ReplacementsReceived { .. }
+                    | EventKind::AircraftArrived { .. }
+                    | EventKind::BaseAntiAircraftFire { .. }
+                    | EventKind::BaseAttacked { .. }
+                    | EventKind::AirGroupFatigue { .. }
+                    | EventKind::AirGroupStoodDown { .. }
+                    | EventKind::AirGroupReturned { .. }
+                    | EventKind::TaskForceFatigue { .. }
+                    | EventKind::TaskForceTurnedBack { .. }
+                    | EventKind::AircraftDitched { .. }
+                    | EventKind::AircraftDitchedNoDeck { .. }
+                    | EventKind::BaseAtDayEnd { .. }
+                    | EventKind::ForceLeftForYard { .. }
+                    | EventKind::AircraftWrittenOff { .. }
+                    | EventKind::GroundFight { .. }
+                    | EventKind::GroundFire { .. }
+                    | EventKind::SideBeatenAshore { .. }
+                    | EventKind::BombardmentFire { .. }
+                    | EventKind::ShoreBombardment { .. }
+                    | EventKind::GroundReportReceived { .. }
+                    | EventKind::MenSurrenderedAshore { .. }
+                    | EventKind::GroundAttackFailed { .. }
+                    | EventKind::CommandTaken { .. }
+                    | EventKind::CommandRefused { .. }
+                    | EventKind::PlanDrafted { .. }
+                    | EventKind::PlanStateChanged { .. }
+                    | EventKind::PlanAmended { .. }
+                    | EventKind::StaffReason { .. } => {}
                 },
                 SideEventKind::EnemySurrendered { hex, men } => {
                     ground.prisoners.push(PrisonersLine {
