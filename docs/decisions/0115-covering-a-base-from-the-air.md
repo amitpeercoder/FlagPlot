@@ -48,7 +48,7 @@ Each morning, for each cover intent in priority order, over the groups its force
 
 ## The proof of the step
 
-Scenario 6, the air campaign, with the Allied side given one cover intent on Henderson Field over all its groups, both leaves, and no order, against the Japanese side as the scenario scripts it. Over 1,000 seeds, set beside the same scenario with the Allied orders taken out and nothing in their place:
+Scenario 6, the air campaign, with the Allied side given one end, "hold Henderson Field" (decision 0117), with no forces limit, both leaves, and no order, against the Japanese side as the scenario scripts it. Over 1,000 seeds, set beside the same scenario with the Allied orders taken out and nothing in their place:
 
 - it passes if the median of Japanese aircraft lost is higher, and the median of Allied aircraft destroyed on the ground is lower, than with no orders;
 - every invariant holds and no staff order is refused on any seed;
