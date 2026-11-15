@@ -285,6 +285,14 @@ pub struct AirGroupOut {
     /// with no target order is as it was.
     #[serde(skip_serializing_if = "Option::is_none")]
     target_priority: Option<Vec<&'static str>>,
+    /// The oldest contact, in pulses, the group launches a naval strike on,
+    /// given only when set (decision 0114).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    strike_contact_age: Option<u32>,
+    /// The share of its aircraft the group holds back from a strike, given
+    /// only when above 0 (decision 0114).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    strike_held_share: Option<Num>,
     arc: Option<ArcOut>,
 }
 
@@ -610,6 +618,9 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
                 .map(|kind| kind.name())
                 .collect()
         }),
+        strike_contact_age: group.strike_contact_age,
+        strike_held_share: (!group.strike_held_share.is_zero())
+            .then_some(Num(group.strike_held_share)),
         arc: group.search.map(|arc| ArcOut {
             from_deg: arc.from_deg,
             to_deg: arc.to_deg,

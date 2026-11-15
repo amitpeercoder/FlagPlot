@@ -35,7 +35,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "69606d76c27cdff9"
+      "hash": "810108e69cd33278"
     }
   ],
   "orders": [
@@ -513,7 +513,7 @@
       "unit": "air_group:19"
     }
   ],
-  "rules_version": 11,
+  "rules_version": 12,
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
     "hash": "a9443b066a393e0b"
@@ -524,6 +524,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v26",
+  "state_version": "flagplot-state-v27",
   "version": 3
 }

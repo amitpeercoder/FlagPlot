@@ -315,3 +315,7 @@ path = "scenario_41_hold_change_release.rs"
 [[test]]
 name = "scenario_42_interrupts_and_runs"
 path = "scenario_42_interrupts_and_runs.rs"
+
+[[test]]
+name = "scenario_46_two_strike_settings"
+path = "scenario_46_two_strike_settings.rs"

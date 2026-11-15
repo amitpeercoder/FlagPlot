@@ -1043,6 +1043,35 @@ impl World {
                             Ok(())
                         }
                     }
+                    AirGroupOrder::SetStrikeContactAge { pulses } => {
+                        // Decision 0114, 3: from 0 up to one less than the
+                        // age at which a contact is dropped. Without the
+                        // search figures there is no drop age, and only a
+                        // negative age is refused.
+                        if self.ref_data.air_combat.is_none() {
+                            return Err(RejectReason::NoAirCombatFigures);
+                        }
+                        let max = self
+                            .ref_data
+                            .search
+                            .as_ref()
+                            .map(|search| search.contact_drop_age_pulses.saturating_sub(1));
+                        if *pulses < 0 || max.is_some_and(|max| *pulses > i64::from(max)) {
+                            Err(RejectReason::StrikeContactAgeOutOfRange {
+                                pulses: *pulses,
+                                max,
+                            })
+                        } else {
+                            Ok(())
+                        }
+                    }
+                    AirGroupOrder::SetStrikeHeldShare { share } => {
+                        if *share < Fixed::ZERO || *share > Fixed::ONE {
+                            Err(RejectReason::StrikeHeldShareOutOfRange(*share))
+                        } else {
+                            Ok(())
+                        }
+                    }
                     AirGroupOrder::SetRestThreshold { fatigue } => {
                         if *fatigue < Fixed::ZERO || *fatigue > Fixed::from_int(100) {
                             Err(RejectReason::FatigueOutOfRange(*fatigue))
@@ -1452,6 +1481,15 @@ impl World {
                     AirGroupOrder::SetPatrolShare { share } => {
                         group.patrol_share = *share;
                         group.share_order = Some(order.id);
+                    }
+                    AirGroupOrder::SetStrikeContactAge { pulses } => {
+                        group.strike_contact_age =
+                            Some(u32::try_from(*pulses).expect("the age was validated"));
+                        group.strike_age_order = Some(order.id);
+                    }
+                    AirGroupOrder::SetStrikeHeldShare { share } => {
+                        group.strike_held_share = *share;
+                        group.strike_share_order = Some(order.id);
                     }
                     AirGroupOrder::SetRestThreshold { fatigue } => {
                         group.rest_above = Some(*fatigue);

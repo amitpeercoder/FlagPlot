@@ -125,6 +125,16 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::PatrolShareOutOfRange(share) => {
             base("patrol_share_out_of_range").num("share", *share)
         }
+        RejectReason::StrikeContactAgeOutOfRange { pulses, max } => {
+            let data = base("strike_contact_age_out_of_range").with("pulses", Field::Int(*pulses));
+            match max {
+                Some(max) => data.with("max", Field::Int(i64::from(*max))),
+                None => data,
+            }
+        }
+        RejectReason::StrikeHeldShareOutOfRange(share) => {
+            base("strike_held_share_out_of_range").num("share", *share)
+        }
         RejectReason::NotAnEnemyBase => base("not_an_enemy_base"),
         RejectReason::FatigueOutOfRange(fatigue) => {
             base("fatigue_out_of_range").num("fatigue", *fatigue)

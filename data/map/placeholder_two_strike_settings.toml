@@ -1,0 +1,28 @@
+# PLACEHOLDER MAP. A stretch of open sea with two airfields 800 nm apart,
+# used by scenario 46. Three more hexes of it hold what the Allied side
+# starts holding as contacts: (3,0), (0,4) and (22,0). The geography is
+# invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-2, 24]
+r = [-3, 6]
+
+# Stands in for Allied airfield 1.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Stands in for Allied airfield 2, 800 nm east of airfield 1.
+[[hex]]
+q = 20
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

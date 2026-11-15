@@ -617,6 +617,19 @@ pub enum AirGroupOrder {
     Rebase {
         base: BaseId,
     },
+    /// The oldest contact, in pulses, the group launches a naval strike on
+    /// (decision 0114). A standing order of its own kind: it replaces the
+    /// age and nothing else. Signed so that a negative number reaches
+    /// intake and is refused there, as bearings are. Added at the end.
+    SetStrikeContactAge {
+        pulses: i64,
+    },
+    /// The share of its aircraft able to fly that the group holds back from
+    /// a strike, from 0 to 1 (decision 0114). A standing order of its own
+    /// kind. Added at the end.
+    SetStrikeHeldShare {
+        share: Fixed,
+    },
 }
 
 /// An order to a land unit (decision 0090).
@@ -893,6 +906,15 @@ pub enum RejectReason {
     /// (decision 0107, step 3, rulings 18 and 30). Added at the end of the
     /// enum.
     Held(crate::command::HoldTarget),
+    /// A strike contact age is below 0 or not below the scenario's contact
+    /// drop age (decision 0114, 3). `max` is the oldest age that is not
+    /// dropped, one less than `search.toml: contact_drop_age_pulses`; it is
+    /// `None` in a scenario with no search figures, where only a negative
+    /// age is refused. Added at the end of the enum.
+    StrikeContactAgeOutOfRange { pulses: i64, max: Option<u32> },
+    /// A held share is not between 0 and 1 (decision 0114, 11). Added at
+    /// the end of the enum.
+    StrikeHeldShareOutOfRange(Fixed),
 }
 
 impl fmt::Display for RejectReason {
@@ -996,6 +1018,16 @@ impl fmt::Display for RejectReason {
             ),
             RejectReason::NotACoastHex(hex) => {
                 write!(f, "{hex} is not a coast hex on the map")
+            }
+            RejectReason::StrikeContactAgeOutOfRange { pulses, max } => match max {
+                Some(max) => write!(
+                    f,
+                    "strike contact age {pulses} is not between 0 and {max} pulses"
+                ),
+                None => write!(f, "strike contact age {pulses} is not 0 or more pulses"),
+            },
+            RejectReason::StrikeHeldShareOutOfRange(share) => {
+                write!(f, "held share {share} is not between 0 and 1")
             }
             RejectReason::NoAirfield => f.write_str("the base has no airfield"),
             RejectReason::WorkingUnitDefends => {
