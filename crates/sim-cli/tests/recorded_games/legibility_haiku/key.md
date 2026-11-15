@@ -30,3 +30,14 @@ Question 1 passes if the answer names the base and the aim (keep it at so many d
 | 22 | leave | as 21: plan:1 released because leave to launch is given; no base named | leave to launch withheld |
 | 23 | leave | as 21, plan:2 of intent:2 | leave to prepare withheld |
 | 24 | leave | as 22, plan:2 | leave to launch withheld |
+
+## Added for the second run (Nov 15, 2026)
+
+Added by the team lead of the mend, from `reasons_second_run.json` alone, before any model saw a second-run reason. The requirement above is not changed: question 1 passes if the answer names the base and the aim; question 2 if it gives a condition the reason's own "would change" or "binding" part states. This adds only the base and aim each of the four leave reasons now states, in its serves part and in its worked part.
+
+| # | Kind | Base and aim the mended reason states | Q2 as above |
+| --- | --- | --- | --- |
+| 21 | leave | base:2 (Placeholder base T), kept at 30 days of supply, a run every 15 days; plan:1 made ready (preparing) because leave to prepare is given | leave to prepare withheld |
+| 22 | leave | base:2 (Placeholder base T), kept at 30 days of supply, a run every 15 days; plan:1 released because leave to launch is given | leave to launch withheld |
+| 23 | leave | base:3 (Placeholder base U), kept at 30 days of supply, a run every 15 days; plan:2 made ready (preparing) because leave to prepare is given | leave to prepare withheld |
+| 24 | leave | base:3 (Placeholder base U), kept at 30 days of supply, a run every 15 days; plan:2 released because leave to launch is given | leave to launch withheld |

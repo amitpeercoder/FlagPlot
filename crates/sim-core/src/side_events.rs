@@ -4382,6 +4382,7 @@ mod tests {
                 EventKind::StaffReason {
                     side: Side::Allied,
                     order: None,
+                    command: None,
                     reason: Box::default(),
                 },
                 Whole,

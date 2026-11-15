@@ -53,7 +53,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
         .position(|other| other.id == intent.id)
         .unwrap_or(order.len());
     let mut scratch = Out::default();
-    morning.hand_in_aside(&mut scratch, None);
+    morning.hand_in_aside(&view, &mut scratch, None);
     for earlier in &order[..position] {
         serve(
             &view,
@@ -67,7 +67,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
     // What those intents hold this morning, for the forward look below.
     let before = morning.clone();
     let mut out = Out::default();
-    morning.hand_in_aside(&mut out, Some(plan.id));
+    morning.hand_in_aside(&view, &mut out, Some(plan.id));
     let served = serve(
         &view,
         &fleet,

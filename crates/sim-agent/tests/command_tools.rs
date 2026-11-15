@@ -224,7 +224,15 @@ fn a_player_commands_scenario_36_by_the_tools() {
         for part in ["serves", "evidence", "binding", "worked", "would_change"] {
             assert!(reason.get(part).is_some(), "{part}: {decision}");
         }
-        assert_eq!(reason["serves"], json!({"intent": 1, "plan": 1}));
+        // The serves part says what the intent is, in words.
+        assert_eq!(
+            reason["serves"],
+            json!({
+                "intent": 1,
+                "plan": 1,
+                "statement": "keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days"
+            })
+        );
         assert!(!reason.to_string().contains("1000001"), "{reason}");
     }
     assert!(given[0]["reason"]["worked"]

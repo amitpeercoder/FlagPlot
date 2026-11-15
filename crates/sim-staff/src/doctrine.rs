@@ -49,7 +49,7 @@ use crate::morning::{priority_order, protected_for_others, Morning, TakenRun};
 use crate::planner::DEFAULT_INTERVAL_DAYS;
 use crate::planner::{Blocker, Evaluation, Params, Planner, RunPlan, Timing, Unit};
 use crate::projection::Readings;
-use crate::reasons::{hold_words, serving, ReasonBuilder};
+use crate::reasons::{hold_words, plan_for, serving, ReasonBuilder};
 use crate::route::route_between;
 use crate::units::{days_word, over, tons, whole};
 
@@ -78,7 +78,7 @@ pub(crate) fn decide(view: SideView<'_>) -> StaffDecisions {
     let fleet = Fleet::of(&view);
     let mut out = Out::default();
     let mut morning = Morning::begin(&view, &fleet);
-    morning.hand_in_aside(&mut out, None);
+    morning.hand_in_aside(&view, &mut out, None);
     for intent in priority_order(state) {
         serve(&view, &fleet, intent, Mode::Live, &mut out, &mut morning);
     }
@@ -224,7 +224,7 @@ pub(crate) fn serve(
                 .binding(format!("{} is {}", plan.id, plan.state.name()))
                 .worked(format!(
                     "{} is {}, so the staff gives no order for {}.",
-                    plan.id,
+                    plan_for(view, intent, plan),
                     plan.state.name(),
                     intent.id
                 ))
@@ -306,7 +306,7 @@ pub(crate) fn serve(
                     .binding("leave to prepare is withheld")
                     .worked(format!(
                         "{} is a draft and the commander has not given leave to prepare, so it waits for him.",
-                        plan.id
+                        plan_for(view, intent, plan)
                     ))
                     .would_change("leave to prepare given, or the commander approving the plan")
                     .done(),
@@ -326,7 +326,8 @@ pub(crate) fn serve(
                 .evidence("leave to prepare is given", today)
                 .worked(format!(
                     "{} is a draft inside the limits of {} and leave to prepare is given: the staff makes it ready (preparing).",
-                    plan.id, intent.id
+                    plan_for(view, intent, plan),
+                    intent.id
                 ))
                 .would_change("leave to prepare withheld")
                 .done(),
@@ -341,7 +342,7 @@ pub(crate) fn serve(
                 .evidence("leave to launch is given", today)
                 .worked(format!(
                     "{} is ready and leave to launch is given: the staff releases it.",
-                    plan.id
+                    plan_for(view, intent, plan)
                 ))
                 .would_change("leave to launch withheld")
                 .done(),
@@ -615,7 +616,8 @@ fn dispatch(
                 },
                 serving(intent, plan)
                     .worked(format!(
-                        "The commitment of run {number}'s ships is made again for the new timing."
+                        "The commitment of run {number}'s ships to {} is made again for the new timing.",
+                        plan_for(planner.view, intent, plan)
                     ))
                     .done(),
             );
@@ -629,7 +631,8 @@ fn dispatch(
                 },
                 serving(intent, plan)
                     .worked(format!(
-                        "Run {number}'s ships are committed from day {today} to day {}, the day before they are free.",
+                        "Run {number}'s ships are committed to {} from day {today} to day {}, the day before they are free.",
+                        plan_for(planner.view, intent, plan),
                         new_days.free - 1
                     ))
                     .done(),
@@ -1569,6 +1572,7 @@ fn free_ended(view: &SideView<'_>, out: &mut Out) {
                 intent: Some(plan.intent),
                 plan: Some(plan.id),
                 amendment: plan.amendments.last().map(|a| a.number),
+                statement: String::new(),
             },
             evidence: vec![sim_core::command::Evidence {
                 what: format!("{} is {}", plan.id, plan.state.name()),
@@ -1577,7 +1581,10 @@ fn free_ended(view: &SideView<'_>, out: &mut Out) {
             binding: vec![format!("{} is {}", plan.id, plan.state.name())],
             worked: format!(
                 "{} is {} and {} of its ships are committed from today on: the staff frees them ({}).",
-                plan.id,
+                state
+                    .intents
+                    .get(&plan.intent)
+                    .map_or_else(|| plan.id.to_string(), |intent| plan_for(view, intent, plan)),
                 plan.state.name(),
                 ships.len(),
                 ships.iter().map(|s| s.to_string()).collect::<Vec<_>>().join(", ")

@@ -721,6 +721,7 @@ mod tests {
                 intent: Some(intent),
                 plan: Some(PlanId::new(1)),
                 amendment: None,
+                statement: "keep base:2 at 30 days of supply, a run every 15 days".to_string(),
             },
             evidence: vec![Evidence {
                 what: "base 2 holds 40 t".to_string(),

@@ -594,6 +594,9 @@ pub(crate) fn reason_to_json(reason: &Reason) -> Value {
     if let Some(amendment) = reason.serves.amendment {
         serves.insert("amendment".into(), json!(amendment));
     }
+    if !reason.serves.statement.is_empty() {
+        serves.insert("statement".into(), json!(reason.serves.statement));
+    }
     json!({
         "serves": Value::Object(serves),
         "evidence": reason
@@ -623,6 +626,11 @@ fn reason_from_json(value: &Value) -> Result<Reason, String> {
             intent: small_opt(serves, "intent")?.map(IntentId::new),
             plan: small_opt(serves, "plan")?.map(PlanId::new),
             amendment: small_opt(serves, "amendment")?,
+            // A game saved before the statement was handed in has none.
+            statement: match serves.get("statement") {
+                None | Some(Value::Null) => String::new(),
+                Some(_) => text(serves, "statement")?.to_string(),
+            },
         },
         evidence,
         binding: texts(value, "binding")?,
@@ -1049,6 +1057,9 @@ mod tests {
                 intent: Some(IntentId::new(1)),
                 plan: Some(PlanId::new(1)),
                 amendment: Some(2),
+                statement:
+                    "keep base:2 (Placeholder base T) at 30 days of supply, a run every 15 days"
+                        .to_string(),
             },
             evidence: vec![
                 Evidence {

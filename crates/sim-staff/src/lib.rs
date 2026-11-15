@@ -46,7 +46,9 @@ use sim_core::view::SideView;
 /// the protected limit, and displaced demand. `supply-3` adds holds, runs
 /// set aside, cargo aboard carried, and the fallback of a cancelled plan.
 /// `supply-4` adds the notices: cannot meet, waits for a leave, a run ended.
-pub const DOCTRINE_VERSION: &str = "supply-4";
+/// `supply-5` hands in each reason with its intent's statement in words, and
+/// names a plan with what it is for where a reason's working names no base.
+pub const DOCTRINE_VERSION: &str = "supply-5";
 
 /// The staff of stage 1: the doctrine for keeping a base supplied. A side
 /// with no intent in force and no commitment to free gets nothing from it.
@@ -55,11 +57,15 @@ pub struct SupplyStaff;
 
 impl Staff for SupplyStaff {
     fn decide(&self, view: SideView<'_>) -> StaffDecisions {
-        doctrine::decide(view)
+        let mut decisions = doctrine::decide(view);
+        reasons::state_intents(&view, &mut decisions);
+        decisions
     }
 
     fn propose(&self, view: SideView<'_>, intent: IntentId) -> Option<Proposal> {
-        proposal::propose(view, intent)
+        let mut proposal = proposal::propose(view, intent)?;
+        reasons::state_intents_of_proposal(&view, &mut proposal);
+        Some(proposal)
     }
 }
 

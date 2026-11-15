@@ -1755,13 +1755,15 @@ pub enum EventKind {
         plan: PlanId,
         number: u32,
     },
-    /// The reason for a staff decision: for the order it handed in, or, with
-    /// no order, for giving none (decision 0107). Cites the order and its
-    /// acceptance or refusal, if there is an order. Added at the end
-    /// (decision 0107).
+    /// The reason for a staff decision: for the order it handed in, for a
+    /// command it handed in (`command`, the command as handed in), or, with
+    /// neither, for giving no order (decision 0107). Cites the order and its
+    /// acceptance or refusal, if there is an order, or the command's
+    /// `CommandTaken` or `CommandRefused`. Added at the end (decision 0107).
     StaffReason {
         side: Side,
         order: Option<OrderId>,
+        command: Option<Box<CommandKind>>,
         reason: Box<Reason>,
     },
     /// A side's men, fighting men standing in a hex where it holds an
@@ -3825,16 +3827,22 @@ impl fmt::Display for EventKind {
             EventKind::StaffReason {
                 side,
                 order,
+                command,
                 reason,
-            } => match order {
-                Some(order) => write!(
-                    f,
-                    "{side:?} staff's reason for {}: {}",
-                    order.shown(),
-                    reason.worked
-                ),
-                None => write!(f, "{side:?} staff gave no order: {}", reason.worked),
-            },
+            } => {
+                match (order, command) {
+                    (Some(order), _) => write!(f, "{side:?} staff's reason for {}", order.shown())?,
+                    (None, Some(command)) => {
+                        write!(f, "{side:?} staff's reason for the command to {command}")?
+                    }
+                    (None, None) => write!(f, "{side:?} staff's reason for giving no order")?,
+                }
+                let serves = reason.serves.to_string();
+                if !serves.is_empty() {
+                    write!(f, " [serves {serves}]")?;
+                }
+                write!(f, ": {}", reason.worked)
+            }
             EventKind::HeldByOrder {
                 side,
                 target,

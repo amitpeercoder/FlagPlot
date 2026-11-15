@@ -295,6 +295,7 @@ fn reason(intent_n: u32, worked: &str) -> Reason {
             intent: Some(intent(intent_n)),
             plan: Some(plan(1)),
             amendment: None,
+            statement: String::new(),
         },
         evidence: vec![Evidence {
             what: "a stock".to_string(),
@@ -1507,6 +1508,7 @@ fn a_staffs_order_outside_its_forces_limit_is_refused_and_one_inside_accepted_ea
             side,
             order: reason_order,
             reason,
+            ..
         } = &next.kind
         else {
             panic!(
