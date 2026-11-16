@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 10
+      "const": 11
     },
     "kind": {
       "const": "command_state"
@@ -76,6 +76,7 @@
           "target",
           "hex",
           "distance",
+          "task_force",
           "floor_days",
           "interval_days",
           "interval",
@@ -110,7 +111,9 @@
               "raid",
               "deny",
               "strike_ships",
-              "search_waters"
+              "search_waters",
+              "stand_at",
+              "operate_carriers"
             ]
           },
           "base": {
@@ -122,7 +125,7 @@
                 "type": "null"
               }
             ],
-            "description": "The side's own base the intent names; null for neutralise and deny."
+            "description": "The side's own base the intent names; null for neutralise, deny, stand_at and operate_carriers."
           },
           "target": {
             "oneOf": [
@@ -147,7 +150,7 @@
                 "type": "null"
               }
             ],
-            "description": "The centre of the waters of a deny intent as [q, r] (decision 0123); null for the other kinds."
+            "description": "The centre of the waters of a deny intent as [q, r] (decision 0123), or the station of a stand_at or operate_carriers intent; null for the other kinds."
           },
           "distance": {
             "type": [
@@ -155,6 +158,13 @@
               "null"
             ],
             "description": "The distance in hexes of the waters of a deny intent (decision 0123); null for the other kinds."
+          },
+          "task_force": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The side's number of the task force a stand_at or operate_carriers intent names (decisions 0124 and 0125); null for the other kinds. hex is then its station."
           },
           "floor_days": {
             "type": [
@@ -229,7 +239,7 @@
           },
           "addressee": {
             "type": "string",
-            "description": "The level it is given to: \"the area\" or a base."
+            "description": "The level it is given to: \"the area\", a base, or a task force (decisions 0124 and 0125)."
           },
           "children": {
             "type": "array",

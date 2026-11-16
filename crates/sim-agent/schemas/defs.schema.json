@@ -379,6 +379,11 @@
           "type": "array",
           "items": { "$ref": "#/$defs/place" }
         },
+        "stand_at": {
+          "description": "Decision 0124: the waypoints of the force's route it is marked to stand at for the night that it has not passed, in hex order; never the last waypoint. Left out when none.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/place" }
+        },
         "halt": {
           "description": "Decision 0096: present while the force is halted at a marked waypoint (status halted). Left out otherwise.",
           "type": "object",
@@ -387,7 +392,7 @@
           "properties": {
             "place": { "$ref": "#/$defs/place" },
             "since": { "description": "The clock time it halted, such as D1 22:00.", "type": "string" },
-            "waits_for": { "description": "What it waits to do before it steams on: bombard (done in a night pulse), cargo, or both in that order.", "type": "array", "items": { "enum": ["bombard", "cargo"] } },
+            "waits_for": { "description": "What it waits to do before it steams on: bombard (done in a night pulse), cargo and night (it stands for the night, decision 0124), those that apply, in that order.", "type": "array", "items": { "enum": ["bombard", "cargo", "night"] } },
             "bombarded": { "description": "true once it has bombarded since it halted; left out until then.", "const": true }
           }
         },
@@ -781,7 +786,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 10
+          "const": 11
         },
         "kind": {
           "const": "not_known"

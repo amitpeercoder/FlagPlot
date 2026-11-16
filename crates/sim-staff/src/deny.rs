@@ -231,6 +231,12 @@ impl Day<'_, '_> {
                 let kind = IntentKind::SearchWaters { base };
                 self.form_or_stand(&end, &plan, kind, &search_text, in_scope, today);
             }
+            // The tasks of the forces its forces limit names (decisions
+            // 0124, 8, and 0125, 2): standing at the centre of the waters,
+            // and carriers.
+            if self.form_force_tasks(&end, &plan, hex, in_scope) {
+                served_any = true;
+            }
             if !served_any {
                 self.cannot_deny(
                     &end,

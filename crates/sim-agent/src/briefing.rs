@@ -3630,6 +3630,9 @@ impl Day {
                         if work.cargo {
                             reasons.push("cargo_work_done");
                         }
+                        if work.night {
+                            reasons.push("the_night_is_over");
+                        }
                         halts.steamed_on.push(SteamedOnLine {
                             task_force: ctx.force(*task_force),
                             place: ctx.place(*hex),

@@ -69,6 +69,10 @@ pub struct ForceLine {
     /// last waypoint, which needs no mark. Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub act_at: Vec<Place>,
+    /// The waypoints marked to stand at for the night (decision 0124, 1),
+    /// chosen as `act_at` is. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub stand_at: Vec<Place>,
     /// The force's halt, while it is halted at a marked waypoint (decision
     /// 0096, 3). Left out when it is not.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -542,6 +546,7 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         movement,
         propulsion_damaged,
         act_at: marks_ahead(ctx, force),
+        stand_at: stand_marks_ahead(ctx, force),
         halt: force.halt.map(|halt| HaltLine {
             place: ctx.place(force.position()),
             since: sim_core::time::ClockTime::from_elapsed(halt.at_hours).to_string(),
@@ -643,6 +648,18 @@ fn marks_ahead(ctx: &Ctx<'_>, force: &TaskForce) -> Vec<Place> {
     marks.into_iter().map(|hex| ctx.place(hex)).collect()
 }
 
+/// The distinct hexes of the route's waypoints still ahead that it is marked
+/// to stand at for the night, in hex order (decision 0124, 1), as
+/// [`marks_ahead`] has them.
+fn stand_marks_ahead(ctx: &Ctx<'_>, force: &TaskForce) -> Vec<Place> {
+    let route = &force.route;
+    let marks: std::collections::BTreeSet<Hex> = (route.next_index..route.waypoints.len())
+        .filter(|i| route.stand_marked(*i))
+        .map(|i| route.waypoints[i])
+        .collect();
+    marks.into_iter().map(|hex| ctx.place(hex)).collect()
+}
+
 /// The line of a force away at the yard (decision 0069): at its port, with
 /// its ships (which are off the map) counted, and nothing of fuel or
 /// movement to say.
@@ -669,6 +686,7 @@ fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         cargo_supply_t: None,
         cargo_fuel_t: None,
         act_at: Vec::new(),
+        stand_at: Vec::new(),
         halt: None,
         preparation: preparation_line(ctx, force),
         landing_at: force.landing_at.map(|hex| ctx.place(hex)),
@@ -1327,10 +1345,15 @@ pub(crate) fn land_unit_line(
     }
 }
 
-/// What a halt is for, in words: `bombard` and `cargo`, in that order.
+/// What a halt is for, in words: `bombard`, `cargo` and `night` (standing for
+/// the night, decision 0124), in that order.
 pub(crate) fn halt_work_words(work: sim_core::state::HaltWork) -> Vec<&'static str> {
-    [(work.bombard, "bombard"), (work.cargo, "cargo")]
-        .into_iter()
-        .filter_map(|(on, word)| on.then_some(word))
-        .collect()
+    [
+        (work.bombard, "bombard"),
+        (work.cargo, "cargo"),
+        (work.night, "night"),
+    ]
+    .into_iter()
+    .filter_map(|(on, word)| on.then_some(word))
+    .collect()
 }

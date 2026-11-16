@@ -2,7 +2,7 @@ Scenario 46: Two strike settings
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e4f4f34b0f69382a  24 events
+day   1  hash 6b36f53c05186989  24 events
 
 air_group:1 "Placeholder dive bombers 1" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
 air_group:2 "Placeholder dive bombers 2" (Allied) at base:1: 10 ready, mission NavalStrike, no arc

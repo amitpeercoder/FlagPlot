@@ -480,6 +480,10 @@ pub struct Route {
     /// waypoint at one of these hexes is marked. Each is one of the
     /// waypoints. Empty for a route with no mark.
     pub act_at: BTreeSet<Hex>,
+    /// The waypoints marked to stand at for the night (decision 0124, 1), by
+    /// hex, as `act_at` marks them. Each is one of the waypoints. Empty for
+    /// a route with no such mark. Added at the end.
+    pub stand_at: BTreeSet<Hex>,
 }
 
 impl Route {
@@ -492,20 +496,35 @@ impl Route {
                 .get(index)
                 .is_some_and(|hex| self.act_at.contains(hex))
     }
+
+    /// Whether the waypoint at `index` is marked to stand at for the night
+    /// (decision 0124, 1). The last waypoint never is.
+    pub fn stand_marked(&self, index: usize) -> bool {
+        index + 1 < self.waypoints.len()
+            && self
+                .waypoints
+                .get(index)
+                .is_some_and(|hex| self.stand_at.contains(hex))
+    }
 }
 
 /// What a halted force waits to do before it steams on (decision 0096, 2):
-/// a bombardment, cargo, or both.
+/// a bombardment, cargo, or both; or, at a waypoint marked to stand at, the
+/// night (decision 0124, 2).
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct HaltWork {
     pub bombard: bool,
     pub cargo: bool,
+    /// It stands for the night: reached in the night pulse at a waypoint
+    /// marked to stand at. Its work is done at the start of the morning
+    /// pulse's movement. Added at the end.
+    pub night: bool,
 }
 
 impl HaltWork {
-    /// Either kind of work.
+    /// Any kind of work.
     pub fn any(self) -> bool {
-        self.bombard || self.cargo
+        self.bombard || self.cargo || self.night
     }
 }
 

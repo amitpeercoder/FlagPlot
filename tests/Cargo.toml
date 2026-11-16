@@ -339,3 +339,11 @@ path = "scenario_49_a_strike_sized_to_its_target.rs"
 [[test]]
 name = "scenario_53_deny_an_area"
 path = "scenario_53_deny_an_area.rs"
+
+[[test]]
+name = "scenario_54_a_force_that_stands_by_night"
+path = "scenario_54_a_force_that_stands_by_night.rs"
+
+[[test]]
+name = "scenario_55_a_carrier_force_from_an_end"
+path = "scenario_55_a_carrier_force_from_an_end.rs"

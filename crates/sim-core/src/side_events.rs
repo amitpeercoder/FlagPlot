@@ -4033,6 +4033,7 @@ mod tests {
                     work: crate::state::HaltWork {
                         bombard: true,
                         cargo: false,
+                        night: false,
                     },
                     elapsed_hours: fx(10),
                 },
@@ -4046,6 +4047,7 @@ mod tests {
                     work: crate::state::HaltWork {
                         bombard: false,
                         cargo: true,
+                        night: false,
                     },
                     fired: false,
                 },

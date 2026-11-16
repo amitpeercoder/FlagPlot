@@ -192,8 +192,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 30 adds an air group's `strike_sizing` and `strike_sizing_order`
 /// after its `strike_share_order` (decision 0118), and the kinds deny an area
 /// (code 6, its hex and then its distance), strike ships (code 7, its base)
-/// and search waters (code 8, its base) (decision 0123).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v30";
+/// and search waters (code 8, its base) (decision 0123);
+/// version 31 adds a route's `stand_at` after its `act_at`, a halt's work
+/// `night` after its `cargo`, the addressee task force (code 4, its number),
+/// and the kinds stand at a hex (code 9) and operate a carrier force (code
+/// 10), each its force and then its hex (decisions 0124 and 0125).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v31";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -325,12 +329,15 @@ fn name_every_field(world: &World) {
             waypoints: _,
             next_index: _,
             act_at: _,
+            stand_at: _,
         } = route;
         if let Some(Halt {
-            work: HaltWork {
-                bombard: _,
-                cargo: _,
-            },
+            work:
+                HaltWork {
+                    bombard: _,
+                    cargo: _,
+                    night: _,
+                },
             at_hours: _,
             event: _,
             bombarded: _,
@@ -521,7 +528,10 @@ fn name_every_field(world: &World) {
                 Maker::Commander | Maker::Staff => {}
             }
             match addressee {
-                Addressee::Area | Addressee::Base(_) | Addressee::AirGroup(_) => {}
+                Addressee::Area
+                | Addressee::Base(_)
+                | Addressee::AirGroup(_)
+                | Addressee::TaskForce(_) => {}
             }
             name_limits(limits);
         }
@@ -673,7 +683,9 @@ fn name_intent_kind(kind: IntentKind) {
             distance: _,
         }
         | IntentKind::StrikeShips { base: _ }
-        | IntentKind::SearchWaters { base: _ } => {}
+        | IntentKind::SearchWaters { base: _ }
+        | IntentKind::StandAt { force: _, hex: _ }
+        | IntentKind::OperateCarriers { force: _, hex: _ } => {}
     }
 }
 
@@ -721,6 +733,12 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
             h.u32(distance);
         }
         IntentKind::StrikeShips { base } | IntentKind::SearchWaters { base } => h.u32(base.raw()),
+        // Decisions 0124 and 0125: the force, then the hex.
+        IntentKind::StandAt { force, hex } | IntentKind::OperateCarriers { force, hex } => {
+            h.u32(force.raw());
+            h.i32(hex.q);
+            h.i32(hex.r);
+        }
     }
 }
 
@@ -834,6 +852,7 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
             Addressee::Area => {}
             Addressee::Base(base) => h.u32(base.raw()),
             Addressee::AirGroup(group) => h.u32(group.raw()),
+            Addressee::TaskForce(force) => h.u32(force.raw()),
         }
         hash_limits(h, &intent.limits);
         h.u32(intent.set_day);
@@ -1042,6 +1061,12 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.i32(hex.q);
             h.i32(hex.r);
         }
+        // After the marks to act at (decision 0124).
+        h.count(task_force.route.stand_at.len());
+        for hex in &task_force.route.stand_at {
+            h.i32(hex.q);
+            h.i32(hex.r);
+        }
         h.i32(task_force.from_hex.q);
         h.i32(task_force.from_hex.r);
         match task_force.toward_hex {
@@ -1111,6 +1136,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.u8(1);
                 h.u8(u8::from(halt.work.bombard));
                 h.u8(u8::from(halt.work.cargo));
+                // After the cargo work (decision 0124).
+                h.u8(u8::from(halt.work.night));
                 h.i64(halt.at_hours.raw());
                 h.u32(halt.event.raw());
                 h.optional_u32(halt.bombarded.map(|id| id.raw()));

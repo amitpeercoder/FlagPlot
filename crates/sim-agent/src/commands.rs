@@ -13,7 +13,7 @@
 //! | `kind` | other keys |
 //! | --- | --- |
 //! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise`, `raid`, `deny`, `strike_ships` or `search_waters`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise` and `deny`), `target` (`neutralise` and `raid`), `hex` as `[q, r]` and `distance` in whole hexes (`deny`: the waters within `distance` of `hex`), and for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set) |
-//! | `form_intent` | `parent`, `intent_kind` (`cover`, `raid`, `deny`, `strike_ships` or `search_waters`), `base` (not for a neutralise or a deny), `target` (for a raid), `hex` and `distance` (for a deny): the staff's, a sub-intent under `parent` |
+//! | `form_intent` | `parent`, `intent_kind` (`cover`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at` or `operate_carriers`), `base` (not for a neutralise, a deny or a task of a task force), `target` (for a raid), `hex` and `distance` (for a deny), `task_force` and `hex` (for `stand_at` and `operate_carriers`): the staff's, a sub-intent under `parent` |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve` or `risk`) and its keys, below |
 //! | `set_leave` | `leave` (`prepare` or `launch`), `given` |
@@ -460,6 +460,11 @@ fn intent_kind_to_json(body: &mut Value, kind: IntentKind) {
             body["intent_kind"] = json!(kind.name());
             body["base"] = json!(base.raw());
         }
+        IntentKind::StandAt { force, hex } | IntentKind::OperateCarriers { force, hex } => {
+            body["intent_kind"] = json!(kind.name());
+            body["task_force"] = json!(force.raw());
+            body["hex"] = json!([hex.q, hex.r]);
+        }
     }
 }
 
@@ -503,8 +508,16 @@ fn intent_kind_from_json(value: &Value) -> Result<IntentKind, String> {
             }),
             "strike_ships" => Ok(IntentKind::StrikeShips { base: base()? }),
             "search_waters" => Ok(IntentKind::SearchWaters { base: base()? }),
+            "stand_at" => Ok(IntentKind::StandAt {
+                force: TaskForceId::new(small(value, "task_force")?),
+                hex: hex_pair(value, "hex")?,
+            }),
+            "operate_carriers" => Ok(IntentKind::OperateCarriers {
+                force: TaskForceId::new(small(value, "task_force")?),
+                hex: hex_pair(value, "hex")?,
+            }),
             other => Err(format!(
-                "unknown intent kind \"{other}\" (keep_supplied, cover, hold, neutralise, raid, deny, strike_ships or search_waters)"
+                "unknown intent kind \"{other}\" (keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at or operate_carriers)"
             )),
         },
     }
@@ -540,6 +553,11 @@ pub fn command_to_json(command: &CommandKind) -> Value {
             if let Some((hex, distance)) = kind.waters() {
                 body["hex"] = json!([hex.q, hex.r]);
                 body["distance"] = json!(distance);
+            }
+            // The tasks of a task force (decisions 0124 and 0125).
+            if let (Some(force), Some(hex)) = (kind.force(), kind.station()) {
+                body["task_force"] = json!(force.raw());
+                body["hex"] = json!([hex.q, hex.r]);
             }
             body
         }
@@ -753,6 +771,7 @@ pub(crate) fn reason_to_json(reason: &Reason) -> Value {
                 Addressee::Area => json!("area"),
                 Addressee::Base(base) => json!({ "base": base.raw() }),
                 Addressee::AirGroup(group) => json!({ "air_group": group.raw() }),
+                Addressee::TaskForce(force) => json!({ "task_force": force.raw() }),
             },
         );
     }
@@ -816,17 +835,22 @@ fn reason_from_json(value: &Value) -> Result<Reason, String> {
                 Some(other) => match (
                     other.get("base").and_then(Value::as_u64),
                     other.get("air_group").and_then(Value::as_u64),
+                    other.get("task_force").and_then(Value::as_u64),
                 ) {
-                    (Some(raw), None) => Some(Addressee::Base(BaseId::new(
+                    (Some(raw), None, None) => Some(Addressee::Base(BaseId::new(
                         u32::try_from(raw).map_err(|_| "level base is too large".to_string())?,
                     ))),
-                    (None, Some(raw)) => Some(Addressee::AirGroup(AirGroupId::new(
+                    (None, Some(raw), None) => Some(Addressee::AirGroup(AirGroupId::new(
                         u32::try_from(raw)
                             .map_err(|_| "level air group is too large".to_string())?,
                     ))),
+                    (None, None, Some(raw)) => Some(Addressee::TaskForce(TaskForceId::new(
+                        u32::try_from(raw)
+                            .map_err(|_| "level task force is too large".to_string())?,
+                    ))),
                     _ => {
                         return Err(format!(
-                            "\"level\" is {other}, not \"area\", {{\"base\": n}} or {{\"air_group\": n}}"
+                            "\"level\" is {other}, not \"area\", {{\"base\": n}}, {{\"air_group\": n}} or {{\"task_force\": n}}"
                         ))
                     }
                 },

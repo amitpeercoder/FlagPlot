@@ -126,8 +126,8 @@ fn is_about(question: &Question, unit: &Unit) -> bool {
         },
         (Question::Movement(q), Unit::Force(id)) => match q {
             MovementQuestion::Reroute { force, .. }
-            | MovementQuestion::Halt { force }
-            | MovementQuestion::SteamOn { force } => force == id,
+            | MovementQuestion::Halt { force, .. }
+            | MovementQuestion::SteamOn { force, .. } => force == id,
         },
         (Question::Ground(q), Unit::Land(id)) => match q {
             GroundQuestion::BackToDefend { unit, .. }
@@ -445,11 +445,13 @@ impl Writer<'_, '_> {
                     },
                 )
             }
-            (MovementQuestion::Halt { .. }, MovementAnswer::Halt(index)) => {
+            (MovementQuestion::Halt { pulse, .. }, MovementAnswer::Halt(index)) => {
+                asked.insert("pulse".into(), json!(pulse.name()));
                 // The index is the waypoint's place in the route, from 0.
                 ("halt", json!({"halts_at_waypoint": index}))
             }
-            (MovementQuestion::SteamOn { .. }, MovementAnswer::SteamOn(on)) => {
+            (MovementQuestion::SteamOn { pulse, .. }, MovementAnswer::SteamOn(on)) => {
+                asked.insert("pulse".into(), json!(pulse.name()));
                 ("steam_on", json!({"steams_on": on}))
             }
             _ => unreachable!("the view answers a question with an answer of its own kind"),

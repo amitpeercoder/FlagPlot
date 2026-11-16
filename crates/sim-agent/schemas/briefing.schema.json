@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 10 },
+    "version": { "const": 11 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -918,7 +918,7 @@
               "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
               "place": { "$ref": "defs.schema.json#/$defs/place" },
               "at": { "description": "The clock time it halted, such as D1 22:00.", "type": "string" },
-              "waits_for": { "description": "The reason it halted: bombard, cargo or both, in that order.", "type": "array", "items": { "enum": ["bombard", "cargo"] } },
+              "waits_for": { "description": "The reason it halted: bombard, cargo and night (it stood for the night, decision 0124), those that apply, in that order.", "type": "array", "items": { "enum": ["bombard", "cargo", "night"] } },
               "event": { "type": "integer" }
             }
           }
@@ -933,8 +933,8 @@
             "properties": {
               "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
               "place": { "$ref": "defs.schema.json#/$defs/place" },
-              "waited_for": { "type": "array", "items": { "enum": ["bombard", "cargo"] } },
-              "reasons": { "description": "Why it went: bombarded, cannot_bombard_any_longer (no ship could fire any longer) and cargo_work_done, those that apply.", "type": "array", "items": { "enum": ["bombarded", "cannot_bombard_any_longer", "cargo_work_done"] } },
+              "waited_for": { "type": "array", "items": { "enum": ["bombard", "cargo", "night"] } },
+              "reasons": { "description": "Why it went: bombarded, cannot_bombard_any_longer (no ship could fire any longer), cargo_work_done and the_night_is_over (a stand for the night, decision 0124), those that apply.", "type": "array", "items": { "enum": ["bombarded", "cannot_bombard_any_longer", "cargo_work_done", "the_night_is_over"] } },
               "event": { "type": "integer" }
             }
           }

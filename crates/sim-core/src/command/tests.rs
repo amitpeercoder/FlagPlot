@@ -2722,6 +2722,7 @@ fn a_forming_order_naming_a_pool_ship_holds_that_ship_and_a_rejected_override_ho
             order: TaskForceOrder::SetRoute {
                 waypoints: vec![HOME],
                 act_at: BTreeSet::new(),
+                stand_at: BTreeSet::new(),
             },
         })],
     );

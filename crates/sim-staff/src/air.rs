@@ -71,7 +71,7 @@ fn level_of(risk: Risk) -> Fixed {
 
 /// The share of its aircraft a fighter group keeps over the base, by risk
 /// level (item 5).
-fn base_share_of(risk: Risk) -> Fixed {
+pub(crate) fn base_share_of(risk: Risk) -> Fixed {
     match risk {
         Risk::Preserve => Fixed::from_ratio(3, 4),
         Risk::Balanced => Fixed::from_ratio(1, 2),
@@ -80,12 +80,12 @@ fn base_share_of(risk: Risk) -> Fixed {
 }
 
 /// The raise of the share after a raid (item 6).
-fn raise() -> Fixed {
+pub(crate) fn raise() -> Fixed {
     Fixed::from_ratio(1, 4)
 }
 
 /// The days before today on which a raid raises the share (item 6).
-const RAID_DAYS: u32 = 3;
+pub(crate) const RAID_DAYS: u32 = 3;
 
 // ---------------------------------------------------------------------------
 // The search arc (item 9).
@@ -160,7 +160,7 @@ pub(crate) fn arc_words(arc: &Arc) -> String {
 }
 
 /// The arc and how it was found, in words.
-fn arc_working(arc: &Arc, threats: &[Threat]) -> String {
+pub(crate) fn arc_working(arc: &Arc, threats: &[Threat]) -> String {
     if threats.is_empty() {
         return "no enemy base on the map and no contact: the arc is the whole circle".to_string();
     }
@@ -189,9 +189,9 @@ fn arc_working(arc: &Arc, threats: &[Threat]) -> String {
 /// One threat the arc points at: the hex of an enemy base on the side's map
 /// or of a contact it holds.
 #[derive(Clone, Debug)]
-struct Threat {
-    hex: Hex,
-    words: String,
+pub(crate) struct Threat {
+    pub(crate) hex: Hex,
+    pub(crate) words: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -336,7 +336,9 @@ pub(crate) struct Day<'v, 'a> {
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
-/// strike ships and search waters.
+/// strike ships and search waters, and the tasks of a task force, standing
+/// at a hex by night and operating a carrier force (decisions 0124 and 0125),
+/// which run in the same morning.
 pub(crate) fn is_air(kind: IntentKind) -> bool {
     matches!(
         kind,
@@ -347,6 +349,8 @@ pub(crate) fn is_air(kind: IntentKind) -> bool {
             | IntentKind::Deny { .. }
             | IntentKind::StrikeShips { .. }
             | IntentKind::SearchWaters { .. }
+            | IntentKind::StandAt { .. }
+            | IntentKind::OperateCarriers { .. }
     )
 }
 
@@ -455,6 +459,8 @@ impl<'v, 'a> Day<'v, 'a> {
         day.raids();
         day.strikes();
         day.searches();
+        day.stands();
+        day.carrier_forces();
         Some(day)
     }
 
@@ -715,6 +721,11 @@ impl<'v, 'a> Day<'v, 'a> {
             let Some(base) = hold.kind.own_base() else {
                 continue;
             };
+            // The tasks of the forces its forces limit names (decisions
+            // 0124, 8, and 0125, 2): cover from the sea, and carriers.
+            if let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) {
+                self.form_force_tasks(&hold, &plan, hex, in_scope);
+            }
             let base_text = base_words(self.view, base);
             // (a) A cover intent for the base stands, whoever made it.
             let standing = self
@@ -827,7 +838,7 @@ impl<'v, 'a> Day<'v, 'a> {
         }
     }
 
-    fn threats(&self) -> Vec<Threat> {
+    pub(crate) fn threats(&self) -> Vec<Threat> {
         let mut found: Vec<Threat> = self
             .view
             .enemy_bases()

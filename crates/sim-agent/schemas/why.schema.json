@@ -36,7 +36,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 10
+          "const": 11
         },
         "kind": {
           "const": "why"
@@ -188,7 +188,7 @@
             "string",
             "null"
           ],
-          "description": "The level that decided (decision 0120, 2): \"the area\", or the base in words (\"base:1\"); null where the reason has none. It is also in serves as \"decided at the level of ...\"."
+          "description": "The level that decided (decision 0120, 2): \"the area\", or the base, air group or task force in words (\"base:1\", \"task_force:2\"); null where the reason has none. It is also in serves as \"decided at the level of ...\"."
         },
         "chain": {
           "type": "array",

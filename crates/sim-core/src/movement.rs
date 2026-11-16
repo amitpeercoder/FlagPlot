@@ -598,15 +598,21 @@ impl World {
             pulse,
             hours_used,
         )?;
-        mover.halt_at = self.halt_index(task_force);
+        mover.halt_at = self.halt_index(task_force, pulse);
         Some(mover)
     }
 
-    /// What `task_force` would do in `hex` if it halted there (decision 0096,
-    /// 2): bombard, work cargo, both or neither ([`halt_work`]).
-    pub(crate) fn halt_work(&self, task_force: &TaskForce, hex: Hex) -> HaltWork {
+    /// What `task_force` would do at the waypoint of its route at `index` if
+    /// it halted there in `pulse` (decisions 0096, 2, and 0124, 2):
+    /// [`waypoint_work`].
+    pub(crate) fn waypoint_work(
+        &self,
+        task_force: &TaskForce,
+        index: usize,
+        pulse: Pulse,
+    ) -> HaltWork {
         let ground = self.halt_ground();
-        halt_work(&ground, task_force, hex, &|at| {
+        waypoint_work(&ground, task_force, index, pulse, &|at| {
             self.enemy_base_on_map(task_force.side, at)
         })
     }
@@ -634,17 +640,21 @@ impl World {
         }
     }
 
-    /// The first waypoint from the force's next one on that is marked to act
-    /// at and where it has work, if any (decision 0096, 1 and 2). The last
-    /// waypoint is never marked. The choice is traced (decision 0100).
-    fn halt_index(&self, task_force: &TaskForce) -> Option<usize> {
+    /// The first waypoint from the force's next one on that is marked and
+    /// where it has work in `pulse`, if any (decisions 0096, 1 and 2, and
+    /// 0124, 2). The last waypoint is never marked. The choice is traced
+    /// (decision 0100).
+    fn halt_index(&self, task_force: &TaskForce, pulse: Pulse) -> Option<usize> {
         let ground = self.halt_ground();
         let side = task_force.side;
-        let answer = halt_index(&ground, task_force, &|at| self.enemy_base_on_map(side, at));
+        let answer = halt_index(&ground, task_force, pulse, &|at| {
+            self.enemy_base_on_map(side, at)
+        });
         self.trace_choice(side, || {
             (
                 Question::Movement(MovementQuestion::Halt {
                     force: task_force.id,
+                    pulse,
                 }),
                 Answer::Movement(MovementAnswer::Halt(answer)),
             )
@@ -674,10 +684,12 @@ impl World {
             let hex = force.from_hex;
             let side = force.side;
             let ground = self.halt_ground();
-            let steams_on = steam_on(&ground, force, &|at| self.enemy_base_on_map(side, at));
+            let steams_on = steam_on(&ground, force, pulse, &|at| {
+                self.enemy_base_on_map(side, at)
+            });
             self.trace_choice(side, || {
                 (
-                    Question::Movement(MovementQuestion::SteamOn { force: id }),
+                    Question::Movement(MovementQuestion::SteamOn { force: id, pulse }),
                     Answer::Movement(MovementAnswer::SteamOn(steams_on)),
                 )
             });
@@ -719,8 +731,9 @@ impl World {
         let mover = step.movers.get_mut(&id).expect("the mover exists");
         mover.halt_recorded = true;
         let hex = mover.from_hex;
+        let index = mover.halt_at.unwrap_or(mover.next_index);
         let elapsed_hours = pulse_start(step.day, step.pulse) + mover.hours_done;
-        let work = self.halt_work(&self.truth.task_forces[&id], hex);
+        let work = self.waypoint_work(&self.truth.task_forces[&id], index, step.pulse);
         let event = self.events.record(
             step.day,
             Some(step.pulse),
@@ -1266,6 +1279,30 @@ pub(crate) fn forecast_passage(
     speed: Option<SpeedSetting>,
     first_day: u32,
 ) -> PassageForecast {
+    forecast_route(
+        map,
+        ref_data,
+        task_force,
+        ships,
+        &[destination],
+        speed,
+        first_day,
+    )
+}
+
+/// As [`forecast_passage`], for a route through `waypoints` in turn with no
+/// mark (decision 0124, 11: the staff's measure of a sortie out and home):
+/// the force steams on past each waypoint but the last, and the forecast
+/// ends at the last. Refused as an order with no waypoint would be.
+pub(crate) fn forecast_route(
+    map: &Map,
+    ref_data: &RefData,
+    task_force: &TaskForce,
+    ships: &BTreeMap<ShipId, Ship>,
+    waypoints: &[Hex],
+    speed: Option<SpeedSetting>,
+    first_day: u32,
+) -> PassageForecast {
     let fuel_at_start: Vec<(ShipId, Fixed)> = task_force
         .ships
         .iter()
@@ -1297,7 +1334,6 @@ pub(crate) fn forecast_passage(
     };
 
     // Intake, as `validate_order` and `apply_order` make it.
-    let waypoints = [destination];
     let refusal = if task_force
         .yard_trip
         .is_some_and(|trip| trip.return_day > first_day)
@@ -1311,7 +1347,7 @@ pub(crate) fn forecast_passage(
     } else if task_force.status == TaskForceStatus::OutOfFuel {
         Some(RejectReason::OutOfFuel)
     } else {
-        task_force.check_route(map, &waypoints).err()
+        task_force.check_route(map, waypoints).err()
     };
     if refusal.is_some() {
         result.refusal = refusal;
@@ -1319,7 +1355,7 @@ pub(crate) fn forecast_passage(
     }
     let mut force = task_force.clone();
     let (turns_back, starts_at) = force
-        .reroute_centre(map, Some(destination))
+        .reroute_centre(map, waypoints.first().copied())
         .expect("the route was checked: the first waypoint is reachable");
     if turns_back {
         force.turn_back();
@@ -1330,6 +1366,7 @@ pub(crate) fn forecast_passage(
         waypoints: waypoints.to_vec(),
         next_index: 0,
         act_at: std::collections::BTreeSet::new(),
+        stand_at: std::collections::BTreeSet::new(),
     };
     force.status = TaskForceStatus::Underway;
     force.halt = None;
@@ -1457,31 +1494,62 @@ pub(crate) fn halt_work(
     HaltWork {
         bombard: has_bombardment_work(ground, task_force, hex, enemy_base_at),
         cargo: ground.has_cargo_work(task_force, hex),
+        night: false,
     }
 }
 
-/// The first waypoint from the force's next one on that is marked to act at
-/// and where it has work, if any (decision 0096, 1 and 2): the index of that
-/// waypoint in the route. The last waypoint is never marked. It is where the
-/// force halts. Draws nothing.
+/// What `task_force` would do at the waypoint of its route at `index` if it
+/// halted there in `pulse`: at a waypoint marked to act at, what
+/// [`halt_work`] gives (decision 0096, 2); at one marked to stand at, the
+/// night, when `pulse` is the night pulse (decision 0124, 2). Nothing at a
+/// waypoint with no mark, or the last.
+pub(crate) fn waypoint_work(
+    ground: &HaltGround,
+    task_force: &TaskForce,
+    index: usize,
+    pulse: Pulse,
+    enemy_base_at: &dyn Fn(Hex) -> Option<BaseId>,
+) -> HaltWork {
+    let route = &task_force.route;
+    let Some(hex) = route.waypoints.get(index).copied() else {
+        return HaltWork::default();
+    };
+    let mut work = if route.marked(index) {
+        halt_work(ground, task_force, hex, enemy_base_at)
+    } else {
+        HaltWork::default()
+    };
+    work.night = route.stand_marked(index) && pulse == Pulse::Night;
+    work
+}
+
+/// The first waypoint from the force's next one on that is marked, to act at
+/// or to stand at, and where it has work in `pulse`, if any (decisions 0096,
+/// 1 and 2, and 0124, 1 and 2): the index of that waypoint in the route. The
+/// last waypoint is never marked. It is where the force halts. A route with
+/// no mark to stand at gives what it gave before in every pulse. Draws
+/// nothing.
 pub(crate) fn halt_index(
     ground: &HaltGround,
     task_force: &TaskForce,
+    pulse: Pulse,
     enemy_base_at: &dyn Fn(Hex) -> Option<BaseId>,
 ) -> Option<usize> {
     let route = &task_force.route;
     (route.next_index..route.waypoints.len())
-        .filter(|index| route.marked(*index))
-        .find(|index| halt_work(ground, task_force, route.waypoints[*index], enemy_base_at).any())
+        .filter(|index| route.marked(*index) || route.stand_marked(*index))
+        .find(|index| waypoint_work(ground, task_force, *index, pulse, enemy_base_at).any())
 }
 
-/// Whether a halted force steams on (decision 0096, 4): for a bombardment, it
-/// has bombarded since it halted or can bombard there no longer; for cargo,
-/// it has none left to work there. The force must be halted: for one that is
-/// not, this is `false`.
+/// Whether a halted force steams on at the start of `pulse`'s movement
+/// (decision 0096, 4, and 0124, 3): for a bombardment, it has bombarded since
+/// it halted or can bombard there no longer; for cargo, it has none left to
+/// work there; for the night, `pulse` is a daylight pulse. The force must be
+/// halted: for one that is not, this is `false`.
 pub(crate) fn steam_on(
     ground: &HaltGround,
     force: &TaskForce,
+    pulse: Pulse,
     enemy_base_at: &dyn Fn(Hex) -> Option<BaseId>,
 ) -> bool {
     let Some(halt) = force.halt else {
@@ -1492,7 +1560,8 @@ pub(crate) fn steam_on(
         || halt.bombarded.is_some()
         || !has_bombardment_work(ground, force, hex, enemy_base_at);
     let cargo_done = !halt.work.cargo || !ground.has_cargo_work(force, hex);
-    bombard_done && cargo_done
+    let night_done = !halt.work.night || pulse != Pulse::Night;
+    bombard_done && cargo_done && night_done
 }
 
 /// Halts at marked waypoints and steaming on (decision 0096).
@@ -1627,6 +1696,7 @@ mod tests {
                     waypoints: spec.route.clone(),
                     next_index: 0,
                     act_at: std::collections::BTreeSet::new(),
+                    stand_at: std::collections::BTreeSet::new(),
                 };
                 force.status = TaskForceStatus::Underway;
             }

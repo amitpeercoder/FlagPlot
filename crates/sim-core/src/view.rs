@@ -749,6 +749,37 @@ impl<'a> SideView<'a> {
         ))
     }
 
+    /// As [`SideView::forecast_passage`], for a route through `waypoints` in
+    /// turn with no mark (decision 0124, 11): what the movement rules would
+    /// do with the force given that route now, steaming on past each
+    /// waypoint but the last. `None` if `task_force` is not one of the side's
+    /// own.
+    pub fn forecast_route(
+        &self,
+        task_force: TaskForceId,
+        waypoints: &[Hex],
+        speed: Option<SpeedSetting>,
+    ) -> Option<PassageForecast> {
+        let force = self.truth.task_forces.get(&task_force)?;
+        if force.side != self.side {
+            return None;
+        }
+        let ships: BTreeMap<ShipId, Ship> = force
+            .ships
+            .iter()
+            .filter_map(|id| self.truth.ships.get(id).map(|ship| (*id, ship.clone())))
+            .collect();
+        Some(movement::forecast_route(
+            self.map,
+            self.ref_data,
+            force,
+            &ships,
+            waypoints,
+            speed,
+            self.truth.day + 1,
+        ))
+    }
+
     /// What a yard order given to one of the side's own task forces now would
     /// do (decision 0069): the port, the passage, each ship's days of repair
     /// and the days away, worked by the function the order itself uses.

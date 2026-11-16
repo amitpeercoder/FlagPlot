@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 10
+      "const": 11
     },
     "kind": {
       "const": "propose"
@@ -228,7 +228,9 @@
                 "raid",
                 "deny",
                 "strike_ships",
-                "search_waters"
+                "search_waters",
+                "stand_at",
+                "operate_carriers"
               ]
             },
             "sub_intents": {
@@ -246,6 +248,7 @@
                   "target",
                   "hex",
                   "distance",
+                  "task_force",
                   "floor_days",
                   "interval_days"
                 ],
@@ -274,7 +277,9 @@
                       "raid",
                       "deny",
                       "strike_ships",
-                      "search_waters"
+                      "search_waters",
+                      "stand_at",
+                      "operate_carriers"
                     ]
                   },
                   "base": {
@@ -317,6 +322,13 @@
                       "null"
                     ],
                     "description": "The distance in hexes of the waters of a deny intent (decision 0123); null for the other kinds."
+                  },
+                  "task_force": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "description": "The side's number of the task force a stand_at or operate_carriers intent names (decisions 0124 and 0125); null for the other kinds."
                   },
                   "floor_days": {
                     "type": "null"

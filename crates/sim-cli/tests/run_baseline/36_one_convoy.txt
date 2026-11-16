@@ -2,24 +2,24 @@ Placeholder scenario 36: One convoy
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 6923801c56334c23  28 events
-day   2  hash eed3d9bef0a5aa11  17 events
-day   3  hash 0c05ddd3a846ee1d  12 events
-day   4  hash a5cd954449561e1b  11 events
-day   5  hash b0460a9e3ab524bf  5 events
-day   6  hash 873403f7bfd9646d  5 events
-day   7  hash 6659eac1921c25f5  5 events
-day   8  hash a7be2c0e4cd052d4  5 events
-day   9  hash bbee0edf699b7f0c  5 events
-day  10  hash 336381a629dbfb3b  5 events
-day  11  hash a371a727f5aca2b6  5 events
-day  12  hash 4c7465c4fb95a1ab  5 events
-day  13  hash 457d297ea2a727fd  5 events
-day  14  hash bb4356c7f1b1f95a  5 events
-day  15  hash b6040a36cf7f06a4  5 events
-day  16  hash f839f1d82a0bfd28  12 events
-day  17  hash 87b03c1540f7148a  16 events
-day  18  hash 9d751d77be907a81  12 events
+day   1  hash 7e9128b0cea67242  28 events
+day   2  hash e8c05ef250e6093e  17 events
+day   3  hash 3c38a3f593a917b8  12 events
+day   4  hash df1149406e5f943e  11 events
+day   5  hash 134d9cad30ff7f0e  5 events
+day   6  hash 457a1087b812c44c  5 events
+day   7  hash 9db949dfa50a67a4  5 events
+day   8  hash 14a3d53bc817c47d  5 events
+day   9  hash eec92f0132c3ce91  5 events
+day  10  hash 30b727b129b597d6  5 events
+day  11  hash 459f1643c92db423  5 events
+day  12  hash 8c2845a16d4daefe  5 events
+day  13  hash d83f12ec90b0d404  5 events
+day  14  hash 2f7529adec4fb867  5 events
+day  15  hash ce7333946f77f835  5 events
+day  16  hash 6816199600eabf6d  12 events
+day  17  hash c9471b89a909a9a9  16 events
+day  18  hash 1874c65e1effc0e8  12 events
 
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Underway at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Placeholder cargo ship 1": afloat in task_force:1000001; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
