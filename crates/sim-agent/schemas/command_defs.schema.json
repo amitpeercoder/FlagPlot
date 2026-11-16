@@ -459,6 +459,8 @@
                 "floor_days",
                 "interval_days",
                 "target",
+                "hex",
+                "distance",
                 "limits"
               ],
               "additionalProperties": false,
@@ -475,7 +477,7 @@
                       "type": "null"
                     }
                   ],
-                  "description": "The side's own base the intent names; null for neutralise."
+                  "description": "The side's own base the intent names; null for neutralise and deny."
                 },
                 "target": {
                   "oneOf": [
@@ -487,6 +489,27 @@
                     }
                   ],
                   "description": "The enemy base a neutralise or a raid is aimed at (decision 0120); null for the other kinds."
+                },
+                "hex": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The centre of the waters of a deny intent as [q, r] (decision 0123); null for the other kinds."
+                },
+                "distance": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "The distance in hexes of the waters of a deny intent (decision 0123); null for the other kinds."
                 },
                 "floor_days": {
                   "type": [
@@ -509,7 +532,10 @@
                     "cover",
                     "hold",
                     "neutralise",
-                    "raid"
+                    "raid",
+                    "deny",
+                    "strike_ships",
+                    "search_waters"
                   ]
                 }
               }
@@ -1169,6 +1195,43 @@
           "type": "integer"
         },
         "raids_on_own_bases": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "deny_measure": {
+      "type": "object",
+      "description": "The measure of a deny intent (decision 0123, 4): the days it has been in force, the distinct contacts the side held in the waters at the end of a day in them, the strikes launched in them from the bases given the task of striking ships under it, the ships sunk and the hits the side's people claim from the air in the waters (claims, never below the truth and never corrected), and the days of them that ended with no contact held in the waters, with its words.",
+      "required": [
+        "days_in_force",
+        "contacts_held",
+        "strikes_launched",
+        "claimed_sunk",
+        "claimed_hits",
+        "days_met",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "days_in_force": {
+          "type": "integer"
+        },
+        "contacts_held": {
+          "type": "integer"
+        },
+        "strikes_launched": {
+          "type": "integer"
+        },
+        "claimed_sunk": {
+          "type": "integer"
+        },
+        "claimed_hits": {
+          "type": "integer"
+        },
+        "days_met": {
           "type": "integer"
         },
         "text": {

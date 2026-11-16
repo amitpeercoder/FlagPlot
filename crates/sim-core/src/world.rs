@@ -115,10 +115,12 @@ impl Default for MadeIds {
 /// pulse at the port's fuelling rate, in the cargo rule's queue, which changes
 /// every live scenario with a force in port) and 12 from decision 0114 (two
 /// standing orders of a strike group: a game saved under the old rules could
-/// not hold them). A pull request raises it by one
+/// not hold them) and 13 from decision 0118 (a strike sized to its target:
+/// an order a game saved under the old rules could not hold, and the live
+/// figures' table of aircraft for each ship). A pull request raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 12;
+pub const RULES_VERSION: u32 = 13;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

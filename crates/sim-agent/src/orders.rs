@@ -169,6 +169,9 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
             AirGroupOrder::SetStrikeHeldShare { share } => {
                 json!({ "kind": "set_strike_held_share", "share": fixed_text(*share) })
             }
+            AirGroupOrder::SetStrikeSizing { on } => {
+                json!({ "kind": "set_strike_sizing", "on": on })
+            }
             AirGroupOrder::Rebase { base } => json!({
                 "kind": "rebase",
                 "base": base.raw(),
@@ -593,6 +596,12 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                 },
                 "set_strike_held_share" => AirGroupOrder::SetStrikeHeldShare {
                     share: fixed(value, "share")?,
+                },
+                "set_strike_sizing" => AirGroupOrder::SetStrikeSizing {
+                    on: value
+                        .get("on")
+                        .and_then(Value::as_bool)
+                        .ok_or_else(|| "\"on\" is missing or not true or false".to_string())?,
                 },
                 "rebase" => AirGroupOrder::Rebase {
                     base: BaseId::new(small(value, "base")?),

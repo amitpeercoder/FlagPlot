@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 9
+      "const": 10
     },
     "kind": {
       "const": "propose"
@@ -225,7 +225,10 @@
                 "cover",
                 "hold",
                 "neutralise",
-                "raid"
+                "raid",
+                "deny",
+                "strike_ships",
+                "search_waters"
               ]
             },
             "sub_intents": {
@@ -241,6 +244,8 @@
                   "kind",
                   "base",
                   "target",
+                  "hex",
+                  "distance",
                   "floor_days",
                   "interval_days"
                 ],
@@ -266,7 +271,10 @@
                       "cover",
                       "hold",
                       "neutralise",
-                      "raid"
+                      "raid",
+                      "deny",
+                      "strike_ships",
+                      "search_waters"
                     ]
                   },
                   "base": {
@@ -288,6 +296,27 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "hex": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The centre of the waters of a deny intent as [q, r] (decision 0123); null for the other kinds."
+                  },
+                  "distance": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "description": "The distance in hexes of the waters of a deny intent (decision 0123); null for the other kinds."
                   },
                   "floor_days": {
                     "type": "null"

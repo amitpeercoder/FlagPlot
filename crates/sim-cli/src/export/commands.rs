@@ -27,7 +27,9 @@ use super::num::Num;
 /// interval_days }`, the interval left out where the commander has not set it;
 /// or `{ "kind": "cover" | "hold", base }`, with no days; or
 /// `{ "kind": "neutralise", target }` (no `base`), or
-/// `{ "kind": "raid", base, target }` (decision 0120).
+/// `{ "kind": "raid", base, target }` (decision 0120); or `{ "kind": "deny",
+/// hex, distance }` (no `base`), or `{ "kind": "strike_ships" |
+/// "search_waters", base }` (decision 0123).
 #[derive(Serialize)]
 struct IntentKindOut {
     kind: &'static str,
@@ -35,6 +37,12 @@ struct IntentKindOut {
     base: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     target: Option<u32>,
+    /// The centre of the waters of a deny intent, `[q, r]`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hex: Option<[i32; 2]>,
+    /// The distance in hexes of the waters of a deny intent.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    distance: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     floor_days: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -51,13 +59,20 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             kind: "keep_supplied",
             base: Some(base.raw()),
             target: None,
+            hex: None,
+            distance: None,
             floor_days: Some(*floor_days),
             interval_days: *interval_days,
         },
-        IntentKind::Cover { base } | IntentKind::Hold { base } => IntentKindOut {
+        IntentKind::Cover { base }
+        | IntentKind::Hold { base }
+        | IntentKind::StrikeShips { base }
+        | IntentKind::SearchWaters { base } => IntentKindOut {
             kind: kind.name(),
             base: Some(base.raw()),
             target: None,
+            hex: None,
+            distance: None,
             floor_days: None,
             interval_days: None,
         },
@@ -65,6 +80,17 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             kind: kind.name(),
             base: kind.own_base().map(|base| base.raw()),
             target: Some(target.raw()),
+            hex: None,
+            distance: None,
+            floor_days: None,
+            interval_days: None,
+        },
+        IntentKind::Deny { hex, distance } => IntentKindOut {
+            kind: "deny",
+            base: None,
+            target: None,
+            hex: Some([hex.q, hex.r]),
+            distance: Some(*distance),
             floor_days: None,
             interval_days: None,
         },

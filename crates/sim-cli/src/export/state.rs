@@ -293,6 +293,10 @@ pub struct AirGroupOut {
     /// only when above 0 (decision 0114).
     #[serde(skip_serializing_if = "Option::is_none")]
     strike_held_share: Option<Num>,
+    /// Given only when the group sizes its strikes to their target
+    /// (decision 0118).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    strike_sizing: Option<bool>,
     arc: Option<ArcOut>,
 }
 
@@ -621,6 +625,7 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         strike_contact_age: group.strike_contact_age,
         strike_held_share: (!group.strike_held_share.is_zero())
             .then_some(Num(group.strike_held_share)),
+        strike_sizing: group.strike_sizing.then_some(true),
         arc: group.search.map(|arc| ArcOut {
             from_deg: arc.from_deg,
             to_deg: arc.to_deg,

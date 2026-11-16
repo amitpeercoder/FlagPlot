@@ -48,7 +48,7 @@ pub const STAFF_DEFAULT_INTERVAL_DAYS: u32 = 15;
 
 /// What every answer about the staff says first: it does nothing for a side
 /// until an intent with a forces limit is set.
-const STAFF_NOTE: &str = "The staff does nothing for your side until you set an intent. To keep a base supplied, give the intent a forces limit (set_intent, then set_limit forces). To hold a place or cover a base from the air (intent_kind hold or cover), the staff may use the air groups based at the base unless you limit them (set_limit forces with air_groups); under a hold intent the staff forms a cover intent by itself. To neutralise an enemy base (intent_kind neutralise, with target), the staff forms a raid from each of your bases with bombers that reach it, using the air groups there unless you limit them. Commands you queue take effect at the start of the coming day.";
+const STAFF_NOTE: &str = "The staff does nothing for your side until you set an intent. To keep a base supplied, give the intent a forces limit (set_intent, then set_limit forces). To hold a place or cover a base from the air (intent_kind hold or cover), the staff may use the air groups based at the base unless you limit them (set_limit forces with air_groups); under a hold intent the staff forms a cover intent by itself. To neutralise an enemy base (intent_kind neutralise, with target), the staff forms a raid from each of your bases with bombers that reach it, using the air groups there unless you limit them. To deny the enemy an area of sea (intent_kind deny, with hex as [q, r] and distance in whole hexes), the staff searches the waters and strikes ships there from your bases whose groups reach them (it forms strike_ships and search_waters intents under it, which you do not state); a strike_ships intent (intent_kind strike_ships, with base) gives a base that task by itself. Commands you queue take effect at the start of the coming day.";
 
 /// The ships and forces of the umpire's ids shown in the side's numbers,
 /// from the side's view.
@@ -282,6 +282,8 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
                     "not set on it or above it: the staff may use nothing (the area commands nothing)",
                 sim_core::command::Addressee::Base(_) =>
                     "not set on it or above it: the staff may use the air groups based at its base that are not held",
+                sim_core::command::Addressee::AirGroup(_) =>
+                    "not set on it or above it: the staff may use the air group itself",
             })
         },
         "risk": bound_risk.name(),
@@ -302,9 +304,10 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
 }
 
 /// An intent's kind as the interface writes it: its name, its own base
-/// (`null` for neutralising a base), its target (`null` for the kinds that
-/// have none), and for keeping a base supplied the days (`null` for the
-/// other kinds).
+/// (`null` for neutralising a base and for denying an area), its target
+/// (`null` for the kinds that have none), its waters (`hex` as `[q, r]` and
+/// `distance`, `null` for the kinds but a deny), and for keeping a base
+/// supplied the days (`null` for the other kinds).
 fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
     let (floor_days, interval_days) = match kind {
         IntentKind::KeepSupplied {
@@ -315,12 +318,17 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         IntentKind::Cover { .. }
         | IntentKind::Hold { .. }
         | IntentKind::Neutralise { .. }
-        | IntentKind::Raid { .. } => (None, None),
+        | IntentKind::Raid { .. }
+        | IntentKind::Deny { .. }
+        | IntentKind::StrikeShips { .. }
+        | IntentKind::SearchWaters { .. } => (None, None),
     };
     json!({
         "kind": kind.name(),
         "base": kind.own_base().map(|base| n.base(base)),
         "target": kind.target().map(|target| n.base(target)),
+        "hex": kind.waters().map(|(hex, _)| json!([hex.q, hex.r])),
+        "distance": kind.waters().map(|(_, distance)| distance),
         "floor_days": floor_days,
         "interval_days": interval_days,
     })
@@ -439,7 +447,30 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
     if matches!(intent.kind, IntentKind::Neutralise { .. }) {
         body["measure"] = neutralise_measure_json(&crate::neutralise_measure(view, intent.id));
     }
+    if matches!(intent.kind, IntentKind::Deny { .. }) {
+        body["measure"] = deny_measure_json(&crate::deny_measure(view, intent.id));
+    }
     body
+}
+
+/// The measure of a deny intent as the interface writes it, with its words
+/// (decision 0123, 4): `null` where it is not a deny intent.
+pub(crate) fn deny_measure_json(measure: &Option<crate::DenyMeasure>) -> Value {
+    let Some(m) = measure else {
+        return Value::Null;
+    };
+    json!({
+        "days_in_force": m.days_in_force,
+        "contacts_held": m.contacts_held,
+        "strikes_launched": m.strikes_launched,
+        "claimed_sunk": m.claimed_sunk,
+        "claimed_hits": m.claimed_hits,
+        "days_met": m.days_met,
+        "text": format!(
+            "{} of the {} days in force ended with no contact held in the waters; {} contacts held in the waters at the end of a day; {} strikes launched from the bases given the task of striking ships; {} ships claimed sunk and {} hits claimed from the air in the waters (claims of your people, never below the truth)",
+            m.days_met, m.days_in_force, m.contacts_held, m.strikes_launched, m.claimed_sunk, m.claimed_hits
+        ),
+    })
 }
 
 /// The measure of a neutralise intent as the interface writes it, with its
@@ -1353,6 +1384,7 @@ pub fn why(view: &SideView<'_>, number: u32) -> Value {
             reason.serves.level.map(|level| match level {
                 sim_core::command::Addressee::Area => "the area".to_string(),
                 sim_core::command::Addressee::Base(base) => n.text(&base.to_string()),
+                sim_core::command::Addressee::AirGroup(group) => n.text(&group.to_string()),
             }),
             reason
                 .serves
@@ -1420,6 +1452,8 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "intent_kind",
             "base",
             "target",
+            "hex",
+            "distance",
             "floor_days",
             "interval_days",
         ],
@@ -1485,18 +1519,29 @@ pub(crate) fn request(
             Some("cover" | "hold") => &["base"],
             Some("neutralise") => &["target"],
             Some("raid") => &["base", "target"],
+            Some("deny") => &["hex", "distance"],
+            Some("strike_ships" | "search_waters") => &["base"],
             _ => &["base", "floor_days", "interval_days"],
         };
         if let (Some(name), Some(key)) = (
             kind.filter(|name| *name != "keep_supplied"),
-            ["base", "target", "floor_days", "interval_days"]
-                .into_iter()
-                .find(|k| body.contains_key(*k) && !takes.contains(k)),
+            [
+                "base",
+                "target",
+                "hex",
+                "distance",
+                "floor_days",
+                "interval_days",
+            ]
+            .into_iter()
+            .find(|k| body.contains_key(*k) && !takes.contains(k)),
         ) {
             let what = match name {
                 "cover" | "hold" => "a base and nothing else",
                 "neutralise" => "a target (the enemy base) and nothing else",
                 "raid" => "a base (your own) and a target (the enemy base) and nothing else",
+                "deny" => "a hex ([q, r]) and a distance (whole hexes) and nothing else",
+                "strike_ships" | "search_waters" => "a base and nothing else",
                 _ => "no such key",
             };
             return Err(CallError::new(format!(
@@ -1506,6 +1551,13 @@ pub(crate) fn request(
         if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("target") {
             return Err(CallError::new(
                 "\"target\" is an argument of set_intent only for intent_kind neutralise or raid",
+            ));
+        }
+        if (kind.is_none() || kind == Some("keep_supplied"))
+            && (body.contains_key("hex") || body.contains_key("distance"))
+        {
+            return Err(CallError::new(
+                "\"hex\" and \"distance\" are arguments of set_intent only for intent_kind deny",
             ));
         }
     }
@@ -1719,6 +1771,20 @@ pub(crate) fn command_answer(
                         ..
                     } => notes.push(format!(
                         "intent:{} is a raid on the target from your base: its bombers are the air groups based at the base that are not held, unless you limit them (set_limit forces with air_groups).",
+                        intent.raw()
+                    )),
+                    CommandKind::SetIntent {
+                        kind: IntentKind::Deny { .. },
+                        ..
+                    } => notes.push(format!(
+                        "intent:{} is an end, addressed to the area: the staff searches the waters and forms a strike_ships intent for each base of yours whose groups reach them, under it. Its forces are the air groups based at your bases that are not held, unless you limit them (set_limit forces with air_groups, or hold an air group). command_state shows the tree and the measure of the intent.",
+                        intent.raw()
+                    )),
+                    CommandKind::SetIntent {
+                        kind: IntentKind::StrikeShips { .. },
+                        ..
+                    } => notes.push(format!(
+                        "intent:{} gives the base the task of striking ships: its groups strike the ships they reach. Its forces are the air groups based at the base that are not held, unless you limit them (set_limit forces with air_groups).",
                         intent.raw()
                     )),
                     CommandKind::SetIntent {

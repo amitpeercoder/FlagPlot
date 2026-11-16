@@ -112,6 +112,23 @@ pub enum IntentKind {
     /// "neutralise a base" naming the same target, and a commander may state
     /// it himself as a root. Added at the end.
     Raid { base: BaseId, target: BaseId },
+    /// Deny the enemy the waters within `distance` hexes of `hex` (decision
+    /// 0123, 1): an end, addressed to the area. It has no date. Under it the
+    /// staff gives each base of the side in reach of those waters the tasks
+    /// of striking ships and, where the base has no cover, of searching them.
+    /// Added at the end.
+    Deny { hex: Hex, distance: u32 },
+    /// Strike the ships that come within reach of `base`'s groups, a base of
+    /// the side (decision 0123, 5): a task, addressed to `base`. It has no
+    /// date. It may stand under "deny an area" and under "hold a place" of
+    /// the same base, and a commander may state it himself as a root. Added
+    /// at the end.
+    StrikeShips { base: BaseId },
+    /// Search the waters of the "deny an area" above it from `base`, a base
+    /// of the side (decision 0123, 11): a task, addressed to `base`. It has
+    /// no date and stands under "deny an area" only, so a commander cannot
+    /// state it as a root. Added at the end.
+    SearchWaters { base: BaseId },
 }
 
 impl IntentKind {
@@ -123,6 +140,9 @@ impl IntentKind {
             IntentKind::Hold { .. } => 3,
             IntentKind::Neutralise { .. } => 4,
             IntentKind::Raid { .. } => 5,
+            IntentKind::Deny { .. } => 6,
+            IntentKind::StrikeShips { .. } => 7,
+            IntentKind::SearchWaters { .. } => 8,
         }
     }
 
@@ -134,28 +154,51 @@ impl IntentKind {
             IntentKind::Hold { .. } => "hold",
             IntentKind::Neutralise { .. } => "neutralise",
             IntentKind::Raid { .. } => "raid",
+            IntentKind::Deny { .. } => "deny",
+            IntentKind::StrikeShips { .. } => "strike_ships",
+            IntentKind::SearchWaters { .. } => "search_waters",
         }
     }
 
-    /// The base the intent names first: the side's own base for every kind
-    /// but "neutralise a base", whose one base is its target, the enemy's.
-    pub const fn base(self) -> BaseId {
+    /// The base the intent names first, if it names one: the side's own
+    /// base for every kind but "neutralise a base", whose one base is its
+    /// target, the enemy's, and "deny an area", which names a hex.
+    pub const fn base(self) -> Option<BaseId> {
         match self {
             IntentKind::KeepSupplied { base, .. }
             | IntentKind::Cover { base }
             | IntentKind::Hold { base }
-            | IntentKind::Raid { base, .. } => base,
-            IntentKind::Neutralise { target } => target,
+            | IntentKind::Raid { base, .. }
+            | IntentKind::StrikeShips { base }
+            | IntentKind::SearchWaters { base } => Some(base),
+            IntentKind::Neutralise { target } => Some(target),
+            IntentKind::Deny { .. } => None,
         }
     }
 
     /// The side's own base the intent names, if it names one: every kind but
-    /// "neutralise a base".
+    /// "neutralise a base" and "deny an area".
     pub const fn own_base(self) -> Option<BaseId> {
         match self {
-            IntentKind::Neutralise { .. } => None,
-            other => Some(other.base()),
+            IntentKind::Neutralise { .. } | IntentKind::Deny { .. } => None,
+            other => other.base(),
         }
+    }
+
+    /// The waters of a "deny an area" intent (decision 0123, 1): its hex and
+    /// its distance in hexes.
+    pub const fn waters(self) -> Option<(Hex, u32)> {
+        match self {
+            IntentKind::Deny { hex, distance } => Some((hex, distance)),
+            _ => None,
+        }
+    }
+
+    /// Whether a commander may state an intent of this kind as a root
+    /// (decision 0123, 11): every kind but "search waters", which stands
+    /// under "deny an area" only.
+    pub const fn may_be_root(self) -> bool {
+        !matches!(self, IntentKind::SearchWaters { .. })
     }
 
     /// The enemy base the intent is aimed at, if any (decision 0120): the
@@ -173,10 +216,14 @@ impl IntentKind {
     /// and raiding from one are the base's (decision 0120, 5 and 9).
     pub const fn addressee(self) -> Addressee {
         match self {
-            IntentKind::KeepSupplied { .. } | IntentKind::Neutralise { .. } => Addressee::Area,
+            IntentKind::KeepSupplied { .. }
+            | IntentKind::Neutralise { .. }
+            | IntentKind::Deny { .. } => Addressee::Area,
             IntentKind::Cover { base }
             | IntentKind::Hold { base }
-            | IntentKind::Raid { base, .. } => Addressee::Base(base),
+            | IntentKind::Raid { base, .. }
+            | IntentKind::StrikeShips { base }
+            | IntentKind::SearchWaters { base } => Addressee::Base(base),
         }
     }
 
@@ -189,6 +236,12 @@ impl IntentKind {
             (IntentKind::Raid { target, .. }, IntentKind::Neutralise { target: aimed }) => {
                 target == aimed
             }
+            // Decision 0123, 5 and 11.
+            (
+                IntentKind::StrikeShips { .. } | IntentKind::SearchWaters { .. },
+                IntentKind::Deny { .. },
+            ) => true,
+            (IntentKind::StrikeShips { base }, IntentKind::Hold { base: held }) => base == held,
             _ => false,
         }
     }
@@ -228,6 +281,11 @@ pub enum Addressee {
     Area,
     /// A base of the side: it commands the side's air groups based there.
     Base(BaseId),
+    /// An air group of the side, the level below a base: it decides the size
+    /// of its own strikes from the task it is under (decision 0123, 9). No
+    /// intent is addressed to it; a reason names it as the level that
+    /// decided. Added at the end.
+    AirGroup(AirGroupId),
 }
 
 impl Addressee {
@@ -236,6 +294,7 @@ impl Addressee {
         match self {
             Addressee::Area => 1,
             Addressee::Base(_) => 2,
+            Addressee::AirGroup(_) => 3,
         }
     }
 }
@@ -245,6 +304,7 @@ impl core::fmt::Display for Addressee {
         match self {
             Addressee::Area => f.write_str("the area"),
             Addressee::Base(base) => write!(f, "{base}"),
+            Addressee::AirGroup(group) => write!(f, "{group}"),
         }
     }
 }
@@ -1269,6 +1329,12 @@ pub enum CommandRefusal {
     /// side's map that is not the side's (decision 0120, 5 and 9). Added at
     /// the end.
     NotAnEnemyBase(BaseId),
+    /// The hex of a "deny an area" intent is not on the map (decision 0123,
+    /// 1). Added at the end.
+    NotOnMap(Hex),
+    /// A kind a commander may not state as a root: "search waters" stands
+    /// under "deny an area" only (decision 0123, 11). Added at the end.
+    NotARoot,
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -1342,6 +1408,10 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NotAnEnemyBase(base) => write!(
                 f,
                 "{base} is not a base on the side's map that is not the side's"
+            ),
+            CommandRefusal::NotOnMap(hex) => write!(f, "{hex} is not on the map"),
+            CommandRefusal::NotARoot => f.write_str(
+                "this kind of intent stands only under an end the staff serves, and the staff forms it",
             ),
         }
     }
@@ -1526,6 +1596,11 @@ fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core
         IntentKind::Hold { base } => write!(f, "hold {base}"),
         IntentKind::Neutralise { target } => write!(f, "neutralise {target}"),
         IntentKind::Raid { base, target } => write!(f, "raid {target} from {base}"),
+        IntentKind::Deny { hex, distance } => {
+            write!(f, "deny the waters within {distance} hexes of {hex}")
+        }
+        IntentKind::StrikeShips { base } => write!(f, "strike ships from {base}"),
+        IntentKind::SearchWaters { base } => write!(f, "search the waters from {base}"),
     }
 }
 

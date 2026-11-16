@@ -2,12 +2,12 @@ Scenario 37: Men falling back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3290ad3302b22545  45 events
-day   2  hash a40f8fd0c7cbf83d  36 events
-day   3  hash 33ef6aa09ab71c95  49 events
-day   4  hash 93d7f31986fa0cd6  29 events
-day   5  hash 5b2511027a117451  27 events
-day   6  hash 7a7f7dd20fd59f5e  26 events
+day   1  hash 008d187124be7e23  45 events
+day   2  hash 5260637f8903bb03  36 events
+day   3  hash 2ae1d462e202fe7b  49 events
+day   4  hash c8c9b8e0f0ff514c  29 events
+day   5  hash 0e568cb0879f8bb7  27 events
+day   6  hash 5e2735ff271580e4  26 events
 
 base:1 "Placeholder base 1, Japanese, at P" (Allied) at (0,0): 350.285 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at R" (Japanese) at (1,0): 80.41 t of supply in stock

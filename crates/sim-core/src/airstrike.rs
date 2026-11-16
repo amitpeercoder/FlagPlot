@@ -735,10 +735,13 @@ impl World {
     /// at least one aircraft, takes the contact its side holds that is no
     /// older than the group's strike contact age allows ([`strike_age_limit`]),
     /// within its reach and of a kind on its target list: the kind first on
-    /// the list, then the nearest, then the lowest contact number
-    /// ([`contact_to_strike`]). With no such contact it launches nothing. It
-    /// launches the aircraft it can fly less the share it holds back
-    /// ([`strike_aircraft`]; decision 0114).
+    /// the list, then the nearest, then the lowest contact number. With no
+    /// such contact it launches nothing. It launches the aircraft it can fly
+    /// less the share it holds back ([`strike_aircraft`]; decision 0114). A
+    /// group that sizes its strikes walks those contacts and launches at the
+    /// first not yet served, no more than the contact needs less what the
+    /// side's groups before it sent there in the pulse
+    /// ([`naval_strike_launch`]; decision 0118).
     ///
     /// The decision reads the group's own side's belief and the group's own
     /// state. It never reads the enemy.
@@ -834,14 +837,20 @@ impl World {
                 continue;
             }
 
-            // The one function (decision 6 of 0063): the contact this group
-            // would strike now, from its side's belief and its own state.
-            let chosen = contact_to_strike(
+            // The one function (decision 6 of 0063, and 0118): the contact
+            // this group would strike now and the aircraft it sends there,
+            // from its side's belief, its own state and what its side's
+            // groups before it have sent in this pulse.
+            let sent = sent_at_contacts(&self.strikes_in_flight, group.side);
+            let chosen = naval_strike_launch(
                 &self.beliefs[&group.side],
                 &group,
                 origin,
                 reach_nm,
                 strike_age_limit(&group, &figures),
+                aircraft,
+                &figures,
+                &sent,
             );
             self.trace_choice(group.side, || {
                 (
@@ -849,16 +858,42 @@ impl World {
                     Answer::Air(AirAnswer::Strike(chosen)),
                 )
             });
-            let Some(StrikeChoice {
-                kind: taken_for,
-                distance_nm,
-                contact,
-                hex,
-                report_event,
+            // A sized group whose contacts are all served does not launch
+            // and records nothing (decision 0118, 5).
+            let Some(NavalStrike {
+                choice:
+                    StrikeChoice {
+                        kind: taken_for,
+                        distance_nm,
+                        contact,
+                        hex,
+                        report_event,
+                    },
+                aircraft,
+                sizing,
             }) = chosen
             else {
                 continue;
             };
+            // A sized launch's breakdown adds the need of the contact (where
+            // the kind has a figure), what had been sent at it and, as the
+            // result, what the group sent (decision 0118, 10).
+            let breakdown = breakdown.map(|mut breakdown| {
+                if let Some(StrikeSizing { need, sent_before }) = sizing {
+                    if let Some(need) = need {
+                        breakdown.factors.push(Factor {
+                            name: "need_of_contact",
+                            value: Fixed::from_int(i64::from(need)),
+                        });
+                    }
+                    breakdown.factors.push(Factor {
+                        name: "sent_before",
+                        value: Fixed::from_int(i64::from(sent_before)),
+                    });
+                    breakdown.result = Fixed::from_int(i64::from(aircraft));
+                }
+                breakdown
+            });
 
             let causes: Vec<Cause> = group
                 .mission_order
@@ -869,6 +904,7 @@ impl World {
                 .chain([Cause::Event(report_event)])
                 .chain(group.strike_age_order.map(Cause::Order))
                 .chain(group.strike_share_order.map(Cause::Order))
+                .chain(group.strike_sizing_order.map(Cause::Order))
                 .collect();
             let launched = self.events.record(
                 day,
@@ -3042,7 +3078,7 @@ pub(crate) fn strike_aircraft(able: u32, held_share: Fixed) -> u32 {
 }
 
 /// The contact a naval strike group would launch at: what
-/// [`contact_to_strike`] chose.
+/// [`naval_strike_launch`] chose.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct StrikeChoice {
     /// The kind the contact is taken for.
@@ -3056,42 +3092,151 @@ pub struct StrikeChoice {
     pub report_event: EventId,
 }
 
-/// Which contact `group`, at `origin`, would strike now (decision 6 of
-/// 0063). A contact qualifies if it is no older than `max_age_pulses`, lies
-/// within `reach_nm` of `origin` and is taken for a kind on the group's target
-/// list. Of those the contact whose kind comes first on the list is taken,
-/// then the nearest, then the lowest contact number. `None`: the group
-/// launches nothing.
+/// Every contact `group`, at `origin`, could launch at now (decision 6 of
+/// 0063), each with the ships it reports, in the order it chooses among
+/// them. A contact qualifies if it is no older than `max_age_pulses`, lies
+/// within `reach_nm` of `origin` and is taken for a kind on the group's
+/// target list. They are ordered by the kind that comes first on the list,
+/// then the nearest, then the lowest contact number; a group with sizing off
+/// takes the first.
 ///
 /// It reads the side's belief and the group's own state and orders, and
-/// nothing else: never the enemy. The strike decision and the side's view
-/// both call it.
-pub(crate) fn contact_to_strike(
+/// nothing else: never the enemy.
+fn contacts_to_strike(
     belief: &BeliefState,
     group: &AirGroup,
     origin: Hex,
     reach_nm: Fixed,
     max_age_pulses: u32,
-) -> Option<StrikeChoice> {
-    belief
+) -> Vec<(StrikeChoice, u32)> {
+    let mut found: Vec<_> = belief
         .contacts()
         .filter(|contact| contact.age_pulses <= max_age_pulses)
         .filter(|contact| group.target_priority.contains(&contact.estimated_kind))
         .filter(|contact| origin.air_distance_within(contact.estimated_hex, reach_nm))
-        .min_by_key(|contact| {
+        .collect();
+    found.sort_by_key(|contact| {
+        (
+            group.target_rank(contact.estimated_kind),
+            origin.air_distance_nm(contact.estimated_hex),
+            contact.id,
+        )
+    });
+    found
+        .into_iter()
+        .map(|contact| {
             (
-                group.target_rank(contact.estimated_kind),
-                origin.air_distance_nm(contact.estimated_hex),
-                contact.id,
+                StrikeChoice {
+                    kind: contact.estimated_kind,
+                    distance_nm: Fixed::from_int(i64::from(
+                        origin.air_distance_nm(contact.estimated_hex),
+                    )),
+                    contact: contact.id,
+                    hex: contact.estimated_hex,
+                    report_event: contact.last_report_event,
+                },
+                contact.estimated_ship_count,
             )
         })
-        .map(|contact| StrikeChoice {
-            kind: contact.estimated_kind,
-            distance_nm: Fixed::from_int(i64::from(origin.air_distance_nm(contact.estimated_hex))),
-            contact: contact.id,
-            hex: contact.estimated_hex,
-            report_event: contact.last_report_event,
-        })
+        .collect()
+}
+
+/// A naval strike a group would launch (decision 0118): the contact, the
+/// aircraft it sends, and, for a group that sizes its strikes, how the size
+/// was found.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct NavalStrike {
+    pub choice: StrikeChoice,
+    /// The aircraft sent.
+    pub aircraft: u32,
+    /// `None` for a group with sizing off, which sends all it can.
+    pub sizing: Option<StrikeSizing>,
+}
+
+/// How a sized strike's size was found (decision 0118, 2 to 4).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct StrikeSizing {
+    /// The need of the contact: the ships it reports times the figure for
+    /// the kind it reports. `None`: the kind has no figure and needs
+    /// everything.
+    pub need: Option<u32>,
+    /// The aircraft launched at the contact in this pulse by the side's
+    /// groups before this one.
+    pub sent_before: u32,
+}
+
+/// The need of a contact reporting `ships` ships taken for `kind` (decision
+/// 0118, 2): the ships times the figure for the kind, `None` where the kind
+/// has no figure, which needs everything.
+pub(crate) fn strike_need(figures: &AirCombatFigures, kind: ShipKind, ships: u32) -> Option<u32> {
+    figures
+        .strike_aircraft_per_ship
+        .get(&kind)
+        .map(|per_ship| per_ship.saturating_mul(ships))
+}
+
+/// The aircraft each contact has had launched at it in this pulse by
+/// `side`'s groups (decision 0118, 3): the strikes in flight of the side
+/// aimed at a contact, sized or not. A base strike aims at no contact.
+pub(crate) fn sent_at_contacts(strikes: &[StrikeInFlight], side: Side) -> BTreeMap<ContactId, u32> {
+    let mut sent: BTreeMap<ContactId, u32> = BTreeMap::new();
+    for strike in strikes.iter().filter(|strike| strike.side == side) {
+        if let Aim::Contact(contact) = strike.aim {
+            *sent.entry(contact).or_insert(0) += strike.aircraft;
+        }
+    }
+    sent
+}
+
+/// The naval strike `group`, at `origin`, launches now when it can send
+/// `can_send` aircraft (those it is able to fly less its held share) and its
+/// side's groups before it have sent `sent` at each contact (decision 0118,
+/// 4 to 7). With sizing off it takes the first contact it could launch on,
+/// as [`contacts_to_strike`] orders them, with all it can send. With sizing on it
+/// walks those contacts in the same order and takes the first whose need is
+/// above what has been sent there, sending the smaller of what it can send
+/// and what is still needed; a contact of a kind with no figure is never
+/// served and gets all it can send. `None`: it launches nothing, having no
+/// contact, or every one served.
+///
+/// It reads the side's belief, the group's own state and the figures, and
+/// nothing of the enemy. The strike decision and the side's view both call
+/// it (decision 0100, 1).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn naval_strike_launch(
+    belief: &BeliefState,
+    group: &AirGroup,
+    origin: Hex,
+    reach_nm: Fixed,
+    max_age_pulses: u32,
+    can_send: u32,
+    figures: &AirCombatFigures,
+    sent: &BTreeMap<ContactId, u32>,
+) -> Option<NavalStrike> {
+    let candidates = contacts_to_strike(belief, group, origin, reach_nm, max_age_pulses);
+    if !group.strike_sizing {
+        let (choice, _) = candidates.into_iter().next()?;
+        return Some(NavalStrike {
+            choice,
+            aircraft: can_send,
+            sizing: None,
+        });
+    }
+    for (choice, ships) in candidates {
+        let sent_before = sent.get(&choice.contact).copied().unwrap_or(0);
+        let need = strike_need(figures, choice.kind, ships);
+        let aircraft = match need {
+            None => can_send,
+            Some(need) if need > sent_before => can_send.min(need - sent_before),
+            Some(_) => continue,
+        };
+        return Some(NavalStrike {
+            choice,
+            aircraft,
+            sizing: Some(StrikeSizing { need, sent_before }),
+        });
+    }
+    None
 }
 
 /// Whether `group`, on the base strike mission against `base`, launches in

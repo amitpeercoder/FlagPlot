@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 9` and a `"kind"` that names it.
+`"version": 10` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 9. A field removed from an answer, or a field whose meaning
+`version` is 10. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -791,3 +791,33 @@ side's own command state; the enemy is told none of it.
   `serves` ends "decided at the level of ..." before the chain. The replay file's `staff_reason`
   event has a `level` field (`"area"` or `"base:n"`), left out where none.
 - **Saved games** are version 5; a game of version 4 or earlier is refused, not converted.
+
+## Denying an area, striking ships, and a strike sized to its target (decisions 0123 and 0118)
+
+`version` is 10: an intent's `base` is `null` for a deny too, which is a change in meaning, so the
+version rises. Everything here is of the side's own command state, groups and choices; the enemy is
+told none of it.
+
+- **Commands.** `set_intent` takes `intent_kind` `"deny"` with `hex` (`[q, r]`) and `distance` (a
+  whole number of hexes, 0 or more) and no `base`, `"strike_ships"` with `base`, and
+  `"search_waters"` with `base`, which a commander may not state as a root: the engine refuses it
+  ("not a root"). A hex off the map is refused ("is not on the map"). `form_intent` writes `hex`
+  and `distance` for a deny. In a saved game and in a staff's hand-in the same keys are written.
+  `set_intent` for any other kind refuses `hex` and `distance`.
+- **`command_state`, `plans`, `propose`.** Each intent has `kind` (`"deny"`, `"strike_ships"` or
+  `"search_waters"` among the others), `base` (`null` for a deny), and `hex` and `distance` (the
+  waters of a deny, `null` for the other kinds). A deny intent in force has a `measure`:
+  `days_in_force`, `contacts_held` (the distinct contacts the side held in the waters at the end
+  of a day in force), `strikes_launched` (by its groups at a base given the task of striking ships
+  under the intent, on the days the task stood), `claimed_sunk` and `claimed_hits` (what the
+  side's people claim from the air in the waters: a claim, never below the truth, never
+  corrected), `days_met` (the days that ended with no contact held in the waters) and `text`.
+- **`report`.** `denials`: each deny intent in force with its measure, its `intent`, its `hex` and
+  its `distance`.
+- **A new air group order**, `set_strike_sizing` (`on`, true or false), a standing order; an air
+  group line has `strike_sizing` (`true`, given only when it is on).
+- **`measure` `choices`.** The strike answer gives `aircraft`, the aircraft the group would send,
+  and, for a group that sizes its strikes, `need` (the aircraft its target needs, `null` where the
+  kind has no figure and needs everything) and `sent_before` (the aircraft the side's groups before
+  it launched at the contact in the pulse).
+- **Saved games** are version 6; a game of version 5 or earlier is refused, not converted.

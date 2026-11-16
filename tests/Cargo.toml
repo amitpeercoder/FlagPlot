@@ -331,3 +331,11 @@ path = "scenario_48_hold_a_place.rs"
 [[test]]
 name = "scenario_50_neutralise_a_base"
 path = "scenario_50_neutralise_a_base.rs"
+
+[[test]]
+name = "scenario_49_a_strike_sized_to_its_target"
+path = "scenario_49_a_strike_sized_to_its_target.rs"
+
+[[test]]
+name = "scenario_53_deny_an_area"
+path = "scenario_53_deny_an_area.rs"

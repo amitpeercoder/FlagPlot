@@ -4,7 +4,7 @@
 //! already a function a side could ask (decision 0049); it is a question
 //! here too, so every choice of the air steps is asked the same way.
 
-use crate::airstrike::StrikeChoice;
+use crate::airstrike::NavalStrike;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId};
@@ -15,7 +15,9 @@ use crate::time::Pulse;
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AirQuestion {
     /// The contact a group on the naval strike mission would launch at
-    /// (decision 6 of 0063).
+    /// (decision 6 of 0063), and the aircraft it would send there (decision
+    /// 0118, 11): asked as the decision will be made, the side's groups
+    /// before it deciding first.
     Strike { group: AirGroupId },
     /// How many of a group's aircraft can fly this pulse (decision 14 of
     /// 0026 and decision 2 of 0036).
@@ -44,7 +46,7 @@ pub enum AirQuestion {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AirAnswer {
     /// `None`: the group launches nothing.
-    Strike(Option<StrikeChoice>),
+    Strike(Option<NavalStrike>),
     AircraftAbleToFly(u32),
     /// `None`: the group launches no base strike this pulse.
     BaseStrike(Option<BaseStrikeLaunch>),

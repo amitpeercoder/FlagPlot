@@ -36,7 +36,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 9
+          "const": 10
         },
         "kind": {
           "const": "why"

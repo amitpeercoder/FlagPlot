@@ -188,8 +188,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// set is read up the tree), and the hold of a whole air group (code 4)
 /// (decisions 0115 and 0117);
 /// version 29 adds the kinds neutralise a base (code 4, its target) and raid
-/// a base (code 5, its base and then its target) (decision 0120).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v29";
+/// a base (code 5, its base and then its target) (decision 0120);
+/// version 30 adds an air group's `strike_sizing` and `strike_sizing_order`
+/// after its `strike_share_order` (decision 0118), and the kinds deny an area
+/// (code 6, its hex and then its distance), strike ships (code 7, its base)
+/// and search waters (code 8, its base) (decision 0123).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v30";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -420,6 +424,8 @@ fn name_every_field(world: &World) {
             strike_age_order: _,
             strike_held_share: _,
             strike_share_order: _,
+            strike_sizing: _,
+            strike_sizing_order: _,
         } = group;
         if let Some(SearchArc {
             from_deg: _,
@@ -515,7 +521,7 @@ fn name_every_field(world: &World) {
                 Maker::Commander | Maker::Staff => {}
             }
             match addressee {
-                Addressee::Area | Addressee::Base(_) => {}
+                Addressee::Area | Addressee::Base(_) | Addressee::AirGroup(_) => {}
             }
             name_limits(limits);
         }
@@ -661,7 +667,13 @@ fn name_intent_kind(kind: IntentKind) {
         | IntentKind::Cover { base: _ }
         | IntentKind::Hold { base: _ }
         | IntentKind::Neutralise { target: _ }
-        | IntentKind::Raid { base: _, target: _ } => {}
+        | IntentKind::Raid { base: _, target: _ }
+        | IntentKind::Deny {
+            hex: _,
+            distance: _,
+        }
+        | IntentKind::StrikeShips { base: _ }
+        | IntentKind::SearchWaters { base: _ } => {}
     }
 }
 
@@ -702,6 +714,13 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
             h.u32(base.raw());
             h.u32(target.raw());
         }
+        // Decision 0123.
+        IntentKind::Deny { hex, distance } => {
+            h.i32(hex.q);
+            h.i32(hex.r);
+            h.u32(distance);
+        }
+        IntentKind::StrikeShips { base } | IntentKind::SearchWaters { base } => h.u32(base.raw()),
     }
 }
 
@@ -814,6 +833,7 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
         match intent.addressee {
             Addressee::Area => {}
             Addressee::Base(base) => h.u32(base.raw()),
+            Addressee::AirGroup(group) => h.u32(group.raw()),
         }
         hash_limits(h, &intent.limits);
         h.u32(intent.set_day);
@@ -1229,6 +1249,9 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.optional_u32(group.strike_age_order.map(|id| id.raw()));
         h.i64(group.strike_held_share.raw());
         h.optional_u32(group.strike_share_order.map(|id| id.raw()));
+        // Last in the group (decision 0118).
+        h.u8(u8::from(group.strike_sizing));
+        h.optional_u32(group.strike_sizing_order.map(|id| id.raw()));
     }
 
     h.count(truth.replacements.len());

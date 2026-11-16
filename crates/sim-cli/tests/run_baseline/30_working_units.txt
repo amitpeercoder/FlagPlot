@@ -2,12 +2,12 @@ Scenario 30: Units that work, and what they build
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0ae704efe3bc3d2c  60 events
-day   2  hash c84a8af6bd365c9a  51 events
-day   3  hash 485f20db5af2ce6b  43 events
-day   4  hash d836a26db73d5fd8  37 events
-day   5  hash bbefb497a03af622  38 events
-day   6  hash 4d7f446c1555e510  31 events
+day   1  hash 6b63e7a527b03e4e  60 events
+day   2  hash 49ee75ab06e0df78  51 events
+day   3  hash 074839d9d6877aa9  43 events
+day   4  hash c42a6babba5639d2  37 events
+day   5  hash 659e2d8a33bbc8c0  38 events
+day   6  hash 3845c5f41d9d6fea  31 events
 
 task_force:1 "Placeholder force 1" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder force 2" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

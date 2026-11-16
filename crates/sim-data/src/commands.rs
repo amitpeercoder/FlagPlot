@@ -12,7 +12,7 @@
 //!
 //! | `kind` | keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both) |
+//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both), `"deny"` (deny the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]`; takes `hex` and `distance` and no `base`), `"strike_ships"` (strike ships from `base`; takes `base`) or `"search_waters"` (search the waters from `base`; takes `base`, and is the staff's to give, so the game refuses it as a root intent) |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` and its keys, below |
 //! | `set_leave` | `leave` (`"prepare"` or `"launch"`), `given` |
@@ -59,6 +59,8 @@ pub(crate) struct CommandSpec {
     intent_kind: Option<String>,
     base: Option<u32>,
     target: Option<u32>,
+    hex: Option<[i32; 2]>,
+    distance: Option<u32>,
     floor_days: Option<u32>,
     interval_days: Option<u32>,
     ships: Option<Vec<u32>>,
@@ -98,6 +100,8 @@ impl CommandSpec {
         note(self.intent_kind.is_some(), "intent_kind");
         note(self.base.is_some(), "base");
         note(self.target.is_some(), "target");
+        note(self.hex.is_some(), "hex");
+        note(self.distance.is_some(), "distance");
         note(self.floor_days.is_some(), "floor_days");
         note(self.interval_days.is_some(), "interval_days");
         note(self.ships.is_some(), "ships");
@@ -138,12 +142,15 @@ impl CommandSpec {
                 None | Some("keep_supplied") => {
                     &["intent", "intent_kind", "base", "floor_days", "interval_days"]
                 }
-                Some("cover" | "hold") => &["intent", "intent_kind", "base"],
+                Some("cover" | "hold" | "strike_ships" | "search_waters") => {
+                    &["intent", "intent_kind", "base"]
+                }
+                Some("deny") => &["intent", "intent_kind", "hex", "distance"],
                 Some("neutralise") => &["intent", "intent_kind", "target"],
                 Some("raid") => &["intent", "intent_kind", "base", "target"],
                 Some(other) => {
                     return Err(format!(
-                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise or raid"
+                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships or search_waters"
                     ))
                 }
             },
@@ -246,6 +253,19 @@ impl CommandSpec {
                     Some("raid") => IntentKind::Raid {
                         base: BaseId::new(need(self.base, "base")?),
                         target: BaseId::new(need(self.target, "target")?),
+                    },
+                    Some("deny") => {
+                        let [q, r] = self.hex.ok_or_else(|| format!("{what} needs \"hex\""))?;
+                        IntentKind::Deny {
+                            hex: Hex::new(q, r),
+                            distance: need(self.distance, "distance")?,
+                        }
+                    }
+                    Some("strike_ships") => IntentKind::StrikeShips {
+                        base: BaseId::new(need(self.base, "base")?),
+                    },
+                    Some("search_waters") => IntentKind::SearchWaters {
+                        base: BaseId::new(need(self.base, "base")?),
                     },
                     Some("cover") => IntentKind::Cover {
                         base: BaseId::new(need(self.base, "base")?),

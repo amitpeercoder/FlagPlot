@@ -53,7 +53,20 @@ pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
             base_words(view, target),
             base_words(view, base)
         ),
+        IntentKind::Deny { hex, distance } => waters_words(hex, distance),
+        IntentKind::StrikeShips { base } => {
+            format!("strike ships from {}", base_words(view, base))
+        }
+        IntentKind::SearchWaters { base } => {
+            format!("search the waters from {}", base_words(view, base))
+        }
     }
+}
+
+/// The waters of a "deny an area" end in words (decision 0123, 1): "deny
+/// the waters within 0 hexes of (0,5)".
+pub(crate) fn waters_words(hex: sim_core::hex::Hex, distance: u32) -> String {
+    format!("deny the waters within {distance} hexes of {hex}")
 }
 
 /// A plan with what it is for: "plan:1, the plan to keep base:2
@@ -119,7 +132,11 @@ pub(crate) fn fill_reason(view: &SideView<'_>, state: &CommandState, reason: &mu
     reason.serves.statement = statement(view, intent);
     // The level that decided: the addressee of the intent served (decision
     // 0120, 2).
-    reason.serves.level = Some(intent.addressee);
+    // A reason that names a level already (an air group deciding the size of
+    // its strikes, decision 0123, 9) keeps it.
+    if reason.serves.level.is_none() {
+        reason.serves.level = Some(intent.addressee);
+    }
     reason.serves.chain = state
         .ancestors(id)
         .into_iter()

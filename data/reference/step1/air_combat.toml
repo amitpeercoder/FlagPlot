@@ -108,3 +108,9 @@ men = "0.2"
 # share of hits on a base that land on its airfield, which counts only where
 # the base has one. 0 in the frozen step 1 figures.
 airfield = "0"
+
+# The aircraft a sized naval strike needs for each ship reported (decision
+# 0118). FROZEN empty: no kind has a figure, so every kind needs everything
+# and sizing a strike does nothing, which leaves step 1 as it was. A test that
+# wants figures adds them here in its own copy.
+[strike_aircraft_per_ship]

@@ -118,6 +118,9 @@ fn text(kind: &OrderKind) -> String {
             AirGroupOrder::SetStrikeHeldShare { share } => {
                 format!("strike held share {share}")
             }
+            AirGroupOrder::SetStrikeSizing { on } => {
+                format!("strike sizing {}", if *on { "on" } else { "off" })
+            }
             AirGroupOrder::Rebase { base } => format!("rebase to {base}"),
         },
         OrderKind::LandUnit { order, .. } => match order {

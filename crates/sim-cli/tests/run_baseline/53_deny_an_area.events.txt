@@ -1,0 +1,99 @@
+Placeholder scenario 53: Deny an area
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash aca388b5b64852fe  68 events
+day   2  hash 47dce7c28ea77b2a  7 events
+
+#1 D0 -         Allied report: 1 ship, carrier, at (0,4), held at the start: new contact:1
+#2 D0 -         Allied report: 2 ships, cruiser, at (3,0), held at the start: new contact:2
+#3 D0 -         Allied contact:1 aged to 1 pulses  <- #1
+#4 D0 -         Allied report: 3 ships, transport, at (-3,0), held at the start: new contact:3
+#5 D0 -         Allied contact:1 aged to 2 pulses  <- #1
+#6 D0 -         Allied contact:2 aged to 1 pulses  <- #2
+#7 D1 -         Allied the commander's command taken: set intent:1 to deny the waters within 0 hexes of (0,5)
+#8 D1 -         Allied plan:1 drafted for intent:1  <- #7
+#9 D1 -         Allied the commander's command taken: risk of intent:1 is press
+#10 D1 -         Allied the commander's command taken: give the leave to prepare
+#11 D1 -         Allied the commander's command taken: give the leave to launch
+#12 D1 -         Allied the staff's command taken: approve plan:1
+#13 D1 -         Allied plan:1 went from draft to preparing  <- #12
+#14 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: plan:1, the plan to deny the waters within 0 hexes of (0,5), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #12
+#15 D1 -         Allied the staff's command taken: approve plan:1
+#16 D1 -         Allied plan:1 went from preparing to released  <- #15
+#17 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: plan:1, the plan to deny the waters within 0 hexes of (0,5), is ready and leave to launch is given: the staff releases it.  <- #15
+#18 D1 -         Allied the staff's command taken: form under intent:1 an intent to strike ships from base:1
+#19 D1 -         Allied staff forms intent:2 under intent:1  <- #18
+#20 D1 -         Allied staff's reason for the command to form under intent:1 an intent to strike ships from base:1 [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: intent:1 is to deny the waters within 0 hexes of (0,5), its plan is released and no task to strike ships from base:1 (Placeholder base 1) stands under it: base:1 (Placeholder base 1) is 200 nm from the nearest hex of the waters within 0 hexes of (0,5) (1 hex(es) on the map); its bombers whose normal reach touches them: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:2 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm), so the staff forms intent:2, strike ships from base:1 (Placeholder base 1), under it, for base:1 (Placeholder base 1) to carry out.  <- #18
+#21 D1 -         Allied the staff's command taken: form under intent:1 an intent to search the waters from base:1
+#22 D1 -         Allied staff forms intent:3 under intent:1  <- #21
+#23 D1 -         Allied staff's reason for the command to form under intent:1 an intent to search the waters from base:1 [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: intent:1 is to deny the waters within 0 hexes of (0,5), its plan is released and no task to search the waters from base:1 (Placeholder base 1) stands under it: base:1 (Placeholder base 1) is 200 nm from the nearest hex of the waters within 0 hexes of (0,5) (1 hex(es) on the map); its groups whose search range touches them: air_group:4 (Placeholder flying boat, a search range of 600 nm), so the staff forms intent:3, search the waters from base:1 (Placeholder base 1), under it, for base:1 (Placeholder base 1) to carry out.  <- #21
+#24 D1 -         Allied staff's reason for giving no order [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: No order is given for these groups for intent:2, striking ships from base:1 (Placeholder base 1) this morning: air_group:4, a group that is neither a fighter nor carries a weapon: no order. at the press risk a bomber flies the naval strike mission up to a fatigue of 60, launches on a contact up to 2 pulse(s) old, goes for every kind, on extended reach, holding back 0, and sizes its strikes.
+#25 D1 -         Allied staff's reason for giving no order [serves intent 3: search the waters from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: No order is given for these groups for intent:3, searching the waters from base:1 (Placeholder base 1) this morning: air_group:1 is a fighter or cannot search: no order; air_group:2 is a fighter or cannot search: no order; air_group:3 is a fighter or cannot search: no order; air_group:5 is a fighter or cannot search: no order. The arc is 110 to 180 (the waters within 0 hexes of (0,5): (0,5); the narrowest arc that holds them is 140 to 150, widened by 30 degrees at each end to 110 to 180).
+#26 D1 -         order:1 accepted for air_group:1  <- order:1  [issued by the staff]
+#27 D1 -         Allied staff's reason for order:1 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:1, a bomber group, has fatigue 0, not above the 60 of the press risk: it is set from rest to naval strike.  <- order:1, #26
+#28 D1 -         order:2 accepted for air_group:1  <- order:2  [issued by the staff]
+#29 D1 -         Allied staff's reason for order:2 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:1, a bomber group, has fatigue 0, not above the 60 of the press risk: it is set from an oldest contact of 0 pulse(s) to 2 pulse(s).  <- order:2, #28
+#30 D1 -         order:3 accepted for air_group:1  <- order:3  [issued by the staff]
+#31 D1 -         Allied staff's reason for order:3 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:1, a bomber group, has fatigue 0, not above the 60 of the press risk: it is set from normal reach to extended reach.  <- order:3, #30
+#32 D1 -         order:4 accepted for air_group:1  <- order:4  [issued by the staff]
+#33 D1 -         Allied staff's reason for order:4 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of air_group:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:1, a bomber group, has fatigue 0, not above the 60 of the press risk. The group decides the size of its strikes from the task it is under: intent:2 strikes ships that come within reach of base:1 (Placeholder base 1), which is more to hit than one force, so each strike is sized by doctrine, which sends everything at a kind it gives no figure for. Its strike sizing is set on.  <- order:4, #32
+#34 D1 -         order:5 accepted for air_group:2  <- order:5  [issued by the staff]
+#35 D1 -         Allied staff's reason for order:5 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:2, a bomber group, has fatigue 0, not above the 60 of the press risk: it is set from rest to naval strike.  <- order:5, #34
+#36 D1 -         order:6 accepted for air_group:2  <- order:6  [issued by the staff]
+#37 D1 -         Allied staff's reason for order:6 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:2, a bomber group, has fatigue 0, not above the 60 of the press risk: it is set from an oldest contact of 0 pulse(s) to 2 pulse(s).  <- order:6, #36
+#38 D1 -         order:7 accepted for air_group:2  <- order:7  [issued by the staff]
+#39 D1 -         Allied staff's reason for order:7 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:2, a bomber group, has fatigue 0, not above the 60 of the press risk: it is set from normal reach to extended reach.  <- order:7, #38
+#40 D1 -         order:8 accepted for air_group:2  <- order:8  [issued by the staff]
+#41 D1 -         Allied staff's reason for order:8 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of air_group:2; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:2, a bomber group, has fatigue 0, not above the 60 of the press risk. The group decides the size of its strikes from the task it is under: intent:2 strikes ships that come within reach of base:1 (Placeholder base 1), which is more to hit than one force, so each strike is sized by doctrine, which sends everything at a kind it gives no figure for. Its strike sizing is set on.  <- order:8, #40
+#42 D1 -         order:9 accepted for air_group:3  <- order:9  [issued by the staff]
+#43 D1 -         Allied staff's reason for order:9 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:3, a bomber group, has fatigue 0, not above the 60 of the press risk: it is set from rest to naval strike.  <- order:9, #42
+#44 D1 -         order:10 accepted for air_group:3  <- order:10  [issued by the staff]
+#45 D1 -         Allied staff's reason for order:10 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:3, a bomber group, has fatigue 0, not above the 60 of the press risk: it is set from an oldest contact of 0 pulse(s) to 2 pulse(s).  <- order:10, #44
+#46 D1 -         order:11 accepted for air_group:3  <- order:11  [issued by the staff]
+#47 D1 -         Allied staff's reason for order:11 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:3, a bomber group, has fatigue 0, not above the 60 of the press risk: it is set from normal reach to extended reach.  <- order:11, #46
+#48 D1 -         order:12 accepted for air_group:3  <- order:12  [issued by the staff]
+#49 D1 -         Allied staff's reason for order:12 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of air_group:3; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:3, a bomber group, has fatigue 0, not above the 60 of the press risk. The group decides the size of its strikes from the task it is under: intent:2 strikes ships that come within reach of base:1 (Placeholder base 1), which is more to hit than one force, so each strike is sized by doctrine, which sends everything at a kind it gives no figure for. Its strike sizing is set on.  <- order:12, #48
+#50 D1 -         order:13 accepted for air_group:4  <- order:13  [issued by the staff]
+#51 D1 -         Allied staff's reason for order:13 [serves intent 3: search the waters from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:4, a search group, has fatigue 0 against the 60 of the press risk; it is not above the level, so it searches the waters: its mission is set from rest to search.  <- order:13, #50
+#52 D1 -         order:14 accepted for air_group:4  <- order:14  [issued by the staff]
+#53 D1 -         Allied staff's reason for order:14 [serves intent 3: search the waters from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: The search arc of air_group:4 is set to 110 to 180 out to 600 nm: the waters within 0 hexes of (0,5): (0,5); the narrowest arc that holds them is 140 to 150, widened by 30 degrees at each end to 110 to 180.  <- order:14, #52
+#54 D1 -         order:15 accepted for air_group:5  <- order:15  [issued by the staff]
+#55 D1 -         Allied staff's reason for order:15 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:5, a fighter group: base:1 (Placeholder base 1) has no cover, and a base that strikes will be struck, so it flies the patrol at a share of 0.5: it is set from rest to combat air patrol.  <- order:15, #54
+#56 D1 -         order:16 accepted for air_group:5  <- order:16  [issued by the staff]
+#57 D1 -         Allied staff's reason for order:16 [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:5, a fighter group: base:1 (Placeholder base 1) has no cover, and a base that strikes will be struck, so it flies the patrol at a share of 0.5: it is set from a patrol share of 1 to 0.5.  <- order:16, #56
+#58 D1 night     Allied contact:1 aged to 3 pulses  <- #1
+#59 D1 night     Allied contact:2 aged to 2 pulses  <- #2
+#60 D1 night     Allied contact:3 aged to 1 pulses  <- #4
+#61 D1 morning   air_group:4 searched 110-180 out to 600 nm from base:1 with 6 aircraft  <- order:13, order:14
+#62 D1 morning   air_group:1 launched 10 aircraft at contact:2 at (3,0), 120 nm  <- order:1, order:3, #2, order:2, order:4
+#63 D1 morning   air_group:2 launched 8 aircraft at contact:2 at (3,0), 120 nm  <- order:5, order:7, #2, order:6, order:8
+#64 D1 morning   air_group:3 launched 9 aircraft at contact:3 at (-3,0), 120 nm  <- order:9, order:11, #4, order:10, order:12
+#65 D1 morning   air_group:5 sent 4 escorts with air_group:1  <- order:15, order:16, #62
+#66 D1 morning   air_group:1 found nothing at (3,0)  <- #62
+#67 D1 morning   air_group:2 found nothing at (3,0)  <- #63
+#68 D1 morning   air_group:3 found nothing at (-3,0)  <- #64
+#69 D1 morning   Allied contact:2 not there at (3,0): dropped  <- #66
+#70 D1 morning   Allied contact:3 not there at (-3,0): dropped  <- #68
+#71 D1 morning   Allied contact:1 aged to 4 pulses  <- #1
+#72 D1 afternoon air_group:4 searched 110-180 out to 600 nm from base:1 with 6 aircraft  <- order:13, order:14
+#73 D1 afternoon Allied contact:1 dropped at 5 pulses  <- #1
+#74 D1 -         base:1 at the end of the day: 1000 t of supply, 44 aircraft ready: open
+#75 D2 -         Allied staff's reason for giving no order [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: intent:2, strike ships from base:1 (Placeholder base 1), stands under intent:1: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from the nearest hex of the waters within 0 hexes of (0,5) (1 hex(es) on the map); its bombers whose normal reach touches them: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:2 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#76 D2 -         Allied staff's reason for giving no order [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: intent:3, search the waters from base:1 (Placeholder base 1), stands under intent:1: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from the nearest hex of the waters within 0 hexes of (0,5) (1 hex(es) on the map); its groups whose search range touches them: air_group:4 (Placeholder flying boat, a search range of 600 nm).
+#77 D2 -         Allied staff's reason for giving no order [serves intent 2: strike ships from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: No order is given for intent:2, striking ships from base:1 (Placeholder base 1) this morning: air_group:1, a bomber group, has fatigue 0, not above the 60 of the press risk; air_group:2, a bomber group, has fatigue 0, not above the 60 of the press risk; air_group:3, a bomber group, has fatigue 0, not above the 60 of the press risk; air_group:4, a group that is neither a fighter nor carries a weapon: no order; air_group:5, a fighter group: base:1 (Placeholder base 1) has no cover, and a base that strikes will be struck, so it flies the patrol at a share of 0.5. at the press risk a bomber flies the naval strike mission up to a fatigue of 60, launches on a contact up to 2 pulse(s) old, goes for every kind, on extended reach, holding back 0, and sizes its strikes.
+#78 D2 -         Allied staff's reason for giving no order [serves intent 3: search the waters from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: No order is given for these groups for intent:3, searching the waters from base:1 (Placeholder base 1) this morning: air_group:1 is a fighter or cannot search: no order; air_group:2 is a fighter or cannot search: no order; air_group:3 is a fighter or cannot search: no order; air_group:4, a search group, has fatigue 0 against the 60 of the press risk; it searches 110 to 180 out to 600 nm; air_group:5 is a fighter or cannot search: no order. The arc is 110 to 180 (the waters within 0 hexes of (0,5): (0,5); the narrowest arc that holds them is 140 to 150, widened by 30 degrees at each end to 110 to 180).
+#79 D2 morning   air_group:4 searched 110-180 out to 600 nm from base:1 with 6 aircraft  <- order:13, order:14
+#80 D2 afternoon air_group:4 searched 110-180 out to 600 nm from base:1 with 6 aircraft  <- order:13, order:14
+#81 D2 -         base:1 at the end of the day: 1000 t of supply, 44 aircraft ready: open
+
+air_group:1 "Placeholder dive bombers 1" (Allied) at base:1: 10 ready, mission NavalStrike, extended reach, no arc
+air_group:2 "Placeholder dive bombers 2" (Allied) at base:1: 10 ready, mission NavalStrike, extended reach, no arc
+air_group:3 "Placeholder dive bombers 3" (Allied) at base:1: 10 ready, mission NavalStrike, extended reach, no arc
+air_group:4 "Placeholder flying boats 4" (Allied) at base:1: 6 ready, mission Search, arc 110-180 to 600 nm
+air_group:5 "Placeholder fighters 5" (Allied) at base:1: 8 ready, mission CombatAirPatrol, patrol share 0.5, no arc
+base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

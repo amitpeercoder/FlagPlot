@@ -16,8 +16,14 @@ pub const FORMAT: &str = "flagplot-agent";
 /// hold intent in command_state and report. 9 adds the kinds `neutralise` and
 /// `raid` with a `target` (decision 0120), a reason's `level` (the level that
 /// decided) in why, and the measure of a neutralise intent in command_state
-/// and report; `base` of an intent is `null` for a neutralise.
-pub const VERSION: u32 = 9;
+/// and report; `base` of an intent is `null` for a neutralise. 10 adds the
+/// kinds `deny` (`hex`, `distance`), `strike_ships` and `search_waters`
+/// (decision 0123), `base` of an intent being `null` for a deny too, the
+/// measure of a deny intent in command_state and report (`denials`), the air
+/// group order `set_strike_sizing` and a group's `strike_sizing`, and the
+/// strike answer's `aircraft` with, for a group that sizes its strikes, `need`
+/// and `sent_before` (decision 0118).
+pub const VERSION: u32 = 10;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

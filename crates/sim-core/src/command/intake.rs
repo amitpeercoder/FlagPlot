@@ -142,6 +142,7 @@ impl World {
             None => match found.addressee {
                 Addressee::Area => false,
                 Addressee::Base(base) => own.location == AirGroupLocation::Base(base),
+                Addressee::AirGroup(addressed) => addressed == group,
             },
         }
     }
@@ -247,6 +248,11 @@ impl World {
                     .is_some_and(|existing| existing.kind.code() != kind.code())
                 {
                     return Err(CommandRefusal::KindCannotChange(*intent));
+                }
+                // "Search waters" stands under "deny an area" only (decision
+                // 0123, 11).
+                if !kind.may_be_root() {
+                    return Err(CommandRefusal::NotARoot);
                 }
                 self.check_intent_kind(side, kind)
             }
@@ -610,7 +616,8 @@ impl World {
 
     /// Checks the kind of an intent set or formed: its own base is the
     /// side's, its target (decision 0120, 5 and 9) is a base on the side's
-    /// map that is not the side's, and a supply intent's days are at least 1.
+    /// map that is not the side's, the hex of its waters (decision 0123, 1)
+    /// is on the map, and a supply intent's days are at least 1.
     fn check_intent_kind(&self, side: Side, kind: &IntentKind) -> Result<(), CommandRefusal> {
         if let Some(base) = kind.own_base() {
             if !self.own_base(side, base) {
@@ -625,6 +632,13 @@ impl World {
                 .is_some_and(|found| found.side != side && found.on_map);
             if !enemy {
                 return Err(CommandRefusal::NotAnEnemyBase(target));
+            }
+        }
+        // The waters of a "deny an area" intent are about a hex on the map
+        // (decision 0123, 1).
+        if let Some((hex, _)) = kind.waters() {
+            if !self.map.contains(hex) {
+                return Err(CommandRefusal::NotOnMap(hex));
             }
         }
         if let IntentKind::KeepSupplied {

@@ -538,6 +538,10 @@
           "description": "Given only for a group that holds back a share of its aircraft from a strike (set_strike_held_share): the share, above \"0\". Left out where none is held back.",
           "$ref": "#/$defs/dec"
         },
+        "strike_sizing": {
+          "description": "Given (true) only for a group that sizes its strikes to their target (set_strike_sizing, decision 0118). Left out where it is off.",
+          "const": true
+        },
         "moved_yesterday": {
           "description": "Given (true) only for a group that a rebase order moved to its present base on the day just resolved (decision 0091): it flew nothing on that day, and its aircraft were on the ground at this base. Left out otherwise.",
           "const": true
@@ -777,7 +781,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 9
+          "const": 10
         },
         "kind": {
           "const": "not_known"

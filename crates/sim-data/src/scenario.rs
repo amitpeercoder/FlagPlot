@@ -569,6 +569,11 @@ enum ActionSpec {
     SetStrikeHeldShare {
         share: Quantity,
     },
+    /// Switch on or off the sizing of the group's strikes to their target
+    /// (decision 0118).
+    SetStrikeSizing {
+        on: bool,
+    },
     /// Move the air group to the named base of its side (decision 0091). A
     /// base that is not the side's, or out of reach, is refused at intake.
     /// The base is the order's `base` key, which `OrderSpec` reads first
@@ -1901,6 +1906,8 @@ impl Scenario {
                     None => Fixed::ZERO,
                 },
                 strike_share_order: None,
+                strike_sizing: false,
+                strike_sizing_order: None,
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -2172,6 +2179,9 @@ impl Scenario {
                         ActionSpec::SetStrikeHeldShare { .. } => {
                             return Err(wrong_target("set_strike_held_share", "air_group"))
                         }
+                        ActionSpec::SetStrikeSizing { .. } => {
+                            return Err(wrong_target("set_strike_sizing", "air_group"))
+                        }
                         ActionSpec::Rebase {} => {
                             return Err(wrong_target("rebase", "air_group"))
                         }
@@ -2292,12 +2302,15 @@ impl Scenario {
                                     .map_err(|e| fail(format!("share on day {day} {e}")))?,
                             }
                         }
+                        ActionSpec::SetStrikeSizing { on } => {
+                            AirGroupOrder::SetStrikeSizing { on: *on }
+                        }
                         ActionSpec::Rebase {} => AirGroupOrder::Rebase {
                             base: BaseId::new(need_base("rebase")?),
                         },
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority, set_strike_contact_age, set_strike_held_share or rebase"
+                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority, set_strike_contact_age, set_strike_held_share, set_strike_sizing or rebase"
                             )))
                         }
                     };
@@ -3627,6 +3640,16 @@ r = 0
             &format!("{}\nextra = 1", share("\"0.25\""))
         ))
         .is_err());
+    }
+
+    #[test]
+    fn the_strike_sizing_order_loads_for_an_air_group() {
+        let sizing = |on: &str| format!("kind = \"set_strike_sizing\"\non = {on}");
+        parse_with(&order("air_group = 1", &sizing("true"))).expect("on loads");
+        parse_with(&order("air_group = 1", &sizing("false"))).expect("off loads");
+        assert!(parse_with(&order("air_group = 1", "kind = \"set_strike_sizing\"")).is_err());
+        assert!(parse_with(&order("air_group = 1", &sizing("1"))).is_err());
+        assert!(error_of(&order("task_force = 1", &sizing("true"))).contains("air_group"));
     }
 
     /// `HEAD` with the air combat key added after the surface combat key.
@@ -6304,7 +6327,9 @@ task_force = 3
         assert!(error_of(&command(
             "kind = \"set_intent\"\nintent = 1\nintent_kind = \"win\"\nbase = 2"
         ))
-        .contains("not keep_supplied, cover, hold, neutralise or raid"));
+        .contains(
+            "not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships or search_waters"
+        ));
         // Neutralise and raid name a target; a neutralise takes no base.
         let aimed = |kind: &str, extra: &str| {
             command(&format!(
@@ -6329,6 +6354,40 @@ task_force = 3
                     target: BaseId::new(9)
                 },
             }
+        );
+        assert_eq!(
+            only(&aimed("deny", "hex = [3, -1]\ndistance = 4")),
+            CommandKind::SetIntent {
+                intent: IntentId::new(4),
+                kind: sim_core::command::IntentKind::Deny {
+                    hex: sim_core::hex::Hex::new(3, -1),
+                    distance: 4
+                },
+            }
+        );
+        assert_eq!(
+            only(&aimed("strike_ships", "base = 2")),
+            CommandKind::SetIntent {
+                intent: IntentId::new(4),
+                kind: sim_core::command::IntentKind::StrikeShips {
+                    base: BaseId::new(2)
+                },
+            }
+        );
+        assert_eq!(
+            only(&aimed("search_waters", "base = 2")),
+            CommandKind::SetIntent {
+                intent: IntentId::new(4),
+                kind: sim_core::command::IntentKind::SearchWaters {
+                    base: BaseId::new(2)
+                },
+            }
+        );
+        assert!(error_of(&aimed("deny", "distance = 4")).contains("needs \"hex\""));
+        assert!(error_of(&aimed("deny", "hex = [3, -1]")).contains("needs \"distance\""));
+        assert!(
+            error_of(&aimed("deny", "hex = [3, -1]\ndistance = 4\nbase = 2"))
+                .contains("does not take \"base\"")
         );
         assert!(error_of(&aimed("neutralise", "base = 2\ntarget = 9"))
             .contains("does not take \"base\""));

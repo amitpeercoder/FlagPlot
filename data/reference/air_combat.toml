@@ -188,3 +188,21 @@ men = "0.2"
 # share of hits on a base that land on its airfield, which counts only where
 # the base has one. 0 in the frozen step 1 figures.
 airfield = "0.2"
+
+# The aircraft a naval strike group sized to its target sends for each ship a
+# contact reports, by the kind it reports (decision 0118, 2 and its table). A
+# kind left out has no figure and needs everything: a sized group sends all it
+# can at it. Carrier and battleship have none: every carrier strike at
+# carriers reported in 1942 sent a whole group or all that could fly, and the
+# battleship is taken with the carrier as a capital ship, with no row
+# (docs/research/oob/strike-sizes.md). The other four are placeholders set by
+# the architect: cruiser 9 leans on 34 aircraft at two cruisers and two
+# destroyers (Midway, 6 June); destroyer 3 on 8 at four destroyers (25 August);
+# transport 3 on 25 at a convoy of 12 transports and its escort (14 November);
+# auxiliary 3 on no row. One table serves both sides. Not in the frozen step 1
+# figures, so sizing does nothing there.
+[strike_aircraft_per_ship]
+cruiser = 9
+destroyer = 3
+transport = 3
+auxiliary = 3

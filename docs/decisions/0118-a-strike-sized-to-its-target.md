@@ -1,10 +1,10 @@
 # 0118: A strike sized to its target
 
-Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, decision 13), on the designer's answer to its question 3: "a strike group sends the number of aircraft and ammunition as it sees fit to accomplish the task at hand". It writes the rule out with its rule card and its hand calculation. Not built. It is built in step 3 of the stage, after step 2. Amended on Nov 15, 2026, after the research on strike sizes and the designer's second word on it: see "Who decides the size".
+Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, decision 13), on the designer's answer to its question 3: "a strike group sends the number of aircraft and ammunition as it sees fit to accomplish the task at hand". It writes the rule out with its rule card and its hand calculation. Built on Nov 16, 2026, with decision 0123 ("As built" below). Amended on Nov 15, 2026, after the research on strike sizes and the designer's second word on it: see "Who decides the size".
 
 Summary: The size of a strike is the launching group's to decide, from the order it was given, what the operation requires and its doctrine; sending everything is one answer. The rule: a standing setting of a naval strike group, off until set, under which it sends at a contact what doctrine says that kind of target needs, less what groups before it have sent there, and everything where doctrine gives no figure
 
-Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Not built
+Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Built
 
 ## Why
 
@@ -80,3 +80,19 @@ In step 3 the strike doctrine decides, for the groups of a strike task, whether 
 ## The hand calculation
 
 `tests/scenario_49_a_strike_sized_to_its_target.rs`: eight groups at one base and three contacts in reach, a carrier, two cruisers and three transports, with no enemy unit, so that every strike finds nothing and no die is rolled. It gives every launch and its breakdown.
+
+## As built
+
+Built on Nov 16, 2026, with decision 0123, in one step. What follows is what was built and every place the build read the record more closely or differed from it.
+
+**State and order.** An air group has `strike_sizing` (off until set) and `strike_sizing_order`, hashed last in the group after `strike_share_order`. The order is `AirGroupOrder::SetStrikeSizing { on }`, added at the end of the air group orders (`set_strike_sizing` with `on` in scenario files and the agent's orders); it is accepted for any group of the side, with or without the air combat figures. There is no scenario key for it. The state version is 30 (`flagplot-state-v30`, with decision 0123's kinds) and the rules label 13.
+
+**The figures.** `air_combat.toml: [strike_aircraft_per_ship]` is an optional table of whole numbers by kind; a kind left out has no figure, and a file without the table is every kind so (`AirCombatFigures::strike_aircraft_per_ship`, empty). The live file has cruiser 9, destroyer 3, transport 3, auxiliary 3 and no carrier or battleship. **The frozen step 1 figures have the table empty**, as this record says ("get no table"); the test that a frozen file has every key of its live counterpart (`crates/sim-data/tests/frozen_figures.rs`) names this table as one a record leaves out, with its reason. A hand calculation adds its own figures to its copy.
+
+**The rule** is `naval_strike_launch` in `crates/sim-core/src/airstrike.rs`, the one function the strike decision and the side's view call. The candidates are the contacts the group could launch on, in its order (`contacts_to_strike`: kind first on the list, then the nearest, then the contact number; it replaces `contact_to_strike`). What has been sent at a contact is read from the strikes in flight of the side aimed at it (`sent_at_contacts`): those launched earlier in the pulse, sized or not. Sizing off takes the first candidate with all the group can send; sizing on walks them as rule 4 has it, and a kind with no figure takes all the group can send and is never served. The need is the ships reported times the figure, saturating.
+
+**The breakdown.** A sized launch's factors are `aircraft_able_to_fly`, `share_held_back`, `need_of_contact` (only where the kind has a figure), `sent_before`, and the result the aircraft sent. An unsized launch's breakdown is as decision 0114 built it. The sizing order is cited after the share order, wherever the group has one (on or off).
+
+**The strike question.** `AirAnswer::Strike` now carries a `NavalStrike` (the contact, the aircraft, and how a sized strike's size was found). `SideView::naval_strike` answers it as the decision will be made: the side's own groups before the one asked, in group number order, on the naval strike mission with ready aircraft, a position and a weapon, each launch on the same function as if the pulse were daylight (darkness is the same everywhere today), then the group asked. `SideView::strike_choice`, which the briefing's `would_strike` reads, is the contact of that answer; for a group with sizing off it is what it was. The agent's strike choice line gains `aircraft`, and for a sized group `need` (null: everything) and `sent_before`; the agent interface is version 10.
+
+**What it was checked against.** Scenario 49 (`data/scenarios/49_a_strike_sized_to_its_target.toml`, placeholder data, run on the frozen figures with the calculation's table added; sizing set by orders on day 1, the age and the held share by the scenario keys) came out as the hand calculation has it in every number: the morning's launches (10, 10, 4, 9, 10, 5, 18 and none), every breakdown, the causes, the three raids of 24, 24 and 18, the drops by groups 1, 4 and 7, 66 aircraft, and every property (89, 89, 89, 78, 72, 82, too few, a base strike of 9, sorties charged 4 and none, the strike question 4, 18 and none, the refusal). One reading: the variants' totals (89, 78, 72, 82) are the morning's, as "in one raid" says; over the whole day the variants with contacts left unserved launch again in the afternoon.

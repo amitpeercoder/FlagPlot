@@ -779,6 +779,11 @@ pub struct AirCombatFigures {
     /// before the attack, the rest after it (decision 0087). 1 is step 1's
     /// rule, all before; 0 all after.
     pub patrol_before_attack_share: Fixed,
+    /// The aircraft a naval strike needs for each ship a contact reports,
+    /// by the kind it reports (decision 0118, 2): `[strike_aircraft_per_ship]`.
+    /// A kind with no entry has no figure and needs everything; an empty
+    /// table, as a file with none gives, is every kind so.
+    pub strike_aircraft_per_ship: BTreeMap<ShipKind, u32>,
 }
 
 impl AirCombatFigures {
@@ -1712,6 +1717,7 @@ impl AirCombatFigures {
             patrol_drawn_off_share: Fixed::ONE,
             // Step 1's rule (decision 0087); the unit tests are worked on it.
             patrol_before_attack_share: Fixed::ONE,
+            strike_aircraft_per_ship: BTreeMap::new(),
         }
     }
 }

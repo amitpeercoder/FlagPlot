@@ -1,0 +1,72 @@
+Placeholder scenario 49: A strike sized to its target
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash da141afc557b2be9  46 events
+
+#1 D0 -         Allied report: 1 ship, carrier, at (0,4), held at the start: new contact:1
+#2 D0 -         Allied report: 2 ships, cruiser, at (3,0), held at the start: new contact:2
+#3 D0 -         Allied contact:1 aged to 1 pulses  <- #1
+#4 D0 -         Allied report: 3 ships, transport, at (-3,0), held at the start: new contact:3
+#5 D0 -         Allied contact:1 aged to 2 pulses  <- #1
+#6 D0 -         Allied contact:2 aged to 1 pulses  <- #2
+#7 D1 -         order:1 accepted for air_group:1  <- order:1
+#8 D1 -         order:2 accepted for air_group:1  <- order:2
+#9 D1 -         order:3 accepted for air_group:2  <- order:3
+#10 D1 -         order:4 accepted for air_group:3  <- order:4
+#11 D1 -         order:5 accepted for air_group:3  <- order:5
+#12 D1 -         order:6 accepted for air_group:4  <- order:6
+#13 D1 -         order:7 accepted for air_group:4  <- order:7
+#14 D1 -         order:8 accepted for air_group:5  <- order:8
+#15 D1 -         order:9 accepted for air_group:5  <- order:9
+#16 D1 -         order:10 accepted for air_group:6  <- order:10
+#17 D1 -         order:11 accepted for air_group:6  <- order:11
+#18 D1 -         order:12 accepted for air_group:7  <- order:12
+#19 D1 -         order:13 accepted for air_group:7  <- order:13
+#20 D1 -         order:14 accepted for air_group:8  <- order:14
+#21 D1 -         order:15 accepted for air_group:8  <- order:15
+#22 D1 night     Allied contact:1 aged to 3 pulses  <- #1
+#23 D1 night     Allied contact:2 aged to 2 pulses  <- #2
+#24 D1 night     Allied contact:3 aged to 1 pulses  <- #4
+#25 D1 morning   air_group:1 launched 10 aircraft at contact:1 at (0,4), 160 nm  <- order:1, #1, order:2
+#26 D1 morning   air_group:2 launched 10 aircraft at contact:1 at (0,4), 160 nm  <- order:3, #1
+#27 D1 morning   air_group:3 launched 10 aircraft at contact:1 at (0,4), 160 nm  <- order:4, #1, order:5
+#28 D1 morning   air_group:4 launched 9 aircraft at contact:1 at (0,4), 160 nm  <- order:6, #1, order:7
+#29 D1 morning   air_group:5 launched 10 aircraft at contact:1 at (0,4), 160 nm  <- order:8, #1, order:9
+#30 D1 morning   air_group:6 launched 10 aircraft at contact:1 at (0,4), 160 nm  <- order:10, #1, order:11
+#31 D1 morning   air_group:7 launched 20 aircraft at contact:1 at (0,4), 160 nm  <- order:12, #1, order:13
+#32 D1 morning   air_group:8 launched 10 aircraft at contact:1 at (0,4), 160 nm  <- order:14, #1, order:15
+#33 D1 morning   air_group:1 found nothing at (0,4)  <- #25
+#34 D1 morning   air_group:2 found nothing at (0,4)  <- #26
+#35 D1 morning   air_group:3 found nothing at (0,4)  <- #27
+#36 D1 morning   air_group:4 found nothing at (0,4)  <- #28
+#37 D1 morning   air_group:5 found nothing at (0,4)  <- #29
+#38 D1 morning   air_group:6 found nothing at (0,4)  <- #30
+#39 D1 morning   air_group:7 found nothing at (0,4)  <- #31
+#40 D1 morning   air_group:8 found nothing at (0,4)  <- #32
+#41 D1 morning   Allied contact:1 not there at (0,4): dropped  <- #33
+#42 D1 morning   Allied contact:2 aged to 3 pulses  <- #2
+#43 D1 morning   Allied contact:3 aged to 2 pulses  <- #4
+#44 D1 afternoon air_group:1 launched 10 aircraft at contact:2 at (3,0), 120 nm  <- order:1, #2, order:2
+#45 D1 afternoon air_group:2 launched 10 aircraft at contact:2 at (3,0), 120 nm  <- order:3, #2
+#46 D1 afternoon air_group:3 launched 9 aircraft at contact:3 at (-3,0), 120 nm  <- order:4, #4, order:5
+#47 D1 afternoon air_group:1 found nothing at (3,0)  <- #44
+#48 D1 afternoon air_group:2 found nothing at (3,0)  <- #45
+#49 D1 afternoon air_group:3 found nothing at (-3,0)  <- #46
+#50 D1 afternoon Allied contact:2 not there at (3,0): dropped  <- #47
+#51 D1 afternoon Allied contact:3 not there at (-3,0): dropped  <- #49
+#52 D1 -         base:1 at the end of the day: 1000 t of supply, 92 aircraft ready: open
+
+air_group:1 "Placeholder dive bombers 1" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
+air_group:2 "Placeholder dive bombers 2" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
+air_group:3 "Placeholder dive bombers 3" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
+air_group:4 "Placeholder dive bombers 4" (Allied) at base:1: 12 ready, mission NavalStrike, no arc
+air_group:5 "Placeholder dive bombers 5" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
+air_group:6 "Placeholder dive bombers 6" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
+air_group:7 "Placeholder dive bombers 7" (Allied) at base:1: 20 ready, mission NavalStrike, no arc
+air_group:8 "Placeholder dive bombers 8" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
+base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

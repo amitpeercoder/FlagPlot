@@ -87,6 +87,7 @@ The orders that act on an air group, and every reason one is refused, are in cha
 - A target priority order sets `target_priority`, a list of kinds of ship, and `target_order`. The strike decision reads it to choose a contact, and the raid reads it to choose what to attack (see "Naval strike: the contact" and "The attack on a ship"). It does nothing for a group that does not strike, and it is accepted for any group.
 - A strike contact age order sets `strike_contact_age`, the oldest contact in pulses the group launches a naval strike on, which only the strike decision reads (see "Naval strike: the contact"). With none set the figure `air_combat.toml: strike_contact_max_age_pulses` serves. It does nothing for a base strike, which needs no contact. [0114]
 - A strike held share order sets `strike_held_share`, a share from 0 to 1 (0 until one is set) of the aircraft the group is able to fly that a naval strike or a base strike holds back (see "Held back from a strike"). It does nothing for search, patrol or escorts. [0114]
+- A strike sizing order sets `strike_sizing`, on or off (off until one is set), which only the strike decision reads, for a naval strike (see "A strike sized to its target"). It does nothing for a base strike, search, patrol or escorts. It does nothing either where `air_combat.toml` has no `[strike_aircraft_per_ship]` figure for any kind. There is no scenario key for it: it is an order, `set_strike_sizing` with `on`. [0118]
 - A rebase order is not a standing order. It is applied when it is taken in and is then spent (see "Rebasing an air group").
 
 The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050, 0059, 0063, 0091, 0114]
@@ -309,7 +310,7 @@ From the contacts that qualify the group takes the one whose estimated kind come
 
 This choice is one function, which takes the side's belief and the group's own state and orders and nothing else. The strike decision calls it, and the side's view offers it (`SideView::strike_choice`), so the briefing and a planner can ask what a group would strike now. The view takes the group's number and answers only for the side's own groups. The group's own setting is read there too, since it is the same function. [0085, 0114]
 
-It launches the aircraft it is able to fly less the share it holds back (see "Held back from a strike"), which is every aircraft it is able to fly when no share is set. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order, by the group's reach order if it is on extended reach, by the group's target order if it has one (a group with none cites nothing new), by the event of the report that last refreshed the contact, by the group's strike contact age order if it has one and by its held share order if it has one. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. When breakdowns are on, the launch's breakdown gives the aircraft able to fly, the share held back and the aircraft sent. [0026, 0032, 0040, 0059, 0063, 0114]
+It launches the aircraft it is able to fly less the share it holds back (see "Held back from a strike"), which is every aircraft it is able to fly when no share is set. A group with strike sizing on may launch fewer, and may not launch at all (see "A strike sized to its target"). It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order, by the group's reach order if it is on extended reach, by the group's target order if it has one (a group with none cites nothing new), by the event of the report that last refreshed the contact, by the group's strike contact age order if it has one and by its held share order if it has one. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. When breakdowns are on, the launch's breakdown gives the aircraft able to fly, the share held back and the aircraft sent. [0026, 0032, 0040, 0059, 0063, 0114]
 
 This is the choice a side can ask as `measure`'s `choices`, `strike`: the answer is the contact the group would strike now, or none. [0100]
 
@@ -330,6 +331,39 @@ The aircraft held do nothing in that pulse: they stay where they are, and at a b
 A side sees: its own group's share, whole, and its orders; the enemy sees neither and learns nothing new of a raid.
 
 A side sees: `BaseStrikeLaunched` for its own group, whole.
+
+### A strike sized to its target
+
+A group can have strike sizing on, by the strike sizing order (see "Air group orders"). It is off until one is set. A group with it off launches as "Naval strike: the contact" says, with every aircraft it can send. A group with it on sends no more at a contact than the contact needs. A base strike is never sized: it launches what it can send at its base, as before. [0118]
+
+**The need of a contact** is the number of ships the contact reports times the figure of `air_combat.toml: [strike_aircraft_per_ship]` for the kind the contact is taken for, a whole number of aircraft. A kind with no figure has no need: it needs everything, and a group sends all it can send at it. Where the file has no such table, or the table is empty, no kind has a figure and sizing does nothing. The frozen step 1 figures (`data/reference/step1`) have an empty table, so the hand-calculation tests are as they were. The live figures are:
+
+| Kind | Aircraft for each ship |
+| --- | --- |
+| Carrier | none (needs everything) |
+| Battleship | none (needs everything) |
+| Cruiser | 9 |
+| Destroyer | 3 |
+| Transport | 3 |
+| Auxiliary | 3 |
+
+One table serves both sides. The carrier and the battleship have no row, and the cruiser, destroyer, transport and auxiliary figures are placeholders (the file says what each leans on). [0118]
+
+**What has been sent** at a contact is the number of aircraft launched at it in this pulse by the side's groups that decided before this one, in group number order, whether those groups sized their strikes or not. It is worked from the strikes launched in the pulse so far. A strike at a base is aimed at no contact and counts for none. [0118]
+
+**The walk.** A group with sizing on takes the contacts it could launch at, in the order "Naval strike: the contact" gives (the kind first on its list, then the nearest, then the lowest contact number), and takes the first one that is not served:
+
+- A contact of a kind with no figure is never served. The group sends all it can send at it.
+- A contact with a figure is served when what has been sent at it has reached its need. The group passes it by and goes on to the next.
+- Otherwise the group sends the smaller of what it can send (the aircraft it is able to fly less its held share) and what is still needed there (the need less what has been sent).
+
+If every contact is served, or there is none, the group launches nothing and nothing is recorded. The aircraft it did not send are not charged: they stay where they are, are not counted as flown ("What counts as a sortie") and are as able to fly in the next pulse. Escorts are unchanged: they are set by "The split" and "Which raid the escorts join, and the reach", whatever the bombers sent. [0118]
+
+**The record.** The launch records `StrikeLaunched` as before, with the aircraft it sent. When breakdowns are on, the launch's breakdown of a sized group gives `aircraft_able_to_fly`, `share_held_back`, `need_of_contact` (only where the kind has a figure), `sent_before` (the aircraft already sent at the contact), and, as the result, the aircraft sent. A launch of a group with sizing off keeps the first two factors and the result as before. It is caused as a launch always is, and by the group's strike sizing order, added after its held share order, where the group has one. [0114, 0118]
+
+**Who decides first.** The groups before it in group number order decide first: a group's launch can leave nothing for the group after it at a contact it served. A group's answer to the question depends, for that reason, on what the groups before it would send. The strike question (`measure`'s `choices`, `strike`, and `SideView::naval_strike`) gives the contact and the aircraft the group would send now: it works the groups of the side that decide before it, as the decision works them, on the same belief, and then the group asked. It answers none when the group has no contact to launch at or all are served. `SideView::strike_choice` gives the contact alone. [0100, 0118]
+
+A side sees: its own group's sizing order, whole; the enemy sees neither the order nor the need, and learns of a smaller strike only as it learns of any raid.
 
 ### A group may fly more than once a day
 

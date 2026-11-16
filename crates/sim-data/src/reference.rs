@@ -639,6 +639,38 @@ struct AirCombatFile {
     patrol_drawn_off_share: Quantity,
     /// Decision 0087.
     patrol_before_attack_share: Quantity,
+    /// Decision 0118, 2. Optional: a file without it gives no figure for
+    /// any kind, and sizing a strike does nothing.
+    strike_aircraft_per_ship: Option<StrikeAircraftTable>,
+}
+
+/// The aircraft a naval strike needs for each ship reported, by kind
+/// (decision 0118, 2). A kind left out has no figure: it needs everything.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct StrikeAircraftTable {
+    carrier: Option<u32>,
+    battleship: Option<u32>,
+    cruiser: Option<u32>,
+    destroyer: Option<u32>,
+    transport: Option<u32>,
+    auxiliary: Option<u32>,
+}
+
+impl StrikeAircraftTable {
+    fn to_map(&self) -> BTreeMap<ShipKind, u32> {
+        [
+            (ShipKind::Carrier, self.carrier),
+            (ShipKind::Battleship, self.battleship),
+            (ShipKind::Cruiser, self.cruiser),
+            (ShipKind::Destroyer, self.destroyer),
+            (ShipKind::Transport, self.transport),
+            (ShipKind::Auxiliary, self.auxiliary),
+        ]
+        .into_iter()
+        .filter_map(|(kind, figure)| figure.map(|figure| (kind, figure)))
+        .collect()
+    }
 }
 
 /// What a bomb hit on a base lands on (decision 7 of 0034). The rest of the
@@ -737,6 +769,11 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             "patrol_before_attack_share",
             &file.patrol_before_attack_share,
         )?,
+        strike_aircraft_per_ship: file
+            .strike_aircraft_per_ship
+            .as_ref()
+            .map(StrikeAircraftTable::to_map)
+            .unwrap_or_default(),
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));

@@ -91,6 +91,12 @@ fn every_live_figures_file_has_a_frozen_counterpart_and_the_other_way_round() {
     );
 }
 
+/// Keys a decision record says the frozen figures do not get, each with its
+/// record. Decision 0118: the frozen step 1 figures get no table of aircraft
+/// for each ship (their table is empty, so sizing a strike does nothing);
+/// a hand calculation that wants figures adds them to its own copy.
+const FROZEN_WITHOUT: &[&str] = &["strike_aircraft_per_ship."];
+
 #[test]
 fn a_frozen_file_has_every_key_and_column_its_live_counterpart_has() {
     let live_dir = reference_dir();
@@ -103,6 +109,7 @@ fn a_frozen_file_has_every_key_and_column_its_live_counterpart_has() {
         let frozen = shape(&file, &frozen_text);
         let lacking: Vec<String> = shape(&file, &live_text)
             .difference(&frozen)
+            .filter(|key| !FROZEN_WITHOUT.iter().any(|prefix| key.starts_with(prefix)))
             .cloned()
             .collect();
         assert!(

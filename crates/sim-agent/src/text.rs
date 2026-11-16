@@ -884,6 +884,9 @@ impl Briefing {
                     share.0
                 ));
             }
+            if g.strike_sizing == Some(true) {
+                s.push_str(", sizes its strikes to their target");
+            }
             s.push_str(&format!(", mission {}", plain(g.mission)));
             if let Some(t) = &g.target {
                 s.push_str(&format!(" at {}", t.text()));
