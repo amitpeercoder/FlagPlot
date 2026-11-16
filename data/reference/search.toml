@@ -24,6 +24,14 @@ merge_distance_hexes = 2
 # also reaches the surface fight.
 fresh_contact_max_age_pulses = 2
 
+# A contact made or refreshed in this pulse is refreshed again in the same
+# pulse only by a report this close (decision 0133): within a pulse a force has
+# not moved, and a report names its own hex or a neighbouring one.
+# Placeholder (decision 0133): the furthest a report's error moves it. No row
+# sizes it. The frozen step 1 figures have none, and there the merge distance
+# above serves both.
+merge_distance_same_pulse_hexes = 1
+
 # Chance a report names a neighbouring hex.
 # Placeholder (decision 0012). The air search note names position error as a
 # thing to model and gives no size.

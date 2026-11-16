@@ -105,7 +105,7 @@
     },
     {
       "file": "data/scenarios/../reference/search.toml",
-      "hash": "8d5c49f5f0d4a40c"
+      "hash": "5e9c6bee76140ec1"
     },
     {
       "file": "data/scenarios/../reference/surface_combat.toml",
@@ -201,7 +201,7 @@
     }
   ],
   "orders": [],
-  "rules_version": 17,
+  "rules_version": 18,
   "scenario": {
     "file": "data/scenarios/43_keep_two_bases_fed.toml",
     "hash": "0a6c6a34dbb4fcd2"

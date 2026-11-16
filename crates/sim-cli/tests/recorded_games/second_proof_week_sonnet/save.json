@@ -341,7 +341,7 @@
     },
     {
       "file": "data/scenarios/second-proof/../../reference/search.toml",
-      "hash": "8d5c49f5f0d4a40c"
+      "hash": "5e9c6bee76140ec1"
     },
     {
       "file": "data/scenarios/second-proof/../../reference/surface_combat.toml",
@@ -441,19 +441,19 @@
     },
     {
       "day": 18,
-      "hash": "d19c8ade1a688e5c"
+      "hash": "56afa9f6749e177e"
     },
     {
       "day": 19,
-      "hash": "dea868559eda15a9"
+      "hash": "b255da14eb38c64e"
     },
     {
       "day": 20,
-      "hash": "b9054f7cfcc648f8"
+      "hash": "c1bc76f3ef992243"
     },
     {
       "day": 21,
-      "hash": "3d8f1a2a2c79217c"
+      "hash": "a246703444cec38f"
     }
   ],
   "orders": [
@@ -976,7 +976,7 @@
       "unit": "land_unit:17"
     }
   ],
-  "rules_version": 17,
+  "rules_version": 18,
   "scenario": {
     "file": "data/scenarios/second-proof/07m_model_week.toml",
     "hash": "632c7d31c9cab8a1"
@@ -8503,7 +8503,7 @@
             "binding": [
               "the patrol share of the balanced risk: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17",
               "rest above fatigue 45 at balanced risk",
-              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 290 to 330, widened by 30 degrees at each end to 260 to 000"
+              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 290 to 330, widened by 30 degrees at each end to 260 to 000"
             ],
             "evidence": [
               {
@@ -8526,7 +8526,7 @@
               "plan": 1,
               "statement": "cover base:1 (Lunga) from the air"
             },
-            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 9.52), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 27.2 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); the arc is 260 to 000 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 290 to 330, widened by 30 degrees at each end to 260 to 000).",
+            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 9.52), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 27.2 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); the arc is 260 to 000 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 290 to 330, widened by 30 degrees at each end to 260 to 000).",
             "would_change": [
               "a group whose fatigue or mission differs from what the doctrine wants",
               "a strike intent for the groups left for it"
@@ -8579,14 +8579,14 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a cruiser; contact 3, a destroyer).",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer; contact 3, a destroyer; contact 5, a cruiser).",
             "would_change": [
               "a home port set"
             ]
           },
           {
             "binding": [
-              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350"
+              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350"
             ],
             "evidence": [
               {
@@ -8625,14 +8625,14 @@
               "plan": 6,
               "statement": "operate the carrier force task_force:2 from (5,-3)"
             },
-            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a cruiser; contact 3, a destroyer).",
+            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer; contact 3, a destroyer; contact 5, a cruiser).",
             "would_change": [
               "a home port set"
             ]
           },
           {
             "binding": [
-              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340"
+              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340"
             ],
             "evidence": [
               {
@@ -8669,7 +8669,7 @@
               "evidence": [
                 {
                   "day": 19,
-                  "what": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 11 able to fly, air_group:103 at fatigue 11.2232 with 10 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 350 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 11 able to fly, air_group:103 at fatigue 11.2232 with 10 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 350 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 19,
@@ -8685,7 +8685,7 @@
                 "plan": 5,
                 "statement": "operate the carrier force task_force:1 from (4,-3)"
               },
-              "worked": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 11 able to fly, air_group:103 at fatigue 11.2232 with 10 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 350 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 11 able to fly, air_group:103 at fatigue 11.2232 with 10 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 350 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -8708,7 +8708,7 @@
               "evidence": [
                 {
                   "day": 19,
-                  "what": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 11 able to fly, air_group:103 at fatigue 11.2232 with 10 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 350 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 11 able to fly, air_group:103 at fatigue 11.2232 with 10 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 350 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 19,
@@ -8724,7 +8724,7 @@
                 "plan": 5,
                 "statement": "operate the carrier force task_force:1 from (4,-3)"
               },
-              "worked": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 11 able to fly, air_group:103 at fatigue 11.2232 with 10 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 350 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 11 able to fly, air_group:103 at fatigue 11.2232 with 10 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 350 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 320, widened by 30 degrees at each end to 250 to 350); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -8819,7 +8819,7 @@
               "evidence": [
                 {
                   "day": 19,
-                  "what": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 8 able to fly, air_group:107 at fatigue 0 with 9 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 8 able to fly, air_group:107 at fatigue 0 with 9 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 19,
@@ -8835,7 +8835,7 @@
                 "plan": 6,
                 "statement": "operate the carrier force task_force:2 from (5,-3)"
               },
-              "worked": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 8 able to fly, air_group:107 at fatigue 0 with 9 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 8 able to fly, air_group:107 at fatigue 0 with 9 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -8858,7 +8858,7 @@
               "evidence": [
                 {
                   "day": 19,
-                  "what": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 8 able to fly, air_group:107 at fatigue 0 with 9 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 8 able to fly, air_group:107 at fatigue 0 with 9 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 19,
@@ -8874,7 +8874,7 @@
                 "plan": 6,
                 "statement": "operate the carrier force task_force:2 from (5,-3)"
               },
-              "worked": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 8 able to fly, air_group:107 at fatigue 0 with 9 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9), contact 3 at (2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 8 able to fly, air_group:107 at fatigue 0 with 9 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-7), contact 3 at (2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -9364,7 +9364,7 @@
             "binding": [
               "the patrol share of the balanced risk: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17",
               "rest above fatigue 45 at balanced risk",
-              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340"
+              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340"
             ],
             "evidence": [
               {
@@ -9387,7 +9387,7 @@
               "plan": 1,
               "statement": "cover base:1 (Lunga) from the air"
             },
-            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 33.2 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); the arc is 260 to 340 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340).",
+            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 33.2 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); the arc is 260 to 340 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340).",
             "would_change": [
               "a group whose fatigue or mission differs from what the doctrine wants",
               "a strike intent for the groups left for it"
@@ -9440,14 +9440,14 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer).",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer; contact 5, a cruiser).",
             "would_change": [
               "a home port set"
             ]
           },
           {
             "binding": [
-              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340"
+              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340"
             ],
             "evidence": [
               {
@@ -9486,14 +9486,14 @@
               "plan": 6,
               "statement": "operate the carrier force task_force:2 from (5,-3)"
             },
-            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer).",
+            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer; contact 5, a cruiser).",
             "would_change": [
               "a home port set"
             ]
           },
           {
             "binding": [
-              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330"
+              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330"
             ],
             "evidence": [
               {
@@ -9567,7 +9567,7 @@
               "evidence": [
                 {
                   "day": 20,
-                  "what": "air_group:104, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 8.2232 with 10 able to fly, air_group:103 at fatigue 1.2232 with 11 able to fly, air_group:104 at fatigue 0 with 4 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:104 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 420 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:104, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 8.2232 with 10 able to fly, air_group:103 at fatigue 1.2232 with 11 able to fly, air_group:104 at fatigue 0 with 4 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:104 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 420 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 20,
@@ -9583,7 +9583,7 @@
                 "plan": 5,
                 "statement": "operate the carrier force task_force:1 from (4,-3)"
               },
-              "worked": "air_group:104, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 8.2232 with 10 able to fly, air_group:103 at fatigue 1.2232 with 11 able to fly, air_group:104 at fatigue 0 with 4 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:104 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 420 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:104, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 8.2232 with 10 able to fly, air_group:103 at fatigue 1.2232 with 11 able to fly, air_group:104 at fatigue 0 with 4 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:104 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 420 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -9606,7 +9606,7 @@
               "evidence": [
                 {
                   "day": 20,
-                  "what": "air_group:104, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 8.2232 with 10 able to fly, air_group:103 at fatigue 1.2232 with 11 able to fly, air_group:104 at fatigue 0 with 4 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:104 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 420 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:104, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 8.2232 with 10 able to fly, air_group:103 at fatigue 1.2232 with 11 able to fly, air_group:104 at fatigue 0 with 4 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:104 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 420 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 20,
@@ -9622,7 +9622,7 @@
                 "plan": 5,
                 "statement": "operate the carrier force task_force:1 from (4,-3)"
               },
-              "worked": "air_group:104, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 8.2232 with 10 able to fly, air_group:103 at fatigue 1.2232 with 11 able to fly, air_group:104 at fatigue 0 with 4 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:104 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 420 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:104, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 8.2232 with 10 able to fly, air_group:103 at fatigue 1.2232 with 11 able to fly, air_group:104 at fatigue 0 with 4 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:104 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 420 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -9643,7 +9643,7 @@
               "evidence": [
                 {
                   "day": 20,
-                  "what": "air_group:106, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 0 with 10 able to fly, air_group:107 at fatigue 8.2232 with 5 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:106 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:106, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 0 with 10 able to fly, air_group:107 at fatigue 8.2232 with 5 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:106 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 20,
@@ -9659,7 +9659,7 @@
                 "plan": 6,
                 "statement": "operate the carrier force task_force:2 from (5,-3)"
               },
-              "worked": "air_group:106, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 0 with 10 able to fly, air_group:107 at fatigue 8.2232 with 5 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:106 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:106, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 0 with 10 able to fly, air_group:107 at fatigue 8.2232 with 5 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:106 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -9682,7 +9682,7 @@
               "evidence": [
                 {
                   "day": 20,
-                  "what": "air_group:106, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 0 with 10 able to fly, air_group:107 at fatigue 8.2232 with 5 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:106 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:106, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 0 with 10 able to fly, air_group:107 at fatigue 8.2232 with 5 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:106 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 20,
@@ -9698,7 +9698,7 @@
                 "plan": 6,
                 "statement": "operate the carrier force task_force:2 from (5,-3)"
               },
-              "worked": "air_group:106, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 0 with 10 able to fly, air_group:107 at fatigue 8.2232 with 5 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:106 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:106, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 0 with 10 able to fly, air_group:107 at fatigue 8.2232 with 5 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:106 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -10274,7 +10274,7 @@
             "binding": [
               "the patrol share of the balanced risk: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20",
               "rest above fatigue 45 at balanced risk",
-              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340"
+              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340"
             ],
             "evidence": [
               {
@@ -10297,7 +10297,7 @@
               "plan": 1,
               "statement": "cover base:1 (Lunga) from the air"
             },
-            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 39.2 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20); the arc is 260 to 340 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340).",
+            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 39.2 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 20); the arc is 260 to 340 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340).",
             "would_change": [
               "a group whose fatigue or mission differs from what the doctrine wants",
               "a strike intent for the groups left for it"
@@ -10350,14 +10350,14 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer).",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer; contact 5, a destroyer).",
             "would_change": [
               "a home port set"
             ]
           },
           {
             "binding": [
-              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340"
+              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340"
             ],
             "evidence": [
               {
@@ -10396,14 +10396,14 @@
               "plan": 6,
               "statement": "operate the carrier force task_force:2 from (5,-3)"
             },
-            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer).",
+            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer; contact 5, a destroyer).",
             "would_change": [
               "a home port set"
             ]
           },
           {
             "binding": [
-              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330"
+              "search arc: threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330"
             ],
             "evidence": [
               {
@@ -10440,7 +10440,7 @@
               "evidence": [
                 {
                   "day": 21,
-                  "what": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 12 able to fly, air_group:103 at fatigue 0 with 12 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 12 able to fly, air_group:103 at fatigue 0 with 12 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 21,
@@ -10456,7 +10456,7 @@
                 "plan": 5,
                 "statement": "operate the carrier force task_force:1 from (4,-3)"
               },
-              "worked": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 12 able to fly, air_group:103 at fatigue 0 with 12 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 12 able to fly, air_group:103 at fatigue 0 with 12 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -10479,7 +10479,7 @@
               "evidence": [
                 {
                   "day": 21,
-                  "what": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 12 able to fly, air_group:103 at fatigue 0 with 12 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 12 able to fly, air_group:103 at fatigue 0 with 12 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 21,
@@ -10495,7 +10495,7 @@
                 "plan": 5,
                 "statement": "operate the carrier force task_force:1 from (4,-3)"
               },
-              "worked": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 12 able to fly, air_group:103 at fatigue 0 with 12 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:102, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:102 at fatigue 0 with 12 able to fly, air_group:103 at fatigue 0 with 12 able to fly, air_group:104 at fatigue 8.352 with 3 able to fly, air_group:125 at fatigue 0 with 7 able to fly): air_group:102 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 340 out to 397 nm from (4,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 310, widened by 30 degrees at each end to 250 to 340); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -10590,7 +10590,7 @@
               "evidence": [
                 {
                   "day": 21,
-                  "what": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 5 able to fly, air_group:107 at fatigue 0 with 6 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 5 able to fly, air_group:107 at fatigue 0 with 6 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 21,
@@ -10606,7 +10606,7 @@
                 "plan": 6,
                 "statement": "operate the carrier force task_force:2 from (5,-3)"
               },
-              "worked": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 5 able to fly, air_group:107 at fatigue 0 with 6 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 5 able to fly, air_group:107 at fatigue 0 with 6 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"
@@ -10629,7 +10629,7 @@
               "evidence": [
                 {
                   "day": 21,
-                  "what": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 5 able to fly, air_group:107 at fatigue 0 with 6 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses"
+                  "what": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 5 able to fly, air_group:107 at fatigue 0 with 6 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses"
                 },
                 {
                   "day": 21,
@@ -10645,7 +10645,7 @@
                 "plan": 6,
                 "statement": "operate the carrier force task_force:2 from (5,-3)"
               },
-              "worked": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 5 able to fly, air_group:107 at fatigue 0 with 6 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses.",
+              "worked": "air_group:107, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:106 at fatigue 8.2232 with 5 able to fly, air_group:107 at fatigue 0 with 6 able to fly, air_group:108 at fatigue 0 with 8 able to fly, air_group:126 at fatigue 0 with 5 able to fly): air_group:107 searches, has fatigue 0 not above the 45 of the balanced risk: it searches 250 to 330 out to 397 nm from (5,-3) (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (-2,-9); the narrowest arc that holds them is 280 to 300, widened by 30 degrees at each end to 250 to 330); at balanced risk a carrier force searches in both daylight pulses.",
               "would_change": [
                 "a different fatigue or risk level",
                 "a new contact, or a contact dropped"

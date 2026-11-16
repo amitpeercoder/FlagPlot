@@ -310,6 +310,10 @@ pub struct SearchFigures {
     pub contact_drop_age_pulses: u32,
     /// A report refreshes a contact at most this many hexes away...
     pub merge_distance_hexes: u32,
+    /// ...or this many, if the contact was made or refreshed in this pulse
+    /// (decision 0133). With none, `merge_distance_hexes` serves both, as
+    /// before: the frozen step 1 figures have none.
+    pub merge_distance_same_pulse_hexes: Option<u32>,
     /// ...and no older than this many pulses. The same figure says how old a
     /// contact may be and still alert a force (decision 0032).
     pub fresh_contact_max_age_pulses: u32,
@@ -1935,6 +1939,7 @@ impl SearchFigures {
         SearchFigures {
             contact_drop_age_pulses: 5,
             merge_distance_hexes: 2,
+            merge_distance_same_pulse_hexes: Some(1),
             fresh_contact_max_age_pulses: 2,
             position_error_chance: tenth(3),
             count_over_chance: tenth(2),

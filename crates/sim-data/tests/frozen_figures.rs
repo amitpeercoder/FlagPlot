@@ -103,10 +103,16 @@ fn every_live_figures_file_has_a_frozen_counterpart_and_the_other_way_round() {
 /// And the search figure of fatigue (decision 0131, 3): the frozen step 1
 /// figures give none, so a search tires a group by the figure for every
 /// sortie, as it did.
+///
+/// And the distance within which a report refreshes a contact made or
+/// refreshed in the same pulse (decision 0133, 5): the frozen step 1 figures
+/// give none, so every contact is refreshed within the merge distance, as it
+/// was.
 const FROZEN_WITHOUT: &[&str] = &[
     "strike_aircraft_per_ship.",
     "rearming",
     "search_fatigue_per_100_nm",
+    "merge_distance_same_pulse_hexes",
 ];
 
 #[test]

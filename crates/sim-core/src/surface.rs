@@ -6748,13 +6748,12 @@ mod tests {
         // 3 at (2,0) is also 2 away. The nearest are 2 and 3 at distance 2;
         // the lower ID, contact 2, is the one cited.
         let mut world = lone_allied();
-        // No merging of reports into one contact, so each stays its own.
-        world
-            .ref_data
-            .search
-            .as_mut()
-            .expect("search figures")
-            .merge_distance_hexes = 0;
+        // No merging of reports into one contact, so each stays its own: the
+        // three reports come in one pulse, so the same-pulse distance of
+        // decision 0133 is set to 0 too.
+        let search = world.ref_data.search.as_mut().expect("search figures");
+        search.merge_distance_hexes = 0;
+        search.merge_distance_same_pulse_hexes = Some(0);
         let (far, _) = give_contact(&mut world, Side::Allied, Hex::new(3, 0));
         let (near_low, _) = give_contact(&mut world, Side::Allied, Hex::new(0, 2));
         give_contact(&mut world, Side::Allied, Hex::new(2, 0));

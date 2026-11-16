@@ -275,8 +275,10 @@ impl BeliefState {
     /// created or refreshed or a claim stored (decision 13).
     ///
     /// A sighting: among contacts within `merge_distance_hexes` of the
-    /// reported hex and no older than `fresh_contact_max_age_pulses`, the nearest is
-    /// refreshed, the lowest ID on a tie. Otherwise the report makes a new
+    /// reported hex (within `merge_distance_same_pulse_hexes`, if given, for a
+    /// contact made or refreshed this pulse: decision 0133) and no older than
+    /// `fresh_contact_max_age_pulses`, the nearest is refreshed, the lowest ID
+    /// on a tie. Otherwise the report makes a new
     /// contact. A battle claim is appended to the claims. A "nothing there"
     /// report removes the contact if it exists and names that hex (decision
     /// 0028). A ground report makes or replaces the estimate for its hex
@@ -335,13 +337,19 @@ impl BeliefState {
         report: &SightingReport,
         figures: &SearchFigures,
     ) -> ReportOutcome {
-        // Iteration is in ID order and min_by_key keeps the first minimum, so
-        // a tie goes to the lowest ID.
+        // A contact made or refreshed this pulse qualifies only within the
+        // same-pulse figure, if there is one; any other within the merge
+        // distance (decision 0133). Iteration is in ID order and min_by_key
+        // keeps the first minimum, so a tie goes to the lowest ID.
+        let reach = |contact: &Contact| match figures.merge_distance_same_pulse_hexes {
+            Some(same_pulse) if self.refreshed_this_pulse.contains(&contact.id) => same_pulse,
+            _ => figures.merge_distance_hexes,
+        };
         let nearest = self
             .contacts
             .values()
             .filter(|contact| {
-                contact.estimated_hex.distance(report.estimated_hex) <= figures.merge_distance_hexes
+                contact.estimated_hex.distance(report.estimated_hex) <= reach(contact)
                     && contact.age_pulses <= figures.fresh_contact_max_age_pulses
             })
             .min_by_key(|contact| contact.estimated_hex.distance(report.estimated_hex))
@@ -785,5 +793,329 @@ mod tests {
             from_bombardment: _,
             received_event: _,
         } = belief.claims()[0].clone();
+    }
+
+    // Scenario 60's cases (decision 0133), at the level its hand calculation
+    // says: reports applied to one side's belief, in order. They live here
+    // because `BeliefState::apply_report` is the crate's own and cannot be
+    // driven from the tests crate; `tests/scenario_60_two_sightings_in_one_pulse.rs`
+    // holds the hand calculation and the battle property. Every number is
+    // the architect's.
+
+    /// A sighting of `count` ships of `kind` at (q, r).
+    fn sighting(q: i32, r: i32, count: u32, kind: ShipKind, event: u32) -> Report {
+        Report::Sighting(SightingReport {
+            estimated_hex: Hex::new(q, r),
+            estimated_ship_count: count,
+            estimated_kind: kind,
+            received_event: EventId::new(event),
+        })
+    }
+
+    /// The figures of scenario 60: the live search figures, whose merge
+    /// distance is 2, same-pulse merge distance 1 and freshness 2.
+    fn s60_figures() -> SearchFigures {
+        let figures = figures();
+        assert_eq!(figures.merge_distance_hexes, 2);
+        assert_eq!(figures.merge_distance_same_pulse_hexes, Some(1));
+        assert_eq!(figures.fresh_contact_max_age_pulses, 2);
+        figures
+    }
+
+    fn s60_apply(
+        belief: &mut BeliefState,
+        report: &Report,
+        figures: &SearchFigures,
+    ) -> ReportOutcome {
+        match belief.apply_report(report, figures) {
+            ApplyOutcome::Contact(outcome) => outcome,
+            other => panic!("a sighting made no contact: {other:?}"),
+        }
+    }
+
+    /// Each contact the side holds: number, hex, ships, kind, age.
+    fn s60_held(belief: &BeliefState) -> Vec<(u32, Hex, u32, ShipKind, u32)> {
+        belief
+            .contacts()
+            .map(|c| {
+                (
+                    c.id.raw(),
+                    c.estimated_hex,
+                    c.estimated_ship_count,
+                    c.estimated_kind,
+                    c.age_pulses,
+                )
+            })
+            .collect()
+    }
+
+    /// The distances the hand calculation names.
+    #[test]
+    fn scenario_60_distances_are_the_hand_calculations() {
+        let d = |a: (i32, i32), b: (i32, i32)| Hex::new(a.0, a.1).distance(Hex::new(b.0, b.1));
+        assert_eq!(d((7, -9), (8, -11)), 2);
+        assert_eq!(d((7, -9), (7, -10)), 1);
+        assert_eq!(d((9, -12), (8, -11)), 1);
+        assert_eq!(d((7, -10), (8, -11)), 1);
+        assert_eq!(d((7, -9), (9, -12)), 3);
+        assert_eq!(d((9, -12), (7, -10)), 2);
+        assert_eq!(d((6, -9), (8, -11)), 2);
+        assert_eq!(d((10, -13), (8, -11)), 2);
+        assert_eq!(d((10, -13), (6, -9)), 4);
+    }
+
+    /// Case A: two forces, one pulse.
+    #[test]
+    fn scenario_60_case_a_two_forces_in_one_pulse_are_two_contacts() {
+        let figures = s60_figures();
+        let mut belief = BeliefState::new(Side::Allied);
+        let first = s60_apply(
+            &mut belief,
+            &sighting(7, -9, 5, ShipKind::Cruiser, 1),
+            &figures,
+        );
+        assert_eq!((first.contact.raw(), first.created), (1, true));
+        let second = s60_apply(
+            &mut belief,
+            &sighting(8, -11, 13, ShipKind::Carrier, 2),
+            &figures,
+        );
+        assert_eq!((second.contact.raw(), second.created), (2, true));
+        assert_eq!(
+            s60_held(&belief),
+            vec![
+                (1, Hex::new(7, -9), 5, ShipKind::Cruiser, 0),
+                (2, Hex::new(8, -11), 13, ShipKind::Carrier, 0),
+            ]
+        );
+    }
+
+    /// Case B: one force, one pulse, a hex out.
+    #[test]
+    fn scenario_60_case_b_a_report_a_hex_out_in_the_same_pulse_refreshes() {
+        let figures = s60_figures();
+        let mut belief = BeliefState::new(Side::Allied);
+        s60_apply(
+            &mut belief,
+            &sighting(7, -9, 5, ShipKind::Cruiser, 1),
+            &figures,
+        );
+        let second = s60_apply(
+            &mut belief,
+            &sighting(7, -10, 13, ShipKind::Carrier, 2),
+            &figures,
+        );
+        assert_eq!((second.contact.raw(), second.created), (1, false));
+        assert_eq!(
+            s60_held(&belief),
+            vec![(1, Hex::new(7, -10), 13, ShipKind::Carrier, 0)]
+        );
+    }
+
+    /// Case C: one force, the next pulse.
+    #[test]
+    fn scenario_60_case_c_the_next_pulse_refreshes_from_two_hexes() {
+        let figures = s60_figures();
+        let mut belief = BeliefState::new(Side::Allied);
+        s60_apply(
+            &mut belief,
+            &sighting(7, -9, 5, ShipKind::Cruiser, 1),
+            &figures,
+        );
+        belief.age_contacts(&figures);
+        let second = s60_apply(
+            &mut belief,
+            &sighting(8, -11, 13, ShipKind::Carrier, 2),
+            &figures,
+        );
+        assert_eq!((second.contact.raw(), second.created), (1, false));
+        assert_eq!(
+            s60_held(&belief),
+            vec![(1, Hex::new(8, -11), 13, ShipKind::Carrier, 0)]
+        );
+    }
+
+    /// Case D: the older contact takes it.
+    #[test]
+    fn scenario_60_case_d_the_older_contact_takes_it() {
+        let figures = s60_figures();
+        let mut belief = BeliefState::new(Side::Allied);
+        s60_apply(
+            &mut belief,
+            &sighting(9, -12, 5, ShipKind::Cruiser, 1),
+            &figures,
+        );
+        belief.age_contacts(&figures);
+        let made = s60_apply(
+            &mut belief,
+            &sighting(7, -9, 5, ShipKind::Cruiser, 2),
+            &figures,
+        );
+        assert_eq!((made.contact.raw(), made.created), (2, true));
+        let third = s60_apply(
+            &mut belief,
+            &sighting(8, -11, 13, ShipKind::Carrier, 3),
+            &figures,
+        );
+        assert_eq!((third.contact.raw(), third.created), (1, false));
+        let hexes: Vec<(u32, Hex)> = s60_held(&belief).iter().map(|c| (c.0, c.1)).collect();
+        assert_eq!(hexes, vec![(1, Hex::new(8, -11)), (2, Hex::new(7, -9))]);
+    }
+
+    /// Case E: a tie goes to the lowest number.
+    #[test]
+    fn scenario_60_case_e_a_tie_goes_to_the_lowest_number() {
+        let figures = s60_figures();
+        let mut belief = BeliefState::new(Side::Allied);
+        s60_apply(
+            &mut belief,
+            &sighting(9, -12, 5, ShipKind::Cruiser, 1),
+            &figures,
+        );
+        let second = s60_apply(
+            &mut belief,
+            &sighting(7, -10, 5, ShipKind::Cruiser, 2),
+            &figures,
+        );
+        assert_eq!((second.contact.raw(), second.created), (2, true));
+        belief.age_contacts(&figures);
+        let third = s60_apply(
+            &mut belief,
+            &sighting(8, -11, 13, ShipKind::Carrier, 3),
+            &figures,
+        );
+        assert_eq!((third.contact.raw(), third.created), (1, false));
+        belief.age_contacts(&figures);
+        let held = s60_held(&belief);
+        assert_eq!((held[0].0, held[0].1), (1, Hex::new(8, -11)));
+        assert_eq!((held[1].0, held[1].1), (2, Hex::new(7, -10)));
+    }
+
+    /// Case E's age, as the architect restated it after the build: a
+    /// contact is not aged at the end of the pulse that made it, so contact
+    /// 2, made in pulse 1, is at age 0 after pulse 1's ageing and 1 after
+    /// pulse 2's.
+    #[test]
+    fn scenario_60_case_e_contact_2_is_one_pulse_old_at_the_end_of_pulse_2() {
+        let figures = s60_figures();
+        let mut belief = BeliefState::new(Side::Allied);
+        s60_apply(
+            &mut belief,
+            &sighting(9, -12, 5, ShipKind::Cruiser, 1),
+            &figures,
+        );
+        s60_apply(
+            &mut belief,
+            &sighting(7, -10, 5, ShipKind::Cruiser, 2),
+            &figures,
+        );
+        belief.age_contacts(&figures);
+        s60_apply(
+            &mut belief,
+            &sighting(8, -11, 13, ShipKind::Carrier, 3),
+            &figures,
+        );
+        belief.age_contacts(&figures);
+        assert_eq!(
+            belief.contact(ContactId::new(2)).expect("held").age_pulses,
+            1
+        );
+    }
+
+    /// Case F: the older contact takes it at two hexes.
+    #[test]
+    fn scenario_60_case_f_the_older_contact_takes_it_at_two_hexes() {
+        let figures = s60_figures();
+        let mut belief = BeliefState::new(Side::Allied);
+        s60_apply(
+            &mut belief,
+            &sighting(10, -13, 5, ShipKind::Cruiser, 1),
+            &figures,
+        );
+        belief.age_contacts(&figures);
+        let made = s60_apply(
+            &mut belief,
+            &sighting(6, -9, 5, ShipKind::Cruiser, 2),
+            &figures,
+        );
+        assert_eq!((made.contact.raw(), made.created), (2, true));
+        let third = s60_apply(
+            &mut belief,
+            &sighting(8, -11, 13, ShipKind::Carrier, 3),
+            &figures,
+        );
+        assert_eq!((third.contact.raw(), third.created), (1, false));
+        let hexes: Vec<(u32, Hex)> = s60_held(&belief).iter().map(|c| (c.0, c.1)).collect();
+        assert_eq!(hexes, vec![(1, Hex::new(8, -11)), (2, Hex::new(6, -9))]);
+    }
+
+    /// Case G: the same hex twice in one pulse.
+    #[test]
+    fn scenario_60_case_g_the_same_hex_twice_in_one_pulse_refreshes() {
+        let figures = s60_figures();
+        let mut belief = BeliefState::new(Side::Allied);
+        s60_apply(
+            &mut belief,
+            &sighting(8, -11, 5, ShipKind::Cruiser, 1),
+            &figures,
+        );
+        let second = s60_apply(
+            &mut belief,
+            &sighting(8, -11, 13, ShipKind::Cruiser, 2),
+            &figures,
+        );
+        assert_eq!((second.contact.raw(), second.created), (1, false));
+        let held = s60_held(&belief);
+        assert_eq!(held.len(), 1);
+        assert_eq!(held[0].2, 13);
+    }
+
+    /// Case H: without the figure, as on the frozen step 1 figures, case A
+    /// gives one contact, as before decision 0133.
+    #[test]
+    fn scenario_60_case_h_without_the_figure_case_a_is_one_contact() {
+        let mut figures = s60_figures();
+        figures.merge_distance_same_pulse_hexes = None;
+        let mut belief = BeliefState::new(Side::Allied);
+        s60_apply(
+            &mut belief,
+            &sighting(7, -9, 5, ShipKind::Cruiser, 1),
+            &figures,
+        );
+        let second = s60_apply(
+            &mut belief,
+            &sighting(8, -11, 13, ShipKind::Carrier, 2),
+            &figures,
+        );
+        assert_eq!((second.contact.raw(), second.created), (1, false));
+        assert_eq!(
+            s60_held(&belief),
+            vec![(1, Hex::new(8, -11), 13, ShipKind::Carrier, 0)]
+        );
+    }
+
+    /// Property: the same reports in the same order give the same contacts.
+    #[test]
+    fn scenario_60_the_same_reports_in_the_same_order_give_the_same_contacts() {
+        let figures = s60_figures();
+        let play = || {
+            let mut belief = BeliefState::new(Side::Allied);
+            for (i, (q, r, n)) in [(9, -12, 5), (7, -9, 3), (8, -11, 13), (7, -10, 2)]
+                .into_iter()
+                .enumerate()
+            {
+                let event = u32::try_from(i).expect("small") + 1;
+                s60_apply(
+                    &mut belief,
+                    &sighting(q, r, n, ShipKind::Cruiser, event),
+                    &figures,
+                );
+                if i == 1 {
+                    belief.age_contacts(&figures);
+                }
+            }
+            (s60_held(&belief), belief.next_contact_raw())
+        };
+        assert_eq!(play(), play());
     }
 }
