@@ -1008,14 +1008,14 @@ impl PortSize {
             return Some(format!("port size {size} has a negative lighter rate"));
         }
         for (name, rate) in [
-            ("berth", self.fuel_berth_rate_t_per_h),
-            ("lighter", self.fuel_lighter_rate_t_per_h),
+            ("fuel berth", self.fuel_berth_rate_t_per_h),
+            ("fuel lighter", self.fuel_lighter_rate_t_per_h),
             ("ammunition berth", self.ammunition_berth_rate_t_per_h),
             ("ammunition lighter", self.ammunition_lighter_rate_t_per_h),
         ] {
             if rate.is_some_and(|rate| rate.is_negative() || rate.is_zero()) {
                 return Some(format!(
-                    "port size {size} has a fuel {name} rate that is not positive"
+                    "port size {size} has a {name} rate that is not positive"
                 ));
             }
         }
