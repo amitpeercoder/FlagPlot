@@ -107,10 +107,16 @@
 //! - **Balanced.** Group 1's share is 0.5 and it keeps 6 overhead. Group 3
 //!   is given two orders, the mission and sizing on, and launches nothing.
 //!   The rules of engagement order has a break-off level of 0.5. Group 2
-//!   is given three orders: the search mission, search once a day and the
-//!   arc, in that order, and it searches in the two morning pulses only.
-//!   Day 1 has 9 orders. (Restated by the architect on Nov 16, 2026, for
-//!   decision 0131: it had 8, and group 2 searching in all four pulses.)
+//!   is given two orders, the search mission and the arc, and searches in
+//!   all four daylight pulses. Day 1 has 8 orders. (As first written. On
+//!   Nov 16, 2026, decision 0131 made it 9, with search once a day for
+//!   group 2 and two searches; the amendment of that decision's rule 6 the
+//!   same day, that a carrier force searches in both pulses at balanced,
+//!   brought it back.)
+//! - **Preserve the force searches once a day.** At preserve the force
+//!   group 2 is given three orders: the search mission, search once a day
+//!   and the arc, in that order, and it searches in the two morning pulses
+//!   only. (Added by the architect on Nov 16, 2026, with the amendment.)
 //! - **No scout.** With no group 2 and a second dive bomber group, group 4,
 //!   of 10: no group can only search, so group 3, the lowest that can do
 //!   both, is set to search and group 4 to strike. The placeholder dive
@@ -139,8 +145,7 @@
 //!   "operate task force 1 from (0,0)" as intent 2, beside the deny end:
 //!   the staff forms no task for force 1 under intent 1, and its reason
 //!   names intent 2. Every order to the force and to its groups is given
-//!   once, serving intent 2, whose risk is balanced: day 1 has 9 orders
-//!   (8 before decision 0131, which adds group 2's search once a day).
+//!   once, serving intent 2, whose risk is balanced: day 1 has 8 orders.
 //!   (Added by the architect on Nov 16, 2026, with the ruling that a force
 //!   has one task of a kind, whoever made it.)
 //! - A held force or group is left alone; the same start gives the same

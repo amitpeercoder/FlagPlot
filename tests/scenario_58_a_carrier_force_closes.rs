@@ -98,10 +98,11 @@
 //!
 //! - **Balanced.** A carrier is what balanced closes on: she closes as
 //!   above, with a break-off level of 0.5, a patrol share of 0.5 and two
-//!   orders to group 3, and three to group 2, search once a day between
-//!   its mission and its arc: eleven orders on day 1 (restated by the
-//!   architect on Nov 16, 2026, for decision 0131; it had ten). She
-//!   launches nothing: the
+//!   orders to group 3: ten orders on day 1 (as first written; decision
+//!   0131 made it eleven with search once a day for group 2, and the
+//!   amendment of its rule 6 on Nov 16, 2026, that a carrier force
+//!   searches in both pulses at balanced, brought it back). She launches
+//!   nothing: the
 //!   contact is a pulse old against the figure of 0. On the morning of
 //!   day 2 the contact is still held, at age 3, and is in reach from
 //!   (6,0), 240 nm: she stays, and the staff gives no order. The contact

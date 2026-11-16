@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 16, 2026, on the designer's choice of th
 
 Summary: A search group may be set to fly its search once a day, in the morning; a search tires a group by a figure of its own, sized so that a flying boat group can search to 700 miles every day as the record has it; and where a base's or a force's only searchers are its bombers, the least tired bomber group that can search flies the morning search while the rest hold the strike
 
-Standing: Decided by the designer, Nov 16, 2026, on the research. Built
+Standing: Decided by the designer, Nov 16, 2026, on the research. Built. Rule 6 amended the same day for a carrier force, on his choice after the proof's rerun
 
 ## Why
 
@@ -31,7 +31,7 @@ Against that, the game's rule: a group that flew in a daylight pulse gains 3 and
 
 ## The doctrines
 
-6. **A search is flown once a day** by every doctrine that sets a group to search (the cover, the search of waters, the carrier force), at preserve the force and at balanced. At press it is flown in both pulses.
+6. **A search is flown once a day** by every doctrine that sets a group to search (the cover, the search of waters, the carrier force), at preserve the force and at balanced. At press it is flown in both pulses. **Amended on Nov 16, 2026, after the second proof was run again (decision 0128, "Rerun"), on the designer's choice: a carrier force searches in both pulses at balanced as at press, and once a day only at preserve the force.** A base's cover and its search of waters are as first written. Why: the research this record rests on found one sortie a day for the long patrols of flying boats from a base, and found carriers searching in the afternoon as well as the morning (Enterprise's 23 aircraft on the afternoon of 24 August 1942, `docs/research/oob/search-tempo.md`). The architect applied the patrol finding to carriers too, which the rows do not support. It showed in the rerun: the American carriers, searching in the morning only, did not find carriers that came within range in the afternoon. This is a change made after seeing a result of the proof, and the proof's report says so.
 7. **Bombers that take a turn, on a carrier force.** Decision 0125's rule 4 has the lowest numbered group that can both search and strike do the searching where the force has no group that can only search. It is changed to the least tired of those groups that can fly, then the lowest numbered, chosen each morning. The rest strike.
 8. **Bombers that take a turn, at a base.** Where a base has a strike task or a raid task and its cover, or a search task, has no group that can only search, the task that has the bombers gives the search to the least tired of its bomber groups that can search and can fly, then the lowest numbered, each morning, where it has two or more such groups. That group flies the cover's or the search task's arc that day and does not strike or raid. With one bomber group, it holds the strike.
 9. **A group that searched yesterday and strikes today** is given the missions in turn by orders, as the rest rule gives rest and work in turn.
