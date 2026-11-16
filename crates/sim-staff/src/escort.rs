@@ -39,7 +39,7 @@ use sim_core::view::SideView;
 use crate::handin::{Out, Step, Who};
 use crate::planner::Planner;
 use crate::reasons::serving;
-use crate::stand::{afloat, fuel_needs, margin, stopped, threat, Sighted, THREAT_HEXES};
+use crate::stand::{afloat, margin, stopped, threat, Sighted, THREAT_HEXES};
 use crate::units::tons;
 
 /// What the doctrine decided for a run about to be routed.
@@ -118,17 +118,45 @@ fn free_escort(
         return Err(format!("{hold} is held by the commander"));
     }
     let need_margin = margin(risk);
-    let Some((needs, _)) = fuel_needs(
-        planner.view,
-        id,
-        waypoints,
-        Some(SpeedSetting::Knots(speed_kn)),
-        need_margin,
-    ) else {
+    let Some(forecast) = planner
+        .view
+        .forecast_route(id, waypoints, Some(SpeedSetting::Knots(speed_kn)))
+        .filter(|f| f.refusal.is_none())
+    else {
         return Err(format!(
             "{id} cannot be routed out and back by the engine's measure"
         ));
     };
+    // The engine's forecast stops where a ship runs dry: such a ship's need
+    // is the whole passage at its class's rate, as the engine burns it.
+    let route_nm = planner.route.as_ref().map_or(Fixed::ZERO, |r| {
+        Fixed::from_int(i64::from(r.out_nm + r.back_nm))
+    });
+    let needs: Vec<(sim_core::ids::ShipId, Fixed, Fixed)> = forecast
+        .ships
+        .iter()
+        .map(|line| {
+            let burned = if line.runs_dry {
+                planner
+                    .view
+                    .ships()
+                    .find(|ship| ship.id == line.ship)
+                    .and_then(|ship| planner.view.ship_class(ship.class))
+                    .map_or(line.burned_t, |class| {
+                        let multiplier = if speed_kn <= class.cruise_speed_kn {
+                            Fixed::ONE
+                        } else {
+                            let ratio = speed_kn / class.cruise_speed_kn;
+                            ratio * ratio
+                        };
+                        route_nm.mul_div(class.fuel_capacity_t, class.endurance_nm) * multiplier
+                    })
+            } else {
+                line.burned_t
+            };
+            (line.ship, line.fuel_t, burned * need_margin)
+        })
+        .collect();
     let words: Vec<String> = needs
         .iter()
         .map(|(ship, aboard, need)| {
