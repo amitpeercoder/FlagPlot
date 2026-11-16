@@ -114,9 +114,11 @@
 //!   bomber has no search range, so this is a test of the pure decision in
 //!   a view built for it, with a type that has both.
 //! - **Fuel takes her home.** At balanced, with ship 1 holding 79 t: the
-//!   passage home needs 66.666666 x 1.2 = 80 t. On day 1 the force is
-//!   routed to base 1 and the reason gives 79 against 80. Its groups are
-//!   given their orders as above. With 81 t it stays.
+//!   passage home needs 66.666666 x 1.2 = 79.999999 t, in the engine's
+//!   fixed point. On day 1 the force is routed to base 1 and the reason
+//!   gives 79 against 79.999999. Its groups are given their orders as
+//!   above. With 81 t it stays. (Restated by the architect on Nov 16,
+//!   2026, after the build: the first draft rounded the need to 80.)
 //! - **A commander's hex.** With the commander stating "operate task force
 //!   1 from (2,0)" as intent 1 and nothing else: on day 1 the force is
 //!   routed to (2,0) at cruise, and the air orders are those of balanced.
@@ -1076,7 +1078,7 @@ fn the_scenario_with_fuel(tons: u32) -> String {
 }
 
 #[test]
-fn fuel_takes_her_home_79_t_against_the_passage_home_with_the_margin() {
+fn fuel_takes_her_home_79_t_against_79_999999_and_she_is_routed_home() {
     let played = play(&the_scenario_with_fuel(79));
     played.nothing_refused();
     // On day 1 the force is routed to base 1, which is (5,0).
@@ -1087,7 +1089,8 @@ fn fuel_takes_her_home_79_t_against_the_passage_home_with_the_margin() {
     );
     // Its groups are given their orders as above.
     assert_eq!(air_orders(&played, 1), balanced_air_orders());
-    // The reason gives 79 against the need: 66.666666 x 1.2.
+    // The reason gives 79 against the need: 66.666666 x 1.2 = 79.999999 in
+    // the engine's fixed point (restated by the architect).
     let r = said(reason_of(&played, 1, &Given::Force(1, route(&[(5, 0)]))));
     assert!(
         r.contains("ship:1 has 79 t aboard against 79.999999 t needed"),
@@ -1100,24 +1103,6 @@ fn fuel_takes_her_home_79_t_against_the_passage_home_with_the_margin() {
         .all(|k| matches!(k, EventKind::TaskForceSteamed { .. }))
         .is_empty());
     played.every_chain_ends_with_the_commander();
-}
-
-/// The hand calculation says the reason gives "79 against 80", the need being
-/// 66.666666 x 1.2 = 80 t. The code works the need in the six decimals of its
-/// figures: 66.666666 x 1.2 = 79.9999992, which the figures hold as
-/// 79.999999. The routing is the same either way (79 is under both), and so
-/// is the stay at 81; the two differ only in the text of the figure, by a
-/// millionth of a ton. This test keeps the hand calculation's figure and is
-/// ignored until the architect rules between 80 and 79.999999.
-#[test]
-#[ignore = "the code's reason gives 79 t against 79.999999 t needed; the hand calculation says 80 t"]
-fn fuel_takes_her_home_the_reason_gives_79_against_80() {
-    let played = play(&the_scenario_with_fuel(79));
-    let r = said(reason_of(&played, 1, &Given::Force(1, route(&[(5, 0)]))));
-    assert!(
-        r.contains("ship:1 has 79 t aboard against 80 t needed"),
-        "{r}"
-    );
 }
 
 #[test]
