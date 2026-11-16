@@ -54,7 +54,10 @@
 //! | Hour 24, the start of day 2 | Sails from S | Sails with it |
 //! | Hour 44 | Arrives at T and unloads | Arrives and stops with it |
 //! | Hour 66, the start of the afternoon of day 3 | Steams for S | Steams with it |
-//! | Hour 86, in the afternoon of day 4 | Arrives at S | Arrives at S; its ships are filled in that pulse |
+//! | Hour 86, in the morning of day 4 | Arrives at S | Arrives at S; its ships are filled in that pulse |
+//!
+//! (Restated by the architect on Nov 16, 2026, after the build: the first
+//! draft put hour 86 in the afternoon.)
 //!
 //! On the morning of day 5 the run's force is back at the source: force 1
 //! has no charge from that morning, by the staff's order to clear it or,
@@ -84,13 +87,18 @@
 //! - **Press.** No run is escorted. Force 1 is given no order on any day.
 //! - **Preserve the force.** Both runs are escorted: force 1 is given the
 //!   run's force as its charge on day 2 and again on day 17.
-//! - **Preserve, a threat and no escort.** With force 1 not in the forces
-//!   limit: on day 2 the run is not routed, the staff hands in that it
-//!   cannot meet the intent, and its reason gives the contact. On day 3
-//!   the contact is gone and the run is routed, a day late.
-//! - **Balanced, a threat and no escort.** With force 1 not in the forces
-//!   limit: the run sails alone on day 2 as in scenario 36, and its reason
-//!   says a threat was believed and no escort was free.
+//! - **Preserve, a threat and no escort.** With force 1 named and held: on
+//!   day 2 the run is not routed, the staff hands in that it cannot meet
+//!   the intent, and its reason gives the contact. On day 3 the contact is
+//!   gone and the run is routed, a day late.
+//! - **Balanced, a threat and no escort.** With force 1 named and held:
+//!   the run sails alone on day 2 as in scenario 36, and its reason says a
+//!   threat was believed and no escort was free.
+//! - **None named, the threat is not read.** With no task force in the
+//!   forces limit the supply doctrine does not read the threat, at any
+//!   risk level (decision 0126, 2). (The two properties above were
+//!   restated by the architect on Nov 16, 2026, after the build: the first
+//!   draft took force 1 out of the forces limit, which rule 2 answers.)
 //! - **An escort short of fuel is not free.** With ships 3 and 4 holding
 //!   10 t each: the run sails alone on day 2, and the reason gives the
 //!   fuel aboard against the fuel needed.
@@ -571,19 +579,16 @@ fn hours_44_and_86_force_1_arrives_with_the_run_and_its_ships_are_filled_at_s() 
     }
 }
 
-/// The hand calculation's table says the ships are filled "in the afternoon
-/// of day 4", at hour 86. Hour 86 is 14 hours into day 4; the night is the
-/// first 12 hours and the morning pulse follows (scenario 36's own log has
-/// ship 1 filled in the morning of day 4). The code fills them in the
-/// morning pulse. The table's word "afternoon" disagrees with its own
-/// hour: reported to the architect, not changed here.
+/// The table: at hour 86, in the morning of day 4, force 1 arrives at S
+/// and its ships are filled in that pulse.
 #[test]
-#[ignore = "the table says afternoon of day 4 for hour 86; the code fills the ships in the morning pulse (hour 86 is 14 hours into the day)"]
-fn the_ships_are_filled_in_the_afternoon_of_day_4() {
+fn the_ships_are_filled_in_the_morning_of_day_4() {
     let played = play(&text());
     for raw in [3, 4] {
         let filled = played.refuelled(raw);
-        assert_eq!(filled[0].1, Some(Pulse::Afternoon), "ship {raw}");
+        assert_eq!(filled.len(), 1, "ship {raw}");
+        assert_eq!(filled[0].0, 4, "ship {raw}");
+        assert_eq!(filled[0].1, Some(Pulse::Morning), "ship {raw}");
     }
 }
 
@@ -887,26 +892,6 @@ fn preserve_both_runs_are_escorted_on_day_2_and_again_on_day_17() {
     assert!(played.ship_fuel(16, 3) == n(500) && played.ship_fuel(16, 4) == n(500));
 }
 
-/// Preserve, a threat, and force 1 not in the forces limit. The doc comment
-/// says the threat is read and the run waits a day. The built doctrine reads
-/// no threat at all when no task force is named (rule 2 of decision 0126,
-/// "with none named, runs sail as they do today"): the run is routed on day
-/// 2 as in scenario 36, with no notice and no mention of the contact. The
-/// hand calculation and the rule disagree; the test is ignored and reported
-/// to the architect. The same property with force 1 named but held, which
-/// the doctrine does read, is the next test.
-#[test]
-#[ignore = "rule 2 of decision 0126: with no task force in the forces limit the threat is not read, so the run is routed on day 2 as in scenario 36"]
-fn preserve_a_threat_and_no_escort_force_1_not_in_the_limit() {
-    let played = play(&force_1_not_named(&with(&risk("preserve"))));
-    played.nothing_refused();
-    let d2 = played.decisions(2);
-    assert!(d2.orders.is_empty(), "the run is not routed on day 2");
-    assert_eq!(played.cannot_meet(2).len(), 1);
-    assert!(said_of_no_order(&played, 2).contains("3 hexes"));
-    assert_eq!(played.decisions(3).orders.len(), 2, "routed on day 3");
-}
-
 fn said_of_no_order(played: &Played, day: u32) -> String {
     played
         .no_order_reasons(day)
@@ -963,22 +948,6 @@ fn preserve_a_threat_and_no_escort_free_force_1_named_and_held() {
     // Force 1, held, was never ordered or moved.
     no_order_to(&played, 1);
     assert_eq!(played.at(18).task_forces[&force(1)].position(), S);
-}
-
-/// Balanced, a threat, force 1 not in the forces limit: the doc comment says
-/// the reason names the threat and the lack of an escort. The built doctrine
-/// reads no threat when no force is named (rule 2 of decision 0126), so the
-/// run sails alone with scenario 36's reason and says nothing of the contact.
-/// Ignored and reported; the held case is the next test.
-#[test]
-#[ignore = "rule 2 of decision 0126: with no task force in the forces limit the threat is not read, so the reason does not mention a threat"]
-fn balanced_a_threat_and_no_escort_force_1_not_in_the_limit() {
-    let played = play(&force_1_not_named(&text()));
-    played.nothing_refused();
-    sails_as_in_36(&played, 2);
-    let reason = &played.route_reason(2).worked;
-    assert!(reason.contains("threat is believed"), "{reason}");
-    assert!(reason.contains("no escort"), "{reason}");
 }
 
 #[test]
@@ -1214,6 +1183,21 @@ fn none_named_the_game_as_it_was_every_order_and_event_is_scenario_36s() {
     }
     // Force 1 never moves.
     no_order_to(&played, 1);
+}
+
+/// None named, the threat is not read, at any risk level: with no task
+/// force in the forces limit, at preserve and at press as at balanced, every
+/// order, command, reason and notice is scenario 36's at that risk.
+#[test]
+fn none_named_the_threat_is_not_read_at_any_risk_level() {
+    for level in ["preserve", "press"] {
+        let played = play(&force_1_not_named(&with(&risk(level))));
+        let reference = play_at(&format!("{}{}", text_36(), risk(level)), &path_36());
+        played.nothing_refused();
+        assert_eq!(played.handed, reference.handed, "{level}");
+        assert_eq!(played.readings, reference.readings, "{level}");
+        no_order_to(&played, 1);
+    }
 }
 
 #[test]
