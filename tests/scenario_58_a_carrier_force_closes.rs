@@ -112,8 +112,22 @@
 //! - **Already in reach.** With the contact at (5,0), 200 nm: no route.
 //! - **Too far.** With the contact at (30,0), 1200 nm, against 610: she
 //!   stays, and the reason gives the two distances.
-//! - **Not the fuel.** With ship 1 holding 50 t: she does not close, and
-//!   the reason gives the fuel aboard against the fuel needed.
+//! - **Not the fuel.** With ship 1 holding 300 t she has the fuel for the
+//!   passage home and not for the passage to (6,0) and from there home:
+//!   she does not close, and the reason gives the fuel aboard against the
+//!   fuel needed. With 50 t she has not the fuel for the passage home
+//!   itself, which the engine's measure has her run dry short of: she is
+//!   routed home to fuel, at cruise, and closing is not weighed. (Restated
+//!   on Nov 16, 2026, by the architect, after the build found that the
+//!   engine's measure gives no more burnt than is aboard: at 50 t she read
+//!   as having the 50 t the passage home needed. A ship that runs dry
+//!   short of a passage is short of the fuel for it.)
+//! - **The first contact decides.** With a second contact, a destroyer at
+//!   (20,0), 800 nm and beyond a night and the reach, the day is as above.
+//!   With the carrier contact at (5,0), in reach, and a destroyer at
+//!   (12,0): at press she does not close, the carrier being first and in
+//!   reach. With a destroyer at (5,0) and the carrier at (12,0): at press
+//!   she closes on the carrier, to (6,0).
 //! - **Speed alone.** With no contact and the commander stating "operate
 //!   task force 1 from (6,0)": at balanced she is ordered to full speed
 //!   and arrives at hour 8; at preserve the force she is given no speed
