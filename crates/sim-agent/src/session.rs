@@ -16,6 +16,7 @@ use sim_core::command::{CommandKind, Staff, StaffDecisions, Staffs};
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{OrderKind, OrderRequest, Origin, RejectReason, TaskForceOrder};
+use sim_core::pictures::CommandRef;
 use sim_core::state::Side;
 use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::World;
@@ -385,12 +386,17 @@ impl Session {
                     Some(Value::Bool(b)) => *b,
                     Some(_) => return Err(CallError::new("\"text\" must be true or false")),
                 };
-                let view = self.world.side_view(side);
+                let side_view = self.world.side_view(side);
+                // The area seat reads its own units as the area command
+                // holds them (decision 0136, 9); the umpire's result below
+                // is read from the side's own view.
+                let known = side_view.known_to(CommandRef::Area);
+                let view = known.view();
                 let mut briefing = briefing_for_game(&view, &self.scenario, Some(self.days));
                 // The final briefing carries the umpire's result (decision 8
                 // of 0054): the game is over, so it is no longer a secret.
                 if let Some(result) = self.final_result() {
-                    briefing = briefing.with_result(&view, &result);
+                    briefing = briefing.with_result(&side_view, &result);
                 }
                 if text {
                     Ok(json!({
@@ -405,11 +411,13 @@ impl Session {
             }
             "list_forces" => {
                 let area = area_of(&args)?;
-                to_value(&list_forces(&self.world.side_view(side), area))
+                let known = self.world.side_view(side).known_to(CommandRef::Area);
+                to_value(&list_forces(&known.view(), area))
             }
             "list_bases" => {
                 let area = area_of(&args)?;
-                to_value(&list_bases(&self.world.side_view(side), area))
+                let known = self.world.side_view(side).known_to(CommandRef::Area);
+                to_value(&list_bases(&known.view(), area))
             }
             "list_contacts" => {
                 let area = area_of(&args)?;
@@ -419,7 +427,8 @@ impl Session {
                 let handle = args.get("handle").and_then(Value::as_str).ok_or_else(|| {
                     CallError::new("\"handle\" is needed, as text such as \"task_force:3\"")
                 })?;
-                to_value(&get_entity(&self.world.side_view(side), handle))
+                let known = self.world.side_view(side).known_to(CommandRef::Area);
+                to_value(&get_entity(&known.view(), handle))
             }
             "measure" => {
                 let question = Question::from_json(&arguments.to_string())
@@ -443,11 +452,8 @@ impl Session {
                     last_day: Some(self.days),
                     yard_check: Some(&check),
                 };
-                to_value(&measure_in(
-                    &self.world.side_view(side),
-                    &question,
-                    &context,
-                ))
+                let known = self.world.side_view(side).known_to(CommandRef::Area);
+                to_value(&measure_in(&known.view(), &question, &context))
             }
             "explain" => {
                 let event = args

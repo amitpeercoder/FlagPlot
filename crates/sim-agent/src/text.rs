@@ -547,9 +547,10 @@ impl Briefing {
         }
         for f in &self.task_forces {
             let mut s = format!(
-                "{} at {}: {}, {}, speed {}",
+                "{} at {}{}: {}, {}, speed {}",
                 f.task_force.text(),
                 at(&f.place),
+                as_of_words(&f.as_of),
                 plain(f.status),
                 plain(f.mission),
                 f.speed
@@ -569,9 +570,10 @@ impl Briefing {
                 // A force away has nothing of route, fuel or movement to
                 // say (decision 0069); its own part gives the day it is back.
                 o.line(format!(
-                    "{} at {}: away at the yard, {}",
+                    "{} at {}{}: away at the yard, {}",
                     f.task_force.text(),
                     at(&f.place),
+                    as_of_words(&f.as_of),
                     ships(f.ships_afloat)
                 ));
                 continue;
@@ -1311,7 +1313,7 @@ fn base_text(o: &mut Out, b: &BriefingBase, rules: Rules, nested: bool) {
     let at_place = if nested {
         String::new()
     } else {
-        format!(" at {}", b.place.coords())
+        format!(" at {}{}", b.place.coords(), as_of_words(&b.as_of))
     };
     let formed = match &b.formed_by {
         Some(f) => format!(
@@ -2592,5 +2594,14 @@ fn planned_days_text(d: &crate::lines::DaysOfSupplyLine) -> String {
             "Days of supply for the hex: no figure, no supply is planned to be used there today ({} t in stock)",
             d.stock_t.0
         ),
+    }
+}
+
+/// ", as last reported the morning of day 1" where a force or a base is given
+/// as the area command last had it (decision 0136, 11); nothing otherwise.
+fn as_of_words(as_of: &Option<String>) -> String {
+    match as_of {
+        Some(moment) => format!(" (as last reported, of {moment})"),
+        None => String::new(),
     }
 }

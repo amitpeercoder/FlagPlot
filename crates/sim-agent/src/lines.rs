@@ -9,6 +9,7 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{BaseId, EntityRef};
 use sim_core::orders::{AirMission, Mission, Reach};
+use sim_core::pictures::CommandRef;
 use sim_core::refdata::ShipKind;
 use sim_core::side_events::SideEventKind;
 use sim_core::state::{
@@ -34,6 +35,14 @@ pub struct FuelLine {
 pub struct ForceLine {
     pub task_force: Handle,
     pub place: Place,
+    /// The moment this line is of, such as "the morning of day 1", where the
+    /// area command holds the force as last reported and that is not the
+    /// pulse just ended (decision 0136, 11). Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub as_of: Option<String>,
+    /// Given (true) only for a force on radio silence (decision 0136, 15).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub radio_silence: Option<bool>,
     /// `idle`, `underway`, `arrived`, `out_of_fuel` or `away_at_yard`
     /// (decision 0069).
     pub status: &'static str,
@@ -351,6 +360,11 @@ pub struct WouldStrike {
 pub struct BaseLine {
     pub base: Handle,
     pub place: Place,
+    /// As in [`ForceLine`]: the moment the area command's held state of the
+    /// base is of, where that is not the pulse just ended (decision 0136,
+    /// 11). Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub as_of: Option<String>,
     pub supply_t: Dec,
     pub fuel_t: Dec,
     /// 0 if the hex has no port.
@@ -506,6 +520,19 @@ pub(crate) fn fuel_line(ctx: &Ctx<'_>, ship: &sim_core::state::Ship) -> FuelLine
     }
 }
 
+/// The moment the area command's held state of `command` is of, in words,
+/// where the view is the area command's and that moment is not the pulse
+/// just ended (decision 0136, 11); `None` otherwise.
+pub(crate) fn held_as_of_text(ctx: &Ctx<'_>, command: CommandRef) -> Option<String> {
+    let held = ctx.view.held_as_of(command)?;
+    (held != ctx.view.pulse_just_ended()).then(|| held.to_string())
+}
+
+/// `Some(true)` for a force on radio silence, else `None` (decision 0136, 15).
+fn radio_silence_flag(ctx: &Ctx<'_>, force: &TaskForce) -> Option<bool> {
+    (ctx.view.radio_silence(force.id) == Some(true)).then_some(true)
+}
+
 pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
     if force.yard_trip.is_some() {
         return away_force_line(ctx, force);
@@ -557,6 +584,8 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         cargo_fuel_t: shows_cargo.then_some(Dec(cargo_fuel)),
         task_force: ctx.force(force.id),
         place: ctx.place(force.position()),
+        as_of: held_as_of_text(ctx, CommandRef::TaskForce(force.id)),
+        radio_silence: radio_silence_flag(ctx, force),
         status: words::status(force.status),
         mission: words::mission(force.mission),
         speed: words::speed(force.speed),
@@ -721,6 +750,8 @@ fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
     ForceLine {
         task_force: ctx.force(force.id),
         place: ctx.place(force.position()),
+        as_of: held_as_of_text(ctx, CommandRef::TaskForce(force.id)),
+        radio_silence: radio_silence_flag(ctx, force),
         status: "away_at_yard",
         mission: words::mission(force.mission),
         speed: words::speed(force.speed),
@@ -829,6 +860,7 @@ pub(crate) fn base_line(ctx: &Ctx<'_>, base: &Base) -> BaseLine {
     BaseLine {
         base: ctx.base(base.id),
         place: ctx.place(base.hex),
+        as_of: held_as_of_text(ctx, CommandRef::Base(base.id)),
         supply_t: Dec(base.supply_t),
         fuel_t: Dec(base.fuel_t),
         port_size: data.map_or(0, |d| d.port_size),
