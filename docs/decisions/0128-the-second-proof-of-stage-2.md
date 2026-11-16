@@ -1,10 +1,10 @@
 # 0128: The second proof of stage 2: its test plan, written before the run
 
-Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, "What it must pass" and step 7 of its seven). It says what is run, what each side states, what passes and what is only reported, before any of it is run. Nothing here has been run. It is run when steps 5 and 6 are built.
+Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, "What it must pass" and step 7 of its seven). It says what is run, what each side states, what passes and what is only reported, before any of it is run. Nothing here has been run. It is run when steps 5 and 6 are built. The designer read the pass marks on Nov 16, 2026, and confirmed that they stand as written.
 
 Summary: The test plan of stage 2's second proof: the Eastern Solomons on its one day and then days 15 to 21 of the 39-day slice, each with both sides' intents stated and no unit order from anyone, over a thousand seeds; what each side states, the conditions that pass or fail with their numbers, the comparison against a side given no orders with its margin, and what is reported and not judged
 
-Standing: Settled by the architect, Nov 16, 2026, inside decision 0113. Not run
+Standing: Settled by the architect and confirmed by the designer, Nov 16, 2026, inside decision 0113. Not run
 
 ## Why it is written first
 
