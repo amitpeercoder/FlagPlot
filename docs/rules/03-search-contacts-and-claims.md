@@ -97,7 +97,7 @@ Because each report goes into belief at once, a later group's report in the same
 
 A side sees: its own `SearchFlown` whole. A `SearchAttempt` that sighted, to the searching side only, cut: the air group, without the task force (decision 0065) and without the distance or the chance, which would say where the force really was when the report names a neighbouring hex. A `SearchAttempt` that did not sight, to nobody. The sighted force is not told, and the enemy sees no part of the search. [0047, 0061, 0065]
 
-Not built: a group sending only part of itself on search while the rest does something else; night search; radar, weather and coastwatchers; report delay; reports that never arrive. [0012, 0052]
+Not built: a group sending only part of itself on search while the rest does something else; night search; radar, weather and coastwatchers; delay and loss of a report on its way to the side's own belief (between commands a report can be late or lost, chapter 1, Commands and their pictures). [0012, 0052, 0135]
 
 ## Sighting reports
 
@@ -153,7 +153,7 @@ Belief holds three things for a side: contacts, claims and estimates of the enem
 
 A contact holds an ID, an estimated hex, an estimated ship count, an estimated kind, an age in pulses, and the event that recorded the report that last made or refreshed it. Contact numbers are allocated for the side in order, and a number is never used again, including after a contact is dropped. [0012, 0028, 0032]
 
-With command levels on (a scenario's `command_levels`), each command of the side holds a picture of its own, and every report is applied to each of them as to the side's belief, in the same pulse; the rules of this chapter are those of a picture as of a belief, and a rule that reads what the side believes reads the picture of the command that owns the decision (chapter 1, Commands and their pictures). [0134]
+With command levels on (a scenario's `command_levels`), each command of the side holds a picture of its own. A report is applied to a picture as to the side's belief, in the pulse it is made where the command holds it first or where reports do not travel, and otherwise when it is passed to it (chapter 1, Commands and their pictures); the rules of this chapter are those of a picture as of a belief, and a rule that reads what the side believes reads the picture of the command that owns the decision (chapter 1, Commands and their pictures). [0134, 0135]
 
 A side sees: its own contacts whole, by its own numbers. The enemy's forces reach it only as contacts. [0007, 0047]
 
@@ -165,7 +165,9 @@ When a sighting report arrives:
 2. If there is one, the nearest is refreshed, and the lowest contact number wins a tie. Its hex, count and kind become the report's. Its age goes to 0. Its last report event becomes this report's event. No average is taken: the report replaces what the contact held.
 3. If there is none, the report makes a new contact with the next number, at age 0.
 
-The test reads only what the side believes. A refreshed or created contact is marked, so the ageing step skips it once, and so a later report in the same pulse refreshes it only from within `merge_distance_same_pulse_hexes`. Every sighting report goes through this rule, a strike's and a bombardment's among them. Two reports of one force in one pulse, each a hex out the opposite way, make two contacts; the second is refreshed by nothing and is dropped by ageing like any other. Two forces within a hex of each other are still one contact. A report is not compared with a contact by count or kind. [0012, 0032, 0040, 0133]
+The test reads only what the side believes. A refreshed or created contact is marked, so the ageing step skips it once, and so a later report in the same pulse refreshes it only from within `merge_distance_same_pulse_hexes`. Every sighting report goes through this rule, a strike's and a bombardment's among them. Two reports of one force in one pulse, each a hex out the opposite way, make two contacts; the second is refreshed by nothing and is dropped by ageing like any other. Two forces within a hex of each other are still one contact. A report is not compared with a contact by count or kind. 
+
+**A sighting a picture hears late** (decision 0135, chapter 1, Commands and their pictures) goes through the same rule with these differences. It makes or refreshes a contact at the age it has, the pulses since it was made, and not at 0, and the contact counts as refreshed in the pulse it arrives. Where the contact it matches was last made or refreshed by a later report than this one (the contact's last report event is later than the report's event), the report is heard and changes nothing: it never replaces newer word. [0012, 0032, 0040, 0133, 0135]
 
 A side sees: `ReportReceived` whole, saying the contact and whether it was created. [0047]
 
@@ -200,6 +202,8 @@ A side sees: those events as its own. [0047]
 ### A strike that finds nothing
 
 If a raid's target hex holds no enemy task force at the start of the air combat step, each of its strike groups that was sent at a contact records `StrikeFoundNothing` (it cites the launch). Each then sends a report: nothing at this hex. The side drops the contact the strike was sent at only if it still holds that contact and the contact still names that hex. Then `ContactNotThere` records it, citing `StrikeFoundNothing`. If the contact is gone, or a later report moved it, nothing changes and no `ContactNotThere` is recorded. No random number is used. The dropped number is not used again, so sighting the force later makes a new contact. A strike group with no bomber left after the fights finds nothing and reports nothing, so its contact stays. [0026, 0027, 0028]
+
+With command levels on and report figures loaded, "nothing there" reaches the picture of the command that flew the strike by its contact number, as above. A picture that did not fly the strike hears it by the hex alone: it drops the lowest-numbered contact whose estimated hex is that hex, if it holds one, and changes nothing otherwise. The side's own belief hears it by hex too. [0135]
 
 Not built: a strike searching the hexes around the one it was sent to, and a search that covers a hex and sees nothing dropping a contact there. [0028]
 
@@ -282,7 +286,7 @@ Belief holds an estimate of the enemy's men ashore for a hex: a count of men, th
 
 **The daily report.** A ground report is made for each hex where both sides still have men ashore at the end of that hex's part of the ground combat phase, after the day's fight, its losses, fatigue and any base that changed side (chapter 7). It is made whether or not there was a fight. The Allied side's report comes first, then the Japanese side's. Each side is given a report of the other's men there. It is made only if `ground.toml: report_error_low` and `report_error_high` are given; with neither, no ground report is made. A side that has no men in the hex gets no report of it. [0092]
 
-**The empty report.** A ground report is also made where a side holds an estimate for a hex, has men of a fighting unit ashore there and the enemy has no man ashore there: it says that the side's men find none. It goes through `BeliefState::apply_report` and removes the side's estimate for the hex. It draws nothing. With no estimate held, no report is made; with only working men, none. It is made at the same point as the daily report, the Allied side first. `GroundFoundEmpty` records it, with the count and the day of the estimate cleared. It cites that estimate's own report event and the day's fight in the hex if there was one, and has no breakdown. [0110 item 10]
+**The empty report.** A ground report is also made where a side holds an estimate for a hex, has men of a fighting unit ashore there and the enemy has no man ashore there: it says that the side's men find none. It goes through `BeliefState::apply_report` and removes the side's estimate for the hex. It draws nothing. With no estimate held, no report is made; with only working men, none. It is made at the same point as the daily report, the Allied side first. `GroundFoundEmpty` records it, with the count and the day of the estimate cleared. It cites that estimate's own report event and the day's fight in the hex if there was one, and has no breakdown. With command levels on and report figures loaded, the estimate it reads is the one in the picture of the base of the side in that hex, else of the area command, and that command holds the report first (chapter 1, Commands and their pictures). [0110 item 10, 0135]
 
 **What it says.** The count is the true count of the enemy's men ashore in the hex, times an error, cut to a whole man. The error is drawn as a whole number of millionths from `report_error_low` to `report_error_high`, both included (`ground.toml`: 0.5 and 1.5). So a report is never below half the truth nor above one and a half times it. The draw is one stream for each reporting side, hex and day, keyed on the day, no pulse, the intelligence subsystem, the draw `GroundReport` and the reporting side's lowest-numbered unit in the hex (chapter 1, Every draw is keyed). [0092]
 

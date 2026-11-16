@@ -19,30 +19,30 @@ use crate::hex::Hex;
 use crate::ids::{BaseId, ShipClassId, ShipId, TaskForceId};
 use crate::map::{HexData, Map};
 use crate::orders::Mission;
-use crate::pictures::{CommandRef, NamedSuperior};
+use crate::pictures::{CommandRef, Holders, NamedSuperior};
 use crate::refdata::{GroundFigures, PortSize, RefData, SearchFigures, ShipClass, ShipKind};
 use crate::state::{Base, Ship, ShipLocation, Side, TaskForce, TruthState};
 use crate::world::World;
 
-const TF1: TaskForceId = TaskForceId::new(1);
-const TF2: TaskForceId = TaskForceId::new(2);
-const TF9: TaskForceId = TaskForceId::new(9);
-const BASE1: BaseId = BaseId::new(1);
-const BASE2: BaseId = BaseId::new(2);
+pub(crate) const TF1: TaskForceId = TaskForceId::new(1);
+pub(crate) const TF2: TaskForceId = TaskForceId::new(2);
+pub(crate) const TF9: TaskForceId = TaskForceId::new(9);
+pub(crate) const BASE1: BaseId = BaseId::new(1);
+pub(crate) const BASE2: BaseId = BaseId::new(2);
 
 fn ship(raw: u32) -> ShipId {
     ShipId::new(raw)
 }
 
-fn hx(q: i32, r: i32) -> Hex {
+pub(crate) fn hx(q: i32, r: i32) -> Hex {
     Hex::new(q, r)
 }
 
-fn tf(id: TaskForceId) -> CommandRef {
+pub(crate) fn tf(id: TaskForceId) -> CommandRef {
     CommandRef::TaskForce(id)
 }
 
-fn world() -> World {
+pub(crate) fn world() -> World {
     let mut map = Map::new();
     for q in -1..=12 {
         for r in -1..=5 {
@@ -140,7 +140,7 @@ fn world() -> World {
     World::new(7, ref_data, map, truth).expect("valid setup")
 }
 
-fn world_with_levels(named: &[NamedSuperior]) -> World {
+pub(crate) fn world_with_levels(named: &[NamedSuperior]) -> World {
     let mut world = world();
     world
         .turn_command_levels_on(named)
@@ -455,7 +455,7 @@ fn with_command_levels_off_there_is_no_command_and_a_view_gives_the_sides_own_be
     assert!(!world.command_levels());
     let figures = world.ref_data.search.clone().expect("figures");
     let r = report(&world, hx(3, 3), 120);
-    world.apply_report(Side::Allied, &r, &figures);
+    world.apply_report(Side::Allied, &r, &Holders::Every, &figures);
     let view = world.side_view(Side::Allied);
     assert!(!view.command_levels());
     assert!(view.commands().is_empty());
@@ -506,7 +506,7 @@ fn with_command_levels_on_a_report_reaches_every_picture_of_the_side_and_no_othe
     let mut world = world_with_levels(&[]);
     let figures = world.ref_data.search.clone().expect("figures");
     let r = report(&world, hx(3, 3), 120);
-    world.apply_report(Side::Allied, &r, &figures);
+    world.apply_report(Side::Allied, &r, &Holders::Every, &figures);
     let own: Vec<GroundEstimate> = world
         .side_view(Side::Allied)
         .ground_estimates()

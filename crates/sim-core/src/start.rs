@@ -23,6 +23,7 @@ use crate::belief::{ApplyOutcome, Report, SightingReport};
 use crate::events::{Cause, EventKind};
 use crate::hex::Hex;
 use crate::ids::ContactId;
+use crate::pictures::Holders;
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::world::{SimError, World};
@@ -113,10 +114,14 @@ impl World {
                     estimated_ship_count: entry.ship_count,
                     estimated_kind: entry.kind,
                     received_event: self.events.next_id(),
+                    age_pulses: 0,
                 };
-                let ApplyOutcome::Contact(outcome) =
-                    self.apply_report(side, &Report::Sighting(report.clone()), &figures)
-                else {
+                let ApplyOutcome::Contact(outcome) = self.apply_report(
+                    side,
+                    &Report::Sighting(report.clone()),
+                    &Holders::Every,
+                    &figures,
+                ) else {
                     unreachable!("a sighting report makes or refreshes a contact");
                 };
                 if !outcome.created {

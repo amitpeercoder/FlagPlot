@@ -708,15 +708,19 @@ impl Day<'_, '_> {
         let found = threat(risk, afloat_count, &sighted);
         let threat_text = match found {
             Some(c) => format!(
-                "contact {} of {} ship(s) is {} hexes from the station {station}, within {THREAT_HEXES}: a threat",
-                c.number, c.ships, c.hexes
+                "{} of {} ship(s) is {} hexes from the station {station}, within {THREAT_HEXES}: a threat",
+                crate::picture::contact_words(&picture, c.number),
+                c.ships,
+                c.hexes
             ),
             None => {
                 let near = sighted.iter().find(|c| c.hexes <= THREAT_HEXES);
                 match near {
                     Some(c) if risk == Risk::Preserve => format!(
-                        "contact {} is {} hexes from the station {station} but reports {} ship(s) against the {afloat_count} {id} has afloat: at preserve the force it is no threat that counts, so there is no threat",
-                        c.number, c.hexes, c.ships
+                        "{} is {} hexes from the station {station} but reports {} ship(s) against the {afloat_count} {id} has afloat: at preserve the force it is no threat that counts, so there is no threat",
+                        crate::picture::contact_words(&picture, c.number),
+                        c.hexes,
+                        c.ships
                     ),
                     _ => format!(
                         "the side holds no contact of ships within {THREAT_HEXES} hexes of the station {station}: there is no threat"

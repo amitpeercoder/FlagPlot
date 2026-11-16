@@ -18,6 +18,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{EntityRef, EventId, TaskForceId};
 use crate::map::Map;
+use crate::pictures::Holders;
 use crate::refdata::{SearchFigures, ShipKind};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::state::Side;
@@ -176,6 +177,7 @@ impl ReportDraws {
             estimated_ship_count: reported_count(true_count, self.count, figures),
             estimated_kind: reported_kind(true_kind, self.kind, figures),
             received_event,
+            age_pulses: 0,
         }
     }
 }
@@ -366,9 +368,20 @@ impl World {
                 let estimated_ship_count = report.estimated_ship_count;
                 let estimated_kind = report.estimated_kind;
 
-                let ApplyOutcome::Contact(outcome) =
-                    self.apply_report(group.side, &Report::Sighting(report.clone()), &figures)
-                else {
+                // The searching group's command holds the sighting first
+                // (decision 0135, 1).
+                let holders = Holders::Commands {
+                    commands: vec![self.command_of_group(group.id)],
+                    key: report.received_event,
+                    day,
+                    pulse: Some(pulse),
+                };
+                let ApplyOutcome::Contact(outcome) = self.apply_report(
+                    group.side,
+                    &Report::Sighting(report.clone()),
+                    &holders,
+                    &figures,
+                ) else {
                     unreachable!("a sighting report makes or refreshes a contact");
                 };
                 let received = self.events.record(
@@ -389,6 +402,7 @@ impl World {
                     received, report.received_event,
                     "the report cites the event that records it"
                 );
+                self.pass_report(group.side, &Report::Sighting(report), &holders);
             }
         }
     }

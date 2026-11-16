@@ -879,8 +879,8 @@ impl<'v, 'a> Day<'v, 'a> {
         found.extend(picture.contacts().map(|c| Threat {
             hex: c.estimated_hex,
             words: format!(
-                "contact {} at {}",
-                picture.contact_number(c.id),
+                "{} at {}",
+                crate::picture::contact_words(&picture, picture.contact_number(c.id)),
                 c.estimated_hex
             ),
         }));
@@ -1271,6 +1271,8 @@ impl<'v, 'a> Day<'v, 'a> {
                         };
                         if m.search != Some(wanted) {
                             let gone = self.gone_since_arc(m, cover.kind.addressee());
+                            let now_picture =
+                                crate::picture::picture_of(self.view, cover.kind.addressee());
                             let mut reason = serving(cover, &plan)
                                 .evidence(format!("{numbers}; it is not above the level"), today)
                                 .evidence(format!("its arc is: {}", setting_words(m)), today)
@@ -1281,7 +1283,8 @@ impl<'v, 'a> Day<'v, 'a> {
                             for (number, day) in &gone {
                                 reason = reason.evidence(
                                     format!(
-                                        "contact {number}, held when its arc was set, was dropped on day {day} and is gone"
+                                        "{}, held when its arc was set, was dropped on day {day} and is gone",
+                                        crate::picture::contact_words(&now_picture, *number)
                                     ),
                                     today,
                                 );
@@ -1292,7 +1295,10 @@ impl<'v, 'a> Day<'v, 'a> {
                                 format!(
                                     "; {} held when its arc was set {} gone",
                                     gone.iter()
-                                        .map(|(n, d)| format!("contact {n} (dropped on day {d})"))
+                                        .map(|(n, d)| format!(
+                                            "{} (dropped on day {d})",
+                                            crate::picture::contact_words(&now_picture, *n)
+                                        ))
                                         .collect::<Vec<_>>()
                                         .join(", "),
                                     if gone.len() == 1 { "is" } else { "are" }

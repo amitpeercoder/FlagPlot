@@ -1102,6 +1102,7 @@ pub fn count(
             | EventKind::SearchFlown { .. }
             | EventKind::SearchAttempt { .. }
             | EventKind::ReportReceived { .. }
+            | EventKind::ReportSent { .. }
             | EventKind::ContactAged { .. }
             | EventKind::ContactDropped { .. }
             | EventKind::SightingRoll { .. }

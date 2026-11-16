@@ -7,8 +7,8 @@ use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
-    BombardmentFigures, FatigueFigures, GroundFigures, PortSize, RefData, ReportError,
-    SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
+    BombardmentFigures, FatigueFigures, GroundFigures, PassingChances, PortSize, RefData,
+    ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
 };
 use sim_core::state::ShipSystem;
 
@@ -1178,6 +1178,73 @@ fn parse_fatigue_figures(text: &str, path: &Path) -> Result<FatigueFigures, Data
             .as_ref()
             .map(|quantity| number("search_fatigue_per_100_nm", quantity))
             .transpose()?,
+    };
+    if let Some(problem) = figures.problem() {
+        return Err(fail(problem));
+    }
+    Ok(figures)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ReportChancesFile {
+    on_time: Quantity,
+    late: Quantity,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ReportReachFile {
+    carrier: Quantity,
+    battleship: Quantity,
+    cruiser: Quantity,
+    other_ship: Quantity,
+    base: Quantity,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ReportsFile {
+    /// Required, and ignored once read: the scenario carries the flag.
+    #[allow(dead_code)]
+    placeholder: bool,
+    up: ReportChancesFile,
+    sideways: ReportChancesFile,
+    down: ReportChancesFile,
+    radio_reach_nm: ReportReachFile,
+}
+
+/// Loads the report figures from a TOML file (decision 0135).
+pub fn load_report_figures(path: &Path) -> Result<ReportFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_report_figures(&text, path)
+}
+
+/// Parses report figures from TOML text. `path` is only used in messages.
+fn parse_report_figures(text: &str, path: &Path) -> Result<ReportFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: ReportsFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let chances = |label: &str, file: &ReportChancesFile| -> Result<PassingChances, DataError> {
+        Ok(PassingChances {
+            on_time: number(&format!("{label} on_time"), &file.on_time)?,
+            late: number(&format!("{label} late"), &file.late)?,
+        })
+    };
+    let reach = &file.radio_reach_nm;
+    let figures = ReportFigures {
+        up: chances("up", &file.up)?,
+        sideways: chances("sideways", &file.sideways)?,
+        down: chances("down", &file.down)?,
+        reach_carrier_nm: number("radio_reach_nm carrier", &reach.carrier)?,
+        reach_battleship_nm: number("radio_reach_nm battleship", &reach.battleship)?,
+        reach_cruiser_nm: number("radio_reach_nm cruiser", &reach.cruiser)?,
+        reach_other_ship_nm: number("radio_reach_nm other_ship", &reach.other_ship)?,
+        reach_base_nm: number("radio_reach_nm base", &reach.base)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -3407,5 +3474,62 @@ mod tests {
         assert_eq!(air.base_hit_men, Fixed::from_ratio(2, 10));
         // The share for the airfield (decision 0103) is 0 in the frozen figures.
         assert_eq!(air.base_hit_airfield, Fixed::ZERO);
+    }
+
+    fn reports_text() -> String {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/reports.toml");
+        fs::read_to_string(path).expect("the report figures are in the repository")
+    }
+
+    #[test]
+    fn report_figures_parse_with_the_files_values() {
+        let figures = parse_report_figures(&reports_text(), here()).expect("parses");
+        assert_eq!(figures.up.on_time, Fixed::from_ratio(7, 10));
+        assert_eq!(figures.up.late, Fixed::from_ratio(1, 4));
+        assert_eq!(figures.sideways.on_time, Fixed::from_ratio(7, 10));
+        assert_eq!(figures.down.late, Fixed::from_ratio(1, 4));
+        assert_eq!(
+            figures.reach_of_kind(ShipKind::Carrier),
+            Fixed::from_int(600)
+        );
+        assert_eq!(
+            figures.reach_of_kind(ShipKind::Cruiser),
+            Fixed::from_int(600)
+        );
+        assert_eq!(
+            figures.reach_of_kind(ShipKind::Destroyer),
+            Fixed::from_int(300)
+        );
+        assert_eq!(
+            figures.reach_of_kind(ShipKind::Transport),
+            Fixed::from_int(300)
+        );
+        assert_eq!(figures.reach_base_nm, Fixed::from_int(1000));
+    }
+
+    #[test]
+    fn report_figures_that_add_to_more_than_one_are_rejected() {
+        let text = reports_text().replacen("late = \"0.25\"", "late = \"0.4\"", 1);
+        assert_ne!(text, reports_text());
+        let error = parse_report_figures(&text, here()).expect_err("rejected");
+        assert!(error.message.contains("more than 1"), "{error}");
+        let text = reports_text().replacen("late = \"0.25\"", "late = \"-0.1\"", 1);
+        let error = parse_report_figures(&text, here()).expect_err("rejected");
+        assert!(error.message.contains("negative"), "{error}");
+    }
+
+    #[test]
+    fn report_figures_with_a_key_missing_or_unknown_or_a_float_are_rejected() {
+        let missing = reports_text().replace("base = 1000\n", "");
+        assert_ne!(missing, reports_text());
+        assert!(parse_report_figures(&missing, here()).is_err());
+        let missing = reports_text().replace("[down]\non_time = \"0.7\"\nlate = \"0.25\"\n", "");
+        assert_ne!(missing, reports_text());
+        assert!(parse_report_figures(&missing, here()).is_err());
+        let extra = format!("{}\nextra = 1\n", reports_text());
+        assert!(parse_report_figures(&extra, here()).is_err());
+        let float = reports_text().replacen("on_time = \"0.7\"", "on_time = 0.7", 1);
+        assert_ne!(float, reports_text());
+        assert!(parse_report_figures(&float, here()).is_err());
     }
 }

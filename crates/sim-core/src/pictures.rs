@@ -8,7 +8,10 @@
 //! There is one path. Every report a side receives goes through
 //! [`World::apply_report`], which applies it to the side's own belief and
 //! then to every command's picture of the side, in the same pulse and the
-//! same order (item 10); every ageing goes through [`World::age_pictures`].
+//! same order (item 10), or, with report figures (decision 0135), to the
+//! pictures of the commands that hold it first, the rest being told by
+//! [`World::pass_report`](crate::passing); every ageing goes through
+//! [`World::age_pictures`].
 //! Every rule that reads what a side believes asks [`World::picture`] (or
 //! [`SideView`](crate::view::SideView)'s own reader, which calls the same
 //! [`picture_of`]) for the picture of the command that owns the decision
@@ -20,9 +23,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use crate::belief::{AgeOutcome, ApplyOutcome, BeliefState, Report};
-use crate::ids::{AirGroupId, BaseId, LandUnitId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, EventId, LandUnitId, TaskForceId};
 use crate::refdata::SearchFigures;
 use crate::state::{AirGroupLocation, ShipLocation, Side, TruthState};
+use crate::time::Pulse;
 use crate::world::{SimError, World};
 
 /// A command of a side (decision 0134, 3 and 4): its area command, one of
@@ -85,6 +89,11 @@ pub struct NamedSuperior {
 pub struct CommandPost {
     pub(crate) superior: Option<CommandRef>,
     pub(crate) picture: BeliefState,
+    /// The reports this command has heard (decision 0135, 13), by the
+    /// report's event, each with the day and pulse it was made: so that one
+    /// reaching it by two roads is applied once. Pruned when older than a
+    /// contact may be.
+    pub(crate) heard: BTreeMap<EventId, (u32, Pulse)>,
 }
 
 impl CommandPost {
@@ -97,6 +106,35 @@ impl CommandPost {
     pub fn picture(&self) -> &BeliefState {
         &self.picture
     }
+
+    /// The reports the command has heard, by the report's event, each with
+    /// the day and pulse it was made (decision 0135, 13). For the hash and
+    /// the umpire.
+    pub fn heard(&self) -> &BTreeMap<EventId, (u32, Pulse)> {
+        &self.heard
+    }
+}
+
+/// Who holds a report first (decision 0135, 1): the command or commands that
+/// saw the thing, or every command at once.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub(crate) enum Holders {
+    /// Every command, in the pulse the report is made: what a scenario
+    /// starts a side with, and every report when there are no report
+    /// figures.
+    Every,
+    /// These commands first; the rest are told by
+    /// [`World::pass_report`](crate::passing). `key` is the event the report
+    /// is known by (its own event; for "nothing there" the strike's), and
+    /// `day` and `pulse` when it is made. `pulse` is `None` for a report
+    /// made in an end-of-day phase, which belongs to no pulse: it is passed
+    /// as the afternoon's last word, its draws and events keyed on no pulse.
+    Commands {
+        commands: Vec<CommandRef>,
+        key: EventId,
+        day: u32,
+        pulse: Option<Pulse>,
+    },
 }
 
 /// The commands of one side, by command.
@@ -250,6 +288,7 @@ impl World {
                 CommandPost {
                     superior: None,
                     picture: own.clone(),
+                    heard: BTreeMap::new(),
                 },
             );
             for force in self.truth.task_forces.values() {
@@ -259,6 +298,7 @@ impl World {
                         CommandPost {
                             superior: Some(CommandRef::Area),
                             picture: own.clone(),
+                            heard: BTreeMap::new(),
                         },
                     );
                 }
@@ -270,6 +310,7 @@ impl World {
                         CommandPost {
                             superior: Some(CommandRef::Area),
                             picture: own.clone(),
+                            heard: BTreeMap::new(),
                         },
                     );
                 }
@@ -377,27 +418,96 @@ impl World {
         command_of_task_force(&self.truth, force).expect("the force exists")
     }
 
+    /// Whether reports travel between commands: command levels are on and
+    /// the scenario has report figures (decision 0135, 10).
+    pub(crate) fn reports_travel(&self) -> bool {
+        self.chain.is_some() && self.ref_data.reports.is_some()
+    }
+
     /// Applies a report to `side`'s belief and then, with command levels on,
-    /// to every command's picture of the side, in command order (decision
-    /// 0134, 10). The one way a report reaches a side. Returns what it did to
-    /// the side's own belief.
+    /// to the pictures of the commands that hold it first, in command order
+    /// (decision 0134, 10; decision 0135, 1). The one way a report reaches a
+    /// side. Returns what it did to the side's own belief.
+    ///
+    /// With command levels off the side's belief alone changes. With them on
+    /// and no report figures, or [`Holders::Every`], every command's picture
+    /// gets it at once, as in decision 0134. With report figures and
+    /// [`Holders::Commands`] only the holders' pictures get it, each marked
+    /// as having heard it; the rest are told by [`World::pass_report`], once
+    /// the caller has recorded the report's event. A holder that is not a
+    /// command of the side now is replaced by the area command.
+    ///
+    /// "Nothing there" (decision 0135, 16): with report figures it reaches a
+    /// holder's picture by contact number, and the side's own by hex; the
+    /// rest hear it by hex when it is passed on.
     pub(crate) fn apply_report(
         &mut self,
         side: Side,
         report: &Report,
+        holders: &Holders,
         figures: &SearchFigures,
     ) -> ApplyOutcome {
+        let travel = self.reports_travel();
+        let holders = match holders {
+            Holders::Commands {
+                commands,
+                key,
+                day,
+                pulse,
+            } if travel => Some((self.resolve_holders(side, commands), *key, *day, *pulse)),
+            _ => None,
+        };
+        let by_hex = by_hex(report);
+        let own_report = if holders.is_some() { &by_hex } else { report };
         let outcome = self
             .beliefs
             .get_mut(&side)
             .expect("both sides have a belief state")
-            .apply_report(report, figures);
+            .apply_report(own_report, figures);
         if let Some(chain) = self.chain.as_mut() {
-            for post in chain.get_mut(&side).expect("both sides").values_mut() {
-                post.picture.apply_report(report, figures);
+            let posts = chain.get_mut(&side).expect("both sides");
+            match holders {
+                None => {
+                    for post in posts.values_mut() {
+                        post.picture.apply_report(report, figures);
+                    }
+                }
+                Some((holders, key, day, pulse)) => {
+                    for (command, post) in posts.iter_mut() {
+                        if holders.contains(command) {
+                            post.picture.apply_report(report, figures);
+                            post.heard
+                                .insert(key, (day, pulse.unwrap_or(Pulse::Afternoon)));
+                        }
+                    }
+                }
             }
         }
         outcome
+    }
+
+    /// Whether `command` is one of `side`'s now (the area command always).
+    pub(crate) fn is_command(&self, side: Side, command: CommandRef) -> bool {
+        self.chain
+            .as_ref()
+            .is_some_and(|chain| chain[&side].contains_key(&command))
+    }
+
+    /// The holders as commands of the side now, without repeats, in command
+    /// order: one that is not a command (a force that has ceased to be) is
+    /// replaced by the area command.
+    pub(crate) fn resolve_holders(&self, side: Side, commands: &[CommandRef]) -> Vec<CommandRef> {
+        let held: BTreeSet<CommandRef> = commands
+            .iter()
+            .map(|command| {
+                if self.is_command(side, *command) {
+                    *command
+                } else {
+                    CommandRef::Area
+                }
+            })
+            .collect();
+        held.into_iter().collect()
     }
 
     /// Ages `side`'s belief and, with command levels on, every command's
@@ -480,13 +590,29 @@ impl World {
             .or_else(|| posts.get(&CommandRef::Area))
             .expect("a side always has its area command");
         let picture = source.picture.clone();
+        // A command formed by copy has heard what the picture it copies has
+        // (decision 0135, 13).
+        let heard = source.heard.clone();
         posts.insert(
             command,
             CommandPost {
                 superior: Some(CommandRef::Area),
                 picture,
+                heard,
             },
         );
+    }
+}
+
+/// The report as a picture that did not fly the strike hears it (decision
+/// 0135, 16): "nothing there" by its hex alone. Any other report as it is.
+pub(crate) fn by_hex(report: &Report) -> Report {
+    match report {
+        Report::NothingThere { hex, .. } => Report::NothingThere {
+            contact: None,
+            hex: *hex,
+        },
+        other => other.clone(),
     }
 }
 

@@ -379,3 +379,7 @@ path = "scenario_60_two_sightings_in_one_pulse.rs"
 [[test]]
 name = "scenario_61_commands_and_their_pictures"
 path = "scenario_61_commands_and_their_pictures.rs"
+
+[[test]]
+name = "scenario_62_reports_between_commands"
+path = "scenario_62_reports_between_commands.rs"

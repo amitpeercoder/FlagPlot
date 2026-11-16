@@ -201,6 +201,10 @@ pub struct World {
     /// are on (decision 0134); `None` with them off. Hashed after the
     /// command states.
     pub(crate) chain: Option<BTreeMap<Side, crate::pictures::SideCommands>>,
+    /// The reports passed to a command that reach it in a later pulse
+    /// (decision 0135, 12). Empty with command levels off or no report
+    /// figures. Hashed after the commands.
+    pub(crate) reports_in_flight: Vec<crate::passing::ReportInFlight>,
     /// Every order received, accepted or not, by ID.
     pub(crate) orders: BTreeMap<OrderId, Order>,
     pub(crate) order_ids: IdAllocator<OrderId>,
@@ -414,6 +418,7 @@ impl World {
             truth,
             beliefs,
             chain: None,
+            reports_in_flight: Vec::new(),
             orders: BTreeMap::new(),
             order_ids: IdAllocator::new(),
             made_ids: MadeIds::new(),

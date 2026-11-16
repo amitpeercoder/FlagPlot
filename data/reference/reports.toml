@@ -1,0 +1,36 @@
+# Reports between commands, step 2 of stage 2b (decision 0135). Every figure
+# is a placeholder: invented so the engine has something to run, not
+# historical. No row sizes any of them; the research asked for in decision
+# 0132 ("What it costs") is to give better. A scenario names this file with
+# its optional `reports` key, and a game with command levels on and no
+# report figures has every report reach every command at once (decision
+# 0135, item 10). The frozen step 1 figures have no such file.
+
+# Required by the loader and ignored once read: the scenario carries the flag.
+placeholder = true
+
+# For each direction a report is passed, the chance it arrives in the pulse it
+# is sent (on time) and the chance it arrives a pulse later (late); the rest
+# is the chance it is never heard. Each pair adds to no more than 1.
+# Placeholders (decision 0135, items 8 and 9). No row sizes any of them.
+[up]
+on_time = "0.7"
+late = "0.25"
+
+[sideways]
+on_time = "0.7"
+late = "0.25"
+
+[down]
+on_time = "0.7"
+late = "0.25"
+
+# The radio reach of a ship by its kind, and of a base, in nautical miles: a
+# task force's reach is its ship's with the longest, a base's its own.
+# Placeholders (decision 0135, items 7 and 9). No row sizes any of them.
+[radio_reach_nm]
+carrier = 600
+battleship = 600
+cruiser = 600
+other_ship = 300
+base = 1000

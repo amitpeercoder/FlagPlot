@@ -44,6 +44,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::{Readiness, Stance};
+use crate::pictures::Holders;
 use crate::refdata::{experience_factor, ShipClass, ShipKind, SurfaceCombatFigures};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::build_sighting_report;
@@ -1706,9 +1707,19 @@ impl World {
             &figures,
             self.events.next_id(),
         );
-        let ApplyOutcome::Contact(outcome) =
-            self.apply_report(force.side, &Report::Sighting(report.clone()), &figures)
-        else {
+        // The force that sighted holds the report first (decision 0135, 1).
+        let holders = Holders::Commands {
+            commands: vec![self.command_of_force(force.id)],
+            key: report.received_event,
+            day: fight.day,
+            pulse: Some(fight.pulse),
+        };
+        let ApplyOutcome::Contact(outcome) = self.apply_report(
+            force.side,
+            &Report::Sighting(report.clone()),
+            &holders,
+            &figures,
+        ) else {
             unreachable!("a sighting report makes or refreshes a contact");
         };
         let received = self.record_in_fight(
@@ -1728,6 +1739,7 @@ impl World {
             received, report.received_event,
             "the report cites the event that records it"
         );
+        self.pass_report(force.side, &Report::Sighting(report), &holders);
     }
 
     /// A force that fired claims as sunk every enemy ship that sank in the
@@ -1763,7 +1775,19 @@ impl World {
             from_bombardment: false,
             received_event: self.events.next_id(),
         };
-        let outcome = self.apply_report(force.side, &Report::BattleClaim(claim.clone()), &figures);
+        // The force that fired holds the claim first (decision 0135, 1).
+        let holders = Holders::Commands {
+            commands: vec![self.command_of_force(force.id)],
+            key: claim.received_event,
+            day: fight.day,
+            pulse: Some(fight.pulse),
+        };
+        let outcome = self.apply_report(
+            force.side,
+            &Report::BattleClaim(claim.clone()),
+            &holders,
+            &figures,
+        );
         assert_eq!(outcome, ApplyOutcome::Claim, "a claim is stored as a claim");
         let received = self.record_in_fight(
             fight,
@@ -1785,6 +1809,7 @@ impl World {
             received, claim.received_event,
             "the claim cites the event that records it"
         );
+        self.pass_report(force.side, &Report::BattleClaim(claim), &holders);
     }
 
     fn record_in_fight(
@@ -4539,6 +4564,7 @@ mod tests {
             estimated_ship_count: 1,
             estimated_kind: ShipKind::Cruiser,
             received_event: received,
+            age_pulses: 0,
         });
         let ApplyOutcome::Contact(outcome) = world
             .beliefs

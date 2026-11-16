@@ -1,0 +1,32 @@
+# Report figures of scenario 62 (decision 0135, step 2 of stage 2b). Every
+# figure is a placeholder: invented so that the scenario's hand calculation
+# rests on no die (every chance is 0 or 1), not historical. No row sizes any
+# of them. Scenario 62 (tests/scenario_62_reports_between_commands.rs) names
+# this file with its `reports` key. The live figures are in reports.toml.
+
+# Required by the loader and ignored once read: the scenario carries the flag.
+placeholder = true
+
+# Placeholders (decision 0135, items 8 and 9; scenario 62): up arrives on
+# time; sideways and down never arrive, so the commands other than the
+# sender and the area command are never told.
+[up]
+on_time = "1"
+late = "0"
+
+[sideways]
+on_time = "0"
+late = "0"
+
+[down]
+on_time = "0"
+late = "0"
+
+# Placeholders (decision 0135, items 7 and 9; scenario 62). No row sizes any
+# of them.
+[radio_reach_nm]
+carrier = 600
+battleship = 600
+cruiser = 600
+other_ship = 300
+base = 1000

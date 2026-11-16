@@ -325,13 +325,33 @@ fn why_tree(world: &World, number: u32, header: &str) -> Result<(), String> {
     }
     println!("{header}");
     let mut shown: BTreeSet<u32> = BTreeSet::new();
-    print_event(world, &find, number, 0, "", &mut shown);
+    let sent = report_sent_index(world.events().iter(), &world.umpire_key());
+    print_event(world, &find, &sent, number, 0, "", &mut shown);
     Ok(())
+}
+
+/// For each event that a `ReportSent` passed on (decision 0135, 22), the
+/// numbers of the `ReportSent` events, in the order of the log.
+fn report_sent_index<'a>(
+    events: impl Iterator<Item = &'a Event>,
+    key: &UmpireKey,
+) -> BTreeMap<u32, Vec<u32>> {
+    let mut index: BTreeMap<u32, Vec<u32>> = BTreeMap::new();
+    for event in events {
+        if let EventKind::ReportSent { report, .. } = &event.kind {
+            index
+                .entry(report.umpire_raw(key))
+                .or_default()
+                .push(event.id.umpire_raw(key));
+        }
+    }
+    index
 }
 
 fn print_event<'a>(
     world: &'a World,
     find: &dyn Fn(u32) -> Option<&'a Event>,
+    sent: &BTreeMap<u32, Vec<u32>>,
     number: u32,
     depth: usize,
     lead: &str,
@@ -360,12 +380,25 @@ fn print_event<'a>(
             breakdown.result
         );
     }
+    // How the report this event is was passed between commands, and when
+    // it arrived; the passings' own causes lead back to this event.
+    for passing in sent.get(&number).into_iter().flatten() {
+        if let Some(passing) = find(*passing) {
+            println!("{indent}    -> {}", event_line(world, passing));
+        }
+    }
     let key = world.umpire_key();
     for cause in &event.causes {
         match cause {
-            Cause::Event(id) => {
-                print_event(world, find, id.umpire_raw(&key), depth + 1, "<- ", shown)
-            }
+            Cause::Event(id) => print_event(
+                world,
+                find,
+                sent,
+                id.umpire_raw(&key),
+                depth + 1,
+                "<- ",
+                shown,
+            ),
             Cause::Order(id) => match world.order(*id) {
                 Some(order) => println!(
                     "{indent}    <- order:{} ({}, day {}, issued by {:?}{}): {:?}",
@@ -385,5 +418,57 @@ fn print_event<'a>(
                 ),
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sim_core::events::{Arrival, Direction, ReportListener};
+    use sim_core::ids::EventId;
+    use sim_core::pictures::CommandRef;
+
+    fn event(raw: u32, kind: EventKind, key: &UmpireKey) -> Event {
+        Event {
+            id: EventId::for_umpire(raw, key),
+            day: 1,
+            pulse: None,
+            kind,
+            causes: Vec::new(),
+            breakdown: None,
+        }
+    }
+
+    #[test]
+    fn a_report_is_indexed_to_the_passings_that_name_it() {
+        let (executed, _) = execute_source(
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../data/scenarios/01_transit.toml"
+            ),
+            None,
+            &sim_data::LoadOptions::default(),
+        )
+        .expect("scenario 1 runs");
+        let key = executed.scenario.world.umpire_key();
+        let sent = |report: u32| EventKind::ReportSent {
+            side: Side::Allied,
+            sender: CommandRef::Area,
+            report: EventId::for_umpire(report, &key),
+            listeners: vec![ReportListener {
+                command: CommandRef::Area,
+                direction: Direction::Down,
+                arrival: Arrival::OnTime,
+            }],
+        };
+        let events = [
+            event(2, sent(1), &key),
+            event(3, sent(1), &key),
+            event(4, sent(9), &key),
+        ];
+        let index = report_sent_index(events.iter(), &key);
+        assert_eq!(index.get(&1), Some(&vec![2, 3]));
+        assert_eq!(index.get(&9), Some(&vec![4]));
+        assert_eq!(index.get(&2), None);
     }
 }

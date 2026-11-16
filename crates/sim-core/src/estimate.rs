@@ -29,6 +29,7 @@ use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{BaseId, EntityRef, EventId, LandUnitId};
+use crate::pictures::{command_at_hex, Holders};
 use crate::refdata::ReportError;
 use crate::rng::{Draw, Subsystem};
 use crate::state::Side;
@@ -114,8 +115,16 @@ impl World {
                 day,
                 received_event: self.events.next_id(),
             };
+            // The command whose men are in the hex holds the count first
+            // (decision 0135, 1).
+            let holders = Holders::Commands {
+                commands: vec![command_at_hex(&self.truth, side, hex)],
+                key: report.received_event,
+                day,
+                pulse: None,
+            };
             let ApplyOutcome::Estimate { replaced } =
-                self.apply_report(side, &Report::Ground(report), &search)
+                self.apply_report(side, &Report::Ground(report), &holders, &search)
             else {
                 unreachable!("a ground report makes or replaces an estimate");
             };
@@ -158,6 +167,7 @@ impl World {
                 received, report.received_event,
                 "the report cites the event that records it"
             );
+            self.pass_report(side, &Report::Ground(report), &holders);
 
             // The enemy's bases in the hex are found (decision 15).
             let hidden: Vec<BaseId> = self
@@ -194,7 +204,11 @@ impl World {
         let fighting = self.truth.land_units.values().any(|unit| {
             unit.side == side && unit.hex == Some(hex) && unit.men_ashore > 0 && !unit.working
         });
-        let Some(held) = self.beliefs[&side].ground_estimate(hex).copied() else {
+        // The picture of the command whose men stand in the hex is the one
+        // read (decision 0135, 18); with command levels off, or no report
+        // figures, it holds what the side's own belief does.
+        let commander = command_at_hex(&self.truth, side, hex);
+        let Some(held) = self.picture(side, commander).ground_estimate(hex).copied() else {
             return;
         };
         if !fighting {
@@ -210,12 +224,17 @@ impl World {
             day,
             received_event: self.events.next_id(),
         };
-        let ApplyOutcome::Cleared { estimate } =
-            self.apply_report(side, &Report::NoneFound(report), &search)
-        else {
-            unreachable!("a side that holds an estimate has it cleared");
+        let holders = Holders::Commands {
+            commands: vec![commander],
+            key: report.received_event,
+            day,
+            pulse: None,
         };
-        debug_assert_eq!(estimate, held);
+        let own = self.apply_report(side, &Report::NoneFound(report), &holders, &search);
+        // The side's own belief and the picture that held the estimate are
+        // the same until reports travel between commands.
+        debug_assert!(self.reports_travel() || own == ApplyOutcome::Cleared { estimate: held });
+        let estimate = held;
         // The estimate cleared, and the day's fight if there was one: both
         // are events the side is given.
         let mut causes = vec![Cause::Event(estimate.report_event)];
@@ -236,6 +255,7 @@ impl World {
             found, report.received_event,
             "the report cites the event that records it"
         );
+        self.pass_report(side, &Report::NoneFound(report), &holders);
     }
 
     /// Gives sides opening estimates of the enemy's men ashore (decision 16
@@ -288,9 +308,12 @@ impl World {
                 day: 0,
                 received_event: staged.events.next_id(),
             };
-            let ApplyOutcome::Estimate { replaced } =
-                staged.apply_report(estimate.side, &Report::Ground(report), &search)
-            else {
+            let ApplyOutcome::Estimate { replaced } = staged.apply_report(
+                estimate.side,
+                &Report::Ground(report),
+                &Holders::Every,
+                &search,
+            ) else {
                 unreachable!("a ground report makes or replaces an estimate");
             };
             if replaced {

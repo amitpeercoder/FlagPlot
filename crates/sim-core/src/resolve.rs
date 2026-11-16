@@ -235,6 +235,9 @@ impl World {
 
         for pulse in Pulse::ALL {
             pass(self, Moment::PulseBegins { day, pulse });
+            // A report passed a pulse ago arrives before anything of this
+            // pulse is seen (decision 0135, 12).
+            self.deliver_late_reports(day, pulse);
             // Alert from belief comes before the pulse's first phase
             // (decision 3 of `docs/decisions/0021-readiness-and-alarm.md`).
             self.alert_from_belief(day, pulse);
@@ -406,6 +409,9 @@ impl World {
                 );
             }
         }
+        // The commands forget the reports they heard longer ago than a
+        // contact may be kept (decision 0135, 13).
+        self.prune_heard(day, pulse, figures.contact_drop_age_pulses);
     }
 
     /// Takes in every order submitted since the last day, and the orders
@@ -2036,6 +2042,7 @@ mod tests {
                         estimated_ship_count: 1,
                         estimated_kind: ShipKind::Cruiser,
                         received_event: EventId::new(1),
+                        age_pulses: 0,
                     }),
                     &search,
                 );

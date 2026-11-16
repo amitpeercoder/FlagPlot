@@ -93,8 +93,10 @@ fn run_threat(
     let found = threat(Risk::Balanced, u32::MAX, &sighted);
     let words = match found {
         Some(c) => format!(
-            "contact {} of {} ship(s) is {} hexes from {destination}, within {THREAT_HEXES}: the run is threatened",
-            c.number, c.ships, c.hexes
+            "{} of {} ship(s) is {} hexes from {destination}, within {THREAT_HEXES}: the run is threatened",
+            crate::picture::contact_words(&picture, c.number),
+            c.ships,
+            c.hexes
         ),
         None => format!(
             "no contact of ships is held within {THREAT_HEXES} hexes of {destination}: the run is not threatened"

@@ -1065,6 +1065,10 @@ pub struct RefData {
     /// file: no man eats and the men's supply phase does nothing. A scenario
     /// with a land unit must name one.
     pub ground: Option<GroundFigures>,
+    /// The report figures of decision 0135. `None` if the scenario names no
+    /// file: with command levels on, every report reaches every command at
+    /// once (decision 0135, item 10).
+    pub reports: Option<ReportFigures>,
 }
 
 impl RefData {
@@ -1100,6 +1104,77 @@ impl RefData {
             .map_or(Fixed::ZERO, |aircraft| {
                 aircraft.search_range_nm.max(aircraft.strike_range_nm) * 2
             })
+    }
+}
+
+/// The chances that a report passed in one direction arrives in the pulse it
+/// is sent (`on_time`), arrives a pulse later (`late`), or is never heard (the
+/// rest).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct PassingChances {
+    pub on_time: Fixed,
+    pub late: Fixed,
+}
+
+/// The figures of reports between commands (decision 0135): the chances of a
+/// report's passing up, sideways and down, and each kind of command's radio
+/// reach in nautical miles.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ReportFigures {
+    /// A command's report to its superior.
+    pub up: PassingChances,
+    /// A command's report to the commands within its radio reach.
+    pub sideways: PassingChances,
+    /// The area command's report to the commands under it.
+    pub down: PassingChances,
+    pub reach_carrier_nm: Fixed,
+    pub reach_battleship_nm: Fixed,
+    pub reach_cruiser_nm: Fixed,
+    pub reach_other_ship_nm: Fixed,
+    pub reach_base_nm: Fixed,
+}
+
+impl ReportFigures {
+    /// The radio reach of a ship of `kind`: a carrier's, a battleship's or a
+    /// cruiser's own; any other kind has the reach of another ship.
+    pub fn reach_of_kind(&self, kind: ShipKind) -> Fixed {
+        match kind {
+            ShipKind::Carrier => self.reach_carrier_nm,
+            ShipKind::Battleship => self.reach_battleship_nm,
+            ShipKind::Cruiser => self.reach_cruiser_nm,
+            _ => self.reach_other_ship_nm,
+        }
+    }
+
+    /// Describes what is wrong with the figures, if anything.
+    pub fn problem(&self) -> Option<String> {
+        for (label, chances) in [
+            ("up", self.up),
+            ("sideways", self.sideways),
+            ("down", self.down),
+        ] {
+            if chances.on_time.is_negative() || chances.late.is_negative() {
+                return Some(format!("{label} has a negative chance"));
+            }
+            if chances.on_time + chances.late > Fixed::ONE {
+                return Some(format!(
+                    "{label} on time {} and late {} add to more than 1",
+                    chances.on_time, chances.late
+                ));
+            }
+        }
+        for (label, reach) in [
+            ("carrier", self.reach_carrier_nm),
+            ("battleship", self.reach_battleship_nm),
+            ("cruiser", self.reach_cruiser_nm),
+            ("other ship", self.reach_other_ship_nm),
+            ("base", self.reach_base_nm),
+        ] {
+            if reach.is_negative() {
+                return Some(format!("the radio reach of a {label} is negative"));
+            }
+        }
+        None
     }
 }
 

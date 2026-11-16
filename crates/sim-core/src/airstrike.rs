@@ -147,6 +147,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
 use crate::orders::{AirMission, Reach};
+use crate::pictures::{CommandRef, Holders};
 use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind, SurfaceCombatFigures};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::{draw_report, ReportDraws};
@@ -467,6 +468,9 @@ enum MissKind {
 struct SideTally {
     /// The unit of the first firing event, which keys the claim's draws.
     first: Option<EntityRef>,
+    /// Every unit that fired, in the order of its first firing event: the
+    /// commands that hold the side's claim first (decision 0135, 1).
+    units: Vec<EntityRef>,
     /// The firing events the claim rests on, in the order they were recorded.
     causes: Vec<EventId>,
     /// Aircraft really lost to this side's fighters and guns in the raid.
@@ -488,6 +492,9 @@ struct SideTally {
 impl SideTally {
     fn fired(&mut self, unit: EntityRef, event: EventId) {
         self.first.get_or_insert(unit);
+        if !self.units.contains(&unit) {
+            self.units.push(unit);
+        }
         self.causes.push(event);
     }
 }
@@ -502,6 +509,9 @@ struct RaidTally {
     taken_for: Option<ShipKind>,
     /// The raid's first strike group, the second part of each claim's key.
     first_group: AirGroupId,
+    /// Every strike group of the raid, whose commands hold the attacking
+    /// side's claim first (decision 0135, 1).
+    strike_groups: Vec<AirGroupId>,
     attacker_side: Side,
     attacker: SideTally,
     defender_side: Side,
@@ -1084,6 +1094,7 @@ impl World {
                 target,
                 taken_for: first.taken_for,
                 first_group: first.air_group,
+                strike_groups: raid.strikes.iter().map(|strike| strike.air_group).collect(),
                 attacker_side: first.side,
                 attacker: SideTally::default(),
                 defender_side: self.defender_of(target),
@@ -1452,13 +1463,34 @@ impl World {
                     continue;
                 }
                 Outcome::Nothing {
-                    side, contact, hex, ..
+                    air_group,
+                    side,
+                    contact,
+                    hex,
+                    ..
                 } => {
                     // Decision 0028: the side learns the hex was empty, and
-                    // drops the contact if it still names that hex.
-                    let dropped =
-                        self.apply_report(side, &Report::NothingThere { contact, hex }, &search);
-                    if dropped == ApplyOutcome::Dropped {
+                    // drops the contact if it still names that hex. The
+                    // contact is the group's command's, by the number its
+                    // picture gives it (decision 0135, 16): that command
+                    // holds the report first.
+                    let command = self.command_of_group(air_group);
+                    let held = self
+                        .picture(side, command)
+                        .contact(contact)
+                        .is_some_and(|held| held.estimated_hex == hex);
+                    let holders = Holders::Commands {
+                        commands: vec![command],
+                        key: event,
+                        day,
+                        pulse: Some(pulse),
+                    };
+                    let report = Report::NothingThere {
+                        contact: Some(contact),
+                        hex,
+                    };
+                    self.apply_report(side, &report, &holders, &search);
+                    if held {
                         self.events.record(
                             day,
                             Some(pulse),
@@ -1467,6 +1499,7 @@ impl World {
                             None,
                         );
                     }
+                    self.pass_report(side, &report, &holders);
                     continue;
                 }
             };
@@ -1513,9 +1546,20 @@ impl World {
                 &search,
                 self.events.next_id(),
             );
-            let ApplyOutcome::Contact(outcome) =
-                self.apply_report(attack.side, &Report::Sighting(report.clone()), &search)
-            else {
+            // The attacking group's command holds the sighting first
+            // (decision 0135, 1).
+            let holders = Holders::Commands {
+                commands: vec![self.command_of_group(attack.air_group)],
+                key: report.received_event,
+                day,
+                pulse: Some(pulse),
+            };
+            let ApplyOutcome::Contact(outcome) = self.apply_report(
+                attack.side,
+                &Report::Sighting(report.clone()),
+                &holders,
+                &search,
+            ) else {
                 unreachable!("a sighting report makes or refreshes a contact");
             };
             let received = self.events.record(
@@ -1536,6 +1580,7 @@ impl World {
                 received, report.received_event,
                 "the report cites the event that records it"
             );
+            self.pass_report(attack.side, &Report::Sighting(report), &holders);
         }
 
         // Each side that fired in a raid claims what it believes it did, once
@@ -1656,7 +1701,38 @@ impl World {
                     from_bombardment: false,
                     received_event: self.events.next_id(),
                 };
-                let outcome = self.apply_report(side, &Report::BattleClaim(claim.clone()), &search);
+                // The commands that fired hold the claim first (decision
+                // 0135, 1): the attacking side's, its strike groups'; the
+                // defending side's, the commands of the patrols and guns
+                // that fired, and the base for a raid on a base.
+                let mut commands: Vec<CommandRef> = if attacking {
+                    tally
+                        .strike_groups
+                        .iter()
+                        .map(|group| self.command_of_group(*group))
+                        .collect()
+                } else {
+                    part.units
+                        .iter()
+                        .map(|unit| match unit {
+                            EntityRef::AirGroup(group) => self.command_of_group(*group),
+                            EntityRef::TaskForce(force) => self.command_of_force(*force),
+                            EntityRef::Base(base) => CommandRef::Base(*base),
+                            _ => CommandRef::Area,
+                        })
+                        .collect()
+                };
+                if let (false, RaidTarget::Base(base)) = (attacking, tally.target) {
+                    commands.push(CommandRef::Base(base));
+                }
+                let holders = Holders::Commands {
+                    commands,
+                    key: claim.received_event,
+                    day,
+                    pulse: Some(pulse),
+                };
+                let outcome =
+                    self.apply_report(side, &Report::BattleClaim(claim.clone()), &holders, &search);
                 assert_eq!(outcome, ApplyOutcome::Claim, "a claim is stored as a claim");
                 let breakdown = self.config.record_breakdowns.then(|| {
                     let mut factors = vec![
@@ -1761,6 +1837,7 @@ impl World {
                     received, claim.received_event,
                     "the claim cites the event that records it"
                 );
+                self.pass_report(side, &Report::BattleClaim(claim), &holders);
             }
         }
     }

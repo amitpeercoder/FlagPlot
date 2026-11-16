@@ -77,7 +77,10 @@ fn unit_side(truth: &TruthState, entity: EntityRef) -> Option<Side> {
         EntityRef::TaskForce(id) => truth.task_forces.get(&id).map(|u| u.side),
         EntityRef::AirGroup(id) => truth.air_groups.get(&id).map(|u| u.side),
         EntityRef::Base(id) => truth.bases.get(&id).map(|u| u.side),
-        EntityRef::Pilot(_) | EntityRef::LandUnit(_) | EntityRef::Contact(_) => None,
+        EntityRef::Pilot(_)
+        | EntityRef::LandUnit(_)
+        | EntityRef::Contact(_)
+        | EntityRef::Event(_) => None,
     }
 }
 
