@@ -166,3 +166,38 @@ These are the measures as the scripts read them, written before the run. Each is
 - **The objectives margin** is the batch's margin for each seed, the Allied one, and its negative for the Japanese.
 - **Medians** are over the 1,000 seeds; a median "no worse" is equal or better, "better" strictly better.
 - **The same start and seed** is checked by running each batch twice and comparing the files, and the exports of a sample of seeds twice.
+
+## Restated before the legibility test was run
+
+*Dated Nov 16, 2026: the architect's ruling, made before any reason was put to a reader.* The set as first written cannot be filled from the week: no surface force is within a night's steaming (reading 3 above), so no stand task is formed, and both deny intents name only carrier forces, so no base is given a strike task. Neither doctrine gives a reason in the week on any seed. Renaming the carrier task's reasons would not test the strike doctrine, so the set keeps its 24 reasons, its five doctrines and its pass mark, and two doctrines' reasons come from their own scenarios: cover 6, raid 6 and carrier 4 from the week's arrangement (a), seed 1, both sides; strike 4 from scenario 53 and stand 4 from scenario 54, each its file as it stands (the main case, its own seed, the figures it names). **The strike and stand reasons are from placeholder scenarios, because the week gives none.**
+
+The rule, written before the pick (): a reason's doctrine is the kind of the intent its serves line names. Within a doctrine the reasons are taken by day and then event number, alternately an order's reason and a day-with-no-order reason (an order first), the other sort where the one due has none left, skipping a reason whose worked text one already taken has. A reason of a staff command (a plan made ready or released under a leave) is neither and is not taken, as in stage 1's pick; this was added to the rule before any reader ran, when the first pick took two such reasons as carrier reasons. Each reader is given the reason's five parts and nothing else, with stage 1's two questions: what was the staff trying to do, and what would change its decision. The key ( in the same folder) was written from the reasons alone before any reader ran: question 1 passes if the answer names the place or force and the aim, question 2 if it gives a condition the reason's own "would change" or "binding" part states. The pass mark is unchanged: at least 20 of the 24 pass both questions, and no doctrine's reasons all fail.
+
+| # | Doctrine | From | Side | Sort | Day | Event |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | cover | the week, arrangement (a), seed 1 | allied | order | 15 | 1507 |
+| 2 | cover | the week, arrangement (a), seed 1 | japanese | no order | 15 | 1490 |
+| 3 | cover | the week, arrangement (a), seed 1 | allied | order | 15 | 1509 |
+| 4 | cover | the week, arrangement (a), seed 1 | allied | no order | 16 | 1851 |
+| 5 | cover | the week, arrangement (a), seed 1 | allied | order | 15 | 1511 |
+| 6 | cover | the week, arrangement (a), seed 1 | japanese | no order | 16 | 1861 |
+| 7 | raid | the week, arrangement (a), seed 1 | japanese | order | 15 | 1585 |
+| 8 | raid | the week, arrangement (a), seed 1 | japanese | no order | 15 | 1491 |
+| 9 | raid | the week, arrangement (a), seed 1 | japanese | order | 18 | 2545 |
+| 10 | raid | the week, arrangement (a), seed 1 | japanese | no order | 16 | 1862 |
+| 11 | raid | the week, arrangement (a), seed 1 | japanese | order | 20 | 2932 |
+| 12 | raid | the week, arrangement (a), seed 1 | japanese | no order | 17 | 2205 |
+| 13 | carrier | the week, arrangement (a), seed 1 | allied | order | 15 | 1497 |
+| 14 | carrier | the week, arrangement (a), seed 1 | allied | no order | 15 | 1441 |
+| 15 | carrier | the week, arrangement (a), seed 1 | allied | order | 15 | 1499 |
+| 16 | carrier | the week, arrangement (a), seed 1 | allied | no order | 15 | 1442 |
+| 17 | strike | scenario 53 | allied | order | 1 | 27 |
+| 18 | strike | scenario 53 | allied | no order | 1 | 24 |
+| 19 | strike | scenario 53 | allied | order | 1 | 29 |
+| 20 | strike | scenario 53 | allied | no order | 2 | 77 |
+| 21 | stand | scenario 54 | allied | order | 1 | 17 |
+| 22 | stand | scenario 54 | allied | no order | 3 | 63 |
+| 23 | stand | scenario 54 | allied | order | 1 | 19 |
+| 24 | stand | scenario 54 | allied | order | 1 | 21 |
+
+**The model's game, restated with it.** A player seat is given no scripted orders, so the Allied seat's days 1 to 14 are pre-played with the script's own Allied orders through the tools ( and , by the side's own numbering), on seed 1 of  (the week with the Japanese intents of day 15 and no Allied command), and the model is handed the game at the start of day 15 only after the day hashes 1 to 14 were checked equal to the scripted run's. The model is told the tools' own descriptions and one instruction, to command by intents alone and give no order to a unit.
