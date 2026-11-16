@@ -287,7 +287,8 @@ impl Day<'_, '_> {
     /// The forming rule (decisions 0124, 8, and 0125, 2): under `end`, a deny
     /// or a hold intent, a stand task at `station` for each surface force its
     /// forces limit names and a carrier task for each carrier force, in task
-    /// force number order, where none for the force is in force under it.
+    /// force number order, where no task of that kind for the force is in force,
+    /// whoever made it (the architect's ruling of Nov 16, 2026).
     /// Whether any such task was formed or stands.
     pub(crate) fn form_force_tasks(
         &mut self,
@@ -348,15 +349,24 @@ impl Day<'_, '_> {
                 _ => continue,
             };
             any = true;
+            // One task of a kind a force, whoever made it and wherever it
+            // stands in the side's trees (the architect's ruling of Nov 16,
+            // 2026, amending decisions 0124, 8, and 0125, 2).
             let standing = self
                 .state
-                .children_in_force(end.id)
-                .into_iter()
-                .filter_map(|child| self.state.intents.get(&child))
-                .find(|child| child.kind.force() == Some(id) && child.kind.code() == kind.code())
-                .map(|child| (child.id, child.kind));
-            if let Some((task, task_kind)) = standing {
-                let reason =
+                .intents_in_force()
+                .find(|other| other.kind.force() == Some(id) && other.kind.code() == kind.code())
+                .map(|other| (other.id, other.kind, other.parent, other.maker));
+            if let Some((task, task_kind, parent, maker)) = standing {
+                let aim = crate::reasons::aim(
+                    self.view,
+                    &Intent {
+                        kind: task_kind,
+                        ..end.clone()
+                    },
+                );
+                let reason = if parent == Some(end.id) {
+                    // A task under this end: the reason it always gave.
                     serving(end, plan)
                         .evidence(why.clone(), today)
                         .evidence(
@@ -365,12 +375,30 @@ impl Day<'_, '_> {
                         )
                         .binding(format!("{task} stands"))
                         .worked(format!(
-                        "{task} ({}) stands under {}: the staff forms no other for {id}. {why}.",
-                        crate::reasons::aim(self.view, &Intent { kind: task_kind, ..end.clone() }),
-                        end.id
-                    ))
+                            "{task} ({aim}) stands under {}: the staff forms no other for {id}. {why}.",
+                            end.id
+                        ))
                         .would_change(format!("{task} withdrawn"))
-                        .done();
+                        .done()
+                } else {
+                    let by = match maker {
+                        Maker::Commander => "the commander's",
+                        Maker::Staff => "the staff's own",
+                    };
+                    let place = match parent {
+                        Some(p) => format!("under {p}"),
+                        None => "as a root".to_string(),
+                    };
+                    serving(end, plan)
+                        .evidence(why.clone(), today)
+                        .evidence(format!("{task}, {by} task of {id}, is in force {place}"), today)
+                        .binding(format!("{task} stands"))
+                        .worked(format!(
+                            "{task} ({aim}), {by}, stands {place}: a force has one task of a kind, so the staff forms no other for {id}. {why}."
+                        ))
+                        .would_change(format!("{task} withdrawn"))
+                        .done()
+                };
                 self.target(in_scope).no_orders.push(reason);
                 continue;
             }
