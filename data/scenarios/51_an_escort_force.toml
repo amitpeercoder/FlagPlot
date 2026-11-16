@@ -1,0 +1,88 @@
+# Scenario 51: an escort force.
+#
+# Decision 0121. Task force 1, Allied, on the transport mission, is one
+# placeholder cargo ship at S (0,0). Task force 2, Allied, on the escort
+# mission, is two placeholder destroyers, also at S. On day 1 force 1 is
+# ordered along the 200 nm to T (5,0) at 10 knots, and force 2 is given force
+# 1 as its charge and no route of its own: it keeps station on it. There is
+# no Japanese unit. The hand calculation is in
+# tests/scenario_51_an_escort_force.rs. The test runs this file on the
+# frozen step 1 figures, and builds the variants of its parts 1 to 3 from
+# this text and from small texts of its own.
+#
+# PLACEHOLDER DATA. The ships, figures and map are invented.
+
+name = "Placeholder scenario 51: An escort force"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_one_convoy.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+# Task force 1: the cargo ship, the charge.
+[[task_force]]
+id = 1
+name = "Placeholder cargo force 1"
+side = "allied"
+q = 0
+r = 0
+mission = "transport"
+
+# Task force 2: the escort, two destroyers.
+[[task_force]]
+id = 2
+name = "Placeholder escort force 2"
+side = "allied"
+q = 0
+r = 0
+mission = "escort"
+
+[[ship]]
+id = 1
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 2"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 2
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer 3"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 2
+
+# Day 1: the charge steams to T at 10 knots; the escort keeps station on it.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[5, 0]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_speed"
+knots = "10"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "escort"
+charge = 1
