@@ -82,7 +82,7 @@ The spec's table gives five choices that the risk level changes. These are its n
 | 4 | Surface forces: cover from the sea, interception, break-off and retirement; "deny an area"; fuel as policy and the day a force may be used | A night action from ends on both sides, on placeholder forces and then on Savo Island's |
 | 5 | The escort rule, and escorted and covered runs under "keep supplied" and "hold a place" | A run escorted and covered against a force sent to stop it |
 | 6 | The rearming rule, and rounds kept in reserve as policy | A force that fights, goes back, rearms and fights again |
-| 7 | Both sides from ends in the slice: the second proof | The Eastern Solomons, and then its week, staff against staff, with no unit order |
+| 7 | Both sides from ends in the slice: the second proof, by the test plan of decision 0128 | The Eastern Solomons, and then its week, staff against staff, with no unit order |
 
 ## What it must pass
 
