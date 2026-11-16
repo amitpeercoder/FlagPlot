@@ -117,18 +117,21 @@ fn free_escort(
     risk: Risk,
 ) -> Result<String, String> {
     let id = force.id;
+    // The escort as the area command holds it, and the moment that is of
+    // where it is not the pulse just ended (decision 0136, 11).
+    let held = crate::reasons::force_held_words(planner.view, id);
     if !(stopped(force) && force.position() == source) {
-        return Err(format!("{id} is not stopped at the source {source}"));
+        return Err(format!("{held} is not stopped at the source {source}"));
     }
     if let Some(charge) = force.charge {
-        return Err(format!("{id} escorts {} already", charge.force));
+        return Err(format!("{held} escorts {} already", charge.force));
     }
     if let Some(hold) = planner.state().hold_on_force(id, &force.ships) {
         return Err(format!("{hold} is held by the commander"));
     }
     // Decision 0127, 2: a force short of ammunition is not free.
     if let Some(short) = crate::ammunition::short(planner.view, id, risk) {
-        return Err(format!("{id} is not free: {}", short.words));
+        return Err(format!("{held} is not free: {}", short.words));
     }
     let need_margin = margin(risk);
     let Some(forecast) = planner
@@ -137,7 +140,7 @@ fn free_escort(
         .filter(|f| f.refusal.is_none())
     else {
         return Err(format!(
-            "{id} cannot be routed out and back by the engine's measure"
+            "{held} cannot be routed out and back by the engine's measure"
         ));
     };
     // The engine's forecast stops where a ship runs dry: such a ship's need
@@ -186,7 +189,7 @@ fn free_escort(
         words.join(", ")
     );
     if needs.iter().any(|(_, aboard, need)| aboard < need) {
-        return Err(format!("{id} is short of fuel for {figures}"));
+        return Err(format!("{held} is short of fuel for {figures}"));
     }
     Ok(figures)
 }
@@ -251,15 +254,17 @@ pub(crate) fn for_run(
     };
     match taken {
         Some((escort, figures)) => {
+            let escort_held = crate::reasons::force_held_words(planner.view, escort);
+            let run_held = crate::reasons::force_held_words(planner.view, run_force);
             let worked = format!(
-                "At {} risk a run is escorted {} where an escort is free; {threat_words}. {escort} is the lowest numbered free escort: it is stopped at the source {}, has no charge, is not held, and has the fuel for {figures}. So {escort} is given {run_force}, the run's force, as its charge, and keeps station on it.",
+                "At {} risk a run is escorted {} where an escort is free; {threat_words}. {escort_held} is the lowest numbered free escort: it is stopped at the source {}, has no charge, is not held, and has the fuel for {figures}. So {escort} is given {run_held}, the run's force, as its charge, and keeps station on it.",
                 risk.name(),
                 if risk == Risk::Preserve { "always" } else { "on a threat" },
                 params.source,
             );
             let reason = serving(intent, params.plan)
                 .evidence(threat_words.clone(), today)
-                .evidence(format!("{escort} is free: {figures}"), today)
+                .evidence(format!("{escort_held} is free: {figures}"), today)
                 .binding(format!("{escort} is named in the forces limit of {}", intent.id))
                 .worked(worked)
                 .would_change("no threat held at balanced risk, or press risk")
@@ -318,7 +323,8 @@ pub(crate) fn clear_charges(planner: &Planner<'_, '_>, out: &mut Out, today: u32
             .evidence(
                 format!(
                     "{} is back and stopped at the source {}",
-                    charge.force, params.source
+                    crate::reasons::force_held_words(planner.view, charge.force),
+                    params.source
                 ),
                 today,
             )

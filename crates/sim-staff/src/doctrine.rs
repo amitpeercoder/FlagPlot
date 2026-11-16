@@ -50,7 +50,7 @@ use crate::morning::{priority_order, protected_for_others, Morning, TakenRun};
 use crate::planner::DEFAULT_INTERVAL_DAYS;
 use crate::planner::{Blocker, Evaluation, Params, Planner, RunPlan, Timing, Unit};
 use crate::projection::Readings;
-use crate::reasons::{as_of_note, hold_words, plan_for, serving, ReasonBuilder};
+use crate::reasons::{as_of_note, hold_words, plan_for, serving, ships_as_of_note, ReasonBuilder};
 use crate::route::route_between;
 use crate::units::{days_word, over, tons, whole};
 
@@ -402,9 +402,10 @@ pub(crate) fn serve(
         match found.status {
             RunStatus::Finished => {}
             RunStatus::Underway => underway.push(format!(
-                "Run {} is under way with {} aboard, due at {} on day {}.",
+                "Run {} is under way with {} aboard{}, due at {} on day {}.",
                 run.number,
                 tons(found.aboard_t),
+                ships_as_of_note(planner.view, &found.afloat),
                 params.destination,
                 run.days.arrive
             )),
@@ -413,9 +414,15 @@ pub(crate) fn serve(
                 if !ready {
                     loading = true;
                     underway.push(format!(
-                        "Run {} is loading at {}: {} of {} aboard.",
+                        "Run {} is loading at {}{}: {} of {} aboard.",
                         run.number,
                         params.source,
+                        match ships_as_of_note(planner.view, &found.afloat) {
+                            note if note.is_empty() => {
+                                as_of_note(planner.view, CommandRef::Base(params.source))
+                            }
+                            note => note,
+                        },
                         tons(found.aboard_t),
                         tons(run.load_t)
                     ));
@@ -423,9 +430,10 @@ pub(crate) fn serve(
                     loading = true;
                     waiting_for_launch = true;
                     underway.push(format!(
-                        "Run {} is loaded ({} aboard) and waits for leave to launch.",
+                        "Run {} is loaded ({} aboard{}) and waits for leave to launch.",
                         run.number,
-                        tons(found.aboard_t)
+                        tons(found.aboard_t),
+                        ships_as_of_note(planner.view, &found.afloat)
                     ));
                 } else {
                     match dispatch(&planner, out, run.number, &found, today) {
@@ -694,11 +702,12 @@ fn dispatch(
     let hour_of_sail = Fixed::from_int(24) * whole(today - 1);
     let arrival_hour = hour_of_sail + timing.out_hours;
     let worked = format!(
-        "Run {number} of {}: the {} aboard are its load of {}; the load is complete, so it sails today (day {today}, hour {hour_of_sail}). \
+        "Run {number} of {}: the {}{} aboard are its load of {}; the load is complete, so it sails today (day {today}, hour {hour_of_sail}). \
          {} nm out at {} kn = {} hours, so it arrives at {} at hour {arrival_hour} (day {}); {} nm back = {} hours. \
          It acts at {}: {} landed in the {} hours of day {} left, at {}; unloading takes {} hours, {} {}.",
         plan.id,
         tons(found.aboard_t),
+        ships_as_of_note(planner.view, &found.afloat),
         tons(run.load_t),
         route.out_nm,
         timing.speed_kn,
@@ -833,12 +842,13 @@ fn new_run(
         None => " (no figure)".to_string(),
     };
     let mut worked = format!(
-        "Reading today at {}: {} over {} a day{figure}, against a floor of {} days. \
+        "Reading today at {}{}: {} over {} a day{figure}, against a floor of {} days. \
          A run ordered on day {today} loads on day {today} ({}), sails on day {}, and is due at {} on day {}. \
          Without it the reading of day {} is {} against {} days x {} = {}: below the floor, so a run is needed. \
          The stock projected for the reading of day {} is {}. \
          Load = max(0, {} - {}) + {} ({} days of use) = {} t.",
         params.destination,
+        as_of_note(planner.view, CommandRef::Base(params.destination)),
         tons(stock_today),
         tons(use_today),
         params.floor_days,
@@ -895,8 +905,9 @@ fn new_run(
         worked.push_str(&note.sentence());
     }
     worked.push_str(&format!(
-        " Ships {}: {} x {} = a room that covers the load.",
+        " Ships {}{}: {} x {} = a room that covers the load.",
         ships_text(&run.ships),
+        ships_as_of_note(planner.view, &run.ships.to_vec()),
         run.ships.len(),
         "the pool's free ships in number order"
     ));
@@ -1200,8 +1211,9 @@ fn idle_reason(
         None => " (no figure)".to_string(),
     };
     let mut worked = format!(
-        "Reading today at {}: {} over {} a day{figure}, against a floor of {} days ({}).",
+        "Reading today at {}{}: {} over {} a day{figure}, against a floor of {} days ({}).",
         params.destination,
+        as_of_note(planner.view, CommandRef::Base(params.destination)),
         tons(stock),
         tons(used),
         params.floor_days,

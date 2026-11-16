@@ -7,8 +7,9 @@ use sim_core::command::{
     ChainLink, CommandState, Evidence, Hold, HoldMaker, HoldTarget, Intent, IntentKind, Plan,
     Proposal, Reason, Serves, StaffDecisions,
 };
-use sim_core::ids::{BaseId, IntentId, TaskForceId};
+use sim_core::ids::{BaseId, IntentId, ShipId, TaskForceId};
 use sim_core::pictures::CommandRef;
+use sim_core::state::ShipLocation;
 use sim_core::view::SideView;
 
 use crate::planner::DEFAULT_INTERVAL_DAYS;
@@ -61,6 +62,39 @@ pub(crate) fn base_held_words(view: &SideView<'_>, base: BaseId) -> String {
 /// force's state: its handle and the moment that state is of.
 pub(crate) fn force_held_words(view: &SideView<'_>, force: TaskForceId) -> String {
     format!("{force}{}", as_of_note(view, CommandRef::TaskForce(force)))
+}
+
+/// The words that say the state of the ships `ships` is held as of another
+/// moment: the moments of the forces they sail in, distinct, in order, as
+/// " (as of the start)" or " (as of the start; as of the morning of day 1)".
+/// A ship in port in no force is held by no command, and says nothing.
+pub(crate) fn ships_as_of_note(view: &SideView<'_>, ships: &[ShipId]) -> String {
+    let mut moments: Vec<String> = Vec::new();
+    for ship in ships {
+        let Some(force) = view
+            .ships()
+            .find(|s| s.id == *ship)
+            .and_then(|s| match s.location {
+                ShipLocation::TaskForce(f) | ShipLocation::Yard(f) => Some(f),
+                _ => None,
+            })
+        else {
+            continue;
+        };
+        if let Some(as_of) = view.held_as_of(CommandRef::TaskForce(force)) {
+            if as_of != view.pulse_just_ended() {
+                let text = as_of.to_string();
+                if !moments.contains(&text) {
+                    moments.push(text);
+                }
+            }
+        }
+    }
+    if moments.is_empty() {
+        String::new()
+    } else {
+        format!(" (as of {})", moments.join("; as of "))
+    }
 }
 
 /// What an intent is for, in words: "keep base:2 (Placeholder base T) at 30
