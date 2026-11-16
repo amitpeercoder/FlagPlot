@@ -3789,7 +3789,13 @@ impl Day {
                     | EventKind::StaffNotice { .. }
                     | EventKind::InterruptFired { .. }
                     | EventKind::IntentFormed { .. }
-                    | EventKind::IntentWithdrawn { .. } => {}
+                    | EventKind::IntentWithdrawn { .. }
+                    // An escort's station, a charge lost and a meeting not
+                    // held are in the side's events and its explain, not the
+                    // briefing's fold (decision 0121).
+                    | EventKind::StationKept { .. }
+                    | EventKind::ChargeLost { .. }
+                    | EventKind::MeetingNotHeld { .. } => {}
                 },
                 SideEventKind::EnemySurrendered { hex, men } => {
                     ground.prisoners.push(PrisonersLine {

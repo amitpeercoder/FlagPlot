@@ -21,9 +21,9 @@ use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent}
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, DayWork, Halt, HaltWork, HitsOnMen,
-    LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship,
-    ShipLocation, ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, DayWork, Halt, HaltWork,
+    HitsOnMen, LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement, SearchArc,
+    Ship, ShipLocation, ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -196,8 +196,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 31 adds a route's `stand_at` after its `act_at`, a halt's work
 /// `night` after its `cargo`, the addressee task force (code 4, its number),
 /// and the kinds stand at a hex (code 9) and operate a carrier force (code
-/// 10), each its force and then its hex (decisions 0124 and 0125).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v31";
+/// 10), each its force and then its hex (decisions 0124 and 0125);
+/// version 32 adds a task force's `charge`, its force and its order, after
+/// its `landing_at` (decision 0121).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v32";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -324,7 +326,9 @@ fn name_every_field(world: &World) {
             halt,
             preparation,
             landing_at: _,
+            charge,
         } = task_force;
+        if let Some(Charge { force: _, order: _ }) = charge {}
         let Route {
             waypoints: _,
             next_index: _,
@@ -1166,6 +1170,15 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.u8(1);
                 h.i32(hex.q);
                 h.i32(hex.r);
+            }
+            None => h.u8(0),
+        }
+        // After the landing (decision 0121).
+        match task_force.charge {
+            Some(charge) => {
+                h.u8(1);
+                h.u32(charge.force.raw());
+                h.u32(charge.order.raw());
             }
             None => h.u8(0),
         }

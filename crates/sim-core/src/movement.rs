@@ -455,6 +455,27 @@ fn build_mover<'s>(
     })
 }
 
+/// The speed in knots `task_force` makes at its speed setting: its slowest
+/// ship's, as [`build_mover`] sets it. `None` where it is not under way, has
+/// no ship or makes no speed. What an escort in station takes from its
+/// charge (decision 0121, 3).
+pub(crate) fn force_speed_kn<'s>(
+    task_force: &TaskForce,
+    ship_of: impl Fn(ShipId) -> &'s Ship,
+    ref_data: &RefData,
+) -> Option<Fixed> {
+    build_mover(task_force, ship_of, ref_data, Pulse::Night, Fixed::ZERO).map(|m| m.speed_kn)
+}
+
+/// How a meeting held in the step ended for each of its two forces, as the
+/// rule of who is met first reads it (decision 0121, 4): its
+/// `EngagementEnded`, and the forces that left it, sunk to the last ship,
+/// broken off or slipped away.
+struct MeetingOutcome {
+    ended: Option<EventId>,
+    left: BTreeSet<TaskForceId>,
+}
+
 /// Everything that lasts for one movement step and is not truth state.
 struct Step {
     day: u32,
@@ -472,6 +493,13 @@ struct Step {
     avoiding: BTreeSet<TaskForceId>,
     /// One alarm stream per force, kept across every fight of the step.
     alarms: BTreeMap<TaskForceId, RngStream>,
+    /// How each meeting held in the step ended, by pair (decision 0121, 4).
+    /// Local to the step, not state.
+    outcomes: BTreeMap<(TaskForceId, TaskForceId), MeetingOutcome>,
+    /// The forces that are some force's charge, at the start of the step:
+    /// on a tie in time, an escort's change of position is taken before its
+    /// charge's (decision 0121, 4).
+    charges: BTreeSet<TaskForceId>,
 }
 
 impl Step {
@@ -495,6 +523,14 @@ impl World {
     pub(crate) fn move_task_forces(&mut self, day: u32, pulse: Pulse) {
         self.steam_on_from_halts(day, pulse);
         self.handle_stragglers(day, pulse);
+        // Escorts take their station for the pulse (decision 0121, 3).
+        self.keep_station(day, pulse);
+        let charges: BTreeSet<TaskForceId> = self
+            .truth
+            .task_forces
+            .values()
+            .filter_map(|force| force.charge.map(|charge| charge.force))
+            .collect();
         let mut step = Step {
             day,
             pulse,
@@ -503,6 +539,8 @@ impl World {
             fought: BTreeSet::new(),
             avoiding: BTreeSet::new(),
             alarms: BTreeMap::new(),
+            outcomes: BTreeMap::new(),
+            charges,
         };
 
         // Budgets. The list of forces is taken after the straggler pass, so a
@@ -529,7 +567,7 @@ impl World {
 
         // Position changes in time order.
         loop {
-            let mut next: Option<(Fixed, TaskForceId, Fixed)> = None;
+            let mut next: Option<(Fixed, bool, TaskForceId, Fixed)> = None;
             for (id, mover) in &mut step.movers {
                 if !mover.active {
                     continue;
@@ -541,13 +579,19 @@ impl World {
                     continue;
                 }
                 // Forces come in ID order and only an earlier time replaces
-                // the best, so a tie goes to the lower ID.
+                // the best, so a tie goes to the lower ID; but a charge comes
+                // after every force that is not one, so an escort that moves
+                // with it enters a hex first (decision 0121, 4). With no
+                // charge in the game this is the order it always was.
                 let hours = mover.hours_done + (mover.segment_nm + distance_nm) / mover.speed_kn;
-                if next.is_none_or(|(best, _, _)| hours < best) {
-                    next = Some((hours, *id, distance_nm));
+                let is_charge = step.charges.contains(id);
+                if next.is_none_or(|(best, best_charge, _, _)| {
+                    hours < best || (hours == best && best_charge && !is_charge)
+                }) {
+                    next = Some((hours, is_charge, *id, distance_nm));
                 }
             }
-            let Some((hours, id, distance_nm)) = next else {
+            let Some((hours, _, id, distance_nm)) = next else {
                 break;
             };
             let mover = step.movers.get_mut(&id).expect("the mover exists");
@@ -818,8 +862,16 @@ impl World {
         if self.truth.task_forces[&a].ships.is_empty()
             || self.truth.task_forces[&b].ships.is_empty()
             || self.truth.task_forces[&a].position() != self.truth.task_forces[&b].position()
-            || !step.fought.insert((a, b))
+            || step.fought.contains(&(a, b))
         {
+            return;
+        }
+        // Who is met first (decision 0121, 4 and 5): a charge is met only
+        // past every escort in station on it.
+        if !self.screen_passed(step, a, b, elapsed_hours, mover) {
+            return;
+        }
+        if !step.fought.insert((a, b)) {
             return;
         }
         // Steaming so far goes into the log before the fight does, with the
@@ -834,6 +886,7 @@ impl World {
             steamed.or_else(|| step.movers.get(&id).and_then(|m| m.last_steamed))
         });
 
+        let before_fight = self.events.len();
         self.hold_meeting(
             step.day,
             step.pulse,
@@ -842,6 +895,30 @@ impl World {
             (elapsed_hours, arrival_cause),
             (&mut step.avoiding, &mut step.alarms),
         );
+        let mut outcome = MeetingOutcome {
+            ended: None,
+            left: BTreeSet::new(),
+        };
+        for event in self.events.from_index(before_fight) {
+            match event.kind {
+                EventKind::EngagementEnded { .. } => outcome.ended = Some(event.id),
+                EventKind::ForceBrokeOff { task_force, .. }
+                | EventKind::ForceSlippedAway { task_force, .. } => {
+                    outcome.left.insert(task_force);
+                }
+                _ => {}
+            }
+        }
+        for id in [a, b] {
+            if self.truth.task_forces[&id].ships.is_empty() {
+                outcome.left.insert(id);
+            }
+        }
+        let ended = outcome.ended;
+        step.outcomes.insert((a, b), outcome);
+        // An escort whose charge the fight sank has no charge from that
+        // moment and stops where it is (decision 0121, 7).
+        self.stop_escorts_of_sunk(step, [a, b], ended);
 
         // Stragglers are dealt with straight after the fight (decision 0016,
         // decision 12).
@@ -868,6 +945,108 @@ impl World {
             let hours_used = step.hours_used(parent);
             if let Some(mover) = self.new_mover(new_force, step.pulse, hours_used) {
                 step.movers.insert(new_force, mover);
+            }
+        }
+    }
+
+    /// Who is met first (decision 0121, 4 and 5), before the meeting of `a`
+    /// and `b`: where one of them is a charge with escorts in station, the
+    /// other's meetings with those escorts are held first, in task force
+    /// number order, and the meeting with the charge is held only if every
+    /// one of them ended its fight with no ship afloat or as the force that
+    /// left it (broke off or slipped away). An escort whose fight was not
+    /// held, still afloat and in the hex, has not been passed. A charge not
+    /// passed is not met by that enemy again in the pulse: the pair is
+    /// marked as having met, and `MeetingNotHeld` is recorded, citing each
+    /// escort's order and the end of its fight. Whether the meeting goes on.
+    fn screen_passed(
+        &mut self,
+        step: &mut Step,
+        a: TaskForceId,
+        b: TaskForceId,
+        elapsed_hours: Fixed,
+        mover: Option<TaskForceId>,
+    ) -> bool {
+        for (charge, enemy) in [(a, b), (b, a)] {
+            let escorts = self.escorts_in_station(charge);
+            if escorts.is_empty() {
+                continue;
+            }
+            let orders: Vec<_> = escorts
+                .iter()
+                .filter_map(|escort| self.truth.task_forces[escort].charge.map(|c| c.order))
+                .collect();
+            let hex = self.truth.task_forces[&charge].position();
+            for escort in &escorts {
+                let (x, y) = ordered(*escort, enemy);
+                let moved = mover.filter(|m| *m == *escort || *m == enemy);
+                self.meet(step, x, y, elapsed_hours, moved);
+            }
+            let mut causes: Vec<Cause> = orders.into_iter().map(Cause::Order).collect();
+            let mut passed = true;
+            for escort in &escorts {
+                let force = &self.truth.task_forces[escort];
+                match step.outcomes.get(&ordered(*escort, enemy)) {
+                    Some(outcome) => {
+                        causes.extend(outcome.ended.map(Cause::Event));
+                        if !outcome.left.contains(escort) {
+                            passed = false;
+                        }
+                    }
+                    None => {
+                        if !force.ships.is_empty() && force.position() == hex {
+                            passed = false;
+                        }
+                    }
+                }
+            }
+            if !passed {
+                step.fought.insert((a, b));
+                self.events.record(
+                    step.day,
+                    Some(step.pulse),
+                    EventKind::MeetingNotHeld {
+                        charge,
+                        enemy,
+                        hex,
+                        escorts,
+                    },
+                    causes,
+                    None,
+                );
+                return false;
+            }
+        }
+        // The fights before may have sunk or moved either force.
+        !self.truth.task_forces[&a].ships.is_empty()
+            && !self.truth.task_forces[&b].ships.is_empty()
+            && self.truth.task_forces[&a].position() == self.truth.task_forces[&b].position()
+    }
+
+    /// Decision 0121, 7, in a fight: each escort whose charge, `a` or `b`,
+    /// has no ship afloat after it has no charge from that moment and stops
+    /// where it is. Its open segment is recorded first, `ChargeLost` cites
+    /// its escort order and the end of the fight, and it carries on from
+    /// there with what is left of its pulse.
+    fn stop_escorts_of_sunk(
+        &mut self,
+        step: &mut Step,
+        forces: [TaskForceId; 2],
+        ended: Option<EventId>,
+    ) {
+        for id in forces {
+            if !self.truth.task_forces[&id].ships.is_empty() {
+                continue;
+            }
+            for escort in self.escorts_of(id) {
+                let order = self.truth.task_forces[&escort].charge.map(|c| c.order);
+                self.record_segment(step, escort);
+                let mut causes: Vec<Cause> = order.into_iter().map(Cause::Order).collect();
+                causes.extend(ended.map(Cause::Event));
+                self.record_lost_charge(step.day, Some(step.pulse), escort, causes);
+                if step.movers.contains_key(&escort) {
+                    self.carry_on_after_fight(step, escort);
+                }
             }
         }
     }

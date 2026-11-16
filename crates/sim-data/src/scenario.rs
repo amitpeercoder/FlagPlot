@@ -530,6 +530,11 @@ enum ActionSpec {
     },
     /// Stand the force down into port (decision 0111). No other key.
     StandDown {},
+    /// Give the force a charge to escort, another task force of its side by
+    /// number, or with no `charge` clear it (decision 0121).
+    Escort {
+        charge: Option<u32>,
+    },
     /// An order to a base: form the ships, lying in port there in no force,
     /// into a task force (decision 0111).
     FormTaskForce {
@@ -2140,6 +2145,9 @@ impl Scenario {
                             TaskForceOrder::JoinTo(TaskForceId::new(*into))
                         }
                         ActionSpec::StandDown {} => TaskForceOrder::StandDown,
+                        ActionSpec::Escort { charge } => {
+                            TaskForceOrder::Escort(charge.map(TaskForceId::new))
+                        }
                         ActionSpec::FormTaskForce { .. } => {
                             return Err(wrong_target("form_task_force", "base"))
                         }

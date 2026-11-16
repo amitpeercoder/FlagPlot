@@ -86,6 +86,15 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 "into": format!("task_force:{}", into.raw()),
             }),
             TaskForceOrder::StandDown => json!({ "kind": "stand_down" }),
+            // The charge as the engine's handle, as a join's force is; a
+            // charge cleared is written with none (decision 0121).
+            TaskForceOrder::Escort(charge) => match charge {
+                Some(charge) => json!({
+                    "kind": "escort",
+                    "charge": format!("task_force:{}", charge.raw()),
+                }),
+                None => json!({ "kind": "escort" }),
+            },
             TaskForceOrder::SetRulesOfEngagement {
                 stance,
                 break_off,
@@ -498,6 +507,16 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                         .ok_or("\"into\" must be a task force written \"task_force:N\"")?,
                 )),
                 "stand_down" => TaskForceOrder::StandDown,
+                "escort" => TaskForceOrder::Escort(match value.get("charge") {
+                    None | Some(Value::Null) => None,
+                    Some(charge) => Some(TaskForceId::new(
+                        charge
+                            .as_str()
+                            .and_then(|handle| handle.strip_prefix("task_force:"))
+                            .and_then(|number| number.parse().ok())
+                            .ok_or("\"charge\" must be a task force written \"task_force:N\"")?,
+                    )),
+                }),
                 "set_rules_of_engagement" => TaskForceOrder::SetRulesOfEngagement {
                     stance: match text(value, "stance")? {
                         "engage" => Stance::Engage,

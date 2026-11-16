@@ -688,6 +688,18 @@ pub struct TaskForce {
     /// until the unloading there is complete, the force works at the rate of
     /// a landing, whatever it still carries.
     pub landing_at: Option<Hex>,
+    /// The force's charge, by an escort order (decision 0121, 1): another
+    /// task force of its side that it keeps station on. `None` for a force
+    /// with no charge. Added at the end.
+    pub charge: Option<Charge>,
+}
+
+/// A force's charge (decision 0121, 1): the task force it escorts and the
+/// escort order that gave it.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Charge {
+    pub force: TaskForceId,
+    pub order: OrderId,
 }
 
 /// A force's preparation for a landing (decision 0095).
@@ -863,6 +875,7 @@ impl TaskForce {
             halt: None,
             preparation: None,
             landing_at: None,
+            charge: None,
         }
     }
 }

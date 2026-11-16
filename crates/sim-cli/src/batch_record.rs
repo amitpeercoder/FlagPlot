@@ -1193,7 +1193,10 @@ pub fn count(
             | EventKind::StaffNotice { .. }
             | EventKind::InterruptFired { .. }
             | EventKind::IntentFormed { .. }
-            | EventKind::IntentWithdrawn { .. } => {}
+            | EventKind::IntentWithdrawn { .. }
+            | EventKind::StationKept { .. }
+            | EventKind::ChargeLost { .. }
+            | EventKind::MeetingNotHeld { .. } => {}
         }
     }
 

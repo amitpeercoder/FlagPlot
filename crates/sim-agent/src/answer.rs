@@ -27,8 +27,10 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `task_force` of an intent and of a reason, `stand_at` in a route order and
 /// in a force's line, the halt for the night (`night` among what a halt waits
 /// for) and the `pulse` a halt or steam-on question was asked in
-/// (decisions 0124 and 0125).
-pub const VERSION: u32 = 11;
+/// (decisions 0124 and 0125). 12 adds the task force order `escort`, with a
+/// `charge` written `task_force:N` or none to clear it, and a force's
+/// `charge` in its detail where it has one (decision 0121).
+pub const VERSION: u32 = 12;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

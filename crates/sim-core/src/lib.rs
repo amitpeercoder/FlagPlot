@@ -35,6 +35,7 @@ mod bombardment;
 mod cargo;
 mod cover;
 mod damage;
+mod escort;
 mod estimate;
 #[cfg(test)]
 mod falling_back_tests;
