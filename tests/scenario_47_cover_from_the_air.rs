@@ -72,40 +72,52 @@
 //!
 //! | Day | Group 1: fatigue, day | Group 2: fatigue, day | Group 3: fatigue, day | The staff's orders |
 //! | --- | --------------------- | --------------------- | --------------------- | ------------------ |
-//! | 1   | 0, flies              | 0, flies              | 0, flies              | Groups 1 and 2: patrol, share 0.5. Group 3: search, arc 060 to 180 at 600 nm |
-//! | 2   | 6, flies              | 6, flies              | 54, rests             | Group 3: rest |
-//! | 3   | 12, flies             | 12, flies             | 44, flies             | Group 3: search, arc 050 to 120 at 600 nm |
-//! | 4   | 18, flies             | 18, flies             | 98, rests             | Group 3: rest |
-//! | 5   | 24, flies             | 24, flies             | 88, rests             | none |
-//! | 6   | 30, flies             | 30, flies             | 78, rests             | none |
-//! | 7   | 36, flies             | 36, flies             | 68, rests             | none |
-//! | 8   | 42, flies             | 42, flies             | 58, rests             | none |
+//! | 1   | 0, flies              | 0, flies              | 0, flies              | Groups 1 and 2: patrol, share 0.5. Group 3: search, search once a day, arc 060 to 180 at 600 nm |
+//! | 2   | 6, flies              | 6, flies              | 22, flies             | none |
+//! | 3   | 12, flies             | 12, flies             | 44, flies             | Group 3: arc 050 to 120 at 600 nm |
+//! | 4   | 18, flies             | 18, flies             | 66, rests             | Group 3: rest |
+//! | 5   | 24, flies             | 24, flies             | 56, rests             | none |
+//! | 6   | 30, flies             | 30, flies             | 46, rests             | none |
+//! | 7   | 36, flies             | 36, flies             | 36, flies             | Group 3: search |
+//! | 8   | 42, flies             | 42, flies             | 58, rests             | Group 3: rest |
 //! | 9   | 48, rests             | 48, flies             | 48, rests             | Group 1: rest |
 //! | 10  | 38, flies             | 54, rests             | 38, flies             | Group 1: patrol. Group 2: rest. Group 3: search |
-//! | 11  | 44, flies             | 44, flies             | 92, rests             | Group 2: patrol. Group 3: rest |
-//! | 12  | 50, rests             | 50, flies             | 82, rests             | Group 1: rest |
+//! | 11  | 44, flies             | 44, flies             | 60, rests             | Group 2: patrol. Group 3: rest |
+//! | 12  | 50, rests             | 50, flies             | 50, rests             | Group 1: rest |
 //!
 //! At the end of day 12: group 1 has fatigue 40, group 2 has 56, group 3
-//! has 72 and group 4 has 0.
+//! has 40 and group 4 has 0. The orders are 7, 0, 1, 1, 0, 0, 1, 1, 1, 3, 2
+//! and 1: eighteen.
+//!
+//! (Restated by the architect on Nov 16, 2026, for decision 0131: at
+//! balanced the staff sets a group that searches to search once a day, so
+//! group 3 flies its search in the morning only, gains 27 and rests the
+//! afternoon for 5. As first written it searched in both pulses, gained 54
+//! on a day in the air, searched on days 1, 3 and 10, the orders were 6, 1,
+//! 2, 1, 0, 0, 0, 0, 1, 3, 2 and 1, and it ended at 72.)
 //!
 //! Why, where it is not plain:
 //!
-//! - **Day 1** has six orders: for each fighter group the patrol mission
-//!   and the share; for group 3 the search mission and the arc. A mission
-//!   and a setting are two orders. Group 4 is given none on any day: it is
+//! - **Day 1** has seven orders: for each fighter group the patrol mission
+//!   and the share; for group 3 the search mission, search once a day and
+//!   the arc, in that order. A mission and a setting are two orders. Group 4 is given none on any day: it is
 //!   not a fighter and cannot search, and the day's reason says it is left
 //!   for a strike intent.
-//! - **Group 3's days in the air.** On day 1 it flies 6 in the morning and
-//!   gains 27; in the afternoon 6 x 0.73, cut to 4, fly and it gains 27: 54.
-//!   On day 3, at 44, 6 x 0.56, cut to 3, fly: 71; then 6 x 0.29, cut to 1:
-//!   98. On day 10, at 38, 3 fly: 65; then 6 x 0.35, cut to 2: 92.
-//! - **Day 3.** Group 3 is at 44, not above 45: it flies, and is given the
-//!   search mission and the new arc. The arc's reason names the contact as
-//!   gone.
+//! - **Group 3's days in the air.** On a day it searches it flies in the
+//!   morning and gains 27, and does not fly in the afternoon and loses 5:
+//!   22 up. On day 1 it flies 6. On day 2, at 22, 6 x 0.78, cut to 4, fly.
+//!   On day 3, at 44, 6 x 0.56, cut to 3. On day 7, at 36, 6 x 0.64, cut
+//!   to 3. On day 10, at 38, 3. On a day of rest it loses 10.
+//! - **Day 3.** Group 3 is at 44, not above 45: it flies. It has the
+//!   search mission and the setting already and is given the new arc. The
+//!   arc's reason names the contact as gone.
+//! - **Days 7 and 10.** Group 3 is at 36 and at 38 and is given the search
+//!   mission. Its setting and its arc stand from before: one order.
 //! - **Day 9.** Both fighter groups are at 48, above 45. They are taken
 //!   most tired first, then by number: group 1 rests, and group 2, the last
 //!   that can fly, is kept on patrol though it is above the level. Group 3
-//!   is at 48 and rests: it has the rest mission already, so no order.
+//!   is at 48 and rests: it has the rest mission already, from day 8, so
+//!   no order.
 //! - **Day 10.** Group 1 is at 38 and flies. Group 2 is at 54 and may now
 //!   rest, since group 1 flies.
 //! - **Day 11.** Both fighters are at 44 and fly.
@@ -114,7 +126,8 @@
 //! On every day at least one fighter group flies the patrol: both on days
 //! 1 to 8 and 11, group 2 on days 9 and 12, group 1 on day 10. On a day a
 //! fighter group flies it gains 6 and on a day it rests it loses 10. Group
-//! 3 searches on days 1, 3 and 10 and no others.
+//! 3 searches on days 1, 2, 3, 7 and 10 and no others, in the morning
+//! only.
 //!
 //! No staff order is refused. Every order and every morning without one
 //! has a reason with these numbers: the fatigue against 45, the share, the

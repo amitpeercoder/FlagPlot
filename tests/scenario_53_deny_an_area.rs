@@ -139,8 +139,11 @@
 //! # Properties
 //!
 //! - **Balanced.** With no risk set: each bomber group is given two
-//!   orders, the mission and sizing on. Day 1 has six orders for the
-//!   bombers, two for group 4 and two for group 5: ten. No strike is
+//!   orders, the mission and sizing on. Group 4 is given three: the search
+//!   mission, search once a day and the arc, in that order (restated by
+//!   the architect on Nov 16, 2026, for decision 0131; it had two). Day 1
+//!   has six orders for the bombers, three for group 4 and two for group
+//!   5: eleven. Group 4 searches in the morning only. No strike is
 //!   launched on either day: every contact is a pulse old or more in the
 //!   morning, against the figure of 0.
 //! - **Preserve the force.** Each bomber group is given four orders: the
