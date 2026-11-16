@@ -999,6 +999,8 @@ mod tests {
                 lighter_rate_t_per_h: n(20),
                 fuel_berth_rate_t_per_h: None,
                 fuel_lighter_rate_t_per_h: None,
+                ammunition_berth_rate_t_per_h: None,
+                ammunition_lighter_rate_t_per_h: None,
             },
         );
 

@@ -233,6 +233,9 @@ struct BaseSpec {
     /// The fuel refuelling leaves in the base (decision 0111). Defaults to
     /// 0. May not be negative.
     fuel_reserve_t: Option<Quantity>,
+    /// Ammunition for ships at the start, in tons (decision 0122). Defaults
+    /// to 0. May not be negative.
+    ammunition_t: Option<Quantity>,
     /// Anti-aircraft shots at a raid on the base (decision 0034). Defaults
     /// to 0.
     anti_aircraft: Option<u32>,
@@ -420,6 +423,10 @@ struct ShipSpec {
     /// Gun rounds aboard at the start. Defaults to the guns times the
     /// rounds each carries.
     gun_rounds: Option<Quantity>,
+    /// Torpedo tubes that have fired at the start, the highest numbered
+    /// (decision 0122). Defaults to 0; at most the class's tubes. With every
+    /// tube fired the ship has no torpedo ready.
+    tubes_fired: Option<u32>,
     /// The crew's experience, a whole number from 0 to 4 (decision 0064).
     /// Defaults to 2. Set here and written by no rule.
     experience: Option<i64>,
@@ -1301,6 +1308,18 @@ impl Scenario {
                     }
                     None => Fixed::ZERO,
                 },
+                ammunition_t: match &spec.ammunition_t {
+                    Some(quantity) => {
+                        let tons = quantity
+                            .to_fixed()
+                            .map_err(|e| fail(format!("{id}: ammunition_t {e}")))?;
+                        if tons < Fixed::ZERO {
+                            return Err(fail(format!("{id}: ammunition_t is negative")));
+                        }
+                        tons
+                    }
+                    None => Fixed::ZERO,
+                },
                 fuel_reserve_t: match &spec.fuel_reserve_t {
                     Some(quantity) => {
                         let reserve = quantity
@@ -1553,6 +1572,13 @@ impl Scenario {
                     spec.class, ship_class.cargo_capacity_t
                 )));
             }
+            let tubes_fired = spec.tubes_fired.unwrap_or(0);
+            if tubes_fired > ship_class.torpedo_tubes {
+                return Err(fail(format!(
+                    "{id}: tubes_fired {tubes_fired} is more than its class's {} tubes",
+                    ship_class.torpedo_tubes
+                )));
+            }
             let ship = Ship {
                 id,
                 name: spec.name.clone(),
@@ -1565,8 +1591,9 @@ impl Scenario {
                 flotation_damage,
                 fire_damage,
                 gun_rounds,
-                torpedoes_ready: ship_class.torpedo_tubes > 0,
+                torpedoes_ready: tubes_fired < ship_class.torpedo_tubes,
                 torpedoes_one_side_fired: false,
+                torpedoes_fired: tubes_fired,
                 systems,
                 experience,
                 system_repair_points: Fixed::ZERO,

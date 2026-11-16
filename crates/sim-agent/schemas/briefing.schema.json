@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 12 },
+    "version": { "const": 13 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -826,6 +826,39 @@
               "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
               "base": { "$ref": "defs.schema.json#/$defs/handle" },
               "ships": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/handle" } },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "charges_lost": {
+          "description": "Decision 0121, 7: escorts whose charge was sunk, stood down or joined; each has no charge now and stopped where it was. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["escort", "charge", "place", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "escort": { "$ref": "defs.schema.json#/$defs/handle" },
+              "charge": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "rearmed": {
+          "description": "Decision 0122, 9: ships that took main battery rounds and torpedoes at a base, one line for each ship and pulse. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "task_force", "base", "rounds", "torpedoes", "tons", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "rounds": { "type": "integer" },
+              "torpedoes": { "type": "integer" },
+              "tons": { "$ref": "defs.schema.json#/$defs/dec" },
               "event": { "type": "integer" }
             }
           }

@@ -749,6 +749,16 @@ impl<'a> SideView<'a> {
         ))
     }
 
+    /// What one of the side's own task forces lacks in ammunition and how it
+    /// would rearm where it lies (decision 0122, 10): each ship's rounds and
+    /// torpedoes lacked, the rate it would take them at and the hours its
+    /// fuel would take first, and the base's stock. `None` if the force is
+    /// not the side's own. It reads only the side's own forces, ships and
+    /// bases.
+    pub fn ammunition_work(&self, task_force: TaskForceId) -> Option<crate::rearm::AmmunitionWork> {
+        crate::rearm::ammunition_work(self.truth, self.map, self.ref_data, self.side, task_force)
+    }
+
     /// As [`SideView::forecast_passage`], for a route through `waypoints` in
     /// turn with no mark (decision 0124, 11): what the movement rules would
     /// do with the force given that route now, steaming on past each
@@ -1052,6 +1062,8 @@ mod tests {
                 lighter_rate_t_per_h: Fixed::from_int(20),
                 fuel_berth_rate_t_per_h: None,
                 fuel_lighter_rate_t_per_h: None,
+                ammunition_berth_rate_t_per_h: None,
+                ammunition_lighter_rate_t_per_h: None,
             },
         );
         ref_data.aircraft_types.insert(
@@ -1129,6 +1141,8 @@ mod tests {
                 lighter_rate_t_per_h: Fixed::from_int(20),
                 fuel_berth_rate_t_per_h: None,
                 fuel_lighter_rate_t_per_h: None,
+                ammunition_berth_rate_t_per_h: None,
+                ammunition_lighter_rate_t_per_h: None,
             },
         );
         ref_data.ship_classes.insert(
@@ -1197,6 +1211,7 @@ mod tests {
                         gun_rounds: Fixed::from_int(800),
                         torpedoes_ready: false,
                         torpedoes_one_side_fired: false,
+                        torpedoes_fired: 0,
                         systems: ShipSystems::ALL_WORKING,
                         experience: Ship::DEFAULT_EXPERIENCE,
                         system_repair_points: Fixed::ZERO,
@@ -1264,6 +1279,8 @@ mod tests {
                 lighter_rate_t_per_h: Fixed::from_int(20),
                 fuel_berth_rate_t_per_h: None,
                 fuel_lighter_rate_t_per_h: None,
+                ammunition_berth_rate_t_per_h: None,
+                ammunition_lighter_rate_t_per_h: None,
             },
         );
         ref_data.search = Some(SearchFigures::from_search_toml());

@@ -95,7 +95,11 @@ fn every_live_figures_file_has_a_frozen_counterpart_and_the_other_way_round() {
 /// record. Decision 0118: the frozen step 1 figures get no table of aircraft
 /// for each ship (their table is empty, so sizing a strike does nothing);
 /// a hand calculation that wants figures adds them to its own copy.
-const FROZEN_WITHOUT: &[&str] = &["strike_aircraft_per_ship."];
+/// Keys the frozen files go without: the strike sizing table (decision
+/// 0118), and the weights of rearming, which the frozen figures do not give
+/// so that no ship rearms in a hand-calculation test that sets none
+/// (decision 0122).
+const FROZEN_WITHOUT: &[&str] = &["strike_aircraft_per_ship.", "rearming"];
 
 #[test]
 fn a_frozen_file_has_every_key_and_column_its_live_counterpart_has() {

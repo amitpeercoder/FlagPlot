@@ -1273,6 +1273,9 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             whole_if(own_force(escort))
         }
         EventKind::MeetingNotHeld { charge, .. } => whole_if(own_force(charge)),
+        // A side sees its own ships rearm whole; the enemy is told nothing
+        // (decision 0122, 9).
+        EventKind::ShipRearmed { ship, .. } => whole_if(own_ship(ship)),
 
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
@@ -1629,7 +1632,8 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::IntentWithdrawn { .. }
             | EventKind::StationKept { .. }
             | EventKind::ChargeLost { .. }
-            | EventKind::MeetingNotHeld { .. } => None,
+            | EventKind::MeetingNotHeld { .. }
+            | EventKind::ShipRearmed { .. } => None,
         })
         .min()
 }
@@ -1829,7 +1833,8 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::IntentWithdrawn { .. }
         | EventKind::StationKept { .. }
         | EventKind::ChargeLost { .. }
-        | EventKind::MeetingNotHeld { .. } => None,
+        | EventKind::MeetingNotHeld { .. }
+        | EventKind::ShipRearmed { .. } => None,
     }
 }
 
@@ -2173,7 +2178,8 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::IntentWithdrawn { .. }
             | EventKind::StationKept { .. }
             | EventKind::ChargeLost { .. }
-            | EventKind::MeetingNotHeld { .. }) => other,
+            | EventKind::MeetingNotHeld { .. }
+            | EventKind::ShipRearmed { .. }) => other,
         }),
         // No other kind a side is given carries a round of a fight.
         other @ (SideEventKind::AirAttackAgainst { .. }
@@ -2416,7 +2422,7 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
             | EventKind::StaffNotice { .. }
             | EventKind::InterruptFired { .. }
             | EventKind::IntentFormed { .. }
-            | EventKind::IntentWithdrawn { .. } | EventKind::StationKept { .. } | EventKind::ChargeLost { .. } | EventKind::MeetingNotHeld { .. } => false,
+            | EventKind::IntentWithdrawn { .. } | EventKind::StationKept { .. } | EventKind::ChargeLost { .. } | EventKind::MeetingNotHeld { .. } | EventKind::ShipRearmed { .. } => false,
 
         // Men lost in a fight cite the enemy's fire; a base taken cites the
         // test that beat the other side (decision 0090).
@@ -2688,7 +2694,8 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::IntentWithdrawn { .. }
                     | EventKind::StationKept { .. }
                     | EventKind::ChargeLost { .. }
-                    | EventKind::MeetingNotHeld { .. },
+                    | EventKind::MeetingNotHeld { .. }
+                    | EventKind::ShipRearmed { .. },
                 )
                 | SideEventKind::Salvo { .. }
                 | SideEventKind::SalvoAgainst { .. }
@@ -4496,6 +4503,21 @@ mod tests {
                 Nothing,
             )),
             sided(row(
+                EventKind::ShipRearmed {
+                    ship: ship(1),
+                    task_force: force(1),
+                    base: BaseId::new(1),
+                    rounds: 500,
+                    torpedoes: 5,
+                    taken_t: fx(60),
+                    rounds_aboard: fx(800),
+                    tubes_fired: 3,
+                    base_ammunition_t: fx(20),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
                 EventKind::MeetingNotHeld {
                     charge: force(1),
                     enemy: force(1),
@@ -4545,7 +4567,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 143, "the log has 143 kinds of event");
+        assert_eq!(all.len(), 144, "the log has 144 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

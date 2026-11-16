@@ -236,12 +236,19 @@ pub(crate) fn gun_shots(
 /// The tubes of a ship's next torpedo salvo (decision 0083): the tubes that
 /// bear on one side, B, for the first salvo, and the rest, T - B, for the
 /// second. For a class with B equal to T there is one salvo, of T.
+///
+/// A salvo fires only the tubes that are loaded (decision 0122, 8): no more
+/// than the tubes less those fired and not loaded again. A ship whose tubes
+/// were never reloaded fires the salvo it always did.
 fn torpedo_salvo_tubes(ship: &Ship, class: &ShipClass) -> u32 {
-    if ship.torpedoes_one_side_fired {
+    let side = if ship.torpedoes_one_side_fired {
         class.torpedo_tubes - class.torpedo_tubes_one_side
     } else {
         class.torpedo_tubes_one_side
-    }
+    };
+    let loaded =
+        class.torpedo_tubes - ship.tubes_fired(class.torpedo_tubes, class.torpedo_tubes_one_side);
+    side.min(loaded)
 }
 
 /// The torpedo shots a ship fires in its next firing round: the tubes of the
@@ -1143,8 +1150,11 @@ impl World {
         let torpedo_share = fight.torpedo_share(force);
         let torpedo_shot_count = torpedo_shots(ship, class, figures, torpedo_share);
         let torpedoes_fired = ship.torpedoes_ready && class.torpedo_tubes > 0;
+        let salvo_tubes = torpedo_salvo_tubes(ship, class);
+        let fired_before = ship.tubes_fired(class.torpedo_tubes, class.torpedo_tubes_one_side);
         let second_side = ship.torpedoes_one_side_fired;
         let class_has_second_side = class.torpedo_tubes > class.torpedo_tubes_one_side;
+        let class_tubes = class.torpedo_tubes;
         let fire_control =
             figures.system_factor(ShipSystem::FireControl, ship.systems.fire_control);
         // The firer's own experience, in a dark fight, when the weapon's
@@ -1229,11 +1239,15 @@ impl World {
         // (decision 0083).
         if torpedoes_fired && torpedo.is_some() {
             let ship = self.truth.ships.get_mut(&firer).expect("firer exists");
-            if !second_side && class_has_second_side {
+            // The tubes of the salvo have fired (decision 0122, 8).
+            let fired = (fired_before + salvo_tubes).min(class_tubes);
+            if !second_side && class_has_second_side && fired < class_tubes {
                 ship.torpedoes_one_side_fired = true;
+                ship.torpedoes_fired = fired;
             } else {
                 ship.torpedoes_ready = false;
                 ship.torpedoes_one_side_fired = false;
+                ship.torpedoes_fired = class_tubes;
             }
         }
         if let Some(torpedo) = torpedo {
@@ -1977,6 +1991,8 @@ mod tests {
                     lighter_rate_t_per_h: Fixed::from_int(20),
                     fuel_berth_rate_t_per_h: None,
                     fuel_lighter_rate_t_per_h: None,
+                    ammunition_berth_rate_t_per_h: None,
+                    ammunition_lighter_rate_t_per_h: None,
                 },
             );
             ref_data.search = Some(SearchFigures::from_search_toml());

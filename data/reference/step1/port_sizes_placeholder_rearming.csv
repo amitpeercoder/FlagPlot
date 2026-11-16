@@ -1,0 +1,32 @@
+# FROZEN: a copy of data/reference/port_sizes_placeholder_rearming.csv
+# as it stood when scenario 52 was built, on Nov 16, 2026, for the hand-calculation test
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. These figures are invented for scenario 52, the hand
+# calculation of decision 0122 (tests/scenario_52_rearming.rs). They are not
+# historical and must not be used for validation.
+#
+# Sizes 0 and 1 are the two the scenario uses: size 0 has no berth and takes
+# ammunition by lighter at 2 t an hour; size 1 has one berth at 5 t an hour for
+# ammunition and 2 t an hour by lighter. Sizes 2 to 10 are unused: the loader
+# needs sizes 0 to 10, so they carry the berths of size 1's cargo and fuel
+# figures and its ammunition rates.
+#
+# berths: ships that can work cargo alongside at once.
+# berth_rate_t_per_h, lighter_rate_t_per_h: tons of cargo an hour at a berth,
+# and by lighter. fuel_berth_rate_t_per_h, fuel_lighter_rate_t_per_h: tons of
+# fuel an hour at a berth, and by lighter; empty is not given.
+# ammunition_berth_rate_t_per_h, ammunition_lighter_rate_t_per_h: tons of
+# ammunition an hour at a berth, and by lighter; empty is not given.
+port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h,fuel_berth_rate_t_per_h,fuel_lighter_rate_t_per_h,ammunition_berth_rate_t_per_h,ammunition_lighter_rate_t_per_h
+0,0,0,20,,40,,2
+1,1,50,20,100,40,5,2
+2,1,75,20,100,40,5,2
+3,2,100,20,100,40,5,2
+4,3,125,20,100,40,5,2
+5,4,150,20,100,40,5,2
+6,5,200,20,100,40,5,2
+7,6,250,20,100,40,5,2
+8,8,300,20,100,40,5,2
+9,10,350,20,100,40,5,2
+10,12,400,20,100,40,5,2

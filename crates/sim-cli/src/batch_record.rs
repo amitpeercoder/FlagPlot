@@ -1196,7 +1196,8 @@ pub fn count(
             | EventKind::IntentWithdrawn { .. }
             | EventKind::StationKept { .. }
             | EventKind::ChargeLost { .. }
-            | EventKind::MeetingNotHeld { .. } => {}
+            | EventKind::MeetingNotHeld { .. }
+            | EventKind::ShipRearmed { .. } => {}
         }
     }
 

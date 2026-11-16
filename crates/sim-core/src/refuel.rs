@@ -85,6 +85,10 @@ impl World {
     ///
     /// A force out of fuel is idle again, with the route it could not finish
     /// dropped, when its first ship has taken fuel (decision 6 of 0045).
+    ///
+    /// Returns the hours each ship has used in the pulse, its cargo's and
+    /// its fuel's, for rearming after them (decision 0122, 5). Fuel taken
+    /// with no rate given takes no hours.
     pub(crate) fn take_fuel(
         &mut self,
         day: u32,
@@ -92,7 +96,8 @@ impl World {
         stop: &FuelStop,
         berthed: &[ShipId],
         cargo_hours: &BTreeMap<ShipId, Fixed>,
-    ) {
+    ) -> BTreeMap<ShipId, Fixed> {
+        let mut used: BTreeMap<ShipId, Fixed> = cargo_hours.clone();
         let id = stop.task_force;
         let mut restore = self.truth.task_forces[&id].status == TaskForceStatus::OutOfFuel;
         let causes: Vec<Cause> = stop.arrival_event.into_iter().map(Cause::Event).collect();
@@ -122,6 +127,9 @@ impl World {
             let mut taken = lacks.min(base_above);
             if let Some(rate) = rate {
                 taken = taken.min(rate * hours_left);
+            }
+            if let Some(rate) = rate.filter(|_| taken > Fixed::ZERO) {
+                used.insert(ship_id, cargo_used + taken / rate);
             }
             if taken <= Fixed::ZERO {
                 self.held_at_reserve(
@@ -213,6 +221,7 @@ impl World {
                 &[Cause::Event(refuelled)],
             );
         }
+        used
     }
 
     /// Records that a ship's refuelling stopped at a reserve (decision 7 of
@@ -350,6 +359,8 @@ mod tests {
                 lighter_rate_t_per_h: Fixed::from_int(20),
                 fuel_berth_rate_t_per_h: None,
                 fuel_lighter_rate_t_per_h: None,
+                ammunition_berth_rate_t_per_h: None,
+                ammunition_lighter_rate_t_per_h: None,
             },
         );
 
@@ -720,6 +731,8 @@ mod tests {
                 lighter_rate_t_per_h: tons(20),
                 fuel_berth_rate_t_per_h: fuel_berth.map(tons),
                 fuel_lighter_rate_t_per_h: fuel_lighter.map(tons),
+                ammunition_berth_rate_t_per_h: None,
+                ammunition_lighter_rate_t_per_h: None,
             },
         );
         world.map.insert(

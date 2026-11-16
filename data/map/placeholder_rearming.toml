@@ -1,0 +1,26 @@
+# PLACEHOLDER MAP. Open sea with two coast hexes, used by scenario 52
+# (rearming, decision 0122): S at (0,0) with port size 1, one berth, and U at
+# (5,0) with port size 0, which works by lighter only. S to U is 5 hexes on one
+# axis, 200 nm. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-2, 12]
+r = [-2, 2]
+
+# S: a base with one berth.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 1
+
+# U: a base with no berth, by lighter.
+[[hex]]
+q = 5
+r = 0
+kind = "coast"
+port_size = 0

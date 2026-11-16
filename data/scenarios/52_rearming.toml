@@ -1,0 +1,98 @@
+# Scenario 52: rearming (decision 0122).
+#
+# Proves, against a hand calculation, that a ship in port takes main battery
+# rounds and torpedoes from the base's ammunition through the hours of the day,
+# at the port's ammunition rate at a berth or by lighter, rounds first and then
+# torpedoes, whole ones only. At S, with one berth, a cruiser that has fired all
+# its tubes takes the berth and a destroyer rearms by lighter; at U, which has no
+# berth, a destroyer rearms by lighter until the base's stock runs out. The hand
+# calculation is in tests/scenario_52_rearming.rs. There is no enemy, no search,
+# no order and no random draw. It runs on the frozen step 1 figures, with the
+# ammunition rates and the weights of rearming set in this scenario's own port
+# sizes and surface combat figures.
+#
+# Class 1 is the placeholder cruiser (8 main guns, 100 rounds a gun, 8 tubes),
+# class 2 the placeholder destroyer (4 main guns, 150 rounds a gun, 8 tubes).
+#
+# PLACEHOLDER DATA. The bases, ships, port sizes, weights and map are invented.
+
+name = "Scenario 52: Rearming"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_rearming.toml"
+ship_classes = ["../reference/ship_classes.csv"]
+port_sizes = "../reference/port_sizes_placeholder_rearming.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat_placeholder_rearming.toml"
+
+# S: port size 1, one berth, 80 t of ammunition.
+[[base]]
+id = 1
+name = "Placeholder base S, Allied"
+side = "allied"
+q = 0
+r = 0
+ammunition_t = 80
+
+# U: port size 0, no berth, 3 t of ammunition.
+[[base]]
+id = 2
+name = "Placeholder base U, Allied"
+side = "allied"
+q = 5
+r = 0
+ammunition_t = 3
+
+# Force 1: a cruiser stopped at S with 300 of 800 rounds and every tube fired.
+[[task_force]]
+id = 1
+name = "Placeholder cruiser force 1"
+side = "allied"
+at_base = 1
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "allied"
+fuel_t = 2000
+gun_rounds = 300
+tubes_fired = 8
+task_force = 1
+
+# Force 2: a destroyer stopped at S with 100 of 600 rounds, by lighter.
+[[task_force]]
+id = 2
+name = "Placeholder destroyer force 2"
+side = "allied"
+at_base = 1
+mission = "surface_combat"
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 2"
+class = 2
+side = "allied"
+fuel_t = 500
+gun_rounds = 100
+task_force = 2
+
+# Force 3: a destroyer stopped at U with 100 of 600 rounds, whose base runs out.
+[[task_force]]
+id = 3
+name = "Placeholder destroyer force 3"
+side = "allied"
+at_base = 2
+mission = "surface_combat"
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer 3"
+class = 2
+side = "allied"
+fuel_t = 500
+gun_rounds = 100
+task_force = 3
