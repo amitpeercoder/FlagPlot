@@ -35,8 +35,13 @@ pub const FORMAT: &str = "flagplot-agent";
 /// the briefing's `charges_lost` and `rearmed` among the force changes
 /// (decisions 0121 and 0122), each left out when empty. 14 adds the air group
 /// order `set_search_once` (`on`) and a group's `search_once`, given only when
-/// it is on (decision 0131).
-pub const VERSION: u32 = 14;
+/// it is on (decision 0131). 15 adds the area seat's reading of its own
+/// forces and bases as the area command last had them reported (decision
+/// 0136): the briefing, `list_forces`, `list_bases` and `get_entity` give a
+/// force or a base with an `as_of` (such as "the morning of day 1") where
+/// that is not the pulse just ended, a force's `radio_silence` where it is
+/// on, and the task force order `set_radio_silence` (`on`).
+pub const VERSION: u32 = 15;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not
