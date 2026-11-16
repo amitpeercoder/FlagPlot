@@ -823,11 +823,14 @@ impl World {
             .values()
             .filter(|other| {
                 other.side != side
-                    && !other.ships.is_empty()
                     && other.position() == hex
                     && !step.fought.contains(&ordered(id, other.id))
             })
             .map(|other| other.id)
+            .filter(|other| {
+                !self.truth.task_forces[other].ships.is_empty()
+                    || self.sunk_by_escort(step, id, *other)
+            })
             .collect();
         for other in others {
             if self.truth.task_forces[&id].ships.is_empty() {
@@ -859,11 +862,19 @@ impl World {
         // A meeting is held only if both forces are still in one hex when
         // its turn comes (decision 7 of 0022): an earlier fight at the same
         // moment may have sent one of them home, turning it out of the hex.
-        if self.truth.task_forces[&a].ships.is_empty()
-            || self.truth.task_forces[&b].ships.is_empty()
-            || self.truth.task_forces[&a].position() != self.truth.task_forces[&b].position()
+        let empty = self.truth.task_forces[&a].ships.is_empty()
+            || self.truth.task_forces[&b].ships.is_empty();
+        if self.truth.task_forces[&a].position() != self.truth.task_forces[&b].position()
             || step.fought.contains(&(a, b))
+            || (empty && !self.sunk_by_escort(step, a, b) && !self.sunk_by_escort(step, b, a))
         {
+            return;
+        }
+        // An enemy an escort in station sank before it reached the charge:
+        // the meeting with the charge is not held, and is recorded so
+        // (decision 0121, 4).
+        if empty {
+            self.screen_passed(step, a, b, elapsed_hours, mover);
             return;
         }
         // Who is met first (decision 0121, 4 and 5): a charge is met only
@@ -1021,6 +1032,18 @@ impl World {
         !self.truth.task_forces[&a].ships.is_empty()
             && !self.truth.task_forces[&b].ships.is_empty()
             && self.truth.task_forces[&a].position() == self.truth.task_forces[&b].position()
+    }
+
+    /// Whether `enemy` has no ship afloat after a fight in this step with an
+    /// escort in station on `charge`, which is afloat (decision 0121, 4):
+    /// the escort held, and the meeting with the charge is one not held.
+    fn sunk_by_escort(&self, step: &Step, charge: TaskForceId, enemy: TaskForceId) -> bool {
+        self.truth.task_forces[&enemy].ships.is_empty()
+            && !self.truth.task_forces[&charge].ships.is_empty()
+            && self
+                .escorts_in_station(charge)
+                .iter()
+                .any(|escort| step.outcomes.contains_key(&ordered(*escort, enemy)))
     }
 
     /// Decision 0121, 7, in a fight: each escort whose charge, `a` or `b`,
