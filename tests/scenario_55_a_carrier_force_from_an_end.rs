@@ -1028,6 +1028,7 @@ fn balanced_air_orders() -> Vec<Given> {
         Given::Air(1, mission(CAP)),
         Given::Air(1, share("0.5")),
         Given::Air(2, mission(SEARCH)),
+        Given::Air(2, AirGroupOrder::SetSearchOnce { on: true }),
         Given::Air(2, arc(60, 300)),
         Given::Air(3, mission(STRIKE)),
         Given::Air(3, sizing(true)),
@@ -1043,12 +1044,11 @@ fn air_orders(played: &Played, day: u32) -> Vec<Given> {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the carrier doctrine now gives the scout group 2 a search-once order between its search mission and its arc: one order more on day 1 than the calculation has"]
 fn balanced_gives_group_1_a_half_and_group_3_two_orders_and_launches_nothing() {
     let played = play(&without_risk(&text()));
     played.nothing_refused();
-    // Eight orders on day 1.
-    assert_eq!(played.orders(1).len(), 8, "{:?}", played.orders(1));
+    // Nine orders on day 1 (group 2's search once a day, decision 0131).
+    assert_eq!(played.orders(1).len(), 9, "{:?}", played.orders(1));
     assert_eq!(
         played.orders(1),
         [
@@ -1077,8 +1077,16 @@ fn balanced_gives_group_1_a_half_and_group_3_two_orders_and_launches_nothing() {
         played.force_at_end().rules_of_engagement.break_off,
         fx("0.5")
     );
-    // Group 2 still searches in all four daylight pulses.
-    assert_eq!(played.searches().len(), 4);
+    // Group 2 searches in the two morning pulses only (decision 0131).
+    assert_eq!(played.searches().len(), 2);
+    assert!(
+        played
+            .searches()
+            .iter()
+            .all(|s| s.1 == Some(Pulse::Morning) && s.2 == 2),
+        "{:?}",
+        played.searches()
+    );
 }
 
 fn the_scenario_with_fuel(tons: u32) -> String {
@@ -1090,7 +1098,6 @@ fn the_scenario_with_fuel(tons: u32) -> String {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the carrier doctrine now gives the scout group 2 a search-once order between its search mission and its arc: one order more on day 1 than the calculation has"]
 fn fuel_takes_her_home_79_t_against_79_999999_and_she_is_routed_home() {
     let played = play(&the_scenario_with_fuel(79));
     played.nothing_refused();
@@ -1119,7 +1126,6 @@ fn fuel_takes_her_home_79_t_against_79_999999_and_she_is_routed_home() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the carrier doctrine now gives the scout group 2 a search-once order between its search mission and its arc: one order more on day 1 than the calculation has"]
 fn fuel_takes_her_home_with_81_t_she_stays() {
     let played = play(&the_scenario_with_fuel(81));
     played.nothing_refused();
@@ -1154,7 +1160,6 @@ fn commander_hex() -> String {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the carrier doctrine now gives the scout group 2 a search-once order between its search mission and its arc: one order more on day 1 than the calculation has"]
 fn a_commanders_hex_the_force_is_routed_to_2_0_at_cruise_and_the_air_orders_are_balanced() {
     let played = play(&commander_hex());
     played.nothing_refused();
@@ -1300,7 +1305,6 @@ fn a_surface_force_and_a_carrier_force_named_together_each_get_their_own_task() 
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the carrier doctrine now gives the scout group 2 a search-once order between its search mission and its arc: one order more on day 1 than the calculation has"]
 fn one_task_a_force_the_commanders_task_stands_and_the_staff_forms_none() {
     let played = play(&with(&command_table(
         1,
@@ -1325,8 +1329,8 @@ fn one_task_a_force_the_commanders_task_stands_and_the_staff_forms_none() {
             .any(|r| r.contains("intent:2") && r.contains("forms no other for task_force:1")),
         "{none:?}"
     );
-    // Every order is given once, serving intent 2, at balanced: 8 on day 1.
-    assert_eq!(played.orders(1).len(), 8, "{:?}", played.orders(1));
+    // Every order is given once, serving intent 2, at balanced: 9 on day 1.
+    assert_eq!(played.orders(1).len(), 9, "{:?}", played.orders(1));
     assert_eq!(
         played.orders(1),
         [

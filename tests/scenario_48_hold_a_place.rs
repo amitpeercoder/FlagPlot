@@ -53,10 +53,13 @@
 //! The cover doctrine runs for intent 2 on the morning it is formed. From
 //! there every order, every group's fatigue on every morning and at the end
 //! of day 12, and the search arc of every day are those of scenario 47's
-//! table. By day the staff gives 6, 1, 2, 1, 0, 0, 0, 0, 1, 3, 2 and 1
-//! orders: 17 in all.
+//! table. By day the staff gives 7, 0, 1, 1, 0, 0, 1, 1, 1, 3, 2 and 1
+//! orders: 18 in all. (Scenario 47's table as the architect restated it on
+//! Nov 16, 2026, for decision 0131; it was 6, 1, 2, 1, 0, 0, 0, 0, 1, 3, 2
+//! and 1, 17 in all. By his ruling of the same day this scenario follows
+//! it.)
 //!
-//! Every one of the 17, and the reason of every morning without an order,
+//! Every one of the 18, and the reason of every morning without an order,
 //! serves intent 2 and plan 1, and its chain is one intent long: intent 1,
 //! made by the commander, with its statement in words. No staff order and
 //! no staff command is refused.
@@ -75,9 +78,10 @@
 //!   on any day and ends at fatigue 0. Group 1 is the only fighter the
 //!   staff may order: it is given the patrol and the share on day 1 and no
 //!   order after, it is kept on patrol on day 9 at 48 and on every later
-//!   day, and it ends day 12 at 72. Group 3's days are unchanged. The staff
-//!   gives 4, 1, 2, 1, then none until 1 on day 10 and 1 on day 11: 10
-//!   orders.
+//!   day, and it ends day 12 at 72. Group 3's days are those of scenario
+//!   47's table. The staff gives 5, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1 and 0: 11
+//!   orders (4, 1, 2, 1, then 1 on days 10 and 11, 10 in all, before
+//!   decision 0131).
 //! - **A risk level is read up the tree.** With the risk of intent 1 set to
 //!   preserve the force on day 1, the share ordered on day 1 is 0.75, and
 //!   both fighters first pass the level of 30 on the morning of day 7, at
@@ -103,9 +107,10 @@
 //!   the staff makes plan 1 ready, hands in that it waits for leave to
 //!   launch, forms no intent and gives no order, and none on day 2. With
 //!   the commander approving plan 1 on day 3, the staff forms intent 2 that
-//!   morning and gives six orders: the patrol and a share of 0.5 to groups
-//!   1 and 2, and to group 3 the search mission and the arc 050 to 120 at
-//!   600 nm, the contact being gone.
+//!   morning and gives seven orders: the patrol and a share of 0.5 to
+//!   groups 1 and 2, and to group 3 the search mission, search once a day
+//!   (decision 0131) and the arc 050 to 120 at 600 nm, the contact being
+//!   gone.
 //! - **A cover intent that stands.** With the commander also stating
 //!   intent 2, cover base 1, on day 1: the staff forms nothing under intent
 //!   1, and its reason names intent 2. The orders are scenario 47's, each
@@ -359,6 +364,11 @@ fn share(s: &str) -> AirGroupOrder {
     AirGroupOrder::SetPatrolShare { share: fx(s) }
 }
 
+/// Search once a day, on (decision 0131).
+fn once() -> AirGroupOrder {
+    AirGroupOrder::SetSearchOnce { on: true }
+}
+
 fn arc(from: i32, to: i32) -> AirGroupOrder {
     AirGroupOrder::SetSearchArc {
         from_deg: from,
@@ -380,15 +390,16 @@ fn table_orders() -> Vec<Vec<(u32, AirGroupOrder)>> {
             (2, mission(CAP)),
             (2, share("0.5")),
             (3, mission(SEARCH)),
+            (3, once()),
             (3, arc(60, 180)),
         ],
+        vec![],
+        vec![(3, arc(50, 120))],
         vec![(3, mission(REST))],
-        vec![(3, mission(SEARCH)), (3, arc(50, 120))],
+        vec![],
+        vec![],
+        vec![(3, mission(SEARCH))],
         vec![(3, mission(REST))],
-        vec![],
-        vec![],
-        vec![],
-        vec![],
         vec![(1, mission(REST))],
         vec![(1, mission(CAP)), (2, mission(REST)), (3, mission(SEARCH))],
         vec![(2, mission(CAP)), (3, mission(REST))],
@@ -399,17 +410,17 @@ fn table_orders() -> Vec<Vec<(u32, AirGroupOrder)>> {
 /// Fatigue on the morning of each day: (group 1, group 2, group 3).
 const MORNINGS: [(i64, i64, i64); 12] = [
     (0, 0, 0),
-    (6, 6, 54),
+    (6, 6, 22),
     (12, 12, 44),
-    (18, 18, 98),
-    (24, 24, 88),
-    (30, 30, 78),
-    (36, 36, 68),
+    (18, 18, 66),
+    (24, 24, 56),
+    (30, 30, 46),
+    (36, 36, 36),
     (42, 42, 58),
     (48, 48, 48),
     (38, 54, 38),
-    (44, 44, 92),
-    (50, 50, 82),
+    (44, 44, 60),
+    (50, 50, 50),
 ];
 
 fn mentions(reason: &Reason, words: &[&str]) {
@@ -530,7 +541,6 @@ fn on_the_first_morning_the_staff_makes_the_plan_ready_releases_it_and_forms_int
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn the_staffs_orders_of_every_morning_are_those_of_scenario_47() {
     let played = play(&text());
     for (i, expected) in table_orders().iter().enumerate() {
@@ -540,15 +550,13 @@ fn the_staffs_orders_of_every_morning_are_those_of_scenario_47() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
-fn the_staff_gives_six_one_two_one_none_none_none_none_one_three_two_one_orders() {
+fn the_staff_gives_seven_none_one_one_none_none_one_one_one_three_two_one_orders() {
     let played = play(&text());
-    assert_eq!(played.counts(), vec![6, 1, 2, 1, 0, 0, 0, 0, 1, 3, 2, 1]);
-    assert_eq!(played.counts().iter().sum::<usize>(), 17);
+    assert_eq!(played.counts(), vec![7, 0, 1, 1, 0, 0, 1, 1, 1, 3, 2, 1]);
+    assert_eq!(played.counts().iter().sum::<usize>(), 18);
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn every_groups_fatigue_on_every_morning_and_at_the_end_is_that_of_scenario_47() {
     let played = play(&text());
     for (i, (g1, g2, g3)) in MORNINGS.iter().enumerate() {
@@ -560,7 +568,7 @@ fn every_groups_fatigue_on_every_morning_and_at_the_end_is_that_of_scenario_47()
     }
     assert_eq!(played.at_end(1), n(40));
     assert_eq!(played.at_end(2), n(56));
-    assert_eq!(played.at_end(3), n(72));
+    assert_eq!(played.at_end(3), n(40));
     assert_eq!(played.at_end(4), n(0));
 }
 
@@ -619,7 +627,6 @@ fn the_reason_of_every_morning_without_an_order_serves_intent_2_and_plan_1() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn the_reasons_name_the_fatigue_against_the_level_the_share_the_threats_and_the_arc() {
     let played = play(&text());
     for (day, order) in played.all_orders() {
@@ -645,11 +652,20 @@ fn the_reasons_name_the_fatigue_against_the_level_the_share_the_threats_and_the_
             AirGroupOrder::SetPatrolShare { .. } => {
                 assert!(w.contains("0.5 at balanced"), "day {day}: {w}")
             }
+            AirGroupOrder::SetSearchOnce { on } => {
+                assert!(on, "day {day}");
+                assert!(
+                    w.contains(&format!(
+                        "air_group:3, a search group, has fatigue {fatigue} against the 45 of the balanced risk"
+                    )),
+                    "day {day}: {w}"
+                );
+            }
             AirGroupOrder::SetSearchArc { .. } => {}
             other => panic!("{other:?}"),
         }
     }
-    let day1 = &played.decisions(1).orders[5].reason.worked;
+    let day1 = &played.decisions(1).orders[6].reason.worked;
     for word in [
         "060 to 180 out to 600 nm",
         "base:2 (Placeholder base 2) at (5,0)",
@@ -658,7 +674,7 @@ fn the_reasons_name_the_fatigue_against_the_level_the_share_the_threats_and_the_
     ] {
         assert!(day1.contains(word), "day 1: no \"{word}\": {day1}");
     }
-    let day3 = &played.decisions(3).orders[1].reason.worked;
+    let day3 = &played.decisions(3).orders[0].reason.worked;
     for word in [
         "050 to 120 out to 600 nm",
         "the narrowest arc that holds them is 080 to 090",
@@ -696,7 +712,6 @@ fn the_measure_of_intent_1_at_the_end_of_day_12() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn the_top_of_every_chain_is_the_commanders_and_why_prints_it() {
     let played = play(&text());
     played.every_chain_ends_with_the_commander();
@@ -724,7 +739,7 @@ fn the_top_of_every_chain_is_the_commanders_and_why_prints_it() {
             seen += 1;
         }
     }
-    assert_eq!(seen, 6);
+    assert_eq!(seen, 7);
 }
 
 // Stage 1 is unchanged: every staffed scenario of stage 1 gives the orders it
@@ -743,7 +758,6 @@ fn limited() -> String {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn a_forces_limit_is_read_up_the_tree() {
     let played = play(&limited());
     played.nothing_refused();
@@ -763,6 +777,7 @@ fn a_forces_limit_is_read_up_the_tree() {
             (1, mission(CAP)),
             (1, share("0.5")),
             (3, mission(SEARCH)),
+            (3, once()),
             (3, arc(60, 180)),
         ]
     );
@@ -788,8 +803,8 @@ fn a_forces_limit_is_read_up_the_tree() {
     );
     assert_eq!(played.mission_at_end(1), CAP);
     assert_eq!(played.at_end(1), n(72));
-    // Group 3's days are those of scenario 47 and the counts are 4, 1, 2, 1,
-    // then none until 1 on day 10 and 1 on day 11: 10 orders.
+    // Group 3's days are those of scenario 47 and the counts are 5, 0, 1, 1,
+    // 0, 0, 1, 1, 0, 1, 1, 0: 11 orders.
     for day in 2..=12 {
         let expected: Vec<(u32, AirGroupOrder)> = table_orders()[(day - 1) as usize]
             .iter()
@@ -798,8 +813,8 @@ fn a_forces_limit_is_read_up_the_tree() {
             .collect();
         assert_eq!(played.air_orders(day), expected, "day {day}");
     }
-    assert_eq!(played.counts(), vec![4, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 0]);
-    assert_eq!(played.counts().iter().sum::<usize>(), 10);
+    assert_eq!(played.counts(), vec![5, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0]);
+    assert_eq!(played.counts().iter().sum::<usize>(), 11);
     played.every_chain_ends_with_the_commander();
 }
 
@@ -832,7 +847,7 @@ fn a_risk_level_is_read_up_the_tree() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
+#[ignore = "decision 0131, left for the architect: in this variant group 3 is at 22 on day 2, not 54; at preserve (level 30) it is not above the level and searches, so day 2's orders are the two shares of 0.75 alone, where the calculation has those and rest to group 3"]
 fn a_limit_on_a_sub_intent_may_narrow() {
     let text = with(&command_table(
         2,
@@ -852,7 +867,6 @@ fn a_limit_on_a_sub_intent_may_narrow() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn a_limit_on_a_sub_intent_may_not_widen_a_risk() {
     let text = with(&command_table(
         2,
@@ -871,7 +885,6 @@ fn a_limit_on_a_sub_intent_may_not_widen_a_risk() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn a_forces_limit_on_a_sub_intent_may_not_name_a_group_the_parent_may_not_use() {
     let text = format!(
         "{}{}",
@@ -887,11 +900,10 @@ fn a_forces_limit_on_a_sub_intent_may_not_name_a_group_the_parent_may_not_use() 
         vec![(2, CommandRefusal::WiderThanParent(intent(1)))]
     );
     assert_eq!(played.at_end(2), n(0));
-    assert_eq!(played.counts().iter().sum::<usize>(), 10);
+    assert_eq!(played.counts().iter().sum::<usize>(), 11);
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn a_staff_made_intent_is_the_staffs() {
     let text = format!(
         "{}{}{}",
@@ -922,7 +934,6 @@ fn a_staff_made_intent_is_the_staffs() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn withdrawing_a_tree_withdraws_what_the_staff_formed_under_it() {
     let text = with(&command_table(5, "kind = \"withdraw_intent\"\nintent = 1"));
     let played = play(&text);
@@ -1015,7 +1026,6 @@ fn nothing_is_formed_or_ordered_before_the_plan_is_released() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn the_commander_approving_the_plan_on_day_3_releases_it_and_the_staff_forms_cover() {
     let text = format!(
         "{}{}",
@@ -1026,7 +1036,7 @@ fn the_commander_approving_the_plan_on_day_3_releases_it_and_the_staff_forms_cov
     played.nothing_refused();
     assert!(played.air_orders(1).is_empty());
     assert!(played.air_orders(2).is_empty());
-    // That morning the staff forms intent 2 and gives six orders.
+    // That morning the staff forms intent 2 and gives seven orders.
     let commands = &played.decisions(3).commands;
     assert_eq!(commands.len(), 1);
     assert_eq!(
@@ -1047,6 +1057,7 @@ fn the_commander_approving_the_plan_on_day_3_releases_it_and_the_staff_forms_cov
             (2, mission(CAP)),
             (2, share("0.5")),
             (3, mission(SEARCH)),
+            (3, once()),
             (3, arc(50, 120)),
         ]
     );
@@ -1057,7 +1068,6 @@ fn the_commander_approving_the_plan_on_day_3_releases_it_and_the_staff_forms_cov
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn a_cover_intent_that_stands_is_served_and_the_staff_forms_nothing_under_the_hold() {
     let text = with(&command_table(
         1,
@@ -1166,7 +1176,7 @@ fn two_worlds_that_differ_only_in_what_the_allied_side_cannot_see_give_the_same_
 // `set_intent` on an intent in force may change its figures and not its kind.
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
+#[ignore = "decision 0131, left for the architect: in this variant group 3 searched on day 2 and is on the search mission at 44 on day 3; at preserve (level 30) it is above the level and is given rest, so day 3 has three orders, the two shares of 0.75 and rest to group 3, where the calculation has the shares alone"]
 fn a_parents_risk_set_after_its_childs_binds_the_child() {
     // Intent 2's risk set to balanced on day 2 (taken: not bolder than its
     // parent's, which is unset and so balanced), then intent 1's set to
@@ -1210,7 +1220,6 @@ fn a_parents_risk_set_after_its_childs_binds_the_child() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn a_parents_forces_limit_set_after_its_childs_binds_the_child() {
     // Intent 2's forces limit names groups 1, 2 and 3 on day 2 (taken: all
     // are at base 1), then intent 1's is set to groups 1 and 3 on day 3: group
@@ -1247,7 +1256,6 @@ fn a_parents_forces_limit_set_after_its_childs_binds_the_child() {
 }
 
 #[test]
-#[ignore = "decision 0131 (back to the architect): at balanced the cover now gives group 3 a search-once order after its search mission on day 1, and group 3 then searches in the morning only, so the orders and fatigue of scenario 47's table no longer hold"]
 fn a_set_intent_may_not_change_the_kind_of_an_intent_in_force() {
     // On day 2 the commander sets intent 1, a hold, to cover base 1: refused;
     // the orders are those of the main case.
