@@ -20,7 +20,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 11
+      "const": 12
     },
     "kind": {
       "const": "staff_orders"

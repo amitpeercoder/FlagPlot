@@ -1,10 +1,10 @@
 # 0121: An escort force: keeping station, and who is met first
 
-Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, decision 14), on the designer's answer to its question 4: escorts sail as a force of their own, with a rule. It writes the rule out with its rule card and its hand calculation. Not built. It is built in step 5 of the stage, with the doctrine for escorted and covered runs, which gets its own record.
+Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, decision 14), on the designer's answer to its question 4: escorts sail as a force of their own, with a rule. It writes the rule out with its rule card and its hand calculation. Built on Nov 16, 2026, in step 5 of the stage, with the doctrine for escorted and covered runs, decision 0126 ("As built" below).
 
 Summary: A task force on the escort mission may be given a charge, another force of its side: it keeps station on it without a route of its own, an enemy force that meets the charge must first fight every escort in station and reaches the charge only past an escort that is sunk or has broken off, and the escorts' guns fire with the charge's at aircraft that attack it
 
-Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Not built
+Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Built
 
 ## Why
 
@@ -54,3 +54,25 @@ No rule of the time for the number of escorts was found, for either side. This r
 ## The hand calculation
 
 `tests/scenario_51_an_escort_force.rs`: a cargo force and its escort over a passage of 200 nm, with the hexes of both at the end of each pulse; and, for the meeting rule, cases built so that the escort holds or is passed, tested over seeds for which meetings are held and in what order.
+
+## As built
+
+Built on Nov 16, 2026, with decision 0126, in step 5 of stage 2. What follows is what was built and every place the build read the record more closely or differed from it.
+
+**Versions.** The state version is 32 (a task force's `charge`, its force and the escort order, after its `landing_at`). The rules label is 15. The saved game is version 8 (the order `escort`), the doctrine `supply-12` (decision 0126), the agent interface version 12 (the order `escort` with `charge`, and a force's `charge` in its detail).
+
+**The order and its refusals** (`TaskForceOrder::Escort(Option<TaskForceId>)`, intake in `resolve.rs`), checked in this order: the escort mission (`NotOnEscortMission`); the force no force's charge (`IsACharge`, naming the escort); for a charge named, not itself (`CannotEscortItself`), the side's (`NotYourUnit`), afloat (the refusal of a force that has ceased to be, or `NoShipAfloat`), with no charge of its own (`ChargeIsAnEscort`). A route order to a force with a charge is refused `KeepsStationOn`, naming the charge. A speed order is taken and is replaced by the next pulse's station. An escort order that clears the charge stops the force where it is and records nothing but the order and any turning back. Scenario files: `kind = "escort"`, `charge = N`, no `charge` to clear.
+
+**Keeping station** (`crates/sim-core/src/escort.rs`) runs at the start of each pulse's movement, after the halts steamed on and the straggler pass. An escort in station takes its charge's waypoints still to reach, cut at the waypoint where the charge will halt in the pulse (the engine's own halt function), with no marks, at `Knots` of the speed the charge's slowest ship makes at its setting; where the charge will not steam (stopped, halted, out of fuel, no speed) the escort stops where it is. Out of station it is routed to the charge's hex at cruise. An escort out of fuel takes no station. The route is set as a route order's acceptance sets it (turning back between centres where that is shorter); the escort's route and speed orders become the escort order. A new event, `StationKept`, records the station where it changes the escort's route, speed or status, citing the escort order and, in station, the charge's route order: the record gave no event for it, and the traceability rule needs one. On a tie in time of two changes of position, a force that is no force's charge comes before one that is, so an escort that moves with its charge enters a hex first; with no charge in a game the order is as it was.
+
+**Who is met first** (`movement.rs`, `World::meet`, `screen_passed`). An escort counts as passed when its fight with that enemy ended with it sunk to the last ship, or as the force that broke off or slipped away (slipping away is read as leaving); an escort whose fight passed unseen, or that is afloat in the hex with no fight held, is not passed. A reading the record did not state: where the escort sank the enemy, the meeting with the charge is one not held, and `MeetingNotHeld` is recorded (the hand calculation has it on every seed the escort holds). The pair is then marked as met for the pulse.
+
+**When the charge is gone** (rule 7): a charge sunk in a fight leaves its escorts with no charge at the end of that fight (`ChargeLost` citing the escort order and the fight's end, the escort's open steaming recorded first); a charge stood down or joined, at the intake of that order (`ChargeLost` among the order's events); a charge sunk any other way (by air), at the start of the next movement, citing the escort order only. An escort itself joined or stood down loses its charge with it. Stopping where it is: at a centre no route, and idle if it was steaming; between centres routed to the hex it is in.
+
+**The guns** (`airstrike.rs`): the shots of the ships of every escort in station on the force a raid attacks are added to that force's, from the same stream, keyed on the charge's lowest ship as before, and split by the same share.
+
+**What a side sees.** `StationKept` and `ChargeLost` are the escort's side's; `MeetingNotHeld` the charge's side's. The agent's briefing does not fold them; they are in the side's events and `explain`.
+
+**What it was checked against.** Scenario 51 (`data/scenarios/51_an_escort_force.toml`, on the frozen figures, and the variants its test builds) came out as the hand calculation has it in every number: part 1's hexes at the end of each pulse, the arrival at hour 20, the fuel of a force ordered the same route, closing from (0,2) in 5 hours, the slow escort, the refusals; part 2 on 200 seeds (the escort holds on all 200; passed and met after it on 193; unseen on 7, not passed); part 3's guns (6 and 6 shots of two destroyers given 6 each at a share of 0.5). Readings of the test: for part 2 the Allied forces start at (4,0) so that they reach T together in the night of day 2; part 3's raid is given a target list of transports, since by default it would take the escort; the slow escort is a class altered to make 10 knots.
+
+**Compared with earlier scenarios.** `sh scripts/compare-scenarios.sh --against origin/main`: 168 runs, all the same with the hashes cut. Every earlier scenario test passes untouched.

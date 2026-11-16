@@ -4472,6 +4472,39 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // An escort's station and a charge lost are the escort's side's;
+            // a meeting not held is the charge's side's, and the enemy is
+            // told nothing (decision 0121, 8).
+            sided(row(
+                EventKind::StationKept {
+                    escort: force(1),
+                    charge: force(1),
+                    in_station: true,
+                    waypoints: vec![hex()],
+                    knots: Some(fx(10)),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::ChargeLost {
+                    escort: force(1),
+                    charge: force(1),
+                    hex: hex(),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::MeetingNotHeld {
+                    charge: force(1),
+                    enemy: force(1),
+                    hex: hex(),
+                    escorts: vec![force(1)],
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -4512,7 +4545,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 140, "the log has 140 kinds of event");
+        assert_eq!(all.len(), 143, "the log has 143 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

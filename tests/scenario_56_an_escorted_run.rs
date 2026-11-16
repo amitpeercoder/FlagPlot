@@ -1021,15 +1021,14 @@ fn an_escort_short_of_fuel_is_not_free_the_run_sails_alone() {
     assert_eq!(played.ship_fuel(1, 4), n(10));
     sails_as_in_36(&played, 2);
     let reason = &played.route_reason(2).worked;
-    // The reason gives the fuel aboard against the fuel needed. (The figure
-    // needed is 12 t, not 60: see the report. The engine's measure of the
-    // passage is cut short when a ship runs dry.)
+    // The reason gives the fuel aboard against the fuel needed: 400 nm at
+    // 500 t over 4000 nm is 50 t, times 1.2 at balanced risk, 60 t.
     assert!(
-        reason.contains("ship:3 has 10 t aboard against"),
+        reason.contains("ship:3 has 10 t aboard against 60 t needed"),
         "{reason}"
     );
     assert!(
-        reason.contains("ship:4 has 10 t aboard against"),
+        reason.contains("ship:4 has 10 t aboard against 60 t needed"),
         "{reason}"
     );
     assert!(reason.contains("task_force:1 is short of fuel"), "{reason}");

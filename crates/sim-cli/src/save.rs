@@ -49,6 +49,9 @@
 //! in the staff's `form_intent`, `stand_at` (a list of hexes) in a route
 //! order of `"script"`, and in a reason's `serves` the `level`
 //! `{"task_force": n}`.
+//!
+//! Version 8 (decision 0121) adds the task force order `escort`, with its
+//! `charge` written `task_force:N` or left out to clear it.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -884,7 +887,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 7);
+        assert_eq!(written["version"], 8);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 11);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
