@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9e72b9cc385abf94  174 events
+day   1  hash fec32aa97f5ff8e9  174 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:2  <- order:2
@@ -93,7 +93,7 @@ day   1  hash 9e72b9cc385abf94  174 events
 #87 D1 afternoon air_group:3 searched for task_force:3 at 223 nm, chance 0.513863: sighted  <- #86
 #88 D1 afternoon Allied report: 14 ships, carrier, at (8,-11): new contact:1  <- #87
 #89 D1 afternoon air_group:3 searched for task_force:4 at 160 nm, chance 0.716197: sighted  <- #86
-#90 D1 afternoon Allied report: 4 ships, carrier, at (7,-9): refreshed contact:1  <- #89
+#90 D1 afternoon Allied report: 4 ships, carrier, at (7,-9): new contact:2  <- #89
 #91 D1 afternoon air_group:4 searched 290-090 out to 250 nm from ship:1 at (7,-5) with 7 aircraft  <- order:5, order:6
 #92 D1 afternoon air_group:4 searched for task_force:3 at 223 nm, chance 0.224815: not sighted  <- #91
 #93 D1 afternoon air_group:4 searched for task_force:4 at 160 nm, chance 0.313336: not sighted  <- #91
@@ -101,9 +101,9 @@ day   1  hash 9e72b9cc385abf94  174 events
 #95 D1 afternoon air_group:17 searched for task_force:1 at 223 nm, chance 0.428219: not sighted  <- #94
 #96 D1 afternoon air_group:17 searched for task_force:2 at 223 nm, chance 0.428219: sighted  <- #94
 #97 D1 afternoon Japanese report: 9 ships, transport, at (7,-5): new contact:1  <- #96
-#98 D1 afternoon air_group:6 launched 15 aircraft at contact:1 at (7,-9), 160 nm  <- order:8, #90
-#99 D1 afternoon air_group:7 launched 15 aircraft at contact:1 at (7,-9), 160 nm  <- order:9, #90
-#100 D1 afternoon air_group:8 launched 8 aircraft at contact:1 at (7,-9), 160 nm  <- order:10, #90
+#98 D1 afternoon air_group:6 launched 15 aircraft at contact:2 at (7,-9), 160 nm  <- order:8, #90
+#99 D1 afternoon air_group:7 launched 15 aircraft at contact:2 at (7,-9), 160 nm  <- order:9, #90
+#100 D1 afternoon air_group:8 launched 8 aircraft at contact:2 at (7,-9), 160 nm  <- order:10, #90
 #101 D1 afternoon air_group:12 launched 18 aircraft at contact:1 at (7,-5), 223 nm  <- order:21, order:22, #97
 #102 D1 afternoon air_group:15 launched 9 aircraft at contact:1 at (7,-5), 223 nm  <- order:26, order:27, #97
 #103 D1 afternoon air_group:19 launched 6 aircraft at base:1 at (2,-4), 200 nm  <- order:33, order:34
@@ -150,16 +150,16 @@ day   1  hash 9e72b9cc385abf94  174 events
 #144 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 17.830188  <- #126
 #145 D1 afternoon ship:33 flight deck hit, working -> degraded  <- #126
 #146 D1 afternoon ship:33 flight deck hit, degraded -> out  <- #126
-#147 D1 afternoon Allied report: 4 ships, cruiser, at (7,-9): refreshed contact:1  <- #126
+#147 D1 afternoon Allied report: 4 ships, cruiser, at (7,-9): refreshed contact:2  <- #126
 #148 D1 afternoon ship:33 took 1 hit on flotation, 17.830188 points, now 35.660376  <- #127
 #149 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 35.660376  <- #127
 #150 D1 afternoon ship:33 flight deck hit, no change, still out  <- #127
 #151 D1 afternoon ship:33 propulsion hit, working -> degraded  <- #127
-#152 D1 afternoon Allied report: 3 ships, carrier, at (7,-9): refreshed contact:1  <- #127
+#152 D1 afternoon Allied report: 3 ships, carrier, at (7,-9): refreshed contact:2  <- #127
 #153 D1 afternoon ship:33 took 2 hits on flotation, 34.5283 points, now 70.188676  <- #128
 #154 D1 afternoon ship:33 propulsion hit, degraded -> out  <- #128
 #155 D1 afternoon ship:33 propulsion hit, no change, still out  <- #128
-#156 D1 afternoon Allied report: 3 ships, carrier, at (6,-8): refreshed contact:1  <- #128
+#156 D1 afternoon Allied report: 3 ships, carrier, at (6,-8): refreshed contact:2  <- #128
 #157 D1 afternoon ship:1 took 3 hits on flotation, 15.782826 points, now 15.782826  <- #129
 #158 D1 afternoon ship:1 took 2 hits on fire, 10.521884 points, now 10.521884  <- #129
 #159 D1 afternoon ship:1 flight deck hit, working -> degraded  <- #129
@@ -246,7 +246,8 @@ ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems 
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 base:1 "Henderson Field" (Allied) at (2,-4): 0 t of supply in stock
-Allied contact:1 at (6,-8): 3 ships, carrier, age 0 pulses
+Allied contact:1 at (8,-11): 14 ships, carrier, age 0 pulses
+Allied contact:2 at (6,-8): 3 ships, carrier, age 0 pulses
 Allied claim at (7,-9): 8 hits on a carrier, 1 sunk, day 1 afternoon
 Allied claim over (7,-5): 44 aircraft shot down, day 1 afternoon
 Allied claim over (7,-5): 25 aircraft shot down, day 1 afternoon

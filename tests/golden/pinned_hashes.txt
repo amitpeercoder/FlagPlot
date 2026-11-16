@@ -1,5 +1,5 @@
 # Hashes the scenario tests pin. `sh scripts/regenerate.sh` writes this file
 # (a test run with FLAGPILOT_UPDATE_GOLDEN=1 writes its computed value here
 # instead of asserting); it is not edited by hand. One `name hexhash` line each.
-scenario_10_eastern_solomons_day_1 9e72b9cc385abf94
+scenario_10_eastern_solomons_day_1 fec32aa97f5ff8e9
 scenario_17a_case_8 066aba2e45bd0b22

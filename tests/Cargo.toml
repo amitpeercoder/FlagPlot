@@ -371,3 +371,7 @@ path = "scenario_58_a_carrier_force_closes.rs"
 [[test]]
 name = "scenario_59_a_search_kept_up"
 path = "scenario_59_a_search_kept_up.rs"
+
+[[test]]
+name = "scenario_60_two_sightings_in_one_pulse"
+path = "scenario_60_two_sightings_in_one_pulse.rs"

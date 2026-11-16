@@ -341,6 +341,9 @@ struct SearchFile {
     placeholder: bool,
     contact_drop_age_pulses: u32,
     merge_distance_hexes: u32,
+    /// Optional (decision 0133): the frozen step 1 figures have none.
+    #[serde(default)]
+    merge_distance_same_pulse_hexes: Option<u32>,
     fresh_contact_max_age_pulses: u32,
     position_error_chance: Quantity,
     count_over_chance: Quantity,
@@ -383,6 +386,7 @@ fn parse_search_figures(text: &str, path: &Path) -> Result<SearchFigures, DataEr
     let figures = SearchFigures {
         contact_drop_age_pulses: file.contact_drop_age_pulses,
         merge_distance_hexes: file.merge_distance_hexes,
+        merge_distance_same_pulse_hexes: file.merge_distance_same_pulse_hexes,
         fresh_contact_max_age_pulses: file.fresh_contact_max_age_pulses,
         position_error_chance: number("position_error_chance", &file.position_error_chance)?,
         count_over_chance: number("count_over_chance", &file.count_over_chance)?,
@@ -1611,10 +1615,24 @@ mod tests {
         let figures = parse_search_figures(&search_text(), here()).expect("parses");
         assert_eq!(figures.contact_drop_age_pulses, 5);
         assert_eq!(figures.merge_distance_hexes, 2);
+        assert_eq!(figures.merge_distance_same_pulse_hexes, Some(1));
         assert_eq!(figures.fresh_contact_max_age_pulses, 2);
         let cruiser = &figures.kind_confusion[&ShipKind::Cruiser];
         assert_eq!(cruiser[&ShipKind::Cruiser], Fixed::from_ratio(7, 10));
         assert_eq!(cruiser[&ShipKind::Battleship], Fixed::from_ratio(1, 10));
+    }
+
+    #[test]
+    fn the_same_pulse_merge_distance_is_optional() {
+        // Decision 0133: the frozen step 1 figures have none.
+        let without = search_text().replace("merge_distance_same_pulse_hexes = 1\n", "");
+        assert_ne!(without, search_text());
+        let figures = parse_search_figures(&without, here()).expect("parses");
+        assert_eq!(figures.merge_distance_same_pulse_hexes, None);
+        let frozen =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/step1/search.toml");
+        let frozen = load_search_figures(&frozen).expect("the frozen file loads");
+        assert_eq!(frozen.merge_distance_same_pulse_hexes, None);
     }
 
     #[test]

@@ -126,10 +126,12 @@ impl Default for MadeIds {
 /// hold) and 17 from decision 0131 (a search flown once a day and a search's
 /// own fatigue figure: an order a game saved under the old rules could not
 /// hold, and the live figure changes every live game in which a group
-/// searches). A pull request raises it by one
+/// searches) and 18 from decision 0133 (a contact reported this pulse is
+/// refreshed again in it only from a hex away, which changes every live game
+/// with two reports two hexes apart in one pulse). A pull request raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 17;
+pub const RULES_VERSION: u32 = 18;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

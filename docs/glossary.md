@@ -237,7 +237,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Bearing** | Degrees clockwise from north, in whole multiples of ten | |
 | **Sweep width** | The width of sea one aircraft of a type sees (`aircraft_types*.csv: sweep_width_nm`) | |
 | **Starting contact** | A contact a scenario gives a side at the start. It is entered as a report with the stated hex, count and kind, then aged (decision 0021) | A report with errors |
-| **Fresh** | Describes a contact whose age is no more than `search.toml: fresh_contact_max_age_pulses`. A fresh contact can be refreshed by a report and can alert a force | Describes a contact that can be struck, which has its own limit |
+| **Fresh** | Describes a contact whose age is no more than `search.toml: fresh_contact_max_age_pulses`. A fresh contact can be refreshed by a report (within `merge_distance_hexes`, or within `merge_distance_same_pulse_hexes` if it was already made or refreshed in the same pulse, decision 0133) and can alert a force | Describes a contact that can be struck, which has its own limit |
 | **Forgotten** | Describes a contact whose age has reached `search.toml: contact_drop_age_pulses`. It is dropped | |
 | **Taken for** | The kind a strike's contact carried when the strike was launched. The raid's claim names it | The kind of ship that was there |
 | **Claim** | A report of what a side's own people believe they did to the enemy. It can be wrong and it never ages (decisions 0014 and 0056). The claim of a shore bombardment is of aircraft destroyed on the ground and nothing else (decision 0092) | A loss in truth |

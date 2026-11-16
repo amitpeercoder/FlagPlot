@@ -79,3 +79,114 @@
 //! - The unit tests of the rule as it was pass unchanged on figures
 //!   without the new one.
 //! - The same reports in the same order give the same contacts.
+//!
+//! # Where the cases are
+//!
+//! `BeliefState::apply_report` is the core crate's own and cannot be driven
+//! from this crate, so cases A to H, the distances and the property of the
+//! same reports in the same order are unit tests in
+//! `crates/sim-core/src/belief.rs`, each named `scenario_60_...` for its case.
+//! This file holds the battle property.
+
+use sim_core::choices::Moment;
+use sim_core::events::{Event, EventKind};
+use sim_core::hex::Hex;
+use sim_core::ids::ContactId;
+use sim_core::state::Side;
+use sim_core::time::Pulse;
+use sim_staff::{as_staffs, staffs};
+
+mod common;
+
+/// The Allied contacts' hexes as the afternoon of day 1 begins, after the
+/// morning's ageing, in the Eastern Solomons from both sides' intents on
+/// live figures, seed 3, and the day's events.
+fn after_the_morning_on_seed_3() -> (Vec<Hex>, Vec<Event>) {
+    let path = common::data_dir().join("scenarios/second-proof/05a_eastern_solomons.toml");
+    let mut scenario = common::load_live(&path)
+        .expect("the scenario loads")
+        .with_seed(3)
+        .expect("the seed is set");
+    let held = staffs();
+    let mut after_morning: Option<Vec<Hex>> = None;
+    scenario
+        .next_day_watched(as_staffs(&held), &mut |world, moment| {
+            if moment
+                == (Moment::PulseBegins {
+                    day: 1,
+                    pulse: Pulse::Afternoon,
+                })
+            {
+                after_morning = Some(
+                    world
+                        .side_view(Side::Allied)
+                        .contacts()
+                        .map(|contact| contact.estimated_hex)
+                        .collect(),
+                );
+            }
+        })
+        .expect("day 1 resolves")
+        .expect("there is a day 1");
+    let mut hexes = after_morning.expect("the afternoon of day 1 began");
+    hexes.sort();
+    (hexes, scenario.world.events().iter().cloned().collect())
+}
+
+/// The battle it was found in, as the hand calculation states it: at the
+/// end of the morning pulse of day 1 the Allied side holds two contacts, one
+/// at (7,-9) and one at (8,-11). Live figures on purpose: the property is of
+/// the live figure and the battle in which the fault was found.
+///
+/// MISMATCH, for the architect. The code holds two contacts, at (7,-8) and
+/// (8,-11). The first report made contact 1 at (7,-9) and the report at
+/// (8,-11) made contact 2, as the hand calculation says; then the carriers
+/// struck contact 1 in the morning, and the strike's four reports (events
+/// 302, 307, 313 and 314) refreshed it, each within a hex, the last naming
+/// (7,-8), a hex off by the report's error.
+#[test]
+#[ignore = "mismatch with the hand calculation: the contacts are at (7,-8) and (8,-11); the strike's last report moved contact 1 from (7,-9) to (7,-8)"]
+fn the_eastern_solomons_on_seed_3_holds_both_forces_after_the_morning() {
+    let (hexes, _) = after_the_morning_on_seed_3();
+    let mut expected = vec![Hex::new(7, -9), Hex::new(8, -11)];
+    expected.sort();
+    assert_eq!(hexes, expected);
+}
+
+/// What the same game does give, asserted by the build and not by the hand
+/// calculation: the report at (7,-9) and the report at (8,-11), in one pulse,
+/// each made a contact, and both contacts are held at the end of the
+/// morning, one of them at (8,-11).
+#[test]
+fn the_eastern_solomons_on_seed_3_makes_two_contacts_of_the_two_forces() {
+    let (hexes, events) = after_the_morning_on_seed_3();
+    assert_eq!(hexes.len(), 2, "two contacts: {hexes:?}");
+    assert!(hexes.contains(&Hex::new(8, -11)), "{hexes:?}");
+    let made: Vec<(Hex, ContactId)> = events
+        .iter()
+        .filter(|e| e.day == 1 && e.pulse == Some(Pulse::Morning))
+        .filter_map(|e| match &e.kind {
+            EventKind::ReportReceived {
+                side: Side::Allied,
+                contact,
+                hex,
+                created: true,
+                ..
+            } => Some((*hex, *contact)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        made,
+        vec![
+            (
+                Hex::new(7, -9),
+                ContactId::for_umpire(1, common::umpire_key())
+            ),
+            (
+                Hex::new(8, -11),
+                ContactId::for_umpire(2, common::umpire_key())
+            )
+        ]
+    );
+}
