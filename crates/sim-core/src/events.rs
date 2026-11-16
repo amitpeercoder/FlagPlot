@@ -1867,6 +1867,23 @@ pub enum EventKind {
         hex: Hex,
         escorts: Vec<TaskForceId>,
     },
+    /// A ship of `task_force` took ammunition from `base` in a pulse
+    /// (decision 0122, 9): whole main battery `rounds` and `torpedoes`,
+    /// `taken_t` tons in all. `rounds_aboard` and `tubes_fired` are the
+    /// ship's after it, `base_ammunition_t` the base's. Caused as a
+    /// refuelling is: by the force's arrival or halt where there is one.
+    /// The side's own. Added at the end (decision 0122).
+    ShipRearmed {
+        ship: ShipId,
+        task_force: TaskForceId,
+        base: BaseId,
+        rounds: u32,
+        torpedoes: u32,
+        taken_t: Fixed,
+        rounds_aboard: Fixed,
+        tubes_fired: u32,
+        base_ammunition_t: Fixed,
+    },
 }
 
 impl EventKind {
@@ -2250,6 +2267,16 @@ impl EventKind {
             | EventKind::ChargeLost { escort, charge, .. } => {
                 vec![EntityRef::TaskForce(*escort), EntityRef::TaskForce(*charge)]
             }
+            EventKind::ShipRearmed {
+                ship,
+                task_force,
+                base,
+                ..
+            } => vec![
+                EntityRef::Ship(*ship),
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Base(*base),
+            ],
             EventKind::MeetingNotHeld {
                 charge, escorts, ..
             } => std::iter::once(*charge)
@@ -4048,6 +4075,20 @@ impl fmt::Display for EventKind {
                     escorts.join(", ")
                 )
             }
+            EventKind::ShipRearmed {
+                ship,
+                base,
+                rounds,
+                torpedoes,
+                taken_t,
+                rounds_aboard,
+                tubes_fired,
+                base_ammunition_t,
+                ..
+            } => write!(
+                f,
+                "{ship} takes {rounds} rounds and {torpedoes} torpedoes, {taken_t} t, from {base}: {rounds_aboard} rounds aboard and {tubes_fired} tubes fired; {base_ammunition_t} t of ammunition left at the base"
+            ),
         }
     }
 }

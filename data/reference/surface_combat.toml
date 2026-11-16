@@ -200,3 +200,17 @@ cruiser = 1
 destroyer = 0
 transport = 1
 auxiliary = 0
+
+# Rearming (decision 0122, 3): the tons a main battery round weighs, by the
+# ship's kind, and a torpedo. Placeholders, sized to a shell with its charge:
+# about a ton for a 14 or 16 inch round, 150 kg for an 8 inch, 40 kg for a 5
+# inch; a torpedo 1.5 t. No battle of the slice reads them: no base in it
+# holds ammunition.
+[rearming]
+tons_per_torpedo = "1.5"
+
+[rearming.tons_per_round]
+battleship = "1"
+cruiser = "0.15"
+destroyer = "0.04"
+others = "0.04"

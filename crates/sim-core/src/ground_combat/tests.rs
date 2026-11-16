@@ -235,6 +235,8 @@ fn world() -> World {
             lighter_rate_t_per_h: n(20),
             fuel_berth_rate_t_per_h: None,
             fuel_lighter_rate_t_per_h: None,
+            ammunition_berth_rate_t_per_h: None,
+            ammunition_lighter_rate_t_per_h: None,
         },
     );
     ref_data.ground = Some(GroundFigures::FIRST);
@@ -1183,6 +1185,8 @@ fn fb_world(units: Vec<FbUnit>) -> World {
             lighter_rate_t_per_h: n(20),
             fuel_berth_rate_t_per_h: None,
             fuel_lighter_rate_t_per_h: None,
+            ammunition_berth_rate_t_per_h: None,
+            ammunition_lighter_rate_t_per_h: None,
         },
     );
     ref_data.ground = Some(GroundFigures {

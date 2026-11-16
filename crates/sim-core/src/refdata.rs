@@ -459,6 +459,36 @@ pub struct SurfaceCombatFigures {
     /// The figures of a night's shore bombardment (decision 0092). `None`
     /// when the file names none of them: then no force bombards.
     pub bombardment: Option<BombardmentFigures>,
+    /// The weights of rearming (decision 0122, 3): `[rearming]`. `None` where
+    /// the file has no such table: no ship rearms. Added at the end.
+    pub rearming: Option<RearmingFigures>,
+}
+
+/// The weights of ammunition a ship takes in port (decision 0122, 3).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct RearmingFigures {
+    /// Tons a main battery round weighs, by the ship's kind: a battleship's,
+    /// a cruiser's, a destroyer's, and every other kind's.
+    pub tons_per_round_battleship: Fixed,
+    pub tons_per_round_cruiser: Fixed,
+    pub tons_per_round_destroyer: Fixed,
+    pub tons_per_round_others: Fixed,
+    /// Tons a torpedo weighs.
+    pub tons_per_torpedo: Fixed,
+}
+
+impl RearmingFigures {
+    /// Tons a round of a ship of `kind` weighs.
+    pub fn tons_per_round(&self, kind: ShipKind) -> Fixed {
+        match kind {
+            ShipKind::Battleship => self.tons_per_round_battleship,
+            ShipKind::Cruiser => self.tons_per_round_cruiser,
+            ShipKind::Destroyer => self.tons_per_round_destroyer,
+            ShipKind::Carrier | ShipKind::Transport | ShipKind::Auxiliary => {
+                self.tons_per_round_others
+            }
+        }
+    }
 }
 
 /// The figures of shore bombardment (decision 0092, 2, 3, 5 and 17).
@@ -533,6 +563,20 @@ impl SurfaceCombatFigures {
     pub fn problem(&self) -> Option<String> {
         if self.round_minutes == 0 {
             return Some("surface combat round minutes is not above 0".to_string());
+        }
+        // Decision 0122, 3: every weight above zero.
+        if let Some(rearming) = &self.rearming {
+            for (name, weight) in [
+                ("battleship round", rearming.tons_per_round_battleship),
+                ("cruiser round", rearming.tons_per_round_cruiser),
+                ("destroyer round", rearming.tons_per_round_destroyer),
+                ("round of other kinds", rearming.tons_per_round_others),
+                ("torpedo", rearming.tons_per_torpedo),
+            ] {
+                if weight <= Fixed::ZERO {
+                    return Some(format!("the rearming weight of a {name} is not above 0"));
+                }
+            }
         }
         if self.max_rounds == 0 {
             return Some("surface combat max rounds is not above 0".to_string());
@@ -945,6 +989,12 @@ pub struct PortSize {
     /// Tons of fuel an hour one ship takes by lighter (decision 0112). `None`
     /// is not given: no limit, and a berth cannot speed the fuelling.
     pub fuel_lighter_rate_t_per_h: Option<Fixed>,
+    /// Tons of ammunition an hour one ship takes at a berth (decision 0122,
+    /// 4). `None` is not given: no ship rearms at a berth of this size.
+    pub ammunition_berth_rate_t_per_h: Option<Fixed>,
+    /// Tons of ammunition an hour one ship takes by lighter (decision 0122,
+    /// 4). `None` is not given: no ship rearms by lighter at this size.
+    pub ammunition_lighter_rate_t_per_h: Option<Fixed>,
 }
 
 impl PortSize {
@@ -960,6 +1010,8 @@ impl PortSize {
         for (name, rate) in [
             ("berth", self.fuel_berth_rate_t_per_h),
             ("lighter", self.fuel_lighter_rate_t_per_h),
+            ("ammunition berth", self.ammunition_berth_rate_t_per_h),
+            ("ammunition lighter", self.ammunition_lighter_rate_t_per_h),
         ] {
             if rate.is_some_and(|rate| rate.is_negative() || rate.is_zero()) {
                 return Some(format!(
@@ -1790,6 +1842,13 @@ impl SurfaceCombatFigures {
                 hit_chance: hundredth(5),
                 reference_gun_damage: Fixed::from_int(20),
                 false_claim_chance: hundredth(1),
+            }),
+            rearming: Some(RearmingFigures {
+                tons_per_round_battleship: Fixed::ONE,
+                tons_per_round_cruiser: hundredth(15),
+                tons_per_round_destroyer: hundredth(4),
+                tons_per_round_others: hundredth(4),
+                tons_per_torpedo: Fixed::from_ratio(3, 2),
             }),
         }
     }

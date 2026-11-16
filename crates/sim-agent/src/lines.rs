@@ -103,6 +103,24 @@ pub struct ForceLine {
     /// fuelling hours are for. Set with `fuel_lacked_t`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fuelling_at: Option<Handle>,
+    /// Decision 0122, 10: for a force stopped at a base of its side whose
+    /// ships afloat lack main battery rounds or torpedoes, what they lack
+    /// together and the hours it would take there. Left out when it lacks
+    /// nothing or is not in port at a base of its side.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ammunition_lacked: Option<AmmunitionLine>,
+}
+
+/// What a force in port lacks of ammunition (decision 0122, 10).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AmmunitionLine {
+    pub rounds: u32,
+    pub torpedoes: u32,
+    pub tons: Dec,
+    /// The hours its rearming would take there, behind its fuel, the longest
+    /// ship's; `null` where the base holds too little ammunition or the port
+    /// gives no rate for it.
+    pub hours: Option<Dec>,
 }
 
 /// What a force in port lacks of fuel and the hours it would take there
@@ -530,6 +548,7 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         fuel_lacked_t: fuel_lack.as_ref().map(|l| Dec(l.lacked_t)),
         fuelling_hours: fuel_lack.as_ref().and_then(|l| l.hours.map(Dec)),
         fuelling_at: fuel_lack.as_ref().map(|l| ctx.base(l.base)),
+        ammunition_lacked: ammunition_line(ctx, force),
         cargo_supply_t: shows_cargo.then_some(Dec(cargo_supply)),
         cargo_fuel_t: shows_cargo.then_some(Dec(cargo_fuel)),
         task_force: ctx.force(force.id),
@@ -564,6 +583,32 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
 /// (else its lighter rate), the longest ship's. `None` when the force lacks
 /// nothing or is not so stopped. The hours are `None` when the rate the port
 /// would use is not given (no limit).
+/// Decision 0122, 10: what a force stopped at a base of its side lacks of
+/// ammunition, and the hours it would take there.
+fn ammunition_line(ctx: &Ctx<'_>, force: &TaskForce) -> Option<AmmunitionLine> {
+    let stopped = matches!(
+        force.status,
+        TaskForceStatus::Idle
+            | TaskForceStatus::Arrived
+            | TaskForceStatus::Halted
+            | TaskForceStatus::OutOfFuel
+    ) && force.toward_hex.is_none();
+    if !stopped || !ctx.bases.values().any(|b| b.hex == force.from_hex) {
+        return None;
+    }
+    let work = ctx.view.ammunition_work(force.id)?;
+    let (rounds, torpedoes, tons) = work.lacks();
+    if rounds == 0 && torpedoes == 0 {
+        return None;
+    }
+    Some(AmmunitionLine {
+        rounds,
+        torpedoes,
+        tons: Dec(tons),
+        hours: work.hours_to_full().map(Dec),
+    })
+}
+
 fn fuel_lack(
     ctx: &Ctx<'_>,
     force: &TaskForce,
@@ -693,6 +738,7 @@ fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         fuel_lacked_t: None,
         fuelling_hours: None,
         fuelling_at: None,
+        ammunition_lacked: None,
     }
 }
 

@@ -3795,7 +3795,10 @@ impl Day {
                     // briefing's fold (decision 0121).
                     | EventKind::StationKept { .. }
                     | EventKind::ChargeLost { .. }
-                    | EventKind::MeetingNotHeld { .. } => {}
+                    | EventKind::MeetingNotHeld { .. }
+                    // A ship rearmed is the side's events' and the list of
+                    // forces' (decision 0122).
+                    | EventKind::ShipRearmed { .. } => {}
                 },
                 SideEventKind::EnemySurrendered { hex, men } => {
                     ground.prisoners.push(PrisonersLine {

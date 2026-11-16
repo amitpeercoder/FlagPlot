@@ -2174,6 +2174,28 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .hex("hex", *hex)
                 .ids("escorts", escorts),
         ),
+        EventKind::ShipRearmed {
+            ship,
+            task_force,
+            base,
+            rounds,
+            torpedoes,
+            taken_t,
+            rounds_aboard,
+            tubes_fired,
+            base_ammunition_t,
+        } => (
+            "ship_rearmed",
+            d.id("ship", *ship)
+                .id("task_force", *task_force)
+                .id("base", *base)
+                .int("rounds", *rounds)
+                .int("torpedoes", *torpedoes)
+                .num("taken_t", *taken_t)
+                .num("rounds_aboard", *rounds_aboard)
+                .int("tubes_fired", *tubes_fired)
+                .num("base_ammunition_t", *base_ammunition_t),
+        ),
     }
 }
 

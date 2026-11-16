@@ -602,6 +602,16 @@ impl Briefing {
                     )),
                 }
             }
+            if let Some(lacked) = &f.ammunition_lacked {
+                s.push_str(&format!(
+                    ", lacks {} rounds and {} torpedoes, {} t of ammunition",
+                    lacked.rounds, lacked.torpedoes, lacked.tons.0
+                ));
+                match &lacked.hours {
+                    Some(hours) => s.push_str(&format!(": {} hours to rearm here", hours.0)),
+                    None => s.push_str(": it cannot rearm here"),
+                }
+            }
             if let Some(halt) = &f.halt {
                 s.push_str(&format!(
                     ", HALTED at {} since {} to {}{}",
