@@ -2,6 +2,7 @@
 
 use crate::hex::Hex;
 use crate::ids::TaskForceId;
+use crate::time::Pulse;
 
 /// A question about one of the side's own units in movement.
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -14,12 +15,14 @@ pub enum MovementQuestion {
         force: TaskForceId,
         first_waypoint: Option<Hex>,
     },
-    /// Where the force would halt on its route (decision 0096, 1 and 2):
-    /// the first waypoint from its next one on that is marked to act at and
-    /// where it has work.
-    Halt { force: TaskForceId },
-    /// Whether the halted force would steam on now (decision 0096, 4).
-    SteamOn { force: TaskForceId },
+    /// Where the force would halt on its route in a movement step of
+    /// `pulse` (decision 0096, 1 and 2, and 0124, 2): the first waypoint from
+    /// its next one on that is marked to act at and where it has work, or
+    /// marked to stand at when `pulse` is the night.
+    Halt { force: TaskForceId, pulse: Pulse },
+    /// Whether the halted force would steam on at the start of `pulse`'s
+    /// movement (decision 0096, 4, and 0124, 3).
+    SteamOn { force: TaskForceId, pulse: Pulse },
 }
 
 /// The answer to an [`MovementQuestion`].

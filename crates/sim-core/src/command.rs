@@ -129,6 +129,17 @@ pub enum IntentKind {
     /// no date and stands under "deny an area" only, so a commander cannot
     /// state it as a root. Added at the end.
     SearchWaters { base: BaseId },
+    /// Stand at `hex` with `force`, a task force of the side (decision 0124,
+    /// 7): a task, addressed to the force. It has no date. It may stand under
+    /// "deny an area", where the hex is the centre of the waters, and under
+    /// "hold a place", where it is the base's hex; and a commander may state
+    /// it himself as a root. Added at the end.
+    StandAt { force: TaskForceId, hex: Hex },
+    /// Operate `force`, a task force of the side with a carrier, from `hex`
+    /// (decision 0125, 1): a task, addressed to the force. It has no date. It
+    /// may stand under "deny an area" and under "hold a place", and a
+    /// commander may state it himself as a root. Added at the end.
+    OperateCarriers { force: TaskForceId, hex: Hex },
 }
 
 impl IntentKind {
@@ -143,6 +154,8 @@ impl IntentKind {
             IntentKind::Deny { .. } => 6,
             IntentKind::StrikeShips { .. } => 7,
             IntentKind::SearchWaters { .. } => 8,
+            IntentKind::StandAt { .. } => 9,
+            IntentKind::OperateCarriers { .. } => 10,
         }
     }
 
@@ -157,6 +170,8 @@ impl IntentKind {
             IntentKind::Deny { .. } => "deny",
             IntentKind::StrikeShips { .. } => "strike_ships",
             IntentKind::SearchWaters { .. } => "search_waters",
+            IntentKind::StandAt { .. } => "stand_at",
+            IntentKind::OperateCarriers { .. } => "operate_carriers",
         }
     }
 
@@ -172,16 +187,43 @@ impl IntentKind {
             | IntentKind::StrikeShips { base }
             | IntentKind::SearchWaters { base } => Some(base),
             IntentKind::Neutralise { target } => Some(target),
-            IntentKind::Deny { .. } => None,
+            IntentKind::Deny { .. }
+            | IntentKind::StandAt { .. }
+            | IntentKind::OperateCarriers { .. } => None,
         }
     }
 
     /// The side's own base the intent names, if it names one: every kind but
-    /// "neutralise a base" and "deny an area".
+    /// "neutralise a base", "deny an area" and the tasks of a task force.
     pub const fn own_base(self) -> Option<BaseId> {
         match self {
-            IntentKind::Neutralise { .. } | IntentKind::Deny { .. } => None,
+            IntentKind::Neutralise { .. }
+            | IntentKind::Deny { .. }
+            | IntentKind::StandAt { .. }
+            | IntentKind::OperateCarriers { .. } => None,
             other => other.base(),
+        }
+    }
+
+    /// The task force of the side the intent names, if it names one: a
+    /// stand task's (decision 0124, 7) and a carrier task's (decision 0125,
+    /// 1).
+    pub const fn force(self) -> Option<TaskForceId> {
+        match self {
+            IntentKind::StandAt { force, .. } | IntentKind::OperateCarriers { force, .. } => {
+                Some(force)
+            }
+            _ => None,
+        }
+    }
+
+    /// The hex a task of a task force names: a stand task's station
+    /// (decision 0124, 7) and the hex a carrier force operates from (decision
+    /// 0125, 1).
+    pub const fn station(self) -> Option<Hex> {
+        match self {
+            IntentKind::StandAt { hex, .. } | IntentKind::OperateCarriers { hex, .. } => Some(hex),
+            _ => None,
         }
     }
 
@@ -224,6 +266,10 @@ impl IntentKind {
             | IntentKind::Raid { base, .. }
             | IntentKind::StrikeShips { base }
             | IntentKind::SearchWaters { base } => Addressee::Base(base),
+            // Decisions 0124, 6 and 7, and 0125, 1.
+            IntentKind::StandAt { force, .. } | IntentKind::OperateCarriers { force, .. } => {
+                Addressee::TaskForce(force)
+            }
         }
     }
 
@@ -242,6 +288,17 @@ impl IntentKind {
                 IntentKind::Deny { .. },
             ) => true,
             (IntentKind::StrikeShips { base }, IntentKind::Hold { base: held }) => base == held,
+            // Decision 0124, 7: at the centre of the waters. Under a hold,
+            // the hex is the base's, which intake checks.
+            (IntentKind::StandAt { hex, .. }, IntentKind::Deny { hex: centre, .. }) => {
+                hex == centre
+            }
+            // Decision 0125, 1.
+            (
+                IntentKind::StandAt { .. } | IntentKind::OperateCarriers { .. },
+                IntentKind::Hold { .. },
+            )
+            | (IntentKind::OperateCarriers { .. }, IntentKind::Deny { .. }) => true,
             _ => false,
         }
     }
@@ -273,8 +330,9 @@ impl Maker {
 }
 
 /// The level an intent is given to (decision 0117, 1 and 2). The level that
-/// owns an intent is the kind of its addressee. A task force and a land
-/// formation are added with the steps that give them intents.
+/// owns an intent is the kind of its addressee. A task force is added by
+/// decision 0124; a land formation is added with the step that gives it
+/// intents.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Addressee {
     /// The area: what it commands is named in a forces limit, or nothing.
@@ -286,6 +344,9 @@ pub enum Addressee {
     /// intent is addressed to it; a reason names it as the level that
     /// decided. Added at the end.
     AirGroup(AirGroupId),
+    /// A task force of the side (decision 0124, 6): it commands its own ships
+    /// and the air groups aboard them. Added at the end.
+    TaskForce(TaskForceId),
 }
 
 impl Addressee {
@@ -295,6 +356,7 @@ impl Addressee {
             Addressee::Area => 1,
             Addressee::Base(_) => 2,
             Addressee::AirGroup(_) => 3,
+            Addressee::TaskForce(_) => 4,
         }
     }
 }
@@ -305,6 +367,7 @@ impl core::fmt::Display for Addressee {
             Addressee::Area => f.write_str("the area"),
             Addressee::Base(base) => write!(f, "{base}"),
             Addressee::AirGroup(group) => write!(f, "{group}"),
+            Addressee::TaskForce(force) => write!(f, "{force}"),
         }
     }
 }
@@ -1601,6 +1664,10 @@ fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core
         }
         IntentKind::StrikeShips { base } => write!(f, "strike ships from {base}"),
         IntentKind::SearchWaters { base } => write!(f, "search the waters from {base}"),
+        IntentKind::StandAt { force, hex } => write!(f, "stand at {hex} with {force}"),
+        IntentKind::OperateCarriers { force, hex } => {
+            write!(f, "operate the carrier force {force} from {hex}")
+        }
     }
 }
 

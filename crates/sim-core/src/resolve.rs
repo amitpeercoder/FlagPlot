@@ -766,13 +766,22 @@ impl World {
                         .unwrap_or(RejectReason::NoShipAfloat));
                 }
                 match task_force_order {
-                    TaskForceOrder::SetRoute { waypoints, act_at } => {
+                    TaskForceOrder::SetRoute {
+                        waypoints,
+                        act_at,
+                        stand_at,
+                    } => {
                         if task_force.status == TaskForceStatus::OutOfFuel {
                             return Err(RejectReason::OutOfFuel);
                         }
                         task_force.check_route(&self.map, waypoints)?;
-                        // Each mark is one of the waypoints (decision 0096, 1).
-                        match act_at.iter().find(|hex| !waypoints.contains(hex)) {
+                        // Each mark is one of the waypoints (decisions 0096, 1,
+                        // and 0124, 1).
+                        match act_at
+                            .iter()
+                            .chain(stand_at)
+                            .find(|hex| !waypoints.contains(hex))
+                        {
                             Some(hex) => Err(RejectReason::MarkNotOnRoute(*hex)),
                             None => Ok(()),
                         }
@@ -1356,7 +1365,11 @@ impl World {
                     .expect("order was validated against this task force");
                 let mut follow_up = None;
                 match task_force_order {
-                    TaskForceOrder::SetRoute { waypoints, act_at } => {
+                    TaskForceOrder::SetRoute {
+                        waypoints,
+                        act_at,
+                        stand_at,
+                    } => {
                         let (turns_back, _) = reroute
                             .flatten()
                             .expect("order was validated: the first waypoint is reachable");
@@ -1376,6 +1389,7 @@ impl World {
                             waypoints: waypoints.clone(),
                             next_index: 0,
                             act_at: act_at.clone(),
+                            stand_at: stand_at.clone(),
                         };
                         task_force.status = TaskForceStatus::Underway;
                         // A new route order ends a halt (decision 0096, 6).
@@ -4288,6 +4302,7 @@ mod tests {
                 waypoints: vec![hx(9, 0)],
                 next_index: 0,
                 act_at: std::collections::BTreeSet::new(),
+                stand_at: std::collections::BTreeSet::new(),
             };
             force.readiness = Readiness::Battle;
             force.readiness_order = Some(crate::ids::OrderId::new(44));

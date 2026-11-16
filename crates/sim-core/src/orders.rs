@@ -464,9 +464,16 @@ pub enum TaskForceOrder {
     /// marked waypoint other than the last the force halts if it has work
     /// there, and steams on when the work is done. Each must be one of the
     /// waypoints. Empty for a route with no mark.
+    ///
+    /// `stand_at` marks waypoints to stand at for the night (decision 0124,
+    /// 1): at one other than the last that the force reaches in the night
+    /// pulse it halts, and steams on at the start of the morning pulse's
+    /// movement. Each must be one of the waypoints. Empty for a route with
+    /// no such mark.
     SetRoute {
         waypoints: Vec<Hex>,
         act_at: BTreeSet<Hex>,
+        stand_at: BTreeSet<Hex>,
     },
     SetSpeed(SpeedSetting),
     SetMission(Mission),
@@ -566,6 +573,7 @@ impl TaskForceOrder {
         TaskForceOrder::SetRoute {
             waypoints,
             act_at: BTreeSet::new(),
+            stand_at: BTreeSet::new(),
         }
     }
 }

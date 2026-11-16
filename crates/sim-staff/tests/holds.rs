@@ -408,7 +408,10 @@ fn a_cancelled_plan_sends_a_force_on_passage_out_home_once() {
             .filter_map(|o| match &o.kind {
                 OrderKind::TaskForce {
                     target,
-                    order: TaskForceOrder::SetRoute { waypoints, act_at },
+                    order:
+                        TaskForceOrder::SetRoute {
+                            waypoints, act_at, ..
+                        },
                 } => Some((*target, waypoints.clone(), act_at.len())),
                 _ => None,
             })

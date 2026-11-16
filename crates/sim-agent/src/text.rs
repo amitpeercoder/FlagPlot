@@ -619,6 +619,13 @@ impl Briefing {
                 let marks: Vec<String> = f.act_at.iter().map(at).collect();
                 s.push_str(&format!(", route marked to act at {}", marks.join(", ")));
             }
+            if !f.stand_at.is_empty() {
+                let marks: Vec<String> = f.stand_at.iter().map(at).collect();
+                s.push_str(&format!(
+                    ", route marked to stand at for the night at {}",
+                    marks.join(", ")
+                ));
+            }
             if let Some(p) = &f.preparation {
                 let roster: Vec<String> = p.roster.iter().map(|u| u.handle.clone()).collect();
                 s.push_str(&format!(
@@ -726,6 +733,7 @@ impl Briefing {
                     .map(|r| match *r {
                         "bombarded" => "it had bombarded",
                         "cannot_bombard_any_longer" => "it could bombard no longer",
+                        "the_night_is_over" => "the night was over",
                         _ => "its cargo work was done",
                     })
                     .collect();
@@ -2475,6 +2483,7 @@ fn waits_text(waits_for: &[&str]) -> String {
         .iter()
         .map(|w| match *w {
             "bombard" => "bombard (at night)",
+            "night" => "stand for the night",
             _ => "work cargo",
         })
         .collect();

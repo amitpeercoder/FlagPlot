@@ -168,7 +168,7 @@
               "type": "string"
             },
             "level": {
-              "description": "The level that decided (decision 0120, 2): the addressee of the intent served, \"area\" or {\"base\": n}, n the base's number. Left out where a reason has none.",
+              "description": "The level that decided (decision 0120, 2): the addressee of the intent served, \"area\", {\"base\": n} (n the base's number) or {\"task_force\": n} (n the side's number of the task force; decisions 0124 and 0125). Left out where a reason has none.",
               "oneOf": [
                 {
                   "const": "area"
@@ -181,6 +181,18 @@
                   "additionalProperties": false,
                   "properties": {
                     "base": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "task_force"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "task_force": {
                       "type": "integer"
                     }
                   }
@@ -461,6 +473,7 @@
                 "target",
                 "hex",
                 "distance",
+                "task_force",
                 "limits"
               ],
               "additionalProperties": false,
@@ -511,6 +524,13 @@
                   ],
                   "description": "The distance in hexes of the waters of a deny intent (decision 0123); null for the other kinds."
                 },
+                "task_force": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "The side's number of the task force a stand_at or operate_carriers intent names (decisions 0124 and 0125); null for the other kinds."
+                },
                 "floor_days": {
                   "type": [
                     "integer",
@@ -535,7 +555,9 @@
                     "raid",
                     "deny",
                     "strike_ships",
-                    "search_waters"
+                    "search_waters",
+                    "stand_at",
+                    "operate_carriers"
                   ]
                 }
               }

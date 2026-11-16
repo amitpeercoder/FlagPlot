@@ -1,0 +1,87 @@
+Placeholder scenario 54: A force that stands by night
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 9298298aad6d0a0e  40 events
+day   2  hash a33fe0ab237ecb20  20 events
+day   3  hash 52470f80f98d7e1a  5 events
+day   4  hash 3c6845b14de66fe2  3 events
+
+#1 D0 -         Allied report: 3 ships, cruiser, at (10,0), held at the start: new contact:1
+#2 D1 -         Allied the commander's command taken: set intent:1 to deny the waters within 0 hexes of (3,0)
+#3 D1 -         Allied plan:1 drafted for intent:1  <- #2
+#4 D1 -         Allied the commander's command taken: limit intent:1's forces to 0 ships and 1 task force
+#5 D1 -         Allied the commander's command taken: give the leave to prepare
+#6 D1 -         Allied the commander's command taken: give the leave to launch
+#7 D1 -         Allied the staff's command taken: approve plan:1
+#8 D1 -         Allied plan:1 went from draft to preparing  <- #7
+#9 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: deny the waters within 0 hexes of (3,0); plan 1; decided at the level of the area]: plan:1, the plan to deny the waters within 0 hexes of (3,0), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #7
+#10 D1 -         Allied the staff's command taken: approve plan:1
+#11 D1 -         Allied plan:1 went from preparing to released  <- #10
+#12 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: deny the waters within 0 hexes of (3,0); plan 1; decided at the level of the area]: plan:1, the plan to deny the waters within 0 hexes of (3,0), is ready and leave to launch is given: the staff releases it.  <- #10
+#13 D1 -         Allied the staff's command taken: form under intent:1 an intent to stand at (3,0) with task_force:1
+#14 D1 -         Allied staff forms intent:2 under intent:1  <- #13
+#15 D1 -         Allied staff's reason for the command to form under intent:1 an intent to stand at (3,0) with task_force:1 [serves intent 1: deny the waters within 0 hexes of (3,0); plan 1; decided at the level of the area]: task_force:1 is named in the forces limit of intent:1, its plan is released and no task of task_force:1 stands under it: task_force:1 is on the surface combat mission with 2 ship(s) afloat, so the staff forms intent:2, to stand at (3,0) with task_force:1, under it, for task_force:1 to carry out.  <- #13
+#16 D1 -         order:1 accepted for task_force:1  <- order:1  [issued by the staff]
+#17 D1 -         Allied staff's reason for order:1 [serves intent 2: stand at (3,0) with task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (3,0)]: task_force:1 has no home port and lies stopped at base:1 (Placeholder base 1): its home port is set to base:1 (Placeholder base 1), where it sorties from and comes back to.  <- order:1, #16
+#18 D1 -         order:2 accepted for task_force:1  <- order:2  [issued by the staff]
+#19 D1 -         Allied staff's reason for order:2 [serves intent 2: stand at (3,0) with task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (3,0)]: A force that stands to meet the enemy by night engages: the rules of engagement of task_force:1 are set to the stance engage and the break-off level of the balanced risk, 0.5; its straggler instruction and keep share are left as they are.  <- order:2, #18
+#20 D1 -         order:3 accepted for task_force:1  <- order:3  [issued by the staff]
+#21 D1 -         Allied staff's reason for order:3 [serves intent 2: stand at (3,0) with task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (3,0)]: intent:2, standing at (3,0) with task_force:1: contact 1 of 3 ship(s) is 7 hexes from the station (3,0), within 15: a threat; it sorties or stands, so task_force:1 is set to battle readiness.  <- order:3, #20
+#22 D1 -         order:4 accepted for task_force:1  <- order:4  [issued by the staff]
+#23 D1 -         Allied staff's reason for order:4 [serves intent 2: stand at (3,0) with task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (3,0)]: intent:2, standing at (3,0) with task_force:1: contact 1 of 3 ship(s) is 7 hexes from the station (3,0), within 15: a threat, and at balanced the force sorties on a night with a threat. the passage to the station and home, by the engine's measure, times the 1.2 of the balanced risk: ship:1 has 2000 t aboard against 72 t needed, ship:2 has 2000 t aboard against 72 t needed: it has the fuel. It is routed to the station (3,0) and home to base:1 (Placeholder base 1), the station marked to stand at: 7.5 hours to the station at cruise, it stands there for the night and steams for home at morning.  <- order:4, #22
+#24 D1 night     task_force:1 steamed 120 nm at 16 kn from (0,0) to (3,0)  <- order:4
+#25 D1 night     ship:1 burned 30 t, 1970 t remaining  <- #24
+#26 D1 night     ship:2 burned 30 t, 1970 t remaining  <- #24
+#27 D1 night     task_force:1 halted at (3,0) at D1 01:30 to stand for the night  <- order:4, #24
+#28 D1 night     Allied contact:1 aged to 1 pulses  <- #1
+#29 D1 morning   task_force:1 steamed on from (3,0): the night is over  <- order:4, #27
+#30 D1 morning   task_force:1 steamed 96 nm at 16 kn from (3,0) to (1,0)  <- order:4
+#31 D1 morning   ship:1 burned 24 t, 1946 t remaining  <- #30
+#32 D1 morning   ship:2 burned 24 t, 1946 t remaining  <- #30
+#33 D1 morning   Allied contact:1 aged to 2 pulses  <- #1
+#34 D1 afternoon task_force:1 steamed 24 nm at 16 kn from (1,0) to (0,0)  <- order:4
+#35 D1 afternoon ship:1 burned 6 t, 1940 t remaining  <- #34
+#36 D1 afternoon ship:2 burned 6 t, 1940 t remaining  <- #34
+#37 D1 afternoon task_force:1 arrived at (0,0) at D1 13:30  <- #34
+#38 D1 afternoon ship:1 took 60 t of fuel at base:1, 2000 t aboard, base:1 has 4940 t left  <- #37
+#39 D1 afternoon ship:2 took 60 t of fuel at base:1, 2000 t aboard, base:1 has 4880 t left  <- #37
+#40 D1 afternoon Allied contact:1 aged to 3 pulses  <- #1
+#41 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#42 D2 -         Allied staff's reason for giving no order [serves intent 1: deny the waters within 0 hexes of (3,0); plan 1; decided at the level of the area]: intent:2 (stand at (3,0) with task_force:1) stands under intent:1: the staff forms no other for task_force:1. task_force:1 is on the surface combat mission with 2 ship(s) afloat.
+#43 D2 -         order:5 accepted for task_force:1  <- order:5  [issued by the staff]
+#44 D2 -         Allied staff's reason for order:5 [serves intent 2: stand at (3,0) with task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (3,0)]: intent:2, standing at (3,0) with task_force:1: contact 1 of 3 ship(s) is 7 hexes from the station (3,0), within 15: a threat, and at balanced the force sorties on a night with a threat. the passage to the station and home, by the engine's measure, times the 1.2 of the balanced risk: ship:1 has 2000 t aboard against 72 t needed, ship:2 has 2000 t aboard against 72 t needed: it has the fuel. It is routed to the station (3,0) and home to base:1 (Placeholder base 1), the station marked to stand at: 7.5 hours to the station at cruise, it stands there for the night and steams for home at morning.  <- order:5, #43
+#45 D2 night     task_force:1 steamed 120 nm at 16 kn from (0,0) to (3,0)  <- order:5
+#46 D2 night     ship:1 burned 30 t, 1970 t remaining  <- #45
+#47 D2 night     ship:2 burned 30 t, 1970 t remaining  <- #45
+#48 D2 night     task_force:1 halted at (3,0) at D2 01:30 to stand for the night  <- order:5, #45
+#49 D2 night     Allied contact:1 aged to 4 pulses  <- #1
+#50 D2 morning   task_force:1 steamed on from (3,0): the night is over  <- order:5, #48
+#51 D2 morning   task_force:1 steamed 96 nm at 16 kn from (3,0) to (1,0)  <- order:5
+#52 D2 morning   ship:1 burned 24 t, 1946 t remaining  <- #51
+#53 D2 morning   ship:2 burned 24 t, 1946 t remaining  <- #51
+#54 D2 morning   Allied contact:1 dropped at 5 pulses  <- #1
+#55 D2 afternoon task_force:1 steamed 24 nm at 16 kn from (1,0) to (0,0)  <- order:5
+#56 D2 afternoon ship:1 burned 6 t, 1940 t remaining  <- #55
+#57 D2 afternoon ship:2 burned 6 t, 1940 t remaining  <- #55
+#58 D2 afternoon task_force:1 arrived at (0,0) at D2 13:30  <- #55
+#59 D2 afternoon ship:1 took 60 t of fuel at base:1, 2000 t aboard, base:1 has 4820 t left  <- #58
+#60 D2 afternoon ship:2 took 60 t of fuel at base:1, 2000 t aboard, base:1 has 4760 t left  <- #58
+#61 D2 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#62 D3 -         Allied staff's reason for giving no order [serves intent 1: deny the waters within 0 hexes of (3,0); plan 1; decided at the level of the area]: intent:2 (stand at (3,0) with task_force:1) stands under intent:1: the staff forms no other for task_force:1. task_force:1 is on the surface combat mission with 2 ship(s) afloat.
+#63 D3 -         Allied staff's reason for giving no order [serves intent 2: stand at (3,0) with task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (3,0)]: intent:2, standing at (3,0) with task_force:1: the side holds no contact of ships within 15 hexes of the station (3,0): there is no threat, and at balanced the force sorties on a night with a threat: task_force:1 does not sortie tonight.
+#64 D3 -         order:6 accepted for task_force:1  <- order:6  [issued by the staff]
+#65 D3 -         Allied staff's reason for order:6 [serves intent 2: stand at (3,0) with task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (3,0)]: intent:2, standing at (3,0) with task_force:1: the side holds no contact of ships within 15 hexes of the station (3,0): there is no threat; it does not sortie, so task_force:1 is set to normal readiness.  <- order:6, #64
+#66 D3 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#67 D4 -         Allied staff's reason for giving no order [serves intent 1: deny the waters within 0 hexes of (3,0); plan 1; decided at the level of the area]: intent:2 (stand at (3,0) with task_force:1) stands under intent:1: the staff forms no other for task_force:1. task_force:1 is on the surface combat mission with 2 ship(s) afloat.
+#68 D4 -         Allied staff's reason for giving no order [serves intent 2: stand at (3,0) with task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (3,0)]: intent:2, standing at (3,0) with task_force:1: the side holds no contact of ships within 15 hexes of the station (3,0): there is no threat, and at balanced the force sorties on a night with a threat: task_force:1 does not sortie tonight.
+#69 D4 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder cruiser force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:2 "Placeholder cruiser 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock, 4760 t of fuel in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

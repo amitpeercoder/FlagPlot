@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 10` and a `"kind"` that names it.
+`"version": 11` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 10. A field removed from an answer, or a field whose meaning
+`version` is 11. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -794,7 +794,7 @@ side's own command state; the enemy is told none of it.
 
 ## Denying an area, striking ships, and a strike sized to its target (decisions 0123 and 0118)
 
-`version` is 10: an intent's `base` is `null` for a deny too, which is a change in meaning, so the
+`version` is 10 here (11 below): an intent's `base` is `null` for a deny too, which is a change in meaning, so the
 version rises. Everything here is of the side's own command state, groups and choices; the enemy is
 told none of it.
 
@@ -821,3 +821,33 @@ told none of it.
   kind has no figure and needs everything) and `sent_before` (the aircraft the side's groups before
   it launched at the contact in the pulse).
 - **Saved games** are version 6; a game of version 5 or earlier is refused, not converted.
+
+## Standing for the night and operating carriers (decisions 0124 and 0125)
+
+`version` is 11: an intent's `base` is also `null` for the two new kinds, which is a change in
+meaning, and a halt question's choice line gains `pulse`. Everything here is of the side's own
+orders, command state and choices; the enemy is told none of it.
+
+- **The route order's `stand_at`.** `{"kind": "set_route", "waypoints": [[1, 0], [3, 0], [1, 0]],
+  "stand_at": [[3, 0]]}`: hexes, each one of the waypoints, marked as `act_at` marks them. A force
+  that reaches a marked waypoint in the night pulse halts there until the morning pulse. Written
+  only when it is not empty, so a route with no such mark is written as it always was. A mark that
+  is not a waypoint is refused with the same words as an `act_at` mark.
+- **A force line** (`list_forces`, `get_entity`'s `summary`, the briefing's `task_forces`) has
+  `stand_at` (the marks of the route not yet passed, as places in hex order; left out when none).
+  A halt's `waits_for`, and the briefing's `halted` `waits_for` and `steamed_on` `waited_for`, may
+  include `night`; a `steamed_on` line's `reasons` may include `the_night_is_over`.
+- **Commands.** `set_intent` takes `intent_kind` `"stand_at"` (stand one of the side's task forces
+  at `hex` for the night) and `"operate_carriers"` (operate the carrier force from `hex`), each
+  with `task_force` (the side's number of one of its own forces; the same refusal for an enemy force
+  and for one that does not exist) and `hex` (`[q, r]`) and no `base`. `form_intent` and the saved
+  game write the same keys.
+- **`command_state`, `plans`, `propose`.** Each intent has `task_force` (the side's number; `null`
+  for the other kinds), and `hex` is also the station of these two kinds. An intent's `addressee`
+  is a task force's handle in words for them.
+- **A reason's `level`** may be `{"task_force": n}` (`n` the side's number in the interface, the
+  umpire's in a saved game); `why` gives it in words as `task_force:n`. The replay file's
+  `staff_reason` event writes it as `"task_force:n"`.
+- **`measure` `choices`.** The `halt` and `steam_on` lines have `pulse` (the pulse's name) in
+  `asked`.
+- **Saved games** are version 7; a game of version 6 or earlier is refused, not converted.

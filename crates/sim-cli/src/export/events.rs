@@ -952,6 +952,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .hex("hex", *hex)
                 .flag("bombard", work.bombard)
                 .flag("cargo", work.cargo)
+                .flag_when_true("night", work.night)
                 .num("elapsed_hours", *elapsed_hours),
         ),
         EventKind::TaskForceSteamedOn {
@@ -965,6 +966,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .hex("hex", *hex)
                 .flag("bombard", work.bombard)
                 .flag("cargo", work.cargo)
+                .flag_when_true("night", work.night)
                 .flag("fired", *fired),
         ),
         // Preparing a landing and the experience of a land unit (decisions
@@ -2025,6 +2027,9 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                     sim_core::command::Addressee::Base(base) => format!("base:{}", base.raw()),
                     sim_core::command::Addressee::AirGroup(group) => {
                         format!("air_group:{}", group.raw())
+                    }
+                    sim_core::command::Addressee::TaskForce(force) => {
+                        format!("task_force:{}", force.raw())
                     }
                 };
                 data = data.with("level", Field::Str(level));

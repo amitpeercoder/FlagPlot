@@ -19,7 +19,10 @@ fn route_orders(scenario: &Scenario) -> Vec<(Side, u32, Vec<Hex>, BTreeSet<Hex>)
         .filter_map(|(side, request)| match &request.kind {
             OrderKind::TaskForce {
                 target,
-                order: TaskForceOrder::SetRoute { waypoints, act_at },
+                order:
+                    TaskForceOrder::SetRoute {
+                        waypoints, act_at, ..
+                    },
             } => Some((*side, target.raw(), waypoints.clone(), act_at.clone())),
             _ => None,
         })

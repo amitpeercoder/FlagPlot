@@ -647,6 +647,7 @@ fn route_to(waypoints: &[Hex], act_at: &[Hex]) -> TaskForceOrder {
     TaskForceOrder::SetRoute {
         waypoints: waypoints.to_vec(),
         act_at: act_at.iter().copied().collect(),
+        stand_at: std::collections::BTreeSet::new(),
     }
 }
 

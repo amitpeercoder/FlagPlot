@@ -35,16 +35,24 @@ pub fn order(order: &Order, key: &UmpireKey) -> OrderOut {
 fn text(kind: &OrderKind) -> String {
     match kind {
         OrderKind::TaskForce { order, .. } => match order {
-            TaskForceOrder::SetRoute { waypoints, act_at } => {
+            TaskForceOrder::SetRoute {
+                waypoints,
+                act_at,
+                stand_at,
+            } => {
                 let waypoints: Vec<String> = waypoints.iter().map(ToString::to_string).collect();
-                let text = format!("route via {}", waypoints.join(", "));
-                if act_at.is_empty() {
-                    text
-                } else {
+                let mut text = format!("route via {}", waypoints.join(", "));
+                if !act_at.is_empty() {
                     // Decision 0096: the waypoints marked to act at.
                     let marks: Vec<String> = act_at.iter().map(ToString::to_string).collect();
-                    format!("{text}, acting at {}", marks.join(", "))
+                    text = format!("{text}, acting at {}", marks.join(", "));
                 }
+                if !stand_at.is_empty() {
+                    // Decision 0124: the waypoints marked to stand at for the night.
+                    let marks: Vec<String> = stand_at.iter().map(ToString::to_string).collect();
+                    text = format!("{text}, standing for the night at {}", marks.join(", "));
+                }
+                text
             }
             TaskForceOrder::SetSpeed(speed) => format!("speed {}", names::speed(*speed)),
             TaskForceOrder::SetMission(mission) => format!("mission {}", names::mission(*mission)),

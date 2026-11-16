@@ -62,6 +62,16 @@
                   "type": "integer"
                 }
               }
+            },
+            "stand_at": {
+              "description": "Optional (decision 0124): [q, r] hexes, each one of the waypoints, to stand at for the night. A force that reaches a marked waypoint in the night pulse halts there until the morning pulse, then steams on. The last waypoint needs no mark. A mark that is not one of the waypoints is refused as an act_at mark is.",
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
             }
           }
         },

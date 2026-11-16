@@ -1,0 +1,105 @@
+# Scenario 54: a surface force that stands by night.
+#
+# Decision 0124. Two placeholder cruisers, task force 1, lie stopped at
+# Allied base 1 (S, at (0,0)), full of fuel, on the surface combat mission.
+# The Allied commander states one end, deny the waters within 0 hexes of
+# (3,0), 120 nm from S, names task force 1 in its forces limit and gives both
+# leaves. At the area's level the staff forms the task of standing at (3,0)
+# (intent 2); at the force's level it sends the force out on the nights it
+# believes in a threat, marked to stand at the station, and brings it home
+# at morning. The Allied side starts holding one contact, which ages out on
+# day 2, and there is no enemy at all. The hand calculation is in
+# tests/scenario_54_a_force_that_stands_by_night.rs. The test runs this file
+# on the frozen step 1 figures, which give no fuelling rate, and with
+# variants it builds from the parsed text.
+#
+# PLACEHOLDER DATA. The base, ships, figures and map are invented.
+
+name = "Placeholder scenario 54: A force that stands by night"
+placeholder = true
+seed = 1942
+days = 4
+map = "../map/placeholder_a_force_that_stands_by_night.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# Allied base 1, S.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 5000
+
+# Task force 1: two placeholder cruisers, stopped at S, with the stance
+# avoid and no home port.
+[[task_force]]
+id = 1
+name = "Placeholder cruiser force 1"
+side = "allied"
+at_base = 1
+mission = "surface_combat"
+stance = "avoid"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser 2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+# The contact.
+[[contact]]
+side = "allied"
+q = 10
+r = 0
+ship_count = 3
+kind = "cruiser"
+age_pulses = 0
+
+# The Allied commander's commands.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "deny"
+hex = [3, 0]
+distance = 0
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [1]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

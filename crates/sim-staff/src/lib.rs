@@ -20,6 +20,7 @@
 #![deny(clippy::float_arithmetic)]
 
 mod air;
+pub mod carrier;
 mod deny;
 mod doctrine;
 mod fleet;
@@ -33,6 +34,7 @@ pub mod raid;
 mod reasons;
 mod route;
 mod search;
+pub mod stand;
 pub mod strike;
 mod units;
 
@@ -78,7 +80,11 @@ use sim_core::view::SideView;
 /// search doctrine, and a cover's arc that takes the waters as threats. A side
 /// with no deny, strike-ships or search-waters intent gets the orders
 /// `supply-9` gave.
-pub const DOCTRINE_VERSION: &str = "supply-10";
+/// `supply-11` adds decisions 0124 and 0125: a task force as an addressee,
+/// the stand and carrier tasks formed under a deny or a hold intent whose
+/// forces limit names task forces, and their doctrines at the force's level.
+/// A side whose intents name no task force gets the orders `supply-10` gave.
+pub const DOCTRINE_VERSION: &str = "supply-11";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

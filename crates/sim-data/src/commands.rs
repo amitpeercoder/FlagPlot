@@ -12,7 +12,7 @@
 //!
 //! | `kind` | keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both), `"deny"` (deny the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]`; takes `hex` and `distance` and no `base`), `"strike_ships"` (strike ships from `base`; takes `base`) or `"search_waters"` (search the waters from `base`; takes `base`, and is the staff's to give, so the game refuses it as a root intent) |
+//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both), `"deny"` (deny the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]`; takes `hex` and `distance` and no `base`), `"strike_ships"` (strike ships from `base`; takes `base`), `"search_waters"` (search the waters from `base`; takes `base`, and is the staff's to give, so the game refuses it as a root intent), `"stand_at"` (stand at `hex` as `[q, r]` with the task force `task_force`, decision 0124) or `"operate_carriers"` (operate the carrier force `task_force` from `hex`, decision 0125); each of the last two takes `task_force` and `hex` and no `base` |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` and its keys, below |
 //! | `set_leave` | `leave` (`"prepare"` or `"launch"`), `given` |
@@ -146,11 +146,14 @@ impl CommandSpec {
                     &["intent", "intent_kind", "base"]
                 }
                 Some("deny") => &["intent", "intent_kind", "hex", "distance"],
+                Some("stand_at" | "operate_carriers") => {
+                    &["intent", "intent_kind", "task_force", "hex"]
+                }
                 Some("neutralise") => &["intent", "intent_kind", "target"],
                 Some("raid") => &["intent", "intent_kind", "base", "target"],
                 Some(other) => {
                     return Err(format!(
-                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships or search_waters"
+                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at or operate_carriers"
                     ))
                 }
             },
@@ -264,6 +267,17 @@ impl CommandSpec {
                     Some("strike_ships") => IntentKind::StrikeShips {
                         base: BaseId::new(need(self.base, "base")?),
                     },
+                    // Decisions 0124, 7, and 0125, 1.
+                    Some(name @ ("stand_at" | "operate_carriers")) => {
+                        let [q, r] = self.hex.ok_or_else(|| format!("{what} needs \"hex\""))?;
+                        let force = TaskForceId::new(need(self.task_force, "task_force")?);
+                        let hex = Hex::new(q, r);
+                        if name == "stand_at" {
+                            IntentKind::StandAt { force, hex }
+                        } else {
+                            IntentKind::OperateCarriers { force, hex }
+                        }
+                    }
                     Some("search_waters") => IntentKind::SearchWaters {
                         base: BaseId::new(need(self.base, "base")?),
                     },

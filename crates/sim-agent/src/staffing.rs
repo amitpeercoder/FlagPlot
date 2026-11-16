@@ -102,7 +102,7 @@ impl<'a> Names<'a> {
     }
 
     /// A JSON value with every string's unit tokens, and every number under
-    /// `ships` or `task_forces`, written in the side's numbers.
+    /// `ships`, `task_forces` or `task_force`, written in the side's numbers.
     pub(crate) fn value(&self, value: &Value) -> Value {
         match value {
             Value::String(text) => Value::String(self.text(text)),
@@ -143,6 +143,14 @@ impl<'a> Names<'a> {
                                     })
                                     .collect(),
                             ),
+                            // The task force of a stand or carrier intent and
+                            // the task force level of a reason (decisions
+                            // 0124 and 0125): the side's number.
+                            ("task_force", Value::Number(number)) => number
+                                .as_u64()
+                                .and_then(|n| u32::try_from(n).ok())
+                                .and_then(|raw| self.force_number(raw))
+                                .map_or_else(|| v.clone(), |n| json!(n)),
                             _ => self.value(v),
                         };
                         (key.clone(), shown)
@@ -284,6 +292,8 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
                     "not set on it or above it: the staff may use the air groups based at its base that are not held",
                 sim_core::command::Addressee::AirGroup(_) =>
                     "not set on it or above it: the staff may use the air group itself",
+                sim_core::command::Addressee::TaskForce(_) =>
+                    "not set on it or above it: the staff may use the task force itself",
             })
         },
         "risk": bound_risk.name(),
@@ -306,8 +316,11 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
 /// An intent's kind as the interface writes it: its name, its own base
 /// (`null` for neutralising a base and for denying an area), its target
 /// (`null` for the kinds that have none), its waters (`hex` as `[q, r]` and
-/// `distance`, `null` for the kinds but a deny), and for keeping a base
-/// supplied the days (`null` for the other kinds).
+/// `distance`, `null` for the kinds but a deny; `hex` is also the station of
+/// a stand_at and an operate_carriers, whose `distance` is `null`), its task
+/// force (`task_force`, the side's number; `null` for the kinds that have
+/// none), and for keeping a base supplied the days (`null` for the other
+/// kinds).
 fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
     let (floor_days, interval_days) = match kind {
         IntentKind::KeepSupplied {
@@ -321,13 +334,20 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         | IntentKind::Raid { .. }
         | IntentKind::Deny { .. }
         | IntentKind::StrikeShips { .. }
-        | IntentKind::SearchWaters { .. } => (None, None),
+        | IntentKind::SearchWaters { .. }
+        | IntentKind::StandAt { .. }
+        | IntentKind::OperateCarriers { .. } => (None, None),
     };
     json!({
         "kind": kind.name(),
         "base": kind.own_base().map(|base| n.base(base)),
         "target": kind.target().map(|target| n.base(target)),
-        "hex": kind.waters().map(|(hex, _)| json!([hex.q, hex.r])),
+        "task_force": kind.force().map(|force| n.force_number(force.raw()).unwrap_or_else(|| force.raw())),
+        "hex": kind
+            .waters()
+            .map(|(hex, _)| hex)
+            .or_else(|| kind.station())
+            .map(|hex| json!([hex.q, hex.r])),
         "distance": kind.waters().map(|(_, distance)| distance),
         "floor_days": floor_days,
         "interval_days": interval_days,
@@ -728,8 +748,27 @@ fn command_json(n: &Names<'_>, command: &CommandKind, request: Option<&Request>)
             }
             body
         }
-        None => n.value(&command_to_json(command)),
+        None => {
+            let mut body = n.value(&command_to_json(command));
+            if let CommandKind::SetIntent { kind, .. } | CommandKind::FormIntent { kind, .. } =
+                command
+            {
+                if let Some(force) = kind.force() {
+                    body["task_force"] = json!(written_force(n, force, request));
+                }
+            }
+            body
+        }
     }
+}
+
+/// The side's number of a task force an intent names, or the number the side
+/// wrote for one that is not its own.
+fn written_force(n: &Names<'_>, force: TaskForceId, request: Option<&Request>) -> u32 {
+    request
+        .and_then(|r| r.force_stand_ins.get(&force.raw()).copied())
+        .or_else(|| n.force_number(force.raw()))
+        .unwrap_or_else(|| force.raw())
 }
 
 /// A command in words, in the side's numbers.
@@ -1385,6 +1424,7 @@ pub fn why(view: &SideView<'_>, number: u32) -> Value {
                 sim_core::command::Addressee::Area => "the area".to_string(),
                 sim_core::command::Addressee::Base(base) => n.text(&base.to_string()),
                 sim_core::command::Addressee::AirGroup(group) => n.text(&group.to_string()),
+                sim_core::command::Addressee::TaskForce(force) => n.text(&force.to_string()),
             }),
             reason
                 .serves
@@ -1454,6 +1494,7 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "target",
             "hex",
             "distance",
+            "task_force",
             "floor_days",
             "interval_days",
         ],
@@ -1521,6 +1562,7 @@ pub(crate) fn request(
             Some("raid") => &["base", "target"],
             Some("deny") => &["hex", "distance"],
             Some("strike_ships" | "search_waters") => &["base"],
+            Some("stand_at" | "operate_carriers") => &["task_force", "hex"],
             _ => &["base", "floor_days", "interval_days"],
         };
         if let (Some(name), Some(key)) = (
@@ -1530,6 +1572,7 @@ pub(crate) fn request(
                 "target",
                 "hex",
                 "distance",
+                "task_force",
                 "floor_days",
                 "interval_days",
             ]
@@ -1542,6 +1585,9 @@ pub(crate) fn request(
                 "raid" => "a base (your own) and a target (the enemy base) and nothing else",
                 "deny" => "a hex ([q, r]) and a distance (whole hexes) and nothing else",
                 "strike_ships" | "search_waters" => "a base and nothing else",
+                "stand_at" | "operate_carriers" => {
+                    "a task_force (your own force's number) and a hex ([q, r]) and nothing else"
+                }
                 _ => "no such key",
             };
             return Err(CallError::new(format!(
@@ -1551,6 +1597,11 @@ pub(crate) fn request(
         if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("target") {
             return Err(CallError::new(
                 "\"target\" is an argument of set_intent only for intent_kind neutralise or raid",
+            ));
+        }
+        if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("task_force") {
+            return Err(CallError::new(
+                "\"task_force\" is an argument of set_intent only for intent_kind stand_at or operate_carriers",
             ));
         }
         if (kind.is_none() || kind == Some("keep_supplied"))
@@ -1638,6 +1689,33 @@ pub(crate) fn request(
                 };
                 *item = json!(id);
             }
+        }
+    }
+    // A stand or carrier task names the force by the side's number; a number
+    // that names none of its forces becomes one no force has, so the engine
+    // refuses an enemy force and one that does not exist alike.
+    if tool == "set_intent" {
+        if let Some(number) = body
+            .get("task_force")
+            .and_then(Value::as_u64)
+            .and_then(|n| u32::try_from(n).ok())
+        {
+            let id = match ctx.own_force(number).map(|f| f.id.raw()) {
+                Some(raw) => raw,
+                None => match force_stand_ins
+                    .iter()
+                    .find(|(_, written)| **written == number)
+                {
+                    Some((id, _)) => *id,
+                    None => {
+                        let id = FIRST_STAND_IN + made;
+                        made += 1;
+                        force_stand_ins.insert(id, number);
+                        id
+                    }
+                },
+            };
+            body.insert("task_force".into(), json!(id));
         }
     }
     if tool == "hold" || tool == "release" || tool == "acknowledge" {

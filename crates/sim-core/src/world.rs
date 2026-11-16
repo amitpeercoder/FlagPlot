@@ -117,10 +117,12 @@ impl Default for MadeIds {
 /// standing orders of a strike group: a game saved under the old rules could
 /// not hold them) and 13 from decision 0118 (a strike sized to its target:
 /// an order a game saved under the old rules could not hold, and the live
-/// figures' table of aircraft for each ship). A pull request raises it by one
+/// figures' table of aircraft for each ship) and 14 from decision 0124 (a
+/// route's marks to stand at for the night: a route a game saved under the
+/// old rules could not hold). A pull request raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 13;
+pub const RULES_VERSION: u32 = 14;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
