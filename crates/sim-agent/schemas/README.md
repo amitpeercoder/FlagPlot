@@ -860,4 +860,4 @@ units; the enemy is told none of it.
 - **A new air group order**, `set_search_once` (`on`, true or false), a standing order: a group on the
   search mission flies its search in the morning pulse only and rests in the afternoon. An air group line
   has `search_once` (`true`, given only when it is on).
-- **Saved games** are version 9; a game of version 8 or earlier is refused, not converted.
+- **Saved games** are version 10 (decision 0134: the file's keys are unchanged); a game of version 9 or earlier is refused, not converted.

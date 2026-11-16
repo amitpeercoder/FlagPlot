@@ -543,7 +543,8 @@ impl World {
             .filter_map(|force| {
                 let choice = alert_choice(
                     force,
-                    self.beliefs[&force.side].contacts(),
+                    self.picture(force.side, self.command_of_force(force.id))
+                        .contacts(),
                     figures.alert_contact_distance_hexes,
                     fresh_max_age,
                 )?;
@@ -563,7 +564,8 @@ impl World {
             match choice {
                 AlertChoice::AlertedBy(contact) => {
                     let side = self.truth.task_forces[&id].side;
-                    let report = self.beliefs[&side]
+                    let report = self
+                        .picture(side, self.command_of_force(id))
                         .contact(contact)
                         .expect("the contact is in the belief")
                         .last_report_event;
@@ -1704,11 +1706,8 @@ impl World {
             &figures,
             self.events.next_id(),
         );
-        let ApplyOutcome::Contact(outcome) = self
-            .beliefs
-            .get_mut(&force.side)
-            .expect("both sides have a belief state")
-            .apply_report(&Report::Sighting(report.clone()), &figures)
+        let ApplyOutcome::Contact(outcome) =
+            self.apply_report(force.side, &Report::Sighting(report.clone()), &figures)
         else {
             unreachable!("a sighting report makes or refreshes a contact");
         };
@@ -1764,11 +1763,7 @@ impl World {
             from_bombardment: false,
             received_event: self.events.next_id(),
         };
-        let outcome = self
-            .beliefs
-            .get_mut(&force.side)
-            .expect("both sides have a belief state")
-            .apply_report(&Report::BattleClaim(claim.clone()), &figures);
+        let outcome = self.apply_report(force.side, &Report::BattleClaim(claim.clone()), &figures);
         assert_eq!(outcome, ApplyOutcome::Claim, "a claim is stored as a claim");
         let received = self.record_in_fight(
             fight,

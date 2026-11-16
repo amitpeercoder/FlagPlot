@@ -366,11 +366,8 @@ impl World {
                 let estimated_ship_count = report.estimated_ship_count;
                 let estimated_kind = report.estimated_kind;
 
-                let ApplyOutcome::Contact(outcome) = self
-                    .beliefs
-                    .get_mut(&group.side)
-                    .expect("both sides have a belief state")
-                    .apply_report(&Report::Sighting(report.clone()), &figures)
+                let ApplyOutcome::Contact(outcome) =
+                    self.apply_report(group.side, &Report::Sighting(report.clone()), &figures)
                 else {
                     unreachable!("a sighting report makes or refreshes a contact");
                 };

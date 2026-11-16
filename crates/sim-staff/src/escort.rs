@@ -28,7 +28,7 @@
 
 use std::collections::BTreeSet;
 
-use sim_core::command::Risk;
+use sim_core::command::{Addressee, Risk};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::TaskForceId;
@@ -72,11 +72,18 @@ fn named_escorts<'v>(planner: &Planner<'v, '_>) -> Vec<&'v TaskForce> {
 
 /// The threat to a run to `destination` (rule 3), in words, with the contact
 /// where there is one.
-fn run_threat(view: &SideView<'_>, destination: Hex) -> (Option<Sighted>, String) {
-    let mut sighted: Vec<Sighted> = view
+fn run_threat(
+    view: &SideView<'_>,
+    addressee: Addressee,
+    destination: Hex,
+) -> (Option<Sighted>, String) {
+    // The picture of the command the intent is addressed to (decision 0134,
+    // 13).
+    let picture = crate::picture::picture_of(view, addressee);
+    let mut sighted: Vec<Sighted> = picture
         .contacts()
         .map(|c| Sighted {
-            number: view.contact_number(c.id),
+            number: picture.contact_number(c.id),
             hexes: c.estimated_hex.distance(destination),
             ships: c.estimated_ship_count,
         })
@@ -202,7 +209,7 @@ pub(crate) fn for_run(
     let view = planner.view;
     let intent = params.intent;
     let risk = planner.state().risk_read_up(intent.id);
-    let (found, threat_words) = run_threat(view, params.destination_hex);
+    let (found, threat_words) = run_threat(view, intent.kind.addressee(), params.destination_hex);
     let wanted = match risk {
         Risk::Preserve => true,
         Risk::Balanced => found.is_some(),

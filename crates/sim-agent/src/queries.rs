@@ -166,7 +166,9 @@ pub fn list_contacts(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListConta
     let mut ctx = Ctx::new(*view);
     // Only when there is an estimate: the numbers of the events are wanted
     // for the estimates alone.
-    if view.ground_estimates().next().is_some() {
+    // The area command's picture (decision 0134, 13).
+    let picture = crate::common::area_picture(view);
+    if picture.ground_estimates().next().is_some() {
         ctx.set_events(&view.events());
     }
     let ground_estimates = ground_estimate_lines(&ctx, view, Some(&|hex| within(area, hex)));
@@ -175,7 +177,7 @@ pub fn list_contacts(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListConta
         version: VERSION,
         kind: "list_contacts",
         area: area_out(area),
-        contacts: view
+        contacts: picture
             .contacts()
             .filter(|c| within(area, c.estimated_hex))
             .map(|c| contact_line(&ctx, c))
@@ -527,7 +529,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
             }))
         }
         "contact" => {
-            let contact = view.contact_by_number(id)?;
+            let contact = crate::common::area_picture(view).contact_by_number(id)?;
             let events = view.events();
             let number = events
                 .iter()

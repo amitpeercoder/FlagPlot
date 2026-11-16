@@ -2,11 +2,11 @@ Scenario 1b: Refuelling, Noumea to Espiritu Santo and back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3489a6fb22235de8  13 events
-day   2  hash f9166980c4b5db96  8 events
-day   3  hash bc2c306f483af6c4  12 events
-day   4  hash a8cd703620426653  8 events
-day   5  hash 3abf15890734cd96  2 events
+day   1  hash 38298553107d4dcf  13 events
+day   2  hash 3d61a5233340a1e9  8 events
+day   3  hash cc6bb400869d29a3  12 events
+day   4  hash 981d50bed41751e6  8 events
+day   5  hash 1af9a37b863f63a5  2 events
 
 task_force:1 "Placeholder transit force" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply

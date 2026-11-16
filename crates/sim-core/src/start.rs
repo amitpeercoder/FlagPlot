@@ -114,11 +114,8 @@ impl World {
                     estimated_kind: entry.kind,
                     received_event: self.events.next_id(),
                 };
-                let ApplyOutcome::Contact(outcome) = self
-                    .beliefs
-                    .get_mut(&side)
-                    .expect("both sides have a belief state")
-                    .apply_report(&Report::Sighting(report.clone()), &figures)
+                let ApplyOutcome::Contact(outcome) =
+                    self.apply_report(side, &Report::Sighting(report.clone()), &figures)
                 else {
                     unreachable!("a sighting report makes or refreshes a contact");
                 };
@@ -148,11 +145,7 @@ impl World {
                 );
                 made.insert(outcome.contact, entry);
             }
-            let outcomes = self
-                .beliefs
-                .get_mut(&side)
-                .expect("both sides have a belief state")
-                .age_contacts(&figures);
+            let outcomes = self.age_pictures(side, &figures);
             for outcome in outcomes {
                 if outcome.dropped {
                     let entry = made.get(&outcome.contact).expect("every contact was made");

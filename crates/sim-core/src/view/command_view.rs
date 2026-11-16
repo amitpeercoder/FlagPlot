@@ -1,0 +1,180 @@
+//! A view for a command (decision 0134, 15), as [`SideView`] is for a side:
+//! one command's picture of the enemy, its contacts, claims and estimates,
+//! and nothing else. It is reached only through [`SideView::command`], for a
+//! command of the view's own side, and holds that command's picture only:
+//! no method returns another command's picture or the truth (item 14). A
+//! side's own units are still known to it exactly through the side's view.
+//!
+//! With command levels off a command's view holds the side's own belief
+//! (item 16).
+
+use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate};
+use crate::hex::Hex;
+use crate::ids::{AirGroupId, ContactId, LandUnitId, TaskForceId};
+use crate::pictures::{self, CommandRef};
+use crate::state::Side;
+
+use super::SideView;
+
+/// One command's view of the enemy.
+///
+/// `Debug` is written by hand and prints the side and the command only.
+#[derive(Clone, Copy)]
+pub struct CommandView<'a> {
+    side: Side,
+    command: CommandRef,
+    superior: Option<CommandRef>,
+    picture: &'a BeliefState,
+}
+
+impl std::fmt::Debug for CommandView<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CommandView")
+            .field("side", &self.side)
+            .field("command", &self.command)
+            .finish_non_exhaustive()
+    }
+}
+
+impl<'a> CommandView<'a> {
+    /// The side the command belongs to.
+    pub fn side(&self) -> Side {
+        self.side
+    }
+
+    /// The command this view is of.
+    pub fn command(&self) -> CommandRef {
+        self.command
+    }
+
+    /// The command it is under: `None` for the area command, and for every
+    /// command while command levels are off.
+    pub fn superior(&self) -> Option<CommandRef> {
+        self.superior
+    }
+
+    /// What the command believes is at sea, in contact number order.
+    pub fn contacts(&self) -> impl Iterator<Item = &'a Contact> + 'a {
+        self.picture.contacts()
+    }
+
+    /// The command's number of a contact. Each picture numbers its own
+    /// contacts from 1; in this step every picture holds what the side's
+    /// holds, so the numbers are the side's.
+    pub fn contact_number(&self, id: ContactId) -> u32 {
+        id.raw()
+    }
+
+    /// One contact the command holds, by its number. `None` if it holds no
+    /// such contact.
+    pub fn contact_by_number(&self, number: u32) -> Option<&'a Contact> {
+        self.picture
+            .contacts()
+            .find(|contact| contact.id.raw() == number)
+    }
+
+    /// What the command believes came of its side's fights, in the order the
+    /// claims arrived.
+    pub fn claims(&self) -> &'a [BattleClaim] {
+        self.picture.claims()
+    }
+
+    /// The command's estimates of the enemy's men ashore, in hex order.
+    pub fn ground_estimates(&self) -> impl Iterator<Item = &'a GroundEstimate> + 'a {
+        self.picture.ground_estimates()
+    }
+
+    /// The command's estimate of the enemy's men ashore in `hex`, if any.
+    pub fn ground_estimate(&self, hex: Hex) -> Option<&'a GroundEstimate> {
+        self.picture.ground_estimate(hex)
+    }
+}
+
+impl<'a> SideView<'a> {
+    /// Whether command levels are on in this game (decision 0134, 1).
+    pub fn command_levels(&self) -> bool {
+        self.commands.is_some()
+    }
+
+    /// The side's commands, in command order: the area command, then its
+    /// task forces, then its bases. Empty with command levels off: there are
+    /// no commands then (decision 0134, 1).
+    pub fn commands(&self) -> Vec<CommandRef> {
+        self.commands
+            .map(|commands| commands.keys().copied().collect())
+            .unwrap_or_default()
+    }
+
+    /// The view of one of the side's own commands (decision 0134, 15).
+    /// `None` for a command that is not the side's. With command levels off
+    /// the area command and each of the side's own task forces and bases has
+    /// a view, and each holds the side's own belief (item 16).
+    pub fn command(&self, command: CommandRef) -> Option<CommandView<'a>> {
+        match self.commands {
+            Some(commands) => commands.get(&command).map(|post| CommandView {
+                side: self.side,
+                command,
+                superior: post.superior(),
+                picture: post.picture(),
+            }),
+            None => {
+                let own = match command {
+                    CommandRef::Area => true,
+                    CommandRef::TaskForce(force) => self
+                        .truth
+                        .task_forces
+                        .get(&force)
+                        .is_some_and(|record| record.side == self.side),
+                    CommandRef::Base(base) => self
+                        .truth
+                        .bases
+                        .get(&base)
+                        .is_some_and(|record| record.side == self.side),
+                };
+                own.then_some(CommandView {
+                    side: self.side,
+                    command,
+                    superior: None,
+                    picture: self.belief,
+                })
+            }
+        }
+    }
+
+    /// The command one of the side's own air groups belongs to (decision
+    /// 0134, 8). `None` for a group that is not the side's.
+    pub fn command_of_group(&self, group: AirGroupId) -> Option<CommandRef> {
+        self.truth
+            .air_groups
+            .get(&group)
+            .filter(|record| record.side == self.side)?;
+        pictures::command_of_group(self.truth, group)
+    }
+
+    /// The command one of the side's own task forces is: itself, or the area
+    /// command once it has ceased to be. `None` for a force not the side's.
+    pub fn command_of_task_force(&self, force: TaskForceId) -> Option<CommandRef> {
+        self.truth
+            .task_forces
+            .get(&force)
+            .filter(|record| record.side == self.side)?;
+        pictures::command_of_task_force(self.truth, force)
+    }
+
+    /// The command one of the side's own land units belongs to (decision
+    /// 0134, 8). `None` for a unit that is not the side's.
+    pub fn command_of_land_unit(&self, unit: LandUnitId) -> Option<CommandRef> {
+        self.truth
+            .land_units
+            .get(&unit)
+            .filter(|record| record.side == self.side)?;
+        pictures::command_of_land_unit(self.truth, unit)
+    }
+
+    /// The picture of one of the side's own commands, for the rules the
+    /// view's choices share with the engine: the one reader (decision 0134,
+    /// 16), the side's own belief with command levels off.
+    pub(crate) fn picture(&self, command: CommandRef) -> &'a BeliefState {
+        pictures::picture_of(self.belief, self.commands, command)
+    }
+}

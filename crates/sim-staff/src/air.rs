@@ -864,7 +864,10 @@ impl<'v, 'a> Day<'v, 'a> {
         }
     }
 
-    pub(crate) fn threats(&self) -> Vec<Threat> {
+    /// The enemy bases the side knows and the contacts in the picture of the
+    /// command `addressee` is (decision 0134, 13).
+    pub(crate) fn threats(&self, addressee: Addressee) -> Vec<Threat> {
+        let picture = crate::picture::picture_of(self.view, addressee);
         let mut found: Vec<Threat> = self
             .view
             .enemy_bases()
@@ -873,11 +876,11 @@ impl<'v, 'a> Day<'v, 'a> {
                 words: format!("{} at {}", base_words(self.view, b.id), b.hex),
             })
             .collect();
-        found.extend(self.view.contacts().map(|c| Threat {
+        found.extend(picture.contacts().map(|c| Threat {
             hex: c.estimated_hex,
             words: format!(
                 "contact {} at {}",
-                self.view.contact_number(c.id),
+                picture.contact_number(c.id),
                 c.estimated_hex
             ),
         }));
@@ -887,8 +890,9 @@ impl<'v, 'a> Day<'v, 'a> {
     /// The contacts the side held when the group's arc was last set and has
     /// since lost, each with the day it was dropped: from the side's own
     /// events, the contacts dropped on or after the day of the group's arc
-    /// order that it no longer holds.
-    fn gone_since_arc(&mut self, m: &Member) -> Vec<(u32, u32)> {
+    /// order that the picture of the command `addressee` is no longer holds
+    /// (decision 0134, 13).
+    fn gone_since_arc(&mut self, m: &Member, addressee: Addressee) -> Vec<(u32, u32)> {
         let Some(order) = m.arc_order else {
             return Vec::new();
         };
@@ -910,7 +914,9 @@ impl<'v, 'a> Day<'v, 'a> {
             }
             if let SideEventKind::Whole(EventKind::ContactDropped { contact, .. }) = &event.kind {
                 let number = self.view.contact_number(*contact);
-                if self.view.contact_by_number(number).is_none()
+                if crate::picture::picture_of(self.view, addressee)
+                    .contact_by_number(number)
+                    .is_none()
                     && !gone.iter().any(|(n, _)| *n == number)
                 {
                     gone.push((number, event.day));
@@ -1019,7 +1025,7 @@ impl<'v, 'a> Day<'v, 'a> {
         // The arc for the groups that search. The waters of a deny intent its
         // searchers reach are threats beside the rest: one arc for a base's
         // searchers (decision 0123, 13).
-        let mut threats = self.threats();
+        let mut threats = self.threats(cover.kind.addressee());
         let base_hex = self.view.bases().find(|b| b.id == base).map(|b| b.hex);
         if let Some(at) = base_hex {
             let ranges: Vec<Fixed> = members
@@ -1264,7 +1270,7 @@ impl<'v, 'a> Day<'v, 'a> {
                             range_nm: m.range,
                         };
                         if m.search != Some(wanted) {
-                            let gone = self.gone_since_arc(m);
+                            let gone = self.gone_since_arc(m, cover.kind.addressee());
                             let mut reason = serving(cover, &plan)
                                 .evidence(format!("{numbers}; it is not above the level"), today)
                                 .evidence(format!("its arc is: {}", setting_words(m)), today)

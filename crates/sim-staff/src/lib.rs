@@ -29,6 +29,7 @@ mod fleet;
 mod handin;
 mod morning;
 mod neutralise;
+mod picture;
 mod planner;
 mod projection;
 mod proposal;

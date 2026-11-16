@@ -777,10 +777,13 @@ impl Day<'_, '_> {
                         .filter(|g| view.able_to_fly(g.id).unwrap_or(0) > 0)
                         .filter_map(|g| bomber_reach(view, g))
                         .min();
-                    let mut held_contacts: Vec<Held> = view
+                    // The force's own picture: the command the task is
+                    // addressed to (decision 0134, 13).
+                    let picture = crate::picture::picture_of(view, task.kind.addressee());
+                    let mut held_contacts: Vec<Held> = picture
                         .contacts()
                         .map(|c| Held {
-                            number: view.contact_number(c.id),
+                            number: picture.contact_number(c.id),
                             hex: c.estimated_hex,
                             kind: c.estimated_kind,
                             age: c.age_pulses,
@@ -1075,7 +1078,7 @@ impl Day<'_, '_> {
 
                 // The groups aboard (rules 3 to 6).
                 let attacked = self.force_attacked(id);
-                let mut threats: Vec<Threat> = self.threats();
+                let mut threats: Vec<Threat> = self.threats(task.kind.addressee());
                 for above in self.state.ancestors(task.id) {
                     if let Some((centre, distance)) = above.kind.waters() {
                         for w in waters(view, centre, distance) {

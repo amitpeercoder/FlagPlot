@@ -197,6 +197,10 @@ pub struct World {
     pub(crate) map: Map,
     pub(crate) truth: TruthState,
     pub(crate) beliefs: BTreeMap<Side, BeliefState>,
+    /// The commands of each side and their pictures, while command levels
+    /// are on (decision 0134); `None` with them off. Hashed after the
+    /// command states.
+    pub(crate) chain: Option<BTreeMap<Side, crate::pictures::SideCommands>>,
     /// Every order received, accepted or not, by ID.
     pub(crate) orders: BTreeMap<OrderId, Order>,
     pub(crate) order_ids: IdAllocator<OrderId>,
@@ -409,6 +413,7 @@ impl World {
             map,
             truth,
             beliefs,
+            chain: None,
             orders: BTreeMap::new(),
             order_ids: IdAllocator::new(),
             made_ids: MadeIds::new(),
@@ -580,6 +585,7 @@ impl World {
             side,
             &self.truth,
             belief,
+            self.chain.as_ref().map(|chain| &chain[&side]),
             &self.map,
             &self.ref_data,
             &self.events,
