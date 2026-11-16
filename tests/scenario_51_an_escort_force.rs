@@ -1018,17 +1018,9 @@ fn the_escort_holds_and_the_cargo_force_is_not_met() {
 /// On every seed on which the escort's fight ends with the escort afloat and
 /// not the one that broke off, the event of a meeting not held is recorded,
 /// caused by the escort order and the escort's fight, on at least 150 of the
-/// 200 seeds.
-///
-/// IGNORED: the code records it only where the Japanese force is still
-/// afloat. The four cruisers sink the one destroyer in the escort's fight on
-/// 190 of the 200 seeds; the charge's meeting is then never come to
-/// (`meet_in` skips a force with no ship afloat) and no event is recorded.
-/// The event is recorded on 10 seeds (2 of them the Japanese force breaking
-/// off, 1 the last round, 7 passing unseen). The fight with the cargo force
-/// begins on none. Returned to the architect.
+/// 200 seeds. That includes the seeds on which the escort sank the Japanese
+/// force: the meeting with the cargo force is then one not held.
 #[test]
-#[ignore = "code records MeetingNotHeld on 10 of 200 seeds, not 150: not recorded where the enemy was sunk by the escort"]
 fn a_meeting_not_held_is_recorded_with_the_escort_order_and_its_fight() {
     let mut recorded = 0;
     for game in games(&holding()) {
@@ -1038,9 +1030,7 @@ fn a_meeting_not_held_is_recorded_with_the_escort_order_and_its_fight() {
             continue;
         }
         let held = game.not_held();
-        if held.len() != 1 {
-            continue;
-        }
+        assert_eq!(held.len(), 1, "seed {seed}");
         let (_, event) = held[0];
         assert_eq!(
             event.kind,
