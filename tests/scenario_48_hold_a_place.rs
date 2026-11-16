@@ -88,9 +88,12 @@
 //!   36, when group 1 rests and group 2 is kept.
 //! - **A limit on a sub-intent may narrow.** In the main case, with the
 //!   commander setting the risk of intent 2 to preserve the force on day
-//!   2: it is taken. That morning the staff gives three orders: a share of
-//!   0.75 to group 1 and to group 2, and rest to group 3, which is at 54.
-//!   Group 1 rests on day 7, as above.
+//!   2: it is taken. That morning the staff gives two orders: a share of
+//!   0.75 to group 1 and to group 2. Group 3 is at 22, not above 30, and
+//!   keeps its search, with search once a day as preserve has it too.
+//!   Group 1 rests on day 7, as above. (Restated by the architect on Nov
+//!   16, 2026, for decision 0131: it had three orders, with rest to group
+//!   3 at 54.)
 //! - **And may not widen.** In the main case, with the commander setting
 //!   the risk of intent 2 to press on day 2: it is refused, as bolder than
 //!   its parent's, and the orders are those of the main case. A forces
@@ -847,7 +850,6 @@ fn a_risk_level_is_read_up_the_tree() {
 }
 
 #[test]
-#[ignore = "decision 0131, left for the architect: in this variant group 3 is at 22 on day 2, not 54; at preserve (level 30) it is not above the level and searches, so day 2's orders are the two shares of 0.75 alone, where the calculation has those and rest to group 3"]
 fn a_limit_on_a_sub_intent_may_narrow() {
     let text = with(&command_table(
         2,
@@ -858,7 +860,7 @@ fn a_limit_on_a_sub_intent_may_narrow() {
     assert_eq!(played.air_orders(1), table_orders()[0]);
     assert_eq!(
         played.air_orders(2),
-        vec![(1, share("0.75")), (2, share("0.75")), (3, mission(REST))]
+        vec![(1, share("0.75")), (2, share("0.75"))]
     );
     assert!(played.air_orders(7).contains(&(1, mission(REST))));
     let two = &played.state.intents[&intent(2)];
@@ -1176,7 +1178,6 @@ fn two_worlds_that_differ_only_in_what_the_allied_side_cannot_see_give_the_same_
 // `set_intent` on an intent in force may change its figures and not its kind.
 
 #[test]
-#[ignore = "decision 0131, left for the architect: in this variant group 3 searched on day 2 and is on the search mission at 44 on day 3; at preserve (level 30) it is above the level and is given rest, so day 3 has three orders, the two shares of 0.75 and rest to group 3, where the calculation has the shares alone"]
 fn a_parents_risk_set_after_its_childs_binds_the_child() {
     // Intent 2's risk set to balanced on day 2 (taken: not bolder than its
     // parent's, which is unset and so balanced), then intent 1's set to
@@ -1197,11 +1198,13 @@ fn a_parents_risk_set_after_its_childs_binds_the_child() {
     played.nothing_refused();
     assert_eq!(played.air_orders(1), table_orders()[0]);
     assert_eq!(played.air_orders(2), table_orders()[1]);
-    // Day 3: both fighters at 12 are given the share 0.75; group 3 at 44 is
-    // above 30 and rests, which it already does, so it is given no order.
+    // Day 3: both fighters at 12 are given the share 0.75; group 3, which
+    // searched on day 2 and is at 44, above 30, is given rest. (Restated by
+    // the architect on Nov 16, 2026, for decision 0131: before it, group 3
+    // was resting already and day 3 had the shares alone.)
     assert_eq!(
         played.air_orders(3),
-        vec![(1, share("0.75")), (2, share("0.75"))]
+        vec![(1, share("0.75")), (2, share("0.75")), (3, mission(REST))]
     );
     // Both fighters first pass 30 on the morning of day 7, at 36: group 1
     // rests and group 2 is kept.
