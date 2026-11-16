@@ -187,3 +187,11 @@ Regenerated after decisions 0121 and 0126 (an escort force, and escorted and cov
 Regenerated after decisions 0122 and 0127 (rearming in port and ammunition as policy: the state layout at version 33, the rules label at 16, saved game version 8, doctrine `supply-13`, the agent interface at version 13; Nov 16, 2026), with `regame.py`. Each `save.json` differs in its versions and day hashes. Each transcript differs only in the answers' `version` (12 to 13): no base in these games holds ammunition, so no force line gains `ammunition_lacked`, and no order, command, hash of play or result changed.
 
 Regenerated after the architect's ruling of Nov 16, 2026, that a force has one stand or carrier task of a kind (decisions 0124 and 0125 amended: doctrine `supply-14`; state layout, rules label, saved game version and agent interface unchanged), with `regame.py`. Each `save.json` differs only in its `doctrine_version` (`supply-13` to `supply-14`); no transcript changed, and no order, command, hash or result changed.
+
+## The second proof's game (Nov 16, 2026)
+
+`second_proof_week_sonnet`: decision 0128's model's game. The Allied seat of `data/scenarios/second-proof/07m_model_week.toml` on seed 1:
+- **Days 1 to 14:** played by the team lead with the script's own Allied orders, through `issue_orders` and `end_day`, by the side's own numbering. Its day hashes equal the scripted week's.
+- **Days 15 to 21:** played by a Sonnet model by intents alone, given the tools' descriptions and one instruction. It gave no unit order.
+
+`account.md` is the model's account. Its play is not judged (`docs/validation/stage-2-second-proof.md`).

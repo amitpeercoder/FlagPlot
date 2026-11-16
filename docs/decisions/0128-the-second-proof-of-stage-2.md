@@ -201,3 +201,28 @@ The rule, written before the pick (`crates/sim-cli/tests/recorded_games/legibili
 | 24 | stand | scenario 54 | allied | order | 1 | 21 |
 
 **The model's game, restated with it.** A player seat is given no scripted orders, so the Allied seat's days 1 to 14 are pre-played with the script's own Allied orders through the tools (`issue_orders` and `end_day`, by the side's own numbering), on seed 1 of `data/scenarios/second-proof/07m_model_week.toml` (the week with the Japanese intents of day 15 and no Allied command), and the model is handed the game at the start of day 15 only after the day hashes 1 to 14 were checked equal to the scripted run's. The model is told the tools' own descriptions and one instruction, to command by intents alone and give no order to a unit.
+
+## As run
+
+Run on Nov 16, 2026, release build, live figures, seeds 1 to 1,000, doctrine `supply-14`, after the rulings above and #375. The report with every number is `docs/validation/stage-2-second-proof.md`. Nothing was tuned, and no pass mark, intent or measure was changed after a run.
+
+- **The Eastern Solomons does not pass.**
+  - These hold on every seed: every invariant; no staff order or command refused; a search and a patrol by each side; the same start giving the same game (batch files and exports identical when run twice).
+  - At least one strike at ships on 800 seeds: the Allied side launched one on 0 seeds and the Japanese on 152.
+  - Against no orders, the Allied side passes (median margin 1.05 from intents against 0.20 from nothing). The Japanese side does not (0.00 against 0.00).
+  - Every staff first strike that the script also flew went in the script's pulse (129 of 129 Japanese seeds in (a), 447 of 447 Allied in (b)).
+  - The reasons: the carrier doctrine routes a force to its hex at cruise, so the Japanese carriers come in later than the script's; the American carriers do not close the range on a contact beyond their reach.
+- **The week does not pass, on one condition.**
+  - These hold: every invariant; no refusal (no commander's command of day 15 refused on any seed either); a strike or raid on 997 Allied and 1,000 Japanese seeds; supply landed on 1,000 seeds for each side; the same start giving the same game.
+  - A search and a patrol on 5 of the 7 days on every seed: the Allied side does so on all 1,000, the Japanese on 683.
+  - On the other 317 seeds the Japanese floatplane groups, the side's only searchers, rest above the fatigue level of the balanced risk on two or more days.
+  - Against no orders, both sides pass, each with three measures no worse and one better:
+    - Allied: supply at Henderson Field 3,220.8 t against 2,000 t; aircraft lost worse, 24 against 1.
+    - Japanese: supply landed 119.08 t against 0; aircraft lost worse, 29 against 0.
+- **Legibility passes**, 24 of 24, every doctrine 4 or 6 of its own. The strike and stand reasons are from scenarios 53 and 54, as ruled.
+- **The model's game** was played: Allied by intents alone from day 15, after a pre-play of days 1 to 14 checked hash for hash. It ended in a decisive victory, margin 56.58. It is kept, not judged.
+- **Speed:**
+  - A day of the staffed week is 9 to 13 ms.
+  - The staffs' decisions take up to 4.08 ms (Allied, day 15) and 7.42 ms (Japanese, day 17).
+
+Put to the designer with the choices it raises: how a carrier force from an end is to reach its strike (its speed to its hex, closing the range); and whether a force's searching should not rest all its searchers, or should draw on its bombers when they do.

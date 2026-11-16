@@ -1,0 +1,54 @@
+{"doctrine_version":"supply-14","format":"flagplot-game","scenario":"data/scenarios/second-proof/07m_model_week.toml","seat":"allied","seed":1}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"orders":[{"order":{"kind":"set_route","waypoints":[[2,-4]]},"unit":"task_force:9"},{"order":{"kind":"set_speed","speed":"cruise"},"unit":"task_force:9"},{"order":{"kind":"unload"},"unit":"task_force:9"},{"order":{"kind":"set_route","waypoints":[[3,-5]]},"unit":"task_force:10"},{"order":{"kind":"set_speed","speed":"cruise"},"unit":"task_force:10"},{"order":{"kind":"unload"},"unit":"task_force:10"}]},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{"orders":[{"order":{"kind":"set_route","waypoints":[[7,6]]},"unit":"task_force:9"},{"order":{"kind":"set_route","waypoints":[[7,6]]},"unit":"task_force:10"},{"order":{"kind":"set_posture","posture":"defend"},"unit":"land_unit:1"},{"order":{"kind":"set_posture","posture":"defend"},"unit":"land_unit:2"},{"order":{"kind":"set_posture","posture":"defend"},"unit":"land_unit:3"}]},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{"orders":[{"order":{"kind":"set_posture","posture":"defend"},"unit":"land_unit:5"},{"order":{"kind":"set_posture","posture":"defend"},"unit":"land_unit:6"},{"order":{"kind":"set_posture","posture":"defend"},"unit":"land_unit:7"},{"order":{"kind":"set_posture","posture":"defend"},"unit":"land_unit:8"}]},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{"orders":[{"order":{"act_at":[[2,-4]],"kind":"set_route","waypoints":[[2,-4],[7,6]]},"unit":"task_force:11"},{"order":{"kind":"set_speed","speed":"cruise"},"unit":"task_force:11"},{"order":{"kind":"unload"},"unit":"task_force:11"}]},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{"orders":[{"order":{"kind":"set_route","waypoints":[[3,-5]]},"unit":"task_force:13"},{"order":{"kind":"set_speed","speed":"cruise"},"unit":"task_force:13"}]},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{"orders":[{"order":{"kind":"set_route","waypoints":[[2,-4]]},"unit":"task_force:12"},{"order":{"kind":"set_speed","speed":"cruise"},"unit":"task_force:12"},{"order":{"kind":"unload"},"unit":"task_force:12"}]},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{"orders":[{"order":{"cargo":"none","kind":"load","unit":"land_unit:7"},"unit":"task_force:13"}]},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"command_state"}
+{"arguments":{},"tool":"list_bases"}
+{"arguments":{},"tool":"list_contacts"}
+{"arguments":{"base":1,"intent_kind":"hold","reason":"Lunga is worth 10+10 points and holds the airfield; cover it with its fighters"},"tool":"set_intent"}
+{"arguments":{"base":4,"intent_kind":"hold","reason":"Tulagi is 5 points"},"tool":"set_intent"}
+{"arguments":{"base":1,"floor_days":30,"intent_kind":"keep_supplied","interval_days":10,"reason":"Keep Lunga fed and flying to end of game"},"tool":"set_intent"}
+{"arguments":{"distance":4,"hex":[1,-7],"intent_kind":"deny","reason":"Search and strike ships approaching from the north/Shortland with Lunga air groups"},"tool":"set_intent"}
+{"arguments":{"hex":[4,-3],"intent_kind":"operate_carriers","reason":"Carriers near Lunga under its fighter cover, ready for carrier fight","task_force":1},"tool":"set_intent"}
+{"arguments":{},"tool":"command_state"}
+{"arguments":{"intent":3,"limit":"forces","reason":"Transports at Espiritu Santo carry stock to Lunga","source":3,"task_forces":[9,11,3]},"tool":"set_limit"}
+{"arguments":{"air_groups":[8,9,10,11,12,13,14,15,16,17],"intent":5,"limit":"forces","reason":"Both carrier groups and their air groups","task_forces":[1,2]},"tool":"set_limit"}
+{"arguments":{"given":true,"leave":"launch","reason":"Let staff release plans itself"},"tool":"set_leave"}
+{"arguments":{"base":1,"below_days":12,"reason":"warn if Lunga supply gets low"},"tool":"set_interrupt"}
+{"arguments":{"intent":3},"tool":"propose"}
+{"arguments":{},"tool":"staff_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"hex":[5,-3],"intent_kind":"operate_carriers","reason":"Bring Saratoga group alongside Enterprise so both carrier air groups share the fight","task_force":2},"tool":"set_intent"}
+{"arguments":{"intent":6,"limit":"forces","reason":"TF11","task_forces":[2]},"tool":"set_limit"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"air_groups":[8,9,10,11,12,13,14,15,16,17],"intent":5,"limit":"forces","reason":"retry","task_forces":[1,2]},"tool":"set_limit"}
+{"arguments":{},"tool":"command_state"}
+{"arguments":{"intent":8,"limit":"forces","reason":"TF11 carrier","task_forces":[2]},"tool":"set_limit"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"days":4,"reason":"Intents are set; let staff carry them to day 21"},"tool":"run"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"get_briefing"}
