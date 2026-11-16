@@ -59,7 +59,7 @@ The result of a game is worked out from the final state and the log. It is not a
 
 ## The chapters
 
-1. **The day, orders, and what a side knows.** Time and the pulses, the order a day resolves in, every order and every reason one is refused, truth and belief, what a side sees of an event, fixed-point numbers and chance, the random keys, the invariants, the state hash and saved games.
+1. **The day, orders, and what a side knows.** Time and the pulses, the order a day resolves in, every order and every reason one is refused, truth and belief, commands and their pictures (command levels), what a side sees of an event, fixed-point numbers and chance, the random keys, the invariants, the state hash and saved games.
 2. **Movement, fuel and cargo.** The map as the rules read it (with its land links), task forces and speed, the budget of a pulse, legs and position, the order of movement, arriving, halting at a marked waypoint and steaming on, turning back, fuel burn, refuelling in port, cargo, berths and lighters (with the port factor of a day's work), and stragglers.
 3. **Search, contacts and claims.** Air search, the sighting report and its errors, belief, contacts and their ageing, a strike that finds nothing, who is alert, the alarm, fatigue of a force, claims (after a fight, a raid and a shore bombardment), and the ground report and the estimate of the enemy ashore.
 4. **Surface combat and damage.** When a fight begins, its rounds, the hit mechanism shared with air attack, damage tracks and named systems, breaking off, what a fight leaves behind, repair, and shore bombardment.

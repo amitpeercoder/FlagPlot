@@ -535,6 +535,28 @@ pub(crate) fn cruise_range_nm(view: &SideView<'_>, ship: &Ship) -> Option<u32> {
     u32::try_from(range.trunc().max(0)).ok()
 }
 
+/// The picture an agent in the area commander's seat is shown: the area
+/// command's (decision 0134, 13). With command levels off it is the side's
+/// own belief.
+pub(crate) fn area_picture<'v>(
+    view: &sim_core::view::SideView<'v>,
+) -> sim_core::view::CommandView<'v> {
+    view.command(sim_core::pictures::CommandRef::Area)
+        .expect("a side always has its area command")
+}
+
+/// The picture of the command an air group of the side belongs to (decision
+/// 0134, 8 and 13): the one its strike decision reads. The area command's
+/// for a group the side does not have.
+pub(crate) fn group_picture<'v>(
+    view: &sim_core::view::SideView<'v>,
+    group: sim_core::ids::AirGroupId,
+) -> sim_core::view::CommandView<'v> {
+    view.command_of_group(group)
+        .and_then(|command| view.command(command))
+        .unwrap_or_else(|| area_picture(view))
+}
+
 #[cfg(test)]
 mod tests {
     use super::map_unit_tokens;

@@ -2,18 +2,18 @@ Placeholder scenario 47: Cover from the air
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a016b199fcbcb9dd  38 events
-day   2  hash 01f26b460e8b08ce  12 events
-day   3  hash 05e0149f5b121764  12 events
-day   4  hash a725cf7bd14b8da5  10 events
-day   5  hash 2971b3a64acb8302  10 events
-day   6  hash 6857b53f9f9538ed  10 events
-day   7  hash f6ca624e4672eb6e  10 events
-day   8  hash 1b4a983b3108b89f  10 events
-day   9  hash b9a5b17174cee5d4  12 events
-day  10  hash 05ad526071b7169d  14 events
-day  11  hash b1be51fddf479d38  12 events
-day  12  hash 5859626c9ed4cbc2  12 events
+day   1  hash 56ecb90f171e2d04  38 events
+day   2  hash bb03a40418235e8f  12 events
+day   3  hash 88d72e752d2298d1  12 events
+day   4  hash 3ba28b71edc3b212  10 events
+day   5  hash cf3b7589832900ef  10 events
+day   6  hash 06f7913be72c5666  10 events
+day   7  hash b977cefd173f90af  10 events
+day   8  hash cc37b404eda0e138  10 events
+day   9  hash b44dbfe3301bde25  12 events
+day  10  hash 58d5f58adf0aaf06  14 events
+day  11  hash ebcb0a88ababb4d5  12 events
+day  12  hash 3153cd093654df5b  12 events
 
 air_group:1 "Placeholder fighters 1" (Allied) at base:1: 12 ready, mission Rest, fatigue 40, no arc
 air_group:2 "Placeholder fighters 2" (Allied) at base:1: 8 ready, mission CombatAirPatrol, patrol share 0.5, fatigue 56, no arc

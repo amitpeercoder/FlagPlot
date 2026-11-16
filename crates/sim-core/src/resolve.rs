@@ -374,16 +374,15 @@ impl World {
     /// Each aged or dropped contact is an event citing the report that last
     /// refreshed it.
     pub(crate) fn age_contacts_at_end_of_pulse(&mut self, day: u32, pulse: Pulse) {
+        // The commands of forces that ceased to be in the pulse end with it
+        // (decision 0134, 6).
+        self.end_gone_commands();
         // With no search figures there are no air groups, so no contacts.
         let Some(figures) = self.ref_data.search.clone() else {
             return;
         };
         for side in Side::ALL {
-            let outcomes = self
-                .beliefs
-                .get_mut(&side)
-                .expect("both sides have a belief state")
-                .age_contacts(&figures);
+            let outcomes = self.age_pictures(side, &figures);
             for outcome in outcomes {
                 let kind = if outcome.dropped {
                     EventKind::ContactDropped {
@@ -658,6 +657,9 @@ impl World {
                 .location = ShipLocation::TaskForce(id);
         }
         self.truth.task_forces.insert(id, force);
+        // Its picture is a copy of the force it was detached from (decision
+        // 0134, 5).
+        self.command_formed(id, crate::pictures::CommandRef::TaskForce(parent));
         id
     }
 

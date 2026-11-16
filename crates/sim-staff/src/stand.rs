@@ -693,10 +693,13 @@ impl Day<'_, '_> {
 
         // The threat (rule 9).
         let afloat_count = u32::try_from(ships.len()).unwrap_or(u32::MAX);
-        let mut sighted: Vec<Sighted> = view
+        // The force's own picture: the command the task is addressed to
+        // (decision 0134, 13).
+        let picture = crate::picture::picture_of(view, task.kind.addressee());
+        let mut sighted: Vec<Sighted> = picture
             .contacts()
             .map(|c| Sighted {
-                number: view.contact_number(c.id),
+                number: picture.contact_number(c.id),
                 hexes: c.estimated_hex.distance(station),
                 ships: c.estimated_ship_count,
             })

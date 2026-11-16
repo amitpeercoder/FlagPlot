@@ -1,10 +1,10 @@
 # 0134: Commands and their pictures: step 1 of stage 2b
 
-Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2b, that the designer confirmed the same day (decision 0132, step 1 of its five). It writes out the chain of command, the switch, a picture for each command and who reads which, with the hand calculation. Nothing is built.
+Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2b, that the designer confirmed the same day (decision 0132, step 1 of its five). It writes out the chain of command, the switch, a picture for each command and who reads which, with the hand calculation. Built on Nov 16, 2026 ("As built" below), with one point left to the architect: no record names the command whose picture a strike read.
 
 Summary: Step 1 of command levels: a scenario may turn command levels on; each side then has an area command, and each of its task forces and bases is a command under it, each with a picture of its own; in this step every report reaches every command of the side at once, so each picture is the side's picture and a game plays as it does with command levels off; and every rule that reads what a side believes is changed to read the picture of the command that owns the decision
 
-Standing: Settled by the architect, Nov 16, 2026, inside decision 0132. Not built
+Standing: Settled by the architect, Nov 16, 2026, inside decision 0132. Built, one point open ("As built", the launch record)
 
 ## Why this step is first
 
@@ -74,3 +74,58 @@ Decision 0132's table says step 1 shows "the same orders and the same hash, on a
 ## The hand calculation
 
 `tests/scenario_61_commands_and_their_pictures.rs`: scenario 58, the carrier force that closes, with command levels on.
+
+## As built
+
+Built on Nov 16, 2026. The core is `crates/sim-core/src/pictures.rs` (the commands, the one path a report and an ageing take, the hooks for a force formed, a force gone and a base that changes side or is formed) and `crates/sim-core/src/view/command_view.rs` (a command's view). The scenario key is `command_levels = true`; a named superior is `superior = { task_force = N }` or `superior = { base = N }` on a `[[task_force]]` or `[[base]]` entry (`crates/sim-data/src/scenario.rs`). The state version is `flagplot-state-v35` and the saved game version 10; the rules label is unchanged, since no game plays differently. Scenario 61 is `data/scenarios/61_commands_and_their_pictures.toml`.
+
+### Every reader changed, and the command it now reads
+
+| Reader | Where | The command |
+| --- | --- | --- |
+| The strike decision (`naval_strike_launch`) | `sim-core`, `airstrike.rs` | The group's command |
+| `SideView::naval_strike` and `strike_choice`, the strike question | `sim-core`, `view.rs` | The group's command |
+| Alert from belief, and the report its event cites | `sim-core`, `surface.rs` | The task force (the area command once it has ceased to be) |
+| The alert question | `sim-core`, `view/surface_choices.rs` | The task force, likewise |
+| Whether a fight ashore is certain (the ground question) | `sim-core`, `view/ground_choices.rs` | The base of the side in the fight's hex, else the area command |
+| The threat to a run (escorting a run) | `sim-staff`, `escort.rs` | The command the intent is addressed to: the area for keeping a base supplied |
+| The threat to a station | `sim-staff`, `stand.rs` | The task force the intent is addressed to |
+| The contacts a carrier force weighs closing on, and its groups' arcs | `sim-staff`, `carrier.rs` | The task force the intent is addressed to |
+| The threats a base's search arc covers, and the contacts lost since an arc was set | `sim-staff`, `air.rs` | The base the cover intent is addressed to |
+| The briefing's contacts and estimates ashore, `list_contacts`, a contact named in `get_entity` and `measure` | `sim-agent`, `briefing.rs`, `queries.rs`, `measure.rs` | The area command |
+| The briefing's word on a strike group that launched nothing | `sim-agent`, `briefing.rs` | The group's command, the picture its strike decision read |
+
+A doctrine reaches its picture through one helper (`sim-staff/src/picture.rs`), the agent through two (`sim-agent/src/common.rs`), the engine and the view through `pictures::picture_of`; with command levels off each returns the side's own belief.
+
+Not changed, on purpose: `SideView::contacts`, `claims`, `ground_estimates` and `contact_by_number` still give the side's own picture (item 11); and the check before a report that a hex is empty (`estimate.rs`, `report_empty`) reads the side's own belief, since it decides whether a report is made, not what a command does.
+
+### Readings taken
+
+1. **A task force is a command** while it has a ship, or a ship away at a yard to rejoin it (decision 0069): that is a force that has not ceased to be. At the start every such force of a side is one.
+2. **A force that ceases to be** (joined, stood down, sunk) stops being a command at the end of the pulse in which it ceased, before the pictures age; until then its picture still takes every report. A rule that asks for the picture of a force that has ceased to be gets the area command's.
+3. **A command whose superior is gone** is put under the area command.
+4. **A base formed by a landing** (decision 0066, 11) is a command from the pulse it is formed, with a copy of the landing force's picture. Item 5 names task forces only; a base formed in play is read the same way.
+5. **Which command a unit belongs to** where item 8 is silent: an air group aboard a ship in port in no force belongs to that base; aboard a ship at a yard, to the force she rejoins; a group lost or aboard a sunk ship, to the area command. A land unit belongs to the lowest-numbered base of its side in the hex its men ashore are in, and to the area command aboard ship or ashore away from one. A fight ashore reads the lowest-numbered base of the side in its hex.
+6. **A doctrine whose addressee is no longer a command of the side** (a base lost, a force gone) reads the area command's picture.
+7. **With command levels off**, a command's view exists for the area, each task force and each base of the side, and holds the side's belief; `SideView::commands` is empty, since no command exists.
+8. **A report that a strike found nothing** names a contact by the number it has in the picture the strike was decided on, and is applied by that number to every picture. In this step every picture numbers its contacts as the side does, so it is right; step 2, where pictures differ, must carry the hex alone or the number in each picture.
+9. **The agent's seat is the area command's** (item 13's last row). Whether it is shown the side's picture instead, the easier setting of item 11, is left to step 5, which builds the seats; in this step the two are the same.
+10. **Copies are made with the pulse's refreshed set** of the picture they copy, so a copy made in a pulse ages at its end as its source does.
+
+### Open: the launch record
+
+The hand calculation asks that the strike of the morning of day 1 name task force 1 as the command whose picture was read, in its reason or the launch's record. Nothing was added: the strike decision is a rule of the engine with no staff reason, and any record of it (a field of `StrikeLaunched`, a factor of its breakdown, or an entry in the trace of choices) would differ between the game with command levels on and the same game off, which the property "on is off" forbids for every event. The staff's own orders to task force 1 and its groups already name it as the level that decided (decision 0125). The options, for the architect:
+
+- **A field of `StrikeLaunched`,** the command whose picture was read, `None` with command levels off and left out of the event's text when `None`: off is unchanged, and "on is off" is restated to compare events but that field.
+- **A breakdown factor,** present only with command levels on: the same restatement, for breakdowns.
+- **No record:** the command is a function of the state at the launch (`SideView::command_of_group`), which the test asserts; a reason by command comes with step 2, where it first matters.
+
+Scenario 61's `the_launch_record_names_task_force_1` is ignored with that message; `the_strike_of_day_1_is_launched_by_a_group_of_task_force_1` asserts the third.
+
+### Speed
+
+`sim-cli time --slice data/scenarios/second-proof/07a_week.toml --early-day 15 --late-day 18 --repeats 5`, release build, on the week of the slice from intents and on the same file with `command_levels = true` put first (made for the measure and not kept): six staffed days from day 15 took 67.7 ms with command levels off and 67.4 ms with them on (medians of 5), about 11.2 ms a day either way; three days from day 18, 27.5 ms and 27.7 ms; the longest day's staff decisions 3.84 and 3.83 ms (Allied, day 15), 7.35 and 7.33 ms (Japanese, day 17). The cost of applying each report to every picture is within the spread.
+
+### Tests
+
+Scenario 61 passes its hand calculation, with the one test above ignored: the commands at the start, the table of pictures at the start and the end of every pulse, the game equal to scenario 58's, the reasons naming contact 1, on is off, balanced, a commander's detach that forms nothing, nothing that plays given another command's picture, every earlier scenario file off, and the bigger games (the Eastern Solomons from intents and Savo Island on seeds 1 to 20, the week of the slice from intents on seeds 1 to 3: the same events and end truth, and every command's picture equal to its side's at every pulse). `crates/sim-core/src/pictures_tests.rs` tests the force formed (detached, and formed in port), the force gone (joined, sunk, at a yard), the base that changes side, the base formed by a landing, and off. Every earlier scenario's run baseline is unchanged but for its hash lines.

@@ -146,8 +146,12 @@ impl SideView<'_> {
         let Some(hex) = unit.hex.filter(|_| unit.men_ashore > 0) else {
             return false;
         };
+        // The picture of the base where the fight is, or the area command
+        // (decision 0134, 13).
+        let command = crate::pictures::command_at_hex(self.truth, self.side, hex);
         self.own_attack_with_fighting_men_at(hex)
             && self
+                .picture(command)
                 .ground_estimate(hex)
                 .is_some_and(|estimate| estimate.men > 0)
     }

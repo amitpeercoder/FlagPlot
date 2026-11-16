@@ -17,6 +17,7 @@ use sim_core::orders::{
     OrderKind, OrderRequest, Origin, Posture, Reach, Readiness, SpeedSetting, Stance,
     StragglerInstruction, TaskForceOrder, WhenSpent,
 };
+use sim_core::pictures::{CommandRef, NamedSuperior};
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
     AirGroup, AirGroupLocation, Arrival, Base, LandUnit, Replacement, Ship, ShipLocation,
@@ -120,6 +121,29 @@ struct ScenarioFile {
     estimate: Vec<EstimateSpec>,
     /// Missions and objectives (decision 0054). Optional.
     objectives: Option<ObjectivesSpec>,
+    /// Whether command levels are on (decision 0134, 1). Optional; off when
+    /// absent.
+    command_levels: Option<bool>,
+}
+
+/// The command a task force or a base is placed under (decision 0134, 4):
+/// exactly one of `task_force` or `base`, as in
+/// `superior = { task_force = 1 }`.
+#[derive(Deserialize, Clone, Copy)]
+#[serde(deny_unknown_fields)]
+struct SuperiorSpec {
+    task_force: Option<u32>,
+    base: Option<u32>,
+}
+
+impl SuperiorSpec {
+    fn command(&self) -> Result<CommandRef, String> {
+        match (self.task_force, self.base) {
+            (Some(force), None) => Ok(CommandRef::TaskForce(TaskForceId::new(force))),
+            (None, Some(base)) => Ok(CommandRef::Base(BaseId::new(base))),
+            _ => Err("a superior names exactly one of task_force or base".to_string()),
+        }
+    }
 }
 
 /// The `[objectives]` table (decision 0054, "As built"): the three levels,
@@ -266,6 +290,9 @@ struct BaseSpec {
     /// The damage to the airfield at the start, 0 to 100 (decision 0103).
     /// Only for a base with an airfield. Defaults to 0.
     airfield_damage: Option<Quantity>,
+    /// The command this base is placed under, if not its side's area
+    /// command (decision 0134, 4). Needs `command_levels = true`.
+    superior: Option<SuperiorSpec>,
 }
 
 /// A land unit at the start (decision 0066, 3): exactly one of a hex, where
@@ -402,6 +429,9 @@ struct TaskForceSpec {
     /// `avoid` (decision 0124's scenarios). Defaults to engage, the rest of
     /// the rules of engagement as they default.
     stance: Option<StanceSpec>,
+    /// The command this force is placed under, if not its side's area
+    /// command (decision 0134, 4). Needs `command_levels = true`.
+    superior: Option<SuperiorSpec>,
 }
 
 #[derive(Deserialize)]
@@ -1019,6 +1049,9 @@ pub struct Scenario {
     contacts: Vec<StartingContact>,
     /// The opening estimates, kept for the same reason (decision 0092, 16).
     estimates: Vec<StartingEstimate>,
+    /// The superiors the scenario names, when command levels are on
+    /// (decision 0134); `None` when they are off.
+    command_levels: Option<Vec<NamedSuperior>>,
     /// Every file the scenario names, as the paths it reads them from, in a
     /// fixed order (decision 0043, 9).
     data_files: Vec<PathBuf>,
@@ -2489,6 +2522,56 @@ impl Scenario {
 
         let mut world =
             World::new(file.seed, ref_data, map, truth).map_err(|e| fail(e.to_string()))?;
+        // Command levels go on before anything that reaches a belief
+        // (decision 0134, 12): the starting contacts and estimates then reach
+        // every picture as they reach the side's.
+        let command_levels = if file.command_levels == Some(true) {
+            let mut named = Vec::new();
+            for spec in &file.task_force {
+                if let Some(superior) = &spec.superior {
+                    named.push(NamedSuperior {
+                        side: spec.side.into(),
+                        command: CommandRef::TaskForce(TaskForceId::new(spec.id)),
+                        superior: superior.command().map_err(|message| {
+                            fail(format!("task force {}: {message}", spec.id))
+                        })?,
+                    });
+                }
+            }
+            for spec in &file.base {
+                if let Some(superior) = &spec.superior {
+                    named.push(NamedSuperior {
+                        side: spec.side.into(),
+                        command: CommandRef::Base(BaseId::new(spec.id)),
+                        superior: superior
+                            .command()
+                            .map_err(|message| fail(format!("base {}: {message}", spec.id)))?,
+                    });
+                }
+            }
+            world
+                .turn_command_levels_on(&named)
+                .map_err(|e| fail(e.to_string()))?;
+            Some(named)
+        } else {
+            for spec in &file.task_force {
+                if spec.superior.is_some() {
+                    return Err(fail(format!(
+                        "task force {} names a superior and command levels are off",
+                        spec.id
+                    )));
+                }
+            }
+            for spec in &file.base {
+                if spec.superior.is_some() {
+                    return Err(fail(format!(
+                        "base {} names a superior and command levels are off",
+                        spec.id
+                    )));
+                }
+            }
+            None
+        };
         if let Some(spec) = &file.objectives {
             let objectives =
                 build_objectives(spec, file.days, world.ref_data().surface_combat.is_some())
@@ -2540,8 +2623,16 @@ impl Scenario {
             commands,
             contacts,
             estimates,
+            command_levels,
             data_files,
         })
+    }
+
+    /// The superiors the scenario names, if command levels are on (decision
+    /// 0134): `None` when they are off, `Some` (empty if it names none) when
+    /// on.
+    pub fn command_levels(&self) -> Option<&[NamedSuperior]> {
+        self.command_levels.as_deref()
     }
 
     /// The files the scenario names (map, ship classes, port sizes, aircraft
@@ -2594,6 +2685,9 @@ impl Scenario {
             self.world.map().clone(),
             self.world.umpire().clone(),
         )?;
+        if let Some(named) = &self.command_levels {
+            world.turn_command_levels_on(named)?;
+        }
         world.hold_starting_contacts(self.contacts.clone())?;
         world.hold_starting_estimates(self.estimates.clone())?;
         if let Some(objectives) = self.world.objectives() {
@@ -2608,6 +2702,7 @@ impl Scenario {
             commands: self.commands.clone(),
             contacts: self.contacts.clone(),
             estimates: self.estimates.clone(),
+            command_levels: self.command_levels.clone(),
             data_files: self.data_files.clone(),
         })
     }
@@ -4379,6 +4474,169 @@ r = 0
         let mut started = scenario.clone();
         started.next_day().expect("runs");
         assert!(started.with_seed(1).is_err());
+    }
+
+    /// `HEAD` with `command_levels` as given (nothing when `None`), two
+    /// allied task forces each with a ship, task force 2 with `superior_2`
+    /// as an extra key of its table, and `base_extra` added to base 1.
+    fn command_text(levels: Option<&str>, superior_2: &str, base_extra: &str) -> String {
+        let head = HEAD.replace(
+            "days = 2\n",
+            &format!(
+                "days = 2\n{}",
+                levels.map_or(String::new(), |v| format!("command_levels = {v}\n"))
+            ),
+        );
+        let head = head.replace("q = 0\nr = 0\n", &format!("q = 0\nr = 0\n{base_extra}\n"));
+        let force = |id: u32, extra: &str| {
+            format!(
+                "[[task_force]]\nid = {id}\nname = \"TF\"\nside = \"allied\"\nat_base = 1\nmission = \"escort\"\n{extra}\n[[ship]]\nid = {id}\nname = \"S\"\nclass = 1\nside = \"allied\"\nfuel_t = 100\ntask_force = {id}\n"
+            )
+        };
+        format!("{head}{}{}", force(1, ""), force(2, superior_2))
+    }
+
+    fn load_command_text(text: &str) -> Result<Scenario, DataError> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        Scenario::parse(text, &path)
+    }
+
+    fn command_ids(scenario: &Scenario, side: Side) -> Vec<CommandRef> {
+        scenario
+            .world
+            .commands(side)
+            .map(|posts| posts.keys().copied().collect())
+            .unwrap_or_default()
+    }
+
+    #[test]
+    fn command_levels_are_off_when_the_key_is_absent_or_false() {
+        for levels in [None, Some("false")] {
+            let scenario = load_command_text(&command_text(levels, "", "")).expect("loads");
+            assert!(!scenario.world.command_levels());
+            assert!(scenario.world.commands(Side::Allied).is_none());
+            assert!(scenario.command_levels().is_none());
+        }
+    }
+
+    #[test]
+    fn command_levels_on_gives_each_side_its_commands() {
+        let scenario = load_command_text(&command_text(Some("true"), "", "")).expect("loads");
+        assert!(scenario.world.command_levels());
+        assert_eq!(scenario.command_levels(), Some(&[][..]));
+        let force = |raw| CommandRef::TaskForce(TaskForceId::new(raw));
+        assert_eq!(
+            command_ids(&scenario, Side::Allied),
+            vec![
+                CommandRef::Area,
+                force(1),
+                force(2),
+                CommandRef::Base(BaseId::new(1))
+            ]
+        );
+        assert_eq!(
+            command_ids(&scenario, Side::Japanese),
+            vec![CommandRef::Area, CommandRef::Base(BaseId::new(2))]
+        );
+        let posts = scenario.world.commands(Side::Allied).expect("on");
+        assert_eq!(posts[&CommandRef::Area].superior(), None);
+        assert_eq!(posts[&force(1)].superior(), Some(CommandRef::Area));
+        // The seed copy turns them on likewise.
+        let other = scenario.with_seed(9).expect("copies");
+        assert_eq!(
+            command_ids(&other, Side::Allied),
+            command_ids(&scenario, Side::Allied)
+        );
+        assert_eq!(other.command_levels(), scenario.command_levels());
+    }
+
+    #[test]
+    fn a_named_superior_is_kept_and_with_seed_names_it_again() {
+        let scenario = load_command_text(&command_text(
+            Some("true"),
+            "superior = { task_force = 1 }",
+            "superior = { task_force = 2 }",
+        ))
+        .expect("loads");
+        let force = |raw| CommandRef::TaskForce(TaskForceId::new(raw));
+        let posts = scenario.world.commands(Side::Allied).expect("on");
+        assert_eq!(posts[&force(2)].superior(), Some(force(1)));
+        assert_eq!(
+            posts[&CommandRef::Base(BaseId::new(1))].superior(),
+            Some(force(2))
+        );
+        assert_eq!(scenario.command_levels().expect("on").len(), 2);
+        let other = scenario.with_seed(3).expect("copies");
+        let posts = other.world.commands(Side::Allied).expect("on");
+        assert_eq!(posts[&force(2)].superior(), Some(force(1)));
+        assert_eq!(
+            posts[&CommandRef::Base(BaseId::new(1))].superior(),
+            Some(force(2))
+        );
+    }
+
+    #[test]
+    fn a_superior_with_command_levels_off_is_refused_naming_the_entry() {
+        for levels in [None, Some("false")] {
+            let message =
+                load_command_text(&command_text(levels, "superior = { task_force = 1 }", ""))
+                    .expect_err("refused")
+                    .message;
+            assert!(message.contains("task force 2"), "{message}");
+            assert!(message.contains("command levels are off"), "{message}");
+            let message =
+                load_command_text(&command_text(levels, "", "superior = { task_force = 1 }"))
+                    .expect_err("refused")
+                    .message;
+            assert!(message.contains("base 1"), "{message}");
+        }
+    }
+
+    #[test]
+    fn a_superior_that_is_no_command_names_itself_or_makes_a_loop_is_refused() {
+        // An unknown command, and a base that is not the side's.
+        for superior in [
+            "superior = { task_force = 9 }",
+            "superior = { base = 2 }",
+            "superior = { base = 7 }",
+        ] {
+            let message = load_command_text(&command_text(Some("true"), superior, ""))
+                .expect_err("refused")
+                .message;
+            assert!(
+                message.contains("is not a command"),
+                "{superior}: {message}"
+            );
+        }
+        // Itself.
+        let message = load_command_text(&command_text(
+            Some("true"),
+            "superior = { task_force = 2 }",
+            "",
+        ))
+        .expect_err("refused")
+        .message;
+        assert!(message.contains("its own superior"), "{message}");
+        // A loop: base 1 under task force 2, task force 2 under base 1.
+        let message = load_command_text(&command_text(
+            Some("true"),
+            "superior = { base = 1 }",
+            "superior = { task_force = 2 }",
+        ))
+        .expect_err("refused")
+        .message;
+        assert!(message.contains("loop"), "{message}");
+        // Neither or both of task_force and base.
+        for superior in [
+            "superior = {}",
+            "superior = { task_force = 1, base = 1 }",
+            "superior = { fleet = 1 }",
+        ] {
+            assert!(
+                load_command_text(&command_text(Some("true"), superior, "")).is_err(),
+                "{superior}"
+            );
+        }
     }
 
     fn contact(body: &str) -> String {

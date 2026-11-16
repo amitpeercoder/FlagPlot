@@ -599,6 +599,9 @@ impl World {
                 ..Base::new(id, format!("Landing at {}", p.hex), p.side, p.hex)
             },
         );
+        // Its picture is a copy of the landing force's (a reading of
+        // decision 0134, 5).
+        self.base_formed(id, crate::pictures::CommandRef::TaskForce(p.task_force));
         let formed = self.events.record(
             day,
             Some(pulse),

@@ -14,6 +14,8 @@
 //! plays the game.
 
 mod air_choices;
+mod command_view;
+pub use command_view::CommandView;
 mod ground_choices;
 mod supply;
 
@@ -92,6 +94,9 @@ pub struct SideView<'a> {
     side: Side,
     truth: &'a TruthState,
     belief: &'a BeliefState,
+    /// The side's own commands and their pictures, while command levels are
+    /// on (decision 0134). The other side's are never handed over.
+    commands: Option<&'a crate::pictures::SideCommands>,
     map: &'a Map,
     ref_data: &'a RefData,
     log: &'a EventLog,
@@ -138,6 +143,7 @@ impl<'a> SideView<'a> {
         side: Side,
         truth: &'a TruthState,
         belief: &'a BeliefState,
+        commands: Option<&'a crate::pictures::SideCommands>,
         map: &'a Map,
         ref_data: &'a RefData,
         log: &'a EventLog,
@@ -151,6 +157,7 @@ impl<'a> SideView<'a> {
             side,
             truth,
             belief,
+            commands,
             map,
             ref_data,
             log,
@@ -898,8 +905,10 @@ impl<'a> SideView<'a> {
             self.flyable_aircraft(group),
             group.strike_held_share,
         );
+        // The picture of the group's command (decision 0134, 13).
+        let command = crate::pictures::command_of_group(self.truth, group.id)?;
         crate::airstrike::naval_strike_launch(
-            self.belief,
+            self.picture(command),
             group,
             origin,
             self.reach_nm(group),

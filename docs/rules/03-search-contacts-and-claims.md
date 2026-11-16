@@ -153,6 +153,8 @@ Belief holds three things for a side: contacts, claims and estimates of the enem
 
 A contact holds an ID, an estimated hex, an estimated ship count, an estimated kind, an age in pulses, and the event that recorded the report that last made or refreshed it. Contact numbers are allocated for the side in order, and a number is never used again, including after a contact is dropped. [0012, 0028, 0032]
 
+With command levels on (a scenario's `command_levels`), each command of the side holds a picture of its own, and every report is applied to each of them as to the side's belief, in the same pulse; the rules of this chapter are those of a picture as of a belief, and a rule that reads what the side believes reads the picture of the command that owns the decision (chapter 1, Commands and their pictures). [0134]
+
 A side sees: its own contacts whole, by its own numbers. The enemy's forces reach it only as contacts. [0007, 0047]
 
 ### A sighting report makes or refreshes a contact

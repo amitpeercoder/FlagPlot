@@ -1,0 +1,84 @@
+Placeholder scenario 61: Commands and their pictures
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 8046b9c5fc415b2e  47 events
+day   2  hash 6f9b7c46f9aba881  12 events
+day   3  hash a641eace5bc08f07  5 events
+
+#1 D0 -         Allied report: 1 ship, carrier, at (12,0), held at the start: new contact:1
+#2 D1 -         Allied the commander's command taken: set intent:1 to operate the carrier force task_force:1 from (0,0)
+#3 D1 -         Allied plan:1 drafted for intent:1  <- #2
+#4 D1 -         Allied the commander's command taken: risk of intent:1 is press
+#5 D1 -         Allied the commander's command taken: give the leave to prepare
+#6 D1 -         Allied the commander's command taken: give the leave to launch
+#7 D1 -         Allied the staff's command taken: approve plan:1
+#8 D1 -         Allied plan:1 went from draft to preparing  <- #7
+#9 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: plan:1, the plan to operate the carrier force task_force:1 from (0,0), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #7
+#10 D1 -         Allied the staff's command taken: approve plan:1
+#11 D1 -         Allied plan:1 went from preparing to released  <- #10
+#12 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: plan:1, the plan to operate the carrier force task_force:1 from (0,0), is ready and leave to launch is given: the staff releases it.  <- #10
+#13 D1 -         Allied staff's reason for giving no order [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: intent:1, operating the carrier force task_force:1 from (0,0): the passage home to base:1 (Placeholder base 1), by the engine's measure, times the 1 of the press risk, for the ship with least against its need: ship:1 has 3000 t aboard against 66.666666 t needed: every ship has what it needs, so task_force:1 stays on its task.
+#14 D1 -         order:1 accepted for task_force:1  <- order:1  [issued by the staff]
+#15 D1 -         Allied staff's reason for order:1 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: intent:1, operating the carrier force task_force:1 from (0,0): task_force:1 is at (0,0), so it is set to battle readiness.  <- order:1, #14
+#16 D1 -         order:2 accepted for task_force:1  <- order:2  [issued by the staff]
+#17 D1 -         Allied staff's reason for order:2 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: A carrier force does not seek a gun action: the rules of engagement of task_force:1 are set to the stance avoid and the break-off level of the press risk, 0.75.  <- order:2, #16
+#18 D1 -         order:3 accepted for task_force:1  <- order:3  [issued by the staff]
+#19 D1 -         Allied staff's reason for order:3 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: intent:1, operating the carrier force task_force:1 from (0,0): contact 1, a carrier, 0 pulse(s) old, is 480 nm from (0,0), beyond the 250 nm normal reach of its bombers and within the 610 nm (360 nm in the night's 12 hours at full speed and the 250 nm normal reach of its bombers): at the press risk it closes on any kind. the first hex along the shortest sea route to (12,0) within that reach of it is (6,0), 240 nm from (0,0): 8 hours at full speed. the passage to (6,0) and from there home to base:1 (Placeholder base 1), by the engine's measure at full speed, times the 1 of the press risk: ship:1 has 3000 t aboard against 542.578123 t needed: it has the fuel. task_force:1 is routed to (6,0) at full speed, cruise taking 15 hours, more than the night's 12.  <- order:3, #18
+#20 D1 -         order:4 accepted for task_force:1  <- order:4  [issued by the staff]
+#21 D1 -         Allied staff's reason for order:4 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: intent:1, operating the carrier force task_force:1 from (0,0): contact 1, a carrier, 0 pulse(s) old, is 480 nm from (0,0), beyond the 250 nm normal reach of its bombers and within the 610 nm (360 nm in the night's 12 hours at full speed and the 250 nm normal reach of its bombers): at the press risk it closes on any kind. the first hex along the shortest sea route to (12,0) within that reach of it is (6,0), 240 nm from (0,0): 8 hours at full speed. the passage to (6,0) and from there home to base:1 (Placeholder base 1), by the engine's measure at full speed, times the 1 of the press risk: ship:1 has 3000 t aboard against 542.578123 t needed: it has the fuel. task_force:1 is routed to (6,0) at full speed, cruise taking 15 hours, more than the night's 12.  <- order:4, #20
+#22 D1 -         order:5 accepted for air_group:1  <- order:5  [issued by the staff]
+#23 D1 -         Allied staff's reason for order:5 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: air_group:1, a fighter group, has fatigue 0 not above the 60 of the press risk: it flies the patrol at a share of 0.25 (0.25 at press, the force not attacked from the air on the three days before); the rest are escorts.  <- order:5, #22
+#24 D1 -         order:6 accepted for air_group:1  <- order:6  [issued by the staff]
+#25 D1 -         Allied staff's reason for order:6 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: air_group:1, a fighter group, has fatigue 0 not above the 60 of the press risk: it flies the patrol at a share of 0.25 (0.25 at press, the force not attacked from the air on the three days before); the rest are escorts.  <- order:6, #24
+#26 D1 -         order:7 accepted for air_group:2  <- order:7  [issued by the staff]
+#27 D1 -         Allied staff's reason for order:7 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: air_group:2, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 60 of the press risk: it searches 050 to 120 out to 300 nm from (0,0) (threats: contact 1 at (12,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at press risk a carrier force searches in both daylight pulses.  <- order:7, #26
+#28 D1 -         order:8 accepted for air_group:2  <- order:8  [issued by the staff]
+#29 D1 -         Allied staff's reason for order:8 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: air_group:2, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 60 of the press risk: it searches 050 to 120 out to 300 nm from (0,0) (threats: contact 1 at (12,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at press risk a carrier force searches in both daylight pulses.  <- order:8, #28
+#30 D1 -         order:9 accepted for air_group:3  <- order:9  [issued by the staff]
+#31 D1 -         Allied staff's reason for order:9 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized.  <- order:9, #30
+#32 D1 -         order:10 accepted for air_group:3  <- order:10  [issued by the staff]
+#33 D1 -         Allied staff's reason for order:10 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized.  <- order:10, #32
+#34 D1 -         order:11 accepted for air_group:3  <- order:11  [issued by the staff]
+#35 D1 -         Allied staff's reason for order:11 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized.  <- order:11, #34
+#36 D1 -         order:12 accepted for air_group:3  <- order:12  [issued by the staff]
+#37 D1 -         Allied staff's reason for order:12 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of air_group:3]: air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:1 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.  <- order:12, #36
+#38 D1 night     task_force:1 steamed 240 nm at 30 kn from (0,0) to (6,0)  <- order:4, order:3
+#39 D1 night     ship:1 burned 281.25 t, 2718.75 t remaining  <- #38
+#40 D1 night     task_force:1 arrived at (6,0) at D1 02:00  <- #38
+#41 D1 night     Allied contact:1 aged to 1 pulses  <- #1
+#42 D1 morning   air_group:2 searched 050-120 out to 300 nm from ship:1 at (6,0) with 6 aircraft  <- order:7, order:8
+#43 D1 morning   air_group:3 launched 10 aircraft at contact:1 at (12,0), 240 nm  <- order:9, order:11, #1, order:10, order:12
+#44 D1 morning   air_group:1 sent 9 escorts with air_group:3  <- order:5, order:6, #43
+#45 D1 morning   air_group:3 found nothing at (12,0)  <- #43
+#46 D1 morning   Allied contact:1 not there at (12,0): dropped  <- #45
+#47 D1 afternoon air_group:2 searched 050-120 out to 300 nm from ship:1 at (6,0) with 6 aircraft  <- order:7, order:8
+#48 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#49 D2 -         Allied staff's reason for giving no order [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: intent:1, operating the carrier force task_force:1 from (0,0): the passage home to base:1 (Placeholder base 1), by the engine's measure, times the 1 of the press risk, for the ship with least against its need: ship:1 has 2718.75 t aboard against 74.333333 t needed: every ship has what it needs, so task_force:1 stays on its task. task_force:1 does not close: the side holds no contact of ships 3 pulses old or less.
+#50 D2 -         Allied staff's reason for giving no order [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: No order is given for these groups for intent:1, operating the carrier force task_force:1 from (0,0) this morning: air_group:1, a fighter group, has fatigue 0 not above the 60 of the press risk: it flies the patrol at a share of 0.25 (0.25 at press, the force not attacked from the air on the three days before); the rest are escorts; air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized.
+#51 D2 -         order:13 accepted for task_force:1  <- order:13  [issued by the staff]
+#52 D2 -         Allied staff's reason for order:13 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: intent:1, operating the carrier force task_force:1 from (0,0): task_force:1 is at (6,0), not in the task's hex and not on its way home, it left the hex to close and holds nothing in reach and nothing to close on, so it is routed to (0,0) at full speed, cruise taking 15 hours, more than the night's 12.  <- order:13, #51
+#53 D2 -         order:14 accepted for air_group:2  <- order:14  [issued by the staff]
+#54 D2 -         Allied staff's reason for order:14 [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: air_group:2, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 60 of the press risk: it searches the whole circle out to 300 nm from (6,0) (no enemy base on the map and no contact: the arc is the whole circle); at press risk a carrier force searches in both daylight pulses.  <- order:14, #53
+#55 D2 night     task_force:1 steamed 240 nm at 30 kn from (6,0) to (0,0)  <- order:13, order:3
+#56 D2 night     ship:1 burned 281.25 t, 2437.5 t remaining  <- #55
+#57 D2 night     task_force:1 arrived at (0,0) at D2 02:00  <- #55
+#58 D2 morning   air_group:2 searched 000-000 out to 300 nm from ship:1 at (0,0) with 6 aircraft  <- order:7, order:14
+#59 D2 afternoon air_group:2 searched 000-000 out to 300 nm from ship:1 at (0,0) with 6 aircraft  <- order:7, order:14
+#60 D2 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#61 D3 -         Allied staff's reason for giving no order [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: intent:1, operating the carrier force task_force:1 from (0,0): the passage home to base:1 (Placeholder base 1), by the engine's measure, times the 1 of the press risk, for the ship with least against its need: ship:1 has 2437.5 t aboard against 66.666666 t needed: every ship has what it needs, so task_force:1 stays on its task. task_force:1 does not close: the side holds no contact of ships 3 pulses old or less.
+#62 D3 -         Allied staff's reason for giving no order [serves intent 1: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1]: No order is given for these groups for intent:1, operating the carrier force task_force:1 from (0,0) this morning: air_group:1, a fighter group, has fatigue 0 not above the 60 of the press risk: it flies the patrol at a share of 0.25 (0.25 at press, the force not attacked from the air on the three days before); the rest are escorts; air_group:2, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 60 of the press risk: it searches the whole circle out to 300 nm from (0,0) (no enemy base on the map and no contact: the arc is the whole circle); at press risk a carrier force searches in both daylight pulses; air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized.
+#63 D3 morning   air_group:2 searched 000-000 out to 300 nm from ship:1 at (0,0) with 6 aircraft  <- order:7, order:14
+#64 D3 afternoon air_group:2 searched 000-000 out to 300 nm from ship:1 at (0,0) with 6 aircraft  <- order:7, order:14
+#65 D3 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder carrier force 1" (Allied): Arrived at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.75, stragglers: keep, keep 0; home port base:1
+air_group:1 "Placeholder fighters 1" (Allied) aboard ship:1: 12 ready, mission CombatAirPatrol, patrol share 0.25, no arc
+air_group:2 "Placeholder carrier scouts 2" (Allied) aboard ship:1: 6 ready, mission Search, arc 000-000 to 300 nm
+air_group:3 "Placeholder dive bombers 3" (Allied) aboard ship:1: 10 ready, mission NavalStrike, extended reach, no arc
+ship:1 "Placeholder carrier 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2437.5 t of fuel, 0 t of supply
+base:1 "Placeholder base 1" (Allied) at (0,5): 1000 t of supply in stock, 5000 t of fuel in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

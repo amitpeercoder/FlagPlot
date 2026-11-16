@@ -203,8 +203,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `torpedoes_one_side_fired`, and a base's `ammunition_t` after its
 /// `fuel_reserve_t` (decision 0122);
 /// version 34 adds an air group's `search_once` and `search_once_order` after
-/// its `strike_sizing_order` (decision 0131).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v34";
+/// its `strike_sizing_order` (decision 0131);
+/// version 35 adds, after the command states, whether command levels are on
+/// and each side's commands with their superiors and pictures (decision
+/// 0134).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v35";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -223,6 +226,9 @@ fn name_every_field(world: &World) {
         map: _,
         truth,
         beliefs,
+        // Hashed after the command states, with every picture as a belief
+        // is hashed (decision 0134).
+        chain: _,
         // Hashed by count and next number only.
         orders: _,
         order_ids: _,
@@ -853,6 +859,53 @@ fn hash_limit(h: &mut StateHasher, limit: &Limit) {
 
 /// Hashes one side's command state in a fixed walk of every field (decision
 /// 0107).
+/// Hashes one belief: a side's own, or a command's picture (decision
+/// 0134), in the same order.
+fn hash_belief(h: &mut StateHasher, belief: &crate::belief::BeliefState) {
+    // The refreshed-this-pulse set is transient and not hashed: it must
+    // be empty here, after the last pulse's ageing.
+    debug_assert!(
+        !belief.has_pending_refreshes(),
+        "contacts were refreshed and not aged before the state was hashed"
+    );
+    h.u32(belief.next_contact_raw());
+    h.count(belief.contacts().count());
+    for contact in belief.contacts() {
+        h.u32(contact.id.raw());
+        h.i32(contact.estimated_hex.q);
+        h.i32(contact.estimated_hex.r);
+        h.u32(contact.estimated_ship_count);
+        h.u8(contact.estimated_kind.code());
+        h.u32(contact.age_pulses);
+        h.u32(contact.last_report_event.raw());
+    }
+    h.count(belief.claims().len());
+    for claim in belief.claims() {
+        h.i32(claim.hex.q);
+        h.i32(claim.hex.r);
+        h.u32(claim.day);
+        h.u64(claim.pulse.code());
+        h.u32(claim.claimed_sunk);
+        h.u32(claim.received_event.raw());
+        h.u32(claim.claimed_hits);
+        h.u8(claim.claimed_kind.map_or(0, ShipKind::code));
+        h.u32(claim.claimed_shot_down);
+        h.u32(claim.claimed_on_ground);
+        h.u8(u8::from(claim.from_air));
+        // After `from_air` (decision 0092).
+        h.u8(u8::from(claim.from_bombardment));
+    }
+    // After the claims (decision 0092), in hex order.
+    h.count(belief.ground_estimates().count());
+    for estimate in belief.ground_estimates() {
+        h.i32(estimate.hex.q);
+        h.i32(estimate.hex.r);
+        h.u32(estimate.men);
+        h.u32(estimate.day);
+        h.u32(estimate.report_event.raw());
+    }
+}
+
 fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
     h.count(state.intents.len());
     for intent in state.intents.values() {
@@ -1427,49 +1480,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
 
     h.count(world.beliefs.len());
     for (side, belief) in &world.beliefs {
-        // The refreshed-this-pulse set is transient and not hashed: it must
-        // be empty here, after the last pulse's ageing.
-        debug_assert!(
-            !belief.has_pending_refreshes(),
-            "contacts were refreshed and not aged before the state was hashed"
-        );
         h.u8(side.code());
-        h.u32(belief.next_contact_raw());
-        h.count(belief.contacts().count());
-        for contact in belief.contacts() {
-            h.u32(contact.id.raw());
-            h.i32(contact.estimated_hex.q);
-            h.i32(contact.estimated_hex.r);
-            h.u32(contact.estimated_ship_count);
-            h.u8(contact.estimated_kind.code());
-            h.u32(contact.age_pulses);
-            h.u32(contact.last_report_event.raw());
-        }
-        h.count(belief.claims().len());
-        for claim in belief.claims() {
-            h.i32(claim.hex.q);
-            h.i32(claim.hex.r);
-            h.u32(claim.day);
-            h.u64(claim.pulse.code());
-            h.u32(claim.claimed_sunk);
-            h.u32(claim.received_event.raw());
-            h.u32(claim.claimed_hits);
-            h.u8(claim.claimed_kind.map_or(0, ShipKind::code));
-            h.u32(claim.claimed_shot_down);
-            h.u32(claim.claimed_on_ground);
-            h.u8(u8::from(claim.from_air));
-            // After `from_air` (decision 0092).
-            h.u8(u8::from(claim.from_bombardment));
-        }
-        // After the claims (decision 0092), in hex order.
-        h.count(belief.ground_estimates().count());
-        for estimate in belief.ground_estimates() {
-            h.i32(estimate.hex.q);
-            h.i32(estimate.hex.r);
-            h.u32(estimate.men);
-            h.u32(estimate.day);
-            h.u32(estimate.report_event.raw());
-        }
+        hash_belief(&mut h, belief);
     }
 
     // After the beliefs (decision 0107): each side's command state, Allied
@@ -1477,6 +1489,29 @@ pub(crate) fn hash_world(world: &World) -> u64 {
     for side in Side::ALL {
         h.u8(side.code());
         hash_command_state(&mut h, &world.command[&side]);
+    }
+
+    // After the command states (decision 0134): 0 with command levels off;
+    // with them on 1, then each side's commands in command order, each its
+    // code, its number, its superior (code and number, 0 for none) and its
+    // picture.
+    match &world.chain {
+        None => h.u8(0),
+        Some(chain) => {
+            h.u8(1);
+            for side in Side::ALL {
+                let posts = &chain[&side];
+                h.u8(side.code());
+                h.count(posts.len());
+                for (command, post) in posts {
+                    h.u8(command.code());
+                    h.u32(command.raw());
+                    h.u8(post.superior().map_or(0, crate::pictures::CommandRef::code));
+                    h.u32(post.superior().map_or(0, crate::pictures::CommandRef::raw));
+                    hash_belief(&mut h, post.picture());
+                }
+            }
+        }
     }
 
     h.count(world.orders.len());

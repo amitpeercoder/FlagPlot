@@ -1917,7 +1917,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         objectives: objectives_part(&ctx, view),
         orders: day.orders,
         contacts: ContactsPart {
-            held: view
+            held: crate::common::area_picture(view)
                 .contacts()
                 .map(|c| ContactLine {
                     contact: ctx.entity(EntityRef::Contact(c.id)),
@@ -1954,7 +1954,8 @@ pub(crate) fn ground_estimate_lines(
     view: &SideView<'_>,
     within: Option<&dyn Fn(Hex) -> bool>,
 ) -> Vec<GroundEstimateLine> {
-    view.ground_estimates()
+    crate::common::area_picture(view)
+        .ground_estimates()
         .filter(|e| within.is_none_or(|f| f(e.hex)))
         .map(|e| GroundEstimateLine {
             place: ctx.place(e.hex),
@@ -4458,8 +4459,8 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
         let reach_nm = (group.reach == Reach::Extended).then_some(Dec(reach));
         match group.mission {
             AirMission::NavalStrike => {
-                let nearest = ctx
-                    .view
+                let picture = crate::common::group_picture(&ctx.view, group.id);
+                let nearest = picture
                     .contacts()
                     .map(|c| {
                         (
@@ -4470,8 +4471,7 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
                     })
                     .min();
                 // 8. Contacts in reach, none of a kind on the group's list.
-                let in_reach = ctx
-                    .view
+                let in_reach = picture
                     .contacts()
                     .filter(|c| origin.air_distance_within(c.estimated_hex, reach))
                     .collect::<Vec<_>>();

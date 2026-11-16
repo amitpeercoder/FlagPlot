@@ -114,11 +114,8 @@ impl World {
                 day,
                 received_event: self.events.next_id(),
             };
-            let ApplyOutcome::Estimate { replaced } = self
-                .beliefs
-                .get_mut(&side)
-                .expect("both sides have a belief state")
-                .apply_report(&Report::Ground(report), &search)
+            let ApplyOutcome::Estimate { replaced } =
+                self.apply_report(side, &Report::Ground(report), &search)
             else {
                 unreachable!("a ground report makes or replaces an estimate");
             };
@@ -213,11 +210,8 @@ impl World {
             day,
             received_event: self.events.next_id(),
         };
-        let ApplyOutcome::Cleared { estimate } = self
-            .beliefs
-            .get_mut(&side)
-            .expect("both sides have a belief state")
-            .apply_report(&Report::NoneFound(report), &search)
+        let ApplyOutcome::Cleared { estimate } =
+            self.apply_report(side, &Report::NoneFound(report), &search)
         else {
             unreachable!("a side that holds an estimate has it cleared");
         };
@@ -294,11 +288,8 @@ impl World {
                 day: 0,
                 received_event: staged.events.next_id(),
             };
-            let ApplyOutcome::Estimate { replaced } = staged
-                .beliefs
-                .get_mut(&estimate.side)
-                .expect("both sides have a belief state")
-                .apply_report(&Report::Ground(report), &search)
+            let ApplyOutcome::Estimate { replaced } =
+                staged.apply_report(estimate.side, &Report::Ground(report), &search)
             else {
                 unreachable!("a ground report makes or replaces an estimate");
             };

@@ -286,6 +286,9 @@ impl World {
             causes,
             breakdown,
         );
+        // It stops being a command of the side that lost it and becomes one
+        // of the side that took it (decision 0134, 7).
+        self.base_changed_side(base_id, from);
 
         // Air groups of the beaten side at it are lost whole (decision 20); a
         // group of the side that takes it stays (decision 0101).

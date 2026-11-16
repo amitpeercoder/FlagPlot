@@ -52,6 +52,9 @@ impl World {
                 .location = ShipLocation::TaskForce(id);
         }
         self.truth.task_forces.insert(id, force);
+        // Formed from ships in port: its picture is a copy of the area
+        // command's (decision 0134, 5).
+        self.command_formed(id, crate::pictures::CommandRef::Area);
         EventKind::TaskForceFormed {
             task_force: id,
             side,

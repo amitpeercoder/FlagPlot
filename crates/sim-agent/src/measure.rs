@@ -482,7 +482,7 @@ fn resolve(ctx: &Ctx<'_>, arg: &PlaceArg) -> Option<(Hex, Resolved)> {
                     }
                 }
                 "contact" => {
-                    let contact = ctx.view.contact_by_number(id)?;
+                    let contact = crate::common::area_picture(&ctx.view).contact_by_number(id)?;
                     (
                         contact.estimated_hex,
                         Some(ctx.entity(EntityRef::Contact(contact.id))),

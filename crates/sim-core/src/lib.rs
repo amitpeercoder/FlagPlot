@@ -21,6 +21,7 @@ pub mod ids;
 pub mod map;
 pub mod objectives;
 pub mod orders;
+pub mod pictures;
 pub mod rearm;
 pub mod refdata;
 pub mod repair;
@@ -47,6 +48,8 @@ mod invariants;
 mod landing;
 mod march;
 mod movement;
+#[cfg(test)]
+mod pictures_tests;
 mod preparation;
 #[cfg(test)]
 mod preparation_tests;

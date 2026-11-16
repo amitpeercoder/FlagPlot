@@ -54,7 +54,11 @@ impl SideView<'_> {
                     .map_or(0, |search| search.fresh_contact_max_age_pulses);
                 alert_choice(
                     force,
-                    self.belief.contacts(),
+                    // The force's own picture (decision 0134, 13).
+                    self.picture(crate::pictures::command_of_task_force(
+                        self.truth, force.id,
+                    )?)
+                    .contacts(),
                     figures.alert_contact_distance_hexes,
                     fresh_max_age,
                 )

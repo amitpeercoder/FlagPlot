@@ -1,0 +1,133 @@
+# Scenario 61: commands and their pictures.
+#
+# Decision 0134. This is scenario 58's file with command levels turned on
+# and nothing else changed but the name: the game plays as 58 does, and each
+# Allied command (its area command, task force 1 and base 1) holds the
+# side's picture. The hand calculation is in
+# tests/scenario_61_commands_and_their_pictures.rs. What follows is
+# scenario 58's own note.
+#
+# Scenario 58: a carrier force closes the range.
+#
+# Decision 0130. One placeholder carrier, task force 1, lies stopped at sea
+# at (0,0), full of fuel, on the carrier mission, with Allied base 1 (at
+# (0,5)) as its home port and a fighter group, a scout group and a dive
+# bomber group aboard. The Allied side holds one contact, a carrier 12 hexes
+# (480 nm) to the east, beyond the bombers' reach of 250 nm. The commander
+# states "operate task force 1 from (0,0)" at press and gives both leaves.
+# The staff closes the range at full speed through the night, the bombers
+# strike in the morning, and the force goes back to its hex. There is no
+# enemy unit: the strike finds nothing. The hand calculation is in
+# tests/scenario_58_a_carrier_force_closes.rs. The test runs this file on
+# the frozen step 1 figures with scenario 53's table of aircraft for each
+# ship added, and with variants it builds from the parsed text. The upkeep,
+# wear, fatigue and supply figures are not loaded.
+#
+# PLACEHOLDER DATA. The base, ship, aircraft, figures and map are invented.
+
+name = "Placeholder scenario 61: Commands and their pictures"
+command_levels = true
+placeholder = true
+seed = 1942
+days = 3
+map = "../map/placeholder_a_carrier_force_closes.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# Allied base 1.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 5
+supply_t = 1000
+fuel_t = 5000
+
+# Task force 1: one placeholder carrier, stopped at sea at (0,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force 1"
+side = "allied"
+q = 0
+r = 0
+mission = "carrier"
+home_port = 1
+
+[[ship]]
+id = 1
+name = "Placeholder carrier 1"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+# The groups aboard.
+[[air_group]]
+id = 1
+name = "Placeholder fighters 1"
+side = "allied"
+ship = 1
+aircraft_type = 4
+ready = 12
+
+[[air_group]]
+id = 2
+name = "Placeholder carrier scouts 2"
+side = "allied"
+ship = 1
+aircraft_type = 2
+ready = 6
+
+[[air_group]]
+id = 3
+name = "Placeholder dive bombers 3"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 10
+
+# The contact
+[[contact]]
+side = "allied"
+q = 12
+r = 0
+ship_count = 1
+kind = "carrier"
+age_pulses = 0
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "operate_carriers"
+task_force = 1
+hex = [0, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "risk"
+intent = 1
+risk = "press"
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

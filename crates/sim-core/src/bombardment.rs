@@ -761,11 +761,8 @@ impl World {
             &search,
             self.events.next_id(),
         );
-        let ApplyOutcome::Contact(outcome) = self
-            .beliefs
-            .get_mut(&base_side)
-            .expect("both sides have a belief state")
-            .apply_report(&Report::Sighting(report.clone()), &search)
+        let ApplyOutcome::Contact(outcome) =
+            self.apply_report(base_side, &Report::Sighting(report.clone()), &search)
         else {
             unreachable!("a sighting report makes or refreshes a contact");
         };
@@ -846,11 +843,7 @@ impl World {
             from_bombardment: true,
             received_event: self.events.next_id(),
         };
-        let outcome = self
-            .beliefs
-            .get_mut(&side)
-            .expect("both sides have a belief state")
-            .apply_report(&Report::BattleClaim(claim.clone()), &search);
+        let outcome = self.apply_report(side, &Report::BattleClaim(claim.clone()), &search);
         assert_eq!(outcome, ApplyOutcome::Claim, "a claim is stored as a claim");
         let breakdown = self.config.record_breakdowns.then(|| Breakdown {
             factors: vec![

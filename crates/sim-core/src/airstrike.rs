@@ -851,7 +851,7 @@ impl World {
             // groups before it have sent in this pulse.
             let sent = sent_at_contacts(&self.strikes_in_flight, group.side);
             let chosen = naval_strike_launch(
-                &self.beliefs[&group.side],
+                self.picture(group.side, self.command_of_group(group.id)),
                 &group,
                 origin,
                 reach_nm,
@@ -1456,11 +1456,8 @@ impl World {
                 } => {
                     // Decision 0028: the side learns the hex was empty, and
                     // drops the contact if it still names that hex.
-                    let dropped = self
-                        .beliefs
-                        .get_mut(&side)
-                        .expect("both sides have a belief state")
-                        .apply_report(&Report::NothingThere { contact, hex }, &search);
+                    let dropped =
+                        self.apply_report(side, &Report::NothingThere { contact, hex }, &search);
                     if dropped == ApplyOutcome::Dropped {
                         self.events.record(
                             day,
@@ -1516,11 +1513,8 @@ impl World {
                 &search,
                 self.events.next_id(),
             );
-            let ApplyOutcome::Contact(outcome) = self
-                .beliefs
-                .get_mut(&attack.side)
-                .expect("both sides have a belief state")
-                .apply_report(&Report::Sighting(report.clone()), &search)
+            let ApplyOutcome::Contact(outcome) =
+                self.apply_report(attack.side, &Report::Sighting(report.clone()), &search)
             else {
                 unreachable!("a sighting report makes or refreshes a contact");
             };
@@ -1662,11 +1656,7 @@ impl World {
                     from_bombardment: false,
                     received_event: self.events.next_id(),
                 };
-                let outcome = self
-                    .beliefs
-                    .get_mut(&side)
-                    .expect("both sides have a belief state")
-                    .apply_report(&Report::BattleClaim(claim.clone()), &search);
+                let outcome = self.apply_report(side, &Report::BattleClaim(claim.clone()), &search);
                 assert_eq!(outcome, ApplyOutcome::Claim, "a claim is stored as a claim");
                 let breakdown = self.config.record_breakdowns.then(|| {
                     let mut factors = vec![
