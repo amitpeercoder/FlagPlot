@@ -41,6 +41,14 @@ Rules of control:
 - **Explain:** any staff order answers "why" with the intent it serves and the constraint that shaped it.
 - **Interrupt:** the player defines what stops the clock between days, such as a sighting of carriers, a base falling below supply, or a plan the staff cannot meet.
 
+## Since these pillars were written
+
+Three directions of the designer, of Nov 15 and 16, 2026, each recorded where the detail is. They sharpen pillars 1, 2 and 5 and change none of the five.
+
+- **An intent is an end, and intents form a tree** (decision 0116). The player states a state of the world he wants; the staff forms the tasks under it and the orders under them. The tree of an end with its order in time is the plan. The table above reads as levels of one tree.
+- **A staff at every level, each on its own picture** (`docs/design/command-levels.md`, decision 0119). Each commander interprets and splits the intent he is given. Levels differ in what they know and in what they report, of the enemy and of their own forces. Commanders differ in initiative. It is built as its own stage of step 3.
+- **A seat at any level.** A player may later take a role, see what that level sees, and carry out the intents of the levels above. "Anything can be grabbed" then means sitting where that commander sits.
+
 ## Cuts
 
 These are left out on purpose. Each one protects a pillar or keeps the scope survivable.
