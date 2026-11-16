@@ -23,6 +23,7 @@ mod air;
 pub mod carrier;
 mod deny;
 mod doctrine;
+mod escort;
 mod fleet;
 mod handin;
 mod morning;
