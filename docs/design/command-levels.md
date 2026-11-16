@@ -77,6 +77,10 @@ The size of a strike (decision 0118) is the first case. The admiral gives the ca
 - **A role chosen for a whole game** is the same thing held: a task force commander under a staff-played area commander, receiving intents and splitting them.
 - **The umpire's view is unchanged:** the replay viewer and the validation harness show the truth.
 
+## Seats
+
+Added on Nov 16, 2026, by the designer's direction, recorded as decision 0129. Each level of a side is a seat. A player, who may be a person or a model, may fill one seat or several, and the game's own staff fills every seat no one takes. A seat is given its level's picture, the intents addressed to it with what bears on them and their reasons, and its own forces; it hands in intents for the levels below, orders for its own units, and reasons where it gives them. The game writes a seat's reports and the occupant may add a note. A model in a seat hears only through the game; for people, talk outside the game is a house rule. An intent handed down takes effect the following day, and all the seats of a side plan at once.
+
 ## What is missing
 
 - **A picture for each command** in place of one for each side: in the state, the hash and the saved game. Tens of pictures a side, most of them small.
