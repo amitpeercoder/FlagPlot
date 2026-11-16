@@ -138,6 +138,7 @@ function checkSideViews(replay, umpireModel) {
     assert(seen.size === sv.events.length, label + ': not every side event is in a step');
     if (replay.steps) {
       checkCommand(replay, model, label + ' command', [side]);
+      checkSituation(replay, model, label + ' situation', side);
       // nothing of the other side's command state, orders or reasons is in the page
       const enemy = Core.SIDES.find(x => x !== side);
       assert(!sr.steps.some(e => e.commands && Object.keys(e.commands).some(k => k !== side)) && !(sr.final.commands && Object.keys(sr.final.commands).some(k => k !== side)), label + ': the side\'s steps or final hold the ' + enemy + '\'s command state');
@@ -457,6 +458,102 @@ function checkCommand(replay, model, label, sides) {
   return notes;
 }
 
+
+// ---- Land units, bases, intents on the map and staff notices (the situation at a step) ----
+const hexDist = (a, b) => { const dq = a[0] - b[0], dr = a[1] - b[1]; return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2; };
+/** The counters, the base panel, the drawing of each intent and the notices, against the file's own records. `sides` is the sides the page holds. */
+function checkSituation(replay, model, label, side) {
+  const last = model.states.length - 1, enemy = side ? Core.SIDES.find(x => x !== side) : null;
+  const note = { units: 0, drawn: 0, aboard: 0, gone: 0, bases: 0, shapes: 0, notices: 0 };
+  // Every land unit in the state is drawn at its hex or accounted as aboard a ship (or gone, with no men), at every step.
+  model.states.forEach((st, si) => {
+    const lay = Core.landLayer(model, si, side ? [side] : Core.SIDES);
+    const drawn = lay.stacks.reduce((n, k) => n + k.units.length, 0);
+    assert(drawn + lay.aboard.length + lay.gone.length === st.landUnits.size, label + ': step ' + si + ': ' + st.landUnits.size + ' land units but ' + drawn + ' drawn, ' + lay.aboard.length + ' aboard, ' + lay.gone.length + ' gone');
+    for (const k of lay.stacks) for (const u of k.units) assert(u.hex[0] === k.q && u.hex[1] === k.r && u.side === k.side && u.men_ashore > 0, label + ': step ' + si + ': land_unit:' + u.id + ' is in a stack it is not at');
+    for (const u of lay.gone) assert(u.men_ashore === 0 || !u.hex, label + ': step ' + si + ': land_unit:' + u.id + ' has men ashore and is not drawn');
+    for (const u of lay.aboard) assert(lay.aboardMap.get(u.id).men > 0, label + ': land_unit:' + u.id + ' aboard with no men');
+    note.units += st.landUnits.size; note.drawn += drawn; note.aboard += lay.aboard.length; note.gone += lay.gone.length;
+    if (side) {
+      for (const k of lay.stacks) assert(k.side === side, label + ': an enemy land unit is drawn on the ' + side + ' page');
+      for (const e of lay.estimates) assert(e.side === side && e.of === enemy, label + ': an estimate that is not the page\'s own belief');
+      if (st.rec) { for (const b of st.rec.bases.values()) assert(b.side === side, label + ': the base record of the ' + b.side + ' is on the ' + side + ' page'); for (const u of st.rec.land.values()) assert(u.side === side, label + ': an enemy land unit record on the ' + side + ' page'); }
+      for (const b of model.bases.values()) {
+        const fig = Core.baseFigures(model, si, b.id);
+        if (fig && fig.side !== side && !(st.rec && st.rec.bases.has(b.id))) assert(!fig.known && fig.supply === undefined && fig.fuel === undefined && fig.ammunition === undefined && fig.daysOfSupply === undefined && fig.groups.every(g => g.side === side) && fig.ships.length === 0, label + ': the ' + side + ' page holds stock or units of the enemy base ' + b.id + ' at step ' + si);
+      }
+    }
+  });
+  // The drawn counters at the last step are the final state's land units with men ashore.
+  const fin = (replay.final.land_units || []).filter(u => !side || u.side === side);
+  const lay = Core.landLayer(model, last, Core.SIDES);
+  const wantDrawn = fin.filter(u => u.hex && u.men_ashore > 0).map(u => u.id).sort((a, b) => a - b);
+  const haveDrawn = lay.stacks.flatMap(k => k.units.map(u => u.id)).sort((a, b) => a - b);
+  assert(JSON.stringify(wantDrawn) === JSON.stringify(haveDrawn), label + ': the counters at the last step are not the final state\'s land units ashore');
+  // Each estimate drawn is the side's final estimate of that hex.
+  for (const sd of side ? [side] : Core.SIDES) {
+    const fe = ((replay.final.ground_estimates || {})[sd] || []).map(e => e.hex.join(',') + ':' + e.men).sort();
+    const he = Core.landLayer(model, last, [sd]).estimates.map(e => e.q + ',' + e.r + ':' + e.men).sort();
+    assert(JSON.stringify(fe) === JSON.stringify(he), label + ': ' + sd + ' estimates drawn differ from final');
+  }
+  // The base panel's figures at the last step equal `final`'s records.
+  for (const fb of replay.final.bases || []) {
+    if (side && fb.side !== side) continue;
+    const fig = Core.baseFigures(model, last, fb.id);
+    note.bases++;
+    if (!fig) { fail(label + ': no base panel for base:' + fb.id); continue; }
+    const n = x => x === undefined ? 0 : x;
+    const same = fig.known && fig.side === fb.side && fig.supply === n(fb.supply) && fig.fuel === n(fb.fuel) && fig.ammunition === n(fb.ammunition) && fig.supplyReserve === n(fb.supply_reserve) && fig.fuelReserve === n(fb.fuel_reserve) &&
+      fig.daysOfSupply === (fb.days_of_supply === undefined ? null : fb.days_of_supply) && fig.airfieldDamage === n(fb.airfield_damage) && fig.airfieldClosed === !!fb.airfield_closed && fig.airfield === (fb.airfield !== false) && fig.defences === n(fb.defences);
+    assert(same, label + ': base:' + fb.id + ' panel differs from final: ' + JSON.stringify(fig).slice(0, 160) + ' vs ' + JSON.stringify(fb).slice(0, 160));
+    const tr = Core.baseTrouble(fig);
+    assert(tr.closed === !!(fb.airfield !== false && fb.airfield_closed) && tr.low === (fb.days_of_supply !== undefined && fb.days_of_supply < 7), label + ': base:' + fb.id + ' trouble mark wrong');
+    // The air groups listed there are those whose final record is at the base, the ships those in its port.
+    const gs = (replay.final.air_groups || []).filter(g => g.base === fb.id && (!side || g.side === side)).map(g => g.id).sort((a, b) => a - b);
+    assert(JSON.stringify(gs) === JSON.stringify(fig.groups.map(g => g.id)), label + ': base:' + fb.id + ' lists air groups ' + fig.groups.map(g => g.id) + ', final has ' + gs);
+    const ps = (replay.final.ships || []).filter(x => x.location && x.location.port === fb.id).map(x => x.id).sort((a, b) => a - b);
+    assert(JSON.stringify(ps) === JSON.stringify(fig.ships.map(x => x.id)), label + ': base:' + fb.id + ' lists ships in port ' + fig.ships.map(x => x.id) + ', final has ' + ps);
+  }
+  // Each intent draws what it means, and the enemy's intents are not on a side's page.
+  if (model.commandStates) {
+    const held = model.commandStates[last] || {};
+    for (const sd of Core.SIDES) {
+      for (const it of (held[sd] && held[sd].intents) || []) {
+        const res = Core.intentShapes(model, last, sd, it.id);
+        note.shapes += res.shapes.length;
+        const kinds = res.shapes.map(x => x.type);
+        if (side && sd !== side) { fail(label + ': the ' + sd + '\'s intent ' + it.id + ' is on the ' + side + ' page'); continue; }
+        if (it.kind === 'deny') {
+          const a = res.shapes.find(x => x.type === 'area');
+          const want = replay.map.hexes.filter(h => hexDist([h.q, h.r], it.hex) <= it.distance).length;
+          assert(a && a.hexes.length === want && a.edges.length >= 1, label + ': deny intent ' + it.id + ' outlines ' + (a && a.hexes.length) + ' hexes, the map has ' + want + ' within ' + it.distance);
+          if (a) for (const [h, d] of a.edges) { const dir = replay.directions[d]; assert(!a.hexes.some(x => x[0] === h[0] + dir[0] && x[1] === h[1] + dir[1]), label + ': an outline edge has a hex of the waters beyond it'); }
+        } else if (it.kind === 'stand_at' || it.kind === 'operate_carriers') assert(kinds.includes('ring') && res.shapes.find(x => x.type === 'ring').hex.join() === it.hex.join(), label + ': intent ' + it.id + ' does not ring its station');
+        else if (it.kind === 'raid') assert(res.shapes.some(x => x.type === 'line') && kinds.includes('ring'), label + ': raid ' + it.id + ' draws no line to its target');
+        else if (it.kind === 'hold' || it.kind === 'cover' || it.kind === 'keep_supplied') assert(kinds.includes('ring'), label + ': intent ' + it.id + ' does not ring its base');
+      }
+    }
+  }
+  // Every staff notice is flagged on the node it concerns, at its own step; the tab's count is the day's.
+  model.events.filter(e => e.kind === 'staff_notice').forEach(ev => {
+    const si = model.stepOfEvent.get(ev.id), view = Core.commandView(model, si).find(v => v.side === ev.data.side);
+    note.notices++;
+    const flagged = view && [...view.nodes.values()].some(n => n.notices.some(x => x.event === ev.id));
+    assert(flagged, label + ': staff notice #' + ev.id + ' (' + ev.data.notice + ') is not flagged on a node at its step');
+    const plan = view && view.nodes.size ? (model.commandStates[si][ev.data.side].plans || []).find(p => p.id === ev.data.plan) : null;
+    assert(plan && view.nodes.get(plan.intent) && view.nodes.get(plan.intent).notices.some(x => x.event === ev.id), label + ': staff notice #' + ev.id + ' is flagged on a node other than its plan\'s intent');
+    assert(Core.noticesOfDay(model, si).some(x => x.event === ev.id), label + ': the day\'s notices miss #' + ev.id);
+  });
+  model.steps.forEach((s, si) => {
+    const want = model.events.filter(e => e.kind === 'staff_notice' && e.day === s.day && model.stepOfEvent.get(e.id) <= si).length;
+    assert(Core.noticesOfDay(model, si).length === want, label + ': step ' + si + ' counts ' + Core.noticesOfDay(model, si).length + ' notices, expected ' + want);
+    const nx = Core.nextNoticeStep(model, si);
+    const expect = model.steps.findIndex((t, j) => j > si && t.events.some(ei => model.events[ei].kind === 'staff_notice'));
+    assert(nx === expect, label + ': next notice from step ' + si + ' is ' + nx + ', expected ' + expect);
+  });
+  return note;
+}
+
 // ---- One replay ----
 let currentFile = '';
 function checkReplay(file) {
@@ -564,11 +661,13 @@ function checkReplay(file) {
   checkOlder(replay);
   if (replay.steps) checkWithdrawn(replay);
   const cmdNotes = replay.steps ? checkCommand(replay, model, 'umpire command', Core.SIDES) : null;
+  const sit = replay.steps ? checkSituation(replay, model, 'umpire situation', null) : null;
   const sideNote = (replay.side_views ? checkSideViews(replay, model) : 'no side views (version ' + replay.version + ')') + (cmdNotes && cmdNotes.intents ? ', command: ' + cmdNotes.intents + ' intents, ' + cmdNotes.orders + ' orders, ' + cmdNotes.reasons + ' reasons' + (cmdNotes.stray ? ' (' + cmdNotes.stray + ' staff orders with no reason)' : '') : '');
 
   const s = Core.summarize(model);
   const unclosed = new Set(replay.events.map(e => e.kind));
   console.log('  steps ' + s.steps + ', events ' + s.events + ', forces ' + s.forces + ', contacts at end ' + s.contacts + ', labels placed ' + s.labels + '/' + replay.labels.length +
+    (sit ? ', land ' + sit.drawn + ' drawn/' + sit.aboard + ' aboard/' + sit.gone + ' gone of ' + sit.units + ' unit-steps, bases ' + sit.bases + ', intent shapes ' + sit.shapes + ', notices ' + sit.notices : '') +
     ', hexes ' + replay.map.hexes.length + ', edges checked ' + g.edges + ', one-sided closed marks ' + g.oneSided + ', event kinds ' + unclosed.size + ', ' + sideNote +
     (failures === before ? '  OK' : '  FAILED'));
 }
@@ -583,6 +682,12 @@ function checkOlder(replay) {
     const m = Core.buildModel(r);
     assert(Core.commandView(m, m.steps.length - 1).length === 0, 'older replay (' + name + ') shows a command view');
     assert(Core.eventsServing(m, 'allied', 1).size === 0, 'older replay (' + name + ') has events serving an intent');
+    // The land layer, the base panel and the drawing of an intent open on an older file, without the per-step records.
+    const lastIx = m.states.length - 1;
+    assert(Core.landLayer(m, lastIx, Core.SIDES).stacks.length >= 0 && m.states.every(st => st.rec === null || name.startsWith('version 4')), 'older replay (' + name + ') land layer');
+    for (const b of m.bases.values()) assert(Core.baseFigures(m, lastIx, b.id) !== null, 'older replay (' + name + ') has no base panel for base:' + b.id);
+    if (name.startsWith('version 3')) for (const b of m.bases.values()) assert(!Core.baseFigures(m, lastIx, b.id).known, 'older replay (' + name + ') claims base records it does not hold');
+    for (const sd of Core.SIDES) for (const it of (((r.final || {}).commands || {})[sd] || { intents: [] }).intents) Core.intentShapes(m, lastIx, sd, it.id);
     for (const side of Core.SIDES) { const sr = Core.sideReplay(r, side); if (sr) { const sm = Core.buildModel(sr); assert(Core.commandView(sm, 0).length === 0, 'older replay (' + name + ') ' + side + ' page shows a command view'); } }
   }
 }
@@ -708,7 +813,7 @@ function synthetic() {
     else console.log('  ok: rejects ' + name + ': ' + msg);
   };
   reject('wrong format', Object.assign(base(), { format: 'something-else' }), 'format');
-  reject('version 5', Object.assign(base(), { version: 5 }), '1, 2, 3 and 4');
+  reject('version 6', Object.assign(base(), { version: 6 }), '1, 2, 3, 4 and 5');
   reject('version 2 without side views', Object.assign(base(), { version: 2 }), 'side_views');
   reject('version 3 without side views', Object.assign(base(), { version: 3, aircraft_types: [] }), 'side_views');
   reject('version 2 with a side event without its number', Object.assign(base(), { version: 2, side_views: { allied: { events: [{ log_id: 1, day: 1, kind: 'x' }] }, japanese: { events: [] } } }), 'allied');

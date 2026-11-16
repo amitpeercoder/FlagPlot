@@ -91,7 +91,7 @@ fn every_scenario_exports_what_the_world_logged() {
         assert!(bytes.ends_with(b"\n"), "{scenario}: no trailing newline");
         let replay = parse(&bytes);
         assert_eq!(replay["format"], "flagplot-replay");
-        assert_eq!(replay["version"], 4);
+        assert_eq!(replay["version"], 5);
         assert_eq!(replay["scenario"]["path"], scenario.as_str());
 
         // Run as the exporter runs it: each side's staff is asked.
@@ -660,7 +660,7 @@ fn a_recorded_game_exports_with_the_hashes_it_saved() {
     let bytes = export("recorded", save, &[]);
     let replay = parse(&bytes);
     assert_eq!(replay["format"], "flagplot-replay");
-    assert_eq!(replay["version"], 4);
+    assert_eq!(replay["version"], 5);
     let title = replay["scenario"]["name"].as_str().expect("a title");
     assert!(title.ends_with(&format!("(saved game {save})")), "{title}");
     // The hashes are those the game saved.
