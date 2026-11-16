@@ -1,10 +1,10 @@
 # 0132: Step 3, stage 2b: command levels, in five steps
 
-Status: a plan by the architect, written on Nov 16, 2026, for the designer's approval, as the spec asks of every stage (`docs/step3-spec.md`, "Built in stages"). It plans the stage decision 0119 added, from the designer's direction in `docs/design/command-levels.md` and his answers in decisions 0119 and 0129. Nothing is built. Each step has its own decision record and hand calculation before any code.
+Status: a plan by the architect, written on Nov 16, 2026, for the designer's approval, as the spec asks of every stage (`docs/step3-spec.md`, "Built in stages"). It plans the stage decision 0119 added, from the designer's direction in `docs/design/command-levels.md` and his answers in decisions 0119 and 0129. Confirmed by the designer on Nov 16, 2026, with his answers to its four questions (the last section). Nothing is built. Each step has its own decision record and hand calculation before any code.
 
 Summary: A plan for step 3, stage 2b: each task force and each base becomes a command with its own picture of the enemy, changed only by what it sees and what is reported to it; reports travel up, down and between neighbours in radio reach, on time, a pulse late or lost; a superior knows his forces as last reported, and a force may keep radio silence; a commander has an initiative rating read by one rule; a scenario turns command levels on, and with them off every game plays as it does today; refusal and relief are left out
 
-Standing: A plan for the designer's approval, Nov 16, 2026. Not confirmed. Not built
+Standing: Confirmed by the designer, Nov 16, 2026, with his four answers; on radio silence he differed from the architect: the staff or a scenario may set it. Not built
 
 ## What stage 2b is
 
@@ -52,7 +52,7 @@ Each step is one decision record, one hand calculation, one pull request. Each l
 | --- | --- | --- |
 | 1 | The chain of command as data, the switch, a picture for each command, and a view for a command as `SideView` is for a side. Every report arrives at once, so that with command levels on a game plays exactly as with them off | The same orders and the same hash, on and off, in two staffed scenarios |
 | 2 | The enemy picture by command: own sight, reports up, sideways and down, on time, late or lost. Every rule that reads belief reads its own command's: the strike decision, the search arcs, each doctrine | Two task forces and a base: a sighting reaches one force a pulse before the other, the first strikes and the second does not, and each reason says what its command held |
-| 3 | A superior's knowledge of his forces by report, and radio silence: a setting of a force, set by the staff from the risk of its task; a silent force sends nothing and hears everything | An area staff that routes a supply run on where it last heard its escort was; a silent carrier force its superior holds a day stale |
+| 3 | A superior's knowledge of his forces by report, and radio silence: a setting of a force, set by the staff from the risk of its task or by a scenario; a silent force sends nothing and hears everything | An area staff that routes a supply run on where it last heard its escort was; a silent carrier force its superior holds a day stale |
 | 4 | Commanders as data, and initiative read by one rule (below) | A bold and a cautious commander given the same sighting of their own |
 | 5 | The tools and the proof: `command_state` and `why` by command, the agent interface able to sit at a command and be given its picture, the viewer able to show one command's picture beside the truth; then the proof | The proof below |
 
@@ -92,7 +92,7 @@ Nothing is tuned to pass. A failure is reported with its cause from the staff's 
 - **Fitting the tuned battles again** with command levels on.
 - **People or models in several seats of one side** (decision 0129): step 5 gives a seat its picture; handing intents down from a seat that is not the area's, and several players on a side, come with the interface, after the kill gate.
 - **A finer clock** than the three pulses.
-- **The enemy listening** to radio traffic, which is what silence is for. It is in `docs/design/intelligence.md`. Until it is built silence costs a superior his knowledge and buys nothing, so the staff sets it only where a scenario says, and step 3's record says so.
+- **The enemy listening** to radio traffic, which is what silence is for. It is in `docs/design/intelligence.md`. Until it is built silence costs a superior his knowledge and buys nothing. The designer's answer of Nov 16, 2026 is that the staff may set it, by its doctrine, and a scenario may; step 3's record writes the doctrine and says what silence costs and does not yet buy.
 
 ## What it costs
 
@@ -108,9 +108,13 @@ Nothing is tuned to pass. A failure is reported with its cause from the staff's 
 - **Legibility gets harder first:** a reason must say who knew what. Condition 5 is there for it.
 - **The pulse is coarse:** a report is on time or a third of a day late.
 
-## Questions for the designer
+## The designer's answers, Nov 16, 2026
 
-1. **The switch.** Command levels are on only where a scenario says, and every battle already tuned stays off until a later decision. The architect recommends it: nothing already proved moves.
-2. **Initiative in one rule,** as the table above has it, built as step 4. The architect recommends building it, last, and judging the stage without it. The other course is to leave the rating out with refusal and relief.
-3. **Silence with no enemy listening.** The architect recommends building the setting in step 3 and having the staff set it only where a scenario says, until the intelligence layer gives it a use.
-4. **The pass marks,** above: 200 of 1,000 seeds for condition 4, 10 of 12 for condition 5, three times for speed.
+Put to him one at a time, with a recommendation on each.
+
+1. **The switch:** command levels are on only where a scenario says, and every battle already tuned stays off until a later decision. As recommended.
+2. **Initiative in one rule,** as the table has it, built as step 4, last, with the stage judged without it. As recommended.
+3. **Radio silence may be set by the staff or by the scenario.** The architect had recommended that the staff set it only where a scenario says, since nothing yet listens to radio traffic. So step 3 writes a doctrine by which the staff sets silence from the risk of a force's task, and a scenario may set it too.
+4. **The pass marks stand:** 200 of 1,000 seeds for condition 4, 10 of 12 for condition 5, three times for speed.
+
+Refusal and relief were left out by his word of the same day, before the plan was written.
