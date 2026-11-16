@@ -40,6 +40,7 @@ use sim_core::command::{
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{BaseId, ShipId, TaskForceId};
+use sim_core::pictures::CommandRef;
 use sim_core::view::SideView;
 use std::collections::BTreeSet;
 
@@ -49,7 +50,7 @@ use crate::morning::{priority_order, protected_for_others, Morning, TakenRun};
 use crate::planner::DEFAULT_INTERVAL_DAYS;
 use crate::planner::{Blocker, Evaluation, Params, Planner, RunPlan, Timing, Unit};
 use crate::projection::Readings;
-use crate::reasons::{hold_words, plan_for, serving, ReasonBuilder};
+use crate::reasons::{as_of_note, hold_words, plan_for, serving, ReasonBuilder};
 use crate::route::route_between;
 use crate::units::{days_word, over, tons, whole};
 
@@ -74,6 +75,11 @@ pub(crate) struct Served {
 
 /// The staff's decisions for the day, from the view alone.
 pub(crate) fn decide(view: SideView<'_>) -> StaffDecisions {
+    // The supply doctrine is addressed to the area: it reads the side's
+    // units as the area command holds them (decision 0136, 9). With no
+    // report figures, or command levels off, that is the side's own view.
+    let known = view.known_to(CommandRef::Area);
+    let view = known.view();
     let state = view.command_state();
     let fleet = Fleet::of(&view);
     let mut out = Out::default();
@@ -916,8 +922,9 @@ fn new_run(
         let mut b = serving(intent, plan)
             .evidence(
                 format!(
-                    "{} holds {} and uses {} a day",
+                    "{}{} holds {} and uses {} a day",
                     params.destination,
+                    as_of_note(planner.view, CommandRef::Base(params.destination)),
                     tons(stock_today),
                     tons(use_today)
                 ),
@@ -1289,8 +1296,9 @@ fn idle_reason(
     let next = planner.next_needed(readings, from, &units, idle.pending_t);
     let mut builder = serving(params.intent, params.plan).evidence(
         format!(
-            "{} holds {} and uses {} a day",
+            "{}{} holds {} and uses {} a day",
             params.destination,
+            as_of_note(planner.view, CommandRef::Base(params.destination)),
             tons(stock),
             tons(used)
         ),

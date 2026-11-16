@@ -120,7 +120,14 @@ use sim_core::view::SideView;
 /// search is flown once a day at preserve the force alone, and in both
 /// daylight pulses at balanced and at press; a base's cover and its search
 /// of waters are as `supply-16` had them.
-pub const DOCTRINE_VERSION: &str = "supply-17";
+/// `supply-18` adds decision 0136: every doctrine addressed to the area
+/// reads the side's own units as the area command holds them, with the
+/// moment a held state is of in a reason where it is not the pulse just ended,
+/// and a carrier force and a surface force that stands by night are set to
+/// radio silence at preserve the force where report figures are loaded. With
+/// no report figures, or command levels off, the orders and reasons are those
+/// `supply-17` gave.
+pub const DOCTRINE_VERSION: &str = "supply-18";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

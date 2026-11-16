@@ -1073,6 +1073,12 @@ impl Day<'_, '_> {
                             .done(),
                     );
                 }
+                // Radio silence at preserve the force (decision 0136, 18).
+                if let Some((order, reason)) =
+                    crate::stand::silence_order(view, task, &plan, id, risk, today)
+                {
+                    give(&mut orders, order, reason);
+                }
                 if let Some((waypoints, speed, reason)) = route {
                     if let Some(speed) = speed.filter(|s| *s != force.speed) {
                         give(&mut orders, TaskForceOrder::SetSpeed(speed), reason.clone());
