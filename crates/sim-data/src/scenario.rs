@@ -438,6 +438,9 @@ struct TaskForceSpec {
     /// The command this force is placed under, if not its side's area
     /// command (decision 0134, 4). Needs `command_levels = true`.
     superior: Option<SuperiorSpec>,
+    /// Whether the force keeps radio silence from the start (decision 0136,
+    /// 15). Defaults to false. It has an effect only where reports travel.
+    radio_silence: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -1058,6 +1061,9 @@ pub struct Scenario {
     /// The superiors the scenario names, when command levels are on
     /// (decision 0134); `None` when they are off.
     command_levels: Option<Vec<NamedSuperior>>,
+    /// The task forces that start on radio silence (decision 0136, 15), kept
+    /// so that a world built afresh for another seed has them too.
+    radio_silent: Vec<TaskForceId>,
     /// Every file the scenario names, as the paths it reads them from, in a
     /// fixed order (decision 0043, 9).
     data_files: Vec<PathBuf>,
@@ -2585,6 +2591,16 @@ impl Scenario {
             }
             None
         };
+        let mut radio_silent = Vec::new();
+        for spec in &file.task_force {
+            if spec.radio_silence == Some(true) {
+                let force = TaskForceId::new(spec.id);
+                world
+                    .keep_radio_silence_from_the_start(force)
+                    .map_err(|e| fail(e.to_string()))?;
+                radio_silent.push(force);
+            }
+        }
         if let Some(spec) = &file.objectives {
             let objectives =
                 build_objectives(spec, file.days, world.ref_data().surface_combat.is_some())
@@ -2637,6 +2653,7 @@ impl Scenario {
             contacts,
             estimates,
             command_levels,
+            radio_silent,
             data_files,
         })
     }
@@ -2701,6 +2718,9 @@ impl Scenario {
         if let Some(named) = &self.command_levels {
             world.turn_command_levels_on(named)?;
         }
+        for force in &self.radio_silent {
+            world.keep_radio_silence_from_the_start(*force)?;
+        }
         world.hold_starting_contacts(self.contacts.clone())?;
         world.hold_starting_estimates(self.estimates.clone())?;
         if let Some(objectives) = self.world.objectives() {
@@ -2716,6 +2736,7 @@ impl Scenario {
             contacts: self.contacts.clone(),
             estimates: self.estimates.clone(),
             command_levels: self.command_levels.clone(),
+            radio_silent: self.radio_silent.clone(),
             data_files: self.data_files.clone(),
         })
     }

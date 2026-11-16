@@ -99,6 +99,9 @@ fn text(kind: &OrderKind) -> String {
                 format!("escort {charge} and keep station on it")
             }
             TaskForceOrder::Escort(None) => "clear the charge".to_string(),
+            // Decision 0136, 15.
+            TaskForceOrder::SetRadioSilence { on: true } => "keep radio silence".to_string(),
+            TaskForceOrder::SetRadioSilence { on: false } => "end radio silence".to_string(),
         },
         OrderKind::Base { order, .. } => match order {
             BaseOrder::FormTaskForce { ships } => {

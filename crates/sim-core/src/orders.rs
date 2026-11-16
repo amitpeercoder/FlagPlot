@@ -560,6 +560,15 @@ pub enum TaskForceOrder {
     /// station on it and takes no route order. Cleared, it stops where it
     /// is. Added at the end.
     Escort(Option<TaskForceId>),
+    /// Set the force's radio silence on or off (decision 0136, 15). A
+    /// setting of its own: it touches no route, cargo or other order, and is
+    /// not an order that takes the force out of the staff's hands (decision
+    /// 0107, ruling 23). Taken whatever the command levels, it has an effect
+    /// only where reports travel. Turned off, the reports the force kept are
+    /// dropped. Added at the end.
+    SetRadioSilence {
+        on: bool,
+    },
 }
 
 /// An order to a base of the side (decision 0111). Added with the first.

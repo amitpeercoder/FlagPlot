@@ -51,13 +51,27 @@ pub struct ReportInFlight {
     pub(crate) arrives: (u32, Pulse),
 }
 
+/// A report a silent force made and has not sent (decision 0136, 17): what
+/// sending it later needs. Hashed.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct UnsentReport {
+    /// The report as it is passed: "nothing there" by hex.
+    pub(crate) report: Report,
+    /// The report's event.
+    pub(crate) key: EventId,
+    /// The day and pulse it was made; `None` for a report of an end-of-day
+    /// phase, counted as made in the afternoon.
+    pub(crate) day: u32,
+    pub(crate) pulse: Option<Pulse>,
+}
+
 /// A moment as a number of pulses from day 1's night.
-fn ordinal(day: u32, pulse: Pulse) -> u64 {
+pub(crate) fn ordinal(day: u32, pulse: Pulse) -> u64 {
     u64::from(day) * 3 + pulse.code() - 1
 }
 
 /// The pulse after `(day, pulse)`.
-fn next_pulse(day: u32, pulse: Pulse) -> (u32, Pulse) {
+pub(crate) fn next_pulse(day: u32, pulse: Pulse) -> (u32, Pulse) {
     match pulse {
         Pulse::Night => (day, Pulse::Morning),
         Pulse::Morning => (day, Pulse::Afternoon),
@@ -92,7 +106,7 @@ fn aged(report: &Report, pulses: u64) -> Report {
 
 /// What a draw of one listener gave: the arrival and the chances it was
 /// compared with.
-fn arrival_of(chances: PassingChances, roll: i64) -> Arrival {
+pub(crate) fn arrival_of(chances: PassingChances, roll: i64) -> Arrival {
     if roll < chances.on_time.raw() {
         Arrival::OnTime
     } else if roll < (chances.on_time + chances.late).raw() {
@@ -131,27 +145,55 @@ impl World {
                 self.area_sends_down(side, &report, key, made, now, None, None);
                 continue;
             }
-            let Some(superior) = self.chain.as_ref().expect("on")[&side][&sender].superior() else {
-                continue;
-            };
-            let mut listeners = vec![(superior, Direction::Up)];
-            listeners.extend(
-                self.within_reach(side, sender)
-                    .into_iter()
-                    .map(|command| (command, Direction::Sideways)),
-            );
-            let sent = self.send(side, &report, key, made, now, sender, &listeners, None);
-            if sent.area_first_held {
-                self.area_sends_down(
-                    side,
-                    &report,
-                    key,
-                    made,
-                    now,
-                    Some(sender),
-                    Some(sent.event),
-                );
+            // A silent force sends nothing of its own until it breaks
+            // silence (decision 0136, 16): the report is kept.
+            if let CommandRef::TaskForce(force) = sender {
+                if self.radio_silent.contains(&force) && !self.broke_silence.contains(&force) {
+                    self.unsent_reports
+                        .entry(force)
+                        .or_default()
+                        .push(UnsentReport {
+                            report: report.clone(),
+                            key,
+                            day,
+                            pulse,
+                        });
+                    continue;
+                }
             }
+            self.send_own_report(side, sender, &report, key, made, now);
+        }
+    }
+
+    /// A command sends a report of its own: up to its superior, sideways to
+    /// every command within its radio reach and, once the area command first
+    /// holds it, down. The one place a command's own report is sent, now or,
+    /// for a silent force's, later (decision 0136, 17). `made` is when the
+    /// report was made and `now` the moment of sending.
+    pub(crate) fn send_own_report(
+        &mut self,
+        side: Side,
+        sender: CommandRef,
+        report: &Report,
+        key: EventId,
+        made: (u32, Pulse),
+        now: (u32, Option<Pulse>),
+    ) {
+        let Some(superior) = self.chain.as_ref().expect("on")[&side]
+            .get(&sender)
+            .and_then(|post| post.superior())
+        else {
+            return;
+        };
+        let mut listeners = vec![(superior, Direction::Up)];
+        listeners.extend(
+            self.within_reach(side, sender)
+                .into_iter()
+                .map(|command| (command, Direction::Sideways)),
+        );
+        let sent = self.send(side, report, key, made, now, sender, &listeners, None);
+        if sent.area_first_held {
+            self.area_sends_down(side, report, key, made, now, Some(sender), Some(sent.event));
         }
     }
 
@@ -523,6 +565,15 @@ impl World {
                 });
             }
         }
+        // A silent force's unsent reports older than a contact may be are
+        // dropped with them (decision 0136, 17).
+        for reports in self.unsent_reports.values_mut() {
+            reports.retain(|unsent| {
+                let made = ordinal(unsent.day, unsent.pulse.unwrap_or(Pulse::Afternoon));
+                now.saturating_sub(made) < u64::from(drop_age_pulses)
+            });
+        }
+        self.unsent_reports.retain(|_, reports| !reports.is_empty());
     }
 }
 

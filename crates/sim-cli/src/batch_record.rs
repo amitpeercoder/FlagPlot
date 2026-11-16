@@ -1103,6 +1103,8 @@ pub fn count(
             | EventKind::SearchAttempt { .. }
             | EventKind::ReportReceived { .. }
             | EventKind::ReportSent { .. }
+            | EventKind::StateReportLate { .. }
+            | EventKind::StateReportLost { .. }
             | EventKind::ContactAged { .. }
             | EventKind::ContactDropped { .. }
             | EventKind::SightingRoll { .. }

@@ -209,8 +209,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// 0134);
 /// version 36 adds, after each command's picture, the reports it has heard
 /// (the report's event, the day and the pulse it was made), and after the
-/// commands the reports in flight (decision 0135).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v36";
+/// commands the reports in flight (decision 0135);
+/// version 37 adds, after the reports in flight, what each side's area
+/// command holds of the commands under it (with the moment each is of), the
+/// state reports in flight, the task forces on radio silence and each silent
+/// force's unsent reports (decision 0136).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v37";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -235,6 +239,19 @@ fn name_every_field(world: &World) {
         // Hashed after the commands, each report with every field (decision
         // 0135).
         reports_in_flight: _,
+        // Hashed after the reports in flight: the state each area command
+        // holds of the commands under it, the state reports in flight, the
+        // forces on radio silence and their unsent reports (decision 0136).
+        held: _,
+        state_reports_in_flight: _,
+        radio_silent: _,
+        unsent_reports: _,
+        // Not hashed: scratch state of one pulse, empty at every day
+        // boundary (decision 0136).
+        broke_silence: _,
+        gone_commands: _,
+        // Not hashed: the pulse being resolved, `None` outside a day.
+        pulse_in_hand: _,
         // Hashed by count and next number only.
         orders: _,
         order_ids: _,
@@ -1092,6 +1109,441 @@ fn hash_interrupt_status(h: &mut StateHasher, status: &InterruptStatus) {
     h.u8(u8::from(status.acknowledged));
 }
 
+/// What an area command holds of one command (decision 0136): the moment it
+/// is of, then the task force's record and the base's record each behind a
+/// presence byte, then the ships, air groups and land units, each with every
+/// field.
+fn hash_held_state(h: &mut StateHasher, state: &crate::held::HeldState) {
+    match state.as_of {
+        crate::held::AsOf::Start => h.u8(0),
+        crate::held::AsOf::Pulse { day, pulse } => {
+            h.u8(1);
+            h.u32(day);
+            h.u64(pulse.code());
+        }
+    }
+    match &state.task_force {
+        Some(task_force) => {
+            h.u8(1);
+            hash_task_force(h, task_force);
+        }
+        None => h.u8(0),
+    }
+    match &state.base {
+        Some(base) => {
+            h.u8(1);
+            hash_base(h, base);
+        }
+        None => h.u8(0),
+    }
+    h.count(state.ships.len());
+    for ship in state.ships.values() {
+        hash_ship(h, ship);
+    }
+    h.count(state.air_groups.len());
+    for group in state.air_groups.values() {
+        hash_air_group(h, group);
+    }
+    h.count(state.land_units.len());
+    for unit in state.land_units.values() {
+        hash_land_unit(h, unit);
+    }
+}
+
+/// One `Ship`, every field in one fixed order. Used for the truth state and for
+/// the copies of it the area command holds (decision 0136).
+pub(crate) fn hash_ship(h: &mut StateHasher, ship: &Ship) {
+    h.u32(ship.id.raw());
+    h.u32(ship.class.raw());
+    h.u8(ship.side.code());
+    h.i64(ship.fuel_t.raw());
+    h.i64(ship.supply_t.raw());
+    h.i64(ship.flotation_damage.raw());
+    h.i64(ship.fire_damage.raw());
+    h.i64(ship.gun_rounds.raw());
+    h.u8(u8::from(ship.torpedoes_ready));
+    h.u8(u8::from(ship.torpedoes_one_side_fired));
+    // After the second side (decision 0122).
+    h.u32(ship.torpedoes_fired);
+    for system in ShipSystem::ALL {
+        h.u8(ship.systems.get(system).code());
+    }
+    h.i64(ship.cargo_fuel_t.raw());
+    match ship.location {
+        ShipLocation::TaskForce(id) => {
+            h.u8(1);
+            h.u32(id.raw());
+        }
+        ShipLocation::Port(id) => {
+            h.u8(2);
+            h.u32(id.raw());
+        }
+        ShipLocation::Sunk => h.u8(3),
+        ShipLocation::Yard(id) => {
+            h.u8(4);
+            h.u32(id.raw());
+        }
+    }
+    // After the location (decision 0064).
+    h.u8(ship.experience);
+    // After the repair points (decision 0069).
+    h.i64(ship.system_repair_points.raw());
+    // Last in the ship (decision 0066).
+    match ship.troops {
+        Some(troops) => {
+            h.u8(1);
+            h.u32(troops.unit.raw());
+            h.u32(troops.men);
+        }
+        None => h.u8(0),
+    }
+}
+
+/// One `TaskForce`, every field in one fixed order. Used for the truth state and for
+/// the copies of it the area command holds (decision 0136).
+pub(crate) fn hash_task_force(h: &mut StateHasher, task_force: &TaskForce) {
+    h.u32(task_force.id.raw());
+    h.u8(task_force.side.code());
+    h.count(task_force.ships.len());
+    for ship in &task_force.ships {
+        h.u32(ship.raw());
+    }
+    h.u8(mission_code(task_force.mission));
+    h.u8(speed_code(task_force.speed));
+    if let SpeedSetting::Knots(knots) = task_force.speed {
+        h.i64(knots.raw());
+    }
+    h.count(task_force.route.waypoints.len());
+    for waypoint in &task_force.route.waypoints {
+        h.i32(waypoint.q);
+        h.i32(waypoint.r);
+    }
+    h.count(task_force.route.next_index);
+    // After the route index (decision 0096).
+    h.count(task_force.route.act_at.len());
+    for hex in &task_force.route.act_at {
+        h.i32(hex.q);
+        h.i32(hex.r);
+    }
+    // After the marks to act at (decision 0124).
+    h.count(task_force.route.stand_at.len());
+    for hex in &task_force.route.stand_at {
+        h.i32(hex.q);
+        h.i32(hex.r);
+    }
+    h.i32(task_force.from_hex.q);
+    h.i32(task_force.from_hex.r);
+    match task_force.toward_hex {
+        Some(toward) => {
+            h.u8(1);
+            h.i32(toward.q);
+            h.i32(toward.r);
+        }
+        None => h.u8(0),
+    }
+    h.i64(task_force.progress_nm.raw());
+    h.i64(task_force.leg_nm.raw());
+    h.u8(task_force.status.code());
+    h.optional_u32(task_force.route_order.map(|id| id.raw()));
+    h.optional_u32(task_force.speed_order.map(|id| id.raw()));
+    match task_force.cargo_order {
+        Some(cargo) => {
+            h.u8(1);
+            h.u8(cargo.action.code());
+            h.u32(cargo.order.raw());
+            // After the order (decision 0066).
+            h.optional_u32(cargo.unit.map(|unit| unit.raw()));
+            // After the unit (decision 0111).
+            match cargo.weight_t {
+                Some(weight) => {
+                    h.u8(1);
+                    h.i64(weight.raw());
+                }
+                None => h.u8(0),
+            }
+            h.u8(u8::from(cargo.heeds_reserve));
+        }
+        None => h.u8(0),
+    }
+    match task_force.arrived_at_hours {
+        Some(hours) => {
+            h.u8(1);
+            h.i64(hours.raw());
+        }
+        None => h.u8(0),
+    }
+    h.optional_u32(task_force.arrival_event.map(|id| id.raw()));
+    h.u8(task_force.readiness.code());
+    h.optional_u32(task_force.readiness_order.map(|id| id.raw()));
+    h.u8(u8::from(task_force.alerted));
+    h.optional_u32(task_force.alerted_by.map(|id| id.raw()));
+    h.u8(task_force.rules_of_engagement.stance.code());
+    h.i64(task_force.rules_of_engagement.break_off.raw());
+    h.u8(task_force.rules_of_engagement.stragglers.code());
+    h.i64(task_force.rules_of_engagement.keep_share.raw());
+    h.optional_u32(task_force.rules_order.map(|id| id.raw()));
+    h.optional_u32(task_force.home_port.map(|id| id.raw()));
+    h.i64(task_force.fatigue.raw());
+    // Last in the task force (decision 0069).
+    match task_force.yard_trip {
+        Some(trip) => {
+            h.u8(1);
+            h.u32(trip.base.raw());
+            h.u32(trip.return_day);
+            h.u32(trip.departure.raw());
+        }
+        None => h.u8(0),
+    }
+    // Last in the task force (decision 0096).
+    match task_force.halt {
+        Some(halt) => {
+            h.u8(1);
+            h.u8(u8::from(halt.work.bombard));
+            h.u8(u8::from(halt.work.cargo));
+            // After the cargo work (decision 0124).
+            h.u8(u8::from(halt.work.night));
+            h.i64(halt.at_hours.raw());
+            h.u32(halt.event.raw());
+            h.optional_u32(halt.bombarded.map(|id| id.raw()));
+            h.optional_u32(halt.cargo_completed.map(|id| id.raw()));
+        }
+        None => h.u8(0),
+    }
+    // After the halt (decision 0095): the preparation, whose roster is
+    // in unit order, and the hex where landing has begun.
+    match &task_force.preparation {
+        Some(preparation) => {
+            h.u8(1);
+            h.i32(preparation.hex.q);
+            h.i32(preparation.hex.r);
+            h.count(preparation.roster.len());
+            for unit in &preparation.roster {
+                h.u32(unit.raw());
+            }
+            h.i64(preparation.loading.raw());
+            h.u32(preparation.order.raw());
+        }
+        None => h.u8(0),
+    }
+    match task_force.landing_at {
+        Some(hex) => {
+            h.u8(1);
+            h.i32(hex.q);
+            h.i32(hex.r);
+        }
+        None => h.u8(0),
+    }
+    // After the landing (decision 0121).
+    match task_force.charge {
+        Some(charge) => {
+            h.u8(1);
+            h.u32(charge.force.raw());
+            h.u32(charge.order.raw());
+        }
+        None => h.u8(0),
+    }
+}
+
+/// One `Base`, every field in one fixed order. Used for the truth state and for
+/// the copies of it the area command holds (decision 0136).
+pub(crate) fn hash_base(h: &mut StateHasher, base: &Base) {
+    h.u32(base.id.raw());
+    h.u8(base.side.code());
+    h.i32(base.hex.q);
+    h.i32(base.hex.r);
+    h.i64(base.supply_t.raw());
+    h.u32(base.anti_aircraft);
+    h.u32(base.aircraft_repairs_per_day);
+    h.i64(base.fuel_t.raw());
+    // After the fuel (decision 0069).
+    h.i64(base.ship_repair_points_per_day.raw());
+    match base.yard_passage_days {
+        Some(days) => {
+            h.u8(1);
+            h.u32(days);
+        }
+        None => h.u8(0),
+    }
+    // After the base's place on the map (decision 0066).
+    h.u8(u8::from(base.on_map));
+    // Last in the base (decision 0099).
+    h.u8(u8::from(base.airfield));
+    h.i64(base.airfield_work.raw());
+    h.i64(base.defences.raw());
+    match base.day_work {
+        Some(work) => {
+            h.u8(1);
+            h.u32(work.day);
+            h.i64(work.port.raw());
+            h.i64(work.aircraft.raw());
+        }
+        None => h.u8(0),
+    }
+    // After the base's day of work (decision 0103).
+    h.i64(base.airfield_damage.raw());
+    // After the airfield's damage (decision 0111).
+    h.i64(base.supply_reserve_t.raw());
+    h.i64(base.fuel_reserve_t.raw());
+    // After the reserves (decision 0122).
+    h.i64(base.ammunition_t.raw());
+}
+
+/// One `AirGroup`, every field in one fixed order. Used for the truth state and for
+/// the copies of it the area command holds (decision 0136).
+pub(crate) fn hash_air_group(h: &mut StateHasher, group: &AirGroup) {
+    h.u32(group.id.raw());
+    h.u8(group.side.code());
+    match group.location {
+        AirGroupLocation::Base(base) => {
+            h.u8(1);
+            h.u32(base.raw());
+        }
+        AirGroupLocation::Ship(ship) => {
+            h.u8(2);
+            h.u32(ship.raw());
+        }
+        // Lost with its base (decision 0090).
+        AirGroupLocation::Lost => h.u8(3),
+    }
+    h.u32(group.aircraft_type.raw());
+    h.u32(group.ready);
+    h.u32(group.damaged);
+    h.i64(group.fatigue.raw());
+    match group.rest_above {
+        Some(level) => {
+            h.u8(1);
+            h.i64(level.raw());
+        }
+        None => h.u8(0),
+    }
+    h.optional_u32(group.rest_order.map(|id| id.raw()));
+    h.u8(u8::from(group.stood_down));
+    h.optional_u32(group.pilots);
+    h.u32(group.strength);
+    h.u8(group.mission.code());
+    // The base strike mission (code 5) is followed by its target base.
+    if let AirMission::BaseStrike(base) = group.mission {
+        h.u32(base.raw());
+    }
+    h.i64(group.patrol_share.raw());
+    h.optional_u32(group.share_order.map(|id| id.raw()));
+    match group.search {
+        Some(arc) => {
+            h.u8(1);
+            h.u32(arc.from_deg);
+            h.u32(arc.to_deg);
+            h.i64(arc.range_nm.raw());
+        }
+        None => h.u8(0),
+    }
+    h.optional_u32(group.mission_order.map(|id| id.raw()));
+    h.optional_u32(group.arc_order.map(|id| id.raw()));
+    h.u8(group.reach.code());
+    h.optional_u32(group.reach_order.map(|id| id.raw()));
+    h.count(group.target_priority.len());
+    for kind in &group.target_priority {
+        h.u8(kind.code());
+    }
+    h.optional_u32(group.target_order.map(|id| id.raw()));
+    h.optional_u32(group.last_base_strike_day);
+    // Last in the group (decision 0091).
+    h.optional_u32(group.rebased_day);
+    // Last in the group (decision 0114).
+    h.optional_u32(group.strike_contact_age);
+    h.optional_u32(group.strike_age_order.map(|id| id.raw()));
+    h.i64(group.strike_held_share.raw());
+    h.optional_u32(group.strike_share_order.map(|id| id.raw()));
+    // Last in the group (decision 0118).
+    h.u8(u8::from(group.strike_sizing));
+    h.optional_u32(group.strike_sizing_order.map(|id| id.raw()));
+    // Last in the group (decision 0131).
+    h.u8(u8::from(group.search_once));
+    h.optional_u32(group.search_once_order.map(|id| id.raw()));
+}
+
+/// One `LandUnit`, every field in one fixed order. Used for the truth state and for
+/// the copies of it the area command holds (decision 0136).
+pub(crate) fn hash_land_unit(h: &mut StateHasher, unit: &LandUnit) {
+    h.u32(unit.id.raw());
+    h.u8(unit.side.code());
+    h.u32(unit.men_ashore);
+    match unit.hex {
+        Some(hex) => {
+            h.u8(1);
+            h.i32(hex.q);
+            h.i32(hex.r);
+        }
+        None => h.u8(0),
+    }
+    // After the hex (decision 0090).
+    h.u8(unit.posture.code());
+    h.optional_u32(unit.posture_order.map(|id| id.raw()));
+    h.i64(unit.fatigue.raw());
+    h.i64(unit.fed_share.raw());
+    // After the fed share (decision 0094).
+    match unit.march {
+        Some(march) => {
+            h.u8(1);
+            h.i32(march.to.q);
+            h.i32(march.to.r);
+            h.u32(march.days);
+            h.i64(march.counted.raw());
+            // The cause, after the counted days (decision 0104): an order
+            // or the event of a falling back.
+            match march.cause {
+                Cause::Order(id) => {
+                    h.u8(1);
+                    h.u32(id.raw());
+                }
+                Cause::Event(id) => {
+                    h.u8(2);
+                    h.u32(id.raw());
+                }
+            }
+        }
+        None => h.u8(0),
+    }
+    // After the march (decisions 0095 and 0097).
+    h.i64(unit.rehearsal.raw());
+    match unit.rehearsal_hex {
+        Some(hex) => {
+            h.u8(1);
+            h.i32(hex.q);
+            h.i32(hex.r);
+        }
+        None => h.u8(0),
+    }
+    h.u8(unit.activity.code());
+    // The job of a work activity, 0 for none (decision 0099).
+    if let Activity::Work(job) = unit.activity {
+        h.u8(job.map_or(0, Job::code));
+    }
+    h.optional_u32(unit.activity_order.map(|id| id.raw()));
+    h.u8(unit.experience);
+    h.u32(unit.training_days);
+    h.u32(unit.fight_days);
+    // After the counts (decision 0098), in a fixed order.
+    let skills = unit.skills;
+    for skill in [
+        skills.assault,
+        skills.holding,
+        skills.weight,
+        skills.clear,
+        skills.jungle,
+        skills.mountain,
+        skills.atoll,
+        skills.works,
+    ] {
+        h.u8(skill);
+    }
+    // After the skills (decision 0099).
+    h.u8(u8::from(unit.working));
+    // After working (decision 0105): 0 for no instruction.
+    h.u8(unit.when_spent.map_or(0, WhenSpent::code));
+    // After when_spent (decision 0106).
+    h.i64(unit.fieldworks.raw());
+}
+
 /// Hashes everything that defines the state of a game. When a field is added
 /// to the state, it must be added here too, or two different states could
 /// share a hash.
@@ -1111,309 +1563,22 @@ pub(crate) fn hash_world(world: &World) -> u64 {
 
     h.count(truth.ships.len());
     for ship in truth.ships.values() {
-        h.u32(ship.id.raw());
-        h.u32(ship.class.raw());
-        h.u8(ship.side.code());
-        h.i64(ship.fuel_t.raw());
-        h.i64(ship.supply_t.raw());
-        h.i64(ship.flotation_damage.raw());
-        h.i64(ship.fire_damage.raw());
-        h.i64(ship.gun_rounds.raw());
-        h.u8(u8::from(ship.torpedoes_ready));
-        h.u8(u8::from(ship.torpedoes_one_side_fired));
-        // After the second side (decision 0122).
-        h.u32(ship.torpedoes_fired);
-        for system in ShipSystem::ALL {
-            h.u8(ship.systems.get(system).code());
-        }
-        h.i64(ship.cargo_fuel_t.raw());
-        match ship.location {
-            ShipLocation::TaskForce(id) => {
-                h.u8(1);
-                h.u32(id.raw());
-            }
-            ShipLocation::Port(id) => {
-                h.u8(2);
-                h.u32(id.raw());
-            }
-            ShipLocation::Sunk => h.u8(3),
-            ShipLocation::Yard(id) => {
-                h.u8(4);
-                h.u32(id.raw());
-            }
-        }
-        // After the location (decision 0064).
-        h.u8(ship.experience);
-        // After the repair points (decision 0069).
-        h.i64(ship.system_repair_points.raw());
-        // Last in the ship (decision 0066).
-        match ship.troops {
-            Some(troops) => {
-                h.u8(1);
-                h.u32(troops.unit.raw());
-                h.u32(troops.men);
-            }
-            None => h.u8(0),
-        }
+        hash_ship(&mut h, ship);
     }
 
     h.count(truth.task_forces.len());
     for task_force in truth.task_forces.values() {
-        h.u32(task_force.id.raw());
-        h.u8(task_force.side.code());
-        h.count(task_force.ships.len());
-        for ship in &task_force.ships {
-            h.u32(ship.raw());
-        }
-        h.u8(mission_code(task_force.mission));
-        h.u8(speed_code(task_force.speed));
-        if let SpeedSetting::Knots(knots) = task_force.speed {
-            h.i64(knots.raw());
-        }
-        h.count(task_force.route.waypoints.len());
-        for waypoint in &task_force.route.waypoints {
-            h.i32(waypoint.q);
-            h.i32(waypoint.r);
-        }
-        h.count(task_force.route.next_index);
-        // After the route index (decision 0096).
-        h.count(task_force.route.act_at.len());
-        for hex in &task_force.route.act_at {
-            h.i32(hex.q);
-            h.i32(hex.r);
-        }
-        // After the marks to act at (decision 0124).
-        h.count(task_force.route.stand_at.len());
-        for hex in &task_force.route.stand_at {
-            h.i32(hex.q);
-            h.i32(hex.r);
-        }
-        h.i32(task_force.from_hex.q);
-        h.i32(task_force.from_hex.r);
-        match task_force.toward_hex {
-            Some(toward) => {
-                h.u8(1);
-                h.i32(toward.q);
-                h.i32(toward.r);
-            }
-            None => h.u8(0),
-        }
-        h.i64(task_force.progress_nm.raw());
-        h.i64(task_force.leg_nm.raw());
-        h.u8(task_force.status.code());
-        h.optional_u32(task_force.route_order.map(|id| id.raw()));
-        h.optional_u32(task_force.speed_order.map(|id| id.raw()));
-        match task_force.cargo_order {
-            Some(cargo) => {
-                h.u8(1);
-                h.u8(cargo.action.code());
-                h.u32(cargo.order.raw());
-                // After the order (decision 0066).
-                h.optional_u32(cargo.unit.map(|unit| unit.raw()));
-                // After the unit (decision 0111).
-                match cargo.weight_t {
-                    Some(weight) => {
-                        h.u8(1);
-                        h.i64(weight.raw());
-                    }
-                    None => h.u8(0),
-                }
-                h.u8(u8::from(cargo.heeds_reserve));
-            }
-            None => h.u8(0),
-        }
-        match task_force.arrived_at_hours {
-            Some(hours) => {
-                h.u8(1);
-                h.i64(hours.raw());
-            }
-            None => h.u8(0),
-        }
-        h.optional_u32(task_force.arrival_event.map(|id| id.raw()));
-        h.u8(task_force.readiness.code());
-        h.optional_u32(task_force.readiness_order.map(|id| id.raw()));
-        h.u8(u8::from(task_force.alerted));
-        h.optional_u32(task_force.alerted_by.map(|id| id.raw()));
-        h.u8(task_force.rules_of_engagement.stance.code());
-        h.i64(task_force.rules_of_engagement.break_off.raw());
-        h.u8(task_force.rules_of_engagement.stragglers.code());
-        h.i64(task_force.rules_of_engagement.keep_share.raw());
-        h.optional_u32(task_force.rules_order.map(|id| id.raw()));
-        h.optional_u32(task_force.home_port.map(|id| id.raw()));
-        h.i64(task_force.fatigue.raw());
-        // Last in the task force (decision 0069).
-        match task_force.yard_trip {
-            Some(trip) => {
-                h.u8(1);
-                h.u32(trip.base.raw());
-                h.u32(trip.return_day);
-                h.u32(trip.departure.raw());
-            }
-            None => h.u8(0),
-        }
-        // Last in the task force (decision 0096).
-        match task_force.halt {
-            Some(halt) => {
-                h.u8(1);
-                h.u8(u8::from(halt.work.bombard));
-                h.u8(u8::from(halt.work.cargo));
-                // After the cargo work (decision 0124).
-                h.u8(u8::from(halt.work.night));
-                h.i64(halt.at_hours.raw());
-                h.u32(halt.event.raw());
-                h.optional_u32(halt.bombarded.map(|id| id.raw()));
-                h.optional_u32(halt.cargo_completed.map(|id| id.raw()));
-            }
-            None => h.u8(0),
-        }
-        // After the halt (decision 0095): the preparation, whose roster is
-        // in unit order, and the hex where landing has begun.
-        match &task_force.preparation {
-            Some(preparation) => {
-                h.u8(1);
-                h.i32(preparation.hex.q);
-                h.i32(preparation.hex.r);
-                h.count(preparation.roster.len());
-                for unit in &preparation.roster {
-                    h.u32(unit.raw());
-                }
-                h.i64(preparation.loading.raw());
-                h.u32(preparation.order.raw());
-            }
-            None => h.u8(0),
-        }
-        match task_force.landing_at {
-            Some(hex) => {
-                h.u8(1);
-                h.i32(hex.q);
-                h.i32(hex.r);
-            }
-            None => h.u8(0),
-        }
-        // After the landing (decision 0121).
-        match task_force.charge {
-            Some(charge) => {
-                h.u8(1);
-                h.u32(charge.force.raw());
-                h.u32(charge.order.raw());
-            }
-            None => h.u8(0),
-        }
+        hash_task_force(&mut h, task_force);
     }
 
     h.count(truth.bases.len());
     for base in truth.bases.values() {
-        h.u32(base.id.raw());
-        h.u8(base.side.code());
-        h.i32(base.hex.q);
-        h.i32(base.hex.r);
-        h.i64(base.supply_t.raw());
-        h.u32(base.anti_aircraft);
-        h.u32(base.aircraft_repairs_per_day);
-        h.i64(base.fuel_t.raw());
-        // After the fuel (decision 0069).
-        h.i64(base.ship_repair_points_per_day.raw());
-        match base.yard_passage_days {
-            Some(days) => {
-                h.u8(1);
-                h.u32(days);
-            }
-            None => h.u8(0),
-        }
-        // After the base's place on the map (decision 0066).
-        h.u8(u8::from(base.on_map));
-        // Last in the base (decision 0099).
-        h.u8(u8::from(base.airfield));
-        h.i64(base.airfield_work.raw());
-        h.i64(base.defences.raw());
-        match base.day_work {
-            Some(work) => {
-                h.u8(1);
-                h.u32(work.day);
-                h.i64(work.port.raw());
-                h.i64(work.aircraft.raw());
-            }
-            None => h.u8(0),
-        }
-        // After the base's day of work (decision 0103).
-        h.i64(base.airfield_damage.raw());
-        // After the airfield's damage (decision 0111).
-        h.i64(base.supply_reserve_t.raw());
-        h.i64(base.fuel_reserve_t.raw());
-        // After the reserves (decision 0122).
-        h.i64(base.ammunition_t.raw());
+        hash_base(&mut h, base);
     }
 
     h.count(truth.air_groups.len());
     for group in truth.air_groups.values() {
-        h.u32(group.id.raw());
-        h.u8(group.side.code());
-        match group.location {
-            AirGroupLocation::Base(base) => {
-                h.u8(1);
-                h.u32(base.raw());
-            }
-            AirGroupLocation::Ship(ship) => {
-                h.u8(2);
-                h.u32(ship.raw());
-            }
-            // Lost with its base (decision 0090).
-            AirGroupLocation::Lost => h.u8(3),
-        }
-        h.u32(group.aircraft_type.raw());
-        h.u32(group.ready);
-        h.u32(group.damaged);
-        h.i64(group.fatigue.raw());
-        match group.rest_above {
-            Some(level) => {
-                h.u8(1);
-                h.i64(level.raw());
-            }
-            None => h.u8(0),
-        }
-        h.optional_u32(group.rest_order.map(|id| id.raw()));
-        h.u8(u8::from(group.stood_down));
-        h.optional_u32(group.pilots);
-        h.u32(group.strength);
-        h.u8(group.mission.code());
-        // The base strike mission (code 5) is followed by its target base.
-        if let AirMission::BaseStrike(base) = group.mission {
-            h.u32(base.raw());
-        }
-        h.i64(group.patrol_share.raw());
-        h.optional_u32(group.share_order.map(|id| id.raw()));
-        match group.search {
-            Some(arc) => {
-                h.u8(1);
-                h.u32(arc.from_deg);
-                h.u32(arc.to_deg);
-                h.i64(arc.range_nm.raw());
-            }
-            None => h.u8(0),
-        }
-        h.optional_u32(group.mission_order.map(|id| id.raw()));
-        h.optional_u32(group.arc_order.map(|id| id.raw()));
-        h.u8(group.reach.code());
-        h.optional_u32(group.reach_order.map(|id| id.raw()));
-        h.count(group.target_priority.len());
-        for kind in &group.target_priority {
-            h.u8(kind.code());
-        }
-        h.optional_u32(group.target_order.map(|id| id.raw()));
-        h.optional_u32(group.last_base_strike_day);
-        // Last in the group (decision 0091).
-        h.optional_u32(group.rebased_day);
-        // Last in the group (decision 0114).
-        h.optional_u32(group.strike_contact_age);
-        h.optional_u32(group.strike_age_order.map(|id| id.raw()));
-        h.i64(group.strike_held_share.raw());
-        h.optional_u32(group.strike_share_order.map(|id| id.raw()));
-        // Last in the group (decision 0118).
-        h.u8(u8::from(group.strike_sizing));
-        h.optional_u32(group.strike_sizing_order.map(|id| id.raw()));
-        // Last in the group (decision 0131).
-        h.u8(u8::from(group.search_once));
-        h.optional_u32(group.search_once_order.map(|id| id.raw()));
+        hash_air_group(&mut h, group);
     }
 
     h.count(truth.replacements.len());
@@ -1438,84 +1603,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
     // After the arrivals (decision 0066).
     h.count(truth.land_units.len());
     for unit in truth.land_units.values() {
-        h.u32(unit.id.raw());
-        h.u8(unit.side.code());
-        h.u32(unit.men_ashore);
-        match unit.hex {
-            Some(hex) => {
-                h.u8(1);
-                h.i32(hex.q);
-                h.i32(hex.r);
-            }
-            None => h.u8(0),
-        }
-        // After the hex (decision 0090).
-        h.u8(unit.posture.code());
-        h.optional_u32(unit.posture_order.map(|id| id.raw()));
-        h.i64(unit.fatigue.raw());
-        h.i64(unit.fed_share.raw());
-        // After the fed share (decision 0094).
-        match unit.march {
-            Some(march) => {
-                h.u8(1);
-                h.i32(march.to.q);
-                h.i32(march.to.r);
-                h.u32(march.days);
-                h.i64(march.counted.raw());
-                // The cause, after the counted days (decision 0104): an order
-                // or the event of a falling back.
-                match march.cause {
-                    Cause::Order(id) => {
-                        h.u8(1);
-                        h.u32(id.raw());
-                    }
-                    Cause::Event(id) => {
-                        h.u8(2);
-                        h.u32(id.raw());
-                    }
-                }
-            }
-            None => h.u8(0),
-        }
-        // After the march (decisions 0095 and 0097).
-        h.i64(unit.rehearsal.raw());
-        match unit.rehearsal_hex {
-            Some(hex) => {
-                h.u8(1);
-                h.i32(hex.q);
-                h.i32(hex.r);
-            }
-            None => h.u8(0),
-        }
-        h.u8(unit.activity.code());
-        // The job of a work activity, 0 for none (decision 0099).
-        if let Activity::Work(job) = unit.activity {
-            h.u8(job.map_or(0, Job::code));
-        }
-        h.optional_u32(unit.activity_order.map(|id| id.raw()));
-        h.u8(unit.experience);
-        h.u32(unit.training_days);
-        h.u32(unit.fight_days);
-        // After the counts (decision 0098), in a fixed order.
-        let skills = unit.skills;
-        for skill in [
-            skills.assault,
-            skills.holding,
-            skills.weight,
-            skills.clear,
-            skills.jungle,
-            skills.mountain,
-            skills.atoll,
-            skills.works,
-        ] {
-            h.u8(skill);
-        }
-        // After the skills (decision 0099).
-        h.u8(u8::from(unit.working));
-        // After working (decision 0105): 0 for no instruction.
-        h.u8(unit.when_spent.map_or(0, WhenSpent::code));
-        // After when_spent (decision 0106).
-        h.i64(unit.fieldworks.raw());
+        hash_land_unit(&mut h, unit);
     }
 
     // After the land units (decision 0106): empty at the end of every day.
@@ -1592,6 +1680,51 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(flight.sent_event.raw());
         h.u32(flight.arrives.0);
         h.u64(flight.arrives.1.code());
+    }
+
+    // After the reports in flight (decision 0136): what each area command
+    // holds, 0 when reports do not travel, else 1 and each side's held
+    // states in command order; then the state reports in flight in the order
+    // they were sent; then the forces on radio silence; then each silent
+    // force's unsent reports.
+    match &world.held {
+        None => h.u8(0),
+        Some(held) => {
+            h.u8(1);
+            for side in Side::ALL {
+                h.u8(side.code());
+                h.count(held[&side].len());
+                for (command, state) in &held[&side] {
+                    h.u8(command.code());
+                    h.u32(command.raw());
+                    hash_held_state(&mut h, state);
+                }
+            }
+        }
+    }
+    h.count(world.state_reports_in_flight.len());
+    for flight in &world.state_reports_in_flight {
+        h.u8(flight.side.code());
+        h.u8(flight.command.code());
+        h.u32(flight.command.raw());
+        hash_held_state(&mut h, &flight.state);
+        h.u32(flight.arrives.0);
+        h.u64(flight.arrives.1.code());
+    }
+    h.count(world.radio_silent.len());
+    for force in &world.radio_silent {
+        h.u32(force.raw());
+    }
+    h.count(world.unsent_reports.len());
+    for (force, reports) in &world.unsent_reports {
+        h.u32(force.raw());
+        h.count(reports.len());
+        for unsent in reports {
+            hash_report(&mut h, &unsent.report);
+            h.u32(unsent.key.raw());
+            h.u32(unsent.day);
+            h.u64(unsent.pulse.map_or(0, crate::time::Pulse::code));
+        }
     }
 
     h.count(world.orders.len());

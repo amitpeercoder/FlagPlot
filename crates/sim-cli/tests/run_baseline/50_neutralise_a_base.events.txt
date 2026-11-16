@@ -2,18 +2,18 @@ Placeholder scenario 50: Neutralise a base
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9319e1c2628a4250  35 events
-day   2  hash ea3d9b20291ec439  16 events
-day   3  hash f09dd3809e537ad5  16 events
-day   4  hash 37119cec31b786d4  16 events
-day   5  hash 199e38d55cbf802c  16 events
-day   6  hash 12a7a3ccec775904  16 events
-day   7  hash a6940e65762e5a88  16 events
-day   8  hash ba1ecc0d968cd0ba  16 events
-day   9  hash 820250f24e7d3bb5  14 events
-day  10  hash 65bd22a77f5de1f2  20 events
-day  11  hash afc05eb2f8ccb3f4  16 events
-day  12  hash 82c4128aa18dece5  14 events
+day   1  hash 233239bf96e79fc5  35 events
+day   2  hash f20b9980ed0dab2c  16 events
+day   3  hash 089bb75591384c56  16 events
+day   4  hash 30684a8fcc314dd7  16 events
+day   5  hash e9e19180fb77149d  16 events
+day   6  hash 1ee01e8047a4e51b  16 events
+day   7  hash 6075f168d3697535  16 events
+day   8  hash 5882087fef4a1309  16 events
+day   9  hash 220ea742c5bbb218  14 events
+day  10  hash bb99e479bf60eb6f  20 events
+day  11  hash 905820639e7a65e7  16 events
+day  12  hash 5b2e98778eefd16c  14 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to neutralise base:2
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

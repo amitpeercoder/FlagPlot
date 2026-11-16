@@ -158,6 +158,12 @@ fn tf_index(order: &TaskForceOrder) -> usize {
         TaskForceOrder::JoinTo(_) => 14,
         TaskForceOrder::StandDown => 15,
         TaskForceOrder::Escort(_) => 16,
+        // Decision 0136: the agent interface's reading of the order, its
+        // schema and its example belong to the agent team's step; until
+        // then no example has it and this index is never asked for one.
+        TaskForceOrder::SetRadioSilence { .. } => {
+            unreachable!("the interface does not carry set_radio_silence yet")
+        }
     }
 }
 const TF_KINDS: usize = 17;

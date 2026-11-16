@@ -95,6 +95,11 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 }),
                 None => json!({ "kind": "escort" }),
             },
+            // Decision 0136, 15.
+            TaskForceOrder::SetRadioSilence { on } => json!({
+                "kind": "set_radio_silence",
+                "on": on,
+            }),
             TaskForceOrder::SetRulesOfEngagement {
                 stance,
                 break_off,

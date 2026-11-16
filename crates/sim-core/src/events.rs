@@ -11,6 +11,7 @@ use crate::command::{
     PlanState, Reason, StandingKind, StandingSubject,
 };
 use crate::fixed::Fixed;
+use crate::held::AsOf;
 use crate::hex::Hex;
 use crate::ids::{
     AirGroupId, BaseId, ContactId, EntityRef, EventId, IntentId, LandUnitId, OrderId, ShipId,
@@ -1967,6 +1968,22 @@ pub enum EventKind {
         report: EventId,
         listeners: Vec<ReportListener>,
     },
+    /// A command's state report, of the moment `as_of`, arrives at the area
+    /// command a pulse late (decision 0136, 6). It carries the draw's
+    /// breakdown and no cause. The side's own. Added at the end (decision
+    /// 0136).
+    StateReportLate {
+        side: Side,
+        command: CommandRef,
+        as_of: AsOf,
+    },
+    /// A command's state report, of the moment `as_of`, never arrives at the
+    /// area command (decision 0136, 6). As [`EventKind::StateReportLate`].
+    StateReportLost {
+        side: Side,
+        command: CommandRef,
+        as_of: AsOf,
+    },
 }
 
 impl EventKind {
@@ -2366,6 +2383,10 @@ impl EventKind {
                 .chain(listeners.iter().map(|listener| listener.command))
                 .filter_map(command_entity)
                 .collect(),
+            EventKind::StateReportLate { command, .. }
+            | EventKind::StateReportLost { command, .. } => {
+                command_entity(*command).into_iter().collect()
+            }
             EventKind::MeetingNotHeld {
                 charge, escorts, ..
             } => std::iter::once(*charge)
@@ -4207,6 +4228,12 @@ impl fmt::Display for EventKind {
                 }
                 Ok(())
             }
+            EventKind::StateReportLate {
+                command, as_of, ..
+            } => write!(f, "{command}'s state report of {as_of} is late"),
+            EventKind::StateReportLost {
+                command, as_of, ..
+            } => write!(f, "{command}'s state report of {as_of} is lost"),
         }
     }
 }

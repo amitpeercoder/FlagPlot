@@ -16,7 +16,7 @@ use std::collections::BTreeSet;
 use crate::command::{Addressee, Hold, HoldMaker, HoldTarget};
 use crate::events::{Cause, EventKind};
 use crate::ids::ShipId;
-use crate::orders::{BaseOrder, Issuer, OrderKind, OrderRequest};
+use crate::orders::{BaseOrder, Issuer, OrderKind, OrderRequest, TaskForceOrder};
 use crate::state::Side;
 use crate::world::World;
 
@@ -121,6 +121,12 @@ impl World {
             return usable.then(|| vec![HoldTarget::AirGroup(*target)]);
         }
         match &request.kind {
+            // A word about the radio does not take a force out of the
+            // staff's hands (decision 0136, 15).
+            OrderKind::TaskForce {
+                order: TaskForceOrder::SetRadioSilence { .. },
+                ..
+            } => None,
             // A force listed or inside a limit, or one an intent in force is
             // addressed to (decision 0124, 6).
             OrderKind::TaskForce { target, .. } => (limits

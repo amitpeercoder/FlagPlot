@@ -2205,6 +2205,28 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                     ),
                 ),
         ),
+        // A command's state report late or lost on its way to the area command
+        // (decision 0136, 6).
+        EventKind::StateReportLate {
+            side,
+            command,
+            as_of,
+        } => (
+            "state_report_late",
+            d.text("side", names::side(*side))
+                .with("command", Field::Str(command_word(*command)))
+                .with("as_of", Field::Str(as_of.to_string())),
+        ),
+        EventKind::StateReportLost {
+            side,
+            command,
+            as_of,
+        } => (
+            "state_report_lost",
+            d.text("side", names::side(*side))
+                .with("command", Field::Str(command_word(*command)))
+                .with("as_of", Field::Str(as_of.to_string())),
+        ),
         EventKind::ShipRearmed {
             ship,
             task_force,

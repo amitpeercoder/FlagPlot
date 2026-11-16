@@ -16,6 +16,7 @@ pub mod command;
 pub mod events;
 pub mod fixed;
 pub mod hash;
+pub mod held;
 pub mod hex;
 pub mod ids;
 pub mod map;
@@ -44,6 +45,8 @@ mod falling_back_tests;
 mod forming;
 mod ground;
 mod ground_combat;
+#[cfg(test)]
+mod held_tests;
 mod invariants;
 mod landing;
 mod march;

@@ -235,6 +235,9 @@ impl World {
 
         for pulse in Pulse::ALL {
             pass(self, Moment::PulseBegins { day, pulse });
+            // A command formed in the pulse is held as of it (decision 0136,
+            // 5).
+            self.pulse_in_hand = Some(pulse);
             // A report passed a pulse ago arrives before anything of this
             // pulse is seen (decision 0135, 12).
             self.deliver_late_reports(day, pulse);
@@ -264,6 +267,11 @@ impl World {
             pass(self, Moment::EndOfDay { day, phase });
             self.run_end_of_day_phase(day, phase);
         }
+        // The afternoon's state reports are made at the end of the day,
+        // after its end phases, so that the area command holds the state the
+        // staff is asked on (decision 0136, 2).
+        self.make_state_reports(day, Pulse::Afternoon);
+        self.pulse_in_hand = None;
 
         // The invariants are checked before the day counter advances, so a
         // day that breaks one is not counted. Nothing the check reads uses
@@ -380,6 +388,11 @@ impl World {
         // The commands of forces that ceased to be in the pulse end with it
         // (decision 0134, 6).
         self.end_gone_commands();
+        // The night's and the morning's state reports (decision 0136, 2); the
+        // afternoon's are made at the end of the day.
+        if pulse != Pulse::Afternoon {
+            self.make_state_reports(day, pulse);
+        }
         // With no search figures there are no air groups, so no contacts.
         let Some(figures) = self.ref_data.search.clone() else {
             return;
@@ -1005,6 +1018,7 @@ impl World {
                     TaskForceOrder::SetSpeed(_)
                     | TaskForceOrder::SetMission(_)
                     | TaskForceOrder::SetReadiness(_)
+                    | TaskForceOrder::SetRadioSilence { .. }
                     | TaskForceOrder::Unload => Ok(()),
                 }
             }
@@ -1385,6 +1399,18 @@ impl World {
                     }
                     return events;
                 }
+                if let TaskForceOrder::SetRadioSilence { on } = task_force_order {
+                    // Decision 0136, 15: a setting of the world's, kept by
+                    // force; turned off, what the force kept unsent is
+                    // dropped.
+                    if *on {
+                        self.radio_silent.insert(*target);
+                    } else {
+                        self.radio_silent.remove(target);
+                        self.unsent_reports.remove(target);
+                    }
+                    return Vec::new();
+                }
                 if let TaskForceOrder::Escort(charge) = task_force_order {
                     // Decision 0121, 1: the charge given, or cleared; cleared,
                     // the force stops where it is (7).
@@ -1533,8 +1559,11 @@ impl World {
                     }
                     TaskForceOrder::JoinTo(_)
                     | TaskForceOrder::StandDown
-                    | TaskForceOrder::Escort(_) => {
-                        unreachable!("join, stand-down and escort orders are applied above")
+                    | TaskForceOrder::Escort(_)
+                    | TaskForceOrder::SetRadioSilence { .. } => {
+                        unreachable!(
+                            "join, stand-down, escort and silence orders are applied above"
+                        )
                     }
                     TaskForceOrder::SetRulesOfEngagement {
                         stance,

@@ -3839,6 +3839,10 @@ impl Day {
                     // The side's own commands passing a report on (decision
                     // 0135): the briefing does not list it.
                     | EventKind::ReportSent { .. }
+                    // A state report late or lost on its way to the area
+                    // command (decision 0136): the briefing does not list it.
+                    | EventKind::StateReportLate { .. }
+                    | EventKind::StateReportLost { .. }
                     | EventKind::MenSurrenderedAshore { .. }
                     | EventKind::GroundAttackFailed { .. }
                     | EventKind::CommandTaken { .. }

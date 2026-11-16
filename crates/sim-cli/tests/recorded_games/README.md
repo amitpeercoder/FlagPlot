@@ -198,6 +198,8 @@ Regenerated after decision 0134 (commands and their pictures: the state layout a
 
 Regenerated after decision 0135 (reports between commands: the state layout at version 36, saved game version 11; the rules label, the doctrine version and the agent interface unchanged; Nov 16, 2026), with `regame.py`. Each `save.json` differs only in its two versions and its day hashes; no transcript changed. None of these games turns command levels on or names report figures, so no order, report, event or result changed.
 
+Regenerated after decision 0136 (a superior's knowledge of his forces and radio silence, the plumbing: the state layout at version 37, saved game version 12; the rules label, the doctrine version and the agent interface unchanged so far; Nov 16, 2026), with `regame.py`. Each `save.json` differs only in its two versions and its day hashes; no transcript changed. None of these games turns command levels on or names report figures, so no order, report, event or result changed.
+
 ## The second proof's game (Nov 16, 2026)
 
 `second_proof_week_sonnet`: decision 0128's model's game. The Allied seat of `data/scenarios/second-proof/07m_model_week.toml` on seed 1:
