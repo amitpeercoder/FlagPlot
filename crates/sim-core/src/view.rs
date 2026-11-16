@@ -23,7 +23,7 @@ mod surface_choices;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::airstrike::{StrikeChoice, StrikeInFlight};
+use crate::airstrike::{NavalStrike, StrikeChoice, StrikeInFlight};
 use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate};
 use crate::choices::{Answer, Question};
 use crate::events::EventLog;
@@ -790,27 +790,82 @@ impl<'a> SideView<'a> {
     }
 
     /// The contact `group` would launch a strike at now (decision 6 of 0063):
-    /// `contact_to_strike` (`airstrike.rs`) on this side's belief and the
-    /// group's own state, orders and reach, which is what the strike decision
-    /// calls. The group is named by its number and looked up among this
-    /// side's own groups, so a caller cannot hand in a group of its own
-    /// making. `None` for a number that is not one of this side's groups, a
-    /// group that is not on the naval strike mission, has no position, or has
-    /// no contact that qualifies. It reads belief and the side's own unit and
+    /// the contact of [`SideView::naval_strike`]. The group is named by its
+    /// number and looked up among this side's own groups, so a caller cannot
+    /// hand in a group of its own making. `None` for a number that is not one
+    /// of this side's groups, a group that is not on the naval strike
+    /// mission, has no position, or has no contact that qualifies (or, sized,
+    /// none that is not served). It reads belief and the side's own units and
     /// nothing of the enemy.
     pub fn strike_choice(&self, group: AirGroupId) -> Option<StrikeChoice> {
-        let group = self.air_groups().find(|own| own.id == group)?;
-        if group.mission != AirMission::NavalStrike {
+        self.naval_strike(group).map(|strike| strike.choice)
+    }
+
+    /// The naval strike `group` would launch now, contact and aircraft
+    /// (decisions 6 of 0063, 0114 and 0118): `naval_strike_launch`
+    /// (`airstrike.rs`), which the strike decision calls, on this side's
+    /// belief and the group's own state, with what the side's groups before
+    /// it in group number order would send in a daylight pulse, each worked
+    /// the same way, and what has already been launched in the pulse in
+    /// hand. A group before it launches as the decision launches it: on the
+    /// naval strike mission, with ready aircraft, a position, a weapon and at
+    /// least one aircraft to send. The aircraft are what it is able to fly
+    /// less its held share, and may be none. `None` as for
+    /// [`SideView::strike_choice`].
+    pub fn naval_strike(&self, group: AirGroupId) -> Option<NavalStrike> {
+        let asked = self.air_groups().find(|own| own.id == group)?;
+        if asked.mission != AirMission::NavalStrike {
             return None;
         }
         let figures = self.ref_data.air_combat.as_ref()?;
+        self.truth.air_group_hex(asked)?;
+        let mut sent = crate::airstrike::sent_at_contacts(self.pulse.strikes_in_flight, self.side);
+        let mut before: Vec<&AirGroup> = self
+            .air_groups()
+            .filter(|own| own.id < group && own.mission == AirMission::NavalStrike)
+            .collect();
+        before.sort_by_key(|own| own.id);
+        for own in before {
+            let armed = self
+                .aircraft_type(own.aircraft_type)
+                .is_some_and(|kind| kind.attack_weapon != crate::refdata::AttackWeapon::None);
+            if own.ready == 0 || !armed {
+                continue;
+            }
+            let Some(launch) = self.naval_strike_of(own, figures, &sent) else {
+                continue;
+            };
+            if launch.aircraft == 0 {
+                continue;
+            }
+            *sent.entry(launch.choice.contact).or_insert(0) += launch.aircraft;
+        }
+        self.naval_strike_of(asked, figures, &sent)
+    }
+
+    /// The naval strike of one of the side's own groups with `sent` already
+    /// launched at each contact: `None` where it has no position or no
+    /// contact to launch at.
+    fn naval_strike_of(
+        &self,
+        group: &AirGroup,
+        figures: &crate::refdata::AirCombatFigures,
+        sent: &BTreeMap<crate::ids::ContactId, u32>,
+    ) -> Option<NavalStrike> {
         let origin = self.truth.air_group_hex(group)?;
-        crate::airstrike::contact_to_strike(
+        let can_send = crate::airstrike::strike_aircraft(
+            self.flyable_aircraft(group),
+            group.strike_held_share,
+        );
+        crate::airstrike::naval_strike_launch(
             self.belief,
             group,
             origin,
             self.reach_nm(group),
             crate::airstrike::strike_age_limit(group, figures),
+            can_send,
+            figures,
+            sent,
         )
     }
 

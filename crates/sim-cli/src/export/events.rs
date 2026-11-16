@@ -2023,6 +2023,9 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 let level = match level {
                     sim_core::command::Addressee::Area => "area".to_string(),
                     sim_core::command::Addressee::Base(base) => format!("base:{}", base.raw()),
+                    sim_core::command::Addressee::AirGroup(group) => {
+                        format!("air_group:{}", group.raw())
+                    }
                 };
                 data = data.with("level", Field::Str(level));
             }

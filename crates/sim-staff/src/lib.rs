@@ -20,6 +20,7 @@
 #![deny(clippy::float_arithmetic)]
 
 mod air;
+mod deny;
 mod doctrine;
 mod fleet;
 mod handin;
@@ -31,6 +32,8 @@ mod proposal;
 pub mod raid;
 mod reasons;
 mod route;
+mod search;
+pub mod strike;
 mod units;
 
 pub use projection::project;
@@ -69,7 +72,13 @@ use sim_core::view::SideView;
 /// the base's level; a group a raid task may use as a bomber is the raid's
 /// and not the cover's; every reason says which level decided. A side with
 /// no neutralise or raid intent gets the orders `supply-8` gave.
-pub const DOCTRINE_VERSION: &str = "supply-9";
+/// `supply-10` adds decision 0123: the deny doctrine at the area's level,
+/// which forms strike-ships and search-waters tasks, the strike doctrine at
+/// the base's level with each strike's sizing decided at the group's, the
+/// search doctrine, and a cover's arc that takes the waters as threats. A side
+/// with no deny, strike-ships or search-waters intent gets the orders
+/// `supply-9` gave.
+pub const DOCTRINE_VERSION: &str = "supply-10";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

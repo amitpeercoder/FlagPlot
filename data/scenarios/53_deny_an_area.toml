@@ -1,0 +1,138 @@
+# Scenario 53: the commander states one end, deny the waters at (0,5), at
+# press, and the staff strikes and searches.
+#
+# Decision 0123, with decision 0118. Three dive bomber groups, a flying boat
+# group and a fighter group rest at Allied base 1. The Allied commander
+# states one end, deny the waters within 0 hexes of (0,5), with no forces
+# limit, at press, and gives both leaves. At the area's level the staff forms
+# two tasks for base 1, striking ships (intent 2) and searching the waters
+# (intent 3); at the base's level it sets the groups' standing orders; at the
+# group's level each strike is sized. The Allied side starts holding three
+# contacts in reach, and there is no enemy at all: every strike finds nothing
+# and the search sights nothing. The hand calculation is in
+# tests/scenario_53_deny_an_area.rs. The test runs this file on the frozen
+# step 1 figures with its own table of aircraft for each ship added, and with
+# variants it builds from the parsed text. The upkeep, wear, fatigue and
+# supply figures are not loaded.
+#
+# PLACEHOLDER DATA. The bases, aircraft, figures and map are invented.
+
+name = "Placeholder scenario 53: Deny an area"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_a_strike_sized_to_its_target.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# Allied base 1.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+[[air_group]]
+id = 1
+name = "Placeholder dive bombers 1"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+
+[[air_group]]
+id = 2
+name = "Placeholder dive bombers 2"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+
+[[air_group]]
+id = 3
+name = "Placeholder dive bombers 3"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+
+# Flying boats, 6 ready (a search range of 600 nm).
+[[air_group]]
+id = 4
+name = "Placeholder flying boats 4"
+side = "allied"
+base = 1
+aircraft_type = 1
+ready = 6
+
+# Fighters, 8 ready.
+[[air_group]]
+id = 5
+name = "Placeholder fighters 5"
+side = "allied"
+base = 1
+aircraft_type = 4
+ready = 8
+
+# The three contacts, entered from the oldest down.
+[[contact]]
+side = "allied"
+q = 0
+r = 4
+ship_count = 1
+kind = "carrier"
+age_pulses = 2
+
+[[contact]]
+side = "allied"
+q = 3
+r = 0
+ship_count = 2
+kind = "cruiser"
+age_pulses = 1
+
+[[contact]]
+side = "allied"
+q = -3
+r = 0
+ship_count = 3
+kind = "transport"
+age_pulses = 0
+
+# The Allied commander's commands.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "deny"
+hex = [0, 5]
+distance = 0
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "risk"
+intent = 1
+risk = "press"
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

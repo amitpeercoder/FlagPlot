@@ -457,7 +457,7 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             let measure = crate::hold_measure(view, intent.id)?;
             let mut entry = crate::staffing::hold_measure_json(&Some(measure));
             entry["intent"] = json!(intent.id.raw());
-            entry["base"] = n.base(intent.kind.base());
+            entry["base"] = json!(intent.kind.base().map(|base| n.base(base)));
             Some(entry)
         })
         .collect();
@@ -477,7 +477,7 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             let measure = crate::neutralise_measure(view, intent.id)?;
             let mut entry = crate::staffing::neutralise_measure_json(&Some(measure));
             entry["intent"] = json!(intent.id.raw());
-            entry["target"] = n.base(intent.kind.base());
+            entry["target"] = json!(intent.kind.base().map(|base| n.base(base)));
             Some(entry)
         })
         .collect();
@@ -488,6 +488,28 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             neutralised["text"].as_str().unwrap_or("")
         ));
     }
+    // The deny intents in force and the measure of each (decision 0123, 4).
+    let denials: Vec<Value> = state
+        .intents_in_force()
+        .filter(|intent| matches!(intent.kind, IntentKind::Deny { .. }))
+        .filter_map(|intent| {
+            let measure = crate::deny_measure(view, intent.id)?;
+            let mut entry = crate::staffing::deny_measure_json(&Some(measure));
+            entry["intent"] = json!(intent.id.raw());
+            if let Some((hex, distance)) = intent.kind.waters() {
+                entry["hex"] = json!([hex.q, hex.r]);
+                entry["distance"] = json!(distance);
+            }
+            Some(entry)
+        })
+        .collect();
+    for denied in &denials {
+        summary.push_str(&format!(
+            " Deny intent:{}: {}.",
+            denied["intent"],
+            denied["text"].as_str().unwrap_or("")
+        ));
+    }
     answer(
         "report",
         json!({
@@ -495,6 +517,7 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             "matters": matters_json,
             "holds": holds,
             "neutralisations": neutralisations,
+            "denials": denials,
             "open_matters": open_words.len(),
             "closed_matters": closed,
             "interrupts": interrupts,

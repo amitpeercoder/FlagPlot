@@ -959,6 +959,11 @@ pub struct AirGroup {
     pub strike_held_share: Fixed,
     /// The standing order that set the held share, if any (decision 0114).
     pub strike_share_order: Option<OrderId>,
+    /// Whether the group sizes its naval strikes to their target (decision
+    /// 0118, 1). Off until an order sets it.
+    pub strike_sizing: bool,
+    /// The standing order that set strike sizing, if any (decision 0118).
+    pub strike_sizing_order: Option<OrderId>,
 }
 
 impl AirGroup {
@@ -1019,6 +1024,8 @@ impl AirGroup {
             strike_age_order: None,
             strike_held_share: Fixed::ZERO,
             strike_share_order: None,
+            strike_sizing: false,
+            strike_sizing_order: None,
         }
     }
 }

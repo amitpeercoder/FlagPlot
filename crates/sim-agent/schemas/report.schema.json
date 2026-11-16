@@ -16,7 +16,8 @@
     "fired_last_day",
     "summary",
     "holds",
-    "neutralisations"
+    "neutralisations",
+    "denials"
   ],
   "additionalProperties": false,
   "properties": {
@@ -24,7 +25,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 9
+      "const": 10
     },
     "kind": {
       "const": "report"
@@ -227,6 +228,62 @@
           },
           "target": {
             "$ref": "defs.schema.json#/$defs/handle"
+          }
+        }
+      }
+    },
+    "denials": {
+      "type": "array",
+      "description": "The deny intents in force with the measure of each (decision 0123, 4).",
+      "items": {
+        "type": "object",
+        "description": "The measure of a deny intent, with the intent's number and its waters.",
+        "required": [
+          "days_in_force",
+          "contacts_held",
+          "strikes_launched",
+          "claimed_sunk",
+          "claimed_hits",
+          "days_met",
+          "text",
+          "intent",
+          "hex",
+          "distance"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "days_in_force": {
+            "type": "integer"
+          },
+          "contacts_held": {
+            "type": "integer"
+          },
+          "strikes_launched": {
+            "type": "integer"
+          },
+          "claimed_sunk": {
+            "type": "integer"
+          },
+          "claimed_hits": {
+            "type": "integer"
+          },
+          "days_met": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "intent": {
+            "type": "integer"
+          },
+          "hex": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "distance": {
+            "type": "integer"
           }
         }
       }

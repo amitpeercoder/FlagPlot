@@ -115,7 +115,7 @@ impl SideView<'_> {
                 if group.mission != AirMission::NavalStrike {
                     return None;
                 }
-                Some(AirAnswer::Strike(self.strike_choice(group.id)))
+                Some(AirAnswer::Strike(self.naval_strike(group.id)))
             }
             AirQuestion::AircraftAbleToFly { group } => {
                 let group = self.own_air_group(*group)?;

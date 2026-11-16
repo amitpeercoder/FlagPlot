@@ -1,10 +1,10 @@
 # 0123: The end "deny an area", and striking ships from a base
 
-Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, the second end and doctrine 5, and step 4 of its seven), written by level as decision 0120 has it. It writes the end and two tasks out with the hand calculation, and says when decision 0118's rule for a strike's size is built. Not built. It is the first half of step 4; surface forces, carriers at sea and fuel as policy are the second half and get their own record.
+Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, the second end and doctrine 5, and step 4 of its seven), written by level as decision 0120 has it. It writes the end and two tasks out with the hand calculation, and says when decision 0118's rule for a strike's size is built. Built on Nov 16, 2026 ("As built" below). It is the first half of step 4; surface forces, carriers at sea and fuel as policy are the second half and get their own record.
 
 Summary: The end "deny an area", stated to the area, under which the area's staff gives each of its bases in reach of those waters the task of striking ships and, where the base has no cover, of searching them; the strike doctrine at the base's level, which sets its bombers' standing orders from the risk level; and a strike's size, decided at the group's level from the task it is under
 
-Standing: Settled by the architect, Nov 16, 2026, inside decisions 0113, 0118 and 0120. Not built
+Standing: Settled by the architect, Nov 16, 2026, inside decisions 0113, 0118 and 0120. Built
 
 ## Why
 
@@ -74,3 +74,26 @@ The one rule of the engine built here is decision 0118's.
 ## The hand calculation
 
 `tests/scenario_53_deny_an_area.rs`: one base with three bomber groups, a flying boat group and a fighter group, three contacts in reach and no enemy unit, over 2 days at press, with every order, every launch and its size.
+
+## As built
+
+Built on Nov 16, 2026, with decision 0118, in one step. What follows is what was built and every place the build read the record more closely or differed from it.
+
+**Versions.** The state version is 30 (the kinds deny, code 6, its hex and distance; strike ships, code 7, and search waters, code 8, each its base; and decision 0118's setting). The rules label is 13, raised by decision 0118. The saved game is version 6, the doctrine `supply-10`, the agent interface version 10.
+
+**State and intake.** `IntentKind::Deny { hex, distance }` (addressed to the area), `StrikeShips { base }` and `SearchWaters { base }` (addressed to the base). A strike task may stand under a deny and under a hold of the same base; a search task under a deny only. A commander's `set_intent` of a search task is refused with a new refusal, `NotARoot`; a deny whose hex is not on the map with `NotOnMap`. `IntentKind::base()` now gives none for a deny.
+
+**The level of a reason.** Rule 9's "its reason says the group decided" is built as a new level, `Addressee::AirGroup` (code 3), which no intent is addressed to: the reason of each sizing order the strike doctrine gives says "decided at the level of air_group:N"; every other reason of a task keeps its base. The tools print it as `{"air_group": n}` and `air_group:N`.
+
+**The doctrines** are `crates/sim-staff/src/deny.rs` (the area's), `strike.rs` and `search.rs` (the base's); the morning's order is the leaves, hold, neutralise, deny, cover, raid, strike and search. Readings the build took:
+
+- **The waters** are the hexes on the map within the distance of the hex, of any terrain. A reach or a range "touches" them when a hex of them is within it by the engine's air distance test.
+- **Rule 2** counts, at each base, every group the intent may use there, held or not, as the neutralise doctrine does; a bomber is a group that is not a fighter and whose type carries a weapon; a group that can search is one that is not a fighter and has a search range. The doctrine hands in a reason for each task formed or standing at each base, and for a base whose cover stands in place of a search task. **"Where it forms nothing for any base"** is read as no base having a bomber or a searcher that touches the waters: a morning on which the tasks formed before still stand is not a failure to meet the intent. The cannot-meet notice rests on that reason.
+- **Rule 7, whose a bomber is.** A raid task leaves out a bomber that a strike task of higher rank may use (the priority read up, then the number), and the strike task leaves out a group a raid served before it took; a cover leaves out a strike task's bombers, as it leaves out a raid's. A fighter is the cover's where a cover of the base is in force, and the strike task gives it no order.
+- **Rule 7's orders** come in this order for each bomber, each only where the group differs: mission (naval strike, or rest above the fatigue level), oldest contact (compared with the group's own setting or else the figure), target list, reach, held share, sizing on. A bomber that rests is still given the settings.
+- **Rule 13.** A cover's arc takes as threats, beside its own, the waters of every deny intent in force whose plan is released and whose waters a search group of the cover reaches.
+- **The measure** (`sim_agent::deny_measure`) rebuilds the contacts held at each day's end from the side's own `ReportReceived`, `ContactDropped` and `ContactNotThere`. Its strikes launched are the side's `StrikeLaunched` events on days in force by groups now based where a strike task under the end stands or stood, on that task's days, wherever the strike went (rule 6); its claims are the air claims at hexes of the waters. It is in `command_state` and in `report` as `denials`.
+
+**What it was checked against.** Scenario 53 (`data/scenarios/53_deny_an_area.toml`, placeholder data, run on the frozen figures with the calculation's table added) came out as the hand calculation has it in every number: the tree, the sixteen orders of day 1 and none on day 2, the levels of the reasons, the launches (10, 10 and 4, then 10 and 8: 42), the search of 110 to 180 at 600 nm in every daylight pulse, the patrol, and the measure (2 days in force, 5 strikes, no contact held in the waters, 2 days met). So did the properties of balanced, preserve, the carrier, the cover's one arc, out of reach, withdrawing the end, the forces limit, the same start and two worlds. Two readings: in "a base with a cover has one arc", "(0,5) the only threat" is read as the variant also starting with no contact (contacts held are threats of a cover's arc too); and "a commander's order overrides the size" was first written with the commander's day 1 order holding group 3. That order is taken in before the staff forms the strike task that morning, so no intent in force may then use the group and the order holds nothing (decision 0115, "As built": an override is an order to a group that some intent in force may use); the staff gives group 3 its four orders and it sends 4 at contact 2, as in the main case. **Restated by the architect after the build (Nov 16, 2026):** the code and the override rule as built stand; the property now has the order on day 2, when the strike task is in force, hold group 3 and leave its sizing off with no staff order that day; the same order on day 1 hold nothing; and a hold on day 1 leave the group with no order and nothing flown. Its three tests pass and none is ignored.
+
+**Compared with earlier scenarios.** `sh scripts/compare-scenarios.sh --against origin/main` (85d8420d): 164 runs, 160 the same with the hashes cut; the 4 that differ are scenarios 49 and 53, live and frozen, which are new. Scenarios 46 to 48 and 50 pass with their tests untouched. The recorded games changed only in their versions, their hashes and the words of the tools.

@@ -2,24 +2,24 @@ Placeholder scenario 36: One convoy
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash cb0d89e3e6934b19  28 events
-day   2  hash aff4899f4c334f5b  17 events
-day   3  hash af03c4052c8d8587  12 events
-day   4  hash e1e7480f67f3bb31  11 events
-day   5  hash 6a89c655e73c8fc1  5 events
-day   6  hash aa480bdc8d8aeb23  5 events
-day   7  hash 0cea97df42a4feab  5 events
-day   8  hash 7e815a5431723b7e  5 events
-day   9  hash cf488c3c2fc77116  5 events
-day  10  hash 71c7f5bc3e23e71d  5 events
-day  11  hash a2f80501af62ed90  5 events
-day  12  hash 8ceb4b7fcc084485  5 events
-day  13  hash e1e82ec902c4254f  5 events
-day  14  hash 4940ffe6608c7428  5 events
-day  15  hash 90dba36abacc4c12  5 events
-day  16  hash 9e84b02b37df992e  12 events
-day  17  hash 28ba234592b03400  16 events
-day  18  hash 0c6857b888b5039f  12 events
+day   1  hash 6923801c56334c23  28 events
+day   2  hash eed3d9bef0a5aa11  17 events
+day   3  hash 0c05ddd3a846ee1d  12 events
+day   4  hash a5cd954449561e1b  11 events
+day   5  hash b0460a9e3ab524bf  5 events
+day   6  hash 873403f7bfd9646d  5 events
+day   7  hash 6659eac1921c25f5  5 events
+day   8  hash a7be2c0e4cd052d4  5 events
+day   9  hash bbee0edf699b7f0c  5 events
+day  10  hash 336381a629dbfb3b  5 events
+day  11  hash a371a727f5aca2b6  5 events
+day  12  hash 4c7465c4fb95a1ab  5 events
+day  13  hash 457d297ea2a727fd  5 events
+day  14  hash bb4356c7f1b1f95a  5 events
+day  15  hash b6040a36cf7f06a4  5 events
+day  16  hash f839f1d82a0bfd28  12 events
+day  17  hash 87b03c1540f7148a  16 events
+day  18  hash 9d751d77be907a81  12 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

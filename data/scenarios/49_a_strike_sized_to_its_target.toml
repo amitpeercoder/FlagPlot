@@ -1,0 +1,241 @@
+# Scenario 49: a strike sized to its target.
+#
+# Decision 0118. Eight Allied groups of placeholder dive bombers at one base,
+# all on naval strike, each launching on a contact up to 3 pulses old. Seven
+# size their strikes to their target, by an order of day 1; group 2 does not;
+# group 4 holds back a quarter. The Allied side starts holding three contacts
+# in reach (a carrier, two cruisers, three transports), and there is no enemy
+# at all: every strike flies to a contact's hex, finds nothing and rolls no
+# die. The hand calculation is in tests/scenario_49_a_strike_sized_to_its_target.rs.
+# The test runs this file on the frozen step 1 figures with its own table of
+# aircraft for each ship added, and with variants it builds from the parsed
+# text. The upkeep, wear, fatigue and supply figures are not loaded.
+#
+# PLACEHOLDER DATA. The bases, aircraft, figures and map are invented.
+
+name = "Placeholder scenario 49: A strike sized to its target"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_a_strike_sized_to_its_target.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# Allied base 1.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+[[air_group]]
+id = 1
+name = "Placeholder dive bombers 1"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 3
+
+[[air_group]]
+id = 2
+name = "Placeholder dive bombers 2"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 3
+
+[[air_group]]
+id = 3
+name = "Placeholder dive bombers 3"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 3
+
+[[air_group]]
+id = 4
+name = "Placeholder dive bombers 4"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 12
+strike_contact_age_pulses = 3
+strike_held_share = "0.25"
+
+[[air_group]]
+id = 5
+name = "Placeholder dive bombers 5"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 3
+
+[[air_group]]
+id = 6
+name = "Placeholder dive bombers 6"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 3
+
+[[air_group]]
+id = 7
+name = "Placeholder dive bombers 7"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 20
+strike_contact_age_pulses = 3
+
+[[air_group]]
+id = 8
+name = "Placeholder dive bombers 8"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+strike_contact_age_pulses = 3
+
+# The three contacts, entered from the oldest down: the carrier is contact 1,
+# the cruisers contact 2, the transports contact 3.
+[[contact]]
+side = "allied"
+q = 0
+r = 4
+ship_count = 1
+kind = "carrier"
+age_pulses = 2
+
+[[contact]]
+side = "allied"
+q = 3
+r = 0
+ship_count = 2
+kind = "cruiser"
+age_pulses = 1
+
+[[contact]]
+side = "allied"
+q = -3
+r = 0
+ship_count = 3
+kind = "transport"
+age_pulses = 0
+
+# Every group is on naval strike.
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 4
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 5
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 6
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 7
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 8
+kind = "set_air_mission"
+mission = "naval_strike"
+
+# Every group but group 2 sizes its strikes to their target.
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_strike_sizing"
+on = true
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_strike_sizing"
+on = true
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 4
+kind = "set_strike_sizing"
+on = true
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 5
+kind = "set_strike_sizing"
+on = true
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 6
+kind = "set_strike_sizing"
+on = true
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 7
+kind = "set_strike_sizing"
+on = true
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 8
+kind = "set_strike_sizing"
+on = true

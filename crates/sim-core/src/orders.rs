@@ -630,6 +630,13 @@ pub enum AirGroupOrder {
     SetStrikeHeldShare {
         share: Fixed,
     },
+    /// Whether the group sizes its naval strikes to their target (decision
+    /// 0118, 1): on, it sends at a contact what the figures say that kind of
+    /// target needs, less what groups before it have sent there. Off until
+    /// set. A standing order of its own kind. Added at the end.
+    SetStrikeSizing {
+        on: bool,
+    },
 }
 
 /// An order to a land unit (decision 0090).

@@ -116,8 +116,20 @@ fn check_facts(view: &SideView<'_>, answer: &Answer, line: &Value, label: &str) 
         Answer::Air(AirAnswer::Strike(None)) | Answer::Air(AirAnswer::BaseStrike(None)) => {
             assert_eq!(a["launches"], false, "{label}");
         }
-        Answer::Air(AirAnswer::Strike(Some(s))) => {
+        Answer::Air(AirAnswer::Strike(Some(strike))) => {
+            let s = &strike.choice;
             assert_eq!(a["launches"], true, "{label}");
+            assert_eq!(a["aircraft"], strike.aircraft, "{label}");
+            match &strike.sizing {
+                Some(sizing) => {
+                    assert_eq!(a["need"], serde_json::json!(sizing.need), "{label}");
+                    assert_eq!(a["sent_before"], sizing.sent_before, "{label}");
+                }
+                None => {
+                    assert!(a.get("need").is_none(), "{label}");
+                    assert!(a.get("sent_before").is_none(), "{label}");
+                }
+            }
             assert_eq!(
                 a["contact"]["handle"],
                 format!("contact:{}", view.contact_number(s.contact)),

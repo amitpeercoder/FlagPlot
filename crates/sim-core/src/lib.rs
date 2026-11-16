@@ -58,7 +58,7 @@ mod surface;
 mod upkeep;
 pub mod works;
 
-pub use airstrike::StrikeChoice;
+pub use airstrike::{NavalStrike, StrikeChoice, StrikeSizing};
 pub use command::{Proposal, Staff, StaffCommand, StaffDecisions, Staffs};
 pub use estimate::StartingEstimate;
 pub use invariants::InvariantViolation;

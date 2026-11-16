@@ -487,9 +487,15 @@ impl Day<'_, '_> {
         // The groups: at the base, not held, the raid's by rule 16 and not
         // taken by a raid served before this one, in group number order.
         let mut members = self.at_base(raid, base);
+        // A bomber a strike-ships task of higher rank may use is that task's
+        // (decision 0123, 7).
+        let strike_bombers = self.strike_bombers();
         members.retain(|m| {
             self.state.hold_on_group(m.id).is_none()
                 && self.raid_taken.get(&m.id).is_none_or(|by| *by == raid.id)
+                && strike_bombers
+                    .get(&m.id)
+                    .is_none_or(|task| !self.ranks_above(*task, raid.id))
         });
         let mut groups: Vec<RaidGroup> = Vec::new();
         let mut kinds: BTreeMap<AirGroupId, String> = BTreeMap::new();

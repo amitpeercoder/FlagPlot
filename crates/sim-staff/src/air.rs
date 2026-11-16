@@ -110,13 +110,13 @@ impl Arc {
         to: 0,
     };
 
-    fn whole(&self) -> bool {
+    pub(crate) fn whole(&self) -> bool {
         self.from == self.to
     }
 }
 
 /// A bearing as three digits.
-fn bearing(deg: u32) -> String {
+pub(crate) fn bearing(deg: u32) -> String {
     format!("{deg:03}")
 }
 
@@ -151,7 +151,7 @@ pub(crate) fn arc_for(base: Hex, threats: &[Hex]) -> Arc {
     Arc::WHOLE
 }
 
-fn arc_words(arc: &Arc) -> String {
+pub(crate) fn arc_words(arc: &Arc) -> String {
     if arc.whole() {
         "the whole circle".to_string()
     } else {
@@ -321,6 +321,9 @@ pub(crate) struct Day<'v, 'a> {
     /// The groups raid intents served earlier this morning have taken
     /// (decision 0120, 16: rank decides between two tasks of one kind).
     pub(crate) raid_taken: BTreeMap<AirGroupId, IntentId>,
+    /// The groups strike-ships tasks served earlier this morning have taken
+    /// (decision 0123, 7).
+    pub(crate) strike_taken: BTreeMap<AirGroupId, IntentId>,
     /// The fighter groups the covers served this morning have, with the
     /// patrol share each is to fly at, or `None` where the cover rests it:
     /// what a raid from the same base may draw escorts from (decision 0120,
@@ -332,7 +335,8 @@ pub(crate) struct Day<'v, 'a> {
     events: Option<Vec<sim_core::side_events::SideEvent>>,
 }
 
-/// The kinds the air doctrine serves: hold, cover, neutralise and raid.
+/// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
+/// strike ships and search waters.
 pub(crate) fn is_air(kind: IntentKind) -> bool {
     matches!(
         kind,
@@ -340,6 +344,9 @@ pub(crate) fn is_air(kind: IntentKind) -> bool {
             | IntentKind::Cover { .. }
             | IntentKind::Neutralise { .. }
             | IntentKind::Raid { .. }
+            | IntentKind::Deny { .. }
+            | IntentKind::StrikeShips { .. }
+            | IntentKind::SearchWaters { .. }
     )
 }
 
@@ -435,6 +442,7 @@ impl<'v, 'a> Day<'v, 'a> {
             scratch: StaffDecisions::default(),
             taken: BTreeMap::new(),
             raid_taken: BTreeMap::new(),
+            strike_taken: BTreeMap::new(),
             cover_fighters: BTreeMap::new(),
             lines: Vec::new(),
             events: None,
@@ -442,8 +450,11 @@ impl<'v, 'a> Day<'v, 'a> {
         day.leaves();
         day.holds();
         day.neutralises();
+        day.denials();
         day.covers();
         day.raids();
+        day.strikes();
+        day.searches();
         Some(day)
     }
 
@@ -701,7 +712,9 @@ impl<'v, 'a> Day<'v, 'a> {
             };
             let in_scope = self.in_scope(id);
             let today = self.today;
-            let base = hold.kind.base();
+            let Some(base) = hold.kind.own_base() else {
+                continue;
+            };
             let base_text = base_words(self.view, base);
             // (a) A cover intent for the base stands, whoever made it.
             let standing = self
@@ -890,7 +903,9 @@ impl<'v, 'a> Day<'v, 'a> {
         };
         let in_scope = self.in_scope(cover.id);
         let today = self.today;
-        let base = cover.kind.base();
+        let Some(base) = cover.kind.own_base() else {
+            return;
+        };
         let base_text = base_words(self.view, base);
         let risk = self.state.risk_read_up(cover.id);
         let level = level_of(risk);
@@ -915,14 +930,25 @@ impl<'v, 'a> Day<'v, 'a> {
         // A group a raid task in force may use as a bomber is the raid's,
         // though it can also search (decision 0120, 16, amending decision
         // 0115, 7): the cover leaves it out.
-        let raid_bombers = self.raid_bombers();
+        let mut raid_bombers = self.raid_bombers();
+        // So is a group a strike-ships task in force may use as a bomber
+        // (decision 0123, 7, as decision 0120, 16).
+        for (group, task) in self.strike_bombers() {
+            raid_bombers.entry(group).or_insert(task);
+        }
         let raids_have: Vec<String> = members
             .iter()
             .filter_map(|m| {
                 raid_bombers.get(&m.id).map(|raid| {
                     format!(
-                        "{} is the raid's: {raid} may use it as a bomber (fatigue {}), so the cover gives it no order",
-                        m.id, m.fatigue
+                        "{} is the {}'s: {raid} may use it as a bomber (fatigue {}), so the cover gives it no order",
+                        m.id,
+                        if self.state.intents.get(raid).is_some_and(|i| matches!(i.kind, IntentKind::StrikeShips { .. })) {
+                            "strike task"
+                        } else {
+                            "raid"
+                        },
+                        m.fatigue
                     )
                 })
             })
@@ -936,9 +962,24 @@ impl<'v, 'a> Day<'v, 'a> {
             self.taken.insert(m.id, cover.id);
         }
 
-        // The arc for the groups that search.
-        let threats = self.threats();
+        // The arc for the groups that search. The waters of a deny intent its
+        // searchers reach are threats beside the rest: one arc for a base's
+        // searchers (decision 0123, 13).
+        let mut threats = self.threats();
         let base_hex = self.view.bases().find(|b| b.id == base).map(|b| b.hex);
+        if let Some(at) = base_hex {
+            let ranges: Vec<Fixed> = members
+                .iter()
+                .filter(|m| m.kind == Kind::Searcher)
+                .map(|m| m.range)
+                .collect();
+            for hex in self.waters_for_cover(at, &ranges) {
+                threats.push(Threat {
+                    hex,
+                    words: format!("the waters to deny at {hex}"),
+                });
+            }
+        }
         let hexes: Vec<Hex> = threats.iter().map(|t| t.hex).collect();
         let arc = base_hex.map_or(Arc::WHOLE, |hex| arc_for(hex, &hexes));
         let arc_text = arc_working(&arc, &threats);

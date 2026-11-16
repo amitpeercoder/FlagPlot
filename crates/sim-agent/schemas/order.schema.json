@@ -498,6 +498,23 @@
           "type": "object",
           "required": [
             "kind",
+            "on"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_strike_sizing"
+            },
+            "on": {
+              "description": "True makes a naval_strike group send at a contact the aircraft its target needs and no more (decision 0118): the ships the contact reports times the figure for the kind it is taken for (a kind with no figure, a carrier among them, needs everything), less what the groups before it launched at it in the pulse. False sends all the group can, less its held share. It does not apply to a base_strike. The default is false. A standing order: it stays until another replaces it.",
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
             "base"
           ],
           "additionalProperties": false,

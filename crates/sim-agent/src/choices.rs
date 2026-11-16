@@ -24,7 +24,7 @@ use sim_core::choices::{Answer, Question};
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, ContactId, EntityRef, LandUnitId, ShipId, TaskForceId};
 use sim_core::state::AirGroupLocation;
-use sim_core::StrikeChoice;
+use sim_core::NavalStrike;
 
 use crate::answer::{FORMAT, VERSION};
 use crate::common::{Ctx, Dec, Handle};
@@ -269,10 +269,11 @@ impl Writer<'_, '_> {
         }
     }
 
-    fn strike(&self, launch: Option<&StrikeChoice>) -> Value {
-        let Some(choice) = launch else {
+    fn strike(&self, launch: Option<&NavalStrike>) -> Value {
+        let Some(strike) = launch else {
             return json!({"launches": false});
         };
+        let choice = &strike.choice;
         let report = self
             .ctx
             .view
@@ -280,14 +281,24 @@ impl Writer<'_, '_> {
             .iter()
             .find(|event| event.id == choice.report_event)
             .map(|event| event.number);
-        json!({
+        let mut body = json!({
             "launches": true,
             "contact": self.contact(choice.contact),
             "taken_for": choice.kind.name(),
             "distance_nm": Dec(choice.distance_nm),
             "hex": hex(choice.hex),
             "report_event": report,
-        })
+            "aircraft": strike.aircraft,
+        });
+        // For a group that sizes its strikes: the need of the contact (null
+        // where the kind has no figure and needs everything) and the
+        // aircraft the side's earlier groups sent at it in this pulse
+        // (decision 0118).
+        if let Some(sizing) = &strike.sizing {
+            body["need"] = json!(sizing.need);
+            body["sent_before"] = json!(sizing.sent_before);
+        }
+        body
     }
 
     fn base_strike(&self, launch: Option<&BaseStrikeLaunch>) -> Value {

@@ -37,6 +37,12 @@
 //! `raid` (`base` and `target`), a `target` in the staff's `form_intent`, and
 //! in a reason's `serves` a `level` (`"area"` or `{"base": n}`), the level
 //! that decided; it is left out where a reason has none.
+//!
+//! Version 6 (decisions 0118 and 0123) adds the air group order
+//! `set_strike_sizing` (`on`) in `"script"`, and the intent kinds `deny`
+//! (`hex` as `[q, r]` and `distance`, no `base`), `strike_ships` and
+//! `search_waters` (each with `base`) in `"commands"` and in the staff's
+//! `form_intent`.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -63,9 +69,11 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// forces limit, a hold on a whole air group and a reason's `chain`.
 /// Version 5 (decision 0120) adds the intent kinds `neutralise` and `raid`
 /// (with their `target`, also in the staff's `form_intent`) and a reason's
-/// `level` in `serves`. A game of an older version lacks them and is
-/// refused, not converted.
-pub const VERSION: u32 = 5;
+/// `level` in `serves`. Version 6 (decisions 0118 and 0123) adds the air
+/// group order `set_strike_sizing` and the intent kinds `deny` (`hex` and
+/// `distance`), `strike_ships` and `search_waters`. A game of an older
+/// version lacks them and is refused, not converted.
+pub const VERSION: u32 = 6;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -867,7 +875,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 5);
+        assert_eq!(written["version"], 6);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 11);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

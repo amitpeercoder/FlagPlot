@@ -1072,6 +1072,7 @@ impl World {
                             Ok(())
                         }
                     }
+                    AirGroupOrder::SetStrikeSizing { .. } => Ok(()),
                     AirGroupOrder::SetRestThreshold { fatigue } => {
                         if *fatigue < Fixed::ZERO || *fatigue > Fixed::from_int(100) {
                             Err(RejectReason::FatigueOutOfRange(*fatigue))
@@ -1490,6 +1491,10 @@ impl World {
                     AirGroupOrder::SetStrikeHeldShare { share } => {
                         group.strike_held_share = *share;
                         group.strike_share_order = Some(order.id);
+                    }
+                    AirGroupOrder::SetStrikeSizing { on } => {
+                        group.strike_sizing = *on;
+                        group.strike_sizing_order = Some(order.id);
                     }
                     AirGroupOrder::SetRestThreshold { fatigue } => {
                         group.rest_above = Some(*fatigue);

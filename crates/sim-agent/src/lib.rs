@@ -28,7 +28,7 @@
 //!   0049).
 //!
 //! Every answer serialises to JSON with `"format": "flagplot-agent"`,
-//! `"version": 9` and a `"kind"`, and has a schema under `schemas/`. A
+//! `"version": 10` and a `"kind"`, and has a schema under `schemas/`. A
 //! quantity of the game is a whole number if it counts things and a decimal
 //! string if it is a [`sim_core::fixed::Fixed`], never a float.
 
@@ -37,6 +37,7 @@ mod briefing;
 mod choices;
 mod commands;
 mod common;
+mod deny;
 mod explain;
 mod hold;
 mod lines;
@@ -75,6 +76,7 @@ pub use commands::{
     command_from_json, command_to_json, staff_decisions_from_json, staff_decisions_to_json,
 };
 pub use common::{Dec, Handle, Place};
+pub use deny::{deny_measure, DenyMeasure};
 pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
 };
