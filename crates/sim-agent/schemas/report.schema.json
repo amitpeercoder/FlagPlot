@@ -15,7 +15,8 @@
     "interrupts",
     "fired_last_day",
     "summary",
-    "holds"
+    "holds",
+    "neutralisations"
   ],
   "additionalProperties": false,
   "properties": {
@@ -23,7 +24,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 8
+      "const": 9
     },
     "kind": {
       "const": "report"
@@ -180,6 +181,51 @@
             "type": "integer"
           },
           "base": {
+            "$ref": "defs.schema.json#/$defs/handle"
+          }
+        }
+      }
+    },
+    "neutralisations": {
+      "type": "array",
+      "description": "The neutralise intents in force with the measure of each (decision 0120, 8).",
+      "items": {
+        "type": "object",
+        "description": "The measure of a neutralise intent: the days it has been in force, the raids flown on the target in them, the aircraft claimed destroyed on the ground there (a claim of the side's people), the air raids on the side's own bases and the days of them on which none was raided, and the words.",
+        "required": [
+          "days_in_force",
+          "days_met",
+          "raids_flown",
+          "claimed_on_ground",
+          "raids_on_own_bases",
+          "text",
+          "intent",
+          "target"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "days_in_force": {
+            "type": "integer"
+          },
+          "days_met": {
+            "type": "integer"
+          },
+          "raids_flown": {
+            "type": "integer"
+          },
+          "claimed_on_ground": {
+            "type": "integer"
+          },
+          "raids_on_own_bases": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "intent": {
+            "type": "integer"
+          },
+          "target": {
             "$ref": "defs.schema.json#/$defs/handle"
           }
         }

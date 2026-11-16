@@ -468,12 +468,33 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             hold["text"].as_str().unwrap_or("")
         ));
     }
+    // The neutralise intents in force and the measure of each (decision
+    // 0120, 8).
+    let neutralisations: Vec<Value> = state
+        .intents_in_force()
+        .filter(|intent| matches!(intent.kind, IntentKind::Neutralise { .. }))
+        .filter_map(|intent| {
+            let measure = crate::neutralise_measure(view, intent.id)?;
+            let mut entry = crate::staffing::neutralise_measure_json(&Some(measure));
+            entry["intent"] = json!(intent.id.raw());
+            entry["target"] = n.base(intent.kind.base());
+            Some(entry)
+        })
+        .collect();
+    for neutralised in &neutralisations {
+        summary.push_str(&format!(
+            " Neutralise intent:{}: {}.",
+            neutralised["intent"],
+            neutralised["text"].as_str().unwrap_or("")
+        ));
+    }
     answer(
         "report",
         json!({
             "day": today,
             "matters": matters_json,
             "holds": holds,
+            "neutralisations": neutralisations,
             "open_matters": open_words.len(),
             "closed_matters": closed,
             "interrupts": interrupts,

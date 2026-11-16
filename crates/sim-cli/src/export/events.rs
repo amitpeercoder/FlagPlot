@@ -2017,6 +2017,15 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             if !reason.serves.statement.is_empty() {
                 data = data.with("statement", Field::Str(reason.serves.statement.clone()));
             }
+            // The level that decided: "area" or "base:N"; left out where a
+            // reason has none (decision 0120).
+            if let Some(level) = reason.serves.level {
+                let level = match level {
+                    sim_core::command::Addressee::Area => "area".to_string(),
+                    sim_core::command::Addressee::Base(base) => format!("base:{}", base.raw()),
+                };
+                data = data.with("level", Field::Str(level));
+            }
             // The intents above it, nearest first: "1 (commander): hold
             // base:1; ...", left out where it is a root.
             if !reason.serves.chain.is_empty() {

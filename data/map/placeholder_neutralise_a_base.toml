@@ -1,0 +1,36 @@
+# PLACEHOLDER MAP. A stretch of open sea used by scenario 50 (decision 0120):
+# Allied base 1 at (0,0) and Japanese base 2 at (5,0), 200 nm east of it. A
+# third coast hex at (7,0), 280 nm east, is where the test's variant "out of
+# reach" moves base 2. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-3, 9]
+r = [-3, 8]
+
+# Stands in for Allied base 1.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Stands in for Japanese base 2, 5 hexes east of base 1.
+[[hex]]
+q = 5
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Where the variant "out of reach" puts base 2, 7 hexes east of base 1.
+[[hex]]
+q = 7
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

@@ -1585,6 +1585,7 @@ fn free_ended(view: &SideView<'_>, out: &mut Out) {
                 amendment: plan.amendments.last().map(|a| a.number),
                 statement: String::new(),
                 chain: Vec::new(),
+                level: None,
             },
             evidence: vec![sim_core::command::Evidence {
                 what: format!("{} is {}", plan.id, plan.state.name()),

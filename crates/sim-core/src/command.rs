@@ -80,7 +80,8 @@ impl core::fmt::Display for PlanId {
 
 /// What an intent asks for. Stage 1 has one kind (decision 0107, 17, with
 /// question 5 as answered); step 2 of stage 2 adds covering a base from the
-/// air (decision 0115) and holding a place (decision 0117).
+/// air (decision 0115) and holding a place (decision 0117); step 3 adds
+/// neutralising a base and raiding one (decision 0120).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum IntentKind {
     /// Keep the side's stock in `base`'s hex at `floor_days` days of supply
@@ -101,6 +102,16 @@ pub enum IntentKind {
     /// date. Under it the staff may form a cover intent for the same base.
     /// Added at the end.
     Hold { base: BaseId },
+    /// Neutralise `target`, a base on the side's map that is not the side's
+    /// (decision 0120, 5): an end, addressed to the area. It has no date.
+    /// Under it the staff forms a raid task for each base of the side with
+    /// bombers that reach the target. Added at the end.
+    Neutralise { target: BaseId },
+    /// Raid `target` from `base`, a base of the side (decision 0120, 9): a
+    /// task, addressed to `base`. It has no date. The staff forms it under
+    /// "neutralise a base" naming the same target, and a commander may state
+    /// it himself as a root. Added at the end.
+    Raid { base: BaseId, target: BaseId },
 }
 
 impl IntentKind {
@@ -110,6 +121,8 @@ impl IntentKind {
             IntentKind::KeepSupplied { .. } => 1,
             IntentKind::Cover { .. } => 2,
             IntentKind::Hold { .. } => 3,
+            IntentKind::Neutralise { .. } => 4,
+            IntentKind::Raid { .. } => 5,
         }
     }
 
@@ -119,36 +132,65 @@ impl IntentKind {
             IntentKind::KeepSupplied { .. } => "keep_supplied",
             IntentKind::Cover { .. } => "cover",
             IntentKind::Hold { .. } => "hold",
+            IntentKind::Neutralise { .. } => "neutralise",
+            IntentKind::Raid { .. } => "raid",
         }
     }
 
-    /// The base the intent names.
+    /// The base the intent names first: the side's own base for every kind
+    /// but "neutralise a base", whose one base is its target, the enemy's.
     pub const fn base(self) -> BaseId {
         match self {
             IntentKind::KeepSupplied { base, .. }
             | IntentKind::Cover { base }
-            | IntentKind::Hold { base } => base,
+            | IntentKind::Hold { base }
+            | IntentKind::Raid { base, .. } => base,
+            IntentKind::Neutralise { target } => target,
+        }
+    }
+
+    /// The side's own base the intent names, if it names one: every kind but
+    /// "neutralise a base".
+    pub const fn own_base(self) -> Option<BaseId> {
+        match self {
+            IntentKind::Neutralise { .. } => None,
+            other => Some(other.base()),
+        }
+    }
+
+    /// The enemy base the intent is aimed at, if any (decision 0120): the
+    /// target of a neutralise or a raid intent.
+    pub const fn target(self) -> Option<BaseId> {
+        match self {
+            IntentKind::Neutralise { target } | IntentKind::Raid { target, .. } => Some(target),
+            _ => None,
         }
     }
 
     /// The level an intent of this kind is given to (decision 0117, 2): set
-    /// by the kind, chosen by nobody. Keeping a base supplied is the area's;
-    /// holding a place and covering a base are the base's.
+    /// by the kind, chosen by nobody. Keeping a base supplied and
+    /// neutralising a base are the area's; holding a place, covering a base
+    /// and raiding from one are the base's (decision 0120, 5 and 9).
     pub const fn addressee(self) -> Addressee {
         match self {
-            IntentKind::KeepSupplied { .. } => Addressee::Area,
-            IntentKind::Cover { base } | IntentKind::Hold { base } => Addressee::Base(base),
+            IntentKind::KeepSupplied { .. } | IntentKind::Neutralise { .. } => Addressee::Area,
+            IntentKind::Cover { base }
+            | IntentKind::Hold { base }
+            | IntentKind::Raid { base, .. } => Addressee::Base(base),
         }
     }
 
     /// Whether an intent of this kind may stand under one of `parent`'s kind
-    /// (decision 0117, 3 and 12). Step 2 has one pair: cover from the air
-    /// under holding the same base.
+    /// (decision 0117, 3 and 12, and 0120, 9): cover from the air under
+    /// holding the same base, and a raid under neutralising the same target.
     pub fn may_stand_under(self, parent: IntentKind) -> bool {
-        matches!(
-            (self, parent),
-            (IntentKind::Cover { base }, IntentKind::Hold { base: held }) if base == held
-        )
+        match (self, parent) {
+            (IntentKind::Cover { base }, IntentKind::Hold { base: held }) => base == held,
+            (IntentKind::Raid { target, .. }, IntentKind::Neutralise { target: aimed }) => {
+                target == aimed
+            }
+            _ => false,
+        }
     }
 }
 
@@ -1223,6 +1265,10 @@ pub enum CommandRefusal {
     /// ruling after the build of decision 0117). He withdraws it and states
     /// another. Added at the end.
     KindCannotChange(IntentId),
+    /// The target of a neutralise or a raid intent is not a base on the
+    /// side's map that is not the side's (decision 0120, 5 and 9). Added at
+    /// the end.
+    NotAnEnemyBase(BaseId),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -1292,6 +1338,10 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::KindCannotChange(id) => write!(
                 f,
                 "{id} is another kind of intent: withdraw it and state a new one"
+            ),
+            CommandRefusal::NotAnEnemyBase(base) => write!(
+                f,
+                "{base} is not a base on the side's map that is not the side's"
             ),
         }
     }
@@ -1474,6 +1524,8 @@ fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core
         }
         IntentKind::Cover { base } => write!(f, "cover {base} from the air"),
         IntentKind::Hold { base } => write!(f, "hold {base}"),
+        IntentKind::Neutralise { target } => write!(f, "neutralise {target}"),
+        IntentKind::Raid { base, target } => write!(f, "raid {target} from {base}"),
     }
 }
 
@@ -1507,6 +1559,10 @@ pub struct Serves {
     /// reason was made (decision 0117, 10). The last is one the commander
     /// stated. Empty where the intent is a root. The engine never reads it.
     pub chain: Vec<ChainLink>,
+    /// The level that decided (decision 0120, 2): the addressee of the
+    /// intent served. `None` where a reason has none, as in a game saved
+    /// before it was handed in. The engine never reads it.
+    pub level: Option<Addressee>,
 }
 
 /// One intent of a reason's chain: its number, its maker and its statement
@@ -1520,7 +1576,8 @@ pub struct ChainLink {
 
 /// "intent 1: keep base:2 (Placeholder base T) at 30 days of supply, a run
 /// every 15 days; plan 1, amendment 1", each part only where there is one,
-/// then the chain: "; under intent 1 (the commander's): hold base:1".
+/// then the level that decided, "; decided at the level of base:1", then the
+/// chain: "; under intent 1 (the commander's): hold base:1".
 impl core::fmt::Display for Serves {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut gap = "";
@@ -1541,6 +1598,11 @@ impl core::fmt::Display for Serves {
         }
         if let Some(amendment) = self.amendment {
             write!(f, "{gap}amendment {amendment}")?;
+            gap = "; ";
+        }
+        if let Some(level) = self.level {
+            let before = if gap.is_empty() { "" } else { "; " };
+            write!(f, "{before}decided at the level of {level}")?;
             gap = "; ";
         }
         for link in &self.chain {

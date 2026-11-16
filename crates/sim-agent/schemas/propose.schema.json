@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 8
+      "const": 9
     },
     "kind": {
       "const": "propose"
@@ -223,7 +223,9 @@
             "kind": {
               "enum": [
                 "cover",
-                "hold"
+                "hold",
+                "neutralise",
+                "raid"
               ]
             },
             "sub_intents": {
@@ -238,6 +240,7 @@
                   "reason",
                   "kind",
                   "base",
+                  "target",
                   "floor_days",
                   "interval_days"
                 ],
@@ -261,11 +264,30 @@
                   "kind": {
                     "enum": [
                       "cover",
-                      "hold"
+                      "hold",
+                      "neutralise",
+                      "raid"
                     ]
                   },
                   "base": {
-                    "$ref": "defs.schema.json#/$defs/handle"
+                    "oneOf": [
+                      {
+                        "$ref": "defs.schema.json#/$defs/handle"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "target": {
+                    "oneOf": [
+                      {
+                        "$ref": "defs.schema.json#/$defs/handle"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "floor_days": {
                     "type": "null"

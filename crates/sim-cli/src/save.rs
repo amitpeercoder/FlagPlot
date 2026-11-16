@@ -32,6 +32,11 @@
 //! group (`hold` or `release` with `air_group` and no `setting`); and in a
 //! reason's `serves` a `chain` of the intents above it. A game saved before
 //! reads none of these and is refused, not converted.
+//!
+//! Version 5 (decision 0120) adds the intent kinds `neutralise` (`target`) and
+//! `raid` (`base` and `target`), a `target` in the staff's `form_intent`, and
+//! in a reason's `serves` a `level` (`"area"` or `{"base": n}`), the level
+//! that decided; it is left out where a reason has none.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -55,9 +60,12 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// `"commands"`, `"staff"` and `"doctrine_version"`. Version 4 adds the
 /// intent tree (decisions 0115 to 0117): the intent kinds `cover` and `hold`,
 /// the staff's `form_intent`, `air_groups` and an optional `source` in a
-/// forces limit, a hold on a whole air group and a reason's `chain`. A game
-/// of an older version lacks them and is refused, not converted.
-pub const VERSION: u32 = 4;
+/// forces limit, a hold on a whole air group and a reason's `chain`.
+/// Version 5 (decision 0120) adds the intent kinds `neutralise` and `raid`
+/// (with their `target`, also in the staff's `form_intent`) and a reason's
+/// `level` in `serves`. A game of an older version lacks them and is
+/// refused, not converted.
+pub const VERSION: u32 = 5;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -757,6 +765,9 @@ mod tests {
                     maker: sim_core::command::Maker::Commander,
                     statement: "hold base:2".to_string(),
                 }],
+                level: Some(sim_core::command::Addressee::Base(
+                    sim_core::ids::BaseId::new(2),
+                )),
             },
             evidence: vec![Evidence {
                 what: "base 2 holds 40 t".to_string(),
@@ -856,7 +867,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 4);
+        assert_eq!(written["version"], 5);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 11);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

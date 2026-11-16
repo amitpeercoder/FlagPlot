@@ -24,9 +24,11 @@ mod doctrine;
 mod fleet;
 mod handin;
 mod morning;
+mod neutralise;
 mod planner;
 mod projection;
 mod proposal;
+pub mod raid;
 mod reasons;
 mod route;
 mod units;
@@ -62,7 +64,12 @@ use sim_core::view::SideView;
 /// the air under a held base, and each cover intent's patrol, search and rest
 /// orders for the air groups at its base. A side with no hold or cover
 /// intent gets exactly what `supply-7` gave.
-pub const DOCTRINE_VERSION: &str = "supply-8";
+/// `supply-9` adds decision 0120: the neutralise doctrine at the area's
+/// level, which forms raid tasks and gives no order, and the raid doctrine at
+/// the base's level; a group a raid task may use as a bomber is the raid's
+/// and not the cover's; every reason says which level decided. A side with
+/// no neutralise or raid intent gets the orders `supply-8` gave.
+pub const DOCTRINE_VERSION: &str = "supply-9";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
@@ -86,13 +93,7 @@ impl Staff for SupplyStaff {
             .command_state()
             .intents
             .get(&intent)
-            .is_some_and(|found| {
-                matches!(
-                    found.kind,
-                    sim_core::command::IntentKind::Hold { .. }
-                        | sim_core::command::IntentKind::Cover { .. }
-                )
-            })
+            .is_some_and(|found| air::is_air(found.kind))
         {
             return air::propose(&view, intent);
         }

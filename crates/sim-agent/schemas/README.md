@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 8` and a `"kind"` that names it.
+`"version": 9` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 8. A field removed from an answer, or a field whose meaning
+`version` is 9. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -759,3 +759,35 @@ side's own command state; the enemy is told none of it.
   served, nearest first, each "under intent N (the commander's): ...". A reason's JSON has
   `serves.chain`, a list of `{intent, maker, statement}`, left out when empty.
 - **`report`.** `holds`: each hold intent in force with its `intent`, `base` and `measure`.
+
+## Neutralising a base and raiding one (decision 0120)
+
+`version` is 9: an intent's `base` is `null` where the kind names none of the side's own bases
+(neutralise), which is a change in meaning, so the version rises. Everything here is of the
+side's own command state; the enemy is told none of it.
+
+- **Commands.** `set_intent` takes `intent_kind` `"neutralise"` with `target` (the number of an
+  enemy base on the side's map) and no `base`, and `"raid"` with `base` (one of the side's own)
+  and `target`. In a saved game and in a staff's hand-in the same keys are written; `form_intent`
+  writes `target` for a raid and no `base` for a neutralise. `set_intent` for any other kind
+  refuses `target`, and a neutralise refuses `base`, `floor_days` and `interval_days`. A target
+  that is not an enemy base on the side's map is refused by the engine ("is not a base on the
+  side's map that is not the side's"), in the same words for an enemy base the side may not know
+  and for one that does not exist.
+- **`command_state`, `plans`, `propose`.** Each intent has `kind` (`"neutralise"` or `"raid"`
+  among the others), `base` (`null` for a neutralise) and `target` (the enemy base of a neutralise
+  or a raid, `null` for the other kinds). The `tree` of `propose` is given for a neutralise and a
+  raid as it is for a hold and a cover. A neutralise intent in force has a `measure` with
+  `days_in_force`, `days_met` (the days of them on which none of the side's bases was raided from
+  the air), `raids_flown` (the pulses in which a bomber group of the side's launched at the target;
+  two groups launching together are one raid), `claimed_on_ground` (the aircraft the side claims to
+  have destroyed on the ground at the target's hex from the air: a claim, never below the truth,
+  never corrected), `raids_on_own_bases` (the air raids on the side's own bases) and `text`.
+- **`report`.** `neutralisations`: each neutralise intent in force with its measure, its `intent`
+  and its `target`.
+- **A reason's `level`.** `serves` of a reason has `level` (left out where a reason has none, as
+  in a game saved before): `"area"` or `{"base": n}`, the addressee of the intent served, the level
+  that decided. `why` gives `level` in words ("the area" or "base:1", `null` where none) and
+  `serves` ends "decided at the level of ..." before the chain. The replay file's `staff_reason`
+  event has a `level` field (`"area"` or `"base:n"`), left out where none.
+- **Saved games** are version 5; a game of version 4 or earlier is refused, not converted.

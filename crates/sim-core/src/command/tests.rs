@@ -300,6 +300,7 @@ fn reason(intent_n: u32, worked: &str) -> Reason {
             amendment: None,
             statement: String::new(),
             chain: Vec::new(),
+            level: None,
         },
         evidence: vec![Evidence {
             what: "a stock".to_string(),

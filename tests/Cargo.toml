@@ -327,3 +327,7 @@ path = "scenario_47_cover_from_the_air.rs"
 [[test]]
 name = "scenario_48_hold_a_place"
 path = "scenario_48_hold_a_place.rs"
+
+[[test]]
+name = "scenario_50_neutralise_a_base"
+path = "scenario_50_neutralise_a_base.rs"

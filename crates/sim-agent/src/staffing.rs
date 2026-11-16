@@ -48,7 +48,7 @@ pub const STAFF_DEFAULT_INTERVAL_DAYS: u32 = 15;
 
 /// What every answer about the staff says first: it does nothing for a side
 /// until an intent with a forces limit is set.
-const STAFF_NOTE: &str = "The staff does nothing for your side until you set an intent. To keep a base supplied, give the intent a forces limit (set_intent, then set_limit forces). To hold a place or cover a base from the air (intent_kind hold or cover), the staff may use the air groups based at the base unless you limit them (set_limit forces with air_groups); under a hold intent the staff forms a cover intent by itself. Commands you queue take effect at the start of the coming day.";
+const STAFF_NOTE: &str = "The staff does nothing for your side until you set an intent. To keep a base supplied, give the intent a forces limit (set_intent, then set_limit forces). To hold a place or cover a base from the air (intent_kind hold or cover), the staff may use the air groups based at the base unless you limit them (set_limit forces with air_groups); under a hold intent the staff forms a cover intent by itself. To neutralise an enemy base (intent_kind neutralise, with target), the staff forms a raid from each of your bases with bombers that reach it, using the air groups there unless you limit them. Commands you queue take effect at the start of the coming day.";
 
 /// The ships and forces of the umpire's ids shown in the side's numbers,
 /// from the side's view.
@@ -301,8 +301,10 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
     })
 }
 
-/// An intent's kind as the interface writes it: its name, its base, and for
-/// keeping a base supplied the days (`null` for the other kinds).
+/// An intent's kind as the interface writes it: its name, its own base
+/// (`null` for neutralising a base), its target (`null` for the kinds that
+/// have none), and for keeping a base supplied the days (`null` for the
+/// other kinds).
 fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
     let (floor_days, interval_days) = match kind {
         IntentKind::KeepSupplied {
@@ -310,11 +312,15 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
             interval_days,
             ..
         } => (Some(floor_days), interval_days),
-        IntentKind::Cover { .. } | IntentKind::Hold { .. } => (None, None),
+        IntentKind::Cover { .. }
+        | IntentKind::Hold { .. }
+        | IntentKind::Neutralise { .. }
+        | IntentKind::Raid { .. } => (None, None),
     };
     json!({
         "kind": kind.name(),
-        "base": n.base(kind.base()),
+        "base": kind.own_base().map(|base| n.base(base)),
+        "target": kind.target().map(|target| n.base(target)),
         "floor_days": floor_days,
         "interval_days": interval_days,
     })
@@ -430,7 +436,29 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
     if matches!(intent.kind, IntentKind::Hold { .. }) {
         body["measure"] = hold_measure_json(&crate::hold_measure(view, intent.id));
     }
+    if matches!(intent.kind, IntentKind::Neutralise { .. }) {
+        body["measure"] = neutralise_measure_json(&crate::neutralise_measure(view, intent.id));
+    }
     body
+}
+
+/// The measure of a neutralise intent as the interface writes it, with its
+/// words (decision 0120, 8): `null` where it is not a neutralise intent.
+pub(crate) fn neutralise_measure_json(measure: &Option<crate::NeutraliseMeasure>) -> Value {
+    let Some(m) = measure else {
+        return Value::Null;
+    };
+    json!({
+        "days_in_force": m.days_in_force,
+        "days_met": m.days_met,
+        "raids_flown": m.raids_flown,
+        "claimed_on_ground": m.claimed_on_ground,
+        "raids_on_own_bases": m.raids_on_own_bases,
+        "text": format!(
+            "{} raids flown on the target in {} days in force; {} aircraft claimed destroyed on the ground there (a claim of your people, never below the truth); {} air raids on your bases, {} of the {} days without a raid on any of them",
+            m.raids_flown, m.days_in_force, m.claimed_on_ground, m.raids_on_own_bases, m.days_met, m.days_in_force
+        ),
+    })
 }
 
 /// The measure of a hold intent as the interface writes it, with its words
@@ -1097,13 +1125,14 @@ pub fn propose(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result<Va
     ))
 }
 
-/// The tree the staff would form for a hold or a cover intent (decision
-/// 0117, 14), read from the decisions of its proposal and nothing else: the
+/// The tree the staff would form for a hold, cover, neutralise or raid
+/// intent (decisions 0117, 14, and 0120), read from the decisions of its proposal and nothing else: the
 /// sub-intents it would form (each `form_intent` command, numbered as the
 /// side's next free numbers), the air groups each intent would order and the
 /// order each is given (a mission, a search arc, a patrol share, a rest), and
 /// the search arc with its threats as the reason of its order words them.
-/// `null` for an intent that is not a hold or a cover intent.
+/// `null` for keeping a base supplied (the tree of a neutralise intent holds
+/// the raids the staff would form under it).
 fn tree_json(n: &Names<'_>, view: &SideView<'_>, proposal: &Proposal) -> Value {
     let state = view.command_state();
     let Some(found) = state.intents.get(&proposal.intent) else {
@@ -1316,9 +1345,15 @@ pub fn why(view: &SideView<'_>, number: u32) -> Value {
     };
     // What the reason serves, in words, and the intents above it, nearest
     // first, the last the commander's (decision 0117, 10).
-    let (serves, chain) = match &event.kind {
+    let (serves, level, chain) = match &event.kind {
         SideEventKind::Whole(EventKind::StaffReason { reason, .. }) => (
             n.text(&reason.serves.to_string()),
+            // The level that decided (decision 0120, 2): the area, or the
+            // base, in words; `null` where the reason has none.
+            reason.serves.level.map(|level| match level {
+                sim_core::command::Addressee::Area => "the area".to_string(),
+                sim_core::command::Addressee::Base(base) => n.text(&base.to_string()),
+            }),
             reason
                 .serves
                 .chain
@@ -1338,7 +1373,7 @@ pub fn why(view: &SideView<'_>, number: u32) -> Value {
                 })
                 .collect::<Vec<_>>(),
         ),
-        _ => (String::new(), Vec::new()),
+        _ => (String::new(), None, Vec::new()),
     };
     answer(
         "why",
@@ -1349,6 +1384,7 @@ pub fn why(view: &SideView<'_>, number: u32) -> Value {
             "for": for_json,
             "reason": reason,
             "serves": serves,
+            "level": level,
             "chain": chain,
         }),
     )
@@ -1383,6 +1419,7 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "intent",
             "intent_kind",
             "base",
+            "target",
             "floor_days",
             "interval_days",
         ],
@@ -1443,16 +1480,33 @@ pub(crate) fn request(
     body.insert("kind".into(), json!(tool));
     if tool == "set_intent" {
         let kind = body.get("intent_kind").and_then(Value::as_str);
-        if matches!(kind, Some("cover" | "hold")) {
-            if let Some(key) = ["floor_days", "interval_days"]
+        // The keys each kind takes besides "intent" and "intent_kind".
+        let takes: &[&str] = match kind {
+            Some("cover" | "hold") => &["base"],
+            Some("neutralise") => &["target"],
+            Some("raid") => &["base", "target"],
+            _ => &["base", "floor_days", "interval_days"],
+        };
+        if let (Some(name), Some(key)) = (
+            kind.filter(|name| *name != "keep_supplied"),
+            ["base", "target", "floor_days", "interval_days"]
                 .into_iter()
-                .find(|k| body.contains_key(*k))
-            {
-                return Err(CallError::new(format!(
-                    "\"{key}\" is an argument of set_intent only for intent_kind keep_supplied: {} takes a base and nothing else",
-                    kind.unwrap_or("")
-                )));
-            }
+                .find(|k| body.contains_key(*k) && !takes.contains(k)),
+        ) {
+            let what = match name {
+                "cover" | "hold" => "a base and nothing else",
+                "neutralise" => "a target (the enemy base) and nothing else",
+                "raid" => "a base (your own) and a target (the enemy base) and nothing else",
+                _ => "no such key",
+            };
+            return Err(CallError::new(format!(
+                "\"{key}\" is not an argument of set_intent for intent_kind {name}: {name} takes {what}"
+            )));
+        }
+        if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("target") {
+            return Err(CallError::new(
+                "\"target\" is an argument of set_intent only for intent_kind neutralise or raid",
+            ));
         }
     }
     let mut number_chosen = false;
@@ -1651,6 +1705,20 @@ pub(crate) fn command_answer(
                         ..
                     } => notes.push(format!(
                         "intent:{} is an end: the staff forms a cover intent for the base under it by itself. Its forces are the air groups based at the base that are not held, unless you limit them (set_limit forces with air_groups, or hold an air group). command_state shows the tree and the measure of the hold.",
+                        intent.raw()
+                    )),
+                    CommandKind::SetIntent {
+                        kind: IntentKind::Neutralise { .. },
+                        ..
+                    } => notes.push(format!(
+                        "intent:{} is an end, addressed to the area: the staff forms a raid for each base of yours with bombers that reach the target, under it. Its forces are the air groups based at your bases that are not held, unless you limit them (set_limit forces with air_groups, or hold an air group). command_state shows the tree and the measure of the intent.",
+                        intent.raw()
+                    )),
+                    CommandKind::SetIntent {
+                        kind: IntentKind::Raid { .. },
+                        ..
+                    } => notes.push(format!(
+                        "intent:{} is a raid on the target from your base: its bombers are the air groups based at the base that are not held, unless you limit them (set_limit forces with air_groups).",
                         intent.raw()
                     )),
                     CommandKind::SetIntent {

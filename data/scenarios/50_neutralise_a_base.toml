@@ -1,0 +1,97 @@
+# Scenario 50: the commander states one end, neutralise base 2, and the staff
+# raids it.
+#
+# Decision 0120. Two dive bomber groups and a fighter group rest at Allied
+# base 1. The Allied commander states one end, neutralise base 2, with no
+# forces limit and no risk, and gives both leaves. At the area's level the
+# staff forms a raid task, raid base 2 from base 1 (intent 2); at the base's
+# level it decides which mornings the raid goes, for 12 days. Japanese base
+# 2, 5 hexes (200 nm) east, has nothing at it: no patrol rises, no gun fires
+# and no aircraft is lost. The bombs' hits on it are rolled. The hand
+# calculation is in tests/scenario_50_neutralise_a_base.rs. The test runs
+# this file on the frozen step 1 figures, with the fatigue figures loaded and
+# the wear, upkeep and supply figures not, and with variants it builds from
+# the parsed text.
+#
+# PLACEHOLDER DATA. The bases, aircraft, figures and map are invented.
+
+name = "Placeholder scenario 50: Neutralise a base"
+placeholder = true
+seed = 1942
+days = 12
+map = "../map/placeholder_neutralise_a_base.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+fatigue = "../reference/fatigue.toml"
+
+# Allied base 1.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+# Japanese base 2, 5 hexes east of base 1, with nothing at it.
+[[base]]
+id = 2
+name = "Placeholder base 2"
+side = "japanese"
+q = 5
+r = 0
+supply_t = 0
+
+# Dive bombers, 10 ready (a bomb, a strike radius of 250 nm).
+[[air_group]]
+id = 1
+name = "Placeholder dive bombers 1"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+
+# Fighters, 8 ready (a reach of 250 nm).
+[[air_group]]
+id = 2
+name = "Placeholder fighters 2"
+side = "allied"
+base = 1
+aircraft_type = 4
+ready = 8
+
+# Dive bombers, 10 ready.
+[[air_group]]
+id = 3
+name = "Placeholder dive bombers 3"
+side = "allied"
+base = 1
+aircraft_type = 3
+ready = 10
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "neutralise"
+target = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

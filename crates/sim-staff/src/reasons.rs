@@ -47,6 +47,12 @@ pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
         ),
         IntentKind::Cover { base } => format!("cover {} from the air", base_words(view, base)),
         IntentKind::Hold { base } => format!("hold {}", base_words(view, base)),
+        IntentKind::Neutralise { target } => format!("neutralise {}", base_words(view, target)),
+        IntentKind::Raid { base, target } => format!(
+            "raid {} from {}",
+            base_words(view, target),
+            base_words(view, base)
+        ),
     }
 }
 
@@ -111,6 +117,9 @@ pub(crate) fn fill_reason(view: &SideView<'_>, state: &CommandState, reason: &mu
         return;
     };
     reason.serves.statement = statement(view, intent);
+    // The level that decided: the addressee of the intent served (decision
+    // 0120, 2).
+    reason.serves.level = Some(intent.addressee);
     reason.serves.chain = state
         .ancestors(id)
         .into_iter()
@@ -150,6 +159,7 @@ pub(crate) fn serving_intent(intent: IntentId, plan: &Plan) -> ReasonBuilder {
                 amendment: plan.amendments.last().map(|amendment| amendment.number),
                 statement: String::new(),
                 chain: Vec::new(),
+                level: None,
             },
             ..Reason::default()
         },
