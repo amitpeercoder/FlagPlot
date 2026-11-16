@@ -115,23 +115,28 @@
 //!
 //! # Properties
 //!
+//! The totals below are the morning's launches; where a contact is left
+//! unserved, groups launch again in the afternoon. (Clarified by the
+//! architect on Nov 16, 2026, after the build.)
+//!
 //! - **The game as it was.** With sizing set on no group, every group
 //!   launches all it can send at contact 1: 10, 10, 10, 9, 10, 10, 20 and
 //!   10, 89 aircraft in one raid. The same with sizing on and no table of
-//!   aircraft for each ship in the figures.
+//!   aircraft for each ship in the figures, 89 in the morning.
 //! - **No figure, everything.** With no figure for a carrier, every group
 //!   sends all it can at contact 1, which is never served: 89 aircraft in
 //!   one raid, as with sizing off. With no figure for a transport and the
 //!   others as given, groups 1 to 6 launch as in the main case, group 7
-//!   sends all 20 at contact 3 and group 8 its 10: 78 aircraft.
+//!   sends all 20 at contact 3 and group 8 its 10: 78 aircraft in the
+//!   morning.
 //! - **An unsized group overshoots.** With group 3's sizing off it sends 10
 //!   at contact 1, 30 there in all, and every other launch is unchanged: 72
-//!   aircraft.
+//!   aircraft in the morning.
 //! - **A wrong report sends the wrong size.** With contact 1 reporting 2
 //!   carriers its need is 48: groups 1, 2 and 3 send 10 each, group 4 sends
 //!   9 and group 5 sends 9, all at contact 1; group 6 sends 10 and group 7
-//!   sends 14 at contact 2; group 8 sends 10 at contact 3. 82 aircraft: 48,
-//!   24 and 10.
+//!   sends 14 at contact 2; group 8 sends 10 at contact 3. 82 aircraft in
+//!   the morning: 48, 24 and 10.
 //! - **Too few is still sent.** With group 1 alone at the base it sends 10
 //!   at contact 1, and its breakdown gives a need of 24 and 10 sent.
 //! - **A base strike is not sized.** With group 4 on a base strike at a

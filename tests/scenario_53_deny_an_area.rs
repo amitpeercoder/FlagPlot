@@ -160,8 +160,16 @@
 //!   away, 640 nm: neither is formed, and the staff hands in on day 1 that
 //!   it cannot meet intent 1.
 //! - **A commander's order overrides the size.** With the commander
-//!   ordering sizing off on group 3 on day 1: the group is held, the staff
-//!   gives it no order, and it flies nothing, having no mission.
+//!   ordering sizing off on group 3 on day 2, when the strike task that
+//!   may use it is in force: the order is taken, group 3 is held from
+//!   then, and the staff does not set its sizing on again: it gives group
+//!   3 no order on day 2. The same order on day 1 is taken before the
+//!   task is formed and holds nothing: the staff gives group 3 its four
+//!   orders that morning, sizing on among them, and it sends 4 at contact
+//!   2 as in the main case. With a hold on group 3 on day 1, the staff
+//!   gives it no order and it flies nothing, having no mission.
+//!   (Restated by the architect on Nov 16, 2026, after the build: the
+//!   first draft had the day 1 order hold the group.)
 //! - **Withdrawing the end** on day 2 withdraws both tasks that day.
 //! - The staff orders no group a task may not use; the same start gives
 //!   the same orders; two worlds that differ only in what the Allied side
@@ -986,21 +994,50 @@ fn a_commanders_order_of_sizing_off_on_a_held_group_3_is_left_alone_and_it_flies
     }
 }
 
-/// The lead's reading of "the commander ordering sizing off on group 3 on day
-/// 1: the group is held, the staff gives it no order, and it flies nothing":
-/// the order alone, with no hold command. The code does not hold a group for
-/// a commander's order: the staff gives group 3 its four orders of the main
-/// case, sizing on among them, and the group sends 4 at contact 2 as in the
-/// main case, so it flies. Whether the calculation means a hold command or a
-/// rule that a commander's order holds the group is the architect's to say.
+/// The order on day 2, when the strike task that may use group 3 is in
+/// force: it is taken, it holds the group, and the staff gives group 3 no
+/// order on day 2, so its sizing is not set on again.
 #[test]
-#[ignore = "code gives group 3 its 4 staff orders (sizing on) and 4 aircraft launched on day 1; the calculation says no order and nothing flown: the order alone does not hold a group"]
-fn a_commanders_order_of_sizing_off_on_group_3_alone_holds_it() {
+fn a_commanders_order_of_sizing_off_on_day_2_holds_group_3_and_the_staff_leaves_it() {
+    let played = play(&with(&SIZING_OFF_ON_GROUP_3.replace("day = 1", "day = 2")));
+    played.nothing_refused();
+    assert!(
+        played.orders(2).iter().all(|(g, _)| *g != 3),
+        "{:?}",
+        played.orders(2)
+    );
+    assert!(
+        played.state.hold_on_group(group(3)).is_some(),
+        "group 3 is held from day 2"
+    );
+    let g = &played.truth.last().expect("a state").air_groups[&group(3)];
+    assert!(!g.strike_sizing, "its sizing stays off");
+}
+
+/// The same order on day 1 is taken before the staff forms the strike task
+/// and holds nothing: the staff gives group 3 its four orders, sizing on
+/// among them, and it sends 4 at contact 2 in the morning, as in the main
+/// case.
+#[test]
+fn a_commanders_order_of_sizing_off_on_day_1_holds_nothing() {
     let played = play(&with(SIZING_OFF_ON_GROUP_3));
     played.nothing_refused();
-    assert!(played.orders(1).iter().all(|(g, _)| *g != 3));
-    assert_eq!(played.launched_by(3), 0);
-    assert_ne!(played.mission_at_end(3), STRIKE);
+    let ordered: Vec<AirGroupOrder> = played
+        .orders(1)
+        .into_iter()
+        .filter(|(g, _)| *g == 3)
+        .map(|(_, order)| order)
+        .collect();
+    assert_eq!(ordered.len(), 4, "{ordered:?}");
+    assert!(ordered.contains(&AirGroupOrder::SetStrikeSizing { on: true }));
+    assert!(played.state.hold_on_group(group(3)).is_none());
+    assert!(
+        played
+            .launches(1, Pulse::Morning)
+            .contains(&(3, Hex::new(3, 0), 4)),
+        "{:?}",
+        played.launches(1, Pulse::Morning)
+    );
 }
 
 #[test]
