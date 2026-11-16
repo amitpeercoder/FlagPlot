@@ -1,6 +1,6 @@
 # Design note: command levels, what each knows and what each reports
 
-Status: a note written for discussion and since decided (decision 0119), written by the architect on Nov 15, 2026 at the designer's request, from his direction of that day. Nothing here is built. It says how a staff at every level of command could interpret the intent it is given and hand narrower intents down, each level acting on its own picture, and how reports pass between levels. It says what exists to build on, what is missing, and what the designer still has to decide. It follows decision 0116, which says intents form a tree and leaves the levels as a record on each intent.
+Status: a note written for discussion and since decided (decision 0119) and planned as a stage (decision 0132), written by the architect on Nov 15, 2026 at the designer's request, from his direction of that day. Nothing here is built. It says how a staff at every level of command could interpret the intent it is given and hand narrower intents down, each level acting on its own picture, and how reports pass between levels. It says what exists to build on, what is missing, and what the designer still has to decide. It follows decision 0116, which says intents form a tree and leaves the levels as a record on each intent.
 
 ## The designer's direction
 
@@ -127,7 +127,7 @@ Added on Nov 16, 2026, by the designer's direction, recorded as decision 0129. E
 
 Put to the designer one at a time on Nov 15, 2026. His answers are decision 0119.
 
-1. **Initiative:** a rating of each commander, with placeholder values until research; a commander may even refuse an order. A departure with cause, on what he knew, is not held against him; one without cause may cost him his command. The rule for it waits.
+1. **Initiative:** a rating of each commander, with placeholder values until research; a commander may even refuse an order. A departure with cause, on what he knew, is not held against him; one without cause may cost him his command. The rule for it waits. On Nov 16, 2026 the designer left refusal and relief out of stage 2b: to be added later if play shows the need, for example intents systematically ignored or orders not obeyed. The stage's plan is decision 0132.
 2. **How stale your own forces may be:** any force a level down, as of its last report.
 3. **What goes down with an intent:** what bears on it.
 4. **Neighbours:** always hear each other within radio reach.
