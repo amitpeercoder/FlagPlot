@@ -351,3 +351,7 @@ path = "scenario_54_a_force_that_stands_by_night.rs"
 [[test]]
 name = "scenario_55_a_carrier_force_from_an_end"
 path = "scenario_55_a_carrier_force_from_an_end.rs"
+
+[[test]]
+name = "scenario_56_an_escorted_run"
+path = "scenario_56_an_escorted_run.rs"
