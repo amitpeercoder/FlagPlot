@@ -299,6 +299,9 @@ impl IntentKind {
                 IntentKind::Hold { .. },
             )
             | (IntentKind::OperateCarriers { .. }, IntentKind::Deny { .. }) => true,
+            // Decision 0126, 7: a covering force stands at the run's
+            // destination, the base's hex, which intake checks.
+            (IntentKind::StandAt { .. }, IntentKind::KeepSupplied { .. }) => true,
             _ => false,
         }
     }

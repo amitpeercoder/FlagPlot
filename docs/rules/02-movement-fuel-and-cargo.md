@@ -8,7 +8,7 @@ Where these rules run in a day (chapter 1, The order in which a day resolves, gi
 | --- | --- |
 | Start of the day, after the staff is asked | Orders are taken in, the commander's and the staff's, including route, speed, readiness, cargo, detach, form, join and stand-down orders (chapter 1, Orders; chapter 8) |
 | Start of each pulse | Alert from belief, then fatigue of the task forces (chapter 3, Readiness, alertness and fatigue of a force) |
-| Movement phase of each pulse | Halted forces whose work is done steam on, then stragglers, then movement, meetings and fights |
+| Movement phase of each pulse | Halted forces whose work is done steam on, then stragglers, then escorts keep station (Keeping station), then movement, meetings and fights |
 | Loading phase, last in each pulse | Cargo handling, then refuelling in port, from one queue of berths (decision 0112) |
 
 ## The map as the rules read it
@@ -76,7 +76,8 @@ A task force is a set of ships of one side, with one position, one route, one sp
 | `rules_of_engagement` | Stance, break-off level, straggler instruction and share to keep |
 | `home_port` | A base of its own side, set by order |
 | `cargo_order` | The standing cargo order, if any |
-| `mission` | Set by order. Only shore bombardment reads it among the rules of the engine: a force on the bombardment mission fires at an enemy base (chapter 4, Shore bombardment), and it is what a bombardment halt is for (Halting at a marked waypoint and steaming on). The staff reads it too, to know which task to form for a force: surface combat for a stand task, carrier for a carrier task (chapter 8, A task force as an addressee). It is copied by a split. [0092, 0096, 0124, 0125] |
+| `charge` | Set by the escort order, on a force on the escort mission only: the force it keeps station on, and the order that gave it. None otherwise (Keeping station) |
+| `mission` | Set by order. Two rules of the engine read it: a force on the escort mission may be given a charge (Keeping station), and a force on the bombardment mission fires at an enemy base (chapter 4, Shore bombardment), and it is what a bombardment halt is for (Halting at a marked waypoint and steaming on). The staff reads it too, to know which task to form for a force: surface combat for a stand task, carrier for a carrier task (chapter 8, A task force as an addressee). It is copied by a split. [0092, 0096, 0121, 0124, 0125] |
 | `halt` | Set while the status is halted, and only then: the work it halted for (a bombardment, cargo, or both, or the night), the hour it halted, its `TaskForceHalted` event, the bombardment it has fired since and the completion of its cargo order since, each if any. See Halting at a marked waypoint and steaming on. [0096, 0124] |
 | `yard_trip` | Set while the force is away at the yard: its port, its day of return and the event that sent it. None otherwise (chapter 4, Repair) |
 
@@ -184,7 +185,7 @@ A side sees: its own position changes in `TaskForceSteamed` events (the `from` a
 
 ### Order of movement within a pulse
 
-Within one pulse forces move in order of clock time. The engine works out, for each force that can still steam, the distance to its next change of position: the rest of the way to half the charge of its leg or, if it is already at half or past it, the rest of the leg plus half the charge of the next, if the path has a next hex. It considers only a change that its remaining budget reaches. For each such force the time of the change is its hours used so far, plus the open segment plus that distance divided by its speed. The force with the earliest time is advanced to that point, and the lower task force number wins a tie. This repeats until no force has a change within its budget. Each force then steams out what is left of its budget. [0022 items 1 and 2]
+Within one pulse forces move in order of clock time. The engine works out, for each force that can still steam, the distance to its next change of position: the rest of the way to half the charge of its leg or, if it is already at half or past it, the rest of the leg plus half the charge of the next, if the path has a next hex. It considers only a change that its remaining budget reaches. For each such force the time of the change is its hours used so far, plus the open segment plus that distance divided by its speed. The force with the earliest time is advanced to that point, and the lower task force number wins a tie, except that a force that is some force's charge comes after every force that is not (Keeping station). This repeats until no force has a change within its budget. Each force then steams out what is left of its budget. [0022 items 1 and 2]
 
 A side sees: not an event.
 
@@ -262,6 +263,25 @@ Turning back swaps the two hexes and sets progress to the leg's charge less its 
 A side can ask this choice for its own forces before it is made (`measure`'s `choices`, `reroute`): the side states the first waypoint of the route it is considering, and the answer is whether the force would turn back or go on, and the hex the new route steers from, from the force's own position on its leg and the map. [0100]
 
 A side sees: its own `TaskForceTurnedBack`.
+
+### Keeping station
+
+A task force on the escort mission may be given a charge, another force of its side, by the escort order (chapter 1, Task force orders). Such a force is an escort. A force has at most one charge; a charge may have several escorts; an escort cannot be a charge. [0121]
+
+1. **In station.** An escort is in station when it is in its charge's hex (the nearest hex centre, as chapter 4 reads a position) and both it and its charge have a ship afloat.
+2. **When.** Keeping station runs at the start of each pulse's movement, after the halts steamed on and the straggler pass, and before the budgets are made, so a force the pass made moves with its station kept. It runs for every escort with a ship afloat, in task force number order. A force that is out of fuel takes no route and keeps none it has.
+3. **In station.** The escort takes its charge's route and speed for the pulse. Its route is the charge's waypoints still to reach, cut at the waypoint where the charge will halt in this pulse, if it will halt at one (Halting at a marked waypoint and steaming on); its speed is the charge's speed in knots, which is its slowest ship's at the charge's speed setting. The escort then moves as a force ordered so would (chapter 1, Task force orders): its own ships may make less than the charge's speed, and the escort then falls behind. Its route has no marks, so it never halts of itself. If its charge will not steam in the pulse, because it is stopped, halted, out of fuel, has no route left or has a speed of 0, the escort stops where it is: at a hex centre it keeps no route and is idle; between two centres it is routed to the hex it is in, and turns back where that is the shorter way, as a route order would (Turning back and re-routing). So an escort stops with its charge where the charge halts to work cargo.
+4. **Out of station.** The escort steams for its charge's hex by the shortest sea route, at its cruising speed, until it is in that hex, and is in station again from the next pulse's start. An escort that fell behind is out of station in this way.
+5. **Its own fuel.** The escort burns its own fuel by the rules of Fuel, and the fuel limit may cut its budget below its charge's.
+6. **A route order is refused** to an escort while it has a charge: "keeps station" (chapter 1, Every reason an order is refused). A speed order is accepted, but the speed keeping station gives replaces it at the start of the next pulse. The escort order that clears the charge frees it.
+7. **The charge lost or cleared.** An escort has no charge from the moment its charge has no ship afloat, is joined into another force or is stood down in port, or its escort order is one that clears the charge, and it stops where it is as in 3. A join or a stand-down order of the charge records `ChargeLost` for each of its escorts when it is taken in, as one of the events the order makes, citing that order. A join or a stand-down order to the escort itself ends its own charge, with no `ChargeLost`. A charge sunk in a fight is dealt with in the fight (chapter 4, Meeting). A charge sunk by aircraft is noticed at the start of the next movement step, when keeping station runs, and `ChargeLost` then cites the escort order only. An escort order that clears the charge by order records no `ChargeLost`.
+8. **Order of movement.** On a tie in time (Order of movement within a pulse), a force that is some force's charge at the start of the step comes after every force that is not, so an escort that moves with its charge enters a hex first and its meeting there comes first (chapter 4, Meeting).
+
+What is written is only what changes: keeping station writes the escort's route, speed and status when they are not already what the rule gives, so an escort that has kept station for a pulse and has nothing new to do records nothing. Where it writes, the route order and the speed order of the escort are the escort order that gave the charge. [0121]
+
+A side sees: its own `StationKept`, with the escort, its charge, whether it is in station, the waypoints it was given and the knots; it cites the escort order and, for an escort in station, the charge's route order. Its own `ChargeLost`, with the escort, the charge and the hex, citing the escort order where the charge is lost in keeping station or in a fight, and the order or the end of the fight that took it. A turning back follows, citing the one that caused it. The enemy sees none of them. [0121]
+
+Known limits: the number of escorts a force is given is the staff's judgement, and no figure is set for it. Stations inside a hex (pickets, day and night stations, the distance of a screen) are below the grain of the map. An escort does not go out to an enemy in a neighbouring hex, because forces in neighbouring hexes do not fight. What the charge does when its escort fights is its route and its work, unchanged. [0121]
 
 ### Running out of fuel
 

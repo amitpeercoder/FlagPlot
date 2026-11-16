@@ -38,6 +38,10 @@ pub(crate) enum Step {
     Join {
         into: Who,
     },
+    /// Give the force a charge, or clear it (decision 0121).
+    Escort {
+        charge: Option<Who>,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -174,6 +178,7 @@ impl Out {
                         weight_t: *weight_t,
                     },
                     Step::Join { into } => TaskForceOrder::JoinTo(force(*into)),
+                    Step::Escort { charge } => TaskForceOrder::Escort(charge.map(force)),
                 };
                 orders.push(StaffOrder {
                     kind: OrderKind::TaskForce {

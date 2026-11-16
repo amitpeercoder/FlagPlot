@@ -251,6 +251,19 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::Held(_) => {
             " (the commander holds this unit, or a ship in it: the staff may not order it until he releases it)"
         }
+        R::KeepsStationOn(_) => {
+            " (an escort with a charge keeps station on it and takes no route: give it an escort order with no charge first, then route it)"
+        }
+        R::NotOnEscortMission => {
+            " (escort is for a force on the escort mission: give set_mission escort first)"
+        }
+        R::CannotEscortItself => " (escort names another force of your side, written charge: task_force:N)",
+        R::ChargeIsAnEscort(_) => {
+            " (the force named escorts a charge of its own, and an escort cannot be a charge)"
+        }
+        R::IsACharge { .. } => {
+            " (this force is another force's charge, and a charge cannot be an escort)"
+        }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
         }

@@ -321,6 +321,10 @@ pub struct ForceDetail {
     pub stance: &'static str,
     pub break_off: Dec,
     pub home_port: Option<Handle>,
+    /// The force it escorts and keeps station on (decision 0121), written
+    /// only where it has one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub charge: Option<Handle>,
     pub ships: Vec<ShipLine>,
 }
 
@@ -463,6 +467,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                 stance: words::stance(force.rules_of_engagement.stance),
                 break_off: Dec(force.rules_of_engagement.break_off),
                 home_port: force.home_port.map(|b| ctx.base(b)),
+                charge: force.charge.map(|c| ctx.force(c.force)),
                 ships: force
                     .ships
                     .iter()

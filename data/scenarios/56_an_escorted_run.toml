@@ -1,0 +1,155 @@
+# Scenario 56: an escorted run (decision 0126, with decision 0121's rule
+# beneath it; step 5 of step 3, stage 2).
+#
+# Scenario 36's base, convoy and intent, unchanged, with an escort force
+# named in the forces limit: task force 1, two placeholder destroyers on the
+# escort mission, stopped at S, full of fuel, with no charge. The Allied side
+# starts holding one contact of 2 ships, a destroyer, at (8,0), 3 hexes from
+# T, which ages out on the morning of day 2. The staff escorts the first run
+# (a threat is held on the morning it is routed) and not the second. The
+# hand calculation is in tests/scenario_56_an_escorted_run.rs, which stands
+# on scenario 36's. There is no enemy unit, no aircraft and no random draw.
+# It runs on the frozen step 1 figures.
+#
+# Class 2 is the placeholder destroyer: 16 kn at cruise, 36 at most, 500 t of
+# fuel over 4000 nm.
+#
+# Class 3 is the placeholder cargo ship: 3000 t of cargo, 10 kn at cruise,
+# 0.1 t of fuel a mile (1000 t over 10000 nm), 1000 t of fuel. Land unit 1
+# costs 2000 men x 0.005 t = 10 t a day at base 2.
+#
+# PLACEHOLDER DATA. The bases, ships, unit and map are invented.
+
+name = "Placeholder scenario 56: An escorted run"
+placeholder = true
+seed = 1942
+days = 18
+map = "../map/placeholder_one_convoy.toml"
+ship_classes = ["../reference/ship_classes.csv"]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# S: the source. Port size 1, one berth at 50 t an hour.
+[[base]]
+id = 1
+name = "Placeholder base S, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 5000
+fuel_t = 2000
+
+# T: the destination. Port size 0, by lighter at 20 t an hour.
+[[base]]
+id = 2
+name = "Placeholder base T, Allied"
+side = "allied"
+q = 5
+r = 0
+supply_t = 100
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+men = 2000
+q = 5
+r = 0
+posture = "defend"
+
+# Ships 1 and 2 lie in port at S in no task force, full of fuel.
+[[ship]]
+id = 1
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+port = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+port = 1
+
+# Task force 1: two placeholder destroyers on the escort mission, stopped
+# at S, full of fuel, with no charge.
+[[task_force]]
+id = 1
+name = "Placeholder escort force 1"
+side = "allied"
+at_base = 1
+mission = "escort"
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer 3"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder destroyer 4"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+# The contact: 2 ships, a destroyer, at (8,0), 3 hexes from T.
+[[contact]]
+side = "allied"
+q = 8
+r = 0
+ship_count = 2
+kind = "destroyer"
+age_pulses = 0
+
+# The Allied commander's commands, in force from day 1.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+base = 2
+floor_days = 30
+interval_days = 15
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+ships = [1, 2]
+task_forces = [1]
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "reserve"
+base = 1
+supply_t = 1000
+fuel_t = 0
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

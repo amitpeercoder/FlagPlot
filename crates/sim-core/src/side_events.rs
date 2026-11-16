@@ -1265,6 +1265,14 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::InterruptFired { side: owner, .. }
         | EventKind::IntentFormed { side: owner, .. }
         | EventKind::IntentWithdrawn { side: owner, .. } => whole_if(*owner == side),
+        // An escort's station and the loss of its charge are its side's own,
+        // never shown to the enemy; a meeting not held is the charge's side's,
+        // and the enemy is told nothing of a force it did not meet (decision
+        // 0121, 8).
+        EventKind::StationKept { escort, .. } | EventKind::ChargeLost { escort, .. } => {
+            whole_if(own_force(escort))
+        }
+        EventKind::MeetingNotHeld { charge, .. } => whole_if(own_force(charge)),
 
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
@@ -1618,7 +1626,10 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::StaffNotice { .. }
             | EventKind::InterruptFired { .. }
             | EventKind::IntentFormed { .. }
-            | EventKind::IntentWithdrawn { .. } => None,
+            | EventKind::IntentWithdrawn { .. }
+            | EventKind::StationKept { .. }
+            | EventKind::ChargeLost { .. }
+            | EventKind::MeetingNotHeld { .. } => None,
         })
         .min()
 }
@@ -1815,7 +1826,10 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::StaffNotice { .. }
         | EventKind::InterruptFired { .. }
         | EventKind::IntentFormed { .. }
-        | EventKind::IntentWithdrawn { .. } => None,
+        | EventKind::IntentWithdrawn { .. }
+        | EventKind::StationKept { .. }
+        | EventKind::ChargeLost { .. }
+        | EventKind::MeetingNotHeld { .. } => None,
     }
 }
 
@@ -2156,7 +2170,10 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::StaffNotice { .. }
             | EventKind::InterruptFired { .. }
             | EventKind::IntentFormed { .. }
-            | EventKind::IntentWithdrawn { .. }) => other,
+            | EventKind::IntentWithdrawn { .. }
+            | EventKind::StationKept { .. }
+            | EventKind::ChargeLost { .. }
+            | EventKind::MeetingNotHeld { .. }) => other,
         }),
         // No other kind a side is given carries a round of a fight.
         other @ (SideEventKind::AirAttackAgainst { .. }
@@ -2399,7 +2416,7 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
             | EventKind::StaffNotice { .. }
             | EventKind::InterruptFired { .. }
             | EventKind::IntentFormed { .. }
-            | EventKind::IntentWithdrawn { .. } => false,
+            | EventKind::IntentWithdrawn { .. } | EventKind::StationKept { .. } | EventKind::ChargeLost { .. } | EventKind::MeetingNotHeld { .. } => false,
 
         // Men lost in a fight cite the enemy's fire; a base taken cites the
         // test that beat the other side (decision 0090).
@@ -2668,7 +2685,10 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::StaffNotice { .. }
                     | EventKind::InterruptFired { .. }
                     | EventKind::IntentFormed { .. }
-                    | EventKind::IntentWithdrawn { .. },
+                    | EventKind::IntentWithdrawn { .. }
+                    | EventKind::StationKept { .. }
+                    | EventKind::ChargeLost { .. }
+                    | EventKind::MeetingNotHeld { .. },
                 )
                 | SideEventKind::Salvo { .. }
                 | SideEventKind::SalvoAgainst { .. }
@@ -4452,6 +4472,39 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // An escort's station and a charge lost are the escort's side's;
+            // a meeting not held is the charge's side's, and the enemy is
+            // told nothing (decision 0121, 8).
+            sided(row(
+                EventKind::StationKept {
+                    escort: force(1),
+                    charge: force(1),
+                    in_station: true,
+                    waypoints: vec![hex()],
+                    knots: Some(fx(10)),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::ChargeLost {
+                    escort: force(1),
+                    charge: force(1),
+                    hex: hex(),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::MeetingNotHeld {
+                    charge: force(1),
+                    enemy: force(1),
+                    hex: hex(),
+                    escorts: vec![force(1)],
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -4492,7 +4545,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 140, "the log has 140 kinds of event");
+        assert_eq!(all.len(), 143, "the log has 143 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

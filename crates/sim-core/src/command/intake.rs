@@ -296,8 +296,12 @@ impl World {
                 }
                 // A stand task under "hold a place" stands at the base's hex
                 // (decision 0124, 7).
-                if let (IntentKind::StandAt { hex, .. }, IntentKind::Hold { base }) =
-                    (kind, found.kind)
+                // So does one under "keep supplied", at the destination's
+                // (decision 0126, 7).
+                if let (
+                    IntentKind::StandAt { hex, .. },
+                    IntentKind::Hold { base } | IntentKind::KeepSupplied { base, .. },
+                ) = (kind, found.kind)
                 {
                     if self.truth.bases.get(&base).map(|b| b.hex) != Some(*hex) {
                         return Err(CommandRefusal::CannotStandUnder(*parent));

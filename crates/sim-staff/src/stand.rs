@@ -295,6 +295,7 @@ impl Day<'_, '_> {
         plan: &Plan,
         station: Hex,
         in_scope: bool,
+        surface_only: bool,
     ) -> bool {
         let named: BTreeSet<TaskForceId> = self
             .state
@@ -320,7 +321,7 @@ impl Day<'_, '_> {
                         ships.len()
                     ),
                 ),
-                Mission::Carrier => {
+                Mission::Carrier if !surface_only => {
                     let carriers: Vec<_> = ships
                         .iter()
                         .filter(|(_, _, _, kind)| *kind == ShipKind::Carrier)
@@ -413,6 +414,51 @@ impl Day<'_, '_> {
             }
         }
         any
+    }
+
+    /// Covering forces (decision 0126, 7): under each keep-supplied intent
+    /// whose forces limit names task forces, a stand task at the
+    /// destination's hex for each named force on the surface combat mission,
+    /// by the forming rule of decision 0124, 8. The supply doctrine approves
+    /// and releases the intent's plan this morning where the leaves allow
+    /// (decision 0107, 2); the air doctrine's planned state takes it so, so
+    /// that the task it forms is served this morning too.
+    pub(crate) fn supply_covers(&mut self) {
+        let ends = self.in_priority_order(|i| {
+            matches!(i.kind, IntentKind::KeepSupplied { .. })
+                && i.limits
+                    .forces
+                    .as_ref()
+                    .is_some_and(|f| !f.task_forces.is_empty())
+        });
+        let leaves = self.state.leaves;
+        for id in ends {
+            let Some(end) = self.state.intents.get(&id).cloned() else {
+                continue;
+            };
+            let IntentKind::KeepSupplied { base, .. } = end.kind else {
+                continue;
+            };
+            let Some(plan) = self.state.plans.get_mut(&end.plan) else {
+                continue;
+            };
+            let released = match plan.state {
+                sim_core::command::PlanState::Released => true,
+                sim_core::command::PlanState::Draft => leaves.prepare && leaves.launch,
+                sim_core::command::PlanState::Preparing => leaves.launch,
+                _ => false,
+            };
+            if !released {
+                continue;
+            }
+            plan.state = sim_core::command::PlanState::Released;
+            let plan = plan.clone();
+            let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) else {
+                continue;
+            };
+            let in_scope = self.in_scope(id);
+            self.form_force_tasks(&end, &plan, hex, in_scope, true);
+        }
     }
 
     /// The stand doctrine for the morning (decision 0124, 9 to 15).

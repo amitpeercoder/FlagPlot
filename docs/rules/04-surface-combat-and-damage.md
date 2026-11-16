@@ -26,6 +26,22 @@ A side sees: it learns of a fight from the round in which its own force first si
 
 Known limit: forces in neighbouring hexes do not fight, and a force cannot pursue one that breaks off. A commander's choice to press on or retire after a fight is not built. [0022]
 
+### Meeting an escorted force
+
+A task force may be the charge of one or more escorts in station (chapter 2, Keeping station). Where an enemy force meets such a charge by the rules above, at the start of the pulse or during it, the meetings are held in this order. A force with no escort in station is met as before. [0121]
+
+1. **The escorts first.** The enemy's meetings with the escorts in station on the charge are held first, in task force number order, each as any meeting is (a pair fights at most once in a pulse; the fight takes no time). An escort that is out of station is not one of them: it is met as any force is, in its turn.
+2. **The charge only past them.** The meeting with the charge is held after them only if every one of those escorts, when its fight with the enemy ended, had no ship afloat or was the force that left the fight: it broke off or slipped away, and a force that slipped away counts as having left. An escort that was not met, still afloat and still in the hex, has not been passed. An escort whose fight ended with neither side sighting the other (the forces passed unseen) has not been passed either: unseen is not passed.
+3. **An enemy sunk by an escort** has no ship afloat when its turn to meet the charge comes. The meeting is not held, and it is recorded as one not held (below), not skipped without a word as the meeting of a force with no ship is.
+4. **A meeting not held is not held again.** A charge not met for rule 2 is not met by that enemy force again in the pulse, while both stay in the hex: the pair is marked as having fought. `MeetingNotHeld` is recorded for it, with the charge, the enemy, the hex and the escorts, citing the escort order of each escort and the end of each fight held with the enemy. Where both forces of a pair are charges with escorts in station, each is screened by its own, and the rule is applied to each in turn, the lower number first.
+5. **A charge sunk in a fight.** An escort whose charge has no ship afloat after a fight has no charge from that moment and stops where it is (chapter 2, Keeping station). Its open steaming is recorded first, then `ChargeLost`, citing its escort order and the end of the fight, and the escort carries on with what is left of its pulse. This holds for any fight in the pulse: a charge that is sunk by aircraft is noticed at the start of the next movement step.
+
+The order of events is the order above. Where the escort and its charge change position at one moment, the escort's change is taken first, so it is in the hex and in station before the enemy that meets them both (chapter 2, Order of movement within a pulse, and Keeping station, 8). [0121]
+
+A side sees: its own fights with the escorts as it sees any fight (chapter 1, A surface fight). `MeetingNotHeld` is shown whole to the charge's side and to no one else, and the enemy is told nothing of a force it did not meet. `ChargeLost` is the escort's side's. [0121]
+
+Known limits: the charge keeps to its route and its work while its escorts fight, and does not turn away; that is the staff's order of the next morning. No rule of the time for how many escorts a force has was found, and none is given here. [0121]
+
 ### Darkness
 
 A fight is dark if the pulse is the night pulse and light otherwise. The hex is not read (chapter 1, Darkness). [0001, 0014]

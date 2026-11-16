@@ -2,12 +2,12 @@ Scenario 34: Cover, men who dig in, and a place under bombardment
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 6283701b5b3b3a79  39 events
-day   2  hash c4ec28db83b2fd9a  58 events
-day   3  hash db4138ed84ae3fa6  56 events
-day   4  hash 31097b6895513e2b  39 events
-day   5  hash e441fa6a7d58e5c7  28 events
-day   6  hash ae39b1ea0bde7461  26 events
+day   1  hash 84f430fa4dda6626  39 events
+day   2  hash e8c61757da7aa9f1  58 events
+day   3  hash 8daf6771a03e26d1  56 events
+day   4  hash c9b26b21c26c7c02  39 events
+day   5  hash 8a0982507048a74e  28 events
+day   6  hash 6ec85972907b6028  26 events
 
 task_force:1 "Placeholder bombardment force 1" (Japanese): Arrived at (38,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder bombardment force 2" (Japanese): Arrived at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

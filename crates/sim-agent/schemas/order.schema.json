@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/order",
   "title": "order: one order for one unit, as saved games and issue_orders write it",
-  "description": "unit is \"task_force:N\", \"air_group:N\", \"land_unit:N\" or \"base:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, join, stand_down, set_rules_of_engagement, set_home_port, detach, set_readiness, send_to_yard and prepare_landing (hex [q, r] of a coast hex and roster, a list of land units written \"land_unit:N\", of the side's own numbers; a standing order); load takes an optional unit or, with no unit, an optional weight_t (decision 0111: the tons of supply or fuel the whole force is to have aboard, a level and not an addition; none fills the room); join takes into, a task force written \"task_force:N\" stopped at the same base, and the force joined ceases to be; stand_down puts the force's ships in port in no force and the force ceases to be; a base's is form_task_force (ships, a list of the side's ship numbers lying in port at that base in no force, formed into a new force); load takes an optional unit, a land unit written \"land_unit:N\"; an air group's are set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority, set_strike_contact_age, set_strike_held_share and rebase; a land unit's are set_posture (posture defend or attack, a standing order), march (hex [q, r], a standing order until the unit arrives) and set_activity (activity ready, train or work, and with work an optional job airfield, port, aircraft or defences; a standing order). The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply; with a unit it may name cargo supply, fuel or none.",
+  "description": "unit is \"task_force:N\", \"air_group:N\", \"land_unit:N\" or \"base:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, join, stand_down, escort, set_rules_of_engagement, set_home_port, detach, set_readiness, send_to_yard and prepare_landing (hex [q, r] of a coast hex and roster, a list of land units written \"land_unit:N\", of the side's own numbers; a standing order); load takes an optional unit or, with no unit, an optional weight_t (decision 0111: the tons of supply or fuel the whole force is to have aboard, a level and not an addition; none fills the room); join takes into, a task force written \"task_force:N\" stopped at the same base, and the force joined ceases to be; stand_down puts the force's ships in port in no force and the force ceases to be; escort takes charge, a task force of the side written \"task_force:N\", which a force on the escort mission keeps station on and is met before (none clears it); a base's is form_task_force (ships, a list of the side's ship numbers lying in port at that base in no force, formed into a new force); load takes an optional unit, a land unit written \"land_unit:N\"; an air group's are set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority, set_strike_contact_age, set_strike_held_share and rebase; a land unit's are set_posture (posture defend or attack, a standing order), march (hex [q, r], a standing order until the unit arrives) and set_activity (activity ready, train or work, and with work an optional job airfield, port, aircraft or defences; a standing order). The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply; with a unit it may name cargo supply, fuel or none.",
   "type": "object",
   "required": [
     "unit",
@@ -198,6 +198,22 @@
           "properties": {
             "kind": {
               "const": "stand_down"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "escort"
+            },
+            "charge": {
+              "description": "The force of the side to escort and keep station on, written task_force:N (decision 0121). Left out, the force's charge is cleared and it stops where it is. The force must be on the escort mission.",
+              "type": "string"
             }
           }
         },

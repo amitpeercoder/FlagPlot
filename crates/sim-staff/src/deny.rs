@@ -234,7 +234,7 @@ impl Day<'_, '_> {
             // The tasks of the forces its forces limit names (decisions
             // 0124, 8, and 0125, 2): standing at the centre of the waters,
             // and carriers.
-            if self.form_force_tasks(&end, &plan, hex, in_scope) {
+            if self.form_force_tasks(&end, &plan, hex, in_scope, false) {
                 served_any = true;
             }
             if !served_any {

@@ -552,6 +552,14 @@ pub enum TaskForceOrder {
     /// its orders end and it ceases to be. Done when it is accepted. Added
     /// at the end.
     StandDown,
+    /// Give the force, on the escort mission, another task force of its
+    /// side as its charge, or with `None` clear its charge (decision 0121,
+    /// 1). A standing order of its own kind. A force has at most one charge;
+    /// a charge may have several escorts. An escort cannot be a charge, and
+    /// a force cannot escort itself. While it has a charge the force keeps
+    /// station on it and takes no route order. Cleared, it stops where it
+    /// is. Added at the end.
+    Escort(Option<TaskForceId>),
 }
 
 /// An order to a base of the side (decision 0111). Added with the first.
@@ -930,6 +938,23 @@ pub enum RejectReason {
     /// A held share is not between 0 and 1 (decision 0114, 11). Added at
     /// the end of the enum.
     StrikeHeldShareOutOfRange(Fixed),
+    /// A route order to a force that has a charge: it keeps station on it
+    /// and has no route of its own (decision 0121, 3). Names the charge.
+    /// Added at the end of the enum.
+    KeepsStationOn(TaskForceId),
+    /// An escort order to a force not on the escort mission (decision 0121,
+    /// 1). Added at the end of the enum.
+    NotOnEscortMission,
+    /// An escort order that names the force it is given to (decision 0121,
+    /// 1). Added at the end of the enum.
+    CannotEscortItself,
+    /// An escort order names a force that has a charge of its own: an
+    /// escort cannot be a charge (decision 0121, 1). Names it. Added at the
+    /// end of the enum.
+    ChargeIsAnEscort(TaskForceId),
+    /// An escort order given to a force that is the charge of another,
+    /// `escort` (decision 0121, 1). Added at the end of the enum.
+    IsACharge { escort: TaskForceId },
 }
 
 impl fmt::Display for RejectReason {
@@ -1089,6 +1114,22 @@ impl fmt::Display for RejectReason {
             RejectReason::Held(target) => {
                 write!(f, "the unit is held by its commander ({target})")
             }
+            RejectReason::KeepsStationOn(charge) => write!(
+                f,
+                "the task force keeps station on its charge {charge} and has no route of its own"
+            ),
+            RejectReason::NotOnEscortMission => {
+                f.write_str("the task force is not on the escort mission")
+            }
+            RejectReason::CannotEscortItself => f.write_str("a task force cannot escort itself"),
+            RejectReason::ChargeIsAnEscort(charge) => write!(
+                f,
+                "{charge} has a charge of its own, and an escort cannot be a charge"
+            ),
+            RejectReason::IsACharge { escort } => write!(
+                f,
+                "the task force is the charge of {escort}, and a charge cannot be an escort"
+            ),
         }
     }
 }
