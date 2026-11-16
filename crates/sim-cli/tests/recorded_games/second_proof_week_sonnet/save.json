@@ -368,7 +368,7 @@
       "hash": "5ef7d142f1faa97f"
     }
   ],
-  "doctrine_version": "supply-14",
+  "doctrine_version": "supply-15",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -1545,7 +1545,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -3226,7 +3226,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:3 from (9,-19)"
             },
-            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:3 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -3254,7 +3254,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:4 from (7,-18)"
             },
-            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:4 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -5158,7 +5158,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer).",
             "would_change": [
               "a home port set"
             ]
@@ -5202,7 +5202,7 @@
               "plan": 6,
               "statement": "operate the carrier force task_force:2 from (5,-3)"
             },
-            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer).",
             "would_change": [
               "a home port set"
             ]
@@ -6106,7 +6106,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:3 from (9,-19)"
             },
-            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:3 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -6164,7 +6164,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:4 from (7,-18)"
             },
-            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:4 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -6552,7 +6552,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a cruiser; contact 3, a destroyer).",
             "would_change": [
               "a home port set"
             ]
@@ -6598,7 +6598,7 @@
               "plan": 6,
               "statement": "operate the carrier force task_force:2 from (5,-3)"
             },
-            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a cruiser; contact 3, a destroyer).",
             "would_change": [
               "a home port set"
             ]
@@ -7065,7 +7065,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:3 from (9,-19)"
             },
-            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:3 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -7123,7 +7123,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:4 from (7,-18)"
             },
-            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:4 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -7421,7 +7421,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer; contact 3, a destroyer).",
             "would_change": [
               "a home port set"
             ]
@@ -7467,7 +7467,7 @@
               "plan": 6,
               "statement": "operate the carrier force task_force:2 from (5,-3)"
             },
-            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a destroyer; contact 3, a destroyer).",
             "would_change": [
               "a home port set"
             ]
@@ -7743,7 +7743,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:3 from (9,-19)"
             },
-            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:3 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a cruiser).",
             "would_change": [
               "a home port set"
             ]
@@ -7801,7 +7801,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:4 from (7,-18)"
             },
-            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:4 does not close: at the balanced risk it closes on a carrier, and no contact of ships 3 pulses old or less is of that kind (contact 2, a cruiser).",
             "would_change": [
               "a home port set"
             ]
@@ -8189,7 +8189,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -8235,7 +8235,7 @@
               "plan": 6,
               "statement": "operate the carrier force task_force:2 from (5,-3)"
             },
-            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -8586,7 +8586,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:3 from (9,-19)"
             },
-            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:3 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -8644,7 +8644,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:4 from (7,-18)"
             },
-            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:4 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -8942,7 +8942,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -8988,7 +8988,7 @@
               "plan": 6,
               "statement": "operate the carrier force task_force:2 from (5,-3)"
             },
-            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -9417,7 +9417,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:3 from (9,-19)"
             },
-            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:3 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -9475,7 +9475,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:4 from (7,-18)"
             },
-            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:4 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -9864,7 +9864,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:1 from (4,-3)"
             },
-            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -9910,7 +9910,7 @@
               "plan": 6,
               "statement": "operate the carrier force task_force:2 from (5,-3)"
             },
-            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:2 from (5,-3): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -10261,7 +10261,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:3 from (9,-19)"
             },
-            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:8, operating the carrier force task_force:3 from (9,-19): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:3 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
@@ -10319,7 +10319,7 @@
               "plan": 5,
               "statement": "operate the carrier force task_force:4 from (7,-18)"
             },
-            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home.",
+            "worked": "intent:9, operating the carrier force task_force:4 from (7,-18): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:4 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
             ]
