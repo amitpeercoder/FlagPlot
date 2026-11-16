@@ -594,6 +594,11 @@ enum ActionSpec {
     SetStrikeSizing {
         on: bool,
     },
+    /// Switch on or off the group's flying its search once a day, in the
+    /// morning (decision 0131).
+    SetSearchOnce {
+        on: bool,
+    },
     /// Move the air group to the named base of its side (decision 0091). A
     /// base that is not the side's, or out of reach, is refused at intake.
     /// The base is the order's `base` key, which `OrderSpec` reads first
@@ -1951,6 +1956,8 @@ impl Scenario {
                 strike_share_order: None,
                 strike_sizing: false,
                 strike_sizing_order: None,
+                search_once: false,
+                search_once_order: None,
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -2233,6 +2240,9 @@ impl Scenario {
                         ActionSpec::SetStrikeSizing { .. } => {
                             return Err(wrong_target("set_strike_sizing", "air_group"))
                         }
+                        ActionSpec::SetSearchOnce { .. } => {
+                            return Err(wrong_target("set_search_once", "air_group"))
+                        }
                         ActionSpec::Rebase {} => {
                             return Err(wrong_target("rebase", "air_group"))
                         }
@@ -2356,12 +2366,15 @@ impl Scenario {
                         ActionSpec::SetStrikeSizing { on } => {
                             AirGroupOrder::SetStrikeSizing { on: *on }
                         }
+                        ActionSpec::SetSearchOnce { on } => {
+                            AirGroupOrder::SetSearchOnce { on: *on }
+                        }
                         ActionSpec::Rebase {} => AirGroupOrder::Rebase {
                             base: BaseId::new(need_base("rebase")?),
                         },
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority, set_strike_contact_age, set_strike_held_share, set_strike_sizing or rebase"
+                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority, set_strike_contact_age, set_strike_held_share, set_strike_sizing, set_search_once or rebase"
                             )))
                         }
                     };
@@ -3701,6 +3714,16 @@ r = 0
         assert!(parse_with(&order("air_group = 1", "kind = \"set_strike_sizing\"")).is_err());
         assert!(parse_with(&order("air_group = 1", &sizing("1"))).is_err());
         assert!(error_of(&order("task_force = 1", &sizing("true"))).contains("air_group"));
+    }
+
+    #[test]
+    fn the_search_once_order_loads_for_an_air_group() {
+        let once = |on: &str| format!("kind = \"set_search_once\"\non = {on}");
+        parse_with(&order("air_group = 1", &once("true"))).expect("on loads");
+        parse_with(&order("air_group = 1", &once("false"))).expect("off loads");
+        assert!(parse_with(&order("air_group = 1", "kind = \"set_search_once\"")).is_err());
+        assert!(parse_with(&order("air_group = 1", &once("1"))).is_err());
+        assert!(error_of(&order("task_force = 1", &once("true"))).contains("air_group"));
     }
 
     /// `HEAD` with the air combat key added after the surface combat key.

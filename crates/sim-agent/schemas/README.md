@@ -53,7 +53,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 11. A field removed from an answer, or a field whose meaning
+`version` is 14. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -851,3 +851,13 @@ orders, command state and choices; the enemy is told none of it.
 - **`measure` `choices`.** The `halt` and `steam_on` lines have `pulse` (the pulse's name) in
   `asked`.
 - **Saved games** are version 7; a game of version 6 or earlier is refused, not converted.
+
+## A search flown once a day (decision 0131)
+
+`version` is 14: a new air group order and a new field of a group's line, each of the side's own orders and
+units; the enemy is told none of it.
+
+- **A new air group order**, `set_search_once` (`on`, true or false), a standing order: a group on the
+  search mission flies its search in the morning pulse only and rests in the afternoon. An air group line
+  has `search_once` (`true`, given only when it is on).
+- **Saved games** are version 9; a game of version 8 or earlier is refused, not converted.

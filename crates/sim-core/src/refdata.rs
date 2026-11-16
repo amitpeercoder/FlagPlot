@@ -10,6 +10,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::events::SortieKind;
 use crate::fixed::Fixed;
 use crate::ids::{AircraftTypeId, ShipClassId};
 use crate::orders::Reach;
@@ -1654,9 +1655,27 @@ pub struct FatigueFigures {
     /// Fatigue a task force loses at the start of a pulse in which it is not
     /// alert (decision 0037).
     pub force_rest_per_pulse: Fixed,
+    /// The fatigue added for each 100 nm of a search sortie, in place of
+    /// `air_fatigue_per_100_nm` (decision 0131, 3). `None` when the file
+    /// gives none: the figure for every sortie then serves.
+    pub search_fatigue_per_100_nm: Option<Fixed>,
 }
 
 impl FatigueFigures {
+    /// The fatigue a group gains for a sortie of `kind` over `distance_nm`
+    /// (decision 0131, 3 to 5): a search with the search figure given gains
+    /// the figure for the sortie plus the search figure per 100 nm times the
+    /// distance over 100; any other sortie, or a search with none given,
+    /// gains `gain(distance_nm)`.
+    pub fn gain_for(&self, kind: SortieKind, distance_nm: Fixed) -> Fixed {
+        match (kind, self.search_fatigue_per_100_nm) {
+            (SortieKind::Search, Some(per_100)) => {
+                self.air_fatigue_per_sortie + per_100.mul_div(distance_nm, Fixed::from_int(100))
+            }
+            _ => self.gain(distance_nm),
+        }
+    }
+
     /// The fatigue a group gains for a sortie of `distance_nm` (decision 4
     /// of 0036): the figure for the sortie plus the figure per 100 nm times
     /// the distance over 100.
@@ -1678,6 +1697,10 @@ impl FatigueFigures {
                 self.force_fatigue_per_pulse_alert,
             ),
             ("force rest per pulse", self.force_rest_per_pulse),
+            (
+                "search fatigue per 100 nm",
+                self.search_fatigue_per_100_nm.unwrap_or(Fixed::ZERO),
+            ),
         ] {
             if value < Fixed::ZERO || value > Fixed::from_int(100) {
                 return Some(format!("{label} {value} is not between 0 and 100"));

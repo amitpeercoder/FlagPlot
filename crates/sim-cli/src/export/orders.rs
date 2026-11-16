@@ -134,6 +134,9 @@ fn text(kind: &OrderKind) -> String {
             AirGroupOrder::SetStrikeSizing { on } => {
                 format!("strike sizing {}", if *on { "on" } else { "off" })
             }
+            AirGroupOrder::SetSearchOnce { on } => {
+                format!("search once a day {}", if *on { "on" } else { "off" })
+            }
             AirGroupOrder::Rebase { base } => format!("rebase to {base}"),
         },
         OrderKind::LandUnit { order, .. } => match order {

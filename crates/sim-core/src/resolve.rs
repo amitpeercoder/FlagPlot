@@ -1124,6 +1124,7 @@ impl World {
                         }
                     }
                     AirGroupOrder::SetStrikeSizing { .. } => Ok(()),
+                    AirGroupOrder::SetSearchOnce { .. } => Ok(()),
                     AirGroupOrder::SetRestThreshold { fatigue } => {
                         if *fatigue < Fixed::ZERO || *fatigue > Fixed::from_int(100) {
                             Err(RejectReason::FatigueOutOfRange(*fatigue))
@@ -1599,6 +1600,10 @@ impl World {
                     AirGroupOrder::SetStrikeSizing { on } => {
                         group.strike_sizing = *on;
                         group.strike_sizing_order = Some(order.id);
+                    }
+                    AirGroupOrder::SetSearchOnce { on } => {
+                        group.search_once = *on;
+                        group.search_once_order = Some(order.id);
                     }
                     AirGroupOrder::SetRestThreshold { fatigue } => {
                         group.rest_above = Some(*fatigue);

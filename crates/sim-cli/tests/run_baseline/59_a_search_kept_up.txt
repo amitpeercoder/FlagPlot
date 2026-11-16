@@ -1,0 +1,24 @@
+Placeholder scenario 59: A search kept up
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash f74d55ada79c1017  24 events
+day   2  hash fc04279ced91eb9b  7 events
+day   3  hash f64ce34ff11d024b  7 events
+day   4  hash 95457b3ef7bc11af  7 events
+day   5  hash 32371d020d02fc07  7 events
+day   6  hash 13236cba65a4d2d3  7 events
+day   7  hash 602f85b39d670d83  7 events
+day   8  hash 7c59d7a54b61228f  7 events
+day   9  hash e4eaff07988adc37  7 events
+day  10  hash 4d73856445870fcb  7 events
+day  11  hash db24abb0a50e0d5b  7 events
+day  12  hash e8af9ade106b1cdf  7 events
+
+air_group:1 "Placeholder flying boats 1" (Allied) at base:1: 6 ready, mission Search, arc 050-120 to 600 nm
+base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock
+base:2 "Placeholder base 2" (Japanese) at (5,0): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

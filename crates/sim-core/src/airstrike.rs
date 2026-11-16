@@ -678,6 +678,14 @@ pub(crate) fn able_to_fly(
 }
 
 impl World {
+    /// Whether a group's search is flown in this pulse (decision 0131, 1):
+    /// it is on the search mission and, with search once a day set, it is
+    /// not the afternoon. Whether it has aircraft, light and an arc is for
+    /// the caller.
+    pub fn searches_in(&self, group: &AirGroup, pulse: Pulse) -> bool {
+        group.mission == AirMission::Search && !(group.search_once && pulse == Pulse::Afternoon)
+    }
+
     /// The aircraft of `group` that can be flown this pulse (decision 14 of
     /// 0026 and decision 2 of 0036): its ready aircraft times the flight
     /// deck's factor (all of them from a base, or from a ship whose deck
@@ -1783,7 +1791,7 @@ impl World {
         for group in self.truth.air_groups.values() {
             // The search step: a group with an arc and light sends all it
             // can fly (see `search_from_the_air`).
-            if group.mission == AirMission::Search
+            if self.searches_in(group, pulse)
                 && group.ready > 0
                 && group.search.is_some()
                 && self
@@ -8328,6 +8336,7 @@ mod tests {
             air_rest_per_pulse: Fixed::from_int(5),
             force_fatigue_per_pulse_alert: Fixed::from_int(5),
             force_rest_per_pulse: Fixed::from_int(3),
+            search_fatigue_per_100_nm: None,
         });
     }
 
@@ -10912,6 +10921,7 @@ mod tests {
             air_rest_per_pulse: Fixed::ZERO,
             force_fatigue_per_pulse_alert: Fixed::ZERO,
             force_rest_per_pulse: Fixed::ZERO,
+            search_fatigue_per_100_nm: None,
         });
         air_figures(&mut world).ditch_chance_per_radius_beyond = Fixed::from_int(10);
         strike_pulse(&mut world, Pulse::Morning);

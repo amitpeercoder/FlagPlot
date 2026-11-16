@@ -201,8 +201,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// its `landing_at` (decision 0121);
 /// version 33 adds a ship's `torpedoes_fired` after its
 /// `torpedoes_one_side_fired`, and a base's `ammunition_t` after its
-/// `fuel_reserve_t` (decision 0122).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v33";
+/// `fuel_reserve_t` (decision 0122);
+/// version 34 adds an air group's `search_once` and `search_once_order` after
+/// its `strike_sizing_order` (decision 0131).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v34";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -442,6 +444,8 @@ fn name_every_field(world: &World) {
             strike_share_order: _,
             strike_sizing: _,
             strike_sizing_order: _,
+            search_once: _,
+            search_once_order: _,
         } = group;
         if let Some(SearchArc {
             from_deg: _,
@@ -1301,6 +1305,9 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         // Last in the group (decision 0118).
         h.u8(u8::from(group.strike_sizing));
         h.optional_u32(group.strike_sizing_order.map(|id| id.raw()));
+        // Last in the group (decision 0131).
+        h.u8(u8::from(group.search_once));
+        h.optional_u32(group.search_once_order.map(|id| id.raw()));
     }
 
     h.count(truth.replacements.len());

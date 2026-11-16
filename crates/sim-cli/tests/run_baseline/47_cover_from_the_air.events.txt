@@ -2,18 +2,18 @@ Placeholder scenario 47: Cover from the air
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash eb0cc7e09a351077  37 events
-day   2  hash da22c3712ed6ae41  13 events
-day   3  hash 5e43f16f303e7f90  15 events
-day   4  hash faefce1a32c0e334  11 events
-day   5  hash 78cce89f00a2814e  9 events
-day   6  hash 9eafa61172ff7b47  9 events
-day   7  hash e1b1aceb10a0acc9  9 events
-day   8  hash d3c6cc681f5d5a93  9 events
-day   9  hash d18b0dccef908bef  11 events
-day  10  hash 35210343be464189  17 events
-day  11  hash ed5528ebf41396e1  13 events
-day  12  hash de5d90827d9cf4f9  11 events
+day   1  hash a016b199fcbcb9dd  38 events
+day   2  hash 01f26b460e8b08ce  12 events
+day   3  hash 05e0149f5b121764  12 events
+day   4  hash a725cf7bd14b8da5  10 events
+day   5  hash 2971b3a64acb8302  10 events
+day   6  hash 6857b53f9f9538ed  10 events
+day   7  hash f6ca624e4672eb6e  10 events
+day   8  hash 1b4a983b3108b89f  10 events
+day   9  hash b9a5b17174cee5d4  12 events
+day  10  hash 05ad526071b7169d  14 events
+day  11  hash b1be51fddf479d38  12 events
+day  12  hash 5859626c9ed4cbc2  12 events
 
 #1 D0 -         Allied report: 2 ships, cruiser, at (0,5), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to cover base:1 from the air
@@ -39,151 +39,149 @@ day  12  hash de5d90827d9cf4f9  11 events
 #22 D1 -         order:5 accepted for air_group:3  <- order:5  [issued by the staff]
 #23 D1 -         Allied staff's reason for order:5 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches: its mission is set from rest to search.  <- order:5, #22
 #24 D1 -         order:6 accepted for air_group:3  <- order:6  [issued by the staff]
-#25 D1 -         Allied staff's reason for order:6 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: The search arc of air_group:3 is set to 060 to 180 out to 600 nm: threats: base:2 (Placeholder base 2) at (5,0), contact 1 at (0,5); the narrowest arc that holds them is 090 to 150, widened by 30 degrees at each end to 060 to 180.  <- order:6, #24
-#26 D1 night     Allied contact:1 aged to 1 pulses  <- #1
-#27 D1 morning   air_group:3 searched 060-180 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:6
-#28 D1 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1, order:2
-#29 D1 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:3, order:4
-#30 D1 morning   air_group:3 gained 27 fatigue from its search sortie of 1200 nm, now 27  <- #27
-#31 D1 morning   Allied contact:1 aged to 2 pulses  <- #1
-#32 D1 afternoon air_group:3 searched 060-180 out to 600 nm from base:1 with 4 aircraft  <- order:5, order:6
-#33 D1 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:1, order:2
-#34 D1 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:3, order:4
-#35 D1 afternoon air_group:3 gained 27 fatigue from its search sortie of 1200 nm, now 54  <- #32
-#36 D1 afternoon Allied contact:1 aged to 3 pulses  <- #1
-#37 D1 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#38 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#39 D2 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 6 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 6 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 060 to 180 (threats: base:2 (Placeholder base 2) at (5,0), contact 1 at (0,5); the narrowest arc that holds them is 090 to 150, widened by 30 degrees at each end to 060 to 180).
-#40 D2 -         order:7 accepted for air_group:3  <- order:7  [issued by the staff]
-#41 D2 -         Allied staff's reason for order:7 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:3, a search group, has fatigue 54 against the 45 of the balanced risk; it is above the level and a search group is never kept: it rests for a day, so its mission is set from search to rest.  <- order:7, #40
-#42 D2 night     Allied contact:1 aged to 4 pulses  <- #1
+#25 D1 -         Allied staff's reason for order:6 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it searches, and at balanced risk a search is flown once a day, in the morning: its search once a day is set on.  <- order:6, #24
+#26 D1 -         order:7 accepted for air_group:3  <- order:7  [issued by the staff]
+#27 D1 -         Allied staff's reason for order:7 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: The search arc of air_group:3 is set to 060 to 180 out to 600 nm: threats: base:2 (Placeholder base 2) at (5,0), contact 1 at (0,5); the narrowest arc that holds them is 090 to 150, widened by 30 degrees at each end to 060 to 180.  <- order:7, #26
+#28 D1 night     Allied contact:1 aged to 1 pulses  <- #1
+#29 D1 morning   air_group:3 searched 060-180 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:7, order:6
+#30 D1 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1, order:2
+#31 D1 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:3, order:4
+#32 D1 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #29
+#33 D1 morning   Allied contact:1 aged to 2 pulses  <- #1
+#34 D1 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:1, order:2
+#35 D1 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:3, order:4
+#36 D1 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#37 D1 afternoon Allied contact:1 aged to 3 pulses  <- #1
+#38 D1 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#39 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#40 D2 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 6 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 6 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 060 to 180 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0), contact 1 at (0,5); the narrowest arc that holds them is 090 to 150, widened by 30 degrees at each end to 060 to 180); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 060 to 180 (threats: base:2 (Placeholder base 2) at (5,0), contact 1 at (0,5); the narrowest arc that holds them is 090 to 150, widened by 30 degrees at each end to 060 to 180).
+#41 D2 night     Allied contact:1 aged to 4 pulses  <- #1
+#42 D2 morning   air_group:3 searched 060-180 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:7, order:6
 #43 D2 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:1, order:2
 #44 D2 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:3, order:4
-#45 D2 morning   air_group:3 rested 5 fatigue, now 49  <- order:7
+#45 D2 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #42
 #46 D2 morning   Allied contact:1 dropped at 5 pulses  <- #1
 #47 D2 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:1, order:2
 #48 D2 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:3, order:4
-#49 D2 afternoon air_group:3 rested 5 fatigue, now 44  <- order:7
+#49 D2 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
 #50 D2 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
 #51 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 #52 D3 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 12 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 12 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
 #53 D3 -         order:8 accepted for air_group:3  <- order:8  [issued by the staff]
-#54 D3 -         Allied staff's reason for order:8 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:3, a search group, has fatigue 44 against the 45 of the balanced risk; it is not above the level, so it searches: its mission is set from rest to search.  <- order:8, #53
-#55 D3 -         order:9 accepted for air_group:3  <- order:9  [issued by the staff]
-#56 D3 -         Allied staff's reason for order:9 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: The search arc of air_group:3 is set to 050 to 120 out to 600 nm: threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120; contact 1 (dropped on day 2) held when its arc was set is gone.  <- order:9, #55
-#57 D3 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 3 aircraft  <- order:8, order:9
-#58 D3 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:1, order:2
-#59 D3 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:3, order:4
-#60 D3 morning   air_group:3 gained 27 fatigue from its search sortie of 1200 nm, now 71  <- #57
-#61 D3 afternoon air_group:3 searched 050-120 out to 600 nm from base:1 with 1 aircraft  <- order:8, order:9
-#62 D3 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:1, order:2
-#63 D3 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:3, order:4
-#64 D3 afternoon air_group:3 gained 27 fatigue from its search sortie of 1200 nm, now 98  <- #61
-#65 D3 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#66 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#67 D4 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 18 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 18 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
-#68 D4 -         order:10 accepted for air_group:3  <- order:10  [issued by the staff]
-#69 D4 -         Allied staff's reason for order:10 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:3, a search group, has fatigue 98 against the 45 of the balanced risk; it is above the level and a search group is never kept: it rests for a day, so its mission is set from search to rest.  <- order:10, #68
-#70 D4 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:1, order:2
-#71 D4 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:3, order:4
-#72 D4 morning   air_group:3 rested 5 fatigue, now 93  <- order:10
-#73 D4 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:1, order:2
-#74 D4 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:3, order:4
-#75 D4 afternoon air_group:3 rested 5 fatigue, now 88  <- order:10
-#76 D4 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#77 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#78 D5 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 24 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 24 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 88 against the 45 of the balanced risk; it is above the level, so it rests (mission rest already); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
-#79 D5 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:1, order:2
-#80 D5 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:3, order:4
-#81 D5 morning   air_group:3 rested 5 fatigue, now 83  <- order:10
-#82 D5 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:1, order:2
-#83 D5 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:3, order:4
-#84 D5 afternoon air_group:3 rested 5 fatigue, now 78  <- order:10
-#85 D5 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#86 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#87 D6 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 30 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 30 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 78 against the 45 of the balanced risk; it is above the level, so it rests (mission rest already); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
-#88 D6 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:1, order:2
-#89 D6 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:3, order:4
-#90 D6 morning   air_group:3 rested 5 fatigue, now 73  <- order:10
-#91 D6 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:1, order:2
-#92 D6 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:3, order:4
-#93 D6 afternoon air_group:3 rested 5 fatigue, now 68  <- order:10
-#94 D6 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#95 D6 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#96 D7 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 36 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 36 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 68 against the 45 of the balanced risk; it is above the level, so it rests (mission rest already); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
-#97 D7 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:1, order:2
-#98 D7 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:3, order:4
-#99 D7 morning   air_group:3 rested 5 fatigue, now 63  <- order:10
-#100 D7 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:1, order:2
-#101 D7 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:3, order:4
-#102 D7 afternoon air_group:3 rested 5 fatigue, now 58  <- order:10
-#103 D7 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#104 D7 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#105 D8 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 42 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 42 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 58 against the 45 of the balanced risk; it is above the level, so it rests (mission rest already); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#54 D3 -         Allied staff's reason for order:8 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: The search arc of air_group:3 is set to 050 to 120 out to 600 nm: threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120; contact 1 (dropped on day 2) held when its arc was set is gone.  <- order:8, #53
+#55 D3 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
+#56 D3 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:1, order:2
+#57 D3 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:3, order:4
+#58 D3 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #55
+#59 D3 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:1, order:2
+#60 D3 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:3, order:4
+#61 D3 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#62 D3 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#63 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#64 D4 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 18 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 18 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#65 D4 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
+#66 D4 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:1, order:2
+#67 D4 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:3, order:4
+#68 D4 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #65
+#69 D4 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:1, order:2
+#70 D4 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:3, order:4
+#71 D4 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#72 D4 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#73 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#74 D5 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 24 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 24 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#75 D5 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
+#76 D5 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:1, order:2
+#77 D5 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:3, order:4
+#78 D5 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #75
+#79 D5 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:1, order:2
+#80 D5 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:3, order:4
+#81 D5 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#82 D5 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#83 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#84 D6 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 30 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 30 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#85 D6 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
+#86 D6 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:1, order:2
+#87 D6 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:3, order:4
+#88 D6 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #85
+#89 D6 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:1, order:2
+#90 D6 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:3, order:4
+#91 D6 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#92 D6 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#93 D6 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#94 D7 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 36 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 36 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#95 D7 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
+#96 D7 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:1, order:2
+#97 D7 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:3, order:4
+#98 D7 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #95
+#99 D7 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:1, order:2
+#100 D7 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:3, order:4
+#101 D7 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#102 D7 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#103 D7 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#104 D8 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 42 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:2, a fighter group, has fatigue 42 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#105 D8 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
 #106 D8 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 45  <- order:1, order:2
 #107 D8 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 45  <- order:3, order:4
-#108 D8 morning   air_group:3 rested 5 fatigue, now 53  <- order:10
+#108 D8 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #105
 #109 D8 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 48  <- order:1, order:2
 #110 D8 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 48  <- order:3, order:4
-#111 D8 afternoon air_group:3 rested 5 fatigue, now 48  <- order:10
+#111 D8 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
 #112 D8 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
 #113 D8 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#114 D9 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:2, a fighter group, has fatigue 48 against the 45 of the balanced risk; it is above the level but the last fighter group that can fly, so it is never rested; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 48 against the 45 of the balanced risk; it is above the level, so it rests (mission rest already); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
-#115 D9 -         order:11 accepted for air_group:1  <- order:11  [issued by the staff]
-#116 D9 -         Allied staff's reason for order:11 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:1, a fighter group, has fatigue 48 against the 45 of the balanced risk; it is above the level and another fighter group can fly the patrol: it rests for a day, so its mission is set from combat air patrol to rest.  <- order:11, #115
-#117 D9 morning   air_group:1 rested 5 fatigue, now 43  <- order:11
-#118 D9 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 51  <- order:3, order:4
-#119 D9 morning   air_group:3 rested 5 fatigue, now 43  <- order:10
-#120 D9 afternoon air_group:1 rested 5 fatigue, now 38  <- order:11
-#121 D9 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 54  <- order:3, order:4
-#122 D9 afternoon air_group:3 rested 5 fatigue, now 38  <- order:10
-#123 D9 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#124 D9 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#125 D10 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
-#126 D10 -         order:12 accepted for air_group:1  <- order:12  [issued by the staff]
-#127 D10 -         Allied staff's reason for order:12 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:1, a fighter group, has fatigue 38 against the 45 of the balanced risk; it is not above the level, so it flies the combat air patrol of base:1 (Placeholder base 1): its mission is set from rest to combat air patrol.  <- order:12, #126
-#128 D10 -         order:13 accepted for air_group:2  <- order:13  [issued by the staff]
-#129 D10 -         Allied staff's reason for order:13 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:2, a fighter group, has fatigue 54 against the 45 of the balanced risk; it is above the level and another fighter group can fly the patrol: it rests for a day, so its mission is set from combat air patrol to rest.  <- order:13, #128
-#130 D10 -         order:14 accepted for air_group:3  <- order:14  [issued by the staff]
-#131 D10 -         Allied staff's reason for order:14 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:3, a search group, has fatigue 38 against the 45 of the balanced risk; it is not above the level, so it searches: its mission is set from rest to search.  <- order:14, #130
-#132 D10 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 3 aircraft  <- order:14, order:9
-#133 D10 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 41  <- order:12, order:2
-#134 D10 morning   air_group:2 rested 5 fatigue, now 49  <- order:13
-#135 D10 morning   air_group:3 gained 27 fatigue from its search sortie of 1200 nm, now 65  <- #132
-#136 D10 afternoon air_group:3 searched 050-120 out to 600 nm from base:1 with 2 aircraft  <- order:14, order:9
-#137 D10 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 44  <- order:12, order:2
-#138 D10 afternoon air_group:2 rested 5 fatigue, now 44  <- order:13
-#139 D10 afternoon air_group:3 gained 27 fatigue from its search sortie of 1200 nm, now 92  <- #136
-#140 D10 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#141 D10 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#142 D11 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 44 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
-#143 D11 -         order:15 accepted for air_group:2  <- order:15  [issued by the staff]
-#144 D11 -         Allied staff's reason for order:15 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:2, a fighter group, has fatigue 44 against the 45 of the balanced risk; it is not above the level, so it flies the combat air patrol of base:1 (Placeholder base 1): its mission is set from rest to combat air patrol.  <- order:15, #143
-#145 D11 -         order:16 accepted for air_group:3  <- order:16  [issued by the staff]
-#146 D11 -         Allied staff's reason for order:16 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:3, a search group, has fatigue 92 against the 45 of the balanced risk; it is above the level and a search group is never kept: it rests for a day, so its mission is set from search to rest.  <- order:16, #145
-#147 D11 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 47  <- order:12, order:2
-#148 D11 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 47  <- order:15, order:4
-#149 D11 morning   air_group:3 rested 5 fatigue, now 87  <- order:16
-#150 D11 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 50  <- order:12, order:2
-#151 D11 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 50  <- order:15, order:4
-#152 D11 afternoon air_group:3 rested 5 fatigue, now 82  <- order:16
-#153 D11 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#154 D11 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#155 D12 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:2, a fighter group, has fatigue 50 against the 45 of the balanced risk; it is above the level but the last fighter group that can fly, so it is never rested; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 82 against the 45 of the balanced risk; it is above the level, so it rests (mission rest already); air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
-#156 D12 -         order:17 accepted for air_group:1  <- order:17  [issued by the staff]
-#157 D12 -         Allied staff's reason for order:17 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:1, a fighter group, has fatigue 50 against the 45 of the balanced risk; it is above the level and another fighter group can fly the patrol: it rests for a day, so its mission is set from combat air patrol to rest.  <- order:17, #156
-#158 D12 morning   air_group:1 rested 5 fatigue, now 45  <- order:17
-#159 D12 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 53  <- order:15, order:4
-#160 D12 morning   air_group:3 rested 5 fatigue, now 77  <- order:16
-#161 D12 afternoon air_group:1 rested 5 fatigue, now 40  <- order:17
-#162 D12 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 56  <- order:15, order:4
-#163 D12 afternoon air_group:3 rested 5 fatigue, now 72  <- order:16
-#164 D12 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
-#165 D12 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#114 D9 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:2, a fighter group, has fatigue 48 against the 45 of the balanced risk; it is above the level but the last fighter group that can fly, so it is never rested; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#115 D9 -         order:9 accepted for air_group:1  <- order:9  [issued by the staff]
+#116 D9 -         Allied staff's reason for order:9 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:1, a fighter group, has fatigue 48 against the 45 of the balanced risk; it is above the level and another fighter group can fly the patrol: it rests for a day, so its mission is set from combat air patrol to rest.  <- order:9, #115
+#117 D9 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
+#118 D9 morning   air_group:1 rested 5 fatigue, now 43  <- order:9
+#119 D9 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 51  <- order:3, order:4
+#120 D9 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #117
+#121 D9 afternoon air_group:1 rested 5 fatigue, now 38  <- order:9
+#122 D9 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 54  <- order:3, order:4
+#123 D9 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#124 D9 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#125 D9 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#126 D10 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#127 D10 -         order:10 accepted for air_group:1  <- order:10  [issued by the staff]
+#128 D10 -         Allied staff's reason for order:10 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:1, a fighter group, has fatigue 38 against the 45 of the balanced risk; it is not above the level, so it flies the combat air patrol of base:1 (Placeholder base 1): its mission is set from rest to combat air patrol.  <- order:10, #127
+#129 D10 -         order:11 accepted for air_group:2  <- order:11  [issued by the staff]
+#130 D10 -         Allied staff's reason for order:11 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:2, a fighter group, has fatigue 54 against the 45 of the balanced risk; it is above the level and another fighter group can fly the patrol: it rests for a day, so its mission is set from combat air patrol to rest.  <- order:11, #129
+#131 D10 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
+#132 D10 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 41  <- order:10, order:2
+#133 D10 morning   air_group:2 rested 5 fatigue, now 49  <- order:11
+#134 D10 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #131
+#135 D10 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 44  <- order:10, order:2
+#136 D10 afternoon air_group:2 rested 5 fatigue, now 44  <- order:11
+#137 D10 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#138 D10 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#139 D10 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#140 D11 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a fighter group, has fatigue 44 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#141 D11 -         order:12 accepted for air_group:2  <- order:12  [issued by the staff]
+#142 D11 -         Allied staff's reason for order:12 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:2, a fighter group, has fatigue 44 against the 45 of the balanced risk; it is not above the level, so it flies the combat air patrol of base:1 (Placeholder base 1): its mission is set from rest to combat air patrol.  <- order:12, #141
+#143 D11 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
+#144 D11 morning   air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 47  <- order:10, order:2
+#145 D11 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 47  <- order:12, order:4
+#146 D11 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #143
+#147 D11 afternoon air_group:1 gained 3 fatigue from its patrol sortie of 0 nm, now 50  <- order:10, order:2
+#148 D11 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 50  <- order:12, order:4
+#149 D11 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#150 D11 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#151 D11 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#152 D12 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:2, a fighter group, has fatigue 50 against the 45 of the balanced risk; it is above the level but the last fighter group that can fly, so it is never rested; mission combat air patrol, patrol share 0.5 (wanted 0.5: 0.5 at balanced, the base not attacked from the air on the three days before); air_group:3, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning; air_group:4 is neither a fighter group nor can it search (fatigue 0): no order, it is left for a strike intent. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120).
+#153 D12 -         order:13 accepted for air_group:1  <- order:13  [issued by the staff]
+#154 D12 -         Allied staff's reason for order:13 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:1, a fighter group, has fatigue 50 against the 45 of the balanced risk; it is above the level and another fighter group can fly the patrol: it rests for a day, so its mission is set from combat air patrol to rest.  <- order:13, #153
+#155 D12 morning   air_group:3 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:5, order:8, order:6
+#156 D12 morning   air_group:1 rested 5 fatigue, now 45  <- order:13
+#157 D12 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 53  <- order:12, order:4
+#158 D12 morning   air_group:3 gained 4.68 fatigue from its search sortie of 1200 nm, now 4.68  <- #155
+#159 D12 afternoon air_group:1 rested 5 fatigue, now 40  <- order:13
+#160 D12 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 56  <- order:12, order:4
+#161 D12 afternoon air_group:3 rested 4.68 fatigue, now 0  <- order:5
+#162 D12 -         base:1 at the end of the day: 1000 t of supply, 36 aircraft ready: open
+#163 D12 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 
 air_group:1 "Placeholder fighters 1" (Allied) at base:1: 12 ready, mission Rest, fatigue 40, no arc
 air_group:2 "Placeholder fighters 2" (Allied) at base:1: 8 ready, mission CombatAirPatrol, patrol share 0.5, fatigue 56, no arc
-air_group:3 "Placeholder flying boats 3" (Allied) at base:1: 6 ready, mission Rest, fatigue 72, arc 050-120 to 600 nm
+air_group:3 "Placeholder flying boats 3" (Allied) at base:1: 6 ready, mission Search, arc 050-120 to 600 nm
 air_group:4 "Placeholder dive bombers 4" (Allied) at base:1: 10 ready, mission Rest, no arc
 base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock
 base:2 "Placeholder base 2" (Japanese) at (5,0): 0 t of supply in stock

@@ -297,6 +297,10 @@ pub struct AirGroupOut {
     /// (decision 0118).
     #[serde(skip_serializing_if = "Option::is_none")]
     strike_sizing: Option<bool>,
+    /// Given only when the group flies its search once a day, in the
+    /// morning (decision 0131).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    search_once: Option<bool>,
     arc: Option<ArcOut>,
 }
 
@@ -654,6 +658,7 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         strike_held_share: (!group.strike_held_share.is_zero())
             .then_some(Num(group.strike_held_share)),
         strike_sizing: group.strike_sizing.then_some(true),
+        search_once: group.search_once.then_some(true),
         arc: group.search.map(|arc| ArcOut {
             from_deg: arc.from_deg,
             to_deg: arc.to_deg,

@@ -926,6 +926,9 @@ impl Briefing {
             if g.strike_sizing == Some(true) {
                 s.push_str(", sizes its strikes to their target");
             }
+            if g.search_once == Some(true) {
+                s.push_str(", flies its search once a day, in the morning");
+            }
             s.push_str(&format!(", mission {}", plain(g.mission)));
             if let Some(t) = &g.target {
                 s.push_str(&format!(" at {}", t.text()));

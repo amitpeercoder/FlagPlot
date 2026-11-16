@@ -8904,8 +8904,14 @@ side = "allied"
 kind = "hold"
 task_force = 201
 
+# The acknowledgement of the cannot-meet interrupt of plan 1. It was on day
+# 76, fitted to the seed-1942 game before decision 0131; with the search
+# flown once a day and the search figure that game plays differently, and the
+# interrupt first fires on day 77, at or after day 76, in the staff's morning,
+# after the day's commands are taken. A command can acknowledge it from the
+# next morning, so it moved to day 78 (the architect's ruling of Nov 16, 2026).
 [[command]]
-day = 76
+day = 78
 side = "allied"
 kind = "acknowledge"
 standing = "cannot_meet"

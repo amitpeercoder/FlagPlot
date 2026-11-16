@@ -180,9 +180,10 @@ fn ag_index(order: &AirGroupOrder) -> usize {
         AirGroupOrder::SetStrikeContactAge { .. } => 11,
         AirGroupOrder::SetStrikeHeldShare { .. } => 12,
         AirGroupOrder::SetStrikeSizing { .. } => 13,
+        AirGroupOrder::SetSearchOnce { .. } => 14,
     }
 }
-const AG_KINDS: usize = 14;
+const AG_KINDS: usize = 15;
 
 fn examples() -> Vec<OrderKind> {
     let tf = |order| OrderKind::TaskForce {
@@ -297,6 +298,8 @@ fn examples() -> Vec<OrderKind> {
         ag(AirGroupOrder::SetStrikeHeldShare { share: fx("0.25") }),
         ag(AirGroupOrder::SetStrikeSizing { on: true }),
         ag(AirGroupOrder::SetStrikeSizing { on: false }),
+        ag(AirGroupOrder::SetSearchOnce { on: true }),
+        ag(AirGroupOrder::SetSearchOnce { on: false }),
     ];
     for mission in [
         Mission::Transport,
@@ -938,7 +941,7 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
         assert!(result["allied"]["margin"].is_string(), "{result}");
         assert_eq!(
             last,
-            json!({"format": "flagplot-agent", "version": 13, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
+            json!({"format": "flagplot-agent", "version": 14, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
         );
         assert_eq!(session.day_hashes(), hashes, "variant {variant}");
         let world = session.into_world();

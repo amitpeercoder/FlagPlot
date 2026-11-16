@@ -2,10 +2,10 @@ Placeholder scenario 57: Going back to rearm
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d2a946253dcff21c  24 events
-day   2  hash 975f678ec2cdf695  22 events
-day   3  hash 8afea85a73165c24  5 events
-day   4  hash b48ef7328de260c6  3 events
+day   1  hash 445b2d9dd47d24e5  24 events
+day   2  hash 0f109c129986358a  22 events
+day   3  hash 3341760b166d7a4b  5 events
+day   4  hash d0ebec3b4d0b7055  3 events
 
 #1 D0 -         Allied report: 3 ships, cruiser, at (10,0), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to deny the waters within 0 hexes of (3,0)

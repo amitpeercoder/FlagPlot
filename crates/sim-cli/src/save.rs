@@ -52,6 +52,9 @@
 //!
 //! Version 8 (decision 0121) adds the task force order `escort`, with its
 //! `charge` written `task_force:N` or left out to clear it.
+//!
+//! Version 9 (decision 0131) adds the air group order `set_search_once`
+//! (`on`) in `"script"`.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -83,9 +86,10 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// `distance`), `strike_ships` and `search_waters`. Version 7 (decisions 0124 and 0125) adds
 /// the intent kinds `stand_at` and `operate_carriers`, `stand_at` in a route
 /// order and a reason's `level` of a task force. Version 8 (decision 0121)
-/// adds the task force order `escort` with its `charge`. A game of an older
+/// adds the task force order `escort` with its `charge`. Version 9 (decision
+/// 0131) adds the air group order `set_search_once`. A game of an older
 /// version lacks them and is refused, not converted.
-pub const VERSION: u32 = 8;
+pub const VERSION: u32 = 9;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -887,7 +891,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 8);
+        assert_eq!(written["version"], 9);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 11);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

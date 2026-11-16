@@ -298,7 +298,16 @@ impl Day<'_, '_> {
                 .view
                 .aircraft_type(group.aircraft_type)
                 .is_some_and(|t| t.role == AircraftRole::Fighter);
-            let role = if fighter {
+            // The bomber this task lends a cover or search task of the base
+            // to search today (decision 0131, 8).
+            let lent = self
+                .turns
+                .get(&base)
+                .filter(|t| t.group == m.id && t.lender == task.id)
+                .cloned();
+            let role = if lent.is_some() {
+                StrikeRole::Other
+            } else if fighter {
                 if has_cover {
                     StrikeRole::CoverFighter
                 } else {
@@ -332,10 +341,16 @@ impl Day<'_, '_> {
                     "{}, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves",
                     m.id
                 ),
-                StrikeRole::Other => format!(
-                    "{}, a group that is neither a fighter nor carries a weapon: no order",
-                    m.id
-                ),
+                StrikeRole::Other => match &lent {
+                    Some(turn) => format!(
+                        "{}, a bomber group with fatigue {}, searches today for {} and does not strike: {}",
+                        m.id, m.fatigue, turn.borrower, turn.words
+                    ),
+                    None => format!(
+                        "{}, a group that is neither a fighter nor carries a weapon: no order",
+                        m.id
+                    ),
+                },
             };
             lines.insert(m.id, line);
             groups.push(StrikeGroup {

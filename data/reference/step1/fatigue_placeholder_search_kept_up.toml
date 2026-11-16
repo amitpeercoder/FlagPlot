@@ -1,0 +1,31 @@
+# FROZEN: a copy of data/reference/fatigue_placeholder_search_kept_up.toml
+# as it stood when scenario 59 was built, on Nov 16, 2026, for the hand-calculation test
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. The fatigue figures of the frozen step 1, with the search
+# figure that scenario 59 (decision 0131) sets for itself: a search tires a
+# group by 0.15 for each 100 nm of its sortie instead of the 2 of every other
+# sortie.
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation.
+# See docs/decisions/0036-fatigue-and-rest.md and
+# docs/decisions/0131-a-search-that-can-be-kept-up.md.
+
+placeholder = true
+
+# Fatigue an air group gains in a daylight pulse in which it flew: this much
+# for the sortie, plus this much for each 100 nm of it.
+air_fatigue_per_sortie = 3
+air_fatigue_per_100_nm = 2
+
+# For a search sortie, this much for each 100 nm in place of the figure above
+# (decision 0131, 3).
+search_fatigue_per_100_nm = "0.15"
+
+# Fatigue an air group loses in a daylight pulse in which it did not fly.
+air_rest_per_pulse = 5
+
+# Fatigue a task force gains at the start of a pulse in which it is alert,
+# and loses at the start of one in which it is not (decision 0037).
+force_fatigue_per_pulse_alert = 5
+force_rest_per_pulse = 3

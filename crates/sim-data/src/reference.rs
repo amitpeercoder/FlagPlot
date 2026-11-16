@@ -1140,6 +1140,9 @@ struct FatigueFile {
     air_rest_per_pulse: Quantity,
     force_fatigue_per_pulse_alert: Quantity,
     force_rest_per_pulse: Quantity,
+    /// Decision 0131, 3. Optional: a file without it gives a search the
+    /// figure for every sortie.
+    search_fatigue_per_100_nm: Option<Quantity>,
 }
 
 /// Loads the fatigue figures from a TOML file (decision 0036).
@@ -1166,6 +1169,11 @@ fn parse_fatigue_figures(text: &str, path: &Path) -> Result<FatigueFigures, Data
             &file.force_fatigue_per_pulse_alert,
         )?,
         force_rest_per_pulse: number("force_rest_per_pulse", &file.force_rest_per_pulse)?,
+        search_fatigue_per_100_nm: file
+            .search_fatigue_per_100_nm
+            .as_ref()
+            .map(|quantity| number("search_fatigue_per_100_nm", quantity))
+            .transpose()?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -3031,6 +3039,38 @@ mod tests {
         assert_eq!(figures.air_rest_per_pulse, Fixed::from_int(5));
         assert_eq!(figures.force_fatigue_per_pulse_alert, Fixed::from_int(5));
         assert_eq!(figures.force_rest_per_pulse, Fixed::from_int(3));
+        assert_eq!(
+            figures.search_fatigue_per_100_nm,
+            Some(Fixed::from_ratio(14, 100))
+        );
+    }
+
+    #[test]
+    fn the_search_fatigue_figure_is_optional_a_decimal_and_between_0_and_100() {
+        let text = fatigue_text();
+        let without = text.replace("search_fatigue_per_100_nm = \"0.14\"\n", "");
+        assert_ne!(without, text, "the figure is in the file");
+        let figures = parse_fatigue_figures(&without, here()).expect("parses without it");
+        assert_eq!(figures.search_fatigue_per_100_nm, None);
+        let bad = |to: &str| {
+            let text = text.replace("search_fatigue_per_100_nm = \"0.14\"", to);
+            parse_fatigue_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("search_fatigue_per_100_nm = 0.14").contains("search_fatigue_per_100_nm"));
+        assert!(bad("search_fatigue_per_100_nm = \"101\"").contains("search fatigue"));
+        assert!(bad("search_fatigue_per_100_nm = -1").contains("search fatigue"));
+        let whole = text.replace(
+            "search_fatigue_per_100_nm = \"0.14\"",
+            "search_fatigue_per_100_nm = 1",
+        );
+        assert_eq!(
+            parse_fatigue_figures(&whole, here())
+                .expect("a whole number loads")
+                .search_fatigue_per_100_nm,
+            Some(Fixed::from_int(1))
+        );
     }
 
     #[test]

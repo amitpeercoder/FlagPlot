@@ -294,9 +294,16 @@ impl SideView<'_> {
                 }
                 _ => continue,
             };
+            // A search set to be flown once a day is flown in one of the two
+            // daylight pulses (decision 0131, 1).
+            let pulses = if group.mission == AirMission::Search && group.search_once {
+                1
+            } else {
+                2
+            };
             used.sorties_t += supply.sortie_cost(distance_nm)
                 * Fixed::from_int(i64::from(aircraft))
-                * Fixed::from_int(2);
+                * Fixed::from_int(pulses);
         }
     }
 }

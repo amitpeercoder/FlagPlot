@@ -72,40 +72,52 @@
 //!
 //! | Day | Group 1: fatigue, day | Group 2: fatigue, day | Group 3: fatigue, day | The staff's orders |
 //! | --- | --------------------- | --------------------- | --------------------- | ------------------ |
-//! | 1   | 0, flies              | 0, flies              | 0, flies              | Groups 1 and 2: patrol, share 0.5. Group 3: search, arc 060 to 180 at 600 nm |
-//! | 2   | 6, flies              | 6, flies              | 54, rests             | Group 3: rest |
-//! | 3   | 12, flies             | 12, flies             | 44, flies             | Group 3: search, arc 050 to 120 at 600 nm |
-//! | 4   | 18, flies             | 18, flies             | 98, rests             | Group 3: rest |
-//! | 5   | 24, flies             | 24, flies             | 88, rests             | none |
-//! | 6   | 30, flies             | 30, flies             | 78, rests             | none |
-//! | 7   | 36, flies             | 36, flies             | 68, rests             | none |
-//! | 8   | 42, flies             | 42, flies             | 58, rests             | none |
+//! | 1   | 0, flies              | 0, flies              | 0, flies              | Groups 1 and 2: patrol, share 0.5. Group 3: search, search once a day, arc 060 to 180 at 600 nm |
+//! | 2   | 6, flies              | 6, flies              | 22, flies             | none |
+//! | 3   | 12, flies             | 12, flies             | 44, flies             | Group 3: arc 050 to 120 at 600 nm |
+//! | 4   | 18, flies             | 18, flies             | 66, rests             | Group 3: rest |
+//! | 5   | 24, flies             | 24, flies             | 56, rests             | none |
+//! | 6   | 30, flies             | 30, flies             | 46, rests             | none |
+//! | 7   | 36, flies             | 36, flies             | 36, flies             | Group 3: search |
+//! | 8   | 42, flies             | 42, flies             | 58, rests             | Group 3: rest |
 //! | 9   | 48, rests             | 48, flies             | 48, rests             | Group 1: rest |
 //! | 10  | 38, flies             | 54, rests             | 38, flies             | Group 1: patrol. Group 2: rest. Group 3: search |
-//! | 11  | 44, flies             | 44, flies             | 92, rests             | Group 2: patrol. Group 3: rest |
-//! | 12  | 50, rests             | 50, flies             | 82, rests             | Group 1: rest |
+//! | 11  | 44, flies             | 44, flies             | 60, rests             | Group 2: patrol. Group 3: rest |
+//! | 12  | 50, rests             | 50, flies             | 50, rests             | Group 1: rest |
 //!
 //! At the end of day 12: group 1 has fatigue 40, group 2 has 56, group 3
-//! has 72 and group 4 has 0.
+//! has 40 and group 4 has 0. The orders are 7, 0, 1, 1, 0, 0, 1, 1, 1, 3, 2
+//! and 1: eighteen.
+//!
+//! (Restated by the architect on Nov 16, 2026, for decision 0131: at
+//! balanced the staff sets a group that searches to search once a day, so
+//! group 3 flies its search in the morning only, gains 27 and rests the
+//! afternoon for 5. As first written it searched in both pulses, gained 54
+//! on a day in the air, searched on days 1, 3 and 10, the orders were 6, 1,
+//! 2, 1, 0, 0, 0, 0, 1, 3, 2 and 1, and it ended at 72.)
 //!
 //! Why, where it is not plain:
 //!
-//! - **Day 1** has six orders: for each fighter group the patrol mission
-//!   and the share; for group 3 the search mission and the arc. A mission
-//!   and a setting are two orders. Group 4 is given none on any day: it is
+//! - **Day 1** has seven orders: for each fighter group the patrol mission
+//!   and the share; for group 3 the search mission, search once a day and
+//!   the arc, in that order. A mission and a setting are two orders. Group 4 is given none on any day: it is
 //!   not a fighter and cannot search, and the day's reason says it is left
 //!   for a strike intent.
-//! - **Group 3's days in the air.** On day 1 it flies 6 in the morning and
-//!   gains 27; in the afternoon 6 x 0.73, cut to 4, fly and it gains 27: 54.
-//!   On day 3, at 44, 6 x 0.56, cut to 3, fly: 71; then 6 x 0.29, cut to 1:
-//!   98. On day 10, at 38, 3 fly: 65; then 6 x 0.35, cut to 2: 92.
-//! - **Day 3.** Group 3 is at 44, not above 45: it flies, and is given the
-//!   search mission and the new arc. The arc's reason names the contact as
-//!   gone.
+//! - **Group 3's days in the air.** On a day it searches it flies in the
+//!   morning and gains 27, and does not fly in the afternoon and loses 5:
+//!   22 up. On day 1 it flies 6. On day 2, at 22, 6 x 0.78, cut to 4, fly.
+//!   On day 3, at 44, 6 x 0.56, cut to 3. On day 7, at 36, 6 x 0.64, cut
+//!   to 3. On day 10, at 38, 3. On a day of rest it loses 10.
+//! - **Day 3.** Group 3 is at 44, not above 45: it flies. It has the
+//!   search mission and the setting already and is given the new arc. The
+//!   arc's reason names the contact as gone.
+//! - **Days 7 and 10.** Group 3 is at 36 and at 38 and is given the search
+//!   mission. Its setting and its arc stand from before: one order.
 //! - **Day 9.** Both fighter groups are at 48, above 45. They are taken
 //!   most tired first, then by number: group 1 rests, and group 2, the last
 //!   that can fly, is kept on patrol though it is above the level. Group 3
-//!   is at 48 and rests: it has the rest mission already, so no order.
+//!   is at 48 and rests: it has the rest mission already, from day 8, so
+//!   no order.
 //! - **Day 10.** Group 1 is at 38 and flies. Group 2 is at 54 and may now
 //!   rest, since group 1 flies.
 //! - **Day 11.** Both fighters are at 44 and fly.
@@ -114,7 +126,8 @@
 //! On every day at least one fighter group flies the patrol: both on days
 //! 1 to 8 and 11, group 2 on days 9 and 12, group 1 on day 10. On a day a
 //! fighter group flies it gains 6 and on a day it rests it loses 10. Group
-//! 3 searches on days 1, 3 and 10 and no others.
+//! 3 searches on days 1, 2, 3, 7 and 10 and no others, in the morning
+//! only.
 //!
 //! No staff order is refused. Every order and every morning without one
 //! has a reason with these numbers: the fatigue against 45, the share, the
@@ -328,6 +341,11 @@ fn share(s: &str) -> AirGroupOrder {
     AirGroupOrder::SetPatrolShare { share: fx(s) }
 }
 
+/// Search once a day, on (decision 0131).
+fn once() -> AirGroupOrder {
+    AirGroupOrder::SetSearchOnce { on: true }
+}
+
 fn arc(from: i32, to: i32) -> AirGroupOrder {
     AirGroupOrder::SetSearchArc {
         from_deg: from,
@@ -350,18 +368,21 @@ fn table_orders() -> Vec<Vec<(u32, AirGroupOrder)>> {
             (2, mission(CAP)),
             (2, share("0.5")),
             (3, mission(SEARCH)),
+            (3, once()),
             (3, arc(60, 180)),
         ],
         // Day 2
-        vec![(3, mission(REST))],
+        vec![],
         // Day 3
-        vec![(3, mission(SEARCH)), (3, arc(50, 120))],
+        vec![(3, arc(50, 120))],
         // Day 4
         vec![(3, mission(REST))],
         vec![],
         vec![],
-        vec![],
-        vec![],
+        // Day 7
+        vec![(3, mission(SEARCH))],
+        // Day 8
+        vec![(3, mission(REST))],
         // Day 9
         vec![(1, mission(REST))],
         // Day 10
@@ -376,17 +397,17 @@ fn table_orders() -> Vec<Vec<(u32, AirGroupOrder)>> {
 /// Fatigue on the morning of each day: (group 1, group 2, group 3).
 const MORNINGS: [(i64, i64, i64); 12] = [
     (0, 0, 0),
-    (6, 6, 54),
+    (6, 6, 22),
     (12, 12, 44),
-    (18, 18, 98),
-    (24, 24, 88),
-    (30, 30, 78),
-    (36, 36, 68),
+    (18, 18, 66),
+    (24, 24, 56),
+    (30, 30, 46),
+    (36, 36, 36),
     (42, 42, 58),
     (48, 48, 48),
     (38, 54, 38),
-    (44, 44, 92),
-    (50, 50, 82),
+    (44, 44, 60),
+    (50, 50, 50),
 ];
 
 // ------------------------------------------------------- The hand calculation
@@ -409,10 +430,10 @@ fn the_staffs_orders_of_every_morning_follow_the_table() {
 }
 
 #[test]
-fn the_staff_gives_six_one_two_one_none_none_none_none_one_three_two_one_orders() {
+fn the_staff_gives_seven_none_one_one_none_none_one_one_one_three_two_one_orders() {
     let played = play(&text());
-    assert_eq!(played.counts(), vec![6, 1, 2, 1, 0, 0, 0, 0, 1, 3, 2, 1]);
-    assert_eq!(played.counts().iter().sum::<usize>(), 17);
+    assert_eq!(played.counts(), vec![7, 0, 1, 1, 0, 0, 1, 1, 1, 3, 2, 1]);
+    assert_eq!(played.counts().iter().sum::<usize>(), 18);
 }
 
 #[test]
@@ -441,7 +462,7 @@ fn every_groups_fatigue_on_every_morning_and_at_the_end_follows_the_table() {
     }
     assert_eq!(played.at_end(1), n(40));
     assert_eq!(played.at_end(2), n(56));
-    assert_eq!(played.at_end(3), n(72));
+    assert_eq!(played.at_end(3), n(40));
     assert_eq!(played.at_end(4), n(0));
 }
 
@@ -449,7 +470,7 @@ fn every_groups_fatigue_on_every_morning_and_at_the_end_follows_the_table() {
 fn a_fighter_group_gains_6_on_a_day_it_flies_and_loses_10_on_a_day_it_rests() {
     let played = play(&text());
     // The table's own words: group 1 rests on days 9 and 12, group 2 on day
-    // 10; group 3 flies on days 1, 3 and 10 (+54, +54, +54) and rests
+    // 10; group 3 flies on days 1, 2, 3, 7 and 10 (+22 each) and rests
     // otherwise.
     for day in 1..=12u32 {
         for (raw, rests) in [(1u32, [9u32, 12]), (2, [10, 10])] {
@@ -470,7 +491,7 @@ fn a_fighter_group_gains_6_on_a_day_it_flies_and_loses_10_on_a_day_it_rests() {
 }
 
 #[test]
-fn group_3_searches_on_days_1_3_and_10_and_no_others() {
+fn group_3_searches_on_days_1_2_3_7_and_10_and_no_others_in_the_morning_only() {
     let played = play(&text());
     let mut searched = Vec::new();
     for day in 1..=12u32 {
@@ -484,7 +505,24 @@ fn group_3_searches_on_days_1_3_and_10_and_no_others() {
             searched.push(day);
         }
     }
-    assert_eq!(searched, vec![1, 3, 10]);
+    assert_eq!(searched, vec![1, 2, 3, 7, 10]);
+    // In the morning only (decision 0131).
+    let flown: Vec<(u32, Option<sim_core::time::Pulse>)> = played
+        .all(|k| matches!(k, EventKind::SearchFlown { air_group, .. } if *air_group == group(3)))
+        .iter()
+        .map(|e| (e.day, e.pulse))
+        .collect();
+    let morning = Some(sim_core::time::Pulse::Morning);
+    assert_eq!(
+        flown,
+        vec![
+            (1, morning),
+            (2, morning),
+            (3, morning),
+            (7, morning),
+            (10, morning)
+        ]
+    );
 }
 
 #[test]
@@ -608,6 +646,16 @@ fn the_reasons_of_the_fighters_name_the_fatigue_against_the_level_and_the_share(
                 );
                 assert!(w.contains("0.5 at balanced"), "day {day}: {w}");
             }
+            AirGroupOrder::SetSearchOnce { on } => {
+                assert!(on, "day {day}");
+                assert!(
+                    w.contains(&format!(
+                        "air_group:3, a search group, has fatigue {fatigue} against the 45 of the balanced risk"
+                    )),
+                    "day {day}: {w}"
+                );
+                assert!(w.contains("once a day"), "day {day}: {w}");
+            }
             AirGroupOrder::SetSearchArc { .. } => {}
             other => panic!("{other:?}"),
         }
@@ -618,10 +666,11 @@ fn the_reasons_of_the_fighters_name_the_fatigue_against_the_level_and_the_share(
 fn the_rest_reasons_say_why_the_group_rests_or_is_kept() {
     let played = play(&text());
     let worked = |day: u32, index: usize| played.decisions(day).orders[index].reason.worked.clone();
-    // Group 3 rests on day 2 at 54, day 4 at 98 and day 11 at 92.
-    assert!(worked(2, 0).contains("above the level and a search group is never kept"));
-    assert!(worked(4, 0).contains("fatigue 98 against the 45"));
-    assert!(worked(11, 1).contains("fatigue 92 against the 45"));
+    // Group 3 rests on day 4 at 66, day 8 at 58 and day 11 at 60.
+    assert!(worked(4, 0).contains("above the level and a search group is never kept"));
+    assert!(worked(4, 0).contains("fatigue 66 against the 45"));
+    assert!(worked(8, 0).contains("fatigue 58 against the 45"));
+    assert!(worked(11, 1).contains("fatigue 60 against the 45"));
     // Group 1 rests on days 9 and 12 because another fighter group can fly.
     assert!(worked(9, 0).contains("fatigue 48 against the 45"));
     assert!(worked(9, 0).contains("another fighter group can fly the patrol"));
@@ -646,7 +695,9 @@ fn the_rest_reasons_say_why_the_group_rests_or_is_kept() {
 #[test]
 fn the_arc_reasons_name_the_threats_and_the_arc() {
     let played = play(&text());
-    let day1 = &played.decisions(1).orders[5].reason.worked;
+    // The arc is group 3's third order of day 1, after its mission and
+    // search once a day.
+    let day1 = &played.decisions(1).orders[6].reason.worked;
     for word in [
         "060 to 180 out to 600 nm",
         "base:2 (Placeholder base 2) at (5,0)",
@@ -658,7 +709,8 @@ fn the_arc_reasons_name_the_threats_and_the_arc() {
     }
     // Day 3: the contact was dropped at the end of the morning of day 2 and
     // the reason names it as gone.
-    let day3 = &played.decisions(3).orders[1].reason.worked;
+    // Day 3's one order is the arc.
+    let day3 = &played.decisions(3).orders[0].reason.worked;
     for word in [
         "050 to 120 out to 600 nm",
         "base:2 (Placeholder base 2) at (5,0)",
@@ -693,7 +745,20 @@ fn the_arc_reasons_name_the_threats_and_the_arc() {
 #[test]
 fn the_morning_without_an_order_names_every_groups_fatigue_against_the_level() {
     let played = play(&text());
-    for day in 5..=8u32 {
+    // The mornings without an order are days 2, 5 and 6. On days 5 and 6
+    // group 3 rests; on day 2 it searches.
+    let (g1, g2, g3) = MORNINGS[1];
+    mentions(
+        &played.decisions(2).no_orders[0],
+        &[
+            &format!("air_group:1, a fighter group, has fatigue {g1} against the 45"),
+            &format!("air_group:2, a fighter group, has fatigue {g2} against the 45"),
+            &format!("air_group:3, a search group, has fatigue {g3} against the 45"),
+            "it is not above the level, so it flies",
+            "it is not above the level, so it searches",
+        ],
+    );
+    for day in 5..=6u32 {
         let (g1, g2, g3) = MORNINGS[(day - 1) as usize];
         mentions(
             &played.decisions(day).no_orders[0],
@@ -901,10 +966,11 @@ fn with_no_threat_group_3_searches_the_whole_circle() {
     let played = play(&text);
     played.nothing_refused();
     let day1 = played.air_orders(1);
-    assert_eq!(day1.len(), 6);
-    assert_eq!(day1[5], (3, arc(0, 0)));
+    // Seven orders, group 3's arc the last, after its search once a day.
+    assert_eq!(day1.len(), 7);
+    assert_eq!(day1[6], (3, arc(0, 0)));
     mentions(
-        &played.decisions(1).orders[5].reason,
+        &played.decisions(1).orders[6].reason,
         &[
             "the whole circle out to 600 nm",
             "no enemy base on the map and no contact: the arc is the whole circle",

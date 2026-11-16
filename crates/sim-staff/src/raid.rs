@@ -509,7 +509,15 @@ impl Day<'_, '_> {
                 Some(AircraftRole::Fighter)
             );
             let bomber = bombers.contains(&m.id);
+            // The bomber this raid lends a cover or search task of the base
+            // to search today (decision 0131, 8).
+            let lent = self
+                .turns
+                .get(&base)
+                .filter(|t| t.group == m.id && t.lender == raid.id)
+                .cloned();
             let role = match whose(fighter, bomber, self.cover_may_use(base, m.id), true) {
+                _ if lent.is_some() => RaidRole::Other,
                 Owner::Cover if fighter => {
                     RaidRole::CoverFighter(self.cover_fighters.get(&m.id).copied().flatten())
                 }
@@ -533,6 +541,12 @@ impl Day<'_, '_> {
             kinds.insert(
                 m.id,
                 match role {
+                    RaidRole::Other if lent.is_some() => format!(
+                        "bomber group that searches today for {} and does not raid (fatigue {}): {}",
+                        lent.as_ref().map_or(raid.id, |t| t.borrower),
+                        m.fatigue,
+                        lent.as_ref().map_or(String::new(), |t| t.words.clone())
+                    ),
                     RaidRole::Bomber => "bomber group".to_string(),
                     RaidRole::Fighter => "fighter group".to_string(),
                     RaidRole::CoverFighter(_) => "fighter group of the base's cover".to_string(),

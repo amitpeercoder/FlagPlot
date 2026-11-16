@@ -139,8 +139,11 @@
 //! # Properties
 //!
 //! - **Balanced.** With no risk set: each bomber group is given two
-//!   orders, the mission and sizing on. Day 1 has six orders for the
-//!   bombers, two for group 4 and two for group 5: ten. No strike is
+//!   orders, the mission and sizing on. Group 4 is given three: the search
+//!   mission, search once a day and the arc, in that order (restated by
+//!   the architect on Nov 16, 2026, for decision 0131; it had two). Day 1
+//!   has six orders for the bombers, three for group 4 and two for group
+//!   5: eleven. Group 4 searches in the morning only. No strike is
 //!   launched on either day: every contact is a pulse old or more in the
 //!   morning, against the figure of 0.
 //! - **Preserve the force.** Each bomber group is given four orders: the
@@ -798,9 +801,18 @@ fn balanced_gives_each_bomber_the_mission_and_sizing_and_launches_nothing() {
     expected.push((5, mission(CAP)));
     expected.push((5, AirGroupOrder::SetPatrolShare { share: fx("0.5") }));
     assert_eq!(played.orders_serving(1, 2), expected);
-    assert_eq!(played.orders_serving(1, 3), search_task_orders());
-    // Six for the bombers, two for group 4, two for group 5.
-    assert_eq!(played.orders(1).len(), 10);
+    // At balanced group 4 is set to search once a day between its mission
+    // and its arc (decision 0131).
+    assert_eq!(
+        played.orders_serving(1, 3),
+        vec![
+            (4, mission(AirMission::Search)),
+            (4, AirGroupOrder::SetSearchOnce { on: true }),
+            (4, arc(110, 180)),
+        ]
+    );
+    // Six for the bombers, three for group 4, two for group 5.
+    assert_eq!(played.orders(1).len(), 11);
     assert!(played.orders(2).is_empty());
     assert!(
         played.all_launches().is_empty(),

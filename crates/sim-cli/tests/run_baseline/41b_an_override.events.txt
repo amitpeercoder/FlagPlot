@@ -2,11 +2,11 @@ Placeholder scenario 41b: An override
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 55df2ccf884dca74  28 events
-day   2  hash 603f0342af4a9754  26 events
-day   3  hash 50cee8019e7328b7  17 events
-day   4  hash 7e4092a91243eb1d  11 events
-day   5  hash 5ccb771cd747bdc1  11 events
+day   1  hash 3e7dab13da4318d5  28 events
+day   2  hash af31f9bb6ebfe2d5  26 events
+day   3  hash 6ac7cdfa9fefebd4  17 events
+day   4  hash 75117a9ec20bbaac  11 events
+day   5  hash f726459c8d33dc0c  11 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

@@ -1,0 +1,79 @@
+# Scenario 59: a search that can be kept up.
+#
+# Decision 0131. A flying boat group rests at Allied base 1; the Allied
+# commander states one intent, cover base 1 from the air, and gives both
+# leaves. The staff sets the group to search once a day, in the morning, over
+# the arc toward base 2, and the group searches to 600 nm every morning for
+# 12 days: with the search figure of this scenario's fatigue file it gains
+# 4.8 in the morning and loses 5 in the afternoon. The only Japanese thing is
+# base 2, with nothing at it, 5 hexes east on the Allied map. Nothing is ever
+# sighted and no die is rolled. The hand calculation is in
+# tests/scenario_59_a_search_kept_up.rs. The test runs this file on the
+# frozen step 1 figures, with the fatigue figures loaded (its own file, the
+# frozen figures with a search figure of 0.15) and the wear, upkeep and
+# supply figures not, and with variants it builds from the parsed text.
+#
+# PLACEHOLDER DATA. The bases, aircraft, figures and map are invented.
+
+name = "Placeholder scenario 59: A search kept up"
+placeholder = true
+seed = 1942
+days = 12
+map = "../map/placeholder_cover_from_the_air.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+fatigue = "../reference/fatigue_placeholder_search_kept_up.toml"
+
+# Allied base 1.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+# Japanese base 2, 5 hexes east of base 1, with nothing at it.
+[[base]]
+id = 2
+name = "Placeholder base 2"
+side = "japanese"
+q = 5
+r = 0
+supply_t = 0
+
+# Flying boats, 6 ready (search range 600 nm).
+[[air_group]]
+id = 1
+name = "Placeholder flying boats 1"
+side = "allied"
+base = 1
+aircraft_type = 1
+ready = 6
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "cover"
+base = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

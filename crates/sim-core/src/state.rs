@@ -1022,6 +1022,11 @@ pub struct AirGroup {
     pub strike_sizing: bool,
     /// The standing order that set strike sizing, if any (decision 0118).
     pub strike_sizing_order: Option<OrderId>,
+    /// Whether the group, on the search mission, searches once a day, in the
+    /// morning pulse only (decision 0131, 1). Off until an order sets it.
+    pub search_once: bool,
+    /// The standing order that set search once a day, if any (decision 0131).
+    pub search_once_order: Option<OrderId>,
 }
 
 impl AirGroup {
@@ -1084,6 +1089,8 @@ impl AirGroup {
             strike_share_order: None,
             strike_sizing: false,
             strike_sizing_order: None,
+            search_once: false,
+            search_once_order: None,
         }
     }
 }

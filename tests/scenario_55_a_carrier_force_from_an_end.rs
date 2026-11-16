@@ -106,8 +106,11 @@
 //!
 //! - **Balanced.** Group 1's share is 0.5 and it keeps 6 overhead. Group 3
 //!   is given two orders, the mission and sizing on, and launches nothing.
-//!   The rules of engagement order has a break-off level of 0.5. Day 1 has
-//!   8 orders.
+//!   The rules of engagement order has a break-off level of 0.5. Group 2
+//!   is given three orders: the search mission, search once a day and the
+//!   arc, in that order, and it searches in the two morning pulses only.
+//!   Day 1 has 9 orders. (Restated by the architect on Nov 16, 2026, for
+//!   decision 0131: it had 8, and group 2 searching in all four pulses.)
 //! - **No scout.** With no group 2 and a second dive bomber group, group 4,
 //!   of 10: no group can only search, so group 3, the lowest that can do
 //!   both, is set to search and group 4 to strike. The placeholder dive
@@ -136,7 +139,8 @@
 //!   "operate task force 1 from (0,0)" as intent 2, beside the deny end:
 //!   the staff forms no task for force 1 under intent 1, and its reason
 //!   names intent 2. Every order to the force and to its groups is given
-//!   once, serving intent 2, whose risk is balanced: day 1 has 8 orders.
+//!   once, serving intent 2, whose risk is balanced: day 1 has 9 orders
+//!   (8 before decision 0131, which adds group 2's search once a day).
 //!   (Added by the architect on Nov 16, 2026, with the ruling that a force
 //!   has one task of a kind, whoever made it.)
 //! - A held force or group is left alone; the same start gives the same
@@ -1024,6 +1028,7 @@ fn balanced_air_orders() -> Vec<Given> {
         Given::Air(1, mission(CAP)),
         Given::Air(1, share("0.5")),
         Given::Air(2, mission(SEARCH)),
+        Given::Air(2, AirGroupOrder::SetSearchOnce { on: true }),
         Given::Air(2, arc(60, 300)),
         Given::Air(3, mission(STRIKE)),
         Given::Air(3, sizing(true)),
@@ -1042,8 +1047,8 @@ fn air_orders(played: &Played, day: u32) -> Vec<Given> {
 fn balanced_gives_group_1_a_half_and_group_3_two_orders_and_launches_nothing() {
     let played = play(&without_risk(&text()));
     played.nothing_refused();
-    // Eight orders on day 1.
-    assert_eq!(played.orders(1).len(), 8, "{:?}", played.orders(1));
+    // Nine orders on day 1 (group 2's search once a day, decision 0131).
+    assert_eq!(played.orders(1).len(), 9, "{:?}", played.orders(1));
     assert_eq!(
         played.orders(1),
         [
@@ -1072,8 +1077,16 @@ fn balanced_gives_group_1_a_half_and_group_3_two_orders_and_launches_nothing() {
         played.force_at_end().rules_of_engagement.break_off,
         fx("0.5")
     );
-    // Group 2 still searches in all four daylight pulses.
-    assert_eq!(played.searches().len(), 4);
+    // Group 2 searches in the two morning pulses only (decision 0131).
+    assert_eq!(played.searches().len(), 2);
+    assert!(
+        played
+            .searches()
+            .iter()
+            .all(|s| s.1 == Some(Pulse::Morning) && s.2 == 2),
+        "{:?}",
+        played.searches()
+    );
 }
 
 fn the_scenario_with_fuel(tons: u32) -> String {
@@ -1316,8 +1329,8 @@ fn one_task_a_force_the_commanders_task_stands_and_the_staff_forms_none() {
             .any(|r| r.contains("intent:2") && r.contains("forms no other for task_force:1")),
         "{none:?}"
     );
-    // Every order is given once, serving intent 2, at balanced: 8 on day 1.
-    assert_eq!(played.orders(1).len(), 8, "{:?}", played.orders(1));
+    // Every order is given once, serving intent 2, at balanced: 9 on day 1.
+    assert_eq!(played.orders(1).len(), 9, "{:?}", played.orders(1));
     assert_eq!(
         played.orders(1),
         [
@@ -1427,6 +1440,7 @@ fn view_of(id: u32, fighter: bool, can_search: bool, can_strike: bool, able: u32
         reach: Reach::Normal,
         held_share: Fixed::ZERO,
         sizing: false,
+        search_once: false,
     }
 }
 

@@ -59,7 +59,7 @@
     },
     {
       "file": "data/scenarios/../reference/fatigue.toml",
-      "hash": "5aac70e8a41f6579"
+      "hash": "e4af8a4c9068e139"
     },
     {
       "file": "data/scenarios/../reference/air_supply.toml",
@@ -70,28 +70,28 @@
       "hash": "5ef7d142f1faa97f"
     }
   ],
-  "doctrine_version": "supply-15",
+  "doctrine_version": "supply-16",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "2065d04a1629bf1c"
+      "hash": "7afdff2187b54e4c"
     },
     {
       "day": 2,
-      "hash": "cb4e54d6e2eca180"
+      "hash": "ff50644f469219d5"
     },
     {
       "day": 3,
-      "hash": "76a00f5077df73d4"
+      "hash": "dcefca3679976ec3"
     },
     {
       "day": 4,
-      "hash": "695f8bbd213e5e32"
+      "hash": "a21137d1b4adcf65"
     },
     {
       "day": 5,
-      "hash": "6dd5ef5eecb2f7e0"
+      "hash": "23f317607b8b54fa"
     }
   ],
   "orders": [
@@ -859,7 +859,7 @@
       "unit": "task_force:26"
     }
   ],
-  "rules_version": 16,
+  "rules_version": 17,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "5ed635ac5538b189"
@@ -870,6 +870,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v33",
-  "version": 8
+  "state_version": "flagplot-state-v34",
+  "version": 9
 }
