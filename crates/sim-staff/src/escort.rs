@@ -117,6 +117,10 @@ fn free_escort(
     if let Some(hold) = planner.state().hold_on_force(id, &force.ships) {
         return Err(format!("{hold} is held by the commander"));
     }
+    // Decision 0127, 2: a force short of ammunition is not free.
+    if let Some(short) = crate::ammunition::short(planner.view, id, risk) {
+        return Err(format!("{id} is not free: {}", short.words));
+    }
     let need_margin = margin(risk);
     let Some(forecast) = planner
         .view

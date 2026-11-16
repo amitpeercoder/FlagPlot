@@ -734,7 +734,10 @@ impl Day<'_, '_> {
                         "the passage to the station and home, by the engine's measure, times the {} of the {risk_text}: {fuel_text}",
                         margin(risk)
                     );
-                    if short.is_empty() {
+                    // Ammunition, read with the fuel in one pass (decision
+                    // 0127, 5).
+                    let ammunition = crate::ammunition::short(view, id, risk);
+                    if short.is_empty() && ammunition.is_none() {
                         battle = true;
                         let speed_text = match speed {
                             SpeedSetting::Full => "full speed",
@@ -769,6 +772,34 @@ impl Day<'_, '_> {
                                 .would_change("no threat, a bolder or more careful risk, or less fuel aboard")
                                 .done(),
                         ));
+                    } else if short.is_empty() {
+                        // Short of ammunition alone (decision 0127, 2 to 4).
+                        let ammunition = ammunition.expect("short of ammunition");
+                        let when_text = match ammunition.hours.map(|h| usable_day(today, h)) {
+                            Some(day) => {
+                                format!("it rearms at {home_text} and may be used from day {day}")
+                            }
+                            None => {
+                                out.cannot = true;
+                                format!(
+                                    "{home_text} cannot rearm it, so there is no day from which it may be used, and the staff cannot meet {}",
+                                    task.id
+                                )
+                            }
+                        };
+                        out.summary = Some(
+                            serving(task, &plan)
+                                .evidence(threat_text.clone(), today)
+                                .evidence(fuel_text.clone(), today)
+                                .evidence(ammunition.words.clone(), today)
+                                .binding("a force short of ammunition does not sortie")
+                                .worked(format!(
+                                    "{intent_words}: {threat_text}, and {sortie_rule}. {fuel_text}: it has the fuel. But {}, and it does not sortie; {when_text}.",
+                                    ammunition.words
+                                ))
+                                .would_change("more ammunition aboard")
+                                .done(),
+                        );
                     } else {
                         let triples: Vec<(Fixed, Fixed, Fixed)> = short
                             .iter()
@@ -782,7 +813,21 @@ impl Day<'_, '_> {
                             .collect();
                         let when =
                             fuelling_hours(view, home, &triples).map(|h| usable_day(today, h));
+                        // The later of fuel and ammunition (decision 0127, 5).
+                        let ammunition_day = ammunition
+                            .as_ref()
+                            .map(|a| a.hours.map(|h| usable_day(today, h)));
+                        let when = match ammunition_day {
+                            None => when,
+                            Some(day) => when.zip(day).map(|(a, b)| a.max(b)),
+                        };
+                        let ammunition_words = ammunition
+                            .as_ref()
+                            .map_or_else(String::new, |a| format!("; and {}", a.words));
                         let when_text = match when {
+                            Some(day) if ammunition.is_some() => format!(
+                                "it fuels and rearms at {home_text} and may be used from day {day}"
+                            ),
                             Some(day) => {
                                 format!("it fuels at {home_text} and may be used from day {day}")
                             }
@@ -800,7 +845,7 @@ impl Day<'_, '_> {
                                 .evidence(fuel_text.clone(), today)
                                 .binding("fuel comes first: a force with less aboard than the sortie needs does not sortie")
                                 .worked(format!(
-                                    "{intent_words}: {threat_text}, and {sortie_rule}, but {fuel_text}: it has less than it needs and does not sortie; {when_text}."
+                                    "{intent_words}: {threat_text}, and {sortie_rule}, but {fuel_text}: it has less than it needs{ammunition_words}; it does not sortie; {when_text}."
                                 ))
                                 .would_change("more fuel aboard")
                                 .done(),
