@@ -1,10 +1,10 @@
 # 0128: The second proof of stage 2: its test plan, written before the run
 
-Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, "What it must pass" and step 7 of its seven). It says what is run, what each side states, what passes and what is only reported, before any of it is run. It was run on Nov 16, 2026, and did not pass as stated: see "As run" and `docs/validation/stage-2-second-proof.md`. The designer read the pass marks on Nov 16, 2026, and confirmed that they stand as written.
+Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, "What it must pass" and step 7 of its seven). It says what is run, what each side states, what passes and what is only reported, before any of it is run. It was run on Nov 16, 2026, and did not pass as stated: see "As run" and `docs/validation/stage-2-second-proof.md`. It was run again on Nov 16, 2026, after decisions 0130 and 0131, and again did not pass as stated: see "Rerun on Nov 16, 2026" and `docs/validation/stage-2-second-proof-rerun.md`. The designer read the pass marks on Nov 16, 2026, and confirmed that they stand as written.
 
 Summary: The test plan of stage 2's second proof: the Eastern Solomons on its one day and then days 15 to 21 of the 39-day slice, each with both sides' intents stated and no unit order from anyone, over a thousand seeds; what each side states, the conditions that pass or fail with their numbers, the comparison against a side given no orders with its margin, and what is reported and not judged
 
-Standing: Settled by the architect and confirmed by the designer, Nov 16, 2026, inside decision 0113. Run Nov 16, 2026: not passed as stated (three conditions fail; the choices they raise are the designer's)
+Standing: Settled by the architect and confirmed by the designer, Nov 16, 2026, inside decision 0113. Run Nov 16, 2026: not passed as stated (three conditions fail; the choices they raise are the designer's). Run again Nov 16, 2026, at doctrine `supply-16`: not passed as stated (two conditions of the Eastern Solomons fail; the week and legibility pass)
 
 ## Why it is written first
 
@@ -226,3 +226,11 @@ Run on Nov 16, 2026, release build, live figures, seeds 1 to 1,000, doctrine `su
   - The staffs' decisions take up to 4.08 ms (Allied, day 15) and 7.42 ms (Japanese, day 17).
 
 Put to the designer with the choices it raises: how a carrier force from an end is to reach its strike (its speed to its hex, closing the range); and whether a force's searching should not rest all its searchers, or should draw on its bombers when they do.
+
+## Rerun on Nov 16, 2026
+
+Run again after decisions 0130 and 0131, by the same scripts and the same variant files, release build, live figures, seeds 1 to 1,000, doctrine `supply-16`, state layout `flagplot-state-v34`. Nothing in the plan was changed and nothing was tuned. The report, with both runs side by side, is `docs/validation/stage-2-second-proof-rerun.md`.
+
+- **The Eastern Solomons does not pass.** The Allied side strikes on 558 seeds of the 800 asked (0 before); the Japanese side now passes, on 865 (152 before). Against no orders the Allied side passes (0.25 against 0.20) and the Japanese does not (-5.40 against 0.00). The American carriers search once, in the morning, and do not close on a contact first held after the staff's morning; the Japanese carriers come up overnight, are found and lose the exchange.
+- **The week passes every condition.** The Japanese search holds on all 1,000 seeds (683 before), its floatplanes searching once a day.
+- **Legibility passes**, 24 of 24. Every invariant holds, nothing is refused and the same start gives the same game, in every arrangement. The model's game was not played again: the plan asks for it once.
