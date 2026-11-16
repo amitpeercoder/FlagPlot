@@ -1,0 +1,16 @@
+Placeholder scenario 51: An escort force
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 356cf3e13ec2b74e  21 events
+day   2  hash db946475a48846cb  0 events
+
+task_force:1 "Placeholder cargo force 1" (Allied): Arrived at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder escort force 2" (Allied): Arrived at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 980 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer 2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 475 t of fuel, 0 t of supply
+ship:3 "Placeholder destroyer 3": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 475 t of fuel, 0 t of supply
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

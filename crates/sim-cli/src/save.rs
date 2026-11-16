@@ -79,9 +79,10 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// group order `set_strike_sizing` and the intent kinds `deny` (`hex` and
 /// `distance`), `strike_ships` and `search_waters`. Version 7 (decisions 0124 and 0125) adds
 /// the intent kinds `stand_at` and `operate_carriers`, `stand_at` in a route
-/// order and a reason's `level` of a task force. A game of an older version
-/// lacks them and is refused, not converted.
-pub const VERSION: u32 = 7;
+/// order and a reason's `level` of a task force. Version 8 (decision 0121)
+/// adds the task force order `escort` with its `charge`. A game of an older
+/// version lacks them and is refused, not converted.
+pub const VERSION: u32 = 8;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 

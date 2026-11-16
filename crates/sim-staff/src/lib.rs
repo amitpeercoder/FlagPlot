@@ -85,7 +85,13 @@ use sim_core::view::SideView;
 /// the stand and carrier tasks formed under a deny or a hold intent whose
 /// forces limit names task forces, and their doctrines at the force's level.
 /// A side whose intents name no task force gets the orders `supply-10` gave.
-pub const DOCTRINE_VERSION: &str = "supply-11";
+/// `supply-12` adds decision 0126: under a keep-supplied intent whose forces
+/// limit names task forces, the threat to a run, an escort from the named
+/// forces on the escort mission by the risk level, the escort's charge given
+/// and cleared, and a stand task at the destination for each named surface
+/// force. An intent that names no task force gets the orders `supply-11`
+/// gave.
+pub const DOCTRINE_VERSION: &str = "supply-12";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

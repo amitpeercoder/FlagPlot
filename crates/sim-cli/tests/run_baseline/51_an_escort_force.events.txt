@@ -1,0 +1,38 @@
+Placeholder scenario 51: An escort force
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 356cf3e13ec2b74e  21 events
+day   2  hash db946475a48846cb  0 events
+
+#1 D1 -         order:1 accepted for task_force:1  <- order:1
+#2 D1 -         order:2 accepted for task_force:1  <- order:2
+#3 D1 -         order:3 accepted for task_force:2  <- order:3
+#4 D1 night     task_force:2 keeps station on its charge task_force:1: it takes its route through (5,0) at 10 kn  <- order:3, order:1
+#5 D1 night     task_force:1 steamed 120 nm at 10 kn from (0,0) to (3,0)  <- order:1, order:2
+#6 D1 night     ship:1 burned 12 t, 988 t remaining  <- #5
+#7 D1 night     task_force:2 steamed 120 nm at 10 kn from (0,0) to (3,0)  <- order:3, order:3
+#8 D1 night     ship:2 burned 15 t, 485 t remaining  <- #7
+#9 D1 night     ship:3 burned 15 t, 485 t remaining  <- #7
+#10 D1 morning   task_force:1 steamed 60 nm at 10 kn from (3,0) to (5,0)  <- order:1, order:2
+#11 D1 morning   ship:1 burned 6 t, 982 t remaining  <- #10
+#12 D1 morning   task_force:2 steamed 60 nm at 10 kn from (3,0) to (5,0)  <- order:3, order:3
+#13 D1 morning   ship:2 burned 7.5 t, 477.5 t remaining  <- #12
+#14 D1 morning   ship:3 burned 7.5 t, 477.5 t remaining  <- #12
+#15 D1 afternoon task_force:1 steamed 20 nm at 10 kn from (5,0) to (5,0)  <- order:1, order:2
+#16 D1 afternoon ship:1 burned 2 t, 980 t remaining  <- #15
+#17 D1 afternoon task_force:1 arrived at (5,0) at D1 14:00  <- #15
+#18 D1 afternoon task_force:2 steamed 20 nm at 10 kn from (5,0) to (5,0)  <- order:3, order:3
+#19 D1 afternoon ship:2 burned 2.5 t, 475 t remaining  <- #18
+#20 D1 afternoon ship:3 burned 2.5 t, 475 t remaining  <- #18
+#21 D1 afternoon task_force:2 arrived at (5,0) at D1 14:00  <- #18
+
+task_force:1 "Placeholder cargo force 1" (Allied): Arrived at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder escort force 2" (Allied): Arrived at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 980 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer 2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 475 t of fuel, 0 t of supply
+ship:3 "Placeholder destroyer 3": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 475 t of fuel, 0 t of supply
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
