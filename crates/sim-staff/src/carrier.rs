@@ -795,8 +795,8 @@ impl Day<'_, '_> {
                     held_contacts.sort_by_key(|c| c.number);
                     let held_words = |c: &Held| {
                         format!(
-                            "contact {}, a {}, {} pulse(s) old, is {} nm from {here}",
-                            c.number,
+                            "{}, a {}, {} pulse(s) old, is {} nm from {here}",
+                            crate::picture::contact_words(&picture, c.number),
                             c.kind.name(),
                             c.age,
                             c.distance_nm
@@ -835,7 +835,11 @@ impl Day<'_, '_> {
                                         .iter()
                                         .filter(|c| c.age <= CLOSE_MAX_AGE)
                                         .map(|c| {
-                                            format!("contact {}, a {}", c.number, c.kind.name())
+                                            format!(
+                                                "{}, a {}",
+                                                crate::picture::contact_words(&picture, c.number),
+                                                c.kind.name()
+                                            )
                                         })
                                         .collect::<Vec<_>>()
                                         .join("; ");
@@ -925,8 +929,8 @@ impl Day<'_, '_> {
                                                     if needs.iter().any(|n| n.short()) =>
                                                 {
                                                     close_words = Some(format!(
-                                                            "{id} does not close on contact {}: {contact_text}; {place_text}; but the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: a ship has less than it needs.",
-                                                            c.number,
+                                                            "{id} does not close on {}: {contact_text}; {place_text}; but the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: a ship has less than it needs.",
+                                                            crate::picture::contact_words(&picture, c.number),
                                                             setting_words(speed),
                                                             needs_words(&needs)
                                                         ));

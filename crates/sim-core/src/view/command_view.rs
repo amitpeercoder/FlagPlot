@@ -25,6 +25,7 @@ pub struct CommandView<'a> {
     command: CommandRef,
     superior: Option<CommandRef>,
     picture: &'a BeliefState,
+    reports_travel: bool,
 }
 
 impl std::fmt::Debug for CommandView<'_> {
@@ -58,9 +59,17 @@ impl<'a> CommandView<'a> {
         self.picture.contacts()
     }
 
+    /// Whether reports travel between commands in this game (decision 0135):
+    /// command levels are on and report figures are loaded. Then pictures can
+    /// differ, and a command's picture holds only what it was sent.
+    pub fn reports_travel(&self) -> bool {
+        self.reports_travel
+    }
+
     /// The command's number of a contact. Each picture numbers its own
-    /// contacts from 1; in this step every picture holds what the side's
-    /// holds, so the numbers are the side's.
+    /// contacts from 1 (decision 0135, 20), so the same contact can have
+    /// another number in another command's picture, and a number means
+    /// something only in the picture of the command that gives it.
     pub fn contact_number(&self, id: ContactId) -> u32 {
         id.raw()
     }
@@ -96,6 +105,14 @@ impl<'a> SideView<'a> {
         self.commands.is_some()
     }
 
+    /// Whether reports travel between the side's commands (decision 0135):
+    /// command levels are on and the scenario has report figures. Then a
+    /// command's picture holds what it saw or was sent, and pictures can
+    /// differ from one another and from the side's own.
+    pub fn reports_travel(&self) -> bool {
+        self.commands.is_some() && self.ref_data.reports.is_some()
+    }
+
     /// The side's commands, in command order: the area command, then its
     /// task forces, then its bases. Empty with command levels off: there are
     /// no commands then (decision 0134, 1).
@@ -116,6 +133,7 @@ impl<'a> SideView<'a> {
                 command,
                 superior: post.superior(),
                 picture: post.picture(),
+                reports_travel: self.reports_travel(),
             }),
             None => {
                 let own = match command {
@@ -136,6 +154,7 @@ impl<'a> SideView<'a> {
                     command,
                     superior: None,
                     picture: self.belief,
+                    reports_travel: false,
                 })
             }
         }

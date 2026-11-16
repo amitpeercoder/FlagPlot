@@ -32,8 +32,8 @@ use crate::map::{load_land_links, load_map};
 use crate::quantity::Quantity;
 use crate::reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
-    load_fatigue_figures, load_ground_figures, load_port_sizes, load_search_figures,
-    load_ship_classes, load_surface_combat_figures, parse_kind,
+    load_fatigue_figures, load_ground_figures, load_port_sizes, load_report_figures,
+    load_search_figures, load_ship_classes, load_surface_combat_figures, parse_kind,
 };
 
 /// One file name or a list of them (decision 0043).
@@ -95,6 +95,12 @@ struct ScenarioFile {
     /// Path to the ground figures, relative to the scenario file. Optional,
     /// but a scenario with a land unit must name it (decision 0066, 3).
     ground: Option<String>,
+    /// Path to the report figures, relative to the scenario file. Optional
+    /// (decision 0135): without it, with command levels on, every report
+    /// reaches every command at once. Not a reference file redirected by
+    /// `LoadOptions::reference_root`: it is read where the scenario names it,
+    /// as the map is, since the frozen step 1 figures have no report figures.
+    reports: Option<String>,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -1069,7 +1075,9 @@ pub struct LoadOptions {
     /// looked up by its file name directly under this directory. A file that
     /// is not there is an error that names it: there is no fallback to the
     /// file the scenario names, which would defeat the purpose. The map is
-    /// not a reference file and is read where the scenario names it.
+    /// not a reference file and is read where the scenario names it, and so
+    /// are the report figures (decision 0135), which the frozen step 1
+    /// figures do not have.
     ///
     /// The hand-calculation tests set this to `data/reference/step1`, the
     /// figures as they stood at the end of step 1 (`docs/step2-spec.md`,
@@ -1229,6 +1237,10 @@ impl Scenario {
         if let Some(ground) = &file.ground {
             ref_data.ground = Some(load_ground_figures(&reference(ground)?)?);
         }
+        let reports_file = file.reports.as_ref().map(|name| folder.join(name));
+        if let Some(reports) = &reports_file {
+            ref_data.reports = Some(load_report_figures(reports)?);
+        }
 
         let mut data_files: Vec<PathBuf> = vec![folder.join(&file.map)];
         data_files.extend(land_links_file);
@@ -1253,6 +1265,7 @@ impl Scenario {
         {
             data_files.push(reference(name)?);
         }
+        data_files.extend(reports_file);
 
         let mut truth = TruthState::default();
 
@@ -3594,6 +3607,55 @@ r = 0
         assert_eq!(figures.force_rest_per_pulse, Fixed::from_int(3));
         let error = with_fatigue("fatigue = \"../reference/nothing.toml\"\n")
             .expect_err("a missing file is an error");
+        assert!(error.to_string().contains("nothing.toml"), "{error}");
+    }
+
+    /// `HEAD` with the reports key added after the surface combat key, read
+    /// with `options`.
+    fn with_reports(key: &str, options: &LoadOptions) -> Result<Scenario, DataError> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let head = HEAD.replace(
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            &format!("surface_combat = \"../reference/surface_combat.toml\"\n{key}"),
+        );
+        Scenario::parse_with(&head, &path, options)
+    }
+
+    #[test]
+    fn the_reports_key_is_optional_and_is_read_where_the_scenario_names_it() {
+        assert!(parse_with("")
+            .expect("loads")
+            .world
+            .ref_data()
+            .reports
+            .is_none());
+        let key = "reports = \"../reference/reports.toml\"\n";
+        let with = with_reports(key, &LoadOptions::default()).expect("loads");
+        let figures = with
+            .world
+            .ref_data()
+            .reports
+            .expect("the figures are loaded");
+        assert_eq!(figures.up.on_time, Fixed::from_ratio(7, 10));
+        assert_eq!(figures.reach_base_nm, Fixed::from_int(1000));
+        // It is among the files the scenario records as its inputs.
+        assert!(with
+            .data_files
+            .iter()
+            .any(|file| file.ends_with("reports.toml")));
+        // A reference root does not redirect it: the frozen step 1 figures
+        // have no report figures, and the scenario still gets its own.
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let frozen = with_reports(key, &LoadOptions::frozen_step1(&root)).expect("loads");
+        assert_eq!(
+            frozen.world.ref_data().reports,
+            with.world.ref_data().reports
+        );
+        let error = with_reports(
+            "reports = \"../reference/nothing.toml\"\n",
+            &LoadOptions::default(),
+        )
+        .expect_err("a missing file is an error");
         assert!(error.to_string().contains("nothing.toml"), "{error}");
     }
 

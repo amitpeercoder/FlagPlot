@@ -17,6 +17,7 @@ use crate::ids::{
     TaskForceId,
 };
 use crate::orders::{Cargo, Issuer, Job, RejectReason};
+use crate::pictures::CommandRef;
 use crate::refdata::ShipKind;
 use crate::state::{AirGroupLocation, HaltWork, ShipSystem, Side, SystemState};
 use crate::time::{ClockTime, Pulse};
@@ -477,6 +478,77 @@ impl DetachReason {
             DetachReason::Ordered => "ordered",
         }
     }
+}
+
+/// The way a report is passed between commands (decision 0135, 3 to 5).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub enum Direction {
+    /// To the sender's superior.
+    Up,
+    /// To another command within the sender's radio reach.
+    Sideways,
+    /// From the area command to a command under it.
+    Down,
+}
+
+impl Direction {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            Direction::Up => 1,
+            Direction::Sideways => 2,
+            Direction::Down => 3,
+        }
+    }
+
+    /// The word the log uses.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Direction::Up => "up",
+            Direction::Sideways => "sideways",
+            Direction::Down => "down",
+        }
+    }
+}
+
+/// When a passed report reaches its listener (decision 0135, 8).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub enum Arrival {
+    /// In the pulse it was sent.
+    OnTime,
+    /// In the next pulse.
+    Late,
+    /// Never.
+    Never,
+}
+
+impl Arrival {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            Arrival::OnTime => 1,
+            Arrival::Late => 2,
+            Arrival::Never => 3,
+        }
+    }
+
+    /// The words the log uses.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Arrival::OnTime => "on time",
+            Arrival::Late => "a pulse late",
+            Arrival::Never => "never",
+        }
+    }
+}
+
+/// One listener of a report sent (decision 0135, 21): the command, the
+/// direction it was sent in and when it arrives.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ReportListener {
+    pub command: CommandRef,
+    pub direction: Direction,
+    pub arrival: Arrival,
 }
 
 /// What happened.
@@ -1884,6 +1956,17 @@ pub enum EventKind {
         tubes_fired: u32,
         base_ammunition_t: Fixed,
     },
+    /// A command passed a report on (decision 0135, 21): the report's event,
+    /// the sender and, for each listener in the order it was drawn, the
+    /// direction and whether it arrives on time, a pulse late or never. The
+    /// report's own event is its cause. The side's own. Added at the end
+    /// (decision 0135).
+    ReportSent {
+        side: Side,
+        sender: CommandRef,
+        report: EventId,
+        listeners: Vec<ReportListener>,
+    },
 }
 
 impl EventKind {
@@ -2277,6 +2360,12 @@ impl EventKind {
                 EntityRef::TaskForce(*task_force),
                 EntityRef::Base(*base),
             ],
+            EventKind::ReportSent {
+                sender, listeners, ..
+            } => std::iter::once(*sender)
+                .chain(listeners.iter().map(|listener| listener.command))
+                .filter_map(command_entity)
+                .collect(),
             EventKind::MeetingNotHeld {
                 charge, escorts, ..
             } => std::iter::once(*charge)
@@ -2369,6 +2458,16 @@ impl EventKind {
                 entities
             }
         }
+    }
+}
+
+/// The entity a command names: its task force or its base, and none for the
+/// area command.
+fn command_entity(command: CommandRef) -> Option<EntityRef> {
+    match command {
+        CommandRef::Area => None,
+        CommandRef::TaskForce(force) => Some(EntityRef::TaskForce(force)),
+        CommandRef::Base(base) => Some(EntityRef::Base(base)),
     }
 }
 
@@ -4089,6 +4188,25 @@ impl fmt::Display for EventKind {
                 f,
                 "{ship} takes {rounds} rounds and {torpedoes} torpedoes, {taken_t} t, from {base}: {rounds_aboard} rounds aboard and {tubes_fired} tubes fired; {base_ammunition_t} t of ammunition left at the base"
             ),
+            EventKind::ReportSent {
+                side,
+                sender,
+                report,
+                listeners,
+            } => {
+                write!(f, "{} {sender} sends the report of #{}", side.name(), report.raw())?;
+                for (at, listener) in listeners.iter().enumerate() {
+                    write!(
+                        f,
+                        "{} {} to {}, {}",
+                        if at == 0 { ":" } else { ";" },
+                        listener.direction.name(),
+                        listener.command,
+                        listener.arrival.name()
+                    )?;
+                }
+                Ok(())
+            }
         }
     }
 }

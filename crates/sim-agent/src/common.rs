@@ -400,6 +400,11 @@ impl<'a> Ctx<'a> {
             EntityRef::Pilot(id) => bare(id.to_string()),
             EntityRef::LandUnit(id) => self.land_unit(id),
             EntityRef::Contact(id) => bare(format!("contact:{}", self.view.contact_number(id))),
+            // Only a draw's key (decision 0135, 11); no event names it.
+            EntityRef::Event(id) => match self.numbers.get(&id) {
+                Some(number) => bare(format!("event:{number}")),
+                None => bare("event".to_string()),
+            },
         }
     }
 

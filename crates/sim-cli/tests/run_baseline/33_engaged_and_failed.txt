@@ -2,12 +2,12 @@ Scenario 33: Who is engaged, and an attack that fails
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0e1a547d6aec2a79  79 events
-day   2  hash 6fbc329eebf10174  58 events
-day   3  hash 04b5758bd2884e5a  52 events
-day   4  hash bd08626fe57bee8e  39 events
-day   5  hash a6007452b0e297e4  36 events
-day   6  hash 3d674a57d09f9735  35 events
+day   1  hash edecd7ef18a17c5c  79 events
+day   2  hash 478222f48ea09d19  58 events
+day   3  hash 202e1f8e99cc2d17  52 events
+day   4  hash 3d865b8a7c480627  39 events
+day   5  hash 34f610360f029195  36 events
+day   6  hash c3086026116460b8  35 events
 
 base:1 "Placeholder base 1, Allied, at K" (Allied) at (0,0): 4821.76 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at K" (Japanese) at (0,0): 982.3 t of supply in stock

@@ -2174,6 +2174,37 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .hex("hex", *hex)
                 .ids("escorts", escorts),
         ),
+        EventKind::ReportSent {
+            side,
+            sender,
+            report,
+            listeners,
+        } => (
+            "report_sent",
+            d.text("side", names::side(*side))
+                .with("sender", Field::Str(command_word(*sender)))
+                .int("report", report.umpire_raw(key))
+                .with(
+                    "listeners",
+                    Field::Strs(
+                        listeners
+                            .iter()
+                            .map(|listener| {
+                                format!(
+                                    "{} {} {}",
+                                    listener.direction.name(),
+                                    command_word(listener.command),
+                                    match listener.arrival {
+                                        sim_core::events::Arrival::OnTime => "on_time",
+                                        sim_core::events::Arrival::Late => "late",
+                                        sim_core::events::Arrival::Never => "never",
+                                    }
+                                )
+                            })
+                            .collect(),
+                    ),
+                ),
+        ),
         EventKind::ShipRearmed {
             ship,
             task_force,
@@ -2196,6 +2227,15 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .int("tubes_fired", *tubes_fired)
                 .num("base_ammunition_t", *base_ammunition_t),
         ),
+    }
+}
+
+/// A command as the export words it: `area`, `task_force:N` or `base:N`.
+fn command_word(command: sim_core::pictures::CommandRef) -> String {
+    match command {
+        sim_core::pictures::CommandRef::Area => "area".to_string(),
+        sim_core::pictures::CommandRef::TaskForce(force) => format!("task_force:{}", force.raw()),
+        sim_core::pictures::CommandRef::Base(base) => format!("base:{}", base.raw()),
     }
 }
 

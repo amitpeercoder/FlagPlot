@@ -295,6 +295,9 @@ pub enum EntityRef {
     Base(BaseId),
     LandUnit(LandUnitId),
     Contact(ContactId),
+    /// An event in the log, named by the draw that rests on it (decision
+    /// 0135, 11). Added at the end.
+    Event(EventId),
 }
 
 impl EntityRef {
@@ -309,6 +312,7 @@ impl EntityRef {
             EntityRef::Base(_) => 5,
             EntityRef::LandUnit(_) => 6,
             EntityRef::Contact(_) => 7,
+            EntityRef::Event(_) => 8,
         }
     }
 
@@ -321,6 +325,7 @@ impl EntityRef {
             EntityRef::Base(id) => id.raw(),
             EntityRef::LandUnit(id) => id.raw(),
             EntityRef::Contact(id) => id.raw(),
+            EntityRef::Event(id) => id.raw(),
         }
     }
 
@@ -340,6 +345,7 @@ impl fmt::Display for EntityRef {
             EntityRef::Base(id) => id.fmt(f),
             EntityRef::LandUnit(id) => id.fmt(f),
             EntityRef::Contact(id) => id.shown().fmt(f),
+            EntityRef::Event(id) => id.shown().fmt(f),
         }
     }
 }

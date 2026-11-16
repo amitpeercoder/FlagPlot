@@ -38,6 +38,11 @@
 //! - Ground figures: TOML, named by the scenario's optional `ground` key
 //!   (`docs/decisions/0066-land-units-carried-and-fed.md`). A scenario with a
 //!   land unit must name it.
+//! - Report figures: TOML, named by the scenario's optional `reports` key
+//!   (`docs/decisions/0135-reports-between-commands.md`). Without it, with
+//!   command levels on, every report reaches every command at once. Read
+//!   where the scenario names it, as the map is, and not redirected by
+//!   `LoadOptions::reference_root`.
 //! - Maps: TOML, as rectangular regions plus single-hex overrides, or a
 //!   generated CSV with the columns `q,r,kind,land_percent,lat,lon` (decision
 //!   0017). The extension decides which.
@@ -61,7 +66,8 @@
 //! another directory instead with [`LoadOptions`] and `Scenario::load_with`:
 //! each reference file the scenario names is then looked up by its file name
 //! under `LoadOptions::reference_root`, and one that is missing there is an
-//! error that names it. The map is read where the scenario names it. The
+//! error that names it. The map and the report figures are read where the
+//! scenario names them. The
 //! hand-calculation tests use `data/reference/step1`, the figures frozen at
 //! the end of step 1 (`LoadOptions::frozen_step1`); the run baselines and
 //! everything else read the live files. The files a scenario records as its
@@ -82,7 +88,7 @@ pub use error::DataError;
 pub use map::load_map;
 pub use reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
-    load_fatigue_figures, load_ground_figures, load_port_sizes, load_search_figures,
-    load_ship_classes, load_surface_combat_figures,
+    load_fatigue_figures, load_ground_figures, load_port_sizes, load_report_figures,
+    load_search_figures, load_ship_classes, load_surface_combat_figures,
 };
 pub use scenario::{LoadOptions, Scenario, FROZEN_REFERENCE_DIR};

@@ -1,10 +1,10 @@
 # 0135: Reports between commands: step 2 of stage 2b
 
-Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2b, that the designer confirmed the same day (decision 0132, step 2 of its five). It follows decision 0134, which gave each command a picture and had every report reach every command at once. This record says who holds a report first, to whom it is passed, when it arrives and what a late one does to a picture. Nothing is built.
+Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2b, that the designer confirmed the same day (decision 0132, step 2 of its five). It follows decision 0134, which gave each command a picture and had every report reach every command at once. This record says who holds a report first, to whom it is passed, when it arrives and what a late one does to a picture. Built on Nov 16, 2026 ("As built" below), with three points left to the architect.
 
 Summary: Step 2 of command levels: a report is held first by the command that saw the thing; it is passed up to the area command, sideways to every command of the side within the sender's radio reach, and down from the area command to the commands under it; each passing arrives in the same pulse, a pulse later, or never, by figures for each direction; a late report makes a contact as old as it is and never replaces newer word; and every passing is an event, so that a reason can say what its command held
 
-Standing: Settled by the architect, Nov 16, 2026, inside decision 0132. Not built
+Standing: Settled by the architect, Nov 16, 2026, inside decision 0132. Built, three points open ("As built", "Open")
 
 ## Whose a report is
 
@@ -78,3 +78,63 @@ Standing: Settled by the architect, Nov 16, 2026, inside decision 0132. Not buil
 ## The hand calculation
 
 `tests/scenario_62_reports_between_commands.rs`.
+
+## As built
+
+Built on Nov 16, 2026. The passing is `crates/sim-core/src/passing.rs` (`pass_report`, `send`, `hear`, `deliver_late_reports`, `prune_heard`, `ReportInFlight`); who holds a report first is `Holders` and `World::apply_report` in `crates/sim-core/src/pictures.rs`, with `by_hex`; a late sighting's age, newer word and "nothing there" by hex are in `BeliefState::apply_report` (`crates/sim-core/src/belief.rs`). The figures are `data/reference/reports.toml` (`ReportFigures` in `refdata.rs`, loaded by `sim-data`), named by a scenario's key `reports`. The event is `ReportSent` (`events.rs`), seen whole by its own side and not at all by the other (`side_events.rs`). The draw is `Draw::ReportPassed` (code 9) in the intelligence subsystem, keyed on `EntityRef::Event` (kind code 8, new) and the listener. The state version is `flagplot-state-v36` and the saved game version 11; the rules label is unchanged. Scenario 62 is `data/scenarios/62_reports_between_commands.toml` with `data/reference/reports_placeholder_scenario_62.toml`.
+
+### Where each report is made, and who holds it first
+
+| Where | The report | Held first by |
+| --- | --- | --- |
+| `start.rs` | A scenario's starting contacts | Every command |
+| `estimate.rs`, opening estimates | A scenario's estimates ashore | Every command |
+| `search.rs` | An air search's sighting | The searching group's command |
+| `airstrike.rs` | "Nothing there" | The command of the group that found nothing |
+| `airstrike.rs` | A strike's sighting of the force it attacked | The attacking group's command |
+| `airstrike.rs` | A raid's claim, attacking side | The commands of the raid's strike groups (escorts not counted) |
+| `airstrike.rs` | A raid's claim, defending side | The commands of its units that fired (patrol groups by their command, guns by their task force), and the base for a raid on a base |
+| `surface.rs` | A fight's sighting and claim | The task force whose report it is (each force's report is made for it) |
+| `bombardment.rs` | The base side's sighting of the bombarding force | The base |
+| `bombardment.rs` | The bombarding side's claim | The bombarding task force |
+| `estimate.rs` | A daily ground count, "none found" | The base of the side in the hex, else the area command |
+
+### Readings taken
+
+1. **The report figures are not redirected** by `--reference` or `LoadOptions::reference_root`: a scenario names them where they are, as it does its map. The frozen step 1 figures have none (`data/reference/step1/README.md`, `LIVE_ONLY` in `crates/sim-data/tests/frozen_figures.rs`).
+2. **With no report figures, or command levels off,** nothing of this record happens: no draw, no event, every report to every picture at once (item 10). Scenario 61 is unchanged.
+3. **A report is known by an event:** a sighting by its `ReportReceived`, a claim, a ground count and "none found" by their own events, "nothing there" by the strike's `StrikeFoundNothing`. That event keys the draws, the heard sets and the order of late reports, and is the cause of each "report sent".
+4. **The area command as a holder** (a ground count away from any base, a group whose place is lost) sends its own report down, as it would one it was sent.
+5. **Two holders of one report** (a raid's defenders in two forces) each send it; the area command sends it down once, the first time it holds it, leaving out the command that sent it.
+6. **The listeners of a passing** are its superior first, then the commands in reach in command order; every command within reach is sent it, even one that has heard it, and hears it once (item 13). A passing with no listener is not recorded.
+7. **Radio reach** is measured between hex centres in nautical miles, by the engine's air distance; within means not more than the reach. A force's reach is its longest-reaching ship's, counting the ships in it.
+8. **The area limit of item 5:** a command gets a report sent down if no intent in force is addressed to it, or one of them has no area read up the tree; else only one about a hex in the union of those areas. An intent addressed to an air group counts for the group's command. A report's hex is its sighting's, its claim's, its "nothing there"'s or its count's hex.
+9. **The roll** is one number in 0 to 1, always taken, compared with the on-time chance and then with on time plus late. In the breakdown it is named `draw`, as a raw die is everywhere, so that a side is not given it (decision 0085); the factors are, for each listener in order, `on_time_chance`, `late_chance` and `draw`, and the result is the number of listeners it reaches on time or late.
+10. **The draw is keyed on the report's event and the listener,** as item 11 says, so two passings of one report to one listener in one pulse (sideways from a force and down from the area) share one number, and with figures alike they arrive alike. See "Open".
+11. **A report made at the end of the day** (a ground count, "none found") has no pulse: its draws and its event are keyed on no pulse; it is counted as made in the afternoon, and a late one arrives in the next night.
+12. **Late reports** are applied right after the pulse begins and before the alert from belief, in the order of the reports' events and then of the listeners. One to a command that is no more is dropped with no event. The area command that first holds a late report sends it down in that pulse, with draws of that pulse.
+13. **A late sighting's contact counts as refreshed in the pulse it arrives,** so it is not aged at the end of it: made in pulse 4 and arriving in pulse 5 it is 1 at the end of 5 and 2 at the end of 6, as in the maker's picture (in the maker's it is 0 during pulse 5, in the hearer's 1).
+14. **Newer word** is told by event number: a sighting whose matched contact was last made or refreshed by a report of a later event changes nothing. In the side's own picture and with no figures it never happens, since reports are applied in the order they are made.
+15. **"Nothing there" by hex** drops the lowest-numbered contact at that hex. Item 16's "whose last sighting is not later than that pulse" always holds when it is applied: on time, nothing later exists yet; late, it is applied at the start of the next pulse before anything of it is seen. The side's own picture, with report figures, hears it by hex too (its numbers are not the strike's command's).
+16. **`ContactNotThere`** is recorded when the picture of the strike's command held the contact at the hex, and names the contact by that picture's number. With command levels off or no figures that picture is the side's, as before.
+17. **What each command has heard** is kept, by the report's event and the pulse it was made, until it is as old as the contact drop age (`contact_drop_age_pulses`), and pruned at the end of each pulse after the ageing. A command formed by a copy has heard what the copied one had.
+18. **The check before a "hex is empty" report** reads the picture of the base of the side in the hex, else the area command (`command_at_hex`): the command whose men stand there, as item 18 asks.
+19. **A reason names the command** only when reports travel (command levels on and report figures loaded): "contact 1 held by task_force:2" (`contact_words`, `crates/sim-staff/src/picture.rs`). With no figures the words are as before, which scenario 61 asserts. The reason that a contact dropped since an arc was set names the command whose picture the doctrine reads now.
+20. **`events --why`** prints, beneath any event that is a report's event, each "report sent" of that report with its listeners and arrivals (`crates/sim-cli/src/events.rs`). It shows every passing of the report, not only the one to the command that decided: a launch does not record its command (decision 0134's ruling).
+21. **`ReportSent` in the briefing:** the agent's briefing does not list it; the export gives it a line (`report_sent`).
+
+### Open, for the architect
+
+- **One number for two roads.** Item 11 keys the draw on the report and the listener, so the two roads of item 13 share a number and a report lost sideways is usually lost down as well (with the live figures, the same roll compared with the same chances gives the same arrival). In the Eastern Solomons below, task force 2 lost one report by both roads on seed 1. If the second road is meant to be a second chance, the key needs the sender (or the direction).
+- **"On is off but for report sent" and the reasons.** With every chance certain the events equal those of the game with command levels off but for the "report sent" events and the words " held by <command>" in the staff's reasons, which item 22 adds. Scenario 62's test removes that clause before comparing.
+- **The launch record.** As in decision 0134, no event names the command whose picture a strike read; `why` shows every passing of the report.
+
+### Tests
+
+Scenario 62 passes its hand calculation with nothing ignored (20 tests): the twenty orders of day 1, the two "report sent" events of the morning with three and two listeners, the table of pictures, day 2's two orders and task force 2's reason, day 3's one, and every property, the bigger games included (the Eastern Solomons from intents on seeds 1 to 10, the week of the slice from intents on seed 1, every command's picture equal to its side's at every pulse end). "A late sighting is as old as it is" and "newer word stands" need a picture built in the engine's own tests: `passing_tests::a_late_sighting_is_one_pulse_old_then_one_and_then_two_as_the_makers_is` and `passing_tests::newer_word_stands` (`crates/sim-core/src/passing_tests.rs`, 29 tests of the rules). Every earlier scenario's events are unchanged; only hash lines moved. Three tests that walk every scenario file leave scenario 62 out as they leave out 61 (`scenario_61`'s file test, `scenario_06d1` and `scenario_06d2`'s hash tests).
+
+### Measured (for the architect, not judged)
+
+`sim-cli time --slice ... --early-day 15 --late-day 18 --repeats 5`, release, on the week of the slice from intents, the same with `command_levels = true`, and the same with the live report figures as well (files made for the measure and not kept): six staffed days from day 15, 67.4, 67.6 and 68.7 ms (medians of 5); three from day 18, 27.5, 27.6 and 28.1 ms; one day of the slice 13.1, 13.1 and 13.2 ms early, 8.66, 8.70 and 8.75 ms late; the longest staff day 4.24, 4.32 and 4.33 ms (Allied, day 15), 7.62, 7.60 and 7.65 ms (Japanese, day 17).
+
+The Eastern Solomons from intents (`second-proof/05a_eastern_solomons.toml`), command levels on with the live report figures, seeds 1 to 200, release: the Allied side launches a strike at ships on 168 seeds and the Japanese on 194 (168 and 195 with command levels off). Of 21,106 passings to a listener, 14,846 arrived on time, 5,266 a pulse late and 994 never.

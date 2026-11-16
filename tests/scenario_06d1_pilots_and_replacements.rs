@@ -2191,7 +2191,10 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 && !stem.starts_with("59_")
                 // And scenario 61's, scenario 58 with command levels on
                 // (decision 0134).
-                && !stem.starts_with("61_"))
+                && !stem.starts_with("61_")
+                // And scenario 62's, two carrier forces with command levels
+                // on and report figures (decision 0135).
+                && !stem.starts_with("62_"))
             .then(|| stem.to_string())
         })
         .collect();

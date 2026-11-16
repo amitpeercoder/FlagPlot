@@ -22,3 +22,15 @@ pub(crate) fn picture_of<'v>(view: &SideView<'v>, addressee: Addressee) -> Comma
         .or_else(|| view.command(CommandRef::Area))
         .expect("a side always has its area command")
 }
+
+/// A contact named by its number in a reason (decision 0135, 20 and 22).
+/// Where reports travel between commands the picture is one command's among
+/// several, so the words name it: "contact 1 held by task_force:2". Where
+/// they do not, the words are "contact 1", as they have always been.
+pub(crate) fn contact_words(view: &CommandView<'_>, number: u32) -> String {
+    if view.reports_travel() {
+        format!("contact {number} held by {}", view.command())
+    } else {
+        format!("contact {number}")
+    }
+}

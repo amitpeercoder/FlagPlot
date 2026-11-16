@@ -761,6 +761,11 @@ fn every_scenario_file_but_61_loads_with_command_levels_off() {
             assert!(text.contains(LEVELS_LINE));
             continue;
         }
+        // Scenario 62 (decision 0135) is built after this one and turns
+        // command levels on: it is not one of the files this test is about.
+        if name.starts_with("62_") {
+            continue;
+        }
         seen += 1;
         assert!(
             !text.contains("command_levels"),

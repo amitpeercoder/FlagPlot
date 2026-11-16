@@ -206,8 +206,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// its `strike_sizing_order` (decision 0131);
 /// version 35 adds, after the command states, whether command levels are on
 /// and each side's commands with their superiors and pictures (decision
-/// 0134).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v35";
+/// 0134);
+/// version 36 adds, after each command's picture, the reports it has heard
+/// (the report's event, the day and the pulse it was made), and after the
+/// commands the reports in flight (decision 0135).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v36";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -229,6 +232,9 @@ fn name_every_field(world: &World) {
         // Hashed after the command states, with every picture as a belief
         // is hashed (decision 0134).
         chain: _,
+        // Hashed after the commands, each report with every field (decision
+        // 0135).
+        reports_in_flight: _,
         // Hashed by count and next number only.
         orders: _,
         order_ids: _,
@@ -881,19 +887,7 @@ fn hash_belief(h: &mut StateHasher, belief: &crate::belief::BeliefState) {
     }
     h.count(belief.claims().len());
     for claim in belief.claims() {
-        h.i32(claim.hex.q);
-        h.i32(claim.hex.r);
-        h.u32(claim.day);
-        h.u64(claim.pulse.code());
-        h.u32(claim.claimed_sunk);
-        h.u32(claim.received_event.raw());
-        h.u32(claim.claimed_hits);
-        h.u8(claim.claimed_kind.map_or(0, ShipKind::code));
-        h.u32(claim.claimed_shot_down);
-        h.u32(claim.claimed_on_ground);
-        h.u8(u8::from(claim.from_air));
-        // After `from_air` (decision 0092).
-        h.u8(u8::from(claim.from_bombardment));
+        hash_claim(h, claim);
     }
     // After the claims (decision 0092), in hex order.
     h.count(belief.ground_estimates().count());
@@ -903,6 +897,65 @@ fn hash_belief(h: &mut StateHasher, belief: &crate::belief::BeliefState) {
         h.u32(estimate.men);
         h.u32(estimate.day);
         h.u32(estimate.report_event.raw());
+    }
+}
+
+/// Hashes one battle claim.
+fn hash_claim(h: &mut StateHasher, claim: &crate::belief::BattleClaim) {
+    h.i32(claim.hex.q);
+    h.i32(claim.hex.r);
+    h.u32(claim.day);
+    h.u64(claim.pulse.code());
+    h.u32(claim.claimed_sunk);
+    h.u32(claim.received_event.raw());
+    h.u32(claim.claimed_hits);
+    h.u8(claim.claimed_kind.map_or(0, ShipKind::code));
+    h.u32(claim.claimed_shot_down);
+    h.u32(claim.claimed_on_ground);
+    h.u8(u8::from(claim.from_air));
+    // After `from_air` (decision 0092).
+    h.u8(u8::from(claim.from_bombardment));
+}
+
+/// Hashes a report in flight (decision 0135): a code for its kind, then its
+/// fields.
+fn hash_report(h: &mut StateHasher, report: &crate::belief::Report) {
+    use crate::belief::Report;
+    match report {
+        Report::Sighting(sighting) => {
+            h.u8(1);
+            h.i32(sighting.estimated_hex.q);
+            h.i32(sighting.estimated_hex.r);
+            h.u32(sighting.estimated_ship_count);
+            h.u8(sighting.estimated_kind.code());
+            h.u32(sighting.received_event.raw());
+            h.u32(sighting.age_pulses);
+        }
+        Report::BattleClaim(claim) => {
+            h.u8(2);
+            hash_claim(h, claim);
+        }
+        Report::NothingThere { contact, hex } => {
+            h.u8(3);
+            h.optional_u32(contact.map(|contact| contact.raw()));
+            h.i32(hex.q);
+            h.i32(hex.r);
+        }
+        Report::Ground(ground) => {
+            h.u8(4);
+            h.i32(ground.hex.q);
+            h.i32(ground.hex.r);
+            h.u32(ground.men);
+            h.u32(ground.day);
+            h.u32(ground.received_event.raw());
+        }
+        Report::NoneFound(none) => {
+            h.u8(5);
+            h.i32(none.hex.q);
+            h.i32(none.hex.r);
+            h.u32(none.day);
+            h.u32(none.received_event.raw());
+        }
     }
 }
 
@@ -1509,9 +1562,36 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                     h.u8(post.superior().map_or(0, crate::pictures::CommandRef::code));
                     h.u32(post.superior().map_or(0, crate::pictures::CommandRef::raw));
                     hash_belief(&mut h, post.picture());
+                    // After the picture (decision 0135): the reports heard,
+                    // in the order of their events.
+                    h.count(post.heard().len());
+                    for (event, (day, pulse)) in post.heard() {
+                        h.u32(event.raw());
+                        h.u32(*day);
+                        h.u64(pulse.code());
+                    }
                 }
             }
         }
+    }
+
+    // After the commands (decision 0135): the reports in flight, in the
+    // order they were sent, each with every field.
+    h.count(world.reports_in_flight.len());
+    for flight in &world.reports_in_flight {
+        h.u8(flight.side.code());
+        hash_report(&mut h, &flight.report);
+        h.u32(flight.key.raw());
+        h.u32(flight.made.0);
+        h.u64(flight.made.1.code());
+        h.u8(flight.sender.code());
+        h.u32(flight.sender.raw());
+        h.u8(flight.direction.code());
+        h.u8(flight.listener.code());
+        h.u32(flight.listener.raw());
+        h.u32(flight.sent_event.raw());
+        h.u32(flight.arrives.0);
+        h.u64(flight.arrives.1.code());
     }
 
     h.count(world.orders.len());

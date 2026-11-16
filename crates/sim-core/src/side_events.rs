@@ -678,7 +678,7 @@ impl Owners {
             EntityRef::AirGroup(id) => self.air_groups.get(&id).copied(),
             EntityRef::Base(id) => self.bases.get(&id).copied(),
             EntityRef::LandUnit(id) => self.land_units.get(&id).copied(),
-            EntityRef::Pilot(_) | EntityRef::Contact(_) => None,
+            EntityRef::Pilot(_) | EntityRef::Contact(_) | EntityRef::Event(_) => None,
         }
     }
 }
@@ -848,6 +848,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::ContactDropped { side: owner, .. }
         | EventKind::ClaimReceived { side: owner, .. }
         | EventKind::ContactNotThere { side: owner, .. } => whole_if(*owner == side),
+
+        // A side's own passing of its own reports between its commands, and
+        // nothing of the enemy's (decision 0135, 21): it names no enemy unit,
+        // only the side's own commands and an event of its own.
+        EventKind::ReportSent { side: owner, .. } => whole_if(*owner == side),
 
         // For a side that has come to know of the fight, with its own force
         // of the two and without the enemy's.
@@ -1503,6 +1508,7 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::SearchFlown { .. }
             | EventKind::SearchAttempt { .. }
             | EventKind::ReportReceived { .. }
+            | EventKind::ReportSent { .. }
             | EventKind::ContactAged { .. }
             | EventKind::ContactDropped { .. }
             | EventKind::EngagementBegun { .. }
@@ -1710,6 +1716,7 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::SearchFlown { .. }
         | EventKind::SearchAttempt { .. }
         | EventKind::ReportReceived { .. }
+        | EventKind::ReportSent { .. }
         | EventKind::ContactAged { .. }
         | EventKind::ContactDropped { .. }
         | EventKind::EngagementBegun { .. }
@@ -2051,6 +2058,7 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::SearchFlown { .. }
             | EventKind::SearchAttempt { .. }
             | EventKind::ReportReceived { .. }
+            | EventKind::ReportSent { .. }
             | EventKind::ContactAged { .. }
             | EventKind::ContactDropped { .. }
             | EventKind::EngagementBegun { .. }
@@ -2286,6 +2294,7 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::UnloadingComplete { .. }
         | EventKind::SearchFlown { .. }
         | EventKind::ReportReceived { .. }
+        | EventKind::ReportSent { .. }
         | EventKind::ContactAged { .. }
         | EventKind::ContactDropped { .. }
         | EventKind::ShipDamaged { .. }
@@ -2565,6 +2574,7 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::SearchFlown { .. }
                     | EventKind::SearchAttempt { .. }
                     | EventKind::ReportReceived { .. }
+                    | EventKind::ReportSent { .. }
                     | EventKind::ContactAged { .. }
                     | EventKind::ContactDropped { .. }
                     | EventKind::EngagementBegun { .. }
@@ -4527,6 +4537,22 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // A side's own passing of its own reports (decision 0135, 21):
+            // seen whole by that side, and not at all by the enemy.
+            sided(row(
+                EventKind::ReportSent {
+                    side: Side::Allied,
+                    sender: crate::pictures::CommandRef::TaskForce(force(1)),
+                    report: EventId::new(1),
+                    listeners: vec![crate::events::ReportListener {
+                        command: crate::pictures::CommandRef::Area,
+                        direction: crate::events::Direction::Up,
+                        arrival: crate::events::Arrival::OnTime,
+                    }],
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -4567,7 +4593,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 144, "the log has 144 kinds of event");
+        assert_eq!(all.len(), 145, "the log has 145 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
@@ -4721,6 +4747,7 @@ mod tests {
                                 }
                                 EntityRef::Base(_)
                                 | EntityRef::Contact(_)
+                                | EntityRef::Event(_)
                                 | EntityRef::Pilot(_)
                                 | EntityRef::LandUnit(_) => true,
                             };

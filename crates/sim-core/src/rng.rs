@@ -95,11 +95,17 @@ pub enum Draw {
     /// intelligence subsystem, keyed on the reporting side's lowest-numbered
     /// unit in the hex.
     GroundReport,
+    /// A report's passing from a command to a listener (decision 0135, 11):
+    /// one stream for each report and listener, in the intelligence
+    /// subsystem, keyed on the report's event and the listener (a task force
+    /// or a base; for the area command, the event alone). One number is
+    /// always taken, whatever the chances.
+    ReportPassed,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 9] = [
+    pub const ALL: [Draw; 10] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -109,6 +115,7 @@ impl Draw {
         Draw::GroundFire,
         Draw::Bombardment,
         Draw::GroundReport,
+        Draw::ReportPassed,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -124,6 +131,7 @@ impl Draw {
             Draw::GroundFire => 6,
             Draw::Bombardment => 7,
             Draw::GroundReport => 8,
+            Draw::ReportPassed => 9,
         }
     }
 }

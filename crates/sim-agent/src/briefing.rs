@@ -3836,6 +3836,9 @@ impl Day {
                     | EventKind::BombardmentFire { .. }
                     | EventKind::ShoreBombardment { .. }
                     | EventKind::GroundReportReceived { .. }
+                    // The side's own commands passing a report on (decision
+                    // 0135): the briefing does not list it.
+                    | EventKind::ReportSent { .. }
                     | EventKind::MenSurrenderedAshore { .. }
                     | EventKind::GroundAttackFailed { .. }
                     | EventKind::CommandTaken { .. }

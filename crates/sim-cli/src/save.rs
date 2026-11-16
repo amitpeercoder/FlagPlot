@@ -60,6 +60,11 @@
 //! their pictures: the file's keys are unchanged; its state version is v35
 //! and its daily hashes cover the commands. A game of an older version is
 //! refused, not converted.
+//!
+//! Version 11 (decision 0135) is a game whose state may hold the reports in
+//! flight between commands and what each command has heard: the file's keys
+//! are unchanged; its state version is v36 and its daily hashes cover them. A
+//! game of an older version is refused, not converted.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -95,9 +100,12 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// 0131) adds the air group order `set_search_once`. Version 10 (decision
 /// 0134) is a game whose state may hold commands and their pictures: the
 /// file's keys are unchanged, its state version is v35 and its daily hashes
-/// cover the commands. A game of an older version lacks them and is refused,
-/// not converted.
-pub const VERSION: u32 = 10;
+/// cover the commands. Version 11 (decision 0135) is a game whose state may
+/// hold the reports in flight between commands and what each command has
+/// heard: the file's keys are unchanged, its state version is v36 and its
+/// daily hashes cover them. A game of an older version lacks them and is
+/// refused, not converted.
+pub const VERSION: u32 = 11;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -899,7 +907,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 10);
+        assert_eq!(written["version"], 11);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 11);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

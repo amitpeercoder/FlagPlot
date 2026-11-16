@@ -74,9 +74,18 @@ fn shape(file: &str, text: &str) -> BTreeSet<String> {
     }
 }
 
+/// Live figures files that have no frozen copy, each with its record. The
+/// report figures (decision 0135, item 10): the frozen step 1 figures have
+/// none, and with none every report reaches every command at once, as in
+/// decision 0134. A scenario names the file where it is, as it does its map,
+/// and `LoadOptions::reference_root` does not redirect it.
+/// Scenario 62's own report figures likewise.
+const LIVE_ONLY: &[&str] = &["reports.toml", "reports_placeholder_scenario_62.toml"];
+
 #[test]
 fn every_live_figures_file_has_a_frozen_counterpart_and_the_other_way_round() {
-    let live = figures_files(&reference_dir());
+    let mut live = figures_files(&reference_dir());
+    live.retain(|name| !LIVE_ONLY.contains(&name.as_str()));
     let frozen = figures_files(&reference_dir().join("step1"));
     let missing: Vec<&String> = live.difference(&frozen).collect();
     assert!(

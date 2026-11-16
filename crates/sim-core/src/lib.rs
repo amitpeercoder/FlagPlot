@@ -48,6 +48,9 @@ mod invariants;
 mod landing;
 mod march;
 mod movement;
+mod passing;
+#[cfg(test)]
+mod passing_tests;
 #[cfg(test)]
 mod pictures_tests;
 mod preparation;

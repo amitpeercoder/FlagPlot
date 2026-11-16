@@ -42,8 +42,14 @@ pub enum Report {
     /// A force that fired claims enemy ships sunk.
     BattleClaim(BattleClaim),
     /// A strike flew to a hex and found nothing (decision 0028): the side
-    /// drops `contact` if it still holds it and it still names `hex`.
-    NothingThere { contact: ContactId, hex: Hex },
+    /// drops `contact` if it still holds it and it still names `hex`. With no
+    /// contact (decision 0135, 16) it is carried by its hex alone, as a
+    /// command that did not fly the strike hears it: the picture drops the
+    /// lowest-numbered contact whose estimated hex is `hex`, if it holds one.
+    NothingThere {
+        contact: Option<ContactId>,
+        hex: Hex,
+    },
     /// A count of the enemy's men ashore in a hex (decision 0092, 11 to 16):
     /// it replaces the side's estimate for that hex.
     Ground(GroundReport),
@@ -95,6 +101,10 @@ pub struct SightingReport {
     pub estimated_kind: ShipKind,
     /// The event that records this report's arrival.
     pub received_event: EventId,
+    /// The pulses since the sighting was made: 0 as it is made, more for a
+    /// report that reaches a command a pulse late (decision 0135, 14). The
+    /// contact it makes or refreshes has this age.
+    pub age_pulses: u32,
 }
 
 /// What a side believes came of a fight or a raid: how many enemy ships it
@@ -179,6 +189,9 @@ pub enum ApplyOutcome {
     Contact(ReportOutcome),
     /// A battle claim was stored.
     Claim,
+    /// A sighting was heard and changed nothing: the contact it matches was
+    /// last made or refreshed by a later report (decision 0135, 15).
+    Unheeded,
     /// A "nothing there" report dropped the contact.
     Dropped,
     /// A "nothing there" report changed nothing: the contact was gone or no
@@ -290,24 +303,36 @@ impl BeliefState {
         figures: &SearchFigures,
     ) -> ApplyOutcome {
         match report {
-            Report::Sighting(sighting) => {
-                ApplyOutcome::Contact(self.apply_sighting(sighting, figures))
-            }
+            Report::Sighting(sighting) => match self.apply_sighting(sighting, figures) {
+                Some(outcome) => ApplyOutcome::Contact(outcome),
+                None => ApplyOutcome::Unheeded,
+            },
             Report::BattleClaim(claim) => {
                 self.claims.push(claim.clone());
                 ApplyOutcome::Claim
             }
             Report::NothingThere { contact, hex } => {
-                let names_hex = self
-                    .contacts
-                    .get(contact)
-                    .is_some_and(|held| held.estimated_hex == *hex);
-                if names_hex {
-                    self.contacts.remove(contact);
-                    self.refreshed_this_pulse.remove(contact);
-                    ApplyOutcome::Dropped
-                } else {
-                    ApplyOutcome::Unchanged
+                let held = match contact {
+                    Some(contact) => self
+                        .contacts
+                        .get(contact)
+                        .filter(|held| held.estimated_hex == *hex)
+                        .map(|held| held.id),
+                    // By hex: the lowest-numbered contact that names it
+                    // (decision 0135, 16).
+                    None => self
+                        .contacts
+                        .values()
+                        .find(|held| held.estimated_hex == *hex)
+                        .map(|held| held.id),
+                };
+                match held {
+                    Some(id) => {
+                        self.contacts.remove(&id);
+                        self.refreshed_this_pulse.remove(&id);
+                        ApplyOutcome::Dropped
+                    }
+                    None => ApplyOutcome::Unchanged,
                 }
             }
             Report::Ground(ground) => {
@@ -332,11 +357,13 @@ impl BeliefState {
         }
     }
 
+    /// `None` when the report matches a contact that a later report made or
+    /// refreshed: it is heard and changes nothing (decision 0135, 15).
     fn apply_sighting(
         &mut self,
         report: &SightingReport,
         figures: &SearchFigures,
-    ) -> ReportOutcome {
+    ) -> Option<ReportOutcome> {
         // A contact made or refreshed this pulse qualifies only within the
         // same-pulse figure, if there is one; any other within the merge
         // distance (decision 0133). Iteration is in ID order and min_by_key
@@ -355,6 +382,11 @@ impl BeliefState {
             .min_by_key(|contact| contact.estimated_hex.distance(report.estimated_hex))
             .map(|contact| contact.id);
 
+        if let Some(id) = nearest {
+            if self.contacts[&id].last_report_event > report.received_event {
+                return None;
+            }
+        }
         let (id, created) = match nearest {
             Some(id) => (id, false),
             None => (self.contact_ids.alloc(), true),
@@ -366,15 +398,15 @@ impl BeliefState {
                 estimated_hex: report.estimated_hex,
                 estimated_ship_count: report.estimated_ship_count,
                 estimated_kind: report.estimated_kind,
-                age_pulses: 0,
+                age_pulses: report.age_pulses,
                 last_report_event: report.received_event,
             },
         );
         self.refreshed_this_pulse.insert(id);
-        ReportOutcome {
+        Some(ReportOutcome {
             contact: id,
             created,
-        }
+        })
     }
 
     /// Ages every contact not created or refreshed this pulse, drops those
@@ -422,6 +454,7 @@ mod tests {
             estimated_ship_count: count,
             estimated_kind: ShipKind::Cruiser,
             received_event: EventId::new(event),
+            age_pulses: 0,
         })
     }
 
@@ -454,7 +487,7 @@ mod tests {
     fn nothing_there(belief: &mut BeliefState, contact: ContactId, q: i32, r: i32) -> ApplyOutcome {
         belief.apply_report(
             &Report::NothingThere {
-                contact,
+                contact: Some(contact),
                 hex: Hex::new(q, r),
             },
             &figures(),
@@ -809,6 +842,7 @@ mod tests {
             estimated_ship_count: count,
             estimated_kind: kind,
             received_event: EventId::new(event),
+            age_pulses: 0,
         })
     }
 

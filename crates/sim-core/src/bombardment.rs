@@ -41,6 +41,7 @@ use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, LandUnitId, ShipId, TaskForceId};
 use crate::movement::HaltGround;
 use crate::orders::Mission;
+use crate::pictures::{CommandRef, Holders};
 use crate::refdata::{AirCombatFigures, BombardmentFigures};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::draw_report;
@@ -761,9 +762,19 @@ impl World {
             &search,
             self.events.next_id(),
         );
-        let ApplyOutcome::Contact(outcome) =
-            self.apply_report(base_side, &Report::Sighting(report.clone()), &search)
-        else {
+        // The bombarded base holds the sighting first (decision 0135, 1).
+        let holders = Holders::Commands {
+            commands: vec![CommandRef::Base(base)],
+            key: report.received_event,
+            day,
+            pulse: Some(pulse),
+        };
+        let ApplyOutcome::Contact(outcome) = self.apply_report(
+            base_side,
+            &Report::Sighting(report.clone()),
+            &holders,
+            &search,
+        ) else {
             unreachable!("a sighting report makes or refreshes a contact");
         };
         let received = self.events.record(
@@ -784,11 +795,13 @@ impl World {
             received, report.received_event,
             "the report cites the event that records it"
         );
+        self.pass_report(base_side, &Report::Sighting(report), &holders);
 
         self.claim_bombardment(
             day,
             pulse,
             side,
+            force_id,
             hex,
             (first_ship, base),
             (weighed_shots, destroyed),
@@ -807,6 +820,7 @@ impl World {
         day: u32,
         pulse: Pulse,
         side: crate::state::Side,
+        force_id: TaskForceId,
         hex: Hex,
         (first_ship, base): (ShipId, BaseId),
         (weighed_shots, destroyed): (Fixed, u32),
@@ -843,7 +857,15 @@ impl World {
             from_bombardment: true,
             received_event: self.events.next_id(),
         };
-        let outcome = self.apply_report(side, &Report::BattleClaim(claim.clone()), &search);
+        // The bombarding force holds its claim first (decision 0135, 1).
+        let holders = Holders::Commands {
+            commands: vec![self.command_of_force(force_id)],
+            key: claim.received_event,
+            day,
+            pulse: Some(pulse),
+        };
+        let outcome =
+            self.apply_report(side, &Report::BattleClaim(claim.clone()), &holders, &search);
         assert_eq!(outcome, ApplyOutcome::Claim, "a claim is stored as a claim");
         let breakdown = self.config.record_breakdowns.then(|| Breakdown {
             factors: vec![
@@ -887,6 +909,7 @@ impl World {
             received, claim.received_event,
             "the claim cites the event that records it"
         );
+        self.pass_report(side, &Report::BattleClaim(claim), &holders);
     }
 }
 

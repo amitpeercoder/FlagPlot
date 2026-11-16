@@ -2,18 +2,18 @@ Placeholder scenario 50: Neutralise a base
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a70ce9b5be3d2b1d  35 events
-day   2  hash 64dcb45c6160b2ae  16 events
-day   3  hash ef26f7b8c8a82160  16 events
-day   4  hash eaa7becbb619d7eb  16 events
-day   5  hash fae0e46bbdc53051  16 events
-day   6  hash 31eb58410a977677  16 events
-day   7  hash 9d2d8a058d34a511  16 events
-day   8  hash 0bc6d7ac5330e58d  16 events
-day   9  hash ed26d6282a18f7f6  14 events
-day  10  hash f648a5335474c88b  20 events
-day  11  hash b0a3889d51288c5b  16 events
-day  12  hash 8b03aa3a8257fffa  14 events
+day   1  hash 9319e1c2628a4250  35 events
+day   2  hash ea3d9b20291ec439  16 events
+day   3  hash f09dd3809e537ad5  16 events
+day   4  hash 37119cec31b786d4  16 events
+day   5  hash 199e38d55cbf802c  16 events
+day   6  hash 12a7a3ccec775904  16 events
+day   7  hash a6940e65762e5a88  16 events
+day   8  hash ba1ecc0d968cd0ba  16 events
+day   9  hash 820250f24e7d3bb5  14 events
+day  10  hash 65bd22a77f5de1f2  20 events
+day  11  hash afc05eb2f8ccb3f4  16 events
+day  12  hash 82c4128aa18dece5  14 events
 
 air_group:1 "Placeholder dive bombers 1" (Allied) at base:1: 10 ready, mission Rest, fatigue 40, no arc
 air_group:2 "Placeholder fighters 2" (Allied) at base:1: 8 ready, mission CombatAirPatrol, patrol share 0, fatigue 40, no arc
