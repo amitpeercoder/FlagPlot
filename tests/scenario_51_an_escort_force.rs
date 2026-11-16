@@ -1123,6 +1123,36 @@ fn the_escort_is_passed_and_the_cargo_force_is_met_after_it() {
     );
 }
 
+/// The architect's ruling of Nov 16, 2026 on rule 4 of decision 0121: an
+/// escort that ended its fight with no ship afloat, sunk to the last ship
+/// and not the force that broke off, has been passed, and the charge is met
+/// in the same pulse, after it. Asserted on every seed on which the
+/// one-destroyer escort is sunk outright, which happens on some.
+#[test]
+fn an_escort_sunk_to_the_last_ship_is_passed() {
+    let mut sunk_on = 0;
+    for game in games(&passed()) {
+        let seed = game.seed;
+        let escort = game.fought(2, 3).expect("the escort's fight");
+        let broke_off = game.log[escort.begun..=escort.ended].iter().any(|e| {
+            matches!(
+                &e.kind,
+                EventKind::ForceBrokeOff { task_force, .. }
+                | EventKind::ForceSlippedAway { task_force, .. }
+                    if *task_force == force(2)
+            )
+        });
+        if broke_off || game.afloat_at(2, escort.ended) {
+            continue;
+        }
+        sunk_on += 1;
+        let cargo = game.fought(1, 3).expect("the cargo force is met");
+        assert!(cargo.begun > escort.ended, "seed {seed}");
+        assert!(game.not_held().is_empty(), "seed {seed}");
+    }
+    assert!(sunk_on > 0, "no seed sank the escort outright");
+}
+
 #[test]
 fn unseen_is_not_passed() {
     for case in [holding(), passed()] {
