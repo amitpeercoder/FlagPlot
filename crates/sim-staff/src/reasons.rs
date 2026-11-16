@@ -60,6 +60,10 @@ pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
         IntentKind::SearchWaters { base } => {
             format!("search the waters from {}", base_words(view, base))
         }
+        IntentKind::StandAt { force, hex } => format!("stand at {hex} with {force}"),
+        IntentKind::OperateCarriers { force, hex } => {
+            format!("operate the carrier force {force} from {hex}")
+        }
     }
 }
 

@@ -199,6 +199,7 @@ fn examples() -> Vec<OrderKind> {
         tf(TaskForceOrder::SetRoute {
             waypoints: vec![Hex::new(2, -4), Hex::new(0, 7), Hex::new(2, -4)],
             act_at: [Hex::new(0, 7)].into_iter().collect(),
+            stand_at: [Hex::new(2, -4)].into_iter().collect(),
         }),
         tf(TaskForceOrder::SetSpeed(SpeedSetting::Cruise)),
         tf(TaskForceOrder::SetSpeed(SpeedSetting::Full)),
@@ -417,6 +418,7 @@ fn a_marked_route_writes_act_at_and_an_unmarked_one_writes_none() {
     let marked = kind(TaskForceOrder::SetRoute {
         waypoints: vec![Hex::new(1, 0), Hex::new(3, 0), Hex::new(1, 0)],
         act_at: [Hex::new(3, 0), Hex::new(1, 0)].into_iter().collect(),
+        stand_at: Default::default(),
     });
     let body = order_to_json(&marked);
     assert_eq!(body["act_at"], json!([[1, 0], [3, 0]]), "{body}");
@@ -932,7 +934,7 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
         assert!(result["allied"]["margin"].is_string(), "{result}");
         assert_eq!(
             last,
-            json!({"format": "flagplot-agent", "version": 10, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
+            json!({"format": "flagplot-agent", "version": 11, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
         );
         assert_eq!(session.day_hashes(), hashes, "variant {variant}");
         let world = session.into_world();

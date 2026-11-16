@@ -1458,8 +1458,9 @@ pub enum EventKind {
     },
     /// A task force halted at `hex`, a waypoint of its route marked to act
     /// at, because it has work there (decision 0096, 2): a bombardment, cargo
-    /// or both, as `work` says. It halted at `elapsed_hours` since the
-    /// scenario began.
+    /// or both, as `work` says; or one marked to stand at, reached in the
+    /// night pulse, to stand there for the night (decision 0124, 2). It
+    /// halted at `elapsed_hours` since the scenario began.
     TaskForceHalted {
         task_force: TaskForceId,
         hex: Hex,
@@ -3528,6 +3529,9 @@ impl fmt::Display for EventKind {
                 if work.cargo {
                     done.push("its cargo work is done");
                 }
+                if work.night {
+                    done.push("the night is over");
+                }
                 f.write_str(&done.join(" and "))
             }
             EventKind::LoadingGained {
@@ -3954,6 +3958,15 @@ fn issuer_name(issuer: Issuer) -> &'static str {
 
 /// What a halted force waits to do, in words.
 fn halt_work_words(work: HaltWork) -> &'static str {
+    // The night stand (decision 0124, 2).
+    if work.night {
+        return match (work.bombard, work.cargo) {
+            (true, true) => "stand for the night, bombard and work cargo",
+            (true, false) => "stand for the night and bombard",
+            (false, true) => "stand for the night and work cargo",
+            (false, false) => "stand for the night",
+        };
+    }
     match (work.bombard, work.cargo) {
         (true, true) => "bombard and work cargo",
         (true, false) => "bombard",

@@ -1,10 +1,10 @@
 # 0125: A carrier force played from an end
 
-Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, doctrines 4, 5, 8 and 10, and step 4 of its seven), written by level. It is the third part of step 4, after decisions 0123 and 0124, and the last doctrine the second proof needs. It adds no rule of the engine. Not built.
+Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, doctrines 4, 5, 8 and 10, and step 4 of its seven), written by level. It is the third part of step 4, after decisions 0123 and 0124, and the last doctrine the second proof needs. It adds no rule of the engine. Built on Nov 16, 2026 ("As built" below).
 
 Summary: The task "operate a carrier force from a hex", addressed to a task force with a carrier in it: at the force's level the staff keeps it at its hex, flies its patrol by the risk level, searches toward what the side knows and the waters it is to deny, sets its bombers' standing orders as a base's are set, rests its groups, and takes it home when its fuel says so
 
-Standing: Settled by the architect, Nov 16, 2026, inside decisions 0113, 0120, 0123 and 0124. Not built
+Standing: Settled by the architect, Nov 16, 2026, inside decisions 0113, 0120, 0123 and 0124. Built
 
 ## Why
 
@@ -46,3 +46,20 @@ Each morning, for a task whose force is not held, over the air groups aboard its
 ## The hand calculation
 
 `tests/scenario_55_a_carrier_force_from_an_end.rs`: one carrier with a fighter group, a scout group and a dive bomber group, three contacts in reach and no enemy unit, over 2 days at press: every order, the patrol, the arc of each day and every launch.
+
+## As built
+
+Built on Nov 16, 2026, with decision 0124, in one step (the versions are that record's). The doctrine is `crates/sim-staff/src/carrier.rs`; the decision for the groups is a pure function (`carrier::decide`, with `roles` and `patrol_share`), which the properties "in a view built for it" test. Readings the build took:
+
+- **The kind** is `operate_carriers`. Its forming is decision 0124's rule 8 (`form_force_tasks`): a force on the carrier mission with a carrier afloat and an air group aboard one of its carriers; the hex is the force's position that morning.
+- **Attacked from the air** is read from the side's own events: an air attack on a ship of the force (`AirAttackAgainst`) on any of the three days before.
+- **Rest.** The last fighter group that can fly and the last searching group that can fly are never rested, by the cover's rule (most tired first, then by number). A striking group rests above the level with no exception, by decision 0123's table.
+- **Who searches** uses the engine's own tests: a group can search when it is not a fighter and its type has a search range, and can attack a ship when its type carries a weapon (the strike doctrine's bomber).
+- **The force.** At its hex: battle readiness, no route. Not at its hex, not on its way home and not at home: routed to the hex at cruise (a speed order first where it is not at cruise), and given no readiness order. On its way home (under way or halted with its home port's hex its last waypoint): no route. At home, not at its hex: routed back when every ship has the fuel for the passage to the hex and home at cruise with the margin, else it stays and fuels. Elsewhere, with a ship short of the passage home (at the speed it has) with the margin: routed home, at the speed it has, with no readiness order.
+- **The home port** is the force's own; else, stopped at a base of the side, that base. No order sets it ("or the one an order set" is read as the commander's order). With none, the fuel is not weighed and the reason says so.
+- **When it cannot** (no carrier afloat, or no aircraft able to fly in any group aboard), the notice is handed in and no order is given that morning.
+- **The order of the orders:** readiness, rules of engagement, speed, route, then each group in number order, its mission first.
+
+**What it was checked against.** Scenario 55 (`data/scenarios/55_a_carrier_force_from_an_end.toml`, on the frozen figures with scenario 53's table) came out as the hand calculation has it: the tree, the ten orders of day 1 and the one of day 2, the levels (the sizing order's at `air_group:3`), the arcs 060 to 300 and 110 to 180 at 300 nm, the two strikes of 10 at contacts 2 and 3, the patrol of 3, no fuel burnt. So did the properties of balanced, no scout, a commander's hex, a raid raising the patrol, nothing to fly, a surface force and a carrier force named together (force 2 is given its stand orders: home port, rules of engagement, battle readiness, full speed to (0,5) and the route; 15 orders on day 1), the held force and group, the same start and two worlds.
+
+**One mismatch, for the architect.** "Fuel takes her home" gives the need as 66.666666 x 1.2 = 80 t. The code multiplies the engine's burn, 66.666666 t, by the margin 1.2 in fixed point: 79.9999992, kept as 79.999999. The reason reads "79 t aboard against 79.999999 t needed", and the routing is as the calculation has it (79 t goes home, 81 t stays). The test that asserts the words "79 against 80" (`fuel_takes_her_home_the_reason_gives_79_against_80`) is ignored with that note; a second test asserts the routing and 79.999999. Ruling wanted: whether the need is rounded, or the calculation reads 79.999999.

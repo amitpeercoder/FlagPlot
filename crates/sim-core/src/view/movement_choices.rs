@@ -11,6 +11,7 @@ use crate::choices::movement::{MovementAnswer, MovementQuestion, Rerouted};
 use crate::hex::Hex;
 use crate::ids::BaseId;
 use crate::movement::{halt_index, steam_on, HaltGround};
+use crate::time::Pulse;
 use crate::view::SideView;
 
 impl SideView<'_> {
@@ -33,22 +34,28 @@ impl SideView<'_> {
                     ),
                 ))
             }
-            MovementQuestion::Halt { force } => {
+            MovementQuestion::Halt { force, pulse } => {
                 let force = self.own_force(force)?;
                 let ground = self.halt_ground();
-                Some(MovementAnswer::Halt(halt_index(&ground, force, &|at| {
-                    self.enemy_base_on_map_at(at)
-                })))
+                Some(MovementAnswer::Halt(halt_index(
+                    &ground,
+                    force,
+                    pulse,
+                    &|at| self.enemy_base_on_map_at(at),
+                )))
             }
-            MovementQuestion::SteamOn { force } => {
+            MovementQuestion::SteamOn { force, pulse } => {
                 let force = self.own_force(force)?;
                 if force.halt.is_none() || force.ships.is_empty() {
                     return None;
                 }
                 let ground = self.halt_ground();
-                Some(MovementAnswer::SteamOn(steam_on(&ground, force, &|at| {
-                    self.enemy_base_on_map_at(at)
-                })))
+                Some(MovementAnswer::SteamOn(steam_on(
+                    &ground,
+                    force,
+                    pulse,
+                    &|at| self.enemy_base_on_map_at(at),
+                )))
             }
         }
     }
@@ -56,7 +63,9 @@ impl SideView<'_> {
     /// Every question of this kind this side could ask now, one for each of
     /// its units the choice applies to: for each force, whether a new route
     /// from the waypoint it is steaming toward (or none) would turn it back,
-    /// and where it would halt; for each halted force, whether it steams on.
+    /// and where it would halt in the night pulse, the first movement of the
+    /// day the side gives its orders for; for each halted force, whether it
+    /// steams on at the start of the next pulse's movement, the night's.
     pub(crate) fn movement_questions(&self) -> Vec<MovementQuestion> {
         let mut questions = Vec::new();
         for force in self.task_forces() {
@@ -64,9 +73,15 @@ impl SideView<'_> {
                 force: force.id,
                 first_waypoint: force.route.waypoints.get(force.route.next_index).copied(),
             });
-            questions.push(MovementQuestion::Halt { force: force.id });
+            questions.push(MovementQuestion::Halt {
+                force: force.id,
+                pulse: Pulse::Night,
+            });
             if force.halt.is_some() && !force.ships.is_empty() {
-                questions.push(MovementQuestion::SteamOn { force: force.id });
+                questions.push(MovementQuestion::SteamOn {
+                    force: force.id,
+                    pulse: Pulse::Night,
+                });
             }
         }
         questions

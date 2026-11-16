@@ -2,13 +2,13 @@ Scenario 21: A landing, carried by sea and fed from a base
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0128db1fa7bf36c8  19 events
-day   2  hash 0181b0f87dc09c81  21 events
-day   3  hash 085878a7de9f8ee1  23 events
-day   4  hash 363b1ce8d8c0dfda  9 events
-day   5  hash 13547d6cd8f93ce5  9 events
-day   6  hash c6c9b2d763107631  8 events
-day   7  hash 01c5a7ce3bbf7f39  8 events
+day   1  hash cc075ab1e8604c81  19 events
+day   2  hash 8b95f75d02aebd9e  21 events
+day   3  hash 112e29769b53cbbc  23 events
+day   4  hash e923b930b17755df  9 events
+day   5  hash 68a148fc49e7b57c  9 events
+day   6  hash 4a44663eb7cbaee4  8 events
+day   7  hash 52e91d1beff55714  8 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

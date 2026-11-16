@@ -166,6 +166,7 @@ impl Out {
                     Step::Route { waypoints, act_at } => TaskForceOrder::SetRoute {
                         waypoints: waypoints.clone(),
                         act_at: act_at.clone(),
+                        stand_at: BTreeSet::new(),
                     },
                     Step::Unload => TaskForceOrder::Unload,
                     Step::LoadTo { weight_t } => TaskForceOrder::LoadTo {

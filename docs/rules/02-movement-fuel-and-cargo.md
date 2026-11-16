@@ -69,15 +69,15 @@ A task force is a set of ships of one side, with one position, one route, one sp
 | --- | --- |
 | `ships` | The ships in it. A ship afloat is in exactly one task force, one port or away at the yard. A sunk ship is in none. A force away at the yard lists none |
 | `from_hex`, `toward_hex`, `progress_nm`, `leg_nm` | Where it is on a leg, and what the leg is charged (see What a step is charged and Legs and position) |
-| `route` | Waypoints, the index of the next one, and its marks: the hexes whose waypoints are marked to act at (`act_at`; none for a route with no mark, and the last waypoint is never marked). See Halting at a marked waypoint and steaming on |
+| `route` | Waypoints, the index of the next one, and its marks: the hexes whose waypoints are marked to act at (`act_at`) and those marked to stand at for the night (`stand_at`); none for a route with no mark, and the last waypoint is never marked. See Halting at a marked waypoint and steaming on |
 | `status` | idle (no route), underway, arrived (reached the last waypoint), out of fuel, or halted (stopped at a marked waypoint, holding a halt) |
 | `speed` | cruise, full, or a speed in knots |
 | `readiness`, `alerted`, `fatigue` | See Readiness and fatigue |
 | `rules_of_engagement` | Stance, break-off level, straggler instruction and share to keep |
 | `home_port` | A base of its own side, set by order |
 | `cargo_order` | The standing cargo order, if any |
-| `mission` | Set by order. Only shore bombardment reads it: a force on the bombardment mission fires at an enemy base (chapter 4, Shore bombardment), and it is what a bombardment halt is for (Halting at a marked waypoint and steaming on). It is copied by a split. [0092, 0096] |
-| `halt` | Set while the status is halted, and only then: the work it halted for (a bombardment, cargo, or both), the hour it halted, its `TaskForceHalted` event, the bombardment it has fired since and the completion of its cargo order since, each if any. See Halting at a marked waypoint and steaming on. [0096] |
+| `mission` | Set by order. Only shore bombardment reads it among the rules of the engine: a force on the bombardment mission fires at an enemy base (chapter 4, Shore bombardment), and it is what a bombardment halt is for (Halting at a marked waypoint and steaming on). The staff reads it too, to know which task to form for a force: surface combat for a stand task, carrier for a carrier task (chapter 8, A task force as an addressee). It is copied by a split. [0092, 0096, 0124, 0125] |
+| `halt` | Set while the status is halted, and only then: the work it halted for (a bombardment, cargo, or both, or the night), the hour it halted, its `TaskForceHalted` event, the bombardment it has fired since and the completion of its cargo order since, each if any. See Halting at a marked waypoint and steaming on. [0096, 0124] |
 | `yard_trip` | Set while the force is away at the yard: its port, its day of return and the event that sent it. None otherwise (chapter 4, Repair) |
 
 A task force with no ship afloat is never ordered, never moves and never fights. Every order for it is rejected with "no ship afloat". A force that was joined to another or stood down in port has no ship either, and has ceased to be: it stays in the state, as a force whose ships were all sunk does, and its number is never used again. An order to it is refused with its own reason, "the task force no longer exists: it was joined to F" or "... it was stood down in port", read from the log (chapter 1, Every reason an order is refused). [0016 item 16, 0044, 0111]
@@ -118,7 +118,7 @@ A route order replaces the force's route with a list of waypoints. Chapter 1, Ev
 
 An accepted route order sets the route to the waypoints with the next index 0, sets the status to underway, sets the route order, and clears the arrival hour and the arrival event. It never clears the cargo order, the readiness or the rules of engagement. A route order given to an arrived force sets it underway. A route order to a force that is out of fuel is refused (differences.md row 34): it stays out of fuel where it is until it takes fuel in port. [0005, 0017, 0044]
 
-A route order may also carry marks: a list of hexes to act at, each one of the route's waypoints, else the order is refused (chapter 1, Every reason an order is refused). A mark is by hex: every waypoint at a marked hex is marked. The last waypoint is never treated as marked, so a force arrives there as it always did. A new route order replaces the marks with its own. What a marked waypoint does is in Arriving, below. [0096 items 1 and 2]
+A route order may also carry marks: a list of hexes to act at, each one of the route's waypoints, else the order is refused (chapter 1, Every reason an order is refused). A mark is by hex: every waypoint at a marked hex is marked. The last waypoint is never treated as marked, so a force arrives there as it always did. A new route order replaces the marks with its own. A route order may carry a second list of marks in the same way, `stand_at`, the hexes to stand at for the night: each is one of the route's waypoints, else the order is refused with the same words, a mark is by hex, the last waypoint is never treated as marked, and a new route order replaces them with its own. A route with none gives what a route gave before. What a marked waypoint does is in Halting at a marked waypoint and steaming on, below. [0096 items 1 and 2; 0124 item 1]
 
 A speed order sets the speed setting to cruise, full or a number of knots, which must be above zero. It does not change the status. [0021 item 7]
 
@@ -225,25 +225,27 @@ A side sees: its own `TaskForceArrived`.
 
 ### Halting at a marked waypoint and steaming on
 
-A force with a route that has marks may halt at one. The engine looks for the halt when the force's mover is made, at the start of each pulse's movement, and again after each fight. The halt is at the first marked waypoint, from the force's next one on, where the force has work. Work is one of two things, and a force may have both:
+A force with a route that has marks may halt at one. The engine looks for the halt when the force's mover is made, at the start of each pulse's movement, and again after each fight, for the pulse that movement is in. The halt is at the first marked waypoint, to act at or to stand at, from the force's next one on, where the force has work in that pulse. Work is one of three things, and a force may have more than one:
 
 - **A bombardment.** The force's mission is bombardment, it is not away at the yard, it has a ship afloat, the hex holds a base of the other side that is on the force's side's map, the bombardment and air combat figures are loaded, and a ship of it would fire a shell by the rule of the shore bombardment phase (chapter 4, Shore bombardment).
 - **Cargo.** The force has a cargo order that can work in that hex by the cargo rule below (a base of its side there, or men to land on a coast hex, or men of the order's unit ashore to load), and that is not complete by the cargo rule's own test of when nothing remains to move.
+- **The night.** The waypoint is marked to stand at and the pulse is the night pulse. This is the **night stand**: it is the work of the mark, whatever the force's mission, and needs no base, no cargo and no target. A force that reaches a waypoint marked to stand at in a daylight pulse has no work there and passes it. A waypoint marked both to act at and to stand at has the work of the first, and the night as well in the night pulse. [0124 items 1 and 2]
 
-With no work the force passes the waypoint as any other. A mark never stops a force that has nothing to do there. The route forecast (`measure`) does not foresee halts.
+With no work the force passes the waypoint as any other. A mark never stops a force that has nothing to do there. A route with no mark to stand at halts where it halted before, in every pulse. The route forecast (`measure`) does not foresee halts: it steams the force through every waypoint to the last, and the staff's forecast of a route through several waypoints, which it uses to measure a sortie out and home, marks none (`SideView::forecast_route`).
 
-A force that reaches the centre of the waypoint it halts at stops there, as a force that arrives does. Its status is halted and it is not moving. It records `TaskForceHalted` (the hex, the work, and the hours since the scenario began), citing its route order and the segment that brought it there, or its route and speed orders if it steamed no distance in the pulse. It is stopped as an arrived force is: it can be met and fought, it refuels and is repaired at a base of its side, it can be given a load or unload order, and it can be sent to the yard. It works cargo from the hour it halted, as an arrived force does from its arrival (Working cargo, below), and it bombards in the night pulse's shore bombardment phase (chapter 4, Shore bombardment). A force that halts by day to bombard waits for the night: the rule does not move the bombardment out of the night pulse.
+A force that reaches the centre of the waypoint it halts at stops there, as a force that arrives does. Its status is halted and it is not moving. It records `TaskForceHalted` (the hex, the work, and the hours since the scenario began; for the night, the words "to stand for the night"), citing its route order and the segment that brought it there, or its route and speed orders if it steamed no distance in the pulse. It is stopped as an arrived force is: it can be met and fought, it refuels and is repaired at a base of its side, it can be given a load or unload order, and it can be sent to the yard. It works cargo from the hour it halted, as an arrived force does from its arrival (Working cargo, below), and it bombards in the night pulse's shore bombardment phase (chapter 4, Shore bombardment). A force that halts by day to bombard waits for the night: the rule does not move the bombardment out of the night pulse. A force halted for the night is stopped: it meets what enters its hex and what it finds there, by chapter 4, as any force that is not moving does. [0096, 0124 item 4]
 
 At the start of each pulse's movement, before the straggler pass, each halted force in force order steams on if its work is done:
 
 - **For a bombardment,** it has bombarded since it halted, or it can no longer bombard there: no ship of it can fire, or its mission or the base changed.
 - **For cargo,** it has none left to work there, by the same test as above.
+- **For the night,** the pulse is not the night pulse. So a force that stood for the night steams on at the start of the morning pulse's movement.
 
-A force with both waits for both. It records `TaskForceSteamedOn` (the hex, the work, and whether it fired), citing its route order, the halt, the bombardment and the cargo order's completion event. It is then under way toward the waypoint after the one it halted at and moves in that pulse with the pulse's full hours.
+A force with more than one kind of work waits for all. It records `TaskForceSteamedOn` (the hex, the work, and whether it fired; for the night, the words "the night is over"), citing its route order, the halt, the bombardment and the cargo order's completion event. It is then under way toward the waypoint after the one it halted at and moves in that pulse with the pulse's full hours, whatever the work it stood for. [0124 item 3]
 
 A new route order ends a halt, and records nothing of its own: the order accepted is the record. So does a force retiring after a fight or a trip to the yard. A force that halts where its fuel also runs out is halted, and when it steams on it has no fuel and is out of fuel by the rule above. A halted force with no ship left stays as it is. [0096]
 
-A side can ask this choice for its own forces before it is made (`measure`'s `choices`, `halt`): the answer is the marked waypoint on its route where the rule would halt the force now, or none, from what the side holds; and, for a halted force, whether it would steam on now (`steam_on`). [0100]
+A side can ask this choice for its own forces before it is made (`measure`'s `choices`, `halt`): the answer is the marked waypoint on its route where the rule would halt the force now, or none, from what the side holds; and, for a halted force, whether it would steam on now (`steam_on`). Each question is asked for a pulse, since the answer for a mark to stand at depends on it: the side's list of questions asks both for the night, the first movement of the day it gives orders for. [0100, 0124 item 5]
 
 A side sees: its own `TaskForceHalted` and `TaskForceSteamedOn`, whole. The enemy sees neither.
 
@@ -423,7 +425,7 @@ A task force's readiness, whether it is alert, the alarm, and the fatigue that a
 - Fuel for aircraft: the base's supply stock, spent for sorties (chapter 5, Supply for sorties).
 - The briefing, `measure` (passage, route and reach forecasts) and `explain`: not rules.
 - Which events each side may see, in full: chapter 1, What a side sees of an event.
-- Objectives, missions and results: chapter 6. The only rule that reads a task force's mission is shore bombardment (chapter 4), and the halt for it (above).
+- Objectives, missions and results: chapter 6. The only rule of the engine that reads a task force's mission is shore bombardment (chapter 4), and the halt for it (above); the staff reads it to form a task (chapter 8, A task force as an addressee).
 - Ship repair, forward and at the yard, and a force away at the yard: chapter 4, Repair.
 - The bombardment a halted force makes: chapter 4, Shore bombardment.
 - Land units, men worked as cargo, troop capacity, the men's supply, marching overland and preparing a landing, whose loading scales the rate of a landing: chapter 7.

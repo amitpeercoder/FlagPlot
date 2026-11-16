@@ -35,6 +35,7 @@ const OUT: Hex = Hex::new(4, 0);
 const BOMBARD: HaltWork = HaltWork {
     bombard: true,
     cargo: false,
+    night: false,
 };
 
 fn n(whole: i64) -> Fixed {
@@ -115,6 +116,7 @@ fn world_marked(marks: &[Hex]) -> World {
         waypoints: vec![AT, OUT],
         next_index: 0,
         act_at: marks.iter().copied().collect::<BTreeSet<Hex>>(),
+        stand_at: BTreeSet::new(),
     };
     task_force.status = TaskForceStatus::Underway;
     truth.task_forces.insert(force(), task_force);
@@ -360,6 +362,7 @@ fn the_last_waypoint_is_never_marked() {
         waypoints: vec![Hex::new(0, 0), Hex::new(1, 0), Hex::new(2, 0)],
         next_index: 0,
         act_at: [Hex::new(0, 0), Hex::new(2, 0)].into_iter().collect(),
+        stand_at: BTreeSet::new(),
     };
     assert!(route.marked(0));
     assert!(!route.marked(1));
@@ -373,6 +376,7 @@ fn the_last_waypoint_is_never_marked() {
         waypoints: vec![Hex::new(0, 0)],
         next_index: 0,
         act_at: [Hex::new(0, 0)].into_iter().collect(),
+        stand_at: BTreeSet::new(),
     };
     assert!(!one.marked(0));
     assert!(!Route::default().marked(0));
@@ -388,6 +392,7 @@ fn a_mark_that_is_not_a_waypoint_is_refused() {
         request(TaskForceOrder::SetRoute {
             waypoints: vec![AT, OUT],
             act_at: [Hex::new(2, 0)].into_iter().collect(),
+            stand_at: BTreeSet::new(),
         }),
         Vec::new(),
     );
@@ -414,6 +419,7 @@ fn a_mark_that_is_not_a_waypoint_is_refused() {
         request(TaskForceOrder::SetRoute {
             waypoints: vec![AT, OUT],
             act_at: [OUT].into_iter().collect(),
+            stand_at: BTreeSet::new(),
         }),
         Vec::new(),
     );
@@ -555,7 +561,10 @@ fn the_force_would_halt_at_the_marked_waypoint_where_it_has_work() {
         ask(
             &world,
             Side::Japanese,
-            MovementQuestion::Halt { force: force() }
+            MovementQuestion::Halt {
+                force: force(),
+                pulse: Pulse::Night
+            }
         ),
         Some(MovementAnswer::Halt(Some(0)))
     );
@@ -565,7 +574,10 @@ fn the_force_would_halt_at_the_marked_waypoint_where_it_has_work() {
         ask(
             &world,
             Side::Japanese,
-            MovementQuestion::Halt { force: force() }
+            MovementQuestion::Halt {
+                force: force(),
+                pulse: Pulse::Night
+            }
         ),
         Some(MovementAnswer::Halt(None))
     );
@@ -575,7 +587,10 @@ fn the_force_would_halt_at_the_marked_waypoint_where_it_has_work() {
         ask(
             &world,
             Side::Japanese,
-            MovementQuestion::Halt { force: force() }
+            MovementQuestion::Halt {
+                force: force(),
+                pulse: Pulse::Night
+            }
         ),
         Some(MovementAnswer::Halt(None))
     );
@@ -596,7 +611,10 @@ fn an_enemy_base_off_the_map_gives_no_bombardment_work() {
         ask(
             &world,
             Side::Japanese,
-            MovementQuestion::Halt { force: force() }
+            MovementQuestion::Halt {
+                force: force(),
+                pulse: Pulse::Night
+            }
         ),
         Some(MovementAnswer::Halt(None))
     );
@@ -627,7 +645,10 @@ fn a_force_with_cargo_to_load_at_its_own_base_would_halt_there() {
         ask(
             &world,
             Side::Japanese,
-            MovementQuestion::Halt { force: force() }
+            MovementQuestion::Halt {
+                force: force(),
+                pulse: Pulse::Night
+            }
         ),
         Some(MovementAnswer::Halt(Some(0)))
     );
@@ -642,7 +663,10 @@ fn a_force_with_cargo_to_load_at_its_own_base_would_halt_there() {
         ask(
             &world,
             Side::Japanese,
-            MovementQuestion::Halt { force: force() }
+            MovementQuestion::Halt {
+                force: force(),
+                pulse: Pulse::Night
+            }
         ),
         Some(MovementAnswer::Halt(None))
     );
@@ -654,7 +678,10 @@ fn a_halted_force_steams_on_once_it_has_bombarded() {
     let mut world = world();
     movement(&mut world, 1, Pulse::Night);
     assert_eq!(status(&world), TaskForceStatus::Halted);
-    let steam = MovementQuestion::SteamOn { force: force() };
+    let steam = MovementQuestion::SteamOn {
+        force: force(),
+        pulse: Pulse::Morning,
+    };
     assert_eq!(
         ask(&world, Side::Japanese, steam.clone()),
         Some(MovementAnswer::SteamOn(false)),
@@ -673,7 +700,10 @@ fn a_halted_force_steams_on_once_it_has_bombarded() {
         ask(
             &world,
             Side::Japanese,
-            MovementQuestion::SteamOn { force: force() }
+            MovementQuestion::SteamOn {
+                force: force(),
+                pulse: Pulse::Morning
+            }
         ),
         None,
         "a force that is under way has not halted"
@@ -729,12 +759,18 @@ fn the_view_gives_the_engines_answers_to_halt_steam_on_and_reroute() {
     let mut world = world();
     world.trace_choices(true);
     world.pass_moment(Moment::DayBegins { day: 1 });
-    let halt_q = MovementQuestion::Halt { force: force() };
+    let halt_q = MovementQuestion::Halt {
+        force: force(),
+        pulse: Pulse::Night,
+    };
     let before = ask(&world, Side::Japanese, halt_q.clone()).expect("an answer");
     whole_pulse(&mut world, 1, Pulse::Night);
     let first = traced(&mut world);
     assert_eq!(first.first(), Some(&(halt_q.clone(), before)));
-    let steam_q = MovementQuestion::SteamOn { force: force() };
+    let steam_q = MovementQuestion::SteamOn {
+        force: force(),
+        pulse: Pulse::Morning,
+    };
     let before = ask(&world, Side::Japanese, steam_q.clone()).expect("an answer");
     movement(&mut world, 1, Pulse::Morning);
     let second = traced(&mut world);

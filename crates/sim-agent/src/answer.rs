@@ -22,8 +22,13 @@ pub const FORMAT: &str = "flagplot-agent";
 /// measure of a deny intent in command_state and report (`denials`), the air
 /// group order `set_strike_sizing` and a group's `strike_sizing`, and the
 /// strike answer's `aircraft` with, for a group that sizes its strikes, `need`
-/// and `sent_before` (decision 0118).
-pub const VERSION: u32 = 10;
+/// and `sent_before` (decision 0118). 11 adds the kinds `stand_at` and
+/// `operate_carriers` (`task_force` and `hex`, `base` being `null`), the level
+/// `task_force` of an intent and of a reason, `stand_at` in a route order and
+/// in a force's line, the halt for the night (`night` among what a halt waits
+/// for) and the `pulse` a halt or steam-on question was asked in
+/// (decisions 0124 and 0125).
+pub const VERSION: u32 = 11;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

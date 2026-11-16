@@ -13,7 +13,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::command::{Hold, HoldMaker, HoldTarget};
+use crate::command::{Addressee, Hold, HoldMaker, HoldTarget};
 use crate::events::{Cause, EventKind};
 use crate::ids::ShipId;
 use crate::orders::{BaseOrder, Issuer, OrderKind, OrderRequest};
@@ -96,7 +96,8 @@ impl World {
 
     /// What taking in `request` would hold, if it is an override: its unit
     /// lies in the forces limit of some intent of the side in force (a task
-    /// force listed, or one whose every ship the limit lists; a forming order
+    /// force listed, or one whose every ship the limit lists, or one an intent
+    /// in force is addressed to; a forming order
     /// naming at least one ship of a pool; an air group some intent in force
     /// may use, which holds the whole group). `None` if it is not an
     /// override.
@@ -120,10 +121,15 @@ impl World {
             return usable.then(|| vec![HoldTarget::AirGroup(*target)]);
         }
         match &request.kind {
-            OrderKind::TaskForce { target, .. } => limits
+            // A force listed or inside a limit, or one an intent in force is
+            // addressed to (decision 0124, 6).
+            OrderKind::TaskForce { target, .. } => (limits
                 .iter()
                 .any(|forces| self.force_in_forces_limit(side, forces, *target))
-                .then(|| vec![HoldTarget::TaskForce(*target)]),
+                || self.command[&side]
+                    .intents_in_force()
+                    .any(|intent| intent.addressee == Addressee::TaskForce(*target)))
+            .then(|| vec![HoldTarget::TaskForce(*target)]),
             OrderKind::Base {
                 order: BaseOrder::FormTaskForce { ships },
                 ..

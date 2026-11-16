@@ -395,6 +395,10 @@ struct TaskForceSpec {
     /// The base the force heads for when it retires or sends stragglers
     /// home. It must be a base of the force's own side. Defaults to none.
     home_port: Option<u32>,
+    /// The stance of its rules of engagement at the start, `engage` or
+    /// `avoid` (decision 0124's scenarios). Defaults to engage, the rest of
+    /// the rules of engagement as they default.
+    stance: Option<StanceSpec>,
 }
 
 #[derive(Deserialize)]
@@ -496,6 +500,10 @@ enum ActionSpec {
         waypoints: Vec<[i32; 2]>,
         #[serde(default)]
         act_at: Vec<[i32; 2]>,
+        /// `stand_at` marks waypoints to stand at for the night, by hex
+        /// (decision 0124, 1); each must be one of the waypoints.
+        #[serde(default)]
+        stand_at: Vec<[i32; 2]>,
     },
     /// Exactly one of `speed` and `knots` (decision 7 of 0021).
     SetSpeed {
@@ -1369,6 +1377,9 @@ impl Scenario {
                 spec.mission.into(),
             );
             task_force.readiness = spec.readiness.map_or(Readiness::Normal, Readiness::from);
+            if let Some(stance) = spec.stance {
+                task_force.rules_of_engagement.stance = stance.into();
+            }
             if let Some(quantity) = &spec.fatigue {
                 let fatigue = quantity
                     .to_fixed()
@@ -2048,9 +2059,14 @@ impl Scenario {
             ) {
                 (Some(raw), None, None, None) => {
                     let order = match &spec.action {
-                        ActionSpec::SetRoute { waypoints, act_at } => TaskForceOrder::SetRoute {
+                        ActionSpec::SetRoute {
+                            waypoints,
+                            act_at,
+                            stand_at,
+                        } => TaskForceOrder::SetRoute {
                             waypoints: waypoints.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
                             act_at: act_at.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
+                            stand_at: stand_at.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
                         },
                         ActionSpec::SetSpeed { speed, knots } => {
                             TaskForceOrder::SetSpeed(match (speed, knots) {
@@ -6328,7 +6344,7 @@ task_force = 3
             "kind = \"set_intent\"\nintent = 1\nintent_kind = \"win\"\nbase = 2"
         ))
         .contains(
-            "not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships or search_waters"
+            "not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at or operate_carriers"
         ));
         // Neutralise and raid name a target; a neutralise takes no base.
         let aimed = |kind: &str, extra: &str| {

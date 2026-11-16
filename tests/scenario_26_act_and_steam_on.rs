@@ -138,14 +138,17 @@ const HOME_3: Hex = Hex::new(4, 5);
 const BOMBARD: HaltWork = HaltWork {
     bombard: true,
     cargo: false,
+    night: false,
 };
 const CARGO: HaltWork = HaltWork {
     bombard: false,
     cargo: true,
+    night: false,
 };
 const BOTH: HaltWork = HaltWork {
     bombard: true,
     cargo: true,
+    night: false,
 };
 
 fn path() -> PathBuf {

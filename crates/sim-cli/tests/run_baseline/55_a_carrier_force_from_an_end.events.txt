@@ -1,0 +1,85 @@
+Placeholder scenario 55: A carrier force from an end
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 1941c53b53f0df8c  53 events
+day   2  hash 4e076327e9d0838d  8 events
+
+#1 D0 -         Allied report: 1 ship, carrier, at (0,4), held at the start: new contact:1
+#2 D0 -         Allied report: 2 ships, cruiser, at (3,0), held at the start: new contact:2
+#3 D0 -         Allied contact:1 aged to 1 pulses  <- #1
+#4 D0 -         Allied report: 3 ships, transport, at (-3,0), held at the start: new contact:3
+#5 D0 -         Allied contact:1 aged to 2 pulses  <- #1
+#6 D0 -         Allied contact:2 aged to 1 pulses  <- #2
+#7 D1 -         Allied the commander's command taken: set intent:1 to deny the waters within 0 hexes of (0,5)
+#8 D1 -         Allied plan:1 drafted for intent:1  <- #7
+#9 D1 -         Allied the commander's command taken: risk of intent:1 is press
+#10 D1 -         Allied the commander's command taken: limit intent:1's forces to 0 ships and 1 task force
+#11 D1 -         Allied the commander's command taken: give the leave to prepare
+#12 D1 -         Allied the commander's command taken: give the leave to launch
+#13 D1 -         Allied the staff's command taken: approve plan:1
+#14 D1 -         Allied plan:1 went from draft to preparing  <- #13
+#15 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: plan:1, the plan to deny the waters within 0 hexes of (0,5), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #13
+#16 D1 -         Allied the staff's command taken: approve plan:1
+#17 D1 -         Allied plan:1 went from preparing to released  <- #16
+#18 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: plan:1, the plan to deny the waters within 0 hexes of (0,5), is ready and leave to launch is given: the staff releases it.  <- #16
+#19 D1 -         Allied the staff's command taken: form under intent:1 an intent to operate the carrier force task_force:1 from (0,0)
+#20 D1 -         Allied staff forms intent:2 under intent:1  <- #19
+#21 D1 -         Allied staff's reason for the command to form under intent:1 an intent to operate the carrier force task_force:1 from (0,0) [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: task_force:1 is named in the forces limit of intent:1, its plan is released and no task of task_force:1 stands under it: task_force:1 is on the carrier mission with 1 carrier(s) afloat and 3 air group(s) aboard, and lies at (0,0), so the staff forms intent:2, to operate the carrier force task_force:1 from (0,0), under it, for task_force:1 to carry out.  <- #19
+#22 D1 -         Allied staff's reason for giving no order [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: intent:2, operating the carrier force task_force:1 from (0,0): the passage home to base:1 (Placeholder base 1), by the engine's measure, times the 1 of the press risk, for the ship with least against its need: ship:1 has 3000 t aboard against 66.666666 t needed: every ship has what it needs, so task_force:1 stays on its task.
+#23 D1 -         order:1 accepted for task_force:1  <- order:1  [issued by the staff]
+#24 D1 -         Allied staff's reason for order:1 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: intent:2, operating the carrier force task_force:1 from (0,0): task_force:1 is at (0,0), so it is set to battle readiness.  <- order:1, #23
+#25 D1 -         order:2 accepted for task_force:1  <- order:2  [issued by the staff]
+#26 D1 -         Allied staff's reason for order:2 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: A carrier force does not seek a gun action: the rules of engagement of task_force:1 are set to the stance avoid and the break-off level of the press risk, 0.75.  <- order:2, #25
+#27 D1 -         order:3 accepted for air_group:1  <- order:3  [issued by the staff]
+#28 D1 -         Allied staff's reason for order:3 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:1, a fighter group, has fatigue 0 not above the 60 of the press risk: it flies the patrol at a share of 0.25 (0.25 at press, the force not attacked from the air on the three days before); the rest are escorts.  <- order:3, #27
+#29 D1 -         order:4 accepted for air_group:1  <- order:4  [issued by the staff]
+#30 D1 -         Allied staff's reason for order:4 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:1, a fighter group, has fatigue 0 not above the 60 of the press risk: it flies the patrol at a share of 0.25 (0.25 at press, the force not attacked from the air on the three days before); the rest are escorts.  <- order:4, #29
+#31 D1 -         order:5 accepted for air_group:2  <- order:5  [issued by the staff]
+#32 D1 -         Allied staff's reason for order:5 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:2, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 60 of the press risk: it searches 060 to 300 out to 300 nm from (0,0) (threats: contact 1 at (0,4), contact 2 at (3,0), contact 3 at (-3,0), the waters to deny at (0,5); the narrowest arc that holds them is 090 to 270, widened by 30 degrees at each end to 060 to 300).  <- order:5, #31
+#33 D1 -         order:6 accepted for air_group:2  <- order:6  [issued by the staff]
+#34 D1 -         Allied staff's reason for order:6 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:2, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 60 of the press risk: it searches 060 to 300 out to 300 nm from (0,0) (threats: contact 1 at (0,4), contact 2 at (3,0), contact 3 at (-3,0), the waters to deny at (0,5); the narrowest arc that holds them is 090 to 270, widened by 30 degrees at each end to 060 to 300).  <- order:6, #33
+#35 D1 -         order:7 accepted for air_group:3  <- order:7  [issued by the staff]
+#36 D1 -         Allied staff's reason for order:7 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized.  <- order:7, #35
+#37 D1 -         order:8 accepted for air_group:3  <- order:8  [issued by the staff]
+#38 D1 -         Allied staff's reason for order:8 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized.  <- order:8, #37
+#39 D1 -         order:9 accepted for air_group:3  <- order:9  [issued by the staff]
+#40 D1 -         Allied staff's reason for order:9 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized.  <- order:9, #39
+#41 D1 -         order:10 accepted for air_group:3  <- order:10  [issued by the staff]
+#42 D1 -         Allied staff's reason for order:10 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of air_group:3; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:2 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.  <- order:10, #41
+#43 D1 night     Allied contact:1 aged to 3 pulses  <- #1
+#44 D1 night     Allied contact:2 aged to 2 pulses  <- #2
+#45 D1 night     Allied contact:3 aged to 1 pulses  <- #4
+#46 D1 morning   air_group:2 searched 060-300 out to 300 nm from ship:1 at (0,0) with 6 aircraft  <- order:5, order:6
+#47 D1 morning   air_group:3 launched 10 aircraft at contact:2 at (3,0), 120 nm  <- order:7, order:9, #2, order:8, order:10
+#48 D1 morning   air_group:1 sent 9 escorts with air_group:3  <- order:3, order:4, #47
+#49 D1 morning   air_group:3 found nothing at (3,0)  <- #47
+#50 D1 morning   Allied contact:2 not there at (3,0): dropped  <- #49
+#51 D1 morning   Allied contact:1 aged to 4 pulses  <- #1
+#52 D1 morning   Allied contact:3 aged to 2 pulses  <- #4
+#53 D1 afternoon air_group:2 searched 060-300 out to 300 nm from ship:1 at (0,0) with 6 aircraft  <- order:5, order:6
+#54 D1 afternoon air_group:3 launched 9 aircraft at contact:3 at (-3,0), 120 nm  <- order:7, order:9, #4, order:8, order:10
+#55 D1 afternoon air_group:1 sent 9 escorts with air_group:3  <- order:3, order:4, #54
+#56 D1 afternoon air_group:3 found nothing at (-3,0)  <- #54
+#57 D1 afternoon Allied contact:3 not there at (-3,0): dropped  <- #56
+#58 D1 afternoon Allied contact:1 dropped at 5 pulses  <- #1
+#59 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#60 D2 -         Allied staff's reason for giving no order [serves intent 1: deny the waters within 0 hexes of (0,5); plan 1; decided at the level of the area]: intent:2 (operate the carrier force task_force:1 from (0,0)) stands under intent:1: the staff forms no other for task_force:1. task_force:1 is on the carrier mission with 1 carrier(s) afloat and 3 air group(s) aboard, and lies at (0,0).
+#61 D2 -         Allied staff's reason for giving no order [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: intent:2, operating the carrier force task_force:1 from (0,0): the passage home to base:1 (Placeholder base 1), by the engine's measure, times the 1 of the press risk, for the ship with least against its need: ship:1 has 3000 t aboard against 66.666666 t needed: every ship has what it needs, so task_force:1 stays on its task.
+#62 D2 -         Allied staff's reason for giving no order [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: No order is given for these groups for intent:2, operating the carrier force task_force:1 from (0,0) this morning: air_group:1, a fighter group, has fatigue 0 not above the 60 of the press risk: it flies the patrol at a share of 0.25 (0.25 at press, the force not attacked from the air on the three days before); the rest are escorts; air_group:3, a bomber group, has fatigue 0 not above the 60 of the press risk: it strikes ships by the table of the press risk, with its strikes sized.
+#63 D2 -         order:11 accepted for air_group:2  <- order:11  [issued by the staff]
+#64 D2 -         Allied staff's reason for order:11 [serves intent 2: operate the carrier force task_force:1 from (0,0); plan 1; decided at the level of task_force:1; under intent 1 (the commander's): deny the waters within 0 hexes of (0,5)]: air_group:2, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 60 of the press risk: it searches 110 to 180 out to 300 nm from (0,0) (threats: the waters to deny at (0,5); the narrowest arc that holds them is 140 to 150, widened by 30 degrees at each end to 110 to 180).  <- order:11, #63
+#65 D2 morning   air_group:2 searched 110-180 out to 300 nm from ship:1 at (0,0) with 6 aircraft  <- order:5, order:11
+#66 D2 afternoon air_group:2 searched 110-180 out to 300 nm from ship:1 at (0,0) with 6 aircraft  <- order:5, order:11
+#67 D2 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder carrier force 1" (Allied): Idle at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.75, stragglers: keep, keep 0; home port base:1
+air_group:1 "Placeholder fighters 1" (Allied) aboard ship:1: 12 ready, mission CombatAirPatrol, patrol share 0.25, no arc
+air_group:2 "Placeholder carrier scouts 2" (Allied) aboard ship:1: 6 ready, mission Search, arc 110-180 to 300 nm
+air_group:3 "Placeholder dive bombers 3" (Allied) aboard ship:1: 10 ready, mission NavalStrike, extended reach, no arc
+ship:1 "Placeholder carrier 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+base:1 "Placeholder base 1" (Allied) at (5,0): 1000 t of supply in stock, 5000 t of fuel in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

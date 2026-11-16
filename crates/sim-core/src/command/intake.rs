@@ -127,7 +127,10 @@ impl World {
     /// its chain (the narrowest binds, the architect's ruling after the
     /// build); or, with no forces limit on it or above it, based at the base
     /// it is addressed to. An intent addressed to the area may use no group
-    /// without a forces limit.
+    /// without a forces limit. An intent addressed to a task force (decisions
+    /// 0124, 6, and 0125, 1) may use the groups aboard the force's ships and
+    /// nothing else: a group aboard, where every forces limit on its chain
+    /// names the group or holds the force.
     pub(crate) fn may_use_group(&self, side: Side, intent: IntentId, group: AirGroupId) -> bool {
         let state = &self.command[&side];
         let Some(found) = state.intents.get(&intent) else {
@@ -137,12 +140,28 @@ impl World {
         let Some(own) = own else {
             return false;
         };
+        if let Addressee::TaskForce(force) = found.addressee {
+            let aboard = match own.location {
+                AirGroupLocation::Ship(ship) => self
+                    .truth
+                    .task_forces
+                    .get(&force)
+                    .is_some_and(|found| found.ships.contains(&ship)),
+                _ => false,
+            };
+            return aboard
+                && state.forces_on_chain(intent).iter().all(|forces| {
+                    forces.air_groups.contains(&group)
+                        || self.force_in_forces_limit(side, forces, force)
+                });
+        }
         match state.groups_on_chain(intent) {
             Some(allowed) => allowed.contains(&group),
             None => match found.addressee {
                 Addressee::Area => false,
                 Addressee::Base(base) => own.location == AirGroupLocation::Base(base),
                 Addressee::AirGroup(addressed) => addressed == group,
+                Addressee::TaskForce(_) => false,
             },
         }
     }
@@ -274,6 +293,15 @@ impl World {
                 }
                 if !kind.may_stand_under(found.kind) {
                     return Err(CommandRefusal::CannotStandUnder(*parent));
+                }
+                // A stand task under "hold a place" stands at the base's hex
+                // (decision 0124, 7).
+                if let (IntentKind::StandAt { hex, .. }, IntentKind::Hold { base }) =
+                    (kind, found.kind)
+                {
+                    if self.truth.bases.get(&base).map(|b| b.hex) != Some(*hex) {
+                        return Err(CommandRefusal::CannotStandUnder(*parent));
+                    }
                 }
                 self.check_intent_kind(side, kind)
             }
@@ -637,6 +665,23 @@ impl World {
         // The waters of a "deny an area" intent are about a hex on the map
         // (decision 0123, 1).
         if let Some((hex, _)) = kind.waters() {
+            if !self.map.contains(hex) {
+                return Err(CommandRefusal::NotOnMap(hex));
+            }
+        }
+        // A task of a task force names a force of the side and a hex on the
+        // map (decisions 0124, 7, and 0125, 1).
+        if let Some(force) = kind.force() {
+            let own = self
+                .truth
+                .task_forces
+                .get(&force)
+                .is_some_and(|found| found.side == side);
+            if !own {
+                return Err(CommandRefusal::NotYourForce(force));
+            }
+        }
+        if let Some(hex) = kind.station() {
             if !self.map.contains(hex) {
                 return Err(CommandRefusal::NotOnMap(hex));
             }
@@ -1248,6 +1293,13 @@ impl World {
         }
         if let OrderKind::AirGroup { target, .. } = &request.kind {
             return self.may_use_group(side, intent, *target);
+        }
+        // An intent addressed to a task force commands that force (decision
+        // 0124, 6): an order to it is inside, whatever the limits above.
+        if let (OrderKind::TaskForce { target, .. }, Addressee::TaskForce(force)) =
+            (&request.kind, state.intents[&intent].addressee)
+        {
+            return *target == force;
         }
         // Every forces limit on the chain binds (the architect's ruling
         // after the build). A root has its own alone.

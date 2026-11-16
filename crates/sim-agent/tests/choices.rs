@@ -95,7 +95,7 @@ fn units_of(view: &SideView<'_>, question: &CoreQuestion) -> Vec<String> {
             | SurfaceQuestion::HeadHome { task_force } => *task_force,
         })],
         CoreQuestion::Movement(q) => vec![force(match q {
-            M::Reroute { force, .. } | M::Halt { force } | M::SteamOn { force } => *force,
+            M::Reroute { force, .. } | M::Halt { force, .. } | M::SteamOn { force, .. } => *force,
         })],
         CoreQuestion::Ground(q) => vec![land_unit_handle(
             view,

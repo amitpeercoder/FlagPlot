@@ -951,6 +951,7 @@ fn a_force_that_does_not_qualify_gains_nothing() {
                 work: HaltWork {
                     bombard: false,
                     cargo: true,
+                    night: false,
                 },
                 at_hours: pulse_start(3, Pulse::Night) + n(1),
                 event: EventId::new(1),
@@ -1016,6 +1017,7 @@ fn a_force_that_does_not_qualify_gains_nothing() {
                 work: HaltWork {
                     bombard: false,
                     cargo: true,
+                    night: false,
                 },
                 at_hours: pulse_start(3, Pulse::Night) - n(10),
                 event: EventId::new(1),

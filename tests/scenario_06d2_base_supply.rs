@@ -2860,7 +2860,11 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 && !stem.starts_with("50_")
                 // And scenario 53's, whose staff strikes and searches
                 // (decision 0123).
-                && !stem.starts_with("53_"))
+                && !stem.starts_with("53_")
+                // And scenarios 54's and 55's, whose staff orders a task
+                // force (decisions 0124 and 0125).
+                && !stem.starts_with("54_")
+                && !stem.starts_with("55_"))
             .then(|| stem.to_string())
         })
         .collect();

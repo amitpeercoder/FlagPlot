@@ -17,7 +17,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 10
+      "const": 11
     },
     "kind": {
       "const": "list_bases"

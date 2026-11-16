@@ -1,0 +1,875 @@
+//! A task force as an addressee (decision 0124, rules 6 to 8, and decision
+//! 0125, rule 2), and the doctrine for standing at a hex by night, at the
+//! force's level (decision 0124, rules 9 to 15).
+//!
+//! **Forming, at the level above.** Under a deny or a hold intent whose
+//! forces limit names task forces, the doctrine of that level forms, for
+//! each named force in task force number order where none for that force is
+//! in force under it: a stand task at the end's hex (the centre of the
+//! waters, or the base's hex) for a force on the surface combat mission with
+//! a ship afloat; a carrier task at the force's own hex for a force on the
+//! carrier mission with a carrier afloat with an air group aboard. With no
+//! task force named, nothing is formed.
+//!
+//! **The stand doctrine.** Each morning, for a stand task whose force is not
+//! held: the threat (a contact of ships within 15 hexes of the station; at
+//! preserve the force, one that reports no more ships than the force has
+//! afloat), whether it sorties (press every night, otherwise on a threat),
+//! fuel first (the passage out and home by the engine's own measure, times
+//! the risk's margin), the sortie (from its home port, at cruise where that
+//! reaches the station in the night's 12 hours, else at full speed, the
+//! station marked to stand at), readiness, and rules of engagement set once
+//! from the risk.
+//!
+//! The pure parts are [`margin`], [`break_off`] and [`threat`]; the rest
+//! reads the side's view, and the engine's measures through it.
+
+use std::collections::BTreeSet;
+
+use sim_core::command::{
+    CommandKind, Intent, IntentKind, IntentLimits, Maker, NoticeBasis, NoticeKind, Plan, Reason,
+    Risk, StaffCommand, StaffNotice, StaffOrder,
+};
+use sim_core::fixed::Fixed;
+use sim_core::hex::Hex;
+use sim_core::ids::{BaseId, TaskForceId};
+use sim_core::orders::{Mission, OrderKind, Readiness, SpeedSetting, Stance, TaskForceOrder};
+use sim_core::refdata::ShipKind;
+use sim_core::state::{
+    AirGroupLocation, RulesOfEngagement, ShipLocation, TaskForce, TaskForceStatus,
+};
+use sim_core::time::Pulse;
+use sim_core::view::SideView;
+use sim_core::PassageEnd;
+
+use crate::air::Day;
+use crate::reasons::{base_words, serving};
+
+// ---------------------------------------------------------------------------
+// The risk table (decision 0124) and the threat.
+// ---------------------------------------------------------------------------
+
+/// The hexes from the station within which a contact of ships is a threat
+/// (rule 9). A placeholder: a day's steaming at 25 knots.
+pub const THREAT_HEXES: u32 = 15;
+
+/// The hours of the night pulse: a sortie must reach the station in them
+/// (rule 12).
+pub const NIGHT_HOURS: i64 = 12;
+
+/// The fuel a sortie needs, as a share of the passage out and home (the
+/// table): one and a half times, one and a fifth, once.
+pub fn margin(risk: Risk) -> Fixed {
+    match risk {
+        Risk::Preserve => Fixed::from_ratio(3, 2),
+        Risk::Balanced => Fixed::from_ratio(6, 5),
+        Risk::Press => Fixed::ONE,
+    }
+}
+
+/// The break-off level of the rules of engagement (the table): a quarter, a
+/// half, three quarters.
+pub fn break_off(risk: Risk) -> Fixed {
+    match risk {
+        Risk::Preserve => Fixed::from_ratio(1, 4),
+        Risk::Balanced => Fixed::from_ratio(1, 2),
+        Risk::Press => Fixed::from_ratio(3, 4),
+    }
+}
+
+/// One contact of ships as the threat reads it: its number in the side's
+/// series, its hexes from the station and the ships it reports.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Sighted {
+    pub number: u32,
+    pub hexes: u32,
+    pub ships: u32,
+}
+
+/// The threat (rule 9): the nearest contact within [`THREAT_HEXES`] of the
+/// station that counts, the lowest number on a tie. At preserve the force a
+/// contact counts only where it reports no more ships than the force has
+/// `afloat`.
+pub fn threat(risk: Risk, afloat: u32, contacts: &[Sighted]) -> Option<Sighted> {
+    contacts
+        .iter()
+        .filter(|c| c.hexes <= THREAT_HEXES)
+        .filter(|c| risk != Risk::Preserve || c.ships <= afloat)
+        .min_by_key(|c| (c.hexes, c.number))
+        .copied()
+}
+
+/// The day from which a force that fuels where it lies may be used (rule
+/// 11): the day after it has fuelled, by `hours` of fuelling from the start
+/// of `today`.
+pub fn usable_day(today: u32, hours: Fixed) -> u32 {
+    let day = Fixed::from_int(24);
+    let mut whole = (hours / day).trunc();
+    if Fixed::from_int(whole) * day < hours {
+        whole += 1;
+    }
+    let days = u32::try_from(whole.max(1)).unwrap_or(u32::MAX);
+    today.saturating_add(days)
+}
+
+fn risk_words(risk: Risk) -> String {
+    format!("{} risk", risk.name())
+}
+
+fn pulse_words(pulse: Pulse) -> &'static str {
+    match pulse {
+        Pulse::Night => "night",
+        Pulse::Morning => "morning",
+        Pulse::Afternoon => "afternoon",
+    }
+}
+
+// ---------------------------------------------------------------------------
+// What the force's level reads of a force.
+// ---------------------------------------------------------------------------
+
+/// The ships of `force` afloat, in ship order, each with its fuel aboard,
+/// its capacity and its kind.
+pub(crate) fn afloat(
+    view: &SideView<'_>,
+    force: TaskForceId,
+) -> Vec<(sim_core::ids::ShipId, Fixed, Fixed, ShipKind)> {
+    let mut found: Vec<_> = view
+        .ships()
+        .filter(|ship| ship.location == ShipLocation::TaskForce(force))
+        .filter_map(|ship| {
+            let class = view.ship_class(ship.class)?;
+            Some((ship.id, ship.fuel_t, class.fuel_capacity_t, class.kind))
+        })
+        .collect();
+    found.sort_by_key(|(id, _, _, _)| *id);
+    found
+}
+
+/// Whether the force is stopped: not steaming and not halted.
+pub(crate) fn stopped(force: &TaskForce) -> bool {
+    !matches!(
+        force.status,
+        TaskForceStatus::Underway | TaskForceStatus::Halted
+    ) && force.toward_hex.is_none()
+}
+
+/// The side's own base in `hex`, the lowest number first.
+pub(crate) fn own_base_at(view: &SideView<'_>, hex: Hex) -> Option<BaseId> {
+    let mut bases: Vec<_> = view
+        .bases()
+        .filter(|b| b.hex == hex)
+        .map(|b| b.id)
+        .collect();
+    bases.sort();
+    bases.first().copied()
+}
+
+/// The force's home port as the staff knows it: the one an order set, or
+/// else the base it lies at, stopped. The second is `true` where it has none
+/// set and an order must set it.
+pub(crate) fn home_of(view: &SideView<'_>, force: &TaskForce) -> Option<(BaseId, bool)> {
+    match force.home_port {
+        Some(base) => Some((base, false)),
+        None if stopped(force) => own_base_at(view, force.position()).map(|b| (b, true)),
+        None => None,
+    }
+}
+
+/// Each ship's fuel aboard and the fuel it needs, in ship order.
+pub(crate) type Needs = Vec<(sim_core::ids::ShipId, Fixed, Fixed)>;
+
+/// The fuel each ship of the force needs for a passage through `waypoints`
+/// at `speed`, by the engine's own measure, times `margin`; `None` where the
+/// engine would refuse the route. With the hours to the end of the passage.
+pub(crate) fn fuel_needs(
+    view: &SideView<'_>,
+    force: TaskForceId,
+    waypoints: &[Hex],
+    speed: Option<SpeedSetting>,
+    margin: Fixed,
+) -> Option<(Needs, Fixed)> {
+    let forecast = view.forecast_route(force, waypoints, speed)?;
+    if forecast.refusal.is_some() {
+        return None;
+    }
+    let needs = forecast
+        .ships
+        .iter()
+        .map(|line| (line.ship, line.fuel_t, line.burned_t * margin))
+        .collect();
+    Some((needs, forecast.hours))
+}
+
+/// The hours a passage to `hex` at `speed` takes by the engine's own
+/// measure, where it arrives.
+pub(crate) fn hours_to(
+    view: &SideView<'_>,
+    force: TaskForceId,
+    hex: Hex,
+    speed: SpeedSetting,
+) -> Option<Fixed> {
+    let forecast = view.forecast_route(force, &[hex], Some(speed))?;
+    match forecast.end {
+        PassageEnd::Arrives { .. } => Some(forecast.hours),
+        _ => None,
+    }
+}
+
+/// Where a force away from home is expected home: the day and pulse of its
+/// arrival at `home` by the engine's own measure, in words.
+pub(crate) fn expected_words(view: &SideView<'_>, force: TaskForceId, home: Hex) -> String {
+    match view.forecast_passage(force, home, None).map(|f| f.end) {
+        Some(PassageEnd::Arrives { day, pulse, .. }) => {
+            format!(
+                "it is expected there in the {} of day {day}",
+                pulse_words(pulse)
+            )
+        }
+        _ => "it is not expected there by the engine's measure".to_string(),
+    }
+}
+
+/// What the engine's fuelling rule would take at `base` for `ships` short of
+/// their need (decision 0112): `None` where the base cannot fuel them (no
+/// port that fuels, or less fuel in its stock than they lack of their need);
+/// else the hours it takes to fill them, the longest ship's, by the port's
+/// berth rate where it has a berth and else its lighter rate, no hours where
+/// no rate is given.
+pub(crate) fn fuelling_hours(
+    view: &SideView<'_>,
+    base: BaseId,
+    short: &[(Fixed, Fixed, Fixed)],
+) -> Option<Fixed> {
+    let found = view.bases().find(|b| b.id == base)?;
+    let lacking = short.iter().fold(Fixed::ZERO, |sum, (aboard, need, _)| {
+        sum + (*need - *aboard).max(Fixed::ZERO)
+    });
+    if found.fuel_t < lacking || found.fuel_t <= Fixed::ZERO {
+        return None;
+    }
+    let size = view.hex(found.hex)?.port_size;
+    let port = view.port_size(size)?;
+    let rate = if port.berths > 0 {
+        port.fuel_berth_rate_t_per_h
+    } else {
+        port.fuel_lighter_rate_t_per_h
+    };
+    let Some(rate) = rate else {
+        return Some(Fixed::ZERO);
+    };
+    if rate <= Fixed::ZERO {
+        return None;
+    }
+    Some(
+        short
+            .iter()
+            .fold(Fixed::ZERO, |most, (aboard, _, capacity)| {
+                most.max((*capacity - *aboard).max(Fixed::ZERO) / rate)
+            }),
+    )
+}
+
+// ---------------------------------------------------------------------------
+// The morning.
+// ---------------------------------------------------------------------------
+
+/// What one morning's working of a stand task hands in.
+struct Out {
+    orders: Vec<(TaskForceOrder, Reason)>,
+    /// The reason of the morning, where it gives no route.
+    summary: Option<Reason>,
+    /// The intent cannot be met: the notice rests on the summary.
+    cannot: bool,
+}
+
+impl Day<'_, '_> {
+    /// The forming rule (decisions 0124, 8, and 0125, 2): under `end`, a deny
+    /// or a hold intent, a stand task at `station` for each surface force its
+    /// forces limit names and a carrier task for each carrier force, in task
+    /// force number order, where none for the force is in force under it.
+    /// Whether any such task was formed or stands.
+    pub(crate) fn form_force_tasks(
+        &mut self,
+        end: &Intent,
+        plan: &Plan,
+        station: Hex,
+        in_scope: bool,
+    ) -> bool {
+        let named: BTreeSet<TaskForceId> = self
+            .state
+            .nearest_forces(end.id)
+            .map(|f| f.task_forces.clone())
+            .unwrap_or_default();
+        let today = self.today;
+        let mut any = false;
+        for id in named {
+            let Some(force) = self.view.task_forces().find(|f| f.id == id) else {
+                continue;
+            };
+            let ships = afloat(self.view, id);
+            let (kind, words, why) = match force.mission {
+                Mission::SurfaceCombat if !ships.is_empty() => (
+                    IntentKind::StandAt {
+                        force: id,
+                        hex: station,
+                    },
+                    format!("stand at {station} with {id}"),
+                    format!(
+                        "{id} is on the surface combat mission with {} ship(s) afloat",
+                        ships.len()
+                    ),
+                ),
+                Mission::Carrier => {
+                    let carriers: Vec<_> = ships
+                        .iter()
+                        .filter(|(_, _, _, kind)| *kind == ShipKind::Carrier)
+                        .map(|(ship, _, _, _)| *ship)
+                        .collect();
+                    let aboard = self
+                        .view
+                        .air_groups()
+                        .filter(|g| matches!(g.location, AirGroupLocation::Ship(s) if carriers.contains(&s)))
+                        .count();
+                    if aboard == 0 {
+                        continue;
+                    }
+                    let hex = force.position();
+                    (
+                        IntentKind::OperateCarriers { force: id, hex },
+                        format!("operate the carrier force {id} from {hex}"),
+                        format!(
+                            "{id} is on the carrier mission with {} carrier(s) afloat and {aboard} air group(s) aboard, and lies at {hex}",
+                            carriers.len()
+                        ),
+                    )
+                }
+                _ => continue,
+            };
+            any = true;
+            let standing = self
+                .state
+                .children_in_force(end.id)
+                .into_iter()
+                .filter_map(|child| self.state.intents.get(&child))
+                .find(|child| child.kind.force() == Some(id) && child.kind.code() == kind.code())
+                .map(|child| (child.id, child.kind));
+            if let Some((task, task_kind)) = standing {
+                let reason =
+                    serving(end, plan)
+                        .evidence(why.clone(), today)
+                        .evidence(
+                            format!("{task}, a task of {id}, is in force under {}", end.id),
+                            today,
+                        )
+                        .binding(format!("{task} stands"))
+                        .worked(format!(
+                        "{task} ({}) stands under {}: the staff forms no other for {id}. {why}.",
+                        crate::reasons::aim(self.view, &Intent { kind: task_kind, ..end.clone() }),
+                        end.id
+                    ))
+                        .would_change(format!("{task} withdrawn"))
+                        .done();
+                self.target(in_scope).no_orders.push(reason);
+                continue;
+            }
+            let id_new = self.state.next_intent_number();
+            self.state.intents.insert(
+                id_new,
+                Intent {
+                    id: id_new,
+                    kind,
+                    parent: Some(end.id),
+                    maker: Maker::Staff,
+                    addressee: kind.addressee(),
+                    limits: IntentLimits::default(),
+                    set_day: today,
+                    plan: end.plan,
+                    withdrawn_day: None,
+                },
+            );
+            let reason = serving(end, plan)
+                .evidence(why.clone(), today)
+                .binding(format!("{id} is named in the forces limit of {}", end.id))
+                .worked(format!(
+                    "{id} is named in the forces limit of {}, its plan is released and no task of {id} stands under it: {why}, so the staff forms {id_new}, to {words}, under it, for {id} to carry out.",
+                    end.id
+                ))
+                .would_change(format!("{id} not named in the forces limit"))
+                .would_change("such a task already standing")
+                .done();
+            self.target(in_scope).commands.push(StaffCommand {
+                kind: CommandKind::FormIntent {
+                    parent: end.id,
+                    kind,
+                },
+                reason,
+            });
+            if in_scope {
+                self.lines.push(format!(
+                    "{} would form {id_new}, to {words}, under it ({why}).",
+                    end.id
+                ));
+            }
+        }
+        any
+    }
+
+    /// The stand doctrine for the morning (decision 0124, 9 to 15).
+    pub(crate) fn stands(&mut self) {
+        let tasks = self.in_priority_order(|i| matches!(i.kind, IntentKind::StandAt { .. }));
+        for id in tasks {
+            let Some(task) = self.state.intents.get(&id).cloned() else {
+                continue;
+            };
+            if !self.released(&task) {
+                continue;
+            }
+            self.serve_stand(&task);
+        }
+    }
+
+    #[allow(clippy::too_many_lines)]
+    fn serve_stand(&mut self, task: &Intent) {
+        let Some(plan) = self.plan_of(task) else {
+            return;
+        };
+        let IntentKind::StandAt {
+            force: id,
+            hex: station,
+        } = task.kind
+        else {
+            return;
+        };
+        let in_scope = self.in_scope(task.id);
+        let today = self.today;
+        let view = self.view;
+        let risk = self.state.risk_read_up(task.id);
+        let risk_text = risk_words(risk);
+        let intent_words = format!("{}, standing at {station} with {id}", task.id);
+        let mut out = Out {
+            orders: Vec::new(),
+            summary: None,
+            cannot: false,
+        };
+        let force = view.task_forces().find(|f| f.id == id).cloned();
+        let Some(force) = force else {
+            let reason = serving(task, &plan)
+                .evidence(format!("{id} is not one of the side's forces now"), today)
+                .worked(format!(
+                    "{intent_words}: {id} is gone, so the staff gives no order and cannot meet {}.",
+                    task.id
+                ))
+                .would_change("the force back")
+                .done();
+            out.summary = Some(reason);
+            out.cannot = true;
+            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+            return;
+        };
+        if let Some(hold) = self.state.hold_on_force(id, &force.ships) {
+            let reason = serving(task, &plan)
+                .evidence(format!("{hold} is held by the commander"), today)
+                .binding(format!("the hold on {hold}"))
+                .worked(format!("{intent_words}: {hold} is held by the commander, so the staff gives {id} no order."))
+                .would_change("the hold released")
+                .done();
+            out.summary = Some(reason);
+            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+            return;
+        }
+        let ships = afloat(view, id);
+        if ships.is_empty() {
+            let reason = serving(task, &plan)
+                .evidence(format!("{id} has no ship afloat"), today)
+                .worked(format!("{intent_words}: {id} has no ship afloat, so the staff gives no order and cannot meet {}.", task.id))
+                .would_change("a ship afloat in the force")
+                .done();
+            out.summary = Some(reason);
+            out.cannot = true;
+            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+            return;
+        }
+        let here = force.position();
+
+        // The home port (rule 12): the base it lies at when it has none, set
+        // by order.
+        let Some((home, set_home)) = home_of(view, &force) else {
+            let reason = serving(task, &plan)
+                .evidence(format!("{id} has no home port and lies at {here}, at no base of the side"), today)
+                .binding("the force must be stopped at its home port")
+                .worked(format!("{intent_words}: {id} has no home port and is not stopped at a base of the side, so the staff gives it no order."))
+                .would_change("a home port set, or the force stopped at a base")
+                .done();
+            out.summary = Some(reason);
+            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+            return;
+        };
+        let home_text = base_words(view, home);
+        let Some(home_hex) = view.bases().find(|b| b.id == home).map(|b| b.hex) else {
+            return;
+        };
+        if set_home {
+            out.orders.push((
+                TaskForceOrder::SetHomePort(home),
+                serving(task, &plan)
+                    .evidence(format!("{id} has no home port and lies stopped at {home_text}"), today)
+                    .binding("the force's home port is the base it lies at when the task is formed")
+                    .worked(format!("{id} has no home port and lies stopped at {home_text}: its home port is set to {home_text}, where it sorties from and comes back to."))
+                    .would_change("a home port set by the commander")
+                    .done(),
+            ));
+        }
+
+        // Away from home (rule 14).
+        if !(stopped(&force) && here == home_hex) {
+            let reason = serving(task, &plan)
+                .evidence(format!("{id} is at {here}, not stopped at its home port {home_text}"), today)
+                .binding("the force sorties only from its home port")
+                .worked(format!(
+                    "{intent_words}: {id} is at {here}, not stopped at its home port {home_text}; {}. The staff gives it no order.",
+                    expected_words(view, id, home_hex)
+                ))
+                .would_change("the force stopped at its home port")
+                .done();
+            out.summary = Some(reason);
+            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+            return;
+        }
+
+        // Rules of engagement, set once from the risk (rule 13).
+        let wanted_roe = RulesOfEngagement {
+            stance: Stance::Engage,
+            break_off: break_off(risk),
+            ..force.rules_of_engagement
+        };
+        if force.rules_of_engagement != wanted_roe {
+            out.orders.push((
+                TaskForceOrder::SetRulesOfEngagement {
+                    stance: wanted_roe.stance,
+                    break_off: wanted_roe.break_off,
+                    stragglers: wanted_roe.stragglers,
+                    keep_share: wanted_roe.keep_share,
+                },
+                serving(task, &plan)
+                    .evidence(format!(
+                        "{id} has the stance {} and a break-off level of {}",
+                        stance_words(force.rules_of_engagement.stance),
+                        force.rules_of_engagement.break_off
+                    ), today)
+                    .binding(format!("the break-off level of the {risk_text}: {}", break_off(risk)))
+                    .worked(format!(
+                        "A force that stands to meet the enemy by night engages: the rules of engagement of {id} are set to the stance engage and the break-off level of the {risk_text}, {}; its straggler instruction and keep share are left as they are.",
+                        break_off(risk)
+                    ))
+                    .would_change("a different risk level")
+                    .done(),
+            ));
+        }
+
+        // The threat (rule 9).
+        let afloat_count = u32::try_from(ships.len()).unwrap_or(u32::MAX);
+        let mut sighted: Vec<Sighted> = view
+            .contacts()
+            .map(|c| Sighted {
+                number: view.contact_number(c.id),
+                hexes: c.estimated_hex.distance(station),
+                ships: c.estimated_ship_count,
+            })
+            .collect();
+        sighted.sort_by_key(|c| (c.hexes, c.number));
+        let found = threat(risk, afloat_count, &sighted);
+        let threat_text = match found {
+            Some(c) => format!(
+                "contact {} of {} ship(s) is {} hexes from the station {station}, within {THREAT_HEXES}: a threat",
+                c.number, c.ships, c.hexes
+            ),
+            None => {
+                let near = sighted.iter().find(|c| c.hexes <= THREAT_HEXES);
+                match near {
+                    Some(c) if risk == Risk::Preserve => format!(
+                        "contact {} is {} hexes from the station {station} but reports {} ship(s) against the {afloat_count} {id} has afloat: at preserve the force it is no threat that counts, so there is no threat",
+                        c.number, c.hexes, c.ships
+                    ),
+                    _ => format!(
+                        "the side holds no contact of ships within {THREAT_HEXES} hexes of the station {station}: there is no threat"
+                    ),
+                }
+            }
+        };
+        let sorties = risk == Risk::Press || found.is_some();
+        let sortie_rule = match risk {
+            Risk::Press => "at press the force sorties every night",
+            Risk::Balanced => "at balanced the force sorties on a night with a threat",
+            Risk::Preserve => {
+                "at preserve the force it sorties on a threat it is not outnumbered by"
+            }
+        };
+
+        let mut battle = false;
+        let mut route: Option<(TaskForceOrder, Reason)> = None;
+        let mut speed_order: Option<(TaskForceOrder, Reason)> = None;
+        if station == here {
+            // Its own hex: no route (rule 12).
+            battle = sorties;
+            out.summary = Some(
+                serving(task, &plan)
+                    .evidence(threat_text.clone(), today)
+                    .binding(sortie_rule)
+                    .worked(format!(
+                        "{intent_words}: the station is the hex {id} lies at, so it is given no route; {threat_text}, so it is set to {} readiness.",
+                        if battle { "battle" } else { "normal" }
+                    ))
+                    .would_change("a contact near the station, or none")
+                    .done(),
+            );
+        } else if !sorties {
+            out.summary = Some(
+                serving(task, &plan)
+                    .evidence(threat_text.clone(), today)
+                    .binding(sortie_rule)
+                    .worked(format!(
+                        "{intent_words}: {threat_text}, and {sortie_rule}: {id} does not sortie tonight."
+                    ))
+                    .would_change("a contact of ships near the station")
+                    .done(),
+            );
+        } else {
+            // The speed (rule 12).
+            let cruise = hours_to(view, id, station, SpeedSetting::Cruise);
+            let full = hours_to(view, id, station, SpeedSetting::Full);
+            let night = Fixed::from_int(NIGHT_HOURS);
+            let chosen = match (cruise, full) {
+                (Some(h), _) if h <= night => Some((SpeedSetting::Cruise, h)),
+                (_, Some(h)) if h <= night => Some((SpeedSetting::Full, h)),
+                _ => None,
+            };
+            let hours_text = format!(
+                "the station is {} hours away at cruise and {} at full speed",
+                cruise.map_or_else(|| "no".to_string(), |h| h.to_string()),
+                full.map_or_else(|| "no".to_string(), |h| h.to_string())
+            );
+            match chosen {
+                None => {
+                    out.cannot = true;
+                    out.summary = Some(
+                        serving(task, &plan)
+                            .evidence(threat_text.clone(), today)
+                            .evidence(hours_text.clone(), today)
+                            .binding(format!("a sortie must reach the station within the night's {NIGHT_HOURS} hours"))
+                            .worked(format!(
+                                "{intent_words}: {threat_text}, but {hours_text}: not even full speed brings {id} to the station within the night's {NIGHT_HOURS} hours, so there is no sortie and the staff cannot meet {}.",
+                                task.id
+                            ))
+                            .would_change("a station nearer the force's home port")
+                            .done(),
+                    );
+                }
+                Some((speed, hours)) => {
+                    // Fuel first (rule 11).
+                    let needs =
+                        fuel_needs(view, id, &[station, home_hex], Some(speed), margin(risk));
+                    let Some((needs, _)) = needs else {
+                        return;
+                    };
+                    let short: Vec<(sim_core::ids::ShipId, Fixed, Fixed)> = needs
+                        .iter()
+                        .copied()
+                        .filter(|(_, aboard, need)| aboard < need)
+                        .collect();
+                    let fuel_text = needs
+                        .iter()
+                        .map(|(ship, aboard, need)| {
+                            format!("{ship} has {aboard} t aboard against {need} t needed")
+                        })
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    let fuel_text = format!(
+                        "the passage to the station and home, by the engine's measure, times the {} of the {risk_text}: {fuel_text}",
+                        margin(risk)
+                    );
+                    if short.is_empty() {
+                        battle = true;
+                        let speed_text = match speed {
+                            SpeedSetting::Full => "full speed",
+                            _ => "cruise",
+                        };
+                        if force.speed != speed {
+                            speed_order = Some((
+                                TaskForceOrder::SetSpeed(speed),
+                                serving(task, &plan)
+                                    .evidence(hours_text.clone(), today)
+                                    .binding(format!("a sortie must reach the station within the night's {NIGHT_HOURS} hours"))
+                                    .worked(format!("{hours_text}: {id} is set to {speed_text}, the slowest that reaches the station within the night."))
+                                    .would_change("a station nearer, or farther")
+                                    .done(),
+                            ));
+                        }
+                        let stand_at: BTreeSet<Hex> = BTreeSet::from([station]);
+                        route = Some((
+                            TaskForceOrder::SetRoute {
+                                waypoints: vec![station, home_hex],
+                                act_at: BTreeSet::new(),
+                                stand_at,
+                            },
+                            serving(task, &plan)
+                                .evidence(threat_text.clone(), today)
+                                .evidence(fuel_text.clone(), today)
+                                .evidence(format!("{hours} hours to the station at {speed_text}"), today)
+                                .binding(sortie_rule)
+                                .worked(format!(
+                                    "{intent_words}: {threat_text}, and {sortie_rule}. {fuel_text}: it has the fuel. It is routed to the station {station} and home to {home_text}, the station marked to stand at: {hours} hours to the station at {speed_text}, it stands there for the night and steams for home at morning."
+                                ))
+                                .would_change("no threat, a bolder or more careful risk, or less fuel aboard")
+                                .done(),
+                        ));
+                    } else {
+                        let triples: Vec<(Fixed, Fixed, Fixed)> = short
+                            .iter()
+                            .map(|(ship, aboard, need)| {
+                                let capacity = ships
+                                    .iter()
+                                    .find(|(s, _, _, _)| s == ship)
+                                    .map_or(*need, |(_, _, c, _)| *c);
+                                (*aboard, *need, capacity)
+                            })
+                            .collect();
+                        let when =
+                            fuelling_hours(view, home, &triples).map(|h| usable_day(today, h));
+                        let when_text = match when {
+                            Some(day) => {
+                                format!("it fuels at {home_text} and may be used from day {day}")
+                            }
+                            None => {
+                                out.cannot = true;
+                                format!(
+                                    "{home_text} cannot fuel it, so there is no day from which it may be used, and the staff cannot meet {}",
+                                    task.id
+                                )
+                            }
+                        };
+                        out.summary = Some(
+                            serving(task, &plan)
+                                .evidence(threat_text.clone(), today)
+                                .evidence(fuel_text.clone(), today)
+                                .binding("fuel comes first: a force with less aboard than the sortie needs does not sortie")
+                                .worked(format!(
+                                    "{intent_words}: {threat_text}, and {sortie_rule}, but {fuel_text}: it has less than it needs and does not sortie; {when_text}."
+                                ))
+                                .would_change("more fuel aboard")
+                                .done(),
+                        );
+                    }
+                }
+            }
+        }
+
+        // Readiness (rule 13).
+        let wanted = if battle {
+            Readiness::Battle
+        } else {
+            Readiness::Normal
+        };
+        if force.readiness != wanted {
+            out.orders.push((
+                TaskForceOrder::SetReadiness(wanted),
+                serving(task, &plan)
+                    .evidence(threat_text.clone(), today)
+                    .binding("battle readiness on a night it sorties or stands at its own hex with a threat, normal on one it does not")
+                    .worked(format!(
+                        "{intent_words}: {threat_text}; {}, so {id} is set to {} readiness.",
+                        if battle { "it sorties or stands" } else { "it does not sortie" },
+                        if battle { "battle" } else { "normal" }
+                    ))
+                    .would_change("a threat near the station, or none")
+                    .done(),
+            ));
+        }
+        if let Some(order) = speed_order {
+            out.orders.push(order);
+        }
+        if let Some(order) = route {
+            out.orders.push(order);
+        }
+        self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+    }
+
+    fn hand_in_stand(
+        &mut self,
+        task: &Intent,
+        plan: &Plan,
+        force: TaskForceId,
+        out: Out,
+        in_scope: bool,
+        intent_words: &str,
+    ) {
+        let mut lines: Vec<String> = Vec::new();
+        let target = self.target(in_scope);
+        for (order, reason) in out.orders {
+            lines.push(reason.worked.clone());
+            target.orders.push(StaffOrder {
+                kind: OrderKind::TaskForce {
+                    target: force,
+                    order,
+                },
+                intent: task.id,
+                reason,
+            });
+        }
+        if let Some(reason) = out.summary {
+            lines.push(reason.worked.clone());
+            target.no_orders.push(reason);
+            if out.cannot {
+                let index = target.no_orders.len() - 1;
+                target.notices.push(StaffNotice {
+                    kind: NoticeKind::CannotMeet,
+                    plan: plan.id,
+                    run: None,
+                    rests_on: NoticeBasis::NoOrder(index),
+                });
+            }
+        }
+        if in_scope {
+            self.lines
+                .push(format!("{intent_words}: {}", lines.join(" ")));
+        }
+    }
+}
+
+pub(crate) fn stance_words(stance: Stance) -> &'static str {
+    match stance {
+        Stance::Engage => "engage",
+        Stance::Avoid => "avoid",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_table() {
+        assert_eq!(margin(Risk::Balanced), "1.2".parse::<Fixed>().unwrap());
+        assert_eq!(break_off(Risk::Press), "0.75".parse::<Fixed>().unwrap());
+    }
+
+    #[test]
+    fn preserve_counts_only_a_contact_it_is_not_outnumbered_by() {
+        let three = Sighted {
+            number: 1,
+            hexes: 7,
+            ships: 3,
+        };
+        assert_eq!(threat(Risk::Preserve, 2, &[three]), None);
+        assert_eq!(threat(Risk::Balanced, 2, &[three]), Some(three));
+        let far = Sighted { hexes: 16, ..three };
+        assert_eq!(threat(Risk::Press, 5, &[far]), None);
+    }
+
+    #[test]
+    fn the_day_after_fuelling() {
+        assert_eq!(usable_day(1, Fixed::ZERO), 2);
+        assert_eq!(usable_day(1, Fixed::from_int(24)), 2);
+        assert_eq!(usable_day(1, Fixed::from_int(25)), 3);
+    }
+}

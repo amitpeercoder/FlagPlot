@@ -202,7 +202,7 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
             " (prepare_landing names the coast hex where the landing is to be made, a hex the map marks as coast, as the hex of a port or a landing beach is; a hex of open sea, of land or off the map is refused)"
         }
         R::MarkNotOnRoute(_) => {
-            " (act_at marks waypoints of the same set_route: each mark must be one of the route's waypoints, and the last waypoint needs no mark since a force stops there anyway)"
+            " (act_at marks waypoints of the same set_route, and so does stand_at, the waypoints to stand at for the night: each mark must be one of the route's waypoints, and the last waypoint needs no mark since a force stops there anyway)"
         }
         R::NoAirfield => {
             " (a base has no airfield until units working on its airfield have done the work it needs; the base's line says how much is done, and no group can rebase to it or land at it before)"

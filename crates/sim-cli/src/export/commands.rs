@@ -29,7 +29,8 @@ use super::num::Num;
 /// `{ "kind": "neutralise", target }` (no `base`), or
 /// `{ "kind": "raid", base, target }` (decision 0120); or `{ "kind": "deny",
 /// hex, distance }` (no `base`), or `{ "kind": "strike_ships" |
-/// "search_waters", base }` (decision 0123).
+/// "search_waters", base }` (decision 0123); or `{ "kind": "stand_at" |
+/// "operate_carriers", task_force, hex }` (decisions 0124 and 0125).
 #[derive(Serialize)]
 struct IntentKindOut {
     kind: &'static str,
@@ -43,6 +44,10 @@ struct IntentKindOut {
     /// The distance in hexes of the waters of a deny intent.
     #[serde(skip_serializing_if = "Option::is_none")]
     distance: Option<u32>,
+    /// The task force of a stand_at or operate_carriers intent (decision
+    /// 0124 and 0125), the umpire's number; `hex` is its station.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    task_force: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     floor_days: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -61,6 +66,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             target: None,
             hex: None,
             distance: None,
+            task_force: None,
             floor_days: Some(*floor_days),
             interval_days: *interval_days,
         },
@@ -73,6 +79,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             target: None,
             hex: None,
             distance: None,
+            task_force: None,
             floor_days: None,
             interval_days: None,
         },
@@ -82,15 +89,29 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             target: Some(target.raw()),
             hex: None,
             distance: None,
+            task_force: None,
             floor_days: None,
             interval_days: None,
         },
+        IntentKind::StandAt { force, hex } | IntentKind::OperateCarriers { force, hex } => {
+            IntentKindOut {
+                kind: kind.name(),
+                base: None,
+                target: None,
+                hex: Some([hex.q, hex.r]),
+                distance: None,
+                task_force: Some(force.raw()),
+                floor_days: None,
+                interval_days: None,
+            }
+        }
         IntentKind::Deny { hex, distance } => IntentKindOut {
             kind: "deny",
             base: None,
             target: None,
             hex: Some([hex.q, hex.r]),
             distance: Some(*distance),
+            task_force: None,
             floor_days: None,
             interval_days: None,
         },

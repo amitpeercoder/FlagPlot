@@ -36,7 +36,11 @@ fn fixed_text(value: Fixed) -> Value {
 pub fn order_to_json(kind: &OrderKind) -> Value {
     match kind {
         OrderKind::TaskForce { order, .. } => match order {
-            TaskForceOrder::SetRoute { waypoints, act_at } => {
+            TaskForceOrder::SetRoute {
+                waypoints,
+                act_at,
+                stand_at,
+            } => {
                 let mut body = json!({
                     "kind": "set_route",
                     "waypoints": waypoints.iter().map(|h| json!([h.q, h.r])).collect::<Vec<_>>(),
@@ -45,6 +49,11 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 // a route with no mark is written as it always was.
                 if !act_at.is_empty() {
                     body["act_at"] = act_at.iter().map(|h| json!([h.q, h.r])).collect();
+                }
+                // Likewise the waypoints to stand at for the night (decision
+                // 0124), written only when one is marked.
+                if !stand_at.is_empty() {
+                    body["stand_at"] = stand_at.iter().map(|h| json!([h.q, h.r])).collect();
                 }
                 body
             }
@@ -452,9 +461,20 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                             "mark",
                         )?,
                     };
+                    // Optional (decision 0124): the waypoints to stand at.
+                    let stand_at = match value.get("stand_at") {
+                        None | Some(Value::Null) => Vec::new(),
+                        Some(marks) => hex_pairs(
+                            marks
+                                .as_array()
+                                .ok_or("\"stand_at\" is not a list of hexes")?,
+                            "mark",
+                        )?,
+                    };
                     TaskForceOrder::SetRoute {
                         waypoints,
                         act_at: act_at.into_iter().collect(),
+                        stand_at: stand_at.into_iter().collect(),
                     }
                 }
                 "set_speed" => TaskForceOrder::SetSpeed(if value.get("knots").is_some() {

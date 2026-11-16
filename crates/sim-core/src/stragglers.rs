@@ -960,6 +960,7 @@ mod tests {
             waypoints: vec![hx(12, 0)],
             next_index: 0,
             act_at: std::collections::BTreeSet::new(),
+            stand_at: std::collections::BTreeSet::new(),
         };
         world.truth.task_forces.get_mut(&TF).unwrap().status = TaskForceStatus::Underway;
         world.truth.task_forces.get_mut(&TF).unwrap().route_order = Some(OrderId::new(5));
@@ -1254,6 +1255,7 @@ mod tests {
                 waypoints: vec![hx(12, 0)],
                 next_index: 0,
                 act_at: std::collections::BTreeSet::new(),
+                stand_at: std::collections::BTreeSet::new(),
             };
             force.status = TaskForceStatus::Underway;
             force.route_order = Some(OrderId::new(5));
@@ -1540,6 +1542,7 @@ mod tests {
                 waypoints: vec![hx(12, 0)],
                 next_index: 0,
                 act_at: std::collections::BTreeSet::new(),
+                stand_at: std::collections::BTreeSet::new(),
             };
             force.status = TaskForceStatus::Underway;
         }
