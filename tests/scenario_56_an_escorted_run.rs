@@ -438,11 +438,6 @@ impl Played {
             .filter(|n| n.kind == NoticeKind::CannotMeet)
             .collect()
     }
-
-    /// The reasons of a day's decisions to give no order.
-    fn no_order_reasons(&self, day: u32) -> Vec<&Reason> {
-        self.decisions(day).no_orders.iter().collect()
-    }
 }
 
 /// A reason's text: its calculation and its evidence.
@@ -890,15 +885,6 @@ fn preserve_both_runs_are_escorted_on_day_2_and_again_on_day_17() {
     // Force 1 is at sea with the second run at the end of day 18, and was
     // full when it left on day 17.
     assert!(played.ship_fuel(16, 3) == n(500) && played.ship_fuel(16, 4) == n(500));
-}
-
-fn said_of_no_order(played: &Played, day: u32) -> String {
-    played
-        .no_order_reasons(day)
-        .into_iter()
-        .map(said)
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 #[test]
