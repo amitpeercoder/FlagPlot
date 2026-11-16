@@ -380,6 +380,21 @@ pub struct BaseOut {
     /// The fuel the base keeps in reserve (decision 0111). Left out when 0.
     #[serde(skip_serializing_if = "num_is_zero")]
     fuel_reserve: Num,
+    /// The ammunition the base holds, in tons (decision 0122). Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    ammunition: Num,
+    /// True for an airfield whose damage is at or above the level at which
+    /// a field takes no aircraft (decision 0103, `airfield_landing_refused_at`).
+    /// Left out when false (version 5).
+    #[serde(skip_serializing_if = "is_false")]
+    airfield_closed: bool,
+    /// The holder's days of supply in the base's hex at this moment, as
+    /// `SideView::days_of_supply` works it (decision 0107): the stock of the
+    /// side's bases there over the planned use. Left out where the hex has
+    /// no figure, and in `initial`, which has no world to read it from
+    /// (version 5).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    days_of_supply: Option<Num>,
 }
 
 fn is_true(b: &bool) -> bool {
@@ -435,7 +450,11 @@ pub fn snapshot(truth: &TruthState, ref_data: &RefData, key: &UmpireKey) -> Snap
             .values()
             .map(|group| air_group(group, ref_data))
             .collect(),
-        bases: bases(truth),
+        bases: truth
+            .bases
+            .values()
+            .map(|b| base(b, ref_data.ground.as_ref()))
+            .collect(),
         land_units: truth
             .land_units
             .values()
@@ -487,11 +506,15 @@ fn land_unit(unit: &LandUnit, key: &UmpireKey) -> LandUnitOut {
     }
 }
 
-pub fn bases(truth: &TruthState) -> Vec<BaseOut> {
-    truth.bases.values().map(base).collect()
+pub fn bases(truth: &TruthState, ref_data: &RefData) -> Vec<BaseOut> {
+    truth
+        .bases
+        .values()
+        .map(|b| base(b, ref_data.ground.as_ref()))
+        .collect()
 }
 
-fn base(base: &Base) -> BaseOut {
+fn base(base: &Base, ground: Option<&sim_core::refdata::GroundFigures>) -> BaseOut {
     BaseOut {
         id: base.id.raw(),
         name: base.name.clone(),
@@ -511,6 +534,11 @@ fn base(base: &Base) -> BaseOut {
         airfield_damage: Num(base.airfield_damage),
         supply_reserve: Num(base.supply_reserve_t),
         fuel_reserve: Num(base.fuel_reserve_t),
+        ammunition: Num(base.ammunition_t),
+        airfield_closed: base.airfield
+            && ground
+                .is_some_and(|figures| base.airfield_damage >= figures.airfield_landing_refused_at),
+        days_of_supply: None,
     }
 }
 
@@ -724,6 +752,15 @@ pub fn records(world: &World) -> Records {
         land_units,
     } = snapshot(world.umpire(), world.ref_data(), &world.umpire_key());
     let key = world.umpire_key();
+    // The holder's days of supply at each base, read through its own side's view.
+    let mut bases = bases;
+    for (out, base) in bases.iter_mut().zip(world.umpire().bases.values()) {
+        out.days_of_supply = world
+            .side_view(base.side)
+            .days_of_supply(base.hex)
+            .and_then(|figure| figure.days)
+            .map(Num);
+    }
     let contacts = |side: Side| -> Vec<ContactOut> {
         world
             .side_view(side)
