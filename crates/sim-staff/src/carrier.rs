@@ -53,7 +53,8 @@ use crate::neutralise::bomber_reach;
 use crate::raid::rest_level;
 use crate::reasons::{base_words, serving};
 use crate::stand::{
-    afloat, break_off, expected_words, fuel_needs, home_of, margin, stance_words, stopped,
+    afloat, break_off, expected_words, fuel_needs, home_of, hours_to, margin, stance_words,
+    stopped, NIGHT_HOURS,
 };
 use crate::strike::{StrikeGroup, StrikeRole};
 
@@ -272,8 +273,248 @@ pub fn decide(
 }
 
 // ---------------------------------------------------------------------------
+// Closing the range (decision 0130), the pure parts.
+// ---------------------------------------------------------------------------
+
+/// The oldest a contact may be, in pulses, for the force to close on it or
+/// to stay for it (decision 0130, 2 and 5).
+pub const CLOSE_MAX_AGE: u32 = 3;
+
+/// The kinds a force closes on at `risk` (decision 0130, 2): nothing at
+/// preserve the force, a carrier at balanced, any kind at press.
+pub fn closes_on(risk: Risk) -> &'static [ShipKind] {
+    match risk {
+        Risk::Preserve => &[],
+        Risk::Balanced => &[ShipKind::Carrier],
+        Risk::Press => &ShipKind::ALL,
+    }
+}
+
+/// The kinds a force closes on, in words.
+pub fn closes_on_words(risk: Risk) -> &'static str {
+    match risk {
+        Risk::Preserve => "nothing",
+        Risk::Balanced => "a carrier",
+        Risk::Press => "any kind",
+    }
+}
+
+/// The speed of a passage (decision 0130, 1): cruise where that brings the
+/// force there within the night's hours (`cruise_hours`, by the engine's
+/// measure, `None` where cruise does not bring it there), otherwise full
+/// speed; always cruise at preserve the force.
+pub fn speed_for(risk: Risk, cruise_hours: Option<Fixed>) -> SpeedSetting {
+    if risk == Risk::Preserve {
+        return SpeedSetting::Cruise;
+    }
+    match cruise_hours {
+        Some(h) if h <= Fixed::from_int(NIGHT_HOURS) => SpeedSetting::Cruise,
+        _ => SpeedSetting::Full,
+    }
+}
+
+/// One contact of ships as the closing rule reads it: its number in the
+/// side's series, its hex, its kind, its age in pulses and its air distance
+/// from the force.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Held {
+    pub number: u32,
+    pub hex: Hex,
+    pub kind: ShipKind,
+    pub age: u32,
+    pub distance_nm: Fixed,
+}
+
+/// What the closing rule makes of one morning's contacts (decision 0130, 2).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Closing {
+    /// At preserve the force it closes on nothing.
+    Preserve,
+    /// No contact of ships is fresh.
+    NothingFresh,
+    /// No fresh contact is of a kind the risk closes on.
+    NothingOfKind,
+    /// Every fresh contact of a kind it closes on is within reach: this
+    /// one, the first of them.
+    InReach(Held),
+    /// Those beyond reach are all beyond a night at full speed and the
+    /// reach: this one, the first of them.
+    TooFar(Held),
+    /// It closes on this one.
+    CloseOn(Held),
+}
+
+/// The first of `contacts` by the order of decision 0130, 2: the kind first
+/// in the order of importance, then the nearest, then the lowest number.
+fn first(contacts: impl Iterator<Item = Held>) -> Option<Held> {
+    contacts.min_by_key(|c| (c.kind, c.distance_nm, c.number))
+}
+
+/// The contacts fresh and of a kind `risk` closes on.
+fn wanted(risk: Risk, contacts: &[Held]) -> impl Iterator<Item = Held> + '_ {
+    contacts
+        .iter()
+        .copied()
+        .filter(|c| c.age <= CLOSE_MAX_AGE)
+        .filter(move |c| closes_on(risk).contains(&c.kind))
+}
+
+/// The contact a force that has left its hex to close stays for (decision
+/// 0130, 5): fresh, of a kind its risk closes on, and within `reach`.
+pub fn in_reach(risk: Risk, reach: Fixed, contacts: &[Held]) -> Option<Held> {
+    first(wanted(risk, contacts).filter(|c| c.distance_nm <= reach))
+}
+
+/// The closing rule (decision 0130, 2): of the fresh contacts of a kind the
+/// risk closes on, beyond `reach` and within `night_nm` (a night at full
+/// speed) and the reach, the first.
+pub fn closing(risk: Risk, reach: Fixed, night_nm: Fixed, contacts: &[Held]) -> Closing {
+    if risk == Risk::Preserve {
+        return Closing::Preserve;
+    }
+    if !contacts.iter().any(|c| c.age <= CLOSE_MAX_AGE) {
+        return Closing::NothingFresh;
+    }
+    let of_kind: Vec<Held> = wanted(risk, contacts).collect();
+    if of_kind.is_empty() {
+        return Closing::NothingOfKind;
+    }
+    let beyond: Vec<Held> = of_kind
+        .iter()
+        .copied()
+        .filter(|c| c.distance_nm > reach)
+        .collect();
+    let Some(far) = first(beyond.iter().copied()) else {
+        return first(of_kind.into_iter()).map_or(Closing::NothingOfKind, Closing::InReach);
+    };
+    match first(
+        beyond
+            .into_iter()
+            .filter(|c| c.distance_nm <= night_nm + reach),
+    ) {
+        Some(c) => Closing::CloseOn(c),
+        None => Closing::TooFar(far),
+    }
+}
+
+/// Where the force goes to close (decision 0130, 3): the first hex of
+/// `path` (the hexes entered along the shortest sea route to `contact`, in
+/// order) within `reach` of it.
+pub fn close_to(path: &[Hex], contact: Hex, reach: Fixed) -> Option<Hex> {
+    path.iter()
+        .copied()
+        .find(|h| Fixed::from_int(i64::from(h.air_distance_nm(contact))) <= reach)
+}
+
+/// The first fresh contact of a kind `risk` closes on beyond `reach`, by
+/// the order of decision 0130, 2: the one whose passage gives the force's
+/// full speed.
+fn wanted_beyond(risk: Risk, reach: Fixed, contacts: &[Held]) -> Option<Held> {
+    first(wanted(risk, contacts).filter(|c| c.distance_nm > reach))
+}
+
+/// One ship's fuel against a passage as the closing rule weighs it
+/// (decision 0130, 4): aboard, the burn by the engine's measure times the
+/// margin, and whether the engine has it run dry short of the passage, when
+/// the burn it gives is only what is aboard.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+struct ShipFuel {
+    ship: sim_core::ids::ShipId,
+    aboard: Fixed,
+    need: Fixed,
+    runs_dry: bool,
+}
+
+impl ShipFuel {
+    fn short(self) -> bool {
+        self.runs_dry || self.aboard < self.need
+    }
+}
+
+/// Each ship's fuel against a passage through `waypoints` at `speed`, by the
+/// engine's own measure, times `margin`; `None` where the engine would
+/// refuse the route.
+fn close_fuel(
+    view: &sim_core::view::SideView<'_>,
+    force: TaskForceId,
+    waypoints: &[Hex],
+    speed: SpeedSetting,
+    margin: Fixed,
+) -> Option<Vec<ShipFuel>> {
+    let forecast = view.forecast_route(force, waypoints, Some(speed))?;
+    if forecast.refusal.is_some() {
+        return None;
+    }
+    Some(
+        forecast
+            .ships
+            .iter()
+            .map(|line| ShipFuel {
+                ship: line.ship,
+                aboard: line.fuel_t,
+                need: line.burned_t * margin,
+                runs_dry: line.runs_dry,
+            })
+            .collect(),
+    )
+}
+
+fn close_fuel_words(needs: &[ShipFuel]) -> String {
+    needs
+        .iter()
+        .map(|n| {
+            if n.runs_dry {
+                format!(
+                    "{} has {} t aboard against more than {} t needed, running dry short of the passage",
+                    n.ship, n.aboard, n.need
+                )
+            } else {
+                format!("{} has {} t aboard against {} t needed", n.ship, n.aboard, n.need)
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn setting_words(speed: SpeedSetting) -> &'static str {
+    match speed {
+        SpeedSetting::Full => "full speed",
+        _ => "cruise",
+    }
+}
+
+// ---------------------------------------------------------------------------
 // The morning, from the side's view.
 // ---------------------------------------------------------------------------
+
+/// The speed of a passage of `force` to `to` by decision 0130, 1, read from
+/// the engine's measure, and the words for it: "cruise", or full speed with
+/// the hours cruise would take.
+fn passage_speed(
+    view: &sim_core::view::SideView<'_>,
+    force: TaskForceId,
+    risk: Risk,
+    to: Hex,
+) -> (SpeedSetting, String) {
+    if risk == Risk::Preserve {
+        return (SpeedSetting::Cruise, "cruise".to_string());
+    }
+    let cruise = hours_to(view, force, to, SpeedSetting::Cruise);
+    match speed_for(risk, cruise) {
+        SpeedSetting::Cruise => (SpeedSetting::Cruise, "cruise".to_string()),
+        speed => (
+            speed,
+            match cruise {
+                Some(h) => format!(
+                    "full speed, cruise taking {h} hours, more than the night's {NIGHT_HOURS}"
+                ),
+                None => {
+                    "full speed, cruise not bringing it there by the engine's measure".to_string()
+                }
+            },
+        ),
+    }
+}
 
 impl Day<'_, '_> {
     /// The carrier doctrine for the morning (decision 0125, 3 to 11).
@@ -406,8 +647,15 @@ impl Day<'_, '_> {
                     && force.route.waypoints.last().copied() == home_hex
                     && force.route.next_index < force.route.waypoints.len();
                 let at_home = stopped(force) && Some(here) == home_hex;
-                let mut route: Option<(Vec<Hex>, Reason)> = None;
+                // A route, the speed it is steamed at where the doctrine sets
+                // one (decision 0130, 1), and its reason.
+                let mut route: Option<(Vec<Hex>, Option<SpeedSetting>, Reason)> = None;
                 let mut going_home = on_way_home;
+                // At its home port and short of the fuel to go back: it fuels.
+                let mut fuelling = false;
+                // The reason the force stays on its task, which the words on
+                // closing join.
+                let mut place_note: Option<usize> = None;
                 let margin = margin(risk);
                 let fuel_words = |needs: &[(sim_core::ids::ShipId, Fixed, Fixed)]| {
                     needs
@@ -421,25 +669,26 @@ impl Day<'_, '_> {
                 // Fuel (rule 8) and its place (rule 7).
                 match home_hex {
                     Some(home_at) if at_home && !at_hex => {
-                        if let Some((needs, _)) = fuel_needs(
-                            view,
-                            id,
-                            &[hex, home_at],
-                            Some(SpeedSetting::Cruise),
-                            margin,
-                        ) {
+                        // The speed of the passage back (decision 0130, 1),
+                        // at which its fuel is measured.
+                        let (speed, speed_text) = passage_speed(view, id, risk, hex);
+                        if let Some((needs, _)) =
+                            fuel_needs(view, id, &[hex, home_at], Some(speed), margin)
+                        {
                             let text = fuel_words(&needs);
                             if needs.iter().all(|(_, aboard, need)| aboard >= need) {
                                 route = Some((
                                     vec![hex],
+                                    Some(speed),
                                     serving(task, &plan)
                                         .evidence(format!("the passage to {hex} and home, by the engine's measure, times the {margin} of the {risk_text}: {text}"), today)
                                         .binding("back to its hex once every ship has the fuel for the passage out and home with the margin")
-                                        .worked(format!("{intent_words}: {id} is at its home port {home_text} and every ship has what the passage to {hex} and home needs ({text}): it is routed back to {hex} at cruise."))
+                                        .worked(format!("{intent_words}: {id} is at its home port {home_text} and every ship has what the passage to {hex} and home needs ({text}): it is routed back to {hex} at {speed_text}."))
                                         .would_change("less fuel aboard")
                                         .done(),
                                 ));
                             } else {
+                                fuelling = true;
                                 notes.push(
                                     serving(task, &plan)
                                         .evidence(format!("the passage to {hex} and home, by the engine's measure, times the {margin} of the {risk_text}: {text}"), today)
@@ -464,6 +713,7 @@ impl Day<'_, '_> {
                             going_home = true;
                             route = Some((
                                 vec![home_at],
+                                None,
                                 serving(task, &plan)
                                     .evidence(fuel_text.clone(), today)
                                     .binding("a ship with less fuel than the passage home needs with the margin takes the force home")
@@ -472,6 +722,7 @@ impl Day<'_, '_> {
                                     .done(),
                             ));
                         } else {
+                            place_note = Some(notes.len());
                             notes.push(
                                 serving(task, &plan)
                                     .evidence(fuel_text.clone(), today)
@@ -492,6 +743,7 @@ impl Day<'_, '_> {
                     }
                     _ => {
                         if home_hex.is_none() {
+                            place_note = Some(notes.len());
                             notes.push(
                                 serving(task, &plan)
                                     .evidence(format!("{id} has no home port and is stopped at no base of the side"), today)
@@ -502,16 +754,258 @@ impl Day<'_, '_> {
                         }
                     }
                 }
-                if route.is_none() && !going_home && !at_hex && !at_home {
+                // Closing the range (decision 0130, 2 to 5): on a morning the
+                // force is not on its way home and not fuelling at home.
+                let mut closes = false;
+                let mut stays = false;
+                let mut close_words: Option<String> = None;
+                // It left its task's hex to close: its last route ends at a
+                // hex that is neither the task's nor its home port's.
+                let left_to_close = !at_hex
+                    && force
+                        .route
+                        .waypoints
+                        .last()
+                        .is_some_and(|w| *w != hex && Some(*w) != home_hex);
+                if !going_home && !fuelling {
+                    // The reach: the least strike radius among the bomber
+                    // groups aboard that can fly.
+                    let reach = aboard
+                        .iter()
+                        .filter(|g| view.able_to_fly(g.id).unwrap_or(0) > 0)
+                        .filter_map(|g| bomber_reach(view, g))
+                        .min();
+                    let mut held_contacts: Vec<Held> = view
+                        .contacts()
+                        .map(|c| Held {
+                            number: view.contact_number(c.id),
+                            hex: c.estimated_hex,
+                            kind: c.estimated_kind,
+                            age: c.age_pulses,
+                            distance_nm: Fixed::from_int(i64::from(
+                                here.air_distance_nm(c.estimated_hex),
+                            )),
+                        })
+                        .collect();
+                    held_contacts.sort_by_key(|c| c.number);
+                    let held_words = |c: &Held| {
+                        format!(
+                            "contact {}, a {}, {} pulse(s) old, is {} nm from {here}",
+                            c.number,
+                            c.kind.name(),
+                            c.age,
+                            c.distance_nm
+                        )
+                    };
+                    match reach {
+                        None => {
+                            close_words = Some(format!(
+                                "{id} does not close: no bomber group aboard can fly."
+                            ));
+                        }
+                        Some(reach) => {
+                            let stay_for = if left_to_close {
+                                in_reach(risk, reach, &held_contacts)
+                            } else {
+                                None
+                            };
+                            if let Some(c) = stay_for {
+                                // It stays while there is something in reach
+                                // (rule 5).
+                                stays = true;
+                                close_words = Some(format!(
+                                    "{id} left its hex {hex} to close, and {}, within the {reach} nm normal reach of its bombers: at the {risk_text} it closes on {}, so it stays where it is and is given no route.",
+                                    held_words(&c),
+                                    closes_on_words(risk)
+                                ));
+                            } else {
+                                // A night at full speed, by the engine's measure.
+                                let night_nm = wanted_beyond(risk, reach, &held_contacts)
+                                    .and_then(|c| {
+                                        view.forecast_passage(id, c.hex, Some(SpeedSetting::Full))
+                                    })
+                                    .map_or(Fixed::ZERO, |f| {
+                                        f.speed_kn * Fixed::from_int(NIGHT_HOURS)
+                                    });
+                                let reach_words = format!(
+                                    "{} nm ({night_nm} nm in the night's {NIGHT_HOURS} hours at full speed and the {reach} nm normal reach of its bombers)",
+                                    night_nm + reach
+                                );
+                                match closing(risk, reach, night_nm, &held_contacts) {
+                                    Closing::Preserve => {
+                                        close_words = Some(format!(
+                                            "{id} does not close: at the {risk_text} it closes on nothing."
+                                        ));
+                                    }
+                                    Closing::NothingFresh => {
+                                        close_words = Some(format!(
+                                            "{id} does not close: the side holds no contact of ships {CLOSE_MAX_AGE} pulses old or less."
+                                        ));
+                                    }
+                                    Closing::NothingOfKind => {
+                                        let list = held_contacts
+                                            .iter()
+                                            .filter(|c| c.age <= CLOSE_MAX_AGE)
+                                            .map(|c| {
+                                                format!("contact {}, a {}", c.number, c.kind.name())
+                                            })
+                                            .collect::<Vec<_>>()
+                                            .join("; ");
+                                        close_words = Some(format!(
+                                            "{id} does not close: at the {risk_text} it closes on {}, and no contact of ships {CLOSE_MAX_AGE} pulses old or less is of that kind ({list}).",
+                                            closes_on_words(risk)
+                                        ));
+                                    }
+                                    Closing::InReach(c) => {
+                                        close_words = Some(format!(
+                                            "{id} does not close: {}, within the {reach} nm normal reach of its bombers, and no contact it closes on is beyond it.",
+                                            held_words(&c)
+                                        ));
+                                    }
+                                    Closing::TooFar(c) => {
+                                        close_words = Some(format!(
+                                            "{id} does not close: {}, beyond the {reach} nm normal reach of its bombers and more than the {reach_words}.",
+                                            held_words(&c)
+                                        ));
+                                    }
+                                    Closing::CloseOn(c) => {
+                                        let target = view
+                                            .sea_path(here, c.hex)
+                                            .and_then(|path| close_to(&path, c.hex, reach));
+                                        match target {
+                                            None => {
+                                                close_words = Some(format!(
+                                                    "{id} does not close: {}, but no sea route from {here} reaches a hex within the {reach} nm normal reach of its bombers of {}.",
+                                                    held_words(&c),
+                                                    c.hex
+                                                ));
+                                            }
+                                            Some(target) => {
+                                                let (speed, speed_text) =
+                                                    passage_speed(view, id, risk, target);
+                                                let hours = hours_to(view, id, target, speed);
+                                                let hours_text = hours.map_or_else(
+                                                    || {
+                                                        "it does not arrive by the engine's measure"
+                                                            .to_string()
+                                                    },
+                                                    |h| {
+                                                        format!(
+                                                            "{h} hours at {}",
+                                                            setting_words(speed)
+                                                        )
+                                                    },
+                                                );
+                                                let target_nm = here.air_distance_nm(target);
+                                                let contact_text = format!(
+                                                    "{}, beyond the {reach} nm normal reach of its bombers and within the {reach_words}",
+                                                    held_words(&c)
+                                                );
+                                                let place_text = format!(
+                                                    "the first hex along the shortest sea route to {} within that reach of it is {target}, {target_nm} nm from {here}: {hours_text}",
+                                                    c.hex
+                                                );
+                                                // Fuel first (rule 4).
+                                                let fuel = home_hex.map(|home_at| {
+                                                    (
+                                                        home_at,
+                                                        close_fuel(
+                                                            view,
+                                                            id,
+                                                            &[target, home_at],
+                                                            speed,
+                                                            margin,
+                                                        ),
+                                                    )
+                                                });
+                                                match fuel {
+                                                    Some((_, None)) => {
+                                                        close_words = Some(format!(
+                                                            "{id} does not close: {contact_text}; {place_text}; but the engine would refuse the passage there and home."
+                                                        ));
+                                                    }
+                                                    Some((_, Some(needs)))
+                                                        if needs.iter().any(|n| n.short()) =>
+                                                    {
+                                                        close_words = Some(format!(
+                                                            "{id} does not close on contact {}: {contact_text}; {place_text}; but the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: a ship has less than it needs.",
+                                                            c.number,
+                                                            setting_words(speed),
+                                                            close_fuel_words(&needs)
+                                                        ));
+                                                    }
+                                                    fuel => {
+                                                        let fuel_text = match fuel {
+                                                            Some((_, Some(needs))) => format!(
+                                                                "the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: it has the fuel",
+                                                                setting_words(speed),
+                                                                close_fuel_words(&needs)
+                                                            ),
+                                                            _ => format!("{id} has no home port the staff knows, so its fuel is not measured against a passage home"),
+                                                        };
+                                                        closes = true;
+                                                        route = Some((
+                                                            vec![target],
+                                                            Some(speed),
+                                                            serving(task, &plan)
+                                                                .evidence(contact_text.clone(), today)
+                                                                .evidence(fuel_text.clone(), today)
+                                                                .evidence(hours_text.clone(), today)
+                                                                .binding(format!("at the {risk_text} the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach", closes_on_words(risk)))
+                                                                .binding("it goes no nearer than its bombers need")
+                                                                .worked(format!(
+                                                                    "{intent_words}: {contact_text}: at the {risk_text} it closes on {}. {place_text}. {fuel_text}. {id} is routed to {target} at {speed_text}.",
+                                                                    closes_on_words(risk)
+                                                                ))
+                                                                .would_change("the contact within reach, older, dropped or of another kind")
+                                                                .would_change("less fuel aboard")
+                                                                .done(),
+                                                        ));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if route.is_none() && !going_home && !at_hex && !at_home && !stays {
+                    // Its place (decision 0125, 7), at the speed of decision
+                    // 0130, 1.
+                    let (speed, speed_text) = passage_speed(view, id, risk, hex);
+                    let back = if left_to_close {
+                        ", it left the hex to close and holds nothing in reach and nothing to close on"
+                    } else {
+                        ""
+                    };
                     route = Some((
                         vec![hex],
+                        Some(speed),
                         serving(task, &plan)
                             .evidence(format!("{id} is at {here}, not at {hex}"), today)
                             .binding("the force is kept at the task's hex")
-                            .worked(format!("{intent_words}: {id} is at {here}, not in the task's hex and not on its way home, so it is routed to {hex} at cruise."))
+                            .worked(format!("{intent_words}: {id} is at {here}, not in the task's hex and not on its way home{back}, so it is routed to {hex} at {speed_text}."))
                             .would_change("the force in the hex")
                             .done(),
                     ));
+                }
+                // The words on closing join the reason it stays on its task,
+                // or stand as a reason of their own.
+                if let Some(words) = close_words {
+                    match place_note.and_then(|i| notes.get_mut(i)) {
+                        Some(note) => {
+                            note.worked = format!("{} {words}", note.worked);
+                        }
+                        None => notes.push(
+                            serving(task, &plan)
+                                .evidence(format!("{id} is at {here}"), today)
+                                .worked(format!("{intent_words}: {words}"))
+                                .would_change("a fresh contact of a kind it closes on beyond its bombers' reach and within a night at full speed and that reach")
+                                .done(),
+                        ),
+                    }
                 }
                 let give = |orders: &mut Vec<StaffOrder>, order: TaskForceOrder, reason: Reason| {
                     orders.push(StaffOrder {
@@ -520,15 +1014,32 @@ impl Day<'_, '_> {
                         reason,
                     });
                 };
-                // Readiness and rules of engagement (rule 9).
-                if at_hex && !going_home && force.readiness != Readiness::Battle {
+                // Readiness and rules of engagement (decision 0125, 9, and
+                // decision 0130, 7: battle readiness on a day it closes, and
+                // on one it stays within reach, as at its hex).
+                if ((at_hex && !going_home) || closes || stays)
+                    && force.readiness != Readiness::Battle
+                {
+                    let (evidence, binding, worked) = if at_hex {
+                        (
+                            format!("{id} is at its hex {hex}"),
+                            "battle readiness while it is at its hex",
+                            format!("{intent_words}: {id} is at {hex}, so it is set to battle readiness."),
+                        )
+                    } else {
+                        (
+                            format!("{id} is at {here}, closing the range"),
+                            "battle readiness on a day it closes, as at its hex",
+                            format!("{intent_words}: {id} closes the range, so it is set to battle readiness."),
+                        )
+                    };
                     give(
                         &mut orders,
                         TaskForceOrder::SetReadiness(Readiness::Battle),
                         serving(task, &plan)
-                            .evidence(format!("{id} is at its hex {hex}"), today)
-                            .binding("battle readiness while it is at its hex")
-                            .worked(format!("{intent_words}: {id} is at {hex}, so it is set to battle readiness."))
+                            .evidence(evidence, today)
+                            .binding(binding)
+                            .worked(worked)
                             .would_change("the force away from its hex")
                             .done(),
                     );
@@ -562,14 +1073,9 @@ impl Day<'_, '_> {
                             .done(),
                     );
                 }
-                if let Some((waypoints, reason)) = route {
-                    let to_hex = waypoints.first() == Some(&hex);
-                    if to_hex && force.speed != SpeedSetting::Cruise {
-                        give(
-                            &mut orders,
-                            TaskForceOrder::SetSpeed(SpeedSetting::Cruise),
-                            reason.clone(),
-                        );
+                if let Some((waypoints, speed, reason)) = route {
+                    if let Some(speed) = speed.filter(|s| *s != force.speed) {
+                        give(&mut orders, TaskForceOrder::SetSpeed(speed), reason.clone());
                     }
                     give(&mut orders, TaskForceOrder::route(waypoints), reason);
                 }
@@ -797,6 +1303,87 @@ mod tests {
         let r = roles(&[group(3, false, true, true), group(4, false, true, true)]);
         assert_eq!(r[0].1, CarrierRole::Searcher);
         assert_eq!(r[1].1, CarrierRole::Striker);
+    }
+
+    fn held(number: u32, q: i32, kind: ShipKind, age: u32) -> Held {
+        let hex = Hex { q, r: 0 };
+        Held {
+            number,
+            hex,
+            kind,
+            age,
+            distance_nm: Fixed::from_int(i64::from(Hex { q: 0, r: 0 }.air_distance_nm(hex))),
+        }
+    }
+
+    #[test]
+    fn the_closing_rule() {
+        let reach = Fixed::from_int(250);
+        let night = Fixed::from_int(360);
+        let carrier = held(1, 12, ShipKind::Carrier, 0);
+        assert_eq!(
+            closing(Risk::Press, reach, night, &[carrier]),
+            Closing::CloseOn(carrier)
+        );
+        assert_eq!(
+            closing(Risk::Preserve, reach, night, &[carrier]),
+            Closing::Preserve
+        );
+        let old = held(1, 12, ShipKind::Carrier, 4);
+        assert_eq!(
+            closing(Risk::Press, reach, night, &[old]),
+            Closing::NothingFresh
+        );
+        let cruiser = held(1, 12, ShipKind::Cruiser, 0);
+        assert_eq!(
+            closing(Risk::Balanced, reach, night, &[cruiser]),
+            Closing::NothingOfKind
+        );
+        assert_eq!(
+            closing(Risk::Press, reach, night, &[cruiser]),
+            Closing::CloseOn(cruiser)
+        );
+        let near = held(1, 5, ShipKind::Carrier, 0);
+        assert_eq!(
+            closing(Risk::Press, reach, night, &[near]),
+            Closing::InReach(near)
+        );
+        let far = held(1, 30, ShipKind::Carrier, 0);
+        assert_eq!(
+            closing(Risk::Press, reach, night, &[far]),
+            Closing::TooFar(far)
+        );
+        // The kind first, then the nearest, then the lowest number.
+        let a = held(2, 11, ShipKind::Cruiser, 0);
+        let b = held(3, 12, ShipKind::Carrier, 0);
+        assert_eq!(
+            closing(Risk::Press, reach, night, &[a, b]),
+            Closing::CloseOn(b)
+        );
+        assert_eq!(in_reach(Risk::Balanced, reach, &[near, a]), Some(near));
+        assert_eq!(in_reach(Risk::Balanced, reach, &[a]), None);
+    }
+
+    #[test]
+    fn where_it_goes_and_how_fast() {
+        let path: Vec<Hex> = (1..=12).map(|q| Hex { q, r: 0 }).collect();
+        assert_eq!(
+            close_to(&path, Hex { q: 12, r: 0 }, Fixed::from_int(250)),
+            Some(Hex { q: 6, r: 0 })
+        );
+        assert_eq!(
+            speed_for(Risk::Balanced, Some(Fixed::from_int(15))),
+            SpeedSetting::Full
+        );
+        assert_eq!(
+            speed_for(Risk::Balanced, Some(Fixed::from_int(12))),
+            SpeedSetting::Cruise
+        );
+        assert_eq!(
+            speed_for(Risk::Preserve, Some(Fixed::from_int(15))),
+            SpeedSetting::Cruise
+        );
+        assert_eq!(speed_for(Risk::Press, None), SpeedSetting::Full);
     }
 
     #[test]
