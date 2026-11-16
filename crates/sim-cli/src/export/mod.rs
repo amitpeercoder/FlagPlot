@@ -201,7 +201,7 @@ fn build(
     let key = world.umpire_key();
     Replay {
         format: "flagplot-replay",
-        version: 4,
+        version: 5,
         scenario: ScenarioOut {
             name: scenario.name.clone(),
             placeholder: scenario.placeholder,
@@ -213,7 +213,7 @@ fn build(
         map: map::map(world.map()),
         directions: map::directions(),
         labels,
-        bases: state::bases(&executed.initial),
+        bases: state::bases(&executed.initial, world.ref_data()),
         base_changes: base_changes(world, &key),
         aircraft_types: state::aircraft_types(world.ref_data()),
         initial: state::snapshot(&executed.initial, world.ref_data(), &key),
