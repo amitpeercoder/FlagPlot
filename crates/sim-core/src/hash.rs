@@ -21,9 +21,9 @@ use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent}
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, DayWork, Halt, HaltWork, HitsOnMen,
-    LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship,
-    ShipLocation, ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, DayWork, Halt, HaltWork,
+    HitsOnMen, LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement, SearchArc,
+    Ship, ShipLocation, ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -196,8 +196,13 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 31 adds a route's `stand_at` after its `act_at`, a halt's work
 /// `night` after its `cargo`, the addressee task force (code 4, its number),
 /// and the kinds stand at a hex (code 9) and operate a carrier force (code
-/// 10), each its force and then its hex (decisions 0124 and 0125).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v31";
+/// 10), each its force and then its hex (decisions 0124 and 0125);
+/// version 32 adds a task force's `charge`, its force and its order, after
+/// its `landing_at` (decision 0121);
+/// version 33 adds a ship's `torpedoes_fired` after its
+/// `torpedoes_one_side_fired`, and a base's `ammunition_t` after its
+/// `fuel_reserve_t` (decision 0122).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v33";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -279,6 +284,7 @@ fn name_every_field(world: &World) {
             gun_rounds: _,
             torpedoes_ready: _,
             torpedoes_one_side_fired: _,
+            torpedoes_fired: _,
             systems,
             experience: _,
             system_repair_points: _,
@@ -324,7 +330,9 @@ fn name_every_field(world: &World) {
             halt,
             preparation,
             landing_at: _,
+            charge,
         } = task_force;
+        if let Some(Charge { force: _, order: _ }) = charge {}
         let Route {
             waypoints: _,
             next_index: _,
@@ -392,6 +400,7 @@ fn name_every_field(world: &World) {
             airfield_damage: _,
             supply_reserve_t: _,
             fuel_reserve_t: _,
+            ammunition_t: _,
         } = base;
         if let Some(DayWork {
             day: _,
@@ -1002,6 +1011,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i64(ship.gun_rounds.raw());
         h.u8(u8::from(ship.torpedoes_ready));
         h.u8(u8::from(ship.torpedoes_one_side_fired));
+        // After the second side (decision 0122).
+        h.u32(ship.torpedoes_fired);
         for system in ShipSystem::ALL {
             h.u8(ship.systems.get(system).code());
         }
@@ -1169,6 +1180,15 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             }
             None => h.u8(0),
         }
+        // After the landing (decision 0121).
+        match task_force.charge {
+            Some(charge) => {
+                h.u8(1);
+                h.u32(charge.force.raw());
+                h.u32(charge.order.raw());
+            }
+            None => h.u8(0),
+        }
     }
 
     h.count(truth.bases.len());
@@ -1210,6 +1230,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         // After the airfield's damage (decision 0111).
         h.i64(base.supply_reserve_t.raw());
         h.i64(base.fuel_reserve_t.raw());
+        // After the reserves (decision 0122).
+        h.i64(base.ammunition_t.raw());
     }
 
     h.count(truth.air_groups.len());

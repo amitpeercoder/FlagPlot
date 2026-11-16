@@ -434,7 +434,19 @@ impl<'v, 'a> Day<'v, 'a> {
     /// for its tree is kept.
     fn run(view: &'v SideView<'a>, scope: Option<IntentId>) -> Option<Day<'v, 'a>> {
         let state = view.command_state();
-        if !state.intents_in_force().any(|i| is_air(i.kind)) {
+        // A keep-supplied intent whose forces limit names task forces may
+        // form covering forces' stand tasks (decision 0126, 7).
+        let covers_a_run = |i: &Intent| {
+            matches!(i.kind, IntentKind::KeepSupplied { .. })
+                && i.limits
+                    .forces
+                    .as_ref()
+                    .is_some_and(|f| !f.task_forces.is_empty())
+        };
+        if !state
+            .intents_in_force()
+            .any(|i| is_air(i.kind) || covers_a_run(i))
+        {
             return None;
         }
         let mut day = Day {
@@ -459,6 +471,7 @@ impl<'v, 'a> Day<'v, 'a> {
         day.raids();
         day.strikes();
         day.searches();
+        day.supply_covers();
         day.stands();
         day.carrier_forces();
         Some(day)
@@ -724,7 +737,7 @@ impl<'v, 'a> Day<'v, 'a> {
             // The tasks of the forces its forces limit names (decisions
             // 0124, 8, and 0125, 2): cover from the sea, and carriers.
             if let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) {
-                self.form_force_tasks(&hold, &plan, hex, in_scope);
+                self.form_force_tasks(&hold, &plan, hex, in_scope, false);
             }
             let base_text = base_words(self.view, base);
             // (a) A cover intent for the base stands, whoever made it.

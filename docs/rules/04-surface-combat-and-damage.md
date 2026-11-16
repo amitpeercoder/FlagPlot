@@ -26,6 +26,22 @@ A side sees: it learns of a fight from the round in which its own force first si
 
 Known limit: forces in neighbouring hexes do not fight, and a force cannot pursue one that breaks off. A commander's choice to press on or retire after a fight is not built. [0022]
 
+### Meeting an escorted force
+
+A task force may be the charge of one or more escorts in station (chapter 2, Keeping station). Where an enemy force meets such a charge by the rules above, at the start of the pulse or during it, the meetings are held in this order. A force with no escort in station is met as before. [0121]
+
+1. **The escorts first.** The enemy's meetings with the escorts in station on the charge are held first, in task force number order, each as any meeting is (a pair fights at most once in a pulse; the fight takes no time). An escort that is out of station is not one of them: it is met as any force is, in its turn.
+2. **The charge only past them.** The meeting with the charge is held after them only if every one of those escorts, when its fight with the enemy ended, had no ship afloat or was the force that left the fight: it broke off or slipped away, and a force that slipped away counts as having left. An escort that was not met, still afloat and still in the hex, has not been passed. An escort whose fight ended with neither side sighting the other (the forces passed unseen) has not been passed either: unseen is not passed.
+3. **An enemy sunk by an escort** has no ship afloat when its turn to meet the charge comes. The meeting is not held, and it is recorded as one not held (below), not skipped without a word as the meeting of a force with no ship is.
+4. **A meeting not held is not held again.** A charge not met for rule 2 is not met by that enemy force again in the pulse, while both stay in the hex: the pair is marked as having fought. `MeetingNotHeld` is recorded for it, with the charge, the enemy, the hex and the escorts, citing the escort order of each escort and the end of each fight held with the enemy. Where both forces of a pair are charges with escorts in station, each is screened by its own, and the rule is applied to each in turn, the lower number first.
+5. **A charge sunk in a fight.** An escort whose charge has no ship afloat after a fight has no charge from that moment and stops where it is (chapter 2, Keeping station). Its open steaming is recorded first, then `ChargeLost`, citing its escort order and the end of the fight, and the escort carries on with what is left of its pulse. This holds for any fight in the pulse: a charge that is sunk by aircraft is noticed at the start of the next movement step.
+
+The order of events is the order above. Where the escort and its charge change position at one moment, the escort's change is taken first, so it is in the hex and in station before the enemy that meets them both (chapter 2, Order of movement within a pulse, and Keeping station, 8). [0121]
+
+A side sees: its own fights with the escorts as it sees any fight (chapter 1, A surface fight). `MeetingNotHeld` is shown whole to the charge's side and to no one else, and the enemy is told nothing of a force it did not meet. `ChargeLost` is the escort's side's. [0121]
+
+Known limits: the charge keeps to its route and its work while its escorts fight, and does not turn away; that is the staff's order of the next morning. No rule of the time for how many escorts a force has was found, and none is given here. [0121]
+
 ### Darkness
 
 A fight is dark if the pulse is the night pulse and light otherwise. The hex is not read (chapter 1, Darkness). [0001, 0014]
@@ -145,13 +161,17 @@ A side can ask this choice for its own forces before it is made (`measure`'s `ch
 
 A ship fires her torpedoes in at most two salvos, one side's tubes and then the other's (decision 0083). The class has two figures: `torpedo_tubes`, every tube aboard (T), and `torpedo_tubes_one_side`, the tubes that bear on one side (B), from 0 to T and above 0 when T is. A derived class takes B from the rows (decision 0074); a class with centreline mounts, and every placeholder and frozen class, has B equal to T. [0074, 0083]
 
-- The tubes of a salvo are B for the first, and T − B for the second, which is fired only if T is above B. A ship's `torpedoes_one_side_fired` flag says which is next: clear for the first, set for the second.
+- The tubes of a salvo are B for the first, and T − B for the second, which is fired only if T is above B, and in either case no more than the tubes that are loaded (below). A ship's `torpedoes_one_side_fired` flag says which is next: clear for the first, set for the second.
 - Torpedo shots are `the salvo's tubes x torpedo_mount_factor x unready_torpedo_share`, in the first round in which the ship has torpedo shots to fire, and only if the ship's `torpedoes_ready` flag is set and its class has tubes. The factor is 1, `degraded_factor` or 0 as for the main battery.
 - The first side is fired in the first round in which the ship has torpedo shots to fire. The second side is fired in the next round in which she has torpedo shots to fire, in the same fight or a later one. Its target is chosen at the start of its own round, as every target is. [0083]
-- When a torpedo salvo with shots above zero is fired, its side is spent, however few tubes fired. After the first side of a class with T above B, `torpedoes_one_side_fired` is set and `torpedoes_ready` stays set. After any other salvo, `torpedoes_ready` and `torpedoes_one_side_fired` are both cleared. If the mounts are out, nothing is fired and nothing is used, and both flags stay as they are. A scenario ship with tubes starts with `torpedoes_ready` set and `torpedoes_one_side_fired` clear. [0014, 0016, 0083]
+- When a torpedo salvo with shots above zero is fired, its side is spent, however few tubes fired, and the tubes it fired are fired and not loaded. After the first side of a class with T above B, `torpedoes_one_side_fired` is set and `torpedoes_ready` stays set, unless every tube has now fired. After any other salvo, `torpedoes_ready` and `torpedoes_one_side_fired` are both cleared. If the mounts are out, nothing is fired and nothing is used, and both flags stay as they are. A scenario ship with tubes starts with `torpedoes_ready` set and `torpedoes_one_side_fired` clear. [0014, 0016, 0083]
 - Where B equals T there is one salvo of all the tubes, and nothing differs from the rule before decision 0083.
 
-Known limit: there are no bearings, so the second side is fired at the first chance; in the record ships took five to fifteen minutes to turn it on. There are no reloads: each tube fires once in a game. [0083]
+**A tube may be loaded again** (decision 0122). The tubes that have fired and not been loaded again are the ship's tubes fired: all T if she has no torpedo ready, else the count she keeps (`torpedoes_fired`, set by each salvo to the tubes fired so far) or the first side's tubes if the second side is next and that is more. The tubes loaded are T less those. A salvo fires only the loaded tubes of its side: its tubes are the side's tubes, B for the first and T − B for the second, and no more than the tubes loaded. A ship whose tubes were never loaded again fires the salvo it always did, because every tube she has not fired is loaded, so nothing differs from the rule before decision 0122 for her. A salvo with no loaded tube has no shots and is not fired.
+
+A class whose tubes bear on two sides is read so: after a ship rearms (chapter 2, Rearming in port) the second-side mark is cleared, and her next salvo is the side's tubes, B, and no more than the tubes she has loaded. A ship that rearms with tubes loaded on both sides therefore fires her loaded tubes as one salvo of up to B and then, if tubes are left, her next side's. No bearing is kept of which tubes are loaded, only how many: the lowest numbered fired tubes are loaded first, and the count is all there is. Torpedoes taken are loaded only in port; a tube is not loaded again at sea or in the middle of a fight.
+
+Known limit: there are no bearings, so the second side is fired at the first chance; in the record ships took five to fifteen minutes to turn it on. A tube fires once between two rearmings, and a game with no ammunition at any base has none, so each tube fires once in that game. [0083, 0122]
 
 - `unready_torpedo_share` is `surface_combat.toml: unready_torpedo_share`, from 0.1 to 1 (the loader refuses a value outside it), if the firing ship's force was not ready when the fight began (see Ready, below), else 1. The same figure holds for every ship of the force and for the whole fight. It applies to each salvo, the first side's and the second's, at the readiness of the force in the fight that salvo is fired in. The tubes of a side that did not fire are not kept for a later round. At 1 the rule does nothing. It is a figure of its own, apart from `unready_gun_share`. [0071]
 
@@ -373,7 +393,7 @@ When the order is taken in, the ships leave the force (their location becomes aw
 | Fuel | Her class's `fuel_capacity_t` |
 | Gun rounds | Her class's `main_guns` times `gun_rounds_per_gun`, the load a scenario gives a ship with no `gun_rounds` key |
 | Torpedoes ready | Yes if her class has torpedo tubes |
-| Side fired (`torpedoes_one_side_fired`) | No |
+| Side fired (`torpedoes_one_side_fired`), tubes fired (`torpedoes_fired`) | No, 0 |
 | Cargo aboard, experience | Unchanged |
 
 The force is idle at its base's hex, with no route, cargo order, alert or fatigue. Its mission, speed, readiness, rules of engagement and home port are as they were when it left. Its arrival event is the `ForceReturnedFromYard` that is then recorded, citing the departure, so the refuelling of a later pulse and forward repair cite it. The force's orders are taken as for any force.

@@ -21,6 +21,7 @@ pub mod ids;
 pub mod map;
 pub mod objectives;
 pub mod orders;
+pub mod rearm;
 pub mod refdata;
 pub mod repair;
 pub mod rng;
@@ -35,6 +36,7 @@ mod bombardment;
 mod cargo;
 mod cover;
 mod damage;
+mod escort;
 mod estimate;
 #[cfg(test)]
 mod falling_back_tests;

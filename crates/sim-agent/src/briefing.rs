@@ -1220,6 +1220,35 @@ pub struct ForceChangesPart {
     pub loads_held_at_reserve: Vec<LoadReserveLine>,
     /// Ships short of fuel because the fuel at their base was at its reserve.
     pub refuelling_held_at_reserve: Vec<RefuellingHeldLine>,
+    /// Escorts whose charge was sunk, stood down or joined, which have no
+    /// charge now and stopped (decision 0121, 7). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub charges_lost: Vec<ChargeLostLine>,
+    /// Ships that took ammunition in port (decision 0122, 9). Left out when
+    /// none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub rearmed: Vec<RearmedLine>,
+}
+
+/// An escort that lost its charge and stopped where it was.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ChargeLostLine {
+    pub escort: Handle,
+    pub charge: Handle,
+    pub place: Place,
+    pub event: u32,
+}
+
+/// A ship that took ammunition at a base in one pulse.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct RearmedLine {
+    pub ship: Handle,
+    pub task_force: Handle,
+    pub base: Handle,
+    pub rounds: u32,
+    pub torpedoes: u32,
+    pub tons: Dec,
+    pub event: u32,
 }
 
 impl ForceChangesPart {
@@ -1230,6 +1259,8 @@ impl ForceChangesPart {
             && self.loads_below_reserve.is_empty()
             && self.loads_held_at_reserve.is_empty()
             && self.refuelling_held_at_reserve.is_empty()
+            && self.charges_lost.is_empty()
+            && self.rearmed.is_empty()
     }
 }
 
@@ -3652,6 +3683,36 @@ impl Day {
                         ships: ships.iter().map(|s| ctx.ship(*s)).collect(),
                         event: id,
                     }),
+                    // A charge lost changes the escort's own orders, and a
+                    // ship rearmed its own ammunition: the side is told
+                    // (decisions 0121, 7, and 0122, 9).
+                    EventKind::ChargeLost {
+                        escort,
+                        charge,
+                        hex,
+                    } => force_changes.charges_lost.push(ChargeLostLine {
+                        escort: ctx.force(*escort),
+                        charge: ctx.force(*charge),
+                        place: ctx.place(*hex),
+                        event: id,
+                    }),
+                    EventKind::ShipRearmed {
+                        ship,
+                        task_force,
+                        base,
+                        rounds,
+                        torpedoes,
+                        taken_t,
+                        ..
+                    } => force_changes.rearmed.push(RearmedLine {
+                        ship: ctx.ship(*ship),
+                        task_force: ctx.force(*task_force),
+                        base: ctx.base(*base),
+                        rounds: *rounds,
+                        torpedoes: *torpedoes,
+                        tons: Dec(*taken_t),
+                        event: id,
+                    }),
                     EventKind::TaskForceJoined {
                         joined,
                         into,
@@ -3789,7 +3850,15 @@ impl Day {
                     | EventKind::StaffNotice { .. }
                     | EventKind::InterruptFired { .. }
                     | EventKind::IntentFormed { .. }
-                    | EventKind::IntentWithdrawn { .. } => {}
+                    | EventKind::IntentWithdrawn { .. }
+                    // An escort's station, a charge lost and a meeting not
+                    // held are in the side's events and its explain, not the
+                    // briefing's fold (decision 0121).
+                    // An escort's station and a meeting not held are in the
+                    // side's events and its explain, not the briefing's fold:
+                    // the force lines say where each force is (decision 0121).
+                    | EventKind::StationKept { .. }
+                    | EventKind::MeetingNotHeld { .. } => {}
                 },
                 SideEventKind::EnemySurrendered { hex, men } => {
                     ground.prisoners.push(PrisonersLine {

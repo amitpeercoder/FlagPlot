@@ -2,10 +2,10 @@ Scenario 39: A load up to a weight, a reserve, and forces formed and joined
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e089655c1f3f0837  19 events
-day   2  hash 034e42b6172d8ee6  8 events
-day   3  hash d04c4394976d46f1  5 events
-day   4  hash 09fc4e601fe818ab  4 events
+day   1  hash 379a639ccdad4ceb  19 events
+day   2  hash abce3c99b2540e50  8 events
+day   3  hash e90ff400feb76639  5 events
+day   4  hash d2302e33d754f49d  4 events
 
 task_force:1 "Placeholder cargo force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder cargo force 2" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

@@ -188,6 +188,11 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::ForceWasStoodDown => base("force_was_stood_down"),
         RejectReason::OutsideForcesLimit => base("outside_forces_limit"),
         RejectReason::Held(target) => base("held").with("target", Field::Str(target.to_string())),
+        RejectReason::KeepsStationOn(charge) => base("keeps_station_on").id("charge", *charge),
+        RejectReason::NotOnEscortMission => base("not_on_escort_mission"),
+        RejectReason::CannotEscortItself => base("cannot_escort_itself"),
+        RejectReason::ChargeIsAnEscort(charge) => base("charge_is_an_escort").id("charge", *charge),
+        RejectReason::IsACharge { escort } => base("is_a_charge").id("escort", *escort),
     }
 }
 
@@ -2126,6 +2131,70 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             d.text("side", names::side(*side))
                 .int("intent", intent.raw())
                 .int("parent", parent.raw()),
+        ),
+        EventKind::StationKept {
+            escort,
+            charge,
+            in_station,
+            waypoints,
+            knots,
+        } => {
+            let data = d
+                .id("escort", *escort)
+                .id("charge", *charge)
+                .flag("in_station", *in_station)
+                .with("waypoints", Field::Hexes(waypoints.clone()));
+            (
+                "station_kept",
+                match knots {
+                    Some(knots) => data.num("knots", *knots),
+                    None => data,
+                },
+            )
+        }
+        EventKind::ChargeLost {
+            escort,
+            charge,
+            hex,
+        } => (
+            "charge_lost",
+            d.id("escort", *escort)
+                .id("charge", *charge)
+                .hex("hex", *hex),
+        ),
+        EventKind::MeetingNotHeld {
+            charge,
+            enemy,
+            hex,
+            escorts,
+        } => (
+            "meeting_not_held",
+            d.id("charge", *charge)
+                .id("enemy", *enemy)
+                .hex("hex", *hex)
+                .ids("escorts", escorts),
+        ),
+        EventKind::ShipRearmed {
+            ship,
+            task_force,
+            base,
+            rounds,
+            torpedoes,
+            taken_t,
+            rounds_aboard,
+            tubes_fired,
+            base_ammunition_t,
+        } => (
+            "ship_rearmed",
+            d.id("ship", *ship)
+                .id("task_force", *task_force)
+                .id("base", *base)
+                .int("rounds", *rounds)
+                .int("torpedoes", *torpedoes)
+                .num("taken_t", *taken_t)
+                .num("rounds_aboard", *rounds_aboard)
+                .int("tubes_fired", *tubes_fired)
+                .num("base_ammunition_t", *base_ammunition_t),
         ),
     }
 }

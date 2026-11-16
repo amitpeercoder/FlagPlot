@@ -20,9 +20,11 @@
 #![deny(clippy::float_arithmetic)]
 
 mod air;
+mod ammunition;
 pub mod carrier;
 mod deny;
 mod doctrine;
+mod escort;
 mod fleet;
 mod handin;
 mod morning;
@@ -84,7 +86,17 @@ use sim_core::view::SideView;
 /// the stand and carrier tasks formed under a deny or a hold intent whose
 /// forces limit names task forces, and their doctrines at the force's level.
 /// A side whose intents name no task force gets the orders `supply-10` gave.
-pub const DOCTRINE_VERSION: &str = "supply-11";
+/// `supply-12` adds decision 0126: under a keep-supplied intent whose forces
+/// limit names task forces, the threat to a run, an escort from the named
+/// forces on the escort mission by the risk level, the escort's charge given
+/// and cleared, and a stand task at the destination for each named surface
+/// force. An intent that names no task force gets the orders `supply-11`
+/// gave.
+/// `supply-13` adds decision 0127: a surface force short of ammunition by its
+/// risk level does not sortie and is not a free escort, with the day from
+/// which it may be used read with its fuel. A force short of nothing gets
+/// the orders `supply-12` gave.
+pub const DOCTRINE_VERSION: &str = "supply-13";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

@@ -401,7 +401,8 @@ impl World {
         // Berths are given out before any cargo moves or fuel is taken, for
         // each side's landing place in a hex: the lowest-numbered base of the
         // side there, or the one a landing will form. A berth goes to a ship
-        // that has cargo to move or fuel to take (decision 0112).
+        // that has cargo to move or fuel to take (decision 0112), or
+        // ammunition to take (decision 0122, 5).
         let mut berths_used: BTreeMap<(Side, Hex), u32> = BTreeMap::new();
         let mut berthed: Vec<ShipId> = Vec::new();
         for stop in &stops {
@@ -452,6 +453,7 @@ impl World {
                 });
                 if has_cargo_to_move
                     || self.has_fuel_to_take(stop.side, stop.hex, &stop.port, *ship_id)
+                    || self.has_ammunition_to_take(stop.side, stop.hex, &stop.port, *ship_id)
                 {
                     *used += 1;
                     berthed.push(*ship_id);
@@ -460,27 +462,26 @@ impl World {
         }
 
         // Then each force works, in force order: its cargo first, then the
-        // fuel its ships take in the hours left (decision 0112).
+        // fuel its ships take in the hours left (decision 0112), then the
+        // ammunition (decision 0122).
         for stop in &stops {
             let mut cargo_hours: BTreeMap<ShipId, Fixed> = BTreeMap::new();
             if let Some(participant) = &stop.cargo_work {
                 self.work_cargo(day, pulse, participant, &berthed, &mut cargo_hours);
             }
-            self.take_fuel(
-                day,
-                pulse,
-                &FuelStop {
-                    task_force: stop.task_force,
-                    side: stop.side,
-                    hex: stop.hex,
-                    port: stop.port,
-                    hours: stop.hours,
-                    ships: &stop.ships,
-                    arrival_event: stop.arrival_event,
-                },
-                &berthed,
-                &cargo_hours,
-            );
+            let fuel_stop = FuelStop {
+                task_force: stop.task_force,
+                side: stop.side,
+                hex: stop.hex,
+                port: stop.port,
+                hours: stop.hours,
+                ships: &stop.ships,
+                arrival_event: stop.arrival_event,
+            };
+            let used = self.take_fuel(day, pulse, &fuel_stop, &berthed, &cargo_hours);
+            // Then ammunition, in the hours cargo and fuel left (decision
+            // 0122, 5).
+            self.take_ammunition(day, pulse, &fuel_stop, &berthed, &used);
         }
     }
 
@@ -1326,6 +1327,8 @@ mod tests {
                     lighter_rate_t_per_h: Fixed::from_int(20),
                     fuel_berth_rate_t_per_h: None,
                     fuel_lighter_rate_t_per_h: None,
+                    ammunition_berth_rate_t_per_h: None,
+                    ammunition_lighter_rate_t_per_h: None,
                 },
             );
         }

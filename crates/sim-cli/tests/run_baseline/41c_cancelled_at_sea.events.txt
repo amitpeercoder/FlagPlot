@@ -2,11 +2,11 @@ Placeholder scenario 41c: Cancelled at sea
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash aa0536649402bbf2  28 events
-day   2  hash 96322bfa93f23b6a  15 events
-day   3  hash a5396a88cfcc8320  18 events
-day   4  hash 349775939346056f  8 events
-day   5  hash 1669c6f489c56602  5 events
+day   1  hash 7c31824490615d40  28 events
+day   2  hash b18e1f2ca07f108c  15 events
+day   3  hash 320a2331947f9e9c  18 events
+day   4  hash 6c3739151a4d4f45  8 events
+day   5  hash 71d39a5bdcaaa5a2  5 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

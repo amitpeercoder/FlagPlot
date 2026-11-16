@@ -602,6 +602,16 @@ impl Briefing {
                     )),
                 }
             }
+            if let Some(lacked) = &f.ammunition_lacked {
+                s.push_str(&format!(
+                    ", lacks {} rounds and {} torpedoes, {} t of ammunition",
+                    lacked.rounds, lacked.torpedoes, lacked.tons.0
+                ));
+                match &lacked.hours {
+                    Some(hours) => s.push_str(&format!(": {} hours to rearm here", hours.0)),
+                    None => s.push_str(": it cannot rearm here"),
+                }
+            }
             if let Some(halt) = &f.halt {
                 s.push_str(&format!(
                     ", HALTED at {} since {} to {}{}",
@@ -757,6 +767,27 @@ impl Briefing {
                     f.base.text(),
                     ships(&f.ships),
                     ev(f.event)
+                ));
+            }
+            for l in &c.charges_lost {
+                o.line(format!(
+                    "Charge lost yesterday: {} no longer escorts {} and stopped at {}{}",
+                    l.escort.text(),
+                    l.charge.text(),
+                    l.place.text(),
+                    ev(l.event)
+                ));
+            }
+            for r in &c.rearmed {
+                o.line(format!(
+                    "Rearmed yesterday: {} of {} took {} rounds and {} torpedoes, {} t, at {}{}",
+                    r.ship.text(),
+                    r.task_force.text(),
+                    r.rounds,
+                    r.torpedoes,
+                    r.tons.0,
+                    r.base.text(),
+                    ev(r.event)
                 ));
             }
             for j in &c.joined {

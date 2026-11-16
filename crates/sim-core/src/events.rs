@@ -1829,6 +1829,61 @@ pub enum EventKind {
         intent: IntentId,
         parent: IntentId,
     },
+    /// An escort took its station for the pulse (decision 0121, 3): in
+    /// station, its charge's route still to steam, cut where the charge
+    /// halts, at the charge's speed in `knots`; out of station, its
+    /// charge's hex at cruise (`knots` none). An empty `waypoints` is an
+    /// escort in station whose charge does not steam this pulse: it stops
+    /// where it is. Recorded only where the escort's route, speed or status
+    /// changes. Cites the escort order and, in station, the charge's route
+    /// order. Added at the end (decision 0121).
+    StationKept {
+        escort: TaskForceId,
+        charge: TaskForceId,
+        in_station: bool,
+        waypoints: Vec<Hex>,
+        knots: Option<Fixed>,
+    },
+    /// An escort's charge has no ship afloat, was stood down or was joined
+    /// into another force (decision 0121, 7): the escort has no charge from
+    /// this moment and stops where it is, at `hex`. Cites the escort order
+    /// and the event that emptied the charge, where there is one. Added at
+    /// the end (decision 0121).
+    ChargeLost {
+        escort: TaskForceId,
+        charge: TaskForceId,
+        hex: Hex,
+    },
+    /// The meeting of `enemy` with `charge` at `hex` was not held (decision
+    /// 0121, 4 and 5): not every escort in station on the charge, `escorts`,
+    /// ended its fight with `enemy` sunk or as the force that left it. The
+    /// charge is not met by that enemy again in the pulse. Cites each
+    /// escort's order and the end of each escort's fight. The umpire's and
+    /// the charge's side's; the enemy is told nothing. Added at the end
+    /// (decision 0121).
+    MeetingNotHeld {
+        charge: TaskForceId,
+        enemy: TaskForceId,
+        hex: Hex,
+        escorts: Vec<TaskForceId>,
+    },
+    /// A ship of `task_force` took ammunition from `base` in a pulse
+    /// (decision 0122, 9): whole main battery `rounds` and `torpedoes`,
+    /// `taken_t` tons in all. `rounds_aboard` and `tubes_fired` are the
+    /// ship's after it, `base_ammunition_t` the base's. Caused as a
+    /// refuelling is: by the force's arrival or halt where there is one.
+    /// The side's own. Added at the end (decision 0122).
+    ShipRearmed {
+        ship: ShipId,
+        task_force: TaskForceId,
+        base: BaseId,
+        rounds: u32,
+        torpedoes: u32,
+        taken_t: Fixed,
+        rounds_aboard: Fixed,
+        tubes_fired: u32,
+        base_ammunition_t: Fixed,
+    },
 }
 
 impl EventKind {
@@ -2208,6 +2263,26 @@ impl EventKind {
             | EventKind::InterruptFired { .. }
             | EventKind::IntentFormed { .. }
             | EventKind::IntentWithdrawn { .. } => Vec::new(),
+            EventKind::StationKept { escort, charge, .. }
+            | EventKind::ChargeLost { escort, charge, .. } => {
+                vec![EntityRef::TaskForce(*escort), EntityRef::TaskForce(*charge)]
+            }
+            EventKind::ShipRearmed {
+                ship,
+                task_force,
+                base,
+                ..
+            } => vec![
+                EntityRef::Ship(*ship),
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Base(*base),
+            ],
+            EventKind::MeetingNotHeld {
+                charge, escorts, ..
+            } => std::iter::once(*charge)
+                .chain(escorts.iter().copied())
+                .map(EntityRef::TaskForce)
+                .collect(),
             EventKind::GroundFoundEmpty { .. } => Vec::new(),
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
@@ -3943,6 +4018,77 @@ impl fmt::Display for EventKind {
                 intent,
                 parent,
             } => write!(f, "{side:?} {intent} is withdrawn with {parent}"),
+            EventKind::StationKept {
+                escort,
+                charge,
+                in_station,
+                waypoints,
+                knots,
+            } => {
+                if !in_station {
+                    let to = waypoints
+                        .first()
+                        .map_or_else(String::new, |hex| format!(" {hex}"));
+                    return write!(
+                        f,
+                        "{escort} is out of station on its charge {charge} and steams for its hex{to} at cruise"
+                    );
+                }
+                if waypoints.is_empty() {
+                    return write!(
+                        f,
+                        "{escort} keeps station on its charge {charge}, which does not steam: it stops"
+                    );
+                }
+                let to: Vec<String> = waypoints.iter().map(ToString::to_string).collect();
+                match knots {
+                    Some(knots) => write!(
+                        f,
+                        "{escort} keeps station on its charge {charge}: it takes its route through {} at {knots} kn",
+                        to.join(", ")
+                    ),
+                    None => write!(
+                        f,
+                        "{escort} keeps station on its charge {charge}: it takes its route through {}",
+                        to.join(", ")
+                    ),
+                }
+            }
+            EventKind::ChargeLost {
+                escort,
+                charge,
+                hex,
+            } => write!(
+                f,
+                "{escort} has lost its charge {charge} and stops at {hex}"
+            ),
+            EventKind::MeetingNotHeld {
+                charge,
+                enemy,
+                hex,
+                escorts,
+            } => {
+                let escorts: Vec<String> = escorts.iter().map(ToString::to_string).collect();
+                write!(
+                    f,
+                    "{enemy} does not meet {charge} at {hex}: its escort {} was not passed",
+                    escorts.join(", ")
+                )
+            }
+            EventKind::ShipRearmed {
+                ship,
+                base,
+                rounds,
+                torpedoes,
+                taken_t,
+                rounds_aboard,
+                tubes_fired,
+                base_ammunition_t,
+                ..
+            } => write!(
+                f,
+                "{ship} takes {rounds} rounds and {torpedoes} torpedoes, {taken_t} t, from {base}: {rounds_aboard} rounds aboard and {tubes_fired} tubes fired; {base_ammunition_t} t of ammunition left at the base"
+            ),
         }
     }
 }

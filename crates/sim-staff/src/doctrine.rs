@@ -385,6 +385,11 @@ pub(crate) fn serve(
     let mut cannot_sail: Option<String> = None;
     let mut underway: Vec<String> = Vec::new();
 
+    // Decision 0126, 6: an escort whose run is home has its charge cleared.
+    if mode == Mode::Live && eff == PlanState::Released {
+        crate::escort::clear_charges(&planner, out, today);
+    }
+
     // 3. Each run not finished is carried on.
     for run in plan.runs.values() {
         let found = run_state(fleet, state, plan.id, run, params.source_hex, today);
@@ -419,9 +424,14 @@ pub(crate) fn serve(
                 } else {
                     match dispatch(&planner, out, run.number, &found, today) {
                         Ok(()) => served.ordered = true,
-                        Err(why) => {
+                        Err(Unsent::Cannot(why)) => {
                             loading = true;
                             cannot_sail = Some(why);
+                        }
+                        Err(Unsent::Held(why)) => {
+                            loading = true;
+                            cannot_sail = Some(why);
+                            cannot_meet = true;
                         }
                     }
                 }
@@ -563,6 +573,15 @@ fn load_complete(planner: &Planner<'_, '_>, load_t: Fixed, found: &RunState) -> 
     available.is_zero() || room.is_zero()
 }
 
+/// Why a loaded run was not sent today.
+enum Unsent {
+    /// It cannot be: the plan or its ships do not allow it.
+    Cannot(String),
+    /// It is held for want of an escort (decision 0126, 4): the staff hands
+    /// in that it cannot meet the intent.
+    Held(String),
+}
+
 /// The orders that send a loaded run: time it again if its sail day is not
 /// today (renewing its commitment), then the route out and back acting at
 /// the destination, and the unload order.
@@ -572,33 +591,43 @@ fn dispatch(
     number: u32,
     found: &RunState,
     today: u32,
-) -> Result<(), String> {
+) -> Result<(), Unsent> {
     let params = &planner.params;
     let intent = params.intent;
     let plan = params.plan;
     let run = plan
         .runs
         .get(&number)
-        .ok_or_else(|| "the run is not in the plan".to_string())?;
+        .ok_or_else(|| Unsent::Cannot("the run is not in the plan".to_string()))?;
     let mut forces = BTreeSet::new();
     for ship in &found.afloat {
         match planner.fleet.force_of(*ship) {
             Some(force) => {
                 forces.insert(force.id);
             }
-            None => return Err(format!("{ship} lies in no force")),
+            None => return Err(Unsent::Cannot(format!("{ship} lies in no force"))),
         }
     }
     let [force] = forces.iter().copied().collect::<Vec<_>>()[..] else {
-        return Err("the run's ships lie in more than one force".to_string());
+        return Err(Unsent::Cannot(
+            "the run's ships lie in more than one force".to_string(),
+        ));
     };
     let route = match &planner.route {
         Some(route) if route.in_area => route,
-        _ => return Err("no route in the area".to_string()),
+        _ => return Err(Unsent::Cannot("no route in the area".to_string())),
     };
     let timing = planner
         .timing_loaded(&found.afloat, route)
-        .ok_or_else(|| "no time can be worked for the passage".to_string())?;
+        .ok_or_else(|| Unsent::Cannot("no time can be worked for the passage".to_string()))?;
+    let mut waypoints = route.out.clone();
+    waypoints.extend(route.back.iter().copied());
+    // Decision 0126: an escort, or the run held, or it sails alone.
+    let (escort_words, escort) =
+        match crate::escort::for_run(planner, force, &waypoints, timing.speed_kn, today) {
+            crate::escort::ForRun::Held(why) => return Err(Unsent::Held(why)),
+            crate::escort::ForRun::Sails { words, escort } => (words, escort),
+        };
     let mut new_days = run.days;
     new_days.sail = today;
     new_days.arrive = today + timing.out_days - 1;
@@ -655,8 +684,6 @@ fn dispatch(
             );
         }
     }
-    let mut waypoints = route.out.clone();
-    waypoints.extend(route.back.iter().copied());
     let act_at: BTreeSet<Hex> = BTreeSet::from([params.destination_hex]);
     let hour_of_sail = Fixed::from_int(24) * whole(today - 1);
     let arrival_hour = hour_of_sail + timing.out_hours;
@@ -694,10 +721,23 @@ fn dispatch(
             )
             .evidence(format!("{} is released", plan.id), today)
             .binding(format!("area: {}", area_text(params.area)))
-            .worked(format!("{worked} {extra}"))
+            .worked(match &escort_words {
+                Some(words) => format!("{worked} {words} {extra}"),
+                None => format!("{worked} {extra}"),
+            })
             .would_change("a load not complete, or a plan not released")
             .done()
     };
+    if let Some((escort, escort_reason)) = escort {
+        out.task(
+            intent.id,
+            Who::Existing(escort),
+            Step::Escort {
+                charge: Some(Who::Existing(force)),
+            },
+            escort_reason,
+        );
+    }
     out.task(
         intent.id,
         Who::Existing(force),

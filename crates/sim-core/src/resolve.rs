@@ -17,8 +17,9 @@ use crate::ids::{BaseId, EventId, LandUnitId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::map::HexKind;
 use crate::orders::{
-    Activity, AirGroupOrder, AirMission, BaseOrder, CargoAction, Issuer, LandUnitOrder, Order,
-    OrderKind, OrderRequest, Origin, Posture, Reach, RejectReason, SpeedSetting, TaskForceOrder,
+    Activity, AirGroupOrder, AirMission, BaseOrder, CargoAction, Issuer, LandUnitOrder, Mission,
+    Order, OrderKind, OrderRequest, Origin, Posture, Reach, RejectReason, SpeedSetting,
+    TaskForceOrder,
 };
 use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
@@ -774,6 +775,11 @@ impl World {
                         if task_force.status == TaskForceStatus::OutOfFuel {
                             return Err(RejectReason::OutOfFuel);
                         }
+                        // An escort with a charge has no route of its own
+                        // (decision 0121, 3).
+                        if let Some(charge) = task_force.charge {
+                            return Err(RejectReason::KeepsStationOn(charge.force));
+                        }
                         task_force.check_route(&self.map, waypoints)?;
                         // Each mark is one of the waypoints (decisions 0096, 1,
                         // and 0124, 1).
@@ -945,6 +951,42 @@ impl World {
                         Ok(())
                     }
                     TaskForceOrder::StandDown => self.stopped_at_own_base(task_force).map(|_| ()),
+                    TaskForceOrder::Escort(charge) => {
+                        // Decision 0121, 1, in this order: the escort
+                        // mission; the force no one's charge; then, for a
+                        // charge named, another force of the side, afloat,
+                        // with no charge of its own.
+                        if task_force.mission != Mission::Escort {
+                            return Err(RejectReason::NotOnEscortMission);
+                        }
+                        if let Some(escort) = self
+                            .truth
+                            .task_forces
+                            .values()
+                            .find(|other| other.charge.is_some_and(|c| c.force == *target))
+                        {
+                            return Err(RejectReason::IsACharge { escort: escort.id });
+                        }
+                        let Some(charge) = charge else {
+                            return Ok(());
+                        };
+                        if charge == target {
+                            return Err(RejectReason::CannotEscortItself);
+                        }
+                        let other = match self.truth.task_forces.get(charge) {
+                            Some(other) if other.side == order.side => other,
+                            _ => return Err(RejectReason::NotYourUnit),
+                        };
+                        if other.ships.is_empty() {
+                            return Err(self
+                                .force_ceased(*charge)
+                                .unwrap_or(RejectReason::NoShipAfloat));
+                        }
+                        if other.charge.is_some() {
+                            return Err(RejectReason::ChargeIsAnEscort(*charge));
+                        }
+                        Ok(())
+                    }
                     TaskForceOrder::SetSpeed(SpeedSetting::Knots(knots)) => {
                         if *knots <= Fixed::ZERO {
                             Err(RejectReason::SpeedNotAboveZero(*knots))
@@ -1309,10 +1351,56 @@ impl World {
                     return self.apply_prepare_landing(*target, *hex, roster, order.id);
                 }
                 if let TaskForceOrder::JoinTo(into) = task_force_order {
-                    return self.join_task_force(*target, *into);
+                    // Decision 0121, 7: the escorts of the force joined have
+                    // no charge from now. Its own charge goes with it.
+                    let mut events = self.join_task_force(*target, *into);
+                    self.truth
+                        .task_forces
+                        .get_mut(target)
+                        .expect("the force exists")
+                        .charge = None;
+                    for escort in self.escorts_of(*target) {
+                        events.extend(self.lose_charge(escort));
+                    }
+                    return events;
                 }
                 if let TaskForceOrder::StandDown = task_force_order {
-                    return self.stand_down_task_force(*target);
+                    let mut events = self.stand_down_task_force(*target);
+                    self.truth
+                        .task_forces
+                        .get_mut(target)
+                        .expect("the force exists")
+                        .charge = None;
+                    for escort in self.escorts_of(*target) {
+                        events.extend(self.lose_charge(escort));
+                    }
+                    return events;
+                }
+                if let TaskForceOrder::Escort(charge) = task_force_order {
+                    // Decision 0121, 1: the charge given, or cleared; cleared,
+                    // the force stops where it is (7).
+                    let force = self
+                        .truth
+                        .task_forces
+                        .get_mut(target)
+                        .expect("order was validated against this task force");
+                    match charge {
+                        Some(charge) => {
+                            force.charge = Some(crate::state::Charge {
+                                force: *charge,
+                                order: order.id,
+                            });
+                            return Vec::new();
+                        }
+                        None => {
+                            if force.charge.is_none() {
+                                return Vec::new();
+                            }
+                            // The charge cleared by order: the escort stops,
+                            // and only its turning back, if any, is recorded.
+                            return self.lose_charge(*target).into_iter().skip(1).collect();
+                        }
+                    }
                 }
                 // A load the staff orders heeds the base's reserve; one the
                 // commander orders does not, and is told what it may take
@@ -1434,8 +1522,10 @@ impl World {
                             ..CargoOrder::new(CargoAction::load_of(*cargo), order.id, Some(*unit))
                         });
                     }
-                    TaskForceOrder::JoinTo(_) | TaskForceOrder::StandDown => {
-                        unreachable!("join and stand-down orders are applied above")
+                    TaskForceOrder::JoinTo(_)
+                    | TaskForceOrder::StandDown
+                    | TaskForceOrder::Escort(_) => {
+                        unreachable!("join, stand-down and escort orders are applied above")
                     }
                     TaskForceOrder::SetRulesOfEngagement {
                         stance,
@@ -1705,6 +1795,8 @@ mod tests {
                 lighter_rate_t_per_h: Fixed::from_int(20),
                 fuel_berth_rate_t_per_h: None,
                 fuel_lighter_rate_t_per_h: None,
+                ammunition_berth_rate_t_per_h: None,
+                ammunition_lighter_rate_t_per_h: None,
             },
         );
 

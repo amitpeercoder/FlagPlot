@@ -101,6 +101,8 @@ fn world(bases: Vec<Base>, forces: Vec<Force>) -> World {
             lighter_rate_t_per_h: fx(20),
             fuel_berth_rate_t_per_h: None,
             fuel_lighter_rate_t_per_h: None,
+            ammunition_berth_rate_t_per_h: None,
+            ammunition_lighter_rate_t_per_h: None,
         },
     );
     ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());

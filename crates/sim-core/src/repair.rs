@@ -286,6 +286,7 @@ impl World {
                 ship.gun_rounds = guns;
                 ship.torpedoes_ready = has_tubes;
                 ship.torpedoes_one_side_fired = false;
+                ship.torpedoes_fired = 0;
                 ship.location = ShipLocation::TaskForce(force_id);
             }
             let force = self

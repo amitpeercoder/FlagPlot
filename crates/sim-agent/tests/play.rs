@@ -157,9 +157,10 @@ fn tf_index(order: &TaskForceOrder) -> usize {
         TaskForceOrder::LoadTo { .. } => 13,
         TaskForceOrder::JoinTo(_) => 14,
         TaskForceOrder::StandDown => 15,
+        TaskForceOrder::Escort(_) => 16,
     }
 }
-const TF_KINDS: usize = 16;
+const TF_KINDS: usize = 17;
 
 fn ag_index(order: &AirGroupOrder) -> usize {
     match order {
@@ -218,6 +219,9 @@ fn examples() -> Vec<OrderKind> {
         }),
         tf(TaskForceOrder::JoinTo(TaskForceId::new(5))),
         tf(TaskForceOrder::StandDown),
+        // Decision 0121: an escort order, and one that clears the charge.
+        tf(TaskForceOrder::Escort(Some(TaskForceId::new(7)))),
+        tf(TaskForceOrder::Escort(None)),
         OrderKind::Base {
             target: BaseId::new(2),
             order: BaseOrder::FormTaskForce {
@@ -934,7 +938,7 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
         assert!(result["allied"]["margin"].is_string(), "{result}");
         assert_eq!(
             last,
-            json!({"format": "flagplot-agent", "version": 11, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
+            json!({"format": "flagplot-agent", "version": 13, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
         );
         assert_eq!(session.day_hashes(), hashes, "variant {variant}");
         let world = session.into_world();

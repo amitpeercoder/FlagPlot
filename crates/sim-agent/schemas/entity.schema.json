@@ -25,7 +25,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 11
+          "const": 13
         },
         "kind": {
           "const": "entity"
@@ -292,6 +292,10 @@
           "$ref": "defs.schema.json#/$defs/dec"
         },
         "home_port": {
+          "$ref": "defs.schema.json#/$defs/handle_or_null"
+        },
+        "charge": {
+          "description": "The force it escorts and keeps station on (decision 0121), only where it has one.",
           "$ref": "defs.schema.json#/$defs/handle_or_null"
         },
         "ships": {

@@ -67,6 +67,13 @@ struct PortSizeRow {
     fuel_berth_rate_t_per_h: String,
     #[serde(default)]
     fuel_lighter_rate_t_per_h: String,
+    /// Optional columns (decision 0122), after the fuel's: tons of
+    /// ammunition an hour at a berth and by lighter. A file without a
+    /// column, or a row with an empty cell, gives no rate: no ship rearms.
+    #[serde(default)]
+    ammunition_berth_rate_t_per_h: String,
+    #[serde(default)]
+    ammunition_lighter_rate_t_per_h: String,
 }
 
 pub(crate) fn parse_kind(text: &str) -> Option<ShipKind> {
@@ -199,6 +206,14 @@ pub fn load_port_sizes(path: &Path) -> Result<BTreeMap<u8, PortSize>, DataError>
             fuel_lighter_rate_t_per_h: optional_rate(
                 "fuel_lighter_rate_t_per_h",
                 &row.fuel_lighter_rate_t_per_h,
+            )?,
+            ammunition_berth_rate_t_per_h: optional_rate(
+                "ammunition_berth_rate_t_per_h",
+                &row.ammunition_berth_rate_t_per_h,
+            )?,
+            ammunition_lighter_rate_t_per_h: optional_rate(
+                "ammunition_lighter_rate_t_per_h",
+                &row.ammunition_lighter_rate_t_per_h,
             )?,
         };
         if let Some(problem) = port.problem(size) {
@@ -432,6 +447,27 @@ struct SurfaceCombatFile {
     gun_system_hit: SystemTable,
     torpedo_system_hit: SystemTable,
     straggler_escorts: EscortTable,
+    /// Rearming (decision 0122, 3). Optional: a file with none loads as
+    /// before and no ship rearms.
+    rearming: Option<RearmingTable>,
+}
+
+/// `[rearming]`: the weight of a torpedo and, in `[rearming.tons_per_round]`,
+/// of a main battery round by the ship's kind.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RearmingTable {
+    tons_per_torpedo: Quantity,
+    tons_per_round: RoundTable,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RoundTable {
+    battleship: Quantity,
+    cruiser: Quantity,
+    destroyer: Quantity,
+    others: Quantity,
 }
 
 /// A table of shares by system. A system left out has share 0.
@@ -595,6 +631,28 @@ fn parse_surface_combat_figures(
                     "the bombardment figures are bombardment_minutes, bombardment_hit_chance, bombardment_reference_gun_damage and bombardment_false_claim_chance: give all four or none".to_string(),
                 ))
             }
+        },
+        rearming: match &file.rearming {
+            None => None,
+            Some(table) => Some(sim_core::refdata::RearmingFigures {
+                tons_per_round_battleship: number(
+                    "rearming tons_per_round battleship",
+                    &table.tons_per_round.battleship,
+                )?,
+                tons_per_round_cruiser: number(
+                    "rearming tons_per_round cruiser",
+                    &table.tons_per_round.cruiser,
+                )?,
+                tons_per_round_destroyer: number(
+                    "rearming tons_per_round destroyer",
+                    &table.tons_per_round.destroyer,
+                )?,
+                tons_per_round_others: number(
+                    "rearming tons_per_round others",
+                    &table.tons_per_round.others,
+                )?,
+                tons_per_torpedo: number("rearming tons_per_torpedo", &table.tons_per_torpedo)?,
+            }),
         },
     };
     if let Some(problem) = figures.problem() {

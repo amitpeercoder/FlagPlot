@@ -97,6 +97,10 @@ pub struct Ship {
     /// the other side (decision 0083). Set only while `torpedoes_ready` is
     /// set and only on such a class.
     pub torpedoes_one_side_fired: bool,
+    /// The tubes that have fired and not been loaded again (decision 0122,
+    /// 8), the highest numbered: read with the two flags above by
+    /// [`Ship::tubes_fired`]. Rearming lowers it. Added after them.
+    pub torpedoes_fired: u32,
     /// The state of each named system (decision 0016).
     pub systems: ShipSystems,
     /// The crew's experience, a whole number from 0 to
@@ -137,6 +141,22 @@ impl Ship {
     /// The highest experience a ship may have.
     pub const MAX_EXPERIENCE: u8 = 4;
 
+    /// The tubes of a class of `tubes` tubes, `one_side` bearing on one
+    /// side, that have fired and are not loaded (decision 0122, 8): all of
+    /// them with no torpedo ready; else at least the first side's once it has
+    /// fired, and at least the count kept.
+    pub fn tubes_fired(&self, tubes: u32, one_side: u32) -> u32 {
+        if !self.torpedoes_ready {
+            return tubes;
+        }
+        let side = if self.torpedoes_one_side_fired {
+            one_side
+        } else {
+            0
+        };
+        self.torpedoes_fired.max(side).min(tubes)
+    }
+
     /// A ship with nothing aboard and nothing damaged: no fuel, supply or
     /// cargo, no gun rounds, torpedoes spent, every system working. Callers
     /// set the figures they care about; production code that builds a ship
@@ -163,6 +183,7 @@ impl Ship {
             gun_rounds: Fixed::ZERO,
             torpedoes_ready: false,
             torpedoes_one_side_fired: false,
+            torpedoes_fired: 0,
             systems: ShipSystems::ALL_WORKING,
             experience: Ship::DEFAULT_EXPERIENCE,
             system_repair_points: Fixed::ZERO,
@@ -360,6 +381,10 @@ pub struct Base {
     /// refuelling and a load of fuel the staff orders never take the fuel
     /// below it. 0 unless set.
     pub fuel_reserve_t: Fixed,
+    /// Ammunition for ships' main batteries and torpedo tubes, in tons
+    /// (decision 0122, 1). 0 unless the scenario gives some: a base with
+    /// none rearms nobody. Added at the end.
+    pub ammunition_t: Fixed,
 }
 
 /// The work made at a base on one day for the two jobs the next day reads
@@ -398,6 +423,7 @@ impl Base {
             airfield_damage: Fixed::ZERO,
             supply_reserve_t: Fixed::ZERO,
             fuel_reserve_t: Fixed::ZERO,
+            ammunition_t: Fixed::ZERO,
         }
     }
 
@@ -688,6 +714,18 @@ pub struct TaskForce {
     /// until the unloading there is complete, the force works at the rate of
     /// a landing, whatever it still carries.
     pub landing_at: Option<Hex>,
+    /// The force's charge, by an escort order (decision 0121, 1): another
+    /// task force of its side that it keeps station on. `None` for a force
+    /// with no charge. Added at the end.
+    pub charge: Option<Charge>,
+}
+
+/// A force's charge (decision 0121, 1): the task force it escorts and the
+/// escort order that gave it.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Charge {
+    pub force: TaskForceId,
+    pub order: OrderId,
 }
 
 /// A force's preparation for a landing (decision 0095).
@@ -863,6 +901,7 @@ impl TaskForce {
             halt: None,
             preparation: None,
             landing_at: None,
+            charge: None,
         }
     }
 }

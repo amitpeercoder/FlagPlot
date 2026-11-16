@@ -94,6 +94,11 @@ fn text(kind: &OrderKind) -> String {
             }
             TaskForceOrder::JoinTo(other) => format!("join {other} at the base here"),
             TaskForceOrder::StandDown => "stand down in port".to_string(),
+            // Decision 0121.
+            TaskForceOrder::Escort(Some(charge)) => {
+                format!("escort {charge} and keep station on it")
+            }
+            TaskForceOrder::Escort(None) => "clear the charge".to_string(),
         },
         OrderKind::Base { order, .. } => match order {
             BaseOrder::FormTaskForce { ships } => {

@@ -424,6 +424,18 @@
         "fuelling_at": {
           "description": "The lowest-numbered base of the side in the force's hex: the port the figures are for. Set with fuel_lacked_t.",
           "$ref": "#/$defs/handle"
+        },
+        "ammunition_lacked": {
+          "description": "Decision 0122, 10: for a force stopped at a base of its side whose ships afloat lack main battery rounds or torpedoes, the rounds and torpedoes they lack together, their tons, and the hours rearming would take there behind the fuel, the longest ship's (null where the base holds too little ammunition or the port gives no rate). Left out when it lacks nothing or is not in port at a base of its side.",
+          "type": "object",
+          "required": ["rounds", "torpedoes", "tons", "hours"],
+          "additionalProperties": false,
+          "properties": {
+            "rounds": { "type": "integer" },
+            "torpedoes": { "type": "integer" },
+            "tons": { "$ref": "#/$defs/dec" },
+            "hours": { "anyOf": [{ "$ref": "#/$defs/dec" }, { "type": "null" }] }
+          }
         }
       }
     },
@@ -786,7 +798,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 11
+          "const": 13
         },
         "kind": {
           "const": "not_known"

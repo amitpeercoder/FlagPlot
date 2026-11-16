@@ -119,10 +119,14 @@ impl Default for MadeIds {
 /// an order a game saved under the old rules could not hold, and the live
 /// figures' table of aircraft for each ship) and 14 from decision 0124 (a
 /// route's marks to stand at for the night: a route a game saved under the
-/// old rules could not hold). A pull request raises it by one
+/// old rules could not hold) and 15 from decision 0121 (an escort force: a
+/// force's charge, an order a game saved under the old rules could not
+/// hold) and 16 from decision 0122 (rearming: a base's ammunition and a
+/// ship's tubes fired, which a game saved under the old rules could not
+/// hold). A pull request raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 14;
+pub const RULES_VERSION: u32 = 16;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

@@ -2,12 +2,12 @@ Scenario 32: A beaten side falls back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 49bc38e0514811ae  46 events
-day   2  hash 18440e501c279ebd  34 events
-day   3  hash 6372b5fce5238df3  32 events
-day   4  hash ba5608ed0b61bd95  31 events
-day   5  hash 7c15a1a39864c99e  25 events
-day   6  hash dce87c5e14b2497d  24 events
+day   1  hash 3c291c53eb2f7c3c  46 events
+day   2  hash ee23c5f7b380c167  34 events
+day   3  hash bb549659b79a5e0d  32 events
+day   4  hash 0d5b6e95475032cf  31 events
+day   5  hash 3c4de287eaad3f6c  25 events
+day   6  hash b303e3b7dbb17e2b  24 events
 
 base:1 "Placeholder base 1, Japanese, at P" (Allied) at (0,0): 486.75 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at R" (Japanese) at (1,0): 97.42 t of supply in stock

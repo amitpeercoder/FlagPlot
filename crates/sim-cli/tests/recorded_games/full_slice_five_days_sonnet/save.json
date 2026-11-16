@@ -31,7 +31,7 @@
     },
     {
       "file": "data/scenarios/../reference/port_sizes.csv",
-      "hash": "bf78df85d94172ae"
+      "hash": "77d7eaae34ffb5b5"
     },
     {
       "file": "data/scenarios/../reference/aircraft_types_eastern_solomons.csv",
@@ -47,7 +47,7 @@
     },
     {
       "file": "data/scenarios/../reference/surface_combat.toml",
-      "hash": "851083b54e6c45a3"
+      "hash": "9a7e47460bcaff50"
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
@@ -70,28 +70,28 @@
       "hash": "5ef7d142f1faa97f"
     }
   ],
-  "doctrine_version": "supply-11",
+  "doctrine_version": "supply-13",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "03a9d3b92f07ae8c"
+      "hash": "2065d04a1629bf1c"
     },
     {
       "day": 2,
-      "hash": "61efd01905be9f94"
+      "hash": "cb4e54d6e2eca180"
     },
     {
       "day": 3,
-      "hash": "ba068acf533b6668"
+      "hash": "76a00f5077df73d4"
     },
     {
       "day": 4,
-      "hash": "51adcf62aaccffb2"
+      "hash": "695f8bbd213e5e32"
     },
     {
       "day": 5,
-      "hash": "674b4d6e12231fda"
+      "hash": "6dd5ef5eecb2f7e0"
     }
   ],
   "orders": [
@@ -859,7 +859,7 @@
       "unit": "task_force:26"
     }
   ],
-  "rules_version": 14,
+  "rules_version": 16,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "5ed635ac5538b189"
@@ -870,6 +870,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v31",
-  "version": 7
+  "state_version": "flagplot-state-v33",
+  "version": 8
 }

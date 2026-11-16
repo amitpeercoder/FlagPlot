@@ -2596,16 +2596,23 @@ impl World {
         }
 
         // The guns of the target, at the bombers left: of every ship afloat
-        // in the force attacked, or of the base attacked (decision 5 of
-        // 0034). Ships do not fire at a raid on the base, and the base does
-        // not fire at a raid on ships.
+        // in the force attacked and in its escorts in station (decision 0121,
+        // 6), or of the base attacked (decision 5 of 0034). Ships do not fire
+        // at a raid on the base, and the base does not fire at a raid on
+        // ships.
         let bombers_left: u32 = bombers.iter().map(|(_, aircraft)| aircraft).sum();
         let guns = match target {
             RaidTarget::Ships(task_force) => {
                 let force = &self.truth.task_forces[&task_force];
+                let escorts = self.escorts_in_station(task_force);
                 let gun_shots: u32 = force
                     .ships
                     .iter()
+                    .chain(
+                        escorts
+                            .iter()
+                            .flat_map(|escort| self.truth.task_forces[escort].ships.iter()),
+                    )
                     .map(|ship| {
                         self.ref_data.ship_classes[&self.truth.ships[ship].class].anti_aircraft
                     })
@@ -3604,6 +3611,8 @@ mod tests {
                 lighter_rate_t_per_h: Fixed::from_int(20),
                 fuel_berth_rate_t_per_h: None,
                 fuel_lighter_rate_t_per_h: None,
+                ammunition_berth_rate_t_per_h: None,
+                ammunition_lighter_rate_t_per_h: None,
             },
         );
         for aircraft_type in [
