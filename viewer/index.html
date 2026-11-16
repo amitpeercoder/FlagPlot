@@ -115,8 +115,56 @@ main { flex: 1 0 0; min-height: 420px; display: grid; grid-template-columns: min
 .sw.raid-none { height: 0; border: 0; border-top: 2px dotted var(--allied); }
 .sw.tally { background: var(--tally-bg); border-color: var(--tally-edge); border-radius: 3px; }
 .sw.ring { height: 14px; width: 14px; margin: 0 5px; border: 1.5px dashed var(--allied); border-radius: 50%; background: transparent; }
-#airtoggle { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; cursor: pointer; white-space: nowrap; }
-#airtoggle.off { opacity: 0.55; cursor: default; }
+#airtoggle, #landtoggle { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; cursor: pointer; white-space: nowrap; }
+#airtoggle.off, #landtoggle.off { opacity: 0.55; cursor: default; }
+
+/* Land layer, base marks and the drawing of an intent */
+.sw.land-ctr { background: var(--allied); border: 1px solid var(--edge); width: 22px; height: 14px; position: relative; }
+.sw.land-ctr.jp { background: var(--japanese); }
+.sw.land-est { border: 2px dashed var(--allied); background: transparent; width: 22px; height: 14px; }
+.sw.gfight { border: 3px double var(--fight); width: 22px; height: 14px; border-radius: 3px; }
+.sw.lmove { height: 0; border: 0; border-top: 3px dashed var(--allied); }
+.sw.warn-low { width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 13px solid #e0a000; margin: 0 5px; border-top: 0; background: transparent; }
+.sw.warn-closed { width: 13px; height: 13px; margin: 0 5px; border-radius: 50%; background: #c4361f; border: 1.5px solid var(--edge); }
+.sw.i-area { border: 2px dashed var(--allied); background: color-mix(in srgb, var(--allied) 10%, transparent); }
+.sw.i-line { height: 0; border: 0; border-top: 3px dashed var(--allied); }
+.sw.i-ring { width: 14px; height: 14px; margin: 0 5px; border: 3px solid var(--allied); border-radius: 50%; background: transparent; }
+.lcounter { cursor: pointer; }
+.lcounter .shape { fill: var(--sc); stroke: var(--edge); stroke-width: 1.5; }
+.lcounter .xx { stroke: var(--si); stroke-width: 1.6; fill: none; }
+.lcounter text { fill: var(--si); font-weight: 700; text-anchor: middle; pointer-events: none; font-size: 11px; }
+.lcounter.est .shape { fill: color-mix(in srgb, var(--sc) 12%, var(--panel)); stroke: var(--sc); stroke-width: 2; stroke-dasharray: 4 3; }
+.lcounter.est .xx { stroke: var(--sc); }
+.lcounter.est text { fill: var(--ink); }
+.lmen { fill: var(--ink); stroke: var(--halo); stroke-width: 3px; paint-order: stroke; font-size: 10.5px; text-anchor: middle; pointer-events: none; }
+.lmove { fill: none; stroke: var(--sc); stroke-width: 3; opacity: 0.85; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.lmove.marching { stroke-dasharray: 7 5; }
+.lmove.fellback { stroke-dasharray: 2 4; }
+.lhead { fill: var(--sc); stroke: var(--edge); stroke-width: 0.8; pointer-events: none; }
+.gfight { cursor: pointer; }
+.gfight rect { fill: var(--tally-bg); stroke: var(--fight); stroke-width: 2; }
+.gfight text { fill: var(--ink); font-size: 11.5px; font-weight: 600; text-anchor: middle; pointer-events: none; }
+.gfight.sel rect { stroke-width: 3.5; }
+.ring-lit { fill: none; stroke: var(--hl); stroke-width: 3.5; pointer-events: none; }
+.ring-lit.sel { stroke: var(--ink); stroke-dasharray: 5 3; stroke-width: 2; }
+.warnmark.low { fill: #e0a000; stroke: #3a2a00; stroke-width: 1; }
+.warnmark.closed { fill: #c4361f; stroke: #fff; stroke-width: 1.2; }
+.warnmark text { fill: #fff; font-size: 9px; font-weight: 800; text-anchor: middle; pointer-events: none; }
+.warnmark.low text { fill: #1d1400; }
+.i-area-fill { fill: color-mix(in srgb, var(--sc) 9%, transparent); stroke: none; pointer-events: none; }
+.i-area-edge { fill: none; stroke: var(--sc); stroke-width: 3; stroke-dasharray: 9 5; stroke-linecap: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+.i-line { fill: none; stroke: var(--sc); stroke-width: 3; stroke-dasharray: 9 5; stroke-linecap: round; vector-effect: non-scaling-stroke; pointer-events: none; opacity: 0.95; }
+.i-line.route { stroke-dasharray: 2 5; stroke-width: 3.2; }
+.i-line.faint { opacity: 0.45; }
+.i-ring { fill: none; stroke: var(--sc); stroke-width: 4; vector-effect: non-scaling-stroke; pointer-events: none; }
+.i-ring.target { stroke-dasharray: 5 3; }
+.i-head { fill: var(--sc); stroke: var(--edge); stroke-width: 0.8; pointer-events: none; }
+.i-lbl { fill: var(--ink); stroke: var(--halo); stroke-width: 3.5px; paint-order: stroke; stroke-linejoin: round; font-size: 11.5px; font-weight: 700; text-anchor: middle; pointer-events: none; }
+.tag.notice { background: var(--warn-bg); color: var(--warn-ink); border-color: var(--warn-ink); font-weight: 600; }
+.cnotice { margin: 2px 0; padding: 1px 6px; background: var(--warn-bg); color: var(--warn-ink); border-radius: 3px; font-size: 12.5px; overflow-wrap: anywhere; }
+.cdrawn { margin: 2px 0; font-size: 12.5px; color: var(--ink); border-left: 3px solid var(--sc, var(--accent)); padding-left: 6px; }
+#nextnotice { margin-left: auto; }
+#tabs button.hasnotice { color: var(--warn-ink); background: var(--warn-bg); }
 
 /* SVG */
 .hex { stroke: var(--hexline); stroke-width: 1; vector-effect: non-scaling-stroke; }
@@ -316,7 +364,7 @@ li.cord.sel { background: color-mix(in srgb, var(--hl) 28%, transparent); box-sh
       <g id="gScreen"></g>
 
     </svg>
-    <div id="mapbtns" class="maptool"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zfit" title="Fit the map to the window">Fit</button><button id="measurebtn" aria-pressed="false" title="Measure: click two hexes (Escape leaves)">Measure</button><label id="airtoggle" title="Show or hide the air layer: search sightings and misses, raids, the fight over each target, reach rings"><input type="checkbox" id="airon" autocomplete="off" checked disabled> Air</label></div>
+    <div id="mapbtns" class="maptool"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zfit" title="Fit the map to the window">Fit</button><button id="measurebtn" aria-pressed="false" title="Measure: click two hexes (Escape leaves)">Measure</button><label id="airtoggle" title="Show or hide the air layer: search sightings and misses, raids, the fight over each target, reach rings"><input type="checkbox" id="airon" autocomplete="off" checked disabled> Air</label><label id="landtoggle" title="Show or hide the land layer: land units, the estimate of the enemy ashore, the fight ashore and a unit's movement"><input type="checkbox" id="landon" autocomplete="off" checked disabled> Land</label></div>
     <div id="measurebox" class="maptool" hidden></div>
     <div id="north" class="maptool" title="North is up"><svg width="14" height="18" viewBox="0 0 14 18" aria-hidden="true"><path d="M7 1 L12 16 L7 12.5 L2 16 Z" fill="currentColor"/></svg><b>N</b></div>
     <div id="scalebar" class="maptool" hidden><div id="scalelabel"></div><div class="bar" id="scalebarbar"></div></div>
@@ -331,7 +379,8 @@ li.cord.sel { background: color-mix(in srgb, var(--hl) 28%, transparent); box-sh
     <div id="cmdwrap" hidden>
       <div class="pane-head">
         <div class="line"><h2 id="cmdtitle">Command</h2><span class="dim" id="cmdinfo"></span>
-          <span id="cmdfilter" class="badge warn" hidden>Events: <button id="cmdclear" title="Show every event again">clear</button></span></div>
+          <span id="cmdfilter" class="badge warn" hidden>Events: <button id="cmdclear" title="Show every event again">clear</button></span>
+          <button id="nextnotice" title="Jump to the next step with a staff notice">Next notice</button></div>
         <div class="line"><fieldset aria-label="Arrange the intents"><label title="Roots at the left, sub-intents under their parent"><input type="radio" name="cmdview" value="tree" checked autocomplete="off"> By intent</label>
           <label title="The same intents grouped by the level they are addressed to: the area, bases, task forces, and the units that received orders"><input type="radio" name="cmdview" value="level" autocomplete="off"> By level</label></fieldset></div>
       </div>
@@ -582,7 +631,7 @@ function buildSteps(events) {
 function validateReplay(r) {
   if (r === null || typeof r !== 'object' || Array.isArray(r)) return 'This is JSON but not a replay: expected an object at the top level.';
   if (r.format !== 'flagplot-replay') return 'Not a Flag Plot replay: format is ' + JSON.stringify(r.format) + ', expected "flagplot-replay".';
-  if (r.version !== 1 && r.version !== 2 && r.version !== 3 && r.version !== 4) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads versions 1, 2, 3 and 4.';
+  if (r.version !== 1 && r.version !== 2 && r.version !== 3 && r.version !== 4 && r.version !== 5) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads versions 1, 2, 3, 4 and 5.';
   if (r.version >= 2) {
     // Version 2 adds side_views: for each side, the events the engine let it see (decision 0047).
     if (!r.side_views || typeof r.side_views !== 'object') return 'Replay version ' + r.version + ' has no "side_views" object.';
@@ -602,7 +651,7 @@ function validateReplay(r) {
       if (t.extended_reach_nm < t.strike_radius_nm) return 'The "aircraft_types" entry ' + t.id + ' has an extended_reach_nm below its strike_radius_nm.';
     }
   }
-  if (r.version === 4 && r.steps === undefined) return 'Replay version 4 has no "steps" list.';
+  if (r.version >= 4 && r.steps === undefined) return 'Replay version ' + r.version + ' has no "steps" list.';
   if (r.steps !== undefined) {
     // Version 4 adds steps: the state at the end of each step, as changes (decision 0108).
     const bad = validateSteps(r.steps);
@@ -734,6 +783,36 @@ function drawAirEvent(ctx, ev, si, aux, attempts, pos) {
 }
 const AIR_ACTIVITY = new Set(['search_flown', 'strike_launched', 'base_strike_launched']);
 
+// ---- Land units: the fight ashore, and a unit's movement in a step (decisions 0090, 0094, 0104, 0105) ----
+// The events that are a fight ashore, and the ones that move a unit or end its place. Each names the hex in its data (a falling back, the
+// hex it left); an event that does not (a side's cut form) is not drawn. Called by both ways of building a model.
+const GROUND_FIGHT_KINDS = new Set(['ground_fight', 'ground_fire', 'men_lost_in_fight', 'ground_attack_failed', 'unit_surrendered', 'men_surrendered_ashore', 'unit_fell_back', 'spent_unit_fell_back']);
+function landAuxEvent(ev, aux) {
+  const d = ev.data || {}, hexOf = h => Array.isArray(h) && h.length === 2 ? [h[0], h[1]] : null;
+  if (GROUND_FIGHT_KINDS.has(ev.kind)) {
+    const h = hexOf(d.hex) || hexOf(d.from);
+    if (h) aux.land.fights.push({ q: h[0], r: h[1], event: ev.id, kind: ev.kind });
+  }
+  switch (ev.kind) {
+    case 'march_day': case 'march_arrived': {
+      const a = hexOf(d.from), b = hexOf(d.to);
+      if (a && b && d.unit !== undefined) aux.land.moves.push({ unit: d.unit, from: a, to: b, kind: ev.kind === 'march_day' ? 'marching' : 'marched', event: ev.id });
+      break;
+    }
+    case 'unit_fell_back': case 'spent_unit_fell_back': {
+      const a = hexOf(d.from), b = hexOf(d.to);
+      if (a && b && d.unit !== undefined) aux.land.moves.push({ unit: d.unit, from: a, to: b, kind: 'fell back', event: ev.id });
+      break;
+    }
+    case 'unit_surrendered': {
+      const a = hexOf(d.hex);
+      if (a && d.unit !== undefined) aux.land.marks.push({ unit: d.unit, hex: a, kind: 'surrendered', event: ev.id });
+      break;
+    }
+    default: break;
+  }
+}
+
 /** The raids and tallies of a step, from what its events drew. */
 function finishAirStep(airCtx, aux, idxs, si) {
   if (aux.air.launches.length) { const a = assembleAir(airCtx, aux.air, idxs, si); aux.air.raids = a.raids; aux.air.tallies = a.tallies; }
@@ -862,11 +941,12 @@ function rebuildFromSteps(ctx) {
   let hasAir = false, applied = -1;
   for (let si = 0; si < steps.length; si++) {
     const step = steps[si];
-    const aux = { moves: new Map(), fights: [], searches: [], air: { sighted: [], misses: [], launches: [], escorts: [], nothing: new Map(), raids: [], tallies: [] } };
+    const aux = { moves: new Map(), fights: [], searches: [], land: { moves: [], fights: [], marks: [] }, air: { sighted: [], misses: [], launches: [], escorts: [], nothing: new Map(), raids: [], tallies: [] } };
     const attempts = new Map();
     live.groupBase = groupBase;
     for (const ei of step.events) {
       const ev = events[ei], d = ev.data || {};
+      landAuxEvent(ev, aux);
       const fset = new Set();
       for (const e of ev.entities || []) {
         const p = parseEntity(e);
@@ -1015,8 +1095,10 @@ function rebuildFromSteps(ctx) {
     states.push({
       forces, contacts, estimates, landUnits, formedBases: new Map(formedBases), baseSide: new Map(baseSide),
       sunk: new Set(sunk), shipForce: new Map(shipForce),
-      moves: aux.moves, fights: aux.fights, searches: aux.searches,
+      moves: aux.moves, fights: aux.fights, searches: aux.searches, land: aux.land,
       air: aux.air, reach, mission, groupBase,
+      // The records at the end of the step (version 4 and later): what the base panel and the land unit panel read.
+      rec: { land: new Map(rec.land_units), bases: new Map(rec.bases), ships: new Map(rec.ships), groups: new Map(rec.air_groups) },
     });
     // The next step starts where this one's records leave the forces.
     live.forces = new Map([...newPos].map(([id, p]) => [id, { q: p.q, r: p.r }]));
@@ -1046,8 +1128,9 @@ function snapshot(cur, aux) {
     forces, contacts, estimates, landUnits, formedBases: new Map(cur.formedBases), baseSide: new Map(cur.baseSide),
     sunk: new Set(cur.sunk),
     shipForce: new Map(cur.shipForce),
-    moves: aux.moves, fights: aux.fights, searches: aux.searches,
+    moves: aux.moves, fights: aux.fights, searches: aux.searches, land: aux.land,
     air: aux.air, reach: cur.reach, mission: cur.mission, groupBase: cur.groupBase,
+    rec: null, // a file with no steps has no records of its own at each step
   };
 }
 
@@ -1289,10 +1372,11 @@ function buildModel(replay) {
   };
 
   for (let si = 0; !fromSteps && si < steps.length; si++) {
-    const aux = { moves: new Map(), fights: [], searches: [], air: { sighted: [], misses: [], launches: [], escorts: [], nothing: new Map(), raids: [], tallies: [] } };
+    const aux = { moves: new Map(), fights: [], searches: [], land: { moves: [], fights: [], marks: [] }, air: { sighted: [], misses: [], launches: [], escorts: [], nothing: new Map(), raids: [], tallies: [] } };
     const attempts = new Map(); // search_attempt event id -> where the force it looked for truly was (umpire only)
     for (const ei of steps[si].events) {
       const ev = events[ei], d = ev.data || {};
+      landAuxEvent(ev, aux);
       // Which forces is this event about? Decided before it is applied (a sunk ship still counts for its force).
       const fset = new Set();
       for (const e of ev.entities || []) {
@@ -1582,6 +1666,7 @@ function buildModel(replay) {
     replay, events, steps, stepOfEvent, states, eventById, orderById, ledTo, eventForces, commandStates: commandStatesByStep,
     hexes: hexList, hexByKey, bases, basesByHex, airGroups, initShips, finalForces, finalShips,
     groupTable, aircraftTypes, hasAir, umpire,
+    hasLand: states.some(st => st.landUnits.size > 0 || Object.values(st.estimates).some(m => m.size > 0)),
     placements, placementsByHex, hasLatLon, days, bounds: { minX, minY, maxX, maxY },
   };
 }
@@ -1810,6 +1895,7 @@ function unitWords(model, target) {
   if (p.type === 'air_group') { const g = model.groupTable.get(p.id); name = g && g.name; }
   else if (p.type === 'base') { const b = model.bases.get(p.id); name = b && b.name; }
   else if (p.type === 'task_force') { const f = model.finalForces.get(p.id) || (model.states[0] && model.states[0].forces.get(p.id)); name = f && f.name; }
+  else if (p.type === 'land_unit') { const last = model.states[model.states.length - 1], u = last && last.landUnits.get(p.id); name = u && u.name; }
   return name ? name + ' (' + target + ')' : String(target);
 }
 
@@ -1851,7 +1937,7 @@ function commandTree(model, side, state, si) {
     nodes.set(it.id, {
       id: it.id, intent: it, side, parent: it.parent !== undefined ? it.parent : null, maker: it.maker || 'commander', level: intentLevel(it),
       words: intentWords(model, it), statement: intentWords(model, it, true), plan: plans.get(it.plan) || null, limits: effectiveLimits(byId, it), withdrawn: it.withdrawn_day !== undefined,
-      children: [], orders: [], none: [],
+      children: [], orders: [], none: [], notices: [], noticesEarlier: [],
     });
   }
   const roots = [];
@@ -1869,6 +1955,13 @@ function commandTree(model, side, state, si) {
     if (n) n.none.push(row);
   }
   for (const n of nodes.values()) n.orders.sort((a, b) => b.day - a.day || a.order - b.order);
+  // The staff's notices (cannot meet the intent, waits for leave, a run ended) concern a plan, which is its root intent's: flagged on that node,
+  // those of the step's day in `notices` and the days before in `noticesEarlier`.
+  for (const ev of model.events) {
+    if (ev.kind !== 'staff_notice' || !ev.data || ev.data.side !== side || (model.stepOfEvent.get(ev.id) || 0) > si) continue;
+    const plan = plans.get(ev.data.plan), n = plan ? nodes.get(plan.intent) : null;
+    if (n) (ev.day === day ? n.notices : n.noticesEarlier).push(noticeRow(ev));
+  }
   return { side, roots, nodes, leaves: state.leaves || null, day };
 }
 
@@ -1907,6 +2000,222 @@ function eventsServing(model, side, intentId) {
     else for (const c of ev.causes || []) if (c.order !== undefined && orders.has(c.order)) { out.add(ev.id); break; }
   }
   return out;
+}
+
+// ---- Land units, bases and the drawing of an intent: what the page shows of the state at a step, worked out here so the checker can test it ----
+
+/** The men of each land unit that are aboard a ship at a step (the ship's `troops`), by unit: { ship, men }. Empty for a file with no records at each step. */
+function landAboard(st) {
+  const out = new Map();
+  if (st.rec) for (const s of st.rec.ships.values()) if (s.troops && s.troops.men > 0) out.set(s.troops.unit, { ship: s.id, men: s.troops.men });
+  return out;
+}
+
+/**
+ * The land counters of a step. Every land unit in the state is exactly one of: ashore at a hex (it has a counter), aboard a ship (it has
+ * none: it is in its force's detail), or gone (no men ashore and none aboard). `stacks` are the units ashore at each hex, one stack for each
+ * side present (both sides are at one hex when they fight). `estimates` are the estimates of the enemy ashore that the sides in `beliefSides`
+ * hold: a side's belief, never the enemy's true units.
+ */
+function landLayer(model, si, beliefSides) {
+  const st = model.states[si], aboardMap = landAboard(st);
+  const byKey = new Map(), aboard = [], gone = [];
+  for (const u of st.landUnits.values()) {
+    if (u.hex && u.men_ashore > 0) {
+      const key = u.hex[0] + ',' + u.hex[1] + ',' + u.side;
+      if (!byKey.has(key)) byKey.set(key, { q: u.hex[0], r: u.hex[1], side: u.side, units: [], men: 0 });
+      const k = byKey.get(key);
+      k.units.push(u); k.men += u.men_ashore;
+    } else if (aboardMap.has(u.id)) aboard.push(u);
+    else gone.push(u);
+  }
+  const stacks = [...byKey.values()].sort((a, b) => a.r - b.r || a.q - b.q || (a.side < b.side ? -1 : 1));
+  for (const k of stacks) k.units.sort((a, b) => a.id - b.id);
+  const estimates = [];
+  for (const side of beliefSides || []) {
+    const m = st.estimates && st.estimates[side];
+    if (m) for (const e of m.values()) estimates.push({ side, of: side === 'allied' ? 'japanese' : 'allied', q: e.hex[0], r: e.hex[1], men: e.men, day: e.day });
+  }
+  return { stacks, aboard, gone, aboardMap, estimates };
+}
+
+/** What the details pane says of one land unit at a step; null when the replay has no such unit. */
+function landUnitView(model, si, id) {
+  const st = model.states[si], u = st.landUnits.get(id);
+  if (!u) return null;
+  const rec = st.rec ? st.rec.land.get(id) : null, aboard = landAboard(st).get(id) || null;
+  const day = model.steps[si].day;
+  let dos = null, stock = null;
+  if (st.rec && u.hex) {
+    for (const b of st.rec.bases.values()) if (b.q === u.hex[0] && b.r === u.hex[1] && b.side === u.side) { if (b.days_of_supply !== undefined) dos = b.days_of_supply; stock = (stock || 0) + (b.supply || 0); }
+  }
+  const orders = (model.replay.orders || []).filter(o => o.target === 'land_unit:' + id && o.day <= day).sort((a, b) => a.id - b.id);
+  const r = rec || {};
+  return {
+    id, name: u.name, side: u.side, men: u.men_ashore, hex: u.hex, aboard, known: !!rec,
+    posture: u.posture || 'defend', activity: r.activity || 'ready', job: r.job || null, working: !!r.working,
+    experience: r.experience !== undefined ? r.experience : (rec ? 2 : null), fatigue: u.fatigue || 0, fieldworks: u.fieldworks || 0, dugIn: (u.fieldworks || 0) > 0,
+    fedShare: u.fed_share !== undefined ? u.fed_share : 1, daysOfSupply: dos, baseStock: stock,
+    march: u.march || null, skills: r.skills || null, trainingDays: r.training_days || 0, fightDays: r.fight_days || 0, rehearsal: r.rehearsal || null,
+    orders,
+  };
+}
+
+/** The holder of a base at a step: the side of its record, else the side the replay starts it with, changed by each base_changed_side. */
+function baseHolderAt(model, si, id) {
+  const st = model.states[si], b = model.bases.get(id), rec = st.rec ? st.rec.bases.get(id) : null;
+  return rec ? rec.side : ((st.baseSide && st.baseSide.get(id)) || (b && b.side) || null);
+}
+
+/**
+ * Everything the base panel says of one base at a step, from the records of that step (a side's page holds its own bases' records
+ * only: an enemy base has its name, hex and holder, and nothing else of the base). `known` says whether the records are held.
+ */
+function baseFigures(model, si, id) {
+  const st = model.states[si], b = model.bases.get(id), rec = st.rec ? st.rec.bases.get(id) : null;
+  if (!b && !rec) return null;
+  const q = b ? b.q : rec.q, r = b ? b.r : rec.r, hx = model.hexByKey.get(hexKey(q, r)) || {};
+  const holder = baseHolderAt(model, si, id), side = model.replay.view_side;
+  const fig = { id, name: (b && b.name) || (rec && rec.name) || null, q, r, side: holder, known: !!rec, portSize: hx.port_size || 0, anchorage: !!hx.anchorage, airfieldSize: hx.airfield_size || 0 };
+  if (rec) {
+    const n = x => x === undefined ? 0 : x;
+    Object.assign(fig, {
+      supply: n(rec.supply), fuel: n(rec.fuel), ammunition: n(rec.ammunition), supplyReserve: n(rec.supply_reserve), fuelReserve: n(rec.fuel_reserve),
+      daysOfSupply: rec.days_of_supply !== undefined ? rec.days_of_supply : null,
+      airfield: rec.airfield !== false, airfieldDamage: n(rec.airfield_damage), airfieldClosed: !!rec.airfield_closed, airfieldWork: n(rec.airfield_work), defences: n(rec.defences),
+      antiAircraft: n(rec.anti_aircraft), aircraftRepairs: n(rec.aircraft_repairs_per_day), shipRepair: n(rec.ship_repair_points_per_day),
+    });
+  }
+  // The air groups there at this step, from their records (the base each is at then).
+  const groups = [];
+  if (st.rec) { for (const g of st.rec.groups.values()) if (g.base === id) groups.push(g); }
+  else for (const g of model.groupTable.values()) { const base = st.groupBase && st.groupBase.has(g.id) ? st.groupBase.get(g.id) : g.base; if (base === id && (g.formedStep === undefined || g.formedStep <= si)) groups.push({ id: g.id, name: g.name, aircraft_type: g.type, mission: st.mission.get(g.id) || g.mission, side: g.side }); }
+  fig.groups = groups.sort((a, c) => a.id - c.id);
+  // Ships lying in the port in no force.
+  fig.ships = st.rec ? [...st.rec.ships.values()].filter(s => s.location && s.location.port === id).sort((a, c) => a.id - c.id) : [];
+  // The land units in its hex.
+  fig.land = [...st.landUnits.values()].filter(u => u.hex && u.hex[0] === q && u.hex[1] === r && u.men_ashore > 0).sort((a, c) => a.id - c.id);
+  // A side's page: that side's estimate of the enemy ashore in the hex, where it holds one.
+  const est = side && st.estimates && st.estimates[side] ? st.estimates[side].get(hexKey(q, r)) : null;
+  fig.estimate = est ? { men: est.men, day: est.day } : null;
+  return fig;
+}
+
+/** The trouble to mark beside a base on the map: its airfield closed (taking no aircraft), or its supply below a week. Only where the base's own records are held. */
+function baseTrouble(fig) {
+  if (!fig || !fig.known) return { closed: false, low: false };
+  return { closed: !!(fig.airfield && fig.airfieldClosed), low: fig.daysOfSupply !== null && fig.daysOfSupply < 7 };
+}
+
+/** The hexes of the map within `distance` hexes of (q, r), as [q, r] pairs in hex order, and the edges of their outline as [hex, direction] (the sides with no neighbour in the set). */
+function areaWithin(model, q, r, distance) {
+  const hexes = model.hexes.filter(h => hexDistance(h.q, h.r, q, r) <= distance).map(h => [h.q, h.r]);
+  const set = new Set(hexes.map(h => hexKey(h[0], h[1])));
+  const dirs = model.replay.directions, edges = [];
+  for (const h of hexes) dirs.forEach((d, i) => { if (!set.has(hexKey(h[0] + d[0], h[1] + d[1]))) edges.push([h, i]); });
+  return { hexes, edges };
+}
+
+/** The routes a plan's runs gave their forces, in the order given: for each run, the waypoints of the latest route order to a force that carried its ships between its load day and its free day. */
+function ensureShipForces(model) {
+  if (model.shipForces) return model.shipForces;
+  const m = new Map();
+  for (const st of model.states) for (const [ship, f] of st.shipForce) { if (!m.has(ship)) m.set(ship, new Set()); m.get(ship).add(f); }
+  model.shipForces = m;
+  return m;
+}
+function runRoutes(model, si, side, state, plan) {
+  const out = [], day = model.steps[si].day, ever = ensureShipForces(model);
+  for (const run of plan.runs || []) {
+    const forces = new Set();
+    for (const s of run.ships || []) for (const f of ever.get(s) || []) forces.add('task_force:' + f);
+    const orders = (model.replay.orders || []).filter(o => o.side === side && forces.has(o.target) && /^route via/.test(o.text) && o.day >= run.days.load && o.day <= run.days.free && o.day <= day);
+    orders.sort((a, b) => a.id - b.id);
+    const last = orders[orders.length - 1];
+    const path = last ? [...String(last.text).split(', acting at')[0].matchAll(/\((-?\d+),\s*(-?\d+)\)/g)].map(m => [parseInt(m[1], 10), parseInt(m[2], 10)]) : [];
+    out.push({ run, order: last ? last.id : null, path, live: run.days.load <= day && day <= run.days.free });
+  }
+  return out;
+}
+
+/**
+ * What a selected intent means on the map, at a step: shapes to draw, and the words saying what each is.
+ *   area  { hexes, edges }      the waters of a deny intent (the hexes within its distance, outlined)
+ *   ring  { hex, role }         a base or a hex the intent is about (hold, cover, keep supplied, the target of a neutralise or raid, a station)
+ *   line  { from, to, role }    from the force to its station; from each tasked base to the target; from a supply source to its base
+ *   route { path, run }         the route of a run of a supply plan that is in the state
+ * The intent and its plan are those of the side's command state at that step.
+ */
+function intentShapes(model, si, side, id) {
+  const held = model.commandStates && model.commandStates[si], state = held && held[side];
+  const it = state && state.intents.find(x => x.id === id);
+  if (!it) return { shapes: [], words: [] };
+  const st = model.states[si], shapes = [], words = [];
+  const baseHex = bid => { const b = model.bases.get(bid); if (b) return [b.q, b.r]; const r = st.rec && st.rec.bases.get(bid); return r ? [r.q, r.r] : null; };
+  const baseName = bid => { const b = model.bases.get(bid), r = st.rec && st.rec.bases.get(bid); return (b && b.name) || (r && r.name) || 'base:' + bid; };
+  const forceHex = fid => { const f = st.forces.get(fid); return f ? [f.q, f.r] : null; };
+  const ring = (hex, role, label) => { if (hex) shapes.push({ type: 'ring', hex, role, label }); };
+  const line = (from, to, role, label) => { if (from && to) shapes.push({ type: 'line', from, to, role, label }); };
+  const hx = h => '(' + h[0] + ', ' + h[1] + ')';
+  switch (it.kind) {
+    case 'deny': {
+      const a = areaWithin(model, it.hex[0], it.hex[1], it.distance);
+      shapes.push({ type: 'area', hex: it.hex, distance: it.distance, hexes: a.hexes, edges: a.edges, label: 'waters to deny' });
+      words.push('the waters within ' + it.distance + ' hexes of ' + hx(it.hex) + ' outlined (' + a.hexes.length + ' hexes)');
+      break;
+    }
+    case 'stand_at': case 'operate_carriers': {
+      ring(it.hex, 'station', it.kind === 'stand_at' ? 'station' : 'carrier station');
+      const f = forceHex(it.task_force);
+      line(f, it.hex, 'station', 'TF' + it.task_force);
+      words.push('the station ' + hx(it.hex) + ' ringed' + (f ? ', a line from task_force:' + it.task_force + ' at ' + hx(f) : ', task_force:' + it.task_force + ' is not on the map at this step'));
+      break;
+    }
+    case 'neutralise': case 'raid': {
+      const target = baseHex(it.target);
+      ring(target, 'target', 'target');
+      const from = it.kind === 'raid' ? [it.base] : state.intents.filter(x => x.parent === it.id && x.kind === 'raid' && x.base != null && x.withdrawn_day === undefined).map(x => x.base);
+      for (const b of [...new Set(from)]) line(baseHex(b), target, 'raid', baseName(b));
+      words.push('the target ' + baseName(it.target) + ' ringed' + (from.length ? ', a line from ' + [...new Set(from)].map(baseName).join(', ') : ', no base tasked yet'));
+      break;
+    }
+    case 'hold': case 'cover': case 'strike_ships': case 'search_waters':
+      ring(baseHex(it.base), 'base', baseName(it.base));
+      words.push(baseName(it.base) + ' ringed');
+      break;
+    case 'keep_supplied': {
+      const base = baseHex(it.base);
+      ring(base, 'base', baseName(it.base));
+      const plan = (state.plans || []).find(p => p.id === it.plan);
+      const sources = new Set((plan && plan.runs || []).map(r => r.source));
+      if (it.limits && it.limits.forces && it.limits.forces.source != null) sources.add(it.limits.forces.source);
+      for (const s of sources) { const sh = baseHex(s); ring(sh, 'source', 'source'); line(sh, base, 'source', baseName(s)); }
+      let drawn = 0;
+      if (plan) for (const rr of runRoutes(model, si, side, state, plan)) if (rr.path.length) { shapes.push({ type: 'route', path: rr.path, run: rr.run, live: rr.live, order: rr.order }); drawn++; }
+      words.push(baseName(it.base) + ' ringed' + (sources.size ? ', its source ' + [...sources].map(baseName).join(', ') : ', no source named yet') + (plan ? ', ' + (plan.runs || []).length + ' run(s) in the state, ' + drawn + ' with a route drawn' : ''));
+      break;
+    }
+    default: break;
+  }
+  return { shapes, words };
+}
+
+/** The staff notices at a step: the events of kind staff_notice of the step, as { event, side, notice, plan, run, text }. */
+const NOTICE_WORDS = { cannot_meet: 'cannot meet its intent', waits_for_leave_to_prepare: 'waits for leave to prepare', waits_for_leave_to_launch: 'waits for leave to launch', run_ended: 'a run ended' };
+function noticeRow(ev) {
+  const d = ev.data || {};
+  return { event: ev.id, side: d.side, notice: d.notice, plan: d.plan, run: d.run, day: ev.day, words: NOTICE_WORDS[d.notice] || String(d.notice || 'notice'), text: splitText(ev.text).body };
+}
+/** The notices of the step's day, up to and including the step, of the sides the page shows. */
+function noticesOfDay(model, si) {
+  const day = model.steps[si].day, out = [];
+  for (const ev of model.events) if (ev.kind === 'staff_notice' && ev.day === day && (model.stepOfEvent.get(ev.id) || 0) <= si) out.push(noticeRow(ev));
+  return out;
+}
+/** The first step after `si` that holds a staff notice, or -1. */
+function nextNoticeStep(model, si) {
+  for (let i = si + 1; i < model.steps.length; i++) if (model.steps[i].events.some(ei => model.events[ei].kind === 'staff_notice')) return i;
+  return -1;
 }
 
 /** Short counts for the checker's one-line summary. */
@@ -2038,6 +2347,7 @@ const FlagPlotCore = {
   hexKey, hexCenter, hexCorner, hexCorners, edgeForDirection, pointToHex, bearingPoint, arcWidth, arcSpec, placeLabels,
   stepLabel, buildSteps, validateReplay, parseEntity, splitText, buildModel, compareWithFinal, whyTree, eventMatches, summarize,
   airGroupHex, airReach,
+  landAuxEvent, landAboard, landLayer, landUnitView, baseHolderAt, baseFigures, baseTrouble, areaWithin, runRoutes, intentShapes, noticeRow, noticesOfDay, nextNoticeStep, NOTICE_WORDS,
   intentLevel, commandStates, parseChain, commandLog, intentWords, orderWords, levelWords, unitWords, effectiveLimits, commandTree, commandView, eventsServing,
 };
 if (typeof module !== 'undefined') module.exports = FlagPlotCore;
@@ -2091,7 +2401,7 @@ const S = {
   pov: 'umpire', models: null,
   // The air layer: shown or not; the events of the air fight whose tally was clicked (the list shows only these);
   // the air group whose reach rings are drawn; the base selected on the map.
-  air: true, selEvents: null, selEventsHex: null, selAirGroup: null, selBase: null,
+  air: true, land: true, selEvents: null, selEventsHex: null, selAirGroup: null, selBase: null, selLand: null,
   // The command panel: the tab shown, how the intents are arranged, the intent whose events the list shows (and the set), the order whose reason is shown.
   tab: 'events', detailFrac: { events: null, command: 0.33 }, detailPin: null, cmdView: 'tree', cmdIntent: null, cmdSet: null, cmdOrder: null,
 };
@@ -2171,6 +2481,9 @@ function initHeader() {
   air.disabled = !S.model.hasAir;
   $('airtoggle').classList.toggle('off', !S.model.hasAir);
   $('airtoggle').title = S.model.hasAir ? 'Show or hide the air layer: search sightings and misses, raids, the fight over each target, reach rings' : 'This replay has no air activity';
+  $('landon').disabled = !S.model.hasLand;
+  $('landtoggle').classList.toggle('off', !S.model.hasLand);
+  $('landtoggle').title = S.model.hasLand ? 'Show or hide the land layer: land units, the estimate of the enemy ashore, the fight ashore and a unit\'s movement' : 'This replay has no land units';
   const problems = C.compareWithFinal(S.model);
   const w = $('rebuildwarn');
   w.hidden = !problems.length;
@@ -2254,7 +2567,62 @@ function renderDynamic() {
       if (path.length > 1) gDyn.append(sv('polyline', { class: 'move ' + side, points: path.map(h => C.hexCenter(h[0], h[1]).join(',')).join(' ') }));
     }
   }
+  // The land layer: a fight ashore is marked on its hex as a surface fight is; a unit that marched, fell back or surrendered shows its movement
+  if (S.land) {
+    for (const f of st.land.fights) {
+      const k = C.hexKey(f.q, f.r);
+      if (fought.has(k)) continue;
+      fought.add(k);
+      const c = C.hexCenter(f.q, f.r);
+      gDyn.append(sv('circle', { class: 'fight-ring', cx: c[0], cy: c[1], r: C.HEX_R * 0.92 }));
+      gDyn.append(sv('circle', { class: 'fight-ring inner', cx: c[0], cy: c[1], r: C.HEX_R * 0.7 }));
+    }
+    for (const mv of st.land.moves) {
+      const u = st.landUnits.get(mv.unit), side = 'side-' + (u && u.side === 'japanese' ? 'japanese' : 'allied');
+      const a = C.hexCenter(mv.from[0], mv.from[1]), b = C.hexCenter(mv.to[0], mv.to[1]);
+      if (a[0] === b[0] && a[1] === b[1]) continue;
+      const g = sv('g', { class: side });
+      const ln = sv('polyline', { class: 'lmove ' + (mv.kind === 'marching' ? 'marching' : mv.kind === 'fell back' ? 'fellback' : ''), points: a.join(',') + ' ' + b.join(',') });
+      ln.append(sv('title', { text: (u ? u.name : 'land_unit:' + mv.unit) + ' ' + mv.kind + ' from (' + mv.from[0] + ', ' + mv.from[1] + ') to (' + mv.to[0] + ', ' + mv.to[1] + ') (event #' + mv.event + ')' }));
+      g.append(ln, arrowHead(a, b, 'lhead'));
+      gDyn.append(g);
+    }
+  }
+  drawIntent();
   renderRings();
+}
+
+/** A small arrowhead at b, pointing from a, in world units. */
+function arrowHead(a, b, cls) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, size = 9;
+  const bx = b[0] - ux * size * 0.4, by = b[1] - uy * size * 0.4;
+  const pts = [[bx + ux * size * 0.7, by + uy * size * 0.7], [bx - ux * size * 0.5 - uy * size * 0.5, by - uy * size * 0.5 + ux * size * 0.5], [bx - ux * size * 0.5 + uy * size * 0.5, by - uy * size * 0.5 - ux * size * 0.5]];
+  return sv('polygon', { class: cls, points: pts.map(p => p[0].toFixed(2) + ',' + p[1].toFixed(2)).join(' ') });
+}
+
+/** What the intent selected in the Command tab means on the map, at this step: the waters outlined, a station or target ringed, lines from the tasked bases or forces, the routes of supply runs. */
+function drawIntent() {
+  if (!S.cmdIntent || !S.model) return;
+  const { side, id } = S.cmdIntent, res = C.intentShapes(S.model, S.step, side, id);
+  if (!res.shapes.length) return;
+  const g = sv('g', { class: 'side-' + side });
+  const ctr = h => C.hexCenter(h[0], h[1]);
+  for (const sh of res.shapes) {
+    if (sh.type === 'area') {
+      for (const h of sh.hexes) g.append(sv('polygon', { class: 'i-area-fill', points: C.hexCorners(h[0], h[1]).map(c => c[0].toFixed(2) + ',' + c[1].toFixed(2)).join(' ') }));
+      let d = '';
+      for (const [h, i] of sh.edges) { const e = C.edgeForDirection(h[0], h[1], i, S.replay.directions); d += 'M' + e[0][0].toFixed(2) + ' ' + e[0][1].toFixed(2) + 'L' + e[1][0].toFixed(2) + ' ' + e[1][1].toFixed(2); }
+      if (d) g.append(sv('path', { class: 'i-area-edge', d }));
+    } else if (sh.type === 'line') {
+      const a = ctr(sh.from), b = ctr(sh.to);
+      g.append(sv('polyline', { class: 'i-line', points: a.join(',') + ' ' + b.join(',') }), arrowHead(a, b, 'i-head'));
+    } else if (sh.type === 'route') {
+      const pts = sh.path.map(h => ctr(h).join(',')).join(' ');
+      g.append(sv('polyline', { class: 'i-line route' + (sh.live ? '' : ' faint'), points: pts }, sv('title', { text: 'Run ' + sh.run.number + ' of the plan: ship(s) ' + sh.run.ships.join(', ') + ', load ' + sh.run.load_t + ' t, days ' + sh.run.days.load + ' to ' + sh.run.days.free + (sh.order ? ', the route of order ' + sh.order : '') })));
+    }
+  }
+  for (const sh of res.shapes) if (sh.type === 'ring') { const c = ctr(sh.hex); g.append(sv('circle', { class: 'i-ring ' + sh.role, cx: c[0], cy: c[1], r: C.HEX_R * 0.82 })); }
+  gDyn.append(g);
 }
 
 /** The reach of the selected air group, drawn round its position at this step: strike radius, extended reach and search range. */
@@ -2290,7 +2658,7 @@ function counterShape(side) {
 function counterLabel(f) { return 'TF' + f.id; }
 
 function highlightSets() {
-  const hl = { forces: new Set(), bases: new Set(), contacts: new Set() };
+  const hl = { forces: new Set(), bases: new Set(), contacts: new Set(), land: new Set() };
   const st = S.model.states[S.step];
   const ev = S.selEvent != null ? S.model.eventById.get(S.selEvent) : null;
   const ord = S.cmdOrder ? S.model.orderById.get(S.cmdOrder.order) : null;
@@ -2301,6 +2669,7 @@ function highlightSets() {
       if (p.type === 'task_force') hl.forces.add(p.id);
       else if (p.type === 'ship') { const fid = st.shipForce.get(p.id); if (fid !== undefined) hl.forces.add(fid); }
       else if (p.type === 'base') hl.bases.add(p.id);
+      else if (p.type === 'land_unit') hl.land.add(p.id);
       else if (p.type === 'air_group' && S.cmdOrder) {
         // An order picked in the command panel lights the unit it was given to: an air group is where its base or its ship's force is.
         const g = S.model.groupTable.get(p.id), base = st.groupBase && st.groupBase.has(p.id) ? st.groupBase.get(p.id) : g && g.base;
@@ -2362,6 +2731,24 @@ function renderScreen() {
   }
   for (const c of counters) obstacles.push(rectFor(c.x, c.y, 40, 24));
 
+  // Land units: one counter for each side's stack at a hex (a count where there are several), tucked beside the forces and clear of them; the estimate
+  // a side holds of the enemy ashore as a hollow dashed one. Units aboard ships are not drawn: they are in their force's detail.
+  const gLand = sv('g'), gTag = sv('g'), landCtrs = [], tags = [];
+  const landLayer = S.land && m.hasLand ? C.landLayer(m, S.step, S.belief !== 'truth' ? [S.belief] : []) : null;
+  if (landLayer) {
+    const items = [...landLayer.stacks.map(k => ({ kind: 'land', q: k.q, r: k.r, side: k.side, stack: k })), ...landLayer.estimates.map(e => ({ kind: 'estimate', q: e.q, r: e.r, side: e.of, est: e }))];
+    for (const it of items) {
+      const p = pos(it.q, it.r);
+      if (!visible(p, 50)) continue;
+      const sgn = it.side === 'japanese' ? 1 : -1, off = it.kind === 'estimate' ? 1 : 0;
+      const cands = [[sgn * 25, 22 + off * 26], [sgn * 25, 48 + off * 26], [-sgn * 25, 22 + off * 26], [0, 46], [sgn * 25, -24], [-sgn * 25, -24], [0, -46]];
+      let at = cands.find(([dx, dy]) => free(rectFor(p[0] + dx, p[1] + dy + 4, 38, 34))) || cands[0];
+      it.x = p[0] + at[0]; it.y = p[1] + at[1];
+      obstacles.push(rectFor(it.x, it.y + 4, 38, 34));
+      landCtrs.push(it);
+    }
+  }
+
   // Ghost contacts for the chosen belief
   const ghosts = [];
   if (S.belief !== 'truth' && st.contacts[S.belief]) {
@@ -2379,10 +2766,14 @@ function renderScreen() {
 
   // Bases
   const baseMarks = [];
-  for (const b of m.bases.values()) {
+  // The bases the replay starts with, and those a landing formed (known from their records at this step).
+  const allBases = [...m.bases.values()];
+  if (st.rec) for (const r of st.rec.bases.values()) if (!m.bases.has(r.id)) allBases.push({ id: r.id, name: r.name, side: r.side, q: r.q, r: r.r, formed: true });
+  const trouble = troubleAt(S.step);
+  for (const b of allBases) {
     const p = pos(b.q, b.r);
     if (!visible(p, 60)) continue;
-    baseMarks.push({ b: Object.assign({}, b, { side: holderOf(st, b) }), x: p[0], y: p[1] });
+    baseMarks.push({ b: Object.assign({}, b, { side: holderOf(st, b) }), x: p[0], y: p[1], trouble: trouble.get(b.id) || { closed: false, low: false } });
     obstacles.push(rectFor(p[0], p[1], 14, 14));
   }
   for (const bm of baseMarks) {
@@ -2426,7 +2817,11 @@ function renderScreen() {
     if (hl.bases.has(b.id)) g.append(sv('rect', { class: 'ring-hl', x: -10, y: -10, width: 20, height: 20 }));
     if (S.selBase === b.id) g.append(sv('rect', { class: 'ring-sel', x: -13, y: -13, width: 26, height: 26, rx: 4 }));
     g.append(sv('path', { class: 'basemark side-' + side, d: 'M0 -7L7 0L0 7L-7 0Z' }));
-    g.append(sv('title', { text: (b.name || 'base ' + b.id) + ' (' + (b.side || '?') + ', base:' + b.id + (b.supply !== undefined ? ', supply ' + b.supply : '') + reserveText(b) + ')' }));
+    const fig = C.baseFigures(m, S.step, b.id), known = fig && fig.known;
+    g.append(sv('title', { text: (b.name || 'base ' + b.id) + ' (' + (b.side || '?') + ', base:' + b.id + (known ? ', supply ' + fig.supply + (fig.daysOfSupply !== null ? ', ' + f1(fig.daysOfSupply) + ' days of supply' : '') + (fig.airfieldClosed ? ', airfield closed' : fig.airfieldDamage > 0 ? ', airfield damage ' + fig.airfieldDamage : '') : b.supply !== undefined && !st.rec ? ', supply ' + b.supply : '') + reserveText(b) + ')' }));
+    // Trouble beside the base: the airfield closed (a field that takes no aircraft), or supply below a week.
+    if (bm.trouble.closed) g.append(sv('g', { class: 'warnmark closed', transform: 'translate(-12 -13)' }, sv('circle', { r: 5.5 }), sv('text', { x: 0, y: 3, text: 'x' }), sv('title', { text: 'Airfield closed: damage ' + fig.airfieldDamage + ', it takes no aircraft' })));
+    if (bm.trouble.low) g.append(sv('g', { class: 'warnmark low', transform: 'translate(' + (bm.trouble.closed ? 12 : 0) + ' -13)' }, sv('path', { d: 'M0 -6L6.5 5L-6.5 5Z' }), sv('text', { x: 0, y: 4, text: '!' }), sv('title', { text: 'Supply below a week: ' + f1(fig.daysOfSupply) + ' days of supply' })));
     gBase.append(g);
     if (bm.label) gBase.append(sv('text', { class: 'lbl base', x: bm.x + 10, y: bm.y + 4, text: bm.label }));
   }
@@ -2455,7 +2850,65 @@ function renderScreen() {
     g.append(sv('title', { text: f.name + ' (' + (f.side || '?') + '), task_force:' + f.id + ', ' + f.ships.length + ' ship(s) afloat' + (afloat ? '' : ', none afloat') }));
     gCtr.append(g);
   }
-  gScreen.append(gFeat, gLbl, gAirLow, gBase, gGhost, gCtr, gAirTop);
+  // Land counters
+  for (const it of landCtrs) {
+    const side = it.side === 'japanese' ? 'japanese' : 'allied', est = it.kind === 'estimate';
+    const key = it.q + ',' + it.r + ',' + (est ? it.est.side : it.side);
+    const g = sv('g', { class: 'lcounter side-' + side + (est ? ' est' : ''), transform: 'translate(' + it.x + ' ' + it.y + ')', 'data-kind': est ? 'estimate' : 'land', 'data-id': key });
+    const lit = !est && it.stack.units.some(u => hl.land.has(u.id));
+    const picked = S.selLand && S.selLand.q === it.q && S.selLand.r === it.r && S.selLand.side === (est ? it.est.side : it.side) && !!S.selLand.estimate === est;
+    if (lit) g.append(sv('rect', { class: 'ring-lit', x: -22, y: -14, width: 44, height: 28, rx: 5 }));
+    if (picked) g.append(sv('rect', { class: 'ring-lit sel', x: -24, y: -16, width: 48, height: 32, rx: 6 }));
+    g.append(sv('rect', { class: 'shape', x: -17, y: -10, width: 34, height: 20, rx: 1.5 }));
+    g.append(sv('path', { class: 'xx', d: 'M-17 -10L17 10M-17 10L17 -10' }));
+    const n = est ? 0 : it.stack.units.length;
+    if (n > 1) { g.append(sv('circle', { cx: 15, cy: -10, r: 7, fill: 'var(--panel)', stroke: 'var(--sc)', 'stroke-width': 1.6 })); const t = sv('text', { x: 15, y: -6.5, text: String(n) }); t.setAttribute('style', 'fill: var(--ink); font-size: 10px'); g.append(t); }
+    const men = est ? it.est.men : it.stack.men;
+    g.append(sv('text', { class: 'lmen', x: 0, y: 22, text: (est ? '~' : '') + (men >= 10000 ? f1(men / 1000) + 'k' : men >= 1000 ? (Math.round(men / 100) / 10) + 'k' : String(men)) }));
+    g.append(sv('title', { text: est ? 'The ' + it.est.side + ' side\'s estimate of the ' + it.est.of + ' men ashore at (' + it.q + ', ' + it.r + '): about ' + men + ' men, reported day ' + it.est.day : it.stack.units.map(u => u.name + ', ' + u.men_ashore + ' men').join('; ') + ' (' + it.side + ', at (' + it.q + ', ' + it.r + '))' }));
+    gLand.append(g);
+  }
+  // The fight ashore: a tag on its hex that lists its events when clicked
+  if (S.land) {
+    const byHex = new Map();
+    for (const f of st.land.fights) { const k = C.hexKey(f.q, f.r); if (!byHex.has(k)) byHex.set(k, { q: f.q, r: f.r, events: [] }); byHex.get(k).events.push(f); }
+    for (const [k, t] of byHex) {
+      const p = pos(t.q, t.r);
+      if (!visible(p, 60)) continue;
+      const label = 'fight ashore, ' + t.events.length + (t.events.length === 1 ? ' event' : ' events');
+      const w = textW(label) + 4, cands = [[0, -34], [0, 34], [0, -58], [0, 58]];
+      const at = cands.find(([dx, dy]) => free(rectFor(p[0] + dx, p[1] + dy, w, 20))) || cands[0];
+      obstacles.push(rectFor(p[0] + at[0], p[1] + at[1], w, 20));
+      const g = sv('g', { class: 'gfight' + (S.selEventsHex === 'g:' + k ? ' sel' : ''), transform: 'translate(' + (p[0] + at[0]) + ' ' + (p[1] + at[1]) + ')', 'data-kind': 'gfight', 'data-id': k });
+      g.append(sv('rect', { x: -w / 2, y: -10, width: w, height: 20, rx: 4 }), sv('text', { x: 0, y: 4, text: label }), sv('title', { text: 'Click for the events of the fight ashore at (' + t.q + ', ' + t.r + ') in this step' }));
+      gTag.append(g);
+    }
+  }
+  // The intent selected in the Command tab: its words on the map
+  const gIntent = sv('g');
+  if (S.cmdIntent && S.model.commandStates) {
+    const { side, id } = S.cmdIntent, res = C.intentShapes(m, S.step, side, id), cls = 'i-lbl';
+    const put = (hex, dy, text) => { const p = pos(hex[0], hex[1]); if (visible(p, 60)) gIntent.append(sv('text', { class: cls, x: p[0], y: p[1] + dy, text })); };
+    for (const sh of res.shapes) {
+      if (sh.type === 'ring') put(sh.hex, -C.HEX_R * k * 0.82 - 4, sh.label || sh.role);
+      else if (sh.type === 'line') { const a = pos(sh.from[0], sh.from[1]), b = pos(sh.to[0], sh.to[1]); if (visible(a, 80) || visible(b, 80)) gIntent.append(sv('text', { class: cls, x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 - 6, text: sh.label || '' })); }
+      else if (sh.type === 'area') put(sh.hex, 4, sh.label + ' (' + sh.distance + ')');
+      else if (sh.type === 'route' && sh.path.length > 1) { const a = pos(sh.path[0][0], sh.path[0][1]), b = pos(sh.path[sh.path.length - 1][0], sh.path[sh.path.length - 1][1]); if (visible(b, 80) || visible(a, 80)) gIntent.append(sv('text', { class: cls, x: b[0], y: b[1] + 16, text: 'run ' + sh.run.number })); }
+    }
+  }
+  gScreen.append(gFeat, gLbl, gAirLow, gBase, gGhost, gCtr, gLand, gAirTop, gTag, gIntent);
+}
+
+/** For each base the trouble to mark beside it at a step (its airfield closed, or its supply below a week), kept for the step shown. */
+function troubleAt(si) {
+  const m = S.model;
+  if (m._trouble && m._trouble.si === si) return m._trouble.map;
+  const map = new Map(), st = m.states[si];
+  const ids = [...m.bases.keys()];
+  if (st.rec) for (const r of st.rec.bases.values()) if (!m.bases.has(r.id)) ids.push(r.id);
+  for (const id of ids) map.set(id, C.baseTrouble(C.baseFigures(m, si, id)));
+  m._trouble = { si, map };
+  return map;
 }
 
 // ---- The air layer on the screen layer ----
@@ -2717,6 +3170,8 @@ function initPanZoom() {
     if (wasClick && kind === 'force') selectEntity({ type: 'force', id: Number(target.getAttribute('data-id')) });
     else if (wasClick && kind === 'base') selectBase(Number(target.getAttribute('data-id')));
     else if (wasClick && kind === 'tally') selectTally(target.getAttribute('data-id'));
+    else if (wasClick && (kind === 'land' || kind === 'estimate')) selectLand(target.getAttribute('data-id'), kind === 'estimate');
+    else if (wasClick && kind === 'gfight') selectGroundFight(target.getAttribute('data-id'));
   };
   mapEl.addEventListener('pointerup', end);
   mapEl.addEventListener('pointercancel', end);
@@ -2956,8 +3411,8 @@ function renderEvents() {
   let shown = 0, total = 0, truncated = false;
   const LIMIT = 2000;
   if (S.selEvents) {
-    const hx = S.selEventsHex ? S.selEventsHex.split(',') : [];
-    ul.append(el('li', { class: 'banner', title: 'Show every event of the step again', onclick: clearEventSet }, S.selEvents.size + ' events of the air fight at (' + hx[0] + ', ' + hx[1] + ') — show all'));
+    const ground = S.selEventsHex && S.selEventsHex.startsWith('g:'), hx = S.selEventsHex ? S.selEventsHex.replace(/^g:/, '').split(',') : [];
+    ul.append(el('li', { class: 'banner', title: 'Show every event of the step again', onclick: clearEventSet }, S.selEvents.size + ' events of the ' + (ground ? 'fight ashore' : 'air fight') + ' at (' + hx[0] + ', ' + hx[1] + ') — show all'));
   }
   if (S.cmdSet) ul.append(el('li', { class: 'banner', title: 'Show every event again', onclick: () => { clearIntentFilter(); render(); } }, S.cmdSet.size + ' events serving intent ' + S.cmdIntent.id + (m.umpire ? ' (' + S.cmdIntent.side + ')' : '') + ' — show all'));
   for (const step of steps) {
@@ -3018,19 +3473,37 @@ function selectEvent(id) {
 function selectEntity(sel) {
   if (S.selEntity && S.selEntity.type === sel.type && S.selEntity.id === sel.id) S.selEntity = null;
   else S.selEntity = sel;
-  S.selBase = null; S.selAirGroup = null;
+  S.selBase = null; S.selAirGroup = null; S.selLand = null;
   render();
 }
 function selectBase(id) {
   S.selBase = S.selBase === id ? null : id;
-  S.selEntity = null; S.selAirGroup = null;
+  S.selEntity = null; S.selAirGroup = null; S.selLand = null;
+  render();
+}
+/** A click on a land counter (a stack of one side's units at a hex) or on the estimate of the enemy ashore: the details pane lists the units. */
+function selectLand(key, estimate) {
+  const [q, r, side] = key.split(',');
+  const sel = { q: Number(q), r: Number(r), side, estimate: !!estimate };
+  if (S.selLand && S.selLand.q === sel.q && S.selLand.r === sel.r && S.selLand.side === sel.side && S.selLand.estimate === sel.estimate) S.selLand = null;
+  else S.selLand = sel;
+  S.selEntity = null; S.selBase = null; S.selAirGroup = null;
+  render();
+}
+/** A click on the tag of a fight ashore: the list shows only the events of that fight in the step, and the first is selected. */
+function selectGroundFight(key) {
+  const m = S.model, list = m && m.states[S.step].land.fights.filter(f => f.q + ',' + f.r === key);
+  if (!list || !list.length) return;
+  if (S.selEvents && S.selEventsHex === 'g:' + key) { S.selEvents = null; S.selEventsHex = null; S.selEvent = null; render(); return; }
+  S.selEvents = new Set(list.map(f => f.event)); S.selEventsHex = 'g:' + key;
+  S.selEvent = list[0].event;
   render();
 }
 function selectAirGroup(id) {
   S.selAirGroup = S.selAirGroup === id ? null : id;
   render();
 }
-function resetAirSelection() { S.selEvents = null; S.selEventsHex = null; S.selAirGroup = null; S.selBase = null; }
+function resetAirSelection() { S.selEvents = null; S.selEventsHex = null; S.selAirGroup = null; S.selBase = null; S.selLand = null; }
 /** A click on a tally: the list shows only the events of that air fight, and the raid's key event is selected so that Why and Led to show its causes. */
 function selectTally(key) {
   const m = S.model, t = m && m.states[S.step].air.tallies.find(x => x.key === key);
@@ -3042,7 +3515,7 @@ function selectTally(key) {
 }
 function clearEventSet() { S.selEvents = null; S.selEventsHex = null; render(); }
 function clearSelection() {
-  if (S.selEvent == null && !S.selEntity && !S.selEvents && S.selBase == null && S.selAirGroup == null && !S.cmdOrder && !S.cmdSet) return;
+  if (S.selEvent == null && !S.selEntity && !S.selEvents && S.selBase == null && S.selAirGroup == null && !S.selLand && !S.cmdOrder && !S.cmdSet) return;
   S.selEvent = null; S.selEntity = null; S.cmdOrder = null; clearIntentFilter(); resetAirSelection();
   render();
 }
@@ -3061,7 +3534,7 @@ function cmdDetails(key, open, summary, body) {
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Whether the details pane has something to show. */
-function hasSelection() { return S.selEvent != null || !!S.selEntity || S.selBase != null || !!S.cmdOrder; }
+function hasSelection() { return S.selEvent != null || !!S.selEntity || S.selBase != null || !!S.selLand || !!S.cmdOrder; }
 /**
  * The split of the right column. With the Command tab open the upper pane gets most of the column and the details pane about a third
  * (draggable), collapsed to its header when nothing is selected; the header toggles it. The Events tab keeps its own layout until its split is dragged.
@@ -3180,11 +3653,20 @@ function nodeEl(n, nest) {
     el('div', { class: 'chead', title: filt ? 'Show every event again' : 'Show only the events that serve this intent', onclick: () => toggleIntent(n.side, n.id) },
       el('span', { class: 'cid', text: '#' + n.id }),
       el('span', { class: 'tag' + (n.maker === 'staff' ? ' staff' : ''), text: n.maker === 'staff' ? 'staff' : 'commander' }),
-      el('span', { class: 'cwords', text: n.words, title: 'As the engine states it: ' + n.statement })),
-    el('div', { class: 'cmeta', text: meta.join(' · ') }),
+      el('span', { class: 'cwords', text: n.words, title: 'As the engine states it: ' + n.statement }),
+      n.notices.length ? el('span', { class: 'tag notice', title: n.notices.map(x => x.text).join('\n'), text: 'notice' + (n.notices.length > 1 ? ' x' + n.notices.length : '') + ': ' + n.notices[n.notices.length - 1].words }) : null),
+    el('div', { class: 'cmeta', text: meta.join(' · ') + (n.noticesEarlier.length ? ' · ' + n.noticesEarlier.length + ' notice' + (n.noticesEarlier.length > 1 ? 's' : '') + ' on earlier days' : '') }),
+    n.notices.map(x => el('div', { class: 'cnotice', text: 'Staff notice, day ' + x.day + ': ' + x.text })),
+    filt ? drawnNote(n) : null,
     orderGroups(n));
   if (nest && n.children.length) box.append(el('div', { class: 'ckids' }, n.children.map(c => nodeEl(c, true))));
   return box;
+}
+
+/** What the selected node draws on the map, in words. */
+function drawnNote(n) {
+  const res = C.intentShapes(S.model, S.step, n.side, n.id);
+  return el('div', { class: 'cdrawn side-' + n.side, text: res.words.length ? 'On the map: ' + res.words.join('; ') + '.' : 'Nothing of this intent is drawn on the map.' });
 }
 
 function levelRank(level) { return level === 'area' ? 0 : level.startsWith('base:') ? 1 : 2; }
@@ -3212,9 +3694,19 @@ function levelView(view) {
   return wrap;
 }
 
+/** The Command tab's label carries the count of staff notices of the step's day; the button beside the title jumps to the next step with one. */
+function renderNotices() {
+  const m = S.model, n = m ? C.noticesOfDay(m, S.step).length : 0, next = m ? C.nextNoticeStep(m, S.step) : -1;
+  $('tabCommand').textContent = 'Command' + (n ? ' (' + n + ' notice' + (n > 1 ? 's' : '') + ')' : '');
+  $('tabCommand').classList.toggle('hasnotice', n > 0);
+  $('nextnotice').disabled = next < 0;
+  $('nextnotice').title = next < 0 ? 'No staff notice in a later step' : 'Jump to the next step with a staff notice: ' + m.steps[next].label;
+}
+
 function renderCommand() {
   const m = S.model, box = $('cmdbody');
   clear(box);
+  renderNotices();
   const views = m ? C.commandView(m, S.step) : [];
   $('cmdtitle').textContent = 'Command' + (S.cmdView === 'level' ? ', by level' : '');
   $('cmdinfo').textContent = '';
@@ -3296,8 +3788,9 @@ function renderDetail() {
   if (S.cmdOrder) { box.append(orderReasonSection()); any = true; }
   if (S.selEntity) { box.append(entitySection(S.selEntity)); any = true; }
   if (S.selBase != null) { box.append(baseSection(S.selBase)); any = true; }
+  if (S.selLand) { box.append(landSection(S.selLand)); any = true; }
   if (S.selEvent != null) { box.append(eventSection(S.selEvent)); any = true; }
-  if (!any) box.append(el('div', { class: 'empty', text: 'Click an event to see why it happened, or a force counter on the map to see its ships. Escape clears the selection.' }));
+  if (!any) box.append(el('div', { class: 'empty', text: 'Click an event to see why it happened, or a force, a base or a land counter on the map. Escape clears the selection.' }));
 }
 
 function eventSection(id) {
@@ -3352,6 +3845,9 @@ function shipSummary(id, st) {
     bits.push('fuel ' + fin.fuel + ', gun rounds ' + fin.gun_rounds + ', torpedoes ' + (fin.torpedoes_ready ? 'ready' : 'not ready'));
   } else bits.push('no end-of-run record');
   row.append(el('div', { class: 'sub', text: bits.join('. ') + '.' }));
+  // The men aboard (their unit is not drawn on the map while it is aboard).
+  const rs = st.rec ? st.rec.ships.get(id) : null;
+  if (rs && rs.troops && rs.troops.men > 0) { const u = st.landUnits.get(rs.troops.unit); row.append(el('div', { class: 'sub', text: rs.troops.men + ' men of ' + (u ? u.name : 'land_unit:' + rs.troops.unit) + ' (land_unit:' + rs.troops.unit + ') aboard.' })); }
   return row;
 }
 
@@ -3410,6 +3906,15 @@ function airGroupsBlock(groups, st) {
     row.append(el('div', null, el('b', { text: g.name || ('air group ' + g.id) }), ' ', el('span', { class: 'dim', text: 'air_group:' + g.id })));
     const bits = [g.type || 'type unknown', 'mission ' + (st.mission.get(g.id) || 'none'), 'reach ' + info.reach];
     row.append(el('div', { class: 'sub', text: bits.join(', ') + (t ? ' (strike ' + t.strike_radius_nm + ', extended ' + t.extended_reach_nm + ', search ' + t.search_range_nm + ' nm)' : '') }));
+    const rg = st.rec ? st.rec.groups.get(g.id) : null;
+    if (rg) {
+      const d = [(rg.ready || 0) + ' ready', (rg.damaged || 0) + ' damaged'];
+      if (rg.pilots !== undefined) d.push(rg.pilots + ' pilots' + (rg.strength !== undefined ? ' of ' + rg.strength : ''));
+      if (rg.patrol_share !== undefined) d.push('patrol share ' + rg.patrol_share);
+      if (rg.arc) d.push('search arc ' + rg.arc.from_deg + ' to ' + rg.arc.to_deg + ' degrees, ' + rg.arc.range_nm + ' nm');
+      d.push('fatigue ' + (rg.fatigue || 0) + (rg.stood_down ? ' (stood down today)' : ''));
+      row.append(el('div', { class: 'sub', text: d.join(', ') }));
+    }
     box.append(row);
   });
   if (S.replay.aircraft_types === undefined) box.append(el('div', { class: 'note', text: 'This replay carries no aircraft figures (version ' + S.replay.version + '); export it again for reach rings.' }));
@@ -3428,15 +3933,81 @@ function reserveText(b) {
 function holderOf(st, b) { return (st && st.baseSide && st.baseSide.get(b.id)) || b.side; }
 
 function baseSection(id) {
-  const m = S.model, st = m.states[S.step], b = m.bases.get(id);
+  const m = S.model, st = m.states[S.step], fig = C.baseFigures(m, S.step, id);
   const sec = el('section');
-  if (!b) { sec.append(el('h2', { text: 'Base ' + id })); return sec; }
-  sec.append(el('h2', null, (b.name || 'base') + ' ', el('span', { class: 'dim', text: 'base:' + id })));
+  if (!fig) { sec.append(el('h2', { text: 'Base ' + id })); return sec; }
+  sec.append(el('h2', null, (fig.name || 'base') + ' ', el('span', { class: 'dim', text: 'base:' + id }), ' ', el('span', { class: 'dim', text: m.steps[S.step].label })));
   const kv = el('dl', { class: 'kv' });
-  kv.append(el('dt', { text: 'Side' }), el('dd', { text: holderOf(st, b) || '?' }), el('dt', { text: 'Hex' }), el('dd', { text: '(' + b.q + ', ' + b.r + ')' }));
+  const add = (k, v) => { kv.append(el('dt', { text: k }), el('dd', { text: String(v) })); };
+  add('Held by', fig.side || '?');
+  add('Hex', '(' + fig.q + ', ' + fig.r + ')');
+  add('Port', fig.portSize ? 'size ' + fig.portSize + (fig.anchorage ? ', with an anchorage' : '') : (fig.anchorage ? 'anchorage only' : 'none'));
+  if (fig.known) {
+    add('Supply', fig.supply + ' t' + (fig.supplyReserve ? ' (reserve ' + fig.supplyReserve + ' t)' : ''));
+    add('Days of supply', fig.daysOfSupply !== null ? f1(fig.daysOfSupply) + ' days at the planned use here' : 'no figure (no planned use of supply in this hex)');
+    add('Fuel', fig.fuel + ' t' + (fig.fuelReserve ? ' (reserve ' + fig.fuelReserve + ' t)' : ''));
+    add('Ammunition', fig.ammunition + ' t');
+    add('Airfield', !fig.airfield ? 'none' : fig.airfieldClosed ? 'closed: damage ' + fig.airfieldDamage + ' of 100, it takes no aircraft' : fig.airfieldDamage > 0 ? 'open, damaged ' + fig.airfieldDamage + ' of 100 (a share of the aircraft fly)' : 'open, undamaged');
+    if (fig.airfield && fig.airfieldWork) add('Work on the airfield', fig.airfieldWork);
+    if (fig.defences) add('Defences', fig.defences + ' of 100');
+    if (fig.antiAircraft) add('Anti-aircraft shots', fig.antiAircraft);
+    if (fig.aircraftRepairs) add('Aircraft repaired a day', fig.aircraftRepairs);
+    if (fig.shipRepair) add('Ship repair a day', fig.shipRepair + ' points');
+  }
   sec.append(kv);
-  const baseOf = g => (st.groupBase && st.groupBase.has(g.id) ? st.groupBase.get(g.id) : g.base);
-  sec.append(airGroupsBlock([...m.groupTable.values()].filter(g => baseOf(g) === id && (g.formedStep === undefined || g.formedStep <= S.step)), st));
+  if (!fig.known) sec.append(el('div', { class: 'note', text: S.replay.view_side ? 'This side knows only the name, place and holder of this base. The stocks, the airfield and the aircraft there are not on its page.' : 'This file (version ' + S.replay.version + ') holds no record of the base at each step; export it again for its stocks and airfield.' }));
+  if (fig.estimate) sec.append(el('div', { class: 'note', text: 'This side\'s estimate of the enemy ashore here: about ' + fig.estimate.men + ' men, reported day ' + fig.estimate.day + '.' }));
+  if (fig.known || !S.replay.view_side) sec.append(airGroupsBlock(fig.groups.map(g => m.groupTable.get(g.id)).filter(Boolean), st));
+  if (fig.known) {
+    sec.append(el('h3', { text: 'Ships in port, not in a force' }));
+    if (!fig.ships.length) sec.append(el('div', { class: 'dim', text: 'None.' }));
+    fig.ships.forEach(sh => sec.append(shipSummary(sh.id, st)));
+  }
+  if (fig.known || !S.replay.view_side) {
+    sec.append(el('h3', { text: 'Land units in the hex' }));
+    if (!fig.land.length) sec.append(el('div', { class: 'dim', text: 'None.' }));
+    for (const u of fig.land) sec.append(el('div', { class: 'shiprow', onclick: e => { e.stopPropagation(); selectLand(u.hex[0] + ',' + u.hex[1] + ',' + u.side, false); } }, el('b', { text: u.name }), ' ', el('span', { class: 'dim', text: (S.replay.view_side ? '' : u.side + ', ') + u.men_ashore + ' men, land_unit:' + u.id })));
+  }
+  return sec;
+}
+
+/** One land unit for the details pane: its men, supply, posture or activity, experience and fatigue, whether it is dug in, and its orders. */
+function landUnitBlock(id) {
+  const m = S.model, v = C.landUnitView(m, S.step, id), box = el('div', { class: 'shiprow', style: 'cursor: default' });
+  if (!v) return box;
+  box.append(el('div', null, el('b', { text: v.name }), ' ', el('span', { class: 'dim', text: 'land_unit:' + v.id + (S.replay.view_side ? '' : ', ' + v.side) })));
+  const kv = el('dl', { class: 'kv' });
+  const add = (k, t) => { kv.append(el('dt', { text: k }), el('dd', { text: String(t) })); };
+  add('Men ashore', v.men + (v.hex ? ' at (' + v.hex[0] + ', ' + v.hex[1] + ')' : ''));
+  add('Posture', v.posture + (v.activity !== 'ready' ? ', activity ' + v.activity + (v.job ? ' (' + v.job + ')' : '') : '') + (v.working ? ', working' : ''));
+  if (v.march) add('Marching', 'to (' + v.march.to[0] + ', ' + v.march.to[1] + '), ' + v.march.days + (v.march.of ? ' of ' + v.march.of : '') + ' days marched');
+  add('Supply', 'fed share ' + v.fedShare + ' at the last night\'s charge' + (v.daysOfSupply !== null ? '; ' + f1(v.daysOfSupply) + ' days of supply at its base here' : (v.known ? '; no days-of-supply figure here' : '')));
+  if (v.experience !== null) add('Experience', v.experience + ' of 4');
+  add('Fatigue', v.fatigue + ' of 100');
+  add('Dug in', v.dugIn ? 'yes, fieldworks ' + v.fieldworks : 'no');
+  if (v.skills) add('Skills', Object.entries(v.skills).map(([k, x]) => k + ' ' + x).join(', '));
+  if (v.trainingDays || v.fightDays) add('Days counted', v.trainingDays + ' of training, ' + v.fightDays + ' of fighting');
+  box.append(kv);
+  box.append(el('div', { class: 'sub', text: v.orders.length ? 'Orders: ' + v.orders.map(o => 'order ' + o.id + ' (day ' + o.day + ', ' + o.issuer + '): ' + o.text).join('; ') : 'No order has been given to this unit.' }));
+  return box;
+}
+
+/** The details of a land counter: each unit of the stack, or the estimate of the enemy ashore (a belief, never the enemy's true units). */
+function landSection(sel) {
+  const m = S.model, st = m.states[S.step], sec = el('section');
+  if (sel.estimate) {
+    const side = sel.side, e = st.estimates[side] && st.estimates[side].get(sel.q + ',' + sel.r);
+    sec.append(el('h2', null, 'Estimate of the enemy ashore at (' + sel.q + ', ' + sel.r + ')'));
+    if (!e) sec.append(el('div', { class: 'dim', text: 'No estimate is held here at this step.' }));
+    else sec.append(el('div', { text: 'The ' + side + ' side believes about ' + e.men + ' enemy men are ashore here, as its last ground report of day ' + e.day + ' said. It may be wrong, and old.' }));
+    return sec;
+  }
+  const units = [...st.landUnits.values()].filter(u => u.hex && u.hex[0] === sel.q && u.hex[1] === sel.r && u.side === sel.side && u.men_ashore > 0).sort((a, b) => a.id - b.id);
+  sec.append(el('h2', null, 'Land units at (' + sel.q + ', ' + sel.r + ') ', el('span', { class: 'dim', text: (S.replay.view_side ? '' : sel.side + ', ') + units.length + (units.length === 1 ? ' unit' : ' units') })));
+  if (!units.length) sec.append(el('div', { class: 'dim', text: 'No unit of this side is ashore here at this step.' }));
+  for (const u of units) sec.append(landUnitBlock(u.id));
+  const mvs = st.land.moves.filter(mv => units.some(u => u.id === mv.unit));
+  for (const mv of mvs) sec.append(el('div', { class: 'note', text: (st.landUnits.get(mv.unit) || {}).name + ' ' + mv.kind + ' from (' + mv.from[0] + ', ' + mv.from[1] + ') to (' + mv.to[0] + ', ' + mv.to[1] + ') in this step (event #' + mv.event + ').' }));
   return sec;
 }
 
@@ -3458,6 +4029,14 @@ function renderLegend() {
     ['deep', 'Deep sea'], ['shallow', 'Shallow sea'], ['coast', 'Coast (more land, darker)'], ['land', 'Land'],
     ['closed', 'Closed side'], ['fight', side ? 'Fight this side knows of, in this step' : 'Fight in this step'], ['arc', 'Search arc flown in this step'],
     ['trail', 'Trail of hexes entered'], ['move', 'Movement in this step'],
+    ...(S.model && S.model.hasLand ? [
+      ['land-ctr', side ? 'Own land units at a hex (a number when several); men beneath. Units aboard ships are in their force\'s detail' : 'Land units at a hex, in their side\'s colour (a number when several); men beneath. Units aboard ships are in their force\'s detail'],
+      ['land-est', side ? 'Estimate of the enemy ashore this side holds (a belief: may be wrong, and old)' : 'Estimate of the enemy ashore (shown with a side\'s contacts)'],
+      ['gfight', 'Fight ashore in this step: click its tag for its events'],
+      ['lmove', 'Land unit that marched (dashed) or fell back (dotted) in this step'],
+    ] : []),
+    ['warn-closed', 'Base whose airfield is closed (it takes no aircraft)'], ['warn-low', 'Base with less than a week of supply'],
+    ['i-area', 'Intent selected in the Command tab: waters outlined, or a station or target ringed, with lines from the force or the tasked bases'],
     ...(S.model && S.model.hasAir ? [
       ['sighted', side ? 'Sighting this side was told of, where the report put it' : 'Sighting, where the report put it (faint line to where the force truly was)'],
       ...(side ? [] : [['miss', 'Search that missed the force it looked for, where the force truly was']]),
@@ -3496,6 +4075,7 @@ function init() {
   initPanZoom();
   initMeasure();
   $('airon').addEventListener('change', e => { S.air = e.target.checked; e.target.blur(); render(); });
+  $('landon').addEventListener('change', e => { S.land = e.target.checked; e.target.blur(); render(); });
   $('filter').addEventListener('input', e => { S.filter = e.target.value.trim(); renderEvents(); });
   $('onlysel').addEventListener('change', e => { S.onlySel = e.target.checked; renderEvents(); });
   $('allsteps').addEventListener('change', e => { S.allSteps = e.target.checked; renderEvents(); });
@@ -3503,6 +4083,7 @@ function init() {
   $('tabEvents').addEventListener('click', () => setTab('events'));
   $('tabCommand').addEventListener('click', () => setTab('command'));
   $('cmdclear').addEventListener('click', () => { clearIntentFilter(); render(); });
+  $('nextnotice').addEventListener('click', () => { const next = S.model ? C.nextNoticeStep(S.model, S.step) : -1; if (next >= 0) { stopPlaying(); goto(next); } });
   document.querySelectorAll('input[name=cmdview]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.cmdView = r.value; r.blur(); renderCommand(); } }));
   render();
   renderReadout();
