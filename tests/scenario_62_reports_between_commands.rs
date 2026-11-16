@@ -141,7 +141,11 @@
 //!   10) and the week of the slice from intents (seed 1), every command's
 //!   picture holds what its side's holds at the end of every pulse, and
 //!   the events are those of the same game with command levels off, but
-//!   for the "report sent" events.
+//!   for the "report sent" events and the words of a staff reason that
+//!   say which command holds a contact it names. (The second exception was
+//!   added by the architect on Nov 16, 2026, after the build: decision
+//!   0135's item 22 puts those words there, and the first draft of this
+//!   property forgot them.)
 //! - **No report figures.** Scenario 61 gives what it gave.
 //! - **Off is unchanged.** Every scenario built before this one gives the
 //!   events it gave.
