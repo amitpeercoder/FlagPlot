@@ -50,8 +50,13 @@
 //! side's does.
 //!
 //! The strike of the morning of day 1 is decided on task force 1's
-//! picture: its reason, or the launch's record, names task force 1 as the
-//! command whose picture was read. The staff's orders to task force 1 and
+//! picture: the command of group 3, as the side's view gives it, is task
+//! force 1. No record of the launch names the command in this step.
+//! (Restated by the architect on Nov 16, 2026, after the build: the first
+//! draft asked the launch's record to name it. Any such record would make
+//! the events with command levels on differ from those with them off,
+//! which this step forbids. Who knew what is written into the record in
+//! step 2, where it first differs.) The staff's orders to task force 1 and
 //! its groups are decided on task force 1's picture, and the reasons that
 //! name contact 1 name it by the number it has there, which is 1.
 //!
@@ -624,24 +629,6 @@ fn the_strike_of_day_1_is_launched_by_a_group_of_task_force_1() {
     let played = play(&text());
     assert!(!played.launches().is_empty());
     assert_eq!(played.launcher, Some(tf(1)));
-}
-
-#[test]
-#[ignore = "no reason or launch record names the command whose picture was read: adding it changes the events with command levels on and off; the options are with the architect"]
-fn the_launch_record_names_task_force_1() {
-    let played = play(&text());
-    let launch = played
-        .events
-        .iter()
-        .find(|e| matches!(e.kind, EventKind::StrikeLaunched { .. }))
-        .expect("a launch");
-    let record = format!("{launch:?}");
-    assert!(
-        record.contains("task force 1")
-            || record.contains("TaskForce(TaskForceId(1))")
-            || record.contains("TaskForceId(1)"),
-        "{record}"
-    );
 }
 
 // --------------------------------------------------------------- Properties
