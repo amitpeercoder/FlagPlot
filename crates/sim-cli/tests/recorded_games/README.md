@@ -188,6 +188,8 @@ Regenerated after decisions 0122 and 0127 (rearming in port and ammunition as po
 
 Regenerated after the architect's ruling of Nov 16, 2026, that a force has one stand or carrier task of a kind (decisions 0124 and 0125 amended: doctrine `supply-14`; state layout, rules label, saved game version and agent interface unchanged), with `regame.py`. Each `save.json` differs only in its `doctrine_version` (`supply-13` to `supply-14`); no transcript changed, and no order, command, hash or result changed.
 
+Regenerated after decision 0130 (a carrier force comes up at speed and closes the range: doctrine `supply-15`; state layout, rules label, saved game version and agent interface unchanged), with `regame.py`. Each `save.json` differs in its `doctrine_version` (`supply-14` to `supply-15`). In `second_proof_week_sonnet` the carrier tasks' reasons for giving no order also gain the words on closing ("does not close: ..."), in its `save.json` and in five answers of its transcript; no carrier force there closed or went at a new speed, so no order, command, hash or result changed.
+
 ## The second proof's game (Nov 16, 2026)
 
 `second_proof_week_sonnet`: decision 0128's model's game. The Allied seat of `data/scenarios/second-proof/07m_model_week.toml` on seed 1:

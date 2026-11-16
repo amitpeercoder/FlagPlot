@@ -363,3 +363,7 @@ path = "scenario_56_an_escorted_run.rs"
 [[test]]
 name = "scenario_57_going_back_to_rearm"
 path = "scenario_57_going_back_to_rearm.rs"
+
+[[test]]
+name = "scenario_58_a_carrier_force_closes"
+path = "scenario_58_a_carrier_force_closes.rs"

@@ -101,7 +101,14 @@ use sim_core::view::SideView;
 /// for a force that already has a task of that kind in force, whoever made
 /// it and wherever it stands. A side with no such task stated beside an end
 /// that names the force gets the orders `supply-13` gave.
-pub const DOCTRINE_VERSION: &str = "supply-14";
+/// `supply-15` adds decision 0130: a carrier force is routed at cruise where
+/// that brings it there in the night and at full speed where it does not,
+/// and closes where the first fresh contact of a kind it wants within a
+/// night and its bombers' reach is beyond that reach, stays while it is in
+/// reach and goes back to its hex when there is none; the passage home for
+/// fuel is at cruise, and a ship the engine's measure has run dry short of
+/// a passage is short of the fuel for it, in the carrier and stand doctrines.
+pub const DOCTRINE_VERSION: &str = "supply-15";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

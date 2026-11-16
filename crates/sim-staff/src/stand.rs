@@ -176,8 +176,53 @@ pub(crate) fn home_of(view: &SideView<'_>, force: &TaskForce) -> Option<(BaseId,
     }
 }
 
+/// One ship's fuel against a passage: aboard, the engine's measure of the
+/// burn times the margin, and whether the engine has it run dry short of the
+/// passage, when the burn it gives is only what is aboard (the architect's
+/// ruling on decision 0130, Nov 16, 2026: a ship that runs dry short of a
+/// passage is short of the fuel for it).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) struct ShipFuel {
+    pub(crate) ship: sim_core::ids::ShipId,
+    pub(crate) aboard: Fixed,
+    pub(crate) need: Fixed,
+    pub(crate) runs_dry: bool,
+}
+
+impl ShipFuel {
+    /// Less aboard than the need, or run dry short of the passage.
+    pub(crate) fn short(self) -> bool {
+        self.runs_dry || self.aboard < self.need
+    }
+
+    /// "ship:N has A t aboard against B t needed", and for a ship that runs
+    /// dry "against more than B t needed, running dry short of the passage".
+    pub(crate) fn words(self) -> String {
+        if self.runs_dry {
+            format!(
+                "{} has {} t aboard against more than {} t needed, running dry short of the passage",
+                self.ship, self.aboard, self.need
+            )
+        } else {
+            format!(
+                "{} has {} t aboard against {} t needed",
+                self.ship, self.aboard, self.need
+            )
+        }
+    }
+}
+
 /// Each ship's fuel aboard and the fuel it needs, in ship order.
-pub(crate) type Needs = Vec<(sim_core::ids::ShipId, Fixed, Fixed)>;
+pub(crate) type Needs = Vec<ShipFuel>;
+
+/// The words of each ship's fuel against its need, joined.
+pub(crate) fn needs_words(needs: &[ShipFuel]) -> String {
+    needs
+        .iter()
+        .map(|n| n.words())
+        .collect::<Vec<_>>()
+        .join(", ")
+}
 
 /// The fuel each ship of the force needs for a passage through `waypoints`
 /// at `speed`, by the engine's own measure, times `margin`; `None` where the
@@ -196,7 +241,12 @@ pub(crate) fn fuel_needs(
     let needs = forecast
         .ships
         .iter()
-        .map(|line| (line.ship, line.fuel_t, line.burned_t * margin))
+        .map(|line| ShipFuel {
+            ship: line.ship,
+            aboard: line.fuel_t,
+            need: line.burned_t * margin,
+            runs_dry: line.runs_dry,
+        })
         .collect();
     Some((needs, forecast.hours))
 }
@@ -746,18 +796,9 @@ impl Day<'_, '_> {
                     let Some((needs, _)) = needs else {
                         return;
                     };
-                    let short: Vec<(sim_core::ids::ShipId, Fixed, Fixed)> = needs
-                        .iter()
-                        .copied()
-                        .filter(|(_, aboard, need)| aboard < need)
-                        .collect();
-                    let fuel_text = needs
-                        .iter()
-                        .map(|(ship, aboard, need)| {
-                            format!("{ship} has {aboard} t aboard against {need} t needed")
-                        })
-                        .collect::<Vec<_>>()
-                        .join(", ");
+                    let short: Vec<ShipFuel> =
+                        needs.iter().copied().filter(|n| n.short()).collect();
+                    let fuel_text = needs_words(&needs);
                     let fuel_text = format!(
                         "the passage to the station and home, by the engine's measure, times the {} of the {risk_text}: {fuel_text}",
                         margin(risk)
@@ -831,12 +872,12 @@ impl Day<'_, '_> {
                     } else {
                         let triples: Vec<(Fixed, Fixed, Fixed)> = short
                             .iter()
-                            .map(|(ship, aboard, need)| {
+                            .map(|n| {
                                 let capacity = ships
                                     .iter()
-                                    .find(|(s, _, _, _)| s == ship)
-                                    .map_or(*need, |(_, _, c, _)| *c);
-                                (*aboard, *need, capacity)
+                                    .find(|(s, _, _, _)| *s == n.ship)
+                                    .map_or(n.need, |(_, _, c, _)| *c);
+                                (n.aboard, n.need, capacity)
                             })
                             .collect();
                         let when =
