@@ -186,8 +186,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `air_groups` after its task forces and its `source` as optional, the risk
 /// limit as optional (unset and balanced are told apart, since a limit not
 /// set is read up the tree), and the hold of a whole air group (code 4)
-/// (decisions 0115 and 0117).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v28";
+/// (decisions 0115 and 0117);
+/// version 29 adds the kinds neutralise a base (code 4, its target) and raid
+/// a base (code 5, its base and then its target) (decision 0120).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v29";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -657,7 +659,9 @@ fn name_intent_kind(kind: IntentKind) {
             interval_days: _,
         }
         | IntentKind::Cover { base: _ }
-        | IntentKind::Hold { base: _ } => {}
+        | IntentKind::Hold { base: _ }
+        | IntentKind::Neutralise { target: _ }
+        | IntentKind::Raid { base: _, target: _ } => {}
     }
 }
 
@@ -693,6 +697,11 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
             h.optional_u32(interval_days);
         }
         IntentKind::Cover { base } | IntentKind::Hold { base } => h.u32(base.raw()),
+        IntentKind::Neutralise { target } => h.u32(target.raw()),
+        IntentKind::Raid { base, target } => {
+            h.u32(base.raw());
+            h.u32(target.raw());
+        }
     }
 }
 

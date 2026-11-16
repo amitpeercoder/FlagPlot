@@ -116,88 +116,88 @@
       "hash": "5ef7d142f1faa97f"
     }
   ],
-  "doctrine_version": "supply-8",
+  "doctrine_version": "supply-9",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "5e1abaf4e7b3ccf2"
+      "hash": "6aed21ab706eaa47"
     },
     {
       "day": 2,
-      "hash": "0bae76ffd143d705"
+      "hash": "441bef62cc0c2c0c"
     },
     {
       "day": 3,
-      "hash": "7ff419c8e21ea62b"
+      "hash": "71a02ed27a7abdfa"
     },
     {
       "day": 4,
-      "hash": "0955bccad92c3841"
+      "hash": "d66058d21eddab88"
     },
     {
       "day": 5,
-      "hash": "c4fb5a0112fc834b"
+      "hash": "6b8c1ca3415f67fa"
     },
     {
       "day": 6,
-      "hash": "1f281b328ad89295"
+      "hash": "ec14f3da70ab1374"
     },
     {
       "day": 7,
-      "hash": "0a6101080799770f"
+      "hash": "7632dbe81e905dc2"
     },
     {
       "day": 8,
-      "hash": "2e7b42282f337821"
+      "hash": "5ace17aa58c83b78"
     },
     {
       "day": 9,
-      "hash": "ba8d63703ef4a32b"
+      "hash": "1ad8d1420078c676"
     },
     {
       "day": 10,
-      "hash": "c2ccb5dfd9d39d7b"
+      "hash": "be9a7fc63a4e8eee"
     },
     {
       "day": 11,
-      "hash": "74149051ad847365"
+      "hash": "e9cfa751e413eff8"
     },
     {
       "day": 12,
-      "hash": "028c591637187ecf"
+      "hash": "a9ba7042db817b2a"
     },
     {
       "day": 13,
-      "hash": "8b0afaed9894c529"
+      "hash": "3d15df03a8f6ccdc"
     },
     {
       "day": 14,
-      "hash": "03d2e6835ed670ef"
+      "hash": "7fa342f07d2ff312"
     },
     {
       "day": 15,
-      "hash": "c371a94481ee883d"
+      "hash": "b39b2ee0707f4974"
     },
     {
       "day": 16,
-      "hash": "82dffdd7de951a42"
+      "hash": "37bfcaba1f4a03eb"
     },
     {
       "day": 17,
-      "hash": "a54363c98ae212d1"
+      "hash": "52e25abe8451fb54"
     },
     {
       "day": 18,
-      "hash": "ce85db1b47a252cc"
+      "hash": "4cdf64df87443be1"
     },
     {
       "day": 19,
-      "hash": "8fd5301f865277ea"
+      "hash": "1492a99b57746763"
     },
     {
       "day": 20,
-      "hash": "14ab5dba8bfcad94"
+      "hash": "909c18b4ea9f48a9"
     }
   ],
   "orders": [],
@@ -233,6 +233,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -259,6 +260,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -296,6 +298,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -331,6 +334,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -363,6 +367,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -389,6 +394,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -426,6 +432,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -461,6 +468,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -505,6 +513,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -542,6 +551,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -578,6 +588,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -614,6 +625,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -672,6 +684,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -703,6 +716,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -750,6 +764,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -781,6 +796,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -813,6 +829,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -835,6 +852,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -867,6 +885,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -889,6 +908,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -921,6 +941,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -943,6 +964,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -975,6 +997,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -997,6 +1020,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1029,6 +1053,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1051,6 +1076,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1083,6 +1109,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1105,6 +1132,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1137,6 +1165,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1159,6 +1188,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1191,6 +1221,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1213,6 +1244,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1245,6 +1277,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1267,6 +1300,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1299,6 +1333,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1321,6 +1356,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1353,6 +1389,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1375,6 +1412,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1407,6 +1445,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1429,6 +1468,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1461,6 +1501,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1483,6 +1524,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1529,6 +1571,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1564,6 +1607,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1607,6 +1651,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1642,6 +1687,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1685,6 +1731,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1721,6 +1768,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1779,6 +1827,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1810,6 +1859,7 @@
               ],
               "serves": {
                 "intent": 1,
+                "level": "area",
                 "plan": 1,
                 "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1857,6 +1907,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1888,6 +1939,7 @@
               ],
               "serves": {
                 "intent": 2,
+                "level": "area",
                 "plan": 2,
                 "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
               },
@@ -1920,6 +1972,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1942,6 +1995,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1974,6 +2028,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -1996,6 +2051,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -2028,6 +2084,7 @@
             ],
             "serves": {
               "intent": 1,
+              "level": "area",
               "plan": 1,
               "statement": "keep base:2 (Placeholder base T, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -2050,6 +2107,7 @@
             ],
             "serves": {
               "intent": 2,
+              "level": "area",
               "plan": 2,
               "statement": "keep base:3 (Placeholder base U, Allied) at 10 days of supply, a run every 15 days"
             },
@@ -2065,6 +2123,6 @@
       "side": "allied"
     }
   ],
-  "state_version": "flagplot-state-v28",
-  "version": 4
+  "state_version": "flagplot-state-v29",
+  "version": 5
 }

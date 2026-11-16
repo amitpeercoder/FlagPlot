@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 8
+      "const": 9
     },
     "kind": {
       "const": "command_state"
@@ -73,6 +73,7 @@
           "in_force",
           "kind",
           "base",
+          "target",
           "floor_days",
           "interval_days",
           "interval",
@@ -102,11 +103,32 @@
             "enum": [
               "keep_supplied",
               "cover",
-              "hold"
+              "hold",
+              "neutralise",
+              "raid"
             ]
           },
           "base": {
-            "$ref": "defs.schema.json#/$defs/handle"
+            "oneOf": [
+              {
+                "$ref": "defs.schema.json#/$defs/handle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The side's own base the intent names; null for neutralise."
+          },
+          "target": {
+            "oneOf": [
+              {
+                "$ref": "defs.schema.json#/$defs/handle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The enemy base a neutralise or a raid is aimed at (decision 0120); null for the other kinds."
           },
           "floor_days": {
             "type": [
@@ -198,8 +220,15 @@
             "$ref": "command_defs.schema.json#/$defs/limits_read_up"
           },
           "measure": {
-            "$ref": "command_defs.schema.json#/$defs/hold_measure",
-            "description": "A hold intent only."
+            "oneOf": [
+              {
+                "$ref": "command_defs.schema.json#/$defs/hold_measure"
+              },
+              {
+                "$ref": "command_defs.schema.json#/$defs/neutralise_measure"
+              }
+            ],
+            "description": "A hold intent (its hold measure) or a neutralise intent (its neutralise measure) only."
           }
         }
       },

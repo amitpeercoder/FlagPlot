@@ -15,10 +15,22 @@
 //!    a cover intent for the base stands, none is formed; where nothing at
 //!    the base can cover it, none is formed; otherwise cover from the air is
 //!    formed under it.
-//! 3. The cover doctrine, for each cover intent whose plan is released, in
+//! 3. The neutralise doctrine, at the area's level (decision 0120, 6 and 7;
+//!    `crate::neutralise`): for each neutralise intent whose plan is
+//!    released, a raid task for each base of the side with bombers that
+//!    reach the target. It forms sub-intents only and gives no order.
+//! 4. The cover doctrine, for each cover intent whose plan is released, in
 //!    priority order, over the groups it may use that are at its base and
 //!    not held: fighters fly the patrol or rest, groups that can search
-//!    search or rest, other groups are left for a strike intent.
+//!    search or rest, other groups are left for a strike intent. A group a
+//!    raid task in force may use as a bomber is the raid's and not the
+//!    cover's (decision 0120, 16, amending decision 0115, 7).
+//! 5. The raid doctrine, at the base's level (decision 0120, 10 to 16;
+//!    `crate::raid`): for each raid intent whose plan is released, which
+//!    mornings its bombers go, with their escort.
+//!
+//! Each doctrine belongs to a level (decision 0120, 1): the addressee of the
+//! intents it serves. Every reason carries it (`Serves::level`).
 //!
 //! The doctrine reads the side's own view and nothing else. A proposal runs
 //! the same day over one tree as if its plan were released and keeps what is
@@ -234,7 +246,7 @@ pub(crate) fn fighter_verdicts(fighters: &[(Fixed, u32)], level: Fixed) -> Vec<V
 // ---------------------------------------------------------------------------
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum Kind {
+pub(crate) enum Kind {
     Fighter,
     Searcher,
     Other,
@@ -242,19 +254,19 @@ enum Kind {
 
 /// An air group of the side as the doctrine reads it this morning.
 #[derive(Clone, Copy, Debug)]
-struct Member {
-    id: AirGroupId,
-    kind: Kind,
-    fatigue: Fixed,
-    able: u32,
-    mission: AirMission,
-    patrol_share: Fixed,
+pub(crate) struct Member {
+    pub(crate) id: AirGroupId,
+    pub(crate) kind: Kind,
+    pub(crate) fatigue: Fixed,
+    pub(crate) able: u32,
+    pub(crate) mission: AirMission,
+    pub(crate) patrol_share: Fixed,
     search: Option<SearchArc>,
     arc_order: Option<sim_core::ids::OrderId>,
     range: Fixed,
 }
 
-fn mission_words(mission: AirMission) -> String {
+pub(crate) fn mission_words(mission: AirMission) -> String {
     match mission {
         AirMission::Rest => "rest".to_string(),
         AirMission::Search => "search".to_string(),
@@ -292,12 +304,12 @@ fn setting_words(m: &Member) -> String {
 // ---------------------------------------------------------------------------
 
 /// The morning's work in the making.
-struct Day<'v, 'a> {
-    view: &'v SideView<'a>,
+pub(crate) struct Day<'v, 'a> {
+    pub(crate) view: &'v SideView<'a>,
     /// The command state as planned: the plans the leaves approve this
     /// morning and the intents formed this morning are in it.
-    state: CommandState,
-    today: u32,
+    pub(crate) state: CommandState,
+    pub(crate) today: u32,
     /// For a proposal, the root whose tree is asked for.
     scope: Option<IntentId>,
     /// What is handed in for the tree in scope (all of it, with no scope).
@@ -306,14 +318,29 @@ struct Day<'v, 'a> {
     scratch: StaffDecisions,
     /// The groups cover intents served earlier this morning have taken.
     taken: BTreeMap<AirGroupId, IntentId>,
+    /// The groups raid intents served earlier this morning have taken
+    /// (decision 0120, 16: rank decides between two tasks of one kind).
+    pub(crate) raid_taken: BTreeMap<AirGroupId, IntentId>,
+    /// The fighter groups the covers served this morning have, with the
+    /// patrol share each is to fly at, or `None` where the cover rests it:
+    /// what a raid from the same base may draw escorts from (decision 0120,
+    /// 10 and 16).
+    pub(crate) cover_fighters: BTreeMap<AirGroupId, Option<Fixed>>,
     /// What the tree in scope would do, in words, for a proposal.
-    lines: Vec<String>,
+    pub(crate) lines: Vec<String>,
     /// The side's events, read when a reason needs them.
     events: Option<Vec<sim_core::side_events::SideEvent>>,
 }
 
-fn is_air(kind: IntentKind) -> bool {
-    matches!(kind, IntentKind::Hold { .. } | IntentKind::Cover { .. })
+/// The kinds the air doctrine serves: hold, cover, neutralise and raid.
+pub(crate) fn is_air(kind: IntentKind) -> bool {
+    matches!(
+        kind,
+        IntentKind::Hold { .. }
+            | IntentKind::Cover { .. }
+            | IntentKind::Neutralise { .. }
+            | IntentKind::Raid { .. }
+    )
 }
 
 /// The staff's air decisions for the morning.
@@ -407,21 +434,33 @@ impl<'v, 'a> Day<'v, 'a> {
             real: StaffDecisions::default(),
             scratch: StaffDecisions::default(),
             taken: BTreeMap::new(),
+            raid_taken: BTreeMap::new(),
+            cover_fighters: BTreeMap::new(),
             lines: Vec::new(),
             events: None,
         };
         day.leaves();
         day.holds();
+        day.neutralises();
         day.covers();
+        day.raids();
         Some(day)
     }
 
-    fn in_scope(&self, intent: IntentId) -> bool {
+    /// The side's events, read once a morning.
+    pub(crate) fn side_events(&mut self) -> &[sim_core::side_events::SideEvent] {
+        if self.events.is_none() {
+            self.events = Some(self.view.events());
+        }
+        self.events.as_deref().unwrap_or(&[])
+    }
+
+    pub(crate) fn in_scope(&self, intent: IntentId) -> bool {
         self.scope
             .is_none_or(|root| self.state.root_of(intent) == root)
     }
 
-    fn target(&mut self, in_scope: bool) -> &mut StaffDecisions {
+    pub(crate) fn target(&mut self, in_scope: bool) -> &mut StaffDecisions {
         if in_scope {
             &mut self.real
         } else {
@@ -432,7 +471,7 @@ impl<'v, 'a> Day<'v, 'a> {
     /// The intents of the planned state that pass `keep`, in priority order:
     /// ranked first, then unranked, each by number (decision 0107, ruling
     /// 10, with the rank read up the tree).
-    fn in_priority_order(&self, keep: impl Fn(&Intent) -> bool) -> Vec<IntentId> {
+    pub(crate) fn in_priority_order(&self, keep: impl Fn(&Intent) -> bool) -> Vec<IntentId> {
         let mut found: Vec<IntentId> = self
             .state
             .intents_in_force()
@@ -446,11 +485,11 @@ impl<'v, 'a> Day<'v, 'a> {
         found
     }
 
-    fn plan_of(&self, intent: &Intent) -> Option<Plan> {
+    pub(crate) fn plan_of(&self, intent: &Intent) -> Option<Plan> {
         self.state.plans.get(&intent.plan).cloned()
     }
 
-    fn released(&self, intent: &Intent) -> bool {
+    pub(crate) fn released(&self, intent: &Intent) -> bool {
         self.state
             .plans
             .get(&intent.plan)
@@ -596,7 +635,7 @@ impl<'v, 'a> Day<'v, 'a> {
     /// 7 and 8): those named in every forces limit on its chain (the
     /// narrowest binds, the architect's ruling after the build), else, with
     /// none, the side's groups at the base it is addressed to.
-    fn may_use(&self, intent: &Intent) -> Vec<AirGroupId> {
+    pub(crate) fn may_use(&self, intent: &Intent) -> Vec<AirGroupId> {
         match self.state.groups_on_chain(intent.id) {
             Some(allowed) => allowed.into_iter().collect(),
             None => match intent.addressee {
@@ -611,7 +650,7 @@ impl<'v, 'a> Day<'v, 'a> {
         }
     }
 
-    fn kind_of(&self, group: &sim_core::state::AirGroup) -> Kind {
+    pub(crate) fn kind_of(&self, group: &sim_core::state::AirGroup) -> Kind {
         match self.view.aircraft_type(group.aircraft_type) {
             Some(t) if t.role == AircraftRole::Fighter => Kind::Fighter,
             Some(t) if t.search_range_nm > Fixed::ZERO => Kind::Searcher,
@@ -621,7 +660,7 @@ impl<'v, 'a> Day<'v, 'a> {
 
     /// The groups the intent may use that are at `base`, in group number
     /// order: held or not.
-    fn at_base(&self, intent: &Intent, base: BaseId) -> Vec<Member> {
+    pub(crate) fn at_base(&self, intent: &Intent, base: BaseId) -> Vec<Member> {
         let may = self.may_use(intent);
         let mut members: Vec<Member> = self
             .view
@@ -873,6 +912,22 @@ impl<'v, 'a> Day<'v, 'a> {
         // The groups: at the base, not held, not taken by a cover served
         // before this one, in group number order.
         let mut members: Vec<Member> = self.at_base(cover, base);
+        // A group a raid task in force may use as a bomber is the raid's,
+        // though it can also search (decision 0120, 16, amending decision
+        // 0115, 7): the cover leaves it out.
+        let raid_bombers = self.raid_bombers();
+        let raids_have: Vec<String> = members
+            .iter()
+            .filter_map(|m| {
+                raid_bombers.get(&m.id).map(|raid| {
+                    format!(
+                        "{} is the raid's: {raid} may use it as a bomber (fatigue {}), so the cover gives it no order",
+                        m.id, m.fatigue
+                    )
+                })
+            })
+            .collect();
+        members.retain(|m| !raid_bombers.contains_key(&m.id));
         members.retain(|m| {
             self.state.hold_on_group(m.id).is_none()
                 && self.taken.get(&m.id).is_none_or(|by| *by == cover.id)
@@ -901,11 +956,18 @@ impl<'v, 'a> Day<'v, 'a> {
             .zip(fighter_verdicts(&tuples, level))
             .map(|(m, v)| (m.id, v))
             .collect();
+        // What a raid from this base may draw escorts from (decision 0120,
+        // 16): each fighter the cover has, with the share it is to fly at,
+        // or none where it rests.
+        for (group, verdict) in &verdicts {
+            let flying = if verdict.rests() { None } else { Some(share) };
+            self.cover_fighters.entry(*group).or_insert(flying);
+        }
 
         let mut orders: Vec<StaffOrder> = Vec::new();
-        let mut unordered: Vec<String> = Vec::new();
-        let mut everyone: Vec<String> = Vec::new();
-        let mut plan_lines: Vec<String> = Vec::new();
+        let mut unordered: Vec<String> = raids_have.clone();
+        let mut everyone: Vec<String> = raids_have.clone();
+        let mut plan_lines: Vec<String> = raids_have;
         let risk_text = format!("{} risk", risk.name());
         let give = |orders: &mut Vec<StaffOrder>,
                     group: AirGroupId,

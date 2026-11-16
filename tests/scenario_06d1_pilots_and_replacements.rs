@@ -2167,7 +2167,9 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 // And scenarios 47 and 48's, whose staff gives the air groups
                 // their orders (decisions 0115 and 0117).
                 && !stem.starts_with("47_")
-                && !stem.starts_with("48_"))
+                && !stem.starts_with("48_")
+                // And scenario 50's, whose staff raids (decision 0120).
+                && !stem.starts_with("50_"))
             .then(|| stem.to_string())
         })
         .collect();

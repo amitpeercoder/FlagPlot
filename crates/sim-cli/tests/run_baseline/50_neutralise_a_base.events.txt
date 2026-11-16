@@ -1,0 +1,247 @@
+Placeholder scenario 50: Neutralise a base
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash b3618ff6ba2ed1b8  35 events
+day   2  hash 7a3c4fda0609b77f  16 events
+day   3  hash 17d679e2294579cb  16 events
+day   4  hash f70c64de0cf101b4  16 events
+day   5  hash 8f14d10d3d4342b4  16 events
+day   6  hash 32c9da097cb5cc0c  16 events
+day   7  hash db54eb2c651e7cd0  16 events
+day   8  hash 4a5d4deef513a616  16 events
+day   9  hash a6033430454c8c53  14 events
+day  10  hash e57b2aec96c4b60a  20 events
+day  11  hash 384efe047953e7c8  16 events
+day  12  hash ce2671320b90d4db  14 events
+
+#1 D1 -         Allied the commander's command taken: set intent:1 to neutralise base:2
+#2 D1 -         Allied plan:1 drafted for intent:1  <- #1
+#3 D1 -         Allied the commander's command taken: give the leave to prepare
+#4 D1 -         Allied the commander's command taken: give the leave to launch
+#5 D1 -         Allied the staff's command taken: approve plan:1
+#6 D1 -         Allied plan:1 went from draft to preparing  <- #5
+#7 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: plan:1, the plan to neutralise base:2 (Placeholder base 2), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #5
+#8 D1 -         Allied the staff's command taken: approve plan:1
+#9 D1 -         Allied plan:1 went from preparing to released  <- #8
+#10 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: plan:1, the plan to neutralise base:2 (Placeholder base 2), is ready and leave to launch is given: the staff releases it.  <- #8
+#11 D1 -         Allied the staff's command taken: form under intent:1 an intent to raid base:2 from base:1
+#12 D1 -         Allied staff forms intent:2 under intent:1  <- #11
+#13 D1 -         Allied staff's reason for the command to form under intent:1 an intent to raid base:2 from base:1 [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:1 is to neutralise base:2 (Placeholder base 2), its plan is released and no raid on it from base:1 (Placeholder base 1) stands under it: base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm), so the staff forms intent:2, raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1), under it, for base:1 (Placeholder base 1) to carry out.  <- #11
+#14 D1 -         order:1 accepted for air_group:1  <- order:1  [issued by the staff]
+#15 D1 -         Allied staff's reason for order:1 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:1, a bomber group, has fatigue 0, not above the 45 of the balanced risk: it can send 10; the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 20 between them, against the 6 the balanced risk asks; the fighters can give 8 escorts (it goes without an escort if it must): its mission is set from rest to strike base:2.  <- order:1, #14
+#16 D1 -         order:2 accepted for air_group:2  <- order:2  [issued by the staff]
+#17 D1 -         Allied staff's reason for order:2 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:2, a fighter group able to fly 8: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes; the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 20 between them, against the 6 the balanced risk asks; the fighters can give 8 escorts (it goes without an escort if it must): its mission is set from rest to combat air patrol.  <- order:2, #16
+#18 D1 -         order:3 accepted for air_group:2  <- order:3  [issued by the staff]
+#19 D1 -         Allied staff's reason for order:3 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:2, a fighter group able to fly 8: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes: its patrol share is set from 1 to 0, so that every aircraft it can fly goes with a raid.  <- order:3, #18
+#20 D1 -         order:4 accepted for air_group:3  <- order:4  [issued by the staff]
+#21 D1 -         Allied staff's reason for order:4 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:3, a bomber group, has fatigue 0, not above the 45 of the balanced risk: it can send 10; the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 20 between them, against the 6 the balanced risk asks; the fighters can give 8 escorts (it goes without an escort if it must): its mission is set from rest to strike base:2.  <- order:4, #20
+#22 D1 morning   air_group:1 launched 10 aircraft at base:2 at (5,0), 200 nm  <- order:1
+#23 D1 morning   air_group:3 launched 10 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#24 D1 morning   air_group:2 sent 8 escorts with air_group:1  <- order:2, order:3, #22
+#25 D1 morning   air_group:1 bombs at base:2: 10 shots x 0.2 = 2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #22
+#26 D1 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 2 hits: 1 on aircraft, 0 on supply, 1 on nothing  <- #23
+#27 D1 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground  <- #25, #26
+#28 D1 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 11  <- #22
+#29 D1 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 11  <- #24
+#30 D1 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 11  <- #23
+#31 D1 afternoon air_group:1 rested 5 fatigue, now 6  <- order:1
+#32 D1 afternoon air_group:2 rested 5 fatigue, now 6  <- order:2
+#33 D1 afternoon air_group:3 rested 5 fatigue, now 6  <- order:4
+#34 D1 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#35 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#36 D2 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#37 D2 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:1, a bomber group, has fatigue 6, not above the 45 of the balanced risk: it can send 9; air_group:2, a fighter group able to fly 7: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes; air_group:3, a bomber group, has fatigue 6, not above the 45 of the balanced risk: it can send 9. the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 18 between them, against the 6 the balanced risk asks; the fighters can give 7 escorts (it goes without an escort if it must).
+#38 D2 morning   air_group:1 launched 9 aircraft at base:2 at (5,0), 200 nm  <- order:1
+#39 D2 morning   air_group:3 launched 9 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#40 D2 morning   air_group:2 sent 7 escorts with air_group:1  <- order:2, order:3, #38
+#41 D2 morning   air_group:1 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 4 hits: 0 on aircraft, 0 on supply, 4 on nothing  <- #38
+#42 D2 morning   air_group:3 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #39
+#43 D2 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #41, #42
+#44 D2 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 17  <- #38
+#45 D2 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 17  <- #40
+#46 D2 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 17  <- #39
+#47 D2 afternoon air_group:1 rested 5 fatigue, now 12  <- order:1
+#48 D2 afternoon air_group:2 rested 5 fatigue, now 12  <- order:2
+#49 D2 afternoon air_group:3 rested 5 fatigue, now 12  <- order:4
+#50 D2 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#51 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#52 D3 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#53 D3 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:1, a bomber group, has fatigue 12, not above the 45 of the balanced risk: it can send 8; air_group:2, a fighter group able to fly 7: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes; air_group:3, a bomber group, has fatigue 12, not above the 45 of the balanced risk: it can send 8. the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 16 between them, against the 6 the balanced risk asks; the fighters can give 7 escorts (it goes without an escort if it must).
+#54 D3 morning   air_group:1 launched 8 aircraft at base:2 at (5,0), 200 nm  <- order:1
+#55 D3 morning   air_group:3 launched 8 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#56 D3 morning   air_group:2 sent 7 escorts with air_group:1  <- order:2, order:3, #54
+#57 D3 morning   air_group:1 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #54
+#58 D3 morning   air_group:3 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 3 hits: 0 on aircraft, 0 on supply, 3 on nothing  <- #55
+#59 D3 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground  <- #57, #58
+#60 D3 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 23  <- #54
+#61 D3 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 23  <- #56
+#62 D3 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 23  <- #55
+#63 D3 afternoon air_group:1 rested 5 fatigue, now 18  <- order:1
+#64 D3 afternoon air_group:2 rested 5 fatigue, now 18  <- order:2
+#65 D3 afternoon air_group:3 rested 5 fatigue, now 18  <- order:4
+#66 D3 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#67 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#68 D4 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#69 D4 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:1, a bomber group, has fatigue 18, not above the 45 of the balanced risk: it can send 8; air_group:2, a fighter group able to fly 6: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes; air_group:3, a bomber group, has fatigue 18, not above the 45 of the balanced risk: it can send 8. the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 16 between them, against the 6 the balanced risk asks; the fighters can give 6 escorts (it goes without an escort if it must).
+#70 D4 morning   air_group:1 launched 8 aircraft at base:2 at (5,0), 200 nm  <- order:1
+#71 D4 morning   air_group:3 launched 8 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#72 D4 morning   air_group:2 sent 6 escorts with air_group:1  <- order:2, order:3, #70
+#73 D4 morning   air_group:1 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #70
+#74 D4 morning   air_group:3 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #71
+#75 D4 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #73, #74
+#76 D4 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 29  <- #70
+#77 D4 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 29  <- #72
+#78 D4 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 29  <- #71
+#79 D4 afternoon air_group:1 rested 5 fatigue, now 24  <- order:1
+#80 D4 afternoon air_group:2 rested 5 fatigue, now 24  <- order:2
+#81 D4 afternoon air_group:3 rested 5 fatigue, now 24  <- order:4
+#82 D4 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#83 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#84 D5 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#85 D5 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:1, a bomber group, has fatigue 24, not above the 45 of the balanced risk: it can send 7; air_group:2, a fighter group able to fly 6: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes; air_group:3, a bomber group, has fatigue 24, not above the 45 of the balanced risk: it can send 7. the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 14 between them, against the 6 the balanced risk asks; the fighters can give 6 escorts (it goes without an escort if it must).
+#86 D5 morning   air_group:1 launched 7 aircraft at base:2 at (5,0), 200 nm  <- order:1
+#87 D5 morning   air_group:3 launched 7 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#88 D5 morning   air_group:2 sent 6 escorts with air_group:1  <- order:2, order:3, #86
+#89 D5 morning   air_group:1 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #86
+#90 D5 morning   air_group:3 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #87
+#91 D5 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #89, #90
+#92 D5 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 35  <- #86
+#93 D5 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 35  <- #88
+#94 D5 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 35  <- #87
+#95 D5 afternoon air_group:1 rested 5 fatigue, now 30  <- order:1
+#96 D5 afternoon air_group:2 rested 5 fatigue, now 30  <- order:2
+#97 D5 afternoon air_group:3 rested 5 fatigue, now 30  <- order:4
+#98 D5 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#99 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#100 D6 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#101 D6 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:1, a bomber group, has fatigue 30, not above the 45 of the balanced risk: it can send 7; air_group:2, a fighter group able to fly 5: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes; air_group:3, a bomber group, has fatigue 30, not above the 45 of the balanced risk: it can send 7. the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 14 between them, against the 6 the balanced risk asks; the fighters can give 5 escorts (it goes without an escort if it must).
+#102 D6 morning   air_group:1 launched 7 aircraft at base:2 at (5,0), 200 nm  <- order:1
+#103 D6 morning   air_group:3 launched 7 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#104 D6 morning   air_group:2 sent 5 escorts with air_group:1  <- order:2, order:3, #102
+#105 D6 morning   air_group:1 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #102
+#106 D6 morning   air_group:3 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #103
+#107 D6 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #105, #106
+#108 D6 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 41  <- #102
+#109 D6 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 41  <- #104
+#110 D6 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 41  <- #103
+#111 D6 afternoon air_group:1 rested 5 fatigue, now 36  <- order:1
+#112 D6 afternoon air_group:2 rested 5 fatigue, now 36  <- order:2
+#113 D6 afternoon air_group:3 rested 5 fatigue, now 36  <- order:4
+#114 D6 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#115 D6 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#116 D7 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#117 D7 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:1, a bomber group, has fatigue 36, not above the 45 of the balanced risk: it can send 6; air_group:2, a fighter group able to fly 5: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes; air_group:3, a bomber group, has fatigue 36, not above the 45 of the balanced risk: it can send 6. the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 12 between them, against the 6 the balanced risk asks; the fighters can give 5 escorts (it goes without an escort if it must).
+#118 D7 morning   air_group:1 launched 6 aircraft at base:2 at (5,0), 200 nm  <- order:1
+#119 D7 morning   air_group:3 launched 6 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#120 D7 morning   air_group:2 sent 5 escorts with air_group:1  <- order:2, order:3, #118
+#121 D7 morning   air_group:1 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #118
+#122 D7 morning   air_group:3 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #119
+#123 D7 morning   Allied claim over (5,0): 0 aircraft shot down  <- #121, #122
+#124 D7 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 47  <- #118
+#125 D7 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 47  <- #120
+#126 D7 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 47  <- #119
+#127 D7 afternoon air_group:1 rested 5 fatigue, now 42  <- order:1
+#128 D7 afternoon air_group:2 rested 5 fatigue, now 42  <- order:2
+#129 D7 afternoon air_group:3 rested 5 fatigue, now 42  <- order:4
+#130 D7 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#131 D7 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#132 D8 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#133 D8 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:1, a bomber group, has fatigue 42, not above the 45 of the balanced risk: it can send 5; air_group:2, a fighter group able to fly 4: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes; air_group:3, a bomber group, has fatigue 42, not above the 45 of the balanced risk: it can send 5. the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 10 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must).
+#134 D8 morning   air_group:1 launched 5 aircraft at base:2 at (5,0), 200 nm  <- order:1
+#135 D8 morning   air_group:3 launched 5 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#136 D8 morning   air_group:2 sent 4 escorts with air_group:1  <- order:2, order:3, #134
+#137 D8 morning   air_group:1 bombs at base:2: 5 shots x 0.2 = 1 expected, 3 hits: 0 on aircraft, 2 on supply, 1 on nothing  <- #134
+#138 D8 morning   air_group:3 bombs at base:2: 5 shots x 0.2 = 1 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #135
+#139 D8 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground  <- #137, #138
+#140 D8 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 53  <- #134
+#141 D8 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 53  <- #136
+#142 D8 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 53  <- #135
+#143 D8 afternoon air_group:1 rested 5 fatigue, now 48  <- order:1
+#144 D8 afternoon air_group:2 rested 5 fatigue, now 48  <- order:2
+#145 D8 afternoon air_group:3 rested 5 fatigue, now 48  <- order:4
+#146 D8 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#147 D8 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#148 D9 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#149 D9 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for these groups for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:2, a fighter group able to fly 4: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes. the raid on base:2 (Placeholder base 2) does not go: the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must).
+#150 D9 -         order:5 accepted for air_group:1  <- order:5  [issued by the staff]
+#151 D9 -         Allied staff's reason for order:5 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:1, a bomber group, has fatigue 48, above the 45 of the balanced risk: it rests; the raid on base:2 (Placeholder base 2) does not go: the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must): its mission is set from strike base:2 to rest.  <- order:5, #150
+#152 D9 -         order:6 accepted for air_group:3  <- order:6  [issued by the staff]
+#153 D9 -         Allied staff's reason for order:6 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:3, a bomber group, has fatigue 48, above the 45 of the balanced risk: it rests; the raid on base:2 (Placeholder base 2) does not go: the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must): its mission is set from strike base:2 to rest.  <- order:6, #152
+#154 D9 morning   air_group:1 rested 5 fatigue, now 43  <- order:5
+#155 D9 morning   air_group:2 rested 5 fatigue, now 43  <- order:2
+#156 D9 morning   air_group:3 rested 5 fatigue, now 43  <- order:6
+#157 D9 afternoon air_group:1 rested 5 fatigue, now 38  <- order:5
+#158 D9 afternoon air_group:2 rested 5 fatigue, now 38  <- order:2
+#159 D9 afternoon air_group:3 rested 5 fatigue, now 38  <- order:6
+#160 D9 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#161 D9 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#162 D10 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#163 D10 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for these groups for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:2, a fighter group able to fly 4: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes. the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 12 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must).
+#164 D10 -         order:7 accepted for air_group:1  <- order:7  [issued by the staff]
+#165 D10 -         Allied staff's reason for order:7 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:1, a bomber group, has fatigue 38, not above the 45 of the balanced risk: it can send 6; the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 12 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must): its mission is set from rest to strike base:2.  <- order:7, #164
+#166 D10 -         order:8 accepted for air_group:3  <- order:8  [issued by the staff]
+#167 D10 -         Allied staff's reason for order:8 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:3, a bomber group, has fatigue 38, not above the 45 of the balanced risk: it can send 6; the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 12 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must): its mission is set from rest to strike base:2.  <- order:8, #166
+#168 D10 morning   air_group:1 launched 6 aircraft at base:2 at (5,0), 200 nm  <- order:7
+#169 D10 morning   air_group:3 launched 6 aircraft at base:2 at (5,0), 200 nm  <- order:8
+#170 D10 morning   air_group:2 sent 4 escorts with air_group:1  <- order:2, order:3, #168
+#171 D10 morning   air_group:1 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #168
+#172 D10 morning   air_group:3 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #169
+#173 D10 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #171, #172
+#174 D10 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 49  <- #168
+#175 D10 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 49  <- #170
+#176 D10 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 49  <- #169
+#177 D10 afternoon air_group:1 rested 5 fatigue, now 44  <- order:7
+#178 D10 afternoon air_group:2 rested 5 fatigue, now 44  <- order:2
+#179 D10 afternoon air_group:3 rested 5 fatigue, now 44  <- order:8
+#180 D10 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#181 D10 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#182 D11 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#183 D11 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:1, a bomber group, has fatigue 44, not above the 45 of the balanced risk: it can send 5; air_group:2, a fighter group able to fly 4: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes; air_group:3, a bomber group, has fatigue 44, not above the 45 of the balanced risk: it can send 5. the raid on base:2 (Placeholder base 2) goes: the bombers that go can send 10 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must).
+#184 D11 morning   air_group:1 launched 5 aircraft at base:2 at (5,0), 200 nm  <- order:7
+#185 D11 morning   air_group:3 launched 5 aircraft at base:2 at (5,0), 200 nm  <- order:8
+#186 D11 morning   air_group:2 sent 4 escorts with air_group:1  <- order:2, order:3, #184
+#187 D11 morning   air_group:1 bombs at base:2: 5 shots x 0.2 = 1 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #184
+#188 D11 morning   air_group:3 bombs at base:2: 5 shots x 0.2 = 1 expected, 3 hits: 0 on aircraft, 1 on supply, 2 on nothing  <- #185
+#189 D11 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #187, #188
+#190 D11 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 55  <- #184
+#191 D11 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 55  <- #186
+#192 D11 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 55  <- #185
+#193 D11 afternoon air_group:1 rested 5 fatigue, now 50  <- order:7
+#194 D11 afternoon air_group:2 rested 5 fatigue, now 50  <- order:2
+#195 D11 afternoon air_group:3 rested 5 fatigue, now 50  <- order:8
+#196 D11 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#197 D11 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#198 D12 -         Allied staff's reason for giving no order [serves intent 1: neutralise base:2 (Placeholder base 2); plan 1; decided at the level of the area]: intent:2 raids base:2 (Placeholder base 2) from base:1 (Placeholder base 1) under intent:1 and stands: the staff forms no other. base:1 (Placeholder base 1) is 200 nm from base:2 (Placeholder base 2); its bombers that reach it on normal reach: air_group:1 (Placeholder dive bomber, a reach of 250 nm), air_group:3 (Placeholder dive bomber, a reach of 250 nm).
+#199 D12 -         Allied staff's reason for giving no order [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: No order is given for these groups for intent:2, the raid on base:2 (Placeholder base 2) from base:1 (Placeholder base 1) this morning: air_group:2, a fighter group able to fly 4: it flies the patrol at a share of 0, every aircraft an escort, and only when a raid goes. the raid on base:2 (Placeholder base 2) does not go: the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must).
+#200 D12 -         order:9 accepted for air_group:1  <- order:9  [issued by the staff]
+#201 D12 -         Allied staff's reason for order:9 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:1, a bomber group, has fatigue 50, above the 45 of the balanced risk: it rests; the raid on base:2 (Placeholder base 2) does not go: the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must): its mission is set from strike base:2 to rest.  <- order:9, #200
+#202 D12 -         order:10 accepted for air_group:3  <- order:10  [issued by the staff]
+#203 D12 -         Allied staff's reason for order:10 [serves intent 2: raid base:2 (Placeholder base 2) from base:1 (Placeholder base 1); plan 1; decided at the level of base:1; under intent 1 (the commander's): neutralise base:2 (Placeholder base 2)]: air_group:3, a bomber group, has fatigue 50, above the 45 of the balanced risk: it rests; the raid on base:2 (Placeholder base 2) does not go: the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must): its mission is set from strike base:2 to rest.  <- order:10, #202
+#204 D12 morning   air_group:1 rested 5 fatigue, now 45  <- order:9
+#205 D12 morning   air_group:2 rested 5 fatigue, now 45  <- order:2
+#206 D12 morning   air_group:3 rested 5 fatigue, now 45  <- order:10
+#207 D12 afternoon air_group:1 rested 5 fatigue, now 40  <- order:9
+#208 D12 afternoon air_group:2 rested 5 fatigue, now 40  <- order:2
+#209 D12 afternoon air_group:3 rested 5 fatigue, now 40  <- order:10
+#210 D12 -         base:1 at the end of the day: 1000 t of supply, 28 aircraft ready: open
+#211 D12 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+air_group:1 "Placeholder dive bombers 1" (Allied) at base:1: 10 ready, mission Rest, fatigue 40, no arc
+air_group:2 "Placeholder fighters 2" (Allied) at base:1: 8 ready, mission CombatAirPatrol, patrol share 0, fatigue 40, no arc
+air_group:3 "Placeholder dive bombers 3" (Allied) at base:1: 10 ready, mission Rest, fatigue 40, no arc
+base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock
+base:2 "Placeholder base 2" (Japanese) at (5,0): 0 t of supply in stock
+Allied: no contacts
+Allied claim at (5,0): 1 aircraft destroyed on the ground, day 1 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground, day 2 morning
+Allied claim at (5,0): 1 aircraft destroyed on the ground, day 3 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground, day 4 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground, day 5 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground, day 6 morning
+Allied claim over (5,0): 0 aircraft shot down, day 7 morning
+Allied claim at (5,0): 1 aircraft destroyed on the ground, day 8 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground, day 10 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground, day 11 morning
+Japanese: no contacts
+Japanese: no battle claims

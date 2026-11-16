@@ -167,6 +167,26 @@
             "statement": {
               "type": "string"
             },
+            "level": {
+              "description": "The level that decided (decision 0120, 2): the addressee of the intent served, \"area\" or {\"base\": n}, n the base's number. Left out where a reason has none.",
+              "oneOf": [
+                {
+                  "const": "area"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "base"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "base": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              ]
+            },
             "chain": {
               "type": "array",
               "description": "The intents above the one served, nearest first, each as it stood when the reason was made; the last is one you stated. Left out where the intent is a root (decision 0117, 10).",
@@ -438,6 +458,7 @@
                 "base",
                 "floor_days",
                 "interval_days",
+                "target",
                 "limits"
               ],
               "additionalProperties": false,
@@ -446,7 +467,26 @@
                   "type": "integer"
                 },
                 "base": {
-                  "$ref": "defs.schema.json#/$defs/handle"
+                  "oneOf": [
+                    {
+                      "$ref": "defs.schema.json#/$defs/handle"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The side's own base the intent names; null for neutralise."
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "$ref": "defs.schema.json#/$defs/handle"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The enemy base a neutralise or a raid is aimed at (decision 0120); null for the other kinds."
                 },
                 "floor_days": {
                   "type": [
@@ -467,7 +507,9 @@
                   "enum": [
                     "keep_supplied",
                     "cover",
-                    "hold"
+                    "hold",
+                    "neutralise",
+                    "raid"
                   ]
                 }
               }
@@ -1098,6 +1140,39 @@
             "integer",
             "null"
           ]
+        }
+      }
+    },
+    "neutralise_measure": {
+      "type": "object",
+      "description": "The measure of a neutralise intent (decision 0120, 8): the days it has been in force, the raids the side's bomber groups flew on the target in them (each pulse in which one of them launched at the target is one raid), the aircraft the side's people claim to have destroyed on the ground at the target from the air (a claim, as the briefing's claims are, never below the truth), the air raids on the side's own bases in those days, and the days of them on which no base of the side was raided from the air; and the words.",
+      "required": [
+        "days_in_force",
+        "days_met",
+        "raids_flown",
+        "claimed_on_ground",
+        "raids_on_own_bases",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "days_in_force": {
+          "type": "integer"
+        },
+        "days_met": {
+          "type": "integer"
+        },
+        "raids_flown": {
+          "type": "integer"
+        },
+        "claimed_on_ground": {
+          "type": "integer"
+        },
+        "raids_on_own_bases": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
         }
       }
     },

@@ -608,11 +608,24 @@ impl World {
         }
     }
 
-    /// Checks the kind of an intent set or formed: its base is the side's,
-    /// and a supply intent's days are at least 1.
+    /// Checks the kind of an intent set or formed: its own base is the
+    /// side's, its target (decision 0120, 5 and 9) is a base on the side's
+    /// map that is not the side's, and a supply intent's days are at least 1.
     fn check_intent_kind(&self, side: Side, kind: &IntentKind) -> Result<(), CommandRefusal> {
-        if !self.own_base(side, kind.base()) {
-            return Err(CommandRefusal::NotYourBase(kind.base()));
+        if let Some(base) = kind.own_base() {
+            if !self.own_base(side, base) {
+                return Err(CommandRefusal::NotYourBase(base));
+            }
+        }
+        if let Some(target) = kind.target() {
+            let enemy = self
+                .truth
+                .bases
+                .get(&target)
+                .is_some_and(|found| found.side != side && found.on_map);
+            if !enemy {
+                return Err(CommandRefusal::NotAnEnemyBase(target));
+            }
         }
         if let IntentKind::KeepSupplied {
             floor_days,

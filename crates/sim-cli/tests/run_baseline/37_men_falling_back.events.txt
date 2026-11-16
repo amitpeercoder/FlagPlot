@@ -2,12 +2,12 @@ Scenario 37: Men falling back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9b456436772414b2  45 events
-day   2  hash cb9bdc6b72128a76  36 events
-day   3  hash a76302a9d44c6096  49 events
-day   4  hash 30176bb9e481e5e1  29 events
-day   5  hash 9288b9e06c605916  27 events
-day   6  hash f555dca538c44929  26 events
+day   1  hash 3290ad3302b22545  45 events
+day   2  hash a40f8fd0c7cbf83d  36 events
+day   3  hash 33ef6aa09ab71c95  49 events
+day   4  hash 93d7f31986fa0cd6  29 events
+day   5  hash 5b2511027a117451  27 events
+day   6  hash 7a7f7dd20fd59f5e  26 events
 
 #1 D1 -         order:1 accepted for land_unit:3  <- order:1
 #2 D1 night     base:3 spent 30 t of supply on 6000 men ashore for the day, 4970 t left
