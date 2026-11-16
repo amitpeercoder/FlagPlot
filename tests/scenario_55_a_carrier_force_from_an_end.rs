@@ -1033,7 +1033,6 @@ fn balanced_air_orders() -> Vec<Given> {
         Given::Air(1, mission(CAP)),
         Given::Air(1, share("0.5")),
         Given::Air(2, mission(SEARCH)),
-        Given::Air(2, AirGroupOrder::SetSearchOnce { on: true }),
         Given::Air(2, arc(60, 300)),
         Given::Air(3, mission(STRIKE)),
         Given::Air(3, sizing(true)),
@@ -1052,8 +1051,9 @@ fn air_orders(played: &Played, day: u32) -> Vec<Given> {
 fn balanced_gives_group_1_a_half_and_group_3_two_orders_and_launches_nothing() {
     let played = play(&without_risk(&text()));
     played.nothing_refused();
-    // Nine orders on day 1 (group 2's search once a day, decision 0131).
-    assert_eq!(played.orders(1).len(), 9, "{:?}", played.orders(1));
+    // Eight orders on day 1: a carrier force searches in both daylight
+    // pulses at balanced (decision 0131, rule 6 as amended).
+    assert_eq!(played.orders(1).len(), 8, "{:?}", played.orders(1));
     assert_eq!(
         played.orders(1),
         [
@@ -1082,8 +1082,44 @@ fn balanced_gives_group_1_a_half_and_group_3_two_orders_and_launches_nothing() {
         played.force_at_end().rules_of_engagement.break_off,
         fx("0.5")
     );
-    // Group 2 searches in the two morning pulses only (decision 0131).
-    assert_eq!(played.searches().len(), 2);
+    // Group 2 is given two orders, the search mission and the arc, and
+    // searches in all four daylight pulses.
+    assert_eq!(
+        played.orders_to_group(1, 2),
+        vec![mission(SEARCH), arc(60, 300)]
+    );
+    assert_eq!(played.searches().len(), 4, "{:?}", played.searches());
+    assert!(
+        played.searches().iter().all(|s| s.2 == 2),
+        "{:?}",
+        played.searches()
+    );
+}
+
+fn at_preserve(text: &str) -> String {
+    changed(
+        text,
+        "limit = \"risk\"\nintent = 1\nrisk = \"press\"\n",
+        "limit = \"risk\"\nintent = 1\nrisk = \"preserve\"\n",
+    )
+}
+
+#[test]
+fn preserve_the_force_searches_once_a_day_group_2_three_orders_morning_pulses_only() {
+    let played = play(&at_preserve(&text()));
+    played.nothing_refused();
+    // Group 2 is given three orders: the search mission, search once a day
+    // and the arc, in that order.
+    assert_eq!(
+        played.orders_to_group(1, 2),
+        vec![
+            mission(SEARCH),
+            AirGroupOrder::SetSearchOnce { on: true },
+            arc(60, 300)
+        ]
+    );
+    // It searches in the two morning pulses only.
+    assert_eq!(played.searches().len(), 2, "{:?}", played.searches());
     assert!(
         played
             .searches()
@@ -1334,8 +1370,8 @@ fn one_task_a_force_the_commanders_task_stands_and_the_staff_forms_none() {
             .any(|r| r.contains("intent:2") && r.contains("forms no other for task_force:1")),
         "{none:?}"
     );
-    // Every order is given once, serving intent 2, at balanced: 9 on day 1.
-    assert_eq!(played.orders(1).len(), 9, "{:?}", played.orders(1));
+    // Every order is given once, serving intent 2, at balanced: 8 on day 1.
+    assert_eq!(played.orders(1).len(), 8, "{:?}", played.orders(1));
     assert_eq!(
         played.orders(1),
         [

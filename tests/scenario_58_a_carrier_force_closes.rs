@@ -738,7 +738,6 @@ fn balanced_air_orders() -> Vec<Given> {
         Given::Air(1, mission(CAP)),
         Given::Air(1, share("0.5")),
         Given::Air(2, mission(SEARCH)),
-        Given::Air(2, AirGroupOrder::SetSearchOnce { on: true }),
         Given::Air(2, arc(50, 120)),
         Given::Air(3, mission(STRIKE)),
         Given::Air(3, sizing(true)),
@@ -746,7 +745,7 @@ fn balanced_air_orders() -> Vec<Given> {
 }
 
 #[test]
-fn balanced_closes_with_eleven_orders_launches_nothing_stays_and_goes_back_on_day_3() {
+fn balanced_closes_with_ten_orders_launches_nothing_stays_and_goes_back_on_day_3() {
     let played = play(&without_risk(&text()));
     played.nothing_refused();
     assert_eq!(
@@ -762,14 +761,14 @@ fn balanced_closes_with_eleven_orders_launches_nothing_stays_and_goes_back_on_da
         ]
         .concat()
     );
-    assert_eq!(played.orders(1).len(), 11);
+    assert_eq!(played.orders(1).len(), 10);
     assert!(played.all_launches().is_empty());
     assert!(played.orders(2).is_empty(), "{:?}", played.orders(2));
     assert_eq!(
         played.orders(3),
         vec![Given::Force(1, route(&[(0, 0)])), Given::Air(2, arc(0, 0))]
     );
-    assert_eq!(played.order_count(), vec![11, 0, 2]);
+    assert_eq!(played.order_count(), vec![10, 0, 2]);
     assert_eq!(played.force_at_end().position(), hex(0, 0));
     assert_eq!(played.force_at_end().toward_hex, None);
     let at = force_by_moment(&without_risk(&text()));

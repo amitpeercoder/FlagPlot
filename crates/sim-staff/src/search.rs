@@ -53,6 +53,29 @@ pub(crate) fn once_words(risk: Risk) -> String {
     }
 }
 
+/// Whether a carrier force's searching group flies once a day, in the
+/// morning (decision 0131, 6, as amended on Nov 16, 2026): at preserve the
+/// force alone; at balanced and at press it searches in both daylight
+/// pulses.
+pub fn carrier_once_a_day(risk: Risk) -> bool {
+    risk == Risk::Preserve
+}
+
+/// The setting a carrier force's searching group is to have, in words.
+pub(crate) fn carrier_once_words(risk: Risk) -> String {
+    if carrier_once_a_day(risk) {
+        format!(
+            "at {} risk a carrier force searches once a day, in the morning",
+            risk.name()
+        )
+    } else {
+        format!(
+            "at {} risk a carrier force searches in both daylight pulses",
+            risk.name()
+        )
+    }
+}
+
 /// A bomber group that can search, as the choice of who takes the search
 /// reads it (decision 0131, 7 and 8).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
