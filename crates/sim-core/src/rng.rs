@@ -99,13 +99,20 @@ pub enum Draw {
     /// one stream for each report and listener, in the intelligence
     /// subsystem, keyed on the report's event and the listener (a task force
     /// or a base; for the area command, the event alone). One number is
-    /// always taken, whatever the chances.
+    /// always taken, whatever the chances. Up and sideways only; a report
+    /// sent down draws [`Draw::ReportPassedDown`].
     ReportPassed,
+    /// A report's passing down from the area command to a command under it
+    /// (decision 0135, 11, as ruled after the build): keyed as
+    /// [`Draw::ReportPassed`] is, on its own stream, so that a report sent
+    /// to one command sideways and down takes two numbers: the second road
+    /// is a second chance.
+    ReportPassedDown,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 10] = [
+    pub const ALL: [Draw; 11] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -116,6 +123,7 @@ impl Draw {
         Draw::Bombardment,
         Draw::GroundReport,
         Draw::ReportPassed,
+        Draw::ReportPassedDown,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -132,6 +140,7 @@ impl Draw {
             Draw::Bombardment => 7,
             Draw::GroundReport => 8,
             Draw::ReportPassed => 9,
+            Draw::ReportPassedDown => 10,
         }
     }
 }

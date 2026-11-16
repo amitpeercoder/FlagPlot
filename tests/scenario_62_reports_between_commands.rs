@@ -1042,7 +1042,9 @@ fn heard_once_by_two_roads_the_game_is_that_of_told_sideways() {
 /// command levels on and report figures, a reason that names a contact says
 /// which command holds it (decision 0135, 22), "contact 1 held by
 /// task_force:2"; that clause is taken out, so that a game can be compared
-/// with the same game with command levels off.
+/// with the same game with command levels off. The property "every chance
+/// certain is step 1", as the architect restated it after the build, allows
+/// exactly these words and the "report sent" events.
 fn plain_text(kind: &EventKind) -> String {
     let text = format!("{kind:?}");
     let mut out = String::new();
@@ -1050,6 +1052,10 @@ fn plain_text(kind: &EventKind) -> String {
     while let Some(at) = rest.find(" held by ") {
         out.push_str(&rest[..at]);
         rest = &rest[at + " held by ".len()..];
+        if let Some(after) = rest.strip_prefix("the area command") {
+            rest = after;
+            continue;
+        }
         let end = rest
             .find(|c: char| !(c.is_ascii_alphanumeric() || c == ':' || c == '_'))
             .unwrap_or(rest.len());

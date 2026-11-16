@@ -324,19 +324,25 @@ impl World {
                 Direction::Sideways => figures.sideways,
                 Direction::Down => figures.down,
             };
+            // A report sent down draws on a stream of its own, so that a
+            // second road is a second chance (decision 0135, 11).
+            let draw = match direction {
+                Direction::Down => Draw::ReportPassedDown,
+                Direction::Up | Direction::Sideways => Draw::ReportPassed,
+            };
             let mut stream = match command {
                 CommandRef::Area => self.rng(
                     day,
                     pulse,
                     Subsystem::Intelligence,
-                    Draw::ReportPassed,
+                    draw,
                     EntityRef::Event(key),
                 ),
                 CommandRef::TaskForce(force) => self.rng_pair(
                     day,
                     pulse,
                     Subsystem::Intelligence,
-                    Draw::ReportPassed,
+                    draw,
                     EntityRef::Event(key),
                     EntityRef::TaskForce(*force),
                 ),
@@ -344,7 +350,7 @@ impl World {
                     day,
                     pulse,
                     Subsystem::Intelligence,
-                    Draw::ReportPassed,
+                    draw,
                     EntityRef::Event(key),
                     EntityRef::Base(*base),
                 ),

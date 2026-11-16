@@ -525,6 +525,42 @@ fn a_report_reaching_a_command_by_two_roads_is_heard_once() {
     assert_eq!(claims_of(&world, tf(TF2)), 1);
 }
 
+#[test]
+fn a_report_sent_to_one_command_sideways_and_down_takes_two_numbers() {
+    // The ruling after the build on item 11: the second road is a second
+    // chance. Task force 2 is sent the report sideways by task force 1 and
+    // down by the area command, in the same pulse; the two draws differ.
+    let mut world = travelling(ON_TIME, ON_TIME, ON_TIME, 600);
+    make(&mut world, &[tf(TF1)], DAY, NOON, claim);
+    let events = sent(&world);
+    let roll_to = |event: &Event, direction: Direction| {
+        let at = listeners(event)
+            .iter()
+            .position(|l| l.0 == tf(TF2) && l.1 == direction)
+            .expect("task force 2 is a listener");
+        event.breakdown.as_ref().expect("breakdowns are on").factors[at * 3 + 2].value
+    };
+    let sideways = roll_to(events[0], Direction::Sideways);
+    let down = roll_to(events[1], Direction::Down);
+    assert_ne!(sideways, down);
+    // Each is the first number of its own stream: up and sideways on
+    // `ReportPassed`, down on `ReportPassedDown`, the key otherwise the same.
+    let key = events[0].causes_key();
+    let first = |draw: crate::rng::Draw| {
+        let mut stream = world.rng_pair(
+            DAY,
+            Some(NOON),
+            crate::rng::Subsystem::Intelligence,
+            draw,
+            EntityRef::Event(key),
+            EntityRef::TaskForce(TF2),
+        );
+        Fixed::from_raw(i64::try_from(stream.below(Fixed::SCALE.unsigned_abs())).expect("fits"))
+    };
+    assert_eq!(sideways, first(crate::rng::Draw::ReportPassed));
+    assert_eq!(down, first(crate::rng::Draw::ReportPassedDown));
+}
+
 trait CausesKey {
     fn causes_key(&self) -> EventId;
 }
@@ -935,6 +971,7 @@ fn a_command_formed_by_copy_has_heard_what_the_picture_it_copies_has() {
 #[test]
 fn the_draw_and_the_entity_kind_have_codes_of_their_own() {
     assert_eq!(crate::rng::Draw::ReportPassed.code(), 9);
+    assert_eq!(crate::rng::Draw::ReportPassedDown.code(), 10);
     let event = EntityRef::Event(EventId::new(3));
     assert_eq!(event.kind_code(), 8);
     assert_eq!(event.raw_id(), 3);

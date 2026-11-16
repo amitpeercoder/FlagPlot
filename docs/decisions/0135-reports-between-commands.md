@@ -81,7 +81,7 @@ Standing: Settled by the architect, Nov 16, 2026, inside decision 0132. Built, t
 
 ## As built
 
-Built on Nov 16, 2026. The passing is `crates/sim-core/src/passing.rs` (`pass_report`, `send`, `hear`, `deliver_late_reports`, `prune_heard`, `ReportInFlight`); who holds a report first is `Holders` and `World::apply_report` in `crates/sim-core/src/pictures.rs`, with `by_hex`; a late sighting's age, newer word and "nothing there" by hex are in `BeliefState::apply_report` (`crates/sim-core/src/belief.rs`). The figures are `data/reference/reports.toml` (`ReportFigures` in `refdata.rs`, loaded by `sim-data`), named by a scenario's key `reports`. The event is `ReportSent` (`events.rs`), seen whole by its own side and not at all by the other (`side_events.rs`). The draw is `Draw::ReportPassed` (code 9) in the intelligence subsystem, keyed on `EntityRef::Event` (kind code 8, new) and the listener. The state version is `flagplot-state-v36` and the saved game version 11; the rules label is unchanged. Scenario 62 is `data/scenarios/62_reports_between_commands.toml` with `data/reference/reports_placeholder_scenario_62.toml`.
+Built on Nov 16, 2026. The passing is `crates/sim-core/src/passing.rs` (`pass_report`, `send`, `hear`, `deliver_late_reports`, `prune_heard`, `ReportInFlight`); who holds a report first is `Holders` and `World::apply_report` in `crates/sim-core/src/pictures.rs`, with `by_hex`; a late sighting's age, newer word and "nothing there" by hex are in `BeliefState::apply_report` (`crates/sim-core/src/belief.rs`). The figures are `data/reference/reports.toml` (`ReportFigures` in `refdata.rs`, loaded by `sim-data`), named by a scenario's key `reports`. The event is `ReportSent` (`events.rs`), seen whole by its own side and not at all by the other (`side_events.rs`). The draw is `Draw::ReportPassed` (code 9) for a passing up or sideways and `Draw::ReportPassedDown` (code 10) for one down, in the intelligence subsystem, keyed on `EntityRef::Event` (kind code 8, new) and the listener. The state version is `flagplot-state-v36` and the saved game version 11; the rules label is unchanged. Scenario 62 is `data/scenarios/62_reports_between_commands.toml` with `data/reference/reports_placeholder_scenario_62.toml`.
 
 ### Where each report is made, and who holds it first
 
@@ -110,7 +110,7 @@ Built on Nov 16, 2026. The passing is `crates/sim-core/src/passing.rs` (`pass_re
 7. **Radio reach** is measured between hex centres in nautical miles, by the engine's air distance; within means not more than the reach. A force's reach is its longest-reaching ship's, counting the ships in it.
 8. **The area limit of item 5:** a command gets a report sent down if no intent in force is addressed to it, or one of them has no area read up the tree; else only one about a hex in the union of those areas. An intent addressed to an air group counts for the group's command. A report's hex is its sighting's, its claim's, its "nothing there"'s or its count's hex.
 9. **The roll** is one number in 0 to 1, always taken, compared with the on-time chance and then with on time plus late. In the breakdown it is named `draw`, as a raw die is everywhere, so that a side is not given it (decision 0085); the factors are, for each listener in order, `on_time_chance`, `late_chance` and `draw`, and the result is the number of listeners it reaches on time or late.
-10. **The draw is keyed on the report's event and the listener,** as item 11 says, so two passings of one report to one listener in one pulse (sideways from a force and down from the area) share one number, and with figures alike they arrive alike. See "Open".
+10. **The draw is keyed on the report's event and the listener,** as item 11 says, on `ReportPassed` up and sideways and on `ReportPassedDown` down (the architect's ruling below), so a report sent to one command sideways and down takes two numbers.
 11. **A report made at the end of the day** (a ground count, "none found") has no pulse: its draws and its event are keyed on no pulse; it is counted as made in the afternoon, and a late one arrives in the next night.
 12. **Late reports** are applied right after the pulse begins and before the alert from belief, in the order of the reports' events and then of the listeners. One to a command that is no more is dropped with no event. The area command that first holds a late report sends it down in that pulse, with draws of that pulse.
 13. **A late sighting's contact counts as refreshed in the pulse it arrives,** so it is not aged at the end of it: made in pulse 4 and arriving in pulse 5 it is 1 at the end of 5 and 2 at the end of 6, as in the maker's picture (in the maker's it is 0 during pulse 5, in the hearer's 1).
@@ -123,11 +123,15 @@ Built on Nov 16, 2026. The passing is `crates/sim-core/src/passing.rs` (`pass_re
 20. **`events --why`** prints, beneath any event that is a report's event, each "report sent" of that report with its listeners and arrivals (`crates/sim-cli/src/events.rs`). It shows every passing of the report, not only the one to the command that decided: a launch does not record its command (decision 0134's ruling).
 21. **`ReportSent` in the briefing:** the agent's briefing does not list it; the export gives it a line (`report_sent`).
 
-### Open, for the architect
+### Open
 
-- **One number for two roads.** Item 11 keys the draw on the report and the listener, so the two roads of item 13 share a number and a report lost sideways is usually lost down as well (with the live figures, the same roll compared with the same chances gives the same arrival). In the Eastern Solomons below, task force 2 lost one report by both roads on seed 1. If the second road is meant to be a second chance, the key needs the sender (or the direction).
-- **"On is off but for report sent" and the reasons.** With every chance certain the events equal those of the game with command levels off but for the "report sent" events and the words " held by <command>" in the staff's reasons, which item 22 adds. Scenario 62's test removes that clause before comparing.
-- **The launch record.** As in decision 0134, no event names the command whose picture a strike read; `why` shows every passing of the report.
+- **`why` shows every passing of a report,** not only the one to the command that decided: as in decision 0134, no event names the command whose picture a strike read. Accepted for this step by the architect; narrowed with the tools in step 5.
+
+### The architect's rulings after the build (Nov 16, 2026)
+
+- **One draw for two roads.** Item 11 keyed the draw on the report and the listener alone, so the two roads of item 13 shared a number and a report lost sideways was usually lost down as well (on the Eastern Solomons, seed 1, task force 2 lost one report by both roads). Ruled: the second road is a second chance. A report sent down draws `Draw::ReportPassedDown` (code 10), added at the end; up and sideways keep `ReportPassed`; nothing else in the key changes. Item 11 is amended. `passing_tests::a_report_sent_to_one_command_sideways_and_down_takes_two_numbers` tests it.
+- **"Held by <command>" in the reasons.** Accepted as built; scenario 62's property "every chance certain is step 1" is restated to allow those words, and its test strips them before comparing.
+- **`why` and every passing.** Accepted for this step (above, "Open").
 
 ### Tests
 
