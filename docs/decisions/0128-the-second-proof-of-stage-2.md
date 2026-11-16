@@ -1,10 +1,10 @@
 # 0128: The second proof of stage 2: its test plan, written before the run
 
-Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, "What it must pass" and step 7 of its seven). It says what is run, what each side states, what passes and what is only reported, before any of it is run. It was run on Nov 16, 2026, and did not pass as stated: see "As run" and `docs/validation/stage-2-second-proof.md`. It was run again on Nov 16, 2026, after decisions 0130 and 0131, and again did not pass as stated: see "Rerun on Nov 16, 2026" and `docs/validation/stage-2-second-proof-rerun.md`. It was run a third time on Nov 16, 2026, after decision 0131's rule 6 was amended for carrier forces, and again did not pass as stated: see "Third run on Nov 16, 2026" and `docs/validation/stage-2-second-proof-third-run.md`. The designer read the pass marks on Nov 16, 2026, and confirmed that they stand as written.
+Status: settled by the architect on Nov 16, 2026, inside the plan for step 3, stage 2 (decision 0113, "What it must pass" and step 7 of its seven). It says what is run, what each side states, what passes and what is only reported, before any of it is run. It was run on Nov 16, 2026, and did not pass as stated: see "As run" and `docs/validation/stage-2-second-proof.md`. It was run again on Nov 16, 2026, after decisions 0130 and 0131, and again did not pass as stated: see "Rerun on Nov 16, 2026" and `docs/validation/stage-2-second-proof-rerun.md`. It was run a third time on Nov 16, 2026, after decision 0131's rule 6 was amended for carrier forces, and again did not pass as stated: see "Third run on Nov 16, 2026" and `docs/validation/stage-2-second-proof-third-run.md`. The designer read the pass marks on Nov 16, 2026, and confirmed that they stand as written. The designer closed stage 2 on Nov 16, 2026, with the two failing conditions as named misses: see "Closed on Nov 16, 2026".
 
 Summary: The test plan of stage 2's second proof: the Eastern Solomons on its one day and then days 15 to 21 of the 39-day slice, each with both sides' intents stated and no unit order from anyone, over a thousand seeds; what each side states, the conditions that pass or fail with their numbers, the comparison against a side given no orders with its margin, and what is reported and not judged
 
-Standing: Settled by the architect and confirmed by the designer, Nov 16, 2026, inside decision 0113. Run Nov 16, 2026: not passed as stated (three conditions fail; the choices they raise are the designer's). Run again Nov 16, 2026, at doctrine `supply-16`: not passed as stated (two conditions of the Eastern Solomons fail; the week and legibility pass). Run a third time Nov 16, 2026, at doctrine `supply-17`: not passed as stated (the same two conditions fail, the Allied strike on 767 seeds of 800; the week and legibility pass)
+Standing: Settled by the architect and confirmed by the designer, Nov 16, 2026, inside decision 0113. Run Nov 16, 2026: not passed as stated (three conditions fail; the choices they raise are the designer's). Run again Nov 16, 2026, at doctrine `supply-16`: not passed as stated (two conditions of the Eastern Solomons fail; the week and legibility pass). Run a third time Nov 16, 2026, at doctrine `supply-17`: not passed as stated (the same two conditions fail, the Allied strike on 767 seeds of 800; the week and legibility pass). Closed by the designer, Nov 16, 2026, with the two misses named
 
 ## Why it is written first
 
@@ -245,3 +245,21 @@ Run a third time after decision 0131's rule 6 was amended (a carrier force searc
   - Against no orders the Allied side passes (0.95 against 0.20) and the Japanese does not (-5.50 against 0.00): its stated station puts the Ryujo detachment in American reach and it loses the exchange.
 - **The week passes every condition.**
 - **Legibility passes**, 24 of 24, carried over: every picked reason is word for word one the rerun's readers marked. Every invariant holds, nothing is refused and the same start gives the same game, in every arrangement.
+
+## Closed on Nov 16, 2026
+
+The designer closed stage 2 on Nov 16, 2026, on the third run, with the two conditions that fail as named misses. No pass mark was changed and nothing was tuned; the three reports stand as run.
+
+**The two named misses, both in the Eastern Solomons on its one day.**
+
+1. **The Allied side strikes at ships on 767 of 1,000 seeds, against a mark of 800.** The scenario's own script strikes on 741. The architect set the mark above what the script itself achieves and said so before the first run was judged. Of the 233 seeds without a strike, on 64 no contact was held all day, and on 169 a contact was held and out of reach; on 134 of those it was the carrier force 223 nm off against a reach of 190 to 200. A staff that gives orders once a day cannot close inside a battle of one day (decision 0130, "What this record cannot mend").
+2. **The Japanese side from its intents has a median margin of -5.50, against 0.00 given nothing.** Coming up to the hexes its intents name puts the Ryujo detachment inside the American carriers' reach; it is sunk on 452 seeds. A side given nothing stays away, nobody fights, and it scores nothing lost. In a battle of one day against the other side's historical script, the comparison against doing nothing rewards not fighting.
+
+**What the close leaves open,** each in `docs/open-work.md`:
+
+- **Two sightings in one pulse.** On 58 of the 169 seeds a sighting in reach was replaced in the same pulse by a sighting of another force further off, and the side held one contact at the farther hex. This is in the game's contact rules, not the staff. It was read in full on one seed and counted from the exports on the rest.
+- **Orders inside a day,** which closing the range in a battle of one day needs.
+- **A comparison that does not reward staying away** in a battle of one day, for the proofs of later stages.
+- **A reason of 52 KB** in the search of waters, which lists every hex where it should name the waters.
+
+**What stage 2 proved.** Days 15 to 21 of the 39-day slice, both sides from stated ends with no unit order from anyone, pass every condition on 1,000 seeds: search and patrol, strikes and raids, supply landed, every invariant, no order refused, the same start the same game, and better than a side given nothing. Legibility is 24 of 24. In the Eastern Solomons both staffs strike more often than the script.
