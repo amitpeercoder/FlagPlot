@@ -79,7 +79,9 @@
 //! - **The least tired bomber searches, on a carrier.** In a view built
 //!   for it: a force with no group that can only search and two bomber
 //!   groups that can search, at fatigue 10 and 4: the one at 4 searches,
-//!   once a day at balanced, and the other strikes. At equal fatigue the
+//!   once a day at preserve the force, and the other strikes. (It read "at
+//!   balanced" until rule 6 was amended on Nov 16, 2026: a carrier force
+//!   searches once a day at preserve the force only.) At equal fatigue the
 //!   lower numbered searches. A group that cannot fly is passed over.
 //! - **The least tired bomber searches, at a base.** In a view built for
 //!   it: a base with a cover that has no searcher and a strike task with
@@ -530,7 +532,7 @@ fn on_a_carrier_the_least_tired_bomber_searches_once_a_day_and_the_other_strikes
         aboard(3, false, true, true, 10, 10),
         aboard(4, false, true, true, 4, 10),
     ];
-    let air = decide(Risk::Balanced, 0, false, 50, 120, &groups);
+    let air = decide(Risk::Preserve, 0, false, 50, 120, &groups);
     assert_eq!(role_of(&air.roles, 4), CarrierRole::Searcher);
     assert_eq!(role_of(&air.roles, 3), CarrierRole::Striker);
     let to_4: Vec<&AirGroupOrder> = air

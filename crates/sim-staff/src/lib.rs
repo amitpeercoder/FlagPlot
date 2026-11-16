@@ -115,7 +115,11 @@ use sim_core::view::SideView;
 /// with no group that can only search, and at a base whose cover or search
 /// task has none where a strike or raid task there has two or more; and a
 /// carrier force with a ship out of fuel is given no route.
-pub const DOCTRINE_VERSION: &str = "supply-16";
+/// `supply-17` amends decision 0131's rule 6 for a carrier force: its
+/// search is flown once a day at preserve the force alone, and in both
+/// daylight pulses at balanced and at press; a base's cover and its search
+/// of waters are as `supply-16` had them.
+pub const DOCTRINE_VERSION: &str = "supply-17";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

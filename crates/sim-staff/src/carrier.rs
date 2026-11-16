@@ -53,7 +53,7 @@ use crate::deny::waters;
 use crate::neutralise::bomber_reach;
 use crate::raid::rest_level;
 use crate::reasons::{base_words, serving};
-use crate::search::{least_tired, once_a_day, once_words, TurnCandidate};
+use crate::search::{carrier_once_a_day, carrier_once_words, least_tired, TurnCandidate};
 use crate::stand::{
     afloat, break_off, expected_words, fuel_needs, home_of, hours_to, margin, needs_words,
     stance_words, stopped, NIGHT_HOURS,
@@ -237,7 +237,7 @@ pub fn decide(
                 if g.mission != wanted {
                     orders.push((g.id, AirGroupOrder::SetAirMission(wanted)));
                 }
-                let once = once_a_day(risk);
+                let once = carrier_once_a_day(risk);
                 if !rests && g.search_once != once {
                     orders.push((g.id, AirGroupOrder::SetSearchOnce { on: once }));
                 }
@@ -1166,7 +1166,7 @@ impl Day<'_, '_> {
                             },
                             arc_words(&arc),
                             g.search_range_nm,
-                            once_words(risk)
+                            carrier_once_words(risk)
                         ),
                         CarrierRole::Striker => format!("{}, a bomber group, has {fatigue}: it strikes ships by the table of the {risk_text}, with its strikes sized", g.id),
                         CarrierRole::Other => format!("{}, neither a fighter nor a group that can search or attack a ship: no order", g.id),

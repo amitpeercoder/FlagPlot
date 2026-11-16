@@ -98,10 +98,11 @@
 //!
 //! - **Balanced.** A carrier is what balanced closes on: she closes as
 //!   above, with a break-off level of 0.5, a patrol share of 0.5 and two
-//!   orders to group 3, and three to group 2, search once a day between
-//!   its mission and its arc: eleven orders on day 1 (restated by the
-//!   architect on Nov 16, 2026, for decision 0131; it had ten). She
-//!   launches nothing: the
+//!   orders to group 3: ten orders on day 1 (as first written; decision
+//!   0131 made it eleven with search once a day for group 2, and the
+//!   amendment of its rule 6 on Nov 16, 2026, that a carrier force
+//!   searches in both pulses at balanced, brought it back). She launches
+//!   nothing: the
 //!   contact is a pulse old against the figure of 0. On the morning of
 //!   day 2 the contact is still held, at age 3, and is in reach from
 //!   (6,0), 240 nm: she stays, and the staff gives no order. The contact
@@ -737,7 +738,6 @@ fn balanced_air_orders() -> Vec<Given> {
         Given::Air(1, mission(CAP)),
         Given::Air(1, share("0.5")),
         Given::Air(2, mission(SEARCH)),
-        Given::Air(2, AirGroupOrder::SetSearchOnce { on: true }),
         Given::Air(2, arc(50, 120)),
         Given::Air(3, mission(STRIKE)),
         Given::Air(3, sizing(true)),
@@ -745,7 +745,7 @@ fn balanced_air_orders() -> Vec<Given> {
 }
 
 #[test]
-fn balanced_closes_with_eleven_orders_launches_nothing_stays_and_goes_back_on_day_3() {
+fn balanced_closes_with_ten_orders_launches_nothing_stays_and_goes_back_on_day_3() {
     let played = play(&without_risk(&text()));
     played.nothing_refused();
     assert_eq!(
@@ -761,14 +761,14 @@ fn balanced_closes_with_eleven_orders_launches_nothing_stays_and_goes_back_on_da
         ]
         .concat()
     );
-    assert_eq!(played.orders(1).len(), 11);
+    assert_eq!(played.orders(1).len(), 10);
     assert!(played.all_launches().is_empty());
     assert!(played.orders(2).is_empty(), "{:?}", played.orders(2));
     assert_eq!(
         played.orders(3),
         vec![Given::Force(1, route(&[(0, 0)])), Given::Air(2, arc(0, 0))]
     );
-    assert_eq!(played.order_count(), vec![11, 0, 2]);
+    assert_eq!(played.order_count(), vec![10, 0, 2]);
     assert_eq!(played.force_at_end().position(), hex(0, 0));
     assert_eq!(played.force_at_end().toward_hex, None);
     let at = force_by_moment(&without_risk(&text()));
