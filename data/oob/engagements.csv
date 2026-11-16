@@ -14,3 +14,4 @@ id,key,name,date_from,date_to,zone
 1009,guadalcanal-15-nov,"Naval Battle of Guadalcanal, night action of 14 to 15 November 1942",1942-11-14,1942-11-15,-11
 1010,tassafaronga,Battle of Tassafaronga,1942-11-30,1942-12-01,-11
 1011,pacific-air-doctrine,Standing doctrine and general judgements on the weight of air attack (not one engagement; a place to hold doctrine rows),1942-05-04,1945-02-10,
+1012,search-tempo-1942,"Air search by the South Pacific air forces, 31 July to 30 November 1942 (not one engagement; a place to hold search rows)",1942-07-31,1942-11-30,
