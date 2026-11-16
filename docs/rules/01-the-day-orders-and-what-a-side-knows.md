@@ -149,7 +149,8 @@ The orders that exist are the ones in the tables below. The spec lists more (add
 | --- | --- | --- |
 | Set route (list of waypoints, and optionally `act_at`, a list of hexes to act at, and `stand_at`, a list of hexes to stand at for the night) | The route, its marks, the route's next waypoint index (to 0), the status (to under way), the order that set the route; clears the recorded arrival and its event, and any halt (chapter 2, Halting at a marked waypoint and steaming on). It may turn a force round between two hexes (chapter 2, Turning back and re-routing). | Route |
 | Set speed (cruise, full, or a speed in knots) | The speed setting and the order that set it. | Speed |
-| Set mission (transport, surface combat, carrier, bombardment, escort) | The task force's mission. Only one rule reads it: a force on the bombardment mission fires at an enemy base (chapter 4, Shore bombardment). | Mission |
+| Set mission (transport, surface combat, carrier, bombardment, escort) | The task force's mission. Two rules read it: a force on the bombardment mission fires at an enemy base (chapter 4, Shore bombardment), and a force on the escort mission may be given a charge by the escort order below. The other missions are read by no rule. | Mission |
+| Escort (`escort`, and `charge`, a force of the side; with no `charge` it clears the charge) | The force's charge, another task force of its side, and the escort order that set it. A force with a charge keeps station on it and has no route of its own (chapter 2, Keeping station); an enemy meets the charge only past it (chapter 4, Meeting); its guns fire with the charge's at a raid on the charge (chapter 5, Anti-aircraft fire). It is applied when taken in. With no `charge` it ends the charge and the force stops where it is. Only a force on the escort mission may be given one. | Charge |
 | Load | A standing cargo order to fill every ship with supply from the base here. | Cargo |
 | Load fuel | A standing cargo order to fill every ship with fuel as cargo from the base here. | Cargo |
 | Load to a weight (`load` with `weight_t`, a cargo of supply, the default, or fuel, and no unit) | A standing cargo order to fill the force's ships, in ship order, until the force has that many tons of the cargo aboard, all its ships together. It is a level, not an addition (chapter 2, Cargo orders). | Cargo |
@@ -164,7 +165,9 @@ The orders that exist are the ones in the tables below. The spec lists more (add
 | Send to yard (`send_to_yard`, no arguments) | Not a standing order. Sends the whole force, stopped at a base that is a port for the yard, away to the yard at once (below, and chapter 4, Repair). The port is the base it is stopped at. | None |
 | Prepare a landing (`prepare_landing`, a hex and a roster of land units) | The force's preparation: the coast hex of the landing and the roster, with the loading it keeps and the order that set it. It is applied when taken in, and what a new place, a unit added or dropped and the same order again do is in chapter 7, Preparing a landing. It stands until replaced or until the landing is done, and may be given at sea. | Preparation |
 
-[0008, 0011, 0014, 0016, 0017, 0021, 0046, 0066, 0069, 0092, 0095, 0096, 0111]
+[0008, 0011, 0014, 0016, 0017, 0021, 0046, 0066, 0069, 0092, 0095, 0096, 0111, 0121]
+
+An escort order that gives a charge changes no position, route or speed when it is taken in, and records nothing beyond its acceptance. The escort takes its station at the start of the next pulse's movement (chapter 2, Keeping station). An escort order that clears a charge records no `ChargeLost`: the force stops where it is, and only a turning back, if it makes one, is recorded. A force's charge ends of itself where the charge has no ship afloat, or is joined into another force or stood down in port (chapter 2, Keeping station). [0121]
 
 A route, load, load-fuel, load-to-a-weight or load-with-a-unit order to a force that is out of fuel is refused (Every reason an order is refused, below; differences.md rows 17 and 34).
 
@@ -253,6 +256,7 @@ Then, by kind:
 | Order | Reason | When |
 | --- | --- | --- |
 | Set route | Out of fuel | The force's status is out of fuel. Tried before the waypoints. [differences.md row 34] |
+| Set route | Keeps station | The force has a charge: "the task force keeps station on its charge F and has no route of its own", naming the charge. Tried after the out-of-fuel reason and before the waypoints. [0121] |
 | Set route | Waypoint off the map | A waypoint is not on the map. The first waypoint is tried first, then each in turn. |
 | Set route | Waypoint unreachable | The first waypoint cannot be reached by sea from the force's position (or the hex it would turn back to), or a later one cannot be reached from the one before. A land hex is unreachable. |
 | Set route | Empty route | The force does not move anywhere: no waypoint other than where it already is, and no leg in progress to finish. |
@@ -287,6 +291,12 @@ Then, by kind:
 | Prepare a landing | Not your land unit | A unit on the roster does not exist or is not the issuer's. One reason for both. The first such unit in roster order is the one that counts. |
 | Prepare a landing | Not a coast hex | The hex is off the map or is not a coast hex: "H is not a coast hex on the map", with the hex. The map is common knowledge. Tried after the roster's owners. |
 | Prepare a landing | Land unit destroyed | A unit on the roster has no men ashore and none aboard any ship: "the land unit is destroyed". Tried after the hex. |
+| Escort | Not on the escort mission | The force's mission is not escort. [0121] |
+| Escort | Is a charge | Another force has this force as its charge, so it cannot be an escort: "the task force is the charge of F, and a charge cannot be an escort", naming that escort. Tried for a charge named and for a clearing order alike. [0121] |
+| Escort | Cannot escort itself | The charge named is the force the order is for. [0121] |
+| Escort | Not your unit | The charge named does not exist or is not the issuer's. One reason for both. [0121] |
+| Escort | No ship afloat | The charge named lists no ships: the reasons of row 3, including the two for a force joined or stood down. [0121] |
+| Escort | Charge is an escort | The charge named has a charge of its own: "F has a charge of its own, and an escort cannot be a charge". Tried last. [0121] |
 | Set speed in knots | Speed not above zero | The speed is zero or below. |
 | Set speed (cruise, full), Set mission, Set readiness, Unload | None | Always accepted. |
 
@@ -512,6 +522,8 @@ No event a side may see names an enemy ship, task force or air group. The side's
 | Task force formed | Own side. The enemy sees nothing |
 | Command taken, command refused, plan drafted, plan state changed, plan amended, staff reason, held by order, staff notice, interrupt fired | Own side. The enemy sees nothing (decision 0107; chapter 8) |
 | Task force joined | The force joined into is own. The enemy sees nothing |
+| Station kept, charge lost | The escort is own. The enemy sees nothing (decision 0121, 8) |
+| Meeting not held | The charge is own. The enemy sees nothing: it is told nothing of a force it did not meet, and the fights of its own force with the escorts are told as any fight is (decision 0121, 8) |
 | Task force stood down in port, load below reserve, load held at reserve, refuelling held at reserve | Own force. The enemy sees nothing (decision 0111) |
 | Loading gained, loading lost, preparation shared | Own force. The enemy sees nothing of a force's preparation |
 | Rehearsal gained, rehearsal lost, left roster | Own land unit. The enemy sees nothing |
