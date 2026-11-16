@@ -207,7 +207,18 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
 .eid { color: var(--dim); margin-right: 6px; font-variant-numeric: tabular-nums; }
 .ecause { color: var(--dim); font-size: 12px; margin-left: 4px; }
 .empty { padding: 10px; color: var(--dim); }
-#detail { flex: 1 1 58%; overflow: auto; border-top: 2px solid var(--line); padding: 8px 10px; min-height: 0; }
+#split { display: none; flex: none; height: 8px; margin: -4px 0; position: relative; z-index: 3; cursor: row-resize; touch-action: none; }
+#split::after { content: ''; position: absolute; left: 0; right: 0; top: 3px; height: 2px; background: var(--line); }
+#split:hover::after, #split.drag::after { background: var(--accent); }
+#panel.cmd #split { display: block; }
+#dwrap { flex: 1 1 58%; min-height: 0; display: flex; flex-direction: column; border-top: 2px solid var(--line); }
+#panel.cmd #dwrap { border-top: 0; flex: 0 0 33%; }
+#dethead { display: none; flex: none; align-items: center; gap: 8px; padding: 2px 10px; background: var(--bg); border-bottom: 1px solid var(--line); cursor: pointer; font-size: 12.5px; }
+#panel.cmd #dethead { display: flex; }
+#dethead b { font-size: 13px; }
+#dwrap.collapsed { flex: 0 0 auto !important; }
+#dwrap.collapsed #detail { display: none; }
+#detail { flex: 1; overflow: auto; padding: 8px 10px; min-height: 0; }
 #detail section { margin-bottom: 12px; }
 #detail h3 { font-size: 12.5px; margin: 8px 0 3px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.03em; }
 #detail table { border-collapse: collapse; }
@@ -229,6 +240,40 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
 .shiprow .sub { color: var(--dim); font-size: 12.5px; }
 .note { color: var(--dim); font-size: 12.5px; margin: 4px 0; }
 
+/* Command panel */
+#tabs { display: flex; gap: 2px; padding: 4px 8px 0; border-bottom: 1px solid var(--line); flex: none; }
+#tabs button { border-radius: 4px 4px 0 0; border-bottom: 0; margin-bottom: -1px; background: var(--bg); }
+#tabs button[aria-selected=true] { background: var(--panel); border-color: var(--line); font-weight: 650; border-bottom: 1px solid var(--panel); }
+#cmdwrap { flex: 1 1 55%; min-height: 0; display: flex; flex-direction: column; }
+#cmdbody { overflow: auto; flex: 1; padding: 4px 8px 8px; }
+#cmdwrap fieldset { border: 0; padding: 0; margin: 0; display: flex; gap: 10px; align-items: center; }
+#cmdfilter { display: inline-flex; gap: 6px; align-items: center; }
+.cside { margin-bottom: 14px; }
+.chside { font-size: 13px; margin: 6px 0 2px; padding-bottom: 2px; border-bottom: 2px solid var(--sc, var(--line)); color: var(--sc, var(--ink)); }
+.cnode { margin: 4px 0; padding: 3px 6px; border: 1px solid var(--line); border-radius: 4px; }
+.cnode.filt { outline: 2px solid var(--accent); outline-offset: -1px; }
+.cnode.withdrawn { opacity: 0.55; }
+.cnode.withdrawn .cwords { text-decoration: line-through; }
+.chead { cursor: pointer; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.chead:hover .cwords { text-decoration: underline; }
+.cid { font-weight: 700; font-variant-numeric: tabular-nums; }
+.cwords { font-weight: 600; overflow-wrap: anywhere; }
+.tag.staff { border-style: dashed; }
+.cmeta { color: var(--dim); font-size: 12px; overflow-wrap: anywhere; }
+.ckids { margin: 4px 0 0 6px; padding-left: 8px; border-left: 2px solid var(--line); }
+.cords { margin-top: 2px; font-size: 12.5px; }
+.cords details { margin: 1px 0; }
+.cords summary { cursor: pointer; }
+.cords ul { list-style: none; margin: 0; padding-left: 10px; }
+li.cord { cursor: pointer; padding: 1px 4px; border-radius: 3px; overflow-wrap: anywhere; }
+li.cord:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+li.cord.sel { background: color-mix(in srgb, var(--hl) 28%, transparent); box-shadow: inset 3px 0 0 var(--hl); }
+.cwhy { padding: 2px 0 2px 10px; overflow-wrap: anywhere; }
+.cnone { padding-left: 2px; }
+.clevel { margin: 6px 0; }
+.clevel h4 { margin: 4px 0 2px; font-size: 12.5px; color: var(--dim); letter-spacing: 0.03em; }
+.oreason ul.cchain { list-style: none; margin: 0; padding: 0; }
+.oreason ul.cchain li { margin: 2px 0; overflow-wrap: anywhere; }
 /* Footer */
 #controls { flex: none; position: sticky; bottom: 0; z-index: 5; background: var(--panel); border-top: 1px solid var(--line); padding: 6px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 #slider { flex: 1; min-width: 160px; }
@@ -278,7 +323,20 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
     <div id="readout" class="maptool"><div class="dim">Move the pointer over the map.</div></div>
     <details id="legend" class="maptool" open><summary>Legend</summary><ul id="legendlist"></ul></details>
   </section>
-  <aside id="panel" aria-label="Events and details">
+  <aside id="panel" aria-label="Events, command and details">
+    <div id="tabs" role="tablist" aria-label="Panel">
+      <button id="tabEvents" role="tab" aria-selected="true" title="The events of the step">Events</button>
+      <button id="tabCommand" role="tab" aria-selected="false" title="The intents of each side, the orders each issued and the reasons">Command</button>
+    </div>
+    <div id="cmdwrap" hidden>
+      <div class="pane-head">
+        <div class="line"><h2 id="cmdtitle">Command</h2><span class="dim" id="cmdinfo"></span>
+          <span id="cmdfilter" class="badge warn" hidden>Events: <button id="cmdclear" title="Show every event again">clear</button></span></div>
+        <div class="line"><fieldset aria-label="Arrange the intents"><label title="Roots at the left, sub-intents under their parent"><input type="radio" name="cmdview" value="tree" checked autocomplete="off"> By intent</label>
+          <label title="The same intents grouped by the level they are addressed to: the area, bases, task forces, and the units that received orders"><input type="radio" name="cmdview" value="level" autocomplete="off"> By level</label></fieldset></div>
+      </div>
+      <div id="cmdbody"></div>
+    </div>
     <div id="evwrap">
       <div class="pane-head">
         <div class="line"><h2 id="evtitle">Events</h2><span class="dim" id="evinfo"></span></div>
@@ -290,7 +348,11 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
       </div>
       <ul id="evlist"></ul>
     </div>
-    <div id="detail"><div class="empty">Click an event to see why it happened, or a force counter on the map to see its ships.</div></div>
+    <div id="split" role="separator" aria-orientation="horizontal" title="Drag to change the height of the details pane" tabindex="0"></div>
+    <div id="dwrap">
+      <div id="dethead" title="Show or hide the details"><span id="detarrow">&#9662;</span><b>Details</b><span class="dim" id="dethint"></span></div>
+      <div id="detail"><div class="empty">Click an event to see why it happened, or a force counter on the map to see its ships.</div></div>
+    </div>
   </aside>
 </main>
 <footer id="controls">
@@ -460,6 +522,7 @@ function sideReplay(replay, side) {
       contacts: { [side]: (final.contacts && final.contacts[side]) || [] },
       claims: { [side]: (final.claims && final.claims[side]) || [] },
       ground_estimates: { [side]: (final.ground_estimates && final.ground_estimates[side]) || [] },
+      ...(final.commands && final.commands[side] ? { commands: { [side]: final.commands[side] } } : {}),
     } : null,
   });
   return out;
@@ -747,7 +810,10 @@ function sideSteps(steps, side) {
       if (c && c.length) changed[k] = { [side]: c };
       if (r && r.length) removed[k] = { [side]: r };
     }
-    return { day: e.day, phase: e.phase, changed, removed };
+    const out = { day: e.day, phase: e.phase, changed, removed };
+    // The side's own command state, whole, where the umpire's entry writes it (decision 0107, item 6): nothing of the enemy's.
+    if (e.commands && e.commands[side]) out.commands = { [side]: e.commands[side] };
+    return out;
   });
 }
 
@@ -1193,6 +1259,8 @@ function buildModel(replay) {
     }
   }
 
+  const commandStatesByStep = commandStates(replay, steps, fromSteps);
+
   // Rebuild
   const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, estimates: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map(), landUnits: new Map(), formedBases: new Map(), baseSide: new Map() };
   for (const u of initial.land_units || []) cur.landUnits.set(u.id, { id: u.id, name: u.name, side: u.side, men_ashore: u.men_ashore || 0, hex: Array.isArray(u.hex) ? u.hex.slice() : (u.hex ? [u.hex.q, u.hex.r] : null), posture: u.posture || 'defend', fatigue: u.fatigue || 0, fieldworks: u.fieldworks || 0, fed_share: u.fed_share !== undefined ? u.fed_share : 1, march: u.march ? { to: Array.isArray(u.march.to) ? u.march.to.slice() : [u.march.to.q, u.march.to.r], days: u.march.days, of: null } : null });
@@ -1511,7 +1579,7 @@ function buildModel(replay) {
   }
 
   return {
-    replay, events, steps, stepOfEvent, states, eventById, orderById, ledTo, eventForces,
+    replay, events, steps, stepOfEvent, states, eventById, orderById, ledTo, eventForces, commandStates: commandStatesByStep,
     hexes: hexList, hexByKey, bases, basesByHex, airGroups, initShips, finalForces, finalShips,
     groupTable, aircraftTypes, hasAir, umpire,
     placements, placementsByHex, hasLatLon, days, bounds: { minX, minY, maxX, maxY },
@@ -1637,6 +1705,208 @@ function eventMatches(model, ev, text, sel) {
     if (sel.type === 'ship') return (ev.entities || []).includes('ship:' + sel.id);
   }
   return true;
+}
+
+// ---- Command: the intent tree, the orders each intent issued, and the reasons (decisions 0107, 0116, 0117, 0120) ----
+// Built from `commands` in the steps (each side's whole command state, written where it changes) and from the staff's own
+// reasons in the events (`staff_reason`: the order, the intent, the level, the chain, the evidence). Nothing is worked out
+// that the file does not hold. A side's page is given its own command state only.
+
+/** The level an intent is addressed to, set by its kind (decision 0117, 2): "area", "base:N" or "task_force:N". */
+function intentLevel(it) {
+  switch (it.kind) {
+    case 'keep_supplied': case 'neutralise': case 'deny': return 'area';
+    case 'cover': case 'hold': case 'raid': case 'strike_ships': case 'search_waters': return it.base != null ? 'base:' + it.base : 'area';
+    case 'stand_at': case 'operate_carriers': return it.task_force != null ? 'task_force:' + it.task_force : 'area';
+    default: return 'area';
+  }
+}
+
+/** Each viewer step's command state: { allied?, japanese? }, the last one written at or before the step's own entry; null for a file with no steps. */
+function commandStates(replay, steps, fromSteps) {
+  if (!fromSteps || !Array.isArray(replay.steps)) return null;
+  const entryAt = new Map();
+  replay.steps.forEach((e, j) => entryAt.set(stepKey(e.day, e.phase), j));
+  const upTo = [];
+  let held = {};
+  replay.steps.forEach(e => {
+    if (e.commands) held = Object.assign({}, held, e.commands);
+    upTo.push(held);
+  });
+  return steps.map(s => {
+    const j = entryAt.get(stepKey(s.stateDay, s.statePhase));
+    return j === undefined ? {} : upTo[j];
+  });
+}
+
+/** "1 (commander): hold base:1 (Name); 2 (staff): ..." -> [{ intent, maker, statement }], nearest first. */
+function parseChain(text) {
+  if (!text) return [];
+  return String(text).split(/; (?=\d+ \((?:commander|staff)\): )/).map(part => {
+    const m = /^(\d+) \((commander|staff)\): ([\s\S]*)$/.exec(part);
+    return m ? { intent: Number(m[1]), maker: m[2], statement: m[3] } : null;
+  }).filter(x => x);
+}
+
+/** The staff's reasons of a model, sorted into those that gave an order, those that gave none and those for a command. */
+function commandLog(model) {
+  if (model.cmdLog) return model.cmdLog;
+  const log = { orders: [], none: [], commands: [], byOrder: new Map(), orderEvent: new Map() };
+  for (const ev of model.events) {
+    if (ev.kind === 'order_accepted' && ev.data && ev.data.order !== undefined) log.orderEvent.set(ev.data.order, ev.id);
+  }
+  for (const ev of model.events) {
+    if (ev.kind !== 'staff_reason') continue;
+    const d = ev.data || {};
+    const row = { event: ev.id, step: model.stepOfEvent.get(ev.id), day: ev.day, side: d.side, intent: d.intent !== undefined ? d.intent : null, plan: d.plan !== undefined ? d.plan : null,
+      level: d.level || null, statement: d.statement || '', chain: parseChain(d.chain), evidence: d.evidence || '', binding: d.binding || '', worked: d.worked || '', would_change: d.would_change || '' };
+    if (d.order !== undefined) {
+      row.order = d.order;
+      row.orderEvent = log.orderEvent.get(d.order) !== undefined ? log.orderEvent.get(d.order) : ev.id;
+      log.orders.push(row);
+      log.byOrder.set(d.order, row);
+    } else if (/reason for giving no order/.test(ev.text || '')) log.none.push(row);
+    else log.commands.push(row);
+  }
+  model.cmdLog = log;
+  return log;
+}
+
+/** What an intent is, in the engine's words: "hold base:1 (Name)". */
+function intentWords(model, it, engine) {
+  const baseW = id => { const b = model.bases.get(id); return b && b.name ? (engine ? 'base:' + id + ' (' + b.name + ')' : b.name + ' (base:' + id + ')') : 'base:' + id; };
+  const forceW = id => engine ? 'task_force:' + id : unitWords(model, 'task_force:' + id);
+  switch (it.kind) {
+    case 'keep_supplied': return 'keep ' + baseW(it.base) + ' at ' + it.floor_days + ' days of supply' + (it.interval_days ? ', a run every ' + it.interval_days + ' days' : '');
+    case 'hold': return 'hold ' + baseW(it.base);
+    case 'cover': return 'cover ' + baseW(it.base) + ' from the air';
+    case 'neutralise': return 'neutralise ' + baseW(it.target);
+    case 'raid': return 'raid ' + baseW(it.target) + ' from ' + baseW(it.base);
+    case 'deny': return 'deny the waters within ' + it.distance + ' hexes of (' + it.hex[0] + ',' + it.hex[1] + ')';
+    case 'strike_ships': return 'strike ships from ' + baseW(it.base);
+    case 'search_waters': return 'search the waters from ' + baseW(it.base);
+    case 'stand_at': return 'stand at (' + it.hex[0] + ',' + it.hex[1] + ') with ' + forceW(it.task_force);
+    case 'operate_carriers': return 'operate the carrier force ' + forceW(it.task_force) + ' from (' + it.hex[0] + ',' + it.hex[1] + ')';
+    default: return it.kind;
+  }
+}
+
+/** What an order asks, in plain words: "air mission: rest", "patrol share: 0.5". */
+function orderWords(text) {
+  return String(text).replace(/_/g, ' ').replace(/^(air mission|mission|speed|readiness|reach|patrol share|home port) /, '$1: ');
+}
+
+/** A level as words, the name first: "the area", "Henderson Field (base:1)", "VMF-223 (air_group:10)". */
+function levelWords(model, level) {
+  if (!level || level === 'area') return 'the area';
+  return unitWords(model, level);
+}
+
+/** An order's target, the name first where the page knows it: "VMF-223 (air_group:10)". */
+function unitWords(model, target) {
+  const p = parseEntity(target);
+  if (!p) return String(target);
+  let name = null;
+  if (p.type === 'air_group') { const g = model.groupTable.get(p.id); name = g && g.name; }
+  else if (p.type === 'base') { const b = model.bases.get(p.id); name = b && b.name; }
+  else if (p.type === 'task_force') { const f = model.finalForces.get(p.id) || (model.states[0] && model.states[0].forces.get(p.id)); name = f && f.name; }
+  return name ? name + ' (' + target + ')' : String(target);
+}
+
+/** The limits that bind an intent, read up the tree: the nearest set on it or above it, and the intent that set it. */
+function effectiveLimits(byId, it) {
+  const out = [];
+  const find = pick => {
+    for (let x = it, hops = 0; x && hops < 64; x = byId.get(x.parent), hops++) { const v = pick(x.limits || {}); if (v !== undefined) return { value: v, from: x.id }; }
+    return null;
+  };
+  const risk = find(l => l.risk), prio = find(l => l.priority), forces = find(l => l.forces), area = find(l => l.area), prot = find(l => (l.protected && l.protected.length) ? l.protected : undefined);
+  const src = l => l.from === it.id ? '' : ' (from intent ' + l.from + ')';
+  if (risk) out.push('risk ' + risk.value + src(risk));
+  if (prio) out.push('priority ' + prio.value + src(prio));
+  if (forces) {
+    const f = forces.value, bits = [];
+    if (f.ships && f.ships.length) bits.push('ships ' + f.ships.join(','));
+    if (f.task_forces && f.task_forces.length) bits.push('task forces ' + f.task_forces.join(','));
+    if (f.air_groups && f.air_groups.length) bits.push('air groups ' + f.air_groups.join(','));
+    if (f.source != null) bits.push('source base ' + f.source);
+    out.push('forces: ' + (bits.join('; ') || 'none named') + src(forces));
+  }
+  if (area) out.push('area of ' + area.value.length + ' hexes' + src(area));
+  if (prot) out.push('protected ships ' + prot.value.join(',') + src(prot));
+  return out;
+}
+
+/**
+ * The tree of one side's command state at one step, with what the staff did under each intent by then: orders given (from
+ * their reasons) and reasons for giving none. `state` is that side's command state; `si` the viewer step.
+ */
+function commandTree(model, side, state, si) {
+  const log = commandLog(model);
+  const day = model.steps[si].day;
+  const byId = new Map(state.intents.map(it => [it.id, it]));
+  const plans = new Map((state.plans || []).map(p => [p.id, p]));
+  const nodes = new Map();
+  for (const it of state.intents) {
+    nodes.set(it.id, {
+      id: it.id, intent: it, side, parent: it.parent !== undefined ? it.parent : null, maker: it.maker || 'commander', level: intentLevel(it),
+      words: intentWords(model, it), statement: intentWords(model, it, true), plan: plans.get(it.plan) || null, limits: effectiveLimits(byId, it), withdrawn: it.withdrawn_day !== undefined,
+      children: [], orders: [], none: [],
+    });
+  }
+  const roots = [];
+  for (const n of nodes.values()) { const p = n.parent !== null ? nodes.get(n.parent) : null; if (p) p.children.push(n); else roots.push(n); }
+  for (const row of log.orders) {
+    if (row.side !== side || row.step === undefined || row.step > si) continue;
+    const n = nodes.get(row.intent);
+    if (!n) continue;
+    const o = model.orderById.get(row.order);
+    n.orders.push({ order: row.order, day: row.day, unit: o ? o.target : null, text: o ? o.text : null, level: row.level, reason: row, event: row.orderEvent });
+  }
+  for (const row of log.none) {
+    if (row.side !== side || row.step === undefined || row.step > si || row.day !== day) continue;
+    const n = nodes.get(row.intent);
+    if (n) n.none.push(row);
+  }
+  for (const n of nodes.values()) n.orders.sort((a, b) => b.day - a.day || a.order - b.order);
+  return { side, roots, nodes, leaves: state.leaves || null, day };
+}
+
+/** The trees of every side the page shows at a step: [] where the replay holds no command state. */
+function commandView(model, si) {
+  const held = model.commandStates && model.commandStates[si];
+  if (!held) return [];
+  const out = [];
+  for (const side of SIDES) if (held[side] && (model.umpire || model.replay.view_side === side)) out.push(commandTree(model, side, held[side], si));
+  return out;
+}
+
+/** The events that serve one intent of one side: its commands, reasons, orders, notices and plan changes (a plan is its root's). */
+function eventsServing(model, side, intentId) {
+  const log = commandLog(model);
+  const held = model.commandStates && model.commandStates[model.commandStates.length - 1];
+  const state = held && held[side];
+  const it = state && state.intents.find(x => x.id === intentId);
+  const out = new Set();
+  if (!it) return out;
+  const root = it.parent === undefined || it.parent === null;
+  const orders = new Set();
+  for (const row of [...log.orders, ...log.none, ...log.commands]) if (row.side === side && row.intent === intentId) { out.add(row.event); for (const c of model.eventById.get(row.event).causes || []) if (c.event !== undefined) out.add(c.event); if (row.order !== undefined) orders.add(row.order); }
+  const token = new RegExp('(^|[^0-9a-z_])intent:' + intentId + '([^0-9]|$)');
+  for (const ev of model.events) {
+    const d = ev.data || {};
+    if (d.side !== side) continue;
+    if (ev.kind === 'command_taken') {
+      const detail = String(d.detail || '');
+      const plan = /approve plan:(\d+)/.exec(detail);
+      if (token.test(detail) || (root && plan && Number(plan[1]) === it.plan)) out.add(ev.id);
+    } else if (ev.kind === 'intent_formed') { if (d.intent === intentId) out.add(ev.id); }
+    else if (ev.kind === 'plan_drafted') { if (d.intent === intentId) out.add(ev.id); }
+    else if (ev.kind === 'plan_state_changed' || ev.kind === 'plan_amended' || ev.kind === 'staff_notice') { if (root && d.plan === it.plan) out.add(ev.id); }
+    else if (ev.kind === 'order_accepted' && orders.has(d.order)) out.add(ev.id);
+    else for (const c of ev.causes || []) if (c.order !== undefined && orders.has(c.order)) { out.add(ev.id); break; }
+  }
+  return out;
 }
 
 /** Short counts for the checker's one-line summary. */
@@ -1768,6 +2038,7 @@ const FlagPlotCore = {
   hexKey, hexCenter, hexCorner, hexCorners, edgeForDirection, pointToHex, bearingPoint, arcWidth, arcSpec, placeLabels,
   stepLabel, buildSteps, validateReplay, parseEntity, splitText, buildModel, compareWithFinal, whyTree, eventMatches, summarize,
   airGroupHex, airReach,
+  intentLevel, commandStates, parseChain, commandLog, intentWords, orderWords, levelWords, unitWords, effectiveLimits, commandTree, commandView, eventsServing,
 };
 if (typeof module !== 'undefined') module.exports = FlagPlotCore;
 </script>
@@ -1821,6 +2092,8 @@ const S = {
   // The air layer: shown or not; the events of the air fight whose tally was clicked (the list shows only these);
   // the air group whose reach rings are drawn; the base selected on the map.
   air: true, selEvents: null, selEventsHex: null, selAirGroup: null, selBase: null,
+  // The command panel: the tab shown, how the intents are arranged, the intent whose events the list shows (and the set), the order whose reason is shown.
+  tab: 'events', detailFrac: { events: null, command: 0.33 }, detailPin: null, cmdView: 'tree', cmdIntent: null, cmdSet: null, cmdOrder: null,
 };
 const mapEl = $('map'), gHexes = $('gHexes'), gClosed = $('gClosed'), gDyn = $('gDyn'), gMeasure = $('gMeasure'), gHover = $('gHover'), gScreen = $('gScreen'), worldEl = $('world'), wrap = $('mapwrap');
 
@@ -1845,7 +2118,7 @@ function loadText(text, sourceName) {
   catch (err) { showMessage('Could not build the replay from ' + sourceName + ': ' + err.message); return; }
   showMessage('');
   stopPlaying();
-  S.replay = obj; S.model = model; S.step = 0; S.selEvent = null; S.selEntity = null; S.hoverKey = null; resetAirSelection();
+  S.replay = obj; S.model = model; S.step = 0; S.selEvent = null; S.selEntity = null; S.hoverKey = null; S.cmdOrder = null; clearIntentFilter(); cmdToggled.clear(); resetAirSelection();
   S.models = { umpire: model, allied: null, japanese: null }; S.pov = 'umpire'; S.belief = beliefChoice();
   initPov();
   S.sea = C.makeSeaMap(obj.map.hexes, obj.directions);
@@ -2020,17 +2293,24 @@ function highlightSets() {
   const hl = { forces: new Set(), bases: new Set(), contacts: new Set() };
   const st = S.model.states[S.step];
   const ev = S.selEvent != null ? S.model.eventById.get(S.selEvent) : null;
-  if (ev) {
-    for (const e of ev.entities || []) {
+  const ord = S.cmdOrder ? S.model.orderById.get(S.cmdOrder.order) : null;
+  if (ev || ord) {
+    for (const e of [...(ev ? ev.entities || [] : []), ...(ord ? [ord.target] : [])]) {
       const p = C.parseEntity(e);
       if (!p) continue;
       if (p.type === 'task_force') hl.forces.add(p.id);
       else if (p.type === 'ship') { const fid = st.shipForce.get(p.id); if (fid !== undefined) hl.forces.add(fid); }
       else if (p.type === 'base') hl.bases.add(p.id);
+      else if (p.type === 'air_group' && S.cmdOrder) {
+        // An order picked in the command panel lights the unit it was given to: an air group is where its base or its ship's force is.
+        const g = S.model.groupTable.get(p.id), base = st.groupBase && st.groupBase.has(p.id) ? st.groupBase.get(p.id) : g && g.base;
+        if (base != null) hl.bases.add(base);
+        else if (g && g.ship != null) { const fid = st.shipForce.get(g.ship); if (fid !== undefined) hl.forces.add(fid); }
+      }
       else if (p.type === 'contact') {
         // A report names its side; an alert names the force, whose side it is.
-        const alerted = ev.data && ev.data.task_force !== undefined ? st.forces.get(ev.data.task_force) : null;
-        const side = (ev.data && ev.data.side) || (alerted && alerted.side);
+        const alerted = ev && ev.data && ev.data.task_force !== undefined ? st.forces.get(ev.data.task_force) : null;
+        const side = (ev && ev.data && ev.data.side) || (alerted && alerted.side);
         if (side) hl.contacts.add(side + ':' + p.id);
         else { hl.contacts.add('allied:' + p.id); hl.contacts.add('japanese:' + p.id); }
       }
@@ -2532,7 +2812,7 @@ function setPov(pov) {
   let idx = 0;
   model.steps.forEach((s, i) => { if (key(s) <= here) idx = i; });
   stopPlaying();
-  S.pov = pov; S.model = model; S.step = idx; S.selEvent = null; S.selEntity = null; S.hoverKey = null; resetAirSelection();
+  S.pov = pov; S.model = model; S.step = idx; S.selEvent = null; S.selEntity = null; S.hoverKey = null; S.cmdOrder = null; clearIntentFilter(); resetAirSelection();
   S.belief = pov === 'umpire' ? beliefChoice() : pov; // a side shows the contacts it holds, and no others
   buildWorld();
   initHeader();
@@ -2672,23 +2952,25 @@ function renderEvents() {
   $('selname').textContent = S.selEntity ? '(' + entityName(S.selEntity) + ')' : '(nothing selected)';
   if (!m) { ul.append(el('li', { class: 'empty', text: 'No replay loaded.' })); $('evinfo').textContent = ''; return; }
   const sel = S.onlySel ? S.selEntity : null;
-  const steps = S.allSteps ? m.steps : [m.steps[S.step]];
+  const steps = (S.allSteps || S.cmdSet) ? m.steps : [m.steps[S.step]];
   let shown = 0, total = 0, truncated = false;
   const LIMIT = 2000;
   if (S.selEvents) {
     const hx = S.selEventsHex ? S.selEventsHex.split(',') : [];
     ul.append(el('li', { class: 'banner', title: 'Show every event of the step again', onclick: clearEventSet }, S.selEvents.size + ' events of the air fight at (' + hx[0] + ', ' + hx[1] + ') — show all'));
   }
+  if (S.cmdSet) ul.append(el('li', { class: 'banner', title: 'Show every event again', onclick: () => { clearIntentFilter(); render(); } }, S.cmdSet.size + ' events serving intent ' + S.cmdIntent.id + (m.umpire ? ' (' + S.cmdIntent.side + ')' : '') + ' — show all'));
   for (const step of steps) {
     const rows = [];
     for (const ei of step.events) {
       const ev = m.events[ei];
       if (S.selEvents && !S.selEvents.has(ev.id)) continue;
+      if (S.cmdSet && !S.cmdSet.has(ev.id)) continue;
       total++;
       if (C.eventMatches(m, ev, S.filter, sel)) rows.push(ev);
     }
     if (!rows.length) continue;
-    if (S.allSteps) ul.append(el('li', { class: 'grp', title: 'Go to this step', onclick: () => { stopPlaying(); goto(step.index); } }, step.label));
+    if (S.allSteps || S.cmdSet) ul.append(el('li', { class: 'grp', title: 'Go to this step', onclick: () => { stopPlaying(); goto(step.index); } }, step.label));
     for (const ev of rows) {
       if (shown >= LIMIT) { truncated = true; break; }
       shown++;
@@ -2702,7 +2984,7 @@ function renderEvents() {
       ul.append(li);
     }
   }
-  if (!shown) ul.append(el('li', { class: 'empty', text: S.model.steps[S.step].phase === 'start' && !S.allSteps ? 'Start: the initial state. Step forward to see events.' : 'No events match.' }));
+  if (!shown) ul.append(el('li', { class: 'empty', text: S.model.steps[S.step].phase === 'start' && !S.allSteps && !S.cmdSet ? 'Start: the initial state. Step forward to see events.' : 'No events match.' }));
   if (truncated) ul.append(el('li', { class: 'empty', text: 'List cut off at ' + LIMIT + ' events. Narrow the filter.' }));
   $('evinfo').textContent = shown + ' of ' + total + ' shown';
   const selRow = ul.querySelector('li.sel');
@@ -2710,7 +2992,7 @@ function renderEvents() {
 }
 
 function clickEvent(id) {
-  if (S.selEvent === id) { S.selEvent = null; render(); return; }
+  if (S.selEvent === id) { S.selEvent = null; S.cmdOrder = null; render(); return; }
   selectEvent(id);
 }
 
@@ -2727,6 +3009,7 @@ function selectEvent(id) {
   const m = S.model;
   if (!m || !m.eventById.has(id)) return;
   S.selEvent = id;
+  if (S.cmdOrder) { const row = C.commandLog(m).byOrder.get(S.cmdOrder.order); if (!row || row.orderEvent !== id) S.cmdOrder = null; }
   if (S.selEvents && !S.selEvents.has(id)) { S.selEvents = null; S.selEventsHex = null; }
   const si = m.stepOfEvent.get(id);
   if (si !== undefined && si !== S.step) { stopPlaying(); S.step = si; }
@@ -2759,9 +3042,226 @@ function selectTally(key) {
 }
 function clearEventSet() { S.selEvents = null; S.selEventsHex = null; render(); }
 function clearSelection() {
-  if (S.selEvent == null && !S.selEntity && !S.selEvents && S.selBase == null && S.selAirGroup == null) return;
-  S.selEvent = null; S.selEntity = null; resetAirSelection();
+  if (S.selEvent == null && !S.selEntity && !S.selEvents && S.selBase == null && S.selAirGroup == null && !S.cmdOrder && !S.cmdSet) return;
+  S.selEvent = null; S.selEntity = null; S.cmdOrder = null; clearIntentFilter(); resetAirSelection();
   render();
+}
+
+// =====================================================================
+// Command: the intent tree of each side, the orders each intent issued, and the reason behind an order
+// =====================================================================
+const cmdToggled = new Map(); // key -> open or not, kept across redraws
+function cmdDetails(key, open, summary, body) {
+  const d = el('details', null, el('summary', null, summary), body);
+  d.open = cmdToggled.has(key) ? cmdToggled.get(key) : open;
+  d.addEventListener('toggle', () => cmdToggled.set(key, d.open));
+  d.addEventListener('click', e => e.stopPropagation());
+  return d;
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** Whether the details pane has something to show. */
+function hasSelection() { return S.selEvent != null || !!S.selEntity || S.selBase != null || !!S.cmdOrder; }
+/**
+ * The split of the right column. With the Command tab open the upper pane gets most of the column and the details pane about a third
+ * (draggable), collapsed to its header when nothing is selected; the header toggles it. The Events tab keeps its own layout until its split is dragged.
+ */
+function applyLayout() {
+  const panel = $('panel'), dw = $('dwrap'), cmd = S.tab === 'command';
+  panel.classList.toggle('cmd', cmd);
+  const sel = hasSelection();
+  if (S.detailPin && S.detailPin.hasSel !== sel) S.detailPin = null; // a manual choice lasts until the selection changes
+  const collapsed = cmd && (S.detailPin ? !S.detailPin.open : !sel);
+  dw.classList.toggle('collapsed', collapsed);
+  $('detarrow').textContent = collapsed ? '\u25B8' : '\u25BE';
+  $('dethint').textContent = sel ? (S.cmdOrder ? 'order ' + S.cmdOrder.order : S.selEvent != null ? 'event #' + S.selEvent : 'selection') : 'nothing selected';
+  const frac = S.detailFrac[cmd ? 'command' : 'events'];
+  dw.style.flex = frac != null && !collapsed ? '0 0 ' + (frac * 100).toFixed(1) + '%' : '';
+}
+function initSplit() {
+  const sp = $('split'), panel = $('panel');
+  sp.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    sp.setPointerCapture(e.pointerId); sp.classList.add('drag');
+    const move = ev => {
+      const r = panel.getBoundingClientRect();
+      const f = Math.max(0.1, Math.min(0.8, (r.bottom - ev.clientY) / r.height));
+      S.detailFrac[S.tab] = f;
+      S.detailPin = { open: true, hasSel: hasSelection() };
+      applyLayout();
+    };
+    const up = () => { sp.classList.remove('drag'); sp.removeEventListener('pointermove', move); sp.removeEventListener('pointerup', up); sp.removeEventListener('pointercancel', up); };
+    sp.addEventListener('pointermove', move); sp.addEventListener('pointerup', up); sp.addEventListener('pointercancel', up);
+  });
+  sp.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+    const cur = S.detailFrac[S.tab] != null ? S.detailFrac[S.tab] : 0.58;
+    S.detailFrac[S.tab] = Math.max(0.1, Math.min(0.8, cur + (e.key === 'ArrowUp' ? 0.05 : -0.05)));
+    S.detailPin = { open: true, hasSel: hasSelection() };
+    applyLayout();
+  });
+  $('dethead').addEventListener('click', () => {
+    const collapsed = $('dwrap').classList.contains('collapsed');
+    S.detailPin = { open: collapsed, hasSel: hasSelection() };
+    applyLayout();
+  });
+}
+
+function setTab(tab) {
+  S.tab = tab;
+  $('tabEvents').setAttribute('aria-selected', String(tab === 'events'));
+  $('tabCommand').setAttribute('aria-selected', String(tab === 'command'));
+  $('evwrap').hidden = tab !== 'events';
+  $('cmdwrap').hidden = tab !== 'command';
+  render();
+}
+
+function clearIntentFilter() { S.cmdIntent = null; S.cmdSet = null; }
+function toggleIntent(side, id) {
+  if (S.cmdIntent && S.cmdIntent.side === side && S.cmdIntent.id === id) clearIntentFilter();
+  else { S.cmdIntent = { side, id }; S.cmdSet = C.eventsServing(S.model, side, id); }
+  render();
+}
+
+/** A click on an order: its event is selected (the events list and the Why pane show it), its unit is lit on the map, its reason is shown. */
+function selectOrder(side, order, event) {
+  if (S.cmdOrder && S.cmdOrder.side === side && S.cmdOrder.order === order) { S.cmdOrder = null; S.selEvent = null; render(); return; }
+  S.cmdOrder = { side, order };
+  S.selEntity = null; S.selBase = null; S.selAirGroup = null;
+  if (S.selEvents && !S.selEvents.has(event)) { S.selEvents = null; S.selEventsHex = null; }
+  S.selEvent = S.model.eventById.has(event) ? event : null;
+  const si = S.model.stepOfEvent.get(event);
+  if (si !== undefined && si !== S.step && !S.allSteps) { S.allSteps = true; $('allsteps').checked = true; } // an earlier day's order: the list shows every step
+  render();
+}
+
+function orderLi(n, o) {
+  const sel = S.cmdOrder && S.cmdOrder.side === n.side && S.cmdOrder.order === o.order;
+  return el('li', { class: 'cord' + (sel ? ' sel' : ''), title: 'Show this order\'s event, its unit and its reason', onclick: e => { e.stopPropagation(); selectOrder(n.side, o.order, o.event); } },
+    el('span', { class: 'eid', text: 'order ' + o.order }), el('span', { class: 'dim', text: '· ' }),
+    el('b', { text: o.unit ? C.unitWords(S.model, o.unit) : '(order not in this file)' }),
+    el('span', { class: 'dim', text: ' · ' }), o.text ? C.orderWords(o.text) : '',
+    o.level ? el('span', { class: 'dim', text: ' · decided at ' + C.levelWords(S.model, o.level) }) : null);
+}
+
+/** The orders under a node: by day, newest first; the step's day open, earlier days collapsed with a count. */
+function orderGroups(n) {
+  const box = el('div', { class: 'cords' });
+  const byDay = new Map();
+  for (const o of n.orders) { if (!byDay.has(o.day)) byDay.set(o.day, []); byDay.get(o.day).push(o); }
+  const today = S.model.steps[S.step].day;
+  for (const [day, list] of byDay) {
+    const ul = el('ul', null, list.map(o => orderLi(n, o)));
+    box.append(cmdDetails(n.side + ':' + n.id + ':d' + day, day === today,
+      el('span', null, 'Day ' + day + ': ', el('span', { class: 'dim', text: list.length + (list.length === 1 ? ' order' : ' orders') })), ul));
+  }
+  for (const row of n.none) {
+    const first = row.worked.length > 110 ? row.worked.slice(0, 107) + '...' : row.worked;
+    box.append(cmdDetails(n.side + ':' + n.id + ':none' + row.event, false, el('span', { class: 'dim' }, 'No order for some units, day ' + row.day + ': ' + first),
+      el('div', { class: 'cwhy' }, row.worked, row.evidence ? el('div', { class: 'dim', text: 'Evidence: ' + row.evidence }) : null, row.binding ? el('div', { class: 'dim', text: 'Bound by: ' + row.binding }) : null, row.would_change ? el('div', { class: 'dim', text: 'Would change with: ' + row.would_change }) : null)));
+  }
+  if (!n.orders.length && !n.none.length && !n.withdrawn) box.append(el('div', { class: 'dim cnone', text: n.children.length ? 'Gives no order itself: the orders come from the intents under it.' : 'No order given by this intent yet.' }));
+  return box;
+}
+
+function nodeEl(n, nest) {
+  const m = S.model, it = n.intent;
+  const filt = S.cmdIntent && S.cmdIntent.side === n.side && S.cmdIntent.id === n.id;
+  const meta = [
+    'addressed to ' + C.levelWords(m, n.level),
+    n.plan ? 'plan ' + n.plan.id + ' ' + n.plan.state : 'no plan',
+    'set day ' + it.set_day,
+    ...(n.withdrawn ? ['withdrawn day ' + it.withdrawn_day] : []),
+    ...(!nest && n.parent !== null ? ['under intent ' + n.parent] : []),
+    ...n.limits,
+  ];
+  const box = el('div', { class: 'cnode' + (n.withdrawn ? ' withdrawn' : '') + (filt ? ' filt' : ''), 'data-intent': n.side + ':' + n.id },
+    el('div', { class: 'chead', title: filt ? 'Show every event again' : 'Show only the events that serve this intent', onclick: () => toggleIntent(n.side, n.id) },
+      el('span', { class: 'cid', text: '#' + n.id }),
+      el('span', { class: 'tag' + (n.maker === 'staff' ? ' staff' : ''), text: n.maker === 'staff' ? 'staff' : 'commander' }),
+      el('span', { class: 'cwords', text: n.words, title: 'As the engine states it: ' + n.statement })),
+    el('div', { class: 'cmeta', text: meta.join(' · ') }),
+    orderGroups(n));
+  if (nest && n.children.length) box.append(el('div', { class: 'ckids' }, n.children.map(c => nodeEl(c, true))));
+  return box;
+}
+
+function levelRank(level) { return level === 'area' ? 0 : level.startsWith('base:') ? 1 : 2; }
+function levelView(view) {
+  const m = S.model, wrap = el('div');
+  const groups = new Map();
+  for (const n of view.nodes.values()) { if (!groups.has(n.level)) groups.set(n.level, []); groups.get(n.level).push(n); }
+  const keys = [...groups.keys()].sort((a, b) => levelRank(a) - levelRank(b) || (parseInt(a.split(':')[1] || 0, 10) - parseInt(b.split(':')[1] || 0, 10)));
+  for (const k of keys) wrap.append(el('div', { class: 'clevel' }, el('h4', { text: cap(C.levelWords(m, k)) }), groups.get(k).map(n => nodeEl(n, false))));
+  // The leaves: the units that received an order, and what each was told by which intent.
+  const units = new Map();
+  for (const n of view.nodes.values()) for (const o of n.orders) { if (!o.unit) continue; if (!units.has(o.unit)) units.set(o.unit, []); units.get(o.unit).push({ n, o }); }
+  if (units.size) {
+    const sec = el('div', { class: 'clevel' }, el('h4', { text: 'Leaves: units that received orders' }));
+    const order = [...units.keys()].sort((a, b) => { const pa = C.parseEntity(a), pb = C.parseEntity(b); return (pa ? pa.type : a).localeCompare(pb ? pb.type : b) || (pa && pb ? pa.id - pb.id : 0); });
+    const today = m.steps[S.step].day;
+    for (const u of order) {
+      const rows = units.get(u).sort((a, b) => b.o.day - a.o.day || a.o.order - b.o.order);
+      const ul = el('ul', null, rows.map(({ n, o }) => el('li', { class: 'cord' + (S.cmdOrder && S.cmdOrder.side === n.side && S.cmdOrder.order === o.order ? ' sel' : ''), onclick: e => { e.stopPropagation(); selectOrder(n.side, o.order, o.event); } },
+        el('span', { class: 'eid', text: 'day ' + o.day + ' ·' }), o.text ? C.orderWords(o.text) : '', el('span', { class: 'dim', text: ' · intent ' + n.id }))));
+      sec.append(cmdDetails(view.side + ':unit:' + u, rows.some(r => r.o.day === today), el('span', null, el('b', { text: C.unitWords(m, u) }), ' ', el('span', { class: 'dim', text: rows.length + (rows.length === 1 ? ' order' : ' orders') })), ul));
+    }
+    wrap.append(sec);
+  }
+  return wrap;
+}
+
+function renderCommand() {
+  const m = S.model, box = $('cmdbody');
+  clear(box);
+  const views = m ? C.commandView(m, S.step) : [];
+  $('cmdtitle').textContent = 'Command' + (S.cmdView === 'level' ? ', by level' : '');
+  $('cmdinfo').textContent = '';
+  $('cmdfilter').hidden = !S.cmdIntent;
+  if (S.cmdIntent) $('cmdfilter').firstChild.textContent = 'Events: intent ' + S.cmdIntent.id + (m && m.umpire ? ' (' + S.cmdIntent.side + ')' : '') + ' ';
+  document.querySelectorAll('input[name=cmdview]').forEach(r => { r.checked = r.value === S.cmdView; });
+  if (!m) { box.append(el('div', { class: 'empty', text: 'No replay loaded.' })); return; }
+  if (!views.length) {
+    const has = m.commandStates && m.commandStates.some(h => h && Object.keys(h).length);
+    box.append(el('div', { class: 'empty', text: has ? 'No intent is set yet at this step. Step forward.' : (m.umpire ? 'This replay holds no command state: no intent was ever set in the run, or the file is older than command state.' : 'This side set no intent, and its staff formed none, in this run.') }));
+    return;
+  }
+  for (const view of views) {
+    const head = el('h3', { class: 'chside side-' + view.side }, cap(view.side) + ' side');
+    const sec = el('section', { class: 'cside' }, head);
+    if (view.leaves) sec.append(el('div', { class: 'note', text: 'Leave to prepare: ' + (view.leaves.prepare ? 'given' : 'withheld') + '. Leave to launch: ' + (view.leaves.launch ? 'given' : 'withheld') + '.' }));
+    if (S.cmdView === 'level') sec.append(levelView(view));
+    else sec.append(...view.roots.map(n => nodeEl(n, true)));
+    box.append(sec);
+  }
+  const info = views.map(v => v.nodes.size + ' intents').join(', ');
+  $('cmdinfo').textContent = info;
+}
+
+/** The reason behind the selected order, from the staff's own words: what it serves up to the commander's intent, evidence, what bound it, the working, what would change it. */
+function orderReasonSection() {
+  const m = S.model, sel = S.cmdOrder, log = C.commandLog(m), row = log.byOrder.get(sel.order), o = m.orderById.get(sel.order);
+  const sec = el('section', { class: 'oreason' });
+  sec.append(el('h2', null, 'Order ' + sel.order + ': the staff\'s reason'));
+  const kv = el('dl', { class: 'kv' });
+  const add = (k, v) => { if (v) kv.append(el('dt', { text: k }), el('dd', { text: String(v) })); };
+  if (o) { add('Unit', C.unitWords(m, o.target)); add('Ordered', C.orderWords(o.text)); add('Day', o.day); }
+  if (!row) { sec.append(kv, el('div', { class: 'note', text: 'No reason is recorded for this order.' })); return sec; }
+  add('Decided at', C.levelWords(m, row.level));
+  sec.append(kv);
+  sec.append(el('h3', { text: 'Serves' }));
+  const ul = el('ul', { class: 'cchain' });
+  const maker = id => { const v = C.commandView(m, S.step).find(x => x.side === sel.side), n = v && v.nodes.get(id); return n ? n.maker : null; };
+  ul.append(el('li', null, el('span', { class: 'link', onclick: () => toggleIntent(sel.side, row.intent), text: 'intent ' + row.intent }), ' (' + (row.chain.length ? 'the staff\'s' : (maker(row.intent) === 'staff' ? 'the staff\'s' : 'the commander\'s')) + '): ' + row.statement));
+  row.chain.forEach(link => ul.append(el('li', null, 'under ', el('span', { class: 'link', onclick: () => toggleIntent(sel.side, link.intent), text: 'intent ' + link.intent }), ' (the ' + link.maker + '\'s): ' + link.statement)));
+  sec.append(ul);
+  const part = (h, t) => { if (t) { sec.append(el('h3', { text: h })); sec.append(el('div', { text: t })); } };
+  part('Evidence', row.evidence);
+  part('What bound it', row.binding);
+  part('The working', row.worked);
+  part('What would change it', row.would_change);
+  return sec;
 }
 
 // =====================================================================
@@ -2793,6 +3293,7 @@ function renderDetail() {
   clear(box);
   if (!m) { box.append(el('div', { class: 'empty', text: 'Open a replay file to begin.' })); return; }
   let any = false;
+  if (S.cmdOrder) { box.append(orderReasonSection()); any = true; }
   if (S.selEntity) { box.append(entitySection(S.selEntity)); any = true; }
   if (S.selBase != null) { box.append(baseSection(S.selBase)); any = true; }
   if (S.selEvent != null) { box.append(eventSection(S.selEvent)); any = true; }
@@ -2977,11 +3478,13 @@ function renderLegend() {
 // =====================================================================
 function render() {
   renderControls();
-  if (!S.model) { renderEvents(); renderDetail(); return; }
+  if (!S.model) { renderEvents(); renderCommand(); renderDetail(); return; }
   renderHeaderStep();
   renderDynamic();
   scheduleScreen();
+  applyLayout();
   renderEvents();
+  renderCommand();
   renderDetail();
   if (S.hoverKey) renderReadout();
 }
@@ -2996,6 +3499,11 @@ function init() {
   $('filter').addEventListener('input', e => { S.filter = e.target.value.trim(); renderEvents(); });
   $('onlysel').addEventListener('change', e => { S.onlySel = e.target.checked; renderEvents(); });
   $('allsteps').addEventListener('change', e => { S.allSteps = e.target.checked; renderEvents(); });
+  initSplit();
+  $('tabEvents').addEventListener('click', () => setTab('events'));
+  $('tabCommand').addEventListener('click', () => setTab('command'));
+  $('cmdclear').addEventListener('click', () => { clearIntentFilter(); render(); });
+  document.querySelectorAll('input[name=cmdview]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.cmdView = r.value; r.blur(); renderCommand(); } }));
   render();
   renderReadout();
   initLoading();

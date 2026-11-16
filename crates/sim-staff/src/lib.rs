@@ -96,7 +96,12 @@ use sim_core::view::SideView;
 /// risk level does not sortie and is not a free escort, with the day from
 /// which it may be used read with its fuel. A force short of nothing gets
 /// the orders `supply-12` gave.
-pub const DOCTRINE_VERSION: &str = "supply-13";
+/// `supply-14` adds the architect's ruling of Nov 16, 2026, on decisions
+/// 0124, 8, and 0125, 2: the staff forms no stand task and no carrier task
+/// for a force that already has a task of that kind in force, whoever made
+/// it and wherever it stands. A side with no such task stated beside an end
+/// that names the force gets the orders `supply-13` gave.
+pub const DOCTRINE_VERSION: &str = "supply-14";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

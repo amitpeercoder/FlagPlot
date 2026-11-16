@@ -132,6 +132,13 @@
 //!   force 2, two cruisers on the surface combat mission, also in the
 //!   forces limit: the staff forms a stand task for it (decision 0124) and
 //!   the carrier task for force 1, and orders each by its own doctrine.
+//! - **One task a force.** With the commander also stating, on day 1,
+//!   "operate task force 1 from (0,0)" as intent 2, beside the deny end:
+//!   the staff forms no task for force 1 under intent 1, and its reason
+//!   names intent 2. Every order to the force and to its groups is given
+//!   once, serving intent 2, whose risk is balanced: day 1 has 8 orders.
+//!   (Added by the architect on Nov 16, 2026, with the ruling that a force
+//!   has one task of a kind, whoever made it.)
 //! - A held force or group is left alone; the same start gives the same
 //!   orders; two worlds that differ only in what the Allied side cannot
 //!   see give the same intents, orders and reasons.
@@ -1282,6 +1289,49 @@ fn a_surface_force_and_a_carrier_force_named_together_each_get_their_own_task() 
     );
     assert_eq!(played.searches().len(), 4);
     played.every_chain_ends_with_the_commander();
+}
+
+#[test]
+fn one_task_a_force_the_commanders_task_stands_and_the_staff_forms_none() {
+    let played = play(&with(&command_table(
+        1,
+        "kind = \"set_intent\"\nintent = 2\nintent_kind = \"operate_carriers\"\ntask_force = 1\nhex = [0, 0]",
+    )));
+    played.nothing_refused();
+    // No task is formed for force 1 under intent 1: the tree is the two
+    // roots the commander stated.
+    assert_eq!(played.state.intents.len(), 2, "{:?}", played.state.intents);
+    let two = &played.state.intents[&intent(2)];
+    assert_eq!(two.maker, Maker::Commander);
+    assert_eq!(two.parent, None);
+    assert!(played
+        .state
+        .intents
+        .values()
+        .all(|i| i.parent != Some(intent(1))));
+    // Its reason names intent 2.
+    let none: Vec<String> = played.decisions(1).no_orders.iter().map(said).collect();
+    assert!(
+        none.iter()
+            .any(|r| r.contains("intent:2") && r.contains("forms no other for task_force:1")),
+        "{none:?}"
+    );
+    // Every order is given once, serving intent 2, at balanced: 8 on day 1.
+    assert_eq!(played.orders(1).len(), 8, "{:?}", played.orders(1));
+    assert_eq!(
+        played.orders(1),
+        [
+            vec![
+                Given::Force(1, BATTLE),
+                Given::Force(1, rules(Stance::Avoid, "0.5")),
+            ],
+            balanced_air_orders(),
+        ]
+        .concat()
+    );
+    for (_, order) in played.all_orders() {
+        assert_eq!(order.intent, intent(2));
+    }
 }
 
 #[test]

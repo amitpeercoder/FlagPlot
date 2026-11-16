@@ -129,6 +129,12 @@
 //!   choice beforehand is told the same.
 //! - **A held force is left alone,** and a commander's route order to
 //!   force 1 holds it.
+//! - **One task a force.** With the commander also stating, on day 1,
+//!   "stand at (3,0), task force 1" as intent 2, beside the deny end: the
+//!   staff forms no stand task under intent 1, and its reason names intent
+//!   2. The orders are the main case's, each serving intent 2 with an empty
+//!   chain. (Added by the architect on Nov 16, 2026, with the ruling that a
+//!   force has one task of a kind, whoever made it.)
 //! - The same start gives the same orders; two worlds that differ only in
 //!   what the Allied side cannot see give the same intents, orders and
 //!   reasons.
@@ -1497,6 +1503,45 @@ fn the_rule_alone_a_side_asking_the_choice_beforehand_is_told_the_same() {
 }
 
 // ------------------------------------------------------------- Held forces
+
+#[test]
+fn one_task_a_force_the_commanders_stand_task_stands_and_the_staff_forms_none() {
+    let played = play(&with(&command_table(
+        1,
+        "kind = \"set_intent\"\nintent = 2\nintent_kind = \"stand_at\"\ntask_force = 1\nhex = [3, 0]",
+    )));
+    played.nothing_refused();
+    // No stand task is formed under intent 1.
+    assert_eq!(played.state.intents.len(), 2, "{:?}", played.state.intents);
+    let two = &played.state.intents[&intent(2)];
+    assert_eq!(two.maker, Maker::Commander);
+    assert_eq!(two.parent, None);
+    assert!(played
+        .all(|k| matches!(k, EventKind::IntentFormed { .. }))
+        .is_empty());
+    // Its reason names intent 2.
+    let none: Vec<String> = played.decisions(1).no_orders.iter().map(said).collect();
+    assert!(
+        none.iter()
+            .any(|r| r.contains("intent:2") && r.contains("forms no other for task_force:1")),
+        "{none:?}"
+    );
+    // The orders are the main case's, each serving intent 2 with an empty
+    // chain.
+    let main = play(&text());
+    assert_eq!(played.order_count(), main.order_count());
+    for day in 1..=4 {
+        assert_eq!(played.orders(day), main.orders(day), "day {day}");
+    }
+    for (day, order) in played.all_orders() {
+        assert_eq!(order.intent, intent(2), "day {day}");
+        assert!(
+            order.reason.serves.chain.is_empty(),
+            "{:?}",
+            order.reason.serves
+        );
+    }
+}
 
 #[test]
 fn a_held_force_is_left_alone() {

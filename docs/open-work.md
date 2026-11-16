@@ -2,6 +2,16 @@
 
 A list kept by the architect of what is decided and not built, what is open, and what is next. Begun on Nov 12, 2026 as step 2's opening list. Each item becomes a plan and a decision record with a hand calculation before it is built.
 
+## Where step 3 stands, Nov 16, 2026
+
+The short form; `README.md` has it in plain words and the decision records have the detail.
+
+- **Stages 0 and 1** are built (decisions 0100, 0107, 0111).
+- **Stage 2,** the fighting doctrines on both sides (decision 0113, rewritten on decision 0116: intents are ends and form a tree), is built in its six building steps: the two strike settings (0114); the intent tree and "hold a place" with cover from the air (0115, 0117); "neutralise a base" and raids, every doctrine written for one level (0120), with the stage's first proof passed; "deny an area", striking ships from a base and a strike's size (0118, 0123), a surface force that stands by night (0124) and a carrier force played from an end (0125); the escort force and escorted runs (0121, 0126); rearming and going back to rearm (0122, 0127).
+- **Next: the second proof of stage 2,** by the test plan of decision 0128, whose pass marks the designer confirmed before the run. With it the legibility test, a model's game and the measurement of speed.
+- **Then stage 2b,** command levels (decision 0119, `docs/design/command-levels.md`); its plan is written and confirmed before it is built. Then stages 3, 4 and 5 as `docs/step3-spec.md` has them.
+- **Limits of stage 2 as built,** for the stages after it to lift: the staff does not choose where a carrier force stands or move a force's home; a force that stands by night steams home by day; no rule holds a strike to an area; one escort force goes with a run or none; a run is not timed to the dark; a carrier does not raid a base; a single fighter group that both patrols and escorts is never rested.
+
 ## Next, before step 3
 
 Decided by the designer at the close, Nov 13, 2026 ("Reported only; repair first"; `docs/step2-spec.md`, "Decided by the designer", 16), in this order:
