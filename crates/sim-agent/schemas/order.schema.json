@@ -541,6 +541,23 @@
           "type": "object",
           "required": [
             "kind",
+            "on"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_search_once"
+            },
+            "on": {
+              "description": "True makes a group on the search mission fly its search once a day, in the morning pulse only, and rest in the afternoon as a group that did not fly (decision 0131). False searches in both daylight pulses. The default is false. A standing order: it stays until another replaces it.",
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
             "base"
           ],
           "additionalProperties": false,

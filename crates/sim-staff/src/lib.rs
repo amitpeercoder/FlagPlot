@@ -35,7 +35,7 @@ mod proposal;
 pub mod raid;
 mod reasons;
 mod route;
-mod search;
+pub mod search;
 pub mod stand;
 pub mod strike;
 mod units;
@@ -108,7 +108,14 @@ use sim_core::view::SideView;
 /// reach and goes back to its hex when there is none; the passage home for
 /// fuel is at cruise, and a ship the engine's measure has run dry short of
 /// a passage is short of the fuel for it, in the carrier and stand doctrines.
-pub const DOCTRINE_VERSION: &str = "supply-15";
+/// `supply-16` adds decision 0131: a search is flown once a day at preserve
+/// the force and at balanced (in both pulses at press) by the cover, the
+/// search of waters and the carrier force; the least tired bomber group
+/// that can search and fly takes the search each morning on a carrier force
+/// with no group that can only search, and at a base whose cover or search
+/// task has none where a strike or raid task there has two or more; and a
+/// carrier force with a ship out of fuel is given no route.
+pub const DOCTRINE_VERSION: &str = "supply-16";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

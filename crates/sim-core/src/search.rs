@@ -18,7 +18,6 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{EntityRef, EventId, TaskForceId};
 use crate::map::Map;
-use crate::orders::AirMission;
 use crate::refdata::{SearchFigures, ShipKind};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::state::Side;
@@ -229,7 +228,7 @@ impl World {
 
         let groups: Vec<_> = self.truth.air_groups.values().cloned().collect();
         for group in groups {
-            if group.mission != AirMission::Search || group.ready == 0 {
+            if !self.searches_in(&group, pulse) || group.ready == 0 {
                 continue;
             }
             let Some(arc) = group.search else {
@@ -255,6 +254,7 @@ impl World {
 
             let causes: Vec<Cause> = [group.mission_order, group.arc_order]
                 .into_iter()
+                .chain(group.search_once.then_some(group.search_once_order))
                 .flatten()
                 .map(Cause::Order)
                 .collect();
@@ -400,10 +400,10 @@ impl World {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::events::Event;
+    use crate::events::{Event, FatigueChange};
     use crate::ids::{AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId};
     use crate::map::{HexData, HexKind};
-    use crate::orders::{AirGroupOrder, Mission, OrderKind, OrderRequest, Origin};
+    use crate::orders::{AirGroupOrder, AirMission, Mission, OrderKind, OrderRequest, Origin};
     use crate::refdata::{AircraftRole, AircraftType, PortSize, RefData, ShipClass};
     use crate::state::{
         AirGroup, AirGroupLocation, Base, SearchArc, Ship, ShipLocation, TaskForce, TruthState,
@@ -1526,5 +1526,110 @@ mod tests {
         }
         let group = &world.truth.air_groups[&GROUP];
         assert_eq!((group.ready, group.damaged, group.strength), (4, 1, 4));
+    }
+
+    // ---- search once a day and a search's own fatigue figure (decision 0131) ----
+
+    fn fatigue_figures(search: Option<Fixed>) -> crate::refdata::FatigueFigures {
+        crate::refdata::FatigueFigures {
+            air_fatigue_per_sortie: Fixed::from_int(3),
+            air_fatigue_per_100_nm: Fixed::from_int(2),
+            air_rest_per_pulse: Fixed::from_int(5),
+            force_fatigue_per_pulse_alert: Fixed::from_int(5),
+            force_rest_per_pulse: Fixed::from_int(3),
+            search_fatigue_per_100_nm: search,
+        }
+    }
+
+    fn fatigue_events(world: &World) -> Vec<(Option<Pulse>, FatigueChange, Fixed, Fixed)> {
+        world
+            .events()
+            .iter()
+            .filter_map(|e| match e.kind {
+                EventKind::AirGroupFatigue {
+                    change,
+                    amount,
+                    fatigue,
+                    ..
+                } => Some((e.pulse, change, amount, fatigue)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_group_set_to_search_once_a_day_flies_in_the_morning_and_rests_in_the_afternoon() {
+        let mut world = world(1, target_at(10, 0));
+        world.ref_data.fatigue = Some(fatigue_figures(Some(Fixed::from_ratio(15, 100))));
+        world.submit_orders(
+            Side::Allied,
+            vec![OrderRequest {
+                kind: OrderKind::AirGroup {
+                    target: GROUP,
+                    order: AirGroupOrder::SetSearchOnce { on: true },
+                },
+                origin: Origin::PLAYER,
+            }],
+        );
+        resolve_days(&mut world, 1);
+        let group = &world.truth.air_groups[&GROUP];
+        assert!(group.search_once);
+        assert_eq!(group.search_once_order, Some(OrderId::new(1)));
+        let flights = flown(&world);
+        assert_eq!(flights.len(), 1);
+        assert_eq!(flights[0].pulse, Some(Pulse::Morning));
+        assert!(flights[0].causes.contains(&Cause::Order(OrderId::new(1))));
+        assert!(attempts(&world)
+            .iter()
+            .all(|e| e.pulse == Some(Pulse::Morning)));
+        let fatigue: Vec<_> = fatigue_events(&world)
+            .into_iter()
+            .filter(|(pulse, ..)| *pulse != Some(Pulse::Night))
+            .collect();
+        // 3 + 12 x 0.15 in the morning, then 5 lost in the afternoon.
+        assert_eq!(fatigue.len(), 2);
+        assert!(matches!(fatigue[0].1, FatigueChange::Gained { .. }));
+        assert_eq!(fatigue[0].2, Fixed::from_ratio(48, 10));
+        assert_eq!(fatigue[1].1, FatigueChange::Rested);
+        // 4.8 less 5, held at nothing.
+        assert_eq!(fatigue[1].3, Fixed::ZERO);
+    }
+
+    #[test]
+    fn a_group_not_set_to_search_once_searches_in_both_daylight_pulses() {
+        let mut world = world(1, target_at(10, 0));
+        world.ref_data.fatigue = Some(fatigue_figures(None));
+        resolve_days(&mut world, 1);
+        let flights = flown(&world);
+        assert_eq!(flights.len(), 2);
+        assert!(!world.truth.air_groups[&GROUP].search_once);
+    }
+
+    #[test]
+    fn a_search_figure_applies_to_a_search_and_to_no_other_sortie() {
+        let with = fatigue_figures(Some(Fixed::from_ratio(15, 100)));
+        let without = fatigue_figures(None);
+        let twelve_hundred = Fixed::from_int(1200);
+        // 3 + 12 x 0.15 for a search with the figure.
+        assert_eq!(
+            with.gain_for(SortieKind::Search, twelve_hundred),
+            Fixed::from_ratio(48, 10)
+        );
+        // 3 + 12 x 2 for a search with none, and for a strike either way.
+        assert_eq!(
+            without.gain_for(SortieKind::Search, twelve_hundred),
+            Fixed::from_int(27)
+        );
+        assert_eq!(
+            with.gain_for(SortieKind::Strike, twelve_hundred),
+            Fixed::from_int(27)
+        );
+        assert_eq!(
+            without.gain_for(SortieKind::Strike, twelve_hundred),
+            Fixed::from_int(27)
+        );
+        assert_eq!(with.problem(), None);
+        let bad = fatigue_figures(Some(Fixed::from_int(101)));
+        assert!(bad.problem().is_some());
     }
 }

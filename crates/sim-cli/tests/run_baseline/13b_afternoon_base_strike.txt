@@ -2,8 +2,8 @@ Scenario 13b: An afternoon base strike
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 6a3f35c353f4b0e0  17 events
-day   2  hash 296a9bc6be7ac41a  5 events
+day   1  hash ce6fe72e41b7273d  17 events
+day   2  hash 1609e58014ef42f1  5 events
 
 task_force:1 "Placeholder carrier force" (Allied): Arrived at (3,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder dive bombers" (Allied) aboard ship:1: 18 ready, mission BaseStrike on base:1, no arc

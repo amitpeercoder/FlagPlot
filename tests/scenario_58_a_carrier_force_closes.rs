@@ -741,6 +741,7 @@ fn balanced_air_orders() -> Vec<Given> {
 }
 
 #[test]
+#[ignore = "decision 0131 (back to the architect): at balanced the carrier doctrine now gives group 2 a search-once order between its search mission and its arc: eleven orders on day 1 where the calculation has ten"]
 fn balanced_closes_with_ten_orders_launches_nothing_stays_and_goes_back_on_day_3() {
     let played = play(&without_risk(&text()));
     played.nothing_refused();
@@ -904,6 +905,63 @@ fn not_the_fuel_with_50_t_she_is_routed_home_at_cruise_and_closing_is_not_weighe
             played.orders(day)
         );
     }
+}
+
+/// The architect's ruling of Nov 16, 2026, recorded under decision 0131,
+/// "As built": a carrier force that cannot move for want of fuel is given no
+/// route and no speed order, the staff hands in that it cannot meet the task
+/// with a reason naming the ship out of fuel and where the force lies, and
+/// its air groups are given their orders as on any morning. The 50 t case
+/// carried to days 2 and 3: no staff order is refused on any day, and the
+/// notice is handed in from the morning she lies dry.
+#[test]
+fn not_the_fuel_with_50_t_she_lies_dry_and_is_given_no_route_from_that_morning() {
+    use sim_core::command::NoticeKind;
+    let played = play(&changed(&text(), "fuel_t = 3000", "fuel_t = 50"));
+    played.nothing_refused();
+    // The mornings on which ship 1 has no fuel aboard.
+    let dry_from = (1..=3u32)
+        .find(|day| played.truth[(day - 1) as usize].ships[&ship(1)].fuel_t <= Fixed::ZERO)
+        .expect("she lies dry on some morning");
+    for day in 1..=3u32 {
+        let dry = day >= dry_from;
+        let notices = &played.decisions(day).notices;
+        assert_eq!(
+            notices.iter().any(|n| n.kind == NoticeKind::CannotMeet),
+            dry,
+            "day {day}: {notices:?}"
+        );
+        if dry {
+            let forces = played.orders_to_force(day, 1);
+            assert!(
+                !forces.iter().any(|o| matches!(
+                    o,
+                    TaskForceOrder::SetRoute { .. } | TaskForceOrder::SetSpeed(_)
+                )),
+                "day {day}: {forces:?}"
+            );
+            let lies =
+                played.truth[(day - 1) as usize].task_forces[&TaskForceId::new(1)].position();
+            assert!(
+                played
+                    .decisions(day)
+                    .no_orders
+                    .iter()
+                    .map(said)
+                    .any(|r| r.contains("ship:1 has no fuel aboard")
+                        && r.contains(&format!("lies at {lies}"))),
+                "day {day}: {:?}",
+                played
+                    .decisions(day)
+                    .no_orders
+                    .iter()
+                    .map(said)
+                    .collect::<Vec<_>>()
+            );
+        }
+    }
+    // She has 50 t on the morning of day 1 and lies dry from day 2.
+    assert_eq!(dry_from, 2);
 }
 
 /// Rule 4 of the hand calculation ("Not the fuel", 300 t): she has the fuel

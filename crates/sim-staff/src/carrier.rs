@@ -38,7 +38,8 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, TaskForceId};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, OrderKind, Reach, Readiness, SpeedSetting, Stance, TaskForceOrder,
+    AirGroupOrder, AirMission, OrderKind, Reach, Readiness, RejectReason, SpeedSetting, Stance,
+    TaskForceOrder,
 };
 use sim_core::refdata::{AircraftRole, ShipKind};
 use sim_core::side_events::SideEventKind;
@@ -52,6 +53,7 @@ use crate::deny::waters;
 use crate::neutralise::bomber_reach;
 use crate::raid::rest_level;
 use crate::reasons::{base_words, serving};
+use crate::search::{least_tired, once_a_day, once_words, TurnCandidate};
 use crate::stand::{
     afloat, break_off, expected_words, fuel_needs, home_of, hours_to, margin, needs_words,
     stance_words, stopped, NIGHT_HOURS,
@@ -97,6 +99,8 @@ pub struct CarrierGroup {
     pub reach: Reach,
     pub held_share: Fixed,
     pub sizing: bool,
+    /// Its setting to search once a day (decision 0131, 1).
+    pub search_once: bool,
 }
 
 /// What a group is to the carrier task this morning.
@@ -126,9 +130,11 @@ pub struct CarrierAir {
     pub rested: Vec<AirGroupId>,
 }
 
-/// The rule of who searches (rule 4): every group that can search and cannot
-/// attack a ship; where there is none, the lowest numbered that can do both.
-/// The rest that can attack a ship strike.
+/// The rule of who searches (rule 4, as decision 0131, 7 amends it): every
+/// group that can search and cannot attack a ship; where there is none, the
+/// least tired of those that can do both and can fly, then the lowest
+/// numbered, chosen each morning (where none of them can fly, the lowest
+/// numbered of them). The rest that can attack a ship strike.
 pub fn roles(groups: &[CarrierGroup]) -> Vec<(AirGroupId, CarrierRole)> {
     let mut sorted: Vec<&CarrierGroup> = groups.iter().collect();
     sorted.sort_by_key(|g| g.id);
@@ -138,10 +144,16 @@ pub fn roles(groups: &[CarrierGroup]) -> Vec<(AirGroupId, CarrierRole)> {
         .map(|g| g.id)
         .collect();
     let both = if pure.is_empty() {
-        sorted
+        let candidates: Vec<TurnCandidate> = sorted
             .iter()
-            .find(|g| !g.fighter && g.can_search && g.can_strike)
-            .map(|g| g.id)
+            .filter(|g| !g.fighter && g.can_search && g.can_strike)
+            .map(|g| TurnCandidate {
+                id: g.id,
+                fatigue: g.fatigue,
+                able: g.able,
+            })
+            .collect();
+        least_tired(&candidates).or_else(|| candidates.first().map(|c| c.id))
     } else {
         None
     };
@@ -225,6 +237,10 @@ pub fn decide(
                 if g.mission != wanted {
                     orders.push((g.id, AirGroupOrder::SetAirMission(wanted)));
                 }
+                let once = once_a_day(risk);
+                if !rests && g.search_once != once {
+                    orders.push((g.id, AirGroupOrder::SetSearchOnce { on: once }));
+                }
                 let arc = SearchArc {
                     from_deg: arc_from,
                     to_deg: arc_to,
@@ -270,6 +286,25 @@ pub fn decide(
         roles,
         rested,
     }
+}
+
+/// Why a group that can search and attack a ship takes the search this
+/// morning (decision 0131, 7), with the numbers of each such group.
+fn turn_words(groups: &[CarrierGroup], chosen: AirGroupId) -> String {
+    let list = groups
+        .iter()
+        .filter(|g| !g.fighter && g.can_search && g.can_strike)
+        .map(|g| {
+            format!(
+                "{} at fatigue {} with {} able to fly",
+                g.id, g.fatigue, g.able
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered ({list}): {chosen}",
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -575,6 +610,42 @@ impl Day<'_, '_> {
                     && force.route.waypoints.last().copied() == home_hex
                     && force.route.next_index < force.route.waypoints.len();
                 let at_home = stopped(force) && Some(here) == home_hex;
+                // A force that cannot move for want of fuel is given no route
+                // and no speed order, and the staff cannot meet the task
+                // (the architect's ruling of Nov 16, 2026, recorded in
+                // decision 0131): a ship with no fuel aboard, or the engine's
+                // forecast refusing the passage to the hex for fuel.
+                let dry_ships: Vec<String> = ships
+                    .iter()
+                    .filter(|(_, fuel, _, _)| *fuel <= Fixed::ZERO)
+                    .map(|(ship, _, _, _)| ship.to_string())
+                    .collect();
+                let refused_for_fuel = !at_hex
+                    && view
+                        .forecast_route(id, &[hex], None)
+                        .and_then(|f| f.refusal)
+                        == Some(RejectReason::OutOfFuel);
+                let dry = !dry_ships.is_empty() || refused_for_fuel;
+                if dry {
+                    cannot = true;
+                    let which = if dry_ships.is_empty() {
+                        format!("the engine refuses a passage of {id} to {hex} as out of fuel")
+                    } else {
+                        format!(
+                            "{} {} no fuel aboard",
+                            dry_ships.join(" and "),
+                            if dry_ships.len() == 1 { "has" } else { "have" }
+                        )
+                    };
+                    notes.push(
+                        serving(task, &plan)
+                            .evidence(format!("{which}; {id} lies at {here}"), today)
+                            .binding("a force that cannot move for want of fuel is given no route")
+                            .worked(format!("{intent_words}: {which}, and {id} lies at {here}: it cannot move, so it is given no route and no speed order, and the staff cannot meet {}. Its air groups are given their orders as on any morning.", task.id))
+                            .would_change("fuel brought to the force")
+                            .done(),
+                    );
+                }
                 // A route, the speed it is steamed at where the doctrine sets
                 // one (decision 0130, 1), and its reason.
                 let mut route: Option<(Vec<Hex>, Option<SpeedSetting>, Reason)> = None;
@@ -587,17 +658,18 @@ impl Day<'_, '_> {
                 let margin = margin(risk);
                 let fuel_words = |needs: &[crate::stand::ShipFuel]| needs_words(needs);
                 // Fuel (rule 8) and its place (rule 7).
-                match home_hex {
-                    Some(home_at) if at_home && !at_hex => {
-                        // The speed of the passage back (decision 0130, 1),
-                        // at which its fuel is measured.
-                        let (speed, speed_text) = passage_speed(view, id, risk, hex);
-                        if let Some((needs, _)) =
-                            fuel_needs(view, id, &[hex, home_at], Some(speed), margin)
-                        {
-                            let text = fuel_words(&needs);
-                            if !needs.iter().any(|n| n.short()) {
-                                route = Some((
+                if !dry {
+                    match home_hex {
+                        Some(home_at) if at_home && !at_hex => {
+                            // The speed of the passage back (decision 0130, 1),
+                            // at which its fuel is measured.
+                            let (speed, speed_text) = passage_speed(view, id, risk, hex);
+                            if let Some((needs, _)) =
+                                fuel_needs(view, id, &[hex, home_at], Some(speed), margin)
+                            {
+                                let text = fuel_words(&needs);
+                                if !needs.iter().any(|n| n.short()) {
+                                    route = Some((
                                     vec![hex],
                                     Some(speed),
                                     serving(task, &plan)
@@ -607,9 +679,9 @@ impl Day<'_, '_> {
                                         .would_change("less fuel aboard")
                                         .done(),
                                 ));
-                            } else {
-                                fuelling = true;
-                                notes.push(
+                                } else {
+                                    fuelling = true;
+                                    notes.push(
                                     serving(task, &plan)
                                         .evidence(format!("the passage to {hex} and home, by the engine's measure, times the {margin} of the {risk_text}: {text}"), today)
                                         .binding("back to its hex once every ship has the fuel for the passage out and home with the margin")
@@ -617,25 +689,30 @@ impl Day<'_, '_> {
                                         .would_change("more fuel aboard")
                                         .done(),
                                 );
+                                }
                             }
                         }
-                    }
-                    Some(home_at) if !on_way_home && here != home_at => {
-                        // The passage home for fuel is at cruise at every
-                        // risk, and its fuel is measured at cruise (the
-                        // architect's ruling on decision 0130, 1).
-                        let needs =
-                            fuel_needs(view, id, &[home_at], Some(SpeedSetting::Cruise), margin);
-                        let short = needs
-                            .as_ref()
-                            .is_some_and(|(n, _)| n.iter().any(|n| n.short()));
-                        let text = needs
-                            .as_ref()
-                            .map_or_else(String::new, |(n, _)| fuel_words(n));
-                        let fuel_text = format!("the passage home to {home_text}, by the engine's measure, times the {margin} of the {risk_text}, for the ship with least against its need: {text}");
-                        if short {
-                            going_home = true;
-                            route = Some((
+                        Some(home_at) if !on_way_home && here != home_at => {
+                            // The passage home for fuel is at cruise at every
+                            // risk, and its fuel is measured at cruise (the
+                            // architect's ruling on decision 0130, 1).
+                            let needs = fuel_needs(
+                                view,
+                                id,
+                                &[home_at],
+                                Some(SpeedSetting::Cruise),
+                                margin,
+                            );
+                            let short = needs
+                                .as_ref()
+                                .is_some_and(|(n, _)| n.iter().any(|n| n.short()));
+                            let text = needs
+                                .as_ref()
+                                .map_or_else(String::new, |(n, _)| fuel_words(n));
+                            let fuel_text = format!("the passage home to {home_text}, by the engine's measure, times the {margin} of the {risk_text}, for the ship with least against its need: {text}");
+                            if short {
+                                going_home = true;
+                                route = Some((
                                 vec![home_at],
                                 Some(SpeedSetting::Cruise),
                                 serving(task, &plan)
@@ -645,36 +722,37 @@ impl Day<'_, '_> {
                                     .would_change("more fuel aboard")
                                     .done(),
                             ));
-                        } else {
-                            place_note = Some(notes.len());
-                            notes.push(
+                            } else {
+                                place_note = Some(notes.len());
+                                notes.push(
                                 serving(task, &plan)
                                     .evidence(fuel_text.clone(), today)
                                     .worked(format!("{intent_words}: {fuel_text}: every ship has what it needs, so {id} stays on its task."))
                                     .would_change("less fuel aboard")
                                     .done(),
                             );
+                            }
                         }
-                    }
-                    Some(home_at) if on_way_home => {
-                        notes.push(
+                        Some(home_at) if on_way_home => {
+                            notes.push(
                             serving(task, &plan)
                                 .evidence(format!("{id} is at {here}, on its way home to {home_text}"), today)
                                 .worked(format!("{intent_words}: {id} is on its way home to {home_text}; {}. It is given no route.", expected_words(view, id, home_at)))
                                 .would_change("the force stopped at its home port")
                                 .done(),
                         );
-                    }
-                    _ => {
-                        if home_hex.is_none() {
-                            place_note = Some(notes.len());
-                            notes.push(
+                        }
+                        _ => {
+                            if home_hex.is_none() {
+                                place_note = Some(notes.len());
+                                notes.push(
                                 serving(task, &plan)
                                     .evidence(format!("{id} has no home port and is stopped at no base of the side"), today)
                                     .worked(format!("{intent_words}: {id} has no home port the staff knows, so its fuel is not measured against a passage home."))
                                     .would_change("a home port set")
                                     .done(),
                             );
+                            }
                         }
                     }
                 }
@@ -691,7 +769,7 @@ impl Day<'_, '_> {
                         .waypoints
                         .last()
                         .is_some_and(|w| *w != hex && Some(*w) != home_hex);
-                if !going_home && !fuelling {
+                if !going_home && !fuelling && !dry {
                     // The reach: the least strike radius among the bomber
                     // groups aboard that can fly.
                     let reach = aboard
@@ -886,7 +964,7 @@ impl Day<'_, '_> {
                         }
                     }
                 }
-                if route.is_none() && !going_home && !at_hex && !at_home && !stays {
+                if route.is_none() && !going_home && !at_hex && !at_home && !stays && !dry {
                     // Its place (decision 0125, 7), at the speed of decision
                     // 0130, 1.
                     let (speed, speed_text) = passage_speed(view, id, risk, hex);
@@ -1040,6 +1118,7 @@ impl Day<'_, '_> {
                         reach: g.reach,
                         held_share: g.strike_held_share,
                         sizing: g.strike_sizing,
+                        search_once: g.search_once,
                     });
                 }
                 let air = decide(risk, figure, attacked.is_some(), arc.from, arc.to, &groups);
@@ -1078,11 +1157,16 @@ impl Day<'_, '_> {
                         CarrierRole::Fighter => format!("{}, a fighter group, has {fatigue}: it flies the patrol at a share of {} ({share_note}); the rest are escorts", g.id, air.share),
                         CarrierRole::Searcher if rests => format!("{}, a group that searches, has {fatigue}: it rests", g.id),
                         CarrierRole::Searcher => format!(
-                            "{}, a group that {} searches, has {fatigue}: it searches {} out to {} nm from {here} ({arc_text})",
+                            "{}, a group that {} searches, has {fatigue}: it searches {} out to {} nm from {here} ({arc_text}); {}",
                             g.id,
-                            if g.can_strike { "can search and attack a ship and, the force having no group that can only search, the lowest numbered such," } else { "can search and cannot attack a ship," },
+                            if g.can_strike {
+                                turn_words(&groups, g.id)
+                            } else {
+                                "can search and cannot attack a ship,".to_string()
+                            },
                             arc_words(&arc),
-                            g.search_range_nm
+                            g.search_range_nm,
+                            once_words(risk)
                         ),
                         CarrierRole::Striker => format!("{}, a bomber group, has {fatigue}: it strikes ships by the table of the {risk_text}, with its strikes sized", g.id),
                         CarrierRole::Other => format!("{}, neither a fighter nor a group that can search or attack a ship: no order", g.id),
@@ -1099,6 +1183,10 @@ impl Day<'_, '_> {
                         (AirGroupOrder::SetPatrolShare { .. }, Some(b)) => {
                             format!("its patrol share is {}", b.patrol_share)
                         }
+                        (AirGroupOrder::SetSearchOnce { .. }, Some(b)) => format!(
+                            "its search once a day is {}",
+                            if b.search_once { "on" } else { "off" }
+                        ),
                         (AirGroupOrder::SetSearchArc { .. }, Some(b)) => match b.search {
                             Some(a) => format!(
                                 "its arc is {} to {} at {} nm",
@@ -1203,6 +1291,7 @@ mod tests {
             reach: Reach::Normal,
             held_share: Fixed::ZERO,
             sizing: false,
+            search_once: false,
         }
     }
 

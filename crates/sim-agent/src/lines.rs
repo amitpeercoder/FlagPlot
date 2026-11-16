@@ -225,6 +225,10 @@ pub struct AirGroupLine {
     /// given only when it is on.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub strike_sizing: Option<bool>,
+    /// Whether the group flies its search once a day, in the morning
+    /// (decision 0131), given only when it is on.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search_once: Option<bool>,
     /// The contact the group would launch a strike at if the strike decision
     /// were made now (decision 6 of 0063): `SideView::strike_choice`, the
     /// function the decision itself calls. Left out for a group that is not
@@ -768,6 +772,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
         strike_held_share: (group.strike_held_share > Fixed::ZERO)
             .then_some(Dec(group.strike_held_share)),
         strike_sizing: group.strike_sizing.then_some(true),
+        search_once: group.search_once.then_some(true),
         would_strike: ctx
             .view
             .strike_choice(group.id)

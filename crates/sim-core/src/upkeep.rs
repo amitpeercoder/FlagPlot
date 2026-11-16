@@ -652,7 +652,15 @@ impl World {
 
             let (change, amount, after, causes, breakdown) = match longest {
                 Some(longest) => {
-                    let gain = figures.gain(longest.distance_nm);
+                    let gain = figures.gain_for(longest.kind, longest.distance_nm);
+                    // The figure for each 100 nm that served (decision 0131, 3).
+                    let (per_100_name, per_100) =
+                        match (longest.kind, figures.search_fatigue_per_100_nm) {
+                            (SortieKind::Search, Some(search)) => {
+                                ("search_fatigue_per_100_nm", search)
+                            }
+                            _ => ("air_fatigue_per_100_nm", figures.air_fatigue_per_100_nm),
+                        };
                     let after = (before + gain).min(full);
                     let mut causes: Vec<Cause> = Vec::new();
                     for sortie in &flown {
@@ -673,8 +681,8 @@ impl World {
                                 value: figures.air_fatigue_per_sortie,
                             },
                             Factor {
-                                name: "air_fatigue_per_100_nm",
-                                value: figures.air_fatigue_per_100_nm,
+                                name: per_100_name,
+                                value: per_100,
                             },
                             Factor {
                                 name: "distance_nm",

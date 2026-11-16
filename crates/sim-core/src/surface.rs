@@ -5677,6 +5677,7 @@ mod tests {
             air_rest_per_pulse: Fixed::from_int(5),
             force_fatigue_per_pulse_alert: Fixed::from_int(5),
             force_rest_per_pulse: Fixed::from_int(3),
+            search_fatigue_per_100_nm: None,
         });
     }
 

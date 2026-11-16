@@ -20,6 +20,15 @@ placeholder = true
 air_fatigue_per_sortie = 3
 air_fatigue_per_100_nm = 2
 
+# A search tires a group by this figure for each 100 nm of it, in place of
+# air_fatigue_per_100_nm (decision 0131, 3 and 4); the figure for the sortie is
+# the same. Sized so that a search to 700 nm flown once a day gains
+# 3 + 14 x 0.14 = 4.96 in the morning and loses 5 in the afternoon: Midway's
+# flying boats searched every day (docs/research/oob/search-tempo.md). A
+# placeholder in every other respect. Strikes, raids, patrols and escorts keep
+# air_fatigue_per_100_nm. The frozen step 1 figures give none.
+search_fatigue_per_100_nm = "0.14"
+
 # Fatigue an air group loses in a daylight pulse in which it did not fly.
 air_rest_per_pulse = 5
 

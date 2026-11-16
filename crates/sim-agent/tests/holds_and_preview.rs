@@ -118,7 +118,7 @@ fn the_three_tools_are_in_the_list_after_set_leave_and_before_approve() {
     assert_eq!(at("preview"), at("release") + 1);
     assert_eq!(at("approve"), at("preview") + 1);
     assert_eq!(COMMAND_TOOLS.len(), 18);
-    assert_eq!(sim_agent::VERSION, 13);
+    assert_eq!(sim_agent::VERSION, 14);
 }
 
 #[test]

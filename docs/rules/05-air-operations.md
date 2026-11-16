@@ -66,7 +66,7 @@ A group has one mission at a time. It flies only that mission. A group takes up 
 | Mission | What the group does |
 | --- | --- |
 | Rest | Stays on the ground. Flies nothing. |
-| Search | Flies its search arc in each daylight pulse, in the search step (chapter 3, Air search). |
+| Search | Flies its search arc in each daylight pulse, in the search step (chapter 3, Air search); in the morning pulse only when it is set to search once a day. |
 | Naval strike | Decides in each daylight pulse whether to strike a contact its side holds, of a kind on its target list. |
 | Base strike (names an enemy base) | Strikes that base in the first daylight pulse of the day in which it is in reach, once a day. |
 | Combat air patrol | Keeps a share of its aircraft over its own hex, and escorts raids with the rest. |
@@ -88,6 +88,7 @@ The orders that act on an air group, and every reason one is refused, are in cha
 - A strike contact age order sets `strike_contact_age`, the oldest contact in pulses the group launches a naval strike on, which only the strike decision reads (see "Naval strike: the contact"). With none set the figure `air_combat.toml: strike_contact_max_age_pulses` serves. It does nothing for a base strike, which needs no contact. [0114]
 - A strike held share order sets `strike_held_share`, a share from 0 to 1 (0 until one is set) of the aircraft the group is able to fly that a naval strike or a base strike holds back (see "Held back from a strike"). It does nothing for search, patrol or escorts. [0114]
 - A strike sizing order sets `strike_sizing`, on or off (off until one is set), which only the strike decision reads, for a naval strike (see "A strike sized to its target"). It does nothing for a base strike, search, patrol or escorts. It does nothing either where `air_combat.toml` has no `[strike_aircraft_per_ship]` figure for any kind. There is no scenario key for it: it is an order, `set_strike_sizing` with `on`. [0118]
+- A search once a day order sets `search_once`, on or off (off until one is set), which only the search step reads. With it on, a group on the search mission searches in the morning pulse and not in the afternoon; in the afternoon it has not flown, and rests as a group that did not fly does (see "Fatigue gained and lost"). With it off it searches in both daylight pulses. It does nothing for a group on another mission. There is no scenario key for it: it is an order, `set_search_once` with `on`. The search it flies cites the order beside the mission and arc orders. A side's forecast of its own base's supply counts one search sortie a day for such a group. [0131]
 - A rebase order is not a standing order. It is applied when it is taken in and is then spent (see "Rebasing an air group").
 
 The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050, 0059, 0063, 0091, 0114]
@@ -627,9 +628,10 @@ A damaged aircraft does not fly. It is on the ground at its base whatever its gr
 If the fatigue figures are loaded, after wear, each group with a position, in order of group number, is worked.
 
 - A group that flew an aircraft in the pulse (a sortie with aircraft `sent`, whether or not any came back) gains: `fatigue.toml: air_fatigue_per_sortie` plus `air_fatigue_per_100_nm` times the distance of its longest sortie over 100, once, never above 100. For equal distances the first sortie counts. A fighter group that kept a patrol and sent escorts gains once, for the longer of the two.
+- **What a search costs.** Where that longest sortie is a search and `fatigue.toml` gives `search_fatigue_per_100_nm`, that figure takes the place of `air_fatigue_per_100_nm`: the gain is `air_fatigue_per_sortie` plus `search_fatigue_per_100_nm` times the distance over 100. The figure for the sortie itself is the same. With no search figure in the file the general figure serves, as before; the frozen step 1 figures give none. Strikes, base strikes, patrols and escorts always take the general figure. When breakdowns are on, the factor is named for the figure that served. The live figure is 0.14: a search to 700 nm, a sortie of 1400 nm, flown once a day gains 3 + 14 x 0.14 = 4.96 in the morning and loses 5 in the afternoon, so the group can search every day, as Midway's flying boats did in June 1942. It is sized from those rows and from nothing else, and is a placeholder in every other respect. [0131]
 - A group that did not fly in the pulse loses `air_rest_per_pulse`, never below 0.
 
-`AirGroupFatigue` (gained or rested, the amount, the new fatigue) is recorded only when the fatigue changes, caused by the events that say the group flew, or for a group that rested, its latest `AirGroupStoodDown` if it is stood down, else its mission order. Nothing changes at night. So a group that flies one long sortie in the morning gets part back in the afternoon, and a group that flies both pulses gets nothing back. No random number. [0036]
+`AirGroupFatigue` (gained or rested, the amount, the new fatigue) is recorded only when the fatigue changes, caused by the events that say the group flew, or for a group that rested, its latest `AirGroupStoodDown` if it is stood down, else its mission order. Nothing changes at night. So a group that flies one long sortie in the morning gets part back in the afternoon, and a group that flies both pulses gets nothing back. A search group set to search once a day is such a group. No random number. [0036, 0131]
 
 A side sees: `AirGroupFatigue` for its own groups, whole.
 

@@ -264,6 +264,8 @@ pub(crate) struct Member {
     search: Option<SearchArc>,
     arc_order: Option<sim_core::ids::OrderId>,
     range: Fixed,
+    /// Its setting to search once a day (decision 0131, 1).
+    pub(crate) search_once: bool,
 }
 
 pub(crate) fn mission_words(mission: AirMission) -> String {
@@ -329,6 +331,9 @@ pub(crate) struct Day<'v, 'a> {
     /// what a raid from the same base may draw escorts from (decision 0120,
     /// 10 and 16).
     pub(crate) cover_fighters: BTreeMap<AirGroupId, Option<Fixed>>,
+    /// The bomber each base's cover or search task borrows to search this
+    /// morning (decision 0131, 8), worked out before the cover is served.
+    pub(crate) turns: BTreeMap<BaseId, crate::search::Turn>,
     /// What the tree in scope would do, in words, for a proposal.
     pub(crate) lines: Vec<String>,
     /// The side's events, read when a reason needs them.
@@ -460,6 +465,7 @@ impl<'v, 'a> Day<'v, 'a> {
             raid_taken: BTreeMap::new(),
             strike_taken: BTreeMap::new(),
             cover_fighters: BTreeMap::new(),
+            turns: BTreeMap::new(),
             lines: Vec::new(),
             events: None,
         };
@@ -467,6 +473,7 @@ impl<'v, 'a> Day<'v, 'a> {
         day.holds();
         day.neutralises();
         day.denials();
+        day.work_turns();
         day.covers();
         day.raids();
         day.strikes();
@@ -698,23 +705,29 @@ impl<'v, 'a> Day<'v, 'a> {
             .filter(|group| {
                 may.contains(&group.id) && group.location == AirGroupLocation::Base(base)
             })
-            .map(|group| Member {
-                id: group.id,
-                kind: self.kind_of(group),
-                fatigue: group.fatigue,
-                able: self.view.able_to_fly(group.id).unwrap_or(0),
-                mission: group.mission,
-                patrol_share: group.patrol_share,
-                search: group.search,
-                arc_order: group.arc_order,
-                range: self
-                    .view
-                    .aircraft_type(group.aircraft_type)
-                    .map_or(Fixed::ZERO, |t| t.search_range_nm),
-            })
+            .map(|group| self.member(group))
             .collect();
         members.sort_by_key(|m| m.id);
         members
+    }
+
+    /// A group of the side as the doctrine reads it this morning.
+    pub(crate) fn member(&self, group: &sim_core::state::AirGroup) -> Member {
+        Member {
+            id: group.id,
+            kind: self.kind_of(group),
+            fatigue: group.fatigue,
+            able: self.view.able_to_fly(group.id).unwrap_or(0),
+            mission: group.mission,
+            patrol_share: group.patrol_share,
+            search: group.search,
+            arc_order: group.arc_order,
+            search_once: group.search_once,
+            range: self
+                .view
+                .aircraft_type(group.aircraft_type)
+                .map_or(Fixed::ZERO, |t| t.search_range_nm),
+        }
     }
 
     fn holds(&mut self) {
@@ -960,6 +973,23 @@ impl<'v, 'a> Day<'v, 'a> {
         for (group, task) in self.strike_bombers() {
             raid_bombers.entry(group).or_insert(task);
         }
+        // Save the one that task lends the cover to search today (decision
+        // 0131, 8).
+        let turn = self
+            .turns
+            .get(&base)
+            .filter(|t| t.borrower == cover.id)
+            .cloned();
+        if let Some(turn) = &turn {
+            raid_bombers.remove(&turn.group);
+            // Lent, it is the cover's today whatever the cover's limit says.
+            if !members.iter().any(|m| m.id == turn.group) {
+                if let Some(group) = self.view.air_groups().find(|g| g.id == turn.group) {
+                    members.push(self.member(group));
+                    members.sort_by_key(|m| m.id);
+                }
+            }
+        }
         let raids_have: Vec<String> = members
             .iter()
             .filter_map(|m| {
@@ -1008,6 +1038,9 @@ impl<'v, 'a> Day<'v, 'a> {
         let arc = base_hex.map_or(Arc::WHOLE, |hex| arc_for(hex, &hexes));
         let arc_text = arc_working(&arc, &threats);
 
+        let once = crate::search::once_a_day(risk);
+        let once_text = crate::search::once_words(risk);
+
         // The fighters, most tired first.
         let mut fighters: Vec<Member> = members
             .iter()
@@ -1050,11 +1083,19 @@ impl<'v, 'a> Day<'v, 'a> {
 
         for m in &members {
             let g = m.id;
-            let numbers = format!(
-                "{g}, a {}, has fatigue {} against the {level} of the {risk_text}",
-                kind_words(m.kind),
-                m.fatigue
-            );
+            let numbers = match &turn {
+                Some(turn) if turn.group == g => format!(
+                    "{g}, a bomber group of {} that can search, has fatigue {} against the {level} of the {risk_text}; {}",
+                    turn.lender,
+                    m.fatigue,
+                    turn.words
+                ),
+                _ => format!(
+                    "{g}, a {}, has fatigue {} against the {level} of the {risk_text}",
+                    kind_words(m.kind),
+                    m.fatigue
+                ),
+            };
             let before = orders.len();
             let line;
             match m.kind {
@@ -1194,6 +1235,29 @@ impl<'v, 'a> Day<'v, 'a> {
                                     .done(),
                             );
                         }
+                        if m.search_once != once {
+                            give(
+                                &mut orders,
+                                g,
+                                AirGroupOrder::SetSearchOnce { on: once },
+                                serving(cover, &plan)
+                                    .evidence(format!("{numbers}; it is not above the level, so it searches"), today)
+                                    .evidence(
+                                        format!(
+                                            "its search once a day is {}",
+                                            if m.search_once { "on" } else { "off" }
+                                        ),
+                                        today,
+                                    )
+                                    .binding(once_text.clone())
+                                    .worked(format!(
+                                        "{numbers}; it searches, and {once_text}: its search once a day is set {}.",
+                                        if once { "on" } else { "off" }
+                                    ))
+                                    .would_change("a different risk level")
+                                    .done(),
+                            );
+                        }
                         let wanted = SearchArc {
                             from_deg: arc.from,
                             to_deg: arc.to,
@@ -1249,7 +1313,7 @@ impl<'v, 'a> Day<'v, 'a> {
                             );
                         }
                         line = format!(
-                            "{numbers}; it is not above the level, so it searches; mission {}, {} ({arc_text})",
+                            "{numbers}; it is not above the level, so it searches; mission {}, {} ({arc_text}); {once_text}",
                             mission_words(m.mission),
                             setting_words(m)
                         );

@@ -190,6 +190,8 @@ Regenerated after the architect's ruling of Nov 16, 2026, that a force has one s
 
 Regenerated after decision 0130 (a carrier force comes up at speed and closes the range: doctrine `supply-15`; state layout, rules label, saved game version and agent interface unchanged), with `regame.py`. Each `save.json` differs in its `doctrine_version` (`supply-14` to `supply-15`). In `second_proof_week_sonnet` the carrier tasks' reasons for giving no order also gain the words on closing ("does not close: ..."), in its `save.json` and in five answers of its transcript; no carrier force there closed or went at a new speed, so no order, command, hash or result changed.
 
+Regenerated after decision 0131 (a search that can be kept up: the state layout at version 34, the rules label at 17, saved game version 9, doctrine `supply-16`, the agent interface at version 14; Nov 16, 2026), with `regame.py`. Each `save.json` differs in its versions and day hashes, and each transcript in the answers' `version` (13 to 14). In `full_slice_five_days_sonnet` the live search figure (0.14 for each 100 nm) changes the fatigue of every group that searched, and the fatigue and aircraft able to fly its briefings show. In `second_proof_week_sonnet` the staff also sets each searching group to search once a day at balanced, with its reasons ("flies its search once a day, in the morning"), and the groups' fatigue follows. Every order is answered as it was asked, every day resolves, and no game's result changed. `replay --check-staff` passes on each.
+
 ## The second proof's game (Nov 16, 2026)
 
 `second_proof_week_sonnet`: decision 0128's model's game. The Allied seat of `data/scenarios/second-proof/07m_model_week.toml` on seed 1:

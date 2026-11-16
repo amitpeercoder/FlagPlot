@@ -91,3 +91,541 @@
 //!   side's is refused.
 //! - Every hand-calculation test on the frozen figures built before this
 //!   one passes untouched: none gives a search figure or the setting.
+
+// ---------------------------------------------------------------- The harness
+
+use std::collections::BTreeMap;
+use std::path::PathBuf;
+
+use sim_core::command::{Risk, StaffDecisions};
+use sim_core::events::{Event, EventKind, SortieKind};
+use sim_core::fixed::Fixed;
+use sim_core::ids::AirGroupId;
+use sim_core::orders::{
+    AirGroupOrder, AirMission, OrderKind, OrderRequest, Origin, Reach, RejectReason,
+};
+use sim_core::refdata::ShipKind;
+use sim_core::state::{Side, TruthState};
+use sim_core::time::Pulse;
+use sim_data::Scenario;
+use sim_staff::carrier::{decide, roles, CarrierGroup, CarrierRole};
+use sim_staff::search::{base_turn, least_tired, once_a_day, TurnCandidate};
+use sim_staff::{as_staffs, staffs};
+
+mod common;
+
+const COMMANDS_MARKER: &str = "# The Allied commander's commands";
+const FATIGUE_FILE: &str = "fatigue_placeholder_search_kept_up.toml";
+
+fn path() -> PathBuf {
+    common::data_dir().join("scenarios/59_a_search_kept_up.toml")
+}
+
+fn text() -> String {
+    std::fs::read_to_string(path()).expect("the scenario file reads")
+}
+
+fn n(whole: i64) -> Fixed {
+    Fixed::from_int(whole)
+}
+
+fn fx(text: &str) -> Fixed {
+    text.parse().expect("a decimal")
+}
+
+fn group(raw: u32) -> AirGroupId {
+    AirGroupId::new(raw)
+}
+
+/// The scenario's text with `extra` after its commands.
+fn with(extra: &str) -> String {
+    format!("{}{}", text(), extra)
+}
+
+/// The scenario's text with no command of the commander's.
+fn without_commands() -> String {
+    let text = text();
+    let at = text.find(COMMANDS_MARKER).expect("the marker");
+    text[..at].to_string()
+}
+
+/// The frozen figures with the search figure taken out of the scenario's
+/// fatigue file: with none, a search costs what every sortie costs.
+fn no_search_figure() -> sim_data::LoadOptions {
+    common::altered_reference("s59", |dir| {
+        common::edit_file_by(
+            dir,
+            FATIGUE_FILE,
+            &[("search_fatigue_per_100_nm = \"0.15\"\n", "")],
+        );
+    })
+}
+
+/// A game played to its end with the doctrine's staffs.
+struct Played {
+    handed: BTreeMap<u32, StaffDecisions>,
+    truth: Vec<TruthState>,
+    events: Vec<Event>,
+}
+
+fn play_with(text: &str, options: &sim_data::LoadOptions) -> Played {
+    let mut scenario: Scenario =
+        common::from_text_with(text, &path(), options).expect("the scenario loads");
+    let held = staffs();
+    let mut handed = BTreeMap::new();
+    let mut truth = vec![scenario.world.umpire().clone()];
+    loop {
+        let day = scenario.world.day() + 1;
+        let summary = scenario
+            .next_day_watched(as_staffs(&held), &mut |_, _| {})
+            .expect("a day resolves");
+        if summary.is_none() {
+            break;
+        }
+        handed.insert(
+            day,
+            scenario
+                .world
+                .staff_handed_in()
+                .get(&Side::Allied)
+                .cloned()
+                .unwrap_or_default(),
+        );
+        truth.push(scenario.world.umpire().clone());
+    }
+    Played {
+        handed,
+        truth,
+        events: scenario.world.events().iter().cloned().collect(),
+    }
+}
+
+fn play(text: &str) -> Played {
+    play_with(text, &common::frozen())
+}
+
+impl Played {
+    /// Group 1's fatigue on the morning of `day`, before the day's orders.
+    fn morning(&self, day: u32) -> Fixed {
+        self.truth[(day - 1) as usize].air_groups[&group(1)].fatigue
+    }
+
+    fn mornings(&self) -> Vec<Fixed> {
+        (1..=12).map(|d| self.morning(d)).collect()
+    }
+
+    /// The staff's orders of `day` to air groups, as (group, order).
+    fn air_orders(&self, day: u32) -> Vec<(u32, AirGroupOrder)> {
+        self.handed[&day]
+            .orders
+            .iter()
+            .map(|o| match &o.kind {
+                OrderKind::AirGroup { target, order } => (target.raw(), order.clone()),
+                other => panic!("the air doctrine gave a non-air order: {other:?}"),
+            })
+            .collect()
+    }
+
+    fn counts(&self) -> Vec<usize> {
+        (1..=12).map(|d| self.handed[&d].orders.len()).collect()
+    }
+
+    /// The aircraft group 1 sent on a search in `pulse` of `day`, if it
+    /// searched.
+    fn searched(&self, day: u32, pulse: Pulse) -> Option<u32> {
+        self.events.iter().find_map(|e| match &e.kind {
+            EventKind::SearchFlown {
+                air_group,
+                aircraft,
+                ..
+            } if *air_group == group(1) && e.day == day && e.pulse == Some(pulse) => {
+                Some(*aircraft)
+            }
+            _ => None,
+        })
+    }
+
+    /// The days on which group 1 searched in the morning.
+    fn search_days(&self) -> Vec<u32> {
+        (1..=12)
+            .filter(|d| self.searched(*d, Pulse::Morning).is_some())
+            .collect()
+    }
+
+    /// The days on which group 1 has the rest mission at the end of the
+    /// staff's orders: the days it rests.
+    fn rest_days(&self) -> Vec<u32> {
+        (1..=12)
+            .filter(|d| self.truth[*d as usize].air_groups[&group(1)].mission == AirMission::Rest)
+            .collect()
+    }
+
+    fn nothing_refused(&self) {
+        let refused: Vec<&Event> = self
+            .events
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.kind,
+                    EventKind::OrderRejected { .. } | EventKind::CommandRefused { .. }
+                )
+            })
+            .collect();
+        assert!(refused.is_empty(), "something was refused: {refused:?}");
+    }
+}
+
+fn mission(m: AirMission) -> AirGroupOrder {
+    AirGroupOrder::SetAirMission(m)
+}
+
+fn arc() -> AirGroupOrder {
+    AirGroupOrder::SetSearchArc {
+        from_deg: 50,
+        to_deg: 120,
+        range_nm: n(600),
+    }
+}
+
+fn press_text() -> String {
+    with("\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"risk\"\nintent = 1\nrisk = \"press\"\n")
+}
+
+// ------------------------------------------------------- The hand calculation
+
+#[test]
+fn the_scenarios_fatigue_file_gives_a_search_figure_of_0_15_and_the_rest_as_frozen() {
+    let scenario = common::load(&path()).expect("the scenario loads");
+    let figures = scenario
+        .world
+        .ref_data()
+        .fatigue
+        .expect("the fatigue figures");
+    assert_eq!(figures.search_fatigue_per_100_nm, Some(fx("0.15")));
+    assert_eq!(figures.air_fatigue_per_sortie, n(3));
+    assert_eq!(figures.air_fatigue_per_100_nm, n(2));
+    assert_eq!(figures.air_rest_per_pulse, n(5));
+    // A search to 600 nm is a sortie of 1200 nm: 3 + 12 x 0.15 = 4.8.
+    assert_eq!(figures.gain_for(SortieKind::Search, n(1200)), fx("4.8"));
+}
+
+#[test]
+fn the_staff_gives_the_search_mission_search_once_on_and_the_arc_on_day_1_and_nothing_after() {
+    let played = play(&text());
+    played.nothing_refused();
+    assert_eq!(
+        played.air_orders(1),
+        vec![
+            (1, mission(AirMission::Search)),
+            (1, AirGroupOrder::SetSearchOnce { on: true }),
+            (1, arc()),
+        ]
+    );
+    assert_eq!(played.counts(), vec![3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+}
+
+#[test]
+fn every_morning_the_group_is_at_0_flies_6_in_the_morning_and_none_in_the_afternoon() {
+    let played = play(&text());
+    for day in 1..=12 {
+        assert_eq!(played.morning(day), Fixed::ZERO, "day {day}");
+        assert_eq!(played.searched(day, Pulse::Morning), Some(6), "day {day}");
+        assert_eq!(played.searched(day, Pulse::Afternoon), None, "day {day}");
+    }
+    assert!(played.rest_days().is_empty(), "{:?}", played.rest_days());
+}
+
+#[test]
+fn it_gains_4_8_in_the_morning_and_loses_it_in_the_afternoon() {
+    let played = play(&text());
+    let changes: Vec<(u32, Pulse, Fixed, Fixed)> = played
+        .events
+        .iter()
+        .filter_map(|e| match &e.kind {
+            EventKind::AirGroupFatigue {
+                air_group,
+                amount,
+                fatigue,
+                ..
+            } if *air_group == group(1) => {
+                Some((e.day, e.pulse.expect("a pulse"), *amount, *fatigue))
+            }
+            _ => None,
+        })
+        .collect();
+    let mut wanted = Vec::new();
+    for day in 1..=12 {
+        wanted.push((day, Pulse::Morning, fx("4.8"), fx("4.8")));
+        // The amount of a loss is given as its size: 4.8, all it had.
+        wanted.push((day, Pulse::Afternoon, fx("4.8"), Fixed::ZERO));
+    }
+    assert_eq!(changes, wanted);
+}
+
+#[test]
+fn the_search_once_order_says_why_with_the_risk() {
+    let played = play(&text());
+    let reason = played.handed[&1]
+        .orders
+        .iter()
+        .find(|o| {
+            matches!(
+                o.kind,
+                OrderKind::AirGroup {
+                    order: AirGroupOrder::SetSearchOnce { .. },
+                    ..
+                }
+            )
+        })
+        .map(|o| o.reason.worked.clone())
+        .expect("the order");
+    assert!(reason.contains("balanced"), "{reason}");
+    assert!(reason.contains("once a day"), "{reason}");
+    assert!(reason.contains("fatigue 0"), "{reason}");
+    assert!(reason.contains("45"), "{reason}");
+}
+
+// ----------------------------------------------------------------- Properties
+
+#[test]
+fn at_press_the_search_once_order_is_not_given_and_it_searches_in_both_pulses() {
+    let played = play(&press_text());
+    played.nothing_refused();
+    assert_eq!(
+        played.air_orders(1),
+        vec![(1, mission(AirMission::Search)), (1, arc())]
+    );
+    let mornings: Vec<Fixed> = [
+        "0", "9.6", "19.2", "28.8", "38.4", "48", "57.6", "67.2", "57.2", "66.8", "56.8", "66.4",
+    ]
+    .iter()
+    .map(|s| fx(s))
+    .collect();
+    assert_eq!(played.mornings(), mornings);
+    // Days 1 to 7: searches in both pulses.
+    for day in 1..=7 {
+        assert!(played.searched(day, Pulse::Morning).is_some(), "day {day}");
+        assert!(
+            played.searched(day, Pulse::Afternoon).is_some(),
+            "day {day}"
+        );
+    }
+    assert_eq!(played.rest_days(), vec![8, 10, 12]);
+    assert_eq!(played.search_days(), vec![1, 2, 3, 4, 5, 6, 7, 9, 11]);
+    assert_eq!(played.counts(), vec![2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1]);
+    assert_eq!(played.counts().iter().sum::<usize>(), 7);
+    assert!(played
+        .handed
+        .values()
+        .flat_map(|d| d.orders.iter())
+        .all(|o| !matches!(
+            o.kind,
+            OrderKind::AirGroup {
+                order: AirGroupOrder::SetSearchOnce { .. },
+                ..
+            }
+        )));
+}
+
+#[test]
+fn without_the_search_figure_a_search_costs_27_and_it_searches_on_days_1_2_3_7_and_10() {
+    let played = play_with(&text(), &no_search_figure());
+    played.nothing_refused();
+    let mornings: Vec<Fixed> = [0, 22, 44, 66, 56, 46, 36, 58, 48, 38, 60, 50]
+        .iter()
+        .map(|v| n(*v))
+        .collect();
+    assert_eq!(played.mornings(), mornings);
+    assert_eq!(played.search_days(), vec![1, 2, 3, 7, 10]);
+    assert_eq!(played.rest_days(), vec![4, 5, 6, 8, 9, 11, 12]);
+    for day in 1..=12 {
+        assert_eq!(played.searched(day, Pulse::Afternoon), None, "day {day}");
+    }
+}
+
+/// The scenario with no commands and the group's orders given by the file:
+/// the search mission, the arc and search once a day `on`.
+fn ordered(on: bool) -> String {
+    format!(
+        "{}\n[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_air_mission\"\nmission = \"search\"\n\n[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_search_arc\"\nfrom_deg = 50\nto_deg = 120\nrange_nm = 600\n\n[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_search_once\"\non = {on}\n",
+        without_commands()
+    )
+}
+
+#[test]
+fn the_rule_alone_on_it_searches_in_the_morning_only_and_off_in_both() {
+    let on = play(&ordered(true));
+    on.nothing_refused();
+    let off = play(&ordered(false));
+    off.nothing_refused();
+    for day in 1..=12 {
+        assert!(on.searched(day, Pulse::Morning).is_some(), "on, day {day}");
+        assert_eq!(on.searched(day, Pulse::Afternoon), None, "on, day {day}");
+    }
+    assert!(off.searched(1, Pulse::Morning).is_some());
+    assert!(off.searched(1, Pulse::Afternoon).is_some());
+}
+
+#[test]
+fn a_strike_sortie_of_1200_nm_costs_27_whether_or_not_the_search_figure_is_given() {
+    let with_figure = common::load(&path())
+        .expect("the scenario loads")
+        .world
+        .ref_data()
+        .fatigue
+        .expect("the fatigue figures");
+    let without = common::from_text_with(&text(), &path(), &no_search_figure())
+        .expect("the scenario loads")
+        .world
+        .ref_data()
+        .fatigue
+        .expect("the fatigue figures");
+    assert_eq!(without.search_fatigue_per_100_nm, None);
+    assert_eq!(with_figure.gain_for(SortieKind::Strike, n(1200)), n(27));
+    assert_eq!(without.gain_for(SortieKind::Strike, n(1200)), n(27));
+    assert_eq!(without.gain_for(SortieKind::Search, n(1200)), n(27));
+}
+
+/// A group aboard as the carrier decision reads it.
+fn aboard(
+    id: u32,
+    fighter: bool,
+    can_search: bool,
+    can_strike: bool,
+    fatigue: i64,
+    able: u32,
+) -> CarrierGroup {
+    CarrierGroup {
+        id: group(id),
+        fighter,
+        can_search,
+        can_strike,
+        fatigue: n(fatigue),
+        able,
+        mission: AirMission::Rest,
+        patrol_share: Fixed::ONE,
+        search: None,
+        search_range_nm: n(300),
+        contact_age: 0,
+        target_priority: ShipKind::ALL.to_vec(),
+        reach: Reach::Normal,
+        held_share: Fixed::ZERO,
+        sizing: false,
+        search_once: false,
+    }
+}
+
+fn role_of(roles: &[(AirGroupId, CarrierRole)], id: u32) -> CarrierRole {
+    roles
+        .iter()
+        .find(|(g, _)| *g == group(id))
+        .map(|(_, r)| *r)
+        .expect("a role")
+}
+
+#[test]
+fn on_a_carrier_the_least_tired_bomber_searches_once_a_day_and_the_other_strikes() {
+    let groups = vec![
+        aboard(1, true, false, false, 0, 12),
+        aboard(3, false, true, true, 10, 10),
+        aboard(4, false, true, true, 4, 10),
+    ];
+    let air = decide(Risk::Balanced, 0, false, 50, 120, &groups);
+    assert_eq!(role_of(&air.roles, 4), CarrierRole::Searcher);
+    assert_eq!(role_of(&air.roles, 3), CarrierRole::Striker);
+    let to_4: Vec<&AirGroupOrder> = air
+        .orders
+        .iter()
+        .filter(|(g, _)| *g == group(4))
+        .map(|(_, o)| o)
+        .collect();
+    assert_eq!(to_4[0], &mission(AirMission::Search));
+    assert_eq!(to_4[1], &AirGroupOrder::SetSearchOnce { on: true });
+    assert!(air
+        .orders
+        .contains(&(group(3), mission(AirMission::NavalStrike))));
+    // At equal fatigue the lower numbered searches.
+    let even = vec![
+        aboard(3, false, true, true, 4, 10),
+        aboard(4, false, true, true, 4, 10),
+    ];
+    let r = roles(&even);
+    assert_eq!(role_of(&r, 3), CarrierRole::Searcher);
+    assert_eq!(role_of(&r, 4), CarrierRole::Striker);
+    // A group that cannot fly is passed over.
+    let grounded = vec![
+        aboard(3, false, true, true, 10, 10),
+        aboard(4, false, true, true, 4, 0),
+    ];
+    let r = roles(&grounded);
+    assert_eq!(role_of(&r, 3), CarrierRole::Searcher);
+    assert_eq!(role_of(&r, 4), CarrierRole::Striker);
+}
+
+fn bomber(id: u32, fatigue: i64, able: u32) -> TurnCandidate {
+    TurnCandidate {
+        id: group(id),
+        fatigue: n(fatigue),
+        able,
+    }
+}
+
+#[test]
+fn at_a_base_the_less_tired_bomber_flies_the_covers_arc_and_with_one_it_holds_the_strike() {
+    // A cover with no searcher and a strike task with two bomber groups that
+    // can search: the less tired takes the search.
+    assert_eq!(
+        base_turn(false, &[bomber(3, 10, 10), bomber(4, 4, 10)]),
+        Some(group(4))
+    );
+    assert_eq!(
+        least_tired(&[bomber(3, 4, 10), bomber(4, 4, 10)]),
+        Some(group(3))
+    );
+    // With one such group, it holds the strike and nobody searches.
+    assert_eq!(base_turn(false, &[bomber(3, 10, 10)]), None);
+    // Two, one of which cannot fly: one that can fly, so it holds the
+    // strike.
+    assert_eq!(
+        base_turn(false, &[bomber(3, 10, 10), bomber(4, 4, 0)]),
+        None
+    );
+    // With a group at the base that can only search, it searches and both
+    // bombers strike.
+    assert_eq!(
+        base_turn(true, &[bomber(3, 10, 10), bomber(4, 4, 10)]),
+        None
+    );
+}
+
+#[test]
+fn search_once_a_day_at_preserve_and_balanced_and_both_pulses_at_press() {
+    assert!(once_a_day(Risk::Preserve));
+    assert!(once_a_day(Risk::Balanced));
+    assert!(!once_a_day(Risk::Press));
+}
+
+#[test]
+fn an_order_to_set_search_once_on_a_group_that_is_not_the_sides_is_refused() {
+    let scenario = common::load(&path()).expect("the scenario loads");
+    let request = OrderRequest {
+        kind: OrderKind::AirGroup {
+            target: group(1),
+            order: AirGroupOrder::SetSearchOnce { on: true },
+        },
+        origin: Origin::PLAYER,
+    };
+    assert_eq!(
+        scenario.world.check_order(Side::Japanese, &request),
+        Err(RejectReason::NotYourUnit)
+    );
+    assert_eq!(scenario.world.check_order(Side::Allied, &request), Ok(()));
+}
+
+#[test]
+fn the_same_start_gives_the_same_orders_and_reasons() {
+    let a = play(&text());
+    let b = play(&text());
+    assert_eq!(a.handed, b.handed);
+    assert_eq!(a.truth.last(), b.truth.last());
+}

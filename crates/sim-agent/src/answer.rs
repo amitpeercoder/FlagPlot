@@ -33,8 +33,10 @@ pub const FORMAT: &str = "flagplot-agent";
 /// line's `ammunition_lacked` (rounds, torpedoes, tons and hours) for a force
 /// in port at a base of its side that lacks ammunition (decision 0122), and
 /// the briefing's `charges_lost` and `rearmed` among the force changes
-/// (decisions 0121 and 0122), each left out when empty.
-pub const VERSION: u32 = 13;
+/// (decisions 0121 and 0122), each left out when empty. 14 adds the air group
+/// order `set_search_once` (`on`) and a group's `search_once`, given only when
+/// it is on (decision 0131).
+pub const VERSION: u32 = 14;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

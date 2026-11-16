@@ -653,6 +653,14 @@ pub enum AirGroupOrder {
     SetStrikeSizing {
         on: bool,
     },
+    /// Whether the group, on the search mission, flies its search once a
+    /// day, in the morning pulse only (decision 0131, 1): on, it does not
+    /// search in the afternoon and rests that pulse as a group that did not
+    /// fly. Off until set. A standing order of its own kind. Added at the
+    /// end.
+    SetSearchOnce {
+        on: bool,
+    },
 }
 
 /// An order to a land unit (decision 0090).

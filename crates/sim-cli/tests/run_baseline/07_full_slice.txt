@@ -2,45 +2,45 @@ Scenario 7: The full slice, 7 August to 14 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c4e2a80e424b9b80  245 events
-day   2  hash 65e3041c1745b58e  146 events
-day   3  hash 38927633f983e02c  147 events
-day   4  hash 941ac712cb2f1933  152 events
-day   5  hash 349be46668072796  140 events
-day   6  hash 7dfdfc07a8bed0b4  34 events
-day   7  hash 98d468efae978cad  30 events
-day   8  hash c69e3f1dc89aa5ab  43 events
-day   9  hash 7ac70ea3fbca85ee  48 events
-day  10  hash 3e38f5a227a5540c  55 events
-day  11  hash 0ec65ea741b5ab87  79 events
-day  12  hash 5030d4b77ab34cf0  68 events
-day  13  hash 0e5e22b6b2fb620d  102 events
-day  14  hash f10f79dadb54ae38  79 events
-day  15  hash a06a7e8eac6fbca4  92 events
-day  16  hash a7f523e7939452eb  87 events
-day  17  hash c99eec4b135ddad3  49 events
-day  18  hash b2f839f9052ce176  210 events
-day  19  hash e20393c618c4e7c4  158 events
-day  20  hash 1c25eb90f58401fe  195 events
-day  21  hash c85a06360e529c6c  231 events
-day  22  hash 58c987a2f173c967  114 events
-day  23  hash 3e66dd73bf5c45e3  195 events
-day  24  hash b4d4229d7b7de06b  209 events
-day  25  hash ae02fbaad75af4b3  220 events
-day  26  hash 627056710e1e4439  165 events
-day  27  hash 7a636c4032bee15d  186 events
-day  28  hash f21b16acff22bcef  137 events
-day  29  hash d54379f574a3ee5d  136 events
-day  30  hash a3c0d1e4e065aa39  170 events
-day  31  hash 884d2514af68a28a  169 events
-day  32  hash 828854d20f75fd3e  153 events
-day  33  hash 7ee9cb34d61e0218  108 events
-day  34  hash 9e862201789ac5f4  138 events
-day  35  hash 3f87c9e428291de2  152 events
-day  36  hash 474e4023d38fafee  144 events
-day  37  hash 3ec70e4067fedd68  217 events
-day  38  hash 674e7bc54c0eaf77  150 events
-day  39  hash f529109d8b88be27  123 events
+day   1  hash bee6617395e80b65  245 events
+day   2  hash de8bcce1cd51d71f  146 events
+day   3  hash 57c763f4faad2ea1  147 events
+day   4  hash eb223f7723811fc0  152 events
+day   5  hash 1e6bbe5a55ea1f05  140 events
+day   6  hash a94e8a739448e687  34 events
+day   7  hash ceeb451fee6d7b9e  30 events
+day   8  hash 3d5e8006be1e4230  43 events
+day   9  hash 940946a32021fd33  48 events
+day  10  hash 7ca1c520749acea7  55 events
+day  11  hash b0754a622679f678  79 events
+day  12  hash 00d5b1b3136bd553  68 events
+day  13  hash 526f7997ddc29da6  102 events
+day  14  hash c9961a6c8b3d3ead  79 events
+day  15  hash 24a5e856dea66b2d  92 events
+day  16  hash c03f71a9fecc3fdc  87 events
+day  17  hash 434ad5dd9b823478  49 events
+day  18  hash a0985593cbb4d991  210 events
+day  19  hash 09e5623f1393da26  258 events
+day  20  hash 57d8106905003dc4  207 events
+day  21  hash f83ec002525258fd  255 events
+day  22  hash 9da5f6ba5f602854  159 events
+day  23  hash 2e923b1a66ffcce9  225 events
+day  24  hash 3406155498f935d6  221 events
+day  25  hash ac418d09c51f570b  238 events
+day  26  hash 45ef6ec612020371  170 events
+day  27  hash a3134c43079e0175  196 events
+day  28  hash 712897c1df6d639a  150 events
+day  29  hash 7f2d740d78f71cc5  144 events
+day  30  hash ffc838397776d9d8  186 events
+day  31  hash f84d46cd514aa7cf  184 events
+day  32  hash 1c31ec25de01f948  161 events
+day  33  hash b0c9f468ae4b8cac  122 events
+day  34  hash 7d8208baa7ea9adc  142 events
+day  35  hash 29314edfa6d8c2a5  168 events
+day  36  hash b2c7c17c948759cd  153 events
+day  37  hash 4c295df3329e1a8f  220 events
+day  38  hash b4220d78ccd3f0e4  151 events
+day  39  hash edb9085333624760  139 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -76,37 +76,37 @@ air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)
 air_group:2 "Tainan Air Group" (Japanese) at base:2: 24 ready, 24 pilots, mission CombatAirPatrol, patrol share 0, fatigue 85, no arc
 air_group:3 "6th Air Group" (Japanese) at base:2: 10 ready, 3 damaged, 13 pilots, mission CombatAirPatrol, patrol share 0, fatigue 85, no arc
 air_group:10 "VMF-223" (Allied) at base:1: 0 ready, 16 pilots, mission CombatAirPatrol, patrol share 1, rests above 40, no arc
-air_group:11 "VMSB-232" (Allied) at base:1: 12 ready, 12 pilots, mission NavalStrike, no arc
+air_group:11 "VMSB-232" (Allied) at base:1: 10 ready, 11 pilots, mission NavalStrike, no arc
 air_group:13 "VMF-224" (Allied) at base:1: 5 ready, 10 pilots, mission CombatAirPatrol, patrol share 1, fatigue 32, rests above 40, stood down, no arc
 air_group:14 "VMSB-231" (Allied) at base:1: 12 ready, 12 pilots, mission NavalStrike, no arc
 air_group:15 "VF-5" (Allied) at base:1: 20 ready, 1 damaged, 23 pilots, mission CombatAirPatrol, patrol share 1, fatigue 24, rests above 40, no arc
 air_group:16 "Fighters from Hornet and Wasp" (Allied) at base:1: 16 ready, 1 damaged, 18 pilots, mission CombatAirPatrol, patrol share 1, fatigue 12, rests above 40, no arc
 air_group:17 "VS-3" (Allied) at base:1: 12 ready, 12 pilots, mission NavalStrike, no arc
-air_group:101 "VF-6" (Allied) aboard ship:1: 22 ready, mission CombatAirPatrol, patrol share 1, fatigue 92, no arc
+air_group:101 "VF-6" (Allied) aboard ship:1: 18 ready, mission CombatAirPatrol, patrol share 1, fatigue 92, no arc
 air_group:102 "VB-6" (Allied) aboard ship:1: 17 ready, mission Rest, no arc
-air_group:103 "VS-5" (Allied) aboard ship:1: 11 ready, mission Search, fatigue 90, arc 290-090 to 250 nm
-air_group:104 "VT-3" (Allied) aboard ship:1: 6 ready, mission Search, fatigue 86, arc 290-090 to 250 nm
+air_group:103 "VS-5" (Allied) aboard ship:1: 11 ready, mission Search, fatigue 84.5, arc 290-090 to 250 nm
+air_group:104 "VT-3" (Allied) aboard ship:1: 4 ready, 1 damaged, mission Search, fatigue 55.3, arc 290-090 to 250 nm
 air_group:105 "VF-5" (Allied) aboard ship:11: 24 ready, mission CombatAirPatrol, patrol share 1, fatigue 92, no arc
-air_group:106 "VB-3" (Allied) aboard ship:11: 14 ready, mission NavalStrike, no arc
-air_group:107 "VS-3" (Allied) aboard ship:11: 14 ready, mission NavalStrike, no arc
+air_group:106 "VB-3" (Allied) aboard ship:11: 12 ready, mission NavalStrike, no arc
+air_group:107 "VS-3" (Allied) aboard ship:11: 15 ready, mission NavalStrike, no arc
 air_group:108 "VT-8" (Allied) aboard ship:11: 8 ready, mission NavalStrike, no arc
-air_group:111 "Shokaku fighter unit" (Japanese) aboard ship:19: 20 ready, mission CombatAirPatrol, patrol share 0.83, fatigue 86, no arc
-air_group:112 "Shokaku bomber unit" (Japanese) aboard ship:19: 17 ready, mission NavalStrike, no arc
+air_group:111 "Shokaku fighter unit" (Japanese) aboard ship:19: 17 ready, mission CombatAirPatrol, patrol share 0.83, fatigue 87.84, no arc
+air_group:112 "Shokaku bomber unit" (Japanese) aboard ship:19: 4 ready, mission NavalStrike, no arc
 air_group:113 "Shokaku attack unit" (Japanese) aboard ship:19: 18 ready, mission NavalStrike, no arc
-air_group:114 "Zuikaku fighter unit" (Japanese) aboard ship:20: 19 ready, mission CombatAirPatrol, patrol share 0.7, fatigue 86, no arc
-air_group:115 "Zuikaku bomber unit" (Japanese) aboard ship:20: 9 ready, mission NavalStrike, no arc
+air_group:114 "Zuikaku fighter unit" (Japanese) aboard ship:20: 16 ready, mission CombatAirPatrol, patrol share 0.7, fatigue 87.84, no arc
+air_group:115 "Zuikaku bomber unit" (Japanese) aboard ship:20: 0 ready, mission NavalStrike, no arc
 air_group:116 "Zuikaku attack unit" (Japanese) aboard ship:20: 18 ready, mission NavalStrike, no arc
-air_group:117 "Chikuma floatplanes" (Japanese) aboard ship:21: 2 ready, mission Search, fatigue 55.6, arc 120-180 to 330 nm
-air_group:118 "Ryujo fighter unit" (Japanese) aboard ship:33: 0 ready, mission CombatAirPatrol, patrol share 0.35, fatigue 31, no arc
-air_group:119 "Ryujo attack unit" (Japanese) aboard ship:33: 0 ready, mission BaseStrike on base:1, fatigue 12, extended reach, no arc
-air_group:120 "Tone floatplanes" (Japanese) aboard ship:34: 5 ready, mission Rest, no arc
+air_group:117 "Chikuma floatplanes" (Japanese) aboard ship:21: 3 ready, mission Search, fatigue 65.568, arc 120-180 to 330 nm
+air_group:118 "Ryujo fighter unit" (Japanese) aboard ship:33: 0 ready, mission CombatAirPatrol, patrol share 0.35, fatigue 14, no arc
+air_group:119 "Ryujo attack unit" (Japanese) aboard ship:33: 0 ready, mission BaseStrike on base:1, fatigue 11, extended reach, no arc
+air_group:120 "Tone floatplanes" (Japanese) aboard ship:34: 0 ready, mission Rest, no arc
 air_group:121 "Shokaku bomber unit, second wave" (Japanese) aboard ship:19: 9 ready, mission Rest, no arc
 air_group:122 "Zuikaku bomber unit, second wave" (Japanese) aboard ship:20: 18 ready, mission Rest, no arc
 air_group:123 "Shokaku fighter unit, second wave escort" (Japanese) aboard ship:19: 3 ready, mission Rest, no arc
 air_group:124 "Zuikaku fighter unit, second wave escort" (Japanese) aboard ship:20: 6 ready, mission Rest, no arc
 air_group:125 "VT-3, attack group" (Allied) aboard ship:1: 7 ready, mission Rest, no arc
 air_group:126 "VT-8, second group" (Allied) aboard ship:11: 5 ready, mission Rest, no arc
-ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
+ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 10.521884, fire 10.521884; flight deck degraded; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
 ship:2 "USS North Carolina": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 5550 t of fuel, 0 t of supply
 ship:3 "USS Portland": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2614 t of fuel, 0 t of supply
 ship:4 "USS Atlanta": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1481 t of fuel, 0 t of supply
@@ -139,7 +139,7 @@ ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all system
 ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1035.30788 t of fuel, 0 t of supply
 ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
 ship:33 "Ryujo": SUNK; damage flotation 100, fire 35.660376; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
-ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
+ship:34 "Tone": SUNK; damage flotation 100, fire 0; flight deck out; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 ship:37 "Placeholder cargo ship 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 937.1 t of fuel, 0 t of supply
@@ -239,7 +239,7 @@ ship:130 "Placeholder fast transport with cargo, task force 38, 3": afloat in ta
 ship:131 "Placeholder fast transport with cargo, task force 38, 4": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 ship:132 "Placeholder fast transport with cargo, task force 39, 1": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 ship:133 "Placeholder fast transport with cargo, task force 39, 2": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-base:1 "Lunga" (Allied) at (2,-4): 1651.46 t of supply in stock, 0 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day, 20063 of work done on the airfield
+base:1 "Lunga" (Allied) at (2,-4): 1632.025 t of supply in stock, 0 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day, 20063 of work done on the airfield
 base:2 "Rabaul" (Japanese) at (-5,-13): 8118.32 t of supply in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 2561.1 t of supply in stock, 0 t of fuel in stock
 base:4 "Tulagi" (Allied) at (3,-5): 0 t of supply in stock, no airfield
@@ -274,17 +274,23 @@ land_unit:22 "Kawaguchi main body, part 4" (Japanese): 246 men ashore at (2,-4),
 land_unit:23 "Kawaguchi main body, part 5" (Japanese): 246 men ashore at (2,-4), fatigue 100
 land_unit:24 "Aoba Detachment, part" (Japanese): 637 men ashore at (2,-5), fieldworks 30
 land_unit:25 "Oka group" (Japanese): 249 men ashore at (2,-4), fatigue 95
-Allied contact:11 at (0,10): 3 ships, carrier, age 3 pulses
-Allied contact:12 at (8,-11): 14 ships, carrier, age 3 pulses
+Allied contact:13 at (0,10): 3 ships, carrier, age 3 pulses
+Allied contact:14 at (8,-12): 15 ships, transport, age 1 pulses
 Allied claim over (2,-4): 9 aircraft shot down, day 18 afternoon
 Allied claim over (2,-4): 7 aircraft shot down, day 19 morning
+Allied claim at (7,-9): 1 hit on a carrier, 0 sunk, day 19 morning
+Allied claim at (7,-9): 17 hits on a carrier, 1 sunk, day 19 morning
 Allied claim over (2,-4): 3 aircraft shot down, day 19 morning
+Allied claim over (7,-5): 29 aircraft shot down, day 19 afternoon
+Allied claim over (7,-5): 26 aircraft shot down, day 19 afternoon
 Allied claim over (2,-4): 4 aircraft shot down, day 20 morning
-Allied claim at (7,-9): 2 hits on a battleship, 0 sunk, day 20 afternoon
-Allied claim at (7,-9): 9 hits on a battleship, 1 sunk, day 20 afternoon
+Allied claim at (7,-9): 2 hits on a cruiser, 0 sunk, day 20 afternoon
+Allied claim at (7,-9): 5 hits on a cruiser, 1 sunk, day 20 afternoon
 Allied claims 0 enemy ships sunk at (0,10), day 21 night
 Allied claims 0 enemy ships sunk at (0,10), day 21 night
 Allied claims 0 enemy ships sunk at (0,10), day 21 morning
+Allied claim over (7,-5): 16 aircraft shot down, day 22 morning
+Allied claim over (7,-5): 9 aircraft shot down, day 22 morning
 Allied claim over (2,-4): 2 aircraft shot down, day 23 morning
 Allied claim over (2,-4): 13 aircraft shot down, day 24 morning
 Allied claims 1 enemy ship sunk at (-4,12), day 25 night
@@ -299,14 +305,20 @@ Allied estimate at (2,-4): 1343 enemy men ashore, reported day 39
 Japanese: no contacts
 Japanese claim over (2,-4): 11 aircraft shot down, day 18 afternoon
 Japanese claim at (2,-4): 20 aircraft shot down, 3 aircraft destroyed on the ground, day 19 morning
+Japanese claim over (7,-9): 1 aircraft shot down, day 19 morning
+Japanese claim over (7,-9): 5 aircraft shot down, day 19 morning
 Japanese claim over (2,-4): 8 aircraft shot down, day 19 morning
+Japanese claim at (7,-5): 1 hit on a carrier, 0 sunk, 3 aircraft shot down, day 19 afternoon
+Japanese claim at (7,-5): 3 hits on a carrier, 0 sunk, 5 aircraft shot down, day 19 afternoon
 Japanese claim at (2,-4): 10 aircraft shot down, 4 aircraft destroyed on the ground, day 20 morning
 Japanese claim over (7,-9): 1 aircraft shot down, day 20 afternoon
-Japanese claim over (7,-9): 5 aircraft shot down, day 20 afternoon
+Japanese claim over (7,-9): 1 aircraft shot down, day 20 afternoon
 Japanese claims 1 enemy ship sunk at (0,10), day 21 night
 Japanese claims 1 enemy ship sunk at (0,10), day 21 night
 Japanese claims 2 enemy ships sunk at (0,10), day 21 morning
 Japanese claims 2 enemy ships sunk at (0,10), day 21 afternoon
+Japanese claim at (7,-5): 0 hits on a battleship, 0 sunk, 1 aircraft shot down, day 22 morning
+Japanese claim at (7,-5): 0 hits on a battleship, 0 sunk, 3 aircraft shot down, day 22 morning
 Japanese claims 0 enemy ships sunk at (-4,14), day 23 night
 Japanese claim at (2,-4): 7 aircraft shot down, 4 aircraft destroyed on the ground, day 23 morning
 Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 24 morning
@@ -320,5 +332,5 @@ Japanese claim over (2,-4): 2 aircraft shot down, day 38 morning
 Japanese estimate at (2,-4): 19202 enemy men ashore, reported day 39
 
 Result (the placeholder scale of decision 0054):
-Allied: 102.448666 points (ships_sunk 2 = 14; ships_crippled 0 = 0; aircraft_destroyed 90 = 4.5; cargo_landed at base:1 4390.4 = 21.952; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 4033 = 40.33), margin 85.895333, decisive victory
-Japanese: 16.553333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 53 = 2.65; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 357 = 3.57), margin -85.895333, decisive defeat
+Allied: 108.048666 points (ships_sunk 3 = 18; ships_crippled 0 = 0; aircraft_destroyed 122 = 6.1; cargo_landed at base:1 4390.4 = 21.952; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 4033 = 40.33), margin 91.095333, decisive victory
+Japanese: 16.953333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 61 = 3.05; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 357 = 3.57), margin -91.095333, decisive defeat

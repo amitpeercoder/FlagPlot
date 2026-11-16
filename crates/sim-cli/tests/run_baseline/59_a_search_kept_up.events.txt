@@ -1,0 +1,126 @@
+Placeholder scenario 59: A search kept up
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash f74d55ada79c1017  24 events
+day   2  hash fc04279ced91eb9b  7 events
+day   3  hash f64ce34ff11d024b  7 events
+day   4  hash 95457b3ef7bc11af  7 events
+day   5  hash 32371d020d02fc07  7 events
+day   6  hash 13236cba65a4d2d3  7 events
+day   7  hash 602f85b39d670d83  7 events
+day   8  hash 7c59d7a54b61228f  7 events
+day   9  hash e4eaff07988adc37  7 events
+day  10  hash 4d73856445870fcb  7 events
+day  11  hash db24abb0a50e0d5b  7 events
+day  12  hash e8af9ade106b1cdf  7 events
+
+#1 D1 -         Allied the commander's command taken: set intent:1 to cover base:1 from the air
+#2 D1 -         Allied plan:1 drafted for intent:1  <- #1
+#3 D1 -         Allied the commander's command taken: give the leave to prepare
+#4 D1 -         Allied the commander's command taken: give the leave to launch
+#5 D1 -         Allied the staff's command taken: approve plan:1
+#6 D1 -         Allied plan:1 went from draft to preparing  <- #5
+#7 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: plan:1, the plan to cover base:1 (Placeholder base 1) from the air, is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #5
+#8 D1 -         Allied the staff's command taken: approve plan:1
+#9 D1 -         Allied plan:1 went from preparing to released  <- #8
+#10 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: plan:1, the plan to cover base:1 (Placeholder base 1) from the air, is ready and leave to launch is given: the staff releases it.  <- #8
+#11 D1 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission rest, no search arc (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#12 D1 -         Allied staff's notice: plan:1 cannot meet its intent  <- #11
+#13 D1 -         Allied standing interrupt fired: plan:1 cannot meet its intent  <- #12
+#14 D1 -         order:1 accepted for air_group:1  <- order:1  [issued by the staff]
+#15 D1 -         Allied staff's reason for order:1 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches: its mission is set from rest to search.  <- order:1, #14
+#16 D1 -         order:2 accepted for air_group:1  <- order:2  [issued by the staff]
+#17 D1 -         Allied staff's reason for order:2 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it searches, and at balanced risk a search is flown once a day, in the morning: its search once a day is set on.  <- order:2, #16
+#18 D1 -         order:3 accepted for air_group:1  <- order:3  [issued by the staff]
+#19 D1 -         Allied staff's reason for order:3 [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: The search arc of air_group:1 is set to 050 to 120 out to 600 nm: threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120.  <- order:3, #18
+#20 D1 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#21 D1 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #20
+#22 D1 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#23 D1 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#24 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#25 D2 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#26 D2 -         Allied staff's notice: plan:1 cannot meet its intent  <- #25
+#27 D2 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#28 D2 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #27
+#29 D2 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#30 D2 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#31 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#32 D3 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#33 D3 -         Allied staff's notice: plan:1 cannot meet its intent  <- #32
+#34 D3 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#35 D3 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #34
+#36 D3 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#37 D3 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#38 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#39 D4 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#40 D4 -         Allied staff's notice: plan:1 cannot meet its intent  <- #39
+#41 D4 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#42 D4 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #41
+#43 D4 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#44 D4 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#45 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#46 D5 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#47 D5 -         Allied staff's notice: plan:1 cannot meet its intent  <- #46
+#48 D5 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#49 D5 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #48
+#50 D5 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#51 D5 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#52 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#53 D6 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#54 D6 -         Allied staff's notice: plan:1 cannot meet its intent  <- #53
+#55 D6 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#56 D6 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #55
+#57 D6 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#58 D6 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#59 D6 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#60 D7 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#61 D7 -         Allied staff's notice: plan:1 cannot meet its intent  <- #60
+#62 D7 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#63 D7 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #62
+#64 D7 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#65 D7 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#66 D7 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#67 D8 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#68 D8 -         Allied staff's notice: plan:1 cannot meet its intent  <- #67
+#69 D8 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#70 D8 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #69
+#71 D8 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#72 D8 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#73 D8 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#74 D9 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#75 D9 -         Allied staff's notice: plan:1 cannot meet its intent  <- #74
+#76 D9 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#77 D9 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #76
+#78 D9 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#79 D9 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#80 D9 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#81 D10 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#82 D10 -         Allied staff's notice: plan:1 cannot meet its intent  <- #81
+#83 D10 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#84 D10 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #83
+#85 D10 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#86 D10 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#87 D10 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#88 D11 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#89 D11 -         Allied staff's notice: plan:1 cannot meet its intent  <- #88
+#90 D11 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#91 D11 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #90
+#92 D11 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#93 D11 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#94 D11 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#95 D12 -         Allied staff's reason for giving no order [serves intent 1: cover base:1 (Placeholder base 1) from the air; plan 1; decided at the level of base:1]: No order is given for these groups for intent:1, the cover of base:1 (Placeholder base 1) from the air this morning: air_group:1, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches; mission search, search arc 050 to 120 at 600 nm (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120); at balanced risk a search is flown once a day, in the morning. The share is 0.5 (0.5 at balanced, the base not attacked from the air on the three days before); the arc is 050 to 120 (threats: base:2 (Placeholder base 2) at (5,0); the narrowest arc that holds them is 080 to 090, widened by 30 degrees at each end to 050 to 120). The staff cannot meet intent:1: it may use no fighter group at the base that is not held.
+#96 D12 -         Allied staff's notice: plan:1 cannot meet its intent  <- #95
+#97 D12 morning   air_group:1 searched 050-120 out to 600 nm from base:1 with 6 aircraft  <- order:1, order:3, order:2
+#98 D12 morning   air_group:1 gained 4.8 fatigue from its search sortie of 1200 nm, now 4.8  <- #97
+#99 D12 afternoon air_group:1 rested 4.8 fatigue, now 0  <- order:1
+#100 D12 -         base:1 at the end of the day: 1000 t of supply, 6 aircraft ready: open
+#101 D12 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+air_group:1 "Placeholder flying boats 1" (Allied) at base:1: 6 ready, mission Search, arc 050-120 to 600 nm
+base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock
+base:2 "Placeholder base 2" (Japanese) at (5,0): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

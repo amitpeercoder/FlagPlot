@@ -99,7 +99,15 @@ fn every_live_figures_file_has_a_frozen_counterpart_and_the_other_way_round() {
 /// 0118), and the weights of rearming, which the frozen figures do not give
 /// so that no ship rearms in a hand-calculation test that sets none
 /// (decision 0122).
-const FROZEN_WITHOUT: &[&str] = &["strike_aircraft_per_ship.", "rearming"];
+///
+/// And the search figure of fatigue (decision 0131, 3): the frozen step 1
+/// figures give none, so a search tires a group by the figure for every
+/// sortie, as it did.
+const FROZEN_WITHOUT: &[&str] = &[
+    "strike_aircraft_per_ship.",
+    "rearming",
+    "search_fatigue_per_100_nm",
+];
 
 #[test]
 fn a_frozen_file_has_every_key_and_column_its_live_counterpart_has() {
