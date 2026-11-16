@@ -136,6 +136,16 @@ function checkSideViews(replay, umpireModel) {
     const seen = new Set();
     model.steps.forEach(s => s.events.forEach(ei => seen.add(ei)));
     assert(seen.size === sv.events.length, label + ': not every side event is in a step');
+    if (replay.steps) {
+      checkCommand(replay, model, label + ' command', [side]);
+      // nothing of the other side's command state, orders or reasons is in the page
+      const enemy = Core.SIDES.find(x => x !== side);
+      assert(!sr.steps.some(e => e.commands && Object.keys(e.commands).some(k => k !== side)) && !(sr.final.commands && Object.keys(sr.final.commands).some(k => k !== side)), label + ': the side\'s steps or final hold the ' + enemy + '\'s command state');
+      assert(model.commandStates.every(h => Object.keys(h).every(k => k === side)), label + ': a command state of the ' + enemy + ' is in the page');
+      assert(model.events.every(e => !e.data || !['staff_reason', 'staff_notice', 'command_taken', 'intent_formed', 'plan_drafted', 'plan_state_changed'].includes(e.kind) || e.data.side === side), label + ': an event of the ' + enemy + '\'s staff is in the page');
+      const text = JSON.stringify([model.commandStates, Core.commandView(model, model.steps.length - 1).map(v => [...v.nodes.values()].map(n => n.words + JSON.stringify(n.orders.map(o => o.text))))]);
+      assert(!text.includes('"' + enemy + '"'), label + ': the command view names the ' + enemy + ' side');
+    }
     const air = checkAirModel(replay, model, label);
     for (const k of Object.keys(airTotals)) airTotals[k] += air[k];
     notes.push(side + ' ' + sv.events.length + '/' + replay.events.length + ' events, ' + model.steps.length + ' steps');
@@ -358,6 +368,95 @@ function checkSideSteps(replay, side, sr, model, label) {
   }
 }
 
+// ---- Command: the intent tree, the orders under each intent, the reasons (decisions 0107, 0116, 0117, 0120) ----
+// The page's tree is read from the steps' `commands` and the staff's reasons; here it is checked against `final.commands` and against
+// itself, with its own, separate table of who an intent is addressed to.
+const ADDRESSEE_OF = { keep_supplied: () => 'area', neutralise: () => 'area', deny: () => 'area', cover: i => 'base:' + i.base, hold: i => 'base:' + i.base, raid: i => 'base:' + i.base, strike_ships: i => 'base:' + i.base, search_waters: i => 'base:' + i.base, stand_at: i => 'task_force:' + i.task_force, operate_carriers: i => 'task_force:' + i.task_force };
+
+function checkCommand(replay, model, label, sides) {
+  const notes = { intents: 0, orders: 0, reasons: 0 };
+  const last = model.steps.length - 1;
+  const finalCmd = (replay.final && replay.final.commands) || {};
+  const own = Core.SIDES.filter(s => sides.includes(s) && finalCmd[s]);
+  const views = Core.commandView(model, last);
+  assert(JSON.stringify(views.map(v => v.side)) === JSON.stringify(own), label + ': the command view shows sides ' + JSON.stringify(views.map(v => v.side)) + ', final.commands holds ' + JSON.stringify(own));
+  const log = Core.commandLog(model);
+  for (const side of Core.SIDES) {
+    const rows = [...log.orders, ...log.none, ...log.commands];
+    if (!sides.includes(side)) assert(!rows.some(r => r.side === side), label + ': holds a reason of the ' + side + ' staff');
+  }
+  for (const v of views) {
+    const fc = finalCmd[v.side], byId = new Map(fc.intents.map(i => [i.id, i]));
+    assert(sameJson(model.commandStates[last][v.side], fc), label + ': ' + v.side + ' command state at the last step is not final.commands');
+    assert(v.nodes.size === fc.intents.length && fc.intents.every(i => v.nodes.has(i.id)), label + ': ' + v.side + ' tree has intents ' + [...v.nodes.keys()] + ', final has ' + fc.intents.map(i => i.id));
+    for (const i of fc.intents) {
+      notes.intents++;
+      const n = v.nodes.get(i.id);
+      if (!n) continue;
+      assert(n.parent === (i.parent === undefined ? null : i.parent), label + ': intent ' + i.id + ' parent ' + n.parent + ' vs ' + i.parent);
+      assert(n.maker === (i.maker || 'commander'), label + ': intent ' + i.id + ' maker ' + n.maker + ' vs ' + i.maker);
+      assert(n.level === ADDRESSEE_OF[i.kind](i), label + ': intent ' + i.id + ' addressee ' + n.level + ' vs ' + ADDRESSEE_OF[i.kind](i));
+      const plan = fc.plans.find(p => p.id === i.plan);
+      assert(plan && n.plan && n.plan.state === plan.state, label + ': intent ' + i.id + ' plan state differs');
+      assert(n.withdrawn === (i.withdrawn_day !== undefined), label + ': intent ' + i.id + ' withdrawn differs');
+      assert(n.words && n.words !== i.kind, label + ': intent ' + i.id + ' has no words');
+      // a child is listed under its parent, and only there
+      if (i.parent !== undefined) assert(v.nodes.get(i.parent) && v.nodes.get(i.parent).children.includes(n), label + ': intent ' + i.id + ' is not under its parent in the tree');
+      else assert(v.roots.includes(n), label + ': intent ' + i.id + ' is a root but not in the roots');
+      // every order under it serves it, was a staff order of this side, and is in the replay
+      for (const o of n.orders) {
+        notes.orders++;
+        const real = model.orderById.get(o.order);
+        assert(real && real.side === v.side && real.issuer === 'staff' && real.target === o.unit, label + ': order ' + o.order + ' under intent ' + i.id + ' is not a staff order of ' + v.side);
+        assert(o.reason.intent === i.id && o.reason.side === v.side, label + ': order ' + o.order + ' is shown under intent ' + i.id + ' but its reason serves intent ' + o.reason.intent);
+        assert(o.reason.step <= last, label + ': an order after the last step');
+      }
+    }
+    // the tree is built step by step: an intent once shown stays; an order shown stays; nothing appears before its event
+    let prevIntents = new Set(), prevOrders = 0;
+    model.steps.forEach((s, si) => {
+      const t = Core.commandView(model, si).find(x => x.side === v.side);
+      const ids = new Set(t ? t.nodes.keys() : []);
+      for (const id of prevIntents) assert(ids.has(id), label + ': intent ' + id + ' vanished at ' + s.label);
+      prevIntents = ids;
+      const count = t ? [...t.nodes.values()].reduce((a, n) => a + n.orders.length, 0) : 0;
+      assert(count >= prevOrders, label + ': an order vanished at ' + s.label);
+      prevOrders = count;
+      if (t) for (const n of t.nodes.values()) for (const o of n.orders) assert(o.reason.step <= si, label + ': order ' + o.order + ' appears before its step');
+      // a node appears no later than the first event that serves it (a reason, a formation, a command)
+      if (t) for (const row of [...log.orders, ...log.none, ...log.commands]) if (row.side === v.side && row.intent !== null && row.step <= si) assert(t.nodes.has(row.intent), label + ': a reason at ' + model.steps[row.step].label + ' serves intent ' + row.intent + ', which the tree at ' + s.label + ' does not hold');
+    });
+    // every reason's chain is the intent's own path to the root, and ends at one the commander made
+    for (const row of [...log.orders, ...log.none, ...log.commands]) {
+      if (row.side !== v.side || row.intent === null) continue;
+      notes.reasons++;
+      const it = byId.get(row.intent);
+      if (!it) { fail(label + ': a reason serves intent ' + row.intent + ', which the state does not hold'); continue; }
+      const path = [];
+      for (let x = it; x && x.parent !== undefined; x = byId.get(x.parent)) path.push(x.parent);
+      assert(JSON.stringify(row.chain.map(l => l.intent)) === JSON.stringify(path), label + ': the chain of the reason at event ' + row.event + ' is ' + JSON.stringify(row.chain.map(l => l.intent)) + ', the path to the root is ' + JSON.stringify(path));
+      const top = row.chain.length ? row.chain[row.chain.length - 1].intent : row.intent;
+      const topIntent = byId.get(top);
+      assert(topIntent && topIntent.maker === undefined, label + ': the chain of the reason at event ' + row.event + ' ends at intent ' + top + ', which the commander did not make');
+      if (row.chain.length) assert(row.chain[row.chain.length - 1].maker === 'commander' && row.chain.every(l => (byId.get(l.intent).maker || 'commander') === l.maker), label + ': a link of the chain names the wrong maker');
+      // The level that decided is the intent's addressee; an order to an air group can say the group (a leaf of the tree, decision 0117, 13).
+      if (row.level) assert(row.level === ADDRESSEE_OF[it.kind](it) || (row.order !== undefined && /^air_group:\d+$/.test(row.level)), label + ': the reason at event ' + row.event + ' says level ' + row.level + ', the intent is addressed to ' + ADDRESSEE_OF[it.kind](it));
+    }
+    // the events that serve an intent: every reason of it, and nothing of the other side
+    for (const i of fc.intents) {
+      const set = Core.eventsServing(model, v.side, i.id);
+      for (const row of [...log.orders, ...log.none, ...log.commands]) if (row.side === v.side && row.intent === i.id) assert(set.has(row.event), label + ': the reason at event ' + row.event + ' is not among the events serving intent ' + i.id);
+      for (const id of set) { const ev = model.eventById.get(id); assert(ev && (!ev.data || ev.data.side === v.side || ev.data.side === undefined), label + ': event ' + id + ' serves a ' + v.side + ' intent but is not that side\'s'); }
+      for (const o of v.nodes.get(i.id) ? v.nodes.get(i.id).orders : []) assert(set.has(o.event), label + ': the event of order ' + o.order + ' is not among the events serving intent ' + i.id);
+    }
+    // the orders of the staff in the file that no intent claims
+    const claimed = new Set(log.orders.filter(r => r.side === v.side).map(r => r.order));
+    const stray = (replay.orders || []).filter(o => o.side === v.side && o.issuer === 'staff' && !claimed.has(o.id));
+    notes.stray = (notes.stray || 0) + stray.length;
+  }
+  return notes;
+}
+
 // ---- One replay ----
 let currentFile = '';
 function checkReplay(file) {
@@ -462,13 +561,49 @@ function checkReplay(file) {
     assert(model.placements.length === replay.labels.length, 'not every label was placed');
   } else assert(model.placements.length === 0, 'labels placed on a map without lat/lon');
 
-  const sideNote = replay.side_views ? checkSideViews(replay, model) : 'no side views (version ' + replay.version + ')';
+  checkOlder(replay);
+  if (replay.steps) checkWithdrawn(replay);
+  const cmdNotes = replay.steps ? checkCommand(replay, model, 'umpire command', Core.SIDES) : null;
+  const sideNote = (replay.side_views ? checkSideViews(replay, model) : 'no side views (version ' + replay.version + ')') + (cmdNotes && cmdNotes.intents ? ', command: ' + cmdNotes.intents + ' intents, ' + cmdNotes.orders + ' orders, ' + cmdNotes.reasons + ' reasons' + (cmdNotes.stray ? ' (' + cmdNotes.stray + ' staff orders with no reason)' : '') : '');
 
   const s = Core.summarize(model);
   const unclosed = new Set(replay.events.map(e => e.kind));
   console.log('  steps ' + s.steps + ', events ' + s.events + ', forces ' + s.forces + ', contacts at end ' + s.contacts + ', labels placed ' + s.labels + '/' + replay.labels.length +
     ', hexes ' + replay.map.hexes.length + ', edges checked ' + g.edges + ', one-sided closed marks ' + g.oneSided + ', event kinds ' + unclosed.size + ', ' + sideNote +
     (failures === before ? '  OK' : '  FAILED'));
+}
+
+// ---- Older replay versions still open, with no command panel to show ----
+function checkOlder(replay) {
+  if (!replay.steps) return;
+  const variants = { 'version 3 (no steps)': Object.assign({}, replay, { steps: undefined, version: 3 }), 'version 4 without commands': Object.assign({}, replay, { steps: replay.steps.map(e => { const c = Object.assign({}, e); delete c.commands; return c; }), final: Object.assign({}, replay.final, { commands: undefined }) }) };
+  for (const [name, r] of Object.entries(variants)) {
+    const bad = Core.validateReplay(r);
+    if (bad) { fail('older replay (' + name + ') rejected: ' + bad); continue; }
+    const m = Core.buildModel(r);
+    assert(Core.commandView(m, m.steps.length - 1).length === 0, 'older replay (' + name + ') shows a command view');
+    assert(Core.eventsServing(m, 'allied', 1).size === 0, 'older replay (' + name + ') has events serving an intent');
+    for (const side of Core.SIDES) { const sr = Core.sideReplay(r, side); if (sr) { const sm = Core.buildModel(sr); assert(Core.commandView(sm, 0).length === 0, 'older replay (' + name + ') ' + side + ' page shows a command view'); } }
+  }
+}
+
+// ---- A withdrawn intent stays in the tree, greyed, with its day ----
+function checkWithdrawn(replay) {
+  const j = replay.steps.findIndex(e => e.commands && e.commands.allied && e.commands.allied.intents.length > 1);
+  if (j < 0 || replay.steps.length < j + 6) return;
+  const steps = replay.steps.map(e => Object.assign({}, e));
+  const withdrawnAt = j + 5, day = steps[withdrawnAt].day;
+  const state = JSON.parse(JSON.stringify(steps[j].commands.allied));
+  state.intents[state.intents.length - 1].withdrawn_day = day;
+  steps[withdrawnAt].commands = { allied: state };
+  const r = Object.assign({}, replay, { steps });
+  const m = Core.buildModel(r);
+  const id = state.intents[state.intents.length - 1].id;
+  // The viewer's steps are the (day, phase) pairs that have events; take the first of them at or after the entry changed, and the one before it.
+  const at = m.steps.findIndex(s => s.stateDay * 10 + Core.PHASES.indexOf(s.statePhase) >= day * 10 + Core.PHASES.indexOf(steps[withdrawnAt].phase));
+  if (at < 1) return;
+  const before = Core.commandView(m, at - 1)[0].nodes.get(id), after = Core.commandView(m, at)[0].nodes.get(id);
+  assert(before && !before.withdrawn && after && after.withdrawn && after.intent.withdrawn_day === day, 'a withdrawn intent is not shown withdrawn with its day, or is not kept in the tree');
 }
 
 // ---- Synthetic edge cases ----
