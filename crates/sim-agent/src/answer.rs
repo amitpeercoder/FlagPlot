@@ -31,7 +31,9 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `charge` written `task_force:N` or none to clear it, and a force's
 /// `charge` in its detail where it has one (decision 0121). 13 adds a force
 /// line's `ammunition_lacked` (rounds, torpedoes, tons and hours) for a force
-/// in port at a base of its side that lacks ammunition (decision 0122).
+/// in port at a base of its side that lacks ammunition (decision 0122), and
+/// the briefing's `charges_lost` and `rearmed` among the force changes
+/// (decisions 0121 and 0122), each left out when empty.
 pub const VERSION: u32 = 13;
 
 /// The answer to a question about something the side does not know of: a

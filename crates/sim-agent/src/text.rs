@@ -769,6 +769,27 @@ impl Briefing {
                     ev(f.event)
                 ));
             }
+            for l in &c.charges_lost {
+                o.line(format!(
+                    "Charge lost yesterday: {} no longer escorts {} and stopped at {}{}",
+                    l.escort.text(),
+                    l.charge.text(),
+                    l.place.text(),
+                    ev(l.event)
+                ));
+            }
+            for r in &c.rearmed {
+                o.line(format!(
+                    "Rearmed yesterday: {} of {} took {} rounds and {} torpedoes, {} t, at {}{}",
+                    r.ship.text(),
+                    r.task_force.text(),
+                    r.rounds,
+                    r.torpedoes,
+                    r.tons.0,
+                    r.base.text(),
+                    ev(r.event)
+                ));
+            }
             for j in &c.joined {
                 o.line(format!(
                     "Joined yesterday: {} joined {} at {} with {}; {} has ceased to be{}",
