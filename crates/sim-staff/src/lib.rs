@@ -103,8 +103,11 @@ use sim_core::view::SideView;
 /// that names the force gets the orders `supply-13` gave.
 /// `supply-15` adds decision 0130: a carrier force is routed at cruise where
 /// that brings it there in the night and at full speed where it does not,
-/// and closes on a fresh contact its bombers want and cannot reach, stays
-/// while one is in reach and goes back to its hex when none is.
+/// and closes where the first fresh contact of a kind it wants within a
+/// night and its bombers' reach is beyond that reach, stays while it is in
+/// reach and goes back to its hex when there is none; the passage home for
+/// fuel is at cruise, and a ship the engine's measure has run dry short of
+/// a passage is short of the fuel for it, in the carrier and stand doctrines.
 pub const DOCTRINE_VERSION: &str = "supply-15";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after

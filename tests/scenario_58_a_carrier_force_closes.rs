@@ -862,9 +862,39 @@ fn a_contact_too_far_is_not_closed_on_and_the_reason_gives_the_distances() {
 }
 
 #[test]
-fn not_the_fuel_with_50_t_she_does_not_close_and_the_reason_gives_the_fuel() {
+fn not_the_fuel_with_50_t_she_is_routed_home_at_cruise_and_closing_is_not_weighed() {
     let played = play(&changed(&text(), "fuel_t = 3000", "fuel_t = 50"));
-    played.nothing_refused();
+    // Day 1: she is short of the passage home itself, which the engine's
+    // measure has her run dry short of, and is routed home at cruise, which
+    // she has: no speed order.
+    let forces = played.orders_to_force(1, 1);
+    assert!(forces.contains(&route(&[(0, 5)])), "{forces:?}");
+    assert!(!forces.contains(&route(&[(6, 0)])), "{forces:?}");
+    assert!(
+        !forces
+            .iter()
+            .any(|o| matches!(o, TaskForceOrder::SetSpeed(_))),
+        "{forces:?}"
+    );
+    let r = said(reason_of(&played, 1, &Given::Force(1, route(&[(0, 5)]))));
+    assert!(r.contains("ship:1 has 50 t aboard against"), "{r}");
+    assert!(r.contains("running dry short of the passage"), "{r}");
+    assert!(r.contains("routed home to base:1"), "{r}");
+    assert!(r.contains("at cruise"), "{r}");
+    // Closing is not weighed on day 1. (From day 2 she lies dry at (0,4),
+    // which the engine's measure gives no line for: decision 0125's
+    // doctrine as built, which the hand calculation does not reach.)
+    let day_1: Vec<String> = played
+        .decisions(1)
+        .orders
+        .iter()
+        .map(|o| said(&o.reason))
+        .chain(played.decisions(1).no_orders.iter().map(said))
+        .collect();
+    assert!(
+        !day_1.iter().any(|r| r.contains("does not close")),
+        "{day_1:?}"
+    );
     for day in 1..=3 {
         assert!(
             !played
@@ -874,30 +904,11 @@ fn not_the_fuel_with_50_t_she_does_not_close_and_the_reason_gives_the_fuel() {
             played.orders(day)
         );
     }
-    assert!(
-        any_reason_has(&played, &["ship:1 has 50 t aboard against"]),
-        "{:?}",
-        all_reasons(&played)
-    );
-    // The reason it does not close gives the fuel aboard against the fuel
-    // needed (decision 0130, 4): at 50 t the engine has her run dry short of
-    // the passage to (6,0) and home.
-    assert!(
-        any_reason_has(
-            &played,
-            &[
-                "does not close on contact 1",
-                "ship:1 has 50 t aboard against"
-            ]
-        ),
-        "{:?}",
-        all_reasons(&played)
-    );
 }
 
-/// Added by the team lead, not in the hand calculation: rule 4 with fuel
-/// enough for the passage home from (0,0) at cruise (66.666666 t at press)
-/// but not for the passage to (6,0) and home at full speed.
+/// Rule 4 of the hand calculation ("Not the fuel", 300 t): she has the fuel
+/// for the passage home from (0,0) at cruise (66.666666 t at press) but not
+/// for the passage to (6,0) and from there home at full speed.
 #[test]
 fn not_the_fuel_with_300_t_she_has_the_passage_home_but_does_not_close() {
     let played = play(&changed(&text(), "fuel_t = 3000", "fuel_t = 300"));
@@ -1040,4 +1051,87 @@ fn two_worlds_that_differ_only_in_what_the_allied_side_cannot_see_give_the_same_
     );
     assert_eq!(plain.handed, other.handed);
     assert_eq!(plain.state, other.state);
+}
+
+/// The reason of the order of a day that is `wanted`.
+fn reason_of<'a>(played: &'a Played, day: u32, wanted: &Given) -> &'a Reason {
+    &played
+        .decisions(day)
+        .orders
+        .iter()
+        .find(|o| &given(o) == wanted)
+        .unwrap_or_else(|| panic!("day {day} has no order {wanted:?}"))
+        .reason
+}
+
+// ------------------------------------------------------ The first contact
+
+/// The scenario with a second contact entered after the first.
+fn with_second_contact(text: &str, q: i32, kind: &str) -> String {
+    let at = text.find(COMMANDS_MARKER).expect("the commands");
+    format!(
+        "{}[[contact]]\nside = \"allied\"\nq = {q}\nr = 0\nship_count = 1\nkind = \"{kind}\"\nage_pulses = 0\n\n{}",
+        &text[..at],
+        &text[at..]
+    )
+}
+
+#[test]
+fn the_first_contact_decides_a_destroyer_beyond_a_night_leaves_day_1_as_above() {
+    let played = play(&with_second_contact(&text(), 20, "destroyer"));
+    played.nothing_refused();
+    assert_eq!(played.orders(1), day_1_orders());
+    assert_eq!(
+        played.launches(1, Pulse::Morning),
+        vec![(3, hex(12, 0), 10)]
+    );
+}
+
+#[test]
+fn the_first_contact_decides_the_carrier_in_reach_and_a_destroyer_beyond_no_close() {
+    let t = with_second_contact(
+        &changed(&text(), "q = 12\nr = 0", "q = 5\nr = 0"),
+        12,
+        "destroyer",
+    );
+    let played = play(&t);
+    played.nothing_refused();
+    assert!(
+        !played.orders(1).iter().any(is_route),
+        "{:?}",
+        played.orders(1)
+    );
+    assert!(
+        !played.orders(1).iter().any(is_speed),
+        "{:?}",
+        played.orders(1)
+    );
+    assert!(
+        any_reason_has(&played, &["does not close: contact 1, a carrier"]),
+        "{:?}",
+        all_reasons(&played)
+    );
+}
+
+#[test]
+fn the_first_contact_decides_a_destroyer_in_reach_and_the_carrier_beyond_she_closes() {
+    let t = with_second_contact(
+        &changed(
+            &changed(&text(), "q = 12\nr = 0", "q = 5\nr = 0"),
+            "kind = \"carrier\"",
+            "kind = \"destroyer\"",
+        ),
+        12,
+        "carrier",
+    );
+    let played = play(&t);
+    played.nothing_refused();
+    assert!(played.orders(1).contains(&full()), "{:?}", played.orders(1));
+    assert!(
+        played
+            .orders(1)
+            .contains(&Given::Force(1, route(&[(6, 0)]))),
+        "{:?}",
+        played.orders(1)
+    );
 }
