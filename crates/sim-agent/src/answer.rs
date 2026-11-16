@@ -29,8 +29,10 @@ pub const FORMAT: &str = "flagplot-agent";
 /// for) and the `pulse` a halt or steam-on question was asked in
 /// (decisions 0124 and 0125). 12 adds the task force order `escort`, with a
 /// `charge` written `task_force:N` or none to clear it, and a force's
-/// `charge` in its detail where it has one (decision 0121).
-pub const VERSION: u32 = 12;
+/// `charge` in its detail where it has one (decision 0121). 13 adds a force
+/// line's `ammunition_lacked` (rounds, torpedoes, tons and hours) for a force
+/// in port at a base of its side that lacks ammunition (decision 0122).
+pub const VERSION: u32 = 13;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

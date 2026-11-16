@@ -2,10 +2,10 @@ Scenario 3: Search, flying boats against an approaching force
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1aca9b04c1597d95  20 events
-day   2  hash f41ad1295fe38429  21 events
-day   3  hash f30be797c6374af9  11 events
-day   4  hash 4010b66ea0cff574  8 events
+day   1  hash 95cd86e93d9d1796  20 events
+day   2  hash 67ab4f8dcbacb212  21 events
+day   3  hash d1f0ca2e7eef9982  11 events
+day   4  hash 3050f299e98f686d  8 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2

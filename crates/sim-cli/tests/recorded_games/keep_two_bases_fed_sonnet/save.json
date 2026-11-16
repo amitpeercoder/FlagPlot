@@ -97,7 +97,7 @@
     },
     {
       "file": "data/scenarios/../reference/port_sizes.csv",
-      "hash": "bf78df85d94172ae"
+      "hash": "77d7eaae34ffb5b5"
     },
     {
       "file": "data/scenarios/../reference/aircraft_types.csv",
@@ -109,99 +109,99 @@
     },
     {
       "file": "data/scenarios/../reference/surface_combat.toml",
-      "hash": "851083b54e6c45a3"
+      "hash": "9a7e47460bcaff50"
     },
     {
       "file": "data/scenarios/../reference/ground.toml",
       "hash": "5ef7d142f1faa97f"
     }
   ],
-  "doctrine_version": "supply-12",
+  "doctrine_version": "supply-13",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "859a092bb7ee5afd"
+      "hash": "719239a3e8de4e0c"
     },
     {
       "day": 2,
-      "hash": "781035cfdac02c92"
+      "hash": "be783e7be47533df"
     },
     {
       "day": 3,
-      "hash": "7df5c258edbd7522"
+      "hash": "f4dc0283ddf420c3"
     },
     {
       "day": 4,
-      "hash": "8dee2bc11d89f230"
+      "hash": "16f4f32792034869"
     },
     {
       "day": 5,
-      "hash": "42ffba412d1b6242"
+      "hash": "81d98e7878c2691b"
     },
     {
       "day": 6,
-      "hash": "2e98ef3ab39d4a64"
+      "hash": "9a025cdb2f35fd4d"
     },
     {
       "day": 7,
-      "hash": "58d9ef2038eda4ea"
+      "hash": "dd42f2a64589b317"
     },
     {
       "day": 8,
-      "hash": "a551f444697e7ae0"
+      "hash": "4a13267dbb582719"
     },
     {
       "day": 9,
-      "hash": "94f9e73488cb964e"
+      "hash": "6f3d29cfa3c8d7cb"
     },
     {
       "day": 10,
-      "hash": "36f33d7e5f3d7ace"
+      "hash": "fc342351b07f9223"
     },
     {
       "day": 11,
-      "hash": "e1a0ea34cc1583e0"
+      "hash": "284b53539835677d"
     },
     {
       "day": 12,
-      "hash": "1f1dbe2321cbd552"
+      "hash": "5f53bc0ff631b737"
     },
     {
       "day": 13,
-      "hash": "eddd1f8d5e6b14c4"
+      "hash": "99536a5e5c40d2c9"
     },
     {
       "day": 14,
-      "hash": "ed68322e13445a12"
+      "hash": "73f9b55729d82ec7"
     },
     {
       "day": 15,
-      "hash": "2634d6255640ae5c"
+      "hash": "5d28016c7ac406e5"
     },
     {
       "day": 16,
-      "hash": "025f22bbc12d8a67"
+      "hash": "9c8befaf13bbacae"
     },
     {
       "day": 17,
-      "hash": "a2d943bc5ac28ede"
+      "hash": "51c0c63504fecb17"
     },
     {
       "day": 18,
-      "hash": "d6d779af9ecb9da1"
+      "hash": "cc2269234fd75694"
     },
     {
       "day": 19,
-      "hash": "5a7d74668a5994fb"
+      "hash": "db36d5a8cf3dd962"
     },
     {
       "day": 20,
-      "hash": "fddd5826538c4071"
+      "hash": "9c730ad696db6bac"
     }
   ],
   "orders": [],
-  "rules_version": 15,
+  "rules_version": 16,
   "scenario": {
     "file": "data/scenarios/43_keep_two_bases_fed.toml",
     "hash": "0a6c6a34dbb4fcd2"
@@ -2123,6 +2123,6 @@
       "side": "allied"
     }
   ],
-  "state_version": "flagplot-state-v32",
+  "state_version": "flagplot-state-v33",
   "version": 8
 }

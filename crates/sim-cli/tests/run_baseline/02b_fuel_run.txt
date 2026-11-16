@@ -2,10 +2,10 @@ Scenario 2b: Fuel run, Espiritu Santo to Guadalcanal
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3ee4d3be12415d4f  10 events
-day   2  hash 2289e3b97b89f585  17 events
-day   3  hash f621046e218fef75  14 events
-day   4  hash 17e77e41bbb93e58  8 events
+day   1  hash f2eada9251eea7e8  10 events
+day   2  hash 8246e0f2e1429126  17 events
+day   3  hash abf96e9d55593eea  14 events
+day   4  hash fcbf9b8f58fea56f  8 events
 
 task_force:1 "Placeholder supply convoy" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply, 1000 t of fuel cargo

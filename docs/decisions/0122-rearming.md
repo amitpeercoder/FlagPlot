@@ -1,10 +1,10 @@
 # 0122: Rearming: a ship in port takes ammunition through the hours of the day
 
-Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, decision 15), on the designer's answer to its question 6: rearming is built in stage 2. It writes the rule out with its rule card and its hand calculation. Not built. It is built in step 6 of the stage, with the staff's policy for when a force goes back to rearm, which gets its own record.
+Status: settled by the architect on Nov 15, 2026, inside the plan for step 3, stage 2 (decision 0113, decision 15), on the designer's answer to its question 6: rearming is built in stage 2. It writes the rule out with its rule card and its hand calculation. Built on Nov 16, 2026, in step 6 of the stage, with the staff's policy for when a force goes back to rearm, decision 0127 ("As built" below).
 
 Summary: A base gains a stock of ammunition in tons, and a ship in port that lacks main battery rounds or torpedoes takes them from it in the port's queue, after its cargo and its fuel, at the port's rate at a berth or by lighter: rounds first, then torpedoes, whole ones only. A game with no ammunition at any base, or no rate, is the game it was
 
-Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Not built
+Standing: Settled by the architect, Nov 15, 2026, inside decision 0113. Built
 
 ## Why
 
@@ -62,3 +62,25 @@ The frozen step 1 figures give no rate and no stock, so the hand-calculation tes
 ## The hand calculation
 
 `tests/scenario_52_rearming.rs`: a cruiser at a berth and a destroyer by lighter at one base, and a destroyer at a base that runs out, with every pulse's rounds, torpedoes and tons.
+
+## As built
+
+Built on Nov 16, 2026, with decision 0127, in step 6 of stage 2. The rule is `crates/sim-core/src/rearm.rs`, called from the cargo queue (`cargo.rs`, `handle_cargo`) after the fuel.
+
+**Versions.** The state version is 33 (a ship's `torpedoes_fired` after its `torpedoes_one_side_fired`, a base's `ammunition_t` after its `fuel_reserve_t`). The rules label is 16. The saved game stays at version 8 (no new order). The agent interface is version 13 (a force line's `ammunition_lacked`).
+
+**How a tube is stated as fired.** A ship's torpedoes were a flag (ready or not) and a second flag for a class that fires one side first (decision 0083). The build keeps both and adds a count, `torpedoes_fired`, the tubes fired and not loaded again; `Ship::tubes_fired` reads the three together (all with none ready, at least the first side once it has fired). A salvo fires the tubes of its side, no more than the tubes loaded, and adds them to the count. A torpedo taken lowers the count, makes the ship ready while any tube is loaded and clears the first-side flag. For a class whose tubes all bear on one side that is the rule exactly; for one with two sides, a ship part loaded fires from the side the flag names the tubes it has loaded, up to that side's: the record's "lowest numbered first" is not followed tube by tube there. A ship whose tubes were never reloaded fires as it always did. A scenario states a ship's tubes fired with `tubes_fired` (the highest numbered), and its rounds with `gun_rounds`; a base's stock with `ammunition_t`.
+
+**What a ship lacks** is whole rounds: the outfit less the rounds aboard, cut to a whole number, so that a part of a round left by fire is never asked for. The marker is 9,999 rounds a gun or more.
+
+**The queue.** A ship that lacks ammunition claims a berth where the port gives an ammunition rate at a berth and a base of its side in the hex holds ammunition; the first base of the side there that holds any serves it. `take_fuel` now gives back the hours each ship used, cargo and fuel (fuel taken with no rate takes none), and the ship takes ammunition in the hours left: whole rounds first, then whole torpedoes, within the rate times the hours and the stock. A ship on a berth takes at the berth rate only; with no berth rate given it takes none there. A force out of fuel at a base rearms as it refuels.
+
+**Data.** The port sizes file has two optional columns, `ammunition_berth_rate_t_per_h` and `ammunition_lighter_rate_t_per_h`; the live file gives 20 where there is a berth and 10 by lighter, the frozen file gives the columns empty. `surface_combat.toml` has an optional `[rearming]` table: `tons_per_torpedo` and `[rearming.tons_per_round]` with `battleship`, `cruiser`, `destroyer` and `others`; the live file has the record's figures and the frozen file none (`FROZEN_WITHOUT` in `crates/sim-data/tests/frozen_figures.rs`). Scenario 52 names its own files, `port_sizes_placeholder_rearming.csv` and `surface_combat_placeholder_rearming.toml`, with a copy of each among the frozen figures.
+
+**The list of forces** (rule 10): a force stopped at a base of its side that lacks ammunition has `ammunition_lacked`, its rounds, torpedoes and tons, and the hours to take them there, the longest ship's, behind its fuel (`SideView::ammunition_work`): a berth is given as the queue would give it to the side's ships in the hex that lack fuel or ammunition, cargo aside; no hours where the base holds less than the force lacks or the port gives no rate.
+
+**A base that changes side** keeps its ammunition whole: the record says nothing, and the code that cuts supply and fuel to the captured share was not changed.
+
+**What it was checked against.** Scenario 52 (`data/scenarios/52_rearming.toml`, on the frozen figures with its own files) came out as the hand calculation has it in every number: the four events at S and U, the base's ammunition after each pulse (10, 4, 4 t at S; 0 at U), the tubes still fired, 13.2 hours and 5 hours in the view and in the list of forces, and every property (no ammunition or no rate; after cargo and fuel, full at hour 23.2; whole ones only; short stock in the queue's order; the marker; she fires again, a salvo of 8, and without ammunition she fires none). A reading of the test: "routed to U on the morning of day 1" cannot be given, since orders are taken at the start of a day; the test rearms on day 1 to 5 tubes loaded and routes on day 2, and she leaves with 800 rounds and 5 tubes loaded.
+
+**Compared with earlier scenarios.** `sh scripts/compare-scenarios.sh` against step 5's branch: 176 runs, 172 the same with the hashes cut; the 4 that differ are scenarios 52 and 57, live and frozen, which are new.
