@@ -96,6 +96,11 @@ fn reject_reason(reason: &RejectReason) -> Data {
     let base = |code: &'static str| Data::new().text("code", code);
     match reason {
         RejectReason::NotYourUnit => base("not_your_unit"),
+        // The truth's reason, with what the area command held (decision
+        // 0136, 13).
+        RejectReason::NotAsHeld { reason, held } => {
+            reject_reason(reason).with("not_as_held", Field::Str(held.clone()))
+        }
         RejectReason::EmptyRoute => base("empty_route"),
         RejectReason::WaypointOffMap(hex) => base("waypoint_off_map").hex("hex", *hex),
         RejectReason::NotACoastHex(hex) => base("not_a_coast_hex").hex("hex", *hex),

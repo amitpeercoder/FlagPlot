@@ -742,6 +742,10 @@ impl World {
             causes,
             None,
         );
+        // A force in a surface fight breaks radio silence (decision 0136,
+        // 17).
+        self.break_silence(a, day, pulse);
+        self.break_silence(b, day, pulse);
         let force_fight = |world: &World, id: TaskForceId, enemy: TaskForceId| {
             let force = &world.truth.task_forces[&id];
             ForceFight {

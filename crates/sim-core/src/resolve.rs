@@ -740,7 +740,7 @@ impl World {
 
     /// Orders are checked against the truth, as the spec says. Note that a
     /// rejection can therefore tell a side something its own view would not.
-    fn validate_order(&self, order: &Order) -> Result<(), RejectReason> {
+    pub(crate) fn validate_order_on_truth(&self, order: &Order) -> Result<(), RejectReason> {
         match &order.kind {
             OrderKind::TaskForce {
                 target,

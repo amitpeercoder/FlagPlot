@@ -451,3 +451,267 @@ fn what_is_held_and_what_is_in_flight_is_part_of_the_hash() {
     assert_ne!(late.state_hash(), before);
     assert!(!late.state_reports_in_flight.is_empty());
 }
+
+// ---- Phase 2: breaking silence, and an order that meets a different world ----
+
+use crate::command::{Addressee, Intent, IntentKind, Maker, PlanId};
+use crate::ids::{IntentId, ShipId};
+use crate::orders::{Issuer, RejectReason, SpeedSetting};
+use crate::passing_tests::{make, sighting_at};
+
+fn area_contacts(world: &World) -> Vec<u32> {
+    world.commands(Side::Allied).expect("on")[&CommandRef::Area]
+        .picture()
+        .contacts()
+        .map(|contact| contact.age_pulses)
+        .collect()
+}
+
+/// Ages every picture as the end of a pulse does.
+fn end_pulse(world: &mut World, day: u32, pulse: Pulse) {
+    world.age_contacts_at_end_of_pulse(day, pulse);
+}
+
+#[test]
+fn a_silent_force_sends_a_sighting_when_it_breaks_silence_as_old_as_it_is() {
+    let mut world = holding(ON_TIME);
+    world.radio_silent.insert(TF1);
+    // Pulse 3 is the night of day 1, pulse 5 its afternoon. The sighting is
+    // the silent force's own and is kept.
+    make(&mut world, &[tf(TF1)], 1, Pulse::Night, |key| {
+        sighting_at(key, hx(6, 2), 2)
+    });
+    assert_eq!(world.unsent_reports[&TF1].len(), 1);
+    assert!(area_contacts(&world).is_empty());
+    end_pulse(&mut world, 1, Pulse::Night);
+    end_pulse(&mut world, 1, Pulse::Morning);
+    assert!(
+        area_contacts(&world).is_empty(),
+        "nothing after pulses 3 and 4"
+    );
+    // The strike launch calls `break_silence(force, day, pulse)` for the force
+    // of the launching group; the same hook is called here, a launch being
+    // too heavy to build in this world.
+    world.break_silence(TF1, 1, Pulse::Afternoon);
+    assert_eq!(area_contacts(&world), vec![2], "heard at age 2");
+    assert!(world.unsent_reports.is_empty());
+    assert!(world.broke_silence.contains(&TF1));
+    // A second call in the same pulse sends nothing more.
+    let sent = |world: &World| {
+        world
+            .events()
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::ReportSent { .. }))
+            .count()
+    };
+    let before = sent(&world);
+    world.break_silence(TF1, 1, Pulse::Afternoon);
+    assert_eq!(sent(&world), before);
+}
+
+#[test]
+fn a_report_older_than_a_contact_may_be_is_not_sent_and_silence_off_drops_what_was_kept() {
+    let mut world = holding(ON_TIME);
+    world.radio_silent.insert(TF1);
+    make(&mut world, &[tf(TF1)], 1, Pulse::Night, |key| {
+        sighting_at(key, hx(6, 2), 2)
+    });
+    // Five pulses old (the drop age): not sent.
+    world.break_silence(TF1, 2, Pulse::Afternoon);
+    assert!(area_contacts(&world).is_empty());
+    // Turning silence off by order drops what was kept.
+    let mut world = holding(ON_TIME);
+    world.radio_silent.insert(TF1);
+    make(&mut world, &[tf(TF1)], 1, Pulse::Night, |key| {
+        sighting_at(key, hx(6, 2), 2)
+    });
+    let off = OrderRequest {
+        kind: OrderKind::TaskForce {
+            target: TF1,
+            order: TaskForceOrder::SetRadioSilence { on: false },
+        },
+        origin: Origin::PLAYER,
+    };
+    world.take_in_order(1, None, Side::Allied, off, Vec::new());
+    assert!(world.unsent_reports.is_empty());
+    assert!(!world.radio_silence(TF1));
+}
+
+#[test]
+fn a_force_that_breaks_silence_makes_its_state_report_that_pulse_and_is_silent_again_after() {
+    let mut world = holding(NEVER);
+    world.radio_silent.insert(TF1);
+    let lost = |world: &World, force: Option<crate::ids::TaskForceId>| {
+        world
+            .events()
+            .iter()
+            .filter(|e| match (&e.kind, force) {
+                (
+                    EventKind::StateReportLost {
+                        side: Side::Allied,
+                        command,
+                        ..
+                    },
+                    Some(f),
+                ) => *command == tf(f),
+                (
+                    EventKind::StateReportLost {
+                        side: Side::Allied, ..
+                    },
+                    None,
+                ) => true,
+                _ => false,
+            })
+            .count()
+    };
+    world.make_state_reports(1, Pulse::Night);
+    assert_eq!(lost(&world, None), 2, "the base and force 2 only");
+    assert_eq!(lost(&world, Some(TF1)), 0);
+    world.break_silence(TF1, 1, Pulse::Morning);
+    world.make_state_reports(1, Pulse::Morning);
+    assert_eq!(lost(&world, Some(TF1)), 1);
+    world.make_state_reports(1, Pulse::Afternoon);
+    assert_eq!(lost(&world, Some(TF1)), 1, "silent again");
+    assert_eq!(lost(&world, None), 2 + 3 + 2);
+}
+
+fn sink_force_1(world: &mut World) {
+    world
+        .truth
+        .task_forces
+        .get_mut(&TF1)
+        .expect("force")
+        .ships
+        .clear();
+    for raw in [1, 2] {
+        world
+            .truth
+            .ships
+            .get_mut(&ShipId::new(raw))
+            .expect("ship")
+            .location = crate::state::ShipLocation::Sunk;
+    }
+}
+
+fn speed_order(origin: Origin) -> OrderRequest {
+    OrderRequest {
+        kind: OrderKind::TaskForce {
+            target: TF1,
+            order: TaskForceOrder::SetSpeed(SpeedSetting::Full),
+        },
+        origin,
+    }
+}
+
+#[test]
+fn an_order_from_the_area_to_a_force_sunk_in_truth_but_held_afloat_is_refused_as_not_as_held() {
+    let mut world = holding(ON_TIME);
+    world.make_state_reports(1, Pulse::Morning);
+    sink_force_1(&mut world);
+    // The truth refuses: nothing is afloat in it.
+    let plain = world.validate_order_on_truth(&crate::orders::Order {
+        id: crate::ids::OrderId::new(0),
+        side: Side::Allied,
+        day_issued: 2,
+        kind: speed_order(Origin::PLAYER).kind,
+        origin: Origin::PLAYER,
+    });
+    let reason = plain.expect_err("the truth refuses");
+    let refused = world
+        .check_order(Side::Allied, &speed_order(Origin::PLAYER))
+        .expect_err("refused");
+    assert!(refused.is_not_as_held());
+    assert_eq!(
+        refused.to_string(),
+        format!(
+            "{reason}; the area command held task_force:1 at (0,0) with 2 ships afloat, as of the morning of day 1"
+        )
+    );
+    // At intake too: the order is rejected with the same words.
+    world.take_in_order(
+        2,
+        None,
+        Side::Allied,
+        speed_order(Origin::PLAYER),
+        Vec::new(),
+    );
+    let rejected = world
+        .events()
+        .iter()
+        .find_map(|e| match &e.kind {
+            EventKind::OrderRejected { reason, .. } => Some(reason.clone()),
+            _ => None,
+        })
+        .expect("rejected");
+    assert!(rejected.is_not_as_held());
+}
+
+#[test]
+fn an_order_from_a_force_level_intent_or_with_no_reports_is_refused_as_before() {
+    let mut world = holding(ON_TIME);
+    world.make_state_reports(1, Pulse::Morning);
+    sink_force_1(&mut world);
+    // A staff order whose intent is addressed to the force.
+    let intent = IntentId::new(1);
+    world
+        .command
+        .get_mut(&Side::Allied)
+        .expect("state")
+        .intents
+        .insert(
+            intent,
+            Intent {
+                id: intent,
+                kind: IntentKind::Hold { base: BASE1 },
+                parent: None,
+                maker: Maker::Staff,
+                addressee: Addressee::TaskForce(TF1),
+                limits: Default::default(),
+                set_day: 1,
+                plan: PlanId::new(1),
+                withdrawn_day: None,
+            },
+        );
+    let staff = Origin {
+        issuer: Issuer::Staff,
+        intent: Some(intent),
+    };
+    let refused = world
+        .check_order(Side::Allied, &speed_order(staff))
+        .expect_err("refused");
+    assert!(!refused.is_not_as_held(), "{refused}");
+    // The same intent addressed to the area is wrapped.
+    world
+        .command
+        .get_mut(&Side::Allied)
+        .expect("state")
+        .intents
+        .get_mut(&intent)
+        .expect("intent")
+        .addressee = Addressee::Area;
+    assert!(world
+        .check_order(Side::Allied, &speed_order(staff))
+        .expect_err("refused")
+        .is_not_as_held());
+    // Reports not travelling: refused as before.
+    let mut plain = world_with_levels(&[]);
+    plain
+        .truth
+        .task_forces
+        .get_mut(&TF1)
+        .expect("force")
+        .ships
+        .clear();
+    for raw in [1, 2] {
+        plain
+            .truth
+            .ships
+            .get_mut(&ShipId::new(raw))
+            .expect("ship")
+            .location = crate::state::ShipLocation::Sunk;
+    }
+    let refused = plain
+        .check_order(Side::Allied, &speed_order(Origin::PLAYER))
+        .expect_err("refused");
+    assert!(!matches!(refused, RejectReason::NotAsHeld { .. }));
+}

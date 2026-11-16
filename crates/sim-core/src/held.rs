@@ -27,6 +27,7 @@ use std::fmt;
 use crate::events::{Arrival, Breakdown, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::ids::{AirGroupId, EntityRef, LandUnitId, ShipId};
+use crate::orders::{Issuer, RejectReason};
 use crate::passing::{arrival_of, next_pulse};
 use crate::pictures::{self, CommandRef};
 use crate::rng::{Draw, Subsystem};
@@ -453,6 +454,118 @@ impl World {
             _ => {
                 held.insert(command, state);
             }
+        }
+    }
+}
+
+impl World {
+    /// Checks an order against the truth, as the engine always has, and, for
+    /// an order from the area command, tells a refusal that rests on the
+    /// state the area command did not hold from any other (decision 0136, 13
+    /// and 14): where reports travel and the order is the commander's or a
+    /// staff order whose intent is addressed to the area, a refusal the state
+    /// the area command holds would not have given is
+    /// [`RejectReason::NotAsHeld`], naming what it held and the moment that
+    /// was of. Any other order is checked as before.
+    pub(crate) fn validate_order(&self, order: &crate::orders::Order) -> Result<(), RejectReason> {
+        let reason = match self.validate_order_on_truth(order) {
+            Ok(()) => return Ok(()),
+            Err(reason) => reason,
+        };
+        if !self.reports_travel() || !self.order_is_from_the_area(order) {
+            return Err(reason);
+        }
+        let held = &self.held.as_ref().expect("reports travel")[&order.side];
+        let mut as_held = self.clone();
+        as_held.truth = held_truth(&self.truth, held);
+        match as_held.validate_order_on_truth(order) {
+            Ok(()) => Err(RejectReason::NotAsHeld {
+                held: self.held_words(order.side, order.kind.target()),
+                reason: Box::new(reason),
+            }),
+            Err(_) => Err(reason),
+        }
+    }
+
+    /// Whether an order comes from the area command: the commander's own, or
+    /// the staff's for an intent addressed to the area (decision 0136, 13).
+    /// An order of the staff's that serves an intent addressed to a task
+    /// force or a base, a scripted order of a scenario and a local
+    /// commander's are not.
+    fn order_is_from_the_area(&self, order: &crate::orders::Order) -> bool {
+        match order.origin.issuer {
+            Issuer::Player => true,
+            Issuer::Staff => order
+                .origin
+                .intent
+                .and_then(|intent| self.command[&order.side].intents.get(&intent))
+                .is_some_and(|intent| intent.addressee == crate::command::Addressee::Area),
+            Issuer::LocalCommander => false,
+        }
+    }
+
+    /// What `side`'s area command held of `target`, in words: where it was,
+    /// what it had, and the moment that was of.
+    fn held_words(&self, side: Side, target: EntityRef) -> String {
+        let held = &self.held.as_ref().expect("reports travel")[&side];
+        let found = |command: CommandRef| held.get(&command);
+        let nothing = || format!("nothing of {target}");
+        match target {
+            EntityRef::TaskForce(force) => match found(CommandRef::TaskForce(force)) {
+                Some(state) => {
+                    let (hex, afloat) = state.task_force().map_or((None, 0), |record| {
+                        (
+                            Some(record.position()),
+                            state
+                                .ships()
+                                .filter(|ship| ship.location != ShipLocation::Sunk)
+                                .count(),
+                        )
+                    });
+                    let at = hex.map_or(String::new(), |hex| format!(" at {hex}"));
+                    format!(
+                        "{target}{at} with {afloat} ship{} afloat, as of {}",
+                        if afloat == 1 { "" } else { "s" },
+                        state.as_of()
+                    )
+                }
+                None => nothing(),
+            },
+            EntityRef::Base(base) => match found(CommandRef::Base(base)) {
+                Some(state) => {
+                    let at = state
+                        .base()
+                        .map_or(String::new(), |record| format!(" at {}", record.hex));
+                    format!("{target}{at}, as of {}", state.as_of())
+                }
+                None => nothing(),
+            },
+            EntityRef::AirGroup(group) => held
+                .values()
+                .filter(|state| state.air_groups.contains_key(&group))
+                .max_by_key(|state| state.as_of)
+                .map_or_else(nothing, |state| {
+                    let record = &state.air_groups[&group];
+                    format!(
+                        "{target} with {} ready aircraft at {}, as of {}",
+                        record.ready,
+                        record.location,
+                        state.as_of()
+                    )
+                }),
+            EntityRef::LandUnit(unit) => held
+                .values()
+                .filter(|state| state.land_units.contains_key(&unit))
+                .max_by_key(|state| state.as_of)
+                .map_or_else(nothing, |state| {
+                    let record = &state.land_units[&unit];
+                    format!(
+                        "{target} with {} men ashore, as of {}",
+                        record.men_ashore,
+                        state.as_of()
+                    )
+                }),
+            _ => nothing(),
         }
     }
 }

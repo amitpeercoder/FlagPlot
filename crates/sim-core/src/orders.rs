@@ -972,6 +972,23 @@ pub enum RejectReason {
     /// An escort order given to a force that is the charge of another,
     /// `escort` (decision 0121, 1). Added at the end of the enum.
     IsACharge { escort: TaskForceId },
+    /// An order from the area that the truth refuses and the state the area
+    /// command holds would have accepted (decision 0136, 13): `reason` is
+    /// the truth's, `held` says what the area command held of the order's
+    /// unit and the moment it was of. Not a fault of the staff, and counted
+    /// apart (item 14). Added at the end of the enum.
+    NotAsHeld {
+        reason: Box<RejectReason>,
+        held: String,
+    },
+}
+
+impl RejectReason {
+    /// Whether the order was refused because the unit is not as the area
+    /// command held it (decision 0136, 14).
+    pub fn is_not_as_held(&self) -> bool {
+        matches!(self, RejectReason::NotAsHeld { .. })
+    }
 }
 
 impl fmt::Display for RejectReason {
@@ -1143,6 +1160,9 @@ impl fmt::Display for RejectReason {
                 f,
                 "{charge} has a charge of its own, and an escort cannot be a charge"
             ),
+            RejectReason::NotAsHeld { reason, held } => {
+                write!(f, "{reason}; the area command held {held}")
+            }
             RejectReason::IsACharge { escort } => write!(
                 f,
                 "the task force is the charge of {escort}, and a charge cannot be an escort"

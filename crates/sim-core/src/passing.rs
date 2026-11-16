@@ -23,8 +23,8 @@ use crate::command::Addressee;
 use crate::events::{Arrival, Breakdown, Cause, Direction, EventKind, Factor, ReportListener};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{EntityRef, EventId};
-use crate::pictures::{by_hex, CommandRef, Holders};
+use crate::ids::{EntityRef, EventId, TaskForceId};
+use crate::pictures::{self, by_hex, CommandRef, Holders};
 use crate::refdata::{PassingChances, ReportFigures};
 use crate::rng::{Draw, Subsystem};
 use crate::state::Side;
@@ -162,6 +162,71 @@ impl World {
                 }
             }
             self.send_own_report(side, sender, &report, key, made, now);
+        }
+    }
+
+    /// A silent force breaks silence in this pulse (decision 0136, 17): the
+    /// first call of the pulse marks it, so that its state report is made
+    /// and the reports it makes from now are sent as made, and sends at once
+    /// every report it kept that is not yet as old as a contact may be,
+    /// oldest first (by when it was made, then its event), as of this pulse,
+    /// each as old as it is. A no-op unless reports travel and the force is
+    /// silent, and after the first call of a pulse.
+    pub(crate) fn break_silence(&mut self, force: TaskForceId, day: u32, pulse: Pulse) {
+        if !self.reports_travel() || !self.radio_silent.contains(&force) {
+            return;
+        }
+        if !self.broke_silence.insert(force) {
+            return;
+        }
+        let Some(kept) = self.unsent_reports.remove(&force) else {
+            return;
+        };
+        let Some(side) = self.truth.task_forces.get(&force).map(|f| f.side) else {
+            return;
+        };
+        let drop_age = self
+            .ref_data
+            .search
+            .as_ref()
+            .map_or(0, |figures| u64::from(figures.contact_drop_age_pulses));
+        let now = ordinal(day, pulse);
+        let mut kept: Vec<UnsentReport> = kept
+            .into_iter()
+            .filter(|unsent| {
+                let made = ordinal(unsent.day, unsent.pulse.unwrap_or(Pulse::Afternoon));
+                now.saturating_sub(made) < drop_age
+            })
+            .collect();
+        kept.sort_by_key(|unsent| {
+            (
+                ordinal(unsent.day, unsent.pulse.unwrap_or(Pulse::Afternoon)),
+                unsent.key,
+            )
+        });
+        for unsent in kept {
+            let made = (unsent.day, unsent.pulse.unwrap_or(Pulse::Afternoon));
+            self.send_own_report(
+                side,
+                CommandRef::TaskForce(force),
+                &unsent.report,
+                unsent.key,
+                made,
+                (day, Some(pulse)),
+            );
+        }
+    }
+
+    /// [`World::break_silence`] for the force of an air group's command: a
+    /// group aboard a silent force's ship launching a strike.
+    pub(crate) fn break_silence_of_group(
+        &mut self,
+        group: crate::ids::AirGroupId,
+        day: u32,
+        pulse: Pulse,
+    ) {
+        if let Some(CommandRef::TaskForce(force)) = pictures::command_of_group(&self.truth, group) {
+            self.break_silence(force, day, pulse);
         }
     }
 

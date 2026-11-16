@@ -71,7 +71,7 @@ const LATE: (i64, i64) = (0, 1);
 
 /// Records an event for a report to cite, and returns its id, the report's
 /// key. The kind does not matter to the passing.
-fn record_key(world: &mut World, day: u32, pulse: Pulse) -> EventId {
+pub(crate) fn record_key(world: &mut World, day: u32, pulse: Pulse) -> EventId {
     world.events.record(
         day,
         Some(pulse),
@@ -88,7 +88,7 @@ fn record_key(world: &mut World, day: u32, pulse: Pulse) -> EventId {
     )
 }
 
-fn sighting_at(key: EventId, at: crate::hex::Hex, count: u32) -> Report {
+pub(crate) fn sighting_at(key: EventId, at: crate::hex::Hex, count: u32) -> Report {
     Report::Sighting(SightingReport {
         estimated_hex: at,
         estimated_ship_count: count,
@@ -116,7 +116,7 @@ fn claim(key: EventId) -> Report {
 
 /// Makes a report as a site does: its event first, then the report applied
 /// to the holders, then passed on. Returns the report's key.
-fn make(
+pub(crate) fn make(
     world: &mut World,
     holders: &[CommandRef],
     day: u32,
