@@ -7,7 +7,8 @@ use sim_core::command::{
     ChainLink, CommandState, Evidence, Hold, HoldMaker, HoldTarget, Intent, IntentKind, Plan,
     Proposal, Reason, Serves, StaffDecisions,
 };
-use sim_core::ids::{BaseId, IntentId};
+use sim_core::ids::{BaseId, IntentId, TaskForceId};
+use sim_core::pictures::CommandRef;
 use sim_core::view::SideView;
 
 use crate::planner::DEFAULT_INTERVAL_DAYS;
@@ -32,6 +33,34 @@ pub(crate) fn base_words(view: &SideView<'_>, base: BaseId) -> String {
         Some(name) => format!("{base} ({name})"),
         None => base.to_string(),
     }
+}
+
+/// The words that say a held state is of another moment (decision 0136,
+/// 11): " (as of the morning of day 1)", or nothing where the state is of the
+/// pulse just ended, where the area command holds nothing of the command, and
+/// on any view but the area command's. With every report on time the words
+/// never appear.
+pub(crate) fn as_of_note(view: &SideView<'_>, command: CommandRef) -> String {
+    match view.held_as_of(command) {
+        Some(as_of) if as_of != view.pulse_just_ended() => format!(" (as of {as_of})"),
+        _ => String::new(),
+    }
+}
+
+/// A base as an area doctrine's reason names it where it rests on the
+/// base's state: [`base_words`] and the moment that state is of.
+pub(crate) fn base_held_words(view: &SideView<'_>, base: BaseId) -> String {
+    format!(
+        "{}{}",
+        base_words(view, base),
+        as_of_note(view, CommandRef::Base(base))
+    )
+}
+
+/// A task force as an area doctrine's reason names it where it rests on the
+/// force's state: its handle and the moment that state is of.
+pub(crate) fn force_held_words(view: &SideView<'_>, force: TaskForceId) -> String {
+    format!("{force}{}", as_of_note(view, CommandRef::TaskForce(force)))
 }
 
 /// What an intent is for, in words: "keep base:2 (Placeholder base T) at 30
