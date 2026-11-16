@@ -991,17 +991,12 @@ mod tests {
         assert_eq!((held[1].0, held[1].1), (2, Hex::new(7, -10)));
     }
 
-    /// Case E's age: the hand calculation says contact 2 "is 2 pulses old at
-    /// the end of pulse 2". MISMATCH, for the architect: the code gives 1.
-    /// A contact is not aged at the end of the pulse that made it (the hand
-    /// calculation's own figures say so), so contact 2, made in pulse 1, is 0
-    /// after pulse 1's ageing and 1 after pulse 2's. For the same reason
-    /// cases C, D and F's "1 pulse old" in pulse 2 is 0 in the code; no
-    /// outcome of C, D or F turns on it (both are within the freshness of 2,
-    /// and neither contact is in the pulse's refreshed set).
+    /// Case E's age, as the architect restated it after the build: a
+    /// contact is not aged at the end of the pulse that made it, so contact
+    /// 2, made in pulse 1, is at age 0 after pulse 1's ageing and 1 after
+    /// pulse 2's.
     #[test]
-    #[ignore = "mismatch with the hand calculation: contact 2 is 1 pulse old at the end of pulse 2, not 2"]
-    fn scenario_60_case_e_contact_2_is_two_pulses_old_at_the_end_of_pulse_2() {
+    fn scenario_60_case_e_contact_2_is_one_pulse_old_at_the_end_of_pulse_2() {
         let figures = s60_figures();
         let mut belief = BeliefState::new(Side::Allied);
         s60_apply(
@@ -1023,7 +1018,7 @@ mod tests {
         belief.age_contacts(&figures);
         assert_eq!(
             belief.contact(ContactId::new(2)).expect("held").age_pulses,
-            2
+            1
         );
     }
 

@@ -41,21 +41,26 @@
 //!   refreshes contact 1: (7,-10), 13 ships, a carrier, age 0. One
 //!   contact.
 //! - **C. One force, the next pulse.** Pulse 1: the first report as in A.
-//!   Pulse 2: contact 1 is 1 pulse old and has not been reported this
+//!   Pulse 2: contact 1 is still at age 0 and has not been reported this
 //!   pulse. A report of 13 ships, a carrier, at (8,-11), 2 hexes away,
 //!   refreshes it, as before this decision: (8,-11), 13 ships, a carrier,
 //!   age 0. One contact.
 //! - **D. The older contact takes it.** Pulse 1: a report at (9,-12) makes
 //!   contact 1. Pulse 2: a report at (7,-9), 3 hexes from contact 1, makes
 //!   contact 2. Then a report at (8,-11): contact 2, made this pulse, is 2
-//!   away and does not qualify; contact 1, 1 pulse old, is 1 away and is
+//!   away and does not qualify; contact 1, not reported this pulse, is 1 away and is
 //!   refreshed to (8,-11). Two contacts: 1 at (8,-11), 2 at (7,-9).
 //! - **E. A tie goes to the lowest number.** Pulse 1: a report at (9,-12)
 //!   makes contact 1. A report at (7,-10), 2 hexes from contact 1, which
-//!   was made this pulse, makes contact 2. Pulse 2: both are 1 pulse old
+//!   was made this pulse, makes contact 2. Pulse 2: both are at age 0
 //!   and neither has been reported this pulse. A report at (8,-11) is 1
 //!   hex from each: contact 1, the lower number, is refreshed to (8,-11).
-//!   Contact 2 stays at (7,-10) and is 2 pulses old at the end of pulse 2.
+//!   Contact 2 stays at (7,-10) and is 1 pulse old at the end of pulse 2.
+//!   (Restated by the architect on Nov 16, 2026, after the build: a
+//!   contact is not aged at the end of the pulse that made it, so a
+//!   contact made in pulse 1 is at age 0 in pulse 2, where the first draft
+//!   had 1, and 1 at the end of pulse 2, where it had 2. No outcome
+//!   turned on it.)
 //! - **F. The older contact takes it at two hexes.** Pulse 1: a report at
 //!   (10,-13) makes contact 1. Pulse 2: a report at (6,-9), 4 hexes from
 //!   contact 1, makes contact 2. Then a report at (8,-11), 2 hexes from
@@ -72,10 +77,14 @@
 //!
 //! - **The battle it was found in.** The Eastern Solomons with both sides
 //!   from their intents (`data/scenarios/second-proof/05a_eastern_solomons.toml`),
-//!   live figures, seed 3: at the end of the morning pulse of day 1 the
-//!   Allied side holds two contacts, one at (7,-9) and one at (8,-11).
-//!   Before this decision it held one, at (8,-11). Whether the carriers
-//!   then strike is reported by the build and not asserted here.
+//!   live figures, seed 3: in the morning pulse of day 1 the report at
+//!   (7,-9) makes one Allied contact and the report at (8,-11) makes
+//!   another, and the side holds two contacts at the end of the morning,
+//!   one of them at (8,-11). Before this decision it held one, at
+//!   (8,-11), and never struck. (Restated by the architect on Nov 16,
+//!   2026, after the build: the first draft had the other contact still
+//!   at (7,-9) at the end of the morning. The carriers struck it that
+//!   morning, and the strike's own reports moved it to (7,-8).)
 //! - The unit tests of the rule as it was pass unchanged on figures
 //!   without the new one.
 //! - The same reports in the same order give the same contacts.
@@ -133,28 +142,7 @@ fn after_the_morning_on_seed_3() -> (Vec<Hex>, Vec<Event>) {
     (hexes, scenario.world.events().iter().cloned().collect())
 }
 
-/// The battle it was found in, as the hand calculation states it: at the
-/// end of the morning pulse of day 1 the Allied side holds two contacts, one
-/// at (7,-9) and one at (8,-11). Live figures on purpose: the property is of
-/// the live figure and the battle in which the fault was found.
-///
-/// MISMATCH, for the architect. The code holds two contacts, at (7,-8) and
-/// (8,-11). The first report made contact 1 at (7,-9) and the report at
-/// (8,-11) made contact 2, as the hand calculation says; then the carriers
-/// struck contact 1 in the morning, and the strike's four reports (events
-/// 302, 307, 313 and 314) refreshed it, each within a hex, the last naming
-/// (7,-8), a hex off by the report's error.
-#[test]
-#[ignore = "mismatch with the hand calculation: the contacts are at (7,-8) and (8,-11); the strike's last report moved contact 1 from (7,-9) to (7,-8)"]
-fn the_eastern_solomons_on_seed_3_holds_both_forces_after_the_morning() {
-    let (hexes, _) = after_the_morning_on_seed_3();
-    let mut expected = vec![Hex::new(7, -9), Hex::new(8, -11)];
-    expected.sort();
-    assert_eq!(hexes, expected);
-}
-
-/// What the same game does give, asserted by the build and not by the hand
-/// calculation: the report at (7,-9) and the report at (8,-11), in one pulse,
+/// The battle property, as restated: the report at (7,-9) and the report at (8,-11), in one pulse,
 /// each made a contact, and both contacts are held at the end of the
 /// morning, one of them at (8,-11).
 #[test]
