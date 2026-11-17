@@ -418,7 +418,7 @@ impl Day<'_, '_> {
     }
 
     /// The last raid of `group` as the side's events give it.
-    fn last_raid_of(&mut self, group: AirGroupId) -> Option<LastRaid> {
+    pub(crate) fn last_raid_of(&mut self, group: AirGroupId) -> Option<LastRaid> {
         let events = self.side_events();
         let mut last: Option<(u32, Option<Pulse>, u32)> = None;
         for event in events {

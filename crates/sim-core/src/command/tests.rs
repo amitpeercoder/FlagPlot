@@ -991,6 +991,100 @@ fn the_staff_is_refused_the_commanders_commands_and_the_commander_the_staffs() {
     );
 }
 
+/// Decision 0142: "take a place" is taken in at a hex of land only, its
+/// forces limit needs a source, the staff forms "ready a landing" under it
+/// while its plan is preparing, and the staff sets a forces limit only, and
+/// only on an intent it formed.
+#[test]
+fn taking_a_place_is_taken_in_and_its_landing_formed_while_preparing() {
+    const PLACE: Hex = Hex::new(5, 0);
+    let mut world = world();
+    world.map.insert(
+        PLACE,
+        HexData {
+            kind: crate::map::HexKind::Coast,
+            ..HexData::open_sea()
+        },
+    );
+    let take = |hex: Hex| CommandKind::SetIntent {
+        intent: intent(1),
+        kind: IntentKind::TakePlace { hex, by_day: None },
+    };
+    refused(
+        &mut world,
+        Issuer::Player,
+        take(Hex::new(4, 0)),
+        CommandRefusal::NotLand(Hex::new(4, 0)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        take(Hex::new(40, 0)),
+        CommandRefusal::NotLand(Hex::new(40, 0)),
+    );
+    player(&mut world, take(PLACE)).unwrap();
+    let mut no_source = forces(&[], &[1]);
+    no_source.source = None;
+    refused(
+        &mut world,
+        Issuer::Player,
+        set_forces(1, no_source),
+        CommandRefusal::NoSource,
+    );
+    player(&mut world, set_forces(1, forces(&[], &[1]))).unwrap();
+    // The staff sets no limit on the commander's intent.
+    refused(
+        &mut world,
+        Issuer::Staff,
+        set_forces(1, forces(&[], &[1])),
+        CommandRefusal::NotYours,
+    );
+    let landing = |hex: Hex| CommandKind::FormIntent {
+        parent: intent(1),
+        kind: IntentKind::ReadyLanding {
+            force: tf(1),
+            hex,
+            by_day: None,
+        },
+    };
+    // A draft is not enough; preparing is.
+    refused(
+        &mut world,
+        Issuer::Staff,
+        landing(PLACE),
+        CommandRefusal::WrongPlanState(PlanState::Draft),
+    );
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        landing(HOME),
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+    staff(&mut world, landing(PLACE)).unwrap();
+    let formed = &state(&world, A).intents[&intent(2)];
+    assert_eq!(formed.maker, Maker::Staff);
+    assert_eq!(formed.parent, Some(intent(1)));
+    // The staff sets the forces limit of the intent it formed, and no other
+    // kind of limit.
+    let mut narrow = forces(&[], &[]);
+    narrow.source = None;
+    staff(&mut world, set_forces(2, narrow.clone())).unwrap();
+    assert_eq!(
+        state(&world, A).intents[&intent(2)].limits.forces,
+        Some(narrow)
+    );
+    refused(
+        &mut world,
+        Issuer::Staff,
+        CommandKind::SetLimit(Limit::Risk {
+            intent: intent(2),
+            risk: Risk::Press,
+        }),
+        CommandRefusal::NotYours,
+    );
+}
+
 // ---------------------------------------------------------------------------
 // The staff's commands.
 // ---------------------------------------------------------------------------

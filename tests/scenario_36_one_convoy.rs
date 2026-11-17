@@ -1488,6 +1488,7 @@ q = 3
 r = 2
 supply_t = {supply}
 fuel_t = {fuel}
+on_map = false
 
 [[land_unit]]
 id = 9

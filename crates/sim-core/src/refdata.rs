@@ -1264,6 +1264,9 @@ pub struct GroundFigures {
     /// The bounds of a ground report's error (decision 14 of 0092). `None`
     /// when the file names neither: then no ground report is made.
     pub report_error: Option<ReportError>,
+    /// The bounds of a reconnaissance flight's error (decision 0147, 7).
+    /// `None` when the file names neither: then no flight is made.
+    pub reconnaissance_error: Option<ReportError>,
     /// Days to march from a hex to a neighbour, at least 1 (decision 4 of
     /// 0094).
     pub march_days_per_hex: u32,
@@ -1420,6 +1423,7 @@ impl GroundFigures {
             low: Fixed::from_raw(500_000),
             high: Fixed::from_raw(1_500_000),
         }),
+        reconnaissance_error: None,
         march_days_per_hex: 3,
         fatigue_per_march_day: Fixed::from_int(10),
         march_supply_days: Fixed::from_int(5),
@@ -1708,6 +1712,14 @@ impl GroundFigures {
             if error.low.is_negative() || error.high < error.low {
                 return Some(format!(
                     "ground report_error_low {} and report_error_high {} are not 0 or more with the low not above the high",
+                    error.low, error.high
+                ));
+            }
+        }
+        if let Some(error) = self.reconnaissance_error {
+            if error.low.is_negative() || error.high < error.low {
+                return Some(format!(
+                    "ground reconnaissance_error_low {} and reconnaissance_error_high {} are not 0 or more with the low not above the high",
                     error.low, error.high
                 ));
             }

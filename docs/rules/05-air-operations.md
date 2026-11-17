@@ -59,7 +59,7 @@ A side sees: `AirGroupLostWithBase` and `PilotsLost` for its own groups, whole. 
 
 ## Missions and orders
 
-### The five missions
+### The six missions
 
 A group has one mission at a time. It flies only that mission. A group takes up its mission only if the other rules of this chapter let it fly. A new group's mission is rest. [0026, 0027, 0034]
 
@@ -70,8 +70,11 @@ A group has one mission at a time. It flies only that mission. A group takes up 
 | Naval strike | Decides in each daylight pulse whether to strike a contact its side holds, of a kind on its target list. |
 | Base strike (names an enemy base) | Strikes that base in the first daylight pulse of the day in which it is in reach, once a day. |
 | Combat air patrol | Keeps a share of its aircraft over its own hex, and escorts raids with the rest. |
+| Reconnaissance (names a hex) | Flies one aircraft to the hex once a day, in the morning pulse, and reports the enemy's men ashore there (chapter 3, The ground report and the estimate). |
 
 The group's mission order, if the mission was set by an order, is a cause of every event that group's flying produces. A group on a strike mission does not search. A group on search does not strike or patrol. A group on patrol does not strike. [0026, 0027, 0034]
+
+The reconnaissance mission (`AirMission::Reconnaissance(hex)`, code 6, hashed after its code with its hex) is given by the mission order with a hex of the map. The order is refused for a group whose aircraft type cannot search (a search range of 0: `AircraftCannotSearch`) and for a hex that is not on the map (`WaypointOffMap`). The group flies it in the search phase of the morning pulse and in no other; a group on reconnaissance does not search, strike or patrol. The flight is the search of chapter 3 in what it costs and in the base and deck it needs; what it reports is chapter 3's ground report. [0147 items 4 and 5]
 
 A side sees: its own orders and what they cause, whole. Nothing of the enemy's missions.
 

@@ -227,6 +227,7 @@ impl Run {
                     hex: h,
                     men,
                     replaced,
+                    ..
                 } if s == side && h == hex => Some((men, replaced)),
                 _ => None,
             })

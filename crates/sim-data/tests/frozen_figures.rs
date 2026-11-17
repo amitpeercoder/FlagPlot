@@ -127,6 +127,9 @@ const FROZEN_WITHOUT: &[&str] = &[
     "rearming",
     "search_fatigue_per_100_nm",
     "merge_distance_same_pulse_hexes",
+    // The two bounds of a reconnaissance flight's error (decision 0147, 7):
+    // the frozen step 1 figures give neither, so no flight is made.
+    "reconnaissance_error_",
 ];
 
 #[test]

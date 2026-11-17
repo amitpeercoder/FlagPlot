@@ -669,6 +669,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
         };
         let mission = match group.mission {
             AirMission::BaseStrike(base) => format!("BaseStrike on {base}"),
+            AirMission::Reconnaissance(hex) => format!("Reconnaissance of {hex}"),
             other => format!("{other:?}"),
         };
         // Damaged aircraft are shown only when there are some (decision 0035).
@@ -906,11 +907,12 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
         // printed only when it holds an estimate.
         for estimate in view.ground_estimates() {
             println!(
-                "{} estimate at {}: {} enemy men ashore, reported day {}",
+                "{} estimate at {}: {} enemy men ashore, reported day {} ({})",
                 side.name(),
                 estimate.hex,
                 estimate.men,
-                estimate.day
+                estimate.day,
+                estimate.grade.name()
             );
         }
     }

@@ -2,68 +2,68 @@ Scenario 28: Experience and training
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 4876c3e0847186fc  47 events
-day   2  hash ca6c9691729343bb  47 events
-day   3  hash 4e50305685a76684  31 events
-day   4  hash cfb13b7c135610e7  27 events
-day   5  hash 7fc1db1eb2c0ecbf  25 events
-day   6  hash c6d8ed53f7b932e4  25 events
-day   7  hash 86c98affdad3bbad  25 events
-day   8  hash f4888f3952449dbe  25 events
-day   9  hash b4e0f7b5e49e2b73  25 events
-day  10  hash aa06675e26fa6329  25 events
-day  11  hash 1585139843630754  25 events
-day  12  hash acf628ce43532fa1  25 events
-day  13  hash d1475311dc261e42  25 events
-day  14  hash 7c4306e6907b4134  25 events
-day  15  hash 725f4c4ea5e291f9  25 events
-day  16  hash 70bbc725019b7ece  25 events
-day  17  hash a72d853d8f481217  25 events
-day  18  hash a91810007ee1b510  25 events
-day  19  hash 93e360c3475ca500  25 events
-day  20  hash 3a2f3a40a652bcc5  25 events
-day  21  hash 7d8f90f164c8caf1  25 events
-day  22  hash d4187aec8c9a5d89  25 events
-day  23  hash 57f583788a08ac24  23 events
-day  24  hash 683e72155f9276db  23 events
-day  25  hash f76b874751c698ae  23 events
-day  26  hash feff99a800329fe2  23 events
-day  27  hash 11893f6ab2bce7d7  23 events
-day  28  hash d1d968b8c939335e  23 events
-day  29  hash c7c71017c6af37a3  23 events
-day  30  hash 597729eeb12af06a  24 events
-day  31  hash b2faecdd2b01c79c  23 events
-day  32  hash 3a617505647e0a6e  23 events
-day  33  hash b015d9d590b52d50  23 events
-day  34  hash 01eddb0cc9ee96b7  23 events
-day  35  hash 60171b0a71d5aa49  23 events
-day  36  hash 882243d9095a5404  23 events
-day  37  hash b51d8c71907550f2  23 events
-day  38  hash 7e4e9f5b102fb747  23 events
-day  39  hash 4cb8f187112bbe9b  23 events
-day  40  hash a07eb653d95347f4  23 events
-day  41  hash 4e4a90705fd0dfca  23 events
-day  42  hash 7bbec1ca6ba28c2c  23 events
-day  43  hash 5030567ebbadb893  23 events
-day  44  hash 91af3d7dbe5b1997  23 events
-day  45  hash d6bb62bcf83ae109  23 events
-day  46  hash 125b8e322b6cee8a  23 events
-day  47  hash 32f89e0e071bd416  23 events
-day  48  hash 74db8a9f870cfa8f  23 events
-day  49  hash ee065ec120b85462  23 events
-day  50  hash e9a319cd85ef4bdb  23 events
-day  51  hash 76bd6cf0fe1a5854  23 events
-day  52  hash 84474f961eed84ce  23 events
-day  53  hash 6d4869907ffb0ea0  23 events
-day  54  hash 63ccf1e0a4ce1b20  23 events
-day  55  hash b786afba94eb8b45  23 events
-day  56  hash 192148f37b6027f5  23 events
-day  57  hash 626ce71e8697be67  23 events
-day  58  hash 3c71eda406d6919e  23 events
-day  59  hash 338a525ce72fb991  23 events
-day  60  hash f1454b832361f888  24 events
-day  61  hash 6d43e7a8acda4101  22 events
-day  62  hash 5ca43e5b235796f7  23 events
+day   1  hash 10999fdcaa089bfb  47 events
+day   2  hash fc51bb2809860638  47 events
+day   3  hash 42ec3d2643904df7  31 events
+day   4  hash eccfa249444e7e44  27 events
+day   5  hash e515bdf3d0285d94  25 events
+day   6  hash ce16c224a600f85b  25 events
+day   7  hash 092b45d63f491d56  25 events
+day   8  hash 9c2de80e6c0434b7  25 events
+day   9  hash 10a6e55fa2f88d66  25 events
+day  10  hash dbfc4d597a84be28  25 events
+day  11  hash de7fef30972eacab  25 events
+day  12  hash e072e6fcece28980  25 events
+day  13  hash b3e63f907dd81325  25 events
+day  14  hash f8bcb429f084a06f  25 events
+day  15  hash eae3111bef560b92  25 events
+day  16  hash 8b934e516d00b165  25 events
+day  17  hash fb86a58ccbcbfada  25 events
+day  18  hash bf0a6383463e6899  25 events
+day  19  hash de68a87650b2d9c9  25 events
+day  20  hash 68c8db99521770be  25 events
+day  21  hash 811e06918cd26d6a  25 events
+day  22  hash 825c00f78c85eb96  25 events
+day  23  hash a7ff724961b31871  23 events
+day  24  hash 89b2363a80c26426  23 events
+day  25  hash 70d85f41e5da0cf7  23 events
+day  26  hash be416388f22778eb  23 events
+day  27  hash 91bf27c36a415ff0  23 events
+day  28  hash 6739f135b7fa8865  23 events
+day  29  hash 79ac194a8a240a58  23 events
+day  30  hash bb6e48da467f4343  24 events
+day  31  hash 5c87929d3e7c43b5  23 events
+day  32  hash f4863724920692c5  23 events
+day  33  hash bf4a252bb84778cd  23 events
+day  34  hash b22ba625b369422c  23 events
+day  35  hash 08be224e40135e10  23 events
+day  36  hash 4400f398d724071f  23 events
+day  37  hash c6efa2b3aa78a4e1  23 events
+day  38  hash 8b3b4f1c5289925c  23 events
+day  39  hash 9add152930f35008  23 events
+day  40  hash 684621bf81c51a83  23 events
+day  41  hash 42c59786040971a9  23 events
+day  42  hash 846650ee872fa881  23 events
+day  43  hash 461c67597b112d6c  23 events
+day  44  hash 61ef888e9871f38a  23 events
+day  45  hash 054aea973f971718  23 events
+day  46  hash 3abf6fa99dcf4051  23 events
+day  47  hash 24d89ddf975ad7ad  23 events
+day  48  hash b46042bdd8feec38  23 events
+day  49  hash a0ca5df050821c63  23 events
+day  50  hash 85c36584bed3de18  23 events
+day  51  hash 175f06335edfc90d  23 events
+day  52  hash fc9ceb1dd8803355  23 events
+day  53  hash 5de6adb1cff069bd  23 events
+day  54  hash 3a9f098e62bf1621  23 events
+day  55  hash 515a67efb1967952  23 events
+day  56  hash d68f3115068ef3cc  23 events
+day  57  hash b75a009caf96b752  23 events
+day  58  hash 32e5aadfd77e076f  23 events
+day  59  hash 10edac1eaa37619e  23 events
+day  60  hash 60c9ef8b8d8f3501  24 events
+day  61  hash 952b935e89ad39e6  22 events
+day  62  hash d97d9bbf6a010784  23 events
 
 #1 D1 -         order:1 accepted for land_unit:1  <- order:1
 #2 D1 -         order:2 accepted for land_unit:6  <- order:2
@@ -86,16 +86,16 @@ day  62  hash 5ca43e5b235796f7  23 events
 #19 D1 -         land_unit:2 lost 40 men in the fight at (10,0), 960 left ashore  <- #17
 #20 D1 -         land_unit:3 lost 80 men in the fight at (10,0), 520 left ashore  <- #16
 #21 D1 -         land_unit:3 attacked: fatigue 50  <- #17, #18
-#22 D1 -         Allied ground report at (10,0): 409 enemy men ashore  <- #15
-#23 D1 -         Japanese ground report at (10,0): 1116 enemy men ashore  <- #15
+#22 D1 -         Allied ground report at (10,0): 409 enemy men ashore (men in contact)  <- #15
+#23 D1 -         Japanese ground report at (10,0): 1116 enemy men ashore (men in contact)  <- #15
 #24 D1 -         fight ashore at (20,0): the Allied side attacks
 #25 D1 -         land_unit:4 fired at (20,0) with 500 men: 5 shots at 0.15, 0 hits  <- #24, #10
 #26 D1 -         land_unit:5 fired at (20,0) with 500 men: 5 shots at 0.9, 4 hits  <- #24, #12
 #27 D1 -         the Allied side's attack at (20,0) failed: weight of fire 0.75 against 4.5  <- #24, #25, #26
 #28 D1 -         land_unit:4 lost 80 men in the fight at (20,0), 420 left ashore  <- #26
 #29 D1 -         land_unit:4 attacked: fatigue 50  <- #25, #27
-#30 D1 -         Allied ground report at (20,0): 694 enemy men ashore  <- #24
-#31 D1 -         Japanese ground report at (20,0): 407 enemy men ashore  <- #24
+#30 D1 -         Allied ground report at (20,0): 694 enemy men ashore (men in contact)  <- #24
+#31 D1 -         Japanese ground report at (20,0): 407 enemy men ashore (men in contact)  <- #24
 #32 D1 -         land_unit:1 trained: 1 day counted at experience 0  <- order:1, #4
 #33 D1 -         land_unit:6 trained: 1 day counted at experience 1  <- order:2, #14
 #34 D1 -         land_unit:2 fired in a fight: 10 days counted at experience 2  <- #16
@@ -131,8 +131,8 @@ day  62  hash 5ca43e5b235796f7  23 events
 #64 D2 -         land_unit:3 lost 160 men in the fight at (10,0), 360 left ashore  <- #61
 #65 D2 -         land_unit:3 attacked: fatigue 100  <- #62, #63
 #66 D2 -         land_unit:3 is too tired to attack at fatigue 100 and goes back to defend  <- #65
-#67 D2 -         Allied ground report at (10,0): 356 enemy men ashore, replacing the estimate held  <- #60
-#68 D2 -         Japanese ground report at (10,0): 912 enemy men ashore, replacing the estimate held  <- #60
+#67 D2 -         Allied ground report at (10,0): 356 enemy men ashore (men in contact), replacing the estimate held  <- #60
+#68 D2 -         Japanese ground report at (10,0): 912 enemy men ashore (men in contact), replacing the estimate held  <- #60
 #69 D2 -         fight ashore at (20,0): the Allied side attacks
 #70 D2 -         land_unit:4 fired at (20,0) with 210 men: 2.1 shots at 0.15, 0 hits  <- #69, #55
 #71 D2 -         land_unit:5 fired at (20,0) with 500 men: 5 shots at 0.9, 5 hits  <- #69, #57
@@ -140,8 +140,8 @@ day  62  hash 5ca43e5b235796f7  23 events
 #73 D2 -         land_unit:4 lost 100 men in the fight at (20,0), 320 left ashore  <- #71
 #74 D2 -         land_unit:4 attacked: fatigue 100  <- #70, #72
 #75 D2 -         land_unit:4 is too tired to attack at fatigue 100 and goes back to defend  <- #74
-#76 D2 -         Allied ground report at (20,0): 256 enemy men ashore, replacing the estimate held  <- #69
-#77 D2 -         Japanese ground report at (20,0): 233 enemy men ashore, replacing the estimate held  <- #69
+#76 D2 -         Allied ground report at (20,0): 256 enemy men ashore (men in contact), replacing the estimate held  <- #69
+#77 D2 -         Japanese ground report at (20,0): 233 enemy men ashore (men in contact), replacing the estimate held  <- #69
 #78 D2 -         land_unit:1 trained: 2 days counted at experience 0  <- order:1, #49
 #79 D2 -         land_unit:6 trained: 2 days counted at experience 1  <- order:2, #59
 #80 D2 -         land_unit:2 fired in a fight: 1 day counted at experience 3  <- #61
@@ -172,11 +172,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #105 D3 night     Allied men ashore at (30,0): 0 of 100 fed from base:6, 100 unfed
 #106 D3 night     land_unit:6 lost 5 men unfed at (30,0), 95 left ashore  <- #105
 #107 D3 -         land_unit:3 rested: fatigue 95
-#108 D3 -         Allied ground report at (10,0): 335 enemy men ashore, replacing the estimate held
-#109 D3 -         Japanese ground report at (10,0): 481 enemy men ashore, replacing the estimate held
+#108 D3 -         Allied ground report at (10,0): 335 enemy men ashore (men in contact), replacing the estimate held
+#109 D3 -         Japanese ground report at (10,0): 481 enemy men ashore (men in contact), replacing the estimate held
 #110 D3 -         land_unit:4 rested: fatigue 95
-#111 D3 -         Allied ground report at (20,0): 679 enemy men ashore, replacing the estimate held
-#112 D3 -         Japanese ground report at (20,0): 300 enemy men ashore, replacing the estimate held
+#111 D3 -         Allied ground report at (20,0): 679 enemy men ashore (men in contact), replacing the estimate held
+#112 D3 -         Japanese ground report at (20,0): 300 enemy men ashore (men in contact), replacing the estimate held
 #113 D3 -         land_unit:1 trained: 3 days counted at experience 0  <- order:1, #96
 #114 D3 -         land_unit:1 dug in: fieldworks 30
 #115 D3 -         land_unit:2 dug in: fieldworks 30
@@ -203,11 +203,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #136 D4 night     Allied men ashore at (30,0): 0 of 95 fed from base:6, 95 unfed
 #137 D4 night     land_unit:6 lost 4 men unfed at (30,0), 91 left ashore  <- #136
 #138 D4 -         land_unit:3 rested: fatigue 90
-#139 D4 -         Allied ground report at (10,0): 413 enemy men ashore, replacing the estimate held
-#140 D4 -         Japanese ground report at (10,0): 1337 enemy men ashore, replacing the estimate held
+#139 D4 -         Allied ground report at (10,0): 413 enemy men ashore (men in contact), replacing the estimate held
+#140 D4 -         Japanese ground report at (10,0): 1337 enemy men ashore (men in contact), replacing the estimate held
 #141 D4 -         land_unit:4 rested: fatigue 90
-#142 D4 -         Allied ground report at (20,0): 552 enemy men ashore, replacing the estimate held
-#143 D4 -         Japanese ground report at (20,0): 413 enemy men ashore, replacing the estimate held
+#142 D4 -         Allied ground report at (20,0): 552 enemy men ashore (men in contact), replacing the estimate held
+#143 D4 -         Japanese ground report at (20,0): 413 enemy men ashore (men in contact), replacing the estimate held
 #144 D4 -         land_unit:1 trained: 4 days counted at experience 0  <- order:1, #127
 #145 D4 -         land_unit:3 dug in: fieldworks 30
 #146 D4 -         land_unit:4 dug in: fieldworks 30
@@ -230,11 +230,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #163 D5 night     Allied men ashore at (30,0): 0 of 91 fed from base:6, 91 unfed
 #164 D5 night     land_unit:6 lost 4 men unfed at (30,0), 87 left ashore  <- #163
 #165 D5 -         land_unit:3 rested: fatigue 85
-#166 D5 -         Allied ground report at (10,0): 400 enemy men ashore, replacing the estimate held
-#167 D5 -         Japanese ground report at (10,0): 691 enemy men ashore, replacing the estimate held
+#166 D5 -         Allied ground report at (10,0): 400 enemy men ashore (men in contact), replacing the estimate held
+#167 D5 -         Japanese ground report at (10,0): 691 enemy men ashore (men in contact), replacing the estimate held
 #168 D5 -         land_unit:4 rested: fatigue 85
-#169 D5 -         Allied ground report at (20,0): 362 enemy men ashore, replacing the estimate held
-#170 D5 -         Japanese ground report at (20,0): 438 enemy men ashore, replacing the estimate held
+#169 D5 -         Allied ground report at (20,0): 362 enemy men ashore (men in contact), replacing the estimate held
+#170 D5 -         Japanese ground report at (20,0): 438 enemy men ashore (men in contact), replacing the estimate held
 #171 D5 -         land_unit:1 trained: 5 days counted at experience 0  <- order:1, #154
 #172 D5 -         base:1 at the end of the day: 4975 t of supply, 0 aircraft ready: not open
 #173 D5 -         base:2 at the end of the day: 4975.8 t of supply, 0 aircraft ready: not open
@@ -255,11 +255,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #188 D6 night     Allied men ashore at (30,0): 0 of 87 fed from base:6, 87 unfed
 #189 D6 night     land_unit:6 lost 4 men unfed at (30,0), 83 left ashore  <- #188
 #190 D6 -         land_unit:3 rested: fatigue 80
-#191 D6 -         Allied ground report at (10,0): 308 enemy men ashore, replacing the estimate held
-#192 D6 -         Japanese ground report at (10,0): 655 enemy men ashore, replacing the estimate held
+#191 D6 -         Allied ground report at (10,0): 308 enemy men ashore (men in contact), replacing the estimate held
+#192 D6 -         Japanese ground report at (10,0): 655 enemy men ashore (men in contact), replacing the estimate held
 #193 D6 -         land_unit:4 rested: fatigue 80
-#194 D6 -         Allied ground report at (20,0): 288 enemy men ashore, replacing the estimate held
-#195 D6 -         Japanese ground report at (20,0): 434 enemy men ashore, replacing the estimate held
+#194 D6 -         Allied ground report at (20,0): 288 enemy men ashore (men in contact), replacing the estimate held
+#195 D6 -         Japanese ground report at (20,0): 434 enemy men ashore (men in contact), replacing the estimate held
 #196 D6 -         land_unit:1 trained: 6 days counted at experience 0  <- order:1, #179
 #197 D6 -         base:1 at the end of the day: 4970 t of supply, 0 aircraft ready: not open
 #198 D6 -         base:2 at the end of the day: 4971 t of supply, 0 aircraft ready: not open
@@ -280,11 +280,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #213 D7 night     Allied men ashore at (30,0): 0 of 83 fed from base:6, 83 unfed
 #214 D7 night     land_unit:6 lost 4 men unfed at (30,0), 79 left ashore  <- #213
 #215 D7 -         land_unit:3 rested: fatigue 75
-#216 D7 -         Allied ground report at (10,0): 501 enemy men ashore, replacing the estimate held
-#217 D7 -         Japanese ground report at (10,0): 943 enemy men ashore, replacing the estimate held
+#216 D7 -         Allied ground report at (10,0): 501 enemy men ashore (men in contact), replacing the estimate held
+#217 D7 -         Japanese ground report at (10,0): 943 enemy men ashore (men in contact), replacing the estimate held
 #218 D7 -         land_unit:4 rested: fatigue 75
-#219 D7 -         Allied ground report at (20,0): 718 enemy men ashore, replacing the estimate held
-#220 D7 -         Japanese ground report at (20,0): 377 enemy men ashore, replacing the estimate held
+#219 D7 -         Allied ground report at (20,0): 718 enemy men ashore (men in contact), replacing the estimate held
+#220 D7 -         Japanese ground report at (20,0): 377 enemy men ashore (men in contact), replacing the estimate held
 #221 D7 -         land_unit:1 trained: 7 days counted at experience 0  <- order:1, #204
 #222 D7 -         base:1 at the end of the day: 4965 t of supply, 0 aircraft ready: not open
 #223 D7 -         base:2 at the end of the day: 4966.2 t of supply, 0 aircraft ready: not open
@@ -305,11 +305,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #238 D8 night     Allied men ashore at (30,0): 0 of 79 fed from base:6, 79 unfed
 #239 D8 night     land_unit:6 lost 3 men unfed at (30,0), 76 left ashore  <- #238
 #240 D8 -         land_unit:3 rested: fatigue 70
-#241 D8 -         Allied ground report at (10,0): 454 enemy men ashore, replacing the estimate held
-#242 D8 -         Japanese ground report at (10,0): 970 enemy men ashore, replacing the estimate held
+#241 D8 -         Allied ground report at (10,0): 454 enemy men ashore (men in contact), replacing the estimate held
+#242 D8 -         Japanese ground report at (10,0): 970 enemy men ashore (men in contact), replacing the estimate held
 #243 D8 -         land_unit:4 rested: fatigue 70
-#244 D8 -         Allied ground report at (20,0): 527 enemy men ashore, replacing the estimate held
-#245 D8 -         Japanese ground report at (20,0): 277 enemy men ashore, replacing the estimate held
+#244 D8 -         Allied ground report at (20,0): 527 enemy men ashore (men in contact), replacing the estimate held
+#245 D8 -         Japanese ground report at (20,0): 277 enemy men ashore (men in contact), replacing the estimate held
 #246 D8 -         land_unit:1 trained: 8 days counted at experience 0  <- order:1, #229
 #247 D8 -         base:1 at the end of the day: 4960 t of supply, 0 aircraft ready: not open
 #248 D8 -         base:2 at the end of the day: 4961.4 t of supply, 0 aircraft ready: not open
@@ -330,11 +330,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #263 D9 night     Allied men ashore at (30,0): 0 of 76 fed from base:6, 76 unfed
 #264 D9 night     land_unit:6 lost 3 men unfed at (30,0), 73 left ashore  <- #263
 #265 D9 -         land_unit:3 rested: fatigue 65
-#266 D9 -         Allied ground report at (10,0): 338 enemy men ashore, replacing the estimate held
-#267 D9 -         Japanese ground report at (10,0): 1086 enemy men ashore, replacing the estimate held
+#266 D9 -         Allied ground report at (10,0): 338 enemy men ashore (men in contact), replacing the estimate held
+#267 D9 -         Japanese ground report at (10,0): 1086 enemy men ashore (men in contact), replacing the estimate held
 #268 D9 -         land_unit:4 rested: fatigue 65
-#269 D9 -         Allied ground report at (20,0): 304 enemy men ashore, replacing the estimate held
-#270 D9 -         Japanese ground report at (20,0): 401 enemy men ashore, replacing the estimate held
+#269 D9 -         Allied ground report at (20,0): 304 enemy men ashore (men in contact), replacing the estimate held
+#270 D9 -         Japanese ground report at (20,0): 401 enemy men ashore (men in contact), replacing the estimate held
 #271 D9 -         land_unit:1 trained: 9 days counted at experience 0  <- order:1, #254
 #272 D9 -         base:1 at the end of the day: 4955 t of supply, 0 aircraft ready: not open
 #273 D9 -         base:2 at the end of the day: 4956.6 t of supply, 0 aircraft ready: not open
@@ -355,11 +355,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #288 D10 night     Allied men ashore at (30,0): 0 of 73 fed from base:6, 73 unfed
 #289 D10 night     land_unit:6 lost 3 men unfed at (30,0), 70 left ashore  <- #288
 #290 D10 -         land_unit:3 rested: fatigue 60
-#291 D10 -         Allied ground report at (10,0): 213 enemy men ashore, replacing the estimate held
-#292 D10 -         Japanese ground report at (10,0): 1293 enemy men ashore, replacing the estimate held
+#291 D10 -         Allied ground report at (10,0): 213 enemy men ashore (men in contact), replacing the estimate held
+#292 D10 -         Japanese ground report at (10,0): 1293 enemy men ashore (men in contact), replacing the estimate held
 #293 D10 -         land_unit:4 rested: fatigue 60
-#294 D10 -         Allied ground report at (20,0): 493 enemy men ashore, replacing the estimate held
-#295 D10 -         Japanese ground report at (20,0): 209 enemy men ashore, replacing the estimate held
+#294 D10 -         Allied ground report at (20,0): 493 enemy men ashore (men in contact), replacing the estimate held
+#295 D10 -         Japanese ground report at (20,0): 209 enemy men ashore (men in contact), replacing the estimate held
 #296 D10 -         land_unit:1 trained: 10 days counted at experience 0  <- order:1, #279
 #297 D10 -         base:1 at the end of the day: 4950 t of supply, 0 aircraft ready: not open
 #298 D10 -         base:2 at the end of the day: 4951.8 t of supply, 0 aircraft ready: not open
@@ -380,11 +380,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #313 D11 night     Allied men ashore at (30,0): 0 of 70 fed from base:6, 70 unfed
 #314 D11 night     land_unit:6 lost 3 men unfed at (30,0), 67 left ashore  <- #313
 #315 D11 -         land_unit:3 rested: fatigue 55
-#316 D11 -         Allied ground report at (10,0): 435 enemy men ashore, replacing the estimate held
-#317 D11 -         Japanese ground report at (10,0): 1337 enemy men ashore, replacing the estimate held
+#316 D11 -         Allied ground report at (10,0): 435 enemy men ashore (men in contact), replacing the estimate held
+#317 D11 -         Japanese ground report at (10,0): 1337 enemy men ashore (men in contact), replacing the estimate held
 #318 D11 -         land_unit:4 rested: fatigue 55
-#319 D11 -         Allied ground report at (20,0): 631 enemy men ashore, replacing the estimate held
-#320 D11 -         Japanese ground report at (20,0): 326 enemy men ashore, replacing the estimate held
+#319 D11 -         Allied ground report at (20,0): 631 enemy men ashore (men in contact), replacing the estimate held
+#320 D11 -         Japanese ground report at (20,0): 326 enemy men ashore (men in contact), replacing the estimate held
 #321 D11 -         land_unit:1 trained: 11 days counted at experience 0  <- order:1, #304
 #322 D11 -         base:1 at the end of the day: 4945 t of supply, 0 aircraft ready: not open
 #323 D11 -         base:2 at the end of the day: 4947 t of supply, 0 aircraft ready: not open
@@ -405,11 +405,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #338 D12 night     Allied men ashore at (30,0): 0 of 67 fed from base:6, 67 unfed
 #339 D12 night     land_unit:6 lost 3 men unfed at (30,0), 64 left ashore  <- #338
 #340 D12 -         land_unit:3 rested: fatigue 50
-#341 D12 -         Allied ground report at (10,0): 265 enemy men ashore, replacing the estimate held
-#342 D12 -         Japanese ground report at (10,0): 1041 enemy men ashore, replacing the estimate held
+#341 D12 -         Allied ground report at (10,0): 265 enemy men ashore (men in contact), replacing the estimate held
+#342 D12 -         Japanese ground report at (10,0): 1041 enemy men ashore (men in contact), replacing the estimate held
 #343 D12 -         land_unit:4 rested: fatigue 50
-#344 D12 -         Allied ground report at (20,0): 410 enemy men ashore, replacing the estimate held
-#345 D12 -         Japanese ground report at (20,0): 469 enemy men ashore, replacing the estimate held
+#344 D12 -         Allied ground report at (20,0): 410 enemy men ashore (men in contact), replacing the estimate held
+#345 D12 -         Japanese ground report at (20,0): 469 enemy men ashore (men in contact), replacing the estimate held
 #346 D12 -         land_unit:1 trained: 12 days counted at experience 0  <- order:1, #329
 #347 D12 -         base:1 at the end of the day: 4940 t of supply, 0 aircraft ready: not open
 #348 D12 -         base:2 at the end of the day: 4942.2 t of supply, 0 aircraft ready: not open
@@ -430,11 +430,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #363 D13 night     Allied men ashore at (30,0): 0 of 64 fed from base:6, 64 unfed
 #364 D13 night     land_unit:6 lost 3 men unfed at (30,0), 61 left ashore  <- #363
 #365 D13 -         land_unit:3 rested: fatigue 45
-#366 D13 -         Allied ground report at (10,0): 228 enemy men ashore, replacing the estimate held
-#367 D13 -         Japanese ground report at (10,0): 590 enemy men ashore, replacing the estimate held
+#366 D13 -         Allied ground report at (10,0): 228 enemy men ashore (men in contact), replacing the estimate held
+#367 D13 -         Japanese ground report at (10,0): 590 enemy men ashore (men in contact), replacing the estimate held
 #368 D13 -         land_unit:4 rested: fatigue 45
-#369 D13 -         Allied ground report at (20,0): 390 enemy men ashore, replacing the estimate held
-#370 D13 -         Japanese ground report at (20,0): 444 enemy men ashore, replacing the estimate held
+#369 D13 -         Allied ground report at (20,0): 390 enemy men ashore (men in contact), replacing the estimate held
+#370 D13 -         Japanese ground report at (20,0): 444 enemy men ashore (men in contact), replacing the estimate held
 #371 D13 -         land_unit:1 trained: 13 days counted at experience 0  <- order:1, #354
 #372 D13 -         base:1 at the end of the day: 4935 t of supply, 0 aircraft ready: not open
 #373 D13 -         base:2 at the end of the day: 4937.4 t of supply, 0 aircraft ready: not open
@@ -455,11 +455,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #388 D14 night     Allied men ashore at (30,0): 0 of 61 fed from base:6, 61 unfed
 #389 D14 night     land_unit:6 lost 3 men unfed at (30,0), 58 left ashore  <- #388
 #390 D14 -         land_unit:3 rested: fatigue 40
-#391 D14 -         Allied ground report at (10,0): 349 enemy men ashore, replacing the estimate held
-#392 D14 -         Japanese ground report at (10,0): 980 enemy men ashore, replacing the estimate held
+#391 D14 -         Allied ground report at (10,0): 349 enemy men ashore (men in contact), replacing the estimate held
+#392 D14 -         Japanese ground report at (10,0): 980 enemy men ashore (men in contact), replacing the estimate held
 #393 D14 -         land_unit:4 rested: fatigue 40
-#394 D14 -         Allied ground report at (20,0): 597 enemy men ashore, replacing the estimate held
-#395 D14 -         Japanese ground report at (20,0): 247 enemy men ashore, replacing the estimate held
+#394 D14 -         Allied ground report at (20,0): 597 enemy men ashore (men in contact), replacing the estimate held
+#395 D14 -         Japanese ground report at (20,0): 247 enemy men ashore (men in contact), replacing the estimate held
 #396 D14 -         land_unit:1 trained: 14 days counted at experience 0  <- order:1, #379
 #397 D14 -         base:1 at the end of the day: 4930 t of supply, 0 aircraft ready: not open
 #398 D14 -         base:2 at the end of the day: 4932.6 t of supply, 0 aircraft ready: not open
@@ -480,11 +480,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #413 D15 night     Allied men ashore at (30,0): 0 of 58 fed from base:6, 58 unfed
 #414 D15 night     land_unit:6 lost 2 men unfed at (30,0), 56 left ashore  <- #413
 #415 D15 -         land_unit:3 rested: fatigue 35
-#416 D15 -         Allied ground report at (10,0): 489 enemy men ashore, replacing the estimate held
-#417 D15 -         Japanese ground report at (10,0): 1356 enemy men ashore, replacing the estimate held
+#416 D15 -         Allied ground report at (10,0): 489 enemy men ashore (men in contact), replacing the estimate held
+#417 D15 -         Japanese ground report at (10,0): 1356 enemy men ashore (men in contact), replacing the estimate held
 #418 D15 -         land_unit:4 rested: fatigue 35
-#419 D15 -         Allied ground report at (20,0): 461 enemy men ashore, replacing the estimate held
-#420 D15 -         Japanese ground report at (20,0): 387 enemy men ashore, replacing the estimate held
+#419 D15 -         Allied ground report at (20,0): 461 enemy men ashore (men in contact), replacing the estimate held
+#420 D15 -         Japanese ground report at (20,0): 387 enemy men ashore (men in contact), replacing the estimate held
 #421 D15 -         land_unit:1 trained: 15 days counted at experience 0  <- order:1, #404
 #422 D15 -         base:1 at the end of the day: 4925 t of supply, 0 aircraft ready: not open
 #423 D15 -         base:2 at the end of the day: 4927.8 t of supply, 0 aircraft ready: not open
@@ -505,11 +505,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #438 D16 night     Allied men ashore at (30,0): 0 of 56 fed from base:6, 56 unfed
 #439 D16 night     land_unit:6 lost 2 men unfed at (30,0), 54 left ashore  <- #438
 #440 D16 -         land_unit:3 rested: fatigue 30
-#441 D16 -         Allied ground report at (10,0): 192 enemy men ashore, replacing the estimate held
-#442 D16 -         Japanese ground report at (10,0): 524 enemy men ashore, replacing the estimate held
+#441 D16 -         Allied ground report at (10,0): 192 enemy men ashore (men in contact), replacing the estimate held
+#442 D16 -         Japanese ground report at (10,0): 524 enemy men ashore (men in contact), replacing the estimate held
 #443 D16 -         land_unit:4 rested: fatigue 30
-#444 D16 -         Allied ground report at (20,0): 412 enemy men ashore, replacing the estimate held
-#445 D16 -         Japanese ground report at (20,0): 436 enemy men ashore, replacing the estimate held
+#444 D16 -         Allied ground report at (20,0): 412 enemy men ashore (men in contact), replacing the estimate held
+#445 D16 -         Japanese ground report at (20,0): 436 enemy men ashore (men in contact), replacing the estimate held
 #446 D16 -         land_unit:1 trained: 16 days counted at experience 0  <- order:1, #429
 #447 D16 -         base:1 at the end of the day: 4920 t of supply, 0 aircraft ready: not open
 #448 D16 -         base:2 at the end of the day: 4923 t of supply, 0 aircraft ready: not open
@@ -530,11 +530,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #463 D17 night     Allied men ashore at (30,0): 0 of 54 fed from base:6, 54 unfed
 #464 D17 night     land_unit:6 lost 2 men unfed at (30,0), 52 left ashore  <- #463
 #465 D17 -         land_unit:3 rested: fatigue 25
-#466 D17 -         Allied ground report at (10,0): 410 enemy men ashore, replacing the estimate held
-#467 D17 -         Japanese ground report at (10,0): 1058 enemy men ashore, replacing the estimate held
+#466 D17 -         Allied ground report at (10,0): 410 enemy men ashore (men in contact), replacing the estimate held
+#467 D17 -         Japanese ground report at (10,0): 1058 enemy men ashore (men in contact), replacing the estimate held
 #468 D17 -         land_unit:4 rested: fatigue 25
-#469 D17 -         Allied ground report at (20,0): 648 enemy men ashore, replacing the estimate held
-#470 D17 -         Japanese ground report at (20,0): 211 enemy men ashore, replacing the estimate held
+#469 D17 -         Allied ground report at (20,0): 648 enemy men ashore (men in contact), replacing the estimate held
+#470 D17 -         Japanese ground report at (20,0): 211 enemy men ashore (men in contact), replacing the estimate held
 #471 D17 -         land_unit:1 trained: 17 days counted at experience 0  <- order:1, #454
 #472 D17 -         base:1 at the end of the day: 4915 t of supply, 0 aircraft ready: not open
 #473 D17 -         base:2 at the end of the day: 4918.2 t of supply, 0 aircraft ready: not open
@@ -555,11 +555,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #488 D18 night     Allied men ashore at (30,0): 0 of 52 fed from base:6, 52 unfed
 #489 D18 night     land_unit:6 lost 2 men unfed at (30,0), 50 left ashore  <- #488
 #490 D18 -         land_unit:3 rested: fatigue 20
-#491 D18 -         Allied ground report at (10,0): 291 enemy men ashore, replacing the estimate held
-#492 D18 -         Japanese ground report at (10,0): 768 enemy men ashore, replacing the estimate held
+#491 D18 -         Allied ground report at (10,0): 291 enemy men ashore (men in contact), replacing the estimate held
+#492 D18 -         Japanese ground report at (10,0): 768 enemy men ashore (men in contact), replacing the estimate held
 #493 D18 -         land_unit:4 rested: fatigue 20
-#494 D18 -         Allied ground report at (20,0): 274 enemy men ashore, replacing the estimate held
-#495 D18 -         Japanese ground report at (20,0): 246 enemy men ashore, replacing the estimate held
+#494 D18 -         Allied ground report at (20,0): 274 enemy men ashore (men in contact), replacing the estimate held
+#495 D18 -         Japanese ground report at (20,0): 246 enemy men ashore (men in contact), replacing the estimate held
 #496 D18 -         land_unit:1 trained: 18 days counted at experience 0  <- order:1, #479
 #497 D18 -         base:1 at the end of the day: 4910 t of supply, 0 aircraft ready: not open
 #498 D18 -         base:2 at the end of the day: 4913.4 t of supply, 0 aircraft ready: not open
@@ -580,11 +580,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #513 D19 night     Allied men ashore at (30,0): 0 of 50 fed from base:6, 50 unfed
 #514 D19 night     land_unit:6 lost 2 men unfed at (30,0), 48 left ashore  <- #513
 #515 D19 -         land_unit:3 rested: fatigue 15
-#516 D19 -         Allied ground report at (10,0): 286 enemy men ashore, replacing the estimate held
-#517 D19 -         Japanese ground report at (10,0): 823 enemy men ashore, replacing the estimate held
+#516 D19 -         Allied ground report at (10,0): 286 enemy men ashore (men in contact), replacing the estimate held
+#517 D19 -         Japanese ground report at (10,0): 823 enemy men ashore (men in contact), replacing the estimate held
 #518 D19 -         land_unit:4 rested: fatigue 15
-#519 D19 -         Allied ground report at (20,0): 701 enemy men ashore, replacing the estimate held
-#520 D19 -         Japanese ground report at (20,0): 395 enemy men ashore, replacing the estimate held
+#519 D19 -         Allied ground report at (20,0): 701 enemy men ashore (men in contact), replacing the estimate held
+#520 D19 -         Japanese ground report at (20,0): 395 enemy men ashore (men in contact), replacing the estimate held
 #521 D19 -         land_unit:1 trained: 19 days counted at experience 0  <- order:1, #504
 #522 D19 -         base:1 at the end of the day: 4905 t of supply, 0 aircraft ready: not open
 #523 D19 -         base:2 at the end of the day: 4908.6 t of supply, 0 aircraft ready: not open
@@ -605,11 +605,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #538 D20 night     Allied men ashore at (30,0): 0 of 48 fed from base:6, 48 unfed
 #539 D20 night     land_unit:6 lost 2 men unfed at (30,0), 46 left ashore  <- #538
 #540 D20 -         land_unit:3 rested: fatigue 10
-#541 D20 -         Allied ground report at (10,0): 224 enemy men ashore, replacing the estimate held
-#542 D20 -         Japanese ground report at (10,0): 933 enemy men ashore, replacing the estimate held
+#541 D20 -         Allied ground report at (10,0): 224 enemy men ashore (men in contact), replacing the estimate held
+#542 D20 -         Japanese ground report at (10,0): 933 enemy men ashore (men in contact), replacing the estimate held
 #543 D20 -         land_unit:4 rested: fatigue 10
-#544 D20 -         Allied ground report at (20,0): 263 enemy men ashore, replacing the estimate held
-#545 D20 -         Japanese ground report at (20,0): 441 enemy men ashore, replacing the estimate held
+#544 D20 -         Allied ground report at (20,0): 263 enemy men ashore (men in contact), replacing the estimate held
+#545 D20 -         Japanese ground report at (20,0): 441 enemy men ashore (men in contact), replacing the estimate held
 #546 D20 -         land_unit:1 trained: 20 days counted at experience 0  <- order:1, #529
 #547 D20 -         base:1 at the end of the day: 4900 t of supply, 0 aircraft ready: not open
 #548 D20 -         base:2 at the end of the day: 4903.8 t of supply, 0 aircraft ready: not open
@@ -630,11 +630,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #563 D21 night     Allied men ashore at (30,0): 0 of 46 fed from base:6, 46 unfed
 #564 D21 night     land_unit:6 lost 2 men unfed at (30,0), 44 left ashore  <- #563
 #565 D21 -         land_unit:3 rested: fatigue 5
-#566 D21 -         Allied ground report at (10,0): 302 enemy men ashore, replacing the estimate held
-#567 D21 -         Japanese ground report at (10,0): 1362 enemy men ashore, replacing the estimate held
+#566 D21 -         Allied ground report at (10,0): 302 enemy men ashore (men in contact), replacing the estimate held
+#567 D21 -         Japanese ground report at (10,0): 1362 enemy men ashore (men in contact), replacing the estimate held
 #568 D21 -         land_unit:4 rested: fatigue 5
-#569 D21 -         Allied ground report at (20,0): 531 enemy men ashore, replacing the estimate held
-#570 D21 -         Japanese ground report at (20,0): 370 enemy men ashore, replacing the estimate held
+#569 D21 -         Allied ground report at (20,0): 531 enemy men ashore (men in contact), replacing the estimate held
+#570 D21 -         Japanese ground report at (20,0): 370 enemy men ashore (men in contact), replacing the estimate held
 #571 D21 -         land_unit:1 trained: 21 days counted at experience 0  <- order:1, #554
 #572 D21 -         base:1 at the end of the day: 4895 t of supply, 0 aircraft ready: not open
 #573 D21 -         base:2 at the end of the day: 4899 t of supply, 0 aircraft ready: not open
@@ -655,11 +655,11 @@ day  62  hash 5ca43e5b235796f7  23 events
 #588 D22 night     Allied men ashore at (30,0): 0 of 44 fed from base:6, 44 unfed
 #589 D22 night     land_unit:6 lost 2 men unfed at (30,0), 42 left ashore  <- #588
 #590 D22 -         land_unit:3 rested: fatigue 0
-#591 D22 -         Allied ground report at (10,0): 442 enemy men ashore, replacing the estimate held
-#592 D22 -         Japanese ground report at (10,0): 1327 enemy men ashore, replacing the estimate held
+#591 D22 -         Allied ground report at (10,0): 442 enemy men ashore (men in contact), replacing the estimate held
+#592 D22 -         Japanese ground report at (10,0): 1327 enemy men ashore (men in contact), replacing the estimate held
 #593 D22 -         land_unit:4 rested: fatigue 0
-#594 D22 -         Allied ground report at (20,0): 652 enemy men ashore, replacing the estimate held
-#595 D22 -         Japanese ground report at (20,0): 357 enemy men ashore, replacing the estimate held
+#594 D22 -         Allied ground report at (20,0): 652 enemy men ashore (men in contact), replacing the estimate held
+#595 D22 -         Japanese ground report at (20,0): 357 enemy men ashore (men in contact), replacing the estimate held
 #596 D22 -         land_unit:1 trained: 22 days counted at experience 0  <- order:1, #579
 #597 D22 -         base:1 at the end of the day: 4890 t of supply, 0 aircraft ready: not open
 #598 D22 -         base:2 at the end of the day: 4894.2 t of supply, 0 aircraft ready: not open
@@ -679,10 +679,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #612 D23 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #611
 #613 D23 night     Allied men ashore at (30,0): 0 of 42 fed from base:6, 42 unfed
 #614 D23 night     land_unit:6 lost 2 men unfed at (30,0), 40 left ashore  <- #613
-#615 D23 -         Allied ground report at (10,0): 400 enemy men ashore, replacing the estimate held
-#616 D23 -         Japanese ground report at (10,0): 1356 enemy men ashore, replacing the estimate held
-#617 D23 -         Allied ground report at (20,0): 364 enemy men ashore, replacing the estimate held
-#618 D23 -         Japanese ground report at (20,0): 417 enemy men ashore, replacing the estimate held
+#615 D23 -         Allied ground report at (10,0): 400 enemy men ashore (men in contact), replacing the estimate held
+#616 D23 -         Japanese ground report at (10,0): 1356 enemy men ashore (men in contact), replacing the estimate held
+#617 D23 -         Allied ground report at (20,0): 364 enemy men ashore (men in contact), replacing the estimate held
+#618 D23 -         Japanese ground report at (20,0): 417 enemy men ashore (men in contact), replacing the estimate held
 #619 D23 -         land_unit:1 trained: 23 days counted at experience 0  <- order:1, #604
 #620 D23 -         base:1 at the end of the day: 4885 t of supply, 0 aircraft ready: not open
 #621 D23 -         base:2 at the end of the day: 4889.4 t of supply, 0 aircraft ready: not open
@@ -702,10 +702,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #635 D24 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #634
 #636 D24 night     Allied men ashore at (30,0): 0 of 40 fed from base:6, 40 unfed
 #637 D24 night     land_unit:6 lost 2 men unfed at (30,0), 38 left ashore  <- #636
-#638 D24 -         Allied ground report at (10,0): 521 enemy men ashore, replacing the estimate held
-#639 D24 -         Japanese ground report at (10,0): 926 enemy men ashore, replacing the estimate held
-#640 D24 -         Allied ground report at (20,0): 623 enemy men ashore, replacing the estimate held
-#641 D24 -         Japanese ground report at (20,0): 339 enemy men ashore, replacing the estimate held
+#638 D24 -         Allied ground report at (10,0): 521 enemy men ashore (men in contact), replacing the estimate held
+#639 D24 -         Japanese ground report at (10,0): 926 enemy men ashore (men in contact), replacing the estimate held
+#640 D24 -         Allied ground report at (20,0): 623 enemy men ashore (men in contact), replacing the estimate held
+#641 D24 -         Japanese ground report at (20,0): 339 enemy men ashore (men in contact), replacing the estimate held
 #642 D24 -         land_unit:1 trained: 24 days counted at experience 0  <- order:1, #627
 #643 D24 -         base:1 at the end of the day: 4880 t of supply, 0 aircraft ready: not open
 #644 D24 -         base:2 at the end of the day: 4884.6 t of supply, 0 aircraft ready: not open
@@ -725,10 +725,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #658 D25 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #657
 #659 D25 night     Allied men ashore at (30,0): 0 of 38 fed from base:6, 38 unfed
 #660 D25 night     land_unit:6 lost 1 men unfed at (30,0), 37 left ashore  <- #659
-#661 D25 -         Allied ground report at (10,0): 192 enemy men ashore, replacing the estimate held
-#662 D25 -         Japanese ground report at (10,0): 1081 enemy men ashore, replacing the estimate held
-#663 D25 -         Allied ground report at (20,0): 590 enemy men ashore, replacing the estimate held
-#664 D25 -         Japanese ground report at (20,0): 270 enemy men ashore, replacing the estimate held
+#661 D25 -         Allied ground report at (10,0): 192 enemy men ashore (men in contact), replacing the estimate held
+#662 D25 -         Japanese ground report at (10,0): 1081 enemy men ashore (men in contact), replacing the estimate held
+#663 D25 -         Allied ground report at (20,0): 590 enemy men ashore (men in contact), replacing the estimate held
+#664 D25 -         Japanese ground report at (20,0): 270 enemy men ashore (men in contact), replacing the estimate held
 #665 D25 -         land_unit:1 trained: 25 days counted at experience 0  <- order:1, #650
 #666 D25 -         base:1 at the end of the day: 4875 t of supply, 0 aircraft ready: not open
 #667 D25 -         base:2 at the end of the day: 4879.8 t of supply, 0 aircraft ready: not open
@@ -748,10 +748,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #681 D26 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #680
 #682 D26 night     Allied men ashore at (30,0): 0 of 37 fed from base:6, 37 unfed
 #683 D26 night     land_unit:6 lost 1 men unfed at (30,0), 36 left ashore  <- #682
-#684 D26 -         Allied ground report at (10,0): 181 enemy men ashore, replacing the estimate held
-#685 D26 -         Japanese ground report at (10,0): 1269 enemy men ashore, replacing the estimate held
-#686 D26 -         Allied ground report at (20,0): 733 enemy men ashore, replacing the estimate held
-#687 D26 -         Japanese ground report at (20,0): 335 enemy men ashore, replacing the estimate held
+#684 D26 -         Allied ground report at (10,0): 181 enemy men ashore (men in contact), replacing the estimate held
+#685 D26 -         Japanese ground report at (10,0): 1269 enemy men ashore (men in contact), replacing the estimate held
+#686 D26 -         Allied ground report at (20,0): 733 enemy men ashore (men in contact), replacing the estimate held
+#687 D26 -         Japanese ground report at (20,0): 335 enemy men ashore (men in contact), replacing the estimate held
 #688 D26 -         land_unit:1 trained: 26 days counted at experience 0  <- order:1, #673
 #689 D26 -         base:1 at the end of the day: 4870 t of supply, 0 aircraft ready: not open
 #690 D26 -         base:2 at the end of the day: 4875 t of supply, 0 aircraft ready: not open
@@ -771,10 +771,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #704 D27 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #703
 #705 D27 night     Allied men ashore at (30,0): 0 of 36 fed from base:6, 36 unfed
 #706 D27 night     land_unit:6 lost 1 men unfed at (30,0), 35 left ashore  <- #705
-#707 D27 -         Allied ground report at (10,0): 399 enemy men ashore, replacing the estimate held
-#708 D27 -         Japanese ground report at (10,0): 732 enemy men ashore, replacing the estimate held
-#709 D27 -         Allied ground report at (20,0): 429 enemy men ashore, replacing the estimate held
-#710 D27 -         Japanese ground report at (20,0): 242 enemy men ashore, replacing the estimate held
+#707 D27 -         Allied ground report at (10,0): 399 enemy men ashore (men in contact), replacing the estimate held
+#708 D27 -         Japanese ground report at (10,0): 732 enemy men ashore (men in contact), replacing the estimate held
+#709 D27 -         Allied ground report at (20,0): 429 enemy men ashore (men in contact), replacing the estimate held
+#710 D27 -         Japanese ground report at (20,0): 242 enemy men ashore (men in contact), replacing the estimate held
 #711 D27 -         land_unit:1 trained: 27 days counted at experience 0  <- order:1, #696
 #712 D27 -         base:1 at the end of the day: 4865 t of supply, 0 aircraft ready: not open
 #713 D27 -         base:2 at the end of the day: 4870.2 t of supply, 0 aircraft ready: not open
@@ -794,10 +794,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #727 D28 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #726
 #728 D28 night     Allied men ashore at (30,0): 0 of 35 fed from base:6, 35 unfed
 #729 D28 night     land_unit:6 lost 1 men unfed at (30,0), 34 left ashore  <- #728
-#730 D28 -         Allied ground report at (10,0): 285 enemy men ashore, replacing the estimate held
-#731 D28 -         Japanese ground report at (10,0): 1397 enemy men ashore, replacing the estimate held
-#732 D28 -         Allied ground report at (20,0): 514 enemy men ashore, replacing the estimate held
-#733 D28 -         Japanese ground report at (20,0): 226 enemy men ashore, replacing the estimate held
+#730 D28 -         Allied ground report at (10,0): 285 enemy men ashore (men in contact), replacing the estimate held
+#731 D28 -         Japanese ground report at (10,0): 1397 enemy men ashore (men in contact), replacing the estimate held
+#732 D28 -         Allied ground report at (20,0): 514 enemy men ashore (men in contact), replacing the estimate held
+#733 D28 -         Japanese ground report at (20,0): 226 enemy men ashore (men in contact), replacing the estimate held
 #734 D28 -         land_unit:1 trained: 28 days counted at experience 0  <- order:1, #719
 #735 D28 -         base:1 at the end of the day: 4860 t of supply, 0 aircraft ready: not open
 #736 D28 -         base:2 at the end of the day: 4865.4 t of supply, 0 aircraft ready: not open
@@ -817,10 +817,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #750 D29 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #749
 #751 D29 night     Allied men ashore at (30,0): 0 of 34 fed from base:6, 34 unfed
 #752 D29 night     land_unit:6 lost 1 men unfed at (30,0), 33 left ashore  <- #751
-#753 D29 -         Allied ground report at (10,0): 190 enemy men ashore, replacing the estimate held
-#754 D29 -         Japanese ground report at (10,0): 984 enemy men ashore, replacing the estimate held
-#755 D29 -         Allied ground report at (20,0): 388 enemy men ashore, replacing the estimate held
-#756 D29 -         Japanese ground report at (20,0): 350 enemy men ashore, replacing the estimate held
+#753 D29 -         Allied ground report at (10,0): 190 enemy men ashore (men in contact), replacing the estimate held
+#754 D29 -         Japanese ground report at (10,0): 984 enemy men ashore (men in contact), replacing the estimate held
+#755 D29 -         Allied ground report at (20,0): 388 enemy men ashore (men in contact), replacing the estimate held
+#756 D29 -         Japanese ground report at (20,0): 350 enemy men ashore (men in contact), replacing the estimate held
 #757 D29 -         land_unit:1 trained: 29 days counted at experience 0  <- order:1, #742
 #758 D29 -         base:1 at the end of the day: 4855 t of supply, 0 aircraft ready: not open
 #759 D29 -         base:2 at the end of the day: 4860.6 t of supply, 0 aircraft ready: not open
@@ -840,10 +840,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #773 D30 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #772
 #774 D30 night     Allied men ashore at (30,0): 0 of 33 fed from base:6, 33 unfed
 #775 D30 night     land_unit:6 lost 1 men unfed at (30,0), 32 left ashore  <- #774
-#776 D30 -         Allied ground report at (10,0): 455 enemy men ashore, replacing the estimate held
-#777 D30 -         Japanese ground report at (10,0): 1109 enemy men ashore, replacing the estimate held
-#778 D30 -         Allied ground report at (20,0): 578 enemy men ashore, replacing the estimate held
-#779 D30 -         Japanese ground report at (20,0): 221 enemy men ashore, replacing the estimate held
+#776 D30 -         Allied ground report at (10,0): 455 enemy men ashore (men in contact), replacing the estimate held
+#777 D30 -         Japanese ground report at (10,0): 1109 enemy men ashore (men in contact), replacing the estimate held
+#778 D30 -         Allied ground report at (20,0): 578 enemy men ashore (men in contact), replacing the estimate held
+#779 D30 -         Japanese ground report at (20,0): 221 enemy men ashore (men in contact), replacing the estimate held
 #780 D30 -         land_unit:1 trained: 30 days counted at experience 0  <- order:1, #765
 #781 D30 -         land_unit:1 rose to experience 1 by training  <- #780
 #782 D30 -         base:1 at the end of the day: 4850 t of supply, 0 aircraft ready: not open
@@ -864,10 +864,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #797 D31 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #796
 #798 D31 night     Allied men ashore at (30,0): 0 of 32 fed from base:6, 32 unfed
 #799 D31 night     land_unit:6 lost 1 men unfed at (30,0), 31 left ashore  <- #798
-#800 D31 -         Allied ground report at (10,0): 259 enemy men ashore, replacing the estimate held
-#801 D31 -         Japanese ground report at (10,0): 1255 enemy men ashore, replacing the estimate held
-#802 D31 -         Allied ground report at (20,0): 658 enemy men ashore, replacing the estimate held
-#803 D31 -         Japanese ground report at (20,0): 340 enemy men ashore, replacing the estimate held
+#800 D31 -         Allied ground report at (10,0): 259 enemy men ashore (men in contact), replacing the estimate held
+#801 D31 -         Japanese ground report at (10,0): 1255 enemy men ashore (men in contact), replacing the estimate held
+#802 D31 -         Allied ground report at (20,0): 658 enemy men ashore (men in contact), replacing the estimate held
+#803 D31 -         Japanese ground report at (20,0): 340 enemy men ashore (men in contact), replacing the estimate held
 #804 D31 -         land_unit:1 trained: 1 day counted at experience 1  <- order:1, #789
 #805 D31 -         base:1 at the end of the day: 4845 t of supply, 0 aircraft ready: not open
 #806 D31 -         base:2 at the end of the day: 4851 t of supply, 0 aircraft ready: not open
@@ -887,10 +887,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #820 D32 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #819
 #821 D32 night     Allied men ashore at (30,0): 0 of 31 fed from base:6, 31 unfed
 #822 D32 night     land_unit:6 lost 1 men unfed at (30,0), 30 left ashore  <- #821
-#823 D32 -         Allied ground report at (10,0): 180 enemy men ashore, replacing the estimate held
-#824 D32 -         Japanese ground report at (10,0): 1214 enemy men ashore, replacing the estimate held
-#825 D32 -         Allied ground report at (20,0): 500 enemy men ashore, replacing the estimate held
-#826 D32 -         Japanese ground report at (20,0): 362 enemy men ashore, replacing the estimate held
+#823 D32 -         Allied ground report at (10,0): 180 enemy men ashore (men in contact), replacing the estimate held
+#824 D32 -         Japanese ground report at (10,0): 1214 enemy men ashore (men in contact), replacing the estimate held
+#825 D32 -         Allied ground report at (20,0): 500 enemy men ashore (men in contact), replacing the estimate held
+#826 D32 -         Japanese ground report at (20,0): 362 enemy men ashore (men in contact), replacing the estimate held
 #827 D32 -         land_unit:1 trained: 2 days counted at experience 1  <- order:1, #812
 #828 D32 -         base:1 at the end of the day: 4840 t of supply, 0 aircraft ready: not open
 #829 D32 -         base:2 at the end of the day: 4846.2 t of supply, 0 aircraft ready: not open
@@ -910,10 +910,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #843 D33 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #842
 #844 D33 night     Allied men ashore at (30,0): 0 of 30 fed from base:6, 30 unfed
 #845 D33 night     land_unit:6 lost 1 men unfed at (30,0), 29 left ashore  <- #844
-#846 D33 -         Allied ground report at (10,0): 232 enemy men ashore, replacing the estimate held
-#847 D33 -         Japanese ground report at (10,0): 1301 enemy men ashore, replacing the estimate held
-#848 D33 -         Allied ground report at (20,0): 705 enemy men ashore, replacing the estimate held
-#849 D33 -         Japanese ground report at (20,0): 419 enemy men ashore, replacing the estimate held
+#846 D33 -         Allied ground report at (10,0): 232 enemy men ashore (men in contact), replacing the estimate held
+#847 D33 -         Japanese ground report at (10,0): 1301 enemy men ashore (men in contact), replacing the estimate held
+#848 D33 -         Allied ground report at (20,0): 705 enemy men ashore (men in contact), replacing the estimate held
+#849 D33 -         Japanese ground report at (20,0): 419 enemy men ashore (men in contact), replacing the estimate held
 #850 D33 -         land_unit:1 trained: 3 days counted at experience 1  <- order:1, #835
 #851 D33 -         base:1 at the end of the day: 4835 t of supply, 0 aircraft ready: not open
 #852 D33 -         base:2 at the end of the day: 4841.4 t of supply, 0 aircraft ready: not open
@@ -933,10 +933,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #866 D34 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #865
 #867 D34 night     Allied men ashore at (30,0): 0 of 29 fed from base:6, 29 unfed
 #868 D34 night     land_unit:6 lost 1 men unfed at (30,0), 28 left ashore  <- #867
-#869 D34 -         Allied ground report at (10,0): 475 enemy men ashore, replacing the estimate held
-#870 D34 -         Japanese ground report at (10,0): 1077 enemy men ashore, replacing the estimate held
-#871 D34 -         Allied ground report at (20,0): 325 enemy men ashore, replacing the estimate held
-#872 D34 -         Japanese ground report at (20,0): 166 enemy men ashore, replacing the estimate held
+#869 D34 -         Allied ground report at (10,0): 475 enemy men ashore (men in contact), replacing the estimate held
+#870 D34 -         Japanese ground report at (10,0): 1077 enemy men ashore (men in contact), replacing the estimate held
+#871 D34 -         Allied ground report at (20,0): 325 enemy men ashore (men in contact), replacing the estimate held
+#872 D34 -         Japanese ground report at (20,0): 166 enemy men ashore (men in contact), replacing the estimate held
 #873 D34 -         land_unit:1 trained: 4 days counted at experience 1  <- order:1, #858
 #874 D34 -         base:1 at the end of the day: 4830 t of supply, 0 aircraft ready: not open
 #875 D34 -         base:2 at the end of the day: 4836.6 t of supply, 0 aircraft ready: not open
@@ -956,10 +956,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #889 D35 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #888
 #890 D35 night     Allied men ashore at (30,0): 0 of 28 fed from base:6, 28 unfed
 #891 D35 night     land_unit:6 lost 1 men unfed at (30,0), 27 left ashore  <- #890
-#892 D35 -         Allied ground report at (10,0): 225 enemy men ashore, replacing the estimate held
-#893 D35 -         Japanese ground report at (10,0): 1379 enemy men ashore, replacing the estimate held
-#894 D35 -         Allied ground report at (20,0): 640 enemy men ashore, replacing the estimate held
-#895 D35 -         Japanese ground report at (20,0): 207 enemy men ashore, replacing the estimate held
+#892 D35 -         Allied ground report at (10,0): 225 enemy men ashore (men in contact), replacing the estimate held
+#893 D35 -         Japanese ground report at (10,0): 1379 enemy men ashore (men in contact), replacing the estimate held
+#894 D35 -         Allied ground report at (20,0): 640 enemy men ashore (men in contact), replacing the estimate held
+#895 D35 -         Japanese ground report at (20,0): 207 enemy men ashore (men in contact), replacing the estimate held
 #896 D35 -         land_unit:1 trained: 5 days counted at experience 1  <- order:1, #881
 #897 D35 -         base:1 at the end of the day: 4825 t of supply, 0 aircraft ready: not open
 #898 D35 -         base:2 at the end of the day: 4831.8 t of supply, 0 aircraft ready: not open
@@ -979,10 +979,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #912 D36 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #911
 #913 D36 night     Allied men ashore at (30,0): 0 of 27 fed from base:6, 27 unfed
 #914 D36 night     land_unit:6 lost 1 men unfed at (30,0), 26 left ashore  <- #913
-#915 D36 -         Allied ground report at (10,0): 285 enemy men ashore, replacing the estimate held
-#916 D36 -         Japanese ground report at (10,0): 1201 enemy men ashore, replacing the estimate held
-#917 D36 -         Allied ground report at (20,0): 606 enemy men ashore, replacing the estimate held
-#918 D36 -         Japanese ground report at (20,0): 168 enemy men ashore, replacing the estimate held
+#915 D36 -         Allied ground report at (10,0): 285 enemy men ashore (men in contact), replacing the estimate held
+#916 D36 -         Japanese ground report at (10,0): 1201 enemy men ashore (men in contact), replacing the estimate held
+#917 D36 -         Allied ground report at (20,0): 606 enemy men ashore (men in contact), replacing the estimate held
+#918 D36 -         Japanese ground report at (20,0): 168 enemy men ashore (men in contact), replacing the estimate held
 #919 D36 -         land_unit:1 trained: 6 days counted at experience 1  <- order:1, #904
 #920 D36 -         base:1 at the end of the day: 4820 t of supply, 0 aircraft ready: not open
 #921 D36 -         base:2 at the end of the day: 4827 t of supply, 0 aircraft ready: not open
@@ -1002,10 +1002,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #935 D37 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #934
 #936 D37 night     Allied men ashore at (30,0): 0 of 26 fed from base:6, 26 unfed
 #937 D37 night     land_unit:6 lost 1 men unfed at (30,0), 25 left ashore  <- #936
-#938 D37 -         Allied ground report at (10,0): 531 enemy men ashore, replacing the estimate held
-#939 D37 -         Japanese ground report at (10,0): 734 enemy men ashore, replacing the estimate held
-#940 D37 -         Allied ground report at (20,0): 514 enemy men ashore, replacing the estimate held
-#941 D37 -         Japanese ground report at (20,0): 391 enemy men ashore, replacing the estimate held
+#938 D37 -         Allied ground report at (10,0): 531 enemy men ashore (men in contact), replacing the estimate held
+#939 D37 -         Japanese ground report at (10,0): 734 enemy men ashore (men in contact), replacing the estimate held
+#940 D37 -         Allied ground report at (20,0): 514 enemy men ashore (men in contact), replacing the estimate held
+#941 D37 -         Japanese ground report at (20,0): 391 enemy men ashore (men in contact), replacing the estimate held
 #942 D37 -         land_unit:1 trained: 7 days counted at experience 1  <- order:1, #927
 #943 D37 -         base:1 at the end of the day: 4815 t of supply, 0 aircraft ready: not open
 #944 D37 -         base:2 at the end of the day: 4822.2 t of supply, 0 aircraft ready: not open
@@ -1025,10 +1025,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #958 D38 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #957
 #959 D38 night     Allied men ashore at (30,0): 0 of 25 fed from base:6, 25 unfed
 #960 D38 night     land_unit:6 lost 1 men unfed at (30,0), 24 left ashore  <- #959
-#961 D38 -         Allied ground report at (10,0): 434 enemy men ashore, replacing the estimate held
-#962 D38 -         Japanese ground report at (10,0): 1163 enemy men ashore, replacing the estimate held
-#963 D38 -         Allied ground report at (20,0): 746 enemy men ashore, replacing the estimate held
-#964 D38 -         Japanese ground report at (20,0): 287 enemy men ashore, replacing the estimate held
+#961 D38 -         Allied ground report at (10,0): 434 enemy men ashore (men in contact), replacing the estimate held
+#962 D38 -         Japanese ground report at (10,0): 1163 enemy men ashore (men in contact), replacing the estimate held
+#963 D38 -         Allied ground report at (20,0): 746 enemy men ashore (men in contact), replacing the estimate held
+#964 D38 -         Japanese ground report at (20,0): 287 enemy men ashore (men in contact), replacing the estimate held
 #965 D38 -         land_unit:1 trained: 8 days counted at experience 1  <- order:1, #950
 #966 D38 -         base:1 at the end of the day: 4810 t of supply, 0 aircraft ready: not open
 #967 D38 -         base:2 at the end of the day: 4817.4 t of supply, 0 aircraft ready: not open
@@ -1048,10 +1048,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #981 D39 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #980
 #982 D39 night     Allied men ashore at (30,0): 0 of 24 fed from base:6, 24 unfed
 #983 D39 night     land_unit:6 lost 1 men unfed at (30,0), 23 left ashore  <- #982
-#984 D39 -         Allied ground report at (10,0): 318 enemy men ashore, replacing the estimate held
-#985 D39 -         Japanese ground report at (10,0): 1171 enemy men ashore, replacing the estimate held
-#986 D39 -         Allied ground report at (20,0): 375 enemy men ashore, replacing the estimate held
-#987 D39 -         Japanese ground report at (20,0): 254 enemy men ashore, replacing the estimate held
+#984 D39 -         Allied ground report at (10,0): 318 enemy men ashore (men in contact), replacing the estimate held
+#985 D39 -         Japanese ground report at (10,0): 1171 enemy men ashore (men in contact), replacing the estimate held
+#986 D39 -         Allied ground report at (20,0): 375 enemy men ashore (men in contact), replacing the estimate held
+#987 D39 -         Japanese ground report at (20,0): 254 enemy men ashore (men in contact), replacing the estimate held
 #988 D39 -         land_unit:1 trained: 9 days counted at experience 1  <- order:1, #973
 #989 D39 -         base:1 at the end of the day: 4805 t of supply, 0 aircraft ready: not open
 #990 D39 -         base:2 at the end of the day: 4812.6 t of supply, 0 aircraft ready: not open
@@ -1071,10 +1071,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1004 D40 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1003
 #1005 D40 night     Allied men ashore at (30,0): 0 of 23 fed from base:6, 23 unfed
 #1006 D40 night     land_unit:6 lost 1 men unfed at (30,0), 22 left ashore  <- #1005
-#1007 D40 -         Allied ground report at (10,0): 424 enemy men ashore, replacing the estimate held
-#1008 D40 -         Japanese ground report at (10,0): 947 enemy men ashore, replacing the estimate held
-#1009 D40 -         Allied ground report at (20,0): 489 enemy men ashore, replacing the estimate held
-#1010 D40 -         Japanese ground report at (20,0): 216 enemy men ashore, replacing the estimate held
+#1007 D40 -         Allied ground report at (10,0): 424 enemy men ashore (men in contact), replacing the estimate held
+#1008 D40 -         Japanese ground report at (10,0): 947 enemy men ashore (men in contact), replacing the estimate held
+#1009 D40 -         Allied ground report at (20,0): 489 enemy men ashore (men in contact), replacing the estimate held
+#1010 D40 -         Japanese ground report at (20,0): 216 enemy men ashore (men in contact), replacing the estimate held
 #1011 D40 -         land_unit:1 trained: 10 days counted at experience 1  <- order:1, #996
 #1012 D40 -         base:1 at the end of the day: 4800 t of supply, 0 aircraft ready: not open
 #1013 D40 -         base:2 at the end of the day: 4807.8 t of supply, 0 aircraft ready: not open
@@ -1094,10 +1094,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1027 D41 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1026
 #1028 D41 night     Allied men ashore at (30,0): 0 of 22 fed from base:6, 22 unfed
 #1029 D41 night     land_unit:6 lost 1 men unfed at (30,0), 21 left ashore  <- #1028
-#1030 D41 -         Allied ground report at (10,0): 221 enemy men ashore, replacing the estimate held
-#1031 D41 -         Japanese ground report at (10,0): 925 enemy men ashore, replacing the estimate held
-#1032 D41 -         Allied ground report at (20,0): 432 enemy men ashore, replacing the estimate held
-#1033 D41 -         Japanese ground report at (20,0): 386 enemy men ashore, replacing the estimate held
+#1030 D41 -         Allied ground report at (10,0): 221 enemy men ashore (men in contact), replacing the estimate held
+#1031 D41 -         Japanese ground report at (10,0): 925 enemy men ashore (men in contact), replacing the estimate held
+#1032 D41 -         Allied ground report at (20,0): 432 enemy men ashore (men in contact), replacing the estimate held
+#1033 D41 -         Japanese ground report at (20,0): 386 enemy men ashore (men in contact), replacing the estimate held
 #1034 D41 -         land_unit:1 trained: 11 days counted at experience 1  <- order:1, #1019
 #1035 D41 -         base:1 at the end of the day: 4795 t of supply, 0 aircraft ready: not open
 #1036 D41 -         base:2 at the end of the day: 4803 t of supply, 0 aircraft ready: not open
@@ -1117,10 +1117,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1050 D42 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1049
 #1051 D42 night     Allied men ashore at (30,0): 0 of 21 fed from base:6, 21 unfed
 #1052 D42 night     land_unit:6 lost 1 men unfed at (30,0), 20 left ashore  <- #1051
-#1053 D42 -         Allied ground report at (10,0): 290 enemy men ashore, replacing the estimate held
-#1054 D42 -         Japanese ground report at (10,0): 662 enemy men ashore, replacing the estimate held
-#1055 D42 -         Allied ground report at (20,0): 538 enemy men ashore, replacing the estimate held
-#1056 D42 -         Japanese ground report at (20,0): 163 enemy men ashore, replacing the estimate held
+#1053 D42 -         Allied ground report at (10,0): 290 enemy men ashore (men in contact), replacing the estimate held
+#1054 D42 -         Japanese ground report at (10,0): 662 enemy men ashore (men in contact), replacing the estimate held
+#1055 D42 -         Allied ground report at (20,0): 538 enemy men ashore (men in contact), replacing the estimate held
+#1056 D42 -         Japanese ground report at (20,0): 163 enemy men ashore (men in contact), replacing the estimate held
 #1057 D42 -         land_unit:1 trained: 12 days counted at experience 1  <- order:1, #1042
 #1058 D42 -         base:1 at the end of the day: 4790 t of supply, 0 aircraft ready: not open
 #1059 D42 -         base:2 at the end of the day: 4798.2 t of supply, 0 aircraft ready: not open
@@ -1140,10 +1140,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1073 D43 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1072
 #1074 D43 night     Allied men ashore at (30,0): 0 of 20 fed from base:6, 20 unfed
 #1075 D43 night     land_unit:6 lost 1 men unfed at (30,0), 19 left ashore  <- #1074
-#1076 D43 -         Allied ground report at (10,0): 298 enemy men ashore, replacing the estimate held
-#1077 D43 -         Japanese ground report at (10,0): 1418 enemy men ashore, replacing the estimate held
-#1078 D43 -         Allied ground report at (20,0): 747 enemy men ashore, replacing the estimate held
-#1079 D43 -         Japanese ground report at (20,0): 366 enemy men ashore, replacing the estimate held
+#1076 D43 -         Allied ground report at (10,0): 298 enemy men ashore (men in contact), replacing the estimate held
+#1077 D43 -         Japanese ground report at (10,0): 1418 enemy men ashore (men in contact), replacing the estimate held
+#1078 D43 -         Allied ground report at (20,0): 747 enemy men ashore (men in contact), replacing the estimate held
+#1079 D43 -         Japanese ground report at (20,0): 366 enemy men ashore (men in contact), replacing the estimate held
 #1080 D43 -         land_unit:1 trained: 13 days counted at experience 1  <- order:1, #1065
 #1081 D43 -         base:1 at the end of the day: 4785 t of supply, 0 aircraft ready: not open
 #1082 D43 -         base:2 at the end of the day: 4793.4 t of supply, 0 aircraft ready: not open
@@ -1163,10 +1163,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1096 D44 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1095
 #1097 D44 night     Allied men ashore at (30,0): 0 of 19 fed from base:6, 19 unfed
 #1098 D44 night     land_unit:6 lost 1 men unfed at (30,0), 18 left ashore  <- #1097
-#1099 D44 -         Allied ground report at (10,0): 419 enemy men ashore, replacing the estimate held
-#1100 D44 -         Japanese ground report at (10,0): 1125 enemy men ashore, replacing the estimate held
-#1101 D44 -         Allied ground report at (20,0): 415 enemy men ashore, replacing the estimate held
-#1102 D44 -         Japanese ground report at (20,0): 372 enemy men ashore, replacing the estimate held
+#1099 D44 -         Allied ground report at (10,0): 419 enemy men ashore (men in contact), replacing the estimate held
+#1100 D44 -         Japanese ground report at (10,0): 1125 enemy men ashore (men in contact), replacing the estimate held
+#1101 D44 -         Allied ground report at (20,0): 415 enemy men ashore (men in contact), replacing the estimate held
+#1102 D44 -         Japanese ground report at (20,0): 372 enemy men ashore (men in contact), replacing the estimate held
 #1103 D44 -         land_unit:1 trained: 14 days counted at experience 1  <- order:1, #1088
 #1104 D44 -         base:1 at the end of the day: 4780 t of supply, 0 aircraft ready: not open
 #1105 D44 -         base:2 at the end of the day: 4788.6 t of supply, 0 aircraft ready: not open
@@ -1186,10 +1186,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1119 D45 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1118
 #1120 D45 night     Allied men ashore at (30,0): 0 of 18 fed from base:6, 18 unfed
 #1121 D45 night     land_unit:6 lost 1 men unfed at (30,0), 17 left ashore  <- #1120
-#1122 D45 -         Allied ground report at (10,0): 524 enemy men ashore, replacing the estimate held
-#1123 D45 -         Japanese ground report at (10,0): 834 enemy men ashore, replacing the estimate held
-#1124 D45 -         Allied ground report at (20,0): 346 enemy men ashore, replacing the estimate held
-#1125 D45 -         Japanese ground report at (20,0): 257 enemy men ashore, replacing the estimate held
+#1122 D45 -         Allied ground report at (10,0): 524 enemy men ashore (men in contact), replacing the estimate held
+#1123 D45 -         Japanese ground report at (10,0): 834 enemy men ashore (men in contact), replacing the estimate held
+#1124 D45 -         Allied ground report at (20,0): 346 enemy men ashore (men in contact), replacing the estimate held
+#1125 D45 -         Japanese ground report at (20,0): 257 enemy men ashore (men in contact), replacing the estimate held
 #1126 D45 -         land_unit:1 trained: 15 days counted at experience 1  <- order:1, #1111
 #1127 D45 -         base:1 at the end of the day: 4775 t of supply, 0 aircraft ready: not open
 #1128 D45 -         base:2 at the end of the day: 4783.8 t of supply, 0 aircraft ready: not open
@@ -1209,10 +1209,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1142 D46 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1141
 #1143 D46 night     Allied men ashore at (30,0): 0 of 17 fed from base:6, 17 unfed
 #1144 D46 night     land_unit:6 lost 1 men unfed at (30,0), 16 left ashore  <- #1143
-#1145 D46 -         Allied ground report at (10,0): 254 enemy men ashore, replacing the estimate held
-#1146 D46 -         Japanese ground report at (10,0): 495 enemy men ashore, replacing the estimate held
-#1147 D46 -         Allied ground report at (20,0): 510 enemy men ashore, replacing the estimate held
-#1148 D46 -         Japanese ground report at (20,0): 215 enemy men ashore, replacing the estimate held
+#1145 D46 -         Allied ground report at (10,0): 254 enemy men ashore (men in contact), replacing the estimate held
+#1146 D46 -         Japanese ground report at (10,0): 495 enemy men ashore (men in contact), replacing the estimate held
+#1147 D46 -         Allied ground report at (20,0): 510 enemy men ashore (men in contact), replacing the estimate held
+#1148 D46 -         Japanese ground report at (20,0): 215 enemy men ashore (men in contact), replacing the estimate held
 #1149 D46 -         land_unit:1 trained: 16 days counted at experience 1  <- order:1, #1134
 #1150 D46 -         base:1 at the end of the day: 4770 t of supply, 0 aircraft ready: not open
 #1151 D46 -         base:2 at the end of the day: 4779 t of supply, 0 aircraft ready: not open
@@ -1232,10 +1232,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1165 D47 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1164
 #1166 D47 night     Allied men ashore at (30,0): 0 of 16 fed from base:6, 16 unfed
 #1167 D47 night     land_unit:6 lost 1 men unfed at (30,0), 15 left ashore  <- #1166
-#1168 D47 -         Allied ground report at (10,0): 387 enemy men ashore, replacing the estimate held
-#1169 D47 -         Japanese ground report at (10,0): 1122 enemy men ashore, replacing the estimate held
-#1170 D47 -         Allied ground report at (20,0): 273 enemy men ashore, replacing the estimate held
-#1171 D47 -         Japanese ground report at (20,0): 210 enemy men ashore, replacing the estimate held
+#1168 D47 -         Allied ground report at (10,0): 387 enemy men ashore (men in contact), replacing the estimate held
+#1169 D47 -         Japanese ground report at (10,0): 1122 enemy men ashore (men in contact), replacing the estimate held
+#1170 D47 -         Allied ground report at (20,0): 273 enemy men ashore (men in contact), replacing the estimate held
+#1171 D47 -         Japanese ground report at (20,0): 210 enemy men ashore (men in contact), replacing the estimate held
 #1172 D47 -         land_unit:1 trained: 17 days counted at experience 1  <- order:1, #1157
 #1173 D47 -         base:1 at the end of the day: 4765 t of supply, 0 aircraft ready: not open
 #1174 D47 -         base:2 at the end of the day: 4774.2 t of supply, 0 aircraft ready: not open
@@ -1255,10 +1255,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1188 D48 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1187
 #1189 D48 night     Allied men ashore at (30,0): 0 of 15 fed from base:6, 15 unfed
 #1190 D48 night     land_unit:6 lost 1 men unfed at (30,0), 14 left ashore  <- #1189
-#1191 D48 -         Allied ground report at (10,0): 372 enemy men ashore, replacing the estimate held
-#1192 D48 -         Japanese ground report at (10,0): 1421 enemy men ashore, replacing the estimate held
-#1193 D48 -         Allied ground report at (20,0): 476 enemy men ashore, replacing the estimate held
-#1194 D48 -         Japanese ground report at (20,0): 233 enemy men ashore, replacing the estimate held
+#1191 D48 -         Allied ground report at (10,0): 372 enemy men ashore (men in contact), replacing the estimate held
+#1192 D48 -         Japanese ground report at (10,0): 1421 enemy men ashore (men in contact), replacing the estimate held
+#1193 D48 -         Allied ground report at (20,0): 476 enemy men ashore (men in contact), replacing the estimate held
+#1194 D48 -         Japanese ground report at (20,0): 233 enemy men ashore (men in contact), replacing the estimate held
 #1195 D48 -         land_unit:1 trained: 18 days counted at experience 1  <- order:1, #1180
 #1196 D48 -         base:1 at the end of the day: 4760 t of supply, 0 aircraft ready: not open
 #1197 D48 -         base:2 at the end of the day: 4769.4 t of supply, 0 aircraft ready: not open
@@ -1278,10 +1278,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1211 D49 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1210
 #1212 D49 night     Allied men ashore at (30,0): 0 of 14 fed from base:6, 14 unfed
 #1213 D49 night     land_unit:6 lost 1 men unfed at (30,0), 13 left ashore  <- #1212
-#1214 D49 -         Allied ground report at (10,0): 290 enemy men ashore, replacing the estimate held
-#1215 D49 -         Japanese ground report at (10,0): 1296 enemy men ashore, replacing the estimate held
-#1216 D49 -         Allied ground report at (20,0): 603 enemy men ashore, replacing the estimate held
-#1217 D49 -         Japanese ground report at (20,0): 194 enemy men ashore, replacing the estimate held
+#1214 D49 -         Allied ground report at (10,0): 290 enemy men ashore (men in contact), replacing the estimate held
+#1215 D49 -         Japanese ground report at (10,0): 1296 enemy men ashore (men in contact), replacing the estimate held
+#1216 D49 -         Allied ground report at (20,0): 603 enemy men ashore (men in contact), replacing the estimate held
+#1217 D49 -         Japanese ground report at (20,0): 194 enemy men ashore (men in contact), replacing the estimate held
 #1218 D49 -         land_unit:1 trained: 19 days counted at experience 1  <- order:1, #1203
 #1219 D49 -         base:1 at the end of the day: 4755 t of supply, 0 aircraft ready: not open
 #1220 D49 -         base:2 at the end of the day: 4764.6 t of supply, 0 aircraft ready: not open
@@ -1301,10 +1301,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1234 D50 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1233
 #1235 D50 night     Allied men ashore at (30,0): 0 of 13 fed from base:6, 13 unfed
 #1236 D50 night     land_unit:6 lost 1 men unfed at (30,0), 12 left ashore  <- #1235
-#1237 D50 -         Allied ground report at (10,0): 325 enemy men ashore, replacing the estimate held
-#1238 D50 -         Japanese ground report at (10,0): 993 enemy men ashore, replacing the estimate held
-#1239 D50 -         Allied ground report at (20,0): 716 enemy men ashore, replacing the estimate held
-#1240 D50 -         Japanese ground report at (20,0): 359 enemy men ashore, replacing the estimate held
+#1237 D50 -         Allied ground report at (10,0): 325 enemy men ashore (men in contact), replacing the estimate held
+#1238 D50 -         Japanese ground report at (10,0): 993 enemy men ashore (men in contact), replacing the estimate held
+#1239 D50 -         Allied ground report at (20,0): 716 enemy men ashore (men in contact), replacing the estimate held
+#1240 D50 -         Japanese ground report at (20,0): 359 enemy men ashore (men in contact), replacing the estimate held
 #1241 D50 -         land_unit:1 trained: 20 days counted at experience 1  <- order:1, #1226
 #1242 D50 -         base:1 at the end of the day: 4750 t of supply, 0 aircraft ready: not open
 #1243 D50 -         base:2 at the end of the day: 4759.8 t of supply, 0 aircraft ready: not open
@@ -1324,10 +1324,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1257 D51 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1256
 #1258 D51 night     Allied men ashore at (30,0): 0 of 12 fed from base:6, 12 unfed
 #1259 D51 night     land_unit:6 lost 1 men unfed at (30,0), 11 left ashore  <- #1258
-#1260 D51 -         Allied ground report at (10,0): 493 enemy men ashore, replacing the estimate held
-#1261 D51 -         Japanese ground report at (10,0): 747 enemy men ashore, replacing the estimate held
-#1262 D51 -         Allied ground report at (20,0): 743 enemy men ashore, replacing the estimate held
-#1263 D51 -         Japanese ground report at (20,0): 263 enemy men ashore, replacing the estimate held
+#1260 D51 -         Allied ground report at (10,0): 493 enemy men ashore (men in contact), replacing the estimate held
+#1261 D51 -         Japanese ground report at (10,0): 747 enemy men ashore (men in contact), replacing the estimate held
+#1262 D51 -         Allied ground report at (20,0): 743 enemy men ashore (men in contact), replacing the estimate held
+#1263 D51 -         Japanese ground report at (20,0): 263 enemy men ashore (men in contact), replacing the estimate held
 #1264 D51 -         land_unit:1 trained: 21 days counted at experience 1  <- order:1, #1249
 #1265 D51 -         base:1 at the end of the day: 4745 t of supply, 0 aircraft ready: not open
 #1266 D51 -         base:2 at the end of the day: 4755 t of supply, 0 aircraft ready: not open
@@ -1347,10 +1347,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1280 D52 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1279
 #1281 D52 night     Allied men ashore at (30,0): 0 of 11 fed from base:6, 11 unfed
 #1282 D52 night     land_unit:6 lost 1 men unfed at (30,0), 10 left ashore  <- #1281
-#1283 D52 -         Allied ground report at (10,0): 238 enemy men ashore, replacing the estimate held
-#1284 D52 -         Japanese ground report at (10,0): 949 enemy men ashore, replacing the estimate held
-#1285 D52 -         Allied ground report at (20,0): 693 enemy men ashore, replacing the estimate held
-#1286 D52 -         Japanese ground report at (20,0): 193 enemy men ashore, replacing the estimate held
+#1283 D52 -         Allied ground report at (10,0): 238 enemy men ashore (men in contact), replacing the estimate held
+#1284 D52 -         Japanese ground report at (10,0): 949 enemy men ashore (men in contact), replacing the estimate held
+#1285 D52 -         Allied ground report at (20,0): 693 enemy men ashore (men in contact), replacing the estimate held
+#1286 D52 -         Japanese ground report at (20,0): 193 enemy men ashore (men in contact), replacing the estimate held
 #1287 D52 -         land_unit:1 trained: 22 days counted at experience 1  <- order:1, #1272
 #1288 D52 -         base:1 at the end of the day: 4740 t of supply, 0 aircraft ready: not open
 #1289 D52 -         base:2 at the end of the day: 4750.2 t of supply, 0 aircraft ready: not open
@@ -1370,10 +1370,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1303 D53 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1302
 #1304 D53 night     Allied men ashore at (30,0): 0 of 10 fed from base:6, 10 unfed
 #1305 D53 night     land_unit:6 lost 1 men unfed at (30,0), 9 left ashore  <- #1304
-#1306 D53 -         Allied ground report at (10,0): 452 enemy men ashore, replacing the estimate held
-#1307 D53 -         Japanese ground report at (10,0): 578 enemy men ashore, replacing the estimate held
-#1308 D53 -         Allied ground report at (20,0): 435 enemy men ashore, replacing the estimate held
-#1309 D53 -         Japanese ground report at (20,0): 470 enemy men ashore, replacing the estimate held
+#1306 D53 -         Allied ground report at (10,0): 452 enemy men ashore (men in contact), replacing the estimate held
+#1307 D53 -         Japanese ground report at (10,0): 578 enemy men ashore (men in contact), replacing the estimate held
+#1308 D53 -         Allied ground report at (20,0): 435 enemy men ashore (men in contact), replacing the estimate held
+#1309 D53 -         Japanese ground report at (20,0): 470 enemy men ashore (men in contact), replacing the estimate held
 #1310 D53 -         land_unit:1 trained: 23 days counted at experience 1  <- order:1, #1295
 #1311 D53 -         base:1 at the end of the day: 4735 t of supply, 0 aircraft ready: not open
 #1312 D53 -         base:2 at the end of the day: 4745.4 t of supply, 0 aircraft ready: not open
@@ -1393,10 +1393,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1326 D54 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1325
 #1327 D54 night     Allied men ashore at (30,0): 0 of 9 fed from base:6, 9 unfed
 #1328 D54 night     land_unit:6 lost 1 men unfed at (30,0), 8 left ashore  <- #1327
-#1329 D54 -         Allied ground report at (10,0): 294 enemy men ashore, replacing the estimate held
-#1330 D54 -         Japanese ground report at (10,0): 1206 enemy men ashore, replacing the estimate held
-#1331 D54 -         Allied ground report at (20,0): 469 enemy men ashore, replacing the estimate held
-#1332 D54 -         Japanese ground report at (20,0): 372 enemy men ashore, replacing the estimate held
+#1329 D54 -         Allied ground report at (10,0): 294 enemy men ashore (men in contact), replacing the estimate held
+#1330 D54 -         Japanese ground report at (10,0): 1206 enemy men ashore (men in contact), replacing the estimate held
+#1331 D54 -         Allied ground report at (20,0): 469 enemy men ashore (men in contact), replacing the estimate held
+#1332 D54 -         Japanese ground report at (20,0): 372 enemy men ashore (men in contact), replacing the estimate held
 #1333 D54 -         land_unit:1 trained: 24 days counted at experience 1  <- order:1, #1318
 #1334 D54 -         base:1 at the end of the day: 4730 t of supply, 0 aircraft ready: not open
 #1335 D54 -         base:2 at the end of the day: 4740.6 t of supply, 0 aircraft ready: not open
@@ -1416,10 +1416,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1349 D55 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1348
 #1350 D55 night     Allied men ashore at (30,0): 0 of 8 fed from base:6, 8 unfed
 #1351 D55 night     land_unit:6 lost 1 men unfed at (30,0), 7 left ashore  <- #1350
-#1352 D55 -         Allied ground report at (10,0): 318 enemy men ashore, replacing the estimate held
-#1353 D55 -         Japanese ground report at (10,0): 705 enemy men ashore, replacing the estimate held
-#1354 D55 -         Allied ground report at (20,0): 671 enemy men ashore, replacing the estimate held
-#1355 D55 -         Japanese ground report at (20,0): 366 enemy men ashore, replacing the estimate held
+#1352 D55 -         Allied ground report at (10,0): 318 enemy men ashore (men in contact), replacing the estimate held
+#1353 D55 -         Japanese ground report at (10,0): 705 enemy men ashore (men in contact), replacing the estimate held
+#1354 D55 -         Allied ground report at (20,0): 671 enemy men ashore (men in contact), replacing the estimate held
+#1355 D55 -         Japanese ground report at (20,0): 366 enemy men ashore (men in contact), replacing the estimate held
 #1356 D55 -         land_unit:1 trained: 25 days counted at experience 1  <- order:1, #1341
 #1357 D55 -         base:1 at the end of the day: 4725 t of supply, 0 aircraft ready: not open
 #1358 D55 -         base:2 at the end of the day: 4735.8 t of supply, 0 aircraft ready: not open
@@ -1439,10 +1439,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1372 D56 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1371
 #1373 D56 night     Allied men ashore at (30,0): 0 of 7 fed from base:6, 7 unfed
 #1374 D56 night     land_unit:6 lost 1 men unfed at (30,0), 6 left ashore  <- #1373
-#1375 D56 -         Allied ground report at (10,0): 276 enemy men ashore, replacing the estimate held
-#1376 D56 -         Japanese ground report at (10,0): 866 enemy men ashore, replacing the estimate held
-#1377 D56 -         Allied ground report at (20,0): 679 enemy men ashore, replacing the estimate held
-#1378 D56 -         Japanese ground report at (20,0): 210 enemy men ashore, replacing the estimate held
+#1375 D56 -         Allied ground report at (10,0): 276 enemy men ashore (men in contact), replacing the estimate held
+#1376 D56 -         Japanese ground report at (10,0): 866 enemy men ashore (men in contact), replacing the estimate held
+#1377 D56 -         Allied ground report at (20,0): 679 enemy men ashore (men in contact), replacing the estimate held
+#1378 D56 -         Japanese ground report at (20,0): 210 enemy men ashore (men in contact), replacing the estimate held
 #1379 D56 -         land_unit:1 trained: 26 days counted at experience 1  <- order:1, #1364
 #1380 D56 -         base:1 at the end of the day: 4720 t of supply, 0 aircraft ready: not open
 #1381 D56 -         base:2 at the end of the day: 4731 t of supply, 0 aircraft ready: not open
@@ -1462,10 +1462,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1395 D57 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1394
 #1396 D57 night     Allied men ashore at (30,0): 0 of 6 fed from base:6, 6 unfed
 #1397 D57 night     land_unit:6 lost 1 men unfed at (30,0), 5 left ashore  <- #1396
-#1398 D57 -         Allied ground report at (10,0): 196 enemy men ashore, replacing the estimate held
-#1399 D57 -         Japanese ground report at (10,0): 1004 enemy men ashore, replacing the estimate held
-#1400 D57 -         Allied ground report at (20,0): 483 enemy men ashore, replacing the estimate held
-#1401 D57 -         Japanese ground report at (20,0): 376 enemy men ashore, replacing the estimate held
+#1398 D57 -         Allied ground report at (10,0): 196 enemy men ashore (men in contact), replacing the estimate held
+#1399 D57 -         Japanese ground report at (10,0): 1004 enemy men ashore (men in contact), replacing the estimate held
+#1400 D57 -         Allied ground report at (20,0): 483 enemy men ashore (men in contact), replacing the estimate held
+#1401 D57 -         Japanese ground report at (20,0): 376 enemy men ashore (men in contact), replacing the estimate held
 #1402 D57 -         land_unit:1 trained: 27 days counted at experience 1  <- order:1, #1387
 #1403 D57 -         base:1 at the end of the day: 4715 t of supply, 0 aircraft ready: not open
 #1404 D57 -         base:2 at the end of the day: 4726.2 t of supply, 0 aircraft ready: not open
@@ -1485,10 +1485,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1418 D58 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1417
 #1419 D58 night     Allied men ashore at (30,0): 0 of 5 fed from base:6, 5 unfed
 #1420 D58 night     land_unit:6 lost 1 men unfed at (30,0), 4 left ashore  <- #1419
-#1421 D58 -         Allied ground report at (10,0): 492 enemy men ashore, replacing the estimate held
-#1422 D58 -         Japanese ground report at (10,0): 514 enemy men ashore, replacing the estimate held
-#1423 D58 -         Allied ground report at (20,0): 496 enemy men ashore, replacing the estimate held
-#1424 D58 -         Japanese ground report at (20,0): 182 enemy men ashore, replacing the estimate held
+#1421 D58 -         Allied ground report at (10,0): 492 enemy men ashore (men in contact), replacing the estimate held
+#1422 D58 -         Japanese ground report at (10,0): 514 enemy men ashore (men in contact), replacing the estimate held
+#1423 D58 -         Allied ground report at (20,0): 496 enemy men ashore (men in contact), replacing the estimate held
+#1424 D58 -         Japanese ground report at (20,0): 182 enemy men ashore (men in contact), replacing the estimate held
 #1425 D58 -         land_unit:1 trained: 28 days counted at experience 1  <- order:1, #1410
 #1426 D58 -         base:1 at the end of the day: 4710 t of supply, 0 aircraft ready: not open
 #1427 D58 -         base:2 at the end of the day: 4721.4 t of supply, 0 aircraft ready: not open
@@ -1508,10 +1508,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1441 D59 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1440
 #1442 D59 night     Allied men ashore at (30,0): 0 of 4 fed from base:6, 4 unfed
 #1443 D59 night     land_unit:6 lost 1 men unfed at (30,0), 3 left ashore  <- #1442
-#1444 D59 -         Allied ground report at (10,0): 464 enemy men ashore, replacing the estimate held
-#1445 D59 -         Japanese ground report at (10,0): 988 enemy men ashore, replacing the estimate held
-#1446 D59 -         Allied ground report at (20,0): 669 enemy men ashore, replacing the estimate held
-#1447 D59 -         Japanese ground report at (20,0): 255 enemy men ashore, replacing the estimate held
+#1444 D59 -         Allied ground report at (10,0): 464 enemy men ashore (men in contact), replacing the estimate held
+#1445 D59 -         Japanese ground report at (10,0): 988 enemy men ashore (men in contact), replacing the estimate held
+#1446 D59 -         Allied ground report at (20,0): 669 enemy men ashore (men in contact), replacing the estimate held
+#1447 D59 -         Japanese ground report at (20,0): 255 enemy men ashore (men in contact), replacing the estimate held
 #1448 D59 -         land_unit:1 trained: 29 days counted at experience 1  <- order:1, #1433
 #1449 D59 -         base:1 at the end of the day: 4705 t of supply, 0 aircraft ready: not open
 #1450 D59 -         base:2 at the end of the day: 4716.6 t of supply, 0 aircraft ready: not open
@@ -1531,10 +1531,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1464 D60 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1463
 #1465 D60 night     Allied men ashore at (30,0): 0 of 3 fed from base:6, 3 unfed
 #1466 D60 night     land_unit:6 lost 1 men unfed at (30,0), 2 left ashore  <- #1465
-#1467 D60 -         Allied ground report at (10,0): 239 enemy men ashore, replacing the estimate held
-#1468 D60 -         Japanese ground report at (10,0): 1157 enemy men ashore, replacing the estimate held
-#1469 D60 -         Allied ground report at (20,0): 627 enemy men ashore, replacing the estimate held
-#1470 D60 -         Japanese ground report at (20,0): 214 enemy men ashore, replacing the estimate held
+#1467 D60 -         Allied ground report at (10,0): 239 enemy men ashore (men in contact), replacing the estimate held
+#1468 D60 -         Japanese ground report at (10,0): 1157 enemy men ashore (men in contact), replacing the estimate held
+#1469 D60 -         Allied ground report at (20,0): 627 enemy men ashore (men in contact), replacing the estimate held
+#1470 D60 -         Japanese ground report at (20,0): 214 enemy men ashore (men in contact), replacing the estimate held
 #1471 D60 -         land_unit:1 trained: 30 days counted at experience 1  <- order:1, #1456
 #1472 D60 -         land_unit:1 rose to experience 2 by training  <- #1471
 #1473 D60 -         base:1 at the end of the day: 4700 t of supply, 0 aircraft ready: not open
@@ -1555,10 +1555,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1488 D61 night     Japanese men ashore at (20,0): 500 of 500 fed from base:5, 0 unfed  <- #1487
 #1489 D61 night     Allied men ashore at (30,0): 0 of 2 fed from base:6, 2 unfed
 #1490 D61 night     land_unit:6 lost 1 men unfed at (30,0), 1 left ashore  <- #1489
-#1491 D61 -         Allied ground report at (10,0): 226 enemy men ashore, replacing the estimate held
-#1492 D61 -         Japanese ground report at (10,0): 1162 enemy men ashore, replacing the estimate held
-#1493 D61 -         Allied ground report at (20,0): 661 enemy men ashore, replacing the estimate held
-#1494 D61 -         Japanese ground report at (20,0): 476 enemy men ashore, replacing the estimate held
+#1491 D61 -         Allied ground report at (10,0): 226 enemy men ashore (men in contact), replacing the estimate held
+#1492 D61 -         Japanese ground report at (10,0): 1162 enemy men ashore (men in contact), replacing the estimate held
+#1493 D61 -         Allied ground report at (20,0): 661 enemy men ashore (men in contact), replacing the estimate held
+#1494 D61 -         Japanese ground report at (20,0): 476 enemy men ashore (men in contact), replacing the estimate held
 #1495 D61 -         base:1 at the end of the day: 4695 t of supply, 0 aircraft ready: not open
 #1496 D61 -         base:2 at the end of the day: 4707 t of supply, 0 aircraft ready: not open
 #1497 D61 -         base:3 at the end of the day: 4888.2 t of supply, 0 aircraft ready: not open
@@ -1578,10 +1578,10 @@ day  62  hash 5ca43e5b235796f7  23 events
 #1511 D62 night     Allied men ashore at (30,0): 0 of 1 fed from base:6, 1 unfed
 #1512 D62 night     land_unit:6 lost 1 men unfed at (30,0), 0 left ashore  <- #1511
 #1513 D62 night     land_unit:6 has no men left and is destroyed  <- #1512
-#1514 D62 -         Allied ground report at (10,0): 197 enemy men ashore, replacing the estimate held
-#1515 D62 -         Japanese ground report at (10,0): 949 enemy men ashore, replacing the estimate held
-#1516 D62 -         Allied ground report at (20,0): 602 enemy men ashore, replacing the estimate held
-#1517 D62 -         Japanese ground report at (20,0): 445 enemy men ashore, replacing the estimate held
+#1514 D62 -         Allied ground report at (10,0): 197 enemy men ashore (men in contact), replacing the estimate held
+#1515 D62 -         Japanese ground report at (10,0): 949 enemy men ashore (men in contact), replacing the estimate held
+#1516 D62 -         Allied ground report at (20,0): 602 enemy men ashore (men in contact), replacing the estimate held
+#1517 D62 -         Japanese ground report at (20,0): 445 enemy men ashore (men in contact), replacing the estimate held
 #1518 D62 -         base:1 at the end of the day: 4690 t of supply, 0 aircraft ready: not open
 #1519 D62 -         base:2 at the end of the day: 4702.2 t of supply, 0 aircraft ready: not open
 #1520 D62 -         base:3 at the end of the day: 4886.4 t of supply, 0 aircraft ready: not open
@@ -1603,9 +1603,9 @@ land_unit:5 "Placeholder unit 5" (Japanese): 500 men ashore at (20,0), fieldwork
 land_unit:6 "Placeholder unit 6" (Allied): no men ashore
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (10,0): 197 enemy men ashore, reported day 62
-Allied estimate at (20,0): 602 enemy men ashore, reported day 62
+Allied estimate at (10,0): 197 enemy men ashore, reported day 62 (men in contact)
+Allied estimate at (20,0): 602 enemy men ashore, reported day 62 (men in contact)
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (10,0): 949 enemy men ashore, reported day 62
-Japanese estimate at (20,0): 445 enemy men ashore, reported day 62
+Japanese estimate at (10,0): 949 enemy men ashore, reported day 62 (men in contact)
+Japanese estimate at (20,0): 445 enemy men ashore, reported day 62 (men in contact)

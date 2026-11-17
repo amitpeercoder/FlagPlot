@@ -212,6 +212,10 @@ pub struct AirGroupLine {
     pub mission: &'static str,
     /// The base a base strike is ordered at.
     pub target: Option<Handle>,
+    /// The hex a group on the reconnaissance mission flies to once a day
+    /// (decision 0147). Left out for any other mission.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reconnaissance_of: Option<Place>,
     /// The aircraft type's strike radius in miles: how far from the group's
     /// place a strike can be flown (for a fighter, the radius within which
     /// its escorts go with a raid). Zero for a type that cannot strike.
@@ -798,6 +802,10 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
         _ => None,
     };
     let aircraft_type = ctx.view.aircraft_type(group.aircraft_type);
+    let reconnaissance_of = match group.mission {
+        AirMission::Reconnaissance(hex) => Some(ctx.place(hex)),
+        _ => None,
+    };
     AirGroupLine {
         available_from: day_not_come(&ctx.view, EntityRef::AirGroup(group.id)),
         strike_radius_nm: Dec(aircraft_type.map_or(Fixed::ZERO, |t| t.strike_range_nm)),
@@ -842,6 +850,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
         rest_above: group.rest_above.map(Dec),
         mission: words::air_mission(group.mission),
         target,
+        reconnaissance_of,
     }
 }
 

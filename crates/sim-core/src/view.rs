@@ -225,6 +225,32 @@ impl<'a> SideView<'a> {
         self.side
     }
 
+    /// The phase of a "take a place" intent of the side (decision 0142, 5),
+    /// read from its plan and the side's own men: prepare while the plan is
+    /// preparing; move while it is released and no man of the side is ashore
+    /// at the place; land while it is released and one is. `None` for any
+    /// other intent, an intent not in force, or a plan in any other state.
+    pub fn place_phase(&self, intent: crate::ids::IntentId) -> Option<crate::command::PlacePhase> {
+        use crate::command::{PlacePhase, PlanState};
+        let state = self.command_state();
+        let found = state.intents.get(&intent).filter(|i| i.in_force())?;
+        let place = found.kind.place()?;
+        match state.plans.get(&found.plan)?.state {
+            PlanState::Preparing => Some(PlacePhase::Prepare),
+            PlanState::Released => {
+                let ashore = self
+                    .land_units()
+                    .any(|unit| unit.men_ashore > 0 && unit.hex == Some(place));
+                Some(if ashore {
+                    PlacePhase::Land
+                } else {
+                    PlacePhase::Move
+                })
+            }
+            _ => None,
+        }
+    }
+
     /// The last day resolved.
     pub fn day(&self) -> u32 {
         self.truth.day

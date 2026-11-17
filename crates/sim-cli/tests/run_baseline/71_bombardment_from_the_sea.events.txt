@@ -1,0 +1,133 @@
+Placeholder scenario 71: Bombardment from the sea
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash b8256406214a6edd  36 events
+day   2  hash e8bf68a1644f0836  20 events
+day   3  hash 538d77c5f299d116  20 events
+day   4  hash e98e6c6cf2cd1ffe  20 events
+day   5  hash 74f1115b3128b864  10 events
+day   6  hash 3cacad0d44a8745d  4 events
+
+#1 D1 -         Allied the commander's command taken: set intent:1 to bombard base:2 with task_force:1
+#2 D1 -         Allied plan:1 drafted for intent:1  <- #1
+#3 D1 -         Allied the commander's command taken: give the leave to prepare
+#4 D1 -         Allied the commander's command taken: give the leave to launch
+#5 D1 -         Allied the staff's command taken: approve plan:1
+#6 D1 -         Allied plan:1 went from draft to preparing  <- #5
+#7 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: plan:1, the plan to bombard base:2 (Placeholder enemy base B) with task_force:1, is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #5
+#8 D1 -         Allied the staff's command taken: approve plan:1
+#9 D1 -         Allied plan:1 went from preparing to released  <- #8
+#10 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: plan:1, the plan to bombard base:2 (Placeholder enemy base B) with task_force:1, is ready and leave to launch is given: the staff releases it.  <- #8
+#11 D1 -         order:1 accepted for task_force:1  <- order:1  [issued by the staff]
+#12 D1 -         Allied staff's reason for order:1 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: task_force:1 has no home port and lies stopped at base:1 (Placeholder base A): its home port is set to base:1 (Placeholder base A), where it sorties from and comes back to.  <- order:1, #11
+#13 D1 -         order:2 accepted for task_force:1  <- order:2  [issued by the staff]
+#14 D1 -         Allied staff's reason for order:2 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: A force that bombards by night engages: the rules of engagement of task_force:1 are set to the stance engage and the break-off level of the balanced risk, 0.5; its straggler instruction and keep share are left as they are.  <- order:2, #13
+#15 D1 -         order:3 accepted for task_force:1  <- order:3  [issued by the staff]
+#16 D1 -         Allied staff's reason for order:3 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: intent:1, bombarding base:2 (Placeholder enemy base B) with task_force:1: it sorties tonight, so task_force:1 is set to battle readiness.  <- order:3, #15
+#17 D1 -         order:4 accepted for task_force:1  <- order:4  [issued by the staff]
+#18 D1 -         Allied staff's reason for order:4 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: intent:1, bombarding base:2 (Placeholder enemy base B) with task_force:1: base:2 (Placeholder enemy base B) is at (4,0), 4 hexes from (0,0); at balanced the force sorties every night. 10 hours to the target at cruise. the passage to the target and home, by the engine's measure, times the 1.2 of the balanced risk: ship:1 has 2000 t aboard against 96 t needed: it has the fuel. At balanced risk ship:1 has 800 rounds against the level of 400 (0.5 of her outfit of 800): it has the rounds. It is routed to (4,0) and home to base:1 (Placeholder base A), the target's hex marked to act at: it halts there, fires in the night's bombardment and steams for home at morning.  <- order:4, #17
+#19 D1 night     task_force:1 steamed 160 nm at 16 kn from (0,0) to (4,0)  <- order:4
+#20 D1 night     ship:1 burned 40 t, 1960 t remaining  <- #19
+#21 D1 night     task_force:1 halted at (4,0) at D1 04:00 to bombard  <- order:4, #19
+#22 D1 night     ship:1 shelled base:2: 120 shells, 120 weighed shots x 0 = 0 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing; 680 rounds left  <- order:4, #21
+#23 D1 night     task_force:1 bombarded base:2 at (4,0): 120 shells, 120 weighed shots, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing  <- #22
+#24 D1 night     Japanese report: 1 ship, battleship, at (4,0): new contact:1  <- #23
+#25 D1 night     Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground  <- #22
+#26 D1 morning   task_force:1 steamed on from (4,0): it has bombarded  <- order:4, #21, #23
+#27 D1 morning   task_force:1 steamed 96 nm at 16 kn from (4,0) to (2,0)  <- order:4
+#28 D1 morning   ship:1 burned 24 t, 1936 t remaining  <- #27
+#29 D1 morning   Japanese contact:1 aged to 1 pulses  <- #24
+#30 D1 afternoon task_force:1 steamed 64 nm at 16 kn from (2,0) to (0,0)  <- order:4
+#31 D1 afternoon ship:1 burned 16 t, 1920 t remaining  <- #30
+#32 D1 afternoon task_force:1 arrived at (0,0) at D1 16:00  <- #30
+#33 D1 afternoon ship:1 took 80 t of fuel at base:1, 2000 t aboard, base:1 has 4920 t left  <- #32
+#34 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #24
+#35 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#36 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#37 D2 -         order:5 accepted for task_force:1  <- order:5  [issued by the staff]
+#38 D2 -         Allied staff's reason for order:5 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: intent:1, bombarding base:2 (Placeholder enemy base B) with task_force:1: base:2 (Placeholder enemy base B) is at (4,0), 4 hexes from (0,0); at balanced the force sorties every night. 10 hours to the target at cruise. the passage to the target and home, by the engine's measure, times the 1.2 of the balanced risk: ship:1 has 2000 t aboard against 96 t needed: it has the fuel. At balanced risk ship:1 has 680 rounds against the level of 400 (0.5 of her outfit of 800): it has the rounds. It is routed to (4,0) and home to base:1 (Placeholder base A), the target's hex marked to act at: it halts there, fires in the night's bombardment and steams for home at morning.  <- order:5, #37
+#39 D2 night     task_force:1 steamed 160 nm at 16 kn from (0,0) to (4,0)  <- order:5
+#40 D2 night     ship:1 burned 40 t, 1960 t remaining  <- #39
+#41 D2 night     task_force:1 halted at (4,0) at D2 04:00 to bombard  <- order:5, #39
+#42 D2 night     ship:1 shelled base:2: 120 shells, 120 weighed shots x 0 = 0 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing; 560 rounds left  <- order:5, #41
+#43 D2 night     task_force:1 bombarded base:2 at (4,0): 120 shells, 120 weighed shots, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing  <- #42
+#44 D2 night     Japanese report: 1 ship, battleship, at (4,-1): refreshed contact:1  <- #43
+#45 D2 night     Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground  <- #42
+#46 D2 morning   task_force:1 steamed on from (4,0): it has bombarded  <- order:5, #41, #43
+#47 D2 morning   task_force:1 steamed 96 nm at 16 kn from (4,0) to (2,0)  <- order:5
+#48 D2 morning   ship:1 burned 24 t, 1936 t remaining  <- #47
+#49 D2 morning   Japanese contact:1 aged to 1 pulses  <- #44
+#50 D2 afternoon task_force:1 steamed 64 nm at 16 kn from (2,0) to (0,0)  <- order:5
+#51 D2 afternoon ship:1 burned 16 t, 1920 t remaining  <- #50
+#52 D2 afternoon task_force:1 arrived at (0,0) at D2 16:00  <- #50
+#53 D2 afternoon ship:1 took 80 t of fuel at base:1, 2000 t aboard, base:1 has 4840 t left  <- #52
+#54 D2 afternoon Japanese contact:1 aged to 2 pulses  <- #44
+#55 D2 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#56 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#57 D3 -         order:6 accepted for task_force:1  <- order:6  [issued by the staff]
+#58 D3 -         Allied staff's reason for order:6 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: intent:1, bombarding base:2 (Placeholder enemy base B) with task_force:1: base:2 (Placeholder enemy base B) is at (4,0), 4 hexes from (0,0); at balanced the force sorties every night. 10 hours to the target at cruise. the passage to the target and home, by the engine's measure, times the 1.2 of the balanced risk: ship:1 has 2000 t aboard against 96 t needed: it has the fuel. At balanced risk ship:1 has 560 rounds against the level of 400 (0.5 of her outfit of 800): it has the rounds. It is routed to (4,0) and home to base:1 (Placeholder base A), the target's hex marked to act at: it halts there, fires in the night's bombardment and steams for home at morning.  <- order:6, #57
+#59 D3 night     task_force:1 steamed 160 nm at 16 kn from (0,0) to (4,0)  <- order:6
+#60 D3 night     ship:1 burned 40 t, 1960 t remaining  <- #59
+#61 D3 night     task_force:1 halted at (4,0) at D3 04:00 to bombard  <- order:6, #59
+#62 D3 night     ship:1 shelled base:2: 120 shells, 120 weighed shots x 0 = 0 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing; 440 rounds left  <- order:6, #61
+#63 D3 night     task_force:1 bombarded base:2 at (4,0): 120 shells, 120 weighed shots, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing  <- #62
+#64 D3 night     Japanese report: 1 ship, battleship, at (4,0): refreshed contact:1  <- #63
+#65 D3 night     Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground  <- #62
+#66 D3 morning   task_force:1 steamed on from (4,0): it has bombarded  <- order:6, #61, #63
+#67 D3 morning   task_force:1 steamed 96 nm at 16 kn from (4,0) to (2,0)  <- order:6
+#68 D3 morning   ship:1 burned 24 t, 1936 t remaining  <- #67
+#69 D3 morning   Japanese contact:1 aged to 1 pulses  <- #64
+#70 D3 afternoon task_force:1 steamed 64 nm at 16 kn from (2,0) to (0,0)  <- order:6
+#71 D3 afternoon ship:1 burned 16 t, 1920 t remaining  <- #70
+#72 D3 afternoon task_force:1 arrived at (0,0) at D3 16:00  <- #70
+#73 D3 afternoon ship:1 took 80 t of fuel at base:1, 2000 t aboard, base:1 has 4760 t left  <- #72
+#74 D3 afternoon Japanese contact:1 aged to 2 pulses  <- #64
+#75 D3 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#76 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#77 D4 -         order:7 accepted for task_force:1  <- order:7  [issued by the staff]
+#78 D4 -         Allied staff's reason for order:7 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: intent:1, bombarding base:2 (Placeholder enemy base B) with task_force:1: base:2 (Placeholder enemy base B) is at (4,0), 4 hexes from (0,0); at balanced the force sorties every night. 10 hours to the target at cruise. the passage to the target and home, by the engine's measure, times the 1.2 of the balanced risk: ship:1 has 2000 t aboard against 96 t needed: it has the fuel. At balanced risk ship:1 has 440 rounds against the level of 400 (0.5 of her outfit of 800): it has the rounds. It is routed to (4,0) and home to base:1 (Placeholder base A), the target's hex marked to act at: it halts there, fires in the night's bombardment and steams for home at morning.  <- order:7, #77
+#79 D4 night     task_force:1 steamed 160 nm at 16 kn from (0,0) to (4,0)  <- order:7
+#80 D4 night     ship:1 burned 40 t, 1960 t remaining  <- #79
+#81 D4 night     task_force:1 halted at (4,0) at D4 04:00 to bombard  <- order:7, #79
+#82 D4 night     ship:1 shelled base:2: 120 shells, 120 weighed shots x 0 = 0 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing; 320 rounds left  <- order:7, #81
+#83 D4 night     task_force:1 bombarded base:2 at (4,0): 120 shells, 120 weighed shots, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing  <- #82
+#84 D4 night     Japanese report: 1 ship, battleship, at (4,0): refreshed contact:1  <- #83
+#85 D4 night     Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground  <- #82
+#86 D4 morning   task_force:1 steamed on from (4,0): it has bombarded  <- order:7, #81, #83
+#87 D4 morning   task_force:1 steamed 96 nm at 16 kn from (4,0) to (2,0)  <- order:7
+#88 D4 morning   ship:1 burned 24 t, 1936 t remaining  <- #87
+#89 D4 morning   Japanese contact:1 aged to 1 pulses  <- #84
+#90 D4 afternoon task_force:1 steamed 64 nm at 16 kn from (2,0) to (0,0)  <- order:7
+#91 D4 afternoon ship:1 burned 16 t, 1920 t remaining  <- #90
+#92 D4 afternoon task_force:1 arrived at (0,0) at D4 16:00  <- #90
+#93 D4 afternoon ship:1 took 80 t of fuel at base:1, 2000 t aboard, base:1 has 4680 t left  <- #92
+#94 D4 afternoon Japanese contact:1 aged to 2 pulses  <- #84
+#95 D4 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#96 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#97 D5 -         Allied staff's reason for giving no order [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: intent:1, bombarding base:2 (Placeholder enemy base B) with task_force:1: base:2 (Placeholder enemy base B) is at (4,0), 4 hexes from (0,0); at balanced the force sorties every night. 10 hours to the target at cruise. the passage to the target and home, by the engine's measure, times the 1.2 of the balanced risk: ship:1 has 2000 t aboard against 96 t needed: it has the fuel. But at balanced risk ship:1 has 320 rounds against the 400 of a 0.5 of her outfit of 800: the force is short of ammunition, and it does not sortie; base:1 (Placeholder base A) cannot rearm it, so there is no day from which it may be used, and the staff cannot meet intent:1.
+#98 D5 -         Allied staff's notice: plan:1 cannot meet its intent  <- #97
+#99 D5 -         Allied standing interrupt fired: plan:1 cannot meet its intent  <- #98
+#100 D5 -         order:8 accepted for task_force:1  <- order:8  [issued by the staff]
+#101 D5 -         Allied staff's reason for order:8 [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: intent:1, bombarding base:2 (Placeholder enemy base B) with task_force:1: it does not sortie tonight, so task_force:1 is set to normal readiness.  <- order:8, #100
+#102 D5 night     Japanese contact:1 aged to 3 pulses  <- #84
+#103 D5 morning   Japanese contact:1 aged to 4 pulses  <- #84
+#104 D5 afternoon Japanese contact:1 dropped at 5 pulses  <- #84
+#105 D5 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#106 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#107 D6 -         Allied staff's reason for giving no order [serves intent 1: bombard base:2 (Placeholder enemy base B) with task_force:1; plan 1; decided at the level of task_force:1]: intent:1, bombarding base:2 (Placeholder enemy base B) with task_force:1: base:2 (Placeholder enemy base B) is at (4,0), 4 hexes from (0,0); at balanced the force sorties every night. 10 hours to the target at cruise. the passage to the target and home, by the engine's measure, times the 1.2 of the balanced risk: ship:1 has 2000 t aboard against 96 t needed: it has the fuel. But at balanced risk ship:1 has 320 rounds against the 400 of a 0.5 of her outfit of 800: the force is short of ammunition, and it does not sortie; base:1 (Placeholder base A) cannot rearm it, so there is no day from which it may be used, and the staff cannot meet intent:1.
+#108 D6 -         Allied staff's notice: plan:1 cannot meet its intent  <- #107
+#109 D6 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#110 D6 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder bombardment force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Placeholder battleship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 320 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 0 t of supply in stock, 4680 t of fuel in stock
+base:2 "Placeholder enemy base B" (Japanese) at (4,0): 0 t of supply in stock
+Allied: no contacts
+Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground, day 1 night
+Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground, day 2 night
+Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground, day 3 night
+Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground, day 4 night
+Japanese: no contacts
+Japanese: no battle claims

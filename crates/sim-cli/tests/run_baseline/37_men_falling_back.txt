@@ -2,12 +2,12 @@ Scenario 37: Men falling back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f0a62048dbc5881c  45 events
-day   2  hash 30a22404803dd210  36 events
-day   3  hash fa6e95e7d421de30  49 events
-day   4  hash 8cfaa5dee8700cfb  29 events
-day   5  hash 0c8a8713392711a0  27 events
-day   6  hash 80a684d9a7d64d43  26 events
+day   1  hash e8dbe2666d2fadfd  45 events
+day   2  hash fbfed78965d688b1  36 events
+day   3  hash 8238698656f04b1d  49 events
+day   4  hash c352467fa8c31c83  29 events
+day   5  hash 1aa89109765fc10c  27 events
+day   6  hash 908fe05516dc02fd  26 events
 
 base:1 "Placeholder base 1, Japanese, at P" (Allied) at (0,0): 350.285 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at R" (Japanese) at (1,0): 80.41 t of supply in stock
@@ -23,8 +23,8 @@ land_unit:4 "Placeholder Japanese regiment at T" (Japanese): 412 men ashore at (
 land_unit:5 "Placeholder Allied division at T" (Allied): 5860 men ashore at (10,0), on attack, fatigue 45
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (0,0): 119 enemy men ashore, reported day 6
+Allied estimate at (0,0): 119 enemy men ashore, reported day 6 (men in contact)
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (0,0): 4018 enemy men ashore, reported day 6
-Japanese estimate at (10,0): 7961 enemy men ashore, reported day 3
+Japanese estimate at (0,0): 4018 enemy men ashore, reported day 6 (men in contact)
+Japanese estimate at (10,0): 7961 enemy men ashore, reported day 3 (men in contact)

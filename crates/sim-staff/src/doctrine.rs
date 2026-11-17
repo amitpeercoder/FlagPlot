@@ -34,7 +34,7 @@
 
 use sim_core::command::{
     CommandKind, CommandState, Committed, Displacement, Hold, HoldTarget, Intent, IntentKind,
-    Leave, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason, RunSpec,
+    Leave, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason, Risk, RunSpec,
     Shortfall, StaffDecisions,
 };
 use sim_core::fixed::Fixed;
@@ -109,7 +109,15 @@ pub(crate) enum Setup<'a> {
     BaseNotYours(&'static str),
 }
 
-pub(crate) fn setup<'a>(view: &SideView<'_>, intent: &'a Intent, plan: &'a Plan) -> Setup<'a> {
+/// A supply intent with no forces limit of its own reads the nearest one up
+/// its tree: the hold's, for one the staff formed under "hold a place"
+/// (decision 0144, 7). A root with none has none.
+pub(crate) fn setup<'a>(
+    view: &SideView<'_>,
+    state: &'a CommandState,
+    intent: &'a Intent,
+    plan: &'a Plan,
+) -> Setup<'a> {
     let IntentKind::KeepSupplied {
         base,
         floor_days,
@@ -123,6 +131,7 @@ pub(crate) fn setup<'a>(view: &SideView<'_>, intent: &'a Intent, plan: &'a Plan)
         .limits
         .forces
         .as_ref()
+        .or_else(|| state.nearest_forces(intent.id))
         .and_then(|forces| forces.source.map(|source| (forces, source)))
     else {
         return Setup::NoForces;
@@ -186,7 +195,7 @@ pub(crate) fn serve(
     let Some(plan) = state.plans.get(&intent.plan) else {
         return Served::default();
     };
-    let params = match setup(view, intent, plan) {
+    let params = match setup(view, state, intent, plan) {
         Setup::Ready(params) => params,
         Setup::NoForces => {
             out.no_order(
@@ -480,6 +489,11 @@ pub(crate) fn serve(
     let mut hold_note: Option<WithoutHold> = None;
     if !loading {
         evaluation = planner.evaluate(&readings, today, &units, pending_t);
+        // Decision 0145, 7 and 8: a run by night carries no more than the
+        // night's hours can land.
+        if let Some(run) = evaluation.as_mut().and_then(|ev| ev.run.as_mut()) {
+            night_load(&planner, run);
+        }
         if let Some(ev) = &evaluation {
             if ev.needed {
                 let note = without_hold(&planner, &readings, ev, pending_t);
@@ -657,12 +671,19 @@ fn dispatch(
         .ok_or_else(|| Unsent::Cannot("no time can be worked for the passage".to_string()))?;
     let mut waypoints = route.out.clone();
     waypoints.extend(route.back.iter().copied());
+    // Decision 0145: the run timed to the dark, or not sent.
+    let (night_words, speed) = night_dispatch(planner, force, &found.afloat, &waypoints)?;
     // Decision 0126: an escort, or the run held, or it sails alone.
-    let (escort_words, escort) =
-        match crate::escort::for_run(planner, force, &waypoints, timing.speed_kn, today) {
-            crate::escort::ForRun::Held(why) => return Err(Unsent::Held(why)),
-            crate::escort::ForRun::Sails { words, escort } => (words, escort),
-        };
+    let (escort_words, escort) = match crate::escort::for_run(
+        &crate::escort::RunContext::of(planner),
+        force,
+        &waypoints,
+        timing.speed_kn,
+        today,
+    ) {
+        crate::escort::ForRun::Held(why) => return Err(Unsent::Held(why)),
+        crate::escort::ForRun::Sails { words, escort } => (words, escort),
+    };
     let mut new_days = run.days;
     new_days.sail = today;
     new_days.arrive = today + timing.out_days - 1;
@@ -757,9 +778,15 @@ fn dispatch(
             )
             .evidence(format!("{} is released", plan.id), today)
             .binding(format!("area: {}", area_text(params.area)))
-            .worked(match &escort_words {
-                Some(words) => format!("{worked} {words} {extra}"),
-                None => format!("{worked} {extra}"),
+            .worked({
+                let worked = match &night_words {
+                    Some(words) => format!("{worked} {words}"),
+                    None => worked.clone(),
+                };
+                match &escort_words {
+                    Some(words) => format!("{worked} {words} {extra}"),
+                    None => format!("{worked} {extra}"),
+                }
             })
             .would_change("a load not complete, or a plan not released")
             .done()
@@ -772,6 +799,19 @@ fn dispatch(
                 charge: Some(Who::Existing(force)),
             },
             escort_reason,
+        );
+    }
+    if let Some((speed, speed_words)) = speed {
+        out.task(
+            intent.id,
+            Who::Existing(force),
+            Step::Speed(speed),
+            serving(intent, plan)
+                .evidence(night_words.clone().unwrap_or_default(), today)
+                .binding("a run by night arrives in the night")
+                .worked(speed_words)
+                .would_change("no enemy base within 15 hexes of the destination, or press")
+                .done(),
         );
     }
     out.task(
@@ -924,6 +964,10 @@ fn new_run(
     if let Some(note) = held {
         worked.push(' ');
         worked.push_str(&note.sentence());
+    }
+    if let Some(night) = &run.night {
+        worked.push(' ');
+        worked.push_str(night);
     }
     worked.push_str(&format!(
         " Ships {}{}: {} x {} = a room that covers the load.",
@@ -1717,5 +1761,201 @@ fn free_words(timing: &crate::planner::Timing, days: &sim_core::command::RunDays
             rate,
             days.free,
         ),
+    }
+}
+
+/// The rate each of `ships` lands at at the destination (the berths first,
+/// in ship order, then by lighter), with what each holds.
+fn landing_rates(
+    planner: &Planner<'_, '_>,
+    lines: &[(ShipId, Fixed)],
+) -> Vec<(ShipId, Fixed, Fixed)> {
+    planner
+        .work(planner.params.destination_hex, lines)
+        .map(|work| work.lines)
+        .unwrap_or_default()
+}
+
+/// The two speeds tried for a run's ships: by the engine's forecast where
+/// they lie in one force, else by the rules it steams by on the route.
+fn tried_for(planner: &Planner<'_, '_>, ships: &[ShipId]) -> Vec<crate::night::Tried> {
+    let params = &planner.params;
+    let Some(route) = planner.route.as_ref() else {
+        return Vec::new();
+    };
+    let forces: BTreeSet<TaskForceId> = ships
+        .iter()
+        .filter_map(|s| planner.fleet.force_of(*s).map(|f| f.id))
+        .collect();
+    let all_in_one = forces.len() == 1
+        && ships.iter().all(|s| planner.fleet.force_of(*s).is_some())
+        && forces
+            .iter()
+            .next()
+            .and_then(|f| planner.fleet.forces.get(f))
+            .is_some_and(|f| f.ships.iter().all(|s| ships.contains(s)));
+    if all_in_one {
+        let force = *forces.iter().next().expect("one force");
+        let mut waypoints = route.out.clone();
+        waypoints.extend(route.back.iter().copied());
+        crate::night::try_force(planner.view, force, params.destination_hex, &waypoints)
+    } else {
+        crate::night::try_ships(
+            planner.view,
+            ships,
+            route.out_nm,
+            route.out_nm + route.back_nm,
+        )
+    }
+}
+
+/// Each ship's load against its limit, in words.
+fn limits_words(lines: &[(ShipId, Fixed, Fixed)], night: Fixed) -> String {
+    lines
+        .iter()
+        .map(|(ship, tons, rate)| {
+            format!(
+                "{ship} carries {tons} t against a limit of {rate} t an hour x {night} hours = {} t",
+                *rate * night
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Decision 0145, 4 to 8, on the morning a run is ordered: where it goes by
+/// night, the speed it will go at, and its load cut to the night's limit.
+fn night_load(planner: &Planner<'_, '_>, run: &mut RunPlan) {
+    let params = &planner.params;
+    let risk = planner.state().risk_read_up(params.intent.id);
+    let Some((base, hexes)) = crate::night::applies(planner.view, risk, params.destination_hex)
+    else {
+        return;
+    };
+    let near = crate::night::base_near_words(planner.view, base, hexes, params.destination_hex);
+    let tried = tried_for(planner, &run.ships);
+    let tried_text = crate::night::tried_words(&tried);
+    let after: Vec<(ShipId, Fixed)> = planner
+        .distribute(&run.ships, run.taken_t)
+        .into_iter()
+        .map(|(ship, _, after)| (ship, after))
+        .collect();
+    let rated = landing_rates(planner, &after);
+    let loads: Vec<(Fixed, Fixed)> = rated.iter().map(|(_, tons, rate)| (*tons, *rate)).collect();
+    let Some(chosen) = crate::night::choose(&tried, &loads) else {
+        let then = match risk {
+            Risk::Preserve => "at preserve the force it is loaded and will not sail while no speed brings it there in the dark",
+            _ => "at balanced it goes by day at cruising speed",
+        };
+        run.night = Some(format!(
+            "By night: {near}; {tried_text}: neither speed brings it there in the night, so {then}."
+        ));
+        return;
+    };
+    let night = chosen.night.unwrap_or(Fixed::ZERO);
+    let lines: Vec<(Fixed, Fixed, Fixed)> = run
+        .ships
+        .iter()
+        .zip(rated.iter())
+        .filter_map(|(id, (_, _, rate))| {
+            let ship = planner.fleet.ships.get(id)?;
+            Some((ship.supply_t, planner.ship_room(ship), *rate * night))
+        })
+        .collect();
+    let most = crate::night::weight_within(&lines);
+    let mut cut_words = String::new();
+    if run.weight_t > most {
+        let before = run.weight_t;
+        let taken = (most - run.aboard_before_t).max(Fixed::ZERO);
+        run.taken_t = taken;
+        run.weight_t = run.aboard_before_t + taken;
+        run.load_t = run.weight_t;
+        let cut = format!(
+            "the night's limit: no ship carries more than it can land in the night's {night} hours, so the load of {before} t is cut to {} t",
+            run.weight_t
+        );
+        cut_words = format!(" The load of {before} t is cut to {} t.", run.weight_t);
+        run.cuts.push(cut);
+    }
+    let after: Vec<(ShipId, Fixed)> = planner
+        .distribute(&run.ships, run.taken_t)
+        .into_iter()
+        .map(|(ship, _, after)| (ship, after))
+        .collect();
+    let rated = landing_rates(planner, &after);
+    run.night = Some(format!(
+        "By night: {near}; {tried_text}. It goes at {}, with {night} hours of the night left on arrival: {}.{cut_words} Its days are reckoned at cruising speed.",
+        crate::night::speed_name(chosen.speed),
+        limits_words(&rated, night)
+    ));
+}
+
+/// Decision 0145, 5, 11 and 12, on the morning a loaded run sails: its
+/// words, and the speed order where the speed differs from the force's; or
+/// the run not sent at preserve the force where no speed brings it there in
+/// the dark.
+#[allow(clippy::type_complexity)]
+fn night_dispatch(
+    planner: &Planner<'_, '_>,
+    force: TaskForceId,
+    ships: &[ShipId],
+    waypoints: &[Hex],
+) -> Result<
+    (
+        Option<String>,
+        Option<(sim_core::orders::SpeedSetting, String)>,
+    ),
+    Unsent,
+> {
+    use sim_core::orders::SpeedSetting;
+    let params = &planner.params;
+    let risk = planner.state().risk_read_up(params.intent.id);
+    let Some((base, hexes)) = crate::night::applies(planner.view, risk, params.destination_hex)
+    else {
+        return Ok((None, None));
+    };
+    let Some(current) = planner.fleet.forces.get(&force).map(|f| f.speed) else {
+        return Ok((None, None));
+    };
+    let near = crate::night::base_near_words(planner.view, base, hexes, params.destination_hex);
+    let tried = crate::night::try_force(planner.view, force, params.destination_hex, waypoints);
+    let tried_text = crate::night::tried_words(&tried);
+    let aboard: Vec<(ShipId, Fixed)> = ships
+        .iter()
+        .filter_map(|id| planner.fleet.ships.get(id).map(|s| (*id, s.supply_t)))
+        .collect();
+    let rated = landing_rates(planner, &aboard);
+    let loads: Vec<(Fixed, Fixed)> = rated.iter().map(|(_, tons, rate)| (*tons, *rate)).collect();
+    match crate::night::choose(&tried, &loads) {
+        Some(chosen) => {
+            let night = chosen.night.unwrap_or(Fixed::ZERO);
+            let speed_name = crate::night::speed_name(chosen.speed);
+            let words = format!(
+                "By night: {near}; {tried_text}. It goes at {speed_name}, with {night} hours of the night left on arrival: {}; it lands its load in the night and steams on at the morning.",
+                limits_words(&rated, night)
+            );
+            let order = (current != chosen.speed).then(|| {
+                (
+                    chosen.speed,
+                    format!("{near}; {tried_text}: {force} is set to {speed_name}, the first that brings it there in the night with the fuel and room for its load."),
+                )
+            });
+            Ok((Some(words), order))
+        }
+        None if risk == Risk::Preserve => Err(Unsent::Held(format!(
+            "{near}; {tried_text}: neither speed brings it there in the night, and at preserve the force it does not sail by day"
+        ))),
+        None => {
+            let words = format!(
+                "By night: {near}; {tried_text}: neither speed brings it there in the night, so at balanced it goes by day at cruising speed."
+            );
+            let order = (current != SpeedSetting::Cruise).then(|| {
+                (
+                    SpeedSetting::Cruise,
+                    format!("{near}; {tried_text}: neither speed brings it there in the night, so {force} is set to cruising speed and goes by day."),
+                )
+            });
+            Ok((Some(words), order))
+        }
     }
 }

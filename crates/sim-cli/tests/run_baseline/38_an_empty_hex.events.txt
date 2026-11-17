@@ -2,16 +2,16 @@ Scenario 38: An empty hex
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0cc09292a95b51cb  33 events
-day   2  hash 0fb0eda55fd0e84a  23 events
-day   3  hash 9635a7624d9999de  23 events
-day   4  hash 3a84454df95ce7f4  22 events
-day   5  hash 429d325f06d0abcc  20 events
-day   6  hash 636981fe3745617e  20 events
+day   1  hash 11a3fc6c1d36721b  33 events
+day   2  hash 7291985b0db5a1fa  23 events
+day   3  hash 01688a54e8308650  23 events
+day   4  hash b0db99a27af61c3b  22 events
+day   5  hash f11b512687a352bb  20 events
+day   6  hash d05bab7f5d6489cd  20 events
 
-#1 D0 -         Allied ground report at (10,0): 400 enemy men ashore
-#2 D0 -         Allied ground report at (20,0): 400 enemy men ashore
-#3 D0 -         Allied ground report at (30,0): 300 enemy men ashore
+#1 D0 -         Allied ground report at (10,0): 400 enemy men ashore (told)
+#2 D0 -         Allied ground report at (20,0): 400 enemy men ashore (told)
+#3 D0 -         Allied ground report at (30,0): 300 enemy men ashore (told)
 #4 D1 night     base:3 spent 2.5 t of supply on 500 men ashore for the day, 997.5 t left
 #5 D1 night     Allied men ashore at (0,0): 500 of 500 fed from base:3, 0 unfed  <- #4
 #6 D1 night     base:1 spent 1.5 t of supply on 300 men ashore for the day, 998.5 t left
@@ -27,8 +27,8 @@ day   6  hash 636981fe3745617e  20 events
 #16 D1 -         the Japanese side is beaten at (0,0): 0 men ashore against 500, without a fight
 #17 D1 -         base:1 at (0,0) changed from the Japanese side to the Allied side: 499.25 t of supply and 0 t of fuel kept, 499.25 t and 0 t lost  <- #16
 #18 D1 -         land_unit:1 of the Japanese side fell back from (0,0) toward (1,0) with 300 men: fatigue 30  <- #16
-#19 D1 -         Allied ground report at (0,0): 236 enemy men ashore
-#20 D1 -         Japanese ground report at (0,0): 308 enemy men ashore
+#19 D1 -         Allied ground report at (0,0): 236 enemy men ashore (men in contact)
+#20 D1 -         Japanese ground report at (0,0): 308 enemy men ashore (men in contact)
 #21 D1 -         allied men at (10,0) find no enemy men ashore; the estimate of 400 men of day 0 is cleared  <- #1
 #22 D1 -         the Japanese side is beaten at (30,0): 0 men ashore against 100, without a fight
 #23 D1 -         base:6 at (30,0) changed from the Japanese side to the Allied side: 499.5 t of supply and 0 t of fuel kept, 499.5 t and 0 t lost  <- #22
@@ -57,8 +57,8 @@ day   6  hash 636981fe3745617e  20 events
 #46 D2 night     Allied men ashore at (30,0): 100 of 100 fed from base:6, 0 unfed  <- #45
 #47 D2 -         land_unit:1 marched from (0,0) toward (1,0): 1 of 3 days  <- #18
 #48 D2 -         land_unit:1 marched: fatigue 35  <- #47
-#49 D2 -         Allied ground report at (0,0): 282 enemy men ashore, replacing the estimate held
-#50 D2 -         Japanese ground report at (0,0): 433 enemy men ashore, replacing the estimate held
+#49 D2 -         Allied ground report at (0,0): 282 enemy men ashore (men in contact), replacing the estimate held
+#50 D2 -         Japanese ground report at (0,0): 433 enemy men ashore (men in contact), replacing the estimate held
 #51 D2 -         land_unit:4 worked at the port of base:5: 100 of work, 100 on the port today  <- #44
 #52 D2 -         land_unit:3 dug in: fieldworks 20
 #53 D2 -         base:1 at the end of the day: 496.75 t of supply, 0 aircraft ready: not open
@@ -80,8 +80,8 @@ day   6  hash 636981fe3745617e  20 events
 #69 D3 night     Allied men ashore at (30,0): 100 of 100 fed from base:6, 0 unfed  <- #68
 #70 D3 -         land_unit:1 marched from (0,0) toward (1,0): 2 of 3 days  <- #18
 #71 D3 -         land_unit:1 marched: fatigue 40  <- #70
-#72 D3 -         Allied ground report at (0,0): 252 enemy men ashore, replacing the estimate held
-#73 D3 -         Japanese ground report at (0,0): 451 enemy men ashore, replacing the estimate held
+#72 D3 -         Allied ground report at (0,0): 252 enemy men ashore (men in contact), replacing the estimate held
+#73 D3 -         Japanese ground report at (0,0): 451 enemy men ashore (men in contact), replacing the estimate held
 #74 D3 -         land_unit:4 worked at the port of base:5: 100 of work, 100 on the port today  <- #67
 #75 D3 -         land_unit:3 dug in: fieldworks 30
 #76 D3 -         base:1 at the end of the day: 494.25 t of supply, 0 aircraft ready: not open
@@ -169,7 +169,7 @@ land_unit:5 "Placeholder Japanese working unit at V" (Japanese): no men ashore
 land_unit:6 "Placeholder Allied platoon at V" (Allied): 100 men ashore at (30,0), on attack
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (20,0): 400 enemy men ashore, reported day 0
+Allied estimate at (20,0): 400 enemy men ashore, reported day 0 (told)
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (0,0): 451 enemy men ashore, reported day 3
+Japanese estimate at (0,0): 451 enemy men ashore, reported day 3 (men in contact)

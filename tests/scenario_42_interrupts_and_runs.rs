@@ -1448,7 +1448,7 @@ fn no_truth_two_worlds_the_side_cannot_tell_apart_give_the_same_runs_and_reports
     std::fs::write(&map_path, map_text).expect("the map is written");
     let enemy = |supply: u32, men: u32, ship_fuel: u32| {
         format!(
-            "\n[[base]]\nid = 7\nname = \"Placeholder base U, Japanese\"\nside = \"japanese\"\nq = 3\nr = 2\nsupply_t = {supply}\nfuel_t = 100\n\n[[land_unit]]\nid = 9\nname = \"Placeholder unit 9\"\nside = \"japanese\"\nmen = {men}\nq = 3\nr = 2\nposture = \"defend\"\n\n[[ship]]\nid = 11\nname = \"Placeholder cargo ship 11\"\nclass = 3\nside = \"japanese\"\nfuel_t = {ship_fuel}\nport = 7\n"
+            "\n[[base]]\nid = 7\nname = \"Placeholder base U, Japanese\"\nside = \"japanese\"\nq = 3\nr = 2\nsupply_t = {supply}\nfuel_t = 100\non_map = false\n\n[[land_unit]]\nid = 9\nname = \"Placeholder unit 9\"\nside = \"japanese\"\nmen = {men}\nq = 3\nr = 2\nposture = \"defend\"\n\n[[ship]]\nid = 11\nname = \"Placeholder cargo ship 11\"\nclass = 3\nside = \"japanese\"\nfuel_t = {ship_fuel}\nport = 7\n"
         )
     };
     let plain = varied(

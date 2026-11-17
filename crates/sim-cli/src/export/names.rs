@@ -98,6 +98,7 @@ pub fn air_mission(mission: AirMission) -> &'static str {
         AirMission::NavalStrike => "naval_strike",
         AirMission::CombatAirPatrol => "combat_air_patrol",
         AirMission::BaseStrike(_) => "base_strike",
+        AirMission::Reconnaissance(_) => "reconnaissance",
     }
 }
 

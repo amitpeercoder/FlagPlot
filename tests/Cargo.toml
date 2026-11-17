@@ -399,3 +399,31 @@ path = "scenario_65_a_day_from_which_a_force_may_be_used.rs"
 [[test]]
 name = "scenario_66_units_made_ready"
 path = "scenario_66_units_made_ready.rs"
+
+[[test]]
+name = "scenario_67_taking_a_place"
+path = "scenario_67_taking_a_place.rs"
+
+[[test]]
+name = "scenario_68_ashore"
+path = "scenario_68_ashore.rs"
+
+[[test]]
+name = "scenario_69_taken_and_held"
+path = "scenario_69_taken_and_held.rs"
+
+[[test]]
+name = "scenario_70_a_run_by_night"
+path = "scenario_70_a_run_by_night.rs"
+
+[[test]]
+name = "scenario_71_bombardment_from_the_sea"
+path = "scenario_71_bombardment_from_the_sea.rs"
+
+[[test]]
+name = "scenario_72_reconnaissance"
+path = "scenario_72_reconnaissance.rs"
+
+[[test]]
+name = "scenario_73_carrier_cover"
+path = "scenario_73_carrier_cover.rs"

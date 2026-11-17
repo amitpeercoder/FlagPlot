@@ -2,14 +2,14 @@ Scenario 29: What a land unit is good at
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9f8196dbd04ea3d3  64 events
-day   2  hash 2abcd26c361d7405  63 events
-day   3  hash 4264700c683bc40c  49 events
-day   4  hash ffb5fd6e8b8e806a  44 events
-day   5  hash 7a33f5e4b214e3d7  41 events
-day   6  hash 73f0dfd22bc946e1  42 events
-day   7  hash 33fd1e427324f40b  34 events
-day   8  hash 0bb6b9a0374c7e28  34 events
+day   1  hash b809b50a512bbcfc  64 events
+day   2  hash 443080891e0605a6  63 events
+day   3  hash 054f12b2d2e4bcf3  49 events
+day   4  hash a553782e2398be85  44 events
+day   5  hash f677e4edc43abd7a  41 events
+day   6  hash d07c16405c465ffe  42 events
+day   7  hash dc2c860f824e040c  34 events
+day   8  hash 7382e6d9172afc4d  34 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:2  <- order:2
@@ -45,8 +45,8 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #32 D1 -         land_unit:8 lost 40 men in the fight at (6,0), 960 left ashore  <- #30
 #33 D1 -         land_unit:9 lost 200 men in the fight at (6,0), 800 left ashore  <- #29
 #34 D1 -         land_unit:9 attacked: fatigue 50  <- #30, #31
-#35 D1 -         Allied ground report at (6,0): 836 enemy men ashore  <- #28
-#36 D1 -         Japanese ground report at (6,0): 829 enemy men ashore  <- #28
+#35 D1 -         Allied ground report at (6,0): 836 enemy men ashore (men in contact)  <- #28
+#36 D1 -         Japanese ground report at (6,0): 829 enemy men ashore (men in contact)  <- #28
 #37 D1 -         fight ashore at (8,0): the Japanese side attacks
 #38 D1 -         land_unit:10 fired at (8,0) with 500 men: 5 shots at 0.78, 3 hits  <- #37, #17
 #39 D1 -         land_unit:11 fired at (8,0) with 500 men: 5 shots at 0.3, 2 hits  <- #37, #19
@@ -54,8 +54,8 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #41 D1 -         land_unit:10 lost 40 men in the fight at (8,0), 460 left ashore  <- #39
 #42 D1 -         land_unit:11 lost 60 men in the fight at (8,0), 440 left ashore  <- #38
 #43 D1 -         land_unit:11 attacked: fatigue 50  <- #39, #40
-#44 D1 -         Allied ground report at (8,0): 277 enemy men ashore  <- #37
-#45 D1 -         Japanese ground report at (8,0): 248 enemy men ashore  <- #37
+#44 D1 -         Allied ground report at (8,0): 277 enemy men ashore (men in contact)  <- #37
+#45 D1 -         Japanese ground report at (8,0): 248 enemy men ashore (men in contact)  <- #37
 #46 D1 -         task_force:1 loaded for the landing at (4,0): loading 5  <- order:1
 #47 D1 -         task_force:2 loaded for the landing at (4,0): loading 5  <- order:2
 #48 D1 -         task_force:3 loaded for the landing at (4,0): loading 5  <- order:3
@@ -105,8 +105,8 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #92 D2 -         land_unit:9 lost 160 men in the fight at (6,0), 640 left ashore  <- #88
 #93 D2 -         land_unit:9 attacked: fatigue 100  <- #89, #90
 #94 D2 -         land_unit:9 is too tired to attack at fatigue 100 and goes back to defend  <- #93
-#95 D2 -         Allied ground report at (6,0): 607 enemy men ashore, replacing the estimate held  <- #87
-#96 D2 -         Japanese ground report at (6,0): 618 enemy men ashore, replacing the estimate held  <- #87
+#95 D2 -         Allied ground report at (6,0): 607 enemy men ashore (men in contact), replacing the estimate held  <- #87
+#96 D2 -         Japanese ground report at (6,0): 618 enemy men ashore (men in contact), replacing the estimate held  <- #87
 #97 D2 -         fight ashore at (8,0): the Japanese side attacks
 #98 D2 -         land_unit:10 fired at (8,0) with 460 men: 4.6 shots at 0.78, 3 hits  <- #97, #74
 #99 D2 -         land_unit:11 fired at (8,0) with 220 men: 2.2 shots at 0.3, 1 hit  <- #97, #76
@@ -115,8 +115,8 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #102 D2 -         land_unit:11 lost 60 men in the fight at (8,0), 380 left ashore  <- #98
 #103 D2 -         land_unit:11 attacked: fatigue 100  <- #99, #100
 #104 D2 -         land_unit:11 is too tired to attack at fatigue 100 and goes back to defend  <- #103
-#105 D2 -         Allied ground report at (8,0): 387 enemy men ashore, replacing the estimate held  <- #97
-#106 D2 -         Japanese ground report at (8,0): 539 enemy men ashore, replacing the estimate held  <- #97
+#105 D2 -         Allied ground report at (8,0): 387 enemy men ashore (men in contact), replacing the estimate held  <- #97
+#106 D2 -         Japanese ground report at (8,0): 539 enemy men ashore (men in contact), replacing the estimate held  <- #97
 #107 D2 -         task_force:1 loaded for the landing at (4,0): loading 10  <- order:1
 #108 D2 -         task_force:2 loaded for the landing at (4,0): loading 10  <- order:2
 #109 D2 -         task_force:3 loaded for the landing at (4,0): loading 10  <- order:3
@@ -163,11 +163,11 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #150 D3 -         land_unit:2 marched: fatigue 15  <- #140
 #151 D3 -         land_unit:4 marched: fatigue 15  <- #144
 #152 D3 -         land_unit:9 rested: fatigue 95
-#153 D3 -         Allied ground report at (6,0): 598 enemy men ashore, replacing the estimate held
-#154 D3 -         Japanese ground report at (6,0): 1168 enemy men ashore, replacing the estimate held
+#153 D3 -         Allied ground report at (6,0): 598 enemy men ashore (men in contact), replacing the estimate held
+#154 D3 -         Japanese ground report at (6,0): 1168 enemy men ashore (men in contact), replacing the estimate held
 #155 D3 -         land_unit:11 rested: fatigue 95
-#156 D3 -         Allied ground report at (8,0): 269 enemy men ashore, replacing the estimate held
-#157 D3 -         Japanese ground report at (8,0): 238 enemy men ashore, replacing the estimate held
+#156 D3 -         Allied ground report at (8,0): 269 enemy men ashore (men in contact), replacing the estimate held
+#157 D3 -         Japanese ground report at (8,0): 238 enemy men ashore (men in contact), replacing the estimate held
 #158 D3 -         task_force:1 loaded for the landing at (4,0): loading 15  <- order:1
 #159 D3 -         task_force:2 loaded for the landing at (4,0): loading 15  <- order:2
 #160 D3 -         task_force:3 loaded for the landing at (4,0): loading 15  <- order:3
@@ -207,11 +207,11 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #194 D4 -         land_unit:2 rested: fatigue 10
 #195 D4 -         land_unit:4 rested: fatigue 10
 #196 D4 -         land_unit:9 rested: fatigue 90
-#197 D4 -         Allied ground report at (6,0): 570 enemy men ashore, replacing the estimate held
-#198 D4 -         Japanese ground report at (6,0): 676 enemy men ashore, replacing the estimate held
+#197 D4 -         Allied ground report at (6,0): 570 enemy men ashore (men in contact), replacing the estimate held
+#198 D4 -         Japanese ground report at (6,0): 676 enemy men ashore (men in contact), replacing the estimate held
 #199 D4 -         land_unit:11 rested: fatigue 90
-#200 D4 -         Allied ground report at (8,0): 395 enemy men ashore, replacing the estimate held
-#201 D4 -         Japanese ground report at (8,0): 632 enemy men ashore, replacing the estimate held
+#200 D4 -         Allied ground report at (8,0): 395 enemy men ashore (men in contact), replacing the estimate held
+#201 D4 -         Japanese ground report at (8,0): 632 enemy men ashore (men in contact), replacing the estimate held
 #202 D4 -         task_force:1 loaded for the landing at (4,0): loading 20  <- order:1
 #203 D4 -         task_force:2 loaded for the landing at (4,0): loading 20  <- order:2
 #204 D4 -         task_force:3 loaded for the landing at (4,0): loading 20  <- order:3
@@ -250,11 +250,11 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #237 D5 -         land_unit:2 rested: fatigue 5
 #238 D5 -         land_unit:4 rested: fatigue 5
 #239 D5 -         land_unit:9 rested: fatigue 85
-#240 D5 -         Allied ground report at (6,0): 568 enemy men ashore, replacing the estimate held
-#241 D5 -         Japanese ground report at (6,0): 1239 enemy men ashore, replacing the estimate held
+#240 D5 -         Allied ground report at (6,0): 568 enemy men ashore (men in contact), replacing the estimate held
+#241 D5 -         Japanese ground report at (6,0): 1239 enemy men ashore (men in contact), replacing the estimate held
 #242 D5 -         land_unit:11 rested: fatigue 85
-#243 D5 -         Allied ground report at (8,0): 533 enemy men ashore, replacing the estimate held
-#244 D5 -         Japanese ground report at (8,0): 315 enemy men ashore, replacing the estimate held
+#243 D5 -         Allied ground report at (8,0): 533 enemy men ashore (men in contact), replacing the estimate held
+#244 D5 -         Japanese ground report at (8,0): 315 enemy men ashore (men in contact), replacing the estimate held
 #245 D5 -         task_force:1 loaded for the landing at (4,0): loading 25  <- order:1
 #246 D5 -         task_force:2 loaded for the landing at (4,0): loading 25  <- order:2
 #247 D5 -         task_force:3 loaded for the landing at (4,0): loading 25  <- order:3
@@ -293,11 +293,11 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #280 D6 -         land_unit:3 marched: fatigue 30  <- #276
 #281 D6 -         land_unit:4 rested: fatigue 0
 #282 D6 -         land_unit:9 rested: fatigue 80
-#283 D6 -         Allied ground report at (6,0): 836 enemy men ashore, replacing the estimate held
-#284 D6 -         Japanese ground report at (6,0): 832 enemy men ashore, replacing the estimate held
+#283 D6 -         Allied ground report at (6,0): 836 enemy men ashore (men in contact), replacing the estimate held
+#284 D6 -         Japanese ground report at (6,0): 832 enemy men ashore (men in contact), replacing the estimate held
 #285 D6 -         land_unit:11 rested: fatigue 80
-#286 D6 -         Allied ground report at (8,0): 397 enemy men ashore, replacing the estimate held
-#287 D6 -         Japanese ground report at (8,0): 601 enemy men ashore, replacing the estimate held
+#286 D6 -         Allied ground report at (8,0): 397 enemy men ashore (men in contact), replacing the estimate held
+#287 D6 -         Japanese ground report at (8,0): 601 enemy men ashore (men in contact), replacing the estimate held
 #288 D6 -         task_force:1 loaded for the landing at (4,0): loading 30  <- order:1
 #289 D6 -         task_force:2 loaded for the landing at (4,0): loading 30  <- order:2
 #290 D6 -         task_force:3 loaded for the landing at (4,0): loading 30  <- order:3
@@ -328,11 +328,11 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #315 D7 night     Japanese men ashore at (8,0): 380 of 380 fed from base:7, 0 unfed  <- #314
 #316 D7 -         land_unit:3 rested: fatigue 25
 #317 D7 -         land_unit:9 rested: fatigue 75
-#318 D7 -         Allied ground report at (6,0): 820 enemy men ashore, replacing the estimate held
-#319 D7 -         Japanese ground report at (6,0): 923 enemy men ashore, replacing the estimate held
+#318 D7 -         Allied ground report at (6,0): 820 enemy men ashore (men in contact), replacing the estimate held
+#319 D7 -         Japanese ground report at (6,0): 923 enemy men ashore (men in contact), replacing the estimate held
 #320 D7 -         land_unit:11 rested: fatigue 75
-#321 D7 -         Allied ground report at (8,0): 532 enemy men ashore, replacing the estimate held
-#322 D7 -         Japanese ground report at (8,0): 352 enemy men ashore, replacing the estimate held
+#321 D7 -         Allied ground report at (8,0): 532 enemy men ashore (men in contact), replacing the estimate held
+#322 D7 -         Japanese ground report at (8,0): 352 enemy men ashore (men in contact), replacing the estimate held
 #323 D7 -         task_force:1 loaded for the landing at (4,0): loading 35  <- order:1
 #324 D7 -         task_force:2 loaded for the landing at (4,0): loading 35  <- order:2
 #325 D7 -         task_force:3 loaded for the landing at (4,0): loading 35  <- order:3
@@ -362,11 +362,11 @@ day   8  hash 0bb6b9a0374c7e28  34 events
 #349 D8 night     Japanese men ashore at (8,0): 380 of 380 fed from base:7, 0 unfed  <- #348
 #350 D8 -         land_unit:3 rested: fatigue 20
 #351 D8 -         land_unit:9 rested: fatigue 70
-#352 D8 -         Allied ground report at (6,0): 507 enemy men ashore, replacing the estimate held
-#353 D8 -         Japanese ground report at (6,0): 739 enemy men ashore, replacing the estimate held
+#352 D8 -         Allied ground report at (6,0): 507 enemy men ashore (men in contact), replacing the estimate held
+#353 D8 -         Japanese ground report at (6,0): 739 enemy men ashore (men in contact), replacing the estimate held
 #354 D8 -         land_unit:11 rested: fatigue 70
-#355 D8 -         Allied ground report at (8,0): 236 enemy men ashore, replacing the estimate held
-#356 D8 -         Japanese ground report at (8,0): 596 enemy men ashore, replacing the estimate held
+#355 D8 -         Allied ground report at (8,0): 236 enemy men ashore (men in contact), replacing the estimate held
+#356 D8 -         Japanese ground report at (8,0): 596 enemy men ashore (men in contact), replacing the estimate held
 #357 D8 -         task_force:1 loaded for the landing at (4,0): loading 40  <- order:1
 #358 D8 -         task_force:2 loaded for the landing at (4,0): loading 40  <- order:2
 #359 D8 -         task_force:3 loaded for the landing at (4,0): loading 40  <- order:3
@@ -410,9 +410,9 @@ land_unit:10 "Placeholder unit 10" (Allied): 441 men ashore at (8,0), fieldworks
 land_unit:11 "Placeholder unit 11" (Japanese): 380 men ashore at (8,0), fatigue 70, fieldworks 30
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (6,0): 507 enemy men ashore, reported day 8
-Allied estimate at (8,0): 236 enemy men ashore, reported day 8
+Allied estimate at (6,0): 507 enemy men ashore, reported day 8 (men in contact)
+Allied estimate at (8,0): 236 enemy men ashore, reported day 8 (men in contact)
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (6,0): 739 enemy men ashore, reported day 8
-Japanese estimate at (8,0): 596 enemy men ashore, reported day 8
+Japanese estimate at (6,0): 739 enemy men ashore, reported day 8 (men in contact)
+Japanese estimate at (8,0): 596 enemy men ashore, reported day 8 (men in contact)

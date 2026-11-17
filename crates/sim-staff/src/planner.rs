@@ -160,6 +160,8 @@ pub(crate) struct RunPlan {
     pub(crate) timing: Timing,
     /// What cut the load below what the intent called for.
     pub(crate) cuts: Vec<String>,
+    /// The run by night, in words, where it goes by night (decision 0145).
+    pub(crate) night: Option<String>,
 }
 
 /// Why a run that is needed cannot be made.
@@ -619,7 +621,7 @@ impl<'a, 'v> Planner<'a, 'v> {
     }
 
     /// Taking supply on top of what is aboard.
-    fn ship_room(&self, ship: &Ship) -> Fixed {
+    pub(crate) fn ship_room(&self, ship: &Ship) -> Fixed {
         let capacity = self
             .view
             .ship_class(ship.class)
@@ -654,7 +656,7 @@ impl<'a, 'v> Planner<'a, 'v> {
     /// The work of moving `lines` (ship, tons) at the port in `hex`: the
     /// first ships, in ship order, up to the port's berths work at the berth
     /// rate and the rest by lighter. `None` where a ship's rate is 0.
-    fn work(&self, hex: Hex, lines: &[(ShipId, Fixed)]) -> Option<Work> {
+    pub(crate) fn work(&self, hex: Hex, lines: &[(ShipId, Fixed)]) -> Option<Work> {
         let port = self.port_at(hex)?;
         let mut hours = Fixed::ZERO;
         let mut out = Vec::new();
@@ -681,7 +683,11 @@ impl<'a, 'v> Planner<'a, 'v> {
 
     /// The tons each of `ships` takes in a load of `load_t`, filled in ship
     /// order, and the supply it then holds.
-    fn distribute(&self, ships: &[ShipId], load_t: Fixed) -> Vec<(ShipId, Fixed, Fixed)> {
+    pub(crate) fn distribute(
+        &self,
+        ships: &[ShipId],
+        load_t: Fixed,
+    ) -> Vec<(ShipId, Fixed, Fixed)> {
         let mut left = load_t;
         let mut lines = Vec::new();
         for id in ships {
@@ -980,6 +986,7 @@ impl<'a, 'v> Planner<'a, 'v> {
                     weight_t: aboard_before_t + taken_t,
                     aboard_before_t,
                     cuts,
+                    night: None,
                 });
             }
         }

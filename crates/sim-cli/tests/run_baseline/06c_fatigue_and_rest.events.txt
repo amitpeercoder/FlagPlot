@@ -2,14 +2,14 @@ Scenario 6c: Fatigue and rest
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5ddbe57f4dc123f2  35 events
-day   2  hash 95c294731844a31b  25 events
-day   3  hash 4bd9fbc548406940  25 events
-day   4  hash c00548cff15af61d  22 events
-day   5  hash 5230a3f739569c29  26 events
-day   6  hash f6952d646383a7e5  21 events
-day   7  hash 5341912b129f490f  14 events
-day   8  hash bc3480ffd0e647c6  18 events
+day   1  hash 71225ef926167f57  35 events
+day   2  hash 25ca3e8397867092  25 events
+day   3  hash 2bf70ce7da2030f9  25 events
+day   4  hash d3b6179b046b4ac4  22 events
+day   5  hash d3ed9e4c87d79564  26 events
+day   6  hash 337f2b6b82e72618  21 events
+day   7  hash d1ef4029535015ee  14 events
+day   8  hash 351830664216eecd  18 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2

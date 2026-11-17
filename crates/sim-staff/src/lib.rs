@@ -22,14 +22,19 @@
 mod air;
 mod ammunition;
 mod available;
+mod bombard;
 pub mod carrier;
+mod cover;
 mod deny;
 mod doctrine;
 mod escort;
 mod fleet;
 mod handin;
+mod holding;
+mod look;
 mod morning;
 mod neutralise;
+mod night;
 mod picture;
 mod planner;
 mod projection;
@@ -41,6 +46,7 @@ mod route;
 pub mod search;
 pub mod stand;
 pub mod strike;
+mod take;
 mod units;
 
 pub use projection::project;
@@ -145,7 +151,58 @@ use sim_core::view::SideView;
 /// order, take leave to prepare and never ask leave to launch, and hand in
 /// the notices ready, late and met once each. A side with neither task gets
 /// the orders and reasons `supply-20` gave.
-pub const DOCTRINE_VERSION: &str = "supply-21";
+/// `supply-22` adds decision 0142: the end "take a place", which chooses
+/// the units that land and forms "ready a landing" for them, asks leave to
+/// launch when the landing is ready, and on leave loads supply, embarks the
+/// men, sails and lands them on attack, and marks the plan complete when the
+/// place is the side's; a "ready a landing" task whose force lies at no base
+/// of its side is ready as it stands. A side with no "take a place" gets the
+/// orders and reasons `supply-21` gave, but for a "ready a landing" task
+/// whose force lies away from a base of its side.
+/// `supply-23` adds decision 0143: ashore, each morning, "take a place"
+/// sets its men to attack when those that can attack are enough against the
+/// side's estimate for the risk, and to defend when they are not; it sends
+/// the units its first lift left behind in a second lift, which goes as the
+/// force stands; and the notice that the end is met says the intent's words.
+/// `supply-24` adds decision 0144: a hold of a base not the side's waits for
+/// it; once it is the side's, the men of the hold on attack are set to
+/// defend and "keep supplied" is formed under the hold from the source its
+/// forces limit names; "take a place" with such a hold beside it checks that
+/// the place can be held before it asks leave to launch, and lands the
+/// supply that lasts until the first run follows, with a margin for the
+/// risk. A side with no "take a place" and no hold of a place with men, or
+/// not its own, gets the orders and reasons `supply-22` gave.
+/// `supply-25` adds decision 0145: at preserve the force and at balanced, a
+/// supply run and a lift of "take a place" to a place with an enemy base on
+/// the side's map within 15 hexes and not in its hex are timed to arrive in
+/// the night, at cruise or else at full speed with the fuel reckoned at that
+/// speed, carry no more in each ship than the night's hours can land, and
+/// where no speed arrives in the dark go by day at balanced or do not sail
+/// at preserve the force. A side with no such run gets the orders and
+/// reasons `supply-24` gave.
+/// `supply-26` adds decision 0146: the task "bombard a base", formed under
+/// a released "neutralise a base" or "take a place" for each named force on
+/// the bombardment mission and served at the force's level as a stand by
+/// night, its route acting at the target's hex. A side with no such task and
+/// no force on the bombardment mission named under those ends gets the
+/// orders and reasons `supply-25` gave.
+/// `supply-27` adds the architect's amendment of decision 0145, item 2a: a
+/// run to a place where a base of the side's own has a fighter group of the
+/// side's based at it goes as before, at every risk. A side with no run by
+/// night to such a place gets the orders and reasons `supply-26` gave.
+/// `supply-28` adds the architect's ruling 6 on decision 0145: item 2a
+/// reaches a base of the side's own in a hex next to the place as well. A
+/// side with no run by night to a place next to its own fighters gets the
+/// orders and reasons `supply-27` gave.
+/// `supply-29` adds decisions 0147 and 0148: under "take a place" the
+/// staff sends an air group to look at the place, chooses its units again
+/// on the first count seen from the air or by men in contact, and launches
+/// only on the count the risk asks for; and it forms "operate a carrier
+/// force" at a covering hex for each named carrier force, whose bombers
+/// strike the enemy's base at the place on a morning with no ship to strike,
+/// and sends the force home when the place is taken. A side with no "take a
+/// place" gets the orders and reasons `supply-28` gave.
+pub const DOCTRINE_VERSION: &str = "supply-29";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

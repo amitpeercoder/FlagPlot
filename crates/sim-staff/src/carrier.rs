@@ -538,6 +538,11 @@ impl Day<'_, '_> {
             if !self.released(&task) {
                 continue;
             }
+            // Under "take a place" the task is served after the landing's
+            // morning, by `take_carriers` (decision 0148).
+            if self.under_take(&task).is_some() {
+                continue;
+            }
             self.serve_carrier(&task);
         }
     }
@@ -558,7 +563,7 @@ impl Day<'_, '_> {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn serve_carrier(&mut self, task: &Intent) {
+    pub(crate) fn serve_carrier(&mut self, task: &Intent) {
         let Some(plan) = self.plan_of(task) else {
             return;
         };
@@ -1280,6 +1285,7 @@ impl Day<'_, '_> {
                     .air_combat_figures()
                     .map_or(0, |f| f.strike_contact_max_age_pulses);
                 let mut groups: Vec<CarrierGroup> = Vec::new();
+                let mut reach_of: BTreeMap<AirGroupId, Fixed> = BTreeMap::new();
                 let mut held_lines: Vec<String> = aboard_waiting
                     .iter()
                     .map(|(group, day)| {
@@ -1297,6 +1303,9 @@ impl Day<'_, '_> {
                     let kind = view.aircraft_type(g.aircraft_type);
                     let fighter = kind.is_some_and(|t| t.role == AircraftRole::Fighter);
                     let range = kind.map_or(Fixed::ZERO, |t| t.search_range_nm);
+                    if let Some(reach) = bomber_reach(view, g) {
+                        reach_of.insert(g.id, reach);
+                    }
                     groups.push(CarrierGroup {
                         id: g.id,
                         fighter,
@@ -1316,7 +1325,27 @@ impl Day<'_, '_> {
                         search_once: g.search_once,
                     });
                 }
-                let air = decide(risk, figure, attacked.is_some(), arc.from, arc.to, &groups);
+                let mut air = decide(risk, figure, attacked.is_some(), arc.from, arc.to, &groups);
+                // Under "take a place" the bombers strike the enemy's base at
+                // the place on a morning with no ship to strike (decision
+                // 0148, 4 to 6): the raid's rules decide the mission and the
+                // held share of the groups that go.
+                let mut cover = crate::cover::CoverStrike::default();
+                if let Some(end) = self.under_take(task) {
+                    cover =
+                        self.cover_strike(task, &plan, &end, here, risk, &groups, &reach_of, &air);
+                    air.orders.retain(|(g, order)| {
+                        !(cover.taken.contains(g)
+                            && matches!(
+                                order,
+                                AirGroupOrder::SetAirMission(_)
+                                    | AirGroupOrder::SetStrikeHeldShare { .. }
+                            ))
+                    });
+                    if let Some(note) = cover.note.take() {
+                        notes.push(note);
+                    }
+                }
                 let share_note = match attacked {
                     Some(day) => format!(
                         "{} at {} raised by {} because {id} was attacked from the air on day {day}",
@@ -1368,6 +1397,10 @@ impl Day<'_, '_> {
                     };
                     lines.insert(g.id, line);
                 }
+                for (group, line) in &cover.lines {
+                    lines.insert(*group, line.clone());
+                }
+                orders.extend(std::mem::take(&mut cover.orders));
                 for (group, order) in &air.orders {
                     let line = lines.get(group).cloned().unwrap_or_default();
                     let before = groups.iter().find(|g| g.id == *group);
