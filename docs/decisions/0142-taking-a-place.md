@@ -137,3 +137,12 @@ No expected number changed. Version pins move in the agent's and the saved games
 - `crates/sim-core/src/command.rs` and `command/intake.rs`: the kind, the phase, the two intake changes.
 - `tests/scenario_67_taking_a_place.rs`.
 
+
+### The architect's rulings, Nov 17, 2026
+
+The nineteen readings are accepted as built. Four are worth their reason or leave something to do.
+
+- **Reading 4, the notice's words.** The notice that the intent is met reuses decision 0141's kind, whose event says "every want of plan:N is met". The kind is right and the words are a build-up's. They are mended with step 4's build: the words are the intent's, "intent:N is met".
+- **Reading 6, ships counted and not named.** Which ship a unit's men go into is the load order's. The hand calculations of the later steps name the ship a unit goes into only as the load order gives it.
+- **Reading 8, the notice that it cannot meet the intent, once.** A notice is news, handed in on the morning a thing first holds and again if it holds anew after it stopped. The later steps of this stage follow this, where their records say "each morning": the reason is given each morning and the notice once.
+- **Reading 12, the fuel with no margin.** It is the run's rule, and a landing force is a run.
