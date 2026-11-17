@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 17
+      "const": 18
     },
     "kind": {
       "const": "command_state"
@@ -79,6 +79,9 @@
           "task_force",
           "floor_days",
           "interval_days",
+          "by_day",
+          "wants",
+          "defences",
           "interval",
           "set_day",
           "withdrawn_day",
@@ -113,7 +116,9 @@
               "strike_ships",
               "search_waters",
               "stand_at",
-              "operate_carriers"
+              "operate_carriers",
+              "ready_landing",
+              "build_up"
             ]
           },
           "base": {
@@ -164,7 +169,7 @@
               "integer",
               "null"
             ],
-            "description": "The side's number of the task force a stand_at or operate_carriers intent names (decisions 0124 and 0125); null for the other kinds. hex is then its station."
+            "description": "The side's number of the task force a stand_at, operate_carriers or ready_landing intent names (decisions 0124, 0125 and 0141); null for the other kinds. hex is then its station."
           },
           "floor_days": {
             "type": [
@@ -177,6 +182,21 @@
               "integer",
               "null"
             ]
+          },
+          "by_day": {
+            "type": ["integer", "null"],
+            "description": "The morning of the day a ready_landing intent is to be ready by (decision 0141); null for the other kinds and for a landing with no date."
+          },
+          "wants": {
+            "oneOf": [
+              { "type": "array", "items": { "enum": ["airfield", "mend", "defences", "port", "aircraft"] } },
+              { "type": "null" }
+            ],
+            "description": "What a build_up intent wants, in order (decision 0141); null for the other kinds."
+          },
+          "defences": {
+            "type": ["integer", "null"],
+            "description": "The points of defences a build_up intent wants, from 1 to 100, when defences is among its wants (decision 0141); null otherwise."
           },
           "interval": {
             "type": [

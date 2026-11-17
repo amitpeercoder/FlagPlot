@@ -283,6 +283,7 @@
                 "ships",
                 "task_forces",
                 "air_groups",
+                "land_units",
                 "source"
               ],
               "additionalProperties": false,
@@ -327,6 +328,11 @@
                   "items": {
                     "type": "integer"
                   }
+                },
+                "land_units": {
+                  "type": "array",
+                  "items": { "type": "integer" },
+                  "description": "The side's numbers of the land units the staff may order (decision 0141)."
                 }
               }
             },
@@ -483,6 +489,9 @@
                 "base",
                 "floor_days",
                 "interval_days",
+                "by_day",
+                "wants",
+                "defences",
                 "target",
                 "hex",
                 "distance",
@@ -542,7 +551,7 @@
                     "integer",
                     "null"
                   ],
-                  "description": "The side's number of the task force a stand_at or operate_carriers intent names (decisions 0124 and 0125); null for the other kinds."
+                  "description": "The side's number of the task force a stand_at, operate_carriers or ready_landing intent names (decisions 0124, 0125 and 0141); null for the other kinds."
                 },
                 "floor_days": {
                   "type": [
@@ -555,6 +564,21 @@
                     "integer",
                     "null"
                   ]
+                },
+                "by_day": {
+                  "type": ["integer", "null"],
+                  "description": "The morning of the day a ready_landing intent is to be ready by (decision 0141); null for the other kinds and for a landing with no date."
+                },
+                "wants": {
+                  "oneOf": [
+                    { "type": "array", "items": { "enum": ["airfield", "mend", "defences", "port", "aircraft"] } },
+                    { "type": "null" }
+                  ],
+                  "description": "What a build_up intent wants, in order (decision 0141); null for the other kinds."
+                },
+                "defences": {
+                  "type": ["integer", "null"],
+                  "description": "The points of defences a build_up intent wants, from 1 to 100, when defences is among its wants (decision 0141); null otherwise."
                 },
                 "limits": {
                   "$ref": "#/$defs/limits"
@@ -570,7 +594,9 @@
                     "strike_ships",
                     "search_waters",
                     "stand_at",
-                    "operate_carriers"
+                    "operate_carriers",
+                    "ready_landing",
+                    "build_up"
                   ]
                 }
               }
@@ -733,7 +759,10 @@
                   "cannot_meet",
                   "waits_for_leave_to_prepare",
                   "waits_for_leave_to_launch",
-                  "run_ended"
+                  "run_ended",
+                  "ready",
+                  "late",
+                  "met"
                 ]
               },
               "plan": {
@@ -813,7 +842,7 @@
       }
     },
     "hold_target": {
-      "description": "What a hold keeps from the staff, in your numbers: a ship, a task force, one setting of an air group, or a whole air group.",
+      "description": "What a hold keeps from the staff, in your numbers: a ship, a task force, one setting of an air group, a whole air group, or a land unit (decision 0141).",
       "oneOf": [
         {
           "type": "object",
@@ -865,6 +894,18 @@
           "additionalProperties": false,
           "properties": {
             "air_group": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "land_unit"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "land_unit": {
               "type": "integer"
             }
           }
@@ -1065,6 +1106,7 @@
         "forces",
         "forces_from",
         "air_groups_binding",
+        "land_units_binding",
         "forces_if_unset",
         "risk",
         "risk_from",
@@ -1085,6 +1127,7 @@
                 "ships",
                 "task_forces",
                 "air_groups",
+                "land_units",
                 "source"
               ],
               "additionalProperties": false,
@@ -1129,6 +1172,11 @@
                   "items": {
                     "type": "integer"
                   }
+                },
+                "land_units": {
+                  "type": "array",
+                  "items": { "type": "integer" },
+                  "description": "The side's numbers of the land units the staff may order (decision 0141)."
                 }
               }
             },
@@ -1145,6 +1193,20 @@
         },
         "air_groups_binding": {
           "description": "The air groups named in every forces limit on the chain, which are all the staff may use (the narrowest binds); null where no forces limit is set on the chain.",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "land_units_binding": {
+          "description": "The land units named in every forces limit on the chain, which are all the staff may order (decision 0141); null where no forces limit is set on the chain.",
           "oneOf": [
             {
               "type": "array",

@@ -1073,6 +1073,10 @@ pub(crate) fn check_command(
                 .air_groups
                 .get(group)
                 .is_some_and(|found| found.side == side),
+            HoldTarget::LandUnit(unit) => truth
+                .land_units
+                .get(unit)
+                .is_some_and(|found| found.side == side),
         };
         if !own || hold.day > day {
             violations.push(InvariantViolation::HoldUnsound(side, *target));

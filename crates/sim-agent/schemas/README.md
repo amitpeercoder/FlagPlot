@@ -892,3 +892,26 @@ nothing is held and every answer is as it was.
   `current`).
 - **`report`**: `refusals`, the staff orders refused because a force was not as the area command held it
   (decision 0136, 14), the other staff orders refused, and the commands refused.
+
+## Units made ready and a base built up (decision 0141)
+
+`version` is 18. Everything below is of the side's own command state and is left out or `null` where it does not
+apply; a game that gives none of it is answered as before.
+
+- **Two intent kinds.** `set_intent` takes `intent_kind` `"ready_landing"` (ready a landing by one of the side's
+  task forces at a coast hex), with `task_force` (the side's number), `hex` (`[q, r]`) and an optional `by_day`
+  (a whole number from 1: the morning it is to be ready by), and no `base`; and `"build_up"` (build up one of the
+  side's bases), with `base`, `wants` (a list, in order, of `"airfield"`, `"mend"`, `"defences"`, `"port"` and
+  `"aircraft"`, each at most once) and `defences` (the points, 1 to 100, required where `"defences"` is among the
+  wants and refused otherwise). For example `{"intent_kind": "ready_landing", "task_force": 1, "hex": [6, 0],
+  "by_day": 6}` and `{"intent_kind": "build_up", "base": 1, "wants": ["airfield", "defences"], "defences": 10}`.
+  `form_intent` and the saved game write the same keys.
+- **A forces limit names land units.** `set_limit` of forces takes `land_units` (the side's land unit numbers;
+  written only when not empty), and `command_state` gives `land_units` in a forces limit and `land_units_binding`
+  in `limits_read_up` (the land units named in every forces limit on the chain; `null` where none is set).
+- **A land unit can be held.** `hold` and `release` take `land_unit` (the side's number) as the one target; a
+  `holds` entry's `target` is `{"land_unit": n}`. It takes no `setting`.
+- **`command_state`, `plans`, `propose`.** An intent's kind has `by_day`, `wants` and `defences`, each `null` for
+  the other kinds, and `kind` may be `ready_landing` or `build_up`; for a ready_landing, `task_force` and `hex` are
+  as for the stand and carrier kinds.
+- **Notices.** The notice kinds of `report` and `staff_orders` include `ready`, `late` and `met`.

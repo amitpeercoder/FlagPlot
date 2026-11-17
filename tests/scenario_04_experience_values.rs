@@ -117,7 +117,9 @@ fn no_other_scenario_gives_experience() {
     // ships their derived values (decision 0072, 13); it moved into this
     // folder for its check on Nov 13, 2026. Scenario 28 gives experience to
     // land units, not ships (decision 0097), and so does scenario 30
-    // (decision 0099); so does scenario 45, for one placeholder land unit.
+    // (decision 0099); so does scenario 45, for one placeholder land unit,
+    // and scenario 66, for its placeholder raw and sound units (decision
+    // 0141).
     let dir = data("scenarios");
     for entry in std::fs::read_dir(dir).expect("the folder reads") {
         let path = entry.expect("an entry").path();
@@ -134,6 +136,7 @@ fn no_other_scenario_gives_experience() {
             || name == "28_experience_and_training.toml"
             || name == "30_working_units.toml"
             || name == "45_soak_ashore.toml"
+            || name == "66_units_made_ready.toml"
         {
             continue;
         }

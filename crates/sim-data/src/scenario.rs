@@ -6622,7 +6622,8 @@ task_force = 3
 
     #[test]
     fn every_commander_command_loads_as_the_command_it_names() {
-        use sim_core::command::{ForcesLimit, IntentKind, Leave, Limit, PlanId, Risk};
+        use sim_core::command::{ForcesLimit, IntentKind, Leave, Limit, PlanId, Risk, Want, Wants};
+        use sim_core::ids::LandUnitId;
         let intent = IntentId::new(1);
         assert_eq!(
             only(&command(
@@ -6665,9 +6666,67 @@ task_force = 3
                     ships: [ShipId::new(3), ShipId::new(4)].into_iter().collect(),
                     task_forces: [TaskForceId::new(2)].into_iter().collect(),
                     air_groups: BTreeSet::new(),
+                    land_units: BTreeSet::new(),
                     source: Some(BaseId::new(1)),
                 },
             })
+        );
+        // Decision 0141: land units in a forces limit.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 2\nland_units = [5, 3]"
+            )),
+            CommandKind::SetLimit(Limit::Forces {
+                intent: IntentId::new(2),
+                limit: ForcesLimit {
+                    ships: BTreeSet::new(),
+                    task_forces: BTreeSet::new(),
+                    air_groups: BTreeSet::new(),
+                    land_units: [LandUnitId::new(3), LandUnitId::new(5)]
+                        .into_iter()
+                        .collect(),
+                    source: None,
+                },
+            })
+        );
+        // Decision 0141: the two new intent kinds.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 3\nintent_kind = \"ready_landing\"\ntask_force = 2\nhex = [6, 0]\nby_day = 6"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(3),
+                kind: IntentKind::ReadyLanding {
+                    force: TaskForceId::new(2),
+                    hex: Hex::new(6, 0),
+                    by_day: Some(6),
+                },
+            }
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 3\nintent_kind = \"ready_landing\"\ntask_force = 2\nhex = [6, 0]"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(3),
+                kind: IntentKind::ReadyLanding {
+                    force: TaskForceId::new(2),
+                    hex: Hex::new(6, 0),
+                    by_day: None,
+                },
+            }
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 4\nintent_kind = \"build_up\"\nbase = 1\nwants = [\"airfield\", \"defences\"]\ndefences = 10"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(4),
+                kind: IntentKind::BuildUp {
+                    base: BaseId::new(1),
+                    wants: Wants::new(&[Want::Airfield, Want::Defences(10)]).expect("good wants"),
+                },
+            }
         );
         // The step 2 shapes: air groups, no source, no ships, no task forces.
         assert_eq!(
@@ -6682,6 +6741,7 @@ task_force = 3
                     air_groups: [AirGroupId::new(7), AirGroupId::new(9)]
                         .into_iter()
                         .collect(),
+                    land_units: BTreeSet::new(),
                     source: None,
                 },
             })
@@ -6795,9 +6855,40 @@ task_force = 3
     }
 
     #[test]
+    fn a_landing_or_build_up_intent_with_wrong_keys_is_refused() {
+        let intent = |body: &str| {
+            error_of(&command(&format!(
+                "kind = \"set_intent\"\nintent = 1\n{body}"
+            )))
+        };
+        let landing = "intent_kind = \"ready_landing\"\ntask_force = 2\nhex = [6, 0]";
+        assert!(intent(&format!("{landing}\nbase = 1")).contains("does not take \"base\""));
+        assert!(intent(&format!("{landing}\nby_day = 0")).contains("by_day 0"));
+        assert!(intent("intent_kind = \"ready_landing\"\nhex = [6, 0]")
+            .contains("needs \"task_force\""));
+        let build = "intent_kind = \"build_up\"\nbase = 1";
+        assert!(intent(build).contains("needs \"wants\""));
+        assert!(intent(&format!("{build}\nwants = [\"defences\"]")).contains("needs \"defences\""));
+        assert!(
+            intent(&format!("{build}\nwants = [\"airfield\"]\ndefences = 5"))
+                .contains("does not want")
+        );
+        assert!(
+            intent(&format!("{build}\nwants = [\"airfield\", \"airfield\"]"))
+                .contains("name a kind twice")
+        );
+        assert!(intent(&format!("{build}\nwants = []")).contains("empty"));
+        assert!(
+            intent(&format!("{build}\nwants = [\"defences\"]\ndefences = 101"))
+                .contains("outside 1 to 100")
+        );
+        assert!(intent(&format!("{build}\nwants = [\"dock\"]")).contains("not airfield"));
+    }
+
+    #[test]
     fn a_hold_or_release_loads_with_its_one_target() {
         use sim_core::command::{HeldSetting, HoldTarget};
-        use sim_core::ids::AirGroupId;
+        use sim_core::ids::{AirGroupId, LandUnitId};
         for (name, make) in [
             (
                 "hold",
@@ -6829,6 +6920,11 @@ task_force = 3
                 only(&command(&format!("kind = \"{name}\"\nair_group = 7"))),
                 make(HoldTarget::AirGroup(AirGroupId::new(7)))
             );
+            // Decision 0141: a land unit.
+            assert_eq!(
+                only(&command(&format!("kind = \"{name}\"\nland_unit = 4"))),
+                make(HoldTarget::LandUnit(LandUnitId::new(4)))
+            );
         }
     }
 
@@ -6844,6 +6940,10 @@ task_force = 3
             assert!(with("ship = 1\nsetting = \"search_arc\"").contains("only with \"air_group\""));
             assert!(with("task_force = 1\nsetting = \"search_arc\"")
                 .contains("only with \"air_group\""));
+            assert!(with("ship = 1\nland_unit = 2").contains("exactly one of"));
+            assert!(
+                with("land_unit = 2\nsetting = \"search_arc\"").contains("only with \"air_group\"")
+            );
             assert!(with("ship = 1\nplan = 1").contains("does not take \"plan\""));
             assert!(parse_with(&command(&format!("kind = \"{name}\"\nship = 1.5"))).is_err());
         }
@@ -7006,7 +7106,7 @@ task_force = 3
             "kind = \"set_intent\"\nintent = 1\nintent_kind = \"win\"\nbase = 2"
         ))
         .contains(
-            "not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at or operate_carriers"
+            "not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing or build_up"
         ));
         // Neutralise and raid name a target; a neutralise takes no base.
         let aimed = |kind: &str, extra: &str| {

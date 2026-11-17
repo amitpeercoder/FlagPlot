@@ -1844,8 +1844,8 @@ function eventMatches(model, ev, text, sel) {
 function intentLevel(it) {
   switch (it.kind) {
     case 'keep_supplied': case 'neutralise': case 'deny': return 'area';
-    case 'cover': case 'hold': case 'raid': case 'strike_ships': case 'search_waters': return it.base != null ? 'base:' + it.base : 'area';
-    case 'stand_at': case 'operate_carriers': return it.task_force != null ? 'task_force:' + it.task_force : 'area';
+    case 'cover': case 'hold': case 'raid': case 'strike_ships': case 'search_waters': case 'build_up': return it.base != null ? 'base:' + it.base : 'area';
+    case 'stand_at': case 'operate_carriers': case 'ready_landing': return it.task_force != null ? 'task_force:' + it.task_force : 'area';
     default: return 'area';
   }
 }
@@ -1915,6 +1915,12 @@ function intentWords(model, it, engine) {
     case 'search_waters': return 'search the waters from ' + baseW(it.base);
     case 'stand_at': return 'stand at (' + it.hex[0] + ',' + it.hex[1] + ') with ' + forceW(it.task_force);
     case 'operate_carriers': return 'operate the carrier force ' + forceW(it.task_force) + ' from (' + it.hex[0] + ',' + it.hex[1] + ')';
+    // Decision 0141.
+    case 'ready_landing': return 'ready a landing at (' + it.hex[0] + ',' + it.hex[1] + ') by ' + forceW(it.task_force) + (it.by_day ? ' by the morning of day ' + it.by_day : '');
+    case 'build_up': {
+      const want = w => ({ airfield: 'an airfield', mend: "its airfield's damage mended", defences: 'defences to ' + it.defences + ' points', port: 'the port worked', aircraft: 'aircraft repair' })[w] || w;
+      return 'build up ' + baseW(it.base) + ': ' + (it.wants || []).map(want).join(', then ');
+    }
     default: return it.kind;
   }
 }
@@ -2222,7 +2228,14 @@ function intentShapes(model, si, side, id) {
       words.push('the target ' + baseName(it.target) + ' ringed' + (from.length ? ', a line from ' + [...new Set(from)].map(baseName).join(', ') : ', no base tasked yet'));
       break;
     }
-    case 'hold': case 'cover': case 'strike_ships': case 'search_waters':
+    case 'ready_landing': {
+      ring(it.hex, 'station', 'landing');
+      const f = forceHex(it.task_force);
+      line(f, it.hex, 'station', 'TF' + it.task_force);
+      words.push('the landing ' + hx(it.hex) + ' ringed' + (f ? ', a line from task_force:' + it.task_force + ' at ' + hx(f) : ', task_force:' + it.task_force + ' is not on the map at this step'));
+      break;
+    }
+    case 'hold': case 'cover': case 'strike_ships': case 'search_waters': case 'build_up':
       ring(baseHex(it.base), 'base', baseName(it.base));
       words.push(baseName(it.base) + ' ringed');
       break;

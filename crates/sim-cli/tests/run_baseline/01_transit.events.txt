@@ -2,9 +2,9 @@ Scenario 1: Transit, Noumea to Espiritu Santo
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 062a889b7711f386  13 events
-day   2  hash e1c0f1e7ec1fc3c1  6 events
-day   3  hash 2f5fe62a537de392  2 events
+day   1  hash 938004779ed1fd62  13 events
+day   2  hash 15d8bddc906e4a55  6 events
+day   3  hash 16275dfb924cec4e  2 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
