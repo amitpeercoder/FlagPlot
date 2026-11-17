@@ -1,10 +1,10 @@
 # 0138: The tools and the proof of stage 2b: step 5, and the test plan written before the run
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 2b, that the designer confirmed on Nov 16, 2026 with its pass marks (decision 0132, step 5 of its five and "What it must pass"). It says what tools are built, and then what is run, how each condition is read and what passes, before any of it is run. The tools (items 1 to 7) were built on Nov 17, 2026 ("As built" below); the proof (items 8 to 17) was run on Nov 17, 2026, and passes as stated ("As run" below).
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 2b, that the designer confirmed on Nov 16, 2026 with its pass marks (decision 0132, step 5 of its five and "What it must pass"). It says what tools are built, and then what is run, how each condition is read and what passes, before any of it is run. The tools (items 1 to 7) were built on Nov 17, 2026 ("As built" below); the proof (items 8 to 17) was run on Nov 17, 2026, and passes as stated ("As run" below). A stricter count of condition 4, made after the run on the designer's word, gives 174 seeds against the mark of 200: see "The stricter count".
 
 Summary: Step 5 of command levels: the tools that show who knew what (a command's picture and held state, when a report reached a command, why a group did not launch, refusals counted by cause, a seat at any command for a model, the viewer showing one command's picture beside the truth), and the test plan of the stage's proof: the Eastern Solomons from intents with command levels on over a thousand seeds, with the reading of each of the designer's pass marks fixed before the run
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0132, whose pass marks the designer confirmed on Nov 16, 2026. Tools built. Proof run Nov 17, 2026: passes as stated
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0132, whose pass marks the designer confirmed on Nov 16, 2026. Tools built. Proof run Nov 17, 2026: passes as stated. Condition 4 by a stricter count made after the run: 174 of 200, which is the designer's to weigh
 
 ## The tools
 
@@ -95,3 +95,9 @@ Run on Nov 17, 2026, release build, live figures, seeds 1 to 1,000, from main at
 Reported: the week with command levels on meets every condition of decision 0128 on every seed, its medians the third run's but for the margin (53.70 against 53.42); at Savo Island every Allied command holds the Hudson's report from the start, and the northern group holds a sighting made in play before its own fight on 850 of 999 seeds; strikes at ships on 818 and 976 seeds (Allied, Japanese) on, 822 and 979 off; of 106,724 passings 69.9% on time, 25.2% late, 4.9% never; the bold commanders change no event (no force holds a contact of its own on the morning the closing is weighed); and a model in the seat of task force 1 was given nothing its command did not hold (`stage_2b_seat_sonnet`).
 
 Readings taken in the run, each in the report: condition 4's clauses as the script reads them (a night report gives no case, and none arose; held is the `--report` tool's; a launch of B at another hex does not stop a case); "a staffed day" as `time`'s one day of the slice; condition 6 for arrangement (a) only; the Hudson's report held at the start as a sighting of the cruiser force.
+
+## The stricter count
+
+The reading of condition 4 fixed before the run says that no group of the second command launches **at that hex** in the pulse. On 59 of the 233 seeds every case has the second command striking in that pulse at another hex, often the same enemy force reported from another place. The architect, who wrote the reading, judged it looser than he meant, told the designer, and on the designer's word counted again from the outputs kept, with nothing run again: a case counts only where the second command launches nothing at all in that pulse.
+
+**By the stricter count 174 of 1,000 seeds have a case** (193 cases; Allied on 118 seeds, Japanese on 67), against the mark of 200. By the reading fixed before the run it is 233 and the condition passes; by the stricter one it misses by 26 seeds. Both numbers stand in the record. What is made of the difference is the designer's.

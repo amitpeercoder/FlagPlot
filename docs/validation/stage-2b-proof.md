@@ -163,3 +163,9 @@ Kept in `crates/sim-cli/tests/recorded_games/stage_2b_seat_sonnet/`. One game of
 5. Condition 6 run for arrangement (a) only; the comparison against no orders needs files item 8 does not make.
 6. Condition 7: the Hudson's report held at the start is a sighting of the cruiser force; the first sighting made in play is given beside it.
 7. The Savo file's six data paths moved one folder up, so that the file names the same data from the new folder.
+
+## The stricter count, made after the run (Nov 17, 2026)
+
+The reading of condition 4 fixed before the run says that no group of the second command launches **at that hex** in the pulse. On 59 of the 233 seeds every case has the second command striking in that pulse at another hex, often the same enemy force reported from another place. The architect, who wrote the reading, judged it looser than he meant, told the designer, and on the designer's word counted again from the outputs kept, with nothing run again: a case counts only where the second command launches nothing at all in that pulse.
+
+**By the stricter count 174 of 1,000 seeds have a case** (193 cases; Allied on 118 seeds, Japanese on 67), against the mark of 200. By the reading fixed before the run it is 233 and the condition passes; by the stricter one it misses by 26 seeds. Both numbers stand in the record. What is made of the difference is the designer's.
