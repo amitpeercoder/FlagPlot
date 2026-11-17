@@ -13,7 +13,8 @@
 # one) selects the target of that name in both, in the same shard.
 #
 # The unit tests of the libraries and programs (`--lib --bins`) and the
-# documentation tests (`--doc`) are not here: CI runs them in shard 0.
+# documentation tests (`--doc`) are not here: CI runs them in a shard of
+# their own.
 
 set -eu
 

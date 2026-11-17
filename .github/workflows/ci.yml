@@ -65,20 +65,22 @@ jobs:
 
   # Tests run in the `checked` profile (Cargo.toml): optimized, with debug
   # assertions and overflow checks on. Building the test programs is most
-  # of the time, so the integration tests are split into shards, each built
-  # and run on its own machine, with `--workspace` so that every shard
-  # resolves the same features as the whole workspace does.
-  # `.github/scripts/test-shard.sh` gives each test target to exactly one
-  # shard; shard 0 also runs the unit tests and the documentation tests.
+  # of the time, so the tests are split into five shards, each built and run
+  # on its own machine, with `--workspace` so that every shard resolves the
+  # same features as the whole workspace does and builds the same programs.
+  # Shards 0 to 3 run the integration tests: `.github/scripts/test-shard.sh`
+  # gives each test target to exactly one of them. Shard 4 runs the unit
+  # tests of the libraries and programs and the documentation tests.
+  # Together they are what `cargo test --workspace` runs.
   test:
-    name: Test (shard ${{ matrix.shard }} of 4)
+    name: Test (shard ${{ matrix.shard }} of 5)
     needs: changes
     if: needs.changes.outputs.needed == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3]
+        shard: [0, 1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4.4.0
 
@@ -92,15 +94,16 @@ jobs:
       - name: Test
         run: |
           set -eu
-          targets=$(sh .github/scripts/test-shard.sh ${{ matrix.shard }} 4)
-          if [ ${{ matrix.shard }} -eq 0 ]; then
-            targets="--lib --bins $targets"
+          if [ ${{ matrix.shard }} -eq 4 ]; then
+            targets="--lib --bins"
+          else
+            targets=$(sh .github/scripts/test-shard.sh ${{ matrix.shard }} 4)
           fi
           # shellcheck disable=SC2086
           cargo test --workspace --locked --profile checked $targets
 
       - name: Documentation tests
-        if: matrix.shard == 0
+        if: matrix.shard == 4
         run: cargo test --workspace --locked --profile checked --doc
 
   # The command-line program in the same profile as the tests.
