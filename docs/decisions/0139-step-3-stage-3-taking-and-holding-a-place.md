@@ -1,10 +1,10 @@
 # 0139: Step 3, stage 3: taking and holding a place, in eight steps
 
-Status: a plan by the architect, written on Nov 17, 2026, for the designer's approval, as the spec asks of every stage (`docs/step3-spec.md`, "Built in stages"). It plans stage 3 as the spec has it: taking and holding a place, the area intent in full, and the 39 days played staff against staff from area intents alone. Nothing is built. Each step has its own decision record and hand calculation before any code.
+Status: a plan by the architect, written on Nov 17, 2026, for the designer's approval, as the spec asks of every stage (`docs/step3-spec.md`, "Built in stages"). It plans stage 3 as the spec has it: taking and holding a place, the area intent in full, and the 39 days played staff against staff from area intents alone. Confirmed by the designer on Nov 17, 2026, with his answers to its six questions (the last section), each as the architect recommended. Nothing is built. Each step has its own decision record and hand calculation before any code.
 
 Summary: A plan for step 3, stage 3: the ends "take a place" and "leave a place" beside those of stage 2, an operation as a tree with phases, and the doctrines that carry it (units made ready, a base built up, the landing force chosen, loaded and rehearsed, the passage, the fight ashore, a run by night, bombardment from the sea, cover by carriers, reconnaissance as a branch of the plan, pulling out); the staff's setup of the 39 days with a day from which each force may be used; the area intent stated alone; and the proof, the 39 days staff against staff over a thousand seeds, with its conditions set before the run
 
-Standing: A plan for the designer's approval, Nov 17, 2026. Not confirmed. Not built
+Standing: Confirmed by the designer, Nov 17, 2026, with his six answers and the pass marks as written. Not built
 
 ## What stage 3 is
 
@@ -133,11 +133,13 @@ Nothing is tuned to pass. A condition that fails is reported with its seeds and 
 - **It is the largest stage so far:** ten doctrines, eight steps.
 - **Thirty-nine days find what a week does not.** Stage 2's week passed; a staff that runs out of ships, fuel or rested groups on day 30 has not been seen yet.
 
-## Questions for the designer
+## The designer's answers, Nov 17, 2026
 
-1. **What control of an island means:** its named places held and their garrisons supplied above their reserve. The architect recommends it.
-2. **Reconnaissance in this stage:** the three grades and the one mission above, so that a landing is not planned blind, with the rest left for later. The architect recommends it. The other course is to build none and let the staff land on an old report.
-3. **Who wins ashore is reported and not judged,** because the ground figures are not tuned. The architect recommends it.
-4. **Command levels are off in the judged run** and on in a reported one. The architect recommends it: the report figures are placeholders.
-5. **The pass marks** of conditions 3, 4, 6 and 7.
-6. **The comparison against a side given nothing is judged for both sides** (condition 5). The architect recommends it, and says plainly that the same comparison was a named miss for the Japanese side in a battle of one day (decision 0128). Over 39 days a side given nothing loses the island, so it should not reward staying away; if it fails, the cause is reported and it comes to the designer.
+Put to him one at a time, with a recommendation on each. Each is as recommended.
+
+1. **Control of an island** means its named places held and their garrisons supplied above their reserve.
+2. **Reconnaissance:** the smallest useful part: the three grades, the one mission, and a landing that is not ready until it has the count its risk asks for or says what it goes without.
+3. **Who holds the airfield on day 39 is reported and not judged.**
+4. **Command levels are off in the judged run** and on in a reported one.
+5. **The pass marks stand** as conditions 3, 4, 6 and 7 have them. Put to him with the note that the scripted setup takes the airfield on every one of a thousand seeds (`docs/validation/full-slice-39-days-baseline.md`, `lunga_american_end_of_day_2`), so that the marks are below what the script does and not above it, which was the fault of stage 2's strike mark.
+6. **The comparison against a side given nothing is judged for both sides.**
