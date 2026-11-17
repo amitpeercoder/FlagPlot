@@ -660,9 +660,10 @@ function checkReplay(file) {
 
   checkOlder(replay);
   if (replay.steps) checkWithdrawn(replay);
+  const picNotes = replay.steps ? checkPictures(replay, model) : null;
   const cmdNotes = replay.steps ? checkCommand(replay, model, 'umpire command', Core.SIDES) : null;
   const sit = replay.steps ? checkSituation(replay, model, 'umpire situation', null) : null;
-  const sideNote = (replay.side_views ? checkSideViews(replay, model) : 'no side views (version ' + replay.version + ')') + (cmdNotes && cmdNotes.intents ? ', command: ' + cmdNotes.intents + ' intents, ' + cmdNotes.orders + ' orders, ' + cmdNotes.reasons + ' reasons' + (cmdNotes.stray ? ' (' + cmdNotes.stray + ' staff orders with no reason)' : '') : '');
+  const sideNote = (replay.side_views ? checkSideViews(replay, model) : 'no side views (version ' + replay.version + ')') + (picNotes ? ', pictures: ' + picNotes.commands + ' commands, ' + picNotes.contacts + ' contacts, ' + picNotes.reports + ' reports sent' : '') + (cmdNotes && cmdNotes.intents ? ', command: ' + cmdNotes.intents + ' intents, ' + cmdNotes.orders + ' orders, ' + cmdNotes.reasons + ' reasons' + (cmdNotes.stray ? ' (' + cmdNotes.stray + ' staff orders with no reason)' : '') : '');
 
   const s = Core.summarize(model);
   const unclosed = new Set(replay.events.map(e => e.kind));
@@ -672,19 +673,143 @@ function checkReplay(file) {
     (failures === before ? '  OK' : '  FAILED'));
 }
 
+// ---- Replay version 6: each command's picture, and the reports sent between commands ----
+const NEXT_PULSE = { night: ['same', 'morning'], morning: ['same', 'afternoon'], afternoon: ['next', 'night'] };
+/**
+ * The pictures of a version 6 file (decision 0138, item 6): the steps applied in order end at final.pictures; every command is a command of its
+ * side and every contact of a picture is well formed and rests on a report of that side; every listener of a report_sent names a command of that
+ * side, with an arrival the way the rules count it; the model draws the same pictures as the file holds. A file with command levels off has none of it.
+ * Returns { commands, contacts, reports } for the summary, or null when the file has no pictures.
+ */
+function checkPictures(replay, model) {
+  const where = 'pictures: ';
+  const hasFinal = !!(replay.final && replay.final.pictures);
+  const sent = replay.events.filter(e => e.kind === 'report_sent');
+  if (!hasFinal) {
+    assert(!replay.steps.some(e => (e.changed && e.changed.pictures) || (e.removed && e.removed.pictures)), where + 'a file with no final pictures has them in its steps');
+    assert(sent.length === 0, where + 'a file with no pictures has ' + sent.length + ' report_sent events');
+    assert(Core.commandViews(replay).length === 0, where + 'a file with no pictures offers command views');
+    return null;
+  }
+  assert(replay.version >= 6, where + 'pictures in a file of version ' + replay.version);
+  const side_of = {};
+  const note = (map, key, side) => { if (!map[side]) map[side] = new Set(); map[side].add(key); };
+  const forces = {}, bases = {};
+  for (const src of [replay.initial, replay.final]) {
+    for (const f of (src && src.task_forces) || []) note(forces, f.id, f.side);
+    for (const b of (src && src.bases) || []) note(bases, b.id, b.side);
+  }
+  for (const b of replay.bases || []) note(bases, b.id, b.side);
+  for (const e of replay.steps) {
+    for (const f of (e.changed && e.changed.task_forces) || []) note(forces, f.id, f.side);
+    for (const b of (e.changed && e.changed.bases) || []) note(bases, b.id, b.side);
+  }
+  for (const c of replay.base_changes || []) { note(bases, c.base, c.from); note(bases, c.base, c.to); }
+  const isCommand = (side, word) => {
+    if (word === 'area') return true;
+    const m = /^(task_force|base):(\d+)$/.exec(word);
+    if (!m) return false;
+    const set = (m[1] === 'base' ? bases : forces)[side];
+    return !!set && set.has(Number(m[2]));
+  };
+  // The steps applied in order end at final.
+  const state = { allied: new Map(), japanese: new Map() };
+  replay.steps.forEach((e, i) => {
+    for (const side of Core.SIDES) {
+      for (const p of (e.changed && e.changed.pictures && e.changed.pictures[side]) || []) state[side].set(p.command, p);
+      for (const c of (e.removed && e.removed.pictures && e.removed.pictures[side]) || []) assert(state[side].delete(c), where + 'step ' + i + ' removes ' + side + ' ' + c + ' which it does not hold');
+    }
+    if (i === 0) for (const side of Core.SIDES) assert(state[side].size > 0 && state[side].has('area'), where + 'the first step does not carry every ' + side + ' command');
+  });
+  let commands = 0, contacts = 0;
+  const events = new Map(replay.events.map(e => [e.id, e]));
+  for (const side of Core.SIDES) {
+    const wanted = new Map(((replay.final.pictures || {})[side] || []).map(p => [p.command, p]));
+    assert(sameJson([...state[side].entries()].sort(([a], [b]) => a < b ? -1 : 1), [...wanted.entries()].sort(([a], [b]) => a < b ? -1 : 1)), where + 'the ' + side + ' steps, applied in order, do not end at final.pictures');
+    assert(wanted.has('area'), where + 'the ' + side + ' pictures hold no area command');
+    for (const [word, p] of wanted) {
+      commands++;
+      assert(isCommand(side, word), where + side + ' ' + word + ' is not a command of the ' + side + ' side');
+      const ids = new Set();
+      for (const c of p.contacts) {
+        contacts++;
+        assert(Number.isInteger(c.id) && !ids.has(c.id), where + side + ' ' + word + ' contact ' + c.id + ' is not a distinct integer');
+        ids.add(c.id);
+        assert(model.hexByKey.has(c.hex[0] + ',' + c.hex[1]) && c.ship_count > 0 && typeof c.kind === 'string' && Number.isInteger(c.age_pulses) && c.age_pulses >= 0 && typeof c.own === 'boolean', where + side + ' ' + word + ' contact ' + c.id + ' is malformed');
+        const ev = events.get(c.report_event);
+        assert(ev && ev.data && ev.data.side === side, where + side + ' ' + word + ' contact ' + c.id + ' rests on event ' + c.report_event + ', which is not a report of the ' + side + ' side');
+      }
+    }
+  }
+  // The model draws the pictures the file holds, at the last step and at the first.
+  const last = model.states[model.states.length - 1];
+  for (const side of Core.SIDES) {
+    for (const p of ((replay.final.pictures || {})[side] || [])) {
+      const got = last.pictures && last.pictures[side].get(p.command);
+      assert(got && got.size === p.contacts.length && p.contacts.every(c => got.has(c.id) && got.get(c.id).own === c.own && got.get(c.id).hex[0] === c.hex[0]), where + 'the model does not draw ' + side + ' ' + p.command + ' as final.pictures holds it');
+    }
+  }
+  // The reports sent.
+  const rows = Core.reportRows(model);
+  assert(rows.length === sent.length, where + 'the Reports list has ' + rows.length + ' rows for ' + sent.length + ' report_sent events');
+  for (const ev of sent) {
+    const d = ev.data, side = d.side;
+    assert(Core.SIDES.includes(side) && isCommand(side, d.sender), where + 'report_sent #' + ev.id + ' has a sender that is not a command of its side');
+    const made = events.get(d.report);
+    // A report is a sighting's event (of its side), or, for "nothing there", the strike's own event, which names no side.
+    assert(made && (made.data.side === undefined || made.data.side === side), where + 'report_sent #' + ev.id + ' names a report (' + d.report + ') that is not an event, or is another side\'s');
+    assert(Array.isArray(d.listeners) && d.listeners.length > 0, where + 'report_sent #' + ev.id + ' has no listeners');
+    const [carry, pulse1] = NEXT_PULSE[ev.pulse || 'afternoon'];
+    for (const l of d.listeners || []) {
+      assert(isCommand(side, l.command), where + 'report_sent #' + ev.id + ' lists ' + l.command + ', not a command of the ' + side + ' side');
+      assert(['up', 'sideways', 'down'].includes(l.direction), where + 'report_sent #' + ev.id + ' has direction ' + l.direction);
+      assert(['on_time', 'late', 'never'].includes(l.arrival), where + 'report_sent #' + ev.id + ' has arrival ' + l.arrival);
+      if (l.arrival === 'never') assert(l.day === undefined && l.pulse === undefined, where + 'report_sent #' + ev.id + ' gives a day for a report that never arrives');
+      else {
+        const wantDay = l.arrival === 'on_time' ? ev.day : ev.day + (carry === 'next' ? 1 : 0), wantPulse = l.arrival === 'on_time' ? (ev.pulse || 'afternoon') : pulse1;
+        assert(l.day === wantDay && l.pulse === wantPulse, where + 'report_sent #' + ev.id + ' to ' + l.command + ' arrives D' + l.day + ' ' + l.pulse + ', not D' + wantDay + ' ' + wantPulse);
+      }
+    }
+    // A command is marked as the rows say: sent, reached or never.
+    for (const l of d.listeners || []) {
+      const t = Core.reportTouch(rows.find(r => r.event === ev.id), side, l.command);
+      assert(t === (l.arrival === 'never' ? 'never' : 'reached') || (t === 'sent' && l.command === d.sender), where + 'report_sent #' + ev.id + ' marks ' + l.command + ' as ' + t);
+    }
+  }
+  // A side's page holds no command picture and no report row of the umpire's list.
+  for (const side of Core.SIDES) {
+    const sr = Core.sideReplay(replay, side);
+    if (!sr) continue;
+    assert(!(sr.final && sr.final.pictures) && !sr.steps.some(e => (e.changed && e.changed.pictures) || (e.removed && e.removed.pictures)), where + 'the ' + side + ' page holds a command picture');
+    assert(Core.commandViews(sr).length === 0, where + 'the ' + side + ' page offers command views');
+  }
+  return { commands, contacts, reports: sent.length };
+}
+
+/** The same replay as an older file would have it: no pictures in the steps or in final. */
+function withoutPictures(replay) {
+  return Object.assign({}, replay, {
+    final: Object.assign({}, replay.final, { pictures: undefined }),
+    steps: replay.steps.map(e => { const c = Object.assign({}, e), ch = Object.assign({}, e.changed), rm = Object.assign({}, e.removed); delete ch.pictures; delete rm.pictures; c.changed = ch; c.removed = rm; return c; }),
+  });
+}
+
 // ---- Older replay versions still open, with no command panel to show ----
 function checkOlder(replay) {
   if (!replay.steps) return;
-  const variants = { 'version 3 (no steps)': Object.assign({}, replay, { steps: undefined, version: 3 }), 'version 4 without commands': Object.assign({}, replay, { steps: replay.steps.map(e => { const c = Object.assign({}, e); delete c.commands; return c; }), final: Object.assign({}, replay.final, { commands: undefined }) }) };
+  const variants = { 'version 3 (no steps)': Object.assign({}, replay, { steps: undefined, version: 3 }), 'version 5 (no pictures)': Object.assign(withoutPictures(replay), { version: 5 }), 'version 4 without commands': Object.assign(withoutPictures(replay), { version: 4, steps: withoutPictures(replay).steps.map(e => { const c = Object.assign({}, e); delete c.commands; return c; }), final: Object.assign({}, withoutPictures(replay).final, { commands: undefined }) }) };
   for (const [name, r] of Object.entries(variants)) {
     const bad = Core.validateReplay(r);
     if (bad) { fail('older replay (' + name + ') rejected: ' + bad); continue; }
     const m = Core.buildModel(r);
-    assert(Core.commandView(m, m.steps.length - 1).length === 0, 'older replay (' + name + ') shows a command view');
-    assert(Core.eventsServing(m, 'allied', 1).size === 0, 'older replay (' + name + ') has events serving an intent');
+    assert(Core.commandViews(r).length === 0 && m.states.every(st => st.pictures === null), 'older replay (' + name + ') offers a command picture');
+    if (!name.startsWith('version 5')) { // a version 5 file has the command state; only the pictures are new in 6
+      assert(Core.commandView(m, m.steps.length - 1).length === 0, 'older replay (' + name + ') shows a command view');
+      assert(Core.eventsServing(m, 'allied', 1).size === 0, 'older replay (' + name + ') has events serving an intent');
+    }
     // The land layer, the base panel and the drawing of an intent open on an older file, without the per-step records.
     const lastIx = m.states.length - 1;
-    assert(Core.landLayer(m, lastIx, Core.SIDES).stacks.length >= 0 && m.states.every(st => st.rec === null || name.startsWith('version 4')), 'older replay (' + name + ') land layer');
+    assert(Core.landLayer(m, lastIx, Core.SIDES).stacks.length >= 0 && m.states.every(st => st.rec === null || name.startsWith('version 4') || name.startsWith('version 5')), 'older replay (' + name + ') land layer');
     for (const b of m.bases.values()) assert(Core.baseFigures(m, lastIx, b.id) !== null, 'older replay (' + name + ') has no base panel for base:' + b.id);
     if (name.startsWith('version 3')) for (const b of m.bases.values()) assert(!Core.baseFigures(m, lastIx, b.id).known, 'older replay (' + name + ') claims base records it does not hold');
     for (const sd of Core.SIDES) for (const it of (((r.final || {}).commands || {})[sd] || { intents: [] }).intents) Core.intentShapes(m, lastIx, sd, it.id);
@@ -813,7 +938,7 @@ function synthetic() {
     else console.log('  ok: rejects ' + name + ': ' + msg);
   };
   reject('wrong format', Object.assign(base(), { format: 'something-else' }), 'format');
-  reject('version 6', Object.assign(base(), { version: 6 }), '1, 2, 3, 4 and 5');
+  reject('version 7', Object.assign(base(), { version: 7 }), '1, 2, 3, 4, 5 and 6');
   reject('version 2 without side views', Object.assign(base(), { version: 2 }), 'side_views');
   reject('version 3 without side views', Object.assign(base(), { version: 3, aircraft_types: [] }), 'side_views');
   reject('version 2 with a side event without its number', Object.assign(base(), { version: 2, side_views: { allied: { events: [{ log_id: 1, day: 1, kind: 'x' }] }, japanese: { events: [] } } }), 'allied');
@@ -847,6 +972,7 @@ function synthetic() {
     run('version 3 file, rebuilt from its events', r3, 2);
   }
   synthetic4(base, hex, ev, reject, dirs);
+  synthetic6(base, hex, reject);
   const v1 = base();
   if (Core.validateReplay(v1)) fail('a version 1 file was rejected'); else console.log('  ok: version 1 still opens');
   const m1 = Core.buildModel(v1);
@@ -926,6 +1052,89 @@ function synthetic4(base, hex, ev, reject) {
   const badPhase = mk(); badPhase.steps[1].phase = 'dawn';
   reject('an unknown phase', badPhase, 'phase');
   if (failures === before) console.log('  ok: version 4 file opens from its steps, the allied page is cut, a missing step is an error');
+}
+
+// ---- A hand-built version 6 replay: three commands and a report that reaches them in three ways ----
+function buildSynthetic6(base, hex) {
+  const tf = (id, ships) => ({ id, name: 'TF' + id, side: 'allied', position: { q: 0, r: 0 }, ships, readiness: 'normal', alerted: false, mission: 'idle', status: 'idle' });
+  const seen = (age, own) => ({ id: 1, hex: [1, 0], ship_count: 1, kind: 'cruiser', age_pulses: age, report_event: 1, own });
+  const pic = (command, contacts) => ({ command, contacts });
+  const events = [
+    { id: 1, day: 1, pulse: 'night', kind: 'report_received', text: '#1 D1 night     report', causes: [], entities: [], data: { side: 'allied', contact: 1, hex: [1, 0], ship_count: 1, kind: 'cruiser', created: true } },
+    { id: 2, day: 1, pulse: 'night', kind: 'report_sent', text: '#2 D1 night     report sent', causes: [{ event: 1 }], entities: [], data: { side: 'allied', sender: 'task_force:1', report: 1, listeners: [
+      { command: 'area', direction: 'up', arrival: 'on_time', day: 1, pulse: 'night' },
+      { command: 'base:1', direction: 'sideways', arrival: 'late', day: 1, pulse: 'morning' },
+      { command: 'task_force:2', direction: 'sideways', arrival: 'never' },
+    ] } },
+    { id: 3, day: 1, pulse: 'morning', kind: 'claim_received', text: '#3 D1 morning   claim', causes: [], entities: [], data: { side: 'allied', hex: [1, 0], claimed_sunk: 0 } },
+    { id: 4, day: 1, pulse: null, kind: 'claim_received', text: '#4 D1 -         claim', causes: [], entities: [], data: { side: 'allied', hex: [1, 0], claimed_sunk: 0 } },
+  ];
+  const entries = [
+    { day: 0, phase: 'start', changed: { task_forces: [tf(1, []), tf(2, [])], pictures: { allied: [pic('area', []), pic('task_force:1', []), pic('task_force:2', []), pic('base:1', [])], japanese: [pic('area', [])] } } },
+    { day: 1, phase: 'orders' },
+    { day: 1, phase: 'night', changed: { pictures: { allied: [pic('area', [seen(0, false)]), pic('task_force:1', [seen(0, true)])] } } },
+    { day: 1, phase: 'morning', changed: { pictures: { allied: [pic('area', [seen(1, false)]), pic('task_force:1', [seen(1, true)]), pic('base:1', [seen(0, false)])] } } },
+    { day: 1, phase: 'end', changed: { pictures: { allied: [pic('area', [seen(2, false)]), pic('task_force:1', [seen(2, true)]), pic('base:1', [seen(1, false)])] } }, removed: { pictures: { allied: ['task_force:2'] } } },
+  ];
+  return Object.assign(base(), {
+    version: 6, side_views: { allied: { events: [] }, japanese: { events: [] } }, aircraft_types: [],
+    map: { hex_nm: 40, real: false, hexes: [hex(0, 0), hex(1, 0), hex(2, 0)] }, scenario: { name: 'Synthetic 6', placeholder: true, seed: 1, days: 1, path: 'x' },
+    events, steps: entries,
+    bases: [{ id: 1, name: 'B', side: 'allied', q: 2, r: 0 }],
+    initial: { task_forces: [tf(1, []), tf(2, [])], ships: [], air_groups: [], bases: [] },
+    final: { task_forces: [tf(1, []), tf(2, [])], ships: [], air_groups: [], bases: [], contacts: { allied: [], japanese: [] }, claims: { allied: [], japanese: [] },
+      pictures: { allied: [pic('area', [seen(2, false)]), pic('task_force:1', [seen(2, true)]), pic('base:1', [seen(1, false)])], japanese: [pic('area', [])] } },
+  });
+}
+
+/** Runs `fn` and returns the checks that failed in it, without counting them or printing them: for a file made bad on purpose. */
+function failuresOf(fn) {
+  const log = console.log, count = failures, lines = [];
+  console.log = m => lines.push(String(m));
+  try { fn(); } finally { console.log = log; failures = count; }
+  return lines.filter(l => l.includes('FAIL'));
+}
+
+function synthetic6(base, hex, reject) {
+  console.log('synthetic version 6');
+  const before = failures;
+  const r6 = buildSynthetic6(base, hex);
+  const bad = Core.validateReplay(r6);
+  if (bad) { fail('a valid version 6 file was rejected: ' + bad); return; }
+  const m = Core.buildModel(r6);
+  assert(Core.compareWithFinal(m).length === 0, 'version 6: end state differs from final: ' + Core.compareWithFinal(m).join('; '));
+  assert(JSON.stringify(Core.commandViews(r6).map(v => v.label)) === JSON.stringify(['Allied \u00b7 area', 'Allied \u00b7 task_force:1', 'Allied \u00b7 task_force:2', 'Allied \u00b7 base:1', 'Japanese \u00b7 area']), 'version 6: the command views are ' + JSON.stringify(Core.commandViews(r6).map(v => v.label)));
+  const held = (si, side, command) => { const p = m.states[si].pictures[side].get(command); return p ? [...p.values()].map(c => c.age_pulses + (c.own ? 'o' : 't')).join(',') : 'gone'; };
+  const last = m.states.length - 1;
+  assert(m.steps.map(s => s.label).join('|') === 'Start|Day 1, night (18:00 to 06:00)|Day 1, morning (06:00 to 12:00)|Day 1, end of day', 'version 6: the steps are ' + m.steps.map(s => s.label).join('|'));
+  assert(held(0, 'allied', 'task_force:2') === '' && held(last, 'allied', 'task_force:2') === 'gone', 'version 6: a command gone is still drawn');
+  assert(held(1, 'allied', 'task_force:1') === '0o' && held(1, 'allied', 'area') === '0t' && held(1, 'allied', 'base:1') === '', 'version 6: the pictures at the night step: ' + [held(1, 'allied', 'task_force:1'), held(1, 'allied', 'area'), held(1, 'allied', 'base:1')]);
+  assert(held(last, 'allied', 'base:1') === '1t' && held(last, 'allied', 'area') === '2t' && held(last, 'allied', 'task_force:1') === '2o', 'version 6: the pictures at the last step');
+  assert(m.states.every(st => st.contacts.allied.size === 0), 'version 6: a command picture leaked into the side\'s contacts');
+  const rows = Core.reportRows(m);
+  assert(rows.length === 1 && rows[0].event === 2 && rows[0].report === 1 && rows[0].sender === 'task_force:1' && rows[0].listeners.length === 3, 'version 6: the report row');
+  const touch = c => Core.reportTouch(rows[0], 'allied', c);
+  assert(touch('task_force:1') === 'sent' && touch('area') === 'reached' && touch('base:1') === 'reached' && touch('task_force:2') === 'never' && Core.reportTouch(rows[0], 'japanese', 'area') === null, 'version 6: who a report reached');
+  assert(held(2, 'allied', 'base:1') === '0t' && held(2, 'allied', 'area') === '1t', 'version 6: the pictures at the morning step');
+  const notes = checkPictures(r6, m);
+  assert(notes && notes.commands === 4 && notes.reports === 1, 'version 6: checkPictures found a fault in the hand-built file');
+  // A side's page holds no picture
+  const sm = Core.buildModel(Core.sideReplay(r6, 'allied'));
+  assert(sm.states.every(st => st.pictures === null) && Core.reportRows(sm).length === 0, 'version 6: the allied page holds a picture');
+  // Bad files and bad pictures
+  const noContacts = buildSynthetic6(base, hex); noContacts.steps[2].changed.pictures.allied[0] = { command: 'area' };
+  reject('a picture with no contacts list', noContacts, 'pictures');
+  const notList = buildSynthetic6(base, hex); notList.steps[4].removed.pictures.allied = [3];
+  reject('a removed picture that is not a command word', notList, 'pictures');
+  const stray = buildSynthetic6(base, hex); stray.steps[4].changed.pictures.allied[2].contacts[0].hex = [9, 9];
+  const strayFailures = failuresOf(() => checkPictures(stray, Core.buildModel(stray)));
+  assert(strayFailures.length >= 2 && strayFailures.some(l => l.includes('final.pictures')), 'version 6: a contact off the map and a final that differs from the steps were not found: ' + strayFailures.join('; '));
+  const lateOut = buildSynthetic6(base, hex); lateOut.events[1].data.listeners[1].day = 2;
+  const lateFailures = failuresOf(() => checkPictures(lateOut, Core.buildModel(lateOut)));
+  assert(lateFailures.length === 1 && lateFailures[0].includes('arrives D2 morning, not D1 morning'), 'version 6: a late arrival on the wrong day was not found: ' + lateFailures.join('; '));
+  const strangerSide = buildSynthetic6(base, hex); strangerSide.events[1].data.listeners[0].command = 'base:9';
+  assert(failuresOf(() => checkPictures(strangerSide, Core.buildModel(strangerSide))).some(l => l.includes('base:9')), 'version 6: a listener that is no command of the side was not found');
+  if (failures === before) console.log('  ok: version 6 file opens, each command\'s picture is the file\'s, a command gone is gone, the reports say who got them, bad ones are found');
 }
 
 // ---- A hand-built version 3 replay: one strike that found nothing, asserted exactly ----

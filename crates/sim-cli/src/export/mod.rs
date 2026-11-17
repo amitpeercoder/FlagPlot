@@ -15,6 +15,7 @@ mod measure_fixture;
 mod names;
 mod num;
 mod orders;
+mod pictures;
 mod sides;
 mod state;
 mod steps;
@@ -201,7 +202,7 @@ fn build(
     let key = world.umpire_key();
     Replay {
         format: "flagplot-replay",
-        version: 5,
+        version: 6,
         scenario: ScenarioOut {
             name: scenario.name.clone(),
             placeholder: scenario.placeholder,
