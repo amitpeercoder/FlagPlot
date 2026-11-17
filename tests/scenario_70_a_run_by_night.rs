@@ -13,7 +13,7 @@
 //! # Hand calculation
 //!
 //! Written by the architect before the code. Everything is asserted
-//! exactly, except the ships' fuel, which this scenario does not test. If
+//! exactly. If
 //! the code disagrees, the code or the rule is wrong: do not change a
 //! number here to make a test pass. A mismatch goes back to the
 //! architect.
@@ -25,7 +25,10 @@
 //! hour for each ship. Day d begins at hour 24 x (d - 1): a night pulse
 //! of 12 hours and two daylight pulses of 6. In a pulse ships move before
 //! cargo is worked. A force that has landed its load steams on at the
-//! start of the next pulse.
+//! start of the next pulse. A ship burns its cruising rate a mile at or
+//! below cruising speed, and that times the square of the speed over the
+//! cruising speed above it. The frozen figures give no fuelling rate, so
+//! a ship in port is filled in the pulse.
 //!
 //! The supply doctrine: a run ordered on a morning loads that day, sails
 //! the next and, with a passage of a day or less, arrives that same day;
@@ -52,8 +55,9 @@
 //!
 //! Task force 1, Allied, on the transport mission: ships 1 and 2,
 //! placeholder fast transports with cargo (class 12: 30 t of cargo,
-//! 16 kn at cruise, 36 kn at full), stopped at base 1 at cruising speed,
-//! full of fuel, nothing aboard.
+//! 16 kn at cruise, 36 kn at full, 500 t of fuel over 4,000 nm, which is
+//! 0.125 t a mile at cruise), stopped at base 1 at cruising speed, full
+//! of fuel, nothing aboard.
 //!
 //! The Allied side's commands of day 1: intent 1, keep base 2 supplied,
 //! with a floor of 5 days and no interval, and a forces limit of ships 1
@@ -67,7 +71,11 @@
 //! at hour 15 of the day, in daylight. At 36 kn it is 240 / 36 = 6 hours
 //! 40 minutes: it arrives in the night with 5 hours 20 minutes left. A
 //! ship's limit is 20 x 5 1/3 = 106 2/3 t; each carries 30 t, which it
-//! lands in 1.5 hours. Full speed is ordered.
+//! lands in 1.5 hours.
+//!
+//! At 36 kn a ship burns 0.125 x (36 / 16) squared = 0.125 x 5.0625 t a
+//! mile: 151.875 t each way and 303.75 t out and home, against 60 t at
+//! cruise. Each ship holds 500 t: it has the fuel. Full speed is ordered.
 //!
 //! ## The supply doctrine's sums
 //!
@@ -114,6 +122,10 @@
 //!   on day 12 it pays 10 t and takes 60 t: 100 t; 90 t after day 13 and
 //!   80 t after day 14.
 //! - **Base 1** loads out 120 t and ends with 880 t of supply.
+//! - **Fuel.** The force's speed stays at full, so it comes home at 36 kn
+//!   too. Each ship burns 303.75 t on each run and is filled at A in the
+//!   pulse it arrives. Base 1 gives 4 x 303.75 = 1,215 t and ends with
+//!   785 t of fuel; each ship ends full.
 //!
 //! # Properties
 //!
@@ -139,6 +151,10 @@
 //!   4 t an hour: a ship's limit is 4 x 5 1/3 = 21 1/3 t. A load fills
 //!   ship 1 first, so the load is cut to 21 1/3 t, all in ship 1, and
 //!   ship 2 goes with its force empty. The reason gives the cut.
+//! - **Not the fuel for full speed.** With each ship holding 300 t and
+//!   base 1 no fuel: at 36 kn a ship needs 303.75 t and has 300. Full
+//!   speed is passed over, cruise arrives by day, and at balanced the run
+//!   goes by day at cruising speed; the reason gives 300 against 303.75.
 //! - The same start gives the same orders; two worlds that differ only in
 //!   what the Allied side cannot see give the same orders and reasons; a
 //!   save on day 8 and a resume give the same game; scenarios 67, 68 and

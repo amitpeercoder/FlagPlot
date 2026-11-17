@@ -19,7 +19,7 @@ A force that unloads by day off a place the enemy can reach from the air is foun
 ## The timing
 
 4. **The hour it would arrive** is worked by the engine's own forecast of the passage from the source, sailing at the first hour of a day, at cruising speed and then at full speed. A passage arrives in the night when its hours, less the whole days in them, are fewer than 12.
-5. **The speed ordered** is the first of the two that arrives in the night with room for the load (item 7). Where it differs from the force's speed the staff orders it, on the morning the force sails, before the route. It is left as it is afterwards.
+5. **The speed ordered** is the first of the two that arrives in the night with room for the load (item 7) and for which every ship has the fuel. Above cruising speed a ship burns its cruising rate times the square of the speed over its cruising speed (chapter 2, Fuel burn), so the fuel each ship needs is the engine's measure of the route out and home at the speed tried, in place of the run's measure at cruise. A speed a ship has not the fuel for is passed over, and the reason gives the two figures. Where it differs from the force's speed the staff orders it, on the morning the force sails, before the route. It is left as it is afterwards.
 6. **The night's hours** are 12 less the hour of the night at which the force arrives.
 
 ## The night's limit
@@ -51,7 +51,7 @@ A force that unloads by day off a place the enemy can reach from the air is foun
 
 ## Rule card
 
-- **Reads:** the side's map of the enemy's bases, the forecast of a passage at two speeds, the port figures, the ships' room and the men aboard, the risk.
+- **Reads:** the side's map of the enemy's bases, the forecast of a passage at two speeds and the fuel each burns, the port figures, the ships' room and the men aboard, the risk.
 - **Writes:** nothing of its own: a speed order, and the weight of a load order.
 - **Reuses:** the supply doctrine's run and the lifts of decisions 0142 and 0143; the speed order; the halt and the steaming on of decision 0096.
 
