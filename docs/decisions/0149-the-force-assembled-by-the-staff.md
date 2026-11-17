@@ -33,7 +33,7 @@ Decision 0142 has the commander name the transport force, the units and the base
 ## What it could not find
 
 12. **The reason of the choice gives each step in that order with its numbers,** and what is short: the men wanted against the men the lift gives; the berths wanted against the berths of the force; that it has no force to bombard, to cover or to escort.
-13. **With no base that can be the source** the staff forms nothing and hands in the notice that it cannot meet the intent, each morning, with what is missing: a transport force stopped at a base of the side, or a fighting unit beside it.
+13. **With no base that can be the source** the staff forms nothing, hands in the notice that it cannot meet the intent, once, and gives the reason each morning, with what is missing: a transport force stopped at a base of the side, or a fighting unit beside it.
 14. **With fewer men than wanted** it does as decision 0142, item 10: at preserve the force it forms nothing and hands in the notice; at balanced and at press it goes with what it has and says so.
 15. **A lack of a bombardment, carrier or escort force stops nothing** beyond what the rules of those forces already say. The reason names it.
 

@@ -43,7 +43,7 @@ It is worked by "take a place" on each morning its landing is ready and its plan
 14. **The first run** is taken to carry the daily need for the 15 days of item 7.
 15. **It can be held** if the source's stock above its reserve is at least the supply that lands with the men and the first run together, and the transport force's room is at least each.
 16. **Where it can,** the reason of the release, or of the day it waits for leave, gives the check: the need, the days, the margin, the supply, the source's stock and the first run.
-17. **Where it cannot,** the reason says what is short and by how much. At preserve the force (the risk of the "take a place") the staff does not ask leave and does not release: it hands in the notice that it cannot meet the intent, each morning the check fails. At balanced and at press it goes, and says so.
+17. **Where it cannot,** the reason says what is short and by how much. At preserve the force (the risk of the "take a place") the staff does not ask leave and does not release: it hands in the notice that it cannot meet the intent, once, and gives the reason each morning the check fails (decision 0142, the ruling on reading 8). At balanced and at press it goes, and says so.
 
 ## What it leaves for later
 

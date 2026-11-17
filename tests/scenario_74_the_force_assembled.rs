@@ -114,13 +114,14 @@
 //!   1 is the lower numbered. The staff goes with unit 1 and says it is
 //!   short by 400 men.
 //! - **Short of men, at preserve the force.** The same at preserve the
-//!   force: the men wanted are 1,500. The staff forms nothing and hands
-//!   in the notice that it cannot meet intent 1 on each morning, with
-//!   600 men against 1,500.
+//!   force: the men wanted are 1,500. The staff forms nothing, hands in
+//!   the notice that it cannot meet intent 1 on day 1 and gives the
+//!   reason on each morning, with 600 men against 1,500.
 //! - **Nothing to sail in.** With task forces 1 and 2 held from day 1:
-//!   no base can be the source. The staff forms nothing and hands in the
-//!   notice that it cannot meet intent 1 on each morning, saying that no
-//!   transport force it may take lies at a base of the side.
+//!   no base can be the source. The staff forms nothing, hands in the
+//!   notice that it cannot meet intent 1 on day 1 and says on each
+//!   morning that no transport force it may take lies at a base of the
+//!   side.
 //! - **With all three named** (task forces 1 and 3, unit 1, base 1): the
 //!   orders and commands are those of the main case, and the limit the
 //!   staff sets on intent 2 names unit 1 alone, as decision 0142 has it.

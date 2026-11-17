@@ -95,7 +95,8 @@
 //!   out of the forces limit: no group is sent. On the morning of day 2
 //!   the landing is otherwise ready: the plan is not released, and the
 //!   staff hands in the notice that it cannot meet intent 1, on that
-//!   morning and on each after, saying that nothing it may use can look.
+//!   morning, and on each after gives the reason, that nothing it may use
+//!   can look.
 //! - **Nothing can look, at balanced.** The same, at balanced: on the
 //!   morning of day 2 the plan is released with units 1 and 2, and the
 //!   reason says it goes on no count.
