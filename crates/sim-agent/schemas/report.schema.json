@@ -17,7 +17,8 @@
     "summary",
     "holds",
     "neutralisations",
-    "denials"
+    "denials",
+    "refusals"
   ],
   "additionalProperties": false,
   "properties": {
@@ -230,6 +231,17 @@
             "$ref": "defs.schema.json#/$defs/handle"
           }
         }
+      }
+    },
+    "refusals": {
+      "type": "object",
+      "description": "Refusals over the whole game, from your own events (decision 0138, 4): staff orders refused because a force was not as the area command held it (decision 0136, 14), staff orders refused for any other cause, and commands refused.",
+      "required": ["staff_orders_not_as_held", "staff_orders_other", "commands"],
+      "additionalProperties": false,
+      "properties": {
+        "staff_orders_not_as_held": { "type": "integer" },
+        "staff_orders_other": { "type": "integer" },
+        "commands": { "type": "integer" }
       }
     },
     "denials": {

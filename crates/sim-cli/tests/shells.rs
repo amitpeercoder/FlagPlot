@@ -221,7 +221,7 @@ fn a_raid_exports_hits_on_men_only_when_one_landed() {
 #[test]
 fn the_batch_counts_men_lost_by_cause_and_shells_fired_by_side() {
     let batch = json_out("batch", SCENARIO, "batch", &["--runs", "3"]);
-    assert_eq!(batch["version"], 5);
+    assert_eq!(batch["version"], 6);
     for run in batch["per_run"].as_array().expect("runs") {
         // The Japanese side fired 1400 shells and the Allied none.
         assert_eq!(run["bombardment_shells"]["japanese"], "1400");

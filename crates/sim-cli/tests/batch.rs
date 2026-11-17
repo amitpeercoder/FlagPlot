@@ -60,7 +60,7 @@ fn ids_of(side: &str, summary: &Value) -> Vec<u64> {
 fn the_summary_adds_up_and_matches_single_runs() {
     let summary = parse(&batch("fight", FIGHT, &["--runs", "20"]));
     assert_eq!(summary["format"], "flag-plot-batch");
-    assert_eq!(summary["version"], 5);
+    assert_eq!(summary["version"], 6);
     assert_eq!(summary["runs"], 20);
     assert_eq!(summary["first_seed"], 1);
     assert_eq!(summary["scenario"]["file"], FIGHT);
@@ -1356,7 +1356,7 @@ fn the_keys_a_version_1_reader_used_keep_their_values() {
         let before: Value =
             serde_json::from_slice(&fs::read(before_path).expect("the old file")).expect("JSON");
         assert_eq!(before["version"], 1);
-        assert_eq!(after["version"], 5);
+        assert_eq!(after["version"], 6);
         for (key, value) in before.as_object().expect("an object") {
             if key == "version" {
                 continue;
@@ -1446,7 +1446,7 @@ fn the_land_fight_counts_add_up_by_day_and_by_cause_in_every_scenario_that_has_t
         "data/scenarios/32_falling_back.toml",
     ] {
         let batch = parse(&batch("land-sums", file, &["--runs", "3"]));
-        assert_eq!(batch["version"], 5, "{file}");
+        assert_eq!(batch["version"], 6, "{file}");
         // The ground figures of the scenario: 0.005 t a man a day.
         assert_eq!(batch["daily_supply_t_per_man"], "0.005", "{file}");
         for run in batch["per_run"].as_array().expect("runs") {
@@ -1616,5 +1616,55 @@ fn scenario_32_records_the_surrender_of_200_men_and_base_7_changing_side_on_day_
             ),
             (Some(1), Some("japanese"), Some("allied"))
         );
+    }
+}
+
+// ------------------------------------------------ refusals by cause (0138)
+
+/// Each run has `refusals`, by side: the staff's orders refused because a unit
+/// was not as the area command held it (decision 0136, 14), the staff's
+/// orders refused for any other cause, and commands refused. A scenario with
+/// no staff and no command has zeros.
+#[test]
+fn every_run_has_refusals_by_side_and_cause_and_a_quiet_scenario_has_zeros() {
+    let summary = parse(&batch("refusals-quiet", QUIET, &["--runs", "2"]));
+    for run in summary["per_run"].as_array().expect("runs") {
+        for side in ["japanese", "allied"] {
+            assert_eq!(
+                run["refusals"][side],
+                serde_json::json!({
+                    "staff_orders_not_as_held": 0,
+                    "staff_orders_other": 0,
+                    "commands": 0
+                }),
+                "{side}"
+            );
+        }
+    }
+}
+
+/// Scenario 45 has two commands of the Allied side that the engine refuses (a
+/// hold of ship 473 on day 66 and its release on day 84, when it is not the
+/// side's, as `run --events` says), and no refused order of the staff. The
+/// batch counts what the log says, by side.
+#[test]
+fn refused_commands_are_counted_by_side_as_the_log_says_them() {
+    let file = "data/scenarios/45_soak_ashore.toml";
+    let summary = parse(&batch("refusals-45", file, &["--runs", "1"]));
+    let run = &summary["per_run"][0];
+    let output = binary(&["run", file, "--seed", "1", "--events"]);
+    assert!(output.status.success());
+    let text = String::from_utf8(output.stdout).expect("UTF-8");
+    let refused = |side: &str| {
+        text.lines()
+            .filter(|line| line.contains(side) && line.contains("command refused"))
+            .count() as u64
+    };
+    assert_eq!(refused("Allied"), 2);
+    assert_eq!(run["refusals"]["allied"]["commands"], 2);
+    assert_eq!(run["refusals"]["japanese"]["commands"], refused("Japanese"));
+    for side in ["japanese", "allied"] {
+        assert_eq!(run["refusals"][side]["staff_orders_not_as_held"], 0);
+        assert_eq!(run["refusals"][side]["staff_orders_other"], 0);
     }
 }
