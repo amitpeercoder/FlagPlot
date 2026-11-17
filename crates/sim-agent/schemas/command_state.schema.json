@@ -344,6 +344,49 @@
         }
       }
     },
+    "picture": {
+      "description": "With command levels on: the area command's picture of the enemy, its contacts with the area command's own numbers (decision 0138, 3). Left out with command levels off.",
+      "type": "object",
+      "required": ["command", "reports_travel", "contacts"],
+      "additionalProperties": false,
+      "properties": {
+        "command": { "const": "area" },
+        "reports_travel": { "type": "boolean", "description": "Whether reports travel between your commands in this game, so that pictures can differ." },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["contact", "place", "taken_for", "ships", "age_pulses", "own"],
+            "additionalProperties": false,
+            "properties": {
+              "contact": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "taken_for": { "type": "string" },
+              "ships": { "type": "integer" },
+              "age_pulses": { "type": "integer" },
+              "own": { "type": "boolean", "description": "Whether the report that last made or refreshed the contact here was the area command's own search, strike or fight, not one it was told of." }
+            }
+          }
+        }
+      }
+    },
+    "forces_held": {
+      "description": "With command levels on: each task force and base the area command holds, as it holds it, with the moment that is of (decision 0138, 3). Empty where nothing is held (no report figures). Left out with command levels off.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["place", "as_of", "current"],
+        "additionalProperties": false,
+        "properties": {
+          "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+          "base": { "$ref": "defs.schema.json#/$defs/handle" },
+          "place": { "$ref": "defs.schema.json#/$defs/place" },
+          "as_of": { "type": "string", "description": "The moment the held state is of, as list_forces says it: \"the start\", \"the morning of day 2\". Always given here." },
+          "current": { "type": "boolean", "description": "True when it is of the pulse just ended." },
+          "radio_silence": { "type": "boolean", "description": "A task force only: whether it is on radio silence." }
+        }
+      }
+    },
     "holds": {
       "type": "array",
       "description": "What you hold from the staff: each hold with its target in your numbers, the day it was made, what made it (a hold command of yours, or an order of yours to a unit in an intent's forces limit) and that order's number, and the words.",

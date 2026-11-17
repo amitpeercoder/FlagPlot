@@ -1019,58 +1019,121 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
             _ => {}
         }
     }
-    answer(
-        "command_state",
-        json!({
-            "for_day": today,
-            "as_at": format!("the start of day {today}, with the commands you have queued taken in"),
-            "notes": notes,
-            "leaves": leaves_json(view),
-            "intents": in_tree_order(state)
-                .into_iter()
-                .map(|intent| intent_json(&n, staff, view, intent))
-                .collect::<Vec<_>>(),
-            "reserves": view
-                .bases()
-                .map(|b| json!({
-                    "base": n.base(b.id),
-                    "supply_t": dec(b.supply_t),
-                    "fuel_t": dec(b.fuel_t),
-                    "supply_reserve_t": dec(b.supply_reserve_t),
-                    "fuel_reserve_t": dec(b.fuel_reserve_t),
-                }))
-                .collect::<Vec<_>>(),
-            "plans": state
-                .plans
-                .values()
-                .map(|plan| plan_json(&n, view, plan, false))
-                .collect::<Vec<_>>(),
-            "commitments": state
-                .commitments
-                .iter()
-                .flat_map(|(ship, list)| list.iter().map(move |c| (ship, c)))
-                .map(|(ship, c)| json!({
-                    "ship": n.ship(*ship),
-                    "plan": c.plan.raw(),
-                    "run": c.run,
-                    "from_day": c.from_day,
-                    "to_day": c.to_day,
-                }))
-                .collect::<Vec<_>>(),
-            "holds": holds_json(&n, view),
-            "interrupts": crate::reporting::interrupts_json(&n, view),
-            "queued": queued
-                .iter()
-                .enumerate()
-                .map(|(i, command)| json!({
-                    "index": i,
-                    "command": command_json(&n, command, None),
-                    "text": command_text(&n, command, None),
-                }))
-                .collect::<Vec<_>>(),
-            "staff_decisions_yesterday": decisions_of_day(&n, view, view.day()),
-        }),
-    )
+    let mut fields = json!({
+        "for_day": today,
+        "as_at": format!("the start of day {today}, with the commands you have queued taken in"),
+        "notes": notes,
+        "leaves": leaves_json(view),
+        "intents": in_tree_order(state)
+            .into_iter()
+            .map(|intent| intent_json(&n, staff, view, intent))
+            .collect::<Vec<_>>(),
+        "reserves": view
+            .bases()
+            .map(|b| json!({
+                "base": n.base(b.id),
+                "supply_t": dec(b.supply_t),
+                "fuel_t": dec(b.fuel_t),
+                "supply_reserve_t": dec(b.supply_reserve_t),
+                "fuel_reserve_t": dec(b.fuel_reserve_t),
+            }))
+            .collect::<Vec<_>>(),
+        "plans": state
+            .plans
+            .values()
+            .map(|plan| plan_json(&n, view, plan, false))
+            .collect::<Vec<_>>(),
+        "commitments": state
+            .commitments
+            .iter()
+            .flat_map(|(ship, list)| list.iter().map(move |c| (ship, c)))
+            .map(|(ship, c)| json!({
+                "ship": n.ship(*ship),
+                "plan": c.plan.raw(),
+                "run": c.run,
+                "from_day": c.from_day,
+                "to_day": c.to_day,
+            }))
+            .collect::<Vec<_>>(),
+        "holds": holds_json(&n, view),
+        "interrupts": crate::reporting::interrupts_json(&n, view),
+        "queued": queued
+            .iter()
+            .enumerate()
+            .map(|(i, command)| json!({
+                "index": i,
+                "command": command_json(&n, command, None),
+                "text": command_text(&n, command, None),
+            }))
+            .collect::<Vec<_>>(),
+        "staff_decisions_yesterday": decisions_of_day(&n, view, view.day()),
+    });
+    // With command levels on, the area command's picture and what it holds
+    // of each force and base under it (decision 0138, 3). With them off
+    // nothing is added and the answer is what it was.
+    if !view.commands().is_empty() {
+        fields["picture"] = picture_json(&n, view);
+        fields["forces_held"] = forces_held_json(view);
+    }
+    answer("command_state", fields)
+}
+
+/// The area command's picture: each contact it holds with the area
+/// command's own number, and whether the contact is the command's own
+/// (decision 0138, 3).
+fn picture_json(n: &Names<'_>, view: &SideView<'_>) -> Value {
+    let picture = crate::common::area_picture(view);
+    json!({
+        "command": "area",
+        "reports_travel": picture.reports_travel(),
+        "contacts": picture
+            .contacts()
+            .map(|c| json!({
+                "contact": n.ctx.entity(sim_core::ids::EntityRef::Contact(c.id)),
+                "place": n.ctx.place(c.estimated_hex),
+                "taken_for": c.estimated_kind.name(),
+                "ships": c.estimated_ship_count,
+                "age_pulses": c.age_pulses,
+                "own": picture.is_own(c.id),
+            }))
+            .collect::<Vec<_>>(),
+    })
+}
+
+/// Each task force and base the area command holds, as it holds it: where,
+/// of which moment, and whether that is the pulse just ended (decision 0138,
+/// 3). Empty where no state is held (no report figures).
+fn forces_held_json(view: &SideView<'_>) -> Value {
+    use sim_core::pictures::CommandRef;
+    let known = view.known_to(CommandRef::Area);
+    let held_view = known.view();
+    let ctx = Ctx::new(held_view);
+    let ended = view.pulse_just_ended();
+    let mut held: Vec<Value> = Vec::new();
+    for force in held_view.task_forces() {
+        let Some(as_of) = held_view.held_as_of(CommandRef::TaskForce(force.id)) else {
+            continue;
+        };
+        held.push(json!({
+            "task_force": ctx.force(force.id),
+            "place": ctx.place(force.position()),
+            "as_of": as_of.to_string(),
+            "current": as_of == ended,
+            "radio_silence": view.radio_silence(force.id) == Some(true),
+        }));
+    }
+    for base in held_view.bases() {
+        let Some(as_of) = held_view.held_as_of(CommandRef::Base(base.id)) else {
+            continue;
+        };
+        held.push(json!({
+            "base": ctx.base(base.id),
+            "place": ctx.place(base.hex),
+            "as_of": as_of.to_string(),
+            "current": as_of == ended,
+        }));
+    }
+    Value::Array(held)
 }
 
 /// Every intent of the side, each root by number with the intents beneath it
