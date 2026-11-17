@@ -4,6 +4,8 @@
 //! supplied" and a lift of "take a place" are timed, at preserve the force
 //! and at balanced, to arrive in the night.
 //!
+//! - **A place the side's own fighters are based at** (item 2a) is run to
+//!   by day, at every risk: read from the side's own groups.
 //! - **The hour it would arrive** (item 4) is the engine's forecast of the
 //!   passage from the source, sailing at the first hour of a day, at cruising
 //!   speed and then at full. It arrives in the night when its hours, less the
@@ -23,8 +25,10 @@
 use sim_core::command::Risk;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
 use sim_core::orders::SpeedSetting;
+use sim_core::refdata::AircraftRole;
+use sim_core::state::AirGroupLocation;
 use sim_core::view::SideView;
 use sim_core::PassageEnd;
 
@@ -72,10 +76,31 @@ pub(crate) fn enemy_base_near(view: &SideView<'_>, place: Hex) -> Option<(BaseId
         .map(|(hexes, id)| (id, hexes))
 }
 
+/// Item 2a: a base of the side's own in `place`'s hex with a fighter group of
+/// the side's based at it, whatever its state: the lowest numbered such base
+/// and the lowest numbered group. Read from the side's own groups only.
+pub(crate) fn own_fighters_at(view: &SideView<'_>, place: Hex) -> Option<(BaseId, AirGroupId)> {
+    let bases: Vec<BaseId> = view
+        .bases()
+        .filter(|b| b.hex == place)
+        .map(|b| b.id)
+        .collect();
+    view.air_groups()
+        .filter_map(|g| match g.location {
+            AirGroupLocation::Base(base) if bases.contains(&base) => {
+                let kind = view.aircraft_type(g.aircraft_type)?;
+                (kind.role == AircraftRole::Fighter).then_some((base, g.id))
+            }
+            _ => None,
+        })
+        .min()
+}
+
 /// Whether a run at `risk` to `place` goes by night, and the base that makes
-/// it (items 2 and 3). At press it goes as before.
+/// it (items 2, 2a and 3). At press it goes as before, and so it does to a
+/// place where the side's own fighters are based (item 2a).
 pub(crate) fn applies(view: &SideView<'_>, risk: Risk, place: Hex) -> Option<(BaseId, u32)> {
-    if risk == Risk::Press {
+    if risk == Risk::Press || own_fighters_at(view, place).is_some() {
         return None;
     }
     enemy_base_near(view, place)

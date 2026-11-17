@@ -184,7 +184,11 @@ use sim_core::view::SideView;
 /// night, its route acting at the target's hex. A side with no such task and
 /// no force on the bombardment mission named under those ends gets the
 /// orders and reasons `supply-25` gave.
-pub const DOCTRINE_VERSION: &str = "supply-26";
+/// `supply-27` adds the architect's amendment of decision 0145, item 2a: a
+/// run to a place where a base of the side's own has a fighter group of the
+/// side's based at it goes as before, at every risk. A side with no run by
+/// night to such a place gets the orders and reasons `supply-26` gave.
+pub const DOCTRINE_VERSION: &str = "supply-27";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

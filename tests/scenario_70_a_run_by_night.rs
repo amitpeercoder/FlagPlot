@@ -671,6 +671,18 @@ fn an_enemy_base_in_the_places_own_hex_only() {
     assert_as_before(&play(&t));
 }
 
+#[test]
+fn the_sides_own_fighters_at_the_place() {
+    let t = changed(
+        &text(),
+        "name = \"Placeholder garrison C\"\nside = \"allied\"\nq = 0\nr = 6\nsupply_t = 100\nfuel_t = 0\n",
+        "name = \"Placeholder garrison C\"\nside = \"allied\"\nq = 0\nr = 6\nsupply_t = 100\nfuel_t = 0\nairfield = true\n",
+    );
+    let group = "[[air_group]]\nid = 1\nname = \"Placeholder fighters 1\"\nside = \"allied\"\nbase = 2\naircraft_type = 4\nready = 12\n\n";
+    let t = changed(&t, COMMANDS_MARKER, &format!("{group}{COMMANDS_MARKER}"));
+    assert_as_before(&play(&t));
+}
+
 /// Base 2 and unit 1 at B, base 3 at C, and the ships troop transports.
 fn no_speed_in_the_dark(t: &str) -> String {
     let t = changed(
