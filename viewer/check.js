@@ -239,6 +239,10 @@ function checkAirModel(replay, model, label) {
       } else if (ev.kind === 'search_flown') {
         const g = model.groupTable.get(d.air_group), t = g && types.get(g.typeId);
         if (t) assert(d.range_nm <= t.search_range_nm, label + ': search ' + ev.id + ' range ' + d.range_nm + ' is over its type\'s ' + t.search_range_nm);
+      } else if (ev.kind === 'reconnaissance_flown') {
+        // The flight is within the search range of its type (decision 0147, 5).
+        const g = model.groupTable.get(d.air_group), t = g && types.get(g.typeId);
+        if (t) assert(d.distance_nm <= t.search_range_nm, label + ': reconnaissance ' + ev.id + ' flew ' + d.distance_nm + ' nm, over its type\'s ' + t.search_range_nm);
       }
     }
   });

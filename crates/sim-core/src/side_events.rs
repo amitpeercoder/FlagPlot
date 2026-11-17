@@ -792,7 +792,10 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::ShipSunk { ship, .. } => whole_if(own_ship(ship)),
 
         // Air groups.
+        // A flight to look at the enemy ashore: the flying side's own, never
+        // shown to the enemy (decision 0147, 11).
         EventKind::SearchFlown { air_group, .. }
+        | EventKind::ReconnaissanceFlown { air_group, .. }
         | EventKind::DamagedAircraftDestroyedOnGround { air_group, .. }
         | EventKind::AircraftWorn { air_group, .. }
         | EventKind::AircraftDitched { air_group, .. }
@@ -1512,6 +1515,7 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::LoadingComplete { .. }
             | EventKind::UnloadingComplete { .. }
             | EventKind::SearchFlown { .. }
+            | EventKind::ReconnaissanceFlown { .. }
             | EventKind::SearchAttempt { .. }
             | EventKind::ReportReceived { .. }
             | EventKind::ReportSent { .. }
@@ -1722,6 +1726,7 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::LoadingComplete { .. }
         | EventKind::UnloadingComplete { .. }
         | EventKind::SearchFlown { .. }
+        | EventKind::ReconnaissanceFlown { .. }
         | EventKind::SearchAttempt { .. }
         | EventKind::ReportReceived { .. }
         | EventKind::ReportSent { .. }
@@ -2066,6 +2071,7 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::LoadingComplete { .. }
             | EventKind::UnloadingComplete { .. }
             | EventKind::SearchFlown { .. }
+            | EventKind::ReconnaissanceFlown { .. }
             | EventKind::SearchAttempt { .. }
             | EventKind::ReportReceived { .. }
             | EventKind::ReportSent { .. }
@@ -2305,6 +2311,7 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::LoadingComplete { .. }
         | EventKind::UnloadingComplete { .. }
         | EventKind::SearchFlown { .. }
+        | EventKind::ReconnaissanceFlown { .. }
         | EventKind::ReportReceived { .. }
         | EventKind::ReportSent { .. }
         | EventKind::StateReportLate { .. }
@@ -2586,6 +2593,7 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::LoadingComplete { .. }
                     | EventKind::UnloadingComplete { .. }
                     | EventKind::SearchFlown { .. }
+                    | EventKind::ReconnaissanceFlown { .. }
                     | EventKind::SearchAttempt { .. }
                     | EventKind::ReportReceived { .. }
                     | EventKind::ReportSent { .. }
@@ -3043,6 +3051,19 @@ mod tests {
                     to_deg: 90,
                     range_nm: fx(300),
                     aircraft: 6,
+                },
+                Whole,
+                Nothing,
+            ),
+            // A reconnaissance flight is the flying side's, never shown to the
+            // enemy (decision 0147, 11).
+            row(
+                EventKind::ReconnaissanceFlown {
+                    air_group: group(1),
+                    from: AirGroupLocation::Base(base(1)),
+                    hex: hex(),
+                    distance_nm: fx(240),
+                    supply_t: fx(2),
                 },
                 Whole,
                 Nothing,
@@ -4008,6 +4029,7 @@ mod tests {
                     hex: hex(),
                     men: 640,
                     replaced: true,
+                    grade: crate::belief::GroundGrade::SeenFromAir,
                 },
                 Whole,
                 Nothing,
@@ -4630,7 +4652,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 147, "the log has 147 kinds of event");
+        assert_eq!(all.len(), 148, "the log has 148 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

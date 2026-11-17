@@ -61,6 +61,14 @@ men_lost_per_base_hit = 10
 report_error_low = "0.5"
 report_error_high = "1.5"
 
+# Reconnaissance from the air (decision 0147, 7): the least and the most a
+# flight's count of the enemy ashore can be, as a share of the truth.
+# PLACEHOLDERS set by the architect, resting on no source: wider than the 0.5
+# and 1.5 of men in contact. Live only; the frozen step 1 copy gives neither, so
+# no flight is made there.
+reconnaissance_error_low = "0.25"
+reconnaissance_error_high = "2"
+
 # Marching overland (decision 0094). Placeholders set by the architect, resting
 # on no source. The record has two marches inside the period, both from Taivu
 # to the airfield: about two days in August and about a week in September

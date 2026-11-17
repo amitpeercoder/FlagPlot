@@ -62,6 +62,7 @@ mod preparation;
 #[cfg(test)]
 mod preparation_tests;
 mod rebase;
+mod reconnaissance;
 mod refuel;
 mod resolve;
 mod search;

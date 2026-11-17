@@ -160,6 +160,10 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                         map.insert("mission".into(), json!("base_strike"));
                         map.insert("target_base".into(), json!(base.raw()))
                     }
+                    AirMission::Reconnaissance(hex) => {
+                        map.insert("mission".into(), json!("reconnaissance"));
+                        map.insert("hex".into(), json!([hex.q, hex.r]))
+                    }
                 };
                 Value::Object(map)
             }
@@ -605,6 +609,12 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                     "base_strike" => {
                         AirMission::BaseStrike(BaseId::new(small(value, "target_base")?))
                     }
+                    "reconnaissance" => AirMission::Reconnaissance(
+                        hex_pairs(
+                            std::slice::from_ref(value.get("hex").ok_or("\"hex\" is missing")?),
+                            "hex",
+                        )?[0],
+                    ),
                     other => return Err(format!("unknown air mission \"{other}\"")),
                 }),
                 "set_search_arc" => AirGroupOrder::SetSearchArc {

@@ -504,6 +504,7 @@ mod tests {
             unfed_loss_share_per_day: Fixed::ONE,
             // No search figures here, so no ground report (decision 0092).
             report_error: None,
+            reconnaissance_error: None,
             ..crate::refdata::GroundFigures::FIRST
         });
         let mut truth = TruthState::default();

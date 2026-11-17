@@ -1152,6 +1152,7 @@ pub fn count(
             | EventKind::LoadingComplete { .. }
             | EventKind::UnloadingComplete { .. }
             | EventKind::SearchFlown { .. }
+            | EventKind::ReconnaissanceFlown { .. }
             | EventKind::SearchAttempt { .. }
             | EventKind::ReportReceived { .. }
             | EventKind::ReportSent { .. }

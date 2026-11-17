@@ -113,6 +113,9 @@ fn text(kind: &OrderKind) -> String {
             AirGroupOrder::SetAirMission(AirMission::BaseStrike(base)) => {
                 format!("air mission base_strike on {base}")
             }
+            AirGroupOrder::SetAirMission(AirMission::Reconnaissance(hex)) => {
+                format!("air mission reconnaissance of {hex}")
+            }
             AirGroupOrder::SetAirMission(mission) => {
                 format!("air mission {}", names::air_mission(*mission))
             }

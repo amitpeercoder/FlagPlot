@@ -365,95 +365,95 @@
     },
     {
       "file": "data/scenarios/second-proof/../../reference/ground.toml",
-      "hash": "5ef7d142f1faa97f"
+      "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-28",
+  "doctrine_version": "supply-29",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "c00f8158d76fbc82"
+      "hash": "d2dd86f825fb8c2f"
     },
     {
       "day": 2,
-      "hash": "c02833fa7ff38a54"
+      "hash": "408d089c12a997c5"
     },
     {
       "day": 3,
-      "hash": "3bd8aecf4c2809a9"
+      "hash": "f5c81f9bf43139f6"
     },
     {
       "day": 4,
-      "hash": "ea8d0dfb57b03cb7"
+      "hash": "dbd13248eb843b5d"
     },
     {
       "day": 5,
-      "hash": "54f787a87dd5af0c"
+      "hash": "ae11e2d49c164bc6"
     },
     {
       "day": 6,
-      "hash": "2dd0ae373164e41b"
+      "hash": "6ab6ea275f6cdc37"
     },
     {
       "day": 7,
-      "hash": "ae6a4216176e5071"
+      "hash": "3f9cbbf5ca0cc331"
     },
     {
       "day": 8,
-      "hash": "2d2a212cd3e016f9"
+      "hash": "51bac07d87310aab"
     },
     {
       "day": 9,
-      "hash": "bd29ca45da002909"
+      "hash": "f33d59c46c73a709"
     },
     {
       "day": 10,
-      "hash": "8c6d0f92262af488"
+      "hash": "39a0b9580127f518"
     },
     {
       "day": 11,
-      "hash": "2ffd97c32b86f5a3"
+      "hash": "4ba8b40d7b0348a7"
     },
     {
       "day": 12,
-      "hash": "4558245d2e8cf902"
+      "hash": "e8cc605adcd65d7c"
     },
     {
       "day": 13,
-      "hash": "21a974701e68568f"
+      "hash": "d591747b132b7e19"
     },
     {
       "day": 14,
-      "hash": "8421f85baaf14fd4"
+      "hash": "93efd5117da6ec8c"
     },
     {
       "day": 15,
-      "hash": "c87cbcd5871936a6"
+      "hash": "8b152c67c6041630"
     },
     {
       "day": 16,
-      "hash": "1f7a65ae66bbbcda"
+      "hash": "a6ed4cc552663f65"
     },
     {
       "day": 17,
-      "hash": "1cb78d3711699739"
+      "hash": "b0a05f515377569e"
     },
     {
       "day": 18,
-      "hash": "a9d255b19285c633"
+      "hash": "e766d38cf37364be"
     },
     {
       "day": 19,
-      "hash": "a55b0d8cfe405bc4"
+      "hash": "c7177debe3b78c52"
     },
     {
       "day": 20,
-      "hash": "2a8024e4c483cf76"
+      "hash": "00455834c3464b38"
     },
     {
       "day": 21,
-      "hash": "e137114b4a766ff6"
+      "hash": "11cfd4a8cc8b826c"
     }
   ],
   "orders": [
@@ -976,7 +976,7 @@
       "unit": "land_unit:17"
     }
   ],
-  "rules_version": 18,
+  "rules_version": 19,
   "scenario": {
     "file": "data/scenarios/second-proof/07m_model_week.toml",
     "hash": "632c7d31c9cab8a1"
@@ -11127,6 +11127,6 @@
       "side": "japanese"
     }
   ],
-  "state_version": "flagplot-state-v42",
-  "version": 17
+  "state_version": "flagplot-state-v43",
+  "version": 18
 }

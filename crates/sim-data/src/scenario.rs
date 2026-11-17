@@ -645,9 +645,12 @@ enum ActionSpec {
     },
     /// `target_base` is required for `base_strike` and given for no other
     /// mission (decision 0034).
+    /// `hex` is required for `reconnaissance` and given for no other mission
+    /// (decision 0147).
     SetAirMission {
         mission: AirMissionSpec,
         target_base: Option<u32>,
+        hex: Option<[i32; 2]>,
     },
     SetSearchArc {
         from_deg: i32,
@@ -873,6 +876,7 @@ enum AirMissionSpec {
     NavalStrike,
     CombatAirPatrol,
     BaseStrike,
+    Reconnaissance,
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -2473,8 +2477,22 @@ impl Scenario {
                         ActionSpec::SetAirMission {
                             mission,
                             target_base,
+                            hex,
                         } => {
                             let mission = match (mission, target_base) {
+                                (AirMissionSpec::Reconnaissance, None) => match hex {
+                                    Some([q, r]) => AirMission::Reconnaissance(Hex::new(*q, *r)),
+                                    None => {
+                                        return Err(fail(format!(
+                                            "the reconnaissance order on day {day} needs a hex"
+                                        )))
+                                    }
+                                },
+                                (_, None) if hex.is_some() => {
+                                    return Err(fail(format!(
+                                        "hex on day {day} is only for the reconnaissance mission"
+                                    )))
+                                }
                                 (AirMissionSpec::BaseStrike, Some(raw)) => {
                                     let base = BaseId::new(*raw);
                                     let held_by = truth

@@ -68,6 +68,41 @@ pub struct NoneFoundReport {
     pub received_event: EventId,
 }
 
+/// Where a count of the enemy's men ashore comes from (decision 0147, 1).
+/// A new report replaces the estimate whatever its grade.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum GroundGrade {
+    /// A scenario's opening estimate: what the side was told before the
+    /// game.
+    Told,
+    /// A reconnaissance flight (decision 0147).
+    SeenFromAir,
+    /// The daily ground report of the side's own men in the hex (decision
+    /// 0092).
+    MenInContact,
+}
+
+impl GroundGrade {
+    /// A stable number for the grade. Part of the state hash. Never
+    /// renumber it; add new values at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            GroundGrade::Told => 1,
+            GroundGrade::SeenFromAir => 2,
+            GroundGrade::MenInContact => 3,
+        }
+    }
+
+    /// The words of the grade.
+    pub const fn name(self) -> &'static str {
+        match self {
+            GroundGrade::Told => "told",
+            GroundGrade::SeenFromAir => "seen from the air",
+            GroundGrade::MenInContact => "men in contact",
+        }
+    }
+}
+
 /// What a ground report says: the enemy's men ashore in a hex, on a day
 /// (decision 0092, 13 and 14). It may be wrong by its error, and an opening
 /// estimate may be wrong by anything.
@@ -75,6 +110,8 @@ pub struct NoneFoundReport {
 pub struct GroundReport {
     pub hex: Hex,
     pub men: u32,
+    /// Where the count comes from (decision 0147, 1).
+    pub grade: GroundGrade,
     /// The day of the report: 0 for a scenario's opening estimate.
     pub day: u32,
     /// The event that records this report's arrival.
@@ -90,6 +127,8 @@ pub struct GroundEstimate {
     pub men: u32,
     pub day: u32,
     pub report_event: EventId,
+    /// Where the count comes from (decision 0147, 1).
+    pub grade: GroundGrade,
 }
 
 /// What a sighting claims. It may be wrong about everything.
@@ -345,6 +384,7 @@ impl BeliefState {
                             men: ground.men,
                             day: ground.day,
                             report_event: ground.received_event,
+                            grade: ground.grade,
                         },
                     )
                     .is_some();

@@ -64,8 +64,11 @@ pub const FORMAT: &str = "flagplot-agent";
 /// (`floor_days`, `interval_days`) under a hold, a hold that names an enemy
 /// base on the side's map, and `intent` in the staff notice `met` of a
 /// take_place (decisions 0143 and 0144). 21 adds the intent kind `bombard`
-/// (`task_force` and `target`) of decision 0146.
-pub const VERSION: u32 = 21;
+/// (`task_force` and `target`) of decision 0146. 22 adds the air mission
+/// `reconnaissance` (with a `hex`) of decision 0147, the grade of an
+/// estimate of the enemy's men ashore (`came_from`), and the refusal
+/// `AircraftCannotSearch`.
+pub const VERSION: u32 = 22;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

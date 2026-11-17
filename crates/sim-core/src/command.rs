@@ -509,6 +509,8 @@ impl IntentKind {
                 target == aimed
             }
             (IntentKind::Bombard { .. }, IntentKind::TakePlace { .. }) => true,
+            // Decision 0148, 1: a carrier force under taking a place.
+            (IntentKind::OperateCarriers { .. }, IntentKind::TakePlace { .. }) => true,
             // Decision 0144, 7: the supply that follows, for the held base.
             (IntentKind::KeepSupplied { base, .. }, IntentKind::Hold { base: held }) => {
                 base == held

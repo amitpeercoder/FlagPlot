@@ -907,6 +907,9 @@ struct GroundFile {
     men_lost_per_base_hit: Option<Quantity>,
     report_error_low: Option<Quantity>,
     report_error_high: Option<Quantity>,
+    /// Decision 0147: without both, no reconnaissance flight is made.
+    reconnaissance_error_low: Option<Quantity>,
+    reconnaissance_error_high: Option<Quantity>,
     /// Marching overland (decision 0094). Required like the older keys.
     /// Days is a whole number, read as one.
     march_days_per_hex: u32,
@@ -1011,6 +1014,20 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
                     "give report_error_low and report_error_high together, or neither".to_string(),
                 ))
             }
+        },
+        reconnaissance_error: match (
+            &file.reconnaissance_error_low,
+            &file.reconnaissance_error_high,
+        ) {
+            (None, None) => None,
+            (Some(low), Some(high)) => Some(ReportError {
+                low: number("reconnaissance_error_low", low)?,
+                high: number("reconnaissance_error_high", high)?,
+            }),
+            _ => return Err(fail(
+                "give reconnaissance_error_low and reconnaissance_error_high together, or neither"
+                    .to_string(),
+            )),
         },
         march_days_per_hex: file.march_days_per_hex,
         fatigue_per_march_day: number("fatigue_per_march_day", &file.fatigue_per_march_day)?,
@@ -3316,6 +3333,44 @@ mod tests {
                 Fixed::from_int(edge.parse().unwrap())
             );
         }
+    }
+
+    #[test]
+    fn the_reconnaissance_error_is_both_keys_or_neither_and_in_range() {
+        // The shipped live file gives both, 0.25 and 2 (decision 0147, 7).
+        let live_path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/ground.toml");
+        let live = fs::read_to_string(live_path).expect("the shipped file reads");
+        let loaded = parse_ground_figures(&live, here()).expect("parses");
+        let error = loaded
+            .reconnaissance_error
+            .expect("the shipped file has them");
+        assert_eq!(
+            (error.low, error.high),
+            (Fixed::from_raw(250_000), Fixed::from_int(2))
+        );
+        // The frozen step 1 file gives neither: no flight is made.
+        let frozen = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(frozen.reconnaissance_error, None);
+        // Only one of the two is refused.
+        for dropped in ["reconnaissance_error_low", "reconnaissance_error_high"] {
+            let text = without_keys(&live, &[dropped]);
+            let message = parse_ground_figures(&text, here())
+                .expect_err("one alone is refused")
+                .message;
+            assert!(
+                message.contains("reconnaissance_error_low and reconnaissance_error_high together"),
+                "{message}"
+            );
+        }
+        // The low may not be above the high, and neither may be negative.
+        let text = with_key(&live, "reconnaissance_error_low", "\"3\"");
+        assert!(parse_ground_figures(&text, here()).is_err());
+        let text = with_key(&live, "reconnaissance_error_low", "\"-1\"");
+        assert!(parse_ground_figures(&text, here()).is_err());
+        // The edges are allowed: low equal to high.
+        let exact = with_key(&live, "reconnaissance_error_low", "2");
+        assert!(parse_ground_figures(&exact, here()).is_ok());
     }
 
     #[test]

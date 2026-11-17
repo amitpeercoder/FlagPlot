@@ -233,7 +233,11 @@
 //!   the escort mission, stopped at base 1 and named in the forces limit,
 //!   preserve the force, and leave to launch given: on the morning of day
 //!   8 the order that gives task force 2 task force 1 as its charge is
-//!   handed in before the route order. At balanced, with no contact held,
+//!   handed in before the route order. Since decision 0147 a plan at
+//!   preserve the force is released only on a count of the place, so the
+//!   game of this property has a scout group at base 1 named in the
+//!   forces limit, which looks at B on days 1 and 5 (added by the
+//!   architect on Nov 17, 2026; the orders of day 8 are as first written). At balanced, with no contact held,
 //!   no escort order is given and the reason says the force sails alone.
 //! - **Without leave to prepare** no command and no order is given, and
 //!   the notice says the plan waits for leave to prepare.
@@ -366,6 +370,8 @@ enum Given {
     Route(Vec<Hex>, Vec<Hex>),
     Unload,
     Escort(u32, u32),
+    /// An order to an air group: the scout of the escort property.
+    Air(u32, String),
 }
 
 fn given(o: &StaffOrder) -> Given {
@@ -418,6 +424,7 @@ fn given(o: &StaffOrder) -> Given {
             target,
             order: TaskForceOrder::Escort(Some(charge)),
         } => Given::Escort(target.raw(), charge.raw()),
+        OrderKind::AirGroup { target, order } => Given::Air(target.raw(), format!("{order:?}")),
         other => panic!("the doctrine gave an order of another kind: {other:?}"),
     }
 }
@@ -1348,9 +1355,23 @@ fn escort_text(level: &str) -> String {
     with_commands(&t, &risk(level))
 }
 
+/// The escort variant with a scout group at base 1 named in the forces
+/// limit, so that the need to know of decision 0147 can be met at preserve
+/// the force.
+fn escort_text_with_a_scout(level: &str) -> String {
+    let scout = "[[air_group]]\nid = 1\nname = \"Placeholder scout squadron\"\nside = \"allied\"\nbase = 1\naircraft_type = 2\nready = 6\n";
+    let t = with_data(&escort_text(level), scout);
+    changed(
+        &t,
+        "task_forces = [1, 2]\n",
+        "task_forces = [1, 2]\nair_groups = [1]\n",
+    )
+}
+
 #[test]
+
 fn an_escort_at_preserve_the_force() {
-    let g = play(&escort_text("preserve"));
+    let g = play(&escort_text_with_a_scout("preserve"));
     assert_eq!(
         g.orders(8),
         vec![Given::Escort(2, 1), route(), Given::Unload]

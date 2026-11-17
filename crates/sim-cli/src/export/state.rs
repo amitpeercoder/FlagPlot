@@ -714,6 +714,9 @@ impl<T> PerSide<T> {
 struct GroundEstimateOut {
     hex: (i32, i32),
     men: u32,
+    /// Where the count comes from (decision 0147): told, seen from the air
+    /// or men in contact.
+    grade: &'static str,
     day: u32,
     report_event: u32,
 }
@@ -791,6 +794,7 @@ pub fn records(world: &World) -> Records {
             .map(|estimate| GroundEstimateOut {
                 hex: (estimate.hex.q, estimate.hex.r),
                 men: estimate.men,
+                grade: estimate.grade.name(),
                 day: estimate.day,
                 report_event: estimate.report_event.umpire_raw(&key),
             })

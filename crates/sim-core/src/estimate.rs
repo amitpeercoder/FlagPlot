@@ -24,7 +24,7 @@
 //!
 //! [`BeliefState::apply_report`]: crate::belief::BeliefState
 
-use crate::belief::{ApplyOutcome, GroundReport, NoneFoundReport, Report};
+use crate::belief::{ApplyOutcome, GroundGrade, GroundReport, NoneFoundReport, Report};
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
@@ -33,6 +33,7 @@ use crate::pictures::{command_at_hex, Holders};
 use crate::refdata::ReportError;
 use crate::rng::{Draw, Subsystem};
 use crate::state::Side;
+use crate::time::Pulse;
 use crate::world::{SimError, World};
 
 /// An estimate of the enemy's men ashore that a side holds when the game
@@ -112,6 +113,7 @@ impl World {
             let report = GroundReport {
                 hex,
                 men,
+                grade: GroundGrade::MenInContact,
                 day,
                 received_event: self.events.next_id(),
             };
@@ -159,6 +161,7 @@ impl World {
                     hex,
                     men,
                     replaced,
+                    grade: GroundGrade::MenInContact,
                 },
                 fight.map(Cause::Event).into_iter().collect(),
                 breakdown,
@@ -170,27 +173,41 @@ impl World {
             self.pass_report(side, &Report::Ground(report), &holders);
 
             // The enemy's bases in the hex are found (decision 15).
-            let hidden: Vec<BaseId> = self
-                .truth
+            self.find_hidden_bases(day, None, hex, side, received);
+        }
+    }
+
+    /// Puts on `side`'s map every enemy base in `hex` that is not on it, one
+    /// `BaseFound` event for each, citing the report `received` (decision 15
+    /// of 0092; decision 0147, 9).
+    pub(crate) fn find_hidden_bases(
+        &mut self,
+        day: u32,
+        pulse: Option<Pulse>,
+        hex: Hex,
+        side: Side,
+        received: EventId,
+    ) {
+        let hidden: Vec<BaseId> = self
+            .truth
+            .bases
+            .values()
+            .filter(|base| base.hex == hex && base.side != side && !base.on_map)
+            .map(|base| base.id)
+            .collect();
+        for base in hidden {
+            self.truth
                 .bases
-                .values()
-                .filter(|base| base.hex == hex && base.side != side && !base.on_map)
-                .map(|base| base.id)
-                .collect();
-            for base in hidden {
-                self.truth
-                    .bases
-                    .get_mut(&base)
-                    .expect("the base exists")
-                    .on_map = true;
-                self.events.record(
-                    day,
-                    None,
-                    EventKind::BaseFound { side, base, hex },
-                    vec![Cause::Event(received)],
-                    None,
-                );
-            }
+                .get_mut(&base)
+                .expect("the base exists")
+                .on_map = true;
+            self.events.record(
+                day,
+                pulse,
+                EventKind::BaseFound { side, base, hex },
+                vec![Cause::Event(received)],
+                None,
+            );
         }
     }
 
@@ -305,6 +322,7 @@ impl World {
             let report = GroundReport {
                 hex: estimate.hex,
                 men: estimate.men,
+                grade: GroundGrade::Told,
                 day: 0,
                 received_event: staged.events.next_id(),
             };
@@ -330,6 +348,7 @@ impl World {
                     hex: estimate.hex,
                     men: estimate.men,
                     replaced: false,
+                    grade: GroundGrade::Told,
                 },
                 Vec::new(),
                 None,

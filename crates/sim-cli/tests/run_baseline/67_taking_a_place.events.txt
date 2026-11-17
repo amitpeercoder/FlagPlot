@@ -2,20 +2,20 @@ Placeholder scenario 67: Taking a place
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f28b53d6687b1917  23 events
-day   2  hash 47c416af00bf7911  9 events
-day   3  hash 0f432aa76388e305  9 events
-day   4  hash d7c441bb78549439  8 events
-day   5  hash 7b6bd3efd249cf9d  9 events
-day   6  hash ae9ac3c01a84bb17  7 events
-day   7  hash 97bc8ad6d6d8c313  13 events
-day   8  hash a8c75b43f396beee  11 events
-day   9  hash 8d3666d333e9d8be  11 events
-day  10  hash c0daffe816bf2660  29 events
-day  11  hash e758b7594deabd04  21 events
-day  12  hash b0bfc36d1c1438da  12 events
-day  13  hash 3a60f6033a54cef2  8 events
-day  14  hash 66ea49ee5d2ad8b8  8 events
+day   1  hash 43aa93c6ea13cad6  23 events
+day   2  hash cc4599a9b535b3d8  9 events
+day   3  hash f8e94d5be66f97f0  9 events
+day   4  hash 12b514f490147768  8 events
+day   5  hash c23d060dabe7ccea  9 events
+day   6  hash ec83a558ee001f14  7 events
+day   7  hash f7a6be45066206d0  13 events
+day   8  hash 373b5a5ff5712c65  11 events
+day   9  hash 197bb1e26ad4d125  11 events
+day  10  hash 90787b6bd4d1fe13  29 events
+day  11  hash d24b0f85c2db854d  21 events
+day  12  hash e19bca2692790c0b  12 events
+day  13  hash 3036885f71954a17  8 events
+day  14  hash bf17597944d1f70d  8 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
@@ -67,7 +67,7 @@ day  14  hash 66ea49ee5d2ad8b8  8 events
 #48 D4 -         base:1 at the end of the day: 964 t of supply, 0 aircraft ready: not open
 #49 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 #50 D5 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is ready: the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 100 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 100 and experience 2. The staff gives no order and hands in the notice that it is ready.
-#51 D5 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 100 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 100 and experience 2) and the commander has not given leave to launch, so the plan waits for him. With leave on a morning it sails 3 days after (the days: 3 to embark (1 for the supply and 1 for each of the 2 units ashore) and 1 day of passage (160 nm at 10 kn = 16 hours)) and lands that day.
+#51 D5 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 100 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 100 and experience 2) and the commander has not given leave to launch, so the plan waits for him. With leave on a morning it sails 3 days after (the days: 3 to embark (1 for the supply and 1 for each of the 2 units ashore) and 1 day of passage (160 nm at 10 kn = 16 hours)) and lands that day. It goes on no count of the enemy at (4,0): at balanced it asks for a count of the enemy at (4,0) seen from the air or by men in contact, of any day.
 #52 D5 -         Allied staff's notice: plan:1's landing is ready  <- #50
 #53 D5 -         Allied staff's notice: plan:1 waits for leave to launch  <- #51
 #54 D5 -         Allied standing interrupt fired: plan:1 waits for the commander's leave  <- #53
@@ -76,7 +76,7 @@ day  14  hash 66ea49ee5d2ad8b8  8 events
 #57 D5 -         base:1 at the end of the day: 955 t of supply, 0 aircraft ready: not open
 #58 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 #59 D6 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is ready and its notice was handed in: the staff gives no order.
-#60 D6 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 100 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 100 and experience 2) and the commander has not given leave to launch, so the plan waits for him. With leave on a morning it sails 3 days after (the days: 3 to embark (1 for the supply and 1 for each of the 2 units ashore) and 1 day of passage (160 nm at 10 kn = 16 hours)) and lands that day.
+#60 D6 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 100 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 100 and experience 2) and the commander has not given leave to launch, so the plan waits for him. With leave on a morning it sails 3 days after (the days: 3 to embark (1 for the supply and 1 for each of the 2 units ashore) and 1 day of passage (160 nm at 10 kn = 16 hours)) and lands that day. It goes on no count of the enemy at (4,0): at balanced it asks for a count of the enemy at (4,0) seen from the air or by men in contact, of any day.
 #61 D6 -         Allied staff's notice: plan:1 waits for leave to launch  <- #60
 #62 D6 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 946 t left
 #63 D6 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #62
@@ -85,7 +85,7 @@ day  14  hash 66ea49ee5d2ad8b8  8 events
 #66 D7 -         Allied the commander's command taken: give the leave to launch
 #67 D7 -         Allied the staff's command taken: approve plan:1
 #68 D7 -         Allied plan:1 went from preparing to released  <- #67
-#69 D7 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 100 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 100 and experience 2) and leave to launch is given: the staff releases plan:1.  <- #67
+#69 D7 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 100 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 100 and experience 2) and leave to launch is given: the staff releases plan:1. It goes on no count of the enemy at (4,0): at balanced it asks for a count of the enemy at (4,0) seen from the air or by men in contact, of any day.  <- #67
 #70 D7 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is ready and its notice was handed in: the staff gives no order.
 #71 D7 -         order:2 accepted for task_force:1  <- order:2  [issued by the staff]
 #72 D7 -         Allied staff's reason for order:2 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: plan:1 is released: the supply is the daily charge of the 1200 men chosen, 6 t a day, for 15 days = 90 t: 90 t to take. The staff orders task_force:1 to load supply at the source until it has 90 t aboard.  <- order:2, #71

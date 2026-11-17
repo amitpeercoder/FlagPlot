@@ -2,20 +2,20 @@ Placeholder scenario 69: Taken and held
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 95b5c76ff49f0302  34 events
-day   2  hash e052d1e709a2a8a5  14 events
-day   3  hash 5a3bba486c123a3f  12 events
-day   4  hash b02875c2108cc06a  12 events
-day   5  hash 6c2c8152c3e6b848  28 events
-day   6  hash f69baedc9821e233  27 events
-day   7  hash 12051aa2c453f170  12 events
-day   8  hash 5ae11ce4590ed51e  8 events
-day   9  hash 546d5aa95aa9ae87  15 events
-day  10  hash 246f2b65770f7085  21 events
-day  11  hash 1b507d8efe58eb39  16 events
-day  12  hash da51386bed9a394c  8 events
-day  13  hash e3817336ca7cb22c  8 events
-day  14  hash 436bc2af72d371e2  8 events
+day   1  hash ca36ef4161f9556d  34 events
+day   2  hash c2d98525ee71b71e  14 events
+day   3  hash 1edb4451fc63afac  12 events
+day   4  hash 81985c7bd0124e69  12 events
+day   5  hash 95acc93915b2ae23  28 events
+day   6  hash 62c0e51fd1a5f99e  27 events
+day   7  hash 9176db0e053578bd  12 events
+day   8  hash 9735356fe0f1732b  8 events
+day   9  hash e3b7632cd9cd2f78  15 events
+day  10  hash 7f232e8cc62fc3e4  21 events
+day  11  hash 4b5b44c2406c1c1e  16 events
+day  12  hash 5ff6f0fc77fc93bb  8 events
+day  13  hash 3f0052af0cf6cb17  8 events
+day  14  hash 9788f06ae84a9865  8 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
@@ -53,7 +53,7 @@ day  14  hash 436bc2af72d371e2  8 events
 #34 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 #35 D2 -         Allied the staff's command taken: approve plan:1
 #36 D2 -         Allied plan:1 went from preparing to released  <- #35
-#37 D2 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:1 (Placeholder First) has rehearsal 100 and experience 2; land_unit:2 (Placeholder Second) has rehearsal 100 and experience 2) and leave to launch is given: the staff releases plan:1. The check that the place can be held, for intent:2 of base:2 (Placeholder airfield B): the daily need of the 1200 men chosen is 6 t; the days until supply follows are 1 to land the men (150 t in the fullest ship at 20 t an hour = 7.5 hours), 1 back to base:1, 1 to load and 1 out: 4 days; the margin at balanced is 5 days; the supply that lands with the men is 6 t x (4 + 5) = 54 t; the first run is 6 t x 15 = 90 t; base:1 holds 994 t above its reserve against 54 t + 90 t = 144 t, and task_force:1's room is 6000 t: it can be held.  <- #35
+#37 D2 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:1 (Placeholder First) has rehearsal 100 and experience 2; land_unit:2 (Placeholder Second) has rehearsal 100 and experience 2) and leave to launch is given: the staff releases plan:1. The check that the place can be held, for intent:2 of base:2 (Placeholder airfield B): the daily need of the 1200 men chosen is 6 t; the days until supply follows are 1 to land the men (150 t in the fullest ship at 20 t an hour = 7.5 hours), 1 back to base:1, 1 to load and 1 out: 4 days; the margin at balanced is 5 days; the supply that lands with the men is 6 t x (4 + 5) = 54 t; the first run is 6 t x 15 = 90 t; base:1 holds 994 t above its reserve against 54 t + 90 t = 144 t, and task_force:1's room is 6000 t: it can be held. It goes on no count of the enemy at (4,0): at balanced it asks for a count of the enemy at (4,0) seen from the air or by men in contact, of any day.  <- #35
 #38 D2 -         Allied staff's reason for giving no order [serves intent 2: hold base:2 (Placeholder airfield B); plan 2; decided at the level of base:2]: intent:2 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and forms nothing and orders nothing under intent:2 until then.
 #39 D2 -         Allied staff's reason for giving no order [serves intent 3: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is ready: the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:1 (Placeholder First) has rehearsal 100 and experience 2; land_unit:2 (Placeholder Second) has rehearsal 100 and experience 2. The staff gives no order and hands in the notice that it is ready.
 #40 D2 -         Allied staff's notice: plan:1's landing is ready  <- #39

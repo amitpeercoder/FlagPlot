@@ -2,12 +2,12 @@ Scenario 34: Cover, men who dig in, and a place under bombardment
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 210c6b1f04e520f1  39 events
-day   2  hash 58076d2e373ae982  58 events
-day   3  hash 5efe7a7208cba7fc  56 events
-day   4  hash 0c12035ef96ad49b  39 events
-day   5  hash 5ad4e1e70bed0a73  28 events
-day   6  hash 9a7d12cdcc40174d  26 events
+day   1  hash e01835f551b3c12e  39 events
+day   2  hash c7fb8aa38f009789  58 events
+day   3  hash c5be495f647cc91d  56 events
+day   4  hash 216a9519688b9ed8  39 events
+day   5  hash 1d9eb7001fc7722c  28 events
+day   6  hash 1b9216ebfbe10fec  26 events
 
 task_force:1 "Placeholder bombardment force 1" (Japanese): Arrived at (38,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder bombardment force 2" (Japanese): Arrived at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -30,8 +30,8 @@ land_unit:6 "Placeholder Allied battalion at F" (Allied): 963 men ashore at (40,
 land_unit:7 "Placeholder Allied company at F" (Allied): 482 men ashore at (40,0), fatigue 45, fieldworks 30
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (30,0): 369 enemy men ashore, reported day 6
+Allied estimate at (30,0): 369 enemy men ashore, reported day 6 (men in contact)
 Japanese: no contacts
 Japanese claim from the sea at (40,0): 8 aircraft destroyed on the ground, day 2 night
 Japanese claim from the sea at (0,0): 8 aircraft destroyed on the ground, day 3 night
-Japanese estimate at (30,0): 1260 enemy men ashore, reported day 6
+Japanese estimate at (30,0): 1260 enemy men ashore, reported day 6 (men in contact)

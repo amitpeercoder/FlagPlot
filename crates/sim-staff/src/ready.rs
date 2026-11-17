@@ -694,7 +694,10 @@ impl Day<'_, '_> {
             }
         }
         let (days, binds) = worst.unwrap_or((Some(0), Binds::Loading));
-        let ready_on = days.map(|d| today + d);
+        // A landing ordered this morning is not ready this morning (decision
+        // 0147, 16: a roster that loses a unit costs no loading, so every
+        // other need may already be met): the earliest is tomorrow.
+        let ready_on = days.map(|d| today + d.max(u32::from(differs)));
         self.landings.insert(
             task.id,
             crate::take::LandingReading {
