@@ -119,3 +119,13 @@ No expected number changed. `tests/scenario_41_hold_change_release.rs` and `test
 - `crates/sim-core/src/command.rs`: the kinds, `Want`, `Wants`, `land_units_on_chain`.
 - `crates/sim-core/src/command/intake.rs`: `may_use_land_unit`, `check_intent_kind`, the forces limit, the hold and the guard; `command/hold.rs`: the override.
 - `tests/scenario_66_units_made_ready.rs`.
+
+### The architect's rulings, Nov 17, 2026
+
+The fifteen readings are accepted as built. Three are worth their reason.
+
+- **Reading 1, the leaves.** A task that readies units never sails anything, so leave to launch is not its to ask. The end it stands under asks it (decision 0142).
+- **Reading 5, a build-up's forces limit.** The units a limit names are the units used, working or fighting. That is what a limit means everywhere else.
+- **Reading 12, no standing interrupt.** Ready, late and met are news of a plan and not alarms.
+
+The viewer reads the two kinds (`viewer/index.html`, `viewer/check.js`): each has its words, its addressee and its ring on the map.
