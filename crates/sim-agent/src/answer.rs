@@ -71,8 +71,11 @@ pub const FORMAT: &str = "flagplot-agent";
 /// any of the task forces, the land units and the source, which the staff
 /// then chooses, and gives in `command_state` what the staff reads up the
 /// tree as it binds: the commander's where he named it, the staff's choice
-/// where he did not (decision 0149).
-pub const VERSION: u32 = 23;
+/// where he did not (decision 0149). 24 adds the intent kind
+/// `control_island` (`island`, `by_day`) of decision 0151, `island` in an
+/// intent of `command_state` (`null` for the other kinds), its measure, and
+/// `islands` in the command report.
+pub const VERSION: u32 = 24;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

@@ -492,6 +492,7 @@
                 "by_day",
                 "wants",
                 "defences",
+                "island",
                 "target",
                 "hex",
                 "distance",
@@ -576,6 +577,10 @@
                   ],
                   "description": "What a build_up intent wants, in order (decision 0141); null for the other kinds."
                 },
+                "island": {
+                  "type": ["integer", "null"],
+                  "description": "The number of the island a control_island intent names (decision 0151); null for the other kinds."
+                },
                 "defences": {
                   "type": ["integer", "null"],
                   "description": "The points of defences a build_up intent wants, from 1 to 100, when defences is among its wants (decision 0141); null otherwise."
@@ -598,6 +603,7 @@
                     "ready_landing",
                     "build_up",
                     "take_place",
+                    "control_island",
                     "bombard"
                   ]
                 }
@@ -1345,6 +1351,73 @@
         },
         "days_met": {
           "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "island_measure": {
+      "type": "object",
+      "description": "The measure of a control_island intent (decision 0151, 10 and 11): the days it has been in force, the days of them on which every named place was the side's at the end of the day with its supply above its reserve and at least its floor of days of supply, each place as the side stands in it today, and the words.",
+      "required": [
+        "days_in_force",
+        "days_controlled",
+        "places",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "days_in_force": {
+          "type": "integer"
+        },
+        "days_controlled": {
+          "type": "integer"
+        },
+        "places": {
+          "type": "array",
+          "description": "The island's named places in its order.",
+          "items": {
+            "type": "object",
+            "required": [
+              "hex",
+              "base",
+              "ours",
+              "days_of_supply"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "hex": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "base": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "The number of the base the island names at the place; null for a bare coast hex."
+              },
+              "ours": {
+                "type": "boolean",
+                "description": "Whether the side holds a base in the hex today."
+              },
+              "days_of_supply": {
+                "oneOf": [
+                  {
+                    "$ref": "defs.schema.json#/$defs/dec"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
         },
         "text": {
           "type": "string"

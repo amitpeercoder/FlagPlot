@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 23
+      "const": 24
     },
     "kind": {
       "const": "propose"
@@ -234,6 +234,7 @@
                 "ready_landing",
                 "build_up",
                 "take_place",
+                "control_island",
                 "bombard"
               ]
             },
@@ -257,7 +258,8 @@
                   "interval_days",
                   "by_day",
                   "wants",
-                  "defences"
+                  "defences",
+                  "island"
                 ],
                 "additionalProperties": false,
                 "properties": {
@@ -290,6 +292,7 @@
                       "ready_landing",
                       "build_up",
                       "take_place",
+                      "control_island",
                       "bombard"
                     ]
                   },
@@ -357,6 +360,10 @@
                       { "type": "null" }
                     ],
                     "description": "What a build_up intent wants, in order (decision 0141); null for the other kinds."
+                  },
+                  "island": {
+                    "type": ["integer", "null"],
+                    "description": "The number of the island a control_island intent names (decision 0151); null for the other kinds."
                   },
                   "defences": {
                     "type": ["integer", "null"],

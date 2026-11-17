@@ -412,11 +412,14 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         | IntentKind::ReadyLanding { .. }
         | IntentKind::BuildUp { .. }
         | IntentKind::TakePlace { .. }
+        | IntentKind::ControlIsland { .. }
         | IntentKind::Bombard { .. } => (None, None),
     };
     // The date of a landing and the wants of a build-up (decision 0141).
     let by_day = match kind {
-        IntentKind::ReadyLanding { by_day, .. } | IntentKind::TakePlace { by_day, .. } => by_day,
+        IntentKind::ReadyLanding { by_day, .. }
+        | IntentKind::TakePlace { by_day, .. }
+        | IntentKind::ControlIsland { by_day, .. } => by_day,
         _ => None,
     };
     let (wants, defences) = match kind {
@@ -445,6 +448,8 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         "floor_days": floor_days,
         "interval_days": interval_days,
         "by_day": by_day,
+        // The island a control_island intent names (decision 0151).
+        "island": kind.island(),
         "wants": wants,
         "defences": defences,
     })
@@ -563,6 +568,9 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
     if matches!(intent.kind, IntentKind::Hold { .. }) {
         body["measure"] = hold_measure_json(&crate::hold_measure(view, intent.id));
     }
+    if matches!(intent.kind, IntentKind::ControlIsland { .. }) {
+        body["measure"] = island_measure_json(&crate::island_measure(view, intent.id));
+    }
     if matches!(intent.kind, IntentKind::Neutralise { .. }) {
         body["measure"] = neutralise_measure_json(&crate::neutralise_measure(view, intent.id));
     }
@@ -607,6 +615,51 @@ pub(crate) fn neutralise_measure_json(measure: &Option<crate::NeutraliseMeasure>
         "text": format!(
             "{} raids flown on the target in {} days in force; {} aircraft claimed destroyed on the ground there (a claim of your people, never below the truth); {} air raids on your bases, {} of the {} days without a raid on any of them",
             m.raids_flown, m.days_in_force, m.claimed_on_ground, m.raids_on_own_bases, m.days_met, m.days_in_force
+        ),
+    })
+}
+
+/// The measure of a control-an-island intent as the interface writes it, with
+/// its words (decision 0151, 11): `null` where it is not one.
+pub(crate) fn island_measure_json(measure: &Option<crate::IslandMeasure>) -> Value {
+    let Some(m) = measure else {
+        return Value::Null;
+    };
+    let places: Vec<Value> = m
+        .places
+        .iter()
+        .map(|place| {
+            json!({
+                "hex": [place.hex.q, place.hex.r],
+                "base": place.base.map(|base| base.raw()),
+                "ours": place.ours,
+                "days_of_supply": place.days_of_supply.map(dec),
+            })
+        })
+        .collect();
+    let words: Vec<String> = m
+        .places
+        .iter()
+        .map(|place| {
+            let supply = match place.days_of_supply {
+                Some(days) => format!("{days} days of supply today"),
+                None => "no figure for its days of supply".to_string(),
+            };
+            format!(
+                "({},{}) {}, {supply}",
+                place.hex.q,
+                place.hex.r,
+                if place.ours { "ours" } else { "not ours" }
+            )
+        })
+        .collect();
+    json!({
+        "days_in_force": m.days_in_force,
+        "days_controlled": m.days_controlled,
+        "places": places,
+        "text": format!(
+            "controlled on {} of {} days in force (every named place the side's at the end of the day with its supply above its reserve and at least its floor of days); places: {}",
+            m.days_controlled, m.days_in_force, words.join("; ")
         ),
     })
 }
@@ -1755,6 +1808,7 @@ pub(crate) fn request(
             Some("ready_landing") => &["task_force", "hex", "by_day"],
             Some("build_up") => &["base", "wants", "defences"],
             Some("take_place") => &["hex", "base", "by_day"],
+            Some("control_island") => &["island", "by_day"],
             Some("bombard") => &["task_force", "target"],
             _ => &["base", "floor_days", "interval_days"],
         };
@@ -1771,6 +1825,7 @@ pub(crate) fn request(
                 "by_day",
                 "wants",
                 "defences",
+                "island",
             ]
             .into_iter()
             .find(|k| body.contains_key(*k) && !takes.contains(k)),
@@ -1789,6 +1844,9 @@ pub(crate) fn request(
                 }
                 "take_place" => {
                     "exactly one of a hex ([q, r]) and a base (the number of a base on your map that is not yours: its hex is the place) and, if wanted, a by_day (a whole number from 1) and nothing else"
+                }
+                "control_island" => {
+                    "an island (the number of an island the scenario names) and, if wanted, a by_day (a whole number from 1) and nothing else"
                 }
                 "bombard" => {
                     "a task_force (your own force's number) and a target (the enemy base) and nothing else"
@@ -1834,6 +1892,11 @@ pub(crate) fn request(
                 }
                 (true, false) => {}
             }
+        }
+        if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("island") {
+            return Err(CallError::new(
+                "\"island\" is an argument of set_intent only for intent_kind control_island",
+            ));
         }
         if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("target") {
             return Err(CallError::new(

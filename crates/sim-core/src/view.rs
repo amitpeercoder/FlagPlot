@@ -721,6 +721,17 @@ impl<'a> SideView<'a> {
         self.map.get(hex)
     }
 
+    /// The island of that number (decision 0151, 1): on both sides' maps, as
+    /// the map is.
+    pub fn island(&self, number: u32) -> Option<&'a crate::map::Island> {
+        self.map.island(number)
+    }
+
+    /// Every island the scenario names, by number.
+    pub fn islands(&self) -> impl Iterator<Item = &'a crate::map::Island> + 'a {
+        self.map.islands()
+    }
+
     /// The hexes joined to `hex` by a land link, in hex order (decision 1 of
     /// 0094). The map is common knowledge. Empty on a map with no land
     /// links.

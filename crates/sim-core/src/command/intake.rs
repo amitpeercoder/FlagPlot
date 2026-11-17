@@ -282,7 +282,9 @@ impl World {
     /// base's air groups, and no ship.
     fn forces_narrow(&self, side: Side, parent: IntentId, limit: &ForcesLimit) -> bool {
         let state = &self.command[&side];
-        if state.take_place_on_chain(parent).is_some() {
+        // Under "control an island" too, each limit above binds only what it
+        // names, kind by kind (decision 0151, 4).
+        if state.take_place_on_chain(parent).is_some() || state.island_on_chain(parent).is_some() {
             return self.forces_narrow_under_take(side, parent, limit);
         }
         let groups_ok = limit
@@ -386,10 +388,14 @@ impl World {
             }
             CommandKind::WithdrawIntent { intent } => {
                 let found = self.in_force_intent(side, *intent)?;
-                if found.maker == Maker::Staff {
-                    return Err(CommandRefusal::MadeByStaff(*intent));
+                // The staff withdraws only an intent it formed (decision
+                // 0151, 8b); the commander only one he made (0117, 5).
+                match (issuer, found.maker) {
+                    (Issuer::Staff, Maker::Commander) => Err(CommandRefusal::NotYours),
+                    (Issuer::Staff, Maker::Staff) => Ok(()),
+                    (_, Maker::Staff) => Err(CommandRefusal::MadeByStaff(*intent)),
+                    _ => Ok(()),
                 }
-                Ok(())
             }
             CommandKind::FormIntent { parent, kind } => {
                 let found = self.in_force_intent(side, *parent)?;
@@ -902,6 +908,13 @@ impl World {
                 return Err(CommandRefusal::NoDays);
             }
         }
+        // The island of "control an island" is one the scenario names
+        // (decision 0151, 1 and 3).
+        if let Some(island) = kind.island() {
+            if self.map.island(island).is_none() {
+                return Err(CommandRefusal::NoSuchIsland(island));
+            }
+        }
         Ok(())
     }
 
@@ -1011,16 +1024,26 @@ impl World {
                     let found = state.intents.get_mut(&below).expect("intent exists");
                     found.withdrawn_day = Some(day);
                     let parent = found.parent.unwrap_or(*intent);
+                    let below_plan = found.plan;
                     follow_ups.push(EventKind::IntentWithdrawn {
                         side,
                         intent: below,
                         parent,
                     });
+                    // A take under an island owns its plan (decision 0151,
+                    // 9): it ends with the take, as a root's does.
+                    if let Some(event) = end_own_plan(state, side, below, below_plan) {
+                        follow_ups.push(event);
+                    }
                 }
                 let found = state.intents.get_mut(intent).expect("intent exists");
                 found.withdrawn_day = Some(day);
                 let plan_id = found.plan;
-                let is_root = found.parent.is_none();
+                let is_root = found.parent.is_none()
+                    || state
+                        .plans
+                        .get(&plan_id)
+                        .is_some_and(|p| p.intent == *intent);
                 let plan = state.plans.get_mut(&plan_id).expect("plan exists");
                 if is_root && !plan.state.ended() {
                     let from = plan.state;
@@ -1261,7 +1284,17 @@ impl World {
             CommandKind::FormIntent { parent, kind } => {
                 let state = self.command.get_mut(&side).expect("side has command state");
                 let id = state.next_intent_number();
-                let plan = state.intents[parent].plan;
+                // A "take a place" formed under "control an island" has a plan
+                // of its own, drafted at its forming (decision 0151, 9, the
+                // architect's addition on the build's finding): it is
+                // prepared, released and marked complete as a root take's.
+                let own_plan = matches!(kind, IntentKind::TakePlace { .. })
+                    && matches!(state.intents[parent].kind, IntentKind::ControlIsland { .. });
+                let plan = if own_plan {
+                    draft_plan(state, id)
+                } else {
+                    state.intents[parent].plan
+                };
                 state.intents.insert(
                     id,
                     Intent {
@@ -1281,6 +1314,13 @@ impl World {
                     intent: id,
                     parent: *parent,
                 });
+                if own_plan {
+                    follow_ups.push(EventKind::PlanDrafted {
+                        side,
+                        plan,
+                        intent: id,
+                    });
+                }
             }
         }
         follow_ups
@@ -1554,6 +1594,34 @@ impl World {
             _ => false,
         }
     }
+}
+
+/// Ends the plan `plan` of `intent`, withdrawn beneath another, where the
+/// plan is its own (a take under an island, decision 0151, 9) and has not
+/// ended: complete where released, else cancelled, as a root's.
+fn end_own_plan(
+    state: &mut CommandState,
+    side: Side,
+    intent: IntentId,
+    plan: PlanId,
+) -> Option<EventKind> {
+    let found = state.plans.get_mut(&plan)?;
+    if found.intent != intent || found.state.ended() {
+        return None;
+    }
+    let from = found.state;
+    let to = if from == PlanState::Released {
+        PlanState::Complete
+    } else {
+        PlanState::Cancelled
+    };
+    found.state = to;
+    Some(EventKind::PlanStateChanged {
+        side,
+        plan,
+        from,
+        to,
+    })
 }
 
 /// Drafts a plan for `intent` in the side's own numbering and returns its

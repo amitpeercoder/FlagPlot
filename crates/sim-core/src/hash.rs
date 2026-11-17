@@ -230,8 +230,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// (decision 0146);
 /// version 43 adds an estimate's `grade` after its event, the same in a
 /// ground report in flight, and the air mission reconnaissance (code 6) with
-/// its hex (decision 0147).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v43";
+/// its hex (decision 0147);
+/// version 44 adds the kind "control an island", with its island and its
+/// date (decision 0151).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v44";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -786,6 +788,10 @@ fn name_intent_kind(kind: IntentKind) {
         | IntentKind::Bombard {
             force: _,
             target: _,
+        }
+        | IntentKind::ControlIsland {
+            island: _,
+            by_day: _,
         } => {}
     }
 }
@@ -870,6 +876,11 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
         IntentKind::Bombard { force, target } => {
             h.u32(force.raw());
             h.u32(target.raw());
+        }
+        // Decision 0151: the island, then the date.
+        IntentKind::ControlIsland { island, by_day } => {
+            h.u32(island);
+            h.optional_u32(by_day);
         }
     }
 }

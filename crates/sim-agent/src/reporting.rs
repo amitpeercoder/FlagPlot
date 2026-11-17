@@ -552,6 +552,26 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             hold["text"].as_str().unwrap_or("")
         ));
     }
+    // The control-an-island intents in force and the measure of each
+    // (decision 0151, 11).
+    let islands: Vec<Value> = state
+        .intents_in_force()
+        .filter(|intent| matches!(intent.kind, IntentKind::ControlIsland { .. }))
+        .filter_map(|intent| {
+            let measure = crate::island_measure(view, intent.id)?;
+            let mut entry = crate::staffing::island_measure_json(&Some(measure));
+            entry["intent"] = json!(intent.id.raw());
+            entry["island"] = json!(intent.kind.island());
+            Some(entry)
+        })
+        .collect();
+    for island in &islands {
+        summary.push_str(&format!(
+            " Island intent:{}: {}.",
+            island["intent"],
+            island["text"].as_str().unwrap_or("")
+        ));
+    }
     // The neutralise intents in force and the measure of each (decision
     // 0120, 8).
     let neutralisations: Vec<Value> = state
@@ -638,6 +658,7 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             },
             "matters": matters_json,
             "holds": holds,
+            "islands": islands,
             "neutralisations": neutralisations,
             "denials": denials,
             "open_matters": open_words.len(),
