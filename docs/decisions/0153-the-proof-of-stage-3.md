@@ -102,7 +102,7 @@ Twenty-four reasons, taken by rule and not by eye, from seed 1 of arrangement (a
 | Ashore | A posture order under a take or a hold (decisions 0143 and 0144) |
 | The supply that follows | A run under a hold's "keep supplied", and a force with men aboard sent by a hold (decisions 0144 and 0152) |
 | By night | A run by night's speed or route, and a bombarding force's route (decisions 0145 and 0146) |
-| Cover and reconnaissance | The forming of a carrier task under a take, a base strike order, and a reconnaissance order (decisions 0147 and 0148) |
+| Cover and reconnaissance | The forming of a carrier task under a take or under an island's denial, a base strike order, and a reconnaissance order (decisions 0147, 0148 and 0151) |
 
 Where seed 1 gives a doctrine fewer than four, the rest are taken from seed 2, then 3. A doctrine that gives fewer than four on the first ten seeds is reported as giving none to judge, and the test is of the reasons there are. The same cheap model answers the same two questions on each, as in decision 0128: what the staff is trying to do, and what would change its mind. **It passes at 20 of 24,** as decision 0139 has it, and no doctrine's reasons all fail.
 
