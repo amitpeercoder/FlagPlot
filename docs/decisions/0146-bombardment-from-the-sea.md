@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: Step 5 of stage 3, second part: the task "bombard a base", given to a task force on the bombardment mission, by which the staff sends the force to the enemy base in the night, at the speed that brings it there in the dark, with the fuel and the rounds its risk asks for, and home at the morning; formed under "neutralise a base" and under "take a place", where it fires on the night of the day the landing is due
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings await the architect (As built)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -86,3 +86,6 @@ No expected number changed. The saved game's version pins (16 to 17: `crates/sim
 
 - `crates/sim-staff/src/bombard.rs`; `crates/sim-staff/src/night.rs`, `doctrine.rs` (`night_load`, `night_dispatch`) and `take.rs` (`move_step`, `lift_night`) for decision 0145.
 
+## The architect's rulings
+
+Made on Nov 17, 2026, on reading the build. Readings 1 to 8 are accepted as built. On reading 6, a contact that stops a sortie at preserve only when it reports strictly more ships than the force has afloat is a placeholder, as the rounds kept back are: the record gave no figure for either (`docs/research/oob/stage-3-leads-checked.md`, section 3).

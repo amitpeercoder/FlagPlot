@@ -135,6 +135,11 @@
 //!   steams at hour 138 and arrives at A at hour 153. Six orders in all.
 //! - **No enemy base near.** With base 3 left out, at balanced: as at
 //!   press.
+//! - **The side's own fighters at the place.** With an airfield at base 2
+//!   and a fighter group of the Allied side based there on no mission, at
+//!   balanced: as at press. The group flies nothing and draws nothing, so
+//!   the supply doctrine's sums are the main case's. (Item 2a, added by
+//!   the architect after the build.)
 //! - **An enemy base in the place's own hex only.** With base 3 at C and
 //!   not on the Allied side's way: as at press.
 //! - **No speed arrives in the dark, at balanced.** With base 2 and unit 1

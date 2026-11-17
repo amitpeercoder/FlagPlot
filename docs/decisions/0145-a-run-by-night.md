@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: Step 5 of stage 3, first part: where an enemy base is near the place a run goes to, the staff times the run to arrive in the night, at cruising speed or at full, carries no more in each ship than the night's hours can land, and the force is gone at the morning; where no speed brings it there in the dark it goes by day and says so, or at preserve the force does not go
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings, and the earlier tests and games it changes, await the architect (As built)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; amended after the build by item 2a, and its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -14,6 +14,7 @@ A force that unloads by day off a place the enemy can reach from the air is foun
 
 1. **The runs it covers** are a supply run of "keep a base supplied" (decision 0107) and a lift of "take a place" (decisions 0142 and 0143).
 2. **A run goes by night** at preserve the force and at balanced, where an enemy base on the side's map lies within 15 hexes of the place it goes to and not in that place's own hex. At press it goes as before. The 15 hexes are the placeholder of the stand doctrine (decision 0124). The risk is the intent's, read up the tree.
+2a. **A place the side's own fighters are based at is run to by day** (amended on Nov 17, 2026, after the build; see "The architect's rulings"). Where a base of the side's in the place's hex has a fighter group of the side's based at it, whatever its state, the run goes as before, at every risk. A side knows its own groups exactly, so this reads nothing of the enemy.
 3. **A base in the place's own hex does not count,** because a landing at an enemy base is the enemy's base itself: what covers that landing is step 6.
 
 ## The timing
@@ -100,3 +101,12 @@ The rule changes what a staff does wherever a supply run goes to a base with an 
 
 What this shows for the architect to weigh: the night's limit at a place worked by lighter cuts a large run to what one ship lands in a few hours, and a run of several days' passage is timed by the same rule.
 
+## The architect's rulings
+
+Made on Nov 17, 2026, on reading the build.
+
+1. **The rule is amended by item 2a.** As first written, any enemy base within 15 hexes sent a run by night. Built, it made the Allied side run to its own airfield at Lunga by night, where a ship working by lighter lands in a night a small part of its load: in the soak the airfield's groups stopped flying, and in a recorded game a load of 1,282.05 t was cut to 151.66668 t. That is the wrong way round. In the record the side that held the air over a place by day ran to it by day, and the side that did not came by night. Whether the side's own fighters are based at the place is the simplest reading of that which a side can make from what it knows exactly. It is a placeholder for the fuller rule this record leaves for later (a base known to hold aircraft, and their reach).
+2. **What the amendment should restore.** The soak ashore (scenario 45), its three ignored tests and the recorded game `second_proof_week_sonnet` have the side's fighters at Lunga, so they play as before this decision. If any does not, it comes back to the architect with the day and the reason; no expected number is changed to fit.
+3. **The four tests of "what the side cannot see"** (scenarios 36, 40, 42 and 56) add an enemy base that is on the side's map, which is a thing the side can see. The base they add is given `on_map = false`, so that the worlds differ only in what the side cannot see, as the tests' names say. No expected number of them changes.
+4. **The night's limit at a place worked by lighter stands.** A run by night to a beach lands little. That is the record's own shape for the side that came by night, and nothing is tuned for it.
+5. **Readings 1 to 10 are accepted as built.** On reading 9: the lift by night has no hand calculation, and stays so until a scenario needs it; the proof's loading check reads it. On reading 6: the supply doctrine's notice each morning stands, as ruled for the supply doctrine before.
