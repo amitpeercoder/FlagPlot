@@ -106,6 +106,23 @@ Twenty-four reasons, taken by rule and not by eye, from seed 1 of arrangement (a
 
 Where seed 1 gives a doctrine fewer than four, the rest are taken from seed 2, then 3. A doctrine that gives fewer than four on the first ten seeds is reported as giving none to judge, and the test is of the reasons there are. The same cheap model answers the same two questions on each, as in decision 0128: what the staff is trying to do, and what would change its mind. **It passes at 20 of 24,** as decision 0139 has it, and no doctrine's reasons all fail.
 
+## The readings fixed with the scripts
+
+The scripts that read conditions 1 to 5 and pick the reasons were written and tested on scripted games before any staffed game was run (`scripts/stage-3-proof/`). Writing them raised twelve questions of wording. The architect settled each on Nov 17, 2026, before the run:
+
+1. **Supply after the landing** is on a later game day than the first Allied `men_landed` in the hex, from a force other than that first event's.
+2. **"After base 1 is Allied"** means Allied at the fight. The count with "Allied at any time before" is printed beside it and not judged.
+3. **"Ends a night pulse in the hex"** is the force's hex at the end of the night step. A force that passes through in the night does not count.
+4. **A patrol** is read from the fatigue event of a patrol sortie, as decision 0128 read it where fatigue figures are loaded.
+5. **The median** of an even count is the mean of the two middle values.
+6. **A doctrine with fewer than four reasons** gives the reasons it has. The test then passes at five in six of the reasons judged, rounded up, with no doctrine's reasons all failing, and the shortfall is reported.
+7. **A reason word for word the same** as one already picked for the doctrine is passed over and the next is taken.
+8. **A reason that fits two doctrines** is taken by the first in the table's order.
+9. **"The force chosen"** takes the forming, the limit set that morning, and a limit set on a later morning, whether for a later lift or for a choice made again on a count.
+10. **A base strike order** counts whatever intent it serves.
+11. **A run by night** is known by its reason's words, "goes by night".
+12. **Other staff commands,** such as an approval or a plan marked, belong to no doctrine and are not picked.
+
 ## Reported and not judged
 
 As decision 0139 has it, and with these:
