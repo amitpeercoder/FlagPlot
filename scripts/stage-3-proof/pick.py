@@ -16,16 +16,25 @@ doctrines of the record's table, in its order, the first four reasons that
 rest on an order or a staff command and that a row of that doctrine matches
 are taken, in event order on seed 1, both sides together; where seed 1 gives
 fewer than four, the rest are taken from seed 2, then 3, up to seed 10. A
-doctrine that gives fewer than four on the first ten seeds is reported with
-the reasons it gave and the words "fewer than four on the first ten seeds".
+doctrine that gives fewer than four on the first ten seeds contributes the
+reasons it gave, with the words "fewer than four on the first ten seeds", and
+the number picked in all is printed (the architect's ruling on decision 0153,
+Nov 17, 2026).
+
+Two more rules, the architect's rulings of the same day:
+  - A reason that rows of two doctrines match is taken by the first of them in
+    the table's order only, whether or not that doctrine still wants one; a
+    later doctrine passes over it and takes its next.
+  - A reason whose worked text is word for word that of a reason already
+    picked for the same doctrine is skipped, as decision 0128's pick did, and
+    the next is taken. The number skipped is printed for each doctrine.
 
 Each row of MATCHERS below reads only the reason's own fields and, for a
 command, the command's: `data.statement` (the intent it serves),
 `data.chain` (the intents above it), the order's `target` and `text` from
 the file's `orders`, the command's `data.command` and `data.detail`, and
 where a row says so the reason's own words. Rows are added here and nowhere
-else. A reason that two doctrines' rows match is taken by each (it is
-flagged in the output).
+else.
 
 Each reader is given the reason's five parts and nothing else, with the two
 questions of decision 0128: what the staff is trying to do, and what would
@@ -226,33 +235,46 @@ def main():
     absent = [s for s in range(1, a.seeds + 1) if s not in games]
 
     taken = {doc: [] for doc in DOCTRINES}
+    skipped = {doc: 0 for doc in DOCTRINES}
+    passed_over = {doc: 0 for doc in DOCTRINES}
     for seed in seeds:
         if all(len(v) >= WANT for v in taken.values()):
             break
         for r in reasons(games[seed]):
             matched = rows_of(r)
-            for doc in DOCTRINES:
-                if len(taken[doc]) >= WANT:
-                    continue
-                mine = [row for d, row in matched if d == doc]
-                if mine:
-                    r2 = dict(r, doctrine=doc, rows=mine, also=[f'{d} {row}' for d, row in matched if d != doc])
-                    taken[doc].append(r2)
+            if not matched:
+                continue
+            # The first doctrine in the table's order that a row matches has
+            # the reason; any later one passes over it.
+            doc = next(d for d in DOCTRINES if any(m == d for m, _ in matched))
+            for later in {m for m, _ in matched if m != doc}:
+                passed_over[later] += 1
+            if len(taken[doc]) >= WANT:
+                continue
+            if any(t['worked'] == r['worked'] for t in taken[doc]):
+                skipped[doc] += 1
+                continue
+            mine = [row for d, row in matched if d == doc]
+            taken[doc].append(dict(r, doctrine=doc, rows=mine,
+                                   also=[f'{d} {row}' for d, row in matched if d != doc]))
 
     out, n = [], 0
     for doc in DOCTRINES:
         got = taken[doc]
         used = sorted(set(r['seed'] for r in got))
         note = '' if len(got) >= WANT else '; fewer than four on the first ten seeds'
-        print(f'{doc}: {len(got)} reasons, from seed(s) {", ".join(map(str, used)) or "none"}{note}')
+        print(f'{doc}: {len(got)} reasons, from seed(s) {", ".join(map(str, used)) or "none"}{note}; '
+              f'skipped for the same worked text: {skipped[doc]}; '
+              f'passed over, taken by an earlier doctrine: {passed_over[doc]}')
         for r in got:
             n += 1
             what = (f'order:{r["order"]} {r["order_target"]} {r["order_text"]}' if r['sort'] == 'order'
                     else f'staff command {r["command"]}: {r["command_detail"]}')
-            also = f'  [also matches {", ".join(r["also"])}]' if r['also'] else ''
+            also = f'  [also matches {", ".join(r["also"])}, which passes over it]' if r['also'] else ''
             print(f'  {n:2}. seed {r["seed"]} day {r["day"]} #{r["event"]} {r["side"]} row {"/".join(r["rows"])}: {what}{also}')
             out.append({k: v for k, v in r.items() if k not in ('ctx', 'words', 'text')}
                        | {'number': n, 'prompt_text': prompt(r)})
+    print(f'picked in all: {n} of {WANT * len(DOCTRINES)}')
     if absent:
         print(f'(no export of seed(s) {", ".join(map(str, absent))} was given)')
     untested = [row for _, row, _, _, tested, _ in MATCHERS if not tested]
