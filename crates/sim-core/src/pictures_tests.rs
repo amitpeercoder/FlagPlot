@@ -523,3 +523,65 @@ fn with_command_levels_on_a_report_reaches_every_picture_of_the_side_and_no_othe
         );
     }
 }
+
+// ---------------------------------------------- Commanders (decision 0137)
+
+fn a_commander(name: &str, note: &str) -> crate::commander::NamedCommander {
+    crate::commander::NamedCommander {
+        side: Side::Allied,
+        command: tf(TF1),
+        commander: crate::commander::Commander {
+            name: name.to_string(),
+            initiative: crate::commander::Initiative::Bold,
+            note: note.to_string(),
+        },
+    }
+}
+
+#[test]
+fn a_commander_is_held_in_his_command_and_goes_with_it() {
+    let mut world = world_with_levels(&[]);
+    let before = world.state_hash();
+    world
+        .name_commanders(&[a_commander("Placeholder A", "Placeholder")])
+        .expect("named");
+    assert_ne!(world.state_hash(), before, "the commander is hashed");
+    let posts = world.commands(Side::Allied).expect("on");
+    assert_eq!(
+        posts[&tf(TF1)].commander().map(|c| c.name.as_str()),
+        Some("Placeholder A")
+    );
+    assert!(posts[&tf(TF2)].commander().is_none());
+    drain_ships(&mut world, TF1, true);
+    world.end_gone_commands();
+    assert!(!has_command(&world, Side::Allied, tf(TF1)));
+}
+
+#[test]
+fn a_commander_needs_a_note_a_command_and_one_place() {
+    let mut world = world_with_levels(&[]);
+    assert!(world.name_commanders(&[a_commander("A", " ")]).is_err());
+    let mut elsewhere = a_commander("A", "Placeholder");
+    elsewhere.command = CommandRef::TaskForce(TaskForceId::new(77));
+    assert!(world.name_commanders(&[elsewhere]).is_err());
+    let twice = [
+        a_commander("A", "Placeholder"),
+        a_commander("B", "Placeholder"),
+    ];
+    assert!(world.name_commanders(&twice).is_err());
+    // Nothing was named by a refused call.
+    assert!(world.commands(Side::Allied).expect("on")[&tf(TF1)]
+        .commander()
+        .is_none());
+}
+
+#[test]
+fn with_command_levels_off_no_commander_is_held() {
+    let mut world = world_with_levels(&[]);
+    world.chain = None;
+    let before = world.state_hash();
+    world
+        .name_commanders(&[a_commander("A", "Placeholder")])
+        .expect("named and not held");
+    assert_eq!(world.state_hash(), before);
+}

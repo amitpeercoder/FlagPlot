@@ -996,3 +996,82 @@ fn the_same_start_gives_the_same_passing() {
     };
     assert_eq!(run(), run());
 }
+
+// ------------------------------------------- A contact of its own (decision 0137)
+
+/// The contacts of `command`'s picture marked as its own, by number.
+fn own_of(world: &World, command: CommandRef) -> Vec<u32> {
+    world.commands(Side::Allied).expect("on")[&command]
+        .own()
+        .iter()
+        .map(|c| c.raw())
+        .collect()
+}
+
+#[test]
+fn a_report_is_its_holders_own_and_told_to_the_rest() {
+    let mut world = travelling(ON_TIME, ON_TIME, ON_TIME, 600);
+    make(&mut world, &[tf(TF1)], DAY, NOON, |k| {
+        sighting_at(k, hx(4, 0), 1)
+    });
+    assert_eq!(own_of(&world, tf(TF1)), vec![1]);
+    for told in [AREA, tf(TF2), base1()] {
+        assert_eq!(
+            world.commands(Side::Allied).expect("on")[&told]
+                .picture()
+                .contacts()
+                .count(),
+            1,
+            "{told}"
+        );
+        assert!(own_of(&world, told).is_empty(), "{told}");
+    }
+    // A report of the same contact sent to task force 1 by task force 2
+    // makes it one task force 1 was told of.
+    make(&mut world, &[tf(TF2)], DAY, NOON, |k| {
+        sighting_at(k, hx(4, 0), 2)
+    });
+    assert!(own_of(&world, tf(TF1)).is_empty());
+    assert_eq!(own_of(&world, tf(TF2)), vec![1]);
+}
+
+#[test]
+fn without_report_figures_the_holders_mark_it_their_own_and_a_dropped_contact_loses_it() {
+    let mut world = world_with_levels(&[]);
+    make(&mut world, &[tf(TF1)], DAY, NOON, |k| {
+        sighting_at(k, hx(4, 0), 1)
+    });
+    assert_eq!(own_of(&world, tf(TF1)), vec![1]);
+    assert!(own_of(&world, tf(TF2)).is_empty());
+    assert!(own_of(&world, AREA).is_empty());
+    let figures = world.ref_data.search.clone().expect("figures");
+    for _ in 0..figures.contact_drop_age_pulses + 1 {
+        world.age_pictures(Side::Allied, &figures);
+    }
+    assert!(own_of(&world, tf(TF1)).is_empty());
+}
+
+#[test]
+fn a_contact_one_command_saw_is_in_its_picture_alone() {
+    let mut world = travelling(ON_TIME, ON_TIME, ON_TIME, 600);
+    let key = record_key(&mut world, DAY, NOON);
+    let figures = world.ref_data.search.clone().expect("figures");
+    world.apply_report(
+        Side::Allied,
+        &sighting_at(key, hx(4, 0), 1),
+        &Holders::Only(tf(TF2)),
+        &figures,
+    );
+    assert_eq!(own_of(&world, tf(TF2)), vec![1]);
+    for other in [AREA, tf(TF1), base1()] {
+        assert_eq!(
+            world.commands(Side::Allied).expect("on")[&other]
+                .picture()
+                .contacts()
+                .count(),
+            0,
+            "{other}"
+        );
+    }
+    assert_eq!(world.beliefs[&Side::Allied].contacts().count(), 1);
+}

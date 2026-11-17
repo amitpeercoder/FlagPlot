@@ -84,6 +84,7 @@ const LIVE_ONLY: &[&str] = &[
     "reports.toml",
     "reports_placeholder_scenario_62.toml",
     "reports_placeholder_scenario_63.toml",
+    "reports_placeholder_scenario_64.toml",
 ];
 
 #[test]

@@ -2,7 +2,7 @@ Scenario 52: Rearming
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5cf79c38c49efc0f  6 events
+day   1  hash fe1b56ca5429441a  6 events
 
 #1 D1 night     ship:1 takes 500 rounds and 5 torpedoes, 60 t, from base:1: 800 rounds aboard and 3 tubes fired; 20 t of ammunition left at the base
 #2 D1 night     ship:2 takes 500 rounds and 0 torpedoes, 10 t, from base:1: 600 rounds aboard and 0 tubes fired; 10 t of ammunition left at the base

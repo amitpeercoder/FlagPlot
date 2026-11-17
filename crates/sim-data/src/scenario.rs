@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use sim_core::choices::Moment;
 use sim_core::command::CommandKind;
+use sim_core::commander::{Commander, Initiative, NamedCommander};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
@@ -130,6 +131,25 @@ struct ScenarioFile {
     /// Whether command levels are on (decision 0134, 1). Optional; off when
     /// absent.
     command_levels: Option<bool>,
+    /// The commanders of the side's commands (decision 0137, 1 and 2).
+    #[serde(default)]
+    commander: Vec<CommanderSpec>,
+}
+
+/// A commander of one command (decision 0137, 1 and 2): the side, exactly
+/// one of `task_force`, `base` or `area = true`, his name, his initiative
+/// rating (`cautious`, `steady` or `bold`) and the note of what the rating
+/// rests on, which is required. Every rating is a placeholder.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct CommanderSpec {
+    side: SideSpec,
+    task_force: Option<u32>,
+    base: Option<u32>,
+    area: Option<bool>,
+    name: String,
+    initiative: String,
+    note: Option<String>,
 }
 
 /// The command a task force or a base is placed under (decision 0134, 4):
@@ -231,6 +251,12 @@ struct ContactSpec {
     kind: String,
     /// How many pulses old the contact is at the start. Defaults to 0.
     age_pulses: Option<u32>,
+    /// The one command that saw it (decision 0137, 6), as in
+    /// `seen_by = { task_force = 1 }`: with command levels on it is in that
+    /// command's picture alone, as its own, and sent to no one. With them
+    /// off it is the side's, as any other. Defaults to none: every command
+    /// was told of it.
+    seen_by: Option<SuperiorSpec>,
 }
 
 /// An estimate of the enemy's men ashore in a hex that a side holds when the
@@ -1053,9 +1079,10 @@ pub struct Scenario {
     /// The commander's commands still to be given, by day, as they will be
     /// submitted (decision 0107, item 16).
     commands: BTreeMap<u32, Vec<(Side, CommandKind)>>,
-    /// The contacts the sides start with, kept so that a world built afresh
-    /// for another seed holds them too.
-    contacts: Vec<StartingContact>,
+    /// The contacts the sides start with, each with the command that saw
+    /// it if the scenario names one (decision 0137, 6), kept so that a world
+    /// built afresh for another seed holds them too.
+    contacts: Vec<(StartingContact, Option<CommandRef>)>,
     /// The opening estimates, kept for the same reason (decision 0092, 16).
     estimates: Vec<StartingEstimate>,
     /// The superiors the scenario names, when command levels are on
@@ -1064,6 +1091,9 @@ pub struct Scenario {
     /// The task forces that start on radio silence (decision 0136, 15), kept
     /// so that a world built afresh for another seed has them too.
     radio_silent: Vec<TaskForceId>,
+    /// The commanders the scenario names (decision 0137), kept for the same
+    /// reason. Held in the world only with command levels on.
+    commanders: Vec<NamedCommander>,
     /// Every file the scenario names, as the paths it reads them from, in a
     /// fixed order (decision 0043, 9).
     data_files: Vec<PathBuf>,
@@ -2591,6 +2621,81 @@ impl Scenario {
             }
             None
         };
+        // The commanders (decision 0137, 1 to 3): checked against the
+        // scenario's commands whether command levels are on or not, and held
+        // only when they are.
+        let mut commanders = Vec::new();
+        for (index, spec) in file.commander.iter().enumerate() {
+            let side: Side = spec.side.into();
+            let describe = format!("commander {} ({})", index + 1, spec.name);
+            let command = match (spec.task_force, spec.base, spec.area) {
+                (Some(force), None, None | Some(false)) => {
+                    if !file
+                        .task_force
+                        .iter()
+                        .any(|t| t.id == force && Side::from(t.side) == side)
+                    {
+                        return Err(fail(format!(
+                            "{describe} is named for task force {force}, which is not a task force of the {} side",
+                            side.name()
+                        )));
+                    }
+                    CommandRef::TaskForce(TaskForceId::new(force))
+                }
+                (None, Some(base), None | Some(false)) => {
+                    if !file
+                        .base
+                        .iter()
+                        .any(|b| b.id == base && Side::from(b.side) == side)
+                    {
+                        return Err(fail(format!(
+                            "{describe} is named for base {base}, which is not a base of the {} side",
+                            side.name()
+                        )));
+                    }
+                    CommandRef::Base(BaseId::new(base))
+                }
+                (None, None, Some(true)) => CommandRef::Area,
+                _ => {
+                    return Err(fail(format!(
+                        "{describe} names exactly one of task_force, base or area = true"
+                    )))
+                }
+            };
+            let initiative = Initiative::parse(&spec.initiative).ok_or_else(|| {
+                fail(format!(
+                    "{describe} has unknown initiative \"{}\": cautious, steady or bold",
+                    spec.initiative
+                ))
+            })?;
+            let note = spec.note.clone().unwrap_or_default();
+            if note.trim().is_empty() {
+                return Err(fail(format!(
+                    "{describe}: the rating {} has no note of what it rests on; every rating is a placeholder and its note is required",
+                    initiative.name()
+                )));
+            }
+            if commanders
+                .iter()
+                .any(|c: &NamedCommander| c.side == side && c.command == command)
+            {
+                return Err(fail(format!(
+                    "{describe}: {command} has a commander already"
+                )));
+            }
+            commanders.push(NamedCommander {
+                side,
+                command,
+                commander: Commander {
+                    name: spec.name.clone(),
+                    initiative,
+                    note,
+                },
+            });
+        }
+        world
+            .name_commanders(&commanders)
+            .map_err(|e| fail(e.to_string()))?;
         let mut radio_silent = Vec::new();
         for spec in &file.task_force {
             if spec.radio_silence == Some(true) {
@@ -2619,16 +2724,50 @@ impl Scenario {
                     spec.kind
                 ))
             })?;
-            contacts.push(StartingContact {
-                side: spec.side.into(),
-                hex: Hex::new(spec.q, spec.r),
-                ship_count: spec.ship_count,
-                kind,
-                age_pulses: spec.age_pulses.unwrap_or(0),
-            });
+            let seen_by = match &spec.seen_by {
+                None => None,
+                Some(seen_by) => {
+                    let command = seen_by.command().map_err(|_| {
+                        fail(format!(
+                            "contact {}: seen_by names exactly one of task_force or base",
+                            index + 1
+                        ))
+                    })?;
+                    let side: Side = spec.side.into();
+                    let known = match command {
+                        CommandRef::TaskForce(force) => file
+                            .task_force
+                            .iter()
+                            .any(|t| t.id == force.raw() && Side::from(t.side) == side),
+                        CommandRef::Base(base) => file
+                            .base
+                            .iter()
+                            .any(|b| b.id == base.raw() && Side::from(b.side) == side),
+                        CommandRef::Area => true,
+                    };
+                    if !known {
+                        return Err(fail(format!(
+                            "contact {} is seen by {command}, which is not a command of the {} side",
+                            index + 1,
+                            side.name()
+                        )));
+                    }
+                    Some(command)
+                }
+            };
+            contacts.push((
+                StartingContact {
+                    side: spec.side.into(),
+                    hex: Hex::new(spec.q, spec.r),
+                    ship_count: spec.ship_count,
+                    kind,
+                    age_pulses: spec.age_pulses.unwrap_or(0),
+                },
+                seen_by,
+            ));
         }
         world
-            .hold_starting_contacts(contacts.clone())
+            .hold_starting_contacts_seen(contacts.clone())
             .map_err(|e| fail(e.to_string()))?;
         let estimates: Vec<StartingEstimate> = file
             .estimate
@@ -2654,6 +2793,7 @@ impl Scenario {
             estimates,
             command_levels,
             radio_silent,
+            commanders,
             data_files,
         })
     }
@@ -2718,10 +2858,11 @@ impl Scenario {
         if let Some(named) = &self.command_levels {
             world.turn_command_levels_on(named)?;
         }
+        world.name_commanders(&self.commanders)?;
         for force in &self.radio_silent {
             world.keep_radio_silence_from_the_start(*force)?;
         }
-        world.hold_starting_contacts(self.contacts.clone())?;
+        world.hold_starting_contacts_seen(self.contacts.clone())?;
         world.hold_starting_estimates(self.estimates.clone())?;
         if let Some(objectives) = self.world.objectives() {
             world.set_objectives(objectives.clone())?;
@@ -2737,6 +2878,7 @@ impl Scenario {
             estimates: self.estimates.clone(),
             command_levels: self.command_levels.clone(),
             radio_silent: self.radio_silent.clone(),
+            commanders: self.commanders.clone(),
             data_files: self.data_files.clone(),
         })
     }

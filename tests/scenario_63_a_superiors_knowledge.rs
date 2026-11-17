@@ -1367,8 +1367,12 @@ fn every_scenario_file_but_61_62_and_63_loads_with_command_levels_off_and_nothin
             .to_string_lossy()
             .to_string();
         let text = std::fs::read_to_string(&path).expect("reads");
-        // Scenarios 61, 62 and 63 turn command levels on.
-        if ["61_", "62_", "63_"].iter().any(|p| name.starts_with(p)) {
+        // Scenarios 61, 62 and 63 turn command levels on, and scenario 64
+        // (decision 0137), built after this one, does too.
+        if ["61_", "62_", "63_", "64_"]
+            .iter()
+            .any(|p| name.starts_with(p))
+        {
             assert!(text.contains(LEVELS_LINE), "{name}");
             continue;
         }

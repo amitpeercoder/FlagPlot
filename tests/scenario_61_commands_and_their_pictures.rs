@@ -770,6 +770,10 @@ fn every_scenario_file_but_61_loads_with_command_levels_off() {
         if name.starts_with("63_") {
             continue;
         }
+        // Scenario 64 (decision 0137) is built after those and likewise.
+        if name.starts_with("64_") {
+            continue;
+        }
         seen += 1;
         assert!(
             !text.contains("command_levels"),

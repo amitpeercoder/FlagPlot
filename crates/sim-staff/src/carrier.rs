@@ -34,6 +34,7 @@ use std::collections::BTreeMap;
 use sim_core::command::{
     Addressee, Intent, IntentKind, NoticeBasis, NoticeKind, Reason, Risk, StaffNotice, StaffOrder,
 };
+use sim_core::commander::Initiative;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, TaskForceId};
@@ -387,19 +388,44 @@ fn first(contacts: impl Iterator<Item = Held>) -> Option<Held> {
     contacts.min_by_key(|c| (c.kind, c.distance_nm, c.number))
 }
 
-/// The contacts fresh and of a kind `risk` closes on.
-fn wanted(risk: Risk, contacts: &[Held]) -> impl Iterator<Item = Held> + '_ {
+/// The level of risk at which a commander of `initiative` weighs a contact
+/// that is his force's own, where his task's risk is `risk` (decision 0137,
+/// 7): a cautious one a level more careful, a bold one a level bolder, a
+/// steady one at the task's. Preserve the force stays so for a cautious
+/// commander and press stays press for a bold one.
+pub fn weighed_at(initiative: Initiative, risk: Risk) -> Risk {
+    match (initiative, risk) {
+        (Initiative::Steady, risk) => risk,
+        (Initiative::Cautious, Risk::Press) => Risk::Balanced,
+        (Initiative::Cautious, Risk::Balanced | Risk::Preserve) => Risk::Preserve,
+        (Initiative::Bold, Risk::Preserve) => Risk::Balanced,
+        (Initiative::Bold, Risk::Balanced | Risk::Press) => Risk::Press,
+    }
+}
+
+/// The contacts fresh and of a kind they are weighed to close on, each at
+/// the level `weigh` gives it.
+fn wanted_by<'a>(
+    weigh: &'a dyn Fn(&Held) -> Risk,
+    contacts: &'a [Held],
+) -> impl Iterator<Item = Held> + 'a {
     contacts
         .iter()
         .copied()
         .filter(|c| c.age <= CLOSE_MAX_AGE)
-        .filter(move |c| closes_on(risk).contains(&c.kind))
+        .filter(move |c| closes_on(weigh(c)).contains(&c.kind))
 }
 
 /// The first fresh contact of a kind `risk` closes on, wherever it is: the
 /// one whose passage gives the force's full speed.
 pub fn first_wanted(risk: Risk, contacts: &[Held]) -> Option<Held> {
-    first(wanted(risk, contacts))
+    first_wanted_by(&|_| risk, contacts)
+}
+
+/// [`first_wanted`], each contact weighed at the level `weigh` gives it
+/// (decision 0137, 7 and 8).
+pub fn first_wanted_by(weigh: &dyn Fn(&Held) -> Risk, contacts: &[Held]) -> Option<Held> {
+    first(wanted_by(weigh, contacts))
 }
 
 /// The closing rule (decision 0130, 2, with the architect's ruling of Nov
@@ -409,13 +435,34 @@ pub fn first_wanted(risk: Risk, contacts: &[Held]) -> Option<Held> {
 /// left its hex stays, rule 5); beyond reach, it closes on it. With none
 /// within, it is too far, naming the first of those beyond.
 pub fn closing(risk: Risk, reach: Fixed, night_nm: Fixed, contacts: &[Held]) -> Closing {
-    if risk == Risk::Preserve {
+    closing_by(risk, &|_| risk, reach, night_nm, contacts)
+}
+
+/// The closing rule with each contact weighed at the level `weigh` gives it
+/// (decision 0137, 7 and 8): a contact that is the force's own at the level
+/// its commander's rating reads the task's `risk` at, one it was told of at
+/// `risk`. At preserve the force it closes on nothing unless a fresh
+/// contact is weighed at a bolder level. With every contact weighed at
+/// `risk` it is [`closing`].
+pub fn closing_by(
+    risk: Risk,
+    weigh: &dyn Fn(&Held) -> Risk,
+    reach: Fixed,
+    night_nm: Fixed,
+    contacts: &[Held],
+) -> Closing {
+    if risk == Risk::Preserve
+        && contacts
+            .iter()
+            .filter(|c| c.age <= CLOSE_MAX_AGE)
+            .all(|c| weigh(c) == Risk::Preserve)
+    {
         return Closing::Preserve;
     }
     if !contacts.iter().any(|c| c.age <= CLOSE_MAX_AGE) {
         return Closing::NothingFresh;
     }
-    let of_kind: Vec<Held> = wanted(risk, contacts).collect();
+    let of_kind: Vec<Held> = wanted_by(weigh, contacts).collect();
     let Some(far) = first(of_kind.iter().copied()) else {
         return Closing::NothingOfKind;
     };
@@ -793,6 +840,58 @@ impl Day<'_, '_> {
                         })
                         .collect();
                     held_contacts.sort_by_key(|c| c.number);
+                    // How each contact is weighed (decision 0137, 7 and 8):
+                    // one that is the force's own at the level its
+                    // commander's rating reads the task's risk at, one it was
+                    // told of at the task's risk. With command levels off
+                    // there is no commander and no contact is its own.
+                    let commander = picture.commander();
+                    let initiative = commander.map_or(Initiative::Steady, |c| c.initiative);
+                    let own: Vec<u32> = picture
+                        .contacts()
+                        .filter(|c| picture.is_own(c.id))
+                        .map(|c| picture.contact_number(c.id))
+                        .collect();
+                    let weigh = |c: &Held| {
+                        if own.contains(&c.number) {
+                            weighed_at(initiative, risk)
+                        } else {
+                            risk
+                        }
+                    };
+                    // The words where a rating changed how a contact was
+                    // weighed (item 10), for each fresh contact it changed,
+                    // and none where it changed none.
+                    let weighed_words = |c: &Held| {
+                        let level = weigh(c);
+                        let commander = commander?;
+                        (level != risk).then(|| {
+                            let how = if level > risk {
+                                "bolder"
+                            } else {
+                                "more careful"
+                            };
+                            format!(
+                                "{}, commanding {id}, is {}: {} is {id}'s own, so he weighs it at the {} risk, one level {how} than the task's {risk_text}, and at the {} risk the force closes on {}",
+                                commander.name,
+                                commander.initiative.name(),
+                                crate::picture::contact_words(&picture, c.number),
+                                level.name(),
+                                level.name(),
+                                closes_on_words(level)
+                            )
+                        })
+                    };
+                    let rating_words: Vec<String> = held_contacts
+                        .iter()
+                        .filter(|c| c.age <= CLOSE_MAX_AGE)
+                        .filter_map(weighed_words)
+                        .collect();
+                    let rating_text = if rating_words.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" {}.", rating_words.join(". "))
+                    };
                     let held_words = |c: &Held| {
                         format!(
                             "{}, a {}, {} pulse(s) old, is {} nm from {here}",
@@ -810,7 +909,7 @@ impl Day<'_, '_> {
                         }
                         Some(reach) => {
                             // A night at full speed, by the engine's measure.
-                            let night_nm = first_wanted(risk, &held_contacts)
+                            let night_nm = first_wanted_by(&weigh, &held_contacts)
                                 .and_then(|c| {
                                     view.forecast_passage(id, c.hex, Some(SpeedSetting::Full))
                                 })
@@ -819,7 +918,7 @@ impl Day<'_, '_> {
                                     "{} nm ({night_nm} nm in the night's {NIGHT_HOURS} hours at full speed and the {reach} nm normal reach of its bombers)",
                                     night_nm + reach
                                 );
-                            match closing(risk, reach, night_nm, &held_contacts) {
+                            match closing_by(risk, &weigh, reach, night_nm, &held_contacts) {
                                 Closing::Preserve => {
                                     close_words = Some(format!(
                                             "{id} does not close: at the {risk_text} it closes on nothing."
@@ -828,6 +927,27 @@ impl Day<'_, '_> {
                                 Closing::NothingFresh => {
                                     close_words = Some(format!(
                                             "{id} does not close: the side holds no contact of ships {CLOSE_MAX_AGE} pulses old or less."
+                                        ));
+                                }
+                                Closing::NothingOfKind if !rating_words.is_empty() => {
+                                    // A rating changed how a contact was
+                                    // weighed (decision 0137, 10).
+                                    let list = held_contacts
+                                        .iter()
+                                        .filter(|c| c.age <= CLOSE_MAX_AGE)
+                                        .map(|c| {
+                                            format!(
+                                                "{}, a {}, weighed at the {} risk, at which it closes on {}",
+                                                crate::picture::contact_words(&picture, c.number),
+                                                c.kind.name(),
+                                                weigh(c).name(),
+                                                closes_on_words(weigh(c))
+                                            )
+                                        })
+                                        .collect::<Vec<_>>()
+                                        .join("; ");
+                                    close_words = Some(format!(
+                                            "{id} does not close: no contact of ships {CLOSE_MAX_AGE} pulses old or less is of a kind it closes on at the risk it is weighed at ({list}).{rating_text}"
                                         ));
                                 }
                                 Closing::NothingOfKind => {
@@ -853,21 +973,21 @@ impl Day<'_, '_> {
                                     // in reach (rule 5).
                                     stays = true;
                                     close_words = Some(format!(
-                                            "{id} left its hex {hex} to close, and {}, within the {reach} nm normal reach of its bombers, the first of the contacts it closes on ({}) within the {reach_words}: it stays where it is and is given no route.",
+                                            "{id} left its hex {hex} to close, and {}, within the {reach} nm normal reach of its bombers, the first of the contacts it closes on ({}) within the {reach_words}: it stays where it is and is given no route.{rating_text}",
                                             held_words(&c),
-                                            closes_on_words(risk)
+                                            closes_on_words(weigh(&c))
                                         ));
                                 }
                                 Closing::InReach(c) => {
                                     close_words = Some(format!(
-                                            "{id} does not close: {}, within the {reach} nm normal reach of its bombers, the first of the contacts it closes on ({}) within the {reach_words}.",
+                                            "{id} does not close: {}, within the {reach} nm normal reach of its bombers, the first of the contacts it closes on ({}) within the {reach_words}.{rating_text}",
                                             held_words(&c),
-                                            closes_on_words(risk)
+                                            closes_on_words(weigh(&c))
                                         ));
                                 }
                                 Closing::TooFar(c) => {
                                     close_words = Some(format!(
-                                            "{id} does not close: {}, beyond the {reach} nm normal reach of its bombers and more than the {reach_words}.",
+                                            "{id} does not close: {}, beyond the {reach} nm normal reach of its bombers and more than the {reach_words}.{rating_text}",
                                             held_words(&c)
                                         ));
                                 }
@@ -878,7 +998,7 @@ impl Day<'_, '_> {
                                     match target {
                                         None => {
                                             close_words = Some(format!(
-                                                    "{id} does not close: {}, but no sea route from {here} reaches a hex within the {reach} nm normal reach of its bombers of {}.",
+                                                    "{id} does not close: {}, but no sea route from {here} reaches a hex within the {reach} nm normal reach of its bombers of {}.{rating_text}",
                                                     held_words(&c),
                                                     c.hex
                                                 ));
@@ -922,14 +1042,14 @@ impl Day<'_, '_> {
                                             match fuel {
                                                 Some((_, None)) => {
                                                     close_words = Some(format!(
-                                                            "{id} does not close: {contact_text}; {place_text}; but the engine would refuse the passage there and home."
+                                                            "{id} does not close: {contact_text}; {place_text}; but the engine would refuse the passage there and home.{rating_text}"
                                                         ));
                                                 }
                                                 Some((_, Some(needs)))
                                                     if needs.iter().any(|n| n.short()) =>
                                                 {
                                                     close_words = Some(format!(
-                                                            "{id} does not close on {}: {contact_text}; {place_text}; but the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: a ship has less than it needs.",
+                                                            "{id} does not close on {}: {contact_text}; {place_text}; but the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: a ship has less than it needs.{rating_text}",
                                                             crate::picture::contact_words(&picture, c.number),
                                                             setting_words(speed),
                                                             needs_words(&needs)
@@ -945,6 +1065,40 @@ impl Day<'_, '_> {
                                                             _ => format!("{id} has no home port the staff knows, so its fuel is not measured against a passage home"),
                                                         };
                                                     closes = true;
+                                                    // Where a rating changed how
+                                                    // the contact was weighed,
+                                                    // the reason says so
+                                                    // (decision 0137, 10).
+                                                    let (binding, why) = match weighed_words(&c) {
+                                                        None => (
+                                                            format!("at the {risk_text} the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach", closes_on_words(risk)),
+                                                            format!("at the {risk_text} it closes on {}", closes_on_words(risk)),
+                                                        ),
+                                                        Some(words) => (
+                                                            format!(
+                                                                "a {} commander weighs a contact of his own at the {} risk, and at that risk the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach",
+                                                                initiative.name(),
+                                                                weigh(&c).name(),
+                                                                closes_on_words(weigh(&c))
+                                                            ),
+                                                            words,
+                                                        ),
+                                                    };
+                                                    // Any other contact whose
+                                                    // weighing a rating changed.
+                                                    let others: Vec<String> = held_contacts
+                                                        .iter()
+                                                        .filter(|o| {
+                                                            o.age <= CLOSE_MAX_AGE
+                                                                && o.number != c.number
+                                                        })
+                                                        .filter_map(weighed_words)
+                                                        .collect();
+                                                    let others_text = if others.is_empty() {
+                                                        String::new()
+                                                    } else {
+                                                        format!(" {}.", others.join(". "))
+                                                    };
                                                     route = Some((
                                                             vec![target],
                                                             Some(speed),
@@ -952,11 +1106,10 @@ impl Day<'_, '_> {
                                                                 .evidence(contact_text.clone(), today)
                                                                 .evidence(fuel_text.clone(), today)
                                                                 .evidence(hours_text.clone(), today)
-                                                                .binding(format!("at the {risk_text} the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach", closes_on_words(risk)))
+                                                                .binding(binding)
                                                                 .binding("it goes no nearer than its bombers need")
                                                                 .worked(format!(
-                                                                    "{intent_words}: {contact_text}: at the {risk_text} it closes on {}. {place_text}. {fuel_text}. {id} is routed to {target} at {speed_text}.",
-                                                                    closes_on_words(risk)
+                                                                    "{intent_words}: {contact_text}: {why}. {place_text}. {fuel_text}. {id} is routed to {target} at {speed_text}.{others_text}"
                                                                 ))
                                                                 .would_change("the contact within reach, older, dropped or of another kind")
                                                                 .would_change("less fuel aboard")
