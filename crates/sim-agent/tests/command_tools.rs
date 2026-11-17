@@ -705,3 +705,47 @@ fn a_take_place_intent_names_a_hex_or_an_enemy_base_and_shows_its_phase() {
     assert_eq!(intents[0]["by_day"], 9);
     assert_eq!(intents[1]["by_day"], Value::Null);
 }
+
+#[test]
+fn a_bombard_intent_names_a_task_force_and_an_enemy_base() {
+    let scenario = load("06_rabaul_guadalcanal.toml", 1942);
+    let enemy = scenario
+        .world
+        .side_view(Side::Allied)
+        .enemy_bases()
+        .next()
+        .expect("the Allied side knows an enemy base")
+        .id
+        .raw();
+    let (mut session, _) = support::play::session_of(scenario, &[Side::Allied]);
+    session = session.with_staffs(sim_staff::staffs());
+    let schemas = schemas();
+    let mut call = |tool: &str, args: Value| -> Result<Value, CallError> {
+        let result = session.call(Side::Allied, tool, &args);
+        if let Ok(answer) = &result {
+            let kind = answer["kind"].as_str().expect("a kind");
+            let errors = schemas.check(&format!("{kind}.schema.json"), answer);
+            assert!(errors.is_empty(), "{tool} {args}: {errors:?}\n{answer}");
+        }
+        result
+    };
+    // The force is named by the side's number; one that is not there is refused.
+    let a = call(
+        "set_intent",
+        json!({"intent_kind": "bombard", "task_force": 1, "target": enemy}),
+    )
+    .expect("answered");
+    assert!(a["status"] == "queued" || a["status"] == "refused", "{a}");
+    // Keys that are not the kind's are refused with the kind's keys named.
+    for args in [
+        json!({"intent_kind": "bombard", "task_force": 1, "target": enemy, "base": 1}),
+        json!({"intent_kind": "bombard", "task_force": 1, "target": enemy, "hex": [0, 0]}),
+    ] {
+        let error = call("set_intent", args.clone()).expect_err("an extra key");
+        assert!(
+            error.to_json().to_string().contains("bombard takes"),
+            "{args}: {}",
+            error.to_json()
+        );
+    }
+}

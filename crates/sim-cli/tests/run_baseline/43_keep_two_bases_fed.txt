@@ -2,26 +2,26 @@ Placeholder scenario 43: Keep two bases fed
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d2f4905c41c38128  9 events
-day   2  hash 296752d41ab49a1e  9 events
-day   3  hash 6b514212fbaecd1e  9 events
-day   4  hash 86435fca57be9060  7 events
-day   5  hash fbfa6a862f80ed5e  7 events
-day   6  hash 2403680cc5558a1c  7 events
-day   7  hash e172b1c6735c41c6  7 events
-day   8  hash a68f19e6416e64bc  7 events
-day   9  hash dbcc271dcbf4e042  7 events
-day  10  hash 270f4255aa47cb54  7 events
-day  11  hash 7506d4048aad3932  7 events
-day  12  hash e7cf0ae5764c2ef4  7 events
-day  13  hash 515d8dbb7e1035e6  7 events
-day  14  hash 09d0783f6d218696  7 events
-day  15  hash f2bceb53658328ce  7 events
-day  16  hash b12b21bf97388e1c  7 events
-day  17  hash a8a92b83bc17e71a  7 events
-day  18  hash 87b3b35fdcc24b24  7 events
-day  19  hash 95d88097f3dcd140  7 events
-day  20  hash a8705d527bfc35a8  7 events
+day   1  hash d1ff1dd1e4b56e83  9 events
+day   2  hash ccdcfd3dcc369e4d  9 events
+day   3  hash 1201092f3a4f7c71  9 events
+day   4  hash 99665f3f33f6d8b7  7 events
+day   5  hash d6e32760386ecc81  7 events
+day   6  hash c4a2713d67eb4a13  7 events
+day   7  hash 2be22f93ae81fc75  7 events
+day   8  hash 62448278368902e3  7 events
+day   9  hash a23653d4049f1461  7 events
+day  10  hash 6e4596bd237239cb  7 events
+day  11  hash 1efe0be044820591  7 events
+day  12  hash c9b74583d6132297  7 events
+day  13  hash 3a15546294e2578d  7 events
+day  14  hash bd07c0a4c2c59251  7 events
+day  15  hash 05031a1c775ddc19  7 events
+day  16  hash 59478c7625e36aef  7 events
+day  17  hash 5bed89ee8140c24d  7 events
+day  18  hash 99c56f3fe714dcef  7 events
+day  19  hash c61840fa389c7587  7 events
+day  20  hash 05d40b74aa1fbb8f  7 events
 
 ship:1 "Placeholder fast transport 1": afloat in base:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
 ship:2 "Placeholder fast transport 2": afloat in base:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply

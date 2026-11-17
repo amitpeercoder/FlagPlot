@@ -523,7 +523,7 @@
                       "type": "null"
                     }
                   ],
-                  "description": "The enemy base a neutralise or a raid is aimed at (decision 0120); null for the other kinds."
+                  "description": "The enemy base a neutralise, a raid or a bombard is aimed at (decisions 0120 and 0146); null for the other kinds."
                 },
                 "hex": {
                   "oneOf": [
@@ -551,7 +551,7 @@
                     "integer",
                     "null"
                   ],
-                  "description": "The side's number of the task force a stand_at, operate_carriers or ready_landing intent names (decisions 0124, 0125 and 0141); null for the other kinds (a take_place has none)."
+                  "description": "The side's number of the task force a stand_at, operate_carriers, ready_landing or bombard intent names (decisions 0124, 0125, 0141 and 0146); null for the other kinds (a take_place has none)."
                 },
                 "floor_days": {
                   "type": [
@@ -597,7 +597,8 @@
                     "operate_carriers",
                     "ready_landing",
                     "build_up",
-                    "take_place"
+                    "take_place",
+                    "bombard"
                   ]
                 }
               }

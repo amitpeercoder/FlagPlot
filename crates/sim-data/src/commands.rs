@@ -12,7 +12,7 @@
 //!
 //! | `kind` | keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both), `"deny"` (deny the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]`; takes `hex` and `distance` and no `base`), `"strike_ships"` (strike ships from `base`; takes `base`), `"search_waters"` (search the waters from `base`; takes `base`, and is the staff's to give, so the game refuses it as a root intent), `"stand_at"` (stand at `hex` as `[q, r]` with the task force `task_force`, decision 0124) or `"operate_carriers"` (operate the carrier force `task_force` from `hex`, decision 0125); each of those two takes `task_force` and `hex` and no `base`; `"ready_landing"` (ready a landing by the task force `task_force` at the coast hex `hex`, with optional `by_day`, a whole number from 1, decision 0141) takes those and no `base`; `"build_up"` (build up `base`, decision 0141) takes `base`, `wants`, a list of any of `"airfield"`, `"mend"`, `"defences"`, `"port"` and `"aircraft"` in order, each at most once, and `defences`, the points from 1 to 100, which is required when `"defences"` is a want and refused otherwise; `"take_place"` (take the hex of land `hex` as `[q, r]`, with optional `by_day`, a whole number from 1, decision 0142) takes those and no `base`, `task_force` or other key |
+//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both), `"deny"` (deny the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]`; takes `hex` and `distance` and no `base`), `"strike_ships"` (strike ships from `base`; takes `base`), `"search_waters"` (search the waters from `base`; takes `base`, and is the staff's to give, so the game refuses it as a root intent), `"stand_at"` (stand at `hex` as `[q, r]` with the task force `task_force`, decision 0124) or `"operate_carriers"` (operate the carrier force `task_force` from `hex`, decision 0125); each of those two takes `task_force` and `hex` and no `base`; `"ready_landing"` (ready a landing by the task force `task_force` at the coast hex `hex`, with optional `by_day`, a whole number from 1, decision 0141) takes those and no `base`; `"build_up"` (build up `base`, decision 0141) takes `base`, `wants`, a list of any of `"airfield"`, `"mend"`, `"defences"`, `"port"` and `"aircraft"` in order, each at most once, and `defences`, the points from 1 to 100, which is required when `"defences"` is a want and refused otherwise; `"take_place"` (take the hex of land `hex` as `[q, r]`, with optional `by_day`, a whole number from 1, decision 0142) takes those and no `base`, `task_force` or other key; `"bombard"` (bombard the enemy base `target` with the task force `task_force`, decision 0146) takes both and no `base`, `hex` or other key |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` and its keys, below |
 //! | `set_leave` | `leave` (`"prepare"` or `"launch"`), `given` |
@@ -166,10 +166,11 @@ impl CommandSpec {
                 Some("build_up") => &["intent", "intent_kind", "base", "wants", "defences"],
                 Some("take_place") => &["intent", "intent_kind", "hex", "by_day"],
                 Some("neutralise") => &["intent", "intent_kind", "target"],
+                Some("bombard") => &["intent", "intent_kind", "task_force", "target"],
                 Some("raid") => &["intent", "intent_kind", "base", "target"],
                 Some(other) => {
                     return Err(format!(
-                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up or take_place"
+                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place or bombard"
                     ))
                 }
             },
@@ -318,6 +319,11 @@ impl CommandSpec {
                             by_day: self.by_day,
                         }
                     }
+                    // Decision 0146.
+                    Some("bombard") => IntentKind::Bombard {
+                        force: TaskForceId::new(need(self.task_force, "task_force")?),
+                        target: BaseId::new(need(self.target, "target")?),
+                    },
                     // Decision 0141, 8 and 10.
                     Some("build_up") => {
                         let names = self

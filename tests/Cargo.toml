@@ -411,3 +411,11 @@ path = "scenario_68_ashore.rs"
 [[test]]
 name = "scenario_69_taken_and_held"
 path = "scenario_69_taken_and_held.rs"
+
+[[test]]
+name = "scenario_70_a_run_by_night"
+path = "scenario_70_a_run_by_night.rs"
+
+[[test]]
+name = "scenario_71_bombardment_from_the_sea"
+path = "scenario_71_bombardment_from_the_sea.rs"

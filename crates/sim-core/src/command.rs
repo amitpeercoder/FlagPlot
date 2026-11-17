@@ -167,6 +167,13 @@ pub enum IntentKind {
     /// the hex and the enemy holds none there (item 3). Under it the staff
     /// forms "ready a landing" (item 12). Added at the end.
     TakePlace { hex: Hex, by_day: Option<u32> },
+    /// Bombard `target`, a base on the side's map that is not the side's,
+    /// with `force`, a task force of the side on the bombardment mission
+    /// (decision 0146, 1): a task, addressed to the force. It has no date.
+    /// The staff forms it under "neutralise a base" naming the same target
+    /// and under "take a place" whose hex is the target's, and a commander may
+    /// state it himself as a root. Added at the end.
+    Bombard { force: TaskForceId, target: BaseId },
 }
 
 /// One thing a "build up a base" task wants (decision 0141, 8 and 10).
@@ -301,6 +308,7 @@ impl IntentKind {
             IntentKind::ReadyLanding { .. } => 11,
             IntentKind::BuildUp { .. } => 12,
             IntentKind::TakePlace { .. } => 13,
+            IntentKind::Bombard { .. } => 14,
         }
     }
 
@@ -320,6 +328,7 @@ impl IntentKind {
             IntentKind::ReadyLanding { .. } => "ready_landing",
             IntentKind::BuildUp { .. } => "build_up",
             IntentKind::TakePlace { .. } => "take_place",
+            IntentKind::Bombard { .. } => "bombard",
         }
     }
 
@@ -335,7 +344,7 @@ impl IntentKind {
             | IntentKind::StrikeShips { base }
             | IntentKind::SearchWaters { base }
             | IntentKind::BuildUp { base, .. } => Some(base),
-            IntentKind::Neutralise { target } => Some(target),
+            IntentKind::Neutralise { target } | IntentKind::Bombard { target, .. } => Some(target),
             IntentKind::Deny { .. }
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
@@ -353,19 +362,22 @@ impl IntentKind {
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
             | IntentKind::ReadyLanding { .. }
-            | IntentKind::TakePlace { .. } => None,
+            | IntentKind::TakePlace { .. }
+            | IntentKind::Bombard { .. } => None,
             other => other.base(),
         }
     }
 
     /// The task force of the side the intent names, if it names one: a
-    /// stand task's (decision 0124, 7), a carrier task's (decision 0125, 1)
-    /// and a landing's (decision 0141, 1).
+    /// stand task's (decision 0124, 7), a carrier task's (decision 0125, 1),
+    /// a landing's (decision 0141, 1) and a bombarding force's (decision
+    /// 0146, 1).
     pub const fn force(self) -> Option<TaskForceId> {
         match self {
             IntentKind::StandAt { force, .. }
             | IntentKind::OperateCarriers { force, .. }
-            | IntentKind::ReadyLanding { force, .. } => Some(force),
+            | IntentKind::ReadyLanding { force, .. }
+            | IntentKind::Bombard { force, .. } => Some(force),
             _ => None,
         }
     }
@@ -422,10 +434,13 @@ impl IntentKind {
     }
 
     /// The enemy base the intent is aimed at, if any (decision 0120): the
-    /// target of a neutralise or a raid intent.
+    /// target of a neutralise or a raid intent, and of a bombardment
+    /// (decision 0146, 1).
     pub const fn target(self) -> Option<BaseId> {
         match self {
-            IntentKind::Neutralise { target } | IntentKind::Raid { target, .. } => Some(target),
+            IntentKind::Neutralise { target }
+            | IntentKind::Raid { target, .. }
+            | IntentKind::Bombard { target, .. } => Some(target),
             _ => None,
         }
     }
@@ -449,7 +464,8 @@ impl IntentKind {
             // Decisions 0124, 6 and 7, 0125, 1, and 0141, 1.
             IntentKind::StandAt { force, .. }
             | IntentKind::OperateCarriers { force, .. }
-            | IntentKind::ReadyLanding { force, .. } => Addressee::TaskForce(force),
+            | IntentKind::ReadyLanding { force, .. }
+            | IntentKind::Bombard { force, .. } => Addressee::TaskForce(force),
         }
     }
 
@@ -486,6 +502,13 @@ impl IntentKind {
             (IntentKind::ReadyLanding { hex, .. }, IntentKind::TakePlace { hex: place, .. }) => {
                 hex == place
             }
+            // Decision 0146, 2: a bombardment of the target under
+            // neutralising it, and of the base at the place under taking it,
+            // whose hex intake checks.
+            (IntentKind::Bombard { target, .. }, IntentKind::Neutralise { target: aimed }) => {
+                target == aimed
+            }
+            (IntentKind::Bombard { .. }, IntentKind::TakePlace { .. }) => true,
             // Decision 0144, 7: the supply that follows, for the held base.
             (IntentKind::KeepSupplied { base, .. }, IntentKind::Hold { base: held }) => {
                 base == held
@@ -1927,6 +1950,7 @@ fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core
             }
         }
         IntentKind::BuildUp { base, wants } => write!(f, "build up {base}: {wants}"),
+        IntentKind::Bombard { force, target } => write!(f, "bombard {target} with {force}"),
         IntentKind::TakePlace { hex, by_day } => {
             write!(f, "take the place at {hex}")?;
             match by_day {

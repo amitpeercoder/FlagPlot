@@ -311,6 +311,8 @@ A ship's fuel is in tons, given at the start by its entry in the scenario file (
 
 Each ship uses its own class figures at the speed of the force. A ship in a slow force burns at its own cruise rate per mile, never less. A ship that does not move burns nothing. A ship at half speed from damage is below cruise and burns the cruise rate. The fuel taken off a ship is written at the end of each segment, and each ship has a `FuelBurned` event with the tons burned and the tons left. [0006, 0016 item 9]
 
+The staff reckons the fuel of a run by night at the speed it tries, by this rule and the engine's forecast (chapter 8, A run by night). [0145]
+
 A side sees: `FuelBurned` for its own ships.
 
 ### The fuel limit on a pulse's budget

@@ -375,6 +375,15 @@ impl World {
                         return Err(CommandRefusal::CannotStandUnder(*parent));
                     }
                 }
+                // A bombardment under "take a place" is of a base in the
+                // place's hex (decision 0146, 2).
+                if let (IntentKind::Bombard { target, .. }, IntentKind::TakePlace { hex, .. }) =
+                    (kind, found.kind)
+                {
+                    if self.truth.bases.get(target).map(|b| b.hex) != Some(hex) {
+                        return Err(CommandRefusal::CannotStandUnder(*parent));
+                    }
+                }
                 // "Keep supplied" formed under "hold a place" takes the
                 // hold's margin as its floor, which is 0 at press (decision
                 // 0144, 7 and 10): its floor is checked as at least 0.
