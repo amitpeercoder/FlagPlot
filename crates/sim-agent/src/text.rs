@@ -140,6 +140,10 @@ impl Briefing {
         o.heading("OBJECTIVES");
         let ob = &self.objectives;
         match &ob.mission {
+            None if ob.not_given_to_this_seat => o.line(
+                "none given to this seat: the mission and objectives are the area command's"
+                    .to_string(),
+            ),
             None => o.line("none: this scenario gives no mission and no objectives".to_string()),
             Some(mission) => {
                 o.line(format!("Mission: {mission}"));
@@ -1503,7 +1507,7 @@ fn enemy_ashore_text(o: &mut Out, a: &EnemyAshorePart) {
             e.men,
             at(&e.place),
             plural(e.age_days, "day", "days"),
-            ev(e.event)
+            e.event.map_or(String::new(), ev)
         ));
     }
     for f in &a.found_empty_yesterday {

@@ -30,7 +30,7 @@
 use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
-use sim_agent::{parse_seat, CallError, Session};
+use sim_agent::{parse_seat, CallError, Post, Session};
 
 use crate::staff_tools::{staff_tool_definitions, STAFF_INSTRUCTIONS};
 use sim_core::state::Side;
@@ -331,6 +331,14 @@ fn tool_text(text: String, is_error: bool) -> Value {
     json!({"content": [{"type": "text", "text": text}], "isError": is_error})
 }
 
+/// What a seat at a task force or a base is told besides the game's own
+/// instructions (decision 0138, 5).
+fn seat_instructions(command: sim_core::pictures::CommandRef) -> String {
+    format!(
+        "\n\nYour seat is at {command}, not at the side's area command. You are given what that command holds and nothing else of your side's: its own units, exactly; its own picture of the enemy; its own events; and the public facts every side has (the map, every base's name, place and side, the figures). You do not see the side's other forces and bases, its mission or objectives, its intents or its plans, and a staff carries out the side's intents with every other command. Your own units are numbered 1, 2, 3 in your own lists (your force is task_force:1, its ships ship:1, ship:2 and so on); a base is named by its number as the map gives it. You may give orders to your own units only; an order to any other unit is refused with the one reason \"not one of your command's units\". You cannot state intents, set limits or leaves, or call the staff: the tools you have are the nine above. An order you give to one of your units that an intent of the side's staff is also working with holds that unit against the staff for the rest of the game, as the commander's own order does."
+    )
+}
+
 impl Server {
     pub fn new(session: Session, side: Side) -> Server {
         Server {
@@ -343,10 +351,12 @@ impl Server {
     /// The instructions the server gives: the game's, and for a seat whose
     /// side has a staff how to command by intent.
     fn instructions(&self) -> String {
-        if self.session.has_staff(self.side) {
-            format!("{INSTRUCTIONS}{STAFF_INSTRUCTIONS}")
-        } else {
-            INSTRUCTIONS.to_string()
+        match self.session.post(self.side) {
+            Post::At(command) => format!("{INSTRUCTIONS}{}", seat_instructions(command)),
+            _ if self.session.has_staff(self.side) => {
+                format!("{INSTRUCTIONS}{STAFF_INSTRUCTIONS}")
+            }
+            _ => INSTRUCTIONS.to_string(),
         }
     }
 
@@ -494,7 +504,9 @@ impl Server {
                     );
                 }
                 if method == "tools/list" {
-                    finish(json!({"tools": tool_list_for(self.session.has_staff(self.side))}))
+                    finish(
+                        json!({"tools": tool_list_for(self.session.has_command_tools(self.side))}),
+                    )
                 } else {
                     let result = self.call_tool(params)?;
                     finish(result)
@@ -559,6 +571,8 @@ fn error_text(error: &CallError) -> String {
 struct Options<'a> {
     scenario: &'a str,
     side: Side,
+    /// Where the seat sits (decision 0138, 5): the area command by default.
+    post: Post,
     seed: Option<u64>,
     save: Option<&'a str>,
     transcript: Option<&'a str>,
@@ -567,6 +581,7 @@ struct Options<'a> {
 fn parse<'a>(args: &'a [String], usage: &str) -> Result<Options<'a>, String> {
     let mut scenario = None;
     let mut side = None;
+    let mut post = Post::Area;
     let mut seed = None;
     let mut save = None;
     let mut transcript = None;
@@ -585,6 +600,7 @@ fn parse<'a>(args: &'a [String], usage: &str) -> Result<Options<'a>, String> {
                         .ok_or_else(|| format!("--seat \"{v}\" is not allied or japanese"))?,
                 );
             }
+            "--at" => post = Post::parse(value("--at")?)?,
             "--seed" => {
                 let v = value("--seed")?;
                 seed = Some(
@@ -605,6 +621,7 @@ fn parse<'a>(args: &'a [String], usage: &str) -> Result<Options<'a>, String> {
         scenario: scenario.ok_or_else(|| format!("no scenario given\n\n{usage}"))?,
         side: side
             .ok_or_else(|| format!("--seat allied or --seat japanese is needed\n\n{usage}"))?,
+        post,
         seed,
         save,
         transcript,
@@ -615,7 +632,8 @@ pub fn command(args: &[String], usage: &str) -> Result<(), String> {
     use std::io::{BufRead, Write};
     let options = parse(args, usage)?;
     let seats = BTreeMap::from([(options.side, sim_agent::SeatKind::Player)]);
-    let (session, kept) = crate::serve::open(options.scenario, options.seed, seats)?;
+    let posts = BTreeMap::from([(options.side, options.post)]);
+    let (session, kept) = crate::serve::open(options.scenario, options.seed, seats, &posts)?;
     let mut server = Server::new(session, options.side);
     let stdin = std::io::stdin();
     let stdout = std::io::stdout();

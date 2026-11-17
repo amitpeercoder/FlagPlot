@@ -219,6 +219,13 @@ impl<'a> Ctx<'a> {
             .expect("an event the side sees has a number")
     }
 
+    /// The side's number of an event, or `None` for one the side is not
+    /// shown (the report an estimate rests on, at a seat that does not see
+    /// the side's reports).
+    pub fn number_if_seen(&self, id: EventId) -> Option<u32> {
+        self.numbers.get(&id).copied()
+    }
+
     /// The side's number of one of its own orders: 1, 2, 3... in the order
     /// they were taken in. The log numbers both sides' orders in one run, so
     /// its numbers would tell a side how many orders the enemy gave
@@ -540,14 +547,14 @@ pub(crate) fn cruise_range_nm(view: &SideView<'_>, ship: &Ship) -> Option<u32> {
     u32::try_from(range.trunc().max(0)).ok()
 }
 
-/// The picture an agent in the area commander's seat is shown: the area
-/// command's (decision 0134, 13). With command levels off it is the side's
-/// own belief.
+/// The picture an agent in a seat is shown: the area command's (decision
+/// 0134, 13) in the area seat, the seat's own command's at a task force or a
+/// base, and the side's own belief under the easier setting (decision 0138,
+/// 5). With command levels off it is the side's own belief.
 pub(crate) fn area_picture<'v>(
     view: &sim_core::view::SideView<'v>,
 ) -> sim_core::view::CommandView<'v> {
-    view.command(sim_core::pictures::CommandRef::Area)
-        .expect("a side always has its area command")
+    view.seat_picture()
 }
 
 /// The picture of the command an air group of the side belongs to (decision
@@ -557,6 +564,9 @@ pub(crate) fn group_picture<'v>(
     view: &sim_core::view::SideView<'v>,
     group: sim_core::ids::AirGroupId,
 ) -> sim_core::view::CommandView<'v> {
+    if view.has_one_picture() {
+        return area_picture(view);
+    }
     view.command_of_group(group)
         .and_then(|command| view.command(command))
         .unwrap_or_else(|| area_picture(view))

@@ -19,6 +19,7 @@ pub use command_view::CommandView;
 mod known_view;
 pub use known_view::KnownView;
 mod ground_choices;
+mod seat_view;
 mod supply;
 
 pub use supply::{DaysOfSupply, PlannedUse};
@@ -107,6 +108,15 @@ pub struct SideView<'a> {
     /// `Some(Area)` for a view built over what the area command holds
     /// ([`SideView::known_to`], decision 0136, 9).
     known_to: Option<crate::pictures::CommandRef>,
+    /// The command this view is cut to, for a seat at a task force or a base
+    /// ([`SideView::at_seat`], `view/seat_view.rs`): its own units, its
+    /// events and its picture are the command's and nothing else of the
+    /// side's. `None` for the side's own view and for the area seat.
+    seat: Option<crate::pictures::CommandRef>,
+    /// Whether [`SideView::seat_picture`] is the side's own belief, every
+    /// report at once, not a command's picture (the easier setting of
+    /// decision 0119, answer 5).
+    side_picture: bool,
     /// The task forces on radio silence, both sides' (decision 0136, 15).
     radio_silent: &'a BTreeSet<TaskForceId>,
     map: &'a Map,
@@ -174,6 +184,8 @@ impl<'a> SideView<'a> {
             commands,
             held,
             known_to: None,
+            seat: None,
+            side_picture: false,
             radio_silent,
             map,
             ref_data,
@@ -190,6 +202,9 @@ impl<'a> SideView<'a> {
     /// `FormTaskForce` order given now would make, if no other forming
     /// order is taken in first. Its own series only.
     pub fn next_task_force_id(&self) -> TaskForceId {
+        if self.seat.is_some() {
+            return TaskForceId::new(0);
+        }
         self.next_task_force
     }
 
@@ -198,6 +213,11 @@ impl<'a> SideView<'a> {
     /// the commitments of its ships (decision 0107, 6). There is no way to
     /// the other side's.
     pub fn command_state(&self) -> &'a crate::command::CommandState {
+        if self.seat.is_some() {
+            // A seat at a command states no intent and holds none of the
+            // side's (decision 0138, 5).
+            return seat_view::blank_command_state();
+        }
         self.command
     }
 
@@ -213,30 +233,30 @@ impl<'a> SideView<'a> {
     /// The side's own ships, known exactly. Supply aboard is visible only for
     /// the own side, because the filter hides every enemy ship.
     pub fn ships(&self) -> impl Iterator<Item = &'a Ship> + '_ {
-        let side = self.side;
+        let view = *self;
         self.truth
             .ships
             .values()
-            .filter(move |ship| ship.side == side)
+            .filter(move |ship| view.owns_ship(ship))
     }
 
     /// The side's own task forces, known exactly.
     pub fn task_forces(&self) -> impl Iterator<Item = &'a TaskForce> + '_ {
-        let side = self.side;
+        let view = *self;
         self.truth
             .task_forces
             .values()
-            .filter(move |task_force| task_force.side == side)
+            .filter(move |task_force| view.owns_force(task_force))
     }
 
     /// The side's own bases. Supply and fuel stock are visible only for the own side,
     /// because the filter hides every enemy base.
     pub fn bases(&self) -> impl Iterator<Item = &'a Base> + '_ {
-        let side = self.side;
+        let view = *self;
         self.truth
             .bases
             .values()
-            .filter(move |base| base.side == side)
+            .filter(move |base| view.owns_base(base))
     }
 
     /// The public facts of every base on the map the side does not own, in
@@ -244,11 +264,11 @@ impl<'a> SideView<'a> {
     /// visible, and a base the enemy formed by a landing is not on the map
     /// (decision 0066, 12): it is not here at all.
     pub fn enemy_bases(&self) -> impl Iterator<Item = PublicBase> + '_ {
-        let side = self.side;
+        let view = *self;
         self.truth
             .bases
             .values()
-            .filter(move |base| base.side != side && base.on_map)
+            .filter(move |base| view.is_public_base(base))
             .map(|base| PublicBase {
                 id: base.id,
                 name: base.name.clone(),
@@ -263,11 +283,11 @@ impl<'a> SideView<'a> {
     /// else in the view (decision 0066, 22). A destroyed unit is listed with
     /// no men.
     pub fn land_units(&self) -> impl Iterator<Item = &'a LandUnit> + '_ {
-        let side = self.side;
+        let view = *self;
         self.truth
             .land_units
             .values()
-            .filter(move |unit| unit.side == side)
+            .filter(move |unit| view.owns_land_unit(unit))
     }
 
     /// The cover of one of the side's own land units (decision 1 of 0106):
@@ -280,7 +300,7 @@ impl<'a> SideView<'a> {
             .truth
             .land_units
             .get(&unit)
-            .filter(|unit| unit.side == self.side)?;
+            .filter(|unit| self.owns_land_unit(unit))?;
         Some(crate::cover::unit_cover(self.truth, unit))
     }
 
@@ -294,7 +314,7 @@ impl<'a> SideView<'a> {
             .truth
             .land_units
             .get(&unit)
-            .filter(|unit| unit.side == self.side)?;
+            .filter(|unit| self.owns_land_unit(unit))?;
         self.ref_data.ground.as_ref()?;
         Some(
             crate::ground_combat::firing_men(
@@ -317,7 +337,7 @@ impl<'a> SideView<'a> {
             .truth
             .land_units
             .get(&unit)
-            .filter(|unit| unit.side == self.side)?;
+            .filter(|unit| self.owns_land_unit(unit))?;
         let figures = self.ref_data.ground.as_ref()?;
         Some((land_unit.fatigue + figures.fatigue_per_attack_day).min(Fixed::from_int(100)))
     }
@@ -329,51 +349,51 @@ impl<'a> SideView<'a> {
             .truth
             .land_units
             .get(&unit)
-            .is_some_and(|land_unit| land_unit.side == self.side);
-        own.then(|| self.truth.men_aboard(unit))
+            .is_some_and(|land_unit| self.owns_land_unit(land_unit));
+        own.then(|| self.men_aboard_in_view(unit))
     }
 
     /// The side's own air groups, known exactly.
     pub fn air_groups(&self) -> impl Iterator<Item = &'a AirGroup> + '_ {
-        let side = self.side;
+        let view = *self;
         self.truth
             .air_groups
             .values()
-            .filter(move |group| group.side == side)
+            .filter(move |group| view.owns_group(group))
     }
 
     /// The side's own replacement streams (decision 6 of 0038), known
     /// exactly. The enemy's are not visible.
     pub fn replacements(&self) -> impl Iterator<Item = &'a Replacement> + '_ {
-        let side = self.side;
+        let view = *self;
         self.truth
             .replacements
             .iter()
-            .filter(move |stream| stream.side == side)
+            .filter(move |stream| view.owns_stream(stream))
     }
 
     /// The arrivals due to the side's own air groups (decision 0041), known
     /// exactly. The enemy's are not visible.
     pub fn arrivals(&self) -> impl Iterator<Item = &'a Arrival> + '_ {
-        let side = self.side;
+        let view = *self;
         self.truth.arrivals.iter().filter(move |arrival| {
-            self.truth
+            view.truth
                 .air_groups
                 .get(&arrival.air_group)
-                .is_some_and(|group| group.side == side)
+                .is_some_and(|group| view.owns_group(group))
         })
     }
 
     /// What the side believes about the enemy.
     pub fn contacts(&self) -> impl Iterator<Item = &'a Contact> + '_ {
-        self.belief.contacts()
+        self.own_belief().contacts()
     }
 
     /// What the side believes came of its fights: the enemy ships it claims
     /// sank, in the order the claims arrived. Real damage is truth and is not
     /// shown.
     pub fn claims(&self) -> &'a [BattleClaim] {
-        self.belief.claims()
+        self.own_belief().claims()
     }
 
     /// What the side believes of the enemy's men ashore: one estimate for a
@@ -381,12 +401,12 @@ impl<'a> SideView<'a> {
     /// opening estimate there, with its day (decision 0092, 11 and 19). It
     /// may be wrong; the truth is not shown.
     pub fn ground_estimates(&self) -> impl Iterator<Item = &'a GroundEstimate> + '_ {
-        self.belief.ground_estimates()
+        self.own_belief().ground_estimates()
     }
 
     /// The side's estimate of the enemy's men ashore in `hex`, if it has one.
     pub fn ground_estimate(&self, hex: Hex) -> Option<&'a GroundEstimate> {
-        self.belief.ground_estimate(hex)
+        self.own_belief().ground_estimate(hex)
     }
 
     /// The figures of shore bombardment, if a force can bombard (decision
@@ -403,8 +423,10 @@ impl<'a> SideView<'a> {
     /// order's `id` is opaque; the side's own count of its orders is
     /// [`SideView::order_number`] (decisions 0055 and 0086).
     pub fn orders(&self) -> impl Iterator<Item = &'a Order> + '_ {
-        let side = self.side;
-        self.orders.values().filter(move |order| order.side == side)
+        let view = *self;
+        self.orders
+            .values()
+            .filter(move |order| order.side == view.side && view.owns_order(order))
     }
 
     /// The events the side may see, each cut down to what it may know, in
@@ -421,7 +443,11 @@ impl<'a> SideView<'a> {
                 .as_ref()
                 .map_or(0, |figures| figures.round_minutes),
         );
-        side_events::project(self.side, self.log.from_index(0), &owners)
+        let all = side_events::project(self.side, self.log.from_index(0), &owners);
+        match self.seat {
+            None => all,
+            Some(_) => self.cut_events(all),
+        }
     }
 
     /// The events of one day the side may see, in log order.
@@ -478,7 +504,7 @@ impl<'a> SideView<'a> {
     /// One contact the side holds, by the side's number of it. `None` if the
     /// side holds no such contact.
     pub fn contact_by_number(&self, number: u32) -> Option<&'a Contact> {
-        self.belief
+        self.own_belief()
             .contacts()
             .find(|contact| contact.id.raw() == number)
     }
@@ -545,6 +571,11 @@ impl<'a> SideView<'a> {
     }
 
     fn own_objectives(&self) -> Option<&'a SideObjectives> {
+        // A seat at a command has no mission or objectives: they are the
+        // side's, and the area command's to hold (decision 0138, 5).
+        if self.seat.is_some() {
+            return None;
+        }
         self.objectives.map(|o| o.side(self.side))
     }
 
@@ -560,6 +591,9 @@ impl<'a> SideView<'a> {
     /// says nothing of the enemy's mission or objectives; it is part of how
     /// the side's own objectives are scored.
     pub fn levels(&self) -> Option<crate::objectives::Levels> {
+        if self.seat.is_some() {
+            return None;
+        }
         self.objectives.map(|o| o.levels)
     }
 
@@ -568,6 +602,9 @@ impl<'a> SideView<'a> {
     /// configuration, common to both sides like [`SideView::levels`], and
     /// says nothing of the enemy's objectives or of any damage.
     pub fn horizon_days(&self) -> Option<u32> {
+        if self.seat.is_some() {
+            return None;
+        }
         self.objectives.map(|o| o.horizon_days)
     }
 
@@ -611,7 +648,7 @@ impl<'a> SideView<'a> {
             .truth
             .land_units
             .get(&unit)
-            .filter(|land_unit| land_unit.side == self.side && land_unit.men_ashore > 0)?;
+            .filter(|land_unit| self.owns_land_unit(land_unit) && land_unit.men_ashore > 0)?;
         land_unit.hex.map(|hex| self.map.land_neighbours(hex))
     }
 
@@ -625,7 +662,7 @@ impl<'a> SideView<'a> {
             .truth
             .land_units
             .get(&unit)
-            .filter(|land_unit| land_unit.side == self.side && land_unit.men_ashore > 0)?;
+            .filter(|land_unit| self.owns_land_unit(land_unit) && land_unit.men_ashore > 0)?;
         let from = land_unit.hex?;
         let figures = self.ref_data.ground.as_ref()?;
         let skill = crate::march::march_skill(self.map, &land_unit.skills, from, to);
@@ -644,7 +681,7 @@ impl<'a> SideView<'a> {
             .truth
             .land_units
             .get(&unit)
-            .filter(|land_unit| land_unit.side == self.side)?;
+            .filter(|land_unit| self.owns_land_unit(land_unit))?;
         let figures = self.ref_data.ground.as_ref()?;
         Some(crate::ground::daily_charge_t(
             figures,
@@ -663,7 +700,7 @@ impl<'a> SideView<'a> {
             .truth
             .task_forces
             .get(&task_force)
-            .filter(|force| force.side == self.side)?;
+            .filter(|force| self.owns_force(force))?;
         let figures = self.ref_data.ground.as_ref()?;
         Some(crate::preparation::landing_rate_factor(figures, force.preparation.as_ref(), hex).0)
     }
@@ -677,7 +714,7 @@ impl<'a> SideView<'a> {
             .truth
             .land_units
             .get(&unit)
-            .filter(|land_unit| land_unit.side == self.side)?;
+            .filter(|land_unit| self.owns_land_unit(land_unit))?;
         let figures = self.ref_data.ground.as_ref()?;
         Some(
             crate::preparation::landing_fatigue_gain(
@@ -696,11 +733,11 @@ impl<'a> SideView<'a> {
         self.truth
             .land_units
             .get(&unit)
-            .filter(|land_unit| land_unit.side == self.side)?;
+            .filter(|land_unit| self.owns_land_unit(land_unit))?;
         self.truth
             .task_forces
             .values()
-            .filter(|force| force.side == self.side)
+            .filter(|force| self.owns_force(force))
             .find(|force| {
                 force
                     .preparation
@@ -754,7 +791,7 @@ impl<'a> SideView<'a> {
         speed: Option<SpeedSetting>,
     ) -> Option<PassageForecast> {
         let force = self.truth.task_forces.get(&task_force)?;
-        if force.side != self.side {
+        if !self.owns_force(force) {
             return None;
         }
         let ships: BTreeMap<ShipId, Ship> = force
@@ -780,6 +817,10 @@ impl<'a> SideView<'a> {
     /// not the side's own. It reads only the side's own forces, ships and
     /// bases.
     pub fn ammunition_work(&self, task_force: TaskForceId) -> Option<crate::rearm::AmmunitionWork> {
+        let force = self.truth.task_forces.get(&task_force)?;
+        if !self.owns_force(force) {
+            return None;
+        }
         crate::rearm::ammunition_work(self.truth, self.map, self.ref_data, self.side, task_force)
     }
 
@@ -795,7 +836,7 @@ impl<'a> SideView<'a> {
         speed: Option<SpeedSetting>,
     ) -> Option<PassageForecast> {
         let force = self.truth.task_forces.get(&task_force)?;
-        if force.side != self.side {
+        if !self.owns_force(force) {
             return None;
         }
         let ships: BTreeMap<ShipId, Ship> = force
@@ -823,7 +864,7 @@ impl<'a> SideView<'a> {
     /// else; whether the order would be accepted is `World::check_order`'s.
     pub fn yard_plan(&self, task_force: TaskForceId) -> Option<crate::repair::YardPlan> {
         let force = self.truth.task_forces.get(&task_force)?;
-        if force.side != self.side {
+        if !self.owns_force(force) {
             return None;
         }
         crate::repair::yard_plan_in(self.truth, self.ref_data, task_force)
