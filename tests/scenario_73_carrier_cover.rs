@@ -88,7 +88,7 @@
 //!
 //! | Day | The staff's commands and orders to the carrier | What happens |
 //! | --- | --- | --- |
-//! | 2 | Forms intent 3, operate task force 1 from (4,0), under intent 1. The force: rules of engagement, avoid, break-off level 0.5; a route to (4,0). Group 1: combat air patrol; a patrol share of 0.5. Group 2: the search mission; the arc 060 to 120 at 300 nm. Group 3: the naval strike mission; strike sizing on | Sails at hour 24, arrives at hour 34 |
+//! | 2 | Forms intent 3, operate task force 1 from (4,0), under intent 1. The force: rules of engagement, avoid, break-off level 0.5; a route to (4,0). Group 1: combat air patrol; a patrol share of 0.5. Group 2: the search mission; the arc 050 to 120 at 300 nm. Group 3: the naval strike mission; strike sizing on | Sails at hour 24, arrives at hour 34 |
 //! | 3 | The force: battle readiness. Group 3: base strike at base 2 | Group 3 strikes base 2 with its 10 |
 //! | 4, 5, 6 | none | Group 3 strikes base 2 on each day |
 //! | 7 | The force: a route to A | Sails at hour 144, arrives at hour 154 |
@@ -96,7 +96,9 @@
 //!
 //! - **Day 2.** B is 400 nm from the force, beyond the reach: group 3 is
 //!   given the orders of scenario 55 at balanced. The one threat of the
-//!   search is base 2, on 090 from (0,0): the arc is 060 to 120. No
+//!   search is base 2, on 090 from (0,0): the narrowest arc of ten-degree
+//!   steps that holds 090 is 080 to 090, and 30 degrees wider at each
+//!   end it is 050 to 120 (decision 0115, 9). No
 //!   speed order is given: the force is at cruise, and cruise brings it
 //!   there in the night.
 //! - **Day 3.** The force is at its hex. B is 240 nm away, within the
@@ -114,8 +116,8 @@
 //! is refused.
 //!
 //! The carrier burns a third of a ton a mile: 53.333333 t each way. On
-//! the morning of day 3 her passage home needs 53.333333 x 1.2 = 64 t
-//! against 2,946.666667 aboard.
+//! the morning of day 3 her passage home needs 53.333333 x 1.2, which
+//! cut to six places is 63.999999 t, against 2,946.666667 aboard.
 //!
 //! # Properties
 //!

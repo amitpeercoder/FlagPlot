@@ -61,7 +61,7 @@
 //! | Day | The estimate at the staff's hour | The staff's commands and orders | What happens |
 //! | --- | --- | --- | --- |
 //! | 1 | none | Approves plan 1 to preparing. Forms intent 2, ready a landing by task force 1 at B, with a forces limit of units 1 and 2. Orders `prepare_landing` at B, roster 1 and 2. Sets air group 1 to reconnaissance of B | In the morning one aircraft flies 4 hexes and reports 150 men, seen from the air. Loading 100; each unit's rehearsal 100 |
-//! | 2 | 150, seen from the air, of day 1 | Sets the forces limit of intent 2 to unit 1. Orders `prepare_landing` at B, roster 1. Sets air group 1 to rest | The loading is cut to 50 by the change and gains to 100. Unit 2 leaves the roster |
+//! | 2 | 150, seen from the air, of day 1 | Sets the forces limit of intent 2 to unit 1. Orders `prepare_landing` at B, roster 1. Sets air group 1 to rest | Unit 2 leaves the roster, which costs no loading (decision 0095, item 10): it stays 100 |
 //! | 3 | the same | Notice: intent 2 is ready. Approves plan 1 to released. Orders a load of supply to a weight of 45 t | |
 //! | 4 | the same | Unit 1 set to attack. Load unit 1 | |
 //!
@@ -70,8 +70,10 @@
 //!   not met: it sends air group 1, the only group in the forces limit.
 //! - **Day 2.** The men wanted are 150 x 3 = 450. Unit 1 has 600: it is
 //!   enough, and unit 2 is left out. The need is met, by a count seen
-//!   from the air one day old. The landing is not ready: the loading
-//!   after the morning's order is 50.
+//!   from the air one day old. The landing is not ready: it was ordered
+//!   again this morning, and a landing ordered in the morning is not
+//!   ready that morning. Its loading stays 100, since only a unit added
+//!   to a roster costs loading.
 //! - **Day 3.** The loading is 100 and unit 1's rehearsal is 100: ready,
 //!   and the count is 2 days old. The supply is 600 x 0.005 x 15 = 45 t.
 //!
@@ -82,9 +84,13 @@
 //!
 //! - **The grades.** With an opening estimate of 500 men at B: it is of
 //!   the grade told, and at preserve the force it does not meet the need.
-//!   Day 1 is as in the main case but for the choice, which is the same
-//!   two units on 1,500 men wanted. On day 2 the estimate is 150, seen
-//!   from the air, and the day is as in the main case.
+//!   On day 1 the men wanted are 500 x 3 = 1,500 and the ships carry
+//!   1,200: at preserve the force no landing is formed and the staff
+//!   hands in the notice that it cannot meet the intent (decision 0142,
+//!   item 10); air group 1 is sent all the same and flies. On day 2 the
+//!   estimate is 150, seen from the air: the landing is formed with unit
+//!   1 alone and the group is set to rest. Restated by the architect on
+//!   Nov 17, 2026: the first writing had two units chosen on day 1.
 //! - **Balanced.** At balanced the men wanted on day 2 are 300, unit 1 is
 //!   chosen alone, and the days are as in the main case.
 //! - **Press.** At press no group is sent on any day. The landing is
