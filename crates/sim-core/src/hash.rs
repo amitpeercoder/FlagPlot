@@ -21,9 +21,10 @@ use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent}
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, DayWork, Halt, HaltWork,
-    HitsOnMen, LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement, SearchArc,
-    Ship, ShipLocation, ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState, YardTrip,
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, DayWork, Formation, Halt,
+    HaltWork, HitsOnMen, LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement,
+    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState,
+    YardTrip,
 };
 use crate::world::World;
 
@@ -215,8 +216,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// state reports in flight, the task forces on radio silence and each silent
 /// force's unsent reports (decision 0136);
 /// version 38 adds, after each command's reports heard, the contacts of its
-/// picture that are its own and its commander (decision 0137).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v38";
+/// picture that are its own and its commander (decision 0137);
+/// version 39 adds the day from which a unit may be used at the end of a
+/// ship, a task force, an air group and a land unit, a land unit's
+/// formation after its day, and after the hits on men the formations
+/// (decision 0140).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v39";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -300,8 +305,17 @@ fn name_every_field(world: &World) {
         arrivals,
         land_units,
         hits_on_men,
+        formations,
     } = truth;
     if let Some(HitsOnMen { hits: _, causes: _ }) = hits_on_men.values().next() {}
+    if let Some(Formation {
+        id: _,
+        // Not hashed: a name changes nothing that happens.
+        name: _,
+        side: _,
+        parent: _,
+    }) = formations.values().next()
+    {}
     if let Some(ship) = ships.values().next() {
         let Ship {
             id: _,
@@ -323,6 +337,7 @@ fn name_every_field(world: &World) {
             experience: _,
             system_repair_points: _,
             troops,
+            available_from: _,
         } = ship;
         if let Some(Troops { unit: _, men: _ }) = troops {}
         let ShipSystems {
@@ -365,6 +380,7 @@ fn name_every_field(world: &World) {
             preparation,
             landing_at: _,
             charge,
+            available_from: _,
         } = task_force;
         if let Some(Charge { force: _, order: _ }) = charge {}
         let Route {
@@ -478,6 +494,7 @@ fn name_every_field(world: &World) {
             strike_sizing_order: _,
             search_once: _,
             search_once_order: _,
+            available_from: _,
         } = group;
         if let Some(SearchArc {
             from_deg: _,
@@ -535,6 +552,8 @@ fn name_every_field(world: &World) {
         working: _,
         when_spent: _,
         fieldworks: _,
+        available_from: _,
+        formation: _,
     }) = land_units.values().next()
     {}
     if let Some(Some(March {
@@ -1212,6 +1231,8 @@ pub(crate) fn hash_ship(h: &mut StateHasher, ship: &Ship) {
         }
         None => h.u8(0),
     }
+    // After the troops (decision 0140).
+    h.optional_u32(ship.available_from);
 }
 
 /// One `TaskForce`, every field in one fixed order. Used for the truth state and for
@@ -1357,6 +1378,8 @@ pub(crate) fn hash_task_force(h: &mut StateHasher, task_force: &TaskForce) {
         }
         None => h.u8(0),
     }
+    // After the charge (decision 0140).
+    h.optional_u32(task_force.available_from);
 }
 
 /// One `Base`, every field in one fixed order. Used for the truth state and for
@@ -1474,6 +1497,8 @@ pub(crate) fn hash_air_group(h: &mut StateHasher, group: &AirGroup) {
     // Last in the group (decision 0131).
     h.u8(u8::from(group.search_once));
     h.optional_u32(group.search_once_order.map(|id| id.raw()));
+    // After the search once order (decision 0140).
+    h.optional_u32(group.available_from);
 }
 
 /// One `LandUnit`, every field in one fixed order. Used for the truth state and for
@@ -1557,6 +1582,9 @@ pub(crate) fn hash_land_unit(h: &mut StateHasher, unit: &LandUnit) {
     h.u8(unit.when_spent.map_or(0, WhenSpent::code));
     // After when_spent (decision 0106).
     h.i64(unit.fieldworks.raw());
+    // After the fieldworks (decision 0140).
+    h.optional_u32(unit.available_from);
+    h.optional_u32(unit.formation.map(|id| id.raw()));
 }
 
 /// Hashes everything that defines the state of a game. When a field is added
@@ -1632,6 +1660,15 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         for cause in &hits.causes {
             h.u32(cause.raw());
         }
+    }
+
+    // After the hits on men (decision 0140): the formations in number
+    // order, each its number, side and parent (0 for none written as absent).
+    h.count(truth.formations.len());
+    for formation in truth.formations.values() {
+        h.u32(formation.id.raw());
+        h.u8(formation.side.code());
+        h.optional_u32(formation.parent.map(|id| id.raw()));
     }
 
     h.count(world.beliefs.len());

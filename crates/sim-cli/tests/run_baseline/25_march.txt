@@ -2,11 +2,11 @@ Scenario 25: Marching overland
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 429c5a0b194e7270  15 events
-day   2  hash 25a04f0623da95e6  13 events
-day   3  hash 47c54801bd42352c  28 events
-day   4  hash 26db29a993b7b4e6  25 events
-day   5  hash 7a24ce5d616a4d60  15 events
+day   1  hash c93e2a1de42df761  15 events
+day   2  hash e8a5d9cbef8f415b  13 events
+day   3  hash e905f4ed6e208e43  28 events
+day   4  hash 58037964fdfa7f7d  25 events
+day   5  hash fa2eb34864c5598b  15 events
 
 base:1 "Placeholder base P, Allied" (Allied) at (0,0): 60 t of supply in stock
 base:2 "Placeholder base Q, Japanese" (Japanese) at (1,0): 40.265 t of supply in stock

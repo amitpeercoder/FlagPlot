@@ -25,7 +25,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 16
+          "const": 17
         },
         "kind": {
           "const": "entity"
@@ -116,6 +116,7 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "available_from": { "description": "The day from which the side may use the unit (decision 0140, 5), given only while that day has not come. Left out otherwise.", "type": "integer", "minimum": 1 },
         "entity_kind": {
           "const": "ship"
         },
@@ -208,6 +209,17 @@
       "required": ["entity_kind", "summary"],
       "additionalProperties": false,
       "properties": {
+        "formation": {
+          "description": "The formation the unit belongs to and the formations above it, nearest first (decision 0140, 8). Left out where the unit has none.",
+          "type": "object",
+          "required": ["number", "name"],
+          "additionalProperties": false,
+          "properties": {
+            "number": { "type": "integer" },
+            "name": { "type": "string" },
+            "parents": { "type": "array", "items": { "type": "object", "required": ["number", "name"], "additionalProperties": false, "properties": { "number": { "type": "integer" }, "name": { "type": "string" } } } }
+          }
+        },
         "entity_kind": { "const": "land_unit" },
         "summary": { "$ref": "defs.schema.json#/$defs/land_unit_line" }
       }
@@ -224,6 +236,7 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "available_from": { "description": "The day from which the side may use the unit (decision 0140, 5), given only while that day has not come. Left out otherwise.", "type": "integer", "minimum": 1 },
         "ship": {
           "$ref": "defs.schema.json#/$defs/handle"
         },

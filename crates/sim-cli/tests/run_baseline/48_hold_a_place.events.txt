@@ -2,18 +2,18 @@ Placeholder scenario 48: Hold a place
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash cbda242fb5e958ec  40 events
-day   2  hash 147e5feb032d105a  13 events
-day   3  hash b5a9050b7eb99dc1  13 events
-day   4  hash e56aa44923f543cd  11 events
-day   5  hash 99275db6e72ac679  11 events
-day   6  hash a813569c25d3139b  11 events
-day   7  hash 01771b7384aeffb7  11 events
-day   8  hash 6b8290ad0f873a87  11 events
-day   9  hash 5ff70eb97bd29cbf  13 events
-day  10  hash 440e099faa2d7a8f  15 events
-day  11  hash 2e4903882ad7fb35  13 events
-day  12  hash e5321ec1b51e26d8  13 events
+day   1  hash f748a48052b583b7  40 events
+day   2  hash 92fb1f5fa476b6cf  13 events
+day   3  hash 16f83656c6762a92  13 events
+day   4  hash 76abcdd90e51ffde  11 events
+day   5  hash 80b734b9be8f9a9e  11 events
+day   6  hash 8f7fe20e7ca67826  11 events
+day   7  hash 2d71eaa1f8e7e436  11 events
+day   8  hash cbd634b1a187ab0a  11 events
+day   9  hash dd988752252b4824  13 events
+day  10  hash 5009c4165e06b5bc  15 events
+day  11  hash 3cae0ddf5263ea6a  13 events
+day  12  hash 7300d87cf3647329  13 events
 
 #1 D0 -         Allied report: 2 ships, cruiser, at (0,5), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to hold base:1

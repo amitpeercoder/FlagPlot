@@ -2,12 +2,13 @@
 
 use serde::Serialize;
 use sim_core::hex::Hex;
+use sim_core::ids::EntityRef;
 use sim_core::state::{Ship, ShipLocation, ShipSystems};
 use sim_core::view::SideView;
 
 use crate::answer::{NotKnown, FORMAT, VERSION};
 use crate::briefing::{ground_estimate_lines, GroundEstimateLine};
-use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
+use crate::common::{cruise_range_nm, day_not_come, Ctx, Dec, Handle, Place};
 use crate::lines::{
     air_group_line, base_line, fed_last_night, force_line, is_listed, land_unit_hex,
     land_unit_line, AirGroupLine, BaseLine, ContactLine, ForceLine, LandUnitLine,
@@ -240,6 +241,10 @@ pub struct SystemStates {
 pub struct ShipDetail {
     pub entity_kind: &'static str,
     pub ship: Handle,
+    /// The day from which the side may use the unit (decision 0140, 5),
+    /// given only while that day has not come. Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub available_from: Option<u32>,
     pub class: String,
     pub ship_kind: Option<&'static str>,
     pub sunk: bool,
@@ -286,12 +291,63 @@ fn troops_aboard(ctx: &Ctx<'_>, ship: &Ship) -> Option<TroopsAboard> {
 pub struct LandUnitDetail {
     pub entity_kind: &'static str,
     pub summary: LandUnitLine,
+    /// The formation the unit belongs to and the formations above it up to
+    /// the top (decision 0140, 8), written only where it has one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub formation: Option<FormationLine>,
+}
+
+/// A formation by number and name (decision 0140, 8).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FormationRef {
+    pub number: u32,
+    pub name: String,
+}
+
+/// A land unit's formation, with the chain of parents above it, the nearest
+/// first.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FormationLine {
+    pub number: u32,
+    pub name: String,
+    /// The formation it belongs to, then that one's parent, up to the top.
+    /// Left out when it has no parent.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub parents: Vec<FormationRef>,
+}
+
+/// The unit's formation and its parents, from the side's own formations.
+fn formation_line(view: &SideView<'_>, unit: &sim_core::state::LandUnit) -> Option<FormationLine> {
+    let own: std::collections::BTreeMap<_, _> = view.formations().map(|f| (f.id, f)).collect();
+    let first = own.get(&unit.formation?)?;
+    let mut parents = Vec::new();
+    let mut next = first.parent;
+    // The loader refuses a loop; the bound keeps a bad state from spinning.
+    while let Some(parent) = next.and_then(|id| own.get(&id)) {
+        if parents.len() > own.len() {
+            break;
+        }
+        parents.push(FormationRef {
+            number: parent.id.raw(),
+            name: parent.name.clone(),
+        });
+        next = parent.parent;
+    }
+    Some(FormationLine {
+        number: first.id.raw(),
+        name: first.name.clone(),
+        parents,
+    })
 }
 
 /// A ship in a task force's detail.
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct ShipLine {
     pub ship: Handle,
+    /// The day from which the side may use the unit (decision 0140, 5),
+    /// given only while that day has not come. Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub available_from: Option<u32>,
     pub class: String,
     pub sunk: bool,
     pub fuel_t: Dec,
@@ -421,6 +477,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
             Some(Detail::Ship(ShipDetail {
                 entity_kind: "ship",
                 ship: ctx.ship(ship.id),
+                available_from: day_not_come(view, EntityRef::Ship(ship.id)),
                 class: class_name(&ctx, ship),
                 ship_kind: view.ship_class(ship.class).map(|c| c.kind.name()),
                 sunk: ship.location == ShipLocation::Sunk,
@@ -451,6 +508,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
             Some(Detail::LandUnit(LandUnitDetail {
                 entity_kind: "land_unit",
                 summary: land_unit_line(&ctx, unit, &fed_last_night(&ctx)),
+                formation: formation_line(view, unit),
             }))
         }
         "task_force" => {
@@ -476,6 +534,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                     .filter_map(|s| ctx.ships.get(s))
                     .map(|s| ShipLine {
                         ship: ctx.ship(s.id),
+                        available_from: day_not_come(view, EntityRef::Ship(s.id)),
                         class: class_name(&ctx, s),
                         sunk: s.location == ShipLocation::Sunk,
                         fuel_t: Dec(s.fuel_t),

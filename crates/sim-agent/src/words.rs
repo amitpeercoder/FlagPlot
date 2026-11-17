@@ -264,6 +264,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::IsACharge { .. } => {
             " (this force is another force's charge, and a charge cannot be an escort)"
         }
+        R::NotYetAvailable { .. } => {
+            " (the unit is still there and the rules act on it, but its side may not use it before that day: list_forces and get_entity show a unit's available_from while its day is to come)"
+        }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
         }

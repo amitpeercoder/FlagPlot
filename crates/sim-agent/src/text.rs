@@ -570,6 +570,9 @@ impl Briefing {
             if rules.fatigue {
                 s.push_str(&format!(", fatigue {}", f.fatigue.0));
             }
+            if let Some(day) = f.available_from {
+                s.push_str(&format!(", available from day {day}"));
+            }
             if f.status == "away_at_yard" {
                 // A force away has nothing of route, fuel or movement to
                 // say (decision 0069); its own part gives the day it is back.
@@ -861,6 +864,10 @@ impl Briefing {
         };
         o.each("Air groups", &self.air_groups, |g| {
             let mut s = format!("{} ({})", g.air_group.text(), g.aircraft_type);
+            if let Some(day) = g.available_from {
+                s.pop();
+                s.push_str(&format!(", available from day {day})"));
+            }
             if g.location.is_none() {
                 s.push_str(
                     ": lost with its base, which changed side; it has no place and takes no order",

@@ -120,6 +120,9 @@ fn free_escort(
     // The escort as the area command holds it, and the moment that is of
     // where it is not the pulse just ended (decision 0136, 11).
     let held = crate::reasons::force_held_words(planner.view, id);
+    if let Some(day) = crate::available::force_waiting(planner.view, id) {
+        return Err(format!("{held} {}", crate::available::from_day_words(day)));
+    }
     if !(stopped(force) && force.position() == source) {
         return Err(format!("{held} is not stopped at the source {source}"));
     }

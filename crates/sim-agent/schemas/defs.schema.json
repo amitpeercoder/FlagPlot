@@ -136,6 +136,7 @@
       "required": ["land_unit", "men_ashore", "place", "men_aboard", "aboard", "destroyed", "fed_last_night", "posture", "fatigue", "fed_share", "activity", "experience", "skills", "training", "fighting"],
       "additionalProperties": false,
       "properties": {
+        "available_from": { "description": "The day from which the side may use the unit (decision 0140, 5), given only while that day has not come. Left out otherwise.", "type": "integer", "minimum": 1 },
         "land_unit": { "$ref": "#/$defs/handle" },
         "men_ashore": { "type": "integer" },
         "place": { "$ref": "#/$defs/place_or_null" },
@@ -309,6 +310,7 @@
           "description": "The moment the area command's held state is of, such as \"the morning of day 1\", where that is not the pulse just ended (decision 0136, 11). Left out otherwise.",
           "type": "string"
         },
+        "available_from": { "description": "The day from which the side may use the unit (decision 0140, 5), given only while that day has not come. Left out otherwise.", "type": "integer", "minimum": 1 },
         "radio_silence": {
           "description": "Given (true) only for a force on radio silence (decision 0136, 15).",
           "const": true
@@ -490,6 +492,7 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "available_from": { "description": "The day from which the side may use the unit (decision 0140, 5), given only while that day has not come. Left out otherwise.", "type": "integer", "minimum": 1 },
         "air_group": {
           "$ref": "#/$defs/handle"
         },
@@ -814,7 +817,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 16
+          "const": 17
         },
         "kind": {
           "const": "not_known"

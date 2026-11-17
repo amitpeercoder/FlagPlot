@@ -21,6 +21,7 @@
 
 mod air;
 mod ammunition;
+mod available;
 pub mod carrier;
 mod deny;
 mod doctrine;
@@ -133,7 +134,12 @@ use sim_core::view::SideView;
 /// and says so in the reason. With no commander, a steady one, command
 /// levels off or no contact of its own, the orders and reasons are those
 /// `supply-18` gave.
-pub const DOCTRINE_VERSION: &str = "supply-19";
+/// `supply-20` adds decision 0140: the staff leaves out a unit before its
+/// day (a ship in no pool, a task force no task may use, an air group no
+/// intent may use) and names the day in its reasons ("may be used from day
+/// 5"); an intent addressed to a force before its day gets one reason and no
+/// order. With no day, the orders and reasons are those `supply-19` gave.
+pub const DOCTRINE_VERSION: &str = "supply-20";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

@@ -199,6 +199,10 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::CannotEscortItself => base("cannot_escort_itself"),
         RejectReason::ChargeIsAnEscort(charge) => base("charge_is_an_escort").id("charge", *charge),
         RejectReason::IsACharge { escort } => base("is_a_charge").id("escort", *escort),
+        // Decision 0140, 2.
+        RejectReason::NotYetAvailable { unit, day } => base("not_yet_available")
+            .with("unit", Field::Str(unit.to_string()))
+            .int("day", *day),
     }
 }
 

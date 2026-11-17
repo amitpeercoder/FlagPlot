@@ -111,9 +111,12 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// Version 13 (decision 0137) is a game whose state may hold commanders and,
 /// on each contact of a command's picture, whether it is the command's own:
 /// the file's keys are unchanged, its state version is v38 and its daily
-/// hashes cover them. A game of an older version lacks them and is refused,
-/// not converted.
-pub const VERSION: u32 = 13;
+/// hashes cover them. Version 14 (decision 0140) is a game whose state may
+/// hold a unit's day (`available_from`) and the formations of land units: the
+/// file's keys are unchanged, its state version is v39 and its daily hashes
+/// cover them. A game of an older version lacks them and is refused, not
+/// converted.
+pub const VERSION: u32 = 14;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -915,7 +918,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 13);
+        assert_eq!(written["version"], 14);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 11);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

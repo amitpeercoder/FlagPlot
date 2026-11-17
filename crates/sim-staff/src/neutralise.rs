@@ -56,6 +56,18 @@ struct Candidate {
     /// Each bomber group it may use at the base: the group, its type's name
     /// and its normal reach.
     bombers: Vec<(AirGroupId, String, Fixed)>,
+    /// The groups it could use at the base but for their day, each with it.
+    waiting: Vec<(AirGroupId, u32)>,
+}
+
+/// The groups left out for their day as words after a base's line: "" or
+/// " (group:3 may be used from day 4)".
+fn waiting_note(waiting: &[(AirGroupId, u32)]) -> String {
+    if waiting.is_empty() {
+        String::new()
+    } else {
+        format!(" ({})", crate::available::list_words(waiting))
+    }
 }
 
 impl Candidate {
@@ -80,6 +92,7 @@ impl Day<'_, '_> {
                 .air_groups()
                 .filter(|g| g.location == AirGroupLocation::Base(base.id))
                 .filter(|g| allowed.as_ref().is_none_or(|set| set.contains(&g.id)))
+                .filter(|g| crate::available::group_may_be_used(self.view, g.id))
                 .collect();
             groups.sort_by_key(|g| g.id);
             if allowed.is_some() && groups.is_empty() {
@@ -102,6 +115,7 @@ impl Day<'_, '_> {
                 base: base.id,
                 distance: distance_nm(base.hex, target_hex),
                 bombers,
+                waiting: self.waiting_groups_at(base.id, allowed.as_ref()),
             });
         }
         found
@@ -245,9 +259,10 @@ impl Day<'_, '_> {
         let mut lines: Vec<String> = Vec::new();
         for candidate in candidates {
             let base_text = base_held_words(self.area, candidate.base);
+            let later = waiting_note(&candidate.waiting);
             if candidate.bombers.is_empty() {
                 lines.push(format!(
-                    "{base_text} is {} nm from {target_text} and has no bomber group it may use",
+                    "{base_text} is {} nm from {target_text} and has no bomber group it may use{later}",
                     candidate.distance
                 ));
                 continue;
@@ -269,7 +284,7 @@ impl Day<'_, '_> {
                 .collect::<Vec<_>>()
                 .join(", ");
             lines.push(format!(
-                "{base_text} is {} nm from {target_text}: {types_text}",
+                "{base_text} is {} nm from {target_text}: {types_text}{later}",
                 candidate.distance
             ));
         }

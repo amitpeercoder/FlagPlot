@@ -686,7 +686,7 @@ impl<'v, 'a> Day<'v, 'a> {
     /// narrowest binds, the architect's ruling after the build), else, with
     /// none, the side's groups at the base it is addressed to.
     pub(crate) fn may_use(&self, intent: &Intent) -> Vec<AirGroupId> {
-        match self.state.groups_on_chain(intent.id) {
+        let mut found: Vec<AirGroupId> = match self.state.groups_on_chain(intent.id) {
             Some(allowed) => allowed.into_iter().collect(),
             None => match intent.addressee {
                 Addressee::Base(base) => self
@@ -697,6 +697,45 @@ impl<'v, 'a> Day<'v, 'a> {
                     .collect(),
                 _ => Vec::new(),
             },
+        };
+        // A group before its day is no group an intent may use (decision
+        // 0140, 3).
+        found.retain(|group| crate::available::group_may_be_used(self.view, *group));
+        found
+    }
+
+    /// The groups at `base` the side may not use yet, each with its day, in
+    /// group order: of those in `allowed`, or of all there with no limit
+    /// (decision 0140, 3).
+    pub(crate) fn waiting_groups_at(
+        &self,
+        base: BaseId,
+        allowed: Option<&std::collections::BTreeSet<AirGroupId>>,
+    ) -> Vec<(AirGroupId, u32)> {
+        let at_base = self
+            .view
+            .air_groups()
+            .filter(|group| group.location == AirGroupLocation::Base(base))
+            .filter(|group| allowed.is_none_or(|set| set.contains(&group.id)))
+            .map(|group| group.id);
+        crate::available::groups_waiting(self.view, at_base)
+    }
+
+    /// The groups the intent could use at `base` but for their day, as words
+    /// to follow a list of the groups it may use: "" where none waits, else
+    /// ", group:3 may be used from day 4".
+    pub(crate) fn waiting_note(&self, intent: &Intent, base: BaseId) -> String {
+        let waiting = match self.state.groups_on_chain(intent.id) {
+            Some(allowed) => self.waiting_groups_at(base, Some(&allowed)),
+            None if matches!(intent.addressee, Addressee::Base(b) if b == base) => {
+                self.waiting_groups_at(base, None)
+            }
+            None => Vec::new(),
+        };
+        if waiting.is_empty() {
+            String::new()
+        } else {
+            format!(", {}", crate::available::list_words(&waiting))
         }
     }
 
@@ -804,8 +843,9 @@ impl<'v, 'a> Day<'v, 'a> {
                     )
                     .binding("no air group at the base that a cover could use")
                     .worked(format!(
-                        "There is nothing at {base_text} to cover it with: {} may use no fighter group and no group that can search there, so the staff forms no cover from the air.",
-                        hold.id
+                        "There is nothing at {base_text} to cover it with: {} may use no fighter group and no group that can search there{}, so the staff forms no cover from the air.",
+                        hold.id,
+                        self.waiting_note(&hold, base)
                     ))
                     .would_change("a fighter group or a search group at the base, or in the forces limit")
                     .done();
@@ -1370,6 +1410,7 @@ impl<'v, 'a> Day<'v, 'a> {
 
         let intent_words = format!("{}, the cover of {base_text} from the air", cover.id);
         let mut notice_basis: Option<usize> = None;
+        let waiting = self.waiting_note(cover, base);
         let out = self.target(in_scope);
         out.orders.extend(orders.iter().cloned());
         if !unordered.is_empty() || cannot_meet {
@@ -1402,6 +1443,7 @@ impl<'v, 'a> Day<'v, 'a> {
             } else {
                 lines.join("; ")
             };
+            let body = format!("{body}{waiting}");
             let mut builder = serving(cover, &plan)
                 .evidence(
                     format!(

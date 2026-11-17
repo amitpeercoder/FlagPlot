@@ -464,6 +464,7 @@ impl Day<'_, '_> {
             everyone.push(line);
         }
         let intent_words = format!("{}, searching the waters from {base_text}", task.id);
+        let waiting = self.waiting_note(task, base);
         let out = self.target(in_scope);
         out.orders.extend(orders);
         if !unordered.is_empty() || members.is_empty() {
@@ -472,6 +473,7 @@ impl Day<'_, '_> {
             } else {
                 unordered.join("; ")
             };
+            let body = format!("{body}{waiting}");
             let reason = serving(task, &plan)
                 .evidence(
                     format!(

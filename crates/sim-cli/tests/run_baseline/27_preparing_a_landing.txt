@@ -2,18 +2,18 @@ Scenario 27: Preparing a landing
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash eccb20bbad81ff27  17 events
-day   2  hash 027d3734a2728f37  13 events
-day   3  hash 73496bed1aaab4d5  14 events
-day   4  hash 9439bde4eaad0b7e  12 events
-day   5  hash f19f504d48a1b6fb  12 events
-day   6  hash 77c06a2c0c0a05aa  18 events
-day   7  hash d4cd6593d5e3a428  13 events
-day   8  hash 5a483578d143a060  13 events
-day   9  hash f0b1318b6078efd4  13 events
-day  10  hash befe8e8dc59f5a7d  13 events
-day  11  hash fbaf677aadaed799  58 events
-day  12  hash 2f449a1614f82743  19 events
+day   1  hash e3aca33e3f51549c  17 events
+day   2  hash 9296a59ba6fd103a  13 events
+day   3  hash e82a8033fa138376  14 events
+day   4  hash ef2697b59d605495  12 events
+day   5  hash df45de0ebf0e6e46  12 events
+day   6  hash 0a21bd70f0584cb1  18 events
+day   7  hash 24eaf2c3e4dd64f5  13 events
+day   8  hash b13f0cb7721c3c27  13 events
+day   9  hash 66c506ede6fdd923  13 events
+day  10  hash d9efafbc3037f0b4  13 events
+day  11  hash 73616310f4615bda  58 events
+day  12  hash e739d962c33a4242  19 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder transport force 2" (Allied): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

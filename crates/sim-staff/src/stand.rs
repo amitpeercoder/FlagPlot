@@ -359,6 +359,11 @@ impl Day<'_, '_> {
             let Some(force) = self.area.task_forces().find(|f| f.id == id) else {
                 continue;
             };
+            // A force before its day is no force a task may use (decision
+            // 0140, 3): no task is formed for it.
+            if crate::available::force_waiting(self.area, id).is_some() {
+                continue;
+            }
             let ships = afloat(self.area, id);
             // The force as the area command holds it, and the moment that is
             // of where it is not the pulse just ended (decision 0136, 11).
@@ -594,6 +599,23 @@ impl Day<'_, '_> {
             self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
             return;
         };
+        if let Some(day) = crate::available::force_waiting(view, id) {
+            // Before its day the force is no force a task may use (decision
+            // 0140, 3): one reason, no order.
+            let words = crate::available::from_day_words(day);
+            let reason = serving(task, &plan)
+                .evidence(format!("{id} {words}"), today)
+                .binding(format!("the day {id} may be used from, {day}"))
+                .worked(format!(
+                    "{intent_words}: {} is to be served by {id}, which {words}, so the staff gives {id} no order.",
+                    task.id
+                ))
+                .would_change("the day come")
+                .done();
+            out.summary = Some(reason);
+            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+            return;
+        }
         if let Some(hold) = self.state.hold_on_force(id, &force.ships) {
             let reason = serving(task, &plan)
                 .evidence(format!("{hold} is held by the commander"), today)

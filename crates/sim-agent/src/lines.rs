@@ -17,7 +17,7 @@ use sim_core::state::{
 };
 use sim_core::time::Pulse;
 
-use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
+use crate::common::{cruise_range_nm, day_not_come, Ctx, Dec, Handle, Place};
 use crate::words;
 
 /// A ship's fuel and how far it gives.
@@ -40,6 +40,10 @@ pub struct ForceLine {
     /// pulse just ended (decision 0136, 11). Left out otherwise.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub as_of: Option<String>,
+    /// The day from which the side may use the unit (decision 0140, 5),
+    /// given only while that day has not come. Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub available_from: Option<u32>,
     /// Given (true) only for a force on radio silence (decision 0136, 15).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub radio_silence: Option<bool>,
@@ -185,6 +189,10 @@ pub struct PropulsionLine {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct AirGroupLine {
     pub air_group: Handle,
+    /// The day from which the side may use the unit (decision 0140, 5),
+    /// given only while that day has not come. Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub available_from: Option<u32>,
     pub aircraft_type: String,
     /// The base or the ship it is at; `None` for a group lost with a base
     /// that changed side (decision 0090, 20), which has no place.
@@ -585,6 +593,7 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         task_force: ctx.force(force.id),
         place: ctx.place(force.position()),
         as_of: held_as_of_text(ctx, CommandRef::TaskForce(force.id)),
+        available_from: day_not_come(&ctx.view, EntityRef::TaskForce(force.id)),
         radio_silence: radio_silence_flag(ctx, force),
         status: words::status(force.status),
         mission: words::mission(force.mission),
@@ -751,6 +760,7 @@ fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         task_force: ctx.force(force.id),
         place: ctx.place(force.position()),
         as_of: held_as_of_text(ctx, CommandRef::TaskForce(force.id)),
+        available_from: day_not_come(&ctx.view, EntityRef::TaskForce(force.id)),
         radio_silence: radio_silence_flag(ctx, force),
         status: "away_at_yard",
         mission: words::mission(force.mission),
@@ -789,6 +799,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
     };
     let aircraft_type = ctx.view.aircraft_type(group.aircraft_type);
     AirGroupLine {
+        available_from: day_not_come(&ctx.view, EntityRef::AirGroup(group.id)),
         strike_radius_nm: Dec(aircraft_type.map_or(Fixed::ZERO, |t| t.strike_range_nm)),
         search_range_nm: Dec(aircraft_type.map_or(Fixed::ZERO, |t| t.search_range_nm)),
         reach_nm: (group.reach == Reach::Extended).then(|| Dec(ctx.view.reach_nm(group))),
@@ -991,6 +1002,10 @@ pub struct AboardLine {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct LandUnitLine {
     pub land_unit: Handle,
+    /// The day from which the side may use the unit (decision 0140, 5),
+    /// given only while that day has not come. Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub available_from: Option<u32>,
     pub men_ashore: u32,
     /// The hex the men ashore are in; `None` when none is ashore.
     pub place: Option<Place>,
@@ -1296,6 +1311,7 @@ pub(crate) fn land_unit_line(
     let men_aboard = ctx.view.men_aboard(unit.id).unwrap_or(0);
     LandUnitLine {
         land_unit: ctx.land_unit(unit.id),
+        available_from: day_not_come(&ctx.view, EntityRef::LandUnit(unit.id)),
         men_ashore: unit.men_ashore,
         place: unit.hex.map(|hex| ctx.place(hex)),
         men_aboard,

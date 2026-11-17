@@ -2,9 +2,9 @@ Placeholder scenario 63: A superior's knowledge
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f8ab769c2893717b  49 events
-day   2  hash 9803d7b14a070a8b  12 events
-day   3  hash 350bc5efe173e453  5 events
+day   1  hash 2a6bd4e93932672c  49 events
+day   2  hash ca03b317b033a2a6  12 events
+day   3  hash d0eb6faeb1c79784  5 events
 
 task_force:1 "Placeholder carrier force 1" (Allied): Arrived at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.75, stragglers: keep, keep 0; home port base:1
 air_group:1 "Placeholder fighters 1" (Allied) aboard ship:1: 12 ready, mission CombatAirPatrol, patrol share 0.25, no arc
