@@ -2,12 +2,12 @@ Scenario 33: Who is engaged, and an attack that fails
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a977e98f0b7db899  79 events
-day   2  hash c9d0fe4af75e60f6  58 events
-day   3  hash a80bb401562cf3c8  52 events
-day   4  hash b14ee49c0ea87c8e  39 events
-day   5  hash feb99c48a7e0f002  36 events
-day   6  hash 598cb8e0259791c3  35 events
+day   1  hash 0a15530ec7ee5252  79 events
+day   2  hash a5af78c848c7f499  58 events
+day   3  hash 7d20f1150d034e37  52 events
+day   4  hash d5f8b56a478b9bff  39 events
+day   5  hash ef32ce58b60b16c7  36 events
+day   6  hash 454b96186b673750  35 events
 
 base:1 "Placeholder base 1, Allied, at K" (Allied) at (0,0): 4821.76 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at K" (Japanese) at (0,0): 982.3 t of supply in stock
@@ -28,11 +28,11 @@ land_unit:7 "Placeholder Allied regiment at P" (Allied): 3440 men ashore at (30,
 land_unit:8 "Placeholder Japanese regiment at P" (Japanese): 1194 men ashore at (30,0), fieldworks 30
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (0,0): 641 enemy men ashore, reported day 6
-Allied estimate at (30,0): 1018 enemy men ashore, reported day 6
+Allied estimate at (0,0): 641 enemy men ashore, reported day 6 (men in contact)
+Allied estimate at (30,0): 1018 enemy men ashore, reported day 6 (men in contact)
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (0,0): 5069 enemy men ashore, reported day 6
-Japanese estimate at (10,0): 4048 enemy men ashore, reported day 3
-Japanese estimate at (20,0): 4106 enemy men ashore, reported day 3
-Japanese estimate at (30,0): 4495 enemy men ashore, reported day 6
+Japanese estimate at (0,0): 5069 enemy men ashore, reported day 6 (men in contact)
+Japanese estimate at (10,0): 4048 enemy men ashore, reported day 3 (men in contact)
+Japanese estimate at (20,0): 4106 enemy men ashore, reported day 3 (men in contact)
+Japanese estimate at (30,0): 4495 enemy men ashore, reported day 6 (men in contact)

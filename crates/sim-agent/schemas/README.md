@@ -952,7 +952,7 @@ apply; a game that gives none of it is answered as before.
 
 ## Bombarding a base (decision 0146)
 
-`version` is 21. Everything below is of the side's own command state.
+`version` is 22. Everything below is of the side's own command state.
 
 - **A fourth kind of task of a force.** `set_intent` takes `intent_kind` `"bombard"`, addressed to the task force,
   with `task_force` (the side's own force's number) and `target` (a base on the side's map that is not the side's).

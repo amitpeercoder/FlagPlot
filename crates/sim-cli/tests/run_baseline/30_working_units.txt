@@ -2,12 +2,12 @@ Scenario 30: Units that work, and what they build
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1ce65a08255148a7  60 events
-day   2  hash 1df172a81bd3ee9d  51 events
-day   3  hash 2c75fb0020005f54  43 events
-day   4  hash 42f863652a902cd7  37 events
-day   5  hash e71c8367eb1caced  38 events
-day   6  hash 4fcd3a77d4d04447  31 events
+day   1  hash 5bf9c71c410fcc40  60 events
+day   2  hash c200165a03cf682a  51 events
+day   3  hash aca028e3375d1035  43 events
+day   4  hash 7c89f8767e13ae7e  37 events
+day   5  hash 003426ca5f738520  38 events
+day   6  hash e2203f00130a0326  31 events
 
 task_force:1 "Placeholder force 1" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder force 2" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -40,7 +40,7 @@ land_unit:11 "Placeholder unit 11" (Allied): 900 men ashore at (0,0), fieldworks
 land_unit:12 "Placeholder unit 12" (Allied): 600 men ashore at (5,0), fieldworks 30
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (15,0): 448 enemy men ashore, reported day 6
+Allied estimate at (15,0): 448 enemy men ashore, reported day 6 (men in contact)
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (15,0): 3838 enemy men ashore, reported day 6
+Japanese estimate at (15,0): 3838 enemy men ashore, reported day 6 (men in contact)

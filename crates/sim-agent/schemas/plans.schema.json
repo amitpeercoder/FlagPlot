@@ -18,7 +18,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 21
+      "const": 22
     },
     "kind": {
       "const": "plans"

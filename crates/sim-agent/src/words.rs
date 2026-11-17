@@ -49,6 +49,7 @@ pub(crate) fn air_mission(mission: AirMission) -> &'static str {
         AirMission::NavalStrike => "naval_strike",
         AirMission::CombatAirPatrol => "combat_air_patrol",
         AirMission::BaseStrike(_) => "base_strike",
+        AirMission::Reconnaissance(_) => "reconnaissance",
     }
 }
 
@@ -161,6 +162,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         }
         R::WaypointUnreachable(_) => {
             " (measure with question sea_route tells whether ships can get from one place to another)"
+        }
+        R::AircraftCannotSearch => {
+            " (reconnaissance is for a group whose aircraft type can search; the briefing's air group lines say which type each group is)"
         }
         R::NotAFighter => {
             " (combat_air_patrol and set_patrol_share are for fighter groups; the briefing's air group lines say which type each group is)"

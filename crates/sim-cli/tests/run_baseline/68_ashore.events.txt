@@ -2,22 +2,22 @@ Placeholder scenario 68: Ashore
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f24e60858f00344e  26 events
-day   2  hash f5f938b56df1438f  15 events
-day   3  hash d1c94d9c24c23972  13 events
-day   4  hash b2187f1e419411eb  13 events
-day   5  hash 626f75925ce016f2  44 events
-day   6  hash dbdec395424bdbda  27 events
-day   7  hash 11b414b518493791  18 events
-day   8  hash 04537e2203106a62  19 events
-day   9  hash 2df765568f207638  16 events
-day  10  hash beab3d969a58f7ce  24 events
-day  11  hash 1d62d58f3a9a06ab  41 events
-day  12  hash 34d48ae714b84eb6  16 events
-day  13  hash e6214e9509647b74  9 events
-day  14  hash b5433f9e9fa24d00  6 events
+day   1  hash 7f56235b470b7146  26 events
+day   2  hash 5ea7a649a52f28bd  15 events
+day   3  hash e60c4ed620b1d048  13 events
+day   4  hash f183a1a456522009  13 events
+day   5  hash f92463020795e739  44 events
+day   6  hash fae02b72ed881b9f  27 events
+day   7  hash d4994a5cdbb34a56  18 events
+day   8  hash 282a3279f5ebc20f  19 events
+day   9  hash 57076cdefb0926cf  16 events
+day  10  hash 524b8eeb1444100d  24 events
+day  11  hash 0a5844ece818cfd3  41 events
+day  12  hash db87a1cfdb35f846  16 events
+day  13  hash 1a280df281a43112  9 events
+day  14  hash d554af5ddbbc275a  6 events
 
-#1 D0 -         Allied ground report at (4,0): 500 enemy men ashore
+#1 D0 -         Allied ground report at (4,0): 500 enemy men ashore (told)
 #2 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)
 #3 D1 -         Allied plan:1 drafted for intent:1  <- #2
 #4 D1 -         Allied the commander's command taken: limit intent:1's forces to 0 ships and 1 task force from base:1
@@ -46,7 +46,7 @@ day  14  hash b5433f9e9fa24d00  6 events
 #27 D1 -         base:2 at the end of the day: 194 t of supply, 0 aircraft ready: not open
 #28 D2 -         Allied the staff's command taken: approve plan:1
 #29 D2 -         Allied plan:1 went from preparing to released  <- #28
-#30 D2 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:1 (Placeholder First) has rehearsal 100 and experience 2; land_unit:2 (Placeholder Second) has rehearsal 100 and experience 2) and leave to launch is given: the staff releases plan:1.  <- #28
+#30 D2 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:1 (Placeholder First) has rehearsal 100 and experience 2; land_unit:2 (Placeholder Second) has rehearsal 100 and experience 2) and leave to launch is given: the staff releases plan:1. It goes on what it was told, not on a count it has seen: the side's estimate of the enemy's men at (4,0) is 500 men, told, of day 0; at balanced it asks for a count of the enemy at (4,0) seen from the air or by men in contact, of any day.  <- #28
 #31 D2 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is ready: the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:1 (Placeholder First) has rehearsal 100 and experience 2; land_unit:2 (Placeholder Second) has rehearsal 100 and experience 2. The staff gives no order and hands in the notice that it is ready.
 #32 D2 -         Allied staff's notice: plan:1's landing is ready  <- #31
 #33 D2 -         order:2 accepted for task_force:1  <- order:2  [issued by the staff]
@@ -120,8 +120,8 @@ day  14  hash b5433f9e9fa24d00  6 events
 #101 D5 -         land_unit:10 lost 600 men in the fight at (4,0), 600 left ashore  <- #96, #97
 #102 D5 -         land_unit:1 attacked: fatigue 50  <- #96
 #103 D5 -         land_unit:2 attacked: fatigue 50  <- #97
-#104 D5 -         Allied ground report at (4,0): 600 enemy men ashore, replacing the estimate held  <- #95
-#105 D5 -         Japanese ground report at (4,0): 600 enemy men ashore  <- #95
+#104 D5 -         Allied ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held  <- #95
+#105 D5 -         Japanese ground report at (4,0): 600 enemy men ashore (men in contact)  <- #95
 #106 D5 -         Japanese found enemy base:3 at (4,0): it is on the Japanese side's map  <- #105
 #107 D5 -         land_unit:1 fired in a fight: 1 day counted at experience 2  <- #96
 #108 D5 -         land_unit:2 fired in a fight: 1 day counted at experience 2  <- #97
@@ -151,8 +151,8 @@ day  14  hash b5433f9e9fa24d00  6 events
 #132 D6 afternoon ship:2 burned 6 t, 972 t remaining  <- #130
 #133 D6 -         land_unit:1 rested: fatigue 25
 #134 D6 -         land_unit:2 rested: fatigue 25
-#135 D6 -         Allied ground report at (4,0): 600 enemy men ashore, replacing the estimate held
-#136 D6 -         Japanese ground report at (4,0): 600 enemy men ashore, replacing the estimate held
+#135 D6 -         Allied ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held
+#136 D6 -         Japanese ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held
 #137 D6 -         base:1 at the end of the day: 871 t of supply, 0 aircraft ready: not open
 #138 D6 -         base:2 at the end of the day: 167 t of supply, 0 aircraft ready: not open
 #139 D6 -         base:3 at the end of the day: 87 t of supply, 0 aircraft ready: not open
@@ -169,8 +169,8 @@ day  14  hash b5433f9e9fa24d00  6 events
 #150 D7 night     task_force:1 arrived at (0,0) at D7 22:00  <- #147
 #151 D7 -         land_unit:1 rested: fatigue 0
 #152 D7 -         land_unit:2 rested: fatigue 0
-#153 D7 -         Allied ground report at (4,0): 600 enemy men ashore, replacing the estimate held
-#154 D7 -         Japanese ground report at (4,0): 600 enemy men ashore, replacing the estimate held
+#153 D7 -         Allied ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held
+#154 D7 -         Japanese ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held
 #155 D7 -         base:1 at the end of the day: 868 t of supply, 0 aircraft ready: not open
 #156 D7 -         base:2 at the end of the day: 164 t of supply, 0 aircraft ready: not open
 #157 D7 -         base:3 at the end of the day: 84 t of supply, 0 aircraft ready: not open
@@ -188,8 +188,8 @@ day  14  hash b5433f9e9fa24d00  6 events
 #169 D8 night     Japanese men ashore at (4,0): 600 of 600 fed from base:2, 0 unfed  <- #168
 #170 D8 night     ship:1 loaded 45 t from base:1, 45 t aboard, 820 t in stock  <- order:11, #150
 #171 D8 night     task_force:1 completed loading at base:1 at D8 18:18  <- #170
-#172 D8 -         Allied ground report at (4,0): 600 enemy men ashore, replacing the estimate held
-#173 D8 -         Japanese ground report at (4,0): 600 enemy men ashore, replacing the estimate held
+#172 D8 -         Allied ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held
+#173 D8 -         Japanese ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held
 #174 D8 -         base:1 at the end of the day: 820 t of supply, 0 aircraft ready: not open
 #175 D8 -         base:2 at the end of the day: 161 t of supply, 0 aircraft ready: not open
 #176 D8 -         base:3 at the end of the day: 81 t of supply, 0 aircraft ready: not open
@@ -204,8 +204,8 @@ day  14  hash b5433f9e9fa24d00  6 events
 #185 D9 night     Japanese men ashore at (4,0): 600 of 600 fed from base:2, 0 unfed  <- #184
 #186 D9 night     600 men of land_unit:3 went aboard ship:1 at (0,0): 600 aboard, 0 left ashore  <- order:12, #150
 #187 D9 night     task_force:1 finished loading land_unit:3 at base:1 at D9 19:00  <- #186
-#188 D9 -         Allied ground report at (4,0): 600 enemy men ashore, replacing the estimate held
-#189 D9 -         Japanese ground report at (4,0): 600 enemy men ashore, replacing the estimate held
+#188 D9 -         Allied ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held
+#189 D9 -         Japanese ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held
 #190 D9 -         base:1 at the end of the day: 817 t of supply, 0 aircraft ready: not open
 #191 D9 -         base:2 at the end of the day: 158 t of supply, 0 aircraft ready: not open
 #192 D9 -         base:3 at the end of the day: 78 t of supply, 0 aircraft ready: not open
@@ -228,8 +228,8 @@ day  14  hash b5433f9e9fa24d00  6 events
 #209 D10 morning   ship:1 landed 160 men of land_unit:3 at (4,0): 160 ashore, 440 left aboard  <- order:14, #208
 #210 D10 afternoon ship:1 landed 440 men of land_unit:3 at (4,0): 600 ashore, 0 left aboard  <- order:14, #208
 #211 D10 afternoon ship:1 unloaded 10 t at base:3, 35 t aboard, 85 t in stock  <- order:14, #208
-#212 D10 -         Allied ground report at (4,0): 600 enemy men ashore, replacing the estimate held
-#213 D10 -         Japanese ground report at (4,0): 1200 enemy men ashore, replacing the estimate held
+#212 D10 -         Allied ground report at (4,0): 600 enemy men ashore (men in contact), replacing the estimate held
+#213 D10 -         Japanese ground report at (4,0): 1200 enemy men ashore (men in contact), replacing the estimate held
 #214 D10 -         base:1 at the end of the day: 817 t of supply, 0 aircraft ready: not open
 #215 D10 -         base:2 at the end of the day: 155 t of supply, 0 aircraft ready: not open
 #216 D10 -         base:3 at the end of the day: 85 t of supply, 0 aircraft ready: not open
@@ -320,4 +320,4 @@ Allied: no contacts
 Allied: no battle claims
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (4,0): 1200 enemy men ashore, reported day 10
+Japanese estimate at (4,0): 1200 enemy men ashore, reported day 10 (men in contact)

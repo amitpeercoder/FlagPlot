@@ -275,6 +275,7 @@ pub(crate) fn mission_words(mission: AirMission) -> String {
         AirMission::NavalStrike => "naval strike".to_string(),
         AirMission::CombatAirPatrol => "combat air patrol".to_string(),
         AirMission::BaseStrike(base) => format!("strike {base}"),
+        AirMission::Reconnaissance(hex) => format!("reconnaissance of {hex}"),
     }
 }
 
@@ -323,7 +324,7 @@ pub(crate) struct Day<'v, 'a> {
     /// What is handed in for the rest, thrown away.
     pub(crate) scratch: StaffDecisions,
     /// The groups cover intents served earlier this morning have taken.
-    taken: BTreeMap<AirGroupId, IntentId>,
+    pub(crate) taken: BTreeMap<AirGroupId, IntentId>,
     /// The groups raid intents served earlier this morning have taken
     /// (decision 0120, 16: rank decides between two tasks of one kind).
     pub(crate) raid_taken: BTreeMap<AirGroupId, IntentId>,

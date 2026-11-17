@@ -2,45 +2,45 @@ Scenario 7: The full slice, 7 August to 14 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1b59181a7f894d64  245 events
-day   2  hash 9bd1f7af64b3ee2c  146 events
-day   3  hash 8944b9443a7845a0  147 events
-day   4  hash 71b4f3139d9ca93d  152 events
-day   5  hash f01fc2bbc27cbe18  140 events
-day   6  hash 3f8771c49de53724  34 events
-day   7  hash b54c1b76886f215f  30 events
-day   8  hash 4b63dca634e7a3c1  43 events
-day   9  hash f7c341df4aeff418  48 events
-day  10  hash 5c13793d1604398a  55 events
-day  11  hash 8259291457b8ec9f  79 events
-day  12  hash 257da0b8d32370cc  68 events
-day  13  hash fb3db4ba239040a3  102 events
-day  14  hash f7331bccbc8b83fe  79 events
-day  15  hash a4eb551f047263a0  92 events
-day  16  hash 0dbd1fd21686cb55  87 events
-day  17  hash 5410b928a093fac3  49 events
-day  18  hash 215b786c2827d8ac  210 events
-day  19  hash 6131003e34d1d51f  258 events
-day  20  hash e62df4f45db2c3b5  207 events
-day  21  hash baa1dc04f6f801ae  255 events
-day  22  hash 16c755636940ef6d  159 events
-day  23  hash 560d1584dc3c57a8  225 events
-day  24  hash 1c38e84eeff45d29  221 events
-day  25  hash e23ac06f36af9a2e  238 events
-day  26  hash 1e6a8c32e25d21dc  170 events
-day  27  hash 5d3f9fad41735d54  196 events
-day  28  hash 54d6fc53bf82a53b  150 events
-day  29  hash f6a8ac70fdd3b8fc  144 events
-day  30  hash aad043f0879f313b  186 events
-day  31  hash 752d5e176b4cc61e  184 events
-day  32  hash 01dfc98a0ffe149b  161 events
-day  33  hash 8baed0503068e8ff  122 events
-day  34  hash 0b9f662a9d212803  142 events
-day  35  hash 37520aa99360cf18  168 events
-day  36  hash 7fe44f556e039946  153 events
-day  37  hash 7248a503c074d3a4  220 events
-day  38  hash 2d4f8a3745ee84bb  151 events
-day  39  hash 87145c8f7883505f  139 events
+day   1  hash 5acbda2bcddf815b  245 events
+day   2  hash 850be36343314a43  146 events
+day   3  hash f2ea804a2a20fe4b  147 events
+day   4  hash 6ce5a759f179e393  152 events
+day   5  hash 9b0d5b873d46c316  140 events
+day   6  hash e36ab2aeb4d2277e  34 events
+day   7  hash c80b32e33f03a29b  30 events
+day   8  hash cf7f6d6de03b0a33  43 events
+day   9  hash d3733d32e8479356  48 events
+day  10  hash 66cf64ac6bb054ee  55 events
+day  11  hash 465897c89c1e4063  79 events
+day  12  hash b6a328ce8408dfd6  68 events
+day  13  hash 2eaacdecb65b795d  102 events
+day  14  hash cb1e6d6c8f136666  79 events
+day  15  hash 9b67dfda40940b10  92 events
+day  16  hash 7b0f04c35cb23de8  87 events
+day  17  hash 6b75e2a4b60e74da  49 events
+day  18  hash 4f7ee03c319c6385  210 events
+day  19  hash 08d2f6354e1a021b  258 events
+day  20  hash 2cd33284ee29d339  207 events
+day  21  hash 253daca35752c5e2  255 events
+day  22  hash 9fd1d2084e6b81d3  159 events
+day  23  hash 7b6f872e3c618314  225 events
+day  24  hash c288b65fc7dd95b9  221 events
+day  25  hash 84d4428b84ccf9a4  238 events
+day  26  hash ed2413313d8c8eec  170 events
+day  27  hash a3401ff0f5412bde  196 events
+day  28  hash 7a18f71abd8ecfa7  150 events
+day  29  hash d9a46983da910a10  144 events
+day  30  hash 0d07ca94d3624f1b  186 events
+day  31  hash 5bb65a131eb1155e  184 events
+day  32  hash 92d14b70cac40c55  161 events
+day  33  hash e9e59f631a37889b  122 events
+day  34  hash cb3865d59aea4aff  142 events
+day  35  hash 3346a44c22699348  168 events
+day  36  hash 3c60573d7efac742  153 events
+day  37  hash 6b2bb753e9810353  220 events
+day  38  hash 70c18588ba874ffe  151 events
+day  39  hash 56bfd7a3d61db642  139 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -301,7 +301,7 @@ Allied claim over (2,-4): 6 aircraft shot down, day 35 morning
 Allied claim over (2,-4): 22 aircraft shot down, day 36 morning
 Allied claim over (2,-4): 8 aircraft shot down, day 37 morning
 Allied claim over (2,-4): 20 aircraft shot down, day 38 morning
-Allied estimate at (2,-4): 1343 enemy men ashore, reported day 39
+Allied estimate at (2,-4): 1343 enemy men ashore, reported day 39 (men in contact)
 Japanese: no contacts
 Japanese claim over (2,-4): 11 aircraft shot down, day 18 afternoon
 Japanese claim at (2,-4): 20 aircraft shot down, 3 aircraft destroyed on the ground, day 19 morning
@@ -329,7 +329,7 @@ Japanese claim at (2,-4): 12 aircraft shot down, 4 aircraft destroyed on the gro
 Japanese claim at (2,-4): 9 aircraft shot down, 1 aircraft destroyed on the ground, day 36 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 37 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 38 morning
-Japanese estimate at (2,-4): 19202 enemy men ashore, reported day 39
+Japanese estimate at (2,-4): 19202 enemy men ashore, reported day 39 (men in contact)
 
 Result (the placeholder scale of decision 0054):
 Allied: 108.048666 points (ships_sunk 3 = 18; ships_crippled 0 = 0; aircraft_destroyed 122 = 6.1; cargo_landed at base:1 4390.4 = 21.952; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 4033 = 40.33), margin 91.095333, decisive victory

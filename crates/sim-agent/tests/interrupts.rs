@@ -120,7 +120,7 @@ fn the_four_tools_follow_staff_orders_in_the_list_and_the_version_is_16() {
     assert_eq!(at("run"), at("acknowledge") + 1);
     assert_eq!(at("report"), at("run") + 1);
     assert_eq!(at("why"), at("report") + 1);
-    assert_eq!(sim_agent::VERSION, 21);
+    assert_eq!(sim_agent::VERSION, 22);
 }
 
 #[test]

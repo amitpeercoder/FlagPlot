@@ -228,6 +228,12 @@ pub struct GroundEstimateLine {
     pub place: Place,
     /// The men the last report gave. An estimate, which may be wrong.
     pub men: u32,
+    /// The grade of the estimate (decision 0147, 1), where the count comes
+    /// from (the key is not `grade`, a word the cover rule keeps for its own
+    /// briefing lines): "told" (a scenario's
+    /// opening estimate), "seen from the air" (a reconnaissance flight) or
+    /// "men in contact" (the daily report of your own men in the hex).
+    pub came_from: &'static str,
     /// The day it was reported; 0 for an opening estimate.
     pub day: u32,
     /// Days from that day to the last day resolved.
@@ -1972,6 +1978,7 @@ pub(crate) fn ground_estimate_lines(
         .map(|e| GroundEstimateLine {
             place: ctx.place(e.hex),
             men: e.men,
+            came_from: e.grade.name(),
             day: e.day,
             age_days: view.day().saturating_sub(e.day),
             event: ctx.number_if_seen(e.report_event),
@@ -3806,6 +3813,7 @@ impl Day {
                     | EventKind::TaskForceArrived { .. }
                     | EventKind::TaskForceOutOfFuel { .. }
                     | EventKind::SearchFlown { .. }
+                    | EventKind::ReconnaissanceFlown { .. }
                     | EventKind::SearchAttempt { .. }
                     | EventKind::ContactAged { .. }
                     | EventKind::EngagementBegun { .. }

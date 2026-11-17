@@ -74,6 +74,9 @@ pub enum AirMission {
     CombatAirPatrol,
     /// Strikes the named enemy base (decision 0034). Added at the end.
     BaseStrike(BaseId),
+    /// Flies once a day to look at the enemy's men ashore in a hex (decision
+    /// 0147). Added at the end.
+    Reconnaissance(Hex),
 }
 
 impl AirMission {
@@ -86,6 +89,7 @@ impl AirMission {
             AirMission::NavalStrike => 3,
             AirMission::CombatAirPatrol => 4,
             AirMission::BaseStrike(_) => 5,
+            AirMission::Reconnaissance(_) => 6,
         }
     }
 }
@@ -986,6 +990,10 @@ pub enum RejectReason {
     /// own, or a ship or land unit it names), `day` that day. Added at the
     /// end of the enum.
     NotYetAvailable { unit: EntityRef, day: u32 },
+    /// The reconnaissance mission needs an aircraft type that can search,
+    /// one with a search range (decision 0147, 4). Added at the end of the
+    /// enum.
+    AircraftCannotSearch,
 }
 
 impl RejectReason {
@@ -1036,6 +1044,9 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::AircraftAttackWithNothing => {
                 f.write_str("the air group's aircraft type attacks with nothing")
+            }
+            RejectReason::AircraftCannotSearch => {
+                f.write_str("the air group's aircraft type cannot search")
             }
             RejectReason::NotAFighter => {
                 f.write_str("the air group's aircraft type is not a fighter")

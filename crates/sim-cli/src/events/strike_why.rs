@@ -67,6 +67,7 @@ fn mission_name(mission: sim_core::orders::AirMission) -> String {
         sim_core::orders::AirMission::NavalStrike => "naval strike".to_string(),
         sim_core::orders::AirMission::CombatAirPatrol => "combat air patrol".to_string(),
         sim_core::orders::AirMission::BaseStrike(base) => format!("base strike on {base}"),
+        sim_core::orders::AirMission::Reconnaissance(hex) => format!("reconnaissance of {hex}"),
     }
 }
 

@@ -57,7 +57,7 @@ pub(crate) struct LandingReading {
 
 /// The men the staff wants for each man of the estimate, by risk (item 10).
 /// The staff's figures, placeholders.
-fn men_per_man(risk: Risk) -> u32 {
+pub(crate) fn men_per_man(risk: Risk) -> u32 {
     match risk {
         Risk::Preserve => 3,
         Risk::Balanced => 2,
@@ -71,27 +71,27 @@ pub(crate) fn routed(force: &TaskForce, place: Hex) -> bool {
     force.route.act_at.contains(&place) || force.landing_at == Some(place)
 }
 
-fn unit_words(unit: &LandUnit) -> String {
+pub(crate) fn unit_words(unit: &LandUnit) -> String {
     format!("{} ({})", unit.id, unit.name)
 }
 
 /// A unit chosen to land, with the ships it takes.
 #[derive(Clone, Debug)]
-struct Pick {
-    id: LandUnitId,
+pub(crate) struct Pick {
+    pub(crate) id: LandUnitId,
     aboard: bool,
     ships: Vec<ShipId>,
 }
 
 /// The choice of item 6 to 10.
-struct Choice {
-    force: TaskForceId,
-    picks: Vec<Pick>,
+pub(crate) struct Choice {
+    pub(crate) force: TaskForceId,
+    pub(crate) picks: Vec<Pick>,
     /// Item 27, in the order a staff works in.
-    lines: Vec<String>,
+    pub(crate) lines: Vec<String>,
     /// The men wanted, where an estimate is held, and whether the men
     /// chosen fall short of them.
-    short: Option<(u32, u32)>,
+    pub(crate) short: Option<(u32, u32)>,
 }
 
 /// The supply a landing takes (item 16).
@@ -256,8 +256,11 @@ impl Day<'_, '_> {
             self.set_plan(plan.id, PlanState::Complete);
             return;
         }
-        // Item 11: the choice is made once.
-        if self.landing_of(end).is_some() {
+        // Item 11: the choice is made once, and made again only on the
+        // first count seen from the air or by men in contact (decision 0147,
+        // 16).
+        if let Some(task) = self.landing_of(end) {
+            self.choose_again(end, plan, &task);
             return;
         }
         let Some(figures) = self.view.ground_figures() else {
@@ -484,7 +487,7 @@ impl Day<'_, '_> {
     /// Items 6 to 10: the transport force and the units that land, or why
     /// there are none (evidence, working).
     #[allow(clippy::too_many_lines)]
-    fn choose(
+    pub(crate) fn choose(
         &self,
         end: &Intent,
         limit: &ForcesLimit,
@@ -1189,6 +1192,11 @@ impl Day<'_, '_> {
                 continue;
             }
             let Some(task) = self.landing_of(&end) else {
+                // Decision 0147, 14: the need to know does not wait for the
+                // landing to be formed: a plan whose landing the staff cannot
+                // form (at preserve the force, with a count that asks for
+                // more men than the ships carry) still sends a group to look.
+                self.look_orders(&end, &plan);
                 continue;
             };
             self.launch_place(&end, &plan, &task);
@@ -1212,6 +1220,8 @@ impl Day<'_, '_> {
         let Some(figures) = view.ground_figures() else {
             return;
         };
+        // Decision 0147, 14 and 15: the group that looks at the place.
+        self.look_orders(end, plan);
         let Some(force) = view.task_forces().find(|f| f.id == force_id).cloned() else {
             let reason = serving(end, plan)
                 .evidence(
@@ -1327,6 +1337,13 @@ impl Day<'_, '_> {
                     )
                 };
             }
+            // Decision 0147, 18 and 19: not launched without the count the
+            // risk asks for. Read after the check of decision 0144, so that a
+            // landing that is otherwise ready is one that passes it too.
+            let Some(goes_on) = self.need_to_know(end, plan, task, &reading.words) else {
+                return;
+            };
+            check_words.push_str(&goes_on);
             if !self.state.leaves.launch {
                 let days = self.days(&force, &units, &supply, place, source_hex, end);
                 let when = match days {

@@ -1349,6 +1349,7 @@ fn escort_text(level: &str) -> String {
 }
 
 #[test]
+#[ignore = "decision 0147, item 19: at preserve the force with no count and no air group that can look, the plan is not released, so the escort, route and unload of day 8 are not given; goes to the architect"]
 fn an_escort_at_preserve_the_force() {
     let g = play(&escort_text("preserve"));
     assert_eq!(

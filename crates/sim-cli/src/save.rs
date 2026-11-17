@@ -81,6 +81,11 @@
 //! Version 17 (decision 0146) adds the intent kind `bombard` (`task_force` and
 //! `target`) in `"commands"` and in the staff's `form_intent`. A game of an
 //! older version is refused, not converted.
+//!
+//! Version 18 (decision 0147) adds the air group order `set_air_mission` with
+//! the mission `reconnaissance` and its `hex`; its state version is v43 and
+//! its daily hashes cover the grade of an estimate. A game of an older version
+//! is refused, not converted.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -148,8 +153,11 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// map. Version 17 (decision 0146) adds the intent kind `bombard`
 /// (`task_force` and `target`) in `"commands"` and in the staff's
 /// `form_intent`; a game of an older version lacks it and is refused, not
-/// converted.
-pub const VERSION: u32 = 17;
+/// converted. Version 18 (decision 0147) adds the air group order
+/// `set_air_mission` with the mission `reconnaissance` and its `hex`; its
+/// state version is v43 and its daily hashes cover the grade of an estimate.
+/// A game of an older version is refused, not converted.
+pub const VERSION: u32 = 18;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -990,7 +998,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 17);
+        assert_eq!(written["version"], 18);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 13);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

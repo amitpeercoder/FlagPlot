@@ -2,45 +2,45 @@ Scenario 7: The full slice, 7 August to 14 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1b59181a7f894d64  245 events
-day   2  hash 9bd1f7af64b3ee2c  146 events
-day   3  hash 8944b9443a7845a0  147 events
-day   4  hash 71b4f3139d9ca93d  152 events
-day   5  hash f01fc2bbc27cbe18  140 events
-day   6  hash 3f8771c49de53724  34 events
-day   7  hash b54c1b76886f215f  30 events
-day   8  hash 4b63dca634e7a3c1  43 events
-day   9  hash f7c341df4aeff418  48 events
-day  10  hash 5c13793d1604398a  55 events
-day  11  hash 8259291457b8ec9f  79 events
-day  12  hash 257da0b8d32370cc  68 events
-day  13  hash fb3db4ba239040a3  102 events
-day  14  hash f7331bccbc8b83fe  79 events
-day  15  hash a4eb551f047263a0  92 events
-day  16  hash 0dbd1fd21686cb55  87 events
-day  17  hash 5410b928a093fac3  49 events
-day  18  hash 215b786c2827d8ac  210 events
-day  19  hash 6131003e34d1d51f  258 events
-day  20  hash e62df4f45db2c3b5  207 events
-day  21  hash baa1dc04f6f801ae  255 events
-day  22  hash 16c755636940ef6d  159 events
-day  23  hash 560d1584dc3c57a8  225 events
-day  24  hash 1c38e84eeff45d29  221 events
-day  25  hash e23ac06f36af9a2e  238 events
-day  26  hash 1e6a8c32e25d21dc  170 events
-day  27  hash 5d3f9fad41735d54  196 events
-day  28  hash 54d6fc53bf82a53b  150 events
-day  29  hash f6a8ac70fdd3b8fc  144 events
-day  30  hash aad043f0879f313b  186 events
-day  31  hash 752d5e176b4cc61e  184 events
-day  32  hash 01dfc98a0ffe149b  161 events
-day  33  hash 8baed0503068e8ff  122 events
-day  34  hash 0b9f662a9d212803  142 events
-day  35  hash 37520aa99360cf18  168 events
-day  36  hash 7fe44f556e039946  153 events
-day  37  hash 7248a503c074d3a4  220 events
-day  38  hash 2d4f8a3745ee84bb  151 events
-day  39  hash 87145c8f7883505f  139 events
+day   1  hash 5acbda2bcddf815b  245 events
+day   2  hash 850be36343314a43  146 events
+day   3  hash f2ea804a2a20fe4b  147 events
+day   4  hash 6ce5a759f179e393  152 events
+day   5  hash 9b0d5b873d46c316  140 events
+day   6  hash e36ab2aeb4d2277e  34 events
+day   7  hash c80b32e33f03a29b  30 events
+day   8  hash cf7f6d6de03b0a33  43 events
+day   9  hash d3733d32e8479356  48 events
+day  10  hash 66cf64ac6bb054ee  55 events
+day  11  hash 465897c89c1e4063  79 events
+day  12  hash b6a328ce8408dfd6  68 events
+day  13  hash 2eaacdecb65b795d  102 events
+day  14  hash cb1e6d6c8f136666  79 events
+day  15  hash 9b67dfda40940b10  92 events
+day  16  hash 7b0f04c35cb23de8  87 events
+day  17  hash 6b75e2a4b60e74da  49 events
+day  18  hash 4f7ee03c319c6385  210 events
+day  19  hash 08d2f6354e1a021b  258 events
+day  20  hash 2cd33284ee29d339  207 events
+day  21  hash 253daca35752c5e2  255 events
+day  22  hash 9fd1d2084e6b81d3  159 events
+day  23  hash 7b6f872e3c618314  225 events
+day  24  hash c288b65fc7dd95b9  221 events
+day  25  hash 84d4428b84ccf9a4  238 events
+day  26  hash ed2413313d8c8eec  170 events
+day  27  hash a3401ff0f5412bde  196 events
+day  28  hash 7a18f71abd8ecfa7  150 events
+day  29  hash d9a46983da910a10  144 events
+day  30  hash 0d07ca94d3624f1b  186 events
+day  31  hash 5bb65a131eb1155e  184 events
+day  32  hash 92d14b70cac40c55  161 events
+day  33  hash e9e59f631a37889b  122 events
+day  34  hash cb3865d59aea4aff  142 events
+day  35  hash 3346a44c22699348  168 events
+day  36  hash 3c60573d7efac742  153 events
+day  37  hash 6b2bb753e9810353  220 events
+day  38  hash 70c18588ba874ffe  151 events
+day  39  hash 56bfd7a3d61db642  139 events
 
 #1 D1 -         order:1 accepted for task_force:20  <- order:1
 #2 D1 -         order:2 accepted for task_force:20  <- order:2
@@ -244,8 +244,8 @@ day  39  hash 87145c8f7883505f  139 events
 #200 D1 -         land_unit:11 of the Japanese side fell back from (2,-4) toward (2,-5) with 232 men: fatigue 30  <- #198
 #201 D1 -         land_unit:12 of the Japanese side fell back from (2,-4) toward (2,-5) with 874 men: fatigue 30  <- #198
 #202 D1 -         land_unit:13 of the Japanese side fell back from (2,-4) toward (2,-5) with 874 men: fatigue 30  <- #198
-#203 D1 -         Allied ground report at (2,-4): 1219 enemy men ashore  <- #182
-#204 D1 -         Japanese ground report at (2,-4): 5873 enemy men ashore  <- #182
+#203 D1 -         Allied ground report at (2,-4): 1219 enemy men ashore (men in contact)  <- #182
+#204 D1 -         Japanese ground report at (2,-4): 5873 enemy men ashore (men in contact)  <- #182
 #205 D1 -         Japanese found enemy base:8 at (2,-4): it is on the Japanese side's map  <- #204
 #206 D1 -         fight ashore at (3,-5): the Allied side attacks
 #207 D1 -         land_unit:5 fired at (3,-5) with 745 men: 0.981339 shots at 0.3, 1 hit  <- #206
@@ -415,8 +415,8 @@ day  39  hash 87145c8f7883505f  139 events
 #371 D2 -         land_unit:12 marched: fatigue 35  <- #356
 #372 D2 -         land_unit:13 marched: fatigue 35  <- #357
 #373 D2 -         the Japanese side is beaten at (2,-4): 215 men ashore against 10221  <- #358
-#374 D2 -         Allied ground report at (2,-4): 1595 enemy men ashore, replacing the estimate held  <- #358
-#375 D2 -         Japanese ground report at (2,-4): 13305 enemy men ashore, replacing the estimate held  <- #358
+#374 D2 -         Allied ground report at (2,-4): 1595 enemy men ashore (men in contact), replacing the estimate held  <- #358
+#375 D2 -         Japanese ground report at (2,-4): 13305 enemy men ashore (men in contact), replacing the estimate held  <- #358
 #376 D2 -         land_unit:5 rested: fatigue 25
 #377 D2 -         land_unit:6 rested: fatigue 25
 #378 D2 -         land_unit:7 rested: fatigue 25
@@ -561,8 +561,8 @@ day  39  hash 87145c8f7883505f  139 events
 #517 D3 -         land_unit:11 marched: fatigue 40  <- #511
 #518 D3 -         land_unit:12 marched: fatigue 40  <- #512
 #519 D3 -         land_unit:13 marched: fatigue 40  <- #513
-#520 D3 -         Allied ground report at (2,-4): 1580 enemy men ashore, replacing the estimate held
-#521 D3 -         Japanese ground report at (2,-4): 5872 enemy men ashore, replacing the estimate held
+#520 D3 -         Allied ground report at (2,-4): 1580 enemy men ashore (men in contact), replacing the estimate held
+#521 D3 -         Japanese ground report at (2,-4): 5872 enemy men ashore (men in contact), replacing the estimate held
 #522 D3 -         land_unit:5 rested: fatigue 20
 #523 D3 -         land_unit:6 rested: fatigue 20
 #524 D3 -         land_unit:7 rested: fatigue 20
@@ -1570,9 +1570,9 @@ day  39  hash 87145c8f7883505f  139 events
 #1526 D16 -         land_unit:17 marched and attacked: fatigue 70  <- #1518, #1509, #1519
 #1527 D16 -         land_unit:17 is too tired to attack at fatigue 70 and goes back to defend  <- #1526
 #1528 D16 -         land_unit:17 of the Japanese side, its attack spent, fell back from (2,-4) toward (2,-5) with 576 men: fatigue 100  <- #1527
-#1529 D16 -         Allied ground report at (2,-4): 794 enemy men ashore  <- #1513
+#1529 D16 -         Allied ground report at (2,-4): 794 enemy men ashore (men in contact)  <- #1513
 #1530 D16 -         Allied found enemy base:10 at (2,-4): it is on the Allied side's map  <- #1529
-#1531 D16 -         Japanese ground report at (2,-4): 6293 enemy men ashore, replacing the estimate held  <- #1513
+#1531 D16 -         Japanese ground report at (2,-4): 6293 enemy men ashore (men in contact), replacing the estimate held  <- #1513
 #1532 D16 -         land_unit:1 fired in a fight: 3 days counted at experience 2  <- #1514
 #1533 D16 -         land_unit:2 fired in a fight: 3 days counted at experience 2  <- #1515
 #1534 D16 -         land_unit:3 fired in a fight: 3 days counted at experience 2  <- #1516
@@ -1623,8 +1623,8 @@ day  39  hash 87145c8f7883505f  139 events
 #1579 D17 afternoon ship:38 burned 6 t, 952 t remaining  <- #1577
 #1580 D17 afternoon ship:39 burned 7.5 t, 440 t remaining  <- #1577
 #1581 D17 -         land_unit:17 marched from (2,-4) toward (2,-5): 1 of 3 days  <- #1528
-#1582 D17 -         Allied ground report at (2,-4): 474 enemy men ashore, replacing the estimate held
-#1583 D17 -         Japanese ground report at (2,-4): 14822 enemy men ashore, replacing the estimate held
+#1582 D17 -         Allied ground report at (2,-4): 474 enemy men ashore (men in contact), replacing the estimate held
+#1583 D17 -         Japanese ground report at (2,-4): 14822 enemy men ashore (men in contact), replacing the estimate held
 #1584 D17 -         land_unit:4 worked at the port of base:1: 658 of work, 658 on the port today  <- #1558
 #1585 D17 -         land_unit:9 worked at the port of base:1: 123 of work, 781 on the port today  <- #1558
 #1586 D17 -         land_unit:7 dug in: fieldworks 30
@@ -1834,8 +1834,8 @@ day  39  hash 87145c8f7883505f  139 events
 #1790 D18 afternoon ship:37 unloaded 213.72 t at base:1, 155.858 t aboard, 3365.044 t in stock  <- order:56, #1725, #1584, #1585
 #1791 D18 afternoon ship:38 unloaded 213.72 t at base:1, 155.858 t aboard, 3578.764 t in stock  <- order:56, #1725, #1584, #1585
 #1792 D18 -         land_unit:17 marched from (2,-4) toward (2,-5): 2 of 3 days  <- #1528
-#1793 D18 -         Allied ground report at (2,-4): 686 enemy men ashore, replacing the estimate held
-#1794 D18 -         Japanese ground report at (2,-4): 6432 enemy men ashore, replacing the estimate held
+#1793 D18 -         Allied ground report at (2,-4): 686 enemy men ashore (men in contact), replacing the estimate held
+#1794 D18 -         Japanese ground report at (2,-4): 6432 enemy men ashore (men in contact), replacing the estimate held
 #1795 D18 -         land_unit:4 worked at the port of base:1: 658 of work, 658 on the port today  <- #1645
 #1796 D18 -         land_unit:9 worked at the port of base:1: 123 of work, 781 on the port today  <- #1645
 #1797 D18 -         base:1 at the end of the day: 3578.764 t of supply, 23 aircraft ready: open
@@ -5383,8 +5383,8 @@ day  39  hash 87145c8f7883505f  139 events
 #5339 D37 -         land_unit:21 of the Japanese side, its attack spent, fell back from (2,-4) toward (2,-5) with 663 men: fatigue 95  <- #5332
 #5340 D37 -         land_unit:22 of the Japanese side, its attack spent, fell back from (2,-4) toward (2,-5) with 246 men: fatigue 95  <- #5334
 #5341 D37 -         land_unit:23 of the Japanese side, its attack spent, fell back from (2,-4) toward (2,-5) with 246 men: fatigue 95  <- #5336
-#5342 D37 -         Allied ground report at (2,-4): 2487 enemy men ashore  <- #5300
-#5343 D37 -         Japanese ground report at (2,-4): 16755 enemy men ashore, replacing the estimate held  <- #5300
+#5342 D37 -         Allied ground report at (2,-4): 2487 enemy men ashore (men in contact)  <- #5300
+#5343 D37 -         Japanese ground report at (2,-4): 16755 enemy men ashore (men in contact), replacing the estimate held  <- #5300
 #5344 D37 -         land_unit:1 fired in a fight: 4 days counted at experience 2  <- #5301
 #5345 D37 -         land_unit:2 fired in a fight: 4 days counted at experience 2  <- #5302
 #5346 D37 -         land_unit:3 fired in a fight: 4 days counted at experience 2  <- #5303
@@ -5540,8 +5540,8 @@ day  39  hash 87145c8f7883505f  139 events
 #5496 D38 -         land_unit:21 marched: fatigue 100  <- #5487
 #5497 D38 -         land_unit:22 marched: fatigue 100  <- #5488
 #5498 D38 -         land_unit:23 marched: fatigue 100  <- #5489
-#5499 D38 -         Allied ground report at (2,-4): 2808 enemy men ashore, replacing the estimate held
-#5500 D38 -         Japanese ground report at (2,-4): 8174 enemy men ashore, replacing the estimate held
+#5499 D38 -         Allied ground report at (2,-4): 2808 enemy men ashore (men in contact), replacing the estimate held
+#5500 D38 -         Japanese ground report at (2,-4): 8174 enemy men ashore (men in contact), replacing the estimate held
 #5501 D38 -         land_unit:4 worked at the port of base:1: 643 of work, 643 on the port today  <- #5381
 #5502 D38 -         land_unit:9 worked at the port of base:1: 121 of work, 764 on the port today  <- #5381
 #5503 D38 -         land_unit:10 worked at the port of base:1: 385 of work, 1149 on the port today  <- #5381
@@ -5675,8 +5675,8 @@ day  39  hash 87145c8f7883505f  139 events
 #5631 D39 -         land_unit:25 marched and attacked: fatigue 65  <- #5628, #5617, #5629
 #5632 D39 -         land_unit:25 is too tired to attack at fatigue 65 and goes back to defend  <- #5631
 #5633 D39 -         land_unit:25 of the Japanese side, its attack spent, fell back from (2,-4) toward (2,-5) with 249 men: fatigue 95  <- #5632
-#5634 D39 -         Allied ground report at (2,-4): 1343 enemy men ashore, replacing the estimate held  <- #5621
-#5635 D39 -         Japanese ground report at (2,-4): 19202 enemy men ashore, replacing the estimate held  <- #5621
+#5634 D39 -         Allied ground report at (2,-4): 1343 enemy men ashore (men in contact), replacing the estimate held  <- #5621
+#5635 D39 -         Japanese ground report at (2,-4): 19202 enemy men ashore (men in contact), replacing the estimate held  <- #5621
 #5636 D39 -         land_unit:12 worked at the port of base:6: 271 of work, 271 on the port today  <- order:7, #5529
 #5637 D39 -         land_unit:13 worked at the port of base:6: 276 of work, 547 on the port today  <- order:8, #5529
 #5638 D39 -         land_unit:1 fired in a fight: 5 days counted at experience 2  <- #5622
@@ -5957,7 +5957,7 @@ Allied claim over (2,-4): 6 aircraft shot down, day 35 morning
 Allied claim over (2,-4): 22 aircraft shot down, day 36 morning
 Allied claim over (2,-4): 8 aircraft shot down, day 37 morning
 Allied claim over (2,-4): 20 aircraft shot down, day 38 morning
-Allied estimate at (2,-4): 1343 enemy men ashore, reported day 39
+Allied estimate at (2,-4): 1343 enemy men ashore, reported day 39 (men in contact)
 Japanese: no contacts
 Japanese claim over (2,-4): 11 aircraft shot down, day 18 afternoon
 Japanese claim at (2,-4): 20 aircraft shot down, 3 aircraft destroyed on the ground, day 19 morning
@@ -5985,7 +5985,7 @@ Japanese claim at (2,-4): 12 aircraft shot down, 4 aircraft destroyed on the gro
 Japanese claim at (2,-4): 9 aircraft shot down, 1 aircraft destroyed on the ground, day 36 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 37 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 38 morning
-Japanese estimate at (2,-4): 19202 enemy men ashore, reported day 39
+Japanese estimate at (2,-4): 19202 enemy men ashore, reported day 39 (men in contact)
 
 Result (the placeholder scale of decision 0054):
 Allied: 108.048666 points (ships_sunk 3 = 18; ships_crippled 0 = 0; aircraft_destroyed 122 = 6.1; cargo_landed at base:1 4390.4 = 21.952; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 4033 = 40.33), margin 91.095333, decisive victory
