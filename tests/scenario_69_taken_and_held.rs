@@ -152,7 +152,8 @@
 //!   supply that lands with the men 6 x 14 = 84 t, and 84 + 90 = 174 t
 //!   are wanted against 94 t, short by 80 t. The staff does not release
 //!   the plan: it hands in the notice that it cannot meet intent 1 on the
-//!   morning of day 2 and on each morning after, and nothing sails.
+//!   morning of day 2, gives the reason on each morning after, and
+//!   nothing sails.
 //! - **Press.** With both intents at press: the margin is 0, the load of
 //!   day 2 is 6 x 4 = 24 t, and intent 4 is formed with a floor of 0
 //!   days.
