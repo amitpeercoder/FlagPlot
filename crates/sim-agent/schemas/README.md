@@ -960,3 +960,17 @@ apply; a game that gives none of it is answered as before.
   staff's) and the saved game write the same two keys.
 - **`command_state`, `propose` and `plans`.** An intent's `kind` may be `bombard`; its `task_force` and `target` are
   the force and the base, and its `base`, `hex`, `distance`, `by_day` and `phase` are `null`.
+
+## The force assembled by the staff (decision 0149)
+
+`version` is 23. Everything below is of the side's own command state.
+
+- **A take_place's forces limit may leave out what the staff is to choose.** `set_limit` of forces on a take_place
+  may name any of `task_forces`, `land_units` and `source`, or none, and a take_place may have no forces limit at
+  all: the engine no longer refuses one with no source ("no source" is still the refusal for a keep_supplied).
+  What the commander names stands; the staff chooses the rest and keeps it as the forces limit of the ready_landing
+  it forms (`set_limit` in `staff_orders` and `propose`), naming only what the commander did not.
+- **`command_state`.** What binds an intent on a take_place's chain (`limits_read_up`, `land_units_binding` and the
+  nearest `forces`) is read as it binds: for the take_place, the commander's task forces, land units and source
+  where he named them and the staff's choice where he did not; for an intent under it, what its own limit does not
+  name of the three is the take_place's, so read.

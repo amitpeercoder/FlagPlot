@@ -84,6 +84,7 @@ pub(crate) struct Pick {
 }
 
 /// The choice of item 6 to 10.
+#[derive(Clone)]
 pub(crate) struct Choice {
     pub(crate) force: TaskForceId,
     pub(crate) picks: Vec<Pick>,
@@ -92,6 +93,8 @@ pub(crate) struct Choice {
     /// The men wanted, where an estimate is held, and whether the men
     /// chosen fall short of them.
     pub(crate) short: Option<(u32, u32)>,
+    /// The men chosen, ashore and aboard (decision 0149, 7: the lift).
+    pub(crate) men: u32,
 }
 
 /// The supply a landing takes (item 16).
@@ -292,47 +295,83 @@ impl Day<'_, '_> {
             self.target(in_scope).no_orders.push(reason);
             return;
         }
-        let Some(limit) = end.limits.forces.clone() else {
-            let reason = serving(end, plan)
-                .evidence(format!("{} has no forces limit", end.id), today)
-                .binding("a forces limit is required in this step")
-                .worked(format!(
-                    "{} names no task force, land unit or source, so the staff gives no order under it.",
-                    end.id
-                ))
-                .would_change("a forces limit with a source")
-                .done();
-            self.target(in_scope).no_orders.push(reason);
-            return;
-        };
-        let Some((source, source_hex)) = limit
-            .source
-            .and_then(|s| self.view.bases().find(|b| b.id == s).map(|b| (s, b.hex)))
-        else {
-            let reason = serving(end, plan)
-                .evidence("the forces limit names no source of the side", today)
-                .worked(format!(
-                    "{} has no source of the side to sail from, so the staff gives no order under it.",
-                    end.id
-                ))
-                .would_change("a source of the side")
-                .done();
-            self.target(in_scope).no_orders.push(reason);
-            return;
-        };
         let risk = self.state.risk_read_up(end.id);
-        let choice = match self.choose(end, &limit, place, source_hex, risk) {
-            Ok(choice) => choice,
-            Err((evidence, worked)) => {
+        let commander = end.limits.forces.clone();
+        // Decision 0149: with all three named the end is decision 0142's;
+        // otherwise the staff assembles the rest.
+        let (choice, source, source_hex, staff_limit) = if crate::assemble::names_all(
+            commander.as_ref(),
+        ) {
+            let Some(limit) = commander else {
+                return;
+            };
+            let Some((source, source_hex)) = limit
+                .source
+                .and_then(|s| self.view.bases().find(|b| b.id == s).map(|b| (s, b.hex)))
+            else {
                 let reason = serving(end, plan)
-                    .evidence(evidence, today)
-                    .worked(worked)
-                    .would_change("a transport force or a unit the side may use")
-                    .done();
+                        .evidence("the forces limit names no source of the side", today)
+                        .worked(format!(
+                            "{} has no source of the side to sail from, so the staff gives no order under it.",
+                            end.id
+                        ))
+                        .would_change("a source of the side")
+                        .done();
                 self.target(in_scope).no_orders.push(reason);
                 return;
+            };
+            let choice = match self.choose(end, &limit, place, source_hex, risk) {
+                Ok(choice) => choice,
+                Err((evidence, worked)) => {
+                    let reason = serving(end, plan)
+                        .evidence(evidence, today)
+                        .worked(worked)
+                        .would_change("a transport force or a unit the side may use")
+                        .done();
+                    self.target(in_scope).no_orders.push(reason);
+                    return;
+                }
+            };
+            let staff_limit = ForcesLimit {
+                ships: BTreeSet::new(),
+                task_forces: BTreeSet::new(),
+                air_groups: BTreeSet::new(),
+                source: None,
+                land_units: choice.picks.iter().map(|p| p.id).collect(),
+            };
+            (choice, source, source_hex, staff_limit)
+        } else {
+            match self.assemble(end, commander.as_ref(), place, risk) {
+                Ok(found) => (found.choice, found.source, found.source_hex, found.limit),
+                Err(none) => {
+                    // Item 13: the notice once, the reason each morning.
+                    let noticed = self.noticed(NoticeKind::CannotMeet, plan.id);
+                    let reason = serving(end, plan)
+                            .evidence(none.evidence.clone(), today)
+                            .binding("no base can be the source")
+                            .worked(format!(
+                                "{}{}",
+                                none.worked,
+                                if noticed {
+                                    ""
+                                } else {
+                                    " It hands in the notice that it cannot meet the intent."
+                                }
+                            ))
+                            .would_change(
+                                "a transport force stopped at a base of the side, with a fighting unit beside it",
+                            )
+                            .done();
+                    if noticed {
+                        self.target(in_scope).no_orders.push(reason);
+                    } else {
+                        self.notice(in_scope, reason, NoticeKind::CannotMeet, plan);
+                    }
+                    return;
+                }
             }
         };
+        let assembled = !crate::assemble::names_all(end.limits.forces.as_ref());
         let choice_words = choice.lines.join("; ");
         // Item 10: at preserve the force, too few men is no landing.
         if let (Risk::Preserve, Some((wanted, chosen))) = (risk, choice.short) {
@@ -410,14 +449,7 @@ impl Day<'_, '_> {
             by_day: task_date,
         };
         let new_id = self.state.next_intent_number();
-        let chosen_set: BTreeSet<LandUnitId> = units.iter().copied().collect();
-        let new_limit = ForcesLimit {
-            ships: BTreeSet::new(),
-            task_forces: BTreeSet::new(),
-            air_groups: BTreeSet::new(),
-            source: None,
-            land_units: chosen_set.clone(),
-        };
+        let new_limit = staff_limit;
         self.state.intents.insert(
             new_id,
             Intent {
@@ -435,11 +467,15 @@ impl Day<'_, '_> {
                 withdrawn_day: None,
             },
         );
-        let unit_list = units
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>()
-            .join(" and ");
+        let unit_list = if assembled {
+            crate::assemble::limit_words(&new_limit)
+        } else {
+            units
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(" and ")
+        };
         let worked = format!(
             "{choice_words}; {}; {}.{date_words}",
             supply.words, days.words
@@ -800,6 +836,7 @@ impl Day<'_, '_> {
             picks,
             lines,
             short,
+            men: chosen_men,
         })
     }
 
@@ -1236,20 +1273,21 @@ impl Day<'_, '_> {
             self.target(in_scope).no_orders.push(reason);
             return;
         };
-        let Some((source, source_hex)) = end
-            .limits
-            .forces
-            .as_ref()
+        // The source as the end's limit binds: the commander's, or the
+        // staff's (decision 0149, 3).
+        let Some((source, source_hex)) = self
+            .state
+            .forces_as_bound(end)
             .and_then(|f| f.source)
             .and_then(|s| view.bases().find(|b| b.id == s).map(|b| (s, b.hex)))
         else {
             return;
         };
-        let units: Vec<LandUnitId> = task
-            .limits
-            .forces
-            .as_ref()
-            .map(|f| f.land_units.iter().copied().collect())
+        // The task's units as its limit binds (decision 0149, 3).
+        let units: Vec<LandUnitId> = self
+            .state
+            .land_units_on_chain(task.id)
+            .map(|f| f.into_iter().collect())
             .unwrap_or_default();
         let mut now = plan.state;
 
@@ -1447,10 +1485,11 @@ impl Day<'_, '_> {
         let today = self.today;
         let view = self.view;
         let force_id = force.id;
-        let Some((source, source_hex)) = end
-            .limits
-            .forces
-            .as_ref()
+        // The source as the end's limit binds: the commander's, or the
+        // staff's (decision 0149, 3).
+        let Some((source, source_hex)) = self
+            .state
+            .forces_as_bound(end)
             .and_then(|f| f.source)
             .and_then(|s| view.bases().find(|b| b.id == s).map(|b| (s, b.hex)))
         else {
@@ -1881,12 +1920,12 @@ impl Day<'_, '_> {
             self.target(in_scope).no_orders.push(reason);
             return;
         }
-        let empty: BTreeSet<TaskForceId> = BTreeSet::new();
-        let task_forces = end
-            .limits
-            .forces
-            .as_ref()
-            .map_or(&empty, |f| &f.task_forces);
+        let bound_forces: BTreeSet<TaskForceId> = self
+            .state
+            .forces_as_bound(end)
+            .map(|f| f.task_forces.clone())
+            .unwrap_or_default();
+        let task_forces = &bound_forces;
         let ctx = crate::escort::RunContext {
             view,
             state: &self.state,
@@ -2022,11 +2061,10 @@ impl Day<'_, '_> {
             return;
         };
         let risk = self.state.risk_read_up(end.id);
-        let task_units: Vec<LandUnitId> = task
-            .limits
-            .forces
-            .as_ref()
-            .map(|f| f.land_units.iter().copied().collect())
+        let task_units: Vec<LandUnitId> = self
+            .state
+            .land_units_on_chain(task.id)
+            .map(|f| f.into_iter().collect())
             .unwrap_or_default();
         // Item 2: the mark.
         let (num, den) = attack_share(risk);
@@ -2309,6 +2347,11 @@ impl Day<'_, '_> {
             source: None,
             land_units: BTreeSet::new(),
         });
+        // A limit that names no unit binds the units above it (decision
+        // 0149, 3): the second lift adds to those.
+        if limit.land_units.is_empty() {
+            limit.land_units = self.state.land_units_on_chain(task.id).unwrap_or_default();
+        }
         limit.land_units.extend(picks.iter().map(|(id, _)| *id));
         if let Some(found) = self.state.intents.get_mut(&task.id) {
             found.limits.forces = Some(limit.clone());
@@ -2362,16 +2405,12 @@ impl Day<'_, '_> {
         source_hex: Hex,
     ) -> (Vec<LandUnit>, Vec<String>) {
         let view = self.view;
-        let chosen: BTreeSet<LandUnitId> = task
-            .limits
-            .forces
-            .as_ref()
-            .map(|f| f.land_units.clone())
-            .unwrap_or_default();
-        let named: Vec<LandUnitId> = end
-            .limits
-            .forces
-            .as_ref()
+        // Both as the limits bind (decision 0149, 3).
+        let chosen: BTreeSet<LandUnitId> =
+            self.state.land_units_on_chain(task.id).unwrap_or_default();
+        let named: Vec<LandUnitId> = self
+            .state
+            .forces_as_bound(end)
             .map(|f| f.land_units.iter().copied().collect())
             .unwrap_or_default();
         let mut found = Vec::new();

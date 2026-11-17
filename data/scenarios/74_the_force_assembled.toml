@@ -1,0 +1,196 @@
+# Scenario 74: the force assembled by the staff.
+#
+# Decision 0149, step 7 of stage 3. The commander says "take that airfield" and
+# names nothing else. The staff weighs the two bases it could sail from, takes
+# the nearer, picks the unit, the transports and a battleship to shell the
+# place on the night of the landing, and takes it.
+#
+# The map is scenario 27's: A at (0,0), a coast hex with port size 5, B at
+# (4,0), a coast hex with port size 0, and C at (0,6), a coast hex with port
+# size 0. A to B is 4 hexes, 160 nm; C to B is 6 hexes, off the grid's axes,
+# so a route between them is charged its straight line, 212 nm (the map's own
+# note; the hand calculation has 240). Allied base 1
+# lies at A with 1,000 t of supply and 5,000 t of fuel; Japanese base 2, an
+# airfield with no gun, no aircraft, no man and no stock, lies at B, on the
+# Allied map; Allied base 3 lies at C with 1,000 t of supply and no fuel. Task
+# force 1, two placeholder troop transports, lies stopped at base 1; task force
+# 2, one placeholder troop transport, lies stopped at base 3; task force 3, a
+# placeholder battleship on the bombardment mission, lies stopped at base 1.
+# Three Allied fighting units are ashore: units 1 and 2 at A and unit 3, with
+# an assault skill of 4, at C. The Allied side holds an opening estimate of 300
+# enemy men at B. On day 1 the commander states "take the place at B" and
+# names no forces, and gives leave to prepare and to launch. The game is 6
+# days. There is no Japanese man, so no die is rolled.
+#
+# The hand calculation is in tests/scenario_74_the_force_assembled.rs. The test
+# runs this file on the frozen step 1 figures with one ground figure of its
+# own, preparation_per_day 100, in
+# data/reference/ground_placeholder_scenario_74.toml, and scenario 71's three
+# bombardment figures, in
+# data/reference/surface_combat_placeholder_scenario_71.toml, which this file
+# names, so that run by itself it plays the game its test proves. It builds its
+# variants from the text of this file using the markers below.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures and map are invented.
+
+name = "Placeholder scenario 74: The force assembled"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_battleship.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat_placeholder_scenario_71.toml"
+air_combat = "../reference/air_combat.toml"
+ground = "../reference/ground_placeholder_scenario_74.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and fuel to
+# give.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 5000
+
+# Japanese base 2 at B: no gun, no aircraft, no man, no stock.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Allied base 3 at C, with supply and no fuel.
+[[base]]
+id = 3
+name = "Placeholder base C"
+side = "allied"
+q = 0
+r = 6
+supply_t = 1000
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# Task force 2: one placeholder troop transport, stopped in port at base 3.
+[[task_force]]
+id = 2
+name = "Placeholder transport force 2"
+side = "allied"
+at_base = 3
+mission = "transport"
+
+[[ship]]
+id = 3
+name = "Placeholder troop transport 3"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 2
+
+# Task force 3: the placeholder battleship, stopped in port at base 1.
+[[task_force]]
+id = 3
+name = "Placeholder bombardment force 3"
+side = "allied"
+at_base = 1
+mission = "bombardment"
+stance = "avoid"
+
+[[ship]]
+id = 4
+name = "Placeholder battleship 4"
+class = 9
+side = "allied"
+fuel_t = 2000
+task_force = 3
+
+# The land units, ashore, fighting units on the defence, each at the standard
+# of experience, 2, the default. Unit 3 has an assault skill of 4.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder Second"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+[[land_unit]]
+id = 3
+name = "Placeholder Assault"
+side = "allied"
+men = 600
+q = 0
+r = 6
+skills = { assault = 4 }
+
+# The Allied side's opening estimate of the enemy at B.
+[[estimate]]
+side = "allied"
+q = 4
+r = 0
+men = 300
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "take_place"
+hex = [4, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

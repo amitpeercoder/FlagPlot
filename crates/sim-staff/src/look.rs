@@ -329,7 +329,7 @@ impl Day<'_, '_> {
         if estimate.grade == GroundGrade::Told {
             return None;
         }
-        let units = task.limits.forces.as_ref()?.land_units.clone();
+        let units = self.state.land_units_on_chain(task.id)?;
         if units
             .iter()
             .any(|id| self.view.men_aboard(*id).unwrap_or(0) > 0)
@@ -355,7 +355,9 @@ impl Day<'_, '_> {
         let Some(estimate) = self.rechoice_count(plan, task, place) else {
             return;
         };
-        let Some(limit) = end.limits.forces.clone() else {
+        // The end's limit as it binds, with the units at the source the
+        // staff may take where the commander named none (decision 0149, 4).
+        let Some(limit) = self.rechoice_limit(end, task) else {
             return;
         };
         let Some(source_hex) = limit
@@ -373,12 +375,7 @@ impl Day<'_, '_> {
         if risk == Risk::Preserve && choice.short.is_some() {
             return;
         }
-        let was = task
-            .limits
-            .forces
-            .as_ref()
-            .map(|f| f.land_units.clone())
-            .unwrap_or_default();
+        let was = self.state.land_units_on_chain(task.id).unwrap_or_default();
         let now: BTreeSet<LandUnitId> = choice.picks.iter().map(|p| p.id).collect();
         if was == now {
             return;
@@ -517,7 +514,7 @@ impl Day<'_, '_> {
         if risk == Risk::Preserve {
             if let (Some(_), Some(limit)) = (
                 self.count_held(plan, task, place),
-                end.limits.forces.clone(),
+                self.rechoice_limit(end, task),
             ) {
                 if let Some(source_hex) = limit
                     .source

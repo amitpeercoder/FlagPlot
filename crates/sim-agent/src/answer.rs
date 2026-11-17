@@ -67,8 +67,12 @@ pub const FORMAT: &str = "flagplot-agent";
 /// (`task_force` and `target`) of decision 0146. 22 adds the air mission
 /// `reconnaissance` (with a `hex`) of decision 0147, the grade of an
 /// estimate of the enemy's men ashore (`came_from`), and the refusal
-/// `AircraftCannotSearch`.
-pub const VERSION: u32 = 22;
+/// `AircraftCannotSearch`. 23 lets a take_place's forces limit leave out
+/// any of the task forces, the land units and the source, which the staff
+/// then chooses, and gives in `command_state` what the staff reads up the
+/// tree as it binds: the commander's where he named it, the staff's choice
+/// where he did not (decision 0149).
+pub const VERSION: u32 = 23;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

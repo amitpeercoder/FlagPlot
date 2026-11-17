@@ -13,6 +13,7 @@
 //! (`test_interrupts`, in `interrupt.rs`); and only then are the day's orders
 //! taken in (`intake_orders`).
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use crate::command::{
@@ -222,8 +223,54 @@ impl World {
     }
 
     /// Whether `ship` is in the pool of every forces limit in `limits`.
-    fn in_every_pool(&self, limits: &[&ForcesLimit], ship: ShipId) -> bool {
+    fn in_every_pool(&self, limits: &[Cow<'_, ForcesLimit>], ship: ShipId) -> bool {
         limits.iter().all(|forces| self.in_pool(forces, ship))
+    }
+
+    /// Decision 0149, 2: under a "take a place", what a limit above does not
+    /// name of the task forces (with the ships), the land units and the
+    /// source is the staff's to choose, so the staff's own limit on the task
+    /// it formed may name it. Each limit above binds only what it names of
+    /// the three; the air groups are read as for any intent.
+    fn forces_narrow_under_take(&self, side: Side, parent: IntentId, limit: &ForcesLimit) -> bool {
+        let state = &self.command[&side];
+        // The limits above as they were set, not as they bind: read as it
+        // binds, the end's limit carries the staff's own earlier choice, and
+        // that choice must not hold the staff to it when it chooses again on
+        // a count or adds a later lift's units (the architect's ruling 5).
+        let above: Vec<&ForcesLimit> = state
+            .up_the_tree(parent)
+            .filter_map(|found| found.limits.forces.as_ref())
+            .collect();
+        let names_forces =
+            |forces: &ForcesLimit| !(forces.task_forces.is_empty() && forces.ships.is_empty());
+        limit
+            .air_groups
+            .iter()
+            .all(|group| self.may_use_group(side, parent, *group))
+            && limit.land_units.iter().all(|unit| {
+                above
+                    .iter()
+                    .filter(|forces| !forces.land_units.is_empty())
+                    .all(|forces| forces.land_units.contains(unit))
+            })
+            && limit.ships.iter().all(|ship| {
+                above
+                    .iter()
+                    .filter(|forces| names_forces(forces))
+                    .all(|forces| self.in_pool(forces, *ship))
+            })
+            && limit.task_forces.iter().all(|force| {
+                above
+                    .iter()
+                    .filter(|forces| names_forces(forces))
+                    .all(|forces| self.force_in_forces_limit(side, forces, *force))
+            })
+            && limit.source.is_none_or(|source| {
+                above
+                    .iter()
+                    .all(|forces| forces.source.is_none_or(|s| s == source))
+            })
     }
 
     /// Whether a forces limit set on `intent`, which has a parent, names
@@ -235,6 +282,9 @@ impl World {
     /// base's air groups, and no ship.
     fn forces_narrow(&self, side: Side, parent: IntentId, limit: &ForcesLimit) -> bool {
         let state = &self.command[&side];
+        if state.take_place_on_chain(parent).is_some() {
+            return self.forces_narrow_under_take(side, parent, limit);
+        }
         let groups_ok = limit
             .air_groups
             .iter()
@@ -418,12 +468,11 @@ impl World {
                         return Err(CommandRefusal::NotYours);
                     }
                     if let Limit::Forces { limit, .. } = limit {
-                        // As for keeping a base supplied, taking a place
-                        // needs a source (decision 0142, 2).
-                        if matches!(
-                            found.kind,
-                            IntentKind::KeepSupplied { .. } | IntentKind::TakePlace { .. }
-                        ) && limit.source.is_none()
+                        // Keeping a base supplied needs a source. Taking a
+                        // place does not: the staff chooses what the
+                        // commander leaves out (decision 0149, 1).
+                        if matches!(found.kind, IntentKind::KeepSupplied { .. })
+                            && limit.source.is_none()
                         {
                             return Err(CommandRefusal::NoSource);
                         }

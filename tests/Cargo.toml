@@ -427,3 +427,7 @@ path = "scenario_72_reconnaissance.rs"
 [[test]]
 name = "scenario_73_carrier_cover"
 path = "scenario_73_carrier_cover.rs"
+
+[[test]]
+name = "scenario_74_the_force_assembled"
+path = "scenario_74_the_force_assembled.rs"
