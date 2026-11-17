@@ -30,12 +30,12 @@
       "hash": "92c5c79c62f24c17"
     }
   ],
-  "doctrine_version": "supply-21",
+  "doctrine_version": "supply-29",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "4b648a521c8d9c61"
+      "hash": "130510fcc2d74c24"
     }
   ],
   "orders": [
@@ -513,7 +513,7 @@
       "unit": "air_group:19"
     }
   ],
-  "rules_version": 18,
+  "rules_version": 19,
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
     "hash": "a9443b066a393e0b"
@@ -524,6 +524,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v40",
-  "version": 15
+  "state_version": "flagplot-state-v43",
+  "version": 18
 }

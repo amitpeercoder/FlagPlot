@@ -2,12 +2,12 @@ Placeholder scenario 35a: Days of supply, men
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 884c86a4fcec23e5  47 events
-day   2  hash bc89e0286bf73f1a  35 events
-day   3  hash f87f9f048163126b  36 events
-day   4  hash d74f7281dfd10605  17 events
-day   5  hash ef7f726ac1a088d5  16 events
-day   6  hash 1db0dd603419b3a9  15 events
+day   1  hash 76301636acdc6c50  47 events
+day   2  hash e0ddb75948cc2323  35 events
+day   3  hash f78627c04c10c252  36 events
+day   4  hash 53c8a4ad83c4c258  17 events
+day   5  hash 4bf44ea2fed21620  16 events
+day   6  hash 2910009112fff090  15 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply

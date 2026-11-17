@@ -2,12 +2,12 @@ Scenario 38: An empty hex
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0cc09292a95b51cb  33 events
-day   2  hash 0fb0eda55fd0e84a  23 events
-day   3  hash 9635a7624d9999de  23 events
-day   4  hash 3a84454df95ce7f4  22 events
-day   5  hash 429d325f06d0abcc  20 events
-day   6  hash 636981fe3745617e  20 events
+day   1  hash 11a3fc6c1d36721b  33 events
+day   2  hash 7291985b0db5a1fa  23 events
+day   3  hash 01688a54e8308650  23 events
+day   4  hash b0db99a27af61c3b  22 events
+day   5  hash f11b512687a352bb  20 events
+day   6  hash d05bab7f5d6489cd  20 events
 
 base:1 "Placeholder base 1, Japanese, at P" (Allied) at (0,0): 486.75 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at R" (Japanese) at (1,0): 97.42 t of supply in stock
@@ -24,7 +24,7 @@ land_unit:5 "Placeholder Japanese working unit at V" (Japanese): no men ashore
 land_unit:6 "Placeholder Allied platoon at V" (Allied): 100 men ashore at (30,0), on attack
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (20,0): 400 enemy men ashore, reported day 0
+Allied estimate at (20,0): 400 enemy men ashore, reported day 0 (told)
 Japanese: no contacts
 Japanese: no battle claims
-Japanese estimate at (0,0): 451 enemy men ashore, reported day 3
+Japanese estimate at (0,0): 451 enemy men ashore, reported day 3 (men in contact)

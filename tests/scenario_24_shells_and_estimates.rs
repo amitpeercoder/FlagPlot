@@ -1400,6 +1400,7 @@ fn check_y(run: &Run) {
                     hex,
                     men,
                     replaced,
+                    ..
                 } = &report.kind
                 else {
                     unreachable!()

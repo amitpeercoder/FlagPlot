@@ -2,10 +2,10 @@ Scenario 24: Shells and bombs on a base, and an attack on a wrong estimate
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ae39b8c3172e6de1  41 events
-day   2  hash 624f409641a4ef2a  33 events
-day   3  hash 4ef0ff4b9ae92f30  24 events
-day   4  hash c1f7f4a80468efb7  15 events
+day   1  hash 0d092372bf25bfb6  41 events
+day   2  hash c15afd3dfcb8fab5  33 events
+day   3  hash b3160cf95963529b  24 events
+day   4  hash 0488d5dcb70bdca6  15 events
 
 task_force:1 "Placeholder bombardment force" (Japanese): Arrived at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder fighter squadron at X" (Allied) at base:1: 20 ready, 1 damaged, mission Rest, no arc
@@ -19,8 +19,8 @@ land_unit:2 "Placeholder Allied division at Y" (Allied): 2940 men ashore at (8,0
 land_unit:3 "Placeholder Japanese battalion at Y" (Japanese): 320 men ashore at (8,0), fatigue 90, fieldworks 30
 Allied: no contacts
 Allied: no battle claims
-Allied estimate at (8,0): 367 enemy men ashore, reported day 4
+Allied estimate at (8,0): 367 enemy men ashore, reported day 4 (men in contact)
 Japanese: no contacts
 Japanese claim from the sea at (0,0): 20 aircraft destroyed on the ground, day 1 night
 Japanese claim from the sea at (0,0): 1 aircraft destroyed on the ground, day 2 night
-Japanese estimate at (8,0): 4096 enemy men ashore, reported day 4
+Japanese estimate at (8,0): 4096 enemy men ashore, reported day 4 (men in contact)

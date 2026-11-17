@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 18
+      "const": 22
     },
     "kind": {
       "const": "command_state"
@@ -82,6 +82,7 @@
           "by_day",
           "wants",
           "defences",
+          "phase",
           "interval",
           "set_day",
           "withdrawn_day",
@@ -118,7 +119,9 @@
               "stand_at",
               "operate_carriers",
               "ready_landing",
-              "build_up"
+              "build_up",
+              "take_place",
+              "bombard"
             ]
           },
           "base": {
@@ -141,7 +144,7 @@
                 "type": "null"
               }
             ],
-            "description": "The enemy base a neutralise or a raid is aimed at (decision 0120); null for the other kinds."
+            "description": "The enemy base a neutralise, a raid or a bombard is aimed at (decisions 0120 and 0146); null for the other kinds."
           },
           "hex": {
             "oneOf": [
@@ -155,7 +158,7 @@
                 "type": "null"
               }
             ],
-            "description": "The centre of the waters of a deny intent as [q, r] (decision 0123), or the station of a stand_at or operate_carriers intent; null for the other kinds."
+            "description": "The centre of the waters of a deny intent as [q, r] (decision 0123), the station of a stand_at or operate_carriers intent, the landing hex of a ready_landing intent, or the place a take_place intent is to take (decision 0142); null for the other kinds."
           },
           "distance": {
             "type": [
@@ -169,7 +172,7 @@
               "integer",
               "null"
             ],
-            "description": "The side's number of the task force a stand_at, operate_carriers or ready_landing intent names (decisions 0124, 0125 and 0141); null for the other kinds. hex is then its station."
+            "description": "The side's number of the task force a stand_at, operate_carriers, ready_landing or bombard intent names (decisions 0124, 0125, 0141 and 0146); null for the other kinds (a take_place has none). hex is then its station."
           },
           "floor_days": {
             "type": [
@@ -185,7 +188,7 @@
           },
           "by_day": {
             "type": ["integer", "null"],
-            "description": "The morning of the day a ready_landing intent is to be ready by (decision 0141); null for the other kinds and for a landing with no date."
+            "description": "The morning of the day a ready_landing or take_place intent is to be ready by or to have taken the place by (decisions 0141 and 0142); null for the other kinds and for one with no date."
           },
           "wants": {
             "oneOf": [
@@ -197,6 +200,13 @@
           "defences": {
             "type": ["integer", "null"],
             "description": "The points of defences a build_up intent wants, from 1 to 100, when defences is among its wants (decision 0141); null otherwise."
+          },
+          "phase": {
+            "oneOf": [
+              { "enum": ["prepare", "move", "land"] },
+              { "type": "null" }
+            ],
+            "description": "Where a take_place intent stands (decision 0142): prepare while its plan is preparing, move while it is released and no man of the side is ashore at the place, land once one is; null for every other kind and for a plan in any other state."
           },
           "interval": {
             "type": [

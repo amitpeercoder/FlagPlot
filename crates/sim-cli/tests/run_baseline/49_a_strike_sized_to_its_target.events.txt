@@ -2,7 +2,7 @@ Placeholder scenario 49: A strike sized to its target
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9c38675ef4e68f22  46 events
+day   1  hash d8339097dd3ea59d  46 events
 
 #1 D0 -         Allied report: 1 ship, carrier, at (0,4), held at the start: new contact:1
 #2 D0 -         Allied report: 2 ships, cruiser, at (3,0), held at the start: new contact:2

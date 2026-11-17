@@ -11,14 +11,21 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
 
+# The checks are split into jobs that run at the same time: format and lint,
+# the tests in shards, and the command-line runs with the viewer's check. The
+# last job, "Format, lint, test", is the check main requires: it waits for
+# every other job and passes only when all of them passed, or when the
+# commit changes documents alone and they were skipped.
 jobs:
-  check:
-    name: Format, lint, test
+  changes:
+    name: Decisions index and what changed
     runs-on: ubuntu-latest
+    outputs:
+      needed: ${{ steps.changes.outputs.needed }}
     steps:
       # Two commits deep, so the commit's first parent is there to compare
       # with.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.4.0
         with:
           fetch-depth: 2
 
@@ -29,39 +36,91 @@ jobs:
         run: sh scripts/decisions-index.sh --check
 
       # A change to documents alone cannot break the build: no test reads a
-      # Markdown file. The job still runs and reports, because main requires
-      # this check; it only skips the steps below.
+      # Markdown file. The required check still runs and reports, because
+      # main requires it; only the jobs below are skipped.
       - name: See whether anything but documents changed
         id: changes
         run: echo "needed=$(sh .github/scripts/needs-checks.sh)" >> "$GITHUB_OUTPUT"
 
+  lint:
+    name: Format and lint
+    needs: changes
+    if: needs.changes.outputs.needed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.4.0
+
       # rustup reads rust-toolchain.toml and installs the pinned toolchain
       # with rustfmt and clippy.
       - name: Install the pinned Rust toolchain
-        if: steps.changes.outputs.needed == 'true'
         run: rustup show active-toolchain || rustup toolchain install
 
-      - uses: Swatinem/rust-cache@v2
-        if: steps.changes.outputs.needed == 'true'
+      - uses: Swatinem/rust-cache@v2.9.3
 
       - name: Format
-        if: steps.changes.outputs.needed == 'true'
         run: cargo fmt --all -- --check
 
       - name: Lint
-        if: steps.changes.outputs.needed == 'true'
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
-      # Tests run in the `checked` profile (Cargo.toml): optimized, with
-      # debug assertions and overflow checks on. Unoptimized, running the
-      # tests was 15 of a check's 17 minutes. The two steps after it use the
-      # same profile so that the command-line program is built once.
+  # Tests run in the `checked` profile (Cargo.toml): optimized, with debug
+  # assertions and overflow checks on. Building the test programs is most
+  # of the time, so the tests are split into five shards, each built and run
+  # on its own machine, with `--workspace` so that every shard resolves the
+  # same features as the whole workspace does and builds the same programs.
+  # Shards 0 to 3 run the integration tests: `.github/scripts/test-shard.sh`
+  # gives each test target to exactly one of them. Shard 4 runs the unit
+  # tests of the libraries and programs and the documentation tests.
+  # Together they are what `cargo test --workspace` runs.
+  test:
+    name: Test (shard ${{ matrix.shard }} of 5)
+    needs: changes
+    if: needs.changes.outputs.needed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4.4.0
+
+      - name: Install the pinned Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2.9.3
+        with:
+          key: shard-${{ matrix.shard }}
+
       - name: Test
-        if: steps.changes.outputs.needed == 'true'
-        run: cargo test --workspace --locked --profile checked
+        run: |
+          set -eu
+          if [ ${{ matrix.shard }} -eq 4 ]; then
+            targets="--lib --bins"
+          else
+            targets=$(sh .github/scripts/test-shard.sh ${{ matrix.shard }} 4)
+          fi
+          # shellcheck disable=SC2086
+          cargo test --workspace --locked --profile checked $targets
+
+      - name: Documentation tests
+        if: matrix.shard == 4
+        run: cargo test --workspace --locked --profile checked --doc
+
+  # The command-line program in the same profile as the tests.
+  run-and-export:
+    name: Run scenario 1, export every scenario, check the viewer
+    needs: changes
+    if: needs.changes.outputs.needed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.4.0
+
+      - name: Install the pinned Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2.9.3
 
       - name: Run scenario 1 from the command line
-        if: steps.changes.outputs.needed == 'true'
         run: cargo run --locked --profile checked -p sim-cli -- run data/scenarios/01_transit.toml --events
 
       # The export carries the state at each step (replay version 4); the
@@ -69,10 +128,46 @@ jobs:
       # still uses for older files. Export every scenario and check the
       # steps end at the final state and agree with the rebuild.
       - name: Export every scenario and check the viewer reads it
-        if: steps.changes.outputs.needed == 'true'
         run: |
           mkdir -p viewer/replays
           for scenario in data/scenarios/*.toml; do
             cargo run --locked --profile checked -p sim-cli -- export "$scenario" --out "viewer/replays/$(basename "$scenario" .toml).json"
           done
           node viewer/check.js viewer/replays/*.json
+
+  # The check main requires, by this name. It runs whatever happened above
+  # and fails unless the index check passed and every other job passed, or
+  # every other job was skipped because only documents changed.
+  check:
+    name: Format, lint, test
+    needs: [changes, lint, test, run-and-export]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job passed
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          NEEDED: ${{ needs.changes.outputs.needed }}
+          LINT: ${{ needs.lint.result }}
+          TEST: ${{ needs.test.result }}
+          EXPORT: ${{ needs.run-and-export.result }}
+        run: |
+          echo "decisions index and what changed: $CHANGES (checks needed: $NEEDED)"
+          echo "format and lint: $LINT"
+          echo "tests: $TEST"
+          echo "run and export: $EXPORT"
+          if [ "$CHANGES" != success ]; then
+            echo "The first job did not pass."
+            exit 1
+          fi
+          if [ "$NEEDED" = false ]; then
+            expected=skipped
+          else
+            expected=success
+          fi
+          for result in "$LINT" "$TEST" "$EXPORT"; do
+            if [ "$result" != "$expected" ]; then
+              echo "A job is $result, and $expected was needed."
+              exit 1
+            fi
+          done

@@ -12,7 +12,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::belief::{GroundEstimate, GroundReport, Report};
+use crate::belief::{GroundEstimate, GroundGrade, GroundReport, Report};
 use crate::events::EventKind;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
@@ -168,6 +168,7 @@ fn report(world: &World, at: Hex, men: u32) -> Report {
     Report::Ground(GroundReport {
         hex: at,
         men,
+        grade: GroundGrade::MenInContact,
         day: 0,
         received_event: world.events.next_id(),
     })

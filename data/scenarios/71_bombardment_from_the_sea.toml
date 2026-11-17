@@ -1,0 +1,103 @@
+# Scenario 71: bombardment from the sea.
+#
+# Decision 0146, step 5 of stage 3, second part. The commander gives a
+# battleship the task of bombarding an enemy base. The staff sends her in the
+# night, brings her home at the morning, and stops when her rounds are below
+# the level her risk keeps.
+#
+# The map is scenario 27's: A at (0,0), a coast hex with port size 5, and B
+# at (4,0), a coast hex with port size 0, 160 nm away. Allied base 1 lies at
+# A with 5,000 t of fuel and no ammunition; Japanese base 2, with no gun, no
+# aircraft, no supply and no man, lies at B, on the Allied map. Task force 1,
+# one placeholder battleship on the bombardment mission, lies stopped at base
+# 1 at cruising speed, full of fuel and rounds, at normal readiness, with no
+# home port and the stance avoid. No contact is held and there is no Japanese
+# unit. On day 1 the commander states "bombard base 2 with task force 1" and
+# gives leave to prepare and to launch. The game is 6 days.
+#
+# The hand calculation is in tests/scenario_71_bombardment_from_the_sea.rs.
+# The test runs this file on the frozen step 1 figures with three surface
+# combat figures of its own, bombardment_minutes 5, bombardment_hit_chance 0
+# and bombardment_false_claim_chance 0, in
+# data/reference/surface_combat_placeholder_scenario_71.toml, which this file
+# names, so that run by itself it plays the game its test proves. No shell
+# hits and nothing is claimed, so no die changes anything. It builds its
+# variants from the text of this file using the markers below.
+#
+# PLACEHOLDER DATA. The bases, ships, figures and map are invented.
+
+name = "Placeholder scenario 71: Bombardment from the sea"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_battleship.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat_placeholder_scenario_71.toml"
+air_combat = "../reference/air_combat.toml"
+
+# Allied base 1 at A, with fuel to give and no ammunition.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 0
+fuel_t = 5000
+
+# Japanese base 2 at B: no gun, no aircraft, no supply, no man.
+[[base]]
+id = 2
+name = "Placeholder enemy base B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Task force 1: the placeholder battleship, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder bombardment force 1"
+side = "allied"
+at_base = 1
+mission = "bombardment"
+stance = "avoid"
+
+[[ship]]
+id = 1
+name = "Placeholder battleship 1"
+class = 9
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "bombard"
+task_force = 1
+target = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

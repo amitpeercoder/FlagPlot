@@ -171,6 +171,7 @@ fn ag_index(order: &AirGroupOrder) -> usize {
             AirMission::NavalStrike => 2,
             AirMission::CombatAirPatrol => 3,
             AirMission::BaseStrike(_) => 4,
+            AirMission::Reconnaissance(_) => 15,
         },
         AirGroupOrder::SetSearchArc { .. } => 5,
         AirGroupOrder::SetPatrolShare { .. } => 6,
@@ -184,7 +185,7 @@ fn ag_index(order: &AirGroupOrder) -> usize {
         AirGroupOrder::SetSearchOnce { .. } => 14,
     }
 }
-const AG_KINDS: usize = 15;
+const AG_KINDS: usize = 16;
 
 fn examples() -> Vec<OrderKind> {
     let tf = |order| OrderKind::TaskForce {
@@ -320,6 +321,7 @@ fn examples() -> Vec<OrderKind> {
         AirMission::NavalStrike,
         AirMission::CombatAirPatrol,
         AirMission::BaseStrike(BaseId::new(9)),
+        AirMission::Reconnaissance(Hex::new(3, -2)),
     ] {
         out.push(ag(AirGroupOrder::SetAirMission(mission)));
     }
@@ -945,7 +947,7 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
         assert!(result["allied"]["margin"].is_string(), "{result}");
         assert_eq!(
             last,
-            json!({"format": "flagplot-agent", "version": 18, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
+            json!({"format": "flagplot-agent", "version": 22, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
         );
         assert_eq!(session.day_hashes(), hashes, "variant {variant}");
         let world = session.into_world();

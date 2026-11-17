@@ -6,6 +6,7 @@
 
 use core::fmt;
 
+use crate::belief::GroundGrade;
 use crate::command::{
     CommandKind, CommandRefusal, HoldTarget, InterruptCondition, InterruptRef, NoticeKind, PlanId,
     PlanState, Reason, StandingKind, StandingSubject,
@@ -1478,6 +1479,20 @@ pub enum EventKind {
         hex: Hex,
         men: u32,
         replaced: bool,
+        /// Where the count comes from (decision 0147, 1).
+        grade: GroundGrade,
+    },
+    /// An air group on the reconnaissance mission flew to `hex` and back
+    /// (decision 0147, 5 and 10): one aircraft, `distance_nm` out from
+    /// `from`, at a cost of `supply_t` of supply (the cost of one search
+    /// sortie of twice the distance). The ground report it gave is the
+    /// next event.
+    ReconnaissanceFlown {
+        air_group: AirGroupId,
+        from: AirGroupLocation,
+        hex: Hex,
+        distance_nm: Fixed,
+        supply_t: Fixed,
     },
     /// A ground report put an enemy base formed by a landing on the
     /// reporting side's map (decision 0092, 15).
@@ -1867,12 +1882,15 @@ pub enum EventKind {
     /// A notice the staff handed in beside its orders (decision 0107, ruling
     /// 34): the plan, the run where there is one, and the kind. Cites the
     /// `StaffReason` it rests on, if its basis resolves to one. Added at the
-    /// end (decision 0107, step 4).
+    /// end (decision 0107, step 4). `intent` names the intent whose words the
+    /// notice says: the end of a `met` notice of "take a place" (the ruling
+    /// on decision 0142's reading 4); `None` for every other notice.
     StaffNotice {
         side: Side,
         kind: NoticeKind,
         plan: PlanId,
         run: Option<u32>,
+        intent: Option<IntentId>,
     },
     /// An interrupt fired at the morning's test (decision 0107, rulings 31
     /// to 33). A set one carries its condition and the figure it was
@@ -2417,6 +2435,11 @@ impl EventKind {
                 vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
             }
             EventKind::GroundReportReceived { .. } => Vec::new(),
+            EventKind::ReconnaissanceFlown {
+                air_group, from, ..
+            } => std::iter::once(EntityRef::AirGroup(*air_group))
+                .chain(place_entity(*from))
+                .collect(),
             EventKind::BaseFound { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::TaskForceHalted { task_force, .. }
             | EventKind::TaskForceSteamedOn { task_force, .. } => {
@@ -3622,12 +3645,31 @@ impl fmt::Display for EventKind {
                 hex,
                 men,
                 replaced,
+                grade,
             } => write!(
                 f,
-                "{} ground report at {hex}: {men} enemy men ashore{}",
+                "{} ground report at {hex}: {men} enemy men ashore ({}){}",
                 side.name(),
+                grade.name(),
                 if *replaced { ", replacing the estimate held" } else { "" }
             ),
+            EventKind::ReconnaissanceFlown {
+                air_group,
+                from,
+                hex,
+                distance_nm,
+                supply_t,
+            } => match from {
+                AirGroupLocation::Base(base) => write!(
+                    f,
+                    "{air_group} flew {distance_nm} nm from {base} to look at {hex}, at a cost of {supply_t} t"
+                ),
+                AirGroupLocation::Ship(ship) => write!(
+                    f,
+                    "{air_group} flew {distance_nm} nm from {ship} to look at {hex}, at a cost of {supply_t} t"
+                ),
+                AirGroupLocation::Lost => write!(f, "{air_group} flew to look at {hex}"),
+            },
             EventKind::BaseFound { side, base, hex } => write!(
                 f,
                 "{} found enemy {base} at {hex}: it is on the {} side's map",
@@ -4074,6 +4116,7 @@ impl fmt::Display for EventKind {
                 kind,
                 plan,
                 run,
+                intent,
             } => {
                 write!(f, "{side:?} staff's notice: ")?;
                 match (kind, run) {
@@ -4089,7 +4132,10 @@ impl fmt::Display for EventKind {
                     (NoticeKind::Late, _) => {
                         write!(f, "{plan}'s landing cannot be ready by its date")
                     }
-                    (NoticeKind::Met, _) => write!(f, "every want of {plan} is met"),
+                    (NoticeKind::Met, _) => match intent {
+                        Some(intent) => write!(f, "{intent} is met"),
+                        None => write!(f, "every want of {plan} is met"),
+                    },
                 }
             }
             EventKind::InterruptFired {

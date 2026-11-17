@@ -412,6 +412,29 @@
           "type": "object",
           "required": [
             "kind",
+            "mission",
+            "hex"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_air_mission"
+            },
+            "mission": {
+              "description": "reconnaissance: once a day, in the morning pulse, one aircraft of the group flies to the hex and reports the enemy's men ashore there, a count that can be wrong by a wide margin (decision 0147). The group's aircraft type must be able to search and the hex within its search range; the flight is not made where your own fighting men are ashore in the hex, and it costs the supply and fatigue of a search sortie of twice the distance. The report is graded seen from the air. Nothing meets the flight.",
+              "const": "reconnaissance"
+            },
+            "hex": {
+              "description": "The hex to look at, as [q, r].",
+              "type": "array",
+              "items": { "type": "integer" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
             "from_deg",
             "to_deg",
             "range_nm"

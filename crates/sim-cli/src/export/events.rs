@@ -128,6 +128,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::NoAirCombatFigures => base("no_air_combat_figures"),
         RejectReason::AircraftAttackWithNothing => base("aircraft_attack_with_nothing"),
         RejectReason::NotAFighter => base("not_a_fighter"),
+        RejectReason::AircraftCannotSearch => base("aircraft_cannot_search"),
         RejectReason::PatrolShareOutOfRange(share) => {
             base("patrol_share_out_of_range").num("share", *share)
         }
@@ -881,12 +882,31 @@ pub(super) fn describe(
             hex,
             men,
             replaced,
+            grade,
         } => (
             "ground_report_received",
             d.text("side", names::side(*side))
                 .hex("hex", *hex)
                 .int("men", *men)
-                .flag("replaced", *replaced),
+                .flag("replaced", *replaced)
+                .text("grade", grade.name()),
+        ),
+        EventKind::ReconnaissanceFlown {
+            air_group,
+            from,
+            hex,
+            distance_nm,
+            supply_t,
+        } => (
+            "reconnaissance_flown",
+            match from {
+                AirGroupLocation::Base(base) => d.id("air_group", *air_group).id("base", *base),
+                AirGroupLocation::Ship(ship) => d.id("air_group", *air_group).id("ship", *ship),
+                AirGroupLocation::Lost => d.id("air_group", *air_group),
+            }
+            .hex("hex", *hex)
+            .num("distance_nm", *distance_nm)
+            .num("supply_t", *supply_t),
         ),
         EventKind::GroundFoundEmpty {
             side,
@@ -2099,6 +2119,7 @@ pub(super) fn describe(
             kind,
             plan,
             run,
+            intent,
         } => {
             let mut data = d
                 .text("side", names::side(*side))
@@ -2106,6 +2127,10 @@ pub(super) fn describe(
                 .int("plan", plan.raw());
             if let Some(run) = run {
                 data = data.int("run", *run);
+            }
+            // The intent whose words a take-a-place's `met` notice says.
+            if let Some(intent) = intent {
+                data = data.int("intent", intent.raw());
             }
             ("staff_notice", data)
         }

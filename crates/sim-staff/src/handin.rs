@@ -14,7 +14,7 @@ use sim_core::command::{
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{BaseId, IntentId, ShipId, TaskForceId};
-use sim_core::orders::{BaseOrder, Cargo, OrderKind, TaskForceOrder};
+use sim_core::orders::{BaseOrder, Cargo, OrderKind, SpeedSetting, TaskForceOrder};
 
 /// A force an order is for: one that exists, or the `k`-th the staff forms
 /// this day.
@@ -32,6 +32,8 @@ pub(crate) enum Step {
         act_at: BTreeSet<Hex>,
     },
     Unload,
+    /// A speed for the force (decision 0145, 5).
+    Speed(SpeedSetting),
     LoadTo {
         weight_t: Fixed,
     },
@@ -173,6 +175,7 @@ impl Out {
                         stand_at: BTreeSet::new(),
                     },
                     Step::Unload => TaskForceOrder::Unload,
+                    Step::Speed(speed) => TaskForceOrder::SetSpeed(*speed),
                     Step::LoadTo { weight_t } => TaskForceOrder::LoadTo {
                         cargo: Cargo::Supply,
                         weight_t: *weight_t,

@@ -801,7 +801,7 @@ function drawAirEvent(ctx, ev, si, aux, attempts, pos) {
   }
   return AIR_ACTIVITY.has(ev.kind);
 }
-const AIR_ACTIVITY = new Set(['search_flown', 'strike_launched', 'base_strike_launched']);
+const AIR_ACTIVITY = new Set(['search_flown', 'reconnaissance_flown', 'strike_launched', 'base_strike_launched']);
 
 // ---- Land units: the fight ashore, and a unit's movement in a step (decisions 0090, 0094, 0104, 0105) ----
 // The events that are a fight ashore, and the ones that move a unit or end its place. Each names the hex in its data (a falling back, the
@@ -1125,7 +1125,7 @@ function rebuildFromSteps(ctx) {
     const contacts = {}, estimates = {};
     for (const side of SIDES) {
       contacts[side] = new Map([...rec.contacts[side]].map(([id, c]) => [id, { id, side, hex: c.hex.slice(), ship_count: c.ship_count, kind: c.kind, age_pulses: c.age_pulses }]));
-      estimates[side] = new Map([...rec.ground_estimates[side]].map(([k, e]) => [k, { hex: e.hex.slice(), men: e.men, day: e.day }]));
+      estimates[side] = new Map([...rec.ground_estimates[side]].map(([k, e]) => [k, { hex: e.hex.slice(), men: e.men, day: e.day, grade: e.grade }]));
     }
     // Each command's picture (replay version 6, the umpire's file only): command word -> the contacts it holds, with `own`.
     let pictures = null;
@@ -1166,7 +1166,7 @@ function snapshot(cur, aux) {
   for (const [id, u] of cur.landUnits) landUnits.set(id, { id, name: u.name, side: u.side, men_ashore: u.men_ashore, hex: u.hex ? u.hex.slice() : null, posture: u.posture, fatigue: u.fatigue, fieldworks: u.fieldworks || 0, fed_share: u.fed_share, march: u.march ? { to: u.march.to.slice(), days: u.march.days, of: u.march.of } : null });
   // What each side believes of the enemy's men ashore (decision 0092): the last ground report of each hex.
   const estimates = {};
-  for (const side of Object.keys(cur.estimates)) estimates[side] = new Map([...cur.estimates[side]].map(([k, e]) => [k, { hex: e.hex.slice(), men: e.men, day: e.day }]));
+  for (const side of Object.keys(cur.estimates)) estimates[side] = new Map([...cur.estimates[side]].map(([k, e]) => [k, { hex: e.hex.slice(), men: e.men, day: e.day, grade: e.grade }]));
   return {
     forces, contacts, estimates, landUnits, formedBases: new Map(cur.formedBases), baseSide: new Map(cur.baseSide), pictures: null,
     sunk: new Set(cur.sunk),
@@ -1632,7 +1632,7 @@ function buildModel(replay) {
           break;
         // A side's estimate of the enemy's men ashore in a hex: the last report there, dated by its day (decision 0092).
         case 'ground_report_received':
-          if (Array.isArray(d.hex) && cur.estimates[d.side]) cur.estimates[d.side].set(d.hex[0] + ',' + d.hex[1], { hex: d.hex.slice(), men: d.men, day: ev.day });
+          if (Array.isArray(d.hex) && cur.estimates[d.side]) cur.estimates[d.side].set(d.hex[0] + ',' + d.hex[1], { hex: d.hex.slice(), men: d.men, day: ev.day, grade: d.grade });
           break;
         // A side's men found the hex empty: the estimate there is cleared (decision 0110, item 10).
         case 'ground_found_empty':
@@ -1751,6 +1751,7 @@ function compareWithFinal(model) {
     for (const e of want) {
       const r = have.get(e.hex[0] + ',' + e.hex[1]);
       if (!r) { problems.push(side + ' estimate at (' + e.hex + ') is in final but not in the rebuild'); continue; }
+      if (e.grade !== undefined && r.grade !== e.grade) problems.push(side + ' estimate at (' + e.hex + ') rebuilt as ' + r.grade + ' but final says ' + e.grade);
       if (r.men !== e.men || r.day !== e.day) problems.push(side + ' estimate at (' + e.hex + ') rebuilt as ' + r.men + ' on day ' + r.day + ' but final says ' + e.men + ' on day ' + e.day);
     }
     for (const key of have.keys()) if (!want.some(e => e.hex[0] + ',' + e.hex[1] === key)) problems.push(side + ' estimate at (' + key + ') is in the rebuild but not in final');
@@ -1843,9 +1844,9 @@ function eventMatches(model, ev, text, sel) {
 /** The level an intent is addressed to, set by its kind (decision 0117, 2): "area", "base:N" or "task_force:N". */
 function intentLevel(it) {
   switch (it.kind) {
-    case 'keep_supplied': case 'neutralise': case 'deny': return 'area';
+    case 'keep_supplied': case 'neutralise': case 'deny': case 'take_place': return 'area';
     case 'cover': case 'hold': case 'raid': case 'strike_ships': case 'search_waters': case 'build_up': return it.base != null ? 'base:' + it.base : 'area';
-    case 'stand_at': case 'operate_carriers': case 'ready_landing': return it.task_force != null ? 'task_force:' + it.task_force : 'area';
+    case 'stand_at': case 'operate_carriers': case 'ready_landing': case 'bombard': return it.task_force != null ? 'task_force:' + it.task_force : 'area';
     default: return 'area';
   }
 }
@@ -1914,9 +1915,13 @@ function intentWords(model, it, engine) {
     case 'strike_ships': return 'strike ships from ' + baseW(it.base);
     case 'search_waters': return 'search the waters from ' + baseW(it.base);
     case 'stand_at': return 'stand at (' + it.hex[0] + ',' + it.hex[1] + ') with ' + forceW(it.task_force);
+    // Decision 0146.
+    case 'bombard': return 'bombard ' + baseW(it.target) + ' with ' + forceW(it.task_force);
     case 'operate_carriers': return 'operate the carrier force ' + forceW(it.task_force) + ' from (' + it.hex[0] + ',' + it.hex[1] + ')';
     // Decision 0141.
     case 'ready_landing': return 'ready a landing at (' + it.hex[0] + ',' + it.hex[1] + ') by ' + forceW(it.task_force) + (it.by_day ? ' by the morning of day ' + it.by_day : '');
+    // Decision 0142.
+    case 'take_place': return 'take the place at (' + it.hex[0] + ',' + it.hex[1] + ')' + (it.by_day ? ' by day ' + it.by_day : '');
     case 'build_up': {
       const want = w => ({ airfield: 'an airfield', mend: "its airfield's damage mended", defences: 'defences to ' + it.defences + ' points', port: 'the port worked', aircraft: 'aircraft repair' })[w] || w;
       return 'build up ' + baseW(it.base) + ': ' + (it.wants || []).map(want).join(', then ');
@@ -2083,7 +2088,7 @@ function landLayer(model, si, beliefSides) {
   const estimates = [];
   for (const side of beliefSides || []) {
     const m = st.estimates && st.estimates[side];
-    if (m) for (const e of m.values()) estimates.push({ side, of: side === 'allied' ? 'japanese' : 'allied', q: e.hex[0], r: e.hex[1], men: e.men, day: e.day });
+    if (m) for (const e of m.values()) estimates.push({ side, of: side === 'allied' ? 'japanese' : 'allied', q: e.hex[0], r: e.hex[1], men: e.men, day: e.day, grade: e.grade });
   }
   return { stacks, aboard, gone, aboardMap, estimates };
 }
@@ -2146,7 +2151,7 @@ function baseFigures(model, si, id) {
   fig.land = [...st.landUnits.values()].filter(u => u.hex && u.hex[0] === q && u.hex[1] === r && u.men_ashore > 0).sort((a, c) => a.id - c.id);
   // A side's page: that side's estimate of the enemy ashore in the hex, where it holds one.
   const est = side && st.estimates && st.estimates[side] ? st.estimates[side].get(hexKey(q, r)) : null;
-  fig.estimate = est ? { men: est.men, day: est.day } : null;
+  fig.estimate = est ? { men: est.men, day: est.day, grade: est.grade } : null;
   return fig;
 }
 
@@ -2235,6 +2240,18 @@ function intentShapes(model, si, side, id) {
       words.push('the landing ' + hx(it.hex) + ' ringed' + (f ? ', a line from task_force:' + it.task_force + ' at ' + hx(f) : ', task_force:' + it.task_force + ' is not on the map at this step'));
       break;
     }
+    case 'bombard': {
+      const target = baseHex(it.target);
+      ring(target, 'target', 'target');
+      const f = forceHex(it.task_force);
+      line(f, target, 'raid', 'TF' + it.task_force);
+      words.push('the target ' + baseName(it.target) + ' ringed' + (f ? ', a line from task_force:' + it.task_force + ' at ' + hx(f) : ', task_force:' + it.task_force + ' is not on the map at this step'));
+      break;
+    }
+    case 'take_place':
+      ring(it.hex, 'station', 'place');
+      words.push('the place ' + hx(it.hex) + ' ringed');
+      break;
     case 'hold': case 'cover': case 'strike_ships': case 'search_waters': case 'build_up':
       ring(baseHex(it.base), 'base', baseName(it.base));
       words.push(baseName(it.base) + ' ringed');
@@ -2967,7 +2984,7 @@ function renderScreen() {
     if (n > 1) { g.append(sv('circle', { cx: 15, cy: -10, r: 7, fill: 'var(--panel)', stroke: 'var(--sc)', 'stroke-width': 1.6 })); const t = sv('text', { x: 15, y: -6.5, text: String(n) }); t.setAttribute('style', 'fill: var(--ink); font-size: 10px'); g.append(t); }
     const men = est ? it.est.men : it.stack.men;
     g.append(sv('text', { class: 'lmen', x: 0, y: 22, text: (est ? '~' : '') + (men >= 10000 ? f1(men / 1000) + 'k' : men >= 1000 ? (Math.round(men / 100) / 10) + 'k' : String(men)) }));
-    g.append(sv('title', { text: est ? 'The ' + it.est.side + ' side\'s estimate of the ' + it.est.of + ' men ashore at (' + it.q + ', ' + it.r + '): about ' + men + ' men, reported day ' + it.est.day : it.stack.units.map(u => u.name + ', ' + u.men_ashore + ' men').join('; ') + ' (' + it.side + ', at (' + it.q + ', ' + it.r + '))' }));
+    g.append(sv('title', { text: est ? 'The ' + it.est.side + ' side\'s estimate of the ' + it.est.of + ' men ashore at (' + it.q + ', ' + it.r + '): about ' + men + ' men, reported day ' + it.est.day + (it.est.grade ? ' (' + it.est.grade + ')' : '') : it.stack.units.map(u => u.name + ', ' + u.men_ashore + ' men').join('; ') + ' (' + it.side + ', at (' + it.q + ', ' + it.r + '))' }));
     gLand.append(g);
   }
   // The fight ashore: a tag on its hex that lists its events when clicked
@@ -4128,7 +4145,7 @@ function baseSection(id) {
   }
   sec.append(kv);
   if (!fig.known) sec.append(el('div', { class: 'note', text: S.replay.view_side ? 'This side knows only the name, place and holder of this base. The stocks, the airfield and the aircraft there are not on its page.' : 'This file (version ' + S.replay.version + ') holds no record of the base at each step; export it again for its stocks and airfield.' }));
-  if (fig.estimate) sec.append(el('div', { class: 'note', text: 'This side\'s estimate of the enemy ashore here: about ' + fig.estimate.men + ' men, reported day ' + fig.estimate.day + '.' }));
+  if (fig.estimate) sec.append(el('div', { class: 'note', text: 'This side\'s estimate of the enemy ashore here: about ' + fig.estimate.men + ' men, reported day ' + fig.estimate.day + (fig.estimate.grade ? ' (' + fig.estimate.grade + ')' : '') + '.' }));
   if (fig.known || !S.replay.view_side) sec.append(airGroupsBlock(fig.groups.map(g => m.groupTable.get(g.id)).filter(Boolean), st));
   if (fig.known) {
     sec.append(el('h3', { text: 'Ships in port, not in a force' }));
@@ -4171,7 +4188,7 @@ function landSection(sel) {
     const side = sel.side, e = st.estimates[side] && st.estimates[side].get(sel.q + ',' + sel.r);
     sec.append(el('h2', null, 'Estimate of the enemy ashore at (' + sel.q + ', ' + sel.r + ')'));
     if (!e) sec.append(el('div', { class: 'dim', text: 'No estimate is held here at this step.' }));
-    else sec.append(el('div', { text: 'The ' + side + ' side believes about ' + e.men + ' enemy men are ashore here, as its last ground report of day ' + e.day + ' said. It may be wrong, and old.' }));
+    else sec.append(el('div', { text: 'The ' + side + ' side believes about ' + e.men + ' enemy men are ashore here, as its last ground report of day ' + e.day + (e.grade ? ' (' + e.grade + ')' : '') + ' said. It may be wrong, and old.' }));
     return sec;
   }
   const units = [...st.landUnits.values()].filter(u => u.hex && u.hex[0] === sel.q && u.hex[1] === sel.r && u.side === sel.side && u.men_ashore > 0).sort((a, b) => a.id - b.id);

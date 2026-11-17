@@ -223,8 +223,15 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// (decision 0140);
 /// version 40 adds the kinds "ready a landing", with its date, and "build
 /// up a base", with its wants, the land units at the end of a forces limit,
-/// and a land unit as a hold's target (decision 0141).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v40";
+/// and a land unit as a hold's target (decision 0141);
+/// version 41 adds the kind "take a place", with its hex and its date
+/// (decision 0142);
+/// version 42 adds the kind "bombard a base", with its force and its target
+/// (decision 0146);
+/// version 43 adds an estimate's `grade` after its event, the same in a
+/// ground report in flight, and the air mission reconnaissance (code 6) with
+/// its hex (decision 0147).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v43";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -743,6 +750,7 @@ fn name_every_field(world: &World) {
             men: _,
             day: _,
             report_event: _,
+            grade: _,
         }) = belief.ground_estimates().next()
         {}
     }
@@ -773,7 +781,12 @@ fn name_intent_kind(kind: IntentKind) {
             hex: _,
             by_day: _,
         }
-        | IntentKind::BuildUp { base: _, wants: _ } => {}
+        | IntentKind::BuildUp { base: _, wants: _ }
+        | IntentKind::TakePlace { hex: _, by_day: _ }
+        | IntentKind::Bombard {
+            force: _,
+            target: _,
+        } => {}
     }
 }
 
@@ -846,6 +859,17 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
                     h.u32(points);
                 }
             }
+        }
+        // Decision 0142: the hex, then the date.
+        IntentKind::TakePlace { hex, by_day } => {
+            h.i32(hex.q);
+            h.i32(hex.r);
+            h.optional_u32(by_day);
+        }
+        // Decision 0146: the force, then the target.
+        IntentKind::Bombard { force, target } => {
+            h.u32(force.raw());
+            h.u32(target.raw());
         }
     }
 }
@@ -985,6 +1009,8 @@ fn hash_belief(h: &mut StateHasher, belief: &crate::belief::BeliefState) {
         h.u32(estimate.men);
         h.u32(estimate.day);
         h.u32(estimate.report_event.raw());
+        // After the event (decision 0147).
+        h.u8(estimate.grade.code());
     }
 }
 
@@ -1036,6 +1062,8 @@ fn hash_report(h: &mut StateHasher, report: &crate::belief::Report) {
             h.u32(ground.men);
             h.u32(ground.day);
             h.u32(ground.received_event.raw());
+            // After the event (decision 0147).
+            h.u8(ground.grade.code());
         }
         Report::NoneFound(none) => {
             h.u8(5);
@@ -1500,6 +1528,12 @@ pub(crate) fn hash_air_group(h: &mut StateHasher, group: &AirGroup) {
     // The base strike mission (code 5) is followed by its target base.
     if let AirMission::BaseStrike(base) = group.mission {
         h.u32(base.raw());
+    }
+    // The reconnaissance mission (code 6) is followed by its hex (decision
+    // 0147).
+    if let AirMission::Reconnaissance(hex) = group.mission {
+        h.i32(hex.q);
+        h.i32(hex.r);
     }
     h.i64(group.patrol_share.raw());
     h.optional_u32(group.share_order.map(|id| id.raw()));

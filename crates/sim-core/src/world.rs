@@ -128,10 +128,13 @@ impl Default for MadeIds {
 /// hold, and the live figure changes every live game in which a group
 /// searches) and 18 from decision 0133 (a contact reported this pulse is
 /// refreshed again in it only from a hex away, which changes every live game
-/// with two reports two hexes apart in one pulse). A pull request raises it by one
+/// with two reports two hexes apart in one pulse) and 19 from decision 0147 (an
+/// estimate's grade and the reconnaissance mission, which a game saved under
+/// the old rules could not hold, and the live figures' two reconnaissance
+/// figures). A pull request raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 18;
+pub const RULES_VERSION: u32 = 19;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

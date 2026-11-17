@@ -1073,6 +1073,7 @@ fn the_default_contested_needs_an_own_attack_and_an_estimate_of_enemy_men() {
             &Report::Ground(GroundReport {
                 hex: AT,
                 men: 300,
+                grade: crate::belief::GroundGrade::MenInContact,
                 day: 0,
                 received_event: EventId::new(1),
             }),

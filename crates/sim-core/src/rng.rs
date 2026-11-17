@@ -113,11 +113,15 @@ pub enum Draw {
     /// subsystem, keyed on the task force or the base that reports. One
     /// number is always taken, whatever the chances.
     StateReport,
+    /// The error of a reconnaissance flight's count of the enemy ashore
+    /// (decision 0147, 8): one stream for each air group, in the morning
+    /// pulse, in the intelligence subsystem, keyed on the air group.
+    Reconnaissance,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 12] = [
+    pub const ALL: [Draw; 13] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -130,6 +134,7 @@ impl Draw {
         Draw::ReportPassed,
         Draw::ReportPassedDown,
         Draw::StateReport,
+        Draw::Reconnaissance,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -148,6 +153,7 @@ impl Draw {
             Draw::ReportPassed => 9,
             Draw::ReportPassedDown => 10,
             Draw::StateReport => 11,
+            Draw::Reconnaissance => 12,
         }
     }
 }

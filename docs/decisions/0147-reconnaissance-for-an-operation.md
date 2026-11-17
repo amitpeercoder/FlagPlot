@@ -1,10 +1,10 @@
 # 0147: Reconnaissance for an operation: step 6 of stage 3, first part
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139, step 6 of its nine, and its items 4 to 6, which the designer confirmed as the smallest useful part of `docs/design/intelligence.md`, "Reconnaissance as part of an operation"). Step 6 is written in two records: this one; and the next, cover for an operation by carriers. This one adds a rule to the engine. Nothing is built. It is built after decision 0146.
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139, step 6 of its nine, and its items 4 to 6, which the designer confirmed as the smallest useful part of `docs/design/intelligence.md`, "Reconnaissance as part of an operation"). Step 6 is written in two records: this one; and the next, cover for an operation by carriers. This one adds a rule to the engine. It is built after decision 0146. Built on Nov 17, 2026, with decision 0148: see "As built".
 
 Summary: Step 6 of stage 3, first part: a count of the enemy ashore has a grade (told, seen from the air, or men in contact); an air group on the new reconnaissance mission flies to a place once a day and reports the men there, with a wider error than men in contact have; and "take a place" sends a group to look, chooses its units again on the first count, and is not launched until it holds the count its risk asks for, or says what it goes without
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Not built
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -75,3 +75,59 @@ As decision 0139 has it: patrols and men put ashore to watch; how hard a reconna
 ## The hand calculation
 
 `tests/scenario_72_reconnaissance.rs`.
+
+## As built
+
+Built on Nov 17, 2026, on the branch `stage3-step6`, with decision 0148. Nothing is tuned and no figure of the frozen step 1 set changed; the two live figures are added to `data/reference/ground.toml` (0.25 and 2, placeholders). The test of scenario 72 (`tests/scenario_72_reconnaissance.rs`) asserts every number and property of the hand calculation it can: 26 tests pass, and two are ignored on a mismatch with the hand calculation (below). The main game gives the orders, commands and notices of the table: the flight of day 1 and no other, 150 men seen from the air, unit 1 chosen alone on day 2 on 450 men wanted, the notice and release on day 3, the load to 45 t, seven orders and five staff commands, none refused.
+
+### Mismatches with the hand calculation
+
+1. **Day 2: "the loading is cut to 50 by the change".** Decision 0095, item 10 (and chapter 7, Preparing a landing) costs loading only for a unit added to a roster: a unit dropped leaves at no cost. On day 2 unit 2 is dropped and nothing added, so the loading stays at 100. The landing is still not ready on day 2, since the staff orders the landing again that morning (a landing ordered that morning is not ready that morning, as the doctrine of decision 0141 already held), and is ready on day 3 as the table has it; nothing else of days 1 to 4 differs. The doc comment is restated by the architect; the ignored test is replaced by `day_2_no_loading_is_lost_and_the_loading_stays_100`.
+2. **The property "The grades", day 1.** With an opening estimate of 500 at preserve the force the men wanted are 1,500, and the two transports carry 1,200. By decision 0142, item 10, at preserve the force a shortfall forms nothing, asks no leave and hands in the notice that it cannot meet the intent: so day 1 forms no landing (the group is sent all the same, so that a count can come, and flies on day 1), and the landing is formed on day 2 on the count of 150, with unit 1 alone, a day behind the main case. The doc comment is restated by the architect; the ignored test is replaced by `the_grades_day_1_no_landing_and_day_2_unit_1_alone`, in which the plan is released on the morning of day 3; `the_grades` asserts the grade told, the group sent on day 1 and the estimate replaced by 150 seen from the air.
+
+### What was built
+
+- **The grade (`crates/sim-core/src/belief.rs`).** `GroundGrade` (told 1, seen from the air 2, men in contact 3) on `GroundEstimate` and `GroundReport`; a scenario's opening estimate is told, the ground report of decision 0092 men in contact. Hashed after the estimate's event and named; state layout `flagplot-state-v43`.
+- **The mission and the flight.** `AirMission::Reconnaissance(Hex)`, code 6 (`crates/sim-core/src/orders.rs`), refused with the new reason `AircraftCannotSearch` for a type with no search range, and for a hex off the map (`resolve.rs`, the mission order). `World::reconnoitre` (`crates/sim-core/src/reconnaissance.rs`, new), called in the morning pulse's search phase after the searches (`resolve.rs`): items 5 to 12, its draw `Draw::Reconnaissance` (code 12, at the end), the events `ReconnaissanceFlown` and `GroundReportReceived` with its grade, and `BaseFound` (shared with the ground report, `estimate.rs`, `find_hidden_bases`). `side_events.rs`: the flight is the flying side's whole, the enemy's nothing; the report's breakdown stays the umpire's.
+- **The two figures** in `refdata.rs` and the loader (`crates/sim-data/src/reference.rs`), both or neither; the frozen step 1 `ground.toml` has neither.
+- **The staff (`crates/sim-staff/src/look.rs`, new, and `take.rs`).** `knowledge` (the count held and the need of the risk, item 13), `look_orders` (items 14 and 15), `choose_again` (items 16 and 17), `need_to_know` (items 18 to 20), called from `prepare_place` and the launch of "take a place". `ready.rs`: a landing ordered again this morning has its projected day no earlier than tomorrow, as its reading already was.
+- **Plumbing:** the scenario file's `set_air_mission` takes a `hex` (`crates/sim-data`); the saved game (version 18, `crates/sim-cli/src/save.rs`); the replay export and `sim-cli run` show the grade; the agent's mission order, briefing (`reconnaissance_of`, and an estimate's grade as `came_from`) and schemas (interface version 22); the viewer's words and `viewer/check.js`; `docs/commands.md`.
+- **Scenario 72** (`data/scenarios/72_reconnaissance.toml`) on its own ground figures (`data/reference/ground_placeholder_scenario_72.toml`, frozen beside the others in `data/reference/step1/`), so that run by itself it plays the game its test proves.
+- **The rulebook:** chapter 1 (the hash, the saved game), chapter 3 (the grade, the flight's report), chapter 5 (the mission), chapter 8 (Taking a place: the need to know; the versions), the glossary. Rules label 19, doctrine `supply-29` (with decision 0148).
+
+### Readings taken
+
+1. **The figures:** one of the two without the other is an error of the loader, as for `report_error`; with neither, no flight is made.
+2. **The mission order** is refused for a type whose search range is 0 (`AircraftCannotSearch`) and for a hex off the map (as a waypoint off the map is).
+3. **The flight:** the range is the type's search range against the distance; the supply spent is the cost of one search sortie of twice the distance (0 with no air supply figures); it is noted as a search sortie of one aircraft, so that wear, fatigue and supply pay for it; flights are made in group order after the day's searches; "men of a fighting unit" are men ashore of a unit that is not working.
+4. **Who is sent:** the groups the forces limit names are its `air_groups`, read up the tree, and not the groups aboard a task force it names; the group is the lowest-numbered of them that can search, may be used, is not held, is not taken that morning by a cover, raid or strike, and whose range reaches the place from its base. A group already on reconnaissance of the place counts as sent. At press the staff sends none and sets none to rest. When the need is met every such group of the limit on reconnaissance of the place is set to rest.
+5. **The order** goes after the "ready a landing" task is served that morning, so a morning's landing order comes before the group's, as the table has it; the group is sent also where the landing could not be formed (a shortfall at preserve), so that a count can come.
+6. **"The first morning a count is held"** is the morning after the count's day: each new count of grade 2 or 3 makes the choice again while the plan is preparing and no unit is aboard.
+7. **At preserve, a count that asks for more men than the ships carry** leaves the limit as it is, and the launch is held by decision 0142, item 10.
+8. **The side's own fighting men ashore with no count** are read as "nothing can look", with words of their own.
+9. **The need is read after the check that the place can be held** (decision 0144): a landing "otherwise ready" is one that passes that check too, so where the check stops it at preserve its own notice is the one handed in.
+10. **The release's reason** ends "It goes on no count of the enemy", "on what it was told" or "on the count held", with the estimate's grade and day.
+
+### Earlier tests, baselines and games that change
+
+No expected number changed.
+
+- **`tests/scenario_67_taking_a_place.rs`, `an_escort_at_preserve_the_force`:** at preserve the force with no count and no air group in the forces limit, nothing can look (item 19): plan 1 is never released, the notice that intent 1 cannot be met is handed in on the morning the landing is otherwise ready, and the escort, route and unload of day 8 are not given. As the architect directed, its variant now adds a scout group (type 2, at base 1) named in the forces limit's `air_groups`. It still fails as written: the group is set to reconnaissance of (4,0) on day 1 and never flies, because scenario 67's ground figures (`ground_placeholder_scenario_67.toml`) give no reconnaissance figures (item 7). The need is never met, the plan is never released, and day 8 has no orders. It stays ignored with that reason, for the architect.
+- **Scenario 73's property "Preserve the force"** (decision 0148): the same cause, in its As built.
+- **Run baselines** differ from main beyond versions and hashes only in words: a ground report's line and an estimate's line name the grade ("(men in contact)", "(told)") in about 28 baselines (07, 23 to 25, 28 to 30, 32 to 34, 37, 38, 45, 68, and the events of 67 and 69), and the release and waiting reasons of scenarios 67 and 69 add "It goes on no count" or "on what it was told". No order or event changed.
+- **Fixtures:** the version pins of the saved game (17 to 18) and agent interface (21 to 22); `NOT_IN_THE_FULL_SLICE` gains `ReconnaissanceFlown`; the count of side event kinds (147 to 148) and of air group order kinds (`sim-agent/tests/play.rs`); event patterns in scenarios 24 and 38 gain `..` for the grade; the two tests that compare every baseline with a run with no staff leave out scenarios 72 and 73. The recorded games differ in their versions and day hashes, and the one holding an estimate (`full_slice_five_days_sonnet`) in the estimate's `came_from` (`crates/sim-cli/tests/recorded_games/README.md`).
+
+### Files to read
+
+- `crates/sim-core/src/reconnaissance.rs` (`reconnoitre`, line 46), called at `crates/sim-core/src/resolve.rs:310`; the mission order at `resolve.rs:1114`; `belief.rs:74` (`GroundGrade`).
+- `crates/sim-staff/src/look.rs` (`knowledge` 155, `look_orders` 234, `choose_again` 351, `need_to_know` 439); its calls in `crates/sim-staff/src/take.rs` at lines 263, 1199, 1224 and 1343.
+
+## The architect's rulings
+
+Made on Nov 17, 2026, on reading the build.
+
+1. **Readings 1 to 11 are accepted as built,** among them that only the air groups a forces limit names are sent to look, not the groups aboard a task force it names, and that the need to know is read after the check that the place can be held.
+2. **Two numbers of scenario 72's hand calculation were the architect's errors and are restated;** the code stands. A unit that leaves a roster costs no loading (decision 0095, item 10), so the loading of day 2 stays 100 and the landing is not ready that morning only because it was ordered again. And with 1,500 men wanted against 1,200 carried at preserve the force no landing is formed on day 1 (decision 0142, item 10): the notice is handed in, the group is sent all the same, and the landing is formed on day 2 on the count.
+3. **What item 19 does to games written before it.** At preserve the force a plan with no count and nothing that can look is never released. Scenario 67's escort property was such a game. It now has a scout group named in its forces limit, and scenario 67's own figures file and its frozen copy gain the two reconnaissance figures at 1 and 1, as a rule that adds a figure adds it to a frozen copy with its first value. The orders of day 8 are as first written; the scout looks on day 1 and again on day 5, when the count of day 1 is more than 3 days old.
+4. **A scenario with its own ground figures and no reconnaissance figures makes no flight,** so a group sent to look there never meets the need. That is as item 7 has it, and a scenario that wants a look gives the figures.
+5. **Known and left:** at preserve the force the staff hands in "cannot meet" on a morning when the count it has asked for is still to come (scenario 72, "The grades", day 1), and forms the landing the next day. It is told once and then met; whether it should wait a day in silence is for the proof to show.

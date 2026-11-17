@@ -305,7 +305,10 @@ impl World {
         match phase {
             PulsePhase::Movement => self.move_task_forces(day, pulse),
             PulsePhase::Loading => self.handle_cargo(day, pulse),
-            PulsePhase::AirSearch => self.search_from_the_air(day, pulse),
+            PulsePhase::AirSearch => {
+                self.search_from_the_air(day, pulse);
+                self.reconnoitre(day, pulse);
+            }
             PulsePhase::StrikeDecisions => self.decide_strikes(day, pulse),
             PulsePhase::AirCombat => self.resolve_strikes(day, pulse),
             PulsePhase::AircraftRepair => self.repair_aircraft(day, pulse),
@@ -1105,6 +1108,23 @@ impl World {
                             .role;
                         if role != AircraftRole::Fighter {
                             return Err(RejectReason::NotAFighter);
+                        }
+                        Ok(())
+                    }
+                    AirGroupOrder::SetAirMission(AirMission::Reconnaissance(hex)) => {
+                        // Decision 0147, 4: refused for a type that cannot
+                        // search, and for a hex that is not on the map.
+                        let search_range = self
+                            .ref_data
+                            .aircraft_types
+                            .get(&group.aircraft_type)
+                            .expect("air group has a known aircraft type")
+                            .search_range_nm;
+                        if search_range <= Fixed::ZERO {
+                            return Err(RejectReason::AircraftCannotSearch);
+                        }
+                        if self.map.get(*hex).is_none() {
+                            return Err(RejectReason::WaypointOffMap(*hex));
                         }
                         Ok(())
                     }
