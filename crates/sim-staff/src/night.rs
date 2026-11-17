@@ -4,8 +4,9 @@
 //! supplied" and a lift of "take a place" are timed, at preserve the force
 //! and at balanced, to arrive in the night.
 //!
-//! - **A place the side's own fighters are based at** (item 2a) is run to
-//!   by day, at every risk: read from the side's own groups.
+//! - **A place the side's own fighters are based at, or a hex next to it**
+//!   (item 2a and ruling 6), is run to by day, at every risk: read from the
+//!   side's own groups.
 //! - **The hour it would arrive** (item 4) is the engine's forecast of the
 //!   passage from the source, sailing at the first hour of a day, at cruising
 //!   speed and then at full. It arrives in the night when its hours, less the
@@ -76,13 +77,14 @@ pub(crate) fn enemy_base_near(view: &SideView<'_>, place: Hex) -> Option<(BaseId
         .map(|(hexes, id)| (id, hexes))
 }
 
-/// Item 2a: a base of the side's own in `place`'s hex with a fighter group of
-/// the side's based at it, whatever its state: the lowest numbered such base
-/// and the lowest numbered group. Read from the side's own groups only.
+/// Item 2a (with ruling 6): a base of the side's own in `place`'s hex or in a
+/// hex next to it with a fighter group of the side's based at it, whatever
+/// its state: the lowest numbered such base and the lowest numbered group.
+/// Read from the side's own groups only.
 pub(crate) fn own_fighters_at(view: &SideView<'_>, place: Hex) -> Option<(BaseId, AirGroupId)> {
     let bases: Vec<BaseId> = view
         .bases()
-        .filter(|b| b.hex == place)
+        .filter(|b| b.hex.distance(place) <= 1)
         .map(|b| b.id)
         .collect();
     view.air_groups()

@@ -688,6 +688,40 @@ fn the_sides_own_fighters_at_the_place() {
     assert_as_before(&play(&t));
 }
 
+/// The text with an Allied base with an airfield and a fighter group at
+/// `(q, r)`, a coast hex added to a copy of the map, and the options that
+/// read it.
+fn with_fighter_base(q: i32, r: i32) -> String {
+    let map_text =
+        std::fs::read_to_string(common::data_dir().join("map/placeholder_preparing.toml"))
+            .expect("the map reads")
+            + &format!("\n[[hex]]\nq = {q}\nr = {r}\nkind = \"coast\"\nport_size = 0\n");
+    let dir = std::env::temp_dir().join(format!("flag_plot_s70_{}_{q}_{r}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a directory");
+    let map_path = dir.join("map.toml");
+    std::fs::write(&map_path, map_text).expect("the map is written");
+    let t = changed(
+        &text(),
+        "map = \"../map/placeholder_preparing.toml\"",
+        &format!("map = \"{}\"", map_path.display()),
+    );
+    let base = format!(
+        "[[base]]\nid = 4\nname = \"Placeholder airfield\"\nside = \"allied\"\nq = {q}\nr = {r}\nsupply_t = 0\nfuel_t = 0\nairfield = true\n\n[[air_group]]\nid = 1\nname = \"Placeholder fighters 1\"\nside = \"allied\"\nbase = 4\naircraft_type = 4\nready = 12\n\n"
+    );
+    changed(&t, COMMANDS_MARKER, &format!("{base}{COMMANDS_MARKER}"))
+}
+
+#[test]
+fn the_sides_own_fighters_in_a_hex_next_to_the_place() {
+    // (-1,6) is next to C at (0,6): as at press.
+    assert_eq!(C.distance(Hex { q: -1, r: 6 }), 1);
+    assert_as_before(&play(&with_fighter_base(-1, 6)));
+    // (-2,6) is two hexes from C: the main case's seven orders.
+    assert_eq!(C.distance(Hex { q: -2, r: 6 }), 2);
+    let g = play(&with_fighter_base(-2, 6));
+    assert_eq!(g.all_orders(), main_orders());
+}
+
 /// Base 2 and unit 1 at B, base 3 at C, and the ships troop transports.
 fn no_speed_in_the_dark(t: &str) -> String {
     let t = changed(

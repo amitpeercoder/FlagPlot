@@ -1889,7 +1889,6 @@ fn every_subsystem_is_in_use_in_every_30_days() {
 }
 
 #[test]
-#[ignore = "decision 0145 with item 2a: from day 2 the Allied runs to Tulagi (no Allied fighters there; Shortland 8 hexes away) go by night and are cut by the night's limit (759.75 t to 124 t on day 2), and no run is ended by a hold any more; the new numbers are the architect's"]
 fn each_thing_that_must_happen_happens_and_leaves_the_run_going() {
     let one = run(1942);
     let firsts = firsts(&one);

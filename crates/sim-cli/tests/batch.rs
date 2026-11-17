@@ -1648,7 +1648,6 @@ fn every_run_has_refusals_by_side_and_cause_and_a_quiet_scenario_has_zeros() {
 /// side's, as `run --events` says), and no refused order of the staff. The
 /// batch counts what the log says, by side.
 #[test]
-#[ignore = "decision 0145 with item 2a: the soak's Allied runs to Tulagi go by night from day 2, and the Allied side's refused commands in the soak are 0, not 2; the new numbers are the architect's"]
 fn refused_commands_are_counted_by_side_as_the_log_says_them() {
     let file = "data/scenarios/45_soak_ashore.toml";
     let summary = parse(&batch("refusals-45", file, &["--runs", "1"]));

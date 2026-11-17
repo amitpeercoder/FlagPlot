@@ -188,7 +188,11 @@ use sim_core::view::SideView;
 /// run to a place where a base of the side's own has a fighter group of the
 /// side's based at it goes as before, at every risk. A side with no run by
 /// night to such a place gets the orders and reasons `supply-26` gave.
-pub const DOCTRINE_VERSION: &str = "supply-27";
+/// `supply-28` adds the architect's ruling 6 on decision 0145: item 2a
+/// reaches a base of the side's own in a hex next to the place as well. A
+/// side with no run by night to a place next to its own fighters gets the
+/// orders and reasons `supply-27` gave.
+pub const DOCTRINE_VERSION: &str = "supply-28";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
