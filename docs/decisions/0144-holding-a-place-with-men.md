@@ -111,3 +111,11 @@ No expected number changed. The agent interface's pins move from 19 to 20 (`crat
 - `crates/sim-staff/src/doctrine.rs` (`setup`) and `projection.rs` (`run_landings`).
 - `crates/sim-core/src/command/intake.rs` (`check_intent_kind`, `may_use_land_unit`, the `form_intent` floor) and `command.rs` (`may_stand_under`).
 - `tests/scenario_69_taken_and_held.rs`.
+
+### The architect's rulings, Nov 17, 2026
+
+The sixteen readings are accepted as built. Three are worth their reason.
+
+- **Reading 4, the third change of intake.** A hold with no land unit named may order the fighting units ashore in its base's hex. The rule card should have named it: a hold that concerns the men must be able to order them. It is recorded here as part of this decision.
+- **Reading 5, and the recorded game that changed.** A hold with men at its base and no source says each morning that the commander may name one. In the recorded game of the second proof's week this adds one reason a morning under the Allied hold of Tulagi and changes no order and no command. It stands: a garrison with nothing coming is worth a line each morning, and the other doctrines give one reason a morning too. The claim that earlier games play as before is corrected to this: no order or command of an earlier game changes.
+- **Reading 16, the hold before the take in a morning.** It gives the handing over the hand calculation has: on the morning after the capture the men are the hold's.

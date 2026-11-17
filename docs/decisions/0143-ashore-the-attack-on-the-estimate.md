@@ -108,3 +108,7 @@ No expected number changed. The agent interface's version pins move to 20 with d
 - `crates/sim-staff/src/ready.rs`: `readies`.
 - `crates/sim-core/src/command/intake.rs` and `events.rs`: the notice's intent.
 - `tests/scenario_68_ashore.rs`.
+
+### The architect's rulings, Nov 17, 2026
+
+The eleven readings are accepted as built. Reading 10, a second lift sent with no estimate while the place is not taken, is item 10 as written. The addition, that a scenario file plays by itself the game its test proves, stands for every scenario from here on: a scenario whose hand calculation rests on figures of its own names a figures file of its own.
