@@ -1391,9 +1391,27 @@ fn the_staffs_setup_of_the_39_days_gives_the_events_of_the_scripted_file_without
 
 /// Units whose day in the staff's setup is not the day of their first
 /// scripted order, because the architect ruled another: (kind, id, day),
-/// kind one of "task_force", "ship", "air_group", "land_unit". Left empty
-/// for the architect to fill (decision 0140, 13).
-const RULED: &[(&str, u32, u32)] = &[];
+/// kind one of "task_force", "ship", "air_group", "land_unit". Day 1 is no
+/// key. The architect's rulings of Nov 17, 2026 (decision 0140, As built): a
+/// unit's day is the day the rows have it there to use, and an air group
+/// whose aircraft arrive in the file takes the day of that arrival.
+const RULED: &[(&str, u32, u32)] = &[
+    // On station by engagement_positions 334, 335, 336, 350 and 334, 365, 369.
+    ("task_force", 3, 17),
+    ("task_force", 4, 17),
+    // Flying on 7 August by air_unit_facts 18, 362, 363, 56, 355 and 82, 83.
+    ("air_group", 1, 1),
+    ("air_group", 2, 1),
+    // The day their aircraft arrive in the file.
+    ("air_group", 3, 25),
+    ("air_group", 10, 14),
+    ("air_group", 11, 14),
+    ("air_group", 13, 24),
+    ("air_group", 14, 24),
+    ("air_group", 15, 36),
+    ("air_group", 16, 38),
+    ("air_group", 17, 38),
+];
 
 /// The units an order names, as intake reads them.
 fn units_an_order_names(kind: &OrderKind) -> Vec<EntityRef> {
@@ -1413,7 +1431,8 @@ fn units_an_order_names(kind: &OrderKind) -> Vec<EntityRef> {
 }
 
 #[test]
-fn every_unit_with_a_day_in_the_staffs_setup_has_the_day_of_its_first_scripted_order() {
+fn every_unit_with_a_day_in_the_staffs_setup_has_the_day_of_its_first_scripted_order_or_the_ruled_day(
+) {
     let scripted = common::load_live(&scripted_file()).expect("scenario 7 loads");
     let mut first: BTreeMap<EntityRef, u32> = BTreeMap::new();
     for (day, orders) in scripted.scripted_orders() {
@@ -1469,6 +1488,17 @@ fn every_unit_with_a_day_in_the_staffs_setup_has_the_day_of_its_first_scripted_o
                 "{kind}:{raw} has day {day}, expected {expected:?} (first scripted order {:?}, ruled {ruled:?})",
                 first.get(&unit)
             ));
+        }
+    }
+    // Every ruled day is the file's own key, day 1 being no key.
+    for (kind, raw, day) in RULED {
+        let own = with_days
+            .iter()
+            .find(|(k, r, _)| k == kind && r == raw)
+            .map(|(_, _, d)| *d);
+        let wanted = (*day > 1).then_some(*day);
+        if own != wanted {
+            wrong.push(format!("{kind}:{raw} has {own:?}, ruled {day}"));
         }
     }
     assert!(

@@ -9,15 +9,14 @@
 # It is kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).
 #
-# available_from = N (decision 0140, 1 to 6) is the day of the first scripted
-# order to the unit in scenario 7, with the row or decision that order's day
-# rests on cited beside it. A unit aboard a force takes the force's day and
-# has no key of its own; a unit the script never orders, or first orders on
-# day 1, has none and may be used from day 1. A day with no row behind it is
-# marked made up (placeholder). Where the script's first order is not plainly
-# the day a unit was there to use, the comment says TO RULE: the architect
-# settles it before the step is merged (decision 0140, 13). The key is read by
-# the loader decision 0140 builds, and this file does not load before it.
+# available_from = N (decision 0140, 1 to 6) is the day the rows have the unit
+# there to use; where no row speaks, the day of the first scripted order to
+# the unit in scenario 7; and an air group whose aircraft arrive in the file
+# takes the day of that arrival (the architect's rulings, Nov 17, 2026,
+# decision 0140's As built). The row or decision the day rests on is cited
+# beside it. A unit aboard a force takes the force's day and has no key of its
+# own; a unit with day 1 has none. A day with no row behind it is marked made
+# up (placeholder).
 #
 # [[formation]] tables and each land unit's formation come from data/oob rows,
 # cited beside them (decision 0140, 9).
@@ -596,8 +595,9 @@ side = "allied"
 # Day 8 (14 August): sent out from Espiritu Santo to land on day 9, 15 August:
 # Transport Division 12's run with the CUB One detachment,
 # data/oob/troop_lift_facts.csv 70, 86, 87, 88 and
-# data/oob/land_unit_facts.csv 660, 661 (decision 0101, 21). The sending day
-# is worked out by running the scenario, not a row.
+# data/oob/land_unit_facts.csv 660, 661 (decision 0101, 21). Worked out from
+# the landing date of the rows by the passage; the sending day itself has no
+# row.
 available_from = 8
 at_base = 3
 mission = "transport"
@@ -650,7 +650,8 @@ name = "Placeholder cargo ships, run of 21 August"
 side = "allied"
 # Day 13 (19 August): sent out on the day that brings it to Lunga on day 15,
 # 21 August: the run of 21 August, data/oob/land_unit_facts.csv 748,
-# data/oob/troop_lift_facts.csv 60. The sending day is worked out, not a row.
+# data/oob/troop_lift_facts.csv 60. Worked out from the landing date of the
+# rows by the passage; the sending day itself has no row.
 available_from = 13
 at_base = 3
 mission = "transport"
@@ -690,8 +691,8 @@ side = "allied"
 # Day 11 (17 August): sent out to lie at Tulagi on day 14 and cross with 2/5
 # on day 15, 21 August (data/oob/land_unit_facts.csv 534), then with the
 # Raiders on day 25, 31 August (data/oob/land_unit_facts.csv 798, 513),
-# decision 0101, the line under the American table. The sending day is worked
-# out, not a row.
+# decision 0101, the line under the American table. Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
 available_from = 11
 at_base = 3
 mission = "transport"
@@ -751,8 +752,8 @@ name = "Placeholder fast transports, the Parachutists' crossing"
 side = "allied"
 # Day 21 (27 August): sent out to lie at Tulagi on day 24 and cross with the
 # Parachutists on day 25, 31 August (data/oob/land_unit_facts.csv 798, 513),
-# decision 0101, the line under the American table. The sending day is worked
-# out, not a row.
+# decision 0101, the line under the American table. Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
 available_from = 21
 at_base = 3
 mission = "transport"
@@ -786,7 +787,8 @@ side = "allied"
 # Day 24 (30 August): sent out on the day that brings the 6th Naval
 # Construction Battalion's ship to Lunga on day 26, 1 September
 # (data/oob/land_unit_facts.csv 606); no row gives her load (decision 0101).
-# The sending day is worked out, not a row.
+# Worked out from the landing date of the rows by the passage; the sending day
+# itself has no row.
 available_from = 24
 at_base = 3
 mission = "transport"
@@ -837,7 +839,8 @@ side = "japanese"
 # Day 10 (16 August): sent out on the day before its landing in the night
 # pulse of day 11, the Oite's run of 16 August (data/oob/troop_lift_facts.csv
 # 37, 38; the architect's ruling of Nov 14, 2026, that a night landing is
-# numbered a day later). The sending day is worked out, not a row.
+# numbered a day later). Worked out from the landing date of the rows by the
+# passage; the sending day itself has no row.
 available_from = 10
 at_base = 7
 mission = "transport"
@@ -861,8 +864,8 @@ side = "japanese"
 # Day 12 (18 August): sent out from Rabaul on the day before its landing on
 # day 13, the Ichiki first echelon's run of 18 August
 # (data/oob/troop_lift_facts.csv 138, 139, 140, 141;
-# data/oob/land_unit_facts.csv 1049). The sending day is worked out, not a
-# row.
+# data/oob/land_unit_facts.csv 1049). Worked out from the landing date of the
+# rows by the passage; the sending day itself has no row.
 available_from = 12
 at_base = 2
 mission = "transport"
@@ -925,7 +928,8 @@ name = "Run of 29 August to Tassafaronga"
 side = "japanese"
 # Day 23 (29 August): sent out on the day before its landing on day 24, the
 # run of 29 August to Tassafaronga (data/oob/troop_lift_facts.csv 45, 148).
-# The sending day is worked out, not a row.
+# Worked out from the landing date of the rows by the passage; the sending day
+# itself has no row.
 available_from = 23
 at_base = 7
 mission = "transport"
@@ -982,8 +986,9 @@ id = 33
 name = "Run of 31 August to Taivu, Kawaguchi part 1"
 side = "japanese"
 # Day 25 (31 August): sent out on the day before its landing on day 26, the
-# run of 31 August to Taivu (data/oob/troop_lift_facts.csv 153, 154). The
-# sending day is worked out, not a row.
+# run of 31 August to Taivu (data/oob/troop_lift_facts.csv 153, 154). Worked
+# out from the landing date of the rows by the passage; the sending day itself
+# has no row.
 available_from = 25
 at_base = 7
 mission = "transport"
@@ -1057,8 +1062,8 @@ id = 34
 name = "Placeholder run of 2 September, Kawaguchi part 2"
 side = "japanese"
 # Day 27 (2 September): sent out on the day before its landing on day 28, the
-# run of 2 September (data/oob/troop_lift_facts.csv 159). The sending day is
-# worked out, not a row.
+# run of 2 September (data/oob/troop_lift_facts.csv 159). Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
 available_from = 27
 at_base = 7
 mission = "transport"
@@ -1080,8 +1085,8 @@ id = 35
 name = "Placeholder run of 4 September, Kawaguchi part 3"
 side = "japanese"
 # Day 29 (4 September): sent out on the day before its landing on day 30, the
-# run of 4 September (data/oob/troop_lift_facts.csv 161). The sending day is
-# worked out, not a row.
+# run of 4 September (data/oob/troop_lift_facts.csv 161). Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
 available_from = 29
 at_base = 7
 mission = "transport"
@@ -1139,8 +1144,8 @@ id = 36
 name = "Placeholder run of 5 September, Kawaguchi part 4"
 side = "japanese"
 # Day 30 (5 September): sent out on the day before its landing on day 31, the
-# run of 5 September (data/oob/troop_lift_facts.csv 164). The sending day is
-# worked out, not a row.
+# run of 5 September (data/oob/troop_lift_facts.csv 164). Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
 available_from = 30
 at_base = 7
 mission = "transport"
@@ -1171,8 +1176,8 @@ id = 37
 name = "Placeholder run of 6 September, Kawaguchi part 5"
 side = "japanese"
 # Day 31 (6 September): sent out on the day before its landing on day 32, the
-# run of 6 September (data/oob/troop_lift_facts.csv 166). The sending day is
-# worked out, not a row.
+# run of 6 September (data/oob/troop_lift_facts.csv 166). Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
 available_from = 31
 at_base = 7
 mission = "transport"
@@ -1205,8 +1210,8 @@ name = "Placeholder run of 11 September to Kamimbo, the Aoba Detachment"
 side = "japanese"
 # Day 36 (11 September): sent out on the day before its landing on day 37, the
 # Aoba Detachment's run to Kamimbo of 11 September
-# (data/oob/troop_lift_facts.csv 168). The sending day is worked out, not a
-# row.
+# (data/oob/troop_lift_facts.csv 168). Worked out from the landing date of the
+# rows by the passage; the sending day itself has no row.
 available_from = 36
 at_base = 7
 mission = "transport"
@@ -1257,8 +1262,8 @@ name = "Placeholder barges of early September, the Oka group"
 side = "japanese"
 # Day 31 (6 September): sent out on the day before its landing on day 32, 7
 # September, the Oka group's barges (data/oob/land_unit_facts.csv 931, 916,
-# 917, 918; decision 0101, as amended, 2). The sending day is worked out, not
-# a row.
+# 917, 918; decision 0101, as amended, 2). Worked out from the landing date of
+# the rows by the passage; the sending day itself has no row.
 available_from = 31
 at_base = 7
 mission = "transport"
@@ -1842,13 +1847,14 @@ mission = "carrier"
 id = 3
 name = "Carrier striking force"
 side = "japanese"
-# Day 18 (24 August): the Eastern Solomons orders of scenario 5, whose day 1
-# is day 18 here (decision 0093, 1; scenario 7's comment above the day-18
-# orders). The rows put the force leaving Hashirajima on 16 August, at sea
-# from 20 and 21 August and at its station north of the Solomons on 23 August:
-# data/oob/engagement_positions.csv 334, 335, 336, 350; Hiei and Kirishima
-# left Kure on 16 August: data/oob/engagement_positions.csv 396.
-available_from = 18
+# Day 17 (23 August): Ruled by the architect, Nov 17, 2026: day 17 (23
+# August), the day the rows have the force on station north of the Solomons:
+# data/oob/engagement_positions.csv 334, 335, 336, 350; it left Hashirajima on
+# 16 August, Hiei and Kirishima Kure the same day
+# (data/oob/engagement_positions.csv 396). The script first orders it on day
+# 18 (the Eastern Solomons orders of scenario 5, decision 0093, 1). Its air
+# groups take its day.
+available_from = 17
 q = 9
 r = -19
 mission = "carrier"
@@ -1865,11 +1871,11 @@ mission = "carrier"
 id = 4
 name = "Ryujo detachment"
 side = "japanese"
-# Day 18 (24 August): the Eastern Solomons orders of scenario 5, whose day 1
-# is day 18 here (decision 0093, 1; scenario 7's comment above the day-18
-# orders). The Ryujo group is with Nagumo's force from 16 August and near
-# Bradley Reefs on 23 August: data/oob/engagement_positions.csv 334, 365, 369.
-available_from = 18
+# Day 17 (23 August): Ruled by the architect, Nov 17, 2026: day 17 (23
+# August), the day the rows have the Ryujo group near Bradley Reefs, with
+# Nagumo's force from 16 August: data/oob/engagement_positions.csv 334, 365,
+# 369. The script first orders it on day 18. Its air groups take its day.
+available_from = 17
 q = 7
 r = -18
 mission = "carrier"
@@ -2397,15 +2403,12 @@ task_force = 11
 id = 1
 name = "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)"
 side = "japanese"
-# Day 15 (21 August): the first scripted order of the Rabaul air campaign,
-# scenario 6's orders moved by 14 (decision 0093, 1; ruling F of decision
-# 0101; scenario 7's comment above the Rabaul orders: before day 15 the
-# bombers have no order, and the raids of 7 to 20 August are not in scenario
-# 6). Not a day with a row. TO RULE: the rows have its units at Rabaul from
-# February (4th Air Group: data/oob/air_unit_facts.csv 18, 362, 363), Misawa
-# from 7 August (data/oob/air_unit_facts.csv 56, 355) and Kisarazu's
-# detachment on 22 August (data/oob/air_unit_facts.csv 52).
-available_from = 15
+# Ruled by the architect, Nov 17, 2026: no day, day 1: the rows have its units
+# at Rabaul and flying on 7 August (4th Air Group: data/oob/air_unit_facts.csv
+# 18, 362, 363; Misawa: data/oob/air_unit_facts.csv 56, 355). The Kisarazu
+# detachment, at Rabaul on 22 August (data/oob/air_unit_facts.csv 52), stays
+# inside the group as the file has it. The script first orders the group on
+# day 15.
 base = 2
 aircraft_type = 2103
 ready = 41
@@ -2415,13 +2418,9 @@ pilots = 41
 id = 2
 name = "Tainan Air Group"
 side = "japanese"
-# Day 15 (21 August): the first scripted order of the Rabaul air campaign,
-# scenario 6's orders moved by 14 (decision 0093, 1; ruling F of decision
-# 0101; scenario 7's comment above the Rabaul orders: before day 15 the
-# bombers have no order, and the raids of 7 to 20 August are not in scenario
-# 6). Not a day with a row. TO RULE: the rows have it at Rabaul and flying on
-# 7 August (data/oob/air_unit_facts.csv 82, 83).
-available_from = 15
+# Ruled by the architect, Nov 17, 2026: no day, day 1: the rows have it at
+# Rabaul and flying on 7 August (data/oob/air_unit_facts.csv 82, 83). The
+# script first orders it on day 15.
 base = 2
 aircraft_type = 2102
 ready = 24
@@ -2431,14 +2430,11 @@ pilots = 24
 id = 3
 name = "6th Air Group"
 side = "japanese"
-# Day 15 (21 August): the first scripted order of the Rabaul air campaign,
-# scenario 6's orders moved by 14 (decision 0093, 1; ruling F of decision
-# 0101; scenario 7's comment above the Rabaul orders: before day 15 the
-# bombers have no order, and the raids of 7 to 20 August are not in scenario
-# 6). Not a day with a row. TO RULE: the rows have it at Lakunai from
-# September, via Truk (data/oob/air_unit_facts.csv 33); the scenario's arrival
-# of its Zeros is day 25, 31 August.
-available_from = 15
+# Day 25 (31 August): Ruled by the architect, Nov 17, 2026: day 25, the day
+# its aircraft arrive in the file (the arrival of day 25), the 6th Air Group
+# at Lakunai from September via Truk (data/oob/air_unit_facts.csv 33). The
+# script first orders it on day 15.
+available_from = 25
 base = 2
 aircraft_type = 2102
 ready = 0
@@ -2448,13 +2444,11 @@ pilots = 0
 id = 10
 name = "VMF-223"
 side = "allied"
-# Day 15 (21 August): the first scripted order of the Henderson Field groups,
-# scenario 6's orders moved by 14 (decision 0093, 1; scenario 7's comment
-# above the Henderson Field orders). VMF-223 flew onto Henderson Field on 20
-# August, day 14 (data/oob/air_unit_facts.csv 114, 115, 309; decision 0101, 8;
-# the scenario's arrival of day 14). The first order is the day after the
-# arrival.
-available_from = 15
+# Day 14 (20 August): Ruled by the architect, Nov 17, 2026: day 14, the day
+# its aircraft arrive in the file (the arrival of day 14), VMF-223 onto
+# Henderson Field on 20 August (data/oob/air_unit_facts.csv 114, 115, 309;
+# decision 0101, 8). The script first orders it on day 15.
+available_from = 14
 base = 1
 aircraft_type = 2100
 ready = 0
@@ -2464,12 +2458,11 @@ pilots = 0
 id = 11
 name = "VMSB-232"
 side = "allied"
-# Day 15 (21 August): the first scripted order of the Henderson Field groups,
-# scenario 6's orders moved by 14 (decision 0093, 1; scenario 7's comment
-# above the Henderson Field orders). VMSB-232 flew onto Henderson Field on 20
-# August, day 14 (data/oob/air_unit_facts.csv 134, 310; decision 0101, 8; the
-# scenario's arrival of day 14). The first order is the day after the arrival.
-available_from = 15
+# Day 14 (20 August): Ruled by the architect, Nov 17, 2026: day 14, the day
+# its aircraft arrive in the file (the arrival of day 14), VMSB-232 onto
+# Henderson Field on 20 August (data/oob/air_unit_facts.csv 134, 310; decision
+# 0101, 8). The script first orders it on day 15.
+available_from = 14
 base = 1
 aircraft_type = 2101
 ready = 0
@@ -2486,13 +2479,12 @@ pilots = 0
 id = 13
 name = "VMF-224"
 side = "allied"
-# Day 15 (21 August): the first scripted order of the Henderson Field groups,
-# scenario 6's orders moved by 14 (decision 0093, 1; scenario 7's comment
-# above the Henderson Field orders). TO RULE: VMF-224 reached Henderson Field
-# on 30 August, the scenario's arrival of day 24 (data/oob/air_unit_facts.csv
-# 121, 318), nine days after this day; air_unit_facts 316 has Col. Wallace
-# bringing 19 F4Fs on 21 August.
-available_from = 15
+# Day 24 (30 August): Ruled by the architect, Nov 17, 2026: day 24, the day
+# its aircraft arrive in the file (the arrival of day 24), VMF-224 at
+# Henderson Field on 30 August (data/oob/air_unit_facts.csv 121, 318).
+# air_unit_facts 316 has 19 F4Fs brought on 21 August; the file's arrival is
+# followed. The script first orders it on day 15.
+available_from = 24
 base = 1
 aircraft_type = 2100
 ready = 0
@@ -2502,13 +2494,12 @@ pilots = 0
 id = 14
 name = "VMSB-231"
 side = "allied"
-# Day 15 (21 August): the first scripted order of the Henderson Field groups,
-# scenario 6's orders moved by 14 (decision 0093, 1; scenario 7's comment
-# above the Henderson Field orders). TO RULE: VMSB-231 reached Henderson Field
-# on 30 August, the scenario's arrival of day 24 (data/oob/air_unit_facts.csv
-# 127, 128, 318), nine days after this day; air_unit_facts 317 has 12 SBD-3s
-# on 21 August.
-available_from = 15
+# Day 24 (30 August): Ruled by the architect, Nov 17, 2026: day 24, the day
+# its aircraft arrive in the file (the arrival of day 24), VMSB-231 at
+# Henderson Field on 30 August (data/oob/air_unit_facts.csv 127, 128, 318).
+# air_unit_facts 317 has 12 SBD-3s on 21 August; the file's arrival is
+# followed. The script first orders it on day 15.
+available_from = 24
 base = 1
 aircraft_type = 2101
 ready = 0
@@ -2518,12 +2509,12 @@ pilots = 0
 id = 15
 name = "VF-5"
 side = "allied"
-# Day 15 (21 August): the first scripted order of the Henderson Field groups,
-# scenario 6's orders moved by 14 (decision 0093, 1; scenario 7's comment
-# above the Henderson Field orders). TO RULE: VF-5 flew in on 11 September,
-# the scenario's arrival of day 36 (data/oob/air_unit_facts.csv 322); other
-# rows have 4 September (data/oob/air_unit_facts.csv 99, 323).
-available_from = 15
+# Day 36 (11 September): Ruled by the architect, Nov 17, 2026: day 36, the day
+# its aircraft arrive in the file (the arrival of day 36), VF-5 at Henderson
+# Field on 11 September (data/oob/air_unit_facts.csv 322). air_unit_facts 99
+# and 323 have 4 September; the file's arrival is followed. The script first
+# orders it on day 15.
+available_from = 36
 base = 1
 aircraft_type = 2100
 ready = 0
@@ -2533,12 +2524,11 @@ pilots = 0
 id = 16
 name = "Fighters from Hornet and Wasp"
 side = "allied"
-# Day 15 (21 August): the first scripted order of the Henderson Field groups,
-# scenario 6's orders moved by 14 (decision 0093, 1; scenario 7's comment
-# above the Henderson Field orders). TO RULE: the fighters of Hornet and Wasp
-# arrived on 13 September, the scenario's arrival of day 38
-# (data/oob/air_unit_facts.csv 324).
-available_from = 15
+# Day 38 (13 September): Ruled by the architect, Nov 17, 2026: day 38, the day
+# its aircraft arrive in the file (the arrival of day 38), the fighters of
+# Hornet and Wasp at Henderson Field on 13 September
+# (data/oob/air_unit_facts.csv 324). The script first orders it on day 15.
+available_from = 38
 base = 1
 aircraft_type = 2100
 ready = 0
@@ -2548,12 +2538,11 @@ pilots = 0
 id = 17
 name = "VS-3"
 side = "allied"
-# Day 15 (21 August): the first scripted order of the Henderson Field groups,
-# scenario 6's orders moved by 14 (decision 0093, 1; scenario 7's comment
-# above the Henderson Field orders). TO RULE: VS-3 flew in on 13 September,
-# the scenario's arrival of day 38 (data/oob/air_unit_facts.csv 156, 158,
-# 325).
-available_from = 15
+# Day 38 (13 September): Ruled by the architect, Nov 17, 2026: day 38, the day
+# its aircraft arrive in the file (the arrival of day 38), VS-3 at Henderson
+# Field on 13 September (data/oob/air_unit_facts.csv 156, 158, 325). The
+# script first orders it on day 15.
+available_from = 38
 base = 1
 aircraft_type = 2101
 ready = 0
