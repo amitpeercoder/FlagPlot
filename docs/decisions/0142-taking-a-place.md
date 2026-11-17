@@ -1,6 +1,6 @@
 # 0142: Taking a place: step 3 of stage 3
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3, that the designer confirmed the same day (decision 0139, step 3 of its eight). It writes the end "take a place" and the doctrine that carries it as far as the landing, over rules already built (decisions 0066, 0090, 0095, 0098 and 0126) and the task "ready a landing" of decision 0141, with the hand calculation. Nothing is built. It is built after decision 0141.
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3, that the designer confirmed the same day (decision 0139, step 3). It writes the end "take a place" and the doctrine that carries it as far as the landing, over rules already built (decisions 0066, 0090, 0095, 0098 and 0126) and the task "ready a landing" of decision 0141, with the hand calculation. Nothing is built. It is built after decision 0141.
 
 Summary: Step 3 of stage 3: the end "take a place", by which the staff chooses the units that land by what each is good at and by the ships that can carry them, forms "ready a landing" for them, asks leave to launch when it is ready, and on leave loads supply for the men, embarks them, sails, lands them on attack, and says when the place is the side's
 
@@ -44,7 +44,7 @@ With no estimate it takes every unit the ships can carry, and says that it goes 
 
 ## Move
 
-16. **The supply.** On the morning the plan is released the force is ordered to load supply at the source to a weight: the daily charge of the men chosen for 15 days, the interval of decision 0107 where none is set. It is cut to the source's stock above its reserve and to the ships' room, and what is aboard already counts toward it. With nothing to take no order is given and the reason says so.
+16. **The supply.** On the morning the plan is released the force is ordered to load supply at the source to a weight: the daily charge of the men chosen for 15 days, the interval of decision 0107 where none is set. The 15 days stand until step 4 builds the check that the place can be held, which sets the supply by the days until the first run that follows can arrive (decision 0139, "Amended by the designer", 2). It is cut to the source's stock above its reserve and to the ships' room, and what is aboard already counts toward it. With nothing to take no order is given and the reason says so.
 17. **The men.** On each morning after, one unit whose men are ashore at the source is ordered aboard, in number order, by a load order with the unit and no cargo. On the same morning it is set to attack. A unit aboard already needs neither.
 18. **The days.** The days to embark are one for the supply, where there is any to take, and one for each unit ashore. The passage is its hours at the cruise speed of the slowest class, rounded up to days. A force released on the morning of day R sails on day R plus the days to embark, and is due on that day plus the days of the passage less one.
 19. **The passage.** On the first morning that every unit chosen is aboard and the supply is aboard or has nothing more to take, the force is given a route to the place and back to the source, marked to act at the place, and an unload order. The route, the area limit and the fuel each ship needs for the round trip are as for a run (decision 0107). An escort is given as for a run (decision 0126), with the place as the destination. A ship without the fuel, or no route, stops it, and the reason says which.
@@ -61,7 +61,7 @@ With no estimate it takes every unit the ships can carry, and says that it goes 
 
 25. **Nothing is ordered without leave to prepare,** and nothing sails or embarks without the plan released.
 26. **A hold is honoured.** A held transport force or a held unit is left out, and the reason names the hold.
-27. **Reasons** carry the numbers: each unit in its order with its assault skill, its experience and its men; the berths; each unit left out and why; the estimate and the men wanted; the supply in tons; the days.
+27. **Reasons** carry the numbers, in the order a staff works in (decision 0139, "Amended by the designer", 3): the estimate and the men wanted; each unit in its order with its assault skill, its experience and its men; the berths; each unit left out and why, and what is short; the supply in tons; the days.
 28. **A proposal** shows the tree before it is formed: the task, the units, the ships, the supply and the days.
 
 ## What it leaves for later steps
@@ -70,6 +70,7 @@ With no estimate it takes every unit the ships can carry, and says that it goes 
 - **A landing by more than one force,** and a working unit landed with the fighting ones.
 - **Cover, bombardment and a run timed to the dark:** steps 5 and 6.
 - **A landing not ready until it holds a count of the enemy:** step 6.
+- **The force assembled by the staff,** where the commander names none: step 7, added by the designer on Nov 17, 2026. In this step a forces limit is required.
 - **Choosing the day and the beach:** stage 4.
 - **Building up the base it sails from:** formed with cover in step 6, where a field is what cover needs.
 
