@@ -24,6 +24,7 @@ mod ammunition;
 mod available;
 mod bombard;
 pub mod carrier;
+mod cover;
 mod deny;
 mod doctrine;
 mod escort;
@@ -193,7 +194,15 @@ use sim_core::view::SideView;
 /// reaches a base of the side's own in a hex next to the place as well. A
 /// side with no run by night to a place next to its own fighters gets the
 /// orders and reasons `supply-27` gave.
-pub const DOCTRINE_VERSION: &str = "supply-28";
+/// `supply-29` adds decisions 0147 and 0148: under "take a place" the
+/// staff sends an air group to look at the place, chooses its units again
+/// on the first count seen from the air or by men in contact, and launches
+/// only on the count the risk asks for; and it forms "operate a carrier
+/// force" at a covering hex for each named carrier force, whose bombers
+/// strike the enemy's base at the place on a morning with no ship to strike,
+/// and sends the force home when the place is taken. A side with no "take a
+/// place" gets the orders and reasons `supply-28` gave.
+pub const DOCTRINE_VERSION: &str = "supply-29";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

@@ -423,3 +423,7 @@ path = "scenario_71_bombardment_from_the_sea.rs"
 [[test]]
 name = "scenario_72_reconnaissance"
 path = "scenario_72_reconnaissance.rs"
+
+[[test]]
+name = "scenario_73_carrier_cover"
+path = "scenario_73_carrier_cover.rs"

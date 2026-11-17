@@ -30,7 +30,7 @@
       "hash": "92c5c79c62f24c17"
     }
   ],
-  "doctrine_version": "supply-28",
+  "doctrine_version": "supply-29",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -589,7 +589,7 @@
       "unit": "air_group:19"
     }
   ],
-  "rules_version": 18,
+  "rules_version": 19,
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
     "hash": "a9443b066a393e0b"
