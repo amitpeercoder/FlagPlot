@@ -232,8 +232,11 @@ pub struct GroundEstimateLine {
     pub day: u32,
     /// Days from that day to the last day resolved.
     pub age_days: u32,
-    /// The side's number of the event that gave it.
-    pub event: u32,
+    /// The side's number of the event that gave it. Left out at a seat at a
+    /// task force or a base, which is not shown the side's reports (decision
+    /// 0138, 5).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub event: Option<u32>,
 }
 
 /// An enemy base a ground report found.
@@ -1971,7 +1974,7 @@ pub(crate) fn ground_estimate_lines(
             men: e.men,
             day: e.day,
             age_days: view.day().saturating_sub(e.day),
-            event: ctx.number(e.report_event),
+            event: ctx.number_if_seen(e.report_event),
         })
         .collect()
 }

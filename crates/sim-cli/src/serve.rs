@@ -14,7 +14,7 @@ use std::io::{BufRead, Write};
 use std::path::Path;
 
 use serde_json::{json, Value};
-use sim_agent::{parse_seat, CallError, Seat, SeatKind, Session};
+use sim_agent::{parse_seat, CallError, Post, Seat, SeatKind, Session};
 use sim_core::orders::OrderRequest;
 use sim_core::state::Side;
 use sim_data::Scenario;
@@ -26,6 +26,8 @@ struct Options<'a> {
     scenario: &'a str,
     seed: Option<u64>,
     seats: BTreeMap<Side, SeatKind>,
+    /// Where each player seat sits; the area command where nothing is said.
+    posts: BTreeMap<Side, Post>,
     save: Option<&'a str>,
     transcript: Option<&'a str>,
 }
@@ -34,6 +36,7 @@ fn parse<'a>(args: &'a [String], usage: &str) -> Result<Options<'a>, String> {
     let mut scenario = None;
     let mut seed = None;
     let mut seats: BTreeMap<Side, SeatKind> = BTreeMap::new();
+    let mut posts: BTreeMap<Side, Post> = BTreeMap::new();
     let mut save = None;
     let mut transcript = None;
     let mut words = args.iter().map(String::as_str);
@@ -66,6 +69,17 @@ fn parse<'a>(args: &'a [String], usage: &str) -> Result<Options<'a>, String> {
                     return Err(format!("--seat names the {} seat twice", side.name()));
                 }
             }
+            "--at" => {
+                let v = value("--at")?;
+                let (side, post) = v.split_once('=').ok_or_else(|| {
+                    format!("--at \"{v}\" is not side=seat, for example allied=task_force:2")
+                })?;
+                let side = parse_seat(side)
+                    .ok_or_else(|| format!("--at names no side \"{side}\": allied or japanese"))?;
+                if posts.insert(side, Post::parse(post)?).is_some() {
+                    return Err(format!("--at names the {} seat twice", side.name()));
+                }
+            }
             "--save" => save = Some(value("--save")?),
             "--transcript" => transcript = Some(value("--transcript")?),
             flag if flag.starts_with('-') => {
@@ -86,10 +100,18 @@ fn parse<'a>(args: &'a [String], usage: &str) -> Result<Options<'a>, String> {
             "serve needs at least one seat held by a player: --seat allied=player or --seat japanese=player\n\n{usage}"
         ));
     }
+    if let Some(side) = posts.keys().find(|side| seats[side] != SeatKind::Player) {
+        return Err(format!(
+            "--at names the {} seat, which is held by the script: --seat {}=player first",
+            side.name(),
+            side.name()
+        ));
+    }
     Ok(Options {
         scenario,
         seed,
         seats,
+        posts,
         save,
         transcript,
     })
@@ -125,6 +147,7 @@ pub fn open(
     scenario_path: &str,
     seed: Option<u64>,
     mut seats: BTreeMap<Side, SeatKind>,
+    posts: &BTreeMap<Side, Post>,
 ) -> Result<(Session, Kept), String> {
     for side in Side::ALL {
         seats.entry(side).or_insert(SeatKind::Script);
@@ -144,9 +167,12 @@ pub fn open(
     // The staff each side is given comes from the doctrine; the commands are
     // the scenario's own, given as the commander's (decision 0107).
     let staffs = sim_staff::staffs();
-    let session = Session::new(scenario.world, &name, days, allied, japanese)
+    let mut session = Session::new(scenario.world, &name, days, allied, japanese)
         .with_staffs(staffs)
         .with_commands(remembered.commands().clone());
+    for (side, post) in posts {
+        session = session.with_post(*side, *post)?;
+    }
     Ok((
         session,
         Kept {
@@ -195,7 +221,12 @@ impl Kept {
 
 pub fn command(args: &[String], usage: &str) -> Result<(), String> {
     let options = parse(args, usage)?;
-    let (mut session, kept) = open(options.scenario, options.seed, options.seats.clone())?;
+    let (mut session, kept) = open(
+        options.scenario,
+        options.seed,
+        options.seats.clone(),
+        &options.posts,
+    )?;
 
     let stdin = std::io::stdin();
     let stdout = std::io::stdout();

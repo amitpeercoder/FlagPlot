@@ -26,6 +26,11 @@ pub struct ObjectivesPart {
     /// scenario has no objectives.
     pub levels: Option<LevelsPart>,
     pub result: Option<ResultPart>,
+    /// True at a seat at a task force or a base, which is not given the
+    /// side's mission and objectives: they are the area command's (decision
+    /// 0138, 5). Left out otherwise.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub not_given_to_this_seat: bool,
 }
 
 /// The scenario's levels (decision 4 of 0054): a margin of at least `minor`
@@ -343,6 +348,7 @@ pub(crate) fn objectives_part(ctx: &Ctx<'_>, view: &SideView<'_>) -> ObjectivesP
             decisive: Dec(l.decisive),
         }),
         result: None,
+        not_given_to_this_seat: view.seat().is_some(),
     }
 }
 

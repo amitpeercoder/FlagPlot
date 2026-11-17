@@ -97,7 +97,7 @@ impl<'a> SideView<'a> {
         self.truth
             .task_forces
             .get(&force)
-            .filter(|record| record.side == self.side)?;
+            .filter(|record| self.owns_force(record))?;
         Some(self.radio_silent.contains(&force))
     }
 }

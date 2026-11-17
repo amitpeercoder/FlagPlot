@@ -5,7 +5,9 @@
 use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
+use sim_core::ids::{BaseId, TaskForceId};
 use sim_core::orders::OrderRequest;
+use sim_core::pictures::CommandRef;
 use sim_core::state::Side;
 
 use crate::answer::{FORMAT, VERSION};
@@ -104,6 +106,60 @@ impl Seat {
         match self {
             Seat::Player => SeatKind::Player,
             Seat::Script(_) => SeatKind::Script,
+        }
+    }
+}
+
+/// Where a player's seat sits (decision 0138, 5): at the side's area command
+/// (the default), at the area command with the easier setting of decision
+/// 0119 (answer 5), or at one of the side's task forces or bases. A seat at
+/// a task force or a base is given what that command holds and nothing else
+/// of its side's, and may give orders to its own units only.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum Post {
+    /// The area command: its picture, and its forces and bases as last
+    /// reported (decisions 0134 and 0136).
+    #[default]
+    Area,
+    /// The area command, given the side's own picture, every report at once,
+    /// and its forces and bases exactly.
+    AreaEasier,
+    /// A task force or a base, named by the number the scenario file gives it
+    /// (the umpire's). Never the area command: that is [`Post::Area`].
+    At(CommandRef),
+}
+
+impl Post {
+    /// A post written `area`, `area:easier`, `task_force:N` or `base:N`, with
+    /// `N` the scenario's number of the force or base.
+    pub fn parse(text: &str) -> Result<Post, String> {
+        let bad = || {
+            format!(
+                "\"{text}\" is not a seat: write area, area:easier, task_force:N or base:N (N is the number the scenario file gives it)"
+            )
+        };
+        match text {
+            "area" => return Ok(Post::Area),
+            "area:easier" => return Ok(Post::AreaEasier),
+            _ => {}
+        }
+        let (kind, number) = text.split_once(':').ok_or_else(bad)?;
+        let number: u32 = number.parse().map_err(|_| bad())?;
+        match kind {
+            "task_force" => Ok(Post::At(CommandRef::TaskForce(TaskForceId::new(number)))),
+            "base" => Ok(Post::At(CommandRef::Base(BaseId::new(number)))),
+            _ => Err(bad()),
+        }
+    }
+
+    /// The post as [`Post::parse`] reads it.
+    pub fn text(self) -> String {
+        match self {
+            Post::Area => "area".to_string(),
+            Post::AreaEasier => "area:easier".to_string(),
+            Post::At(CommandRef::TaskForce(force)) => format!("task_force:{}", force.raw()),
+            Post::At(CommandRef::Base(base)) => format!("base:{}", base.raw()),
+            Post::At(CommandRef::Area) => "area".to_string(),
         }
     }
 }

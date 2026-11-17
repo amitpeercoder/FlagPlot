@@ -103,7 +103,7 @@ pub use queries::{
     TroopsAboard,
 };
 pub use record::{
-    parse_seat, seat_name, CallError, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS,
+    parse_seat, seat_name, CallError, Post, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS,
 };
 pub use session::{Session, NOT_KNOWN};
 pub use staffing::{command_state, plans, propose, staff_orders, why, STAFF_DEFAULT_INTERVAL_DAYS};

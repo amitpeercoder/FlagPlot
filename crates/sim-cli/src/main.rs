@@ -39,9 +39,9 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
        sim-cli validate <measures.toml> [--out <report.md>]
        sim-cli validate --passages <passages.toml> --label TEXT [--map <map.csv>] [--places <positions.csv>] [--out <report.md>]
        sim-cli serve <scenario.toml> --seat allied=player|script --seat japanese=player|script
-                     [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
+                     [--at allied=SEAT] [--at japanese=SEAT] [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
        sim-cli mcp <scenario.toml> --seat allied|japanese
-                   [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
+                   [--at SEAT] [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
        sim-cli time --machine TEXT [--repeats N] [--games N] [--days N] [--slice FILE] [--soak FILE]
                     [--early-day N] [--late-day N] [--soak-late-day N] [--reference DIR]
        sim-cli play --game FILE ... (run `sim-cli play` for its usage)
@@ -122,6 +122,12 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             At the end of input it writes --save (a saved game with the seats
             and the orders handed in by both sides, which replay runs with no
             player) and --transcript (one JSON line for each call).
+  --at      (serve, mcp, play) Where a player's seat sits: area (the default),
+            area:easier (the side's own picture, every report at once, and its
+            forces exactly), task_force:N or base:N (N is the number the
+            scenario file gives it; command levels on): a seat given only what
+            that command holds, which may order its own units only. serve takes
+            it as side=SEAT, mcp and play bare, beside the seat they name.
   mcp       The game as a Model Context Protocol server on standard input and
             output (tools only: the nine tools of serve, answered as text),
             with the named seat the player's and the other the script's. At

@@ -1049,6 +1049,43 @@ fn the_library_code_names_nothing_of_the_truth() {
     );
 }
 
+/// A seat at a task force or a base reads only a view cut to its command
+/// (decision 0138, 5), and the cut is made by `Session::view_of`. So the
+/// functions that answer the nine tools of every seat, and the one that
+/// judges an order, never take the side's own view from the world themselves:
+/// they ask `view_of` or `read`. The one exception is the umpire's result on a
+/// final briefing, which a seat at a command is not given (it is read on a
+/// line that names `with_result`).
+#[test]
+fn the_tools_of_a_seat_read_the_world_only_through_the_seats_view() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/session.rs");
+    let text = std::fs::read_to_string(&path).expect("session.rs reads");
+    let held = ["fn dispatch(", "fn issue_orders(", "fn judge("];
+    let mut inside: Option<&str> = None;
+    let mut watched = 0;
+    for (i, line) in text.lines().enumerate() {
+        let code = line.trim_start();
+        if code.starts_with("//") {
+            continue;
+        }
+        if let Some(at) = code.find("fn ") {
+            let found = &code[at..];
+            inside = held.iter().copied().find(|name| found.starts_with(name));
+        }
+        if let Some(name) = inside {
+            watched += 1;
+            if code.contains("side_view(") {
+                assert!(
+                    code.contains("with_result"),
+                    "session.rs:{} takes the side's own view in {name} instead of the seat's: {line}",
+                    i + 1
+                );
+            }
+        }
+    }
+    assert!(watched > 100, "the lint saw {watched} lines of the tools");
+}
+
 // ---------------------------------------------------------------------
 // Findings of the outside review of Nov 13, 2026 (prompt 11). Kept switched
 // ruled in decision 0085.

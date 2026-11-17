@@ -14,7 +14,7 @@ use std::io::Write;
 use std::path::Path;
 
 use serde_json::{json, Value};
-use sim_agent::{parse_seat, seat_name, SeatKind};
+use sim_agent::{parse_seat, seat_name, Post, SeatKind};
 use sim_core::state::Side;
 
 use crate::mcp::{tool_list, Server};
@@ -24,7 +24,7 @@ use sim_staff::DOCTRINE_VERSION;
 const FORMAT: &str = "flagplot-game";
 
 pub const USAGE: &str = "\
-Usage: sim-cli play --game FILE [--scenario SCENARIO --seat allied|japanese [--seed N]] TOOL [ARGUMENTS_JSON]
+Usage: sim-cli play --game FILE [--scenario SCENARIO --seat allied|japanese [--at SEAT] [--seed N]] TOOL [ARGUMENTS_JSON]
        sim-cli play --game FILE --tools
        sim-cli play --game FILE --export-save FILE --export-transcript FILE
 
@@ -53,11 +53,20 @@ Usage: sim-cli play --game FILE [--scenario SCENARIO --seat allied|japanese [--s
                      game is over: a saved game holds both sides' orders.
   --export-transcript F  Replay the game and write the transcript: every call
                      with the whole answer it was given, one JSON line each.
-  --seed N           (first call) Play with seed N instead of the scenario's.";
+  --seed N           (first call) Play with seed N instead of the scenario's.
+  --at SEAT          (first call) Where the seat sits: area (the default),
+                     area:easier (the side's own picture, every report at once,
+                     and its forces exactly), or task_force:N or base:N, N the
+                     number the scenario file gives it, for a seat that is given
+                     only what that command holds and may order its own units
+                     only (command levels on). Kept in FILE.";
 
 struct Header {
     scenario: String,
     seat: Side,
+    /// Where the seat sits (decision 0138, 5). A game file made before seats
+    /// at a command has none, which is read as the area command.
+    at: Post,
     seed: Option<u64>,
     /// The doctrine whose staff the game was begun under (decision 0107). A
     /// game file made before doctrines were recorded has none, which is read
@@ -67,14 +76,17 @@ struct Header {
 
 impl Header {
     fn to_line(&self) -> String {
-        serde_json::to_string(&json!({
+        let mut header = json!({
             "format": FORMAT,
             "scenario": self.scenario,
             "seat": seat_name(self.seat),
             "seed": self.seed,
             "doctrine_version": self.doctrine_version,
-        }))
-        .expect("a header serialises")
+        });
+        if self.at != Post::Area {
+            header["at"] = json!(self.at.text());
+        }
+        serde_json::to_string(&header).expect("a header serialises")
     }
 
     fn from_line(line: &str, file: &str) -> Result<Header, String> {
@@ -91,7 +103,15 @@ impl Header {
             None => "none".to_string(),
             Some(version) => version.as_str().ok_or_else(bad)?.to_string(),
         };
+        let at = match v.get("at") {
+            None => Post::Area,
+            Some(at) => at
+                .as_str()
+                .and_then(|at| Post::parse(at).ok())
+                .ok_or_else(bad)?,
+        };
         Ok(Header {
+            at,
             doctrine_version,
             scenario: v
                 .get("scenario")
@@ -129,7 +149,8 @@ impl Client {
     /// `notifications/initialized`.
     fn open(header: &Header) -> Result<Client, String> {
         let seats = BTreeMap::from([(header.seat, SeatKind::Player)]);
-        let (session, kept) = serve::open(&header.scenario, header.seed, seats)?;
+        let posts = BTreeMap::from([(header.seat, header.at)]);
+        let (session, kept) = serve::open(&header.scenario, header.seed, seats, &posts)?;
         let mut client = Client {
             server: Server::new(session, header.seat),
             kept,
@@ -225,6 +246,7 @@ pub fn command(args: &[String]) -> Result<(), String> {
     let mut game = None;
     let mut scenario = None;
     let mut seat = None;
+    let mut at = None;
     let mut seed = None;
     let mut export_save = None;
     let mut export_transcript = None;
@@ -251,6 +273,7 @@ pub fn command(args: &[String]) -> Result<(), String> {
                         .ok_or_else(|| format!("--seat \"{v}\" is not allied or japanese"))?,
                 );
             }
+            "--at" => at = Some(Post::parse(value("--at")?)?),
             "--seed" => {
                 let v = value("--seed")?;
                 seed = Some(
@@ -319,6 +342,15 @@ pub fn command(args: &[String]) -> Result<(), String> {
                 ));
             }
         }
+        if let Some(post) = at {
+            if post != header.at {
+                return Err(format!(
+                    "--at {} is not the game's seat {} (in {game})",
+                    post.text(),
+                    header.at.text()
+                ));
+            }
+        }
         if let Some(n) = seed {
             if Some(n) != header.seed {
                 return Err(format!("--seed {n} is not the game's seed (in {game})"));
@@ -347,6 +379,7 @@ pub fn command(args: &[String]) -> Result<(), String> {
             seat: seat.ok_or_else(|| {
                 format!("{game} is a new game: --scenario and --seat are needed\n\n{USAGE}")
             })?,
+            at: at.unwrap_or_default(),
             seed,
             doctrine_version: DOCTRINE_VERSION.to_string(),
         };
