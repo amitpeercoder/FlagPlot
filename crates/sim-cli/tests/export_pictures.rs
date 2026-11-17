@@ -350,11 +350,10 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// Each scenario with command levels off exports what it did before version
 /// 6, but for the version: no `pictures`, no `report_sent`, and, with the
 /// version put back to 5, the bytes of the export made on the commit before
-/// (their FNV-1a 64-bit hash). Remade at the state layout v43 (decision
-/// 0147), which changes an export's state version and day hashes and gives
-/// an estimate of the enemy ashore its `grade`, in the exports of the
-/// scenarios that hold one, and nothing else of it: every earlier scenario
-/// gives the events it gave.
+/// (their FNV-1a 64-bit hash). Remade at the state layout v44 (decision
+/// 0151), which changes an export's state version and day hashes and gives
+/// every intent's kind the key `island` (null but for "control an island"),
+/// and nothing else of it: every earlier scenario gives the events it gave.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -363,16 +362,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0x4957_abcc_3db6_36aa),
-        ("04a_night_action", 0x774b_b838_1e5f_cb35),
-        ("05_eastern_solomons", 0x90a3_3788_7d28_47ea),
-        ("21_landing", 0xdc21_f95b_1d4f_683c),
-        ("23_fight_ashore", 0x16ed_2ad5_6189_1fb2),
-        ("31_airfield_damage", 0x5632_37be_aff2_c9b7),
-        ("36_one_convoy", 0x770a_4c9a_314b_efc5),
-        ("43_keep_two_bases_fed", 0x68bd_7105_b88c_d194),
-        ("50_neutralise_a_base", 0x478b_1af5_0ef9_587f),
-        ("58_a_carrier_force_closes", 0xad64_d9a8_3a2c_863a),
+        ("01_transit", 0xf352_5dee_0bf6_d671),
+        ("04a_night_action", 0xfa22_95ec_f9ff_9880),
+        ("05_eastern_solomons", 0xa1e5_f1d7_c1d5_904c),
+        ("21_landing", 0x967f_1d27_3fc4_57e5),
+        ("23_fight_ashore", 0x6aa6_8beb_cb33_8283),
+        ("31_airfield_damage", 0x846d_e6ca_5b3f_93dc),
+        ("36_one_convoy", 0xbc50_1621_3f9b_e009),
+        ("43_keep_two_bases_fed", 0x823d_9795_f8b7_f44e),
+        ("50_neutralise_a_base", 0x9951_aa06_94be_2c0a),
+        ("58_a_carrier_force_closes", 0x5f40_5609_78bc_8cf4),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;
