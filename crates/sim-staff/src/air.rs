@@ -514,6 +514,9 @@ impl<'v, 'a> Day<'v, 'a> {
         // "neutralise a base" or "take a place" (after the landing force is
         // routed, whose due day it reads) and served at the force's level.
         day.bombards();
+        // Decision 0148: carriers under "take a place", formed once its
+        // plan is released and served after the landing's morning.
+        day.take_carriers();
         Some(day)
     }
 

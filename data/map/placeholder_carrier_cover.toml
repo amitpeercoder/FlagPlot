@@ -1,0 +1,29 @@
+# PLACEHOLDER MAP. A row of open sea with two coast hexes, used by scenario 73
+# (decision 0148, cover for an operation by carriers): A at (0,0) with port
+# size 5 and B at (10,0) with port size 0, so ships there work by lighter. A
+# to B is 10 hexes, 400 nm, along an axis of the grid, where a leg between
+# centres is charged 40 nm (decision 0058), so the passages are exact in the
+# hand calculation. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-2, 12]
+r = [-3, 3]
+
+# A, the embarkation port and the carrier's home port.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 5
+anchorage = true
+
+# B, an empty shore with a Japanese airfield.
+[[hex]]
+q = 10
+r = 0
+kind = "coast"
+port_size = 0

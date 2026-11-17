@@ -24,6 +24,7 @@ mod ammunition;
 mod available;
 mod bombard;
 pub mod carrier;
+mod cover;
 mod deny;
 mod doctrine;
 mod escort;
