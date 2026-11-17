@@ -60,7 +60,10 @@
 //! - **The source.** Base 1: task force 1 has 1,200 berths; unit 1 takes
 //!   ship 1 and gives 600 men, the men wanted; the passage is 16 hours.
 //!   Base 3: task force 2 has 600 berths; unit 3 gives 600 men; the
-//!   passage is 24 hours. Both give the men wanted, and base 1 is the
+//!   passage is 21.2 hours: C to B is off the grid's axes and the route
+//!   is charged its straight line, 212 nm, at 10 kn (restated by the
+//!   architect on Nov 17, 2026: the first writing had 6 hexes and 24
+//!   hours). Both give the men wanted, and base 1 is the
 //!   nearer: the source is base 1.
 //! - **The units.** Unit 1.
 //! - **The transport force.** Task force 1.
@@ -78,7 +81,7 @@
 //! | 1 | 0 | Approves plan 1 to preparing. Forms intent 2, ready a landing by task force 1 at B, and sets its forces limit as above. Orders `prepare_landing` at B, roster 1 | Loading 100; unit 1's rehearsal 100 |
 //! | 2 | 24 | Notice: intent 2 is ready. Approves plan 1 to released. Orders a load of supply to a weight of 45 t. Forms intent 3, bombard base 2 with task force 3, under intent 1. Task force 3: home port, base 1; rules of engagement, engage, break-off level 0.5 | Ship 1 loads 45 t |
 //! | 3 | 48 | Unit 1 set to attack. Load unit 1 | Ship 1 takes 600 men |
-//! | 4 | 72 | Task force 1: a route to B and back to A, acting at B, and an unload order. Task force 3: battle readiness; a route to B and A, B marked to act at | The battleship sails at hour 72, halts at B at hour 82 and fires 120 shells in the night. The transports sail at hour 72 and arrive at hour 88. Ship 1 lands 160 men in the morning and 440 in the afternoon, and then 10 t. Base 3, "Landing at (4,0)", is formed. Base 2 changes side at the end of the day |
+//! | 4 | 72 | Task force 1: a route to B and back to A, acting at B, and an unload order. Task force 3: battle readiness; a route to B and A, B marked to act at | The battleship sails at hour 72, halts at B at hour 82 and fires 120 shells in the night. The transports sail at hour 72 and arrive at hour 88. Ship 1 lands 160 men in the morning and 440 in the afternoon, and then 10 t. Base 4, "Landing at (4,0)", is formed (restated by the architect: base 3 is base C). Base 2 changes side at the end of the day |
 //! | 5 | 96 | Marks plan 1 complete; notice: intent 1 is met. Task force 3: normal readiness | Ship 1 lands 35 t in 1.75 hours. The transports steam for A at hour 108 and arrive at hour 124. The battleship steamed for A at hour 84 and arrived at hour 94 |
 //! | 6 | 120 | none | |
 //!
@@ -955,20 +958,18 @@ fn the_source_base_1_has_1200_berths_and_16_hours_and_base_3_600_berths() {
 }
 
 #[test]
-#[ignore = "mismatch with the hand calculation: the engine's forecast of task force 2's passage from C (0,6) to B (4,0) is 21.2 hours, not 24. C to B is 6 hexes but off the grid's axes, so the route is charged its straight line, 212 nm, at 10 kn (the map's own note, data/map/placeholder_preparing.toml). The choice is unchanged: base 1, 16 hours, is still the nearer. For the architect."]
-fn the_passage_from_base_3_is_24_hours() {
+fn the_passage_from_base_3_is_21_2_hours() {
     let g = main_game();
     assert_says(
         &g.reasons_serving(1, 1),
-        &["task_force:2 with 600 berths, its lift gives 600 men, 24 hours to (4,0)"],
+        &["task_force:2 with 600 berths, its lift gives 600 men, 21.2 hours to (4,0)"],
     );
 }
 
 #[test]
-#[ignore = "mismatch with the hand calculation: the table of day 4 has base 3 formed as \"Landing at (4,0)\", but base 3 is Placeholder base C in the inputs; the base the first man forms takes the next free number, 4 (asserted by name in the_landing_and_the_hours). For the architect."]
-fn the_landing_forms_base_3() {
+fn the_landing_forms_base_4() {
     let g = main_game();
-    assert_eq!(g.base(4, 3).expect("base 3").name, "Landing at (4,0)");
+    assert_eq!(g.base(4, 4).expect("base 4").name, "Landing at (4,0)");
 }
 
 // ---------------------------------------------------------------- The properties

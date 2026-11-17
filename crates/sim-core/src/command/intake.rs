@@ -234,7 +234,14 @@ impl World {
     /// the three; the air groups are read as for any intent.
     fn forces_narrow_under_take(&self, side: Side, parent: IntentId, limit: &ForcesLimit) -> bool {
         let state = &self.command[&side];
-        let above = state.forces_on_chain(parent);
+        // The limits above as they were set, not as they bind: read as it
+        // binds, the end's limit carries the staff's own earlier choice, and
+        // that choice must not hold the staff to it when it chooses again on
+        // a count or adds a later lift's units (the architect's ruling 5).
+        let above: Vec<&ForcesLimit> = state
+            .up_the_tree(parent)
+            .filter_map(|found| found.limits.forces.as_ref())
+            .collect();
         let names_forces =
             |forces: &ForcesLimit| !(forces.task_forces.is_empty() && forces.ships.is_empty());
         limit

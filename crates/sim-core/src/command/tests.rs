@@ -992,11 +992,10 @@ fn the_staff_is_refused_the_commanders_commands_and_the_commander_the_staffs() {
 }
 
 /// Decision 0142: "take a place" is taken in at a hex of land only, its
-/// forces limit needs a source, the staff forms "ready a landing" under it
+/// forces limit needs no source since decision 0149, the staff forms "ready a landing" under it
 /// while its plan is preparing, and the staff sets a forces limit only, and
 /// only on an intent it formed.
 #[test]
-#[ignore = "decision 0149, item 1, withdraws decision 0142, item 2: a take-a-place forces limit with no source is now taken in, not refused \"No source\"; this test asserts the refusal. The rest of it is covered by taking_a_place_needs_no_source_and_the_staff_names_what_is_left_out. For the architect to restate."]
 fn taking_a_place_is_taken_in_and_its_landing_formed_while_preparing() {
     const PLACE: Hex = Hex::new(5, 0);
     let mut world = world();
@@ -1024,14 +1023,11 @@ fn taking_a_place_is_taken_in_and_its_landing_formed_while_preparing() {
         CommandRefusal::NotLand(Hex::new(40, 0)),
     );
     player(&mut world, take(PLACE)).unwrap();
+    // A forces limit with no source is taken in (decision 0149, item 1,
+    // which withdraws decision 0142, item 2, for this end).
     let mut no_source = forces(&[], &[1]);
     no_source.source = None;
-    refused(
-        &mut world,
-        Issuer::Player,
-        set_forces(1, no_source),
-        CommandRefusal::NoSource,
-    );
+    player(&mut world, set_forces(1, no_source)).unwrap();
     player(&mut world, set_forces(1, forces(&[], &[1]))).unwrap();
     // The staff sets no limit on the commander's intent.
     refused(
@@ -1159,6 +1155,18 @@ fn taking_a_place_needs_no_source_and_the_staff_names_what_is_left_out() {
         .into_owned();
     assert_eq!(bound.task_forces, no_source.task_forces);
     assert_eq!(bound.source, Some(base(1)));
+    // The staff's own earlier choice does not bind its next (the
+    // architect's ruling 5 of decision 0149): having named base 1 as the
+    // source it may name base 2, as it does when it chooses again.
+    let mut again = forces(&[], &[]);
+    again.source = Some(base(2));
+    staff(&mut world, set_forces(2, again)).unwrap();
+    let end = &state(&world, A).intents[&intent(1)];
+    let bound = state(&world, A)
+        .forces_as_bound(end)
+        .expect("a limit")
+        .into_owned();
+    assert_eq!(bound.source, Some(base(2)));
 }
 
 // ---------------------------------------------------------------------------

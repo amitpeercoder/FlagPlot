@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: Step 7 of stage 3: "take a place" may be stated with no forces named; the staff then works from its estimate of the enemy to the men wanted, the base they can sail from, the units by what each is good at, the transport force, and the bombardment and carrier forces it can give, keeps its choice as the forces limit of the task it forms, and says in numbers what it could not find
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings await the architect (As built)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -106,3 +106,14 @@ No expected number changed.
 - `crates/sim-staff/src/assemble.rs` (`assemble` at line 227, `rechoice_limit` at 575), called from `crates/sim-staff/src/take.rs:344` in `prepare_place`.
 - `crates/sim-core/src/command.rs` (`forces_on_chain` 1283, `assembled_forces` 1304, `forces_as_bound` 1320) and `crates/sim-core/src/command/intake.rs` (`forces_narrow_under_take` 235; the no-source check in `SetLimit`).
 - `tests/scenario_74_the_force_assembled.rs`.
+
+## The architect's rulings
+
+Made on Nov 17, 2026, on reading the build.
+
+1. **Readings 1 to 15 are accepted as built.**
+2. **Both mismatches were the architect's errors and are restated;** the code stands. The passage from C to B is 21.2 hours, the route being charged its straight line off the grid's axes. The base the landing forms is base 4, base 3 being base C.
+3. **The test of decision 0142 that asserted "No source"** is restated: a forces limit of "take a place" with no source is taken in.
+4. **Known and left, on reading 13:** where the staff assembled the force, decision 0143's second lift finds no unit, since the staff's limit names only the units it chose. A side whose first lift falls short sends no more from the source of itself. Decision 0152's lifts as they stand are not touched by this, and the 39 days have every man aboard a force. A second lift chosen by the staff from what is still ashore is left for later.
+5. **A fault found on reading the build, and mended.** The check that a staff's limit stays inside the limits above it read those limits as they bind. As it binds, the end's limit carries the staff's own earlier choice, so the staff could not name another source or add a unit when it chose again on a count, or added a later lift's units: its command would have been refused. The check now reads the limits above as they were set. `taking_a_place_needs_no_source_and_the_staff_names_what_is_left_out` has the staff name a second source after its first; it failed before the change.
+
