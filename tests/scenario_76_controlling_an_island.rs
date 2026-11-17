@@ -137,7 +137,8 @@
 //! - **No source.** With task force 1 left out: no base can be the
 //!   source of supply or of the landing. The holds form no supply and
 //!   say so; the take hands in the notice that it cannot meet its intent
-//!   each morning; the island is controlled on 0 of 14 days.
+//!   on day 1 and gives the reason each morning; the island is
+//!   controlled on 0 of 14 days.
 //! - **An enemy base near.** With a Japanese base 5 on the Allied map at
 //!   (2,3), in no named place's hex: "neutralise base 5" is formed on day
 //!   1, after the denial, and finds no bomber and no bombardment force.
