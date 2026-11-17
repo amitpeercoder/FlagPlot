@@ -23,9 +23,9 @@ pub enum Field {
     Ids(Vec<u32>),
     /// A list of words.
     Texts(Vec<&'static str>),
-    /// A list of strings made at run time.
-    Strs(Vec<String>),
     Obj(Data),
+    /// A list of objects.
+    Objs(Vec<Data>),
 }
 
 impl Serialize for Field {
@@ -46,8 +46,8 @@ impl Serialize for Field {
             }
             Field::Ids(ids) => ids.serialize(serializer),
             Field::Texts(words) => words.serialize(serializer),
-            Field::Strs(strings) => strings.serialize(serializer),
             Field::Obj(data) => data.serialize(serializer),
+            Field::Objs(list) => list.serialize(serializer),
         }
     }
 }

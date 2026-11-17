@@ -252,6 +252,17 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
 #evlist li.ev:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 #evlist li.ev.sel { background: color-mix(in srgb, var(--hl) 28%, transparent); box-shadow: inset 3px 0 0 var(--hl); }
 #evlist li.grp { padding: 3px 10px; background: var(--bg); font-weight: 650; cursor: pointer; position: sticky; top: 0; border-bottom: 1px solid var(--line); }
+#repwrap { flex: 1 1 42%; min-height: 110px; display: flex; flex-direction: column; min-height: 0; }
+#replist { list-style: none; margin: 0; padding: 0; overflow: auto; flex: 1; }
+#replist li.rep { padding: 4px 10px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+#replist li.rep.reached { background: color-mix(in srgb, var(--hl) 22%, transparent); box-shadow: inset 3px 0 0 var(--hl); }
+#replist li.rep.later { opacity: 0.5; }
+#replist .repno { cursor: pointer; text-decoration: underline; color: var(--accent); background: none; border: 0; padding: 0; font: inherit; }
+#replist .chip { display: inline-block; border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; margin: 1px 3px 1px 0; font-size: 11px; white-space: nowrap; }
+#replist .chip.late { border-style: dashed; }
+#replist .chip.never { text-decoration: line-through; color: var(--dim); }
+#replist .chip.me { font-weight: 700; border-color: var(--hl); }
+.ghost.own .gshape { stroke-dasharray: none; }
 .eid { color: var(--dim); margin-right: 6px; font-variant-numeric: tabular-nums; }
 .ecause { color: var(--dim); font-size: 12px; margin-left: 4px; }
 .empty { padding: 10px; color: var(--dim); }
@@ -347,6 +358,7 @@ li.cord.sel { background: color-mix(in srgb, var(--hl) 28%, transparent); box-sh
       <label><input type="radio" autocomplete="off" name="pov" value="umpire" checked> Umpire</label>
       <label><input type="radio" autocomplete="off" name="pov" value="allied" disabled> Allied</label>
       <label><input type="radio" autocomplete="off" name="pov" value="japanese" disabled> Japanese</label>
+      <select id="cmdpov" autocomplete="off" aria-label="One command's picture beside the truth" title="The truth with one command's contacts drawn over it (a replay with command levels on)" hidden><option value="">Command picture...</option></select>
     </fieldset>
     <fieldset class="belief" id="belief">
       <legend>Show</legend>
@@ -375,6 +387,7 @@ li.cord.sel { background: color-mix(in srgb, var(--hl) 28%, transparent); box-sh
     <div id="tabs" role="tablist" aria-label="Panel">
       <button id="tabEvents" role="tab" aria-selected="true" title="The events of the step">Events</button>
       <button id="tabCommand" role="tab" aria-selected="false" title="The intents of each side, the orders each issued and the reasons">Command</button>
+      <button id="tabReports" role="tab" aria-selected="false" title="The reports commands passed on, who got each and when" hidden>Reports</button>
     </div>
     <div id="cmdwrap" hidden>
       <div class="pane-head">
@@ -385,6 +398,13 @@ li.cord.sel { background: color-mix(in srgb, var(--hl) 28%, transparent); box-sh
           <label title="The same intents grouped by the level they are addressed to: the area, bases, task forces, and the units that received orders"><input type="radio" name="cmdview" value="level" autocomplete="off"> By level</label></fieldset></div>
       </div>
       <div id="cmdbody"></div>
+    </div>
+    <div id="repwrap" hidden>
+      <div class="pane-head">
+        <div class="line"><h2 id="reptitle">Reports</h2><span class="dim" id="repinfo"></span></div>
+        <div class="line"><label title="Only the reports that reached the command chosen in View, or that it sent"><input type="checkbox" id="reponly" autocomplete="off"> only those that reached the chosen command <span class="dim" id="repcmd"></span></label></div>
+      </div>
+      <ul id="replist"></ul>
     </div>
     <div id="evwrap">
       <div class="pane-head">
@@ -631,7 +651,7 @@ function buildSteps(events) {
 function validateReplay(r) {
   if (r === null || typeof r !== 'object' || Array.isArray(r)) return 'This is JSON but not a replay: expected an object at the top level.';
   if (r.format !== 'flagplot-replay') return 'Not a Flag Plot replay: format is ' + JSON.stringify(r.format) + ', expected "flagplot-replay".';
-  if (r.version !== 1 && r.version !== 2 && r.version !== 3 && r.version !== 4 && r.version !== 5) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads versions 1, 2, 3, 4 and 5.';
+  if (r.version !== 1 && r.version !== 2 && r.version !== 3 && r.version !== 4 && r.version !== 5 && r.version !== 6) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads versions 1, 2, 3, 4, 5 and 6.';
   if (r.version >= 2) {
     // Version 2 adds side_views: for each side, the events the engine let it see (decision 0047).
     if (!r.side_views || typeof r.side_views !== 'object') return 'Replay version ' + r.version + ' has no "side_views" object.';
@@ -859,6 +879,18 @@ function validateSteps(steps) {
           }
         }
       }
+      if (part.pictures !== undefined) {
+        if (part.pictures === null || typeof part.pictures !== 'object' || Array.isArray(part.pictures)) return where + ' "' + word + '.pictures" is not an object of the sides.';
+        for (const side of SIDES) {
+          const list = part.pictures[side];
+          if (list === undefined) continue;
+          if (!Array.isArray(list)) return where + ' "' + word + '.pictures.' + side + '" is not a list.';
+          for (const x of list) {
+            const ok = word === 'changed' ? x && typeof x.command === 'string' && Array.isArray(x.contacts) : typeof x === 'string';
+            if (!ok) return where + ' "' + word + '.pictures.' + side + '" has an entry without its command' + (word === 'changed' ? ' and its contacts.' : '.');
+          }
+        }
+      }
     }
   }
   return null;
@@ -909,7 +941,7 @@ function rebuildFromSteps(ctx) {
   const entries = replay.steps;
   const entryAt = new Map();
   entries.forEach((e, j) => entryAt.set(stepKey(e.day, e.phase), j));
-  const rec = { task_forces: new Map(), ships: new Map(), air_groups: new Map(), bases: new Map(), land_units: new Map(), contacts: { allied: new Map(), japanese: new Map() }, ground_estimates: { allied: new Map(), japanese: new Map() } };
+  const rec = { task_forces: new Map(), ships: new Map(), air_groups: new Map(), bases: new Map(), land_units: new Map(), contacts: { allied: new Map(), japanese: new Map() }, ground_estimates: { allied: new Map(), japanese: new Map() }, pictures: { allied: new Map(), japanese: new Map() } };
   const hexOf = h => h[0] + ',' + h[1];
   const applyEntry = e => {
     const ch = e.changed || {}, rm = e.removed || {};
@@ -922,6 +954,9 @@ function rebuildFromSteps(ctx) {
       for (const id of (rm.contacts && rm.contacts[side]) || []) rec.contacts[side].delete(id);
       for (const r of (ch.ground_estimates && ch.ground_estimates[side]) || []) rec.ground_estimates[side].set(hexOf(r.hex), r);
       for (const h of (rm.ground_estimates && rm.ground_estimates[side]) || []) rec.ground_estimates[side].delete(hexOf(h));
+      // Replay version 6: a command's whole picture where it changed, by the command's word.
+      for (const r of (ch.pictures && ch.pictures[side]) || []) rec.pictures[side].set(r.command, r);
+      for (const c of (rm.pictures && rm.pictures[side]) || []) rec.pictures[side].delete(c);
     }
   };
 
@@ -1092,8 +1127,16 @@ function rebuildFromSteps(ctx) {
       contacts[side] = new Map([...rec.contacts[side]].map(([id, c]) => [id, { id, side, hex: c.hex.slice(), ship_count: c.ship_count, kind: c.kind, age_pulses: c.age_pulses }]));
       estimates[side] = new Map([...rec.ground_estimates[side]].map(([k, e]) => [k, { hex: e.hex.slice(), men: e.men, day: e.day }]));
     }
+    // Each command's picture (replay version 6, the umpire's file only): command word -> the contacts it holds, with `own`.
+    let pictures = null;
+    if (replay.final && replay.final.pictures) {
+      pictures = {};
+      for (const side of SIDES) {
+        pictures[side] = new Map([...rec.pictures[side]].map(([cmd, p]) => [cmd, new Map(p.contacts.map(c => [c.id, { id: c.id, side, hex: c.hex.slice(), ship_count: c.ship_count, kind: c.kind, age_pulses: c.age_pulses, own: !!c.own, report_event: c.report_event }]))]));
+      }
+    }
     states.push({
-      forces, contacts, estimates, landUnits, formedBases: new Map(formedBases), baseSide: new Map(baseSide),
+      forces, contacts, estimates, landUnits, formedBases: new Map(formedBases), baseSide: new Map(baseSide), pictures,
       sunk: new Set(sunk), shipForce: new Map(shipForce),
       moves: aux.moves, fights: aux.fights, searches: aux.searches, land: aux.land,
       air: aux.air, reach, mission, groupBase,
@@ -1125,7 +1168,7 @@ function snapshot(cur, aux) {
   const estimates = {};
   for (const side of Object.keys(cur.estimates)) estimates[side] = new Map([...cur.estimates[side]].map(([k, e]) => [k, { hex: e.hex.slice(), men: e.men, day: e.day }]));
   return {
-    forces, contacts, estimates, landUnits, formedBases: new Map(cur.formedBases), baseSide: new Map(cur.baseSide),
+    forces, contacts, estimates, landUnits, formedBases: new Map(cur.formedBases), baseSide: new Map(cur.baseSide), pictures: null,
     sunk: new Set(cur.sunk),
     shipForce: new Map(cur.shipForce),
     moves: aux.moves, fights: aux.fights, searches: aux.searches, land: aux.land,
@@ -2340,13 +2383,57 @@ function measureHexes(sea, a, b) {
   return { air: airDistanceNm(a[0], a[1], b[0], b[1]), sea: sea_ };
 }
 
+// ---- Replay version 6: each command's picture, and the reports sent between commands (decision 0138, item 6) ----
+/** The commands of a replay that has pictures, as { side, command, label }: every command that ever held a picture, in side and command order (area, task forces, bases). Empty for a file without pictures. */
+function commandViews(replay) {
+  if (!replay || !replay.final || !replay.final.pictures || !Array.isArray(replay.steps)) return [];
+  const seen = { allied: new Set(), japanese: new Set() };
+  const note = (side, list) => { for (const p of list || []) seen[side].add(typeof p === 'string' ? p : p.command); };
+  for (const side of SIDES) {
+    note(side, replay.final.pictures[side]);
+    for (const e of replay.steps) note(side, e.changed && e.changed.pictures && e.changed.pictures[side]);
+  }
+  const rank = w => w === 'area' ? [0, 0] : w.startsWith('task_force:') ? [1, Number(w.slice(11))] : [2, Number(w.slice(5))];
+  const out = [];
+  for (const side of SIDES) {
+    for (const command of [...seen[side]].sort((a, b) => { const x = rank(a), y = rank(b); return x[0] - y[0] || x[1] - y[1]; })) {
+      out.push({ side, command, label: side.charAt(0).toUpperCase() + side.slice(1) + ' \u00b7 ' + command });
+    }
+  }
+  return out;
+}
+
+/**
+ * The reports sent in a model's events (`report_sent`), in log order: { event (the sending's event number), step, day, pulse, side, sender,
+ * report (the report's event number), listeners: [{ command, direction, arrival, day, pulse }] }. `day` and `pulse` of a listener are when it
+ * arrives, left out when it never does. The export works them out; this reads them.
+ */
+function reportRows(model) {
+  const rows = [];
+  for (const ev of model.events) {
+    if (ev.kind !== 'report_sent') continue;
+    const d = ev.data || {};
+    rows.push({ event: ev.id, step: model.stepOfEvent.get(ev.id), day: ev.day, pulse: ev.pulse, side: d.side, sender: d.sender, report: d.report, listeners: Array.isArray(d.listeners) ? d.listeners : [] });
+  }
+  return rows;
+}
+
+/** What a command of a side did with a report row: 'sent' (it sent it), 'reached' (a listener of it, arriving on time or late), 'never' (a listener it never reached) or null. */
+function reportTouch(row, side, command) {
+  if (row.side !== side) return null;
+  if (row.sender === command) return 'sent';
+  const l = row.listeners.find(x => x.command === command);
+  if (!l) return null;
+  return l.arrival === 'never' ? 'never' : 'reached';
+}
+
 const FlagPlotCore = {
   HEX_SPACING, ROW_SPACING, HEX_R, LABEL_COS_LAT, PHASES,
   SIDES, sideReplay, sideSteps, validateSteps, rebuildFromSteps,
   HEX_NM, isqrt, airDistanceNm, makeSeaMap, canStep, seaDistancesTo, seaPath, hexDistance, stepChargeNm, measureHexes,
   hexKey, hexCenter, hexCorner, hexCorners, edgeForDirection, pointToHex, bearingPoint, arcWidth, arcSpec, placeLabels,
   stepLabel, buildSteps, validateReplay, parseEntity, splitText, buildModel, compareWithFinal, whyTree, eventMatches, summarize,
-  airGroupHex, airReach,
+  airGroupHex, airReach, commandViews, reportRows, reportTouch,
   landAuxEvent, landAboard, landLayer, landUnitView, baseHolderAt, baseFigures, baseTrouble, areaWithin, runRoutes, intentShapes, noticeRow, noticesOfDay, nextNoticeStep, NOTICE_WORDS,
   intentLevel, commandStates, parseChain, commandLog, intentWords, orderWords, levelWords, unitWords, effectiveLimits, commandTree, commandView, eventsServing,
 };
@@ -2404,6 +2491,8 @@ const S = {
   air: true, land: true, selEvents: null, selEventsHex: null, selAirGroup: null, selBase: null, selLand: null,
   // The command panel: the tab shown, how the intents are arranged, the intent whose events the list shows (and the set), the order whose reason is shown.
   tab: 'events', detailFrac: { events: null, command: 0.33 }, detailPin: null, cmdView: 'tree', cmdIntent: null, cmdSet: null, cmdOrder: null,
+  // The command whose picture is drawn over the truth ({ side, command }, replay version 6), and the Reports tab's filter.
+  cmd: null, repOnly: false,
 };
 const mapEl = $('map'), gHexes = $('gHexes'), gClosed = $('gClosed'), gDyn = $('gDyn'), gMeasure = $('gMeasure'), gHover = $('gHover'), gScreen = $('gScreen'), worldEl = $('world'), wrap = $('mapwrap');
 
@@ -2429,7 +2518,7 @@ function loadText(text, sourceName) {
   showMessage('');
   stopPlaying();
   S.replay = obj; S.model = model; S.step = 0; S.selEvent = null; S.selEntity = null; S.hoverKey = null; S.cmdOrder = null; clearIntentFilter(); cmdToggled.clear(); resetAirSelection();
-  S.models = { umpire: model, allied: null, japanese: null }; S.pov = 'umpire'; S.belief = beliefChoice();
+  S.models = { umpire: model, allied: null, japanese: null }; S.pov = 'umpire'; S.belief = beliefChoice(); S.cmd = null; S.repOnly = false; $('reponly').checked = false;
   initPov();
   S.sea = C.makeSeaMap(obj.map.hexes, obj.directions);
   S.measure.a = null; S.measure.b = null;
@@ -2734,7 +2823,7 @@ function renderScreen() {
   // Land units: one counter for each side's stack at a hex (a count where there are several), tucked beside the forces and clear of them; the estimate
   // a side holds of the enemy ashore as a hollow dashed one. Units aboard ships are not drawn: they are in their force's detail.
   const gLand = sv('g'), gTag = sv('g'), landCtrs = [], tags = [];
-  const landLayer = S.land && m.hasLand ? C.landLayer(m, S.step, S.belief !== 'truth' ? [S.belief] : []) : null;
+  const landLayer = S.land && m.hasLand ? C.landLayer(m, S.step, !S.cmd && S.belief !== 'truth' ? [S.belief] : []) : null;
   if (landLayer) {
     const items = [...landLayer.stacks.map(k => ({ kind: 'land', q: k.q, r: k.r, side: k.side, stack: k })), ...landLayer.estimates.map(e => ({ kind: 'estimate', q: e.q, r: e.r, side: e.of, est: e }))];
     for (const it of items) {
@@ -2750,10 +2839,10 @@ function renderScreen() {
   }
 
   // Ghost contacts for the chosen belief
-  const ghosts = [];
-  if (S.belief !== 'truth' && st.contacts[S.belief]) {
+  const ghosts = [], shown = shownContacts(st);
+  if (shown) {
     const perHex = new Map();
-    for (const c of st.contacts[S.belief].values()) {
+    for (const c of shown.map.values()) {
       const key = C.hexKey(c.hex[0], c.hex[1]);
       const i = perHex.get(key) || 0;
       perHex.set(key, i + 1);
@@ -2829,12 +2918,12 @@ function renderScreen() {
   for (const g of ghosts) {
     const c = g.c, side = c.side === 'japanese' ? 'japanese' : 'allied';
     const op = 0.35 + 0.65 * Math.max(0, Math.min(1, 1 - (Number(c.age_pulses) || 0) / 5));
-    const grp = sv('g', { class: 'ghost side-' + side, transform: 'translate(' + g.x + ' ' + g.y + ')', opacity: op.toFixed(2) });
-    if (hl.contacts.has(c.side + ':' + c.id)) grp.append(sv('rect', { class: 'ring-hl', x: -23, y: -14, width: 46, height: 28, rx: 5, opacity: 1 }));
+    const grp = sv('g', { class: 'ghost side-' + side + (S.cmd && c.own ? ' own' : ''), transform: 'translate(' + g.x + ' ' + g.y + ')', opacity: op.toFixed(2) });
+    if (!S.cmd && hl.contacts.has(c.side + ':' + c.id)) grp.append(sv('rect', { class: 'ring-hl', x: -23, y: -14, width: 46, height: 28, rx: 5, opacity: 1 }));
     grp.append(sv('rect', { class: 'gshape', x: -20, y: -11, width: 40, height: 22, rx: 3 }));
     grp.append(sv('text', { x: 0, y: 4, text: String(c.ship_count) }));
     grp.append(sv('text', { x: 0, y: 26, text: ghostText(c) }));
-    grp.append(sv('title', { text: 'Contact ' + c.id + ' (' + c.side + ' belief): ' + ghostText(c) + ', in (' + c.hex[0] + ',' + c.hex[1] + ')' }));
+    grp.append(sv('title', { text: 'Contact ' + c.id + ' (' + c.side + ' ' + (S.cmd ? S.cmd.command + ' picture' : 'belief') + (S.cmd ? (c.own ? ', its own' : ', told') : '') + '): ' + ghostText(c) + ', in (' + c.hex[0] + ',' + c.hex[1] + ')' }));
     gGhost.append(grp);
   }
 
@@ -3095,6 +3184,16 @@ function drawAir(c) {
   }
 }
 
+/** The contacts drawn as ghosts at a step: the chosen command's picture (over the truth) or the chosen belief; null for none. */
+function shownContacts(st) {
+  if (S.cmd) {
+    const per = st.pictures && st.pictures[S.cmd.side];
+    return { map: (per && per.get(S.cmd.command)) || new Map(), label: S.cmd.side + ' ' + S.cmd.command + ' picture' };
+  }
+  if (S.belief !== 'truth' && st.contacts[S.belief]) return { map: st.contacts[S.belief], label: S.belief + ' belief' };
+  return null;
+}
+
 function ghostText(c) { return c.ship_count + ' ' + c.kind + ', age ' + c.age_pulses; }
 
 function renderScale() {
@@ -3225,8 +3324,9 @@ function renderReadout() {
   if (formed) line('Base ' + formed.id + ' (' + formed.side + '): formed by a landing');
   if (st.landUnits) for (const u of st.landUnits.values()) if (u.hex && u.hex[0] === q && u.hex[1] === r && u.men_ashore > 0) line('Land unit: ' + u.name + (u.side ? ' (' + u.side + ')' : '') + ', ' + u.men_ashore + ' men ashore' + (u.posture === 'attack' ? ', on attack' : '') + (u.fatigue > 0 ? ', fatigue ' + u.fatigue : '') + (u.fieldworks > 0 ? ', fieldworks ' + u.fieldworks : '') + (u.fed_share !== undefined && u.fed_share < 1 ? ', fed share ' + u.fed_share : '') + (u.march ? ', marching to (' + u.march.to[0] + ',' + u.march.to[1] + '), ' + u.march.days + (u.march.of ? ' of ' + u.march.of : '') + ' days marched' : ''));
   for (const f of st.forces.values()) if (f.q === q && f.r === r) line('Force: TF' + f.id + ' ' + f.name + ' (' + f.side + '), ' + f.ships.length + ' ship(s) afloat');
-  if (S.belief !== 'truth' && st.contacts[S.belief]) {
-    for (const c of st.contacts[S.belief].values()) if (c.hex[0] === q && c.hex[1] === r) line('Contact (' + S.belief + ' belief): ' + ghostText(c));
+  const shownHere = shownContacts(st);
+  if (shownHere) {
+    for (const c of shownHere.map.values()) if (c.hex[0] === q && c.hex[1] === r) line('Contact (' + shownHere.label + (S.cmd ? (c.own ? ', its own' : ', told') : '') + '): ' + ghostText(c));
   }
   if (st.fights.some(f => f.q === q && f.r === r)) line('A fight is recorded here in this step.');
 }
@@ -3243,19 +3343,28 @@ function initPov() {
   const has = !!(S.replay && S.replay.side_views);
   document.querySelectorAll('input[name=pov]').forEach(r => { r.checked = r.value === S.pov; r.disabled = r.value !== 'umpire' && !has; });
   $('povset').title = has ? '' : 'This file has no side views (replay version 1). Export it again to see a side\'s view.';
+  // One command's picture beside the truth (replay version 6 with command levels on).
+  const sel = $('cmdpov'), views = S.replay ? C.commandViews(S.replay) : [];
+  while (sel.options.length > 1) sel.remove(1);
+  for (const v of views) { const o = document.createElement('option'); o.value = v.side + '|' + v.command; o.textContent = v.label; sel.append(o); }
+  sel.hidden = !views.length;
+  sel.value = S.cmd ? S.cmd.side + '|' + S.cmd.command : '';
   applyPovChrome();
 }
 
 function applyPovChrome() {
   const side = S.pov !== 'umpire';
-  $('belief').hidden = side;
-  $('readonly').textContent = side ? S.pov.charAt(0).toUpperCase() + S.pov.slice(1) + ' side: only what it was allowed to know, read-only' : "Umpire's view, read-only";
+  $('belief').hidden = side || !!S.cmd;
+  $('readonly').textContent = side ? S.pov.charAt(0).toUpperCase() + S.pov.slice(1) + ' side: only what it was allowed to know, read-only' : S.cmd ? "Umpire's view with the picture of " + S.cmd.side + ' ' + S.cmd.command + ' over it, read-only' : "Umpire's view, read-only";
   renderLegend();
 }
 
 /** Changes the view, keeping the step nearest the one on screen (the steps of a side are the ones in which it has events). */
 function setPov(pov) {
-  if (!S.models || pov === S.pov) return;
+  if (!S.models) return;
+  if (pov === S.pov && !S.cmd) return;
+  S.cmd = null; // a side's page or the truth alone has no command's picture
+  if (pov === S.pov) { initPov(); render(); renderReadout(); return; }
   let model = S.models[pov];
   if (!model) {
     try { model = C.buildModel(C.sideReplay(S.replay, pov)); }
@@ -3275,6 +3384,19 @@ function setPov(pov) {
   render();
   renderReadout();
   renderMeasure();
+}
+
+/** Draws one command's picture over the truth (the Umpire view), or none. `value` is "side|command", or "" for none. */
+function setCommandView(value) {
+  if (!S.models) return;
+  if (!value) { setPov('umpire'); return; }
+  const [side, command] = value.split('|');
+  if (S.pov !== 'umpire') { const keep = value; setPov('umpire'); value = keep; }
+  S.cmd = { side, command };
+  S.belief = 'truth';
+  initPov();
+  render();
+  renderReadout();
 }
 
 // =====================================================================
@@ -3395,6 +3517,7 @@ function initControls() {
     else if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); togglePlay(); }
   });
   document.querySelectorAll('input[name=pov]').forEach(r => r.addEventListener('change', () => { if (r.checked) { r.blur(); setPov(r.value); } }));
+  $('cmdpov').addEventListener('change', e => { const v = e.target.value; e.target.blur(); setCommandView(v); });
   document.querySelectorAll('input[name=belief]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.belief = r.value; r.blur(); render(); renderReadout(); } }));
 }
 
@@ -3585,9 +3708,45 @@ function setTab(tab) {
   S.tab = tab;
   $('tabEvents').setAttribute('aria-selected', String(tab === 'events'));
   $('tabCommand').setAttribute('aria-selected', String(tab === 'command'));
+  $('tabReports').setAttribute('aria-selected', String(tab === 'reports'));
   $('evwrap').hidden = tab !== 'events';
   $('cmdwrap').hidden = tab !== 'command';
+  $('repwrap').hidden = tab !== 'reports';
   render();
+}
+
+/** The Reports tab: the reports sent between commands, with who got each and when. Shown for the Umpire's page of a file that has any. */
+function reportsAvailable() { return !!(S.model && S.model.umpire && C.reportRows(S.model).length); }
+
+function renderReports() {
+  const tab = $('tabReports'), avail = reportsAvailable();
+  tab.hidden = !avail;
+  if (!avail) { if (S.tab === 'reports') { setTab('events'); } return; }
+  const m = S.model, ul = $('replist');
+  clear(ul);
+  const rows = C.reportRows(m);
+  $('repcmd').textContent = S.cmd ? '(' + S.cmd.side + ' ' + S.cmd.command + ')' : '(choose a command in View)';
+  $('reponly').disabled = !S.cmd;
+  let shown = 0;
+  for (const row of rows) {
+    const touch = S.cmd ? C.reportTouch(row, S.cmd.side, S.cmd.command) : null;
+    if (S.repOnly && S.cmd && touch !== 'sent' && touch !== 'reached') continue;
+    shown++;
+    const later = row.step !== undefined && row.step > S.step;
+    const chips = row.listeners.map(l => {
+      const when = l.arrival === 'never' ? 'never' : (l.arrival === 'late' ? 'a pulse late, ' : '') + 'D' + l.day + ' ' + l.pulse;
+      const me = S.cmd && row.side === S.cmd.side && l.command === S.cmd.command;
+      return el('span', { class: 'chip ' + l.arrival + (me ? ' me' : ''), title: l.direction + ' to ' + l.command + ': ' + (l.arrival === 'never' ? 'never arrives' : (l.arrival === 'late' ? 'arrives a pulse late, ' : 'arrives on time, ') + 'day ' + l.day + ' ' + l.pulse) }, l.direction + ' ' + l.command + ' ' + when);
+    });
+    ul.append(el('li', { class: 'rep' + (touch === 'reached' || touch === 'sent' ? ' reached' : '') + (later ? ' later' : ''), 'data-id': row.event },
+      el('span', { class: 'eid', text: '#' + row.event }),
+      el('span', { class: 'dim', text: 'D' + row.day + ' ' + (row.pulse || 'end of day') + ' \u00b7 ' + row.side + ' \u00b7 sent by ' + row.sender + ' \u00b7 report ' }),
+      el('button', { class: 'repno', title: 'Select the report\'s event', onclick: () => selectEvent(row.report) }, '#' + row.report),
+      touch === 'sent' ? el('b', { text: ' \u00b7 sent by the chosen command' }) : touch === 'reached' ? el('b', { text: ' \u00b7 reached the chosen command' }) : touch === 'never' ? el('span', { class: 'dim', text: ' \u00b7 never reached the chosen command' }) : null,
+      el('div', null, ...chips)));
+  }
+  if (!shown) ul.append(el('li', { class: 'empty', text: 'No reports match.' }));
+  $('repinfo').textContent = shown + ' of ' + rows.length + ' shown';
 }
 
 function clearIntentFilter() { S.cmdIntent = null; S.cmdSet = null; }
@@ -4025,7 +4184,7 @@ function renderLegend() {
   const items = [
     ...(!side || side === 'allied' ? [['allied', side ? 'Own force' : 'Allied force']] : []),
     ...(!side || side === 'japanese' ? [['japanese', side ? 'Own force' : 'Japanese force']] : []),
-    ['ghost', side ? 'Contact this side holds, fainter when less sure' : 'Contact (belief), fainter when less sure'],
+    ['ghost', side ? 'Contact this side holds, fainter when less sure' : S.cmd ? 'Contact in the chosen command\'s picture, fainter when less sure; dashed it was told, solid it is the command\'s own' : 'Contact (belief), fainter when less sure'],
     ['deep', 'Deep sea'], ['shallow', 'Shallow sea'], ['coast', 'Coast (more land, darker)'], ['land', 'Land'],
     ['closed', 'Closed side'], ['fight', side ? 'Fight this side knows of, in this step' : 'Fight in this step'], ['arc', 'Search arc flown in this step'],
     ['trail', 'Trail of hexes entered'], ['move', 'Movement in this step'],
@@ -4064,6 +4223,7 @@ function render() {
   applyLayout();
   renderEvents();
   renderCommand();
+  renderReports();
   renderDetail();
   if (S.hoverKey) renderReadout();
 }
@@ -4082,6 +4242,8 @@ function init() {
   initSplit();
   $('tabEvents').addEventListener('click', () => setTab('events'));
   $('tabCommand').addEventListener('click', () => setTab('command'));
+  $('tabReports').addEventListener('click', () => setTab('reports'));
+  $('reponly').addEventListener('change', e => { S.repOnly = e.target.checked; e.target.blur(); renderReports(); });
   $('cmdclear').addEventListener('click', () => { clearIntentFilter(); render(); });
   $('nextnotice').addEventListener('click', () => { const next = S.model ? C.nextNoticeStep(S.model, S.step) : -1; if (next >= 0) { stopPlaying(); goto(next); } });
   document.querySelectorAll('input[name=cmdview]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.cmdView = r.value; r.blur(); renderCommand(); } }));

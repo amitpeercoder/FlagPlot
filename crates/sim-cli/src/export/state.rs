@@ -689,6 +689,10 @@ pub struct FinalOut {
     /// was.
     #[serde(skip_serializing_if = "super::commands::CommandsOut::is_empty")]
     commands: super::commands::CommandsOut,
+    /// Each command's picture, by side (replay version 6): left out while
+    /// command levels are off.
+    #[serde(skip_serializing_if = "PerSide::is_empty")]
+    pictures: PerSide<super::pictures::PictureOut>,
 }
 
 #[derive(Serialize)]
@@ -744,6 +748,7 @@ pub struct Records {
     land_units: Vec<LandUnitOut>,
     contacts: PerSide<ContactOut>,
     ground_estimates: PerSide<GroundEstimateOut>,
+    pictures: PerSide<super::pictures::PictureOut>,
 }
 
 /// The records of the world as it stands, with the contacts and ground
@@ -805,6 +810,7 @@ pub fn records(world: &World) -> Records {
             allied: ground_estimates(Side::Allied),
             japanese: ground_estimates(Side::Japanese),
         },
+        pictures: super::pictures::pictures(world),
     }
 }
 
@@ -831,6 +837,8 @@ pub struct KeyedRecords {
     pub contacts: PerSide<(u32, String)>,
     /// Keyed by hex, as the side holds one estimate for each.
     pub ground_estimates: PerSide<((i32, i32), String)>,
+    /// Keyed by command word.
+    pub pictures: PerSide<(String, String)>,
 }
 
 impl Records {
@@ -849,6 +857,10 @@ impl Records {
                 allied: keyed(&self.ground_estimates.allied, |r| r.hex),
                 japanese: keyed(&self.ground_estimates.japanese, |r| r.hex),
             },
+            pictures: PerSide {
+                allied: keyed(&self.pictures.allied, |r| r.command.clone()),
+                japanese: keyed(&self.pictures.japanese, |r| r.command.clone()),
+            },
         }
     }
 }
@@ -864,6 +876,7 @@ pub fn final_state(world: &World) -> FinalOut {
         land_units,
         contacts,
         ground_estimates,
+        pictures,
     } = records(world);
     let key = world.umpire_key();
     let claims = |side: Side| -> Vec<ClaimOut> {
@@ -893,5 +906,6 @@ pub fn final_state(world: &World) -> FinalOut {
         },
         ground_estimates,
         commands: super::commands::commands(world),
+        pictures,
     }
 }
