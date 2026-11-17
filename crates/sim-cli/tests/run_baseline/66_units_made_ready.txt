@@ -2,25 +2,25 @@ Placeholder scenario 66: Units made ready, and a base built up
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0a42ce374df0c279  27 events
-day   2  hash b379109a3d28fdbe  11 events
-day   3  hash b2f0630fe71e3ec6  11 events
-day   4  hash a2da1f50a84fb87e  9 events
-day   5  hash f477801b801aa7b0  9 events
-day   6  hash 6b615b107628d87b  9 events
-day   7  hash f0024bf5fd42ea1a  9 events
-day   8  hash 11f0aaf2cb9a2d7e  9 events
-day   9  hash af04192ec0e976aa  9 events
-day  10  hash d3a3269ddcb9636b  9 events
-day  11  hash 7dda2ef2855bd540  9 events
-day  12  hash e07f58007c0af4d8  9 events
+day   1  hash e3c3f19aea6913b9  25 events
+day   2  hash 52ad6b5b4b73bb9a  9 events
+day   3  hash 6909c1095c8dce09  10 events
+day   4  hash 9ccb9c96e37ed087  11 events
+day   5  hash 3da1679e2643fdba  8 events
+day   6  hash ad523dd1aca2ba28  7 events
+day   7  hash cb042e13588e5250  7 events
+day   8  hash 3d5b9be51a0360c7  7 events
+day   9  hash 61e8a14e8bd9ec09  6 events
+day  10  hash ecbc9b12bd29bf80  6 events
+day  11  hash acd7365e13f69625  6 events
+day  12  hash 4d8dfe308ba639a6  6 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
 ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-base:1 "Placeholder base 1" (Allied) at (0,0): 844 t of supply in stock, 5000 t of fuel in stock, no airfield, 12000 of work done on the airfield
-land_unit:1 "Placeholder Raw" (Allied): 800 men ashore at (0,0), fieldworks 30
-land_unit:2 "Placeholder Sound" (Allied): 800 men ashore at (0,0), fieldworks 30
+base:1 "Placeholder base 1" (Allied) at (0,0): 844 t of supply in stock, 5000 t of fuel in stock, 4000 of work done on the airfield
+land_unit:1 "Placeholder Raw" (Allied): 800 men ashore at (0,0)
+land_unit:2 "Placeholder Sound" (Allied): 800 men ashore at (0,0)
 land_unit:3 "Placeholder Builders" (Allied): 1000 men ashore at (0,0)
 Allied: no contacts
 Allied: no battle claims

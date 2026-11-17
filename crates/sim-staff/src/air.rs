@@ -317,11 +317,11 @@ pub(crate) struct Day<'v, 'a> {
     pub(crate) state: CommandState,
     pub(crate) today: u32,
     /// For a proposal, the root whose tree is asked for.
-    scope: Option<IntentId>,
+    pub(crate) scope: Option<IntentId>,
     /// What is handed in for the tree in scope (all of it, with no scope).
-    real: StaffDecisions,
+    pub(crate) real: StaffDecisions,
     /// What is handed in for the rest, thrown away.
-    scratch: StaffDecisions,
+    pub(crate) scratch: StaffDecisions,
     /// The groups cover intents served earlier this morning have taken.
     taken: BTreeMap<AirGroupId, IntentId>,
     /// The groups raid intents served earlier this morning have taken
@@ -342,13 +342,18 @@ pub(crate) struct Day<'v, 'a> {
     pub(crate) lines: Vec<String>,
     /// The side's events, read when a reason needs them.
     events: Option<Vec<sim_core::side_events::SideEvent>>,
+    /// What each "ready a landing" task served this morning found of its
+    /// readiness: what "take a place" reads to ask leave to launch
+    /// (decision 0142, 15).
+    pub(crate) landings: BTreeMap<IntentId, crate::take::LandingReading>,
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
 /// strike ships and search waters, and the tasks of a task force, standing
 /// at a hex by night and operating a carrier force (decisions 0124 and 0125),
 /// which run in the same morning, and the two tasks that order land units
-/// (decision 0141), which take their leaves here too.
+/// (decision 0141), which take their leaves here too, and "take a place"
+/// (decision 0142), which forms the first of them.
 pub(crate) fn is_air(kind: IntentKind) -> bool {
     matches!(
         kind,
@@ -363,6 +368,8 @@ pub(crate) fn is_air(kind: IntentKind) -> bool {
             | IntentKind::OperateCarriers { .. }
             | IntentKind::ReadyLanding { .. }
             | IntentKind::BuildUp { .. }
+            | IntentKind::TakePlace { .. }
+            | IntentKind::Bombard { .. }
     )
 }
 
@@ -484,6 +491,7 @@ impl<'v, 'a> Day<'v, 'a> {
             turns: BTreeMap::new(),
             lines: Vec::new(),
             events: None,
+            landings: BTreeMap::new(),
         };
         day.leaves();
         day.holds();
@@ -497,7 +505,15 @@ impl<'v, 'a> Day<'v, 'a> {
         day.supply_covers();
         day.stands();
         day.carrier_forces();
+        // Decision 0142: "take a place" forms its landing before the tasks
+        // that ready units are served, and launches it after.
+        day.takes_prepare();
         day.readies();
+        day.takes_launch();
+        // Decision 0146: bombardment from the sea, formed under a released
+        // "neutralise a base" or "take a place" (after the landing force is
+        // routed, whose due day it reads) and served at the force's level.
+        day.bombards();
         Some(day)
     }
 
@@ -627,6 +643,11 @@ impl<'v, 'a> Day<'v, 'a> {
             if intent.kind.readies_units() {
                 continue;
             }
+            // "Take a place" asks leave to launch only when its landing is
+            // ready (decision 0142, 15): its own doctrine does it.
+            if matches!(intent.kind, IntentKind::TakePlace { .. }) {
+                continue;
+            }
             if now == PlanState::Preparing {
                 if !leaves.launch {
                     let reason = serving(&intent, &plan)
@@ -664,14 +685,14 @@ impl<'v, 'a> Day<'v, 'a> {
         }
     }
 
-    fn set_plan(&mut self, plan: sim_core::command::PlanId, state: PlanState) {
+    pub(crate) fn set_plan(&mut self, plan: sim_core::command::PlanId, state: PlanState) {
         if let Some(found) = self.state.plans.get_mut(&plan) {
             found.state = state;
         }
     }
 
     /// A no-order reason and the notice that the plan waits for a leave.
-    fn waits(
+    pub(crate) fn waits(
         &mut self,
         in_scope: bool,
         reason: Reason,
@@ -809,6 +830,27 @@ impl<'v, 'a> Day<'v, 'a> {
             let Some(base) = hold.kind.own_base() else {
                 continue;
             };
+            // Decision 0144, 1 to 3: a hold of a base that is not the side's,
+            // or no longer is, waits for it.
+            if !self.view.bases().any(|b| b.id == base) {
+                let base_text = base_words(self.view, base);
+                let reason = serving(&hold, &plan)
+                    .evidence(format!("{base_text} is not the side's"), today)
+                    .binding(format!("{base_text} is not the side's"))
+                    .worked(format!(
+                        "{} holds {base_text}, which is not the side's: the staff waits for it to be the side's, and forms nothing and orders nothing under {} until then.",
+                        hold.id, hold.id
+                    ))
+                    .would_change(format!("{base_text} the side's"))
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                continue;
+            }
+            // Decision 0144, 4 to 9: the men at the base, and the supply
+            // that follows.
+            if self.hold_men(&hold, &plan, base, in_scope) {
+                self.hold_supply(&hold, &plan, base, in_scope);
+            }
             // The tasks of the forces its forces limit names (decisions
             // 0124, 8, and 0125, 2): cover from the sea, and carriers.
             if let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) {

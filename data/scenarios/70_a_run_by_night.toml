@@ -1,0 +1,139 @@
+# Scenario 70: a run by night.
+#
+# Decision 0145, step 5 of stage 3, first part. Two fast transports keep a
+# garrison fed at a place an enemy base overlooks. At cruising speed they
+# would arrive by day. The staff sends them at full speed: they arrive in the
+# night, land their load in an hour and a half, and are gone at the morning.
+#
+# The map is scenario 27's: A at (0,0), a coast hex with port size 5; B at
+# (4,0) and C at (0,6), coast hexes with port size 0. A to C is 6 hexes,
+# 240 nm, and C to B is 6 hexes. Allied base 1 lies at A with 1,000 t of
+# supply and 2,000 t of fuel; Allied base 2, the garrison, at C with 100 t of
+# supply; Japanese base 3 at B, on the Allied map, with no ship, aircraft or
+# man. Unit 1, an Allied fighting unit of 2,000 men, is ashore at C on the
+# defence. Task force 1, two placeholder fast transports with cargo (class
+# 12), lies stopped at base 1 on the transport mission at cruising speed,
+# full of fuel, with nothing aboard. On day 1 the commander states "keep
+# base 2 supplied", with a floor of 5 days and no interval, and a forces
+# limit of ships 1 and 2 and base 1 as the source, and gives leave to prepare
+# and to launch. The game is 14 days.
+#
+# The hand calculation is in tests/scenario_70_a_run_by_night.rs. The test
+# runs this file on the frozen step 1 figures. Nothing is sighted and nothing
+# fights, so no die changes anything. It builds its variants from the text
+# of this file using the markers below.
+#
+# PLACEHOLDER DATA. The bases, ships, units and map are invented.
+
+name = "Placeholder scenario 70: A run by night"
+placeholder = true
+seed = 1942
+days = 14
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+    "../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# Allied base 1 at A, the source.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 2000
+
+# Allied base 2 at C, the garrison kept supplied.
+[[base]]
+id = 2
+name = "Placeholder garrison C"
+side = "allied"
+q = 0
+r = 6
+supply_t = 100
+fuel_t = 0
+
+# Japanese base 3 at B, on the Allied map, 6 hexes from C.
+[[base]]
+id = 3
+name = "Placeholder enemy base B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Unit 1, the garrison, ashore at C on the defence.
+[[land_unit]]
+id = 1
+name = "Placeholder Garrison"
+side = "allied"
+men = 2000
+q = 0
+r = 6
+posture = "defend"
+
+# Task force 1: two placeholder fast transports with cargo, stopped at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder fast transport 1"
+class = 12
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder fast transport 2"
+class = 12
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+base = 2
+floor_days = 5
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+ships = [1, 2]
+task_forces = []
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

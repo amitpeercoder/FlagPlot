@@ -2,18 +2,18 @@ Placeholder scenario 66: Units made ready, and a base built up
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0a42ce374df0c279  27 events
-day   2  hash b379109a3d28fdbe  11 events
-day   3  hash b2f0630fe71e3ec6  11 events
-day   4  hash a2da1f50a84fb87e  9 events
-day   5  hash f477801b801aa7b0  9 events
-day   6  hash 6b615b107628d87b  9 events
-day   7  hash f0024bf5fd42ea1a  9 events
-day   8  hash 11f0aaf2cb9a2d7e  9 events
-day   9  hash af04192ec0e976aa  9 events
-day  10  hash d3a3269ddcb9636b  9 events
-day  11  hash 7dda2ef2855bd540  9 events
-day  12  hash e07f58007c0af4d8  9 events
+day   1  hash e3c3f19aea6913b9  25 events
+day   2  hash 52ad6b5b4b73bb9a  9 events
+day   3  hash 6909c1095c8dce09  10 events
+day   4  hash 9ccb9c96e37ed087  11 events
+day   5  hash 3da1679e2643fdba  8 events
+day   6  hash ad523dd1aca2ba28  7 events
+day   7  hash cb042e13588e5250  7 events
+day   8  hash 3d5b9be51a0360c7  7 events
+day   9  hash 61e8a14e8bd9ec09  6 events
+day  10  hash ecbc9b12bd29bf80  6 events
+day  11  hash acd7365e13f69625  6 events
+day  12  hash 4d8dfe308ba639a6  6 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to ready a landing at (6,0) by task_force:1
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
@@ -30,128 +30,106 @@ day  12  hash e07f58007c0af4d8  9 events
 #13 D1 -         order:1 accepted for task_force:1  <- order:1  [issued by the staff]
 #14 D1 -         Allied staff's reason for order:1 [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: task_force:1 is to land at (6,0) with land_unit:1, land_unit:2: the staff gives it the landing order with that roster.  <- order:1, #13
 #15 D1 -         order:2 accepted for land_unit:1  <- order:2  [issued by the staff]
-#16 D1 -         Allied staff's reason for order:2 [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: land_unit:1 (Placeholder Raw) is at experience 1, below the standard of 2, with 0 of the 30 days of training a level takes counted; its rehearsal for (6,0) is 0 and needs 20 days at 5 a day; at balanced with no date it trains to the standard first: the staff sets it to train.  <- order:2, #15
+#16 D1 -         Allied staff's reason for order:2 [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: land_unit:1 (Placeholder Raw) is at experience 1, below the standard of 2, with 0 of the 3 days of training a level takes counted; its rehearsal for (6,0) is 0 and needs 4 days at 25 a day; at balanced with no date it trains to the standard first: the staff sets it to train.  <- order:2, #15
 #17 D1 -         order:3 accepted for land_unit:3  <- order:3  [issued by the staff]
-#18 D1 -         Allied staff's reason for order:3 [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 20000 of work to do on an airfield, 1000 a day by the units at it, 20 days. The staff sets land_unit:3 (Placeholder Builders) to work at the airfield job.  <- order:3, #17
+#18 D1 -         Allied staff's reason for order:3 [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 4000 of work to do on an airfield, 1000 a day by the units at it, 4 days. The staff sets land_unit:3 (Placeholder Builders) to work at the airfield job.  <- order:3, #17
 #19 D1 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 987 t left
 #20 D1 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #19
-#21 D1 -         task_force:1 loaded for the landing at (6,0): loading 5  <- order:1
+#21 D1 -         task_force:1 loaded for the landing at (6,0): loading 25  <- order:1
 #22 D1 -         land_unit:1 trained: 1 day counted at experience 1  <- order:2, #20
-#23 D1 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 5  <- order:1
+#23 D1 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 25  <- order:1
 #24 D1 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 1000 done on the airfield  <- order:3, #20
-#25 D1 -         land_unit:1 dug in: fieldworks 10
-#26 D1 -         land_unit:2 dug in: fieldworks 10
-#27 D1 -         base:1 at the end of the day: 987 t of supply, 0 aircraft ready: not open
-#28 D2 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 5, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#29 D2 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 19000 of work to do on an airfield, 1000 a day by the units at it, 19 days; every unit is at the airfield job already, so the staff gives no order.
-#30 D2 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 974 t left
-#31 D2 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #30
-#32 D2 -         task_force:1 loaded for the landing at (6,0): loading 10  <- order:1
-#33 D2 -         land_unit:1 trained: 2 days counted at experience 1  <- order:2, #31
-#34 D2 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 10  <- order:1
-#35 D2 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 2000 done on the airfield  <- order:3, #31
-#36 D2 -         land_unit:1 dug in: fieldworks 20
-#37 D2 -         land_unit:2 dug in: fieldworks 20
-#38 D2 -         base:1 at the end of the day: 974 t of supply, 0 aircraft ready: not open
-#39 D3 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 10, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#40 D3 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 18000 of work to do on an airfield, 1000 a day by the units at it, 18 days; every unit is at the airfield job already, so the staff gives no order.
-#41 D3 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 961 t left
-#42 D3 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #41
-#43 D3 -         task_force:1 loaded for the landing at (6,0): loading 15  <- order:1
-#44 D3 -         land_unit:1 trained: 3 days counted at experience 1  <- order:2, #42
-#45 D3 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 15  <- order:1
-#46 D3 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 3000 done on the airfield  <- order:3, #42
-#47 D3 -         land_unit:1 dug in: fieldworks 30
-#48 D3 -         land_unit:2 dug in: fieldworks 30
-#49 D3 -         base:1 at the end of the day: 961 t of supply, 0 aircraft ready: not open
-#50 D4 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 15, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#51 D4 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 17000 of work to do on an airfield, 1000 a day by the units at it, 17 days; every unit is at the airfield job already, so the staff gives no order.
-#52 D4 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 948 t left
-#53 D4 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #52
-#54 D4 -         task_force:1 loaded for the landing at (6,0): loading 20  <- order:1
-#55 D4 -         land_unit:1 trained: 4 days counted at experience 1  <- order:2, #53
-#56 D4 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 20  <- order:1
-#57 D4 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #53
-#58 D4 -         base:1 at the end of the day: 948 t of supply, 0 aircraft ready: not open
-#59 D5 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 20, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#60 D5 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 16000 of work to do on an airfield, 1000 a day by the units at it, 16 days; every unit is at the airfield job already, so the staff gives no order.
-#61 D5 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 935 t left
-#62 D5 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #61
-#63 D5 -         task_force:1 loaded for the landing at (6,0): loading 25  <- order:1
-#64 D5 -         land_unit:1 trained: 5 days counted at experience 1  <- order:2, #62
-#65 D5 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 25  <- order:1
-#66 D5 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 5000 done on the airfield  <- order:3, #62
-#67 D5 -         base:1 at the end of the day: 935 t of supply, 0 aircraft ready: not open
-#68 D6 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 25, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#69 D6 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 15000 of work to do on an airfield, 1000 a day by the units at it, 15 days; every unit is at the airfield job already, so the staff gives no order.
-#70 D6 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 922 t left
-#71 D6 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #70
-#72 D6 -         task_force:1 loaded for the landing at (6,0): loading 30  <- order:1
-#73 D6 -         land_unit:1 trained: 6 days counted at experience 1  <- order:2, #71
-#74 D6 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 30  <- order:1
-#75 D6 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 6000 done on the airfield  <- order:3, #71
-#76 D6 -         base:1 at the end of the day: 922 t of supply, 0 aircraft ready: not open
-#77 D7 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 30, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#78 D7 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 14000 of work to do on an airfield, 1000 a day by the units at it, 14 days; every unit is at the airfield job already, so the staff gives no order.
-#79 D7 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 909 t left
-#80 D7 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #79
-#81 D7 -         task_force:1 loaded for the landing at (6,0): loading 35  <- order:1
-#82 D7 -         land_unit:1 trained: 7 days counted at experience 1  <- order:2, #80
-#83 D7 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 35  <- order:1
-#84 D7 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 7000 done on the airfield  <- order:3, #80
-#85 D7 -         base:1 at the end of the day: 909 t of supply, 0 aircraft ready: not open
-#86 D8 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 35, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#87 D8 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 13000 of work to do on an airfield, 1000 a day by the units at it, 13 days; every unit is at the airfield job already, so the staff gives no order.
-#88 D8 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 896 t left
-#89 D8 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #88
-#90 D8 -         task_force:1 loaded for the landing at (6,0): loading 40  <- order:1
-#91 D8 -         land_unit:1 trained: 8 days counted at experience 1  <- order:2, #89
-#92 D8 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 40  <- order:1
-#93 D8 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 8000 done on the airfield  <- order:3, #89
-#94 D8 -         base:1 at the end of the day: 896 t of supply, 0 aircraft ready: not open
-#95 D9 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 40, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#96 D9 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 12000 of work to do on an airfield, 1000 a day by the units at it, 12 days; every unit is at the airfield job already, so the staff gives no order.
-#97 D9 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 883 t left
-#98 D9 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #97
-#99 D9 -         task_force:1 loaded for the landing at (6,0): loading 45  <- order:1
-#100 D9 -         land_unit:1 trained: 9 days counted at experience 1  <- order:2, #98
-#101 D9 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 45  <- order:1
-#102 D9 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 9000 done on the airfield  <- order:3, #98
-#103 D9 -         base:1 at the end of the day: 883 t of supply, 0 aircraft ready: not open
-#104 D10 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 45, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#105 D10 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 11000 of work to do on an airfield, 1000 a day by the units at it, 11 days; every unit is at the airfield job already, so the staff gives no order.
-#106 D10 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 870 t left
-#107 D10 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #106
-#108 D10 -         task_force:1 loaded for the landing at (6,0): loading 50  <- order:1
-#109 D10 -         land_unit:1 trained: 10 days counted at experience 1  <- order:2, #107
-#110 D10 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 50  <- order:1
-#111 D10 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 10000 done on the airfield  <- order:3, #107
-#112 D10 -         base:1 at the end of the day: 870 t of supply, 0 aircraft ready: not open
-#113 D11 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 50, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#114 D11 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 10000 of work to do on an airfield, 1000 a day by the units at it, 10 days; every unit is at the airfield job already, so the staff gives no order.
-#115 D11 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 857 t left
-#116 D11 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #115
-#117 D11 -         task_force:1 loaded for the landing at (6,0): loading 55  <- order:1
-#118 D11 -         land_unit:1 trained: 11 days counted at experience 1  <- order:2, #116
-#119 D11 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 55  <- order:1
-#120 D11 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 11000 done on the airfield  <- order:3, #116
-#121 D11 -         base:1 at the end of the day: 857 t of supply, 0 aircraft ready: not open
-#122 D12 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 55, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 51, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
-#123 D12 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 9000 of work to do on an airfield, 1000 a day by the units at it, 9 days; every unit is at the airfield job already, so the staff gives no order.
-#124 D12 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 844 t left
-#125 D12 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #124
-#126 D12 -         task_force:1 loaded for the landing at (6,0): loading 60  <- order:1
-#127 D12 -         land_unit:1 trained: 12 days counted at experience 1  <- order:2, #125
-#128 D12 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 60  <- order:1
-#129 D12 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 12000 done on the airfield  <- order:3, #125
-#130 D12 -         base:1 at the end of the day: 844 t of supply, 0 aircraft ready: not open
+#25 D1 -         base:1 at the end of the day: 987 t of supply, 0 aircraft ready: not open
+#26 D2 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 25, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 8, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
+#27 D2 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 3000 of work to do on an airfield, 1000 a day by the units at it, 3 days; every unit is at the airfield job already, so the staff gives no order.
+#28 D2 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 974 t left
+#29 D2 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #28
+#30 D2 -         task_force:1 loaded for the landing at (6,0): loading 50  <- order:1
+#31 D2 -         land_unit:1 trained: 2 days counted at experience 1  <- order:2, #29
+#32 D2 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 50  <- order:1
+#33 D2 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 2000 done on the airfield  <- order:3, #29
+#34 D2 -         base:1 at the end of the day: 974 t of supply, 0 aircraft ready: not open
+#35 D3 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 50, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 8, and what binds is the training of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
+#36 D3 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 2000 of work to do on an airfield, 1000 a day by the units at it, 2 days; every unit is at the airfield job already, so the staff gives no order.
+#37 D3 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 961 t left
+#38 D3 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #37
+#39 D3 -         task_force:1 loaded for the landing at (6,0): loading 75  <- order:1
+#40 D3 -         land_unit:1 trained: 3 days counted at experience 1  <- order:2, #38
+#41 D3 -         land_unit:1 rose to experience 2 by training  <- #40
+#42 D3 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 75  <- order:1
+#43 D3 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 3000 done on the airfield  <- order:3, #38
+#44 D3 -         base:1 at the end of the day: 961 t of supply, 0 aircraft ready: not open
+#45 D4 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: an airfield is the first want of base:1 (Placeholder base 1) not met: 1000 of work to do on an airfield, 1000 a day by the units at it, 1 day; every unit is at the airfield job already, so the staff gives no order.
+#46 D4 -         order:4 accepted for land_unit:1  <- order:4  [issued by the staff]
+#47 D4 -         Allied staff's reason for order:4 [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: land_unit:1 (Placeholder Raw) is at experience 2, at or above the standard of 2, with 0 of the 3 days of training a level takes counted; its rehearsal for (6,0) is 0 and needs 4 days at 25 a day; it is at the standard, so it rehearses: the staff sets it to stand ready, which on the roster is to rehearse.  <- order:4, #46
+#48 D4 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 948 t left
+#49 D4 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #48
+#50 D4 -         task_force:1 loaded for the landing at (6,0): loading 100  <- order:1
+#51 D4 -         land_unit:1 rehearsed the landing at (6,0) with task_force:1: rehearsal 25  <- order:1, order:4
+#52 D4 -         land_unit:2 rehearsed the landing at (6,0) with task_force:1: rehearsal 100  <- order:1
+#53 D4 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #49
+#54 D4 -         base:1 (Allied) at (0,0) has an airfield: 4000 of work done  <- #53
+#55 D4 -         base:1 at the end of the day: 948 t of supply, 0 aircraft ready: not open
+#56 D5 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 100, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 8, and what binds is the rehearsal of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
+#57 D5 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: Every want of base:1 (Placeholder base 1) is met (an airfield: the base has an airfield): the staff gives no order and hands in the notice that the task is met.
+#58 D5 -         Allied staff's notice: every want of plan:2 is met  <- #57
+#59 D5 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 935 t left
+#60 D5 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #59
+#61 D5 -         land_unit:1 rehearsed the landing at (6,0) with task_force:1: rehearsal 50  <- order:1, order:4
+#62 D5 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #60
+#63 D5 -         base:1 at the end of the day: 935 t of supply, 0 aircraft ready: not open
+#64 D6 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 100, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 8, and what binds is the rehearsal of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
+#65 D6 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: Every want of base:1 (Placeholder base 1) is met (an airfield: the base has an airfield): the staff gives no order.
+#66 D6 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 922 t left
+#67 D6 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #66
+#68 D6 -         land_unit:1 rehearsed the landing at (6,0) with task_force:1: rehearsal 75  <- order:1, order:4
+#69 D6 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #67
+#70 D6 -         base:1 at the end of the day: 922 t of supply, 0 aircraft ready: not open
+#71 D7 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is not ready: the force's loading for (6,0) is 100, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 8, and what binds is the rehearsal of land_unit:1 (Placeholder Raw). Every order it needs stands: the staff gives no order.
+#72 D7 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: Every want of base:1 (Placeholder base 1) is met (an airfield: the base has an airfield): the staff gives no order.
+#73 D7 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 909 t left
+#74 D7 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #73
+#75 D7 -         land_unit:1 rehearsed the landing at (6,0) with task_force:1: rehearsal 100  <- order:1, order:4
+#76 D7 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #74
+#77 D7 -         base:1 at the end of the day: 909 t of supply, 0 aircraft ready: not open
+#78 D8 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is ready: the force's loading for (6,0) is 100, of the 100 asked at balanced; land_unit:1 (Placeholder Raw) has rehearsal 100 and experience 2; land_unit:2 (Placeholder Sound) has rehearsal 100 and experience 2. The staff gives no order and hands in the notice that it is ready.
+#79 D8 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: Every want of base:1 (Placeholder base 1) is met (an airfield: the base has an airfield): the staff gives no order.
+#80 D8 -         Allied staff's notice: plan:1's landing is ready  <- #78
+#81 D8 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 896 t left
+#82 D8 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #81
+#83 D8 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #82
+#84 D8 -         base:1 at the end of the day: 896 t of supply, 0 aircraft ready: not open
+#85 D9 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is ready and its notice was handed in: the staff gives no order.
+#86 D9 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: Every want of base:1 (Placeholder base 1) is met (an airfield: the base has an airfield): the staff gives no order.
+#87 D9 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 883 t left
+#88 D9 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #87
+#89 D9 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #88
+#90 D9 -         base:1 at the end of the day: 883 t of supply, 0 aircraft ready: not open
+#91 D10 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is ready and its notice was handed in: the staff gives no order.
+#92 D10 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: Every want of base:1 (Placeholder base 1) is met (an airfield: the base has an airfield): the staff gives no order.
+#93 D10 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 870 t left
+#94 D10 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #93
+#95 D10 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #94
+#96 D10 -         base:1 at the end of the day: 870 t of supply, 0 aircraft ready: not open
+#97 D11 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is ready and its notice was handed in: the staff gives no order.
+#98 D11 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: Every want of base:1 (Placeholder base 1) is met (an airfield: the base has an airfield): the staff gives no order.
+#99 D11 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 857 t left
+#100 D11 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #99
+#101 D11 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #100
+#102 D11 -         base:1 at the end of the day: 857 t of supply, 0 aircraft ready: not open
+#103 D12 -         Allied staff's reason for giving no order [serves intent 1: ready a landing at (6,0) by task_force:1; plan 1; decided at the level of task_force:1]: The landing at (6,0) by task_force:1 is ready and its notice was handed in: the staff gives no order.
+#104 D12 -         Allied staff's reason for giving no order [serves intent 2: build up base:1 (Placeholder base 1): an airfield; plan 2; decided at the level of base:1]: Every want of base:1 (Placeholder base 1) is met (an airfield: the base has an airfield): the staff gives no order.
+#105 D12 night     base:1 spent 13 t of supply on 2600 men ashore for the day, 844 t left
+#106 D12 night     Allied men ashore at (0,0): 2600 of 2600 fed from base:1, 0 unfed  <- #105
+#107 D12 -         land_unit:3 worked at the airfield of base:1: 1000 of work, 4000 done on the airfield  <- order:3, #106
+#108 D12 -         base:1 at the end of the day: 844 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
 ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-base:1 "Placeholder base 1" (Allied) at (0,0): 844 t of supply in stock, 5000 t of fuel in stock, no airfield, 12000 of work done on the airfield
-land_unit:1 "Placeholder Raw" (Allied): 800 men ashore at (0,0), fieldworks 30
-land_unit:2 "Placeholder Sound" (Allied): 800 men ashore at (0,0), fieldworks 30
+base:1 "Placeholder base 1" (Allied) at (0,0): 844 t of supply in stock, 5000 t of fuel in stock, 4000 of work done on the airfield
+land_unit:1 "Placeholder Raw" (Allied): 800 men ashore at (0,0)
+land_unit:2 "Placeholder Sound" (Allied): 800 men ashore at (0,0)
 land_unit:3 "Placeholder Builders" (Allied): 1000 men ashore at (0,0)
 Allied: no contacts
 Allied: no battle claims

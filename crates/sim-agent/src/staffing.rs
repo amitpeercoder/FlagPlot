@@ -386,10 +386,12 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
 /// (`null` for neutralising a base and for denying an area), its target
 /// (`null` for the kinds that have none), its waters (`hex` as `[q, r]` and
 /// `distance`, `null` for the kinds but a deny; `hex` is also the station of
-/// a stand_at, an operate_carriers and a ready_landing, whose `distance` is `null`), its task
+/// a stand_at, an operate_carriers and a ready_landing, and the place of a take_place, whose `distance` is `null`), its task
 /// force (`task_force`, the side's number; `null` for the kinds that have
 /// none), and for keeping a base supplied the days (`null` for the other
-/// kinds), for a ready_landing its date (`by_day`, `null` when none), and for a
+/// kinds), for a ready_landing or a take_place its date (`by_day`, `null` when
+/// none), for a take_place also `phase` (`prepare`, `move` or `land`, `null`
+/// for the other kinds), and for a
 /// build_up its `wants` in order and the points of its `defences`.
 fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
     let (floor_days, interval_days) = match kind {
@@ -408,11 +410,13 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         | IntentKind::StandAt { .. }
         | IntentKind::OperateCarriers { .. }
         | IntentKind::ReadyLanding { .. }
-        | IntentKind::BuildUp { .. } => (None, None),
+        | IntentKind::BuildUp { .. }
+        | IntentKind::TakePlace { .. }
+        | IntentKind::Bombard { .. } => (None, None),
     };
     // The date of a landing and the wants of a build-up (decision 0141).
     let by_day = match kind {
-        IntentKind::ReadyLanding { by_day, .. } => by_day,
+        IntentKind::ReadyLanding { by_day, .. } | IntentKind::TakePlace { by_day, .. } => by_day,
         _ => None,
     };
     let (wants, defences) = match kind {
@@ -435,6 +439,7 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
             .map(|(hex, _)| hex)
             .or_else(|| kind.station())
             .or_else(|| kind.landing())
+            .or_else(|| kind.place())
             .map(|hex| json!([hex.q, hex.r])),
         "distance": kind.waters().map(|(_, distance)| distance),
         "floor_days": floor_days,
@@ -552,6 +557,9 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
     if let (Some(map), Value::Object(kind)) = (body.as_object_mut(), kind_json(n, intent.kind)) {
         map.extend(kind);
     }
+    // The phase of a take-a-place intent (decision 0142): `null` for the
+    // other kinds.
+    body["phase"] = json!(view.place_phase(intent.id).map(|phase| phase.name()));
     if matches!(intent.kind, IntentKind::Hold { .. }) {
         body["measure"] = hold_measure_json(&crate::hold_measure(view, intent.id));
     }
@@ -1731,7 +1739,11 @@ pub(crate) fn request(
     }
     body.insert("kind".into(), json!(tool));
     if tool == "set_intent" {
-        let kind = body.get("intent_kind").and_then(Value::as_str);
+        let kind_owned = body
+            .get("intent_kind")
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        let kind = kind_owned.as_deref();
         // The keys each kind takes besides "intent" and "intent_kind".
         let takes: &[&str] = match kind {
             Some("cover" | "hold") => &["base"],
@@ -1742,6 +1754,8 @@ pub(crate) fn request(
             Some("stand_at" | "operate_carriers") => &["task_force", "hex"],
             Some("ready_landing") => &["task_force", "hex", "by_day"],
             Some("build_up") => &["base", "wants", "defences"],
+            Some("take_place") => &["hex", "base", "by_day"],
+            Some("bombard") => &["task_force", "target"],
             _ => &["base", "floor_days", "interval_days"],
         };
         if let (Some(name), Some(key)) = (
@@ -1773,6 +1787,12 @@ pub(crate) fn request(
                 "ready_landing" => {
                     "a task_force (your own force's number), a hex ([q, r]) and, if wanted, a by_day (a whole number from 1) and nothing else"
                 }
+                "take_place" => {
+                    "exactly one of a hex ([q, r]) and a base (the number of a base on your map that is not yours: its hex is the place) and, if wanted, a by_day (a whole number from 1) and nothing else"
+                }
+                "bombard" => {
+                    "a task_force (your own force's number) and a target (the enemy base) and nothing else"
+                }
                 "build_up" => {
                     "a base (your own), wants (a list of airfield, mend, defences, port, aircraft) and defences (the points, 1 to 100, when defences is a want) and nothing else"
                 }
@@ -1782,14 +1802,47 @@ pub(crate) fn request(
                 "\"{key}\" is not an argument of set_intent for intent_kind {name}: {name} takes {what}"
             )));
         }
+        // Decision 0142: a place to take is a hex, or a base of the enemy's,
+        // whose hex it is.
+        if kind == Some("take_place") {
+            match (body.contains_key("hex"), body.contains_key("base")) {
+                (true, true) => {
+                    return Err(CallError::new(
+                        "take_place takes exactly one of \"hex\" and \"base\", not both",
+                    ));
+                }
+                (false, false) => {
+                    return Err(CallError::new(
+                        "take_place needs one of \"hex\" ([q, r]) and \"base\" (the number of a base on your map that is not yours)",
+                    ));
+                }
+                (false, true) => {
+                    let number = body
+                        .get("base")
+                        .and_then(Value::as_u64)
+                        .and_then(|n| u32::try_from(n).ok());
+                    let found = number
+                        .and_then(|number| view.enemy_bases().find(|base| base.id.raw() == number));
+                    let Some(found) = found else {
+                        return Err(CallError::new(format!(
+                            "base {} is not a base on your map that is not yours, so it names no place to take; give a hex or the number of an enemy base",
+                            body["base"]
+                        )));
+                    };
+                    body.remove("base");
+                    body.insert("hex".into(), json!([found.hex.q, found.hex.r]));
+                }
+                (true, false) => {}
+            }
+        }
         if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("target") {
             return Err(CallError::new(
-                "\"target\" is an argument of set_intent only for intent_kind neutralise or raid",
+                "\"target\" is an argument of set_intent only for intent_kind neutralise, raid or bombard",
             ));
         }
         if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("task_force") {
             return Err(CallError::new(
-                "\"task_force\" is an argument of set_intent only for intent_kind stand_at, operate_carriers or ready_landing",
+                "\"task_force\" is an argument of set_intent only for intent_kind stand_at, operate_carriers, ready_landing or bombard",
             ));
         }
         if (kind.is_none() || kind == Some("keep_supplied"))

@@ -4470,6 +4470,7 @@ mod tests {
                     kind: crate::command::NoticeKind::CannotMeet,
                     plan: crate::command::PlanId::new(1),
                     run: None,
+                    intent: None,
                 },
                 Whole,
                 Nothing,

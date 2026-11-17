@@ -2,10 +2,10 @@ Scenario 24: Shells and bombs on a base, and an attack on a wrong estimate
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ae39b8c3172e6de1  41 events
-day   2  hash 624f409641a4ef2a  33 events
-day   3  hash 4ef0ff4b9ae92f30  24 events
-day   4  hash c1f7f4a80468efb7  15 events
+day   1  hash df293cfc71ec5bd3  41 events
+day   2  hash a67ac1aafc458964  33 events
+day   3  hash a1459d55cc8e3e92  24 events
+day   4  hash 397f62128f27d9f1  15 events
 
 task_force:1 "Placeholder bombardment force" (Japanese): Arrived at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder fighter squadron at X" (Allied) at base:1: 20 ready, 1 damaged, mission Rest, no arc

@@ -817,7 +817,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 18
+          "const": 21
         },
         "kind": {
           "const": "not_known"

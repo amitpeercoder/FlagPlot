@@ -6728,6 +6728,44 @@ task_force = 3
                 },
             }
         );
+        // Decision 0142: a place to take, with and without a date.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 5\nintent_kind = \"take_place\"\nhex = [6, 0]\nby_day = 9"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(5),
+                kind: IntentKind::TakePlace {
+                    hex: Hex::new(6, 0),
+                    by_day: Some(9),
+                },
+            }
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 5\nintent_kind = \"take_place\"\nhex = [6, 0]"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(5),
+                kind: IntentKind::TakePlace {
+                    hex: Hex::new(6, 0),
+                    by_day: None,
+                },
+            }
+        );
+        // Decision 0146: a base to bombard with a task force.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 5\nintent_kind = \"bombard\"\ntask_force = 3\ntarget = 12"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(5),
+                kind: IntentKind::Bombard {
+                    force: TaskForceId::new(3),
+                    target: BaseId::new(12),
+                },
+            }
+        );
         // The step 2 shapes: air groups, no source, no ships, no task forces.
         assert_eq!(
             only(&command(
@@ -6883,6 +6921,42 @@ task_force = 3
                 .contains("outside 1 to 100")
         );
         assert!(intent(&format!("{build}\nwants = [\"dock\"]")).contains("not airfield"));
+    }
+
+    #[test]
+    fn a_take_place_intent_with_wrong_keys_is_refused() {
+        let intent = |body: &str| {
+            error_of(&command(&format!(
+                "kind = \"set_intent\"\nintent = 1\n{body}"
+            )))
+        };
+        let place = "intent_kind = \"take_place\"\nhex = [6, 0]";
+        assert!(intent(&format!("{place}\nbase = 1")).contains("does not take \"base\""));
+        assert!(
+            intent(&format!("{place}\ntask_force = 1")).contains("does not take \"task_force\"")
+        );
+        assert!(intent(&format!("{place}\ntarget = 1")).contains("does not take \"target\""));
+        assert!(intent(&format!("{place}\ndistance = 1")).contains("does not take \"distance\""));
+        assert!(intent(&format!("{place}\nby_day = 0")).contains("by_day 0"));
+        assert!(intent("intent_kind = \"take_place\"").contains("needs \"hex\""));
+    }
+
+    #[test]
+    fn a_bombard_intent_with_wrong_keys_is_refused() {
+        let intent = |body: &str| {
+            error_of(&command(&format!(
+                "kind = \"set_intent\"\nintent = 1\n{body}"
+            )))
+        };
+        let bombard = "intent_kind = \"bombard\"\ntask_force = 3\ntarget = 12";
+        for key in ["base = 1", "hex = [6, 0]", "by_day = 2", "distance = 1"] {
+            let name = key.split(' ').next().expect("a key");
+            assert!(
+                intent(&format!("{bombard}\n{key}")).contains(&format!("does not take \"{name}\""))
+            );
+        }
+        assert!(intent("intent_kind = \"bombard\"\ntarget = 12").contains("needs \"task_force\""));
+        assert!(intent("intent_kind = \"bombard\"\ntask_force = 3").contains("needs \"target\""));
     }
 
     #[test]
@@ -7106,7 +7180,7 @@ task_force = 3
             "kind = \"set_intent\"\nintent = 1\nintent_kind = \"win\"\nbase = 2"
         ))
         .contains(
-            "not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing or build_up"
+            "not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place or bombard"
         ));
         // Neutralise and raid name a target; a neutralise takes no base.
         let aimed = |kind: &str, extra: &str| {

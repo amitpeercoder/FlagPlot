@@ -2,24 +2,24 @@ Placeholder scenario 56: An escorted run
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a34a97b28464829c  31 events
-day   2  hash 3abf35adb2428feb  32 events
-day   3  hash f3a02f38c0056fee  16 events
-day   4  hash 1830f0ed580e5b59  20 events
-day   5  hash d4c7060715509cfd  7 events
-day   6  hash f2f1341390967a6b  5 events
-day   7  hash 7c8ac1d788ee5727  5 events
-day   8  hash 353e3011d7b85f86  5 events
-day   9  hash d67d82342e2de446  5 events
-day  10  hash 0bc5efaa2022d7ad  5 events
-day  11  hash 9896049495a18be4  5 events
-day  12  hash c020e0d097421ce9  5 events
-day  13  hash 436ece00cda084cb  5 events
-day  14  hash e5ff5f6645d04c1c  5 events
-day  15  hash b0e16da72504a4ce  5 events
-day  16  hash b36d2476d261f4cd  12 events
-day  17  hash 6aafaa8af1240918  16 events
-day  18  hash 85a5a286c935f339  12 events
+day   1  hash a7dcc864259cd1ce  31 events
+day   2  hash 1e5fa147ad7deedd  32 events
+day   3  hash 1d6546f48e00d0fc  16 events
+day   4  hash c855acd1be52a847  20 events
+day   5  hash 35842db877d8652b  7 events
+day   6  hash 75a6782af32b2e5d  5 events
+day   7  hash 7502abc398d7e4c1  5 events
+day   8  hash d5f767289dd62a6c  5 events
+day   9  hash 1fc0710b0d4a7814  5 events
+day  10  hash 82034487b0a8dfb3  5 events
+day  11  hash 84d2d83c074b2bd2  5 events
+day  12  hash 9faffbafceec153f  5 events
+day  13  hash 6f8203fa03008209  5 events
+day  14  hash 6d95e3afd9ef26c6  5 events
+day  15  hash d3d266170c932018  5 events
+day  16  hash 2165e848264dedbb  12 events
+day  17  hash abbebac5bbc6bf12  16 events
+day  18  hash f3c031a1dee49313  12 events
 
 #1 D0 -         Allied report: 2 ships, destroyer, at (8,0), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days

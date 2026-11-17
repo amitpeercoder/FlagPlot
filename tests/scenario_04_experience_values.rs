@@ -119,7 +119,8 @@ fn no_other_scenario_gives_experience() {
     // land units, not ships (decision 0097), and so does scenario 30
     // (decision 0099); so does scenario 45, for one placeholder land unit,
     // and scenario 66, for its placeholder raw and sound units (decision
-    // 0141).
+    // 0141), and scenario 67, for its placeholder raw, sound and assault
+    // units (decision 0142).
     let dir = data("scenarios");
     for entry in std::fs::read_dir(dir).expect("the folder reads") {
         let path = entry.expect("an entry").path();
@@ -137,6 +138,7 @@ fn no_other_scenario_gives_experience() {
             || name == "30_working_units.toml"
             || name == "45_soak_ashore.toml"
             || name == "66_units_made_ready.toml"
+            || name == "67_taking_a_place.toml"
         {
             continue;
         }
