@@ -4085,6 +4085,11 @@ impl fmt::Display for EventKind {
                         write!(f, "run {run} of {plan} has ended")
                     }
                     (NoticeKind::RunEnded, None) => write!(f, "a run of {plan} has ended"),
+                    (NoticeKind::Ready, _) => write!(f, "{plan}'s landing is ready"),
+                    (NoticeKind::Late, _) => {
+                        write!(f, "{plan}'s landing cannot be ready by its date")
+                    }
+                    (NoticeKind::Met, _) => write!(f, "every want of {plan} is met"),
                 }
             }
             EventKind::InterruptFired {

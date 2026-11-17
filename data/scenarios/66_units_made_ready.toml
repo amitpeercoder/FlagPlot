@@ -1,0 +1,132 @@
+# Scenario 66: units made ready, and a base built up.
+#
+# Decision 0141, step 2 of stage 3. The staff trains a raw unit and then
+# rehearses it, rehearses a sound one from the first day, loads the
+# transports, builds an airfield, and says when the landing is ready. Nobody
+# gives a unit its activity by hand. Allied base 1 lies at (0,0), a coast
+# hex, with a port, no airfield and no work done on one. Task force 1, two
+# placeholder transports, lies stopped in port there. Ashore at the base are
+# a raw fighting unit, a sound one and a working unit. The commander states
+# two tasks on day 1: ready a landing by task force 1 at (6,0) with units 1
+# and 2, and build up base 1 with an airfield; and gives leave to prepare.
+# The game is 12 days. There is no Japanese unit, so no die is rolled.
+#
+# The hand calculation is in tests/scenario_66_units_made_ready.rs. The test
+# runs this file on the frozen step 1 figures with three ground figures of its
+# own: preparation_per_day 25, training_days_per_level 3, airfield_work 4000.
+# It builds its variants from the text of this file using the markers below.
+#
+# PLACEHOLDER DATA. The base, ships, units, figures and map are invented.
+
+name = "Placeholder scenario 66: Units made ready, and a base built up"
+placeholder = true
+seed = 1942
+days = 12
+map = "../map/placeholder_units_made_ready.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# Allied base 1, with supply for every man for the whole game.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 5000
+airfield = false
+
+# Task force 1: two placeholder transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The land units, ashore at base 1.
+[[land_unit]]
+id = 1
+name = "Placeholder Raw"
+side = "allied"
+men = 800
+q = 0
+r = 0
+experience = 1
+
+[[land_unit]]
+id = 2
+name = "Placeholder Sound"
+side = "allied"
+men = 800
+q = 0
+r = 0
+experience = 2
+
+[[land_unit]]
+id = 3
+name = "Placeholder Builders"
+side = "allied"
+men = 1000
+q = 0
+r = 0
+working = true
+skills = { works = 2 }
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "ready_landing"
+task_force = 1
+hex = [6, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+land_units = [1, 2]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 2
+intent_kind = "build_up"
+base = 1
+wants = ["airfield"]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true

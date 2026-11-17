@@ -30,7 +30,10 @@ use super::num::Num;
 /// `{ "kind": "raid", base, target }` (decision 0120); or `{ "kind": "deny",
 /// hex, distance }` (no `base`), or `{ "kind": "strike_ships" |
 /// "search_waters", base }` (decision 0123); or `{ "kind": "stand_at" |
-/// "operate_carriers", task_force, hex }` (decisions 0124 and 0125).
+/// "operate_carriers", task_force, hex }` (decisions 0124 and 0125); or `{
+/// "kind": "ready_landing", task_force, hex, by_day }` (`by_day` left out
+/// where there is none) or `{ "kind": "build_up", base, wants, defences }`
+/// (decision 0141).
 #[derive(Serialize)]
 struct IntentKindOut {
     kind: &'static str,
@@ -52,6 +55,15 @@ struct IntentKindOut {
     floor_days: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     interval_days: Option<u32>,
+    /// The morning a ready_landing intent is to be ready by (decision 0141).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    by_day: Option<u32>,
+    /// What a build_up intent wants, in order (decision 0141).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    wants: Option<Vec<&'static str>>,
+    /// The points of defences a build_up intent wants, where it wants them.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    defences: Option<u32>,
 }
 
 fn intent_kind(kind: &IntentKind) -> IntentKindOut {
@@ -69,6 +81,9 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             task_force: None,
             floor_days: Some(*floor_days),
             interval_days: *interval_days,
+            by_day: None,
+            wants: None,
+            defences: None,
         },
         IntentKind::Cover { base }
         | IntentKind::Hold { base }
@@ -82,6 +97,9 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             task_force: None,
             floor_days: None,
             interval_days: None,
+            by_day: None,
+            wants: None,
+            defences: None,
         },
         IntentKind::Neutralise { target } | IntentKind::Raid { target, .. } => IntentKindOut {
             kind: kind.name(),
@@ -92,6 +110,9 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             task_force: None,
             floor_days: None,
             interval_days: None,
+            by_day: None,
+            wants: None,
+            defences: None,
         },
         IntentKind::StandAt { force, hex } | IntentKind::OperateCarriers { force, hex } => {
             IntentKindOut {
@@ -103,8 +124,41 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
                 task_force: Some(force.raw()),
                 floor_days: None,
                 interval_days: None,
+                by_day: None,
+                wants: None,
+                defences: None,
             }
         }
+        // Decision 0141.
+        IntentKind::ReadyLanding { force, hex, by_day } => IntentKindOut {
+            kind: kind.name(),
+            base: None,
+            target: None,
+            hex: Some([hex.q, hex.r]),
+            distance: None,
+            task_force: Some(force.raw()),
+            floor_days: None,
+            interval_days: None,
+            by_day: *by_day,
+            wants: None,
+            defences: None,
+        },
+        IntentKind::BuildUp { base, wants } => IntentKindOut {
+            kind: kind.name(),
+            base: Some(base.raw()),
+            target: None,
+            hex: None,
+            distance: None,
+            task_force: None,
+            floor_days: None,
+            interval_days: None,
+            by_day: None,
+            wants: Some(wants.iter().map(|want| want.name()).collect()),
+            defences: wants.iter().find_map(|want| match want {
+                sim_core::command::Want::Defences(points) => Some(points),
+                _ => None,
+            }),
+        },
         IntentKind::Deny { hex, distance } => IntentKindOut {
             kind: "deny",
             base: None,
@@ -114,6 +168,9 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             task_force: None,
             floor_days: None,
             interval_days: None,
+            by_day: None,
+            wants: None,
+            defences: None,
         },
     }
 }
@@ -125,6 +182,9 @@ struct ForcesOut {
     /// Left out where the limit names none, as it was before air groups.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     air_groups: Vec<u32>,
+    /// Left out where the limit names none (decision 0141).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    land_units: Vec<u32>,
     /// Left out where the limit names none (a cover or hold intent's need
     /// not).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -158,6 +218,7 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
             ships: ships(&forces.ships),
             task_forces: forces.task_forces.iter().map(|f| f.raw()).collect(),
             air_groups: forces.air_groups.iter().map(|g| g.raw()).collect(),
+            land_units: forces.land_units.iter().map(|u| u.raw()).collect(),
             source: forces.source.map(|source| source.raw()),
         }),
         area: limits
@@ -262,6 +323,7 @@ fn limit(limit: &Limit) -> LimitOut {
                 ships: ships(&limit.ships),
                 task_forces: limit.task_forces.iter().map(|f| f.raw()).collect(),
                 air_groups: limit.air_groups.iter().map(|g| g.raw()).collect(),
+                land_units: limit.land_units.iter().map(|u| u.raw()).collect(),
                 source: limit.source.map(|source| source.raw()),
             }),
             ..blank("forces")

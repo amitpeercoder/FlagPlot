@@ -127,6 +127,14 @@ pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
         IntentKind::OperateCarriers { force, hex } => {
             format!("operate the carrier force {force} from {hex}")
         }
+        // Decision 0141, 1 and 8.
+        IntentKind::ReadyLanding { force, hex, by_day } => match by_day {
+            Some(day) => format!("ready a landing at {hex} by {force} by the morning of day {day}"),
+            None => format!("ready a landing at {hex} by {force}"),
+        },
+        IntentKind::BuildUp { base, wants } => {
+            format!("build up {}: {wants}", base_words(view, base))
+        }
     }
 }
 

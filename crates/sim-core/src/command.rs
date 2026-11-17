@@ -44,7 +44,9 @@ use std::sync::Mutex;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AirGroupId, BaseId, IntentId, InterruptId, OrderId, ShipId, TaskForceId};
+use crate::ids::{
+    AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, OrderId, ShipId, TaskForceId,
+};
 use crate::orders::{Issuer, OrderKind};
 use crate::state::Side;
 use crate::view::SideView;
@@ -140,6 +142,135 @@ pub enum IntentKind {
     /// may stand under "deny an area" and under "hold a place", and a
     /// commander may state it himself as a root. Added at the end.
     OperateCarriers { force: TaskForceId, hex: Hex },
+    /// Ready a landing by `force`, a task force of the side, at `hex`, a
+    /// coast hex (decision 0141, 1): a task, addressed to the force. The
+    /// land units that are to land are named in its forces limit. `by_day`
+    /// is the morning by which it is to be ready, or `None`. A commander may
+    /// state it himself as a root. Added at the end.
+    ReadyLanding {
+        force: TaskForceId,
+        hex: Hex,
+        by_day: Option<u32>,
+    },
+    /// Build up `base`, a base of the side, with what is wanted there, in
+    /// order (decision 0141, 8): a task, addressed to the base. It has no
+    /// date. A commander may state it himself as a root. Added at the end.
+    BuildUp { base: BaseId, wants: Wants },
+}
+
+/// One thing a "build up a base" task wants (decision 0141, 8 and 10).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Want {
+    /// An airfield: met when the base has one.
+    Airfield,
+    /// Its airfield's damage mended: met when the field has no damage.
+    Mended,
+    /// Defences to this many points, from 1 to 100: met at that or above.
+    Defences(u32),
+    /// The port worked: never met.
+    Port,
+    /// Aircraft repair worked: never met.
+    AircraftRepair,
+}
+
+impl Want {
+    /// A stable number for the kind of want. Part of the state hash. Never
+    /// renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            Want::Airfield => 1,
+            Want::Mended => 2,
+            Want::Defences(_) => 3,
+            Want::Port => 4,
+            Want::AircraftRepair => 5,
+        }
+    }
+
+    /// The want's name as scenario files, saved games and the tools write
+    /// it. Defences carry their points beside the name.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Want::Airfield => "airfield",
+            Want::Mended => "mend",
+            Want::Defences(_) => "defences",
+            Want::Port => "port",
+            Want::AircraftRepair => "aircraft",
+        }
+    }
+
+    /// The want of that name; `points` is read for defences only.
+    pub fn from_name(name: &str, points: Option<u32>) -> Option<Want> {
+        match name {
+            "airfield" => Some(Want::Airfield),
+            "mend" => Some(Want::Mended),
+            "defences" => points.map(Want::Defences),
+            "port" => Some(Want::Port),
+            "aircraft" => Some(Want::AircraftRepair),
+            _ => None,
+        }
+    }
+}
+
+impl core::fmt::Display for Want {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Want::Airfield => f.write_str("an airfield"),
+            Want::Mended => f.write_str("its airfield's damage mended"),
+            Want::Defences(points) => write!(f, "defences to {points} points"),
+            Want::Port => f.write_str("the port worked"),
+            Want::AircraftRepair => f.write_str("aircraft repair"),
+        }
+    }
+}
+
+/// What a "build up a base" task wants, in order (decision 0141, 8): one to
+/// five wants, each kind at most once, defences from 1 to 100 points. Made
+/// only by [`Wants::new`], which refuses anything else, so every value is
+/// one intake may take.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Wants {
+    items: [Option<Want>; 5],
+}
+
+impl Wants {
+    /// The wants in the order given, or `None` if the list is empty, names
+    /// a kind twice, or has defences outside 1 to 100.
+    pub fn new(list: &[Want]) -> Option<Wants> {
+        if list.is_empty() || list.len() > 5 {
+            return None;
+        }
+        let mut items = [None; 5];
+        for (i, want) in list.iter().enumerate() {
+            if list[..i].iter().any(|seen| seen.code() == want.code()) {
+                return None;
+            }
+            if let Want::Defences(points) = want {
+                if !(1..=100).contains(points) {
+                    return None;
+                }
+            }
+            items[i] = Some(*want);
+        }
+        Some(Wants { items })
+    }
+
+    /// The wants, in order.
+    pub fn iter(&self) -> impl Iterator<Item = Want> + '_ {
+        self.items.iter().filter_map(|want| *want)
+    }
+}
+
+impl core::fmt::Display for Wants {
+    /// "an airfield, then defences to 10 points".
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        for (i, want) in self.iter().enumerate() {
+            if i > 0 {
+                f.write_str(", then ")?;
+            }
+            write!(f, "{want}")?;
+        }
+        Ok(())
+    }
 }
 
 impl IntentKind {
@@ -156,6 +287,8 @@ impl IntentKind {
             IntentKind::SearchWaters { .. } => 8,
             IntentKind::StandAt { .. } => 9,
             IntentKind::OperateCarriers { .. } => 10,
+            IntentKind::ReadyLanding { .. } => 11,
+            IntentKind::BuildUp { .. } => 12,
         }
     }
 
@@ -172,6 +305,8 @@ impl IntentKind {
             IntentKind::SearchWaters { .. } => "search_waters",
             IntentKind::StandAt { .. } => "stand_at",
             IntentKind::OperateCarriers { .. } => "operate_carriers",
+            IntentKind::ReadyLanding { .. } => "ready_landing",
+            IntentKind::BuildUp { .. } => "build_up",
         }
     }
 
@@ -185,11 +320,13 @@ impl IntentKind {
             | IntentKind::Hold { base }
             | IntentKind::Raid { base, .. }
             | IntentKind::StrikeShips { base }
-            | IntentKind::SearchWaters { base } => Some(base),
+            | IntentKind::SearchWaters { base }
+            | IntentKind::BuildUp { base, .. } => Some(base),
             IntentKind::Neutralise { target } => Some(target),
             IntentKind::Deny { .. }
             | IntentKind::StandAt { .. }
-            | IntentKind::OperateCarriers { .. } => None,
+            | IntentKind::OperateCarriers { .. }
+            | IntentKind::ReadyLanding { .. } => None,
         }
     }
 
@@ -200,21 +337,39 @@ impl IntentKind {
             IntentKind::Neutralise { .. }
             | IntentKind::Deny { .. }
             | IntentKind::StandAt { .. }
-            | IntentKind::OperateCarriers { .. } => None,
+            | IntentKind::OperateCarriers { .. }
+            | IntentKind::ReadyLanding { .. } => None,
             other => other.base(),
         }
     }
 
     /// The task force of the side the intent names, if it names one: a
-    /// stand task's (decision 0124, 7) and a carrier task's (decision 0125,
-    /// 1).
+    /// stand task's (decision 0124, 7), a carrier task's (decision 0125, 1)
+    /// and a landing's (decision 0141, 1).
     pub const fn force(self) -> Option<TaskForceId> {
         match self {
-            IntentKind::StandAt { force, .. } | IntentKind::OperateCarriers { force, .. } => {
-                Some(force)
-            }
+            IntentKind::StandAt { force, .. }
+            | IntentKind::OperateCarriers { force, .. }
+            | IntentKind::ReadyLanding { force, .. } => Some(force),
             _ => None,
         }
+    }
+
+    /// The coast hex of a "ready a landing" task (decision 0141, 1).
+    pub const fn landing(self) -> Option<Hex> {
+        match self {
+            IntentKind::ReadyLanding { hex, .. } => Some(hex),
+            _ => None,
+        }
+    }
+
+    /// Whether the kind is one of the two tasks that order land units
+    /// (decision 0141): ready a landing, and build up a base.
+    pub const fn readies_units(self) -> bool {
+        matches!(
+            self,
+            IntentKind::ReadyLanding { .. } | IntentKind::BuildUp { .. }
+        )
     }
 
     /// The hex a task of a task force names: a stand task's station
@@ -265,11 +420,12 @@ impl IntentKind {
             | IntentKind::Hold { base }
             | IntentKind::Raid { base, .. }
             | IntentKind::StrikeShips { base }
-            | IntentKind::SearchWaters { base } => Addressee::Base(base),
-            // Decisions 0124, 6 and 7, and 0125, 1.
-            IntentKind::StandAt { force, .. } | IntentKind::OperateCarriers { force, .. } => {
-                Addressee::TaskForce(force)
-            }
+            | IntentKind::SearchWaters { base }
+            | IntentKind::BuildUp { base, .. } => Addressee::Base(base),
+            // Decisions 0124, 6 and 7, 0125, 1, and 0141, 1.
+            IntentKind::StandAt { force, .. }
+            | IntentKind::OperateCarriers { force, .. }
+            | IntentKind::ReadyLanding { force, .. } => Addressee::TaskForce(force),
         }
     }
 
@@ -418,6 +574,9 @@ pub struct ForcesLimit {
     /// stage 2.
     pub air_groups: BTreeSet<AirGroupId>,
     pub source: Option<BaseId>,
+    /// Land units the staff may order for the intent (decision 0141, "A
+    /// forces limit gains land units"). Added at the end.
+    pub land_units: BTreeSet<LandUnitId>,
 }
 
 /// The limits of one intent as they stand. A limit not set is `None` (or the
@@ -725,6 +884,10 @@ pub enum HoldTarget {
     /// `hold` command or by a commander's order to a group an intent may use.
     /// Added at the end.
     AirGroup(AirGroupId),
+    /// A land unit: the staff gives it no order (decision 0141, 14). Made by
+    /// a `hold` command or by a commander's order to a unit a task may use.
+    /// Added at the end.
+    LandUnit(LandUnitId),
 }
 
 impl HoldTarget {
@@ -735,6 +898,7 @@ impl HoldTarget {
             HoldTarget::TaskForce(_) => 2,
             HoldTarget::Setting { .. } => 3,
             HoldTarget::AirGroup(_) => 4,
+            HoldTarget::LandUnit(_) => 5,
         }
     }
 }
@@ -748,6 +912,7 @@ impl core::fmt::Display for HoldTarget {
                 HeldSetting::SearchArc => write!(f, "the search arc of {group}"),
             },
             HoldTarget::AirGroup(group) => write!(f, "{group}"),
+            HoldTarget::LandUnit(unit) => write!(f, "{unit}"),
         }
     }
 }
@@ -1064,6 +1229,17 @@ impl CommandState {
             .filter_map(|found| found.limits.risk)
             .min()
             .unwrap_or_default()
+    }
+
+    /// The land units the forces limits on `intent`'s chain allow: those
+    /// named in every one of them (decision 0141). `None` where none is set
+    /// on the chain.
+    pub fn land_units_on_chain(&self, intent: IntentId) -> Option<BTreeSet<LandUnitId>> {
+        let mut limits = self.forces_on_chain(intent).into_iter();
+        let first = limits.next()?.land_units.clone();
+        Some(limits.fold(first, |allowed, limit| {
+            allowed.intersection(&limit.land_units).copied().collect()
+        }))
     }
 
     /// The rank of `intent` read up the tree; `None` where none is set on it
@@ -1401,6 +1577,12 @@ pub enum CommandRefusal {
     /// A kind a commander may not state as a root: "search waters" stands
     /// under "deny an area" only (decision 0123, 11). Added at the end.
     NotARoot,
+    /// The land unit is not one of the side's (decision 0141: a forces limit
+    /// or a hold names it). Added at the end.
+    NotYourLandUnit(LandUnitId),
+    /// The hex of a "ready a landing" task is not a coast hex on the map
+    /// (decision 0141, 1). Added at the end.
+    NotACoastHex(Hex),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -1479,6 +1661,10 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NotARoot => f.write_str(
                 "this kind of intent stands only under an end the staff serves, and the staff forms it",
             ),
+            CommandRefusal::NotYourLandUnit(unit) => {
+                write!(f, "{unit} is not one of the side's land units")
+            }
+            CommandRefusal::NotACoastHex(hex) => write!(f, "{hex} is not a coast hex on the map"),
         }
     }
 }
@@ -1671,6 +1857,14 @@ fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core
         IntentKind::OperateCarriers { force, hex } => {
             write!(f, "operate the carrier force {force} from {hex}")
         }
+        IntentKind::ReadyLanding { force, hex, by_day } => {
+            write!(f, "ready a landing at {hex} by {force}")?;
+            match by_day {
+                Some(day) => write!(f, " by the morning of day {day}"),
+                None => Ok(()),
+            }
+        }
+        IntentKind::BuildUp { base, wants } => write!(f, "build up {base}: {wants}"),
     }
 }
 
@@ -1825,6 +2019,16 @@ pub enum NoticeKind {
     WaitsForLeave(Leave),
     /// The staff has ended a run of the plan.
     RunEnded,
+    /// A "ready a landing" task is ready (decision 0141, 5). Handed in once.
+    /// Added at the end.
+    Ready,
+    /// A "ready a landing" task cannot be ready by its date (decision 0141,
+    /// 6): its reason gives the days late and what binds. Handed in once.
+    /// Added at the end.
+    Late,
+    /// Every want of a "build up a base" task is met (decision 0141, 11).
+    /// Handed in once. Added at the end.
+    Met,
 }
 
 impl NoticeKind {
@@ -1835,6 +2039,9 @@ impl NoticeKind {
             NoticeKind::WaitsForLeave(Leave::Prepare) => 2,
             NoticeKind::WaitsForLeave(Leave::Launch) => 3,
             NoticeKind::RunEnded => 4,
+            NoticeKind::Ready => 5,
+            NoticeKind::Late => 6,
+            NoticeKind::Met => 7,
         }
     }
 
@@ -1845,6 +2052,9 @@ impl NoticeKind {
             NoticeKind::WaitsForLeave(Leave::Prepare) => "waits_for_leave_to_prepare",
             NoticeKind::WaitsForLeave(Leave::Launch) => "waits_for_leave_to_launch",
             NoticeKind::RunEnded => "run_ended",
+            NoticeKind::Ready => "ready",
+            NoticeKind::Late => "late",
+            NoticeKind::Met => "met",
         }
     }
 
@@ -1855,6 +2065,9 @@ impl NoticeKind {
             NoticeKind::WaitsForLeave(Leave::Prepare),
             NoticeKind::WaitsForLeave(Leave::Launch),
             NoticeKind::RunEnded,
+            NoticeKind::Ready,
+            NoticeKind::Late,
+            NoticeKind::Met,
         ]
         .into_iter()
         .find(|kind| kind.name() == name)

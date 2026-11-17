@@ -70,6 +70,29 @@ pub fn unit_work(
     }
 }
 
+/// The work that raises a base's defences from `from` to `to` (decision 4
+/// of 0099, decision 8 of 0106): each stretch at the cost of its grade,
+/// `work_per_defence_point` times the grade's factor, as
+/// `defences_after_work` spends it. 0 where `to` is not above `from`. What a
+/// staff reads to say how much work a want of defences still asks (decision
+/// 0141, 12).
+pub fn work_to_raise_defences(from: Fixed, to: Fixed, figures: &GroundFigures) -> Fixed {
+    let to = to.min(Fixed::from_int(100));
+    let mut at = from;
+    let mut work = Fixed::ZERO;
+    while at < to {
+        let factor = crate::cover::grade_factor(at, figures);
+        let top = [figures.prepared_from, figures.fortified_from]
+            .into_iter()
+            .find(|start| *start > at && crate::cover::grade_factor(*start, figures) != factor)
+            .unwrap_or(to)
+            .min(to);
+        work += (top - at) * (figures.work_per_defence_point * factor);
+        at = top;
+    }
+    work
+}
+
 /// The factor a day's work on a port gives the next day's cargo rate at the
 /// base (decision 4 of 0099): 1 plus the work over
 /// `work_to_double_unloading`, and no more than 2.

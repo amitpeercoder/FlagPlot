@@ -50,8 +50,14 @@ pub const FORMAT: &str = "flagplot-agent";
 /// side may use it, given only while that day has not come) to the lines of
 /// `list_forces` and the briefing, to `get_entity` and to `command_state`'s
 /// forces limits, a land unit's `formation` and its `parents` in
-/// `get_entity`, and the refusal `not yet available` (decision 0140).
-pub const VERSION: u32 = 17;
+/// `get_entity`, and the refusal `not yet available` (decision 0140). 18 adds
+/// the two kinds `ready_landing` (`task_force`, `hex`, `by_day`) and
+/// `build_up` (`base`, `wants`, `defences`) of decision 0141, with `by_day`,
+/// `wants` and `defences` in an intent's kind (`null` for the other kinds),
+/// `land_units` in a forces limit and `land_units_binding` in what the staff
+/// reads up the tree, a land unit (`land_unit`) as the target of a hold, and
+/// the notices `ready`, `late` and `met`.
+pub const VERSION: u32 = 18;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

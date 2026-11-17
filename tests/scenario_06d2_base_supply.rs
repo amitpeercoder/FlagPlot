@@ -2891,7 +2891,10 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 && !stem.starts_with("64_")
                 // And scenario 65's, scenario 58 with a day from which its
                 // force may be used, played by the staff (decision 0140).
-                && !stem.starts_with("65_"))
+                && !stem.starts_with("65_")
+                // And scenario 66's, whose staff readies a landing and builds up
+                // a base (decision 0141).
+                && !stem.starts_with("66_"))
             .then(|| stem.to_string())
         })
         .collect();

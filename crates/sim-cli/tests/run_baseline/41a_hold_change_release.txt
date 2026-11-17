@@ -2,33 +2,33 @@ Placeholder scenario 41a: A hold, a changed intent, a release
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 33ac0b0a363f1311  23 events
-day   2  hash 72832a933b6135c7  8 events
-day   3  hash 6dde6139ece88384  25 events
-day   4  hash 8e9b43db47641202  11 events
-day   5  hash 01fce975bcdf6578  11 events
-day   6  hash 3b1b9b7df9c7b8aa  5 events
-day   7  hash ec3b6688a3856f12  5 events
-day   8  hash 5db88205853eb70a  6 events
-day   9  hash 389928f23bf17b38  5 events
-day  10  hash 9fdc06e3489d3f7c  17 events
-day  11  hash 67c6b5fa55767719  16 events
-day  12  hash b7ed556aa33efbd2  12 events
-day  13  hash e268ecc57a3b2d42  9 events
-day  14  hash 827acb02a4f5fc28  5 events
-day  15  hash 65d4614e9676740f  5 events
-day  16  hash 6e687690d0b82859  5 events
-day  17  hash b91b717dc3ced77f  6 events
-day  18  hash e653f261aa43112b  5 events
-day  19  hash 436b62c1f84c2e66  5 events
-day  20  hash ba3cc654ce73f2bb  5 events
-day  21  hash 6139c6d599f02cd4  5 events
-day  22  hash 03a63c6e9f46915e  5 events
-day  23  hash 01ea445a483b989f  5 events
-day  24  hash 07d54aea574d0e65  5 events
-day  25  hash a0141e90544f3db4  12 events
-day  26  hash 8371f04dcaf2cab1  16 events
-day  27  hash e2ad56292790e276  12 events
+day   1  hash 5d52eff033ef1cb5  23 events
+day   2  hash 1b4eadcc22097deb  8 events
+day   3  hash 162c9f608811c7e8  25 events
+day   4  hash b6f30afcf84d405e  11 events
+day   5  hash 708574ae688d1894  11 events
+day   6  hash 5146c23a9a285426  5 events
+day   7  hash 7ecdb67163796dde  5 events
+day   8  hash d3c4526084385f06  6 events
+day   9  hash 8bbc09a367a4a564  5 events
+day  10  hash f7bf313f31c9a520  17 events
+day  11  hash cc6403cc1ba349ad  16 events
+day  12  hash a087421d73fe68e6  12 events
+day  13  hash 0786a2f2609965ae  9 events
+day  14  hash bc0af3aed695198c  5 events
+day  15  hash c90d4c312a919b33  5 events
+day  16  hash e14396d83898a685  5 events
+day  17  hash c72ab8f116ad1fab  6 events
+day  18  hash 19cebd3c1e447147  5 events
+day  19  hash 7448733611f9a39a  5 events
+day  20  hash 30602dd00806c217  5 events
+day  21  hash cd3b44f8d8dba318  5 events
+day  22  hash 67c4feb46729951a  5 events
+day  23  hash bfa6be603d580653  5 events
+day  24  hash 118b1cee202c3659  5 events
+day  25  hash 732ae0225743c008  12 events
+day  26  hash 8b733026bb5ca25d  16 events
+day  27  hash 9b635dec2728e7ba  12 events
 
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Underway at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:1000002 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1

@@ -220,8 +220,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 39 adds the day from which a unit may be used at the end of a
 /// ship, a task force, an air group and a land unit, a land unit's
 /// formation after its day, and after the hits on men the formations
-/// (decision 0140).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v39";
+/// (decision 0140);
+/// version 40 adds the kinds "ready a landing", with its date, and "build
+/// up a base", with its wants, the land units at the end of a forces limit,
+/// and a land unit as a hold's target (decision 0141).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v40";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -655,7 +658,10 @@ fn name_every_field(world: &World) {
         {}
         if let Some((target, Hold { day: _, by })) = holds.iter().next() {
             match target {
-                HoldTarget::Ship(_) | HoldTarget::TaskForce(_) | HoldTarget::AirGroup(_) => {}
+                HoldTarget::Ship(_)
+                | HoldTarget::TaskForce(_)
+                | HoldTarget::AirGroup(_)
+                | HoldTarget::LandUnit(_) => {}
                 HoldTarget::Setting {
                     group: _,
                     setting: _,
@@ -761,7 +767,13 @@ fn name_intent_kind(kind: IntentKind) {
         | IntentKind::StrikeShips { base: _ }
         | IntentKind::SearchWaters { base: _ }
         | IntentKind::StandAt { force: _, hex: _ }
-        | IntentKind::OperateCarriers { force: _, hex: _ } => {}
+        | IntentKind::OperateCarriers { force: _, hex: _ }
+        | IntentKind::ReadyLanding {
+            force: _,
+            hex: _,
+            by_day: _,
+        }
+        | IntentKind::BuildUp { base: _, wants: _ } => {}
     }
 }
 
@@ -779,6 +791,7 @@ fn name_limits(limits: &IntentLimits) {
         task_forces: _,
         air_groups: _,
         source: _,
+        land_units: _,
     }) = forces
     {}
 }
@@ -814,6 +827,25 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
             h.u32(force.raw());
             h.i32(hex.q);
             h.i32(hex.r);
+        }
+        // Decision 0141: the force, the hex, then the date.
+        IntentKind::ReadyLanding { force, hex, by_day } => {
+            h.u32(force.raw());
+            h.i32(hex.q);
+            h.i32(hex.r);
+            h.optional_u32(by_day);
+        }
+        // Decision 0141: the base, then each want in order, its code and
+        // for defences its points.
+        IntentKind::BuildUp { base, wants } => {
+            h.u32(base.raw());
+            h.count(wants.iter().count());
+            for want in wants.iter() {
+                h.u8(want.code());
+                if let crate::command::Want::Defences(points) = want {
+                    h.u32(points);
+                }
+            }
         }
     }
 }
@@ -863,6 +895,11 @@ fn hash_forces(h: &mut StateHasher, forces: &ForcesLimit) {
         h.u32(group.raw());
     }
     h.optional_u32(forces.source.map(BaseId::raw));
+    // Decision 0141.
+    h.count(forces.land_units.len());
+    for unit in &forces.land_units {
+        h.u32(unit.raw());
+    }
 }
 
 /// Hashes one limit as a command set it, for an amendment: a code for the
@@ -1098,6 +1135,7 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
                 h.u8(setting.code());
             }
             HoldTarget::AirGroup(group) => h.u32(group.raw()),
+            HoldTarget::LandUnit(unit) => h.u32(unit.raw()),
         }
         h.u32(hold.day);
         match hold.by {

@@ -35,6 +35,7 @@ mod planner;
 mod projection;
 mod proposal;
 pub mod raid;
+mod ready;
 mod reasons;
 mod route;
 pub mod search;
@@ -139,7 +140,12 @@ use sim_core::view::SideView;
 /// intent may use) and names the day in its reasons ("may be used from day
 /// 5"); an intent addressed to a force before its day gets one reason and no
 /// order. With no day, the orders and reasons are those `supply-19` gave.
-pub const DOCTRINE_VERSION: &str = "supply-20";
+/// `supply-21` adds decision 0141: the tasks "ready a landing" and "build up
+/// a base", which give land units their activity and a force its landing
+/// order, take leave to prepare and never ask leave to launch, and hand in
+/// the notices ready, late and met once each. A side with neither task gets
+/// the orders and reasons `supply-20` gave.
+pub const DOCTRINE_VERSION: &str = "supply-21";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

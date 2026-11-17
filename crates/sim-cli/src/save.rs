@@ -65,6 +65,13 @@
 //! flight between commands and what each command has heard: the file's keys
 //! are unchanged; its state version is v36 and its daily hashes cover them. A
 //! game of an older version is refused, not converted.
+//!
+//! Version 15 (decision 0141) adds the intent kinds `ready_landing`
+//! (`task_force`, `hex` and an optional `by_day`) and `build_up` (`base`,
+//! `wants` as a list and `defences`) in `"commands"` and in the staff's
+//! `form_intent`, `land_units` in a forces limit, `land_unit` as the target
+//! of a hold or a release, and the notices `ready`, `late` and `met`. A game
+//! of an older version is refused, not converted.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -114,9 +121,15 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// hashes cover them. Version 14 (decision 0140) is a game whose state may
 /// hold a unit's day (`available_from`) and the formations of land units: the
 /// file's keys are unchanged, its state version is v39 and its daily hashes
-/// cover them. A game of an older version lacks them and is refused, not
-/// converted.
-pub const VERSION: u32 = 14;
+/// cover them. Version 15 (decision 0141) adds the intent kinds `ready_landing`
+/// (`task_force`, `hex` and an optional `by_day`) and `build_up` (`base`,
+/// `wants` and `defences`) in `"commands"` and in the staff's `form_intent`,
+/// `land_units` in a forces limit, a land unit (`land_unit`) as the target of
+/// a hold or a release, and the notices `ready`, `late` and `met` in the
+/// staff's hand-in; its state version is v40 and its daily hashes cover what
+/// the decision adds. A game of an older version lacks them and is refused,
+/// not converted.
+pub const VERSION: u32 = 15;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -723,6 +736,7 @@ mod tests {
                             ships: [ShipId::new(3), ShipId::new(4)].into_iter().collect(),
                             task_forces: [TaskForceId::new(1)].into_iter().collect(),
                             air_groups: [sim_core::ids::AirGroupId::new(5)].into_iter().collect(),
+                            land_units: [sim_core::ids::LandUnitId::new(2)].into_iter().collect(),
                             source: Some(BaseId::new(1)),
                         },
                     }),
@@ -881,6 +895,24 @@ mod tests {
                     run: Some(2),
                     rests_on: sim_core::command::NoticeBasis::Command(0),
                 },
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::Ready,
+                    plan: PlanId::new(2),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                },
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::Late,
+                    plan: PlanId::new(2),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                },
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::Met,
+                    plan: PlanId::new(3),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                },
             ],
         };
         let mut staff: StaffHandIns = BTreeMap::new();
@@ -918,7 +950,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 14);
+        assert_eq!(written["version"], 15);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 11);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

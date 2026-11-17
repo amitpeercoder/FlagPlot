@@ -20,7 +20,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 17
+      "const": 18
     },
     "kind": {
       "const": "staff_orders"
@@ -80,7 +80,10 @@
               "cannot_meet",
               "waits_for_leave_to_prepare",
               "waits_for_leave_to_launch",
-              "run_ended"
+              "run_ended",
+              "ready",
+              "late",
+              "met"
             ]
           },
           "plan": {

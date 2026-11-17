@@ -223,6 +223,7 @@ fn forces(ship_list: &[u32], force_list: &[u32]) -> ForcesLimit {
         ships: ships(ship_list),
         task_forces: force_list.iter().map(|n| tf(*n)).collect(),
         air_groups: BTreeSet::new(),
+        land_units: BTreeSet::new(),
         source: Some(base(1)),
     }
 }
@@ -1973,6 +1974,7 @@ fn two_worlds_differing_in_the_other_side(other: Side) -> (World, World) {
                 ships: [ship(enemy_ship)].into_iter().collect(),
                 task_forces: [tf(enemy_force)].into_iter().collect(),
                 air_groups: BTreeSet::new(),
+                land_units: BTreeSet::new(),
                 source: Some(base(enemy_base)),
             },
         }),

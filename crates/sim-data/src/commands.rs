@@ -12,18 +12,18 @@
 //!
 //! | `kind` | keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both), `"deny"` (deny the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]`; takes `hex` and `distance` and no `base`), `"strike_ships"` (strike ships from `base`; takes `base`), `"search_waters"` (search the waters from `base`; takes `base`, and is the staff's to give, so the game refuses it as a root intent), `"stand_at"` (stand at `hex` as `[q, r]` with the task force `task_force`, decision 0124) or `"operate_carriers"` (operate the carrier force `task_force` from `hex`, decision 0125); each of the last two takes `task_force` and `hex` and no `base` |
+//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both), `"deny"` (deny the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]`; takes `hex` and `distance` and no `base`), `"strike_ships"` (strike ships from `base`; takes `base`), `"search_waters"` (search the waters from `base`; takes `base`, and is the staff's to give, so the game refuses it as a root intent), `"stand_at"` (stand at `hex` as `[q, r]` with the task force `task_force`, decision 0124) or `"operate_carriers"` (operate the carrier force `task_force` from `hex`, decision 0125); each of those two takes `task_force` and `hex` and no `base`; `"ready_landing"` (ready a landing by the task force `task_force` at the coast hex `hex`, with optional `by_day`, a whole number from 1, decision 0141) takes those and no `base`; `"build_up"` (build up `base`, decision 0141) takes `base`, `wants`, a list of any of `"airfield"`, `"mend"`, `"defences"`, `"port"` and `"aircraft"` in order, each at most once, and `defences`, the points from 1 to 100, which is required when `"defences"` is a want and refused otherwise |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` and its keys, below |
 //! | `set_leave` | `leave` (`"prepare"` or `"launch"`), `given` |
 //! | `approve`, `cancel_plan` | `plan` |
-//! | `hold`, `release` | exactly one of `ship`, `task_force` and `air_group`; with `air_group`, `setting` (`"search_arc"`) holds that setting alone, and with no `setting` the whole group is held; no other target takes `setting` |
+//! | `hold`, `release` | exactly one of `ship`, `task_force`, `air_group` and `land_unit`; with `air_group`, `setting` (`"search_arc"`) holds that setting alone, and with no `setting` the whole group is held; no other target takes `setting` |
 //!
 //! | `set_interrupt` | either `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`"cannot_meet"`, `"waits_for_leave"` or `"ship_lost"`) and `on` (switch a standing kind off or on); never a mixture of the two |
 //! | `acknowledge` | either `interrupt`, or `standing` with exactly one of `plan` and `ship`; never a mixture |
 //!
 //! The limits: `limit = "forces"` has `intent` and, each optional (a list
-//! not given is empty), `ships`, `task_forces` and `air_groups`, and `source`
+//! not given is empty), `ships`, `task_forces`, `air_groups` and `land_units`, and `source`
 //! (a base; a supply intent's forces limit must name one, another kind's
 //! need not); `"area"` has `intent` and `hexes` as `[[q, r], ...]`;
 //! `"priority"` has `intent` and `rank`; `"protected"` has `intent` and
@@ -37,9 +37,10 @@ use serde::Deserialize;
 use sim_core::command::{
     CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
     InterruptRef, InterruptSetting, Leave, Limit, PlanId, Risk, StandingKind, StandingSubject,
+    Want, Wants,
 };
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId};
 use sim_core::state::Side;
 
 use crate::quantity::Quantity;
@@ -66,6 +67,10 @@ pub(crate) struct CommandSpec {
     ships: Option<Vec<u32>>,
     task_forces: Option<Vec<u32>>,
     air_groups: Option<Vec<u32>>,
+    land_units: Option<Vec<u32>>,
+    wants: Option<Vec<String>>,
+    defences: Option<u32>,
+    by_day: Option<u32>,
     source: Option<u32>,
     hexes: Option<Vec<[i32; 2]>>,
     rank: Option<u32>,
@@ -78,6 +83,7 @@ pub(crate) struct CommandSpec {
     ship: Option<u32>,
     task_force: Option<u32>,
     air_group: Option<u32>,
+    land_unit: Option<u32>,
     setting: Option<String>,
     interrupt: Option<u32>,
     below_days: Option<u32>,
@@ -107,6 +113,10 @@ impl CommandSpec {
         note(self.ships.is_some(), "ships");
         note(self.task_forces.is_some(), "task_forces");
         note(self.air_groups.is_some(), "air_groups");
+        note(self.land_units.is_some(), "land_units");
+        note(self.wants.is_some(), "wants");
+        note(self.defences.is_some(), "defences");
+        note(self.by_day.is_some(), "by_day");
         note(self.source.is_some(), "source");
         note(self.hexes.is_some(), "hexes");
         note(self.rank.is_some(), "rank");
@@ -119,6 +129,7 @@ impl CommandSpec {
         note(self.ship.is_some(), "ship");
         note(self.task_force.is_some(), "task_force");
         note(self.air_group.is_some(), "air_group");
+        note(self.land_unit.is_some(), "land_unit");
         note(self.setting.is_some(), "setting");
         note(self.interrupt.is_some(), "interrupt");
         note(self.below_days.is_some(), "below_days");
@@ -149,11 +160,15 @@ impl CommandSpec {
                 Some("stand_at" | "operate_carriers") => {
                     &["intent", "intent_kind", "task_force", "hex"]
                 }
+                Some("ready_landing") => {
+                    &["intent", "intent_kind", "task_force", "hex", "by_day"]
+                }
+                Some("build_up") => &["intent", "intent_kind", "base", "wants", "defences"],
                 Some("neutralise") => &["intent", "intent_kind", "target"],
                 Some("raid") => &["intent", "intent_kind", "base", "target"],
                 Some(other) => {
                     return Err(format!(
-                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at or operate_carriers"
+                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing or build_up"
                     ))
                 }
             },
@@ -164,6 +179,7 @@ impl CommandSpec {
                 "ships",
                 "task_forces",
                 "air_groups",
+                "land_units",
                 "source",
             ],
             ("set_limit", Some("area")) => &["limit", "intent", "hexes"],
@@ -181,7 +197,7 @@ impl CommandSpec {
             }
             ("set_leave", _) => &["leave", "given"],
             ("approve" | "cancel_plan", _) => &["plan"],
-            ("hold" | "release", _) => &["ship", "task_force", "air_group", "setting"],
+            ("hold" | "release", _) => &["ship", "task_force", "air_group", "land_unit", "setting"],
             ("set_interrupt" | "acknowledge", _) => {
                 // The two forms: a number, or a standing kind. A table that
                 // carries keys of both is refused as a mixture, not as a key
@@ -278,6 +294,51 @@ impl CommandSpec {
                             IntentKind::OperateCarriers { force, hex }
                         }
                     }
+                    // Decision 0141, 1.
+                    Some("ready_landing") => {
+                        let [q, r] = self.hex.ok_or_else(|| format!("{what} needs \"hex\""))?;
+                        if self.by_day == Some(0) {
+                            return Err(format!("{what} has by_day 0, which is not a day from 1"));
+                        }
+                        IntentKind::ReadyLanding {
+                            force: TaskForceId::new(need(self.task_force, "task_force")?),
+                            hex: Hex::new(q, r),
+                            by_day: self.by_day,
+                        }
+                    }
+                    // Decision 0141, 8 and 10.
+                    Some("build_up") => {
+                        let names = self
+                            .wants
+                            .as_ref()
+                            .ok_or_else(|| format!("{what} needs \"wants\""))?;
+                        let asks_defences = names.iter().any(|n| n == "defences");
+                        if asks_defences != self.defences.is_some() {
+                            return Err(if asks_defences {
+                                format!(
+                                    "{what} wants \"defences\" and needs \"defences\", the points"
+                                )
+                            } else {
+                                format!("{what} gives \"defences\" but does not want \"defences\"")
+                            });
+                        }
+                        let mut list = Vec::new();
+                        for name in names {
+                            list.push(Want::from_name(name, self.defences).ok_or_else(|| {
+                                format!(
+                                    "{what} has want \"{name}\", which is not airfield, mend, defences, port or aircraft"
+                                )
+                            })?);
+                        }
+                        IntentKind::BuildUp {
+                            base: BaseId::new(need(self.base, "base")?),
+                            wants: Wants::new(&list).ok_or_else(|| {
+                                format!(
+                                    "{what} has wants that are empty, name a kind twice, or give defences outside 1 to 100 points"
+                                )
+                            })?,
+                        }
+                    }
                     Some("search_waters") => IntentKind::SearchWaters {
                         base: BaseId::new(need(self.base, "base")?),
                     },
@@ -319,6 +380,13 @@ impl CommandSpec {
                             .flatten()
                             .copied()
                             .map(AirGroupId::new)
+                            .collect(),
+                        land_units: self
+                            .land_units
+                            .iter()
+                            .flatten()
+                            .copied()
+                            .map(LandUnitId::new)
                             .collect(),
                         source: self.source.map(BaseId::new),
                     },
@@ -385,13 +453,13 @@ impl CommandSpec {
                 plan: PlanId::new(need(self.plan, "plan")?),
             },
             "hold" | "release" => {
-                let named = [self.ship, self.task_force, self.air_group]
+                let named = [self.ship, self.task_force, self.air_group, self.land_unit]
                     .iter()
                     .filter(|n| n.is_some())
                     .count();
                 if named != 1 {
                     return Err(format!(
-                        "{what} needs exactly one of \"ship\", \"task_force\" and \"air_group\""
+                        "{what} needs exactly one of \"ship\", \"task_force\", \"air_group\" and \"land_unit\""
                     ));
                 }
                 let target = if let Some(ship) = self.ship {
@@ -404,6 +472,11 @@ impl CommandSpec {
                         return Err(format!("{what} takes \"setting\" only with \"air_group\""));
                     }
                     HoldTarget::TaskForce(TaskForceId::new(force))
+                } else if let Some(unit) = self.land_unit {
+                    if self.setting.is_some() {
+                        return Err(format!("{what} takes \"setting\" only with \"air_group\""));
+                    }
+                    HoldTarget::LandUnit(LandUnitId::new(unit))
                 } else {
                     let group = AirGroupId::new(self.air_group.expect("one target is named"));
                     match self.setting.as_deref() {

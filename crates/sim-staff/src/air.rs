@@ -347,7 +347,8 @@ pub(crate) struct Day<'v, 'a> {
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
 /// strike ships and search waters, and the tasks of a task force, standing
 /// at a hex by night and operating a carrier force (decisions 0124 and 0125),
-/// which run in the same morning.
+/// which run in the same morning, and the two tasks that order land units
+/// (decision 0141), which take their leaves here too.
 pub(crate) fn is_air(kind: IntentKind) -> bool {
     matches!(
         kind,
@@ -360,6 +361,8 @@ pub(crate) fn is_air(kind: IntentKind) -> bool {
             | IntentKind::SearchWaters { .. }
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
+            | IntentKind::ReadyLanding { .. }
+            | IntentKind::BuildUp { .. }
     )
 }
 
@@ -494,6 +497,7 @@ impl<'v, 'a> Day<'v, 'a> {
         day.supply_covers();
         day.stands();
         day.carrier_forces();
+        day.readies();
         Some(day)
     }
 
@@ -616,6 +620,12 @@ impl<'v, 'a> Day<'v, 'a> {
                 });
                 now = PlanState::Preparing;
                 self.set_plan(plan.id, now);
+            }
+            // The two tasks that order land units work while their plan
+            // prepares and launch nothing: they never ask leave to launch
+            // (decision 0141, 5 and 15; step 3 asks it of the landing).
+            if intent.kind.readies_units() {
+                continue;
             }
             if now == PlanState::Preparing {
                 if !leaves.launch {

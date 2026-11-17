@@ -1,10 +1,10 @@
 # 0141: Units made ready, and a base built up: step 2 of stage 3
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3, that the designer confirmed the same day (decision 0139, step 2 of its eight). It writes two tasks and their doctrines over rules already built (decisions 0095, 0097, 0098, 0099 and 0103), with the hand calculation. Nothing is built. It is built after decision 0140.
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3, that the designer confirmed the same day (decision 0139, step 2 of its eight). It writes two tasks and their doctrines over rules already built (decisions 0095, 0097, 0098, 0099 and 0103), with the hand calculation. It is built after decision 0140. Built on Nov 17, 2026: see "As built".
 
 Summary: Step 2 of stage 3: two tasks a commander may state and that "take a place" will form: "ready a landing", by which the staff gives a force its landing order and roster and sets each unit to train or to rehearse by its experience, its risk and the date, and says when the landing is ready; and "build up a base", by which it sets the working units, and any fighting unit it is given, to the jobs wanted, in order, and says how many days each will take
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Not built
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings await the architect (As built)
 
 ## Why
 
@@ -74,3 +74,48 @@ The staff hands in a notice that it is ready, once. Step 3 of this stage asks le
 ## The hand calculation
 
 `tests/scenario_66_units_made_ready.rs`.
+
+## As built
+
+Built on Nov 17, 2026, on the branch `stage3-step2`. Nothing is tuned and no figure changed. Every number of the hand calculation is asserted exactly and none is ignored: no mismatch was found. Every scenario built before this one gives the events it gave: the run baselines changed in their hash lines only, and the recorded games in their versions and day hashes (one transcript also in new keys of `command_state`, which are null for its intents).
+
+### What was built
+
+- **The state (`crates/sim-core/src/command.rs`).** `IntentKind::ReadyLanding { force, hex, by_day }` (code 11, `ready_landing`, addressed to the force) and `IntentKind::BuildUp { base, wants }` (code 12, `build_up`, addressed to the base), both possible roots and standing under nothing yet; `Want` (airfield, mend, defences to a number, port, aircraft) and `Wants`, one to five, each kind once, defences from 1 to 100, made only by `Wants::new`; `ForcesLimit::land_units` and `CommandState::land_units_on_chain`; `HoldTarget::LandUnit` (code 5); `NoticeKind::Ready`, `Late` and `Met` (codes 5 to 7); `CommandRefusal::NotYourLandUnit` and `NotACoastHex`, at the end.
+- **Intake (`command/intake.rs`, `command/hold.rs`).** A ready-a-landing's hex must be a coast hex on the map and its force the side's; a forces limit's and a hold's land units must be the side's; a limit on a sub-intent may name only land units its parent may use. `World::may_use_land_unit` is the one test of what a task may use, read by intake, the override and the narrowing: a unit named in every forces limit on the chain; with none, a build-up's working units with men ashore in its base's hex. A staff's order to a land unit is inside the limit by that test, and is refused as held when the unit is held. A commander's order of any kind to a land unit some intent in force may use holds it (the override). A pure helper, `sim_core::works::work_to_raise_defences`, gives the work from one level of defences to another at each grade's cost.
+- **The doctrine (`crates/sim-staff/src/ready.rs`).** `Day::readies`, run last in the air doctrine's morning (`air.rs`), serves both kinds in one priority order. The leaves are the air doctrine's (`air.rs`, `leaves`), with the two kinds stopping at preparing.
+- **Scenario 66** (`data/scenarios/66_units_made_ready.toml`, map `data/map/placeholder_units_made_ready.toml`) and its 19 tests: the hand calculation in five, and each property in its own.
+- **Versions.** State layout `flagplot-state-v40`; saved game 15; agent interface 18 (and the schemas' constants); doctrine `supply-21`. The rules label stays 18: no game without either task plays differently.
+- **The tools.** `set_intent` takes `ready_landing` (`task_force`, `hex`, optional `by_day`) and `build_up` (`base`, `wants`, and `defences` where it is a want); a forces limit takes `land_units`; `hold` and `release` take `land_unit`; `command_state` gives `by_day`, `wants`, `defences`, `land_units` and `land_units_binding`; the notices are `ready`, `late` and `met` (`docs/commands.md`).
+
+### Readings taken
+
+Where the decision leaves a detail open; the architect may rule on each.
+
+1. **Leaves.** Both kinds take leave to prepare as a hold does and work while their plan is preparing or released. They never ask leave to launch, hand in no `waits_for_leave_to_launch`, and the staff never releases them (item 5: step 3 asks leave to launch on the landing).
+2. **The standard is 2,** the service's standard (decision 0097, 1), a constant. A unit below it whose experience is at the training ceiling cannot be trained higher and is counted with the units that cannot train: it rehearses.
+3. **"Plans without it."** A held unit, a unit before its day, a unit a higher task took that morning and a unit with no man left are left off the landing's roster and out of its readiness, and named in its reasons. So a unit released or come to its day is added to the roster then, and the force's loading is cut once by `preparation_kept_on_change`, as the property "Before its day" has it.
+4. **A working unit named in a landing's forces limit** is put on the roster (it is to land: item 1), given no order (item 4), and not counted in the readiness, since it never rehearses.
+5. **A build-up with a forces limit** uses the land units the limit names, read up the tree as every forces limit is (decision 0117, 7), working or fighting; "a forces limit may add fighting units" is read so, as the property "A fighting unit put to work" names unit 3 in the limit beside unit 2. With no limit it uses the working units at the base.
+6. **"At the base"** is men ashore in the base's hex; a unit with none there is left out with words.
+7. **"Its damage mended"** is met at a base with no airfield: there is nothing to mend.
+8. **"Once"** is read from the side's own `StaffNotice` events: no notice of a kind is handed in for a plan that had one before. Each task here is a root with its own plan.
+9. **Ready** needs the force's preparation already for the hex with the roster the staff would give (no landing order that morning) and a roster that is not empty, beside item 5's table, read over the fighting units on the roster.
+10. **The projection for "late"** takes the loading the force will have after the morning's order (0 for a new hex, cut where a unit is added) and gains `preparation_per_day` a day; each fighting unit's days of training by the rule of item 3 (at balanced with a date, no more than the days left less the days of rehearsal to 100) and then of rehearsal to the risk's mark. The morning it is ready is today plus the longest; what binds is the longest term, the loading first and then by unit at a tie, a unit's "training" where its days include training and else its "rehearsal". A unit that can never be ready (at preserve the force, below the standard and unable to train; or one that gains no rehearsal) makes the task late with no count of days.
+11. **"Days left before the date"** is the date's day less today's.
+12. **The notices `ready`, `late` and `met`** fire no standing interrupt: the decision names none. Each rests on a no-order reason of its own; a morning with no order for a task has one reason that says so.
+13. **A held force** is given no landing order; its units are still set to train or stand ready.
+14. **Numbers in words** are written as the fixed-point numbers print, with no thousands mark: "4000 of work to do on an airfield, 1000 a day by the units at it, 4 days".
+15. **The properties' choices.** "A hold and an override": the commander's order of day 2 sets unit 2 to train; the staff, which would set it back to stand ready, gives it no order after. "What the Allied side cannot see": a Japanese land unit at (6,0) of 100 men in one world and 300 in the other. "Every scenario built before this one gives the events it gave" is shown by the run baselines and the recorded games, as above, and by a test that scenario 66 with its commands cut hands in nothing.
+
+### Earlier tests touched
+
+No expected number changed. `tests/scenario_41_hold_change_release.rs` and `tests/scenario_45_soak_ashore.rs` gain the arm `HoldTarget::LandUnit` in a match (counted as a setting is). Scenario 66 is added to the scenarios exempt from three walks of the folder: `tests/scenario_04_experience_values.rs` (it gives its placeholder land units experience) and the two run-without-a-staff hash checks of `tests/scenario_06d1_pilots_and_replacements.rs` and `tests/scenario_06d2_base_supply.rs` (it is played by the staff, as scenario 65 is). `crates/sim-cli/tests/export_pictures.rs`'s ten export hashes are remade at layout v40, as at v39. Version pins move in the agent's and the saved games' tests (18 and 15), and the sim-core command tests' forces limits gain `land_units`.
+
+### Files to read
+
+- `crates/sim-staff/src/ready.rs`: the doctrine whole.
+- `crates/sim-staff/src/air.rs`: `is_air`, the leaves' stop at preparing, and `readies` in `Day::run`.
+- `crates/sim-core/src/command.rs`: the kinds, `Want`, `Wants`, `land_units_on_chain`.
+- `crates/sim-core/src/command/intake.rs`: `may_use_land_unit`, `check_intent_kind`, the forces limit, the hold and the guard; `command/hold.rs`: the override.
+- `tests/scenario_66_units_made_ready.rs`.
