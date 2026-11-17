@@ -16,6 +16,17 @@ The short form; `README.md` has it in plain words and the decision records have 
 - **Next: stage 3,** taking and holding a place. Its plan is decision 0139, confirmed by the designer on Nov 17, 2026 and amended by him the same day: nine steps (the staff assembles the force for an operation itself, before the proof), each with its record and hand calculation first, ending with the 39 days played staff against staff. Then stages 4 and 5.
 - **Limits of stage 2 as built,** for the stages after it to lift: the staff does not choose where a carrier force stands or move a force's home; a force that stands by night steams home by day; no rule holds a strike to an area; one escort force goes with a run or none; a run is not timed to the dark; a carrier does not raid a base; a single fighter group that both patrols and escorts is never rested.
 
+## The clean-up after stage 3's proof, before stage 4
+
+Agreed by the designer on Nov 17, 2026, after the architect's review of the architecture. The foundations stay as they are (the pure core, fixed point, keyed draws, events with causes, truth and belief, facts derived into ratings, decision records and hand calculations, the fixed order of phases). What is cleaned up is the housekeeping, in this order, each as its own pull request, and none of it while stage 3's teams are editing the same files:
+
+1. **The checks of a pull request made quicker,** now, not after the proof: the same checks, in less time. No rule and no test changes.
+2. **The large files of `sim-core` split by phase into folders:** `airstrike.rs` (13,374 lines), `surface.rs` (7,127) and `resolve.rs` (4,975). One crate still. Purely a move: no state, no draw and no event changes, so the hash version stays and every golden file and recorded game must pass untouched. A golden file that differs means the move changed something, and it is undone.
+3. **One declaration for each event,** from which its text, its place in the export and its place in the hash are made, in place of the four or five places an event is written today (`events.rs`, `side_events.rs`, `hash.rs` and the export). Who may see an event stays a choice its author is made to state: a new event must still fail to compile until it is decided. `sim-core` still depends on nothing. This one may raise the hash version once, with the golden files remade (decision 0057), and it has a decision record first.
+4. **The old modes, brought to the designer:** each stage came in "on only where a scenario says, and off plays as before" (command levels, figures present or absent, a scenario's own figures). The architect lists every such switch, what still reads its off side, and what retiring it would cost; the designer says which may go. Nothing is retired without his word, and the frozen step 1 figures and their hand-calculation tests are not among them.
+
+Kept for later, and not part of this clean-up: a shared harness for new scenario tests from stage 4 (the tests that exist are not rewritten); the doctrine's common skeleton, tidied before stage 5; and speed at the size of a whole campaign, which is measured on the 39 days after the proof (`sim-cli time`) and given a budget before anything is changed for it.
+
 ## Next, before step 3
 
 Decided by the designer at the close, Nov 13, 2026 ("Reported only; repair first"; `docs/step2-spec.md`, "Decided by the designer", 16), in this order:
