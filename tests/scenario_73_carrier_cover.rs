@@ -121,10 +121,16 @@
 //!
 //! # Properties
 //!
-//! - **Preserve the force.** At preserve the force group 3 holds back a
-//!   third and can send 6, fewer than the 12 the risk asks: no raid goes.
-//!   Group 3 is given no base strike order on any day, and the reason of
-//!   day 3 gives 6 against 12.
+//! - **Preserve the force.** At preserve the force the operation needs a
+//!   count of the enemy at B seen from the air or by men in contact
+//!   (decision 0147, 13). The side holds none, and nothing it may use can
+//!   look: B is 400 nm from A and the scouts' range is 300 nm. So plan 1
+//!   is never released (decision 0147, 19): no carrier task is formed,
+//!   the carrier is given no order on any day, and no raid goes.
+//!   Restated by the architect on Nov 17, 2026: the first writing, made
+//!   before decision 0147, had the operation go and group 3 hold back a
+//!   third, 6 against the 12 the risk asks. A carrier force does not go
+//!   forward to look for itself; that is left open in decision 0148.
 //! - **Press.** At press the orders of days 3 and 7 are the same; the
 //!   break-off level ordered on day 2 is 0.75, the patrol share 0.25, and
 //!   group 3's orders of day 2 are scenario 55's four at press.
@@ -840,28 +846,17 @@ fn at_press(text: &str) -> String {
 }
 
 #[test]
-#[ignore = "mismatch with decision 0147, item 19: at preserve the force the plan holds no count and no air group in the forces limit can look, so plan 1 is never released and no carrier task is formed; there is no reason of day 3 giving 6 against 12. Goes to the architect"]
-fn preserve_the_force_group_3_holds_back_a_third_and_no_raid_goes() {
+fn preserve_the_force_nothing_can_look_and_the_carrier_is_given_no_order() {
     let g = play(&at_preserve(&text()));
     g.nothing_refused();
-    // Group 3 is given no base strike order on any day.
+    // No carrier task is formed and the carrier is given no order.
+    assert!(g.carrier_tasks().is_empty(), "{:?}", g.carrier_tasks());
     for day in 1..=g.days() {
-        assert!(
-            !g.carrier(day).iter().any(|o| matches!(
-                o,
-                Given::Air(3, AirGroupOrder::SetAirMission(AirMission::BaseStrike(_)))
-            )),
-            "day {day}: {:?}",
-            g.carrier(day)
-        );
+        assert!(g.carrier(day).is_empty(), "day {day}: {:?}", g.carrier(day));
     }
+    // No raid goes, and base 2 does not change side.
     assert!(g.base_strikes(3).is_empty());
-    // The reason of day 3 gives 6 against 12.
-    let day_3 = g.no_orders(3, 3).join(" ");
-    assert!(
-        day_3.contains("can send 6 between them, against the 12"),
-        "{day_3}"
-    );
+    assert_eq!(g.changed_side_day(2), None);
 }
 
 #[test]

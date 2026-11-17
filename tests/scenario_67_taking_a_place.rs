@@ -233,7 +233,11 @@
 //!   the escort mission, stopped at base 1 and named in the forces limit,
 //!   preserve the force, and leave to launch given: on the morning of day
 //!   8 the order that gives task force 2 task force 1 as its charge is
-//!   handed in before the route order. At balanced, with no contact held,
+//!   handed in before the route order. Since decision 0147 a plan at
+//!   preserve the force is released only on a count of the place, so the
+//!   game of this property has a scout group at base 1 named in the
+//!   forces limit, which looks at B on days 1 and 5 (added by the
+//!   architect on Nov 17, 2026; the orders of day 8 are as first written). At balanced, with no contact held,
 //!   no escort order is given and the reason says the force sails alone.
 //! - **Without leave to prepare** no command and no order is given, and
 //!   the notice says the plan waits for leave to prepare.
@@ -366,6 +370,8 @@ enum Given {
     Route(Vec<Hex>, Vec<Hex>),
     Unload,
     Escort(u32, u32),
+    /// An order to an air group: the scout of the escort property.
+    Air(u32, String),
 }
 
 fn given(o: &StaffOrder) -> Given {
@@ -418,6 +424,7 @@ fn given(o: &StaffOrder) -> Given {
             target,
             order: TaskForceOrder::Escort(Some(charge)),
         } => Given::Escort(target.raw(), charge.raw()),
+        OrderKind::AirGroup { target, order } => Given::Air(target.raw(), format!("{order:?}")),
         other => panic!("the doctrine gave an order of another kind: {other:?}"),
     }
 }
@@ -1362,7 +1369,7 @@ fn escort_text_with_a_scout(level: &str) -> String {
 }
 
 #[test]
-#[ignore = "with the scout group named, air group 1 is set to reconnaissance of (4,0) on day 1 but never flies: scenario 67's ground figures (ground_placeholder_scenario_67.toml, frozen) give no reconnaissance_error figures, so no flight is made (decision 0147, item 7); the need is never met, plan 1 is never released and day 8 has no orders. Goes to the architect"]
+
 fn an_escort_at_preserve_the_force() {
     let g = play(&escort_text_with_a_scout("preserve"));
     assert_eq!(

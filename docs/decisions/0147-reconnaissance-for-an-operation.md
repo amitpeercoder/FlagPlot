@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: Step 6 of stage 3, first part: a count of the enemy ashore has a grade (told, seen from the air, or men in contact); an air group on the new reconnaissance mission flies to a place once a day and reports the men there, with a wider error than men in contact have; and "take a place" sends a group to look, chooses its units again on the first count, and is not launched until it holds the count its risk asks for, or says what it goes without
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built, with two numbers of the hand calculation that the build does not give and one earlier test that changes, for the architect (As built)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -121,3 +121,13 @@ No expected number changed.
 
 - `crates/sim-core/src/reconnaissance.rs` (`reconnoitre`, line 46), called at `crates/sim-core/src/resolve.rs:310`; the mission order at `resolve.rs:1114`; `belief.rs:74` (`GroundGrade`).
 - `crates/sim-staff/src/look.rs` (`knowledge` 155, `look_orders` 234, `choose_again` 351, `need_to_know` 439); its calls in `crates/sim-staff/src/take.rs` at lines 263, 1199, 1224 and 1343.
+
+## The architect's rulings
+
+Made on Nov 17, 2026, on reading the build.
+
+1. **Readings 1 to 11 are accepted as built,** among them that only the air groups a forces limit names are sent to look, not the groups aboard a task force it names, and that the need to know is read after the check that the place can be held.
+2. **Two numbers of scenario 72's hand calculation were the architect's errors and are restated;** the code stands. A unit that leaves a roster costs no loading (decision 0095, item 10), so the loading of day 2 stays 100 and the landing is not ready that morning only because it was ordered again. And with 1,500 men wanted against 1,200 carried at preserve the force no landing is formed on day 1 (decision 0142, item 10): the notice is handed in, the group is sent all the same, and the landing is formed on day 2 on the count.
+3. **What item 19 does to games written before it.** At preserve the force a plan with no count and nothing that can look is never released. Scenario 67's escort property was such a game. It now has a scout group named in its forces limit, and scenario 67's own figures file and its frozen copy gain the two reconnaissance figures at 1 and 1, as a rule that adds a figure adds it to a frozen copy with its first value. The orders of day 8 are as first written; the scout looks on day 1 and again on day 5, when the count of day 1 is more than 3 days old.
+4. **A scenario with its own ground figures and no reconnaissance figures makes no flight,** so a group sent to look there never meets the need. That is as item 7 has it, and a scenario that wants a look gives the figures.
+5. **Known and left:** at preserve the force the staff hands in "cannot meet" on a morning when the count it has asked for is still to come (scenario 72, "The grades", day 1), and forms the landing the next day. It is told once and then met; whether it should wait a day in silence is for the proof to show.

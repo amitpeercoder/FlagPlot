@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: Step 6 of stage 3, second part: under "take a place" the staff gives each carrier force its forces limit names the task of operating from the first hex on its way from which its bombers reach the place; there it searches and flies its patrol as before, strikes ships first, and on a morning with no ship to strike sends its bombers at the enemy's base at the place by the raid's rules, until the place is taken, when the force is sent home
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built, with three points of the hand calculation the build does not give, for the architect (As built)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -36,6 +36,7 @@ A landing goes in under what the carriers can do for it: they find and strike th
 - **Choosing the day it sails** so that it is on station no earlier than it must be: stage 4, with the choice of the day.
 - **A patrol over another force or over a beach,** which the air rules do not have.
 - **A covering hex chosen against the enemy's bases and searches,** not only by the bombers' reach.
+- **A carrier force that goes forward to look.** A group aboard a force is sent to look only if a forces limit names it and the place is within its range from where the force lies; the staff does not move the force up to make the count (the architect's rulings, 3).
 - **Carriers under "hold a place" striking a base,** and a strike on a base timed with a bombardment.
 
 ## Rule card
@@ -89,3 +90,12 @@ No expected number changed. The two tests that compare every run baseline with a
 ### Files to read
 
 - `crates/sim-staff/src/cover.rs` (`take_carriers` 62, `form_cover_tasks` 123, `cover_strike` 313, `send_home` 538); `crates/sim-staff/src/carrier.rs` from line 1288 (the reach of each group and the call of `cover_strike`); `crates/sim-staff/src/air.rs:520`.
+
+## The architect's rulings
+
+Made on Nov 17, 2026, on reading the build.
+
+1. **Readings 1 to 8 are accepted as built.** On reading 8, the property "Ships first" is played with a force of two cruisers lying at (6,0) that the search finds, since a scenario gives a contact only at the start of a game.
+2. **Two numbers of scenario 73's hand calculation were the architect's errors and are restated;** the code stands. The arc of day 2 is 050 to 120, by the rule of decision 0115, item 9. The fuel home is 53.333333 x 1.2 cut to six places, 63.999999 t.
+3. **The property "Preserve the force" is restated.** It was written before decision 0147. With that rule the operation of scenario 73 is never released at preserve the force: the side holds no count of B, and B is 400 nm from A, beyond the scouts' 300 nm. No carrier task is formed and the carrier is given no order. A carrier force's bombers holding back a third at preserve the force is scenario 55's, and is not played under "take a place" here. That a carrier force does not go forward to look for itself is added to what this record leaves for later.
+

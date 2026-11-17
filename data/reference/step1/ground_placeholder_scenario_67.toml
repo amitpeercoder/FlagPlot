@@ -63,6 +63,12 @@ men_lost_per_base_hit = 10
 report_error_low = "0.5"
 report_error_high = "1.5"
 
+# The least and the most a reconnaissance flight's count of the enemy ashore
+# can be, as a share of the truth (decision 0147, 7). Added with the rule, at
+# its first value here: a flight's count is exact.
+reconnaissance_error_low = 1
+reconnaissance_error_high = 1
+
 # Marching overland (decision 0094). Placeholders set by the architect, resting
 # on no source. The record has two marches inside the period, both from Taivu
 # to the airfield: about two days in August and about a week in September
