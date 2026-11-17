@@ -72,6 +72,11 @@
 //! `form_intent`, `land_units` in a forces limit, `land_unit` as the target
 //! of a hold or a release, and the notices `ready`, `late` and `met`. A game
 //! of an older version is refused, not converted.
+//!
+//! Version 16 (decision 0142) adds the intent kind `take_place` (`hex` and an
+//! optional `by_day`) in `"commands"`, and the staff's `set_limit` of forces on
+//! an intent it formed in its hand-in. A game of an older version is refused,
+//! not converted.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -128,8 +133,12 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// a hold or a release, and the notices `ready`, `late` and `met` in the
 /// staff's hand-in; its state version is v40 and its daily hashes cover what
 /// the decision adds. A game of an older version lacks them and is refused,
-/// not converted.
-pub const VERSION: u32 = 15;
+/// not converted. Version 16 (decision 0142) adds the intent kind
+/// `take_place` (`hex` and an optional `by_day`) in `"commands"` and the
+/// staff's `set_limit` of forces on an intent it formed in its hand-in; its
+/// state version is v41. A game of an older version lacks them and is
+/// refused, not converted.
+pub const VERSION: u32 = 16;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -802,6 +811,16 @@ mod tests {
                 ),
                 (
                     Side::Allied,
+                    CommandKind::SetIntent {
+                        intent: IntentId::new(8),
+                        kind: IntentKind::TakePlace {
+                            hex: sim_core::hex::Hex::new(6, 0),
+                            by_day: Some(12),
+                        },
+                    },
+                ),
+                (
+                    Side::Allied,
                     CommandKind::Hold {
                         target: sim_core::command::HoldTarget::AirGroup(
                             sim_core::ids::AirGroupId::new(5),
@@ -950,9 +969,9 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 15);
+        assert_eq!(written["version"], 16);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 11);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 12);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

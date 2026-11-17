@@ -116,88 +116,88 @@
       "hash": "5ef7d142f1faa97f"
     }
   ],
-  "doctrine_version": "supply-21",
+  "doctrine_version": "supply-22",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "a9ae0b504c9c493a"
+      "hash": "2febc2d8f558f397"
     },
     {
       "day": 2,
-      "hash": "d60e870a40534e87"
+      "hash": "a1ed3ca86d043ebe"
     },
     {
       "day": 3,
-      "hash": "4432e0588e016587"
+      "hash": "fff8511eb803b156"
     },
     {
       "day": 4,
-      "hash": "c8b2013f08b84061"
+      "hash": "6ca06b950d6d2ad8"
     },
     {
       "day": 5,
-      "hash": "b299fcc9131edefb"
+      "hash": "cfc2a7bc50ecaefa"
     },
     {
       "day": 6,
-      "hash": "df927f885c561541"
+      "hash": "bc9f04aa1374a588"
     },
     {
       "day": 7,
-      "hash": "77c09fddae90c603"
+      "hash": "6a66c822d598194e"
     },
     {
       "day": 8,
-      "hash": "10c6c03dc1cf9c91"
+      "hash": "e4184be5eb9f4100"
     },
     {
       "day": 9,
-      "hash": "478203c00847d99b"
+      "hash": "fab7a87138f99f7e"
     },
     {
       "day": 10,
-      "hash": "fba94766663497cf"
+      "hash": "291faeff2e38d402"
     },
     {
       "day": 11,
-      "hash": "1243122cea128971"
+      "hash": "18b2118a2493d364"
     },
     {
       "day": 12,
-      "hash": "3875f270967893bf"
+      "hash": "f78690620503e80a"
     },
     {
       "day": 13,
-      "hash": "7e603f70fb767389"
+      "hash": "b7b43b86f5b4280c"
     },
     {
       "day": 14,
-      "hash": "ea4cf60dc3bb3dfb"
+      "hash": "dffbe496f93526b6"
     },
     {
       "day": 15,
-      "hash": "0e65f29edecd9b51"
+      "hash": "974f53669213ab00"
     },
     {
       "day": 16,
-      "hash": "96e5009dec9f7204"
+      "hash": "d6e25c8efe982349"
     },
     {
       "day": 17,
-      "hash": "7335a06a7cad7087"
+      "hash": "3a408c04f2d11d1a"
     },
     {
       "day": 18,
-      "hash": "7ad8dbf22c51b4a0"
+      "hash": "f17fab06f76f0a35"
     },
     {
       "day": 19,
-      "hash": "ee5b13c4a09f1cf6"
+      "hash": "6a62ad7194e1f6cf"
     },
     {
       "day": 20,
-      "hash": "1ee9594e71b67fb4"
+      "hash": "2b5fa95ba84c0589"
     }
   ],
   "orders": [],
@@ -2123,6 +2123,6 @@
       "side": "allied"
     }
   ],
-  "state_version": "flagplot-state-v40",
-  "version": 15
+  "state_version": "flagplot-state-v41",
+  "version": 16
 }

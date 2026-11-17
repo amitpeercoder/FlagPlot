@@ -629,3 +629,79 @@ fn leave_to_launch_withheld_holds_the_plan_for_the_commander() {
     assert_eq!(kinds(&orders), ["add_run", "commit_ships"]);
     assert_eq!(orders["orders"][0]["order"]["kind"], "form_task_force");
 }
+
+#[test]
+fn a_take_place_intent_names_a_hex_or_an_enemy_base_and_shows_its_phase() {
+    let scenario = load("06_rabaul_guadalcanal.toml", 1942);
+    let enemy = scenario
+        .world
+        .side_view(Side::Allied)
+        .enemy_bases()
+        .next()
+        .expect("the Allied side knows an enemy base");
+    let (number, hex) = (enemy.id.raw(), [enemy.hex.q, enemy.hex.r]);
+    let (mut session, _) = support::play::session_of(scenario, &[Side::Allied]);
+    session = session.with_staffs(sim_staff::staffs());
+    let schemas = schemas();
+    let mut call = |tool: &str, args: Value| -> Result<Value, CallError> {
+        let result = session.call(Side::Allied, tool, &args);
+        if let Ok(answer) = &result {
+            let kind = answer["kind"].as_str().expect("a kind");
+            let errors = schemas.check(&format!("{kind}.schema.json"), answer);
+            assert!(errors.is_empty(), "{tool} {args}: {errors:?}\n{answer}");
+        }
+        result
+    };
+    // By base: the tool writes the base's hex.
+    let a = call(
+        "set_intent",
+        json!({"intent_kind": "take_place", "base": number, "by_day": 9}),
+    )
+    .expect("answered");
+    assert_eq!(a["status"], "queued", "{a}");
+    // By hex.
+    let a = call(
+        "set_intent",
+        json!({"intent_kind": "take_place", "hex": hex, "intent": 2}),
+    )
+    .expect("answered");
+    assert_eq!(a["status"], "queued", "{a}");
+    // Both, neither, an own base and a base that does not exist are refused.
+    for args in [
+        json!({"intent_kind": "take_place", "base": number, "hex": hex}),
+        json!({"intent_kind": "take_place"}),
+        json!({"intent_kind": "take_place", "base": 99_999}),
+        json!({"intent_kind": "take_place", "hex": hex, "task_force": 1}),
+    ] {
+        let refused = match call("set_intent", args.clone()) {
+            Err(_) => true,
+            Ok(a) => a["status"] == "refused",
+        };
+        assert!(refused, "{args}");
+    }
+    let error = call(
+        "set_intent",
+        json!({"intent_kind": "take_place", "base": 99_999}),
+    )
+    .expect_err("a base that is not on the map");
+    assert!(
+        error
+            .to_json()
+            .to_string()
+            .contains("not a base on your map"),
+        "{}",
+        error.to_json()
+    );
+    let state = call("command_state", json!({})).expect("answered");
+    let intents = state["intents"].as_array().expect("intents");
+    assert_eq!(intents.len(), 2, "{state}");
+    for intent in intents {
+        assert_eq!(intent["kind"], "take_place");
+        assert_eq!(intent["hex"], json!(hex));
+        assert_eq!(intent["base"], Value::Null);
+        assert_eq!(intent["addressee"], "the area");
+        assert!(intent["phase"] == "prepare" || intent["phase"].is_null());
+    }
+    assert_eq!(intents[0]["by_day"], 9);
+    assert_eq!(intents[1]["by_day"], Value::Null);
+}
