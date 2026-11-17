@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: Step 8 of stage 3, second part: the end "control an island", stated alone, from which the staff draws the tree: "take a place" and "hold a place" for each named place that is not the side's, "hold a place" for each that is, the supply under each hold from a source it chooses, a denial of the island's waters with the carrier forces under it, and the neutralising of each enemy base near it, the base at a place still to be taken among them; with its measure, the days on which every named place was the side's and held supply for its floor of days
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings await the architect (As built)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139; amended after a review. Built; its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -130,3 +130,15 @@ No expected number changed and no earlier test is ignored. Every scenario that s
 - `crates/sim-staff/src/cover.rs` (`under_island`, `island_strike_take`, `covering_hex`), `carrier.rs` (the call of the strike), `assemble.rs` (item 8a), `holding.rs`, `air.rs` (`leaves`, `leave_for`, `Day::run`).
 - `crates/sim-core/src/command.rs` (`forms_own_plan`, `owns_plan`, `plan_owner`, `island_on_chain`, `forces_on_chain`, `groups_on_chain`), `command/intake.rs` (the staff's withdraw, `forces_of`, the forming), `invariants.rs`.
 - `crates/sim-agent/src/island.rs`; `tests/scenario_76_controlling_an_island.rs`.
+
+## The architect's rulings
+
+Made on Nov 18, 2026, on reading the build.
+
+1. **Readings 1 to 11 are accepted as built.**
+2. **Four rules were added during the build, each on a finding of the team and each ruled before it was built:** the staff may withdraw an intent it formed (item 8b); a take formed under an island has a plan of its own, and so has the supply formed under an island's hold (item 9); and a forces limit that names no air group does not bind air groups under an island (item 4). Without the last a held airfield would have flown no patrol once the staff had set its hold's supply ships.
+3. **One number of scenario 76's hand calculation was the architect's error and is restated:** with the island asked for by day 10 the task "ready a landing" has day 8.
+4. **A carrier force weighs its fuel and not its rounds** (the team's check before building). It is brought back to its hex once fuelled. Rounds for a carrier's aircraft are left for later.
+5. **Known and left, on reading 9:** the measure is worked each time from the side's own view of today, so a place that is lost shows none of its earlier days, and today's use is applied to past days. It is reported and not judged in the proof; a measure that keeps its days is for the interface's work.
+6. **Not yet played:** two islands stated by one side. The code keeps each supply intent's runs on its own plan; scenario 77's property "Two islands" (decision 0152) is the first game of it.
+
