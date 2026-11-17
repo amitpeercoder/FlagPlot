@@ -341,12 +341,23 @@ impl World {
             }
             Ok(plan)
         };
-        let forces_of = |plan: &Plan| -> Result<&ForcesLimit, CommandRefusal> {
-            let forces = state
-                .intents
-                .get(&plan.intent)
-                .and_then(|intent| intent.limits.forces.as_ref())
-                .ok_or(CommandRefusal::NoForcesLimit)?;
+        // The forces limit a run of the plan draws on: its intent's. A
+        // "keep supplied" that owns a plan under an island's hold has none of
+        // its own and reads the hold's, set by the staff, up the tree
+        // (decision 0151, 8 and 9).
+        let forces_of = |plan: &Plan| -> Result<Cow<'_, ForcesLimit>, CommandRefusal> {
+            let owner = state.intents.get(&plan.intent);
+            let forces = match owner.and_then(|intent| intent.limits.forces.as_ref()) {
+                Some(forces) => Cow::Borrowed(forces),
+                None => owner
+                    .filter(|i| {
+                        i.parent.is_some()
+                            && matches!(i.kind, IntentKind::KeepSupplied { .. })
+                            && state.island_on_chain(i.id).is_some()
+                    })
+                    .and_then(|i| state.nearest_forces(i.id))
+                    .ok_or(CommandRefusal::NoForcesLimit)?,
+            };
             if forces.source.is_none() {
                 return Err(CommandRefusal::NoSource);
             }
@@ -623,7 +634,7 @@ impl World {
                     if !self.own_ship_afloat(side, *ship) {
                         return Err(CommandRefusal::NotYourShip(*ship));
                     }
-                    if !self.in_pool(forces, *ship) {
+                    if !self.in_pool(&forces, *ship) {
                         return Err(CommandRefusal::NotInPool(*ship));
                     }
                     if let Some(target) = self.hold_on_ship_of(side, *ship) {
@@ -664,7 +675,7 @@ impl World {
                     if !self.own_ship_afloat(side, *ship) {
                         return Err(CommandRefusal::NotYourShip(*ship));
                     }
-                    if !self.in_pool(forces, *ship) {
+                    if !self.in_pool(&forces, *ship) {
                         return Err(CommandRefusal::NotInPool(*ship));
                     }
                     if let Some(target) = self.hold_on_ship_of(side, *ship) {
@@ -1176,14 +1187,20 @@ impl World {
                 }
             }
             CommandKind::AddRun { plan, run } => {
+                let intent = self.command[&side].plans[plan].intent;
+                // The source is the intent's, read up the tree for a "keep
+                // supplied" under an island's hold (decision 0151, 8).
+                let source = {
+                    let state = &self.command[&side];
+                    state.intents[&intent]
+                        .limits
+                        .forces
+                        .as_ref()
+                        .and_then(|forces| forces.source)
+                        .or_else(|| state.nearest_forces(intent).and_then(|f| f.source))
+                        .expect("the forces limit and its source were checked")
+                };
                 let state = self.command.get_mut(&side).expect("side has command state");
-                let intent = state.plans[plan].intent;
-                let source = state.intents[&intent]
-                    .limits
-                    .forces
-                    .as_ref()
-                    .and_then(|forces| forces.source)
-                    .expect("the forces limit and its source were checked");
                 let found = state.plans.get_mut(plan).expect("plan exists");
                 let number = found.runs.keys().next_back().map_or(1, |last| last + 1);
                 found.runs.insert(
@@ -1288,8 +1305,7 @@ impl World {
                 // of its own, drafted at its forming (decision 0151, 9, the
                 // architect's addition on the build's finding): it is
                 // prepared, released and marked complete as a root take's.
-                let own_plan = matches!(kind, IntentKind::TakePlace { .. })
-                    && matches!(state.intents[parent].kind, IntentKind::ControlIsland { .. });
+                let own_plan = state.forms_own_plan(*kind, *parent);
                 let plan = if own_plan {
                     draft_plan(state, id)
                 } else {

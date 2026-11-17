@@ -223,6 +223,26 @@ impl Day<'_, '_> {
             interval_days: None,
         };
         let id_new = self.state.next_intent_number();
+        // Under an island's hold it has a plan of its own (decision 0151, 9),
+        // drafted as intake drafts it; else the hold's.
+        let plan_id = if self.state.forms_own_plan(kind, hold.id) {
+            let plan_id = sim_core::command::PlanId::new(self.state.next_plan);
+            self.state.next_plan += 1;
+            self.state.plans.insert(
+                plan_id,
+                Plan {
+                    id: plan_id,
+                    intent: id_new,
+                    state: sim_core::command::PlanState::Draft,
+                    baseline: None,
+                    amendments: Vec::new(),
+                    runs: std::collections::BTreeMap::new(),
+                },
+            );
+            plan_id
+        } else {
+            hold.plan
+        };
         self.state.intents.insert(
             id_new,
             Intent {
@@ -233,7 +253,7 @@ impl Day<'_, '_> {
                 addressee: kind.addressee(),
                 limits: IntentLimits::default(),
                 set_day: today,
-                plan: hold.plan,
+                plan: plan_id,
                 withdrawn_day: None,
             },
         );

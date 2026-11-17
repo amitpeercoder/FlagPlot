@@ -371,6 +371,7 @@ pub(crate) fn is_air(kind: IntentKind) -> bool {
             | IntentKind::BuildUp { .. }
             | IntentKind::TakePlace { .. }
             | IntentKind::Bombard { .. }
+            | IntentKind::ControlIsland { .. }
     )
 }
 
@@ -495,6 +496,9 @@ impl<'v, 'a> Day<'v, 'a> {
             landings: BTreeMap::new(),
         };
         day.leaves();
+        // Decision 0151: the tree of an island, formed before the doctrines
+        // that serve what it forms.
+        day.islands();
         day.holds();
         day.neutralises();
         day.denials();
@@ -573,13 +577,24 @@ impl<'v, 'a> Day<'v, 'a> {
     // -- 1. The leaves ------------------------------------------------------
 
     fn leaves(&mut self) {
-        let roots = self.in_priority_order(|i| is_air(i.kind) && i.parent.is_none());
-        for id in roots {
+        // Every intent that owns a plan: the roots, and a take formed under
+        // an island (decision 0151, 9).
+        let owners = self.in_priority_order(|i| is_air(i.kind) && self.state.owns_plan(i));
+        for id in owners {
+            self.leave_for(id);
+        }
+    }
+
+    /// The leaves for the plan `id` owns (decision 0107): a draft made ready
+    /// on leave to prepare, and released on leave to launch but for the
+    /// kinds whose own doctrine releases them.
+    pub(crate) fn leave_for(&mut self, id: IntentId) {
+        {
             let Some(intent) = self.state.intents.get(&id).cloned() else {
-                continue;
+                return;
             };
             let Some(plan) = self.plan_of(&intent) else {
-                continue;
+                return;
             };
             let in_scope = self.in_scope(id);
             let today = self.today;
@@ -597,12 +612,12 @@ impl<'v, 'a> Day<'v, 'a> {
                     .would_change("a new plan for the intent")
                     .done();
                 self.target(in_scope).no_orders.push(reason);
-                continue;
+                return;
             }
             if self.scope == Some(id) {
                 // A proposal takes the plan as released.
                 self.set_plan(plan.id, PlanState::Released);
-                continue;
+                return;
             }
             let leaves = self.state.leaves;
             if now == PlanState::Draft {
@@ -622,7 +637,7 @@ impl<'v, 'a> Day<'v, 'a> {
                         NoticeKind::WaitsForLeave(Leave::Prepare),
                         plan.id,
                     );
-                    continue;
+                    return;
                 }
                 let reason = serving(&intent, &plan)
                     .evidence(format!("{} is a draft", plan.id), today)
@@ -645,12 +660,12 @@ impl<'v, 'a> Day<'v, 'a> {
             // prepares and launch nothing: they never ask leave to launch
             // (decision 0141, 5 and 15; step 3 asks it of the landing).
             if intent.kind.readies_units() {
-                continue;
+                return;
             }
             // "Take a place" asks leave to launch only when its landing is
             // ready (decision 0142, 15): its own doctrine does it.
             if matches!(intent.kind, IntentKind::TakePlace { .. }) {
-                continue;
+                return;
             }
             if now == PlanState::Preparing {
                 if !leaves.launch {
@@ -669,7 +684,7 @@ impl<'v, 'a> Day<'v, 'a> {
                         NoticeKind::WaitsForLeave(Leave::Launch),
                         plan.id,
                     );
-                    continue;
+                    return;
                 }
                 let reason = serving(&intent, &plan)
                     .evidence(format!("{} is preparing", plan.id), today)

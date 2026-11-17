@@ -1330,18 +1330,32 @@ impl CommandState {
         found
     }
 
-    /// Whether `intent` owns a plan of its own: a root, or a "take a place"
-    /// formed under "control an island" (decision 0151, 9).
+    /// Whether `intent` owns a plan of its own: a root, or an intent formed
+    /// with one (see [`CommandState::forms_own_plan`]).
     pub fn owns_plan(&self, intent: &Intent) -> bool {
         match intent.parent {
             None => true,
-            Some(parent) => {
-                matches!(intent.kind, IntentKind::TakePlace { .. })
-                    && self
-                        .intents
-                        .get(&parent)
-                        .is_some_and(|found| matches!(found.kind, IntentKind::ControlIsland { .. }))
-            }
+            Some(parent) => self.forms_own_plan(intent.kind, parent),
+        }
+    }
+
+    /// Whether an intent of `kind` formed under `parent` has a plan of its own
+    /// (decision 0151, 9, the architect's additions on the build's findings):
+    /// a "take a place" under "control an island", prepared, released and
+    /// marked complete as a root take's is; and a "keep supplied" under a
+    /// "hold a place" under "control an island", whose runs are its own, as
+    /// a root supply intent's are, since the island's holds share one plan.
+    pub fn forms_own_plan(&self, kind: IntentKind, parent: IntentId) -> bool {
+        let Some(above) = self.intents.get(&parent) else {
+            return false;
+        };
+        match (kind, above.kind) {
+            (IntentKind::TakePlace { .. }, IntentKind::ControlIsland { .. }) => true,
+            (IntentKind::KeepSupplied { .. }, IntentKind::Hold { .. }) => above
+                .parent
+                .and_then(|p| self.intents.get(&p))
+                .is_some_and(|p| matches!(p.kind, IntentKind::ControlIsland { .. })),
+            _ => false,
         }
     }
 
