@@ -89,7 +89,7 @@ Each is read from the umpire's export of each seed and from the batch file, by s
 5. **Better than a side given nothing.** The median over the seeds of the Allied margin on the objectives scale in (a) is above its median in (b); the median of the Japanese margin, the negative of the Allied, in (a) is above its median in (c).
 6. **Legibility.** Below.
 7. **Speed.** `sim-cli time` on arrangement (a), the median of a staffed day over the 39, on the machine and with the workloads decision 0100 names: no more than 40 ms.
-8. **The operation on placeholder forces** is judged by the hand calculations of scenarios 66 to 77, which pass or do not.
+8. **The operation on placeholder forces** is judged by the hand calculations of scenarios 66 to 74, 76 and 77, which pass or do not. Scenario 75, "leave a place", is not among them: decision 0150 is built after the proof (decision 0151, "Amended after the review").
 
 ## Legibility
 

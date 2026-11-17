@@ -1,10 +1,10 @@
 # 0150: Leaving a place: step 8 of stage 3, first part
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139, step 8 of its nine as amended). Step 8 is written in two records: this one, the end "leave a place"; and the next, "control an island". It adds no rule to the engine. Nothing is built. It is built after decision 0149.
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139, step 8 of its nine as amended). Step 8 is written in two records: this one, the end "leave a place"; and the next, "control an island". It adds no rule to the engine. Nothing is built. Moved by the designer on Nov 17, 2026, on the architect's review of step 8, to after the proof of stage 3: neither side states it in the 39 days, and it is built before stage 4, which has the staff leave a place of itself.
 
 Summary: Step 8 of stage 3, first part: the end "leave a place", by which the staff flies the air groups out to the base named, sends the transport force for the men, takes the working units off first and the fighting units after, a unit a morning, and brings them back, in as many trips as the berths need, until nothing of the side's is left there that could be taken off
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Not built
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Not built; moved to after the proof of stage 3
 
 ## Why
 
@@ -47,6 +47,7 @@ A commander must be able to give a place up before it is taken from him. The rul
 - **A rear guard,** and a taking off under attack timed against the enemy.
 - **Men taken off by a force other than a transport force,** and a march out overland to another place.
 - **Leaving formed by the staff of itself,** when it judges a place cannot be held: stage 4.
+- **To settle before it is built:** item 6 flies every air group out on the first morning, the fighters among them, so the transports load for days with no cover of their own. The review of Nov 17, 2026 asks whether the fighters should go last.
 
 ## Rule card
 

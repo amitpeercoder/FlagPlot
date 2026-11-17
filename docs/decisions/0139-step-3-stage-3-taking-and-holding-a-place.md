@@ -87,7 +87,7 @@ The slice is scripted today: each force is sent out on the day the record gives.
 | 5 | A run by night, and bombardment from the sea |
 | 6 | Cover for an operation by carriers, and reconnaissance as a branch of the plan |
 | 7 | The force assembled by the staff: "take a place" stated with no forces named (added by the designer, below) |
-| 8 | "Leave a place", and "control an island" stated alone |
+| 8 | "Control an island" stated alone, and forces with men aboard. "Leave a place" was of this step and is moved to after the proof, by the designer on Nov 17, 2026 (decision 0151, "Amended after the review") |
 | 9 | The proof |
 
 ## What it must pass

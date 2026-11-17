@@ -1,6 +1,6 @@
 # 0152: Forces with men aboard: what the 39 days ask of steps 7 and 8
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139), after reading the staff's setup of the 39 days against decisions 0142 to 0151. In that setup every man of both sides who is not on Guadalcanal or Tulagi on 7 August is aboard a transport force, at sea or in port, and each force may be used from its own day (decision 0140). Decisions 0149 and 0151 choose among units ashore beside ships, and decision 0143 sends after only what was left ashore. This record widens the three so that the staff can use what the campaign gives it. It adds no rule to the engine. Nothing is built. It is built with decision 0151, after decision 0150.
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139), after reading the staff's setup of the 39 days against decisions 0142 to 0151. In that setup every man of both sides who is not on Guadalcanal or Tulagi on 7 August is aboard a transport force, at sea or in port, and each force may be used from its own day (decision 0140). Decisions 0149 and 0151 choose among units ashore beside ships, and decision 0143 sends after only what was left ashore. This record widens the three so that the staff can use what the campaign gives it. It adds no rule to the engine. Nothing is built. It is built after decision 0151, in its own pull request; decision 0150 waits until after the proof (decision 0151, "Amended after the review").
 
 Summary: A transport force with men aboard is a lift as it stands: "take a place" takes one as its first lift, sends each later one while the place is not taken and men are still wanted, and lands the working men aboard with the rest; a hold sends to its place a force with men aboard that no take needs; and the supply under a hold formed by "control an island" uses whatever transport forces lie empty at its source that morning
 
@@ -19,9 +19,11 @@ The landings of 7 August begin with the men at sea. Every Japanese reinforcement
 
 ## Later lifts
 
-5. **Decision 0143's second lift is widened.** While the place is not taken, and no estimate is held or the fit men who can attack are fewer than the men wanted, the staff sends, in this order: each lift as it stands with a fighting unit aboard that no "take a place" higher in priority has taken, in force order, on the first morning the side may use it; then the units left ashore at the source, as that decision has it.
+5. **Decision 0143's second lift is widened.** While the place is not taken, the first lift is no longer on its way there (it has landed its men, or is lost), and no estimate is held or the fit men who can attack are fewer than the men wanted, the staff sends, in this order: each lift as it stands with a fighting unit aboard that no "take a place" higher in priority has taken, in force order, on the first morning the side may use it; then the units left ashore at the source, as that decision has it.
 6. **A later lift as it stands** is given a route to the place and back to its source, marked to act at the place, and an unload order, on that morning: it has nothing to load. Its units are added to the forces limit of the task "ready a landing", as decision 0143, item 12, has it. They are not set to attack before they sail: the judgement of each morning sets them.
 7. **One force a morning to a place** is not asked: each lift is its own force and goes when it can.
+
+5a. **Why the first lift must be in first** (amended on Nov 17, 2026, after the review of step 8). As first written, a side with no estimate sent every lift it had to its first place on the first morning, and a second island asked for the same day had nothing left to land: in the staff's setup of the 39 days the transports for Tulagi would have gone to Lunga. With the wait, the takes are served in priority order on the first morning, each with one lift, and a later lift goes where men are still wanted once the first is ashore.
 
 ## Men for a place already held
 

@@ -59,11 +59,17 @@
 //! | Hold base 2 | control | the staff |
 //! | Hold base 3 | control | the staff |
 //! | Deny the waters within 3 hexes of (4,0) | control | the staff |
+//! | Neutralise base 2 | control | the staff |
 //! | Ready a landing by task force 1 at B | the take | the staff |
 //! | Keep base 3 supplied, floor 5 days | the hold of base 3 | the staff |
 //!
-//! The first four formed are intents 2 to 5, in that order. No enemy
-//! base lies off the island: nothing is neutralised. The source of
+//! The first five formed are intents 2 to 6, in that order. The side
+//! has no carrier force: no carrier task is formed. Base 2 is the
+//! enemy's and at a named place: it is neutralised until it is taken,
+//! and the neutralising finds no bomber and no bombardment force and
+//! forms nothing under it. On the morning of day 5, base 2 the side's,
+//! the staff withdraws intent 6. No enemy base lies off the island. The
+//! source of
 //! supply is base 1, the side's only base off the island, where task
 //! force 1 lies: each hold's forces limit is set to task force 1 and
 //! base 1. The denial finds no force and no air group and forms nothing
@@ -118,16 +124,27 @@
 //!
 //! ## The measure
 //!
-//! Every named place is the side's at the end of each day from day 4,
-//! with supply there: the island is controlled on 11 of 14 days in
-//! force.
+//! A place counts on a day when it holds a base of the side at the end
+//! of the day and the days of supply in its hex are at least the floor,
+//! 5 days. C holds 100 t falling to 79 t at 1.5 t a day: it counts on
+//! every day. B is the side's from the end of day 4. At the end of day 4
+//! its hex holds 10 t at 3 t a day, 3.33 days: it does not count. At the
+//! end of days 5 to 8 it holds 24, 21, 18 and 15 t: 8, 7, 6 and 5 days.
+//! At the end of day 9 it holds 57 t, and 54 t down to 42 t at the end
+//! of days 10 to 14. The island is controlled on days 5 to 14: on 10 of
+//! 14 days in force.
+//!
+//! Restated by the architect on Nov 17, 2026, with decision 0151's
+//! amendment: the first writing counted any supply at all and gave 11 of
+//! 14; it had no neutralising of base 2, and no property of a carrier or
+//! of a date.
 //!
 //! # Properties
 //!
-//! - **Both places the side's already.** With base 2 Allied and unit 1
-//!   ashore there: no take is formed; both holds are formed and each
-//!   forms its supply on day 1; the island is controlled on 14 of 14
-//!   days.
+//! - **Both places the side's already.** With base 2 Allied, holding
+//!   100 t of supply, and unit 1 ashore there: no take and no
+//!   neutralising is formed; both holds are formed and each forms its
+//!   supply on day 1; the island is controlled on 14 of 14 days.
 //! - **A commander's own hold stands.** With the commander's own intent
 //!   "hold base 3" stated on day 1 beside intent 1: the staff forms no
 //!   hold of base 3 and its reason names the commander's.
@@ -140,8 +157,23 @@
 //!   on day 1 and gives the reason each morning; the island is
 //!   controlled on 0 of 14 days.
 //! - **An enemy base near.** With a Japanese base 5 on the Allied map at
-//!   (2,3), in no named place's hex: "neutralise base 5" is formed on day
-//!   1, after the denial, and finds no bomber and no bombardment force.
+//!   (2,3), in no named place's hex: "neutralise base 2" and then
+//!   "neutralise base 5" are formed on day 1, after the denial, and each
+//!   finds no bomber and no bombardment force. Only the forming is
+//!   asserted: base 5 lies 3 hexes from B, so the lift is a run by night
+//!   (decision 0145) and its hours are not the main case's.
+//! - **A carrier.** With scenario 73's carrier force, its ship and its
+//!   three air groups as they are there, stopped at base 1 with base 1
+//!   its home port: "operate task force 2 from (0,0)" is formed under
+//!   the denial on day 1, the force lying within its bombers' reach of
+//!   B, 160 nm. The take forms no carrier task. On the morning of day 2
+//!   the take's plan is released and group 3 is set to the base strike
+//!   at base 2: it launches at base 2 on days 2, 3 and 4 and on no other
+//!   day. The force is given no route on any day: it is not sent home
+//!   when the take is met. The landing is the main case's.
+//! - **By a date.** With the island asked for by day 10: the take is
+//!   formed with the date of day 10, and the task "ready a landing"
+//!   under it has that day. Only the forming is asserted.
 //! - **Without leave to launch** the plan of intent 1 is approved to
 //!   preparing, nothing is formed, and the notice that it waits for
 //!   leave to launch is handed in each morning.

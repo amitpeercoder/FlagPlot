@@ -68,9 +68,11 @@
 //!
 //! Ten orders in all. No staff order or command is refused.
 //!
-//! - **Day 1.** The tree: "take the place at base 2", "hold base 2" and
-//!   "deny the waters within 3 hexes of (4,0)" under intent 1, in that
-//!   order. The take's first lift is task force 1, a lift as it stands:
+//! - **Day 1.** The tree: "take the place at base 2", "hold base 2",
+//!   "deny the waters within 3 hexes of (4,0)" and "neutralise base 2"
+//!   under intent 1, in that order. The neutralising finds no bomber and
+//!   no bombardment force, and the staff withdraws it on the morning of
+//!   day 3, base 2 the side's. The take's first lift is task force 1, a lift as it stands:
 //!   its fighting unit is unit 1, and unit 2 lands with it. The force
 //!   does not lie at a base: its landing is ready as it stands, and it
 //!   goes with the 30 t aboard. The plan of the take is released that
@@ -109,8 +111,16 @@
 //!
 //! ## The measure
 //!
-//! Base 2 is the side's at the end of each day from day 2, with supply
-//! in the hex: the island is controlled on 7 of 8 days in force.
+//! Base 2 is the side's at the end of each day from day 2. The floor is
+//! 5 days. At the end of day 2 the hex holds 25 t at 5 t a day, 5 days:
+//! it counts. At the end of day 3 it holds 20 t, 4 days: it does not. At
+//! the end of day 4 it holds 35 t at 6.5 t a day, and from day 5 more
+//! than 90 t: it counts. The island is controlled on days 2 and 4 to 8:
+//! on 6 of 8 days in force.
+//!
+//! Restated by the architect on Nov 17, 2026, with decision 0151's
+//! amendment: the first writing counted any supply at all and gave 7 of
+//! 8, and had no neutralising of base 2.
 //!
 //! # Properties
 //!
@@ -123,6 +133,15 @@
 //!   task "ready a landing", and unit 3 is given no posture order before
 //!   it sails. Only the orders of days 1 and 4 are asserted: the fights
 //!   are not this scenario's.
+//! - **Two islands.** With a second island, "Placeholder island 2", of a
+//!   Japanese base 4 at C, (0,6), on the Allied map with nothing at it,
+//!   intent 2, control island 2, stated on day 1 after intent 1, and
+//!   unit 3 a fighting unit of 300 men usable from day 1: on the morning
+//!   of day 1 the take of base 2 takes task force 1 as its first lift
+//!   and sends no other, its first lift being on its way; the take of
+//!   base 4 takes task force 2 as its first lift and routes it to C. No
+//!   force but task force 1 is routed to B on day 1. Only the orders of
+//!   day 1 are asserted.
 //! - **Nothing aboard that can fight.** With unit 1 a working unit: no
 //!   lift as it stands has a fighting unit, and no base has a transport
 //!   force beside a fighting unit ashore. The take forms nothing, hands
