@@ -223,8 +223,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// (decision 0140);
 /// version 40 adds the kinds "ready a landing", with its date, and "build
 /// up a base", with its wants, the land units at the end of a forces limit,
-/// and a land unit as a hold's target (decision 0141).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v40";
+/// and a land unit as a hold's target (decision 0141);
+/// version 41 adds the kind "take a place", with its hex and its date
+/// (decision 0142).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v41";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -773,7 +775,8 @@ fn name_intent_kind(kind: IntentKind) {
             hex: _,
             by_day: _,
         }
-        | IntentKind::BuildUp { base: _, wants: _ } => {}
+        | IntentKind::BuildUp { base: _, wants: _ }
+        | IntentKind::TakePlace { hex: _, by_day: _ } => {}
     }
 }
 
@@ -846,6 +849,12 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
                     h.u32(points);
                 }
             }
+        }
+        // Decision 0142: the hex, then the date.
+        IntentKind::TakePlace { hex, by_day } => {
+            h.i32(hex.q);
+            h.i32(hex.r);
+            h.optional_u32(by_day);
         }
     }
 }

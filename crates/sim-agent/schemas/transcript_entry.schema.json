@@ -21,7 +21,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 18
+      "const": 20
     },
     "kind": {
       "const": "transcript_entry"
@@ -63,7 +63,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 18
+          "const": 20
         },
         "kind": {
           "type": "string"

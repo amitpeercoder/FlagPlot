@@ -56,8 +56,15 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `wants` and `defences` in an intent's kind (`null` for the other kinds),
 /// `land_units` in a forces limit and `land_units_binding` in what the staff
 /// reads up the tree, a land unit (`land_unit`) as the target of a hold, and
-/// the notices `ready`, `late` and `met`.
-pub const VERSION: u32 = 18;
+/// the notices `ready`, `late` and `met`. 19 adds the kind `take_place`
+/// (`hex` or `base` in the tool, `by_day`) of decision 0142, `phase` in an
+/// intent of `command_state` (`prepare`, `move`, `land` or `null`), `by_day`
+/// for a take_place, and the staff's `set_limit` of forces on an intent it
+/// formed. 20 adds the kind `keep_supplied` to a staff's `form_intent`
+/// (`floor_days`, `interval_days`) under a hold, a hold that names an enemy
+/// base on the side's map, and `intent` in the staff notice `met` of a
+/// take_place (decisions 0143 and 0144).
+pub const VERSION: u32 = 20;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

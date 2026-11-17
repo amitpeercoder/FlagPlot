@@ -12,9 +12,12 @@
 # The game is 12 days. There is no Japanese unit, so no die is rolled.
 #
 # The hand calculation is in tests/scenario_66_units_made_ready.rs. The test
-# runs this file on the frozen step 1 figures with three ground figures of its
-# own: preparation_per_day 25, training_days_per_level 3, airfield_work 4000.
-# It builds its variants from the text of this file using the markers below.
+# runs this file on the frozen step 1 figures with three ground figures of
+# its own: preparation_per_day 25, training_days_per_level 3, airfield_work
+# 4000. The figures are in
+# data/reference/ground_placeholder_scenario_66.toml, which this file names,
+# so that run by itself it plays the game its test proves. It builds its
+# variants from the text of this file using the markers below.
 #
 # PLACEHOLDER DATA. The base, ships, units, figures and map are invented.
 
@@ -31,7 +34,7 @@ port_sizes = "../reference/port_sizes.csv"
 aircraft_types = "../reference/aircraft_types.csv"
 search = "../reference/search.toml"
 surface_combat = "../reference/surface_combat.toml"
-ground = "../reference/ground.toml"
+ground = "../reference/ground_placeholder_scenario_66.toml"
 
 # Allied base 1, with supply for every man for the whole game.
 [[base]]

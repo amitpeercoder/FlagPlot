@@ -109,7 +109,15 @@ pub(crate) enum Setup<'a> {
     BaseNotYours(&'static str),
 }
 
-pub(crate) fn setup<'a>(view: &SideView<'_>, intent: &'a Intent, plan: &'a Plan) -> Setup<'a> {
+/// A supply intent with no forces limit of its own reads the nearest one up
+/// its tree: the hold's, for one the staff formed under "hold a place"
+/// (decision 0144, 7). A root with none has none.
+pub(crate) fn setup<'a>(
+    view: &SideView<'_>,
+    state: &'a CommandState,
+    intent: &'a Intent,
+    plan: &'a Plan,
+) -> Setup<'a> {
     let IntentKind::KeepSupplied {
         base,
         floor_days,
@@ -123,6 +131,7 @@ pub(crate) fn setup<'a>(view: &SideView<'_>, intent: &'a Intent, plan: &'a Plan)
         .limits
         .forces
         .as_ref()
+        .or_else(|| state.nearest_forces(intent.id))
         .and_then(|forces| forces.source.map(|source| (forces, source)))
     else {
         return Setup::NoForces;
@@ -186,7 +195,7 @@ pub(crate) fn serve(
     let Some(plan) = state.plans.get(&intent.plan) else {
         return Served::default();
     };
-    let params = match setup(view, intent, plan) {
+    let params = match setup(view, state, intent, plan) {
         Setup::Ready(params) => params,
         Setup::NoForces => {
             out.no_order(
@@ -658,11 +667,16 @@ fn dispatch(
     let mut waypoints = route.out.clone();
     waypoints.extend(route.back.iter().copied());
     // Decision 0126: an escort, or the run held, or it sails alone.
-    let (escort_words, escort) =
-        match crate::escort::for_run(planner, force, &waypoints, timing.speed_kn, today) {
-            crate::escort::ForRun::Held(why) => return Err(Unsent::Held(why)),
-            crate::escort::ForRun::Sails { words, escort } => (words, escort),
-        };
+    let (escort_words, escort) = match crate::escort::for_run(
+        &crate::escort::RunContext::of(planner),
+        force,
+        &waypoints,
+        timing.speed_kn,
+        today,
+    ) {
+        crate::escort::ForRun::Held(why) => return Err(Unsent::Held(why)),
+        crate::escort::ForRun::Sails { words, escort } => (words, escort),
+    };
     let mut new_days = run.days;
     new_days.sail = today;
     new_days.arrive = today + timing.out_days - 1;

@@ -915,3 +915,37 @@ apply; a game that gives none of it is answered as before.
   the other kinds, and `kind` may be `ready_landing` or `build_up`; for a ready_landing, `task_force` and `hex` are
   as for the stand and carrier kinds.
 - **Notices.** The notice kinds of `report` and `staff_orders` include `ready`, `late` and `met`.
+
+## Taking a place (decision 0142)
+
+`version` is 20. Everything below is of the side's own command state.
+
+- **A third kind of end.** `set_intent` takes `intent_kind` `"take_place"` (take a hex of land), addressed to the
+  area, with exactly one of `hex` (`[q, r]`) and `base` (the number of a base on the side's map that is not the
+  side's: the tool writes that base's hex, and refuses with a message naming the base when it is not one), and an
+  optional `by_day` (a whole number from 1). It takes no other key. For example `{"intent_kind": "take_place",
+  "hex": [6, 0], "by_day": 12}` and `{"intent_kind": "take_place", "base": 7}`. `form_intent` and the saved game
+  write `hex` and `by_day` (left out when there is none), never `base`. A hex that is not land is refused by the
+  engine: "{hex} is not a hex of land on the map".
+- **`command_state`.** An intent's `kind` may be `take_place`; its `hex` is the place and `by_day` its date. A new
+  key `phase` on every intent is `"prepare"` (its plan is preparing), `"move"` (released, and no man of the side
+  is ashore at the place) or `"land"` (released, and one is) for a take_place, and `null` for every other kind and
+  for a plan in any other state. `propose` and `plans` give the kind the same way (no `phase`).
+- **The staff's limits.** The staff may hand in `set_limit` of forces on an intent it formed (the land units
+  and ships of a ready_landing it forms under a take_place); `staff_orders` and `propose` write it as for any
+  other limit command.
+
+## Ashore, and holding a place with men (decisions 0143 and 0144)
+
+`version` is 20. Everything below is of the side's own command state.
+
+- **A hold may name a base that is not the side's.** `set_intent` with `intent_kind` `"hold"` takes a `base` that is
+  one of the side's own or an enemy base on the side's map; the engine accepts it, and the staff does nothing under
+  it until the base is the side's. The keys are as before.
+- **A staff's `form_intent` may be `keep_supplied`.** Under a hold it is written with `intent_kind` `"keep_supplied"`
+  (always written for a formed intent), `base` (the hold's), `floor_days` (a whole number, 0 allowed) and, only where
+  set, `interval_days`; the formed intent has no `interval_days` of its own. Its forces limit, where it has none,
+  is the hold's, read up the tree. `staff_orders`, `propose`, the saved game and a hand-in write the same keys.
+- **The `met` notice of a take_place.** In the replay export a `staff_notice` event may carry an optional `intent`
+  (the number of the intent; only for the `met` notice of a take_place plan), and its words are "intent:N is met".
+  An `intent` is left out of the other notices.

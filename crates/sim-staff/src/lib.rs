@@ -28,6 +28,7 @@ mod doctrine;
 mod escort;
 mod fleet;
 mod handin;
+mod holding;
 mod morning;
 mod neutralise;
 mod picture;
@@ -41,6 +42,7 @@ mod route;
 pub mod search;
 pub mod stand;
 pub mod strike;
+mod take;
 mod units;
 
 pub use projection::project;
@@ -145,7 +147,28 @@ use sim_core::view::SideView;
 /// order, take leave to prepare and never ask leave to launch, and hand in
 /// the notices ready, late and met once each. A side with neither task gets
 /// the orders and reasons `supply-20` gave.
-pub const DOCTRINE_VERSION: &str = "supply-21";
+/// `supply-22` adds decision 0142: the end "take a place", which chooses
+/// the units that land and forms "ready a landing" for them, asks leave to
+/// launch when the landing is ready, and on leave loads supply, embarks the
+/// men, sails and lands them on attack, and marks the plan complete when the
+/// place is the side's; a "ready a landing" task whose force lies at no base
+/// of its side is ready as it stands. A side with no "take a place" gets the
+/// orders and reasons `supply-21` gave, but for a "ready a landing" task
+/// whose force lies away from a base of its side.
+/// `supply-23` adds decision 0143: ashore, each morning, "take a place"
+/// sets its men to attack when those that can attack are enough against the
+/// side's estimate for the risk, and to defend when they are not; it sends
+/// the units its first lift left behind in a second lift, which goes as the
+/// force stands; and the notice that the end is met says the intent's words.
+/// `supply-24` adds decision 0144: a hold of a base not the side's waits for
+/// it; once it is the side's, the men of the hold on attack are set to
+/// defend and "keep supplied" is formed under the hold from the source its
+/// forces limit names; "take a place" with such a hold beside it checks that
+/// the place can be held before it asks leave to launch, and lands the
+/// supply that lasts until the first run follows, with a margin for the
+/// risk. A side with no "take a place" and no hold of a place with men, or
+/// not its own, gets the orders and reasons `supply-22` gave.
+pub const DOCTRINE_VERSION: &str = "supply-24";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

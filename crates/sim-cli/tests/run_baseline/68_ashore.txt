@@ -1,0 +1,34 @@
+Placeholder scenario 68: Ashore
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 0d3eed97d8d1c9bf  26 events
+day   2  hash d0483e64f4e42886  15 events
+day   3  hash a954170deec9c1b3  13 events
+day   4  hash ba03947273090386  13 events
+day   5  hash cd0dbfe5f004daf3  44 events
+day   6  hash 4da5b17e2270af89  27 events
+day   7  hash 9de3c4163ec1e94e  18 events
+day   8  hash 18874cf33e8406c7  19 events
+day   9  hash 3dff6580e1620f31  16 events
+day  10  hash 0f73db49b6b9726d  24 events
+day  11  hash 8e3a9d4dfa141052  41 events
+day  12  hash 0327f5404764cf9f  16 events
+day  13  hash 3ec1e1171035b3b5  9 events
+day  14  hash 6db650722d145655  6 events
+
+task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 936 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 936 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 817 t of supply in stock
+base:2 "Placeholder airfield B" (Allied) at (4,0): 62.5 t of supply in stock
+base:3 "Landing at (4,0)" (Allied) at (4,0): 114 t of supply in stock, no airfield
+land_unit:1 "Placeholder First" (Allied): 225 men ashore at (4,0), on attack
+land_unit:2 "Placeholder Second" (Allied): 225 men ashore at (4,0), on attack
+land_unit:3 "Placeholder Third" (Allied): 450 men ashore at (4,0), on attack
+land_unit:10 "Placeholder Garrison" (Japanese): no men ashore
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
+Japanese estimate at (4,0): 1200 enemy men ashore, reported day 10

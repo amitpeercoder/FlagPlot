@@ -101,8 +101,10 @@ pub enum IntentKind {
     /// a commander may state it himself as a root. Added at the end.
     Cover { base: BaseId },
     /// Hold `base`, a base of the side (decision 0117, 12): an end. It has no
-    /// date. Under it the staff may form a cover intent for the same base.
-    /// Added at the end.
+    /// date. Under it the staff may form a cover intent for the same base,
+    /// and "keep supplied" for it (decision 0144, 7). It may name a base on
+    /// the side's map that is not the side's, and then waits for it to be
+    /// the side's (decision 0144, 1). Added at the end.
     Hold { base: BaseId },
     /// Neutralise `target`, a base on the side's map that is not the side's
     /// (decision 0120, 5): an end, addressed to the area. It has no date.
@@ -156,6 +158,15 @@ pub enum IntentKind {
     /// order (decision 0141, 8): a task, addressed to the base. It has no
     /// date. A commander may state it himself as a root. Added at the end.
     BuildUp { base: BaseId, wants: Wants },
+    /// Take the place at `hex`, a hex of land on the map (decision 0142, 1):
+    /// an end, addressed to the area. The commander names it by its hex or by
+    /// a base on the side's map that is not the side's, which means that
+    /// base's hex. `by_day` is the day by the end of which the place is to be
+    /// the side's, or `None`. Its forces limit names the task forces, the land
+    /// units and a source (item 2). It is met when the side holds a base in
+    /// the hex and the enemy holds none there (item 3). Under it the staff
+    /// forms "ready a landing" (item 12). Added at the end.
+    TakePlace { hex: Hex, by_day: Option<u32> },
 }
 
 /// One thing a "build up a base" task wants (decision 0141, 8 and 10).
@@ -289,6 +300,7 @@ impl IntentKind {
             IntentKind::OperateCarriers { .. } => 10,
             IntentKind::ReadyLanding { .. } => 11,
             IntentKind::BuildUp { .. } => 12,
+            IntentKind::TakePlace { .. } => 13,
         }
     }
 
@@ -307,6 +319,7 @@ impl IntentKind {
             IntentKind::OperateCarriers { .. } => "operate_carriers",
             IntentKind::ReadyLanding { .. } => "ready_landing",
             IntentKind::BuildUp { .. } => "build_up",
+            IntentKind::TakePlace { .. } => "take_place",
         }
     }
 
@@ -326,7 +339,8 @@ impl IntentKind {
             IntentKind::Deny { .. }
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
-            | IntentKind::ReadyLanding { .. } => None,
+            | IntentKind::ReadyLanding { .. }
+            | IntentKind::TakePlace { .. } => None,
         }
     }
 
@@ -338,7 +352,8 @@ impl IntentKind {
             | IntentKind::Deny { .. }
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
-            | IntentKind::ReadyLanding { .. } => None,
+            | IntentKind::ReadyLanding { .. }
+            | IntentKind::TakePlace { .. } => None,
             other => other.base(),
         }
     }
@@ -359,6 +374,14 @@ impl IntentKind {
     pub const fn landing(self) -> Option<Hex> {
         match self {
             IntentKind::ReadyLanding { hex, .. } => Some(hex),
+            _ => None,
+        }
+    }
+
+    /// The hex of land a "take a place" end names (decision 0142, 1).
+    pub const fn place(self) -> Option<Hex> {
+        match self {
+            IntentKind::TakePlace { hex, .. } => Some(hex),
             _ => None,
         }
     }
@@ -415,7 +438,8 @@ impl IntentKind {
         match self {
             IntentKind::KeepSupplied { .. }
             | IntentKind::Neutralise { .. }
-            | IntentKind::Deny { .. } => Addressee::Area,
+            | IntentKind::Deny { .. }
+            | IntentKind::TakePlace { .. } => Addressee::Area,
             IntentKind::Cover { base }
             | IntentKind::Hold { base }
             | IntentKind::Raid { base, .. }
@@ -458,6 +482,14 @@ impl IntentKind {
             // Decision 0126, 7: a covering force stands at the run's
             // destination, the base's hex, which intake checks.
             (IntentKind::StandAt { .. }, IntentKind::KeepSupplied { .. }) => true,
+            // Decision 0142, 12: the landing at the place's hex.
+            (IntentKind::ReadyLanding { hex, .. }, IntentKind::TakePlace { hex: place, .. }) => {
+                hex == place
+            }
+            // Decision 0144, 7: the supply that follows, for the held base.
+            (IntentKind::KeepSupplied { base, .. }, IntentKind::Hold { base: held }) => {
+                base == held
+            }
             _ => false,
         }
     }
@@ -705,6 +737,28 @@ pub enum Leave {
 // ---------------------------------------------------------------------------
 // Plans.
 // ---------------------------------------------------------------------------
+
+/// The phase of a "take a place" plan (decision 0142, 5): read, not stored.
+/// Prepare while the plan is preparing; move from its release until the first
+/// man of the side lands at the place; land from then until the intent is
+/// met. Follow up is step 4.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum PlacePhase {
+    Prepare,
+    Move,
+    Land,
+}
+
+impl PlacePhase {
+    /// The phase's name as the tools write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            PlacePhase::Prepare => "prepare",
+            PlacePhase::Move => "move",
+            PlacePhase::Land => "land",
+        }
+    }
+}
 
 /// A plan's state (the spec's "plan's life").
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -1437,9 +1491,13 @@ pub enum InterruptSetting {
 impl CommandKind {
     /// Whether `issuer` may give this command at all. Intake refuses it
     /// otherwise (`CommandRefusal::NotYours`). The staff's `Approve` is
-    /// further bound by the leaves.
+    /// further bound by the leaves. The staff may set a forces limit, and
+    /// only on an intent it formed (decision 0142, 12), which intake checks.
     pub fn allowed_from(&self, issuer: Issuer) -> bool {
         match self {
+            CommandKind::SetLimit(Limit::Forces { .. }) => {
+                matches!(issuer, Issuer::Player | Issuer::Staff)
+            }
             CommandKind::SetIntent { .. }
             | CommandKind::WithdrawIntent { .. }
             | CommandKind::SetLimit(_)
@@ -1583,6 +1641,9 @@ pub enum CommandRefusal {
     /// The hex of a "ready a landing" task is not a coast hex on the map
     /// (decision 0141, 1). Added at the end.
     NotACoastHex(Hex),
+    /// The hex of a "take a place" end is not a hex of land on the map
+    /// (decision 0142, 1). Added at the end.
+    NotLand(Hex),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -1665,6 +1726,7 @@ impl core::fmt::Display for CommandRefusal {
                 write!(f, "{unit} is not one of the side's land units")
             }
             CommandRefusal::NotACoastHex(hex) => write!(f, "{hex} is not a coast hex on the map"),
+            CommandRefusal::NotLand(hex) => write!(f, "{hex} is not a hex of land on the map"),
         }
     }
 }
@@ -1865,6 +1927,13 @@ fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core
             }
         }
         IntentKind::BuildUp { base, wants } => write!(f, "build up {base}: {wants}"),
+        IntentKind::TakePlace { hex, by_day } => {
+            write!(f, "take the place at {hex}")?;
+            match by_day {
+                Some(day) => write!(f, " by the end of day {day}"),
+                None => Ok(()),
+            }
+        }
     }
 }
 

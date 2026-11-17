@@ -28,10 +28,10 @@
 
 use std::collections::BTreeSet;
 
-use sim_core::command::{Addressee, Risk};
+use sim_core::command::{Addressee, CommandState, Intent, Plan, Risk};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::TaskForceId;
+use sim_core::ids::{BaseId, TaskForceId};
 use sim_core::orders::{Mission, SpeedSetting};
 use sim_core::state::TaskForce;
 use sim_core::view::SideView;
@@ -41,6 +41,44 @@ use crate::planner::Planner;
 use crate::reasons::serving;
 use crate::stand::{afloat, margin, stopped, threat, Sighted, THREAT_HEXES};
 use crate::units::tons;
+
+/// What the escort rule reads of a run about to be routed: the intent and
+/// plan it serves, the task forces its forces limit names, its source and
+/// destination, and the miles out and back. A run of "keep supplied" makes
+/// it from its planner; a landing of "take a place" (decision 0142, 19)
+/// from its place.
+pub(crate) struct RunContext<'a, 'v> {
+    pub(crate) view: &'a SideView<'v>,
+    pub(crate) state: &'a CommandState,
+    pub(crate) intent: &'a Intent,
+    pub(crate) plan: &'a Plan,
+    pub(crate) task_forces: &'a BTreeSet<TaskForceId>,
+    pub(crate) source: BaseId,
+    pub(crate) source_hex: Hex,
+    pub(crate) destination_hex: Hex,
+    /// The miles out and back the run's route is charged.
+    pub(crate) route_nm: Fixed,
+}
+
+impl<'a, 'v> RunContext<'a, 'v> {
+    /// The context of a run of the supply doctrine.
+    pub(crate) fn of(planner: &'a Planner<'a, 'v>) -> RunContext<'a, 'v> {
+        let params = &planner.params;
+        RunContext {
+            view: planner.view,
+            state: planner.state(),
+            intent: params.intent,
+            plan: params.plan,
+            task_forces: &params.forces.task_forces,
+            source: params.source,
+            source_hex: params.source_hex,
+            destination_hex: params.destination_hex,
+            route_nm: planner.route.as_ref().map_or(Fixed::ZERO, |r| {
+                Fixed::from_int(i64::from(r.out_nm + r.back_nm))
+            }),
+        }
+    }
+}
 
 /// What the doctrine decided for a run about to be routed.
 pub(crate) enum ForRun {
@@ -58,12 +96,9 @@ pub(crate) enum ForRun {
 
 /// The forces the intent's forces limit names that are on the escort
 /// mission and have a ship afloat, in number order.
-fn named_escorts<'v>(planner: &Planner<'v, '_>) -> Vec<&'v TaskForce> {
-    let view = planner.view;
-    planner
-        .params
-        .forces
-        .task_forces
+fn named_escorts<'v>(ctx: &RunContext<'_, 'v>) -> Vec<&'v TaskForce> {
+    let view = ctx.view;
+    ctx.task_forces
         .iter()
         .filter_map(|id| view.task_forces().find(|f| f.id == *id))
         .filter(|f| f.mission == Mission::Escort && !afloat(view, f.id).is_empty())
@@ -109,7 +144,7 @@ fn run_threat(
 /// `speed_kn` from `source` (rule 5): `Ok` with the fuel figures in words,
 /// or `Err` with why not.
 fn free_escort(
-    planner: &Planner<'_, '_>,
+    ctx: &RunContext<'_, '_>,
     force: &TaskForce,
     source: Hex,
     waypoints: &[Hex],
@@ -119,8 +154,8 @@ fn free_escort(
     let id = force.id;
     // The escort as the area command holds it, and the moment that is of
     // where it is not the pulse just ended (decision 0136, 11).
-    let held = crate::reasons::force_held_words(planner.view, id);
-    if let Some(day) = crate::available::force_waiting(planner.view, id) {
+    let held = crate::reasons::force_held_words(ctx.view, id);
+    if let Some(day) = crate::available::force_waiting(ctx.view, id) {
         return Err(format!("{held} {}", crate::available::from_day_words(day)));
     }
     if !(stopped(force) && force.position() == source) {
@@ -129,15 +164,15 @@ fn free_escort(
     if let Some(charge) = force.charge {
         return Err(format!("{held} escorts {} already", charge.force));
     }
-    if let Some(hold) = planner.state().hold_on_force(id, &force.ships) {
+    if let Some(hold) = ctx.state.hold_on_force(id, &force.ships) {
         return Err(format!("{hold} is held by the commander"));
     }
     // Decision 0127, 2: a force short of ammunition is not free.
-    if let Some(short) = crate::ammunition::short(planner.view, id, risk) {
+    if let Some(short) = crate::ammunition::short(ctx.view, id, risk) {
         return Err(format!("{held} is not free: {}", short.words));
     }
     let need_margin = margin(risk);
-    let Some(forecast) = planner
+    let Some(forecast) = ctx
         .view
         .forecast_route(id, waypoints, Some(SpeedSetting::Knots(speed_kn)))
         .filter(|f| f.refusal.is_none())
@@ -148,19 +183,16 @@ fn free_escort(
     };
     // The engine's forecast stops where a ship runs dry: such a ship's need
     // is the whole passage at its class's rate, as the engine burns it.
-    let route_nm = planner.route.as_ref().map_or(Fixed::ZERO, |r| {
-        Fixed::from_int(i64::from(r.out_nm + r.back_nm))
-    });
+    let route_nm = ctx.route_nm;
     let needs: Vec<(sim_core::ids::ShipId, Fixed, Fixed)> = forecast
         .ships
         .iter()
         .map(|line| {
             let burned = if line.runs_dry {
-                planner
-                    .view
+                ctx.view
                     .ships()
                     .find(|ship| ship.id == line.ship)
-                    .and_then(|ship| planner.view.ship_class(ship.class))
+                    .and_then(|ship| ctx.view.ship_class(ship.class))
                     .map_or(line.burned_t, |class| {
                         let multiplier = if speed_kn <= class.cruise_speed_kn {
                             Fixed::ONE
@@ -201,23 +233,22 @@ fn free_escort(
 /// `waypoints` at `speed_kn`. With no task force named, the run sails as it
 /// always did and nothing is said (rule 2).
 pub(crate) fn for_run(
-    planner: &Planner<'_, '_>,
+    ctx: &RunContext<'_, '_>,
     run_force: TaskForceId,
     waypoints: &[Hex],
     speed_kn: Fixed,
     today: u32,
 ) -> ForRun {
-    let params = &planner.params;
-    if params.forces.task_forces.is_empty() {
+    if ctx.task_forces.is_empty() {
         return ForRun::Sails {
             words: None,
             escort: None,
         };
     }
-    let view = planner.view;
-    let intent = params.intent;
-    let risk = planner.state().risk_read_up(intent.id);
-    let (found, threat_words) = run_threat(view, intent.kind.addressee(), params.destination_hex);
+    let view = ctx.view;
+    let intent = ctx.intent;
+    let risk = ctx.state.risk_read_up(intent.id);
+    let (found, threat_words) = run_threat(view, intent.kind.addressee(), ctx.destination_hex);
     let wanted = match risk {
         Risk::Preserve => true,
         Risk::Balanced => found.is_some(),
@@ -241,8 +272,8 @@ pub(crate) fn for_run(
     }
     let mut refused: Vec<String> = Vec::new();
     let mut taken: Option<(TaskForceId, String)> = None;
-    for force in named_escorts(planner) {
-        match free_escort(planner, force, params.source_hex, waypoints, speed_kn, risk) {
+    for force in named_escorts(ctx) {
+        match free_escort(ctx, force, ctx.source_hex, waypoints, speed_kn, risk) {
             Ok(figures) => {
                 taken = Some((force.id, figures));
                 break;
@@ -257,15 +288,15 @@ pub(crate) fn for_run(
     };
     match taken {
         Some((escort, figures)) => {
-            let escort_held = crate::reasons::force_held_words(planner.view, escort);
-            let run_held = crate::reasons::force_held_words(planner.view, run_force);
+            let escort_held = crate::reasons::force_held_words(ctx.view, escort);
+            let run_held = crate::reasons::force_held_words(ctx.view, run_force);
             let worked = format!(
                 "At {} risk a run is escorted {} where an escort is free; {threat_words}. {escort_held} is the lowest numbered free escort: it is stopped at the source {}, has no charge, is not held, and has the fuel for {figures}. So {escort} is given {run_held}, the run's force, as its charge, and keeps station on it.",
                 risk.name(),
                 if risk == Risk::Preserve { "always" } else { "on a threat" },
-                params.source,
+                ctx.source,
             );
-            let reason = serving(intent, params.plan)
+            let reason = serving(intent, ctx.plan)
                 .evidence(threat_words.clone(), today)
                 .evidence(format!("{escort_held} is free: {figures}"), today)
                 .binding(format!("{escort} is named in the forces limit of {}", intent.id))
@@ -300,9 +331,10 @@ pub(crate) fn clear_charges(planner: &Planner<'_, '_>, out: &mut Out, today: u32
     if params.forces.task_forces.is_empty() {
         return;
     }
+    let ctx = RunContext::of(planner);
     let view = planner.view;
     let mut cleared: BTreeSet<TaskForceId> = BTreeSet::new();
-    for escort in named_escorts(planner) {
+    for escort in named_escorts(&ctx) {
         let Some(charge) = escort.charge else {
             continue;
         };

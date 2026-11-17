@@ -2099,6 +2099,7 @@ pub(super) fn describe(
             kind,
             plan,
             run,
+            intent,
         } => {
             let mut data = d
                 .text("side", names::side(*side))
@@ -2106,6 +2107,10 @@ pub(super) fn describe(
                 .int("plan", plan.raw());
             if let Some(run) = run {
                 data = data.int("run", *run);
+            }
+            // The intent whose words a take-a-place's `met` notice says.
+            if let Some(intent) = intent {
+                data = data.int("intent", intent.raw());
             }
             ("staff_notice", data)
         }
