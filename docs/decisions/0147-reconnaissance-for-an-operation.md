@@ -53,7 +53,7 @@ The 3 days are a placeholder.
 16. **The choice made again.** On the first morning the staff holds a count seen from the air or by men in contact, while the plan is preparing and no unit is aboard for it, the units are chosen again by decision 0142, items 8 to 10, on that count. Where the choice differs, the forces limit of the task "ready a landing" is set to it, and that task then orders the landing again with the new roster, at the cost the rules give a change (decision 0095).
 17. **An estimate of 0** asks for one unit: the first in the order.
 18. **Not launched without it.** The task is ready, for the leave and the release of decision 0142, item 15, only when the need is met as well.
-19. **Where nothing can look,** because no group fits item 14: at preserve the force the plan is not released, and on each morning the landing is otherwise ready the staff hands in the notice that it cannot meet the intent, with what it lacks; at balanced it goes, and the reason of the release says that it goes on no count, or on what it was told.
+19. **Where nothing can look,** because no group fits item 14: at preserve the force the plan is not released, and on the first morning the landing is otherwise ready the staff hands in the notice that it cannot meet the intent, with what it lacks, and gives the reason each morning after; at balanced it goes, and the reason of the release says that it goes on no count, or on what it was told.
 20. **Reasons** give the estimate with its grade and its day, the count the risk asks for, the group sent with its range and the distance, and what the new count changed.
 
 ## What it leaves for later
