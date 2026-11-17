@@ -205,6 +205,34 @@ pub struct World {
     /// (decision 0135, 12). Empty with command levels off or no report
     /// figures. Hashed after the commands.
     pub(crate) reports_in_flight: Vec<crate::passing::ReportInFlight>,
+    /// What each side's area command holds of the commands under it, as last
+    /// reported, while reports travel (decision 0136); `None` with command
+    /// levels off or no report figures. Hashed after the reports in flight.
+    pub(crate) held:
+        Option<BTreeMap<Side, BTreeMap<crate::pictures::CommandRef, crate::held::HeldState>>>,
+    /// State reports that reach the area command in a later pulse (decision
+    /// 0136, 2). Hashed after `held`.
+    pub(crate) state_reports_in_flight: Vec<crate::held::StateReportInFlight>,
+    /// The task forces on radio silence (decision 0136, 15), set by a
+    /// scenario or an order. Hashed.
+    pub(crate) radio_silent: BTreeSet<TaskForceId>,
+    /// A silent force's own reports it has not sent (decision 0136, 17), in
+    /// the order they were made. Hashed.
+    pub(crate) unsent_reports: BTreeMap<TaskForceId, Vec<crate::passing::UnsentReport>>,
+    /// The silent forces that broke silence in the pulse in hand (decision
+    /// 0136, 17). Cleared when the pulse's state reports are made, which is
+    /// the end of the pulse (the afternoon's, the end of the day), so empty
+    /// at every day boundary and not hashed.
+    pub(crate) broke_silence: BTreeSet<TaskForceId>,
+    /// The commands of task forces that ceased to be in the pulse in hand,
+    /// kept until the pulse's state reports are made (decision 0136, 2); for
+    /// the afternoon, through the day's end phases. Empty at every day
+    /// boundary, so not hashed.
+    pub(crate) gone_commands: Vec<(Side, crate::pictures::CommandRef)>,
+    /// The pulse being resolved, while a day is: the moment a command formed
+    /// in it is held as of (decision 0136, 5). `None` outside the day's
+    /// pulses and end phases, so not hashed.
+    pub(crate) pulse_in_hand: Option<Pulse>,
     /// Every order received, accepted or not, by ID.
     pub(crate) orders: BTreeMap<OrderId, Order>,
     pub(crate) order_ids: IdAllocator<OrderId>,
@@ -419,6 +447,13 @@ impl World {
             beliefs,
             chain: None,
             reports_in_flight: Vec::new(),
+            held: None,
+            state_reports_in_flight: Vec::new(),
+            radio_silent: BTreeSet::new(),
+            unsent_reports: BTreeMap::new(),
+            broke_silence: BTreeSet::new(),
+            gone_commands: Vec::new(),
+            pulse_in_hand: None,
             orders: BTreeMap::new(),
             order_ids: IdAllocator::new(),
             made_ids: MadeIds::new(),
@@ -591,6 +626,8 @@ impl World {
             &self.truth,
             belief,
             self.chain.as_ref().map(|chain| &chain[&side]),
+            self.held.as_ref().map(|held| &held[&side]),
+            &self.radio_silent,
             &self.map,
             &self.ref_data,
             &self.events,

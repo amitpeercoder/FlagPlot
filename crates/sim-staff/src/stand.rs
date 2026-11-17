@@ -356,10 +356,13 @@ impl Day<'_, '_> {
         let today = self.today;
         let mut any = false;
         for id in named {
-            let Some(force) = self.view.task_forces().find(|f| f.id == id) else {
+            let Some(force) = self.area.task_forces().find(|f| f.id == id) else {
                 continue;
             };
-            let ships = afloat(self.view, id);
+            let ships = afloat(self.area, id);
+            // The force as the area command holds it, and the moment that is
+            // of where it is not the pulse just ended (decision 0136, 11).
+            let held = crate::reasons::force_held_words(self.area, id);
             let (kind, words, why) = match force.mission {
                 Mission::SurfaceCombat if !ships.is_empty() => (
                     IntentKind::StandAt {
@@ -368,7 +371,7 @@ impl Day<'_, '_> {
                     },
                     format!("stand at {station} with {id}"),
                     format!(
-                        "{id} is on the surface combat mission with {} ship(s) afloat",
+                        "{held} is on the surface combat mission with {} ship(s) afloat",
                         ships.len()
                     ),
                 ),
@@ -379,7 +382,7 @@ impl Day<'_, '_> {
                         .map(|(ship, _, _, _)| *ship)
                         .collect();
                     let aboard = self
-                        .view
+                        .area
                         .air_groups()
                         .filter(|g| matches!(g.location, AirGroupLocation::Ship(s) if carriers.contains(&s)))
                         .count();
@@ -391,7 +394,7 @@ impl Day<'_, '_> {
                         IntentKind::OperateCarriers { force: id, hex },
                         format!("operate the carrier force {id} from {hex}"),
                         format!(
-                            "{id} is on the carrier mission with {} carrier(s) afloat and {aboard} air group(s) aboard, and lies at {hex}",
+                            "{held} is on the carrier mission with {} carrier(s) afloat and {aboard} air group(s) aboard, and lies at {hex}",
                             carriers.len()
                         ),
                     )
@@ -531,7 +534,7 @@ impl Day<'_, '_> {
             }
             plan.state = sim_core::command::PlanState::Released;
             let plan = plan.clone();
-            let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) else {
+            let Some(hex) = self.area.bases().find(|b| b.id == base).map(|b| b.hex) else {
                 continue;
             };
             let in_scope = self.in_scope(id);
@@ -615,6 +618,11 @@ impl Day<'_, '_> {
             return;
         }
         let here = force.position();
+
+        // Radio silence at preserve the force (decision 0136, 18).
+        if let Some(order) = silence_order(view, task, &plan, id, risk, today) {
+            out.orders.push(order);
+        }
 
         // The home port (rule 12): the base it lies at when it has none, set
         // by order.
@@ -1001,6 +1009,38 @@ impl Day<'_, '_> {
                 .push(format!("{intent_words}: {}", lines.join(" ")));
         }
     }
+}
+
+/// The order that sets a force to radio silence (decision 0136, 18): at
+/// preserve the force, where reports travel between commands, a force the
+/// side's view shows is not silent. At balanced and at press, and where it is
+/// silent already, nothing; the staff never turns silence off (20).
+pub(crate) fn silence_order(
+    view: &SideView<'_>,
+    task: &Intent,
+    plan: &Plan,
+    force: TaskForceId,
+    risk: Risk,
+    today: u32,
+) -> Option<(TaskForceOrder, Reason)> {
+    if risk != Risk::Preserve || !view.reports_travel() || view.radio_silence(force) != Some(false)
+    {
+        return None;
+    }
+    Some((
+        TaskForceOrder::SetRadioSilence { on: true },
+        serving(task, plan)
+            .evidence(
+                format!("{force} is not on radio silence and reports travel between commands"),
+                today,
+            )
+            .binding("at preserve the force the force keeps radio silence")
+            .worked(format!(
+                "At preserve the force, {force} keeps radio silence: it is set to it, and sends nothing until it fights, is attacked or strikes. What silence buys is not built: nothing listens to radio traffic yet (decision 0136, 19)."
+            ))
+            .would_change("a different risk level")
+            .done(),
+    ))
 }
 
 pub(crate) fn stance_words(stance: Stance) -> &'static str {

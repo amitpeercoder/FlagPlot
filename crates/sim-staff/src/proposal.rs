@@ -34,6 +34,10 @@ use crate::units::{tons, whole};
 pub(crate) const PROPOSAL_DAYS: u32 = 30;
 
 pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> {
+    // A supply intent is addressed to the area: its proposal is worked on
+    // what the area command holds (decision 0136, 9 and 10).
+    let known = view.known_to(sim_core::pictures::CommandRef::Area);
+    let view = known.view();
     let state = view.command_state();
     let intent = state.intents.get(&intent).filter(|i| i.in_force())?;
     let today = view.day() + 1;

@@ -2,12 +2,12 @@ Scenario 33: Who is engaged, and an attack that fails
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash edecd7ef18a17c5c  79 events
-day   2  hash 478222f48ea09d19  58 events
-day   3  hash 202e1f8e99cc2d17  52 events
-day   4  hash 3d865b8a7c480627  39 events
-day   5  hash 34f610360f029195  36 events
-day   6  hash c3086026116460b8  35 events
+day   1  hash 850d8f24371ffaf1  79 events
+day   2  hash 62a14c3b1f35c0d6  58 events
+day   3  hash b32407208baf73d0  52 events
+day   4  hash 1d6d42b08dca807e  39 events
+day   5  hash a232916873b5607a  36 events
+day   6  hash 0a0f42015969afeb  35 events
 
 #1 D1 -         order:1 accepted for land_unit:7  <- order:1
 #2 D1 -         order:2 accepted for land_unit:2  <- order:2

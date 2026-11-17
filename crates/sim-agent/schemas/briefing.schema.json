@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 14 },
+    "version": { "const": 15 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -1641,6 +1641,7 @@
       "properties": {
         "base": { "$ref": "defs.schema.json#/$defs/handle" },
         "place": { "$ref": "defs.schema.json#/$defs/place" },
+        "as_of": { "description": "The moment the area command's held state of the base is of, where that is not the pulse just ended (decision 0136, 11). Left out otherwise.", "type": "string" },
         "supply_t": { "$ref": "defs.schema.json#/$defs/dec" },
         "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
         "spent_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },

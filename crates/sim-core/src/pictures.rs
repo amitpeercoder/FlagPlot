@@ -382,6 +382,9 @@ impl World {
             }
         }
         self.chain = Some(chain);
+        // With report figures the area command holds each command under it,
+        // exactly, as of the start (decision 0136, 4).
+        self.begin_holding();
         Ok(())
     }
 
@@ -533,6 +536,7 @@ impl World {
     pub(crate) fn command_formed(&mut self, force: TaskForceId, from: CommandRef) {
         let side = self.truth.task_forces[&force].side;
         self.add_command(side, CommandRef::TaskForce(force), from);
+        self.hold_now(side, CommandRef::TaskForce(force));
     }
 
     /// A base was formed during the game, by a landing (decision 0066, 11):
@@ -542,6 +546,7 @@ impl World {
     pub(crate) fn base_formed(&mut self, base: BaseId, from: CommandRef) {
         let side = self.truth.bases[&base].side;
         self.add_command(side, CommandRef::Base(base), from);
+        self.hold_now(side, CommandRef::Base(base));
     }
 
     /// A base changed side from `from` to `to` (decision 0134, 7): with
@@ -559,6 +564,10 @@ impl World {
             .remove(&CommandRef::Base(base));
         rehome(chain.get_mut(&from).expect("both sides"));
         self.add_command(to, CommandRef::Base(base), CommandRef::Area);
+        // The losing side's area command drops what it held of the base; the
+        // winning side's holds it as of now (decision 0136, 5).
+        self.drop_held(from, CommandRef::Base(base));
+        self.hold_now(to, CommandRef::Base(base));
     }
 
     /// Ends the commands of task forces that have ceased to be (decision
@@ -566,17 +575,30 @@ impl World {
     /// is under the area command. Run at the end of every pulse, before the
     /// pictures age: a force joined, stood down or sunk in a pulse, or at
     /// intake, is a command until the end of that pulse.
+    ///
+    /// The commands that ended are kept in `gone_commands` until the pulse's
+    /// state reports are made: each makes one last report (decision 0136, 2).
     pub(crate) fn end_gone_commands(&mut self) {
         let Some(chain) = self.chain.as_mut() else {
             return;
         };
         let truth = &self.truth;
-        for posts in chain.values_mut() {
+        let reporting = self.held.is_some();
+        for (side, posts) in chain.iter_mut() {
+            let before: Vec<CommandRef> = posts.keys().copied().collect();
             posts.retain(|command, _| match command {
                 CommandRef::TaskForce(force) => !force_is_gone(truth, *force),
                 CommandRef::Area | CommandRef::Base(_) => true,
             });
             rehome(posts);
+            if reporting {
+                self.gone_commands.extend(
+                    before
+                        .into_iter()
+                        .filter(|command| !posts.contains_key(command))
+                        .map(|command| (*side, command)),
+                );
+            }
         }
     }
 

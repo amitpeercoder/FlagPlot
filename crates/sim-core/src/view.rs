@@ -16,6 +16,8 @@
 mod air_choices;
 mod command_view;
 pub use command_view::CommandView;
+mod known_view;
+pub use known_view::KnownView;
 mod ground_choices;
 mod supply;
 
@@ -97,6 +99,15 @@ pub struct SideView<'a> {
     /// The side's own commands and their pictures, while command levels are
     /// on (decision 0134). The other side's are never handed over.
     commands: Option<&'a crate::pictures::SideCommands>,
+    /// What the side's area command holds of the commands under it, while
+    /// reports travel (decision 0136); the other side's is never handed over.
+    held: Option<&'a BTreeMap<crate::pictures::CommandRef, crate::held::HeldState>>,
+    /// Whom this view is the truth of: `None` for the side's own view, whole;
+    /// `Some(Area)` for a view built over what the area command holds
+    /// ([`SideView::known_to`], decision 0136, 9).
+    known_to: Option<crate::pictures::CommandRef>,
+    /// The task forces on radio silence, both sides' (decision 0136, 15).
+    radio_silent: &'a BTreeSet<TaskForceId>,
     map: &'a Map,
     ref_data: &'a RefData,
     log: &'a EventLog,
@@ -144,6 +155,8 @@ impl<'a> SideView<'a> {
         truth: &'a TruthState,
         belief: &'a BeliefState,
         commands: Option<&'a crate::pictures::SideCommands>,
+        held: Option<&'a BTreeMap<crate::pictures::CommandRef, crate::held::HeldState>>,
+        radio_silent: &'a BTreeSet<TaskForceId>,
         map: &'a Map,
         ref_data: &'a RefData,
         log: &'a EventLog,
@@ -158,6 +171,9 @@ impl<'a> SideView<'a> {
             truth,
             belief,
             commands,
+            held,
+            known_to: None,
+            radio_silent,
             map,
             ref_data,
             log,

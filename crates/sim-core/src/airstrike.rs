@@ -947,6 +947,9 @@ impl World {
                 launched,
                 taken_for: Some(taken_for),
             });
+            // A force whose group launches a naval strike breaks radio
+            // silence (decision 0136, 17).
+            self.break_silence_of_group(group.id, day, pulse);
         }
     }
 
@@ -1004,6 +1007,9 @@ impl World {
             launched,
             taken_for: None,
         });
+        // A force whose group launches a raid breaks radio silence
+        // (decision 0136, 17).
+        self.break_silence_of_group(group.id, day, pulse);
     }
 
     /// The air combat step of one daylight pulse (decisions 7 to 12 and 16
@@ -1331,6 +1337,9 @@ impl World {
                         attack.breakdown.clone(),
                     );
                     attack_events.push(event);
+                    // A force an air strike reaches breaks radio silence
+                    // (decision 0136, 17).
+                    self.break_silence(attack.task_force, day, pulse);
                     if let Some(index) = tally_of.get(&attack.air_group) {
                         let side = &mut tallies[*index].attacker;
                         side.fired(EntityRef::AirGroup(attack.air_group), event);

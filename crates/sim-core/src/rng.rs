@@ -108,11 +108,16 @@ pub enum Draw {
     /// to one command sideways and down takes two numbers: the second road
     /// is a second chance.
     ReportPassedDown,
+    /// A state report's journey up to the area command (decision 0136, 2):
+    /// one stream for each command and moment, in the intelligence
+    /// subsystem, keyed on the task force or the base that reports. One
+    /// number is always taken, whatever the chances.
+    StateReport,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 11] = [
+    pub const ALL: [Draw; 12] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -124,6 +129,7 @@ impl Draw {
         Draw::GroundReport,
         Draw::ReportPassed,
         Draw::ReportPassedDown,
+        Draw::StateReport,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -141,6 +147,7 @@ impl Draw {
             Draw::GroundReport => 8,
             Draw::ReportPassed => 9,
             Draw::ReportPassedDown => 10,
+            Draw::StateReport => 11,
         }
     }
 }

@@ -2,18 +2,18 @@ Placeholder scenario 59: A search kept up
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e9e39111fbe2f421  24 events
-day   2  hash 32f9a21b147572c3  7 events
-day   3  hash 870c72ed83a58a49  7 events
-day   4  hash 056f2c6ed5b08417  7 events
-day   5  hash 456384a0b1881901  7 events
-day   6  hash 6d04f24bb61a2783  7 events
-day   7  hash 80706e9c40f30549  7 events
-day   8  hash 116d5d8c0a63c7ef  7 events
-day   9  hash 109398b182b6dde1  7 events
-day  10  hash 2cbfe3dcb3abc763  7 events
-day  11  hash 196bc783f32566f9  7 events
-day  12  hash ed4c610791daa8f7  7 events
+day   1  hash 376591e714880936  24 events
+day   2  hash 700447d2ebb5b38a  7 events
+day   3  hash 802ff5708f5a4752  7 events
+day   4  hash b7b9117a11790bc6  7 events
+day   5  hash a5c840cba8727256  7 events
+day   6  hash eed7adb55ed7d392  7 events
+day   7  hash 179d2ace38a43a1a  7 events
+day   8  hash 10e1f4a6aac96606  7 events
+day   9  hash 7903b27e673a41c6  7 events
+day  10  hash 840653bc02b4b42a  7 events
+day  11  hash 6fc6878557f08742  7 events
+day  12  hash aefa4ec0b6444076  7 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to cover base:1 from the air
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

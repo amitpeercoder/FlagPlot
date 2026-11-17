@@ -383,3 +383,7 @@ path = "scenario_61_commands_and_their_pictures.rs"
 [[test]]
 name = "scenario_62_reports_between_commands"
 path = "scenario_62_reports_between_commands.rs"
+
+[[test]]
+name = "scenario_63_a_superiors_knowledge"
+path = "scenario_63_a_superiors_knowledge.rs"

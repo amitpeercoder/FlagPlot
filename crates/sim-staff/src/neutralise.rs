@@ -28,7 +28,7 @@ use sim_core::state::AirGroupLocation;
 use sim_core::view::SideView;
 
 use crate::air::Day;
-use crate::reasons::{base_words, serving};
+use crate::reasons::{base_held_words, base_words, serving};
 
 /// A group of the side as a raid reads it: whether it is a bomber, and if
 /// so its type's normal reach (decision 0120, 10: not a fighter, a weapon,
@@ -72,7 +72,7 @@ impl Day<'_, '_> {
     fn candidates(&self, intent: &Intent, target_hex: Hex) -> Vec<Candidate> {
         let allowed = self.state.groups_on_chain(intent.id);
         let mut found: Vec<Candidate> = Vec::new();
-        let mut bases: Vec<_> = self.view.bases().collect();
+        let mut bases: Vec<_> = self.area.bases().collect();
         bases.sort_by_key(|b| b.id);
         for base in bases {
             let mut groups: Vec<_> = self
@@ -90,7 +90,7 @@ impl Day<'_, '_> {
             let bombers: Vec<(AirGroupId, String, Fixed)> = groups
                 .iter()
                 .filter_map(|g| {
-                    let reach = bomber_reach(self.view, g)?;
+                    let reach = bomber_reach(self.area, g)?;
                     let name = self
                         .view
                         .aircraft_type(g.aircraft_type)
@@ -153,6 +153,7 @@ impl Day<'_, '_> {
             for candidate in qualifying {
                 let base = candidate.base;
                 let base_text = base_words(self.view, base);
+                let base_held = base_held_words(self.area, base);
                 let reaching: Vec<String> = candidate
                     .bombers
                     .iter()
@@ -160,7 +161,7 @@ impl Day<'_, '_> {
                     .map(|(group, name, reach)| format!("{group} ({name}, a reach of {reach} nm)"))
                     .collect();
                 let reach_text = format!(
-                    "{base_text} is {} nm from {target_text}; its bombers that reach it on normal reach: {}",
+                    "{base_held} is {} nm from {target_text}; its bombers that reach it on normal reach: {}",
                     candidate.distance,
                     reaching.join(", ")
                 );
@@ -243,7 +244,7 @@ impl Day<'_, '_> {
         let today = self.today;
         let mut lines: Vec<String> = Vec::new();
         for candidate in candidates {
-            let base_text = base_words(self.view, candidate.base);
+            let base_text = base_held_words(self.area, candidate.base);
             if candidate.bombers.is_empty() {
                 lines.push(format!(
                     "{base_text} is {} nm from {target_text} and has no bomber group it may use",

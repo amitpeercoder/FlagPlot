@@ -712,6 +712,8 @@ impl World {
             fire_events.clone(),
             None,
         );
+        // A force that bombards breaks radio silence (decision 0136, 17).
+        self.break_silence(force_id, day, pulse);
         // A halted force has now bombarded, and may steam on (decision 0096,
         // 4).
         if let Some(halt) = self

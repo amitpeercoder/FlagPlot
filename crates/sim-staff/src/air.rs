@@ -308,6 +308,10 @@ fn setting_words(m: &Member) -> String {
 /// The morning's work in the making.
 pub(crate) struct Day<'v, 'a> {
     pub(crate) view: &'v SideView<'a>,
+    /// The side's units as the area command knows them (decision 0136, 9):
+    /// what a doctrine addressed to the area reads. The side's own view
+    /// where no report figures are loaded or command levels are off.
+    pub(crate) area: &'v SideView<'v>,
     /// The command state as planned: the plans the leaves approve this
     /// morning and the intents formed this morning are in it.
     pub(crate) state: CommandState,
@@ -361,7 +365,9 @@ pub(crate) fn is_air(kind: IntentKind) -> bool {
 
 /// The staff's air decisions for the morning.
 pub(crate) fn decide(view: &SideView<'_>) -> StaffDecisions {
-    match Day::run(view, None) {
+    let known = view.known_to(sim_core::pictures::CommandRef::Area);
+    let area = known.view();
+    match Day::run(view, &area, None) {
         Some(day) => {
             let mut decisions = day.real;
             fill_decisions(view, &day.state, &mut decisions);
@@ -381,7 +387,9 @@ pub(crate) fn propose(view: &SideView<'_>, intent: IntentId) -> Option<Proposal>
         .filter(|i| i.in_force() && is_air(i.kind))?;
     let plan = state.plans.get(&found.plan)?;
     let root = state.root_of(intent);
-    let day = Day::run(view, Some(root))?;
+    let known = view.known_to(sim_core::pictures::CommandRef::Area);
+    let area = known.view();
+    let day = Day::run(view, &area, Some(root))?;
     let ended = plan.state.ended();
     let worked = if ended {
         format!(
@@ -437,7 +445,11 @@ impl<'v, 'a> Day<'v, 'a> {
     /// in force (it hands in nothing). With a `scope` (a proposal) the root
     /// of the tree asked for is taken as released and only what is handed in
     /// for its tree is kept.
-    fn run(view: &'v SideView<'a>, scope: Option<IntentId>) -> Option<Day<'v, 'a>> {
+    fn run(
+        view: &'v SideView<'a>,
+        area: &'v SideView<'v>,
+        scope: Option<IntentId>,
+    ) -> Option<Day<'v, 'a>> {
         let state = view.command_state();
         // A keep-supplied intent whose forces limit names task forces may
         // form covering forces' stand tasks (decision 0126, 7).
@@ -456,6 +468,7 @@ impl<'v, 'a> Day<'v, 'a> {
         }
         let mut day = Day {
             view,
+            area,
             state: state.clone(),
             today: view.day() + 1,
             scope,

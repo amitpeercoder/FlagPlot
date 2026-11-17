@@ -95,6 +95,11 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 }),
                 None => json!({ "kind": "escort" }),
             },
+            // Decision 0136, 15.
+            TaskForceOrder::SetRadioSilence { on } => json!({
+                "kind": "set_radio_silence",
+                "on": on,
+            }),
             TaskForceOrder::SetRulesOfEngagement {
                 stance,
                 break_off,
@@ -520,6 +525,12 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                             .ok_or("\"charge\" must be a task force written \"task_force:N\"")?,
                     )),
                 }),
+                "set_radio_silence" => TaskForceOrder::SetRadioSilence {
+                    on: value
+                        .get("on")
+                        .and_then(Value::as_bool)
+                        .ok_or_else(|| "\"on\" is missing or not true or false".to_string())?,
+                },
                 "set_rules_of_engagement" => TaskForceOrder::SetRulesOfEngagement {
                     stance: match text(value, "stance")? {
                         "engage" => Stance::Engage,

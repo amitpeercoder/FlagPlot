@@ -37,7 +37,7 @@ use sim_core::view::SideView;
 
 use crate::air::Day;
 use crate::neutralise::bomber_reach;
-use crate::reasons::{base_words, serving, waters_words};
+use crate::reasons::{base_held_words, base_words, serving, waters_words};
 
 /// The waters of a deny intent (decision 0123, 1): the hexes on the map
 /// within `distance` hexes of `hex`, in hex order.
@@ -100,7 +100,7 @@ impl Day<'_, '_> {
     /// searchers, in base number order.
     fn deny_candidates(&self, intent: &Intent) -> Vec<Candidate> {
         let allowed = self.state.groups_on_chain(intent.id);
-        let mut bases: Vec<_> = self.view.bases().collect();
+        let mut bases: Vec<_> = self.area.bases().collect();
         bases.sort_by_key(|b| b.id);
         let mut found = Vec::new();
         for base in bases {
@@ -115,17 +115,17 @@ impl Day<'_, '_> {
                 continue;
             }
             let name = |g: &AirGroup| {
-                self.view
+                self.area
                     .aircraft_type(g.aircraft_type)
                     .map_or_else(|| g.aircraft_type.to_string(), |t| t.name.clone())
             };
             let bombers = groups
                 .iter()
-                .filter_map(|g| Some((g.id, name(g), bomber_reach(self.view, g)?)))
+                .filter_map(|g| Some((g.id, name(g), bomber_reach(self.area, g)?)))
                 .collect();
             let searchers = groups
                 .iter()
-                .filter_map(|g| Some((g.id, name(g), search_range(self.view, g)?)))
+                .filter_map(|g| Some((g.id, name(g), search_range(self.area, g)?)))
                 .collect();
             found.push(Candidate {
                 base: base.id,
@@ -165,7 +165,7 @@ impl Day<'_, '_> {
             let mut served_any = false;
             for candidate in &candidates {
                 let base = candidate.base;
-                let base_text = base_words(self.view, base);
+                let base_text = base_held_words(self.area, base);
                 let near = nearest_nm(candidate.hex, &waters_hexes);
                 let near_text = near.map_or_else(
                     || "the waters have no hex on the map".to_string(),
@@ -351,7 +351,7 @@ impl Day<'_, '_> {
         let today = self.today;
         let mut lines: Vec<String> = Vec::new();
         for candidate in candidates {
-            let base_text = base_words(self.view, candidate.base);
+            let base_text = base_held_words(self.area, candidate.base);
             let near = nearest_nm(candidate.hex, waters_hexes).map_or_else(
                 || "no hex of the waters is on the map".to_string(),
                 |nm| format!("{nm} nm from the nearest hex of the waters"),

@@ -96,6 +96,11 @@ fn reject_reason(reason: &RejectReason) -> Data {
     let base = |code: &'static str| Data::new().text("code", code);
     match reason {
         RejectReason::NotYourUnit => base("not_your_unit"),
+        // The truth's reason, with what the area command held (decision
+        // 0136, 13).
+        RejectReason::NotAsHeld { reason, held } => {
+            reject_reason(reason).with("not_as_held", Field::Str(held.clone()))
+        }
         RejectReason::EmptyRoute => base("empty_route"),
         RejectReason::WaypointOffMap(hex) => base("waypoint_off_map").hex("hex", *hex),
         RejectReason::NotACoastHex(hex) => base("not_a_coast_hex").hex("hex", *hex),
@@ -2204,6 +2209,28 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                             .collect(),
                     ),
                 ),
+        ),
+        // A command's state report late or lost on its way to the area command
+        // (decision 0136, 6).
+        EventKind::StateReportLate {
+            side,
+            command,
+            as_of,
+        } => (
+            "state_report_late",
+            d.text("side", names::side(*side))
+                .with("command", Field::Str(command_word(*command)))
+                .with("as_of", Field::Str(as_of.to_string())),
+        ),
+        EventKind::StateReportLost {
+            side,
+            command,
+            as_of,
+        } => (
+            "state_report_lost",
+            d.text("side", names::side(*side))
+                .with("command", Field::Str(command_word(*command)))
+                .with("as_of", Field::Str(as_of.to_string())),
         ),
         EventKind::ShipRearmed {
             ship,

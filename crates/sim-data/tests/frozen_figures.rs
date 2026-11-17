@@ -79,8 +79,12 @@ fn shape(file: &str, text: &str) -> BTreeSet<String> {
 /// none, and with none every report reaches every command at once, as in
 /// decision 0134. A scenario names the file where it is, as it does its map,
 /// and `LoadOptions::reference_root` does not redirect it.
-/// Scenario 62's own report figures likewise.
-const LIVE_ONLY: &[&str] = &["reports.toml", "reports_placeholder_scenario_62.toml"];
+/// Scenario 62's and scenario 63's own report figures likewise.
+const LIVE_ONLY: &[&str] = &[
+    "reports.toml",
+    "reports_placeholder_scenario_62.toml",
+    "reports_placeholder_scenario_63.toml",
+];
 
 #[test]
 fn every_live_figures_file_has_a_frozen_counterpart_and_the_other_way_round() {

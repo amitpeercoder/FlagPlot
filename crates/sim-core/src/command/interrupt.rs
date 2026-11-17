@@ -73,15 +73,19 @@ impl World {
             if state.interrupts.is_empty() {
                 continue;
             }
-            let view = self.side_view(side);
+            // The commander and the area staff read what the area command
+            // holds, not the truth (decision 0136, 9): the base's place and
+            // the days of supply of its hex.
+            let known = self
+                .side_view(side)
+                .known_to(crate::pictures::CommandRef::Area);
+            let view = known.view();
             let mut figures = BTreeMap::new();
             for (id, interrupt) in &state.interrupts {
                 let InterruptCondition::SupplyBelow { base, .. } = interrupt.condition;
-                let reading = self
-                    .truth
-                    .bases
-                    .get(&base)
-                    .filter(|found| found.side == side)
+                let reading = view
+                    .bases()
+                    .find(|found| found.id == base)
                     .and_then(|found| view.days_of_supply(found.hex));
                 figures.insert(*id, reading);
             }

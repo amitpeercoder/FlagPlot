@@ -861,3 +861,18 @@ units; the enemy is told none of it.
   search mission flies its search in the morning pulse only and rests in the afternoon. An air group line
   has `search_once` (`true`, given only when it is on).
 - **Saved games** are version 10 (decision 0134: the file's keys are unchanged); a game of version 9 or earlier is refused, not converted.
+
+## What the area command knows of its forces (decision 0136)
+
+`version` is 15: the area seat reads its own units as the area command holds them, so a force or a base the
+command last had reported is given as of that report. With command levels off, or no report figures loaded,
+nothing is held and every answer is as it was.
+
+- **`as_of`**, in a force's line and a base's line (`list_forces`, `list_bases`, `get_entity` and the
+  briefing), such as "the morning of day 1" or "the start": where the area command holds the force or the
+  base as last reported and that is not the pulse just ended. Left out otherwise. The briefing's text says
+  "(as last reported, of the morning of day 1)" after the place.
+- **`radio_silence`** in a force's line, `true`, given only when it is on.
+- **A new task force order**, `set_radio_silence` (`on`, true or false): a silent force sends no state
+  report and none of its own reports up or sideways until it fights, is attacked or launches a strike.
+- **Saved games** are as the engine writes them (decision 0136); the file's keys are unchanged.

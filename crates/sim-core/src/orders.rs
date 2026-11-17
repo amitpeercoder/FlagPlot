@@ -560,6 +560,15 @@ pub enum TaskForceOrder {
     /// station on it and takes no route order. Cleared, it stops where it
     /// is. Added at the end.
     Escort(Option<TaskForceId>),
+    /// Set the force's radio silence on or off (decision 0136, 15). A
+    /// setting of its own: it touches no route, cargo or other order, and is
+    /// not an order that takes the force out of the staff's hands (decision
+    /// 0107, ruling 23). Taken whatever the command levels, it has an effect
+    /// only where reports travel. Turned off, the reports the force kept are
+    /// dropped. Added at the end.
+    SetRadioSilence {
+        on: bool,
+    },
 }
 
 /// An order to a base of the side (decision 0111). Added with the first.
@@ -963,6 +972,23 @@ pub enum RejectReason {
     /// An escort order given to a force that is the charge of another,
     /// `escort` (decision 0121, 1). Added at the end of the enum.
     IsACharge { escort: TaskForceId },
+    /// An order from the area that the truth refuses and the state the area
+    /// command holds would have accepted (decision 0136, 13): `reason` is
+    /// the truth's, `held` says what the area command held of the order's
+    /// unit and the moment it was of. Not a fault of the staff, and counted
+    /// apart (item 14). Added at the end of the enum.
+    NotAsHeld {
+        reason: Box<RejectReason>,
+        held: String,
+    },
+}
+
+impl RejectReason {
+    /// Whether the order was refused because the unit is not as the area
+    /// command held it (decision 0136, 14).
+    pub fn is_not_as_held(&self) -> bool {
+        matches!(self, RejectReason::NotAsHeld { .. })
+    }
 }
 
 impl fmt::Display for RejectReason {
@@ -1134,6 +1160,9 @@ impl fmt::Display for RejectReason {
                 f,
                 "{charge} has a charge of its own, and an escort cannot be a charge"
             ),
+            RejectReason::NotAsHeld { reason, held } => {
+                write!(f, "{reason}; the area command held {held}")
+            }
             RejectReason::IsACharge { escort } => write!(
                 f,
                 "the task force is the charge of {escort}, and a charge cannot be an escort"

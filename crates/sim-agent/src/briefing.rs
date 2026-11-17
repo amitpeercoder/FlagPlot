@@ -616,6 +616,11 @@ pub struct ReturnedForce {
 pub struct BriefingBase {
     pub base: Handle,
     pub place: Place,
+    /// The moment the area command's held state of the base is of, where
+    /// that is not the pulse just ended (decision 0136, 11). Left out
+    /// otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub as_of: Option<String>,
     pub supply_t: Dec,
     pub fuel_t: Dec,
     /// Supply paid out yesterday, all uses together.
@@ -1819,6 +1824,10 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
             BriefingBase {
                 base: ctx.base(b.id),
                 place: ctx.place(b.hex),
+                as_of: crate::lines::held_as_of_text(
+                    &ctx,
+                    sim_core::pictures::CommandRef::Base(b.id),
+                ),
                 supply_t: Dec(b.supply_t),
                 fuel_t: Dec(b.fuel_t),
                 spent_yesterday_t: Dec(spent),
@@ -3839,6 +3848,10 @@ impl Day {
                     // The side's own commands passing a report on (decision
                     // 0135): the briefing does not list it.
                     | EventKind::ReportSent { .. }
+                    // A state report late or lost on its way to the area
+                    // command (decision 0136): the briefing does not list it.
+                    | EventKind::StateReportLate { .. }
+                    | EventKind::StateReportLost { .. }
                     | EventKind::MenSurrenderedAshore { .. }
                     | EventKind::GroundAttackFailed { .. }
                     | EventKind::CommandTaken { .. }

@@ -305,6 +305,14 @@
         "place": {
           "$ref": "#/$defs/place"
         },
+        "as_of": {
+          "description": "The moment the area command's held state is of, such as \"the morning of day 1\", where that is not the pulse just ended (decision 0136, 11). Left out otherwise.",
+          "type": "string"
+        },
+        "radio_silence": {
+          "description": "Given (true) only for a force on radio silence (decision 0136, 15).",
+          "const": true
+        },
         "status": {
           "enum": [
             "idle",
@@ -648,6 +656,10 @@
         "place": {
           "$ref": "#/$defs/place"
         },
+        "as_of": {
+          "description": "The moment the area command's held state is of, such as \"the morning of day 1\", where that is not the pulse just ended (decision 0136, 11). Left out otherwise.",
+          "type": "string"
+        },
         "supply_t": {
           "$ref": "#/$defs/dec"
         },
@@ -802,7 +814,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 14
+          "const": 15
         },
         "kind": {
           "const": "not_known"
