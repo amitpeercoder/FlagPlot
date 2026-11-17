@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 'use strict';
+process.exit(1); // probe: the export job must fail and the required check with it
 // Structural self-check for replay files, using the viewer's own pure functions.
 //   node viewer/check.js viewer/replays/*.json
 // It extracts the <script id="core"> and <script id="ui"> blocks from index.html,
