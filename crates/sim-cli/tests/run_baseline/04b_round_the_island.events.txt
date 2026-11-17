@@ -2,8 +2,8 @@ Scenario 4b: Round the island
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7803acdfc4bf9503  12 events
-day   2  hash 3c3fb4bd98564ec6  0 events
+day   1  hash c01b624b89fd467e  12 events
+day   2  hash 75a05d35f585e461  0 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

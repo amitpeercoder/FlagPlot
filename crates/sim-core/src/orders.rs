@@ -981,6 +981,11 @@ pub enum RejectReason {
         reason: Box<RejectReason>,
         held: String,
     },
+    /// An order to a unit before the day from which its side may use it
+    /// (decision 0140, 2): `unit` is the unit whose day it is (the order's
+    /// own, or a ship or land unit it names), `day` that day. Added at the
+    /// end of the enum.
+    NotYetAvailable { unit: EntityRef, day: u32 },
 }
 
 impl RejectReason {
@@ -1167,6 +1172,9 @@ impl fmt::Display for RejectReason {
                 f,
                 "the task force is the charge of {escort}, and a charge cannot be an escort"
             ),
+            RejectReason::NotYetAvailable { unit, day } => {
+                write!(f, "{unit} may be used from day {day}")
+            }
         }
     }
 }

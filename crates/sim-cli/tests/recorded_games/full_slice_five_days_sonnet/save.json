@@ -70,28 +70,28 @@
       "hash": "5ef7d142f1faa97f"
     }
   ],
-  "doctrine_version": "supply-19",
+  "doctrine_version": "supply-20",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "1030c440dacf0628"
+      "hash": "e1a9621b1275c87b"
     },
     {
       "day": 2,
-      "hash": "59817668511a4411"
+      "hash": "6e41d8230d2a1d22"
     },
     {
       "day": 3,
-      "hash": "6b2cc5b01a93a07f"
+      "hash": "1a8d7ff7db770958"
     },
     {
       "day": 4,
-      "hash": "6e6ff6197c74a989"
+      "hash": "32669b6238693f40"
     },
     {
       "day": 5,
-      "hash": "2cf75a0fe62e00ce"
+      "hash": "53f6ddf68ad6490f"
     }
   ],
   "orders": [
@@ -870,6 +870,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v38",
-  "version": 13
+  "state_version": "flagplot-state-v39",
+  "version": 14
 }

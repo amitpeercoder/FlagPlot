@@ -1201,6 +1201,10 @@ impl World {
         // The guard of a hold comes first (decision 0107, rulings 18 and 30).
         let forced = if let Some(target) = self.held_order_target(side, &request.kind) {
             Some(RejectReason::Held(target))
+        } else if let Some(refused) = self.not_yet_available(side, &request.kind, day) {
+            // Before its day a unit is in no forces limit (decision 0140, 3):
+            // the refusal gives the day.
+            Some(refused)
         } else if self.staff_order_in_forces_limit(side, &request) {
             None
         } else {

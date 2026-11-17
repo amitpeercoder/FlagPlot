@@ -36,8 +36,8 @@ use crate::events::EventLog;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
-    AirGroupId, AircraftTypeId, BaseId, ContactId, EventId, LandUnitId, OrderId, ShipClassId,
-    ShipId, TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, ContactId, EntityRef, EventId, LandUnitId, OrderId,
+    ShipClassId, ShipId, TaskForceId,
 };
 use crate::landing::DeckLoss;
 use crate::map::{HexData, Map};
@@ -51,7 +51,7 @@ use crate::refdata::{
 };
 use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{
-    AirGroup, Arrival, Base, LandUnit, Replacement, Ship, Side, TaskForce, TruthState,
+    AirGroup, Arrival, Base, Formation, LandUnit, Replacement, Ship, Side, TaskForce, TruthState,
 };
 use crate::upkeep::Sortie;
 
@@ -288,6 +288,68 @@ impl<'a> SideView<'a> {
             .land_units
             .values()
             .filter(move |unit| view.owns_land_unit(unit))
+    }
+
+    /// The day from which the side may use one of its own units (decision
+    /// 0140, 5): a task force, a ship, an air group or a land unit, the
+    /// later of its own day and those of what carries it, as intake reads it
+    /// ([`TruthState::available_from`]). `None` for a unit with no day, which
+    /// may be used from day 1, and for a unit that is not the side's: no
+    /// enemy's day is ever given.
+    pub fn available_from(&self, unit: EntityRef) -> Option<u32> {
+        if !self.owns_unit(unit) {
+            return None;
+        }
+        self.truth.available_from(unit)
+    }
+
+    /// Whether `unit` is a task force, ship, air group or land unit of the
+    /// side.
+    fn owns_unit(&self, unit: EntityRef) -> bool {
+        let side = self.side;
+        let own = match unit {
+            EntityRef::Ship(id) => self.truth.ships.get(&id).is_some_and(|x| x.side == side),
+            EntityRef::TaskForce(id) => self
+                .truth
+                .task_forces
+                .get(&id)
+                .is_some_and(|x| x.side == side),
+            EntityRef::AirGroup(id) => self
+                .truth
+                .air_groups
+                .get(&id)
+                .is_some_and(|x| x.side == side),
+            EntityRef::LandUnit(id) => self
+                .truth
+                .land_units
+                .get(&id)
+                .is_some_and(|x| x.side == side),
+            _ => false,
+        };
+        own
+    }
+
+    /// Whether the side may use one of its own units on the day it now gives
+    /// orders for, the day after [`SideView::day`] (decision 0140, 3): it has
+    /// no day, or its day has come. The one test every doctrine reads.
+    /// False for a unit that is not the side's.
+    pub fn may_use(&self, unit: EntityRef) -> bool {
+        self.owns_unit(unit)
+            && self
+                .truth
+                .available_from(unit)
+                .is_none_or(|from| self.day() + 1 >= from)
+    }
+
+    /// The side's own formations of land units, in number order (decision
+    /// 0140, 8): each with its parent, so that the tree can be read from any
+    /// unit's [`LandUnit::formation`] up. The enemy's are not here.
+    pub fn formations(&self) -> impl Iterator<Item = &'a Formation> + '_ {
+        let side = self.side;
+        self.truth
+            .formations
+            .values()
+            .filter(move |formation| formation.side == side)
     }
 
     /// The cover of one of the side's own land units (decision 1 of 0106):
@@ -1297,6 +1359,7 @@ mod tests {
                         experience: Ship::DEFAULT_EXPERIENCE,
                         system_repair_points: Fixed::ZERO,
                         troops: None,
+                        available_from: None,
                     },
                 );
             }

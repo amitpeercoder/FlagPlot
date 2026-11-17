@@ -592,6 +592,10 @@ impl Day<'_, '_> {
             .filter(|g| matches!(g.location, AirGroupLocation::Ship(s) if aboard_ids.contains(&s)))
             .collect();
         aboard.sort_by_key(|g| g.id);
+        // A group before its day is left out (decision 0140, 3): the staff
+        // reads and orders only those it may use, and names the others.
+        let aboard_waiting = crate::available::groups_waiting(view, aboard.iter().map(|g| g.id));
+        aboard.retain(|g| !aboard_waiting.iter().any(|(id, _)| *id == g.id));
         let able_total: u32 = aboard
             .iter()
             .map(|g| view.able_to_fly(g.id).unwrap_or(0))
@@ -608,6 +612,23 @@ impl Day<'_, '_> {
                             task.id
                         ))
                         .would_change("the force back")
+                        .done(),
+                );
+            }
+            (Some(_), _) if crate::available::force_waiting(view, id).is_some() => {
+                // Before its day the force is no force a task may use
+                // (decision 0140, 3): one reason, no order to it or its groups.
+                let day = crate::available::force_waiting(view, id).unwrap_or(today);
+                let words = crate::available::from_day_words(day);
+                notes.push(
+                    serving(task, &plan)
+                        .evidence(format!("{id} {words}"), today)
+                        .binding(format!("the day {id} may be used from, {day}"))
+                        .worked(format!(
+                            "{intent_words}: {} is to be served by {id}, which {words}, so the staff gives {id} and its groups no order.",
+                            task.id
+                        ))
+                        .would_change("the day come")
                         .done(),
                 );
             }
@@ -1259,7 +1280,15 @@ impl Day<'_, '_> {
                     .air_combat_figures()
                     .map_or(0, |f| f.strike_contact_max_age_pulses);
                 let mut groups: Vec<CarrierGroup> = Vec::new();
-                let mut held_lines: Vec<String> = Vec::new();
+                let mut held_lines: Vec<String> = aboard_waiting
+                    .iter()
+                    .map(|(group, day)| {
+                        format!(
+                            "{}: no order",
+                            crate::available::named_with_day(group, *day)
+                        )
+                    })
+                    .collect();
                 for g in &aboard {
                     if let Some(hold) = self.state.hold_on_group(g.id) {
                         held_lines.push(format!("{hold} is held by the commander: no order"));

@@ -17,8 +17,8 @@ use crate::events::Cause;
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
 use crate::ids::{
-    AirGroupId, AircraftTypeId, BaseId, EventId, LandUnitId, OrderId, ShipClassId, ShipId,
-    TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, EntityRef, EventId, FormationId, LandUnitId, OrderId,
+    ShipClassId, ShipId, TaskForceId,
 };
 use crate::map::{Map, Terrain};
 use crate::orders::{
@@ -115,6 +115,11 @@ pub struct Ship {
     /// ship carries men of one unit only, never more than its class's troop
     /// capacity, and `Some` always holds at least one man.
     pub troops: Option<Troops>,
+    /// The day from which the ship's side may use her (decision 0140, 1),
+    /// set by the scenario and never changed. `None`: from day 1. Before
+    /// the later of this and her task force's day no order to her is taken
+    /// ([`TruthState::available_from`]). Added at the end.
+    pub available_from: Option<u32>,
 }
 
 /// Men of one land unit aboard a ship (decision 0066, 2).
@@ -170,6 +175,7 @@ impl Ship {
         location: ShipLocation,
     ) -> Ship {
         Ship {
+            available_from: None,
             id,
             name,
             class,
@@ -718,6 +724,10 @@ pub struct TaskForce {
     /// task force of its side that it keeps station on. `None` for a force
     /// with no charge. Added at the end.
     pub charge: Option<Charge>,
+    /// The day from which the force's side may use it (decision 0140, 1),
+    /// set by the scenario and never changed. `None`: from day 1. A force
+    /// made in play has none. Added at the end.
+    pub available_from: Option<u32>,
 }
 
 /// A force's charge (decision 0121, 1): the task force it escorts and the
@@ -872,6 +882,7 @@ impl TaskForce {
     /// A task force sitting at a hex with no route.
     pub fn at(id: TaskForceId, name: String, side: Side, hex: Hex, mission: Mission) -> TaskForce {
         TaskForce {
+            available_from: None,
             id,
             name,
             side,
@@ -1027,6 +1038,11 @@ pub struct AirGroup {
     pub search_once: bool,
     /// The standing order that set search once a day, if any (decision 0131).
     pub search_once_order: Option<OrderId>,
+    /// The day from which the group's side may use it (decision 0140, 1),
+    /// set by the scenario and never changed. `None`: from day 1. A group
+    /// aboard a ship takes the later of this and the ship's. Added at the
+    /// end.
+    pub available_from: Option<u32>,
 }
 
 impl AirGroup {
@@ -1058,6 +1074,7 @@ impl AirGroup {
         aircraft_type: AircraftTypeId,
     ) -> AirGroup {
         AirGroup {
+            available_from: None,
             id,
             name,
             side,
@@ -1190,6 +1207,27 @@ pub struct LandUnit {
     /// back, is taken aboard or is set to attack (decision 6), and worn by
     /// hits on men (decision 12).
     pub fieldworks: Fixed,
+    /// The day from which the unit's side may use it (decision 0140, 1),
+    /// set by the scenario and never changed. `None`: from day 1. A unit
+    /// with men aboard ships takes the later of this and each such ship's.
+    /// Added at the end.
+    pub available_from: Option<u32>,
+    /// The formation the unit belongs to (decision 0140, 7), set by the
+    /// scenario and never changed. No rule reads it.
+    pub formation: Option<FormationId>,
+}
+
+/// A formation of land units (decision 0140, 7): a battalion under a
+/// regiment under a division. Set by the scenario and never changed; no
+/// rule reads it. A formation is not a command (decision 0139, 10).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Formation {
+    pub id: FormationId,
+    pub name: String,
+    pub side: Side,
+    /// The formation it belongs to, if any. Never itself or one of its own
+    /// descendants: the loader refuses a loop.
+    pub parent: Option<FormationId>,
 }
 
 /// A land unit's skills (decision 0098, 1 to 4): each a whole number from 0
@@ -1295,6 +1333,8 @@ impl LandUnit {
         hex: Option<Hex>,
     ) -> LandUnit {
         LandUnit {
+            available_from: None,
+            formation: None,
             id,
             name,
             side,
@@ -1342,6 +1382,9 @@ pub struct TruthState {
     /// strain on them and then empties it (decision 10 of 0106). Empty at
     /// the end of every day.
     pub hits_on_men: BTreeMap<(Hex, Side), HitsOnMen>,
+    /// The formations of land units (decision 0140, 7). Empty in a scenario
+    /// without any. Added at the end.
+    pub formations: BTreeMap<FormationId, Formation>,
 }
 
 /// A day's hits on the men of one side in one hex (decision 10 of 0106):
@@ -1353,6 +1396,73 @@ pub struct HitsOnMen {
 }
 
 impl TruthState {
+    /// The day from which `unit`'s side may use it (decision 0140, 2): the
+    /// later of its own day and the days it takes from what carries it.
+    /// `None` where none of them has a day, or for a unit that is not
+    /// there; such a unit may be used from day 1.
+    ///
+    /// - A ship: the later of her own day and her task force's (the force
+    ///   she is in, or away from at the yard).
+    /// - A task force: the later of its own day and each ship's own day,
+    ///   for an order to the force moves every ship in it.
+    /// - An air group aboard a ship: the later of its own and the ship's,
+    ///   as a ship's is read.
+    /// - A land unit: the later of its own and that of each ship with its
+    ///   men aboard.
+    ///
+    /// Bases have no day. The one place the rule is written: intake and the
+    /// side's view both read it.
+    pub fn available_from(&self, unit: EntityRef) -> Option<u32> {
+        match unit {
+            EntityRef::Ship(id) => {
+                let ship = self.ships.get(&id)?;
+                let force = match ship.location {
+                    ShipLocation::TaskForce(force) | ShipLocation::Yard(force) => self
+                        .task_forces
+                        .get(&force)
+                        .and_then(|found| found.available_from),
+                    ShipLocation::Port(_) | ShipLocation::Sunk => None,
+                };
+                later(ship.available_from, force)
+            }
+            EntityRef::TaskForce(id) => {
+                let force = self.task_forces.get(&id)?;
+                let ships = self
+                    .ships
+                    .values()
+                    .filter(|ship| {
+                        matches!(
+                            ship.location,
+                            ShipLocation::TaskForce(f) | ShipLocation::Yard(f) if f == id
+                        )
+                    })
+                    .filter_map(|ship| ship.available_from)
+                    .max();
+                later(force.available_from, ships)
+            }
+            EntityRef::AirGroup(id) => {
+                let group = self.air_groups.get(&id)?;
+                let carrier = match group.location {
+                    AirGroupLocation::Ship(ship) => self.available_from(EntityRef::Ship(ship)),
+                    _ => None,
+                };
+                later(group.available_from, carrier)
+            }
+            EntityRef::LandUnit(id) => {
+                let unit = self.land_units.get(&id)?;
+                let ships = self
+                    .ships
+                    .values()
+                    .filter(|ship| ship.troops.is_some_and(|troops| troops.unit == id))
+                    .filter(|ship| ship.location != ShipLocation::Sunk)
+                    .filter_map(|ship| self.available_from(EntityRef::Ship(ship.id)))
+                    .max();
+                later(unit.available_from, ships)
+            }
+            _ => None,
+        }
+    }
+
     /// The men of a land unit aboard ships that are afloat (decision 0066).
     pub fn men_aboard(&self, unit: LandUnitId) -> u32 {
         self.ships
@@ -1461,5 +1571,14 @@ impl TruthState {
             },
             AirGroupLocation::Lost => None,
         }
+    }
+}
+
+/// The later of two days, either of which may be absent (decision 0140, 2).
+fn later(a: Option<u32>, b: Option<u32>) -> Option<u32> {
+    match (a, b) {
+        (Some(a), Some(b)) => Some(a.max(b)),
+        (a, None) => a,
+        (None, b) => b,
     }
 }

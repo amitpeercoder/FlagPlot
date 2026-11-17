@@ -16,6 +16,10 @@ use sim_core::view::SideView;
 pub(crate) struct Fleet<'v> {
     pub(crate) ships: BTreeMap<ShipId, &'v Ship>,
     pub(crate) forces: BTreeMap<TaskForceId, &'v TaskForce>,
+    /// The ships the side may not use yet, each with the day it may be used
+    /// from (decision 0140, 3). They are in `ships` all the same: they are
+    /// there, and only a choice of what to order leaves them out.
+    pub(crate) waiting: BTreeMap<ShipId, u32>,
 }
 
 impl<'v> Fleet<'v> {
@@ -23,6 +27,9 @@ impl<'v> Fleet<'v> {
         Fleet {
             ships: view.ships().map(|ship| (ship.id, ship)).collect(),
             forces: view.task_forces().map(|force| (force.id, force)).collect(),
+            waiting: crate::available::ships_waiting(view, view.ships().map(|ship| ship.id))
+                .into_iter()
+                .collect(),
         }
     }
 
@@ -199,21 +206,39 @@ pub(crate) fn held_ships(
     held
 }
 
+/// Whether the forces limit lists the ship or the force it lies in.
+fn in_limit(ship: &Ship, forces: &ForcesLimit) -> bool {
+    forces.ships.contains(&ship.id)
+        || matches!(
+            ship.location,
+            ShipLocation::TaskForce(force) | ShipLocation::Yard(force)
+                if forces.task_forces.contains(&force)
+        )
+}
+
 /// The ships of the side afloat that the forces limit gives to the staff:
-/// those it lists and those in a force it lists.
+/// those it lists and those in a force it lists, and that the side may use
+/// (decision 0140, 3): a ship before its day is in no pool.
 pub(crate) fn pool_ships(fleet: &Fleet<'_>, forces: &ForcesLimit) -> BTreeSet<ShipId> {
     fleet
         .ships
         .values()
         .filter(|ship| ship.location != ShipLocation::Sunk)
-        .filter(|ship| {
-            forces.ships.contains(&ship.id)
-                || matches!(
-                    ship.location,
-                    ShipLocation::TaskForce(force) | ShipLocation::Yard(force)
-                        if forces.task_forces.contains(&force)
-                )
-        })
+        .filter(|ship| in_limit(ship, forces))
+        .filter(|ship| !fleet.waiting.contains_key(&ship.id))
         .map(|ship| ship.id)
+        .collect()
+}
+
+/// The ships afloat that the forces limit lists and that the side may not
+/// use yet, each with its day, in ship order: what a reason that lists the
+/// pool names with the day.
+pub(crate) fn waiting_ships(fleet: &Fleet<'_>, forces: &ForcesLimit) -> Vec<(ShipId, u32)> {
+    fleet
+        .ships
+        .values()
+        .filter(|ship| ship.location != ShipLocation::Sunk)
+        .filter(|ship| in_limit(ship, forces))
+        .filter_map(|ship| Some((ship.id, *fleet.waiting.get(&ship.id)?)))
         .collect()
 }

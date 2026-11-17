@@ -47,7 +47,15 @@ A scenario's `[[land_unit]]` entry gives `id`, `name`, `side` and `men`, and eit
 - marks a unit `working` and gives it the posture attack. [0099]
 - gives a unit fieldworks outside 0 to the fieldworks limit, or above 0 for a working unit, a unit on attack or a unit with no men ashore (a unit aboard ships). [0106]
 
+A unit may also give `available_from`, the day from which its side may use it (chapter 1, A day from which a unit may be used), and `formation`, the number of a formation it belongs to. [0140]
+
 Units are put aboard in unit order, each over the force's ships in ship order, into a ship that has no men aboard or holds men of this unit, each up to its troop capacity. A unit that is aboard has no men ashore. The game is also refused when it is built (`World::new`) if there are land units and no ground figures, or if the ground figures are wrong (below, Data keys). [0066 items 3 and 4, Settled before the build, 0090 items 1 and 11, 0097 items 1 and 3]
+
+### Formations
+
+A scenario may state formations of land units, `[[formation]]` with `id`, `name`, `side` and an optional `parent`, the number of the formation it belongs to: a battalion under a regiment under a division. A land unit's `formation` names the formation it belongs to. The loader refuses a formation numbered 0 or twice, a parent that is not there or is of the other side, a formation that is its own ancestor, and a land unit whose formation is not there or is of the other side. No rule reads a formation: it is data, so that a staff can later choose and move a formation whole. A formation is not a command. The state keeps the formations and each unit's formation, and they are in the hash. [0140 items 7 and 8]
+
+A side sees: its own formations and their parents, and its own units' formations. Nothing of the enemy's. [0140 item 8]
 
 ### Troop capacity
 

@@ -2,12 +2,12 @@ Scenario 34: Cover, men who dig in, and a place under bombardment
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e267493403f9881c  39 events
-day   2  hash a9a786aaa15dbcdb  58 events
-day   3  hash 9dae92bf4ee694df  56 events
-day   4  hash 6fc4b27f5dd5e4ac  39 events
-day   5  hash f2fdca21a136f480  28 events
-day   6  hash 4eecae13c9bba706  26 events
+day   1  hash 5d79214b63be4d13  39 events
+day   2  hash 6cba3c51e3443610  58 events
+day   3  hash 216f612a93367946  56 events
+day   4  hash db55ed6606d9cad1  39 events
+day   5  hash 0be28e75edce8be1  28 events
+day   6  hash a6cdec1e002484af  26 events
 
 #1 D1 -         order:1 accepted for land_unit:2  <- order:1
 #2 D1 -         order:2 accepted for land_unit:3  <- order:2

@@ -468,6 +468,12 @@ impl World {
     /// [`RejectReason::NotAsHeld`], naming what it held and the moment that
     /// was of. Any other order is checked as before.
     pub(crate) fn validate_order(&self, order: &crate::orders::Order) -> Result<(), RejectReason> {
+        // A unit before its day (decision 0140, 2) is refused first, from
+        // anyone: a side knows its own days exactly, so it is no matter of
+        // what the area command holds.
+        if let Some(refused) = self.not_yet_available(order.side, &order.kind, order.day_issued) {
+            return Err(refused);
+        }
         let reason = match self.validate_order_on_truth(order) {
             Ok(()) => return Ok(()),
             Err(reason) => reason,

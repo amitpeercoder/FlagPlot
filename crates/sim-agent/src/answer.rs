@@ -46,8 +46,12 @@ pub const FORMAT: &str = "flagplot-agent";
 /// of play; the easier setting at the area seat; `objectives`'
 /// `not_given_to_this_seat`; with command levels on, `command_state`'s
 /// `picture` and `forces_held`; and the command report's `refusals`
-/// (decision 0138, 3 and 4).
-pub const VERSION: u32 = 16;
+/// (decision 0138, 3 and 4). 17 adds a unit's `available_from` (the day its
+/// side may use it, given only while that day has not come) to the lines of
+/// `list_forces` and the briefing, to `get_entity` and to `command_state`'s
+/// forces limits, a land unit's `formation` and its `parents` in
+/// `get_entity`, and the refusal `not yet available` (decision 0140).
+pub const VERSION: u32 = 17;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

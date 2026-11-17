@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 16
+      "const": 17
     },
     "kind": {
       "const": "command_state"
@@ -383,7 +383,8 @@
           "place": { "$ref": "defs.schema.json#/$defs/place" },
           "as_of": { "type": "string", "description": "The moment the held state is of, as list_forces says it: \"the start\", \"the morning of day 2\". Always given here." },
           "current": { "type": "boolean", "description": "True when it is of the pulse just ended." },
-          "radio_silence": { "type": "boolean", "description": "A task force only: whether it is on radio silence." }
+          "radio_silence": { "type": "boolean", "description": "A task force only: whether it is on radio silence." },
+          "available_from": { "description": "The day from which the side may use the unit (decision 0140, 5), given only while that day has not come. Left out otherwise.", "type": "integer", "minimum": 1 }
         }
       }
     },
