@@ -218,6 +218,8 @@ Regenerated after decision 0140 (a day from which a unit may be used, and format
 
 Regenerated after decision 0141 (units made ready, and a base built up: the state layout at version 40, saved game version 15, the doctrine version `supply-21`, the agent interface version 18; the rules label unchanged, 18; Nov 17, 2026), with `regame.py`. Each `save.json` differs only in its versions and its day hashes. Each transcript differs only in the answers' `version` (17 to 18) and the doctrine version they name, but for `second_proof_week_sonnet`, whose two `command_state` answers also give each intent the new keys `by_day`, `wants` and `defences` (null for its hold intents) and `land_units_binding` in its limits read up (null). None of these games states either task, so no order, command, event or result changed.
 
+Regenerated after decision 0142 (taking a place: the state layout at version 41, saved game version 16, the doctrine version `supply-22`, the agent interface version 19; the rules label unchanged, 18; Nov 17, 2026), with `regame.py`. Each `save.json` differs only in its versions and its day hashes. Each transcript differs only in the answers' `version` (18 to 19), the doctrine version they name, and, in a `command_state` answer, each intent's new key `phase` (null for its intents). None of these games states "take a place", so no order, command, event or result changed.
+
 ## The proof of stage 2b (Nov 17, 2026)
 
 Two folders from the proof of stage 2b (decision 0138, `docs/validation/stage-2b-proof.md`), neither with a `game.jsonl`, so neither is replayed by `regame.py` or the `mcp` tests:

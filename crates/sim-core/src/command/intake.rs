@@ -329,7 +329,16 @@ impl World {
                     .plans
                     .get(&found.plan)
                     .map_or(PlanState::Draft, |plan| plan.state);
-                if plan_state != PlanState::Released {
+                // "Ready a landing" under "take a place" is formed while the
+                // plan is preparing as well (decision 0142, 12).
+                let preparing_will_do = matches!(
+                    (kind, found.kind),
+                    (
+                        IntentKind::ReadyLanding { .. },
+                        IntentKind::TakePlace { .. }
+                    )
+                ) && plan_state == PlanState::Preparing;
+                if plan_state != PlanState::Released && !preparing_will_do {
                     return Err(CommandRefusal::WrongPlanState(plan_state));
                 }
                 if !kind.may_stand_under(found.kind) {
@@ -355,13 +364,24 @@ impl World {
                 if let Some(intent) = limit.intent() {
                     let found = self.in_force_intent(side, intent)?;
                     parent = found.parent;
+                    // The staff sets a forces limit only on an intent it
+                    // formed (decision 0142, 12).
+                    if issuer == Issuer::Staff && found.maker != Maker::Staff {
+                        return Err(CommandRefusal::NotYours);
+                    }
                     if let Limit::Forces { limit, .. } = limit {
-                        if matches!(found.kind, IntentKind::KeepSupplied { .. })
-                            && limit.source.is_none()
+                        // As for keeping a base supplied, taking a place
+                        // needs a source (decision 0142, 2).
+                        if matches!(
+                            found.kind,
+                            IntentKind::KeepSupplied { .. } | IntentKind::TakePlace { .. }
+                        ) && limit.source.is_none()
                         {
                             return Err(CommandRefusal::NoSource);
                         }
                     }
+                } else if issuer == Issuer::Staff {
+                    return Err(CommandRefusal::NotYours);
                 }
                 match limit {
                     Limit::Forces { limit, .. } => {
@@ -750,6 +770,19 @@ impl World {
                 .is_some_and(|data| data.kind == crate::map::HexKind::Coast);
             if !coast {
                 return Err(CommandRefusal::NotACoastHex(hex));
+            }
+        }
+        // The place of "take a place" is a hex of land on the map (decision
+        // 0142, 1): a coast hex or a hex inland.
+        if let Some(hex) = kind.place() {
+            let land = self.map.get(hex).is_some_and(|data| {
+                matches!(
+                    data.kind,
+                    crate::map::HexKind::Coast | crate::map::HexKind::Land
+                )
+            });
+            if !land {
+                return Err(CommandRefusal::NotLand(hex));
             }
         }
         if let IntentKind::KeepSupplied {

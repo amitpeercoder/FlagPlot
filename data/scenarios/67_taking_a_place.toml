@@ -1,0 +1,149 @@
+# Scenario 67: taking a place.
+#
+# Decision 0142, step 3 of stage 3. The commander names a place, a
+# transport force, three units and the base they sail from. The staff picks
+# the two units the ships can carry, by what each is good at, makes the
+# landing ready, asks leave to launch, and on leave loads supply, embarks the
+# men, sails, lands them on attack and takes an airfield nobody defends.
+#
+# The map is scenario 27's: A at (0,0), a coast hex with port size 5, and B
+# at (4,0), a coast hex with port size 0. A to B is 4 hexes, 160 nm. Allied
+# base 1 lies at A; Japanese base 2, an airfield with no gun, no aircraft and
+# no man, lies at B. Task force 1, two placeholder troop transports, lies
+# stopped in port at A with nothing aboard. Three Allied fighting units are
+# ashore at A. The Allied side holds no estimate of the enemy's men at B.
+# The commander states "take the place at B" on day 1 with a forces limit of
+# task force 1, units 1, 2 and 3 and base 1 as the source, and gives leave
+# to prepare; leave to launch is withheld until day 7. The game is 14 days.
+# There is no Japanese man, so no die is rolled.
+#
+# The hand calculation is in tests/scenario_67_taking_a_place.rs. The test
+# runs this file on the frozen step 1 figures with five ground figures of its
+# own: preparation_per_day 25, training_days_per_level 3,
+# assault_skill_strength 0.25, unprepared_landing_share 0.5 and
+# unprepared_landing_fatigue 40. It builds its variants from the text of this
+# file using the markers below.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures and map are invented.
+
+name = "Placeholder scenario 67: Taking a place"
+placeholder = true
+seed = 1942
+days = 14
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel to give.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: no gun, no aircraft, no man, no stock.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The land units, ashore at A, all fighting units.
+[[land_unit]]
+id = 1
+name = "Placeholder Raw"
+side = "allied"
+men = 600
+q = 0
+r = 0
+experience = 1
+
+[[land_unit]]
+id = 2
+name = "Placeholder Sound"
+side = "allied"
+men = 600
+q = 0
+r = 0
+experience = 2
+
+[[land_unit]]
+id = 3
+name = "Placeholder Assault"
+side = "allied"
+men = 600
+q = 0
+r = 0
+experience = 2
+skills = { assault = 4 }
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "take_place"
+hex = [4, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [1]
+land_units = [1, 2, 3]
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 7
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

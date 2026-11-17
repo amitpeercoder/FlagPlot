@@ -537,7 +537,7 @@
                       "type": "null"
                     }
                   ],
-                  "description": "The centre of the waters of a deny intent as [q, r] (decision 0123); null for the other kinds."
+                  "description": "The centre of the waters of a deny intent as [q, r] (decision 0123), the station of a stand_at or operate_carriers intent, the landing hex of a ready_landing intent or the place of a take_place intent; null for the other kinds."
                 },
                 "distance": {
                   "type": [
@@ -551,7 +551,7 @@
                     "integer",
                     "null"
                   ],
-                  "description": "The side's number of the task force a stand_at, operate_carriers or ready_landing intent names (decisions 0124, 0125 and 0141); null for the other kinds."
+                  "description": "The side's number of the task force a stand_at, operate_carriers or ready_landing intent names (decisions 0124, 0125 and 0141); null for the other kinds (a take_place has none)."
                 },
                 "floor_days": {
                   "type": [
@@ -567,7 +567,7 @@
                 },
                 "by_day": {
                   "type": ["integer", "null"],
-                  "description": "The morning of the day a ready_landing intent is to be ready by (decision 0141); null for the other kinds and for a landing with no date."
+                  "description": "The morning of the day a ready_landing or take_place intent is to be ready by or to have taken the place by (decisions 0141 and 0142); null for the other kinds and for one with no date."
                 },
                 "wants": {
                   "oneOf": [
@@ -596,7 +596,8 @@
                     "stand_at",
                     "operate_carriers",
                     "ready_landing",
-                    "build_up"
+                    "build_up",
+                    "take_place"
                   ]
                 }
               }

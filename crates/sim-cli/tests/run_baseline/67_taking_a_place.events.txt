@@ -1,0 +1,182 @@
+Placeholder scenario 67: Taking a place
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash f22c2415267559ed  26 events
+day   2  hash 570c082a2eabeef8  12 events
+day   3  hash 2064b7a58ffc775d  12 events
+day   4  hash 56fc964dfb508297  9 events
+day   5  hash e58440dad29ef5a9  9 events
+day   6  hash 844d3b5a6fcdaa50  9 events
+day   7  hash eef4fa076937fe01  10 events
+day   8  hash 99cec73ee735984f  9 events
+day   9  hash 630a9edc6b29a2e4  9 events
+day  10  hash 83795ae3bfaaf09f  9 events
+day  11  hash fb649058a168efee  9 events
+day  12  hash d3a80179048e63bf  9 events
+day  13  hash 8c5fc45fab70ca29  9 events
+day  14  hash a972699a3e0ab400  9 events
+
+#1 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)
+#2 D1 -         Allied plan:1 drafted for intent:1  <- #1
+#3 D1 -         Allied the commander's command taken: limit intent:1's forces to 0 ships and 1 task force from base:1
+#4 D1 -         Allied the commander's command taken: give the leave to prepare
+#5 D1 -         Allied the staff's command taken: approve plan:1
+#6 D1 -         Allied plan:1 went from draft to preparing  <- #5
+#7 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: take the place at (4,0); plan 1; decided at the level of the area]: plan:1, the plan to take the place at (4,0), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #5
+#8 D1 -         Allied the staff's command taken: form under intent:1 an intent to ready a landing at (4,0) by task_force:1
+#9 D1 -         Allied staff forms intent:2 under intent:1  <- #8
+#10 D1 -         Allied staff's reason for the command to form under intent:1 an intent to ready a landing at (4,0) by task_force:1 [serves intent 1: take the place at (4,0); plan 1; decided at the level of the area]: the side holds no estimate of the enemy's men at (4,0): the staff takes every unit the ships can carry and goes with no count of the enemy; the units in their order, the higher assault skill first, then the higher experience, then the lower number: land_unit:3 (Placeholder Assault): assault skill 4, experience 2, 600 men; land_unit:2 (Placeholder Sound): assault skill 2, experience 2, 600 men; land_unit:1 (Placeholder Raw): assault skill 2, experience 1, 600 men; the berths: 1200 men in 1200 berths in 2 ships of task_force:1 (land_unit:3 takes 1 ship; land_unit:2 takes 1 ship); left out: land_unit:1 (Placeholder Raw) (600 men) is left out: no ship is left for it; the supply is the daily charge of the 1200 men chosen, 6 t a day, for 15 days = 90 t: 90 t to take; the days: 3 to embark (1 for the supply and 1 for each of the 2 units ashore) and 1 day of passage (160 nm at 10 kn = 16 hours). The staff forms intent:2, ready a landing by task_force:1 at (4,0), under intent:1.  <- #8
+#11 D1 -         Allied the staff's command taken: limit intent:2's forces to 0 ships and 0 task forces
+#12 D1 -         Allied plan:1 amended, amendment 1  <- #11
+#13 D1 -         Allied staff's reason for the command to limit intent:2's forces to 0 ships and 0 task forces [serves intent 1: take the place at (4,0); plan 1; decided at the level of the area]: the side holds no estimate of the enemy's men at (4,0): the staff takes every unit the ships can carry and goes with no count of the enemy; the units in their order, the higher assault skill first, then the higher experience, then the lower number: land_unit:3 (Placeholder Assault): assault skill 4, experience 2, 600 men; land_unit:2 (Placeholder Sound): assault skill 2, experience 2, 600 men; land_unit:1 (Placeholder Raw): assault skill 2, experience 1, 600 men; the berths: 1200 men in 1200 berths in 2 ships of task_force:1 (land_unit:3 takes 1 ship; land_unit:2 takes 1 ship); left out: land_unit:1 (Placeholder Raw) (600 men) is left out: no ship is left for it; the supply is the daily charge of the 1200 men chosen, 6 t a day, for 15 days = 90 t: 90 t to take; the days: 3 to embark (1 for the supply and 1 for each of the 2 units ashore) and 1 day of passage (160 nm at 10 kn = 16 hours). The staff sets the forces limit of intent:2 to land_unit:2 and land_unit:3.  <- #11
+#14 D1 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 0, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 0 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 0 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#15 D1 -         order:1 accepted for task_force:1  <- order:1  [issued by the staff]
+#16 D1 -         Allied staff's reason for order:1 [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: task_force:1 is to land at (4,0) with land_unit:2, land_unit:3: the staff gives it the landing order with that roster.  <- order:1, #15
+#17 D1 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 991 t left
+#18 D1 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #17
+#19 D1 -         task_force:1 loaded for the landing at (4,0): loading 5  <- order:1
+#20 D1 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 5  <- order:1
+#21 D1 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 7.5  <- order:1
+#22 D1 -         land_unit:1 dug in: fieldworks 10
+#23 D1 -         land_unit:2 dug in: fieldworks 10
+#24 D1 -         land_unit:3 dug in: fieldworks 10
+#25 D1 -         base:1 at the end of the day: 991 t of supply, 0 aircraft ready: not open
+#26 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#27 D2 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 5, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#28 D2 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 5, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 5 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 7.5 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#29 D2 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 982 t left
+#30 D2 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #29
+#31 D2 -         task_force:1 loaded for the landing at (4,0): loading 10  <- order:1
+#32 D2 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 10  <- order:1
+#33 D2 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 15  <- order:1
+#34 D2 -         land_unit:1 dug in: fieldworks 20
+#35 D2 -         land_unit:2 dug in: fieldworks 20
+#36 D2 -         land_unit:3 dug in: fieldworks 20
+#37 D2 -         base:1 at the end of the day: 982 t of supply, 0 aircraft ready: not open
+#38 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#39 D3 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 10, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#40 D3 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 10, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 10 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 15 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#41 D3 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 973 t left
+#42 D3 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #41
+#43 D3 -         task_force:1 loaded for the landing at (4,0): loading 15  <- order:1
+#44 D3 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 15  <- order:1
+#45 D3 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 22.5  <- order:1
+#46 D3 -         land_unit:1 dug in: fieldworks 30
+#47 D3 -         land_unit:2 dug in: fieldworks 30
+#48 D3 -         land_unit:3 dug in: fieldworks 30
+#49 D3 -         base:1 at the end of the day: 973 t of supply, 0 aircraft ready: not open
+#50 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#51 D4 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 15, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#52 D4 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 15, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 15 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 22.5 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#53 D4 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 964 t left
+#54 D4 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #53
+#55 D4 -         task_force:1 loaded for the landing at (4,0): loading 20  <- order:1
+#56 D4 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 20  <- order:1
+#57 D4 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 30  <- order:1
+#58 D4 -         base:1 at the end of the day: 964 t of supply, 0 aircraft ready: not open
+#59 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#60 D5 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 20, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#61 D5 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 20, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 20 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 30 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#62 D5 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 955 t left
+#63 D5 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #62
+#64 D5 -         task_force:1 loaded for the landing at (4,0): loading 25  <- order:1
+#65 D5 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 25  <- order:1
+#66 D5 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 37.5  <- order:1
+#67 D5 -         base:1 at the end of the day: 955 t of supply, 0 aircraft ready: not open
+#68 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#69 D6 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 25, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#70 D6 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 25, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 25 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 37.5 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#71 D6 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 946 t left
+#72 D6 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #71
+#73 D6 -         task_force:1 loaded for the landing at (4,0): loading 30  <- order:1
+#74 D6 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 30  <- order:1
+#75 D6 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 45  <- order:1
+#76 D6 -         base:1 at the end of the day: 946 t of supply, 0 aircraft ready: not open
+#77 D6 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#78 D7 -         Allied the commander's command taken: give the leave to launch
+#79 D7 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 30, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#80 D7 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 30, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 30 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 45 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#81 D7 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 937 t left
+#82 D7 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #81
+#83 D7 -         task_force:1 loaded for the landing at (4,0): loading 35  <- order:1
+#84 D7 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 35  <- order:1
+#85 D7 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 52.5  <- order:1
+#86 D7 -         base:1 at the end of the day: 937 t of supply, 0 aircraft ready: not open
+#87 D7 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#88 D8 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 35, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#89 D8 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 35, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 35 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 52.5 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#90 D8 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 928 t left
+#91 D8 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #90
+#92 D8 -         task_force:1 loaded for the landing at (4,0): loading 40  <- order:1
+#93 D8 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 40  <- order:1
+#94 D8 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 60  <- order:1
+#95 D8 -         base:1 at the end of the day: 928 t of supply, 0 aircraft ready: not open
+#96 D8 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#97 D9 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 40, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#98 D9 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 40, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 40 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 60 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#99 D9 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 919 t left
+#100 D9 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #99
+#101 D9 -         task_force:1 loaded for the landing at (4,0): loading 45  <- order:1
+#102 D9 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 45  <- order:1
+#103 D9 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 67.5  <- order:1
+#104 D9 -         base:1 at the end of the day: 919 t of supply, 0 aircraft ready: not open
+#105 D9 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#106 D10 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 45, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#107 D10 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 45, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 45 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 67.5 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#108 D10 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 910 t left
+#109 D10 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #108
+#110 D10 -         task_force:1 loaded for the landing at (4,0): loading 50  <- order:1
+#111 D10 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 50  <- order:1
+#112 D10 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 75  <- order:1
+#113 D10 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#114 D10 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#115 D11 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 50, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#116 D11 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 50, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 50 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 75 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#117 D11 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 901 t left
+#118 D11 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #117
+#119 D11 -         task_force:1 loaded for the landing at (4,0): loading 55  <- order:1
+#120 D11 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 55  <- order:1
+#121 D11 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 82.5  <- order:1
+#122 D11 -         base:1 at the end of the day: 901 t of supply, 0 aircraft ready: not open
+#123 D11 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#124 D12 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 55, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#125 D12 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 55, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 55 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 82.5 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#126 D12 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 892 t left
+#127 D12 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #126
+#128 D12 -         task_force:1 loaded for the landing at (4,0): loading 60  <- order:1
+#129 D12 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 60  <- order:1
+#130 D12 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 90  <- order:1
+#131 D12 -         base:1 at the end of the day: 892 t of supply, 0 aircraft ready: not open
+#132 D12 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#133 D13 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 60, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#134 D13 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 60, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 60 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 90 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#135 D13 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 883 t left
+#136 D13 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #135
+#137 D13 -         task_force:1 loaded for the landing at (4,0): loading 65  <- order:1
+#138 D13 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 65  <- order:1
+#139 D13 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 97.5  <- order:1
+#140 D13 -         base:1 at the end of the day: 883 t of supply, 0 aircraft ready: not open
+#141 D13 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#142 D14 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is not ready: the force's loading for (4,0) is 65, of the 100 asked at balanced; at balanced with no date it would be ready on the morning of day 21, and what binds is the force's loading. Every order it needs stands: the staff gives no order.
+#143 D14 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 65, of the 100 asked at balanced; land_unit:2 (Placeholder Sound) has rehearsal 65 and experience 2; land_unit:3 (Placeholder Assault) has rehearsal 97.5 and experience 2; it expects the landing to be ready on the morning of day 21. The staff gives no order under intent:1 before then.
+#144 D14 night     base:1 spent 9 t of supply on 1800 men ashore for the day, 874 t left
+#145 D14 night     Allied men ashore at (0,0): 1800 of 1800 fed from base:1, 0 unfed  <- #144
+#146 D14 -         task_force:1 loaded for the landing at (4,0): loading 70  <- order:1
+#147 D14 -         land_unit:2 rehearsed the landing at (4,0) with task_force:1: rehearsal 70  <- order:1
+#148 D14 -         land_unit:3 rehearsed the landing at (4,0) with task_force:1: rehearsal 100  <- order:1
+#149 D14 -         base:1 at the end of the day: 874 t of supply, 0 aircraft ready: not open
+#150 D14 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 874 t of supply in stock
+base:2 "Placeholder airfield B" (Japanese) at (4,0): 0 t of supply in stock
+land_unit:1 "Placeholder Raw" (Allied): 600 men ashore at (0,0), fieldworks 30
+land_unit:2 "Placeholder Sound" (Allied): 600 men ashore at (0,0), fieldworks 30
+land_unit:3 "Placeholder Assault" (Allied): 600 men ashore at (0,0), fieldworks 30
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

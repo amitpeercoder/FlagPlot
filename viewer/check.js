@@ -372,7 +372,7 @@ function checkSideSteps(replay, side, sr, model, label) {
 // ---- Command: the intent tree, the orders under each intent, the reasons (decisions 0107, 0116, 0117, 0120) ----
 // The page's tree is read from the steps' `commands` and the staff's reasons; here it is checked against `final.commands` and against
 // itself, with its own, separate table of who an intent is addressed to.
-const ADDRESSEE_OF = { keep_supplied: () => 'area', neutralise: () => 'area', deny: () => 'area', cover: i => 'base:' + i.base, hold: i => 'base:' + i.base, raid: i => 'base:' + i.base, strike_ships: i => 'base:' + i.base, search_waters: i => 'base:' + i.base, stand_at: i => 'task_force:' + i.task_force, operate_carriers: i => 'task_force:' + i.task_force, ready_landing: i => 'task_force:' + i.task_force, build_up: i => 'base:' + i.base };
+const ADDRESSEE_OF = { keep_supplied: () => 'area', neutralise: () => 'area', deny: () => 'area', cover: i => 'base:' + i.base, hold: i => 'base:' + i.base, raid: i => 'base:' + i.base, strike_ships: i => 'base:' + i.base, search_waters: i => 'base:' + i.base, stand_at: i => 'task_force:' + i.task_force, operate_carriers: i => 'task_force:' + i.task_force, ready_landing: i => 'task_force:' + i.task_force, build_up: i => 'base:' + i.base, take_place: () => 'area' };
 
 function checkCommand(replay, model, label, sides) {
   const notes = { intents: 0, orders: 0, reasons: 0 };
@@ -528,7 +528,7 @@ function checkSituation(replay, model, label, side) {
           const want = replay.map.hexes.filter(h => hexDist([h.q, h.r], it.hex) <= it.distance).length;
           assert(a && a.hexes.length === want && a.edges.length >= 1, label + ': deny intent ' + it.id + ' outlines ' + (a && a.hexes.length) + ' hexes, the map has ' + want + ' within ' + it.distance);
           if (a) for (const [h, d] of a.edges) { const dir = replay.directions[d]; assert(!a.hexes.some(x => x[0] === h[0] + dir[0] && x[1] === h[1] + dir[1]), label + ': an outline edge has a hex of the waters beyond it'); }
-        } else if (it.kind === 'stand_at' || it.kind === 'operate_carriers' || it.kind === 'ready_landing') assert(kinds.includes('ring') && res.shapes.find(x => x.type === 'ring').hex.join() === it.hex.join(), label + ': intent ' + it.id + ' does not ring its station');
+        } else if (it.kind === 'stand_at' || it.kind === 'operate_carriers' || it.kind === 'ready_landing' || it.kind === 'take_place') assert(kinds.includes('ring') && res.shapes.find(x => x.type === 'ring').hex.join() === it.hex.join(), label + ': intent ' + it.id + ' does not ring its station');
         else if (it.kind === 'raid') assert(res.shapes.some(x => x.type === 'line') && kinds.includes('ring'), label + ': raid ' + it.id + ' draws no line to its target');
         else if (it.kind === 'hold' || it.kind === 'cover' || it.kind === 'keep_supplied' || it.kind === 'build_up') assert(kinds.includes('ring'), label + ': intent ' + it.id + ' does not ring its base');
       }

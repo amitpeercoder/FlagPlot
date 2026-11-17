@@ -658,11 +658,16 @@ fn dispatch(
     let mut waypoints = route.out.clone();
     waypoints.extend(route.back.iter().copied());
     // Decision 0126: an escort, or the run held, or it sails alone.
-    let (escort_words, escort) =
-        match crate::escort::for_run(planner, force, &waypoints, timing.speed_kn, today) {
-            crate::escort::ForRun::Held(why) => return Err(Unsent::Held(why)),
-            crate::escort::ForRun::Sails { words, escort } => (words, escort),
-        };
+    let (escort_words, escort) = match crate::escort::for_run(
+        &crate::escort::RunContext::of(planner),
+        force,
+        &waypoints,
+        timing.speed_kn,
+        today,
+    ) {
+        crate::escort::ForRun::Held(why) => return Err(Unsent::Held(why)),
+        crate::escort::ForRun::Sails { words, escort } => (words, escort),
+    };
     let mut new_days = run.days;
     new_days.sail = today;
     new_days.arrive = today + timing.out_days - 1;
