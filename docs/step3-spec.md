@@ -98,7 +98,7 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | A rules version on a saved game | Decision 0100 (stage 0) | Built |
 | A force that acts at a place and steams on by itself | Decision 0096 | Built |
 | A load of a stated weight, and refuelling that leaves a reserve | Decision 0111 (stage 1) | Built, with forces formed, joined and stood down (scenario 39) |
-| A day from which a force may be used | Stage 2 | Not built |
+| A day from which a force may be used | Stage 3 | Built: decision 0140 |
 | Preparing a landing: loading and rehearsal | Decision 0095 | Built |
 | The experience of a land unit, and training | Decision 0097 | Built |
 | What a land unit is good at: its skills | Decision 0098 | Built |
@@ -306,7 +306,7 @@ The scripted scenarios of steps 1 and 2 stay as they are. They are the validatio
 The 39-day slice is built first with scripted orders, each force sent out on the day the record gives (decision 0093). Every force is in it from day 1, because nothing brings a force in later. Taking the scripts away would hand a staff forces weeks before they were there to use.
 
 - **The scripted setup** is kept as it is, for the measures against the record.
-- **The staff setup** has the same forces, bases and map and no scripted order. Each force has a day from which its side may use it, from a source where one gives it, and declared as made up where none does. It is a dated entry in the forces limit.
+- **The staff setup** has the same forces, bases and map and no scripted order. Each force has a day from which its side may use it, from a source where one gives it, and declared as made up where none does. It is a property of the force, set by the scenario (decision 0140), not an entry in a forces limit: a forces limit belongs to one intent, and a staff that writes its own limits would lose a day kept there.
 - **A side knows its own forces' days and not the enemy's.** A staff cannot plan on an enemy arrival it has not been told of.
 - **After its day a force is the staff's to use as it sees fit.** No date of any operation is fixed by the setup.
 

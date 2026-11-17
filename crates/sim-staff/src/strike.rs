@@ -466,6 +466,7 @@ impl Day<'_, '_> {
             reach_words(reach(risk)),
             held_share(risk)
         );
+        let waiting = self.waiting_note(task, base);
         let out = self.target(in_scope);
         out.orders.extend(orders);
         if !unordered.is_empty() || groups.is_empty() {
@@ -474,6 +475,7 @@ impl Day<'_, '_> {
             } else {
                 unordered.join("; ")
             };
+            let body = format!("{body}{waiting}");
             let head = if ordered.is_empty() {
                 "No order is given"
             } else {

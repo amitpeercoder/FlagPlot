@@ -43,7 +43,9 @@ use sim_core::refdata::PortSize;
 use sim_core::state::{Ship, ShipLocation};
 use sim_core::view::SideView;
 
-use crate::fleet::{force_stopped_at, held_ships, pool_ships, run_state, Fleet, RunStatus};
+use crate::fleet::{
+    force_stopped_at, held_ships, pool_ships, run_state, waiting_ships, Fleet, RunStatus,
+};
 use crate::morning::{protected_for_others, Morning};
 use crate::projection::Readings;
 use crate::route::{route_between, RouteInfo};
@@ -164,8 +166,12 @@ pub(crate) struct RunPlan {
 #[derive(Clone, Debug)]
 pub(crate) enum Blocker {
     /// No ship of the pool is free; the earliest day one is, if any is
-    /// expected to be.
-    NoShip { free_from: Option<u32> },
+    /// expected to be, and the ships of the forces limit left out of the pool
+    /// for their day (decision 0140, 3), each with it.
+    NoShip {
+        free_from: Option<u32>,
+        waiting: Vec<(ShipId, u32)>,
+    },
     /// The source has nothing above its reserve to give.
     Source {
         stock_t: Fixed,
@@ -184,10 +190,13 @@ impl Blocker {
         match self {
             Blocker::NoShip {
                 free_from: Some(day),
+                ..
             } => {
                 format!("no ship of the pool is free until day {day}")
             }
-            Blocker::NoShip { free_from: None } => "no ship of the pool is free".to_string(),
+            Blocker::NoShip {
+                free_from: None, ..
+            } => "no ship of the pool is free".to_string(),
             Blocker::Source { reserve_t, .. } if *reserve_t > Fixed::ZERO => {
                 "the source's stock above its reserve".to_string()
             }
@@ -202,7 +211,8 @@ impl Blocker {
     /// The numbers behind what binds, for a reason's worked part.
     pub(crate) fn detail(&self) -> String {
         match self {
-            Blocker::NoShip { .. } | Blocker::NoRoute => String::new(),
+            Blocker::NoShip { waiting, .. } => crate::available::list_words(waiting),
+            Blocker::NoRoute => String::new(),
             Blocker::Source {
                 stock_t,
                 reserve_t,
@@ -279,6 +289,9 @@ pub(crate) struct Planner<'a, 'v> {
     pub(crate) route: Option<RouteInfo>,
     /// The ships of the pool afloat that no other intent in force protects.
     pub(crate) pool: BTreeSet<ShipId>,
+    /// The ships the forces limit lists that the side may not use yet, each
+    /// with its day: in no pool, named in the reason that lists the pool.
+    waiting: Vec<(ShipId, u32)>,
     /// The day each busy ship of the pool is free again.
     busy_until: BTreeMap<ShipId, u32>,
     held: BTreeSet<ShipId>,
@@ -351,6 +364,7 @@ impl<'a, 'v> Planner<'a, 'v> {
                 *entry = (*entry).max(run.days.free.max(today + 1));
             }
         }
+        let waiting = waiting_ships(fleet, params.forces);
         Planner {
             view,
             fleet,
@@ -358,6 +372,7 @@ impl<'a, 'v> Planner<'a, 'v> {
             today,
             route,
             pool,
+            waiting,
             busy_until,
             held,
             holds,
@@ -929,6 +944,7 @@ impl<'a, 'v> Planner<'a, 'v> {
             } else if units.is_empty() {
                 blocker = Some(Blocker::NoShip {
                     free_from: self.earliest_free(),
+                    waiting: self.waiting.clone(),
                 });
             } else if chosen.ships.is_empty() {
                 blocker = Some(Blocker::Fuel {

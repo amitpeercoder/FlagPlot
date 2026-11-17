@@ -234,6 +234,12 @@ define_id!(
     "intent"
 );
 define_id!(
+    /// A formation of land units: a battalion, a regiment, a division
+    /// (decision 0140, 7). Data only: no rule reads it.
+    FormationId,
+    "formation"
+);
+define_id!(
     /// An interrupt the commander set, in his own numbering from 1 (decision
     /// 0107, ruling 31).
     InterruptId,

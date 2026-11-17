@@ -44,7 +44,9 @@ use sim_core::pictures::CommandRef;
 use sim_core::view::SideView;
 use std::collections::BTreeSet;
 
-use crate::fleet::{pool_ships, run_movement, run_state, Fleet, RunState, RunStatus};
+use crate::fleet::{
+    pool_ships, run_movement, run_state, waiting_ships, Fleet, RunState, RunStatus,
+};
 use crate::handin::{Out, Step, Who};
 use crate::morning::{priority_order, protected_for_others, Morning, TakenRun};
 use crate::planner::DEFAULT_INTERVAL_DAYS;
@@ -256,6 +258,25 @@ pub(crate) fn serve(
         return Served::default();
     }
     let pool = pool_ships(fleet, params.forces);
+    let waiting = waiting_ships(fleet, params.forces);
+    if pool.is_empty() && !waiting.is_empty() {
+        // Every ship of the pool is one the side may not use yet
+        // (decision 0140, 3): nothing is ordered, and the plan is not failed,
+        // for the ships are there and their day will come.
+        let list = crate::available::list_words(&waiting);
+        out.no_order(
+            serving(intent, plan)
+                .evidence(format!("every ship of the pool is left out for its day: {list}"), today)
+                .binding("no ship of the pool may be used yet")
+                .worked(format!(
+                    "No ship of the pool of {} may be used yet: {list}, so there is nothing to send.",
+                    intent.id
+                ))
+                .would_change("the day a ship of the pool may be used from")
+                .done(),
+        );
+        return Served::default();
+    }
     if pool.is_empty() {
         let reason = |text: String| {
             serving(intent, plan)

@@ -2,9 +2,9 @@ Scenario 12b: Patrol pilots
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 662d89006b9be200  26 events
-day   2  hash c61b0980e0f135da  18 events
-day   3  hash 7694faa59aabff6c  18 events
+day   1  hash 357dfffe1a7b87bd  26 events
+day   2  hash bf49444165c5ec2b  18 events
+day   3  hash 186f49e7820b89c9  18 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2

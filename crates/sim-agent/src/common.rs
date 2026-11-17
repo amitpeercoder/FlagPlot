@@ -533,6 +533,15 @@ pub(crate) fn kind_name(kind: &SideEventKind) -> String {
     out
 }
 
+/// The day an own unit may be used from, while that day has not come for the
+/// orders now being given (decision 0140, 5): the effective day from
+/// [`SideView::available_from`], given only while [`SideView::may_use`] says
+/// no, so it is the day a refusal would name. `None` once the day has come,
+/// for a unit with no day and for any unit that is not the side's.
+pub(crate) fn day_not_come(view: &SideView<'_>, unit: EntityRef) -> Option<u32> {
+    view.available_from(unit).filter(|_| !view.may_use(unit))
+}
+
 /// Whole miles of steaming a ship's fuel gives at its class's cruising
 /// speed: fuel x endurance / full load, rounded down. `None` if the class is
 /// unknown or has no full load.

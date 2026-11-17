@@ -2200,7 +2200,10 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 && !stem.starts_with("63_")
                 // And scenario 64's, scenario 58 with command levels on, a
                 // commander and report figures (decision 0137).
-                && !stem.starts_with("64_"))
+                && !stem.starts_with("64_")
+                // And scenario 65's, scenario 58 with a day from which its
+                // force may be used, played by the staff (decision 0140).
+                && !stem.starts_with("65_"))
             .then(|| stem.to_string())
         })
         .collect();

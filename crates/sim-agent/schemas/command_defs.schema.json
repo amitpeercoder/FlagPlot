@@ -299,6 +299,19 @@
                     "type": "integer"
                   }
                 },
+                "not_yet_available": {
+                  "description": "The units of the limit whose day has not come, each with the day the side may use it from (decision 0140, 5). Left out when none.",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["unit", "available_from"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": { "$ref": "defs.schema.json#/$defs/handle" },
+                      "available_from": { "type": "integer", "minimum": 1 }
+                    }
+                  }
+                },
                 "source": {
                   "oneOf": [
                     {
@@ -1086,6 +1099,19 @@
                   "type": "array",
                   "items": {
                     "type": "integer"
+                  }
+                },
+                "not_yet_available": {
+                  "description": "The units of the limit whose day has not come, each with the day the side may use it from (decision 0140, 5). Left out when none.",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["unit", "available_from"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": { "$ref": "defs.schema.json#/$defs/handle" },
+                      "available_from": { "type": "integer", "minimum": 1 }
+                    }
                   }
                 },
                 "source": {

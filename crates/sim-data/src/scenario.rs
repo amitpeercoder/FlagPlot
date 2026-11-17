@@ -9,7 +9,8 @@ use sim_core::commander::{Commander, Initiative, NamedCommander};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
-    AirGroupId, AircraftTypeId, BaseId, IntentId, LandUnitId, ShipClassId, ShipId, TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, FormationId, IntentId, LandUnitId, ShipClassId, ShipId,
+    TaskForceId,
 };
 use sim_core::map::HexKind;
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
@@ -21,8 +22,8 @@ use sim_core::orders::{
 use sim_core::pictures::{CommandRef, NamedSuperior};
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, LandUnit, Replacement, Ship, ShipLocation,
-    ShipSystem, ShipSystems, Side, Skills, SystemState, TaskForce, TruthState,
+    AirGroup, AirGroupLocation, Arrival, Base, Formation, LandUnit, Replacement, Ship,
+    ShipLocation, ShipSystem, ShipSystems, Side, Skills, SystemState, TaskForce, TruthState,
 };
 use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::{DaySummary, Staffs, StartingContact, StartingEstimate, World};
@@ -134,6 +135,21 @@ struct ScenarioFile {
     /// The commanders of the side's commands (decision 0137, 1 and 2).
     #[serde(default)]
     commander: Vec<CommanderSpec>,
+    /// Formations of land units, each with its parent (decision 0140, 7).
+    #[serde(default)]
+    formation: Vec<FormationSpec>,
+}
+
+/// A formation of land units (decision 0140, 7): its number, name, side and
+/// the formation it belongs to, if any, which must be there and of the same
+/// side. No formation may be its own ancestor.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FormationSpec {
+    id: u32,
+    name: String,
+    side: SideSpec,
+    parent: Option<u32>,
 }
 
 /// A commander of one command (decision 0137, 1 and 2): the side, exactly
@@ -363,6 +379,12 @@ struct LandUnitSpec {
     /// to the ground figure `fieldworks_limit`, and 0 for a working unit,
     /// one on attack or one with no men ashore. Defaults to 0.
     fieldworks: Option<Quantity>,
+    /// The day from which the side may use it (decision 0140, 1): a whole
+    /// number from 1. Without it, from day 1.
+    available_from: Option<u32>,
+    /// The formation the unit belongs to (decision 0140, 7): a formation of
+    /// its side.
+    formation: Option<u32>,
 }
 
 /// A land unit's skills (decision 0098), each optional, defaulting to 2:
@@ -413,6 +435,9 @@ struct AirGroupSpec {
     /// The share of its aircraft the group holds back from a strike at the
     /// start, 0 to 1 (decision 0114). Defaults to 0.
     strike_held_share: Option<Quantity>,
+    /// The day from which the side may use it (decision 0140, 1): a whole
+    /// number from 1. Without it, from day 1.
+    available_from: Option<u32>,
 }
 
 /// A stream of replacements for a side at a base (decision 6 of 0038).
@@ -467,6 +492,9 @@ struct TaskForceSpec {
     /// Whether the force keeps radio silence from the start (decision 0136,
     /// 15). Defaults to false. It has an effect only where reports travel.
     radio_silence: Option<bool>,
+    /// The day from which the side may use it (decision 0140, 1): a whole
+    /// number from 1. Without it, from day 1.
+    available_from: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -507,6 +535,9 @@ struct ShipSpec {
     main_battery: Option<SystemStateSpec>,
     torpedo_mounts: Option<SystemStateSpec>,
     flight_deck: Option<SystemStateSpec>,
+    /// The day from which the side may use it (decision 0140, 1): a whole
+    /// number from 1. Without it, from day 1.
+    available_from: Option<u32>,
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -941,6 +972,70 @@ fn ship_points(table: &BTreeMap<String, Quantity>, what: &str) -> Result<ShipPoi
 /// can be worked out: `ships_out_of_action` reads the yard figures in the
 /// surface combat file (decision 0088, "As built": the loader refuses the
 /// objective without them).
+/// A unit's day from the scenario (decision 0140, 1): a whole number from
+/// 1, or none.
+fn available_day(day: Option<u32>, unit: impl std::fmt::Display) -> Result<Option<u32>, String> {
+    match day {
+        Some(0) => Err(format!(
+            "{unit} has available_from = 0: days are numbered from 1"
+        )),
+        day => Ok(day),
+    }
+}
+
+/// The formations of a scenario (decision 0140, 7), checked: each number
+/// once, each parent there and of the same side, and none its own ancestor.
+fn formations(specs: &[FormationSpec]) -> Result<BTreeMap<FormationId, Formation>, String> {
+    let mut found: BTreeMap<FormationId, Formation> = BTreeMap::new();
+    for spec in specs {
+        let id = FormationId::new(spec.id);
+        if spec.id == 0 {
+            return Err(format!("{id} is numbered 0, which is no formation"));
+        }
+        let formation = Formation {
+            id,
+            name: spec.name.clone(),
+            side: spec.side.into(),
+            parent: spec.parent.map(FormationId::new),
+        };
+        if found.insert(id, formation).is_some() {
+            return Err(format!("{id} appears twice"));
+        }
+    }
+    for formation in found.values() {
+        let Some(parent) = formation.parent else {
+            continue;
+        };
+        let Some(above) = found.get(&parent) else {
+            return Err(format!(
+                "{} has the parent {parent}, which is not there",
+                formation.id
+            ));
+        };
+        if above.side != formation.side {
+            return Err(format!(
+                "{} is {} but its parent {parent} is {}",
+                formation.id,
+                formation.side.name(),
+                above.side.name()
+            ));
+        }
+        // Up the tree: a loop comes back to where it began within as many
+        // steps as there are formations.
+        let mut at = Some(parent);
+        for _ in 0..found.len() {
+            match at {
+                Some(next) if next == formation.id => {
+                    return Err(format!("{} is its own ancestor", formation.id));
+                }
+                Some(next) => at = found.get(&next).and_then(|f| f.parent),
+                None => break,
+            }
+        }
+    }
+    Ok(found)
+}
+
 fn build_objectives(
     spec: &ObjectivesSpec,
     days: u32,
@@ -1517,6 +1612,7 @@ impl Scenario {
                 }
                 task_force.home_port = Some(port);
             }
+            task_force.available_from = available_day(spec.available_from, id).map_err(&fail)?;
             if truth.task_forces.insert(id, task_force).is_some() {
                 return Err(fail(format!("{id} appears twice")));
             }
@@ -1685,11 +1781,16 @@ impl Scenario {
                 experience,
                 system_repair_points: Fixed::ZERO,
                 troops: None,
+                available_from: available_day(spec.available_from, id).map_err(&fail)?,
             };
             if truth.ships.insert(id, ship).is_some() {
                 return Err(fail(format!("{id} appears twice")));
             }
         }
+
+        // Formations come before land units, which name them (decision
+        // 0140, 7).
+        truth.formations = formations(&file.formation).map_err(&fail)?;
 
         // Land units come after ships, since a unit may be aboard some
         // (decision 0066, 3).
@@ -1719,6 +1820,25 @@ impl Scenario {
             }
             let side: Side = spec.side.into();
             let mut unit = LandUnit::new(id, spec.name.clone(), side, 0, None);
+            unit.available_from = available_day(spec.available_from, id).map_err(&fail)?;
+            if let Some(raw) = spec.formation {
+                let formation = FormationId::new(raw);
+                match truth.formations.get(&formation) {
+                    None => {
+                        return Err(fail(format!(
+                            "{id} belongs to {formation}, which is not there"
+                        )))
+                    }
+                    Some(found) if found.side != side => {
+                        return Err(fail(format!(
+                            "{id} is {} but its formation {formation} is {}",
+                            side.name(),
+                            found.side.name()
+                        )))
+                    }
+                    Some(_) => unit.formation = Some(formation),
+                }
+            }
             if let Some(posture) = spec.posture {
                 unit.posture = posture.into();
             }
@@ -2040,6 +2160,7 @@ impl Scenario {
                 strike_sizing_order: None,
                 search_once: false,
                 search_once_order: None,
+                available_from: available_day(spec.available_from, id).map_err(&fail)?,
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));

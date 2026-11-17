@@ -93,6 +93,8 @@ struct Candidate {
     /// Each group it may use at the base that can search, with its type's
     /// name and its search range.
     searchers: Vec<(AirGroupId, String, Fixed)>,
+    /// The groups it could use at the base but for their day, each with it.
+    waiting: Vec<(AirGroupId, u32)>,
 }
 
 impl Day<'_, '_> {
@@ -109,6 +111,7 @@ impl Day<'_, '_> {
                 .air_groups()
                 .filter(|g| g.location == AirGroupLocation::Base(base.id))
                 .filter(|g| allowed.as_ref().is_none_or(|set| set.contains(&g.id)))
+                .filter(|g| crate::available::group_may_be_used(self.view, g.id))
                 .collect();
             groups.sort_by_key(|g| g.id);
             if allowed.is_some() && groups.is_empty() {
@@ -132,6 +135,7 @@ impl Day<'_, '_> {
                 hex: base.hex,
                 bombers,
                 searchers,
+                waiting: self.waiting_groups_at(base.id, allowed.as_ref()),
             });
         }
         found
@@ -369,12 +373,20 @@ impl Day<'_, '_> {
                     types.push(text);
                 }
             }
+            let later = if candidate.waiting.is_empty() {
+                String::new()
+            } else {
+                format!(" ({})", crate::available::list_words(&candidate.waiting))
+            };
             if types.is_empty() {
                 lines.push(format!(
-                    "{base_text} is {near} and has no bomber and no group that can search that the intent may use"
+                    "{base_text} is {near} and has no bomber and no group that can search that the intent may use{later}"
                 ));
             } else {
-                lines.push(format!("{base_text} is {near}: {}", types.join(", ")));
+                lines.push(format!(
+                    "{base_text} is {near}: {}{later}",
+                    types.join(", ")
+                ));
             }
         }
         let body = if lines.is_empty() {

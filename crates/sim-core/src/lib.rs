@@ -35,6 +35,7 @@ pub mod view;
 pub mod world;
 
 mod airstrike;
+mod available;
 mod bombardment;
 mod cargo;
 mod cover;

@@ -690,6 +690,7 @@ impl Day<'_, '_> {
             .filter_map(|g| lines.get(&g.id).cloned())
             .collect();
         let intent_words = format!("{}, the raid on {target_text} from {base_text}", raid.id);
+        let waiting = self.waiting_note(raid, base);
         let out = self.target(in_scope);
         out.orders.extend(orders);
         if !unordered.is_empty() || morning.cannot.is_some() || groups.is_empty() {
@@ -700,6 +701,7 @@ impl Day<'_, '_> {
             } else {
                 unordered.join("; ")
             };
+            let body = format!("{body}{waiting}");
             let head = if ordered.is_empty() {
                 "No order is given"
             } else {

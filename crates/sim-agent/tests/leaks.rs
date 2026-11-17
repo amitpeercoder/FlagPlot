@@ -856,6 +856,72 @@ fn compare(name: &str, seeds: std::ops::RangeInclusive<u64>, make: Make, found: 
     }
 }
 
+/// The enemy's units carry a day from which they may be used (decision 0140,
+/// 5): in the one world a day that has come already, so that nothing else
+/// changes, in the other none.
+fn enemy_day_given(
+    doc: &Doc,
+    _side: Side,
+    enemy: Side,
+    _world: &World,
+) -> Option<(String, String)> {
+    let line = format!("side = \"{}\"\n", side_word(enemy));
+    let mut edited = false;
+    let tables = doc
+        .tables
+        .iter()
+        .map(|table| {
+            let kind = table_kind(table);
+            if ["task_force", "ship", "air_group", "land_unit"].contains(&kind)
+                && table.contains(&line)
+                && table_value(table, "available_from").is_none()
+            {
+                edited = true;
+                return table.replace(&line, &format!("{line}available_from = 1\n"));
+            }
+            table.clone()
+        })
+        .collect();
+    edited.then(|| {
+        (
+            doc.text(),
+            Doc {
+                head: doc.head.clone(),
+                tables,
+            }
+            .text(),
+        )
+    })
+}
+
+/// A day for the enemy's units that has not come: a side's own view at the
+/// start, before any order is given, is the same whatever it is (decision
+/// 0140, 5: nothing gives a side the enemy's days).
+fn enemy_day_late(text: &str, enemy: Side) -> String {
+    let doc = parse_doc(text);
+    let line = format!("side = \"{}\"\n", side_word(enemy));
+    let tables: Vec<String> = doc
+        .tables
+        .iter()
+        .map(|table| {
+            let kind = table_kind(table);
+            if ["task_force", "ship", "air_group", "land_unit"].contains(&kind)
+                && table.contains(&line)
+                && table_value(table, "available_from").is_none()
+            {
+                table.replace(&line, &format!("{line}available_from = 40\n"))
+            } else {
+                table.clone()
+            }
+        })
+        .collect();
+    Doc {
+        head: doc.head,
+        tables,
+    }
+    .text()
+}
+
 const LEAK_SCENARIOS: [&str; 5] = [
     "04a_night_action.toml",
     "05_eastern_solomons.toml",
@@ -910,6 +976,37 @@ fn what_a_side_cannot_know_changes_nothing_it_is_given() {
             found.enemy_saw_it,
             found.compared
         );
+    }
+}
+
+#[test]
+fn the_enemys_days_of_availability_change_nothing_the_side_is_given() {
+    // The same days (one, which has always come) set or not set: every
+    // answer of every tool, every day, is the same.
+    let found = found_by(enemy_day_given, 1..=1);
+    println!("an enemy day given: {found:?}");
+    assert!(found.changed.is_empty(), "{:?}", found.changed);
+    assert!(found.compared >= 4, "{} runs compared", found.compared);
+    // A day that has not come for the enemy's units changes what happens, but
+    // before any order is given the side's answers are the same.
+    for name in LEAK_SCENARIOS {
+        let text = scenario_text(name);
+        for side in SIDES {
+            let enemy = other(side);
+            let late = enemy_day_late(&text, enemy);
+            assert_ne!(text, late, "{name}: the enemy has units");
+            let (one, two) = (load_text(&text, name, 1), load_text(&late, name, 1));
+            let title = one.name.clone();
+            let (view1, view2) = (one.world.side_view(side), two.world.side_view(side));
+            let mut a = answers(&view1, &title);
+            a.extend(staff_answers(&one.world, side));
+            let mut b = answers(&view2, &title);
+            b.extend(staff_answers(&two.world, side));
+            assert_eq!(a, b, "{name}: {side:?} was given the enemy's days");
+            // The enemy's own view does show its days.
+            let theirs = briefing(&two.world.side_view(enemy), &title).to_text();
+            assert!(theirs.contains("available from day 40"), "{name}: {theirs}");
+        }
     }
 }
 

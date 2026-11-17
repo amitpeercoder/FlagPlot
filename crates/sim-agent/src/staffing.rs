@@ -24,7 +24,7 @@ use sim_core::command::{
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
-use sim_core::ids::{AirGroupId, IntentId, LandUnitId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, EntityRef, IntentId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::Issuer;
 use sim_core::side_events::{SideCause, SideEvent, SideEventKind};
 use sim_core::state::ShipLocation;
@@ -230,13 +230,46 @@ fn force_numbers<'s>(n: &Names<'_>, forces: impl IntoIterator<Item = &'s TaskFor
     numbers
 }
 
+/// The units of a forces limit whose day has not come, each with the day
+/// (decision 0140, 5): the staff leaves them out until then.
+fn limit_not_yet_available(n: &Names<'_>, forces: &sim_core::command::ForcesLimit) -> Vec<Value> {
+    let view = &n.ctx.view;
+    let mut waiting: Vec<(EntityRef, u32)> = Vec::new();
+    let mut note = |unit: EntityRef| {
+        if let Some(day) = crate::common::day_not_come(view, unit) {
+            waiting.push((unit, day));
+        }
+    };
+    forces
+        .ships
+        .iter()
+        .for_each(|id| note(EntityRef::Ship(*id)));
+    forces
+        .task_forces
+        .iter()
+        .for_each(|id| note(EntityRef::TaskForce(*id)));
+    forces
+        .air_groups
+        .iter()
+        .for_each(|id| note(EntityRef::AirGroup(*id)));
+    waiting
+        .into_iter()
+        .map(|(unit, day)| json!({ "unit": n.ctx.entity(unit), "available_from": day }))
+        .collect()
+}
+
 fn forces_json(n: &Names<'_>, forces: &sim_core::command::ForcesLimit) -> Value {
-    json!({
+    let mut body = json!({
         "ships": n.ships(&forces.ships),
         "task_forces": force_numbers(n, &forces.task_forces),
         "air_groups": n.groups(&forces.air_groups),
         "source": forces.source.map(|source| n.base(source)),
-    })
+    });
+    let waiting = limit_not_yet_available(n, forces);
+    if !waiting.is_empty() {
+        body["not_yet_available"] = Value::Array(waiting);
+    }
+    body
 }
 
 /// The limits set on one intent itself. A limit not set on it is `null` (a
@@ -1121,6 +1154,13 @@ fn forces_held_json(view: &SideView<'_>) -> Value {
             "current": as_of == ended,
             "radio_silence": view.radio_silence(force.id) == Some(true),
         }));
+        if let Some(day) =
+            crate::common::day_not_come(view, sim_core::ids::EntityRef::TaskForce(force.id))
+        {
+            if let Some(last) = held.last_mut() {
+                last["available_from"] = json!(day);
+            }
+        }
     }
     for base in held_view.bases() {
         let Some(as_of) = held_view.held_as_of(CommandRef::Base(base.id)) else {
