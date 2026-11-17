@@ -175,13 +175,16 @@ impl Day<'_, '_> {
                     .is_some_and(|f| crate::take::routed(f, hex));
                 // Decision 0143, 11: after the first landing a later lift
                 // goes as the force stands, with no landing made ready.
-                let landed = task.limits.forces.as_ref().is_some_and(|limit| {
-                    limit.land_units.iter().any(|id| {
-                        self.view
-                            .land_units()
-                            .any(|u| u.id == *id && u.men_ashore > 0 && u.hex == Some(hex))
-                    })
-                });
+                let landed = self
+                    .state
+                    .land_units_on_chain(task.id)
+                    .is_some_and(|units| {
+                        units.iter().any(|id| {
+                            self.view
+                                .land_units()
+                                .any(|u| u.id == *id && u.men_ashore > 0 && u.hex == Some(hex))
+                        })
+                    });
                 if under_place && (routed || landed) {
                     continue;
                 }

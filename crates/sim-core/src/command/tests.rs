@@ -996,6 +996,7 @@ fn the_staff_is_refused_the_commanders_commands_and_the_commander_the_staffs() {
 /// while its plan is preparing, and the staff sets a forces limit only, and
 /// only on an intent it formed.
 #[test]
+#[ignore = "decision 0149, item 1, withdraws decision 0142, item 2: a take-a-place forces limit with no source is now taken in, not refused \"No source\"; this test asserts the refusal. The rest of it is covered by taking_a_place_needs_no_source_and_the_staff_names_what_is_left_out. For the architect to restate."]
 fn taking_a_place_is_taken_in_and_its_landing_formed_while_preparing() {
     const PLACE: Hex = Hex::new(5, 0);
     let mut world = world();
@@ -1083,6 +1084,81 @@ fn taking_a_place_is_taken_in_and_its_landing_formed_while_preparing() {
         }),
         CommandRefusal::NotYours,
     );
+}
+
+/// Decision 0149, items 1 to 3: a "take a place" needs no forces limit and
+/// none with a source; the staff's limit on the "ready a landing" it forms
+/// may name what the commander left out, and nothing outside what he named;
+/// and the end's limit is then read as it binds: the commander's where he
+/// named a thing, the staff's where he did not.
+#[test]
+fn taking_a_place_needs_no_source_and_the_staff_names_what_is_left_out() {
+    const PLACE: Hex = Hex::new(5, 0);
+    let mut world = world();
+    world.map.insert(
+        PLACE,
+        HexData {
+            kind: crate::map::HexKind::Coast,
+            ..HexData::open_sea()
+        },
+    );
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::TakePlace {
+                hex: PLACE,
+                by_day: None,
+            },
+        },
+    )
+    .unwrap();
+    // A forces limit with no source is taken in (item 1).
+    let mut no_source = forces(&[], &[1]);
+    no_source.source = None;
+    player(&mut world, set_forces(1, no_source.clone())).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    staff(
+        &mut world,
+        CommandKind::FormIntent {
+            parent: intent(1),
+            kind: IntentKind::ReadyLanding {
+                force: tf(1),
+                hex: PLACE,
+                by_day: None,
+            },
+        },
+    )
+    .unwrap();
+    // The staff may not name a force the commander did not name.
+    let mut wider = forces(&[], &[2]);
+    wider.source = Some(base(1));
+    refused(
+        &mut world,
+        Issuer::Staff,
+        set_forces(2, wider),
+        CommandRefusal::WiderThanParent(intent(1)),
+    );
+    // It may name the source he left out.
+    let mut chosen = forces(&[], &[]);
+    chosen.source = Some(base(1));
+    staff(&mut world, set_forces(2, chosen)).unwrap();
+    // The end's limit as it binds: his task force, the staff's source.
+    let end = &state(&world, A).intents[&intent(1)];
+    let bound = state(&world, A)
+        .forces_as_bound(end)
+        .expect("a limit")
+        .into_owned();
+    assert_eq!(bound.task_forces, no_source.task_forces);
+    assert_eq!(bound.source, Some(base(1)));
+    // And the task's limit reads the task force from the end.
+    let task = &state(&world, A).intents[&intent(2)];
+    let bound = state(&world, A)
+        .forces_as_bound(task)
+        .expect("a limit")
+        .into_owned();
+    assert_eq!(bound.task_forces, no_source.task_forces);
+    assert_eq!(bound.source, Some(base(1)));
 }
 
 // ---------------------------------------------------------------------------

@@ -39,6 +39,7 @@ pub(crate) mod interrupt;
 #[cfg(test)]
 mod tests;
 
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
 
@@ -1276,17 +1277,73 @@ impl CommandState {
     /// beneath it: the narrowest binds (the architect's ruling after the
     /// build). Empty where none is set on it or above it: then it may use
     /// what its addressee commands (rule 8).
-    pub fn forces_on_chain(&self, intent: IntentId) -> Vec<&ForcesLimit> {
+    ///
+    /// On the chain of a "take a place" each limit is read as it binds there
+    /// (decision 0149, 2 and 3): see [`CommandState::forces_as_bound`].
+    pub fn forces_on_chain(&self, intent: IntentId) -> Vec<Cow<'_, ForcesLimit>> {
         self.up_the_tree(intent)
-            .filter_map(|found| found.limits.forces.as_ref())
+            .filter_map(|found| self.forces_as_bound(found))
             .collect()
     }
 
     /// The nearest forces limit on `intent`'s chain, for words: what binds is
     /// every limit on the chain ([`CommandState::forces_on_chain`]). For a
     /// root, its own.
-    pub fn nearest_forces(&self, intent: IntentId) -> Option<&ForcesLimit> {
+    pub fn nearest_forces(&self, intent: IntentId) -> Option<Cow<'_, ForcesLimit>> {
         self.forces_on_chain(intent).into_iter().next()
+    }
+
+    /// The nearest "take a place" on `intent`'s chain: itself or above it.
+    pub fn take_place_on_chain(&self, intent: IntentId) -> Option<&Intent> {
+        self.up_the_tree(intent)
+            .find(|found| matches!(found.kind, IntentKind::TakePlace { .. }))
+    }
+
+    /// The forces limit of the "ready a landing" the staff formed under the
+    /// "take a place" `end`, in force: the staff's choice (decision 0149, 3).
+    pub fn assembled_forces(&self, end: IntentId) -> Option<&ForcesLimit> {
+        self.intents_in_force()
+            .find(|found| {
+                found.parent == Some(end)
+                    && found.maker == Maker::Staff
+                    && matches!(found.kind, IntentKind::ReadyLanding { .. })
+            })
+            .and_then(|found| found.limits.forces.as_ref())
+    }
+
+    /// The forces limit set on `found` as it binds (decision 0149, 2 and 3).
+    /// Of a "take a place": each of the task forces (with the ships), the
+    /// land units and the source is the commander's where he named it, and
+    /// where he did not the staff's, kept on the "ready a landing" it formed.
+    /// Of an intent under a "take a place": what it does not name of the
+    /// three is that end's, as just read. Any other is read as set.
+    pub fn forces_as_bound<'a>(&'a self, found: &'a Intent) -> Option<Cow<'a, ForcesLimit>> {
+        let own = found.limits.forces.as_ref();
+        let fill = match found.kind {
+            IntentKind::TakePlace { .. } => self.assembled_forces(found.id).cloned(),
+            _ => match self.take_place_on_chain(found.id) {
+                Some(end) if own.is_some() => self.forces_as_bound(end).map(Cow::into_owned),
+                _ => None,
+            },
+        };
+        let Some(fill) = fill else {
+            return own.map(Cow::Borrowed);
+        };
+        let Some(own) = own else {
+            return Some(Cow::Owned(fill));
+        };
+        let mut bound = own.clone();
+        if bound.task_forces.is_empty() && bound.ships.is_empty() {
+            bound.task_forces = fill.task_forces;
+            bound.ships = fill.ships;
+        }
+        if bound.land_units.is_empty() {
+            bound.land_units = fill.land_units;
+        }
+        if bound.source.is_none() {
+            bound.source = fill.source;
+        }
+        Some(Cow::Owned(bound))
     }
 
     /// The air groups the forces limits on `intent`'s chain allow: those
