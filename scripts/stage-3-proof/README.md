@@ -15,14 +15,18 @@ Python 3.9 or later, standard library only. No build step and no test runs them;
 | `same.py` | 1, its second half | Two batch files of one arrangement, and two folders of exports of the same seeds |
 | `pick.py` | 6, the picking rule | The exports of arrangement (a), seeds 1 to 10 |
 | `common.py` | | Shared reading of the files |
+| `make_arrangements.py` | | Makes the three arrangement files, `data/scenarios/stage-3-proof/07a_slice.toml`, `07b_slice.toml` and `07c_slice.toml`, from the staff's setup; with `--check`, says whether the files kept are the ones it makes |
+| `run.sh` | 1 to 7 | Makes every file the scripts read, one step at a time, into a folder outside the repository, and runs the scripts on them |
 
 ## How to run them
+
+`run.sh` does all of what follows, one step at a time: `run.sh STEP [a|b|c ...] --out DIR` with the step `build`, `loading`, `batch`, `exports`, `sample`, `time`, `read` or `all` (its header says what each makes; `docs/validation/stage-3-proof-setup.md` the times and the disk). By hand:
 
 Run `sim-cli` from the top of the repository, so that both runs of a batch name their inputs by the same paths. Keep the files out of the repository.
 
 ```
 cargo build --release -p sim-cli
-S=data/scenarios/...            # the arrangement's scenario file
+S=data/scenarios/stage-3-proof/07a_slice.toml   # the arrangement's scenario file
 OUT=/some/folder/outside/the/repository
 for n in $(seq 1 1000); do target/release/sim-cli export $S --seed $n --out $OUT/a/seed$n.json; done
 target/release/sim-cli batch $S --runs 1000 --out $OUT/a.json
@@ -65,7 +69,7 @@ Every count is in seeds: a seed counts once however many events it has. L is the
 
 The rule is in `pick.py`'s docstring. In short: a reason is a `staff_reason` event; it rests on an order when `data.order` is set, and on a staff command when one of its causes is a `command_taken` or `command_refused` with `issuer` `staff`. For each doctrine of the record's table, in its order, the first four reasons that rest on either and that a row of the doctrine matches are taken, in event order on seed 1, both sides together, then seed 2, 3 ... up to 10. A doctrine with fewer than four on the ten seeds contributes the reasons it has, marked "fewer than four on the first ten seeds", and the number picked in all is printed. By the architect's rulings of Nov 17, 2026, a reason whose worked text is word for word that of one already picked for the same doctrine is skipped and the next taken (as decision 0128's pick did), and a reason that rows of two doctrines match is taken by the first in the table's order only, whether or not it still wants one, the later doctrine passing over it. The numbers skipped and passed over are printed for each doctrine. Each reader is given `prompt_text`: the intent served (with the intents above it) and the reason's evidence, binding, worked and would-change parts.
 
-The matchers are one table, `MATCHERS`, and a doctrine's reasons are changed there and nowhere else.
+The matchers are one table, `MATCHERS`, and a doctrine's reasons are changed there and nowhere else. A staff command that belongs to no doctrine, an approval or a plan marked or cancelled (`NO_DOCTRINE`), is matched by no row, by the architect's reading 12: since decision 0151 a "keep supplied" under an island's hold owns a plan, and its approvals would otherwise have been taken by row 4a (as they were on scenario 76 before the guard).
 
 | Row | Doctrine | Matches | Tested on |
 | --- | --- | --- | --- |
@@ -81,10 +85,12 @@ The matchers are one table, `MATCHERS`, and a doctrine's reasons are changed the
 | 5a | By night | A speed or route order to a task force whose reason says the run "goes by night" | 70 |
 | 5b | By night | A route order to a task force serving "bombard" | 71 |
 | 6a | Cover and reconnaissance | The staff's `form_intent` of a carrier task ("operate the carrier force") under "take a place" | 73 |
-| 6b | Cover and reconnaissance | The same under a denial, with "island" in the intents above it | **Untested**: decision 0151 is not on main, and the words of "control an island" are not known yet; confirm the row when it lands |
+| 6b | Cover and reconnaissance | The same under a denial: the reason in decision 0151's words, "{deny} denies the waters of island {n} ({name}), its plan is released and no carrier task of {force} stands: … The staff forms {intent}, to operate the carrier force {force} from {hex}, under {deny}, for {force} to carry out." | 76, its carrier property built as its test builds it (scenario 73's carrier force added, the frozen figures with scenario 53's aircraft for each ship) |
 | 6c | Cover and reconnaissance | A base strike order (`air mission base_strike`) | 73 |
 | 6d | Cover and reconnaissance | A reconnaissance order (`air mission reconnaissance`) | 72 |
 
 ## What it was tested on
 
 On files made from main on Nov 17, 2026, kept outside the repository, with scripted games standing in for the staffed ones: scenario 7 (seeds 1 to 6, and a batch of 20 run twice); the staff's setup `data/scenarios/staff/07_full_slice.toml` with no intent (seeds 1 to 3, a batch of 20); a copy of the staff's setup with intents of the kinds on main added (take Lunga and Tulagi, hold base 1, a Japanese hold of base 1, a Japanese take of Lunga from day 12, and a Japanese bombardment of base 1 refused on day 1 and accepted on day 18; seeds 1 to 10, a batch of 20; not committed); scenario 45, the soak ashore (seeds 1 to 3, for the Japanese bombardments of base 1); scenarios 66 to 73 for the matchers; and one export edited by hand to hold a staff order rejected and a staff command refused, the only way to show those counted, since no game on main has one. Each count was shown counted on some seed and not counted on another; condition 2's staff counts were shown counted only on the edited file.
+
+On Nov 18, 2026, with decision 0151 on main (at 4dec6155) and decision 0152 not: row 6b was tested on scenario 76's carrier property and on seed 1 of arrangement (a), where it takes the four carrier tasks formed under the islands' denials; scenarios 66 to 74 and 76 give the same rows as before but for scenario 76's four approvals, now matched by none; row 4b stays untested until decision 0152 is on main. `run.sh` was run on five seeds of each arrangement, and every script ran on what it made (`docs/validation/stage-3-proof-setup.md`).

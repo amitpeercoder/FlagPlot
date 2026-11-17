@@ -29,6 +29,10 @@ Two more rules, the architect's rulings of the same day:
     picked for the same doctrine is skipped, as decision 0128's pick did, and
     the next is taken. The number skipped is printed for each doctrine.
 
+A staff command that belongs to no doctrine, an approval or a plan marked
+or cancelled (`NO_DOCTRINE`), is matched by no row (the architect's reading
+12 of decision 0153).
+
 Each row of MATCHERS below reads only the reason's own fields and, for a
 command, the command's: `data.statement` (the intent it serves),
 `data.chain` (the intents above it), the order's `target` and `text` from
@@ -74,6 +78,23 @@ def is_command(r, name, detail=None):
     if r['sort'] != 'command' or r['command'] != name:
         return False
     return detail is None or re.search(detail, r['command_detail']) is not None
+
+
+# The forming reason of a carrier task under an island's denial, in the words
+# of decision 0151 ("As built", after reading 11) as main writes them: "{deny}
+# denies the waters of island {n} ({name}), its plan is released and no
+# carrier task of {force} stands: ... The staff forms {intent}, to operate the
+# carrier force {force} from {hex}, under {deny}, for {force} to carry out."
+ISLAND_CARRIER = re.compile(
+    r'intent:(\d+) denies the waters of island \d+ \(.+?\), its plan is released and no carrier task of '
+    r'(task_force:\d+) stands: .* The staff forms intent:\d+, to operate the carrier force \2 from '
+    r'\(-?\d+,-?\d+\), under intent:\1, for \2 to carry out\.$', re.S)
+
+# Staff commands that belong to no doctrine (the architect's reading 12 of
+# decision 0153): an approval or a plan marked or cancelled. Since decision
+# 0151 a "keep supplied" under an island's hold owns a plan, so its approvals
+# serve the supply intent and would otherwise match row 4a.
+NO_DOCTRINE = ('approve', 'mark_plan', 'cancel_plan')
 
 
 def limit_on_formed_ready(r, later):
@@ -131,9 +152,9 @@ MATCHERS = [
      '0147, 0148', '73',
      lambda r: is_command(r, 'form_intent', r'an intent to operate the carrier force') and re.match(r'take the place at ', st(r))),
     ('Cover and reconnaissance', '6b', 'the staff command forming a carrier task under a denial an island\'s control formed',
-     '0151', None,
+     '0151', '76 (its carrier property, built as its test builds it)',
      lambda r: is_command(r, 'form_intent', r'an intent to operate the carrier force')
-     and re.match(r'deny the waters', st(r)) and 'island' in r['chain']),
+     and re.match(r'deny the waters', st(r)) and ISLAND_CARRIER.match(r['worked'])),
     ('Cover and reconnaissance', '6c', 'a base strike order (air mission base_strike)',
      '0148', '73',
      lambda r: is_order(r, 'air_group', r'^air mission base_strike')),
@@ -189,6 +210,8 @@ def reasons(game):
 
 
 def rows_of(r):
+    if r['sort'] == 'command' and r['command'] in NO_DOCTRINE:
+        return []
     return [(doc, row) for doc, row, _, _, _, test in MATCHERS if test(r)]
 
 
