@@ -18,11 +18,13 @@
 # There is no Japanese man, so no die is rolled.
 #
 # The hand calculation is in tests/scenario_67_taking_a_place.rs. The test
-# runs this file on the frozen step 1 figures with five ground figures of its
-# own: preparation_per_day 25, training_days_per_level 3,
+# runs this file on the frozen step 1 figures with five ground figures of
+# its own: preparation_per_day 25, training_days_per_level 3,
 # assault_skill_strength 0.25, unprepared_landing_share 0.5 and
-# unprepared_landing_fatigue 40. It builds its variants from the text of this
-# file using the markers below.
+# unprepared_landing_fatigue 40. The figures are in
+# data/reference/ground_placeholder_scenario_67.toml, which this file names,
+# so that run by itself it plays the game its test proves. It builds its
+# variants from the text of this file using the markers below.
 #
 # PLACEHOLDER DATA. The bases, ships, units, figures and map are invented.
 
@@ -39,7 +41,7 @@ port_sizes = "../reference/port_sizes.csv"
 aircraft_types = "../reference/aircraft_types.csv"
 search = "../reference/search.toml"
 surface_combat = "../reference/surface_combat.toml"
-ground = "../reference/ground.toml"
+ground = "../reference/ground_placeholder_scenario_67.toml"
 
 # Allied base 1 at A, with supply for every man for the whole game and no
 # fuel to give.

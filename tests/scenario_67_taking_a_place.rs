@@ -299,33 +299,11 @@ fn changed(text: &str, original: &str, replacement: &str) -> String {
     common::replace_once(text, original, replacement)
 }
 
-/// The scenario's own ground figures: the frozen ones with five changed.
+/// The frozen step 1 figures. The scenario names its own ground figures,
+/// `data/reference/ground_placeholder_scenario_67.toml`, frozen beside the
+/// others: the figures its hand calculation names.
 fn figures() -> sim_data::LoadOptions {
-    common::altered_reference("s67", |dir| {
-        common::edit_file_by(
-            dir,
-            "ground.toml",
-            &[
-                ("preparation_per_day = 5\n", "preparation_per_day = 25\n"),
-                (
-                    "training_days_per_level = 30\n",
-                    "training_days_per_level = 3\n",
-                ),
-                (
-                    "assault_skill_strength = 0\n",
-                    "assault_skill_strength = \"0.25\"\n",
-                ),
-                (
-                    "unprepared_landing_share = 1\n",
-                    "unprepared_landing_share = \"0.5\"\n",
-                ),
-                (
-                    "unprepared_landing_fatigue = 0\n",
-                    "unprepared_landing_fatigue = 40\n",
-                ),
-            ],
-        );
-    })
+    common::frozen()
 }
 
 fn load(text: &str) -> Scenario {

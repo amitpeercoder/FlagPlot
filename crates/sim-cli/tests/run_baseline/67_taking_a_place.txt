@@ -2,29 +2,30 @@ Placeholder scenario 67: Taking a place
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f22c2415267559ed  26 events
-day   2  hash 570c082a2eabeef8  12 events
-day   3  hash 2064b7a58ffc775d  12 events
-day   4  hash 56fc964dfb508297  9 events
-day   5  hash e58440dad29ef5a9  9 events
-day   6  hash 844d3b5a6fcdaa50  9 events
-day   7  hash eef4fa076937fe01  10 events
-day   8  hash 99cec73ee735984f  9 events
-day   9  hash 630a9edc6b29a2e4  9 events
-day  10  hash 83795ae3bfaaf09f  9 events
-day  11  hash fb649058a168efee  9 events
-day  12  hash d3a80179048e63bf  9 events
-day  13  hash 8c5fc45fab70ca29  9 events
-day  14  hash a972699a3e0ab400  9 events
+day   1  hash 303b5d873d3cf464  23 events
+day   2  hash da683dbc2f364c02  9 events
+day   3  hash 1a814a26d2d29d12  9 events
+day   4  hash e479835289777e1a  8 events
+day   5  hash 72193654725d7218  9 events
+day   6  hash 17debbb505124896  7 events
+day   7  hash 29be0ddb0db41b1e  13 events
+day   8  hash 43491ba78fb06b2b  11 events
+day   9  hash 54c5c3a18353d20b  11 events
+day  10  hash 58c4adeda6a6e395  29 events
+day  11  hash a5f6aec734621f73  21 events
+day  12  hash 30900c7d0d5c3ae5  12 events
+day  13  hash 2e1b74072ed9ba79  8 events
+day  14  hash a61e64dd9d0f06ef  8 events
 
-task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
-base:1 "Placeholder base A" (Allied) at (0,0): 874 t of supply in stock
-base:2 "Placeholder airfield B" (Japanese) at (4,0): 0 t of supply in stock
-land_unit:1 "Placeholder Raw" (Allied): 600 men ashore at (0,0), fieldworks 30
-land_unit:2 "Placeholder Sound" (Allied): 600 men ashore at (0,0), fieldworks 30
-land_unit:3 "Placeholder Assault" (Allied): 600 men ashore at (0,0), fieldworks 30
+task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 817 t of supply in stock
+base:2 "Placeholder airfield B" (Allied) at (4,0): 62 t of supply in stock
+base:3 "Landing at (4,0)" (Allied) at (4,0): 4 t of supply in stock, no airfield, formed in play, on its own side's map only
+land_unit:1 "Placeholder Raw" (Allied): 600 men ashore at (0,0)
+land_unit:2 "Placeholder Sound" (Allied): 600 men ashore at (4,0), on attack
+land_unit:3 "Placeholder Assault" (Allied): 600 men ashore at (4,0), on attack
 Allied: no contacts
 Allied: no battle claims
 Japanese: no contacts

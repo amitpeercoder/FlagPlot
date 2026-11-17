@@ -1,10 +1,10 @@
 # 0144: Holding a place with men, the supply that follows, and the check that it can be held: step 4 of stage 3, second part
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139, step 4 of its nine, and item 2 of the designer's amendment). It widens "hold a place" (decision 0117) to the men ashore and their supply, lets it be stated of a place the side does not hold yet, and gives "take a place" (decision 0142) the check that the place can be held before leave to launch. Nothing is built. It is built after decision 0143.
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139, step 4 of its nine, and item 2 of the designer's amendment). It widens "hold a place" (decision 0117) to the men ashore and their supply, lets it be stated of a place the side does not hold yet, and gives "take a place" (decision 0142) the check that the place can be held before leave to launch. It is built after decision 0143. Built on Nov 17, 2026, with decision 0143: see "As built".
 
 Summary: Step 4 of stage 3, second part: "hold a place" may be stated of a base the side means to take and waits for it; once the base is the side's the staff puts the men there on the defence and forms "keep supplied" under the hold from the source its limit names; and a "take a place" with such a hold beside it works out before it asks leave whether the men can be fed, and lands the supply that lasts until the first run that follows, with a margin for the risk
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Not built
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings await the architect (As built)
 
 ## Why
 
@@ -66,3 +66,48 @@ It is worked by "take a place" on each morning its landing is ready and its plan
 ## The hand calculation
 
 `tests/scenario_69_taken_and_held.rs`.
+
+## As built
+
+Built on Nov 17, 2026, on the branch `stage3-step4`, with decision 0143. Nothing is tuned and no figure changed. Every number of the hand calculation that an event, the state or a reason carries is asserted exactly, and no test is ignored: no mismatch was found. Scenarios 67 and 68 give the orders they gave, and every scenario file built before this one gives the events it gave (no run baseline changed). One recorded game changed in more than its versions (Earlier tests touched, below).
+
+### What was built
+
+- **Intake (`crates/sim-core/src/command/intake.rs`, `command.rs`).** A hold may name a base of the other side that is on the map (`check_intent_kind`). "Keep supplied" may stand under "hold a place" for the same base (`IntentKind::may_stand_under`), and formed there its floor may be 0. A third change, which the hand calculation needs and the rule card does not name: a hold with no land unit named in any forces limit on its chain may order the fighting units with men ashore in its base's hex (`may_use_land_unit`), as a build-up may its working units; without it the posture orders of day 6 are refused as outside the forces limit (reading 4).
+- **The hold doctrine (`crates/sim-staff/src/air.rs`, `holds`, and the new `crates/sim-staff/src/holding.rs`).** A hold of a base not the side's waits with one reason (items 1 to 3). Otherwise, before the forces' tasks and the cover: `Day::hold_men` (items 4 and 5) and, on a morning the hold has men there, `Day::hold_supply` (items 7 and 9). Item 6 needed no code: the tasks of decisions 0124 and 0125 are formed for the surface combat and carrier missions only.
+- **The supply doctrine** (`doctrine.rs`, `setup`) reads a supply intent's forces limit up the tree where it has none of its own, and its projection (`projection.rs`, `run_landings`) counts a plan's runs as its supply intent's: the plan's own intent, or the "keep supplied" formed in the plan under a hold (reading 8).
+- **The check (`crates/sim-staff/src/take.rs`, `hold_of_place` and `hold_check`)**, used for the supply of the first lift (`supply`, by its days) and in `launch_place` before leave is asked, with the notice once at preserve the force (the ruling on decision 0142's reading 8).
+- **Scenario 69** (`data/scenarios/69_taken_and_held.toml`, on scenario 27's map, with its own ground figures in `data/reference/ground_placeholder_scenario_69.toml`: decision 0143, As built, "A scenario file plays its game") and its 16 tests (`tests/scenario_69_taken_and_held.rs`).
+- **The tools.** `form_intent` of `keep_supplied` is written and read with `floor_days` and `interval_days` (`crates/sim-agent/src/commands.rs`); the tool descriptions and the schemas say a hold may name an enemy base on the map; the agent interface is version 20.
+- **Versions.** Doctrine `supply-24`; agent interface 20 (and the schemas' constants). The state layout (`flagplot-state-v41`), the saved game (16) and the rules label (18) do not rise.
+
+### Readings taken
+
+1. **"A base on the side's map that is not the side's"** is a base of the other side with `on_map`, as for the target of a neutralise.
+2. **Waiting** gives one reason a morning, before anything else under the hold, and no notice.
+3. **The men of the hold** are fighting units only (a working unit is not set to defend), at the base's hex, read through every forces limit on the chain where any names a land unit, else all. "The commander does not hold" counts a hold by command and by order; a held unit on attack gets a reason naming the hold. A unit "serves a take a place not yet met" where it is named in the forces limit of a "take a place" whose plan has not ended and whose place is not the side's, or of a task under it; "met" is read as the condition (the place the side's), not the plan's state, so on the morning the hold first runs after the capture (before "take a place" marks its plan complete) the men are already the hold's, as the hand calculation has it.
+4. **The third intake change** (What was built): needed for the posture orders; it also makes a commander's own order to such a unit a hold by order (Holds and the override), as for any unit an intent may use.
+5. **The supply follows the men.** Items 7 and 9 act only on a morning the hold has men at the base (a fighting unit of item 4, on attack or not, not held). A hold with no man there forms nothing and says nothing of supply: so it plays as it did, as the properties ask. A hold with men and no source gives the reason of item 9 each morning it has men there.
+6. **"No keep supplied for the base's hex in force"** is any "keep supplied", by anyone, whose base lies in that hex.
+7. **Floor 0.** At press the floor is 0, which intake refuses for a commander's "keep supplied"; it is accepted for one formed under a hold.
+8. **The formed intent's limits.** Its forces limit is read up the tree (the hold's) by the supply doctrine, and intake reads it so already for the staff's orders and the plan's commands. Its area is its own (none), not read up. The projection had read a plan's runs as its root intent's, which under a hold is not a supply intent: the run of day 9 was then not projected and the doctrine handed in `cannot_meet` on day 10. It now reads them as the plan's supply intent's.
+9. **The hold of the check** is the lowest-numbered hold in force of a base, the side's or not, in the place's hex, whose nearest forces limit names a source of the side; its risk gives the margin, and the end's risk decides whether the staff goes.
+10. **The fullest ship** is, over the units chosen, the most men of one unit in one ship of the force, or, for a unit ashore, the least of its men and the most berths of a ship of the force. Its men weigh `handling_t_per_man` each.
+11. **The place's rate for a ship** is its port size's berth rate where the port has a berth, else its lighter rate; the landing factor of a force's loading and work on the port are not counted. With no rate, one day.
+12. **The passages** are from the place to the hold's source and back, inside the end's area, at the cruise speed of the transport force's slowest ship, each rounded up to whole days, one at least. With no route the check is not made and the supply is 15 days.
+13. **The room** of the transport force is its ships' cargo capacity less any fuel carried as cargo (supply aboard counts as room for supply). The stock is the source's above its reserve that morning, with no load still to be taken counted against it.
+14. **The days of the check set the supply** in every reading of the first lift's supply, the day-1 words of the choice included; a later lift (decision 0143) takes 15 days.
+15. **The words.** Where it can be held, the check's words follow the release's reason, or the waiting reason; where it cannot at balanced or press, "the staff goes all the same". At preserve the reason carries the check and the notice is handed in once.
+16. **Order within a morning.** The hold doctrine runs before "take a place", so on day 6 the hold's `form_intent` comes before the `mark_plan` of the end, and its posture orders before anything of the end's.
+
+### Earlier tests touched
+
+No expected number changed. The agent interface's pins move from 19 to 20 (`crates/sim-agent/tests`, the schemas). The run baselines are unchanged; the recorded games are remade by `scripts/regenerate.sh`: each differs in its doctrine and interface versions, and `second_proof_week_sonnet` also gains, from day 15, one reason a morning under the Allied hold of base 4 (Tulagi), where the side has men and the hold names no source, that the commander may name one (reading 5). No order or command of that game changed; its day hashes of days 15 to 21 changed because the extra reasons are events and move the numbers of later events, which the state cites. The architect may rule whether a hold with men and no source should say this.
+
+### Files to read
+
+- `crates/sim-staff/src/holding.rs` and `air.rs` (`holds`).
+- `crates/sim-staff/src/take.rs`: `hold_of_place`, `hold_check`, `supply` and the leave in `launch_place`.
+- `crates/sim-staff/src/doctrine.rs` (`setup`) and `projection.rs` (`run_landings`).
+- `crates/sim-core/src/command/intake.rs` (`check_intent_kind`, `may_use_land_unit`, the `form_intent` floor) and `command.rs` (`may_stand_under`).
+- `tests/scenario_69_taken_and_held.rs`.

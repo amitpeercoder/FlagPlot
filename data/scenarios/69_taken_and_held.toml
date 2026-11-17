@@ -1,0 +1,157 @@
+# Scenario 69: taken and held.
+#
+# Decision 0144, step 4 of stage 3, second part. The commander asks for an
+# airfield and asks that it be held, from the base the men sail from. The
+# staff works out that the men can be fed, lands them with nine days of
+# supply and not fifteen, puts them on the defence when the airfield is
+# theirs, and sends the first run of supply after them when it is needed.
+#
+# The map is scenario 27's: A at (0,0), a coast hex with port size 5, and B
+# at (4,0), a coast hex with port size 0. A to B is 4 hexes, 160 nm. Allied
+# base 1 lies at A; Japanese base 2, an airfield with no gun, no aircraft,
+# no man and no stock, lies at B, on the Allied map. No base has a reserve.
+# Task force 1, two placeholder troop transports, lies stopped in port at A
+# with nothing aboard. Two Allied fighting units are ashore at A. The Allied
+# side holds no estimate of the enemy's men at B. On day 1 the commander
+# states "take the place at B", with a forces limit of task force 1, units 1
+# and 2 and base 1 as the source, and "hold base 2", with a forces limit of
+# task force 1 and base 1 as the source, and gives leave to prepare and to
+# launch. The game is 14 days. There is no Japanese man, so no die is
+# rolled.
+#
+# The hand calculation is in tests/scenario_69_taken_and_held.rs. The test
+# runs this file on the frozen step 1 figures with one ground figure of its
+# own, preparation_per_day 100. The figures are in
+# data/reference/ground_placeholder_scenario_69.toml, which this file names,
+# so that run by itself it plays the game its test proves. It builds its
+# variants from the text of this file using the markers below.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures and map are invented.
+
+name = "Placeholder scenario 69: Taken and held"
+placeholder = true
+seed = 1942
+days = 14
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground_placeholder_scenario_69.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel to give.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: no gun, no aircraft, no man, no stock.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The land units, ashore at A, fighting units on the defence, each at the
+# standard of experience, 2, the default.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder Second"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "take_place"
+hex = [4, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [1]
+land_units = [1, 2]
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 2
+intent_kind = "hold"
+base = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 2
+task_forces = [1]
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

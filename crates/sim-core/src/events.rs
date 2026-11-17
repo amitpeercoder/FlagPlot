@@ -1867,12 +1867,15 @@ pub enum EventKind {
     /// A notice the staff handed in beside its orders (decision 0107, ruling
     /// 34): the plan, the run where there is one, and the kind. Cites the
     /// `StaffReason` it rests on, if its basis resolves to one. Added at the
-    /// end (decision 0107, step 4).
+    /// end (decision 0107, step 4). `intent` names the intent whose words the
+    /// notice says: the end of a `met` notice of "take a place" (the ruling
+    /// on decision 0142's reading 4); `None` for every other notice.
     StaffNotice {
         side: Side,
         kind: NoticeKind,
         plan: PlanId,
         run: Option<u32>,
+        intent: Option<IntentId>,
     },
     /// An interrupt fired at the morning's test (decision 0107, rulings 31
     /// to 33). A set one carries its condition and the figure it was
@@ -4074,6 +4077,7 @@ impl fmt::Display for EventKind {
                 kind,
                 plan,
                 run,
+                intent,
             } => {
                 write!(f, "{side:?} staff's notice: ")?;
                 match (kind, run) {
@@ -4089,7 +4093,10 @@ impl fmt::Display for EventKind {
                     (NoticeKind::Late, _) => {
                         write!(f, "{plan}'s landing cannot be ready by its date")
                     }
-                    (NoticeKind::Met, _) => write!(f, "every want of {plan} is met"),
+                    (NoticeKind::Met, _) => match intent {
+                        Some(intent) => write!(f, "{intent} is met"),
+                        None => write!(f, "every want of {plan} is met"),
+                    },
                 }
             }
             EventKind::InterruptFired {

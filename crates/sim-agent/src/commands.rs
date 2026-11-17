@@ -13,7 +13,7 @@
 //! | `kind` | other keys |
 //! | --- | --- |
 //! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up` or `take_place`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise` and `deny`), `target` (`neutralise` and `raid`), `hex` as `[q, r]` and `distance` in whole hexes (`deny`: the waters within `distance` of `hex`), for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set); `ready_landing` (decision 0141) takes `task_force`, `hex` and `by_day` (left out when there is no date); `build_up` takes `base`, `wants`, a list of `airfield`, `mend`, `defences`, `port` and `aircraft` in order, and `defences`, the points from 1 to 100, written only when `defences` is a want; `take_place` (decision 0142) takes `hex` as `[q, r]` and `by_day` (left out when there is no date), and, in the tool, `base` in place of `hex` (the tool writes the base's hex) |
-//! | `form_intent` | `parent`, `intent_kind` (`cover`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing` or `build_up`), `base` (not for a neutralise, a deny or a task of a task force), `by_day`, `wants` and `defences` (as for `set_intent`), `target` (for a raid), `hex` and `distance` (for a deny), `task_force` and `hex` (for `stand_at` and `operate_carriers`): the staff's, a sub-intent under `parent` |
+//! | `form_intent` | `parent`, `intent_kind` (`keep_supplied` under a hold, with `floor_days` and optionally `interval_days`; `cover`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing` or `build_up`), `base` (not for a neutralise, a deny or a task of a task force), `by_day`, `wants` and `defences` (as for `set_intent`), `target` (for a raid), `hex` and `distance` (for a deny), `task_force` and `hex` (for `stand_at` and `operate_carriers`): the staff's, a sub-intent under `parent` |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve` or `risk`) and its keys, below |
 //! | `set_leave` | `leave` (`prepare` or `launch`), `given` |
@@ -631,6 +631,18 @@ pub fn command_to_json(command: &CommandKind) -> Value {
             if let Some(base) = kind.own_base() {
                 body["base"] = json!(base.raw());
             }
+            // Keeping a base supplied under a hold (decision 0144).
+            if let IntentKind::KeepSupplied {
+                floor_days,
+                interval_days,
+                ..
+            } = kind
+            {
+                body["floor_days"] = json!(floor_days);
+                if let Some(days) = interval_days {
+                    body["interval_days"] = json!(days);
+                }
+            }
             if let Some(target) = kind.target() {
                 body["target"] = json!(target.raw());
             }
@@ -752,9 +764,10 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
         }),
         "form_intent" => {
             let kind = intent_kind_from_json(value)?;
-            if matches!(kind, IntentKind::KeepSupplied { .. }) {
+            // A formed intent has no default kind: the key must be there.
+            if value.get("intent_kind").is_none_or(Value::is_null) {
                 return Err(
-                    "form_intent needs \"intent_kind\" \"cover\", \"hold\", \"neutralise\", \"raid\", \"deny\", \"strike_ships\" or \"search_waters\""
+                    "form_intent needs \"intent_kind\" \"keep_supplied\", \"cover\", \"hold\", \"neutralise\", \"raid\", \"deny\", \"strike_ships\", \"search_waters\", \"stand_at\", \"operate_carriers\", \"ready_landing\" or \"take_place\""
                         .to_string(),
                 );
             }
@@ -1537,6 +1550,36 @@ mod tests {
             }),
             json!({ "kind": "form_intent", "parent": 1, "intent_kind": "cover", "base": 5 })
         );
+        // A staff's keep_supplied under a hold (decision 0144): floor_days
+        // is always written, 0 included, and interval_days only when set.
+        for floor_days in [5, 0] {
+            let command = CommandKind::FormIntent {
+                parent: IntentId::new(1),
+                kind: IntentKind::KeepSupplied {
+                    base: BaseId::new(5),
+                    floor_days,
+                    interval_days: None,
+                },
+            };
+            let json = command_to_json(&command);
+            assert_eq!(
+                json,
+                json!({ "kind": "form_intent", "parent": 1, "intent_kind": "keep_supplied", "base": 5, "floor_days": floor_days })
+            );
+            assert_eq!(command_from_json(&json), Ok(command));
+        }
+        let with_interval = CommandKind::FormIntent {
+            parent: IntentId::new(1),
+            kind: IntentKind::KeepSupplied {
+                base: BaseId::new(5),
+                floor_days: 2,
+                interval_days: Some(3),
+            },
+        };
+        assert_eq!(
+            command_from_json(&command_to_json(&with_interval)),
+            Ok(with_interval)
+        );
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
                 intent,
@@ -1641,7 +1684,6 @@ mod tests {
             json!({ "kind": "set_intent", "intent": 1, "intent_kind": "win", "base": 2 }),
             json!({ "kind": "set_intent", "intent": 1, "intent_kind": "keep_supplied", "base": 2 }),
             json!({ "kind": "form_intent", "parent": 1, "base": 2 }),
-            json!({ "kind": "form_intent", "parent": 1, "intent_kind": "keep_supplied", "base": 2, "floor_days": 3 }),
             json!({ "kind": "form_intent", "intent_kind": "cover", "base": 2 }),
             json!({ "kind": "set_intent", "intent": 1, "intent_kind": "ready_landing", "task_force": 1 }),
             json!({ "kind": "set_intent", "intent": 1, "intent_kind": "build_up", "base": 1, "wants": ["defences"] }),

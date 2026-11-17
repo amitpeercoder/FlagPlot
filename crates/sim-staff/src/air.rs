@@ -825,6 +825,27 @@ impl<'v, 'a> Day<'v, 'a> {
             let Some(base) = hold.kind.own_base() else {
                 continue;
             };
+            // Decision 0144, 1 to 3: a hold of a base that is not the side's,
+            // or no longer is, waits for it.
+            if !self.view.bases().any(|b| b.id == base) {
+                let base_text = base_words(self.view, base);
+                let reason = serving(&hold, &plan)
+                    .evidence(format!("{base_text} is not the side's"), today)
+                    .binding(format!("{base_text} is not the side's"))
+                    .worked(format!(
+                        "{} holds {base_text}, which is not the side's: the staff waits for it to be the side's, and forms nothing and orders nothing under {} until then.",
+                        hold.id, hold.id
+                    ))
+                    .would_change(format!("{base_text} the side's"))
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                continue;
+            }
+            // Decision 0144, 4 to 9: the men at the base, and the supply
+            // that follows.
+            if self.hold_men(&hold, &plan, base, in_scope) {
+                self.hold_supply(&hold, &plan, base, in_scope);
+            }
             // The tasks of the forces its forces limit names (decisions
             // 0124, 8, and 0125, 2): cover from the sea, and carriers.
             if let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) {
