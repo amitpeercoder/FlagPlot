@@ -99,8 +99,8 @@ impl World {
     /// force listed, or one whose every ship the limit lists, or one an intent
     /// in force is addressed to; a forming order
     /// naming at least one ship of a pool; an air group some intent in force
-    /// may use, which holds the whole group). `None` if it is not an
-    /// override.
+    /// may use, which holds the whole group; a land unit some intent in force
+    /// may use, decision 0141, 14). `None` if it is not an override.
     fn override_targets(&self, side: Side, request: &OrderRequest) -> Option<Vec<HoldTarget>> {
         // Only the commander's own orders override: a scenario's scripted
         // order with the issuer `staff` is a statement of the scenario, not
@@ -119,6 +119,13 @@ impl World {
                 .intents_in_force()
                 .any(|intent| self.may_use_group(side, intent.id, *target));
             return usable.then(|| vec![HoldTarget::AirGroup(*target)]);
+        }
+        // A land unit a task in force may use (decision 0141, 14).
+        if let OrderKind::LandUnit { target, .. } = &request.kind {
+            let usable = self.command[&side]
+                .intents_in_force()
+                .any(|intent| self.may_use_land_unit(side, intent.id, *target));
+            return usable.then(|| vec![HoldTarget::LandUnit(*target)]);
         }
         match &request.kind {
             // A word about the radio does not take a force out of the

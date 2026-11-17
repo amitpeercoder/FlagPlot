@@ -12,8 +12,8 @@
 //!
 //! | `kind` | other keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise`, `raid`, `deny`, `strike_ships` or `search_waters`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise` and `deny`), `target` (`neutralise` and `raid`), `hex` as `[q, r]` and `distance` in whole hexes (`deny`: the waters within `distance` of `hex`), and for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set) |
-//! | `form_intent` | `parent`, `intent_kind` (`cover`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at` or `operate_carriers`), `base` (not for a neutralise, a deny or a task of a task force), `target` (for a raid), `hex` and `distance` (for a deny), `task_force` and `hex` (for `stand_at` and `operate_carriers`): the staff's, a sub-intent under `parent` |
+//! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing` or `build_up`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise` and `deny`), `target` (`neutralise` and `raid`), `hex` as `[q, r]` and `distance` in whole hexes (`deny`: the waters within `distance` of `hex`), for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set); `ready_landing` (decision 0141) takes `task_force`, `hex` and `by_day` (left out when there is no date); `build_up` takes `base`, `wants`, a list of `airfield`, `mend`, `defences`, `port` and `aircraft` in order, and `defences`, the points from 1 to 100, written only when `defences` is a want |
+//! | `form_intent` | `parent`, `intent_kind` (`cover`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing` or `build_up`), `base` (not for a neutralise, a deny or a task of a task force), `by_day`, `wants` and `defences` (as for `set_intent`), `target` (for a raid), `hex` and `distance` (for a deny), `task_force` and `hex` (for `stand_at` and `operate_carriers`): the staff's, a sub-intent under `parent` |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve` or `risk`) and its keys, below |
 //! | `set_leave` | `leave` (`prepare` or `launch`), `given` |
@@ -23,13 +23,13 @@
 //! | `add_run` | `plan`, `ships`, `load_t`, `days` (`load`, `sail`, `arrive`, `free`) |
 //! | `time_run` | `plan`, `run`, `days` |
 //! | `mark_plan` | `plan`, `outcome` (`complete` or `failed`) |
-//! | `hold`, `release` | one of `ship`, `task_force`, or `air_group`; with `air_group`, `setting` (`search_arc`) holds that setting alone and no `setting` holds the whole group |
+//! | `hold`, `release` | one of `ship`, `task_force`, `air_group` or `land_unit`; with `air_group`, `setting` (`search_arc`) holds that setting alone and no `setting` holds the whole group |
 //! | `end_run` | `plan`, `run` |
 //! | `set_interrupt` | `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`cannot_meet`, `waits_for_leave` or `ship_lost`) and `on` |
 //! | `acknowledge` | `interrupt`, or `standing` with one of `plan` or `ship` |
 //!
-//! The limits: `forces` has `intent` and `ships`, `task_forces`, `air_groups`
-//! and `source` (each left out when empty or not set, and each read as empty
+//! The limits: `forces` has `intent` and `ships`, `task_forces`, `air_groups`,
+//! `land_units` and `source` (each left out when empty or not set, and each read as empty
 //! or not set when absent);
 //! `area` has `intent`, `hexes` as `[[q, r], ...]`; `priority` has `intent`
 //! and `rank` (`null` for unranked); `protected` has `intent`, `ships`;
@@ -56,11 +56,11 @@ use sim_core::command::{
     Addressee, ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget, IntentKind,
     InterruptCondition, InterruptRef, InterruptSetting, Leave, Limit, Maker, NoticeBasis,
     NoticeKind, PlanId, PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves, StaffCommand,
-    StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject,
+    StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject, Want, Wants,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId};
 
 use crate::orders::{order_from_json, order_to_json, unit_text};
 
@@ -216,6 +216,7 @@ fn target_to_json(body: &mut Value, target: HoldTarget) {
         HoldTarget::AirGroup(group) => body["air_group"] = json!(group.raw()),
         HoldTarget::Ship(ship) => body["ship"] = json!(ship.raw()),
         HoldTarget::TaskForce(force) => body["task_force"] = json!(force.raw()),
+        HoldTarget::LandUnit(unit) => body["land_unit"] = json!(unit.raw()),
         HoldTarget::Setting { group, setting } => {
             body["air_group"] = json!(group.raw());
             body["setting"] = json!(setting.name());
@@ -224,7 +225,7 @@ fn target_to_json(body: &mut Value, target: HoldTarget) {
 }
 
 fn target_from_json(value: &Value) -> Result<HoldTarget, String> {
-    let named: Vec<&str> = ["ship", "task_force", "air_group"]
+    let named: Vec<&str> = ["ship", "task_force", "air_group", "land_unit"]
         .into_iter()
         .filter(|key| value.get(key).is_some())
         .collect();
@@ -233,6 +234,10 @@ fn target_from_json(value: &Value) -> Result<HoldTarget, String> {
         ["task_force"] => Ok(HoldTarget::TaskForce(TaskForceId::new(small(
             value,
             "task_force",
+        )?))),
+        ["land_unit"] => Ok(HoldTarget::LandUnit(LandUnitId::new(small(
+            value,
+            "land_unit",
         )?))),
         ["air_group"] => {
             let group = AirGroupId::new(small(value, "air_group")?);
@@ -244,8 +249,14 @@ fn target_from_json(value: &Value) -> Result<HoldTarget, String> {
                 }),
             }
         }
-        [] => Err("a hold names one of \"ship\", \"task_force\" or \"air_group\"".to_string()),
-        _ => Err("a hold names only one of \"ship\", \"task_force\" and \"air_group\"".to_string()),
+        [] => Err(
+            "a hold names one of \"ship\", \"task_force\", \"air_group\" or \"land_unit\""
+                .to_string(),
+        ),
+        _ => Err(
+            "a hold names only one of \"ship\", \"task_force\", \"air_group\" and \"land_unit\""
+                .to_string(),
+        ),
     }
 }
 
@@ -333,6 +344,10 @@ fn limit_to_json(limit: &Limit) -> Value {
                 body["air_groups"] =
                     json!(limit.air_groups.iter().map(|g| g.raw()).collect::<Vec<_>>());
             }
+            if !limit.land_units.is_empty() {
+                body["land_units"] =
+                    json!(limit.land_units.iter().map(|u| u.raw()).collect::<Vec<_>>());
+            }
             if let Some(source) = limit.source {
                 body["source"] = json!(source.raw());
             }
@@ -393,6 +408,10 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
                 air_groups: numbers_or_none(value, "air_groups")?
                     .into_iter()
                     .map(AirGroupId::new)
+                    .collect(),
+                land_units: numbers_or_none(value, "land_units")?
+                    .into_iter()
+                    .map(LandUnitId::new)
                     .collect(),
                 source: small_opt(value, "source")?.map(BaseId::new),
             },
@@ -465,7 +484,51 @@ fn intent_kind_to_json(body: &mut Value, kind: IntentKind) {
             body["task_force"] = json!(force.raw());
             body["hex"] = json!([hex.q, hex.r]);
         }
+        IntentKind::ReadyLanding { force, hex, by_day } => {
+            body["intent_kind"] = json!(kind.name());
+            body["task_force"] = json!(force.raw());
+            body["hex"] = json!([hex.q, hex.r]);
+            // Left out when there is no date.
+            if let Some(day) = by_day {
+                body["by_day"] = json!(day);
+            }
+        }
+        IntentKind::BuildUp { base, wants } => {
+            body["intent_kind"] = json!(kind.name());
+            body["base"] = json!(base.raw());
+            body["wants"] = json!(wants.iter().map(Want::name).collect::<Vec<_>>());
+            // The points, written once, when defences are among the wants.
+            if let Some(points) = wants.iter().find_map(|want| match want {
+                Want::Defences(points) => Some(points),
+                _ => None,
+            }) {
+                body["defences"] = json!(points);
+            }
+        }
     }
+}
+
+/// The wants of a "build up" task from `wants` and `defences`.
+fn wants_from_json(value: &Value) -> Result<Wants, String> {
+    let names = texts(value, "wants")?;
+    let asks_defences = names.iter().any(|name| name == "defences");
+    let points = small_opt(value, "defences")?;
+    if asks_defences != points.is_some() {
+        return Err(if asks_defences {
+            "\"defences\" is a want, so \"defences\" must give its points".to_string()
+        } else {
+            "\"defences\" is given but \"defences\" is not among the wants".to_string()
+        });
+    }
+    let mut list = Vec::new();
+    for name in &names {
+        list.push(Want::from_name(name, points).ok_or_else(|| {
+            format!("unknown want \"{name}\" (airfield, mend, defences, port or aircraft)")
+        })?);
+    }
+    Wants::new(&list).ok_or_else(|| {
+        "wants are empty, name a kind twice, or give defences outside 1 to 100".to_string()
+    })
 }
 
 /// The hex of a command's object as `[q, r]`.
@@ -516,8 +579,17 @@ fn intent_kind_from_json(value: &Value) -> Result<IntentKind, String> {
                 force: TaskForceId::new(small(value, "task_force")?),
                 hex: hex_pair(value, "hex")?,
             }),
+            "ready_landing" => Ok(IntentKind::ReadyLanding {
+                force: TaskForceId::new(small(value, "task_force")?),
+                hex: hex_pair(value, "hex")?,
+                by_day: small_opt(value, "by_day")?,
+            }),
+            "build_up" => Ok(IntentKind::BuildUp {
+                base: base()?,
+                wants: wants_from_json(value)?,
+            }),
             other => Err(format!(
-                "unknown intent kind \"{other}\" (keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at or operate_carriers)"
+                "unknown intent kind \"{other}\" (keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing or build_up)"
             )),
         },
     }
@@ -558,6 +630,10 @@ pub fn command_to_json(command: &CommandKind) -> Value {
             if let (Some(force), Some(hex)) = (kind.force(), kind.station()) {
                 body["task_force"] = json!(force.raw());
                 body["hex"] = json!([hex.q, hex.r]);
+            }
+            // The two tasks of decision 0141.
+            if kind.readies_units() {
+                intent_kind_to_json(&mut body, *kind);
             }
             body
         }
@@ -1092,6 +1168,44 @@ mod tests {
                     distance: 0,
                 },
             },
+            // Decision 0141: the two tasks, a hold of a land unit.
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::ReadyLanding {
+                    force: TaskForceId::new(2),
+                    hex: Hex::new(6, 0),
+                    by_day: Some(6),
+                },
+            },
+            CommandKind::FormIntent {
+                parent: IntentId::new(1),
+                kind: IntentKind::ReadyLanding {
+                    force: TaskForceId::new(2),
+                    hex: Hex::new(6, 0),
+                    by_day: None,
+                },
+            },
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::BuildUp {
+                    base: BaseId::new(1),
+                    wants: Wants::new(&[Want::Airfield, Want::Defences(10), Want::Port])
+                        .expect("good wants"),
+                },
+            },
+            CommandKind::FormIntent {
+                parent: IntentId::new(1),
+                kind: IntentKind::BuildUp {
+                    base: BaseId::new(1),
+                    wants: Wants::new(&[Want::Mended]).expect("good wants"),
+                },
+            },
+            CommandKind::Hold {
+                target: HoldTarget::LandUnit(LandUnitId::new(4)),
+            },
+            CommandKind::Release {
+                target: HoldTarget::LandUnit(LandUnitId::new(4)),
+            },
             CommandKind::WithdrawIntent { intent },
             CommandKind::SetLimit(Limit::Forces {
                 intent,
@@ -1101,6 +1215,7 @@ mod tests {
                         .into_iter()
                         .collect(),
                     air_groups: BTreeSet::new(),
+                    land_units: BTreeSet::new(),
                     source: Some(BaseId::new(2)),
                 },
             }),
@@ -1112,6 +1227,7 @@ mod tests {
                     air_groups: [AirGroupId::new(8), AirGroupId::new(2)]
                         .into_iter()
                         .collect(),
+                    land_units: BTreeSet::new(),
                     source: None,
                 },
             }),
@@ -1121,6 +1237,9 @@ mod tests {
                     ships: ships(&[4]),
                     task_forces: BTreeSet::new(),
                     air_groups: [AirGroupId::new(2)].into_iter().collect(),
+                    land_units: [LandUnitId::new(7), LandUnitId::new(3)]
+                        .into_iter()
+                        .collect(),
                     source: Some(BaseId::new(1)),
                 },
             }),
@@ -1395,6 +1514,33 @@ mod tests {
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
                 intent,
+                kind: IntentKind::ReadyLanding {
+                    force: TaskForceId::new(1),
+                    hex: Hex::new(6, 0),
+                    by_day: Some(6)
+                }
+            }),
+            json!({ "kind": "set_intent", "intent": 2, "intent_kind": "ready_landing", "task_force": 1, "hex": [6, 0], "by_day": 6 })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::BuildUp {
+                    base: BaseId::new(1),
+                    wants: Wants::new(&[Want::Airfield, Want::Defences(10)]).expect("good wants")
+                }
+            }),
+            json!({ "kind": "set_intent", "intent": 2, "intent_kind": "build_up", "base": 1, "wants": ["airfield", "defences"], "defences": 10 })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::Hold {
+                target: HoldTarget::LandUnit(LandUnitId::new(1))
+            }),
+            json!({ "kind": "hold", "land_unit": 1 })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::SetIntent {
+                intent,
                 kind: IntentKind::Neutralise {
                     target: BaseId::new(9)
                 }
@@ -1451,6 +1597,13 @@ mod tests {
             json!({ "kind": "form_intent", "parent": 1, "base": 2 }),
             json!({ "kind": "form_intent", "parent": 1, "intent_kind": "keep_supplied", "base": 2, "floor_days": 3 }),
             json!({ "kind": "form_intent", "intent_kind": "cover", "base": 2 }),
+            json!({ "kind": "set_intent", "intent": 1, "intent_kind": "ready_landing", "task_force": 1 }),
+            json!({ "kind": "set_intent", "intent": 1, "intent_kind": "build_up", "base": 1, "wants": ["defences"] }),
+            json!({ "kind": "set_intent", "intent": 1, "intent_kind": "build_up", "base": 1, "wants": ["airfield"], "defences": 5 }),
+            json!({ "kind": "set_intent", "intent": 1, "intent_kind": "build_up", "base": 1, "wants": ["airfield", "airfield"] }),
+            json!({ "kind": "set_intent", "intent": 1, "intent_kind": "build_up", "base": 1, "wants": [] }),
+            json!({ "kind": "set_intent", "intent": 1, "intent_kind": "build_up", "base": 1, "wants": ["defences"], "defences": 101 }),
+            json!({ "kind": "hold", "ship": 1, "land_unit": 1 }),
         ] {
             assert!(command_from_json(&bad).is_err(), "{bad}");
         }
@@ -1467,6 +1620,7 @@ mod tests {
                     ships: ships(&[4]),
                     task_forces: BTreeSet::new(),
                     air_groups: BTreeSet::new(),
+                    land_units: BTreeSet::new(),
                     source: Some(BaseId::new(2)),
                 }
             }))
@@ -1479,6 +1633,7 @@ mod tests {
                 air_groups: [AirGroupId::new(3), AirGroupId::new(1)]
                     .into_iter()
                     .collect(),
+                land_units: BTreeSet::new(),
                 source: None,
             },
         }));
@@ -1614,6 +1769,24 @@ mod tests {
                     run: Some(3),
                     rests_on: NoticeBasis::NoOrder(0),
                 },
+                StaffNotice {
+                    kind: NoticeKind::Ready,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: NoticeBasis::Command(0),
+                },
+                StaffNotice {
+                    kind: NoticeKind::Late,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: NoticeBasis::Command(0),
+                },
+                StaffNotice {
+                    kind: NoticeKind::Met,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: NoticeBasis::Command(0),
+                },
             ],
         };
         let value = staff_decisions_to_json(&decisions);
@@ -1629,6 +1802,9 @@ mod tests {
         assert_eq!(value["notices"][1]["rests_on"], json!({ "no_order": 1 }));
         assert_eq!(value["notices"][0]["rests_on"], json!({ "command": 0 }));
         assert_eq!(value["notices"][1]["kind"], "waits_for_leave_to_prepare");
+        assert_eq!(value["notices"][4]["kind"], "ready");
+        assert_eq!(value["notices"][5]["kind"], "late");
+        assert_eq!(value["notices"][6]["kind"], "met");
         // Nothing handed in is written as three empty lists and reads back
         // as nothing.
         let none = staff_decisions_to_json(&StaffDecisions::default());

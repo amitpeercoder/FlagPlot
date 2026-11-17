@@ -2,24 +2,24 @@ Placeholder scenario 56: An escorted run
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 74f7c612a48b59b8  31 events
-day   2  hash 51b79ec438877907  32 events
-day   3  hash 9d469901d22f464a  16 events
-day   4  hash dd117aed0f201635  20 events
-day   5  hash 5b8486a68cb3f589  7 events
-day   6  hash a436988cb38102ef  5 events
-day   7  hash 4c0724b8427e9ff3  5 events
-day   8  hash 540a230c69ae0b02  5 events
-day   9  hash 29cbafcccd061b42  5 events
-day  10  hash c5a1acddc93b3819  5 events
-day  11  hash 26f94f449b373908  5 events
-day  12  hash c1e0d4f8a4efb9cd  5 events
-day  13  hash 901cf64d2ac2b44f  5 events
-day  14  hash 02e9476f9cfcdd28  5 events
-day  15  hash a85d622e57980642  5 events
-day  16  hash de2d66bddc839b99  12 events
-day  17  hash 5d8c638a961fba6c  16 events
-day  18  hash 011a32551d099f8d  12 events
+day   1  hash a34a97b28464829c  31 events
+day   2  hash 3abf35adb2428feb  32 events
+day   3  hash f3a02f38c0056fee  16 events
+day   4  hash 1830f0ed580e5b59  20 events
+day   5  hash d4c7060715509cfd  7 events
+day   6  hash f2f1341390967a6b  5 events
+day   7  hash 7c8ac1d788ee5727  5 events
+day   8  hash 353e3011d7b85f86  5 events
+day   9  hash d67d82342e2de446  5 events
+day  10  hash 0bc5efaa2022d7ad  5 events
+day  11  hash 9896049495a18be4  5 events
+day  12  hash c020e0d097421ce9  5 events
+day  13  hash 436ece00cda084cb  5 events
+day  14  hash e5ff5f6645d04c1c  5 events
+day  15  hash b0e16da72504a4ce  5 events
+day  16  hash b36d2476d261f4cd  12 events
+day  17  hash 6aafaa8af1240918  16 events
+day  18  hash 85a5a286c935f339  12 events
 
 task_force:1 "Placeholder escort force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Underway at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1

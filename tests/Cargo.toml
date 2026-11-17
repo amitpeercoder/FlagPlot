@@ -395,3 +395,7 @@ path = "scenario_64_commanders_and_initiative.rs"
 [[test]]
 name = "scenario_65_a_day_from_which_a_force_may_be_used"
 path = "scenario_65_a_day_from_which_a_force_may_be_used.rs"
+
+[[test]]
+name = "scenario_66_units_made_ready"
+path = "scenario_66_units_made_ready.rs"

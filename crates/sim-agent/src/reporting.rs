@@ -315,6 +315,11 @@ fn matter_words(kind: NoticeKind, plan: PlanId, intent: Option<u32>, run: Option
             format!("run {run} of plan:{} has ended", plan.raw())
         }
         (NoticeKind::RunEnded, None) => format!("a run of plan:{} has ended", plan.raw()),
+        // Decision 0141: the notices of the two tasks. The plan names the
+        // task's plan as for the others.
+        (NoticeKind::Ready, _) => format!("plan:{} is ready", plan.raw()),
+        (NoticeKind::Late, _) => format!("plan:{} cannot be ready by its date", plan.raw()),
+        (NoticeKind::Met, _) => format!("plan:{} has every want met", plan.raw()),
     }
 }
 

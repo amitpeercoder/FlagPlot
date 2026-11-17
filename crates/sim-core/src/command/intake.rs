@@ -24,7 +24,7 @@ use crate::command::{
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
-use crate::ids::{AirGroupId, BaseId, EventId, IntentId, ShipId};
+use crate::ids::{AirGroupId, BaseId, EventId, IntentId, LandUnitId, ShipId};
 use crate::orders::{AirGroupOrder, BaseOrder, Issuer, OrderKind, OrderRequest, RejectReason};
 use crate::state::{AirGroupLocation, ShipLocation, Side};
 use crate::world::World;
@@ -107,6 +107,13 @@ impl World {
             .is_some_and(|base| base.side == side)
     }
 
+    fn own_land_unit(&self, side: Side, unit: LandUnitId) -> bool {
+        self.truth
+            .land_units
+            .get(&unit)
+            .is_some_and(|found| found.side == side)
+    }
+
     /// Whether `ship` is in the pool of `forces`: listed in it, or in a task
     /// force it lists (afloat in it, or away from it at the yard).
     pub(crate) fn in_pool(&self, forces: &ForcesLimit, ship: ShipId) -> bool {
@@ -166,6 +173,36 @@ impl World {
         }
     }
 
+    /// Whether intent `intent` may use land unit `unit` (decision 0141): a
+    /// unit of the side named in every forces limit on the intent's chain;
+    /// with none on the chain, a working unit of the side with men ashore in
+    /// the hex of the base a "build up a base" task is addressed to (item 8).
+    /// With no forces limit, no other kind may use a land unit.
+    pub(crate) fn may_use_land_unit(&self, side: Side, intent: IntentId, unit: LandUnitId) -> bool {
+        let state = &self.command[&side];
+        let Some(found) = state.intents.get(&intent) else {
+            return false;
+        };
+        let Some(own) = self.truth.land_units.get(&unit).filter(|u| u.side == side) else {
+            return false;
+        };
+        match state.land_units_on_chain(intent) {
+            Some(allowed) => allowed.contains(&unit),
+            None => match found.kind {
+                IntentKind::BuildUp { base, .. } => {
+                    own.working
+                        && own.men_ashore > 0
+                        && self
+                            .truth
+                            .bases
+                            .get(&base)
+                            .is_some_and(|b| Some(b.hex) == own.hex)
+                }
+                _ => false,
+            },
+        }
+    }
+
     /// Whether `ship` is in the pool of every forces limit in `limits`.
     fn in_every_pool(&self, limits: &[&ForcesLimit], ship: ShipId) -> bool {
         limits.iter().all(|forces| self.in_pool(forces, ship))
@@ -183,7 +220,11 @@ impl World {
         let groups_ok = limit
             .air_groups
             .iter()
-            .all(|group| self.may_use_group(side, parent, *group));
+            .all(|group| self.may_use_group(side, parent, *group))
+            && limit
+                .land_units
+                .iter()
+                .all(|unit| self.may_use_land_unit(side, parent, *unit));
         let above = state.forces_on_chain(parent);
         if above.is_empty() {
             return groups_ok
@@ -352,6 +393,11 @@ impl World {
                         if let Some(source) = limit.source {
                             if !self.own_base(side, source) {
                                 return Err(CommandRefusal::NotYourBase(source));
+                            }
+                        }
+                        for unit in &limit.land_units {
+                            if !self.own_land_unit(side, *unit) {
+                                return Err(CommandRefusal::NotYourLandUnit(*unit));
                             }
                         }
                     }
@@ -560,6 +606,11 @@ impl World {
                             return Err(CommandRefusal::NotYourGroup(*group));
                         }
                     }
+                    HoldTarget::LandUnit(unit) => {
+                        if !self.own_land_unit(side, *unit) {
+                            return Err(CommandRefusal::NotYourLandUnit(*unit));
+                        }
+                    }
                 }
                 if state.holds.contains_key(target) {
                     return Err(CommandRefusal::AlreadyHeld(*target));
@@ -688,6 +739,17 @@ impl World {
         if let Some(hex) = kind.station() {
             if !self.map.contains(hex) {
                 return Err(CommandRefusal::NotOnMap(hex));
+            }
+        }
+        // A landing is readied at a coast hex on the map (decision 0141, 1),
+        // as the order it gives is (decision 0095, 1).
+        if let Some(hex) = kind.landing() {
+            let coast = self
+                .map
+                .get(hex)
+                .is_some_and(|data| data.kind == crate::map::HexKind::Coast);
+            if !coast {
+                return Err(CommandRefusal::NotACoastHex(hex));
             }
         }
         if let IntentKind::KeepSupplied {
@@ -1248,8 +1310,8 @@ impl World {
     /// What the commander holds that an order is for, if anything: a task
     /// force held or with a held ship; a forming order naming a held ship (or
     /// a ship in a held force); a search arc or air mission order to a group
-    /// whose search arc is held. A land unit is never held. The guard binds
-    /// orders a staff hands in only.
+    /// whose search arc is held; a land unit held (decision 0141, 14). The
+    /// guard binds orders a staff hands in only.
     fn held_order_target(&self, side: Side, kind: &OrderKind) -> Option<HoldTarget> {
         let state = &self.command[&side];
         if state.holds.is_empty() {
@@ -1278,7 +1340,11 @@ impl World {
                 };
                 (arc_or_mission && state.holds.contains_key(&setting)).then_some(setting)
             }
-            _ => None,
+            // Decision 0141, 14.
+            OrderKind::LandUnit { target, .. } => {
+                let whole = HoldTarget::LandUnit(*target);
+                state.holds.contains_key(&whole).then_some(whole)
+            }
         }
     }
 
@@ -1289,8 +1355,8 @@ impl World {
     /// the pool, or the limit's source base forming a force from ships in the
     /// pool, or an air group the intent may use (decision 0115, 2: named in
     /// the limit, or with no limit at or above the intent, based at the base
-    /// it is addressed to). A land unit or any other base order is in no
-    /// forces limit.
+    /// it is addressed to), or a land unit the intent may use (decision
+    /// 0141). Any other base order is in no forces limit.
     fn staff_order_in_forces_limit(&self, side: Side, request: &OrderRequest) -> bool {
         let Some(intent) = request.origin.intent else {
             return false;
@@ -1301,6 +1367,10 @@ impl World {
         }
         if let OrderKind::AirGroup { target, .. } = &request.kind {
             return self.may_use_group(side, intent, *target);
+        }
+        // A land unit the intent may use (decision 0141).
+        if let OrderKind::LandUnit { target, .. } = &request.kind {
+            return self.may_use_land_unit(side, intent, *target);
         }
         // An intent addressed to a task force commands that force (decision
         // 0124, 6): an order to it is inside, whatever the limits above.
