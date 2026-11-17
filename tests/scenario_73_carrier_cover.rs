@@ -335,9 +335,6 @@ fn base_strike() -> AirMission {
     AirMission::BaseStrike(BaseId::new(2))
 }
 
-/// Group 2's arc on day 2 as the hand calculation writes it.
-const HAND_ARC_FROM: i32 = 60;
-
 impl Played {
     fn days(&self) -> u32 {
         self.handed.len() as u32
@@ -515,16 +512,15 @@ fn main_game() -> &'static Played {
     GAME.get_or_init(|| play(&text()))
 }
 
-/// The carrier's orders of day 2, as the hand calculation writes them,
-/// with group 2's arc starting at `from`.
-fn day_2(from: i32) -> Vec<Given> {
+/// The carrier's orders of day 2, as the hand calculation writes them.
+fn day_2() -> Vec<Given> {
     vec![
         rules("0.5"),
         route(4, 0),
         mission(1, CAP),
         share(1, "0.5"),
         mission(2, SEARCH),
-        arc(2, from, 120),
+        arc(2, 50, 120),
         mission(3, STRIKE),
         sizing(3),
     ]
@@ -744,27 +740,8 @@ fn the_carriers_orders_day_by_day() {
     g.nothing_refused();
     // Day 1: the plan is not released and the carrier is not served.
     assert!(g.carrier(1).is_empty());
-    // Day 2, as the hand calculation writes it but for the arc's first bearing,
-    // which `the_arc_of_day_2_is_060_to_120` holds to the figure written.
-    let day_2_given = g.carrier(2);
-    assert_eq!(day_2_given.len(), 8);
-    let mut with_hand_arc = day_2_given.clone();
-    // The arc's first bearing is left to its own test.
-    if let Given::Air(
-        2,
-        AirGroupOrder::SetSearchArc {
-            from_deg: _,
-            to_deg,
-            range_nm,
-        },
-    ) = &day_2_given[5]
-    {
-        assert_eq!((*to_deg, *range_nm), (120, n(300)));
-        with_hand_arc[5] = arc(2, HAND_ARC_FROM, *to_deg);
-    } else {
-        panic!("group 2's second order is its arc: {day_2_given:?}");
-    }
-    assert_eq!(with_hand_arc, day_2(HAND_ARC_FROM));
+    // Day 2, whole, with the arc 050 to 120.
+    assert_eq!(g.carrier(2), day_2());
     // Day 3: battle readiness and group 3 to the base strike at base 2.
     assert_eq!(g.carrier(3), day_3());
     // Days 4 to 6: none.
@@ -784,10 +761,9 @@ fn the_carriers_orders_day_by_day() {
 }
 
 #[test]
-#[ignore = "the hand calculation writes the arc of day 2 as 060 to 120; the engine's rule (decision 0115, 9: the narrowest arc of ten-degree steps, the lowest start, widened by 30 degrees at each end) gives 050 to 120 for a threat on bearing 090, as scenario 55's 110 to 180 for 150 does: reported to the architect"]
-fn the_arc_of_day_2_is_060_to_120() {
+fn the_arc_of_day_2_is_050_to_120() {
     let g = main_game();
-    assert_eq!(g.carrier(2)[5], arc(2, 60, 120));
+    assert_eq!(g.carrier(2)[5], arc(2, 50, 120));
 }
 
 #[test]

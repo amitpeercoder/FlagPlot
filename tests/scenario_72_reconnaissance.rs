@@ -696,29 +696,17 @@ fn day_2_the_count_changes_the_choice() {
     assert_says(&not_ready, &["The landing at (4,0) is not ready"]);
 }
 
-/// The hand calculation says the change of roster on day 2 cuts the loading
-/// to 50, which then gains to 100. Decision 0095, item 10, costs loading
-/// only for a unit added to a roster, so the engine keeps the loading at 100
-/// when unit 2 leaves. The day's events show it: no loss of loading, no
-/// gain. This is the architect's to settle.
+/// Day 2: the change of roster drops unit 2 and adds none, so no loading is
+/// lost (decision 0095, item 10) and the loading stays 100.
 #[test]
-#[ignore = "the hand calculation's loading cut to 50 on day 2 disagrees with decision 0095, item 10: a unit leaving a roster costs no loading"]
-fn day_2_the_loading_is_cut_to_50_by_the_change_and_gains_to_100() {
+fn day_2_no_loading_is_lost_and_the_loading_stays_100() {
     let g = main_game();
-    let loss = g.events.iter().find_map(|e| match &e.kind {
-        EventKind::LoadingLost {
-            loading_before,
-            loading,
-            ..
-        } if e.day == 2 => Some((*loading_before, *loading)),
-        _ => None,
-    });
-    assert_eq!(loss, Some((n(100), n(50))));
-    let gained = g.events.iter().find_map(|e| match &e.kind {
-        EventKind::LoadingGained { loading, .. } if e.day == 2 => Some(*loading),
-        _ => None,
-    });
-    assert_eq!(gained, Some(n(100)));
+    assert!(!g
+        .events
+        .iter()
+        .any(|e| e.day == 2 && matches!(e.kind, EventKind::LoadingLost { .. })));
+    assert_eq!(g.loading(1), n(100));
+    assert_eq!(g.loading(2), n(100));
 }
 
 #[test]
@@ -799,24 +787,34 @@ fn the_grades() {
     assert!(g.refused().is_empty(), "{:?}", g.refused());
 }
 
-/// The hand calculation has day 1 of the told game "as in the main case but
-/// for the choice, which is the same two units on 1,500 men wanted", and
-/// day 2 as in the main case. Decision 0142, item 10, has the staff at
-/// preserve the force form nothing, ask no leave and hand in the notice that
-/// it cannot meet the intent where the units the ships carry (1,200 men) are
-/// fewer than the men wanted (500 x 3 = 1,500): so on day 1 the engine forms
-/// no landing, gives the notice, and sends the group; on day 2, on the
-/// count of 150, it forms the landing with unit 1, and every day after goes a
-/// day later than in the main case. This is the architect's to settle.
+/// The told game, as restated: on day 1 no landing is formed (1,500 men
+/// wanted against the 1,200 the ships carry, decision 0142, item 10), the
+/// notice that intent 1 cannot be met is handed in, and air group 1 is sent
+/// and flies; on day 2, on 150 seen from the air, the landing is formed with
+/// unit 1 alone and the group is set to rest.
 #[test]
-#[ignore = "the hand calculation's day 1 of the told game (two units on 1,500 men wanted at preserve the force) disagrees with decision 0142, item 10: too few men is no landing at preserve"]
-fn the_grades_day_1_chooses_the_same_two_units_on_1500_men_wanted() {
+fn the_grades_day_1_no_landing_and_day_2_unit_1_alone() {
     let g = play(&with_an_opening_estimate_of_500());
-    assert_eq!(g.commands(1), main_game().commands(1));
-    let form = text_of(g.command_reason(1, &Cmd::Form(1, landing_kind())));
-    assert_says(&form, &["500 enemy men at (4,0)", "1500 men"]);
-    assert_main_orders(&g, &main_orders_to_day_3());
-    assert_eq!(g.all_commands(), main_commands());
+    // Day 1.
+    assert!(!g.commands(1).iter().any(|c| matches!(c, Cmd::Form(..))));
+    assert_eq!(g.orders(1), vec![Given::Look(1, B)]);
+    let cannot: Vec<(u32, NoticeKind, u32)> = g
+        .all_notices()
+        .into_iter()
+        .filter(|(_, k, _)| *k == NoticeKind::CannotMeet)
+        .collect();
+    assert_eq!(cannot, vec![(1, NoticeKind::CannotMeet, 1)]);
+    assert_eq!(g.flights().len(), 1);
+    assert_eq!(g.estimates[1], Some((150, GroundGrade::SeenFromAir, 1)));
+    // Day 2.
+    assert!(g.commands(2).contains(&Cmd::Form(1, landing_kind())));
+    assert!(g.commands(2).contains(&Cmd::Limit(2, vec![1])));
+    assert!(g.orders(2).contains(&Given::Landing(1, B, vec![1])));
+    assert!(g.orders(2).contains(&Given::Rest(1)));
+    assert!(g.refused().is_empty(), "{:?}", g.refused());
+    // Ordered on day 2, with loading and rehearsal 100 by its end: ready,
+    // and the plan released, on the morning of day 3.
+    assert_eq!(g.plan_day(1, PlanState::Released), Some(3));
 }
 
 #[test]

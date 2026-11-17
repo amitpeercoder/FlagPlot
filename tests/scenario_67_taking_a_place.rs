@@ -1348,10 +1348,23 @@ fn escort_text(level: &str) -> String {
     with_commands(&t, &risk(level))
 }
 
+/// The escort variant with a scout group at base 1 named in the forces
+/// limit, so that the need to know of decision 0147 can be met at preserve
+/// the force.
+fn escort_text_with_a_scout(level: &str) -> String {
+    let scout = "[[air_group]]\nid = 1\nname = \"Placeholder scout squadron\"\nside = \"allied\"\nbase = 1\naircraft_type = 2\nready = 6\n";
+    let t = with_data(&escort_text(level), scout);
+    changed(
+        &t,
+        "task_forces = [1, 2]\n",
+        "task_forces = [1, 2]\nair_groups = [1]\n",
+    )
+}
+
 #[test]
-#[ignore = "decision 0147, item 19: at preserve the force with no count and no air group that can look, the plan is not released, so the escort, route and unload of day 8 are not given; goes to the architect"]
+#[ignore = "with the scout group named, air group 1 is set to reconnaissance of (4,0) on day 1 but never flies: scenario 67's ground figures (ground_placeholder_scenario_67.toml, frozen) give no reconnaissance_error figures, so no flight is made (decision 0147, item 7); the need is never met, plan 1 is never released and day 8 has no orders. Goes to the architect"]
 fn an_escort_at_preserve_the_force() {
-    let g = play(&escort_text("preserve"));
+    let g = play(&escort_text_with_a_scout("preserve"));
     assert_eq!(
         g.orders(8),
         vec![Given::Escort(2, 1), route(), Given::Unload]
