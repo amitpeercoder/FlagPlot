@@ -2,24 +2,24 @@ Placeholder scenario 42b: Two reasons on one day
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7f270096ab9bfc00  24 events
-day   2  hash 6e306bb460da012b  9 events
-day   3  hash d226b091556edd12  7 events
-day   4  hash 5ae17e0a4de70a6f  6 events
-day   5  hash 5a3b4856a8aefdfb  6 events
-day   6  hash b35ec55f3018895c  6 events
-day   7  hash e3530a448b0c9216  6 events
-day   8  hash e234148513503ac9  6 events
-day   9  hash 59d3f4ee133a2ce9  6 events
-day  10  hash f2a23a848aa0e65a  6 events
-day  11  hash b3f922f064a5c4a4  6 events
-day  12  hash ed511172ca8681a6  6 events
-day  13  hash 30307653112d1fa2  6 events
-day  14  hash 6d1f2e2eead0c6ec  6 events
-day  15  hash 95dce506c5c62ce6  6 events
-day  16  hash 496a317889e2a17f  6 events
-day  17  hash f6aae1ac8dd7eac5  6 events
-day  18  hash 182f7692e363546b  6 events
+day   1  hash 4e6f2cc145b5773f  24 events
+day   2  hash 9fe84dc2cd99a96e  9 events
+day   3  hash 6854358a0b86e65b  7 events
+day   4  hash c800f85c4176c61a  6 events
+day   5  hash 4d59cc8675f83b4a  6 events
+day   6  hash 8383c3ce4f51ab49  6 events
+day   7  hash 34800692c861ae87  6 events
+day   8  hash 6f4eb384c3c098cc  6 events
+day   9  hash ab9eb0cd2db035c0  6 events
+day  10  hash acc80d5a333a8787  6 events
+day  11  hash 5ffd1c94087f04ad  6 events
+day  12  hash 4589380da307c1cb  6 events
+day  13  hash af1e2d3dd5eba3eb  6 events
+day  14  hash 10d975603a21c0c1  6 events
+day  15  hash d6be0e924d9cf0cb  6 events
+day  16  hash ba6246c3f505d1de  6 events
+day  17  hash db2f8eca987381c4  6 events
+day  18  hash caceec725f72414e  6 events
 
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Placeholder cargo ship 1": afloat in task_force:1000001; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 360 t of supply

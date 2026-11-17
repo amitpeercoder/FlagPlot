@@ -319,9 +319,9 @@ pub(crate) struct Day<'v, 'a> {
     /// For a proposal, the root whose tree is asked for.
     pub(crate) scope: Option<IntentId>,
     /// What is handed in for the tree in scope (all of it, with no scope).
-    real: StaffDecisions,
+    pub(crate) real: StaffDecisions,
     /// What is handed in for the rest, thrown away.
-    scratch: StaffDecisions,
+    pub(crate) scratch: StaffDecisions,
     /// The groups cover intents served earlier this morning have taken.
     taken: BTreeMap<AirGroupId, IntentId>,
     /// The groups raid intents served earlier this morning have taken
@@ -369,6 +369,7 @@ pub(crate) fn is_air(kind: IntentKind) -> bool {
             | IntentKind::ReadyLanding { .. }
             | IntentKind::BuildUp { .. }
             | IntentKind::TakePlace { .. }
+            | IntentKind::Bombard { .. }
     )
 }
 
@@ -509,6 +510,10 @@ impl<'v, 'a> Day<'v, 'a> {
         day.takes_prepare();
         day.readies();
         day.takes_launch();
+        // Decision 0146: bombardment from the sea, formed under a released
+        // "neutralise a base" or "take a place" (after the landing force is
+        // routed, whose due day it reads) and served at the force's level.
+        day.bombards();
         Some(day)
     }
 

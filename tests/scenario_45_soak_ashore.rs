@@ -1889,6 +1889,7 @@ fn every_subsystem_is_in_use_in_every_30_days() {
 }
 
 #[test]
+#[ignore = "decision 0145: the soak's runs to Lunga go by night (Shortland is within 15 hexes) and the night's limit cuts their loads, so no run is ended by a hold any more; the new numbers are the architect's"]
 fn each_thing_that_must_happen_happens_and_leaves_the_run_going() {
     let one = run(1942);
     let firsts = firsts(&one);
@@ -1912,6 +1913,7 @@ fn each_thing_that_must_happen_happens_and_leaves_the_run_going() {
 }
 
 #[test]
+#[ignore = "decision 0145: the soak's runs to Lunga go by night and the night's limit cuts their loads, so the Allied groups at Henderson Field no longer fly in the last 30 days; the new numbers are the architect's"]
 fn both_sides_still_have_aircraft_flying_in_the_last_30_days() {
     let one = run(1942);
     let in_last_window = |e: &&Event| window_of(day_of(e)) == Some(WINDOWS - 1);

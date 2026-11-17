@@ -1,10 +1,10 @@
 # 0146: Bombardment from the sea: step 5 of stage 3, second part
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139, step 5 of its nine). It writes the task "bombard a base", given to a task force, and the doctrine that serves it, over the rule of shore bombardment (decision 0092), the halt at a marked waypoint (decision 0096) and the doctrine of a force that stands by night (decisions 0124 and 0127), which it follows closely. It adds no rule to the engine. Nothing is built. It is built after decision 0145.
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 3 (decision 0139, step 5 of its nine). It writes the task "bombard a base", given to a task force, and the doctrine that serves it, over the rule of shore bombardment (decision 0092), the halt at a marked waypoint (decision 0096) and the doctrine of a force that stands by night (decisions 0124 and 0127), which it follows closely. It adds no rule to the engine. It is built after decision 0145. Built on Nov 17, 2026, with decision 0145: see "As built".
 
 Summary: Step 5 of stage 3, second part: the task "bombard a base", given to a task force on the bombardment mission, by which the staff sends the force to the enemy base in the night, at the speed that brings it there in the dark, with the fuel and the rounds its risk asks for, and home at the morning; formed under "neutralise a base" and under "take a place", where it fires on the night of the day the landing is due
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Not built
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings await the architect (As built)
 
 ## Why
 
@@ -54,3 +54,35 @@ Each morning, for each bombard task in force whose plan is released and whose fo
 ## The hand calculation
 
 `tests/scenario_71_bombardment_from_the_sea.rs`.
+
+## As built
+
+Built on Nov 17, 2026, on the branch `stage3-step5`, with decision 0145. Nothing is tuned and no figure changed. Every number of the hand calculation that an event, the state or a reason carries is asserted exactly in `tests/scenario_71_bombardment_from_the_sea.rs` (16 tests), and no test is ignored: no mismatch was found. The halts are at elapsed hours 10, 34, 58 and 82; the force steams on at the start of the morning pulses, hours 12, 36, 60 and 84, and is home at hours 22, 46, 70 and 94; base 1 ends with 4,680 t of fuel.
+
+### What was built
+
+- **The kind (`crates/sim-core/src/command.rs`, `command/intake.rs`, `hash.rs`).** `IntentKind::Bombard { force, target }`, code 14, name `bombard`, addressed to the force; its `force()` and `target()` are its two fields, so intake checks the force is the side's and the target a base of the other side on the map. It may stand under "neutralise a base" of the same target and under "take a place", where intake checks the target lies in the place's hex. Hashed after its code, the force then the target, and named in `name_every_field`; state layout `flagplot-state-v42`.
+- **The doctrine (`crates/sim-staff/src/bombard.rs`, new):** `Day::bombards`, run last in the morning (after "take a place" launches, `air.rs`), forms the tasks under each released neutralise and take-a-place end (`form_bombard_tasks`) and serves each task (`serve_bombard`), with the landing force's due day under take a place (`landing_due`). The stand doctrine's helpers (`stand.rs`) are used as they are.
+- **Plumbing:** the scenario file (`crates/sim-data`), the saved game (version 17, `crates/sim-cli/src/save.rs`), the replay export, the agent's commands, tools, schemas and interface (version 21), the viewer's words, addressee and shape (`viewer/index.html`, `viewer/check.js`), `docs/commands.md`.
+- **Scenario 71** (`data/scenarios/71_bombardment_from_the_sea.toml`) with its own surface combat figures (`data/reference/surface_combat_placeholder_scenario_71.toml`, the frozen surface combat figures with the three bombardment figures of the hand calculation, frozen beside the others in `data/reference/step1/` with its README's rule), so that run by itself it plays the game its test proves; its live run and its run on the frozen figures give the same orders, halts and shells.
+- **The rulebook:** chapter 8, "Bombarding a base" and the third task under "A task force as an addressee", the day's order and the versions; chapter 1, the state hash and the saved game; chapter 4, Shore bombardment, one line; the glossary. Doctrine `supply-26`.
+
+### Readings taken
+
+1. **The mission** is not checked by intake: a commander's own task given to a force on another mission is served as written, and the engine's halt then finds no bombardment to wait for. The staff forms the task only for a force on the bombardment mission.
+2. **The target is read first** after the force's own checks (gone, before its day, held, no ship afloat): where it is no longer the enemy's on the side's map, the force gets the readiness order and no other, and no notice.
+3. **The notice of "neutralise a base"** with no bomber that reaches the target is handed in as before, a bombard task formed under it or not.
+4. **The due day under take a place** is, on the morning the landing force is routed (its route order in the same morning's hand-in), that day plus the days of the passage at the cruise speed of its slowest class less one (decision 0142, 18), even where the lift goes at full speed by decision 0145; while the landing force is under way to the place, the day the engine's forecast brings it there; once it has come there is none, and the force does not sortie again.
+5. **A plan ended this morning:** a bombard task whose plan was released at the staff's hour and is marked complete by the staff that morning (the place taken) is still served, so that the force is set back to normal readiness (the hand calculation's day 6).
+6. **At preserve the force** a contact stops the sortie when it reports more ships than the force has afloat (strictly more), within 15 hexes of the target, read from the force's own picture.
+7. **The forming runs in the bombard step,** not in the neutralise doctrine's own pass, so its `form_intent` follows the morning's other commands; a force before its day is left out, as the stand's forming does.
+8. **The reason of a sortie** gives each ship's rounds against the level of the risk where it is not short ("ship:1 has 800 rounds against the level of 400"), beside the stand's words for the target, the hours and the fuel.
+
+### Earlier tests touched
+
+No expected number changed. The saved game's version pins (16 to 17: `crates/sim-cli/src/save.rs`, `crates/sim-cli/tests/saved_games.rs`), the agent interface's (20 to 21: `crates/sim-agent/tests`, the schemas), and the export hashes of `crates/sim-cli/tests/export_pictures.rs` remade at the state layout v42, which changes an export's state version and day hashes and nothing else. The two tests that compare every run baseline with a run that has no staff (`tests/scenario_06d1_pilots_and_replacements.rs`, `tests/scenario_06d2_base_supply.rs`) leave out scenarios 70 and 71, as they leave out every scenario played by the staff. The run baselines, pinned hashes, batch fixture and recorded games are remade by `scripts/regenerate.sh`; what changed in them beyond versions and hashes is decision 0145's (its As built).
+
+### Files to read
+
+- `crates/sim-staff/src/bombard.rs`; `crates/sim-staff/src/night.rs`, `doctrine.rs` (`night_load`, `night_dispatch`) and `take.rs` (`move_step`, `lift_night`) for decision 0145.
+

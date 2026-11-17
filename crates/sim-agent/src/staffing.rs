@@ -411,7 +411,8 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         | IntentKind::OperateCarriers { .. }
         | IntentKind::ReadyLanding { .. }
         | IntentKind::BuildUp { .. }
-        | IntentKind::TakePlace { .. } => (None, None),
+        | IntentKind::TakePlace { .. }
+        | IntentKind::Bombard { .. } => (None, None),
     };
     // The date of a landing and the wants of a build-up (decision 0141).
     let by_day = match kind {
@@ -1754,6 +1755,7 @@ pub(crate) fn request(
             Some("ready_landing") => &["task_force", "hex", "by_day"],
             Some("build_up") => &["base", "wants", "defences"],
             Some("take_place") => &["hex", "base", "by_day"],
+            Some("bombard") => &["task_force", "target"],
             _ => &["base", "floor_days", "interval_days"],
         };
         if let (Some(name), Some(key)) = (
@@ -1787,6 +1789,9 @@ pub(crate) fn request(
                 }
                 "take_place" => {
                     "exactly one of a hex ([q, r]) and a base (the number of a base on your map that is not yours: its hex is the place) and, if wanted, a by_day (a whole number from 1) and nothing else"
+                }
+                "bombard" => {
+                    "a task_force (your own force's number) and a target (the enemy base) and nothing else"
                 }
                 "build_up" => {
                     "a base (your own), wants (a list of airfield, mend, defences, port, aircraft) and defences (the points, 1 to 100, when defences is a want) and nothing else"
@@ -1832,12 +1837,12 @@ pub(crate) fn request(
         }
         if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("target") {
             return Err(CallError::new(
-                "\"target\" is an argument of set_intent only for intent_kind neutralise or raid",
+                "\"target\" is an argument of set_intent only for intent_kind neutralise, raid or bombard",
             ));
         }
         if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("task_force") {
             return Err(CallError::new(
-                "\"task_force\" is an argument of set_intent only for intent_kind stand_at, operate_carriers or ready_landing",
+                "\"task_force\" is an argument of set_intent only for intent_kind stand_at, operate_carriers, ready_landing or bombard",
             ));
         }
         if (kind.is_none() || kind == Some("keep_supplied"))

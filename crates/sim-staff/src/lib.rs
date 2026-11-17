@@ -22,6 +22,7 @@
 mod air;
 mod ammunition;
 mod available;
+mod bombard;
 pub mod carrier;
 mod deny;
 mod doctrine;
@@ -31,6 +32,7 @@ mod handin;
 mod holding;
 mod morning;
 mod neutralise;
+mod night;
 mod picture;
 mod planner;
 mod projection;
@@ -168,7 +170,21 @@ use sim_core::view::SideView;
 /// supply that lasts until the first run follows, with a margin for the
 /// risk. A side with no "take a place" and no hold of a place with men, or
 /// not its own, gets the orders and reasons `supply-22` gave.
-pub const DOCTRINE_VERSION: &str = "supply-24";
+/// `supply-25` adds decision 0145: at preserve the force and at balanced, a
+/// supply run and a lift of "take a place" to a place with an enemy base on
+/// the side's map within 15 hexes and not in its hex are timed to arrive in
+/// the night, at cruise or else at full speed with the fuel reckoned at that
+/// speed, carry no more in each ship than the night's hours can land, and
+/// where no speed arrives in the dark go by day at balanced or do not sail
+/// at preserve the force. A side with no such run gets the orders and
+/// reasons `supply-24` gave.
+/// `supply-26` adds decision 0146: the task "bombard a base", formed under
+/// a released "neutralise a base" or "take a place" for each named force on
+/// the bombardment mission and served at the force's level as a stand by
+/// night, its route acting at the target's hex. A side with no such task and
+/// no force on the bombardment mission named under those ends gets the
+/// orders and reasons `supply-25` gave.
+pub const DOCTRINE_VERSION: &str = "supply-26";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

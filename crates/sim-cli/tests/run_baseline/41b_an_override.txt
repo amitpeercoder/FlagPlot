@@ -2,11 +2,11 @@ Placeholder scenario 41b: An override
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 74ca5c8496f5aca9  28 events
-day   2  hash 256810b319c2cec1  26 events
-day   3  hash a9e686e61e15e200  17 events
-day   4  hash 59f3c466d4ea2618  11 events
-day   5  hash 9337b260bffa5048  11 events
+day   1  hash faa7f977d0f1ca96  28 events
+day   2  hash 85db95afc5c93228  26 events
+day   3  hash 431d79693a3556d7  17 events
+day   4  hash da30dbaa17e07f19  11 events
+day   5  hash 82ef2367f40bcc8d  11 events
 
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:1000002 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1

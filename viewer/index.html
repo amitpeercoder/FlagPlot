@@ -1845,7 +1845,7 @@ function intentLevel(it) {
   switch (it.kind) {
     case 'keep_supplied': case 'neutralise': case 'deny': case 'take_place': return 'area';
     case 'cover': case 'hold': case 'raid': case 'strike_ships': case 'search_waters': case 'build_up': return it.base != null ? 'base:' + it.base : 'area';
-    case 'stand_at': case 'operate_carriers': case 'ready_landing': return it.task_force != null ? 'task_force:' + it.task_force : 'area';
+    case 'stand_at': case 'operate_carriers': case 'ready_landing': case 'bombard': return it.task_force != null ? 'task_force:' + it.task_force : 'area';
     default: return 'area';
   }
 }
@@ -1914,6 +1914,8 @@ function intentWords(model, it, engine) {
     case 'strike_ships': return 'strike ships from ' + baseW(it.base);
     case 'search_waters': return 'search the waters from ' + baseW(it.base);
     case 'stand_at': return 'stand at (' + it.hex[0] + ',' + it.hex[1] + ') with ' + forceW(it.task_force);
+    // Decision 0146.
+    case 'bombard': return 'bombard ' + baseW(it.target) + ' with ' + forceW(it.task_force);
     case 'operate_carriers': return 'operate the carrier force ' + forceW(it.task_force) + ' from (' + it.hex[0] + ',' + it.hex[1] + ')';
     // Decision 0141.
     case 'ready_landing': return 'ready a landing at (' + it.hex[0] + ',' + it.hex[1] + ') by ' + forceW(it.task_force) + (it.by_day ? ' by the morning of day ' + it.by_day : '');
@@ -2235,6 +2237,14 @@ function intentShapes(model, si, side, id) {
       const f = forceHex(it.task_force);
       line(f, it.hex, 'station', 'TF' + it.task_force);
       words.push('the landing ' + hx(it.hex) + ' ringed' + (f ? ', a line from task_force:' + it.task_force + ' at ' + hx(f) : ', task_force:' + it.task_force + ' is not on the map at this step'));
+      break;
+    }
+    case 'bombard': {
+      const target = baseHex(it.target);
+      ring(target, 'target', 'target');
+      const f = forceHex(it.task_force);
+      line(f, target, 'raid', 'TF' + it.task_force);
+      words.push('the target ' + baseName(it.target) + ' ringed' + (f ? ', a line from task_force:' + it.task_force + ' at ' + hx(f) : ', task_force:' + it.task_force + ' is not on the map at this step'));
       break;
     }
     case 'take_place':

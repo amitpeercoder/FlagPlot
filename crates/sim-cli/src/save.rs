@@ -77,6 +77,10 @@
 //! optional `by_day`) in `"commands"`, and the staff's `set_limit` of forces on
 //! an intent it formed in its hand-in. A game of an older version is refused,
 //! not converted.
+//!
+//! Version 17 (decision 0146) adds the intent kind `bombard` (`task_force` and
+//! `target`) in `"commands"` and in the staff's `form_intent`. A game of an
+//! older version is refused, not converted.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -141,8 +145,11 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// staff's `form_intent` may now be `keep_supplied` under a hold, written
 /// with `intent_kind`, `base`, `floor_days` (which may be 0) and an optional
 /// `interval_days`, and a hold's `base` may be an enemy base on the side's
-/// map.
-pub const VERSION: u32 = 16;
+/// map. Version 17 (decision 0146) adds the intent kind `bombard`
+/// (`task_force` and `target`) in `"commands"` and in the staff's
+/// `form_intent`; a game of an older version lacks it and is refused, not
+/// converted.
+pub const VERSION: u32 = 17;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -825,6 +832,16 @@ mod tests {
                 ),
                 (
                     Side::Allied,
+                    CommandKind::SetIntent {
+                        intent: IntentId::new(9),
+                        kind: IntentKind::Bombard {
+                            force: sim_core::ids::TaskForceId::new(2),
+                            target: BaseId::new(3),
+                        },
+                    },
+                ),
+                (
+                    Side::Allied,
                     CommandKind::Hold {
                         target: sim_core::command::HoldTarget::AirGroup(
                             sim_core::ids::AirGroupId::new(5),
@@ -973,9 +990,9 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 16);
+        assert_eq!(written["version"], 17);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 12);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 13);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

@@ -949,3 +949,14 @@ apply; a game that gives none of it is answered as before.
 - **The `met` notice of a take_place.** In the replay export a `staff_notice` event may carry an optional `intent`
   (the number of the intent; only for the `met` notice of a take_place plan), and its words are "intent:N is met".
   An `intent` is left out of the other notices.
+
+## Bombarding a base (decision 0146)
+
+`version` is 21. Everything below is of the side's own command state.
+
+- **A fourth kind of task of a force.** `set_intent` takes `intent_kind` `"bombard"`, addressed to the task force,
+  with `task_force` (the side's own force's number) and `target` (a base on the side's map that is not the side's).
+  It takes no other key. For example `{"intent_kind": "bombard", "task_force": 3, "target": 12}`. `form_intent` (the
+  staff's) and the saved game write the same two keys.
+- **`command_state`, `propose` and `plans`.** An intent's `kind` may be `bombard`; its `task_force` and `target` are
+  the force and the base, and its `base`, `hex`, `distance`, `by_day` and `phase` are `null`.

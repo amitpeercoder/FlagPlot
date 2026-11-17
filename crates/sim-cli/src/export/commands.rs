@@ -34,7 +34,8 @@ use super::num::Num;
 /// "kind": "ready_landing", task_force, hex, by_day }` (`by_day` left out
 /// where there is none) or `{ "kind": "build_up", base, wants, defences }`
 /// (decision 0141); or `{ "kind": "take_place", hex, by_day }` (no `base` or
-/// `task_force`; `by_day` left out where there is none, decision 0142).
+/// `task_force`; `by_day` left out where there is none, decision 0142); or `{
+/// "kind": "bombard", task_force, target }` (decision 0146).
 #[derive(Serialize)]
 struct IntentKindOut {
     kind: &'static str,
@@ -156,6 +157,20 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             floor_days: None,
             interval_days: None,
             by_day: *by_day,
+            wants: None,
+            defences: None,
+        },
+        // Decision 0146: the task force and the enemy base it bombards.
+        IntentKind::Bombard { force, target } => IntentKindOut {
+            kind: kind.name(),
+            base: None,
+            target: Some(target.raw()),
+            hex: None,
+            distance: None,
+            task_force: Some(force.raw()),
+            floor_days: None,
+            interval_days: None,
+            by_day: None,
             wants: None,
             defences: None,
         },

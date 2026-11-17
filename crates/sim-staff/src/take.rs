@@ -35,7 +35,7 @@ use sim_core::hex::Hex;
 use sim_core::ids::{BaseId, EntityRef, LandUnitId, ShipId, TaskForceId};
 use sim_core::map::HexKind;
 use sim_core::orders::{
-    Cargo, CargoAction, LandUnitOrder, Mission, OrderKind, Posture, TaskForceOrder,
+    Cargo, CargoAction, LandUnitOrder, Mission, OrderKind, Posture, SpeedSetting, TaskForceOrder,
 };
 use sim_core::state::{LandUnit, ShipLocation, Skills, TaskForce};
 
@@ -193,7 +193,7 @@ impl Day<'_, '_> {
     }
 
     /// The "ready a landing" task the staff formed under `end`, if any.
-    fn landing_of(&self, end: &Intent) -> Option<Intent> {
+    pub(crate) fn landing_of(&self, end: &Intent) -> Option<Intent> {
         self.state
             .intents_in_force()
             .find(|i| i.parent == Some(end.id) && matches!(i.kind, IntentKind::ReadyLanding { .. }))
@@ -1120,7 +1120,7 @@ impl Day<'_, '_> {
     }
 
     /// The slowest cruise speed of the force's ships afloat.
-    fn speed_of(&self, force: &TaskForce) -> Option<Fixed> {
+    pub(crate) fn speed_of(&self, force: &TaskForce) -> Option<Fixed> {
         self.view
             .ships()
             .filter(|s| s.location == ShipLocation::TaskForce(force.id))
@@ -1458,14 +1458,55 @@ impl Day<'_, '_> {
             return;
         }
         let cargo_order = force.cargo_order.as_ref();
+        // Decision 0145: a lift timed to the dark.
+        let night = self
+            .route_for(force, place, source_hex, end)
+            .ok()
+            .and_then(|(waypoints, _, _)| self.lift_night(end, force, place, &waypoints));
 
-        // Item 16: the supply, first.
-        let take = supply.to_take();
+        // Item 16: the supply, first, cut to the night's limit (decision
+        // 0145, 7 and 8).
+        let mut supply_level = supply.level;
+        let mut night_supply_words = String::new();
+        if let Some(night) = &night {
+            let planned = night.with_supply(supply.level);
+            if let Some(chosen) = crate::night::choose(&night.tried, &night.loads(&planned)) {
+                let hours = chosen.night.unwrap_or(Fixed::ZERO);
+                let lines: Vec<(Fixed, Fixed, Fixed)> = night
+                    .ships
+                    .iter()
+                    .map(|s| {
+                        (
+                            s.supply + night.handling * i64::from(s.men),
+                            s.room,
+                            s.rate * hours,
+                        )
+                    })
+                    .collect();
+                let aboard = night
+                    .ships
+                    .iter()
+                    .fold(Fixed::ZERO, |sum, s| sum + s.supply);
+                let most = aboard + crate::night::weight_within(&lines);
+                if supply_level > most {
+                    night_supply_words = format!(
+                        " By night: {}; {}. At {} the night's hours left on arrival are {hours}, and no ship carries more than it can land in them, so the supply is cut from {} to {}.",
+                        night.near,
+                        crate::night::tried_words(&night.tried),
+                        crate::night::speed_name(chosen.speed),
+                        tons(supply_level),
+                        tons(most)
+                    );
+                    supply_level = most.max(supply.aboard);
+                }
+            }
+        }
+        let take = (supply_level - supply.aboard).max(Fixed::ZERO);
         if !take.is_zero() {
             let loading = cargo_order.is_some_and(|c| {
                 c.action == CargoAction::Load
                     && c.unit.is_none()
-                    && c.weight_t == Some(supply.level)
+                    && c.weight_t == Some(supply_level)
             });
             if loading {
                 let reason = serving(end, plan)
@@ -1483,16 +1524,16 @@ impl Day<'_, '_> {
                 .evidence(supply.words.clone(), today)
                 .worked(if first_lift {
                     format!(
-                        "{} is released: {}. The staff orders {force_id} to load supply at the source until it has {} aboard.",
+                        "{} is released: {}.{night_supply_words} The staff orders {force_id} to load supply at the source until it has {} aboard.",
                         plan.id,
                         supply.words,
-                        tons(supply.level)
+                        tons(supply_level)
                     )
                 } else {
                     format!(
-                        "A second lift: {}. The staff orders {force_id} to load supply at the source until it has {} aboard.",
+                        "A second lift: {}.{night_supply_words} The staff orders {force_id} to load supply at the source until it has {} aboard.",
                         supply.words,
-                        tons(supply.level)
+                        tons(supply_level)
                     )
                 })
                 .would_change("the source's stock, or other units chosen")
@@ -1500,7 +1541,7 @@ impl Day<'_, '_> {
             if in_scope {
                 self.lines.push(format!(
                     "{force_id} loads supply to {}.",
-                    tons(supply.level)
+                    tons(supply_level)
                 ));
             }
             self.target(in_scope).orders.push(StaffOrder {
@@ -1508,7 +1549,7 @@ impl Day<'_, '_> {
                     target: force_id,
                     order: TaskForceOrder::LoadTo {
                         cargo: Cargo::Supply,
-                        weight_t: supply.level,
+                        weight_t: supply_level,
                     },
                 },
                 intent: end.id,
@@ -1524,6 +1565,56 @@ impl Day<'_, '_> {
             .filter(|u| u.men_ashore > 0)
             .collect();
         ashore.sort_by_key(|u| u.id);
+        // Decision 0145, 9: a unit goes only in ships that can each land
+        // their part of it in the night's hours; one that cannot is left for
+        // a later run.
+        let mut left_words: Vec<String> = Vec::new();
+        if let Some(night) = &night {
+            let mut kept = Vec::new();
+            for unit in ashore {
+                let ships = night.with_unit(unit.id, unit.men_ashore);
+                let eligible = night
+                    .tried
+                    .iter()
+                    .any(|t| t.night.is_some() && t.has_fuel());
+                let fits = !eligible
+                    || night.tried.iter().any(|t| {
+                        t.night.is_some_and(|hours| {
+                            t.has_fuel()
+                                && night
+                                    .loads(&ships)
+                                    .iter()
+                                    .all(|(load, rate)| *load <= *rate * hours)
+                        })
+                    });
+                if fits {
+                    kept.push(unit);
+                } else {
+                    let best = night
+                        .tried
+                        .iter()
+                        .filter(|t| t.has_fuel())
+                        .filter_map(|t| t.night)
+                        .max()
+                        .unwrap_or(Fixed::ZERO);
+                    left_words.push(format!(
+                        "{} is left for a later run: taken aboard, its ships would land {} and not every one can in the night's {best} hours",
+                        unit_words(unit),
+                        night.limits_words(&ships, best)
+                    ));
+                }
+            }
+            ashore = kept;
+        }
+        let left_text = if left_words.is_empty() {
+            String::new()
+        } else {
+            format!(
+                " By night: {}; {}.",
+                night.as_ref().map_or_else(String::new, |n| n.near.clone()),
+                left_words.join("; ")
+            )
+        };
         if let Some(unit) = ashore.first() {
             let unit = (*unit).clone();
             let hold = HoldTarget::LandUnit(unit.id);
@@ -1650,8 +1741,85 @@ impl Day<'_, '_> {
         let Some(speed) = self.speed_of(force) else {
             return;
         };
-        // The fuel for the round trip, as for a run (decision 0107).
         let route_nm = whole(out_nm + back_nm);
+        // Decision 0145, 5, 11 and 12: the speed that brings it there in the
+        // night, with the fuel reckoned at that speed.
+        let mut night_words = String::new();
+        let mut night_speed: Option<(SpeedSetting, String)> = None;
+        if let Some(night) = &night {
+            let tried_text = crate::night::tried_words(&night.tried);
+            match crate::night::choose(&night.tried, &night.loads(&night.ships)) {
+                Some(chosen) => {
+                    let hours = chosen.night.unwrap_or(Fixed::ZERO);
+                    let name = crate::night::speed_name(chosen.speed);
+                    night_words = format!(
+                        " By night: {}; {tried_text}. It goes at {name}, with {hours} hours of the night left on arrival: {}; it lands in the night and steams on at the morning.",
+                        night.near,
+                        night.limits_words(&night.ships, hours)
+                    );
+                    if force.speed != chosen.speed {
+                        night_speed = Some((
+                            chosen.speed,
+                            format!(
+                                "{}; {tried_text}: {force_id} is set to {name}, the first that brings it there in the night with the fuel and room for its load.",
+                                night.near
+                            ),
+                        ));
+                    }
+                }
+                None if night.risk == Risk::Preserve => {
+                    let why = format!(
+                        "{}; {tried_text}: neither speed brings it there in the night, and at preserve the force it does not sail by day",
+                        night.near
+                    );
+                    let noticed = self.noticed(NoticeKind::CannotMeet, plan.id);
+                    let reason = serving(end, plan)
+                        .evidence(why.clone(), today)
+                        .binding(why.clone())
+                        .worked(format!(
+                            "Every unit is aboard and the supply is aboard, but {why}: the force is not routed{}.",
+                            if noticed { "" } else { ", and the staff hands in the notice that it cannot meet the intent" }
+                        ))
+                        .would_change("a speed that arrives in the dark, or a bolder risk level")
+                        .done();
+                    if noticed {
+                        self.target(in_scope).no_orders.push(reason);
+                    } else {
+                        self.notice(in_scope, reason, NoticeKind::CannotMeet, plan);
+                    }
+                    return;
+                }
+                None => {
+                    night_words = format!(
+                        " By night: {}; {tried_text}: neither speed brings it there in the night, so at balanced it goes by day at cruising speed.",
+                        night.near
+                    );
+                    if force.speed != SpeedSetting::Cruise {
+                        night_speed = Some((
+                            SpeedSetting::Cruise,
+                            format!(
+                                "{}; {tried_text}: neither speed brings it there in the night, so {force_id} is set to cruising speed and goes by day.",
+                                night.near
+                            ),
+                        ));
+                    }
+                }
+            }
+        }
+        let fuel_speed = night_speed
+            .as_ref()
+            .map(|(s, _)| *s)
+            .or_else(|| night.as_ref().map(|_| force.speed));
+        // The fuel for the round trip, as for a run (decision 0107); for a
+        // lift by night, at the speed it goes at, by the engine's measure.
+        let measured: Option<Vec<crate::stand::ShipFuel>> = fuel_speed.and_then(|s| {
+            night.as_ref().and_then(|n| {
+                n.tried
+                    .iter()
+                    .find(|t| t.speed == s)
+                    .map(|t| t.fuel.clone())
+            })
+        });
         let mut short: Vec<String> = Vec::new();
         let mut fuel_lines: Vec<String> = Vec::new();
         for ship in view
@@ -1661,7 +1829,13 @@ impl Day<'_, '_> {
             let Some(class) = view.ship_class(ship.class) else {
                 continue;
             };
-            let need = route_nm.mul_div(class.fuel_capacity_t, class.endurance_nm);
+            let need = measured
+                .as_ref()
+                .and_then(|m| m.iter().find(|f| f.ship == ship.id))
+                .map_or_else(
+                    || route_nm.mul_div(class.fuel_capacity_t, class.endurance_nm),
+                    |f| f.need,
+                );
             fuel_lines.push(format!(
                 "{} has {} against {} needed",
                 ship.id,
@@ -1732,7 +1906,7 @@ impl Day<'_, '_> {
             " It goes as it stands, with no landing made ready.".to_string()
         };
         let worked = format!(
-            "Every unit chosen is aboard {force_id} and its supply is aboard ({}). It sails today (day {today}, hour {sail_hour}): {out_nm} nm out at {speed} kn = {hours_out} hours, so it arrives at {place} at hour {}; {back_nm} nm back to the source {source}. Fuel: {}.{}{loading_words}",
+            "Every unit chosen is aboard {force_id} and its supply is aboard ({}).{left_text} It sails today (day {today}, hour {sail_hour}): {out_nm} nm out at {speed} kn = {hours_out} hours, so it arrives at {place} at hour {}; {back_nm} nm back to the source {source}. Fuel: {}.{}{loading_words}{night_words}",
             supply.words,
             sail_hour + hours_out,
             fuel_lines.join(", "),
@@ -1764,6 +1938,22 @@ impl Day<'_, '_> {
             self.lines.push(format!(
                 "{force_id} sails for {place} and lands what it carries."
             ));
+        }
+        if let Some((setting, words)) = night_speed {
+            let speed_reason = serving(end, plan)
+                .evidence(words.clone(), today)
+                .binding("a lift by night arrives in the night")
+                .worked(words)
+                .would_change("no enemy base within 15 hexes of the place, or press")
+                .done();
+            self.target(in_scope).orders.push(StaffOrder {
+                kind: OrderKind::TaskForce {
+                    target: force_id,
+                    order: TaskForceOrder::SetSpeed(setting),
+                },
+                intent: end.id,
+                reason: speed_reason,
+            });
         }
         let route_reason = reason(
             "This is the route order: out to the place and back to the source, acting at the place.",
@@ -2301,5 +2491,159 @@ impl Day<'_, '_> {
         }
         picks.sort_by_key(|(id, _)| *id);
         picks
+    }
+}
+
+/// A lift timed to the dark (decision 0145): the base that sends it, the
+/// two speeds tried, and each ship's rate at the place where men are landed,
+/// in ship order.
+struct LiftNight {
+    near: String,
+    risk: Risk,
+    tried: Vec<crate::night::Tried>,
+    /// Each ship of the force, its rate at the place (times the factor of
+    /// the force's loading, where it lands men), the supply and the men's
+    /// weight aboard, its room for supply and its berths left.
+    ships: Vec<LiftShip>,
+    handling: Fixed,
+}
+
+#[derive(Clone, Copy)]
+struct LiftShip {
+    ship: ShipId,
+    rate: Fixed,
+    supply: Fixed,
+    men: u32,
+    unit: Option<LandUnitId>,
+    room: Fixed,
+    berths: u32,
+}
+
+impl LiftNight {
+    /// The weight each ship would land, the men by their weight and the
+    /// supply together, against the rate it lands at.
+    fn loads(&self, ships: &[LiftShip]) -> Vec<(Fixed, Fixed)> {
+        ships
+            .iter()
+            .map(|s| (s.supply + self.handling * i64::from(s.men), s.rate))
+            .collect()
+    }
+
+    fn limits_words(&self, ships: &[LiftShip], night: Fixed) -> String {
+        ships
+            .iter()
+            .map(|s| {
+                format!(
+                    "{} lands {} t against a limit of {} t an hour x {night} hours = {} t",
+                    s.ship,
+                    s.supply + self.handling * i64::from(s.men),
+                    s.rate,
+                    s.rate * night
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+
+    /// The ships with `unit`'s men ashore taken aboard in ship order into
+    /// the berths each has left.
+    fn with_unit(&self, unit: LandUnitId, men: u32) -> Vec<LiftShip> {
+        let mut left = men;
+        self.ships
+            .iter()
+            .map(|s| {
+                let mut s = *s;
+                if s.unit.is_none_or(|u| u == unit) {
+                    let take = left.min(s.berths);
+                    if take > 0 {
+                        s.men += take;
+                        s.berths -= take;
+                        s.unit = Some(unit);
+                        left -= take;
+                    }
+                }
+                s
+            })
+            .collect()
+    }
+
+    /// The ships with the supply aboard raised to `level` in ship order.
+    fn with_supply(&self, level: Fixed) -> Vec<LiftShip> {
+        let aboard = self.ships.iter().fold(Fixed::ZERO, |sum, s| sum + s.supply);
+        let mut left = (level - aboard).max(Fixed::ZERO);
+        self.ships
+            .iter()
+            .map(|s| {
+                let mut s = *s;
+                let add = left.min(s.room);
+                s.supply += add;
+                s.room -= add;
+                left -= add;
+                s
+            })
+            .collect()
+    }
+}
+
+impl Day<'_, '_> {
+    /// Decision 0145, 2 to 6, for a lift of "take a place": where it goes by
+    /// night, the speeds tried and the ships as they stand.
+    fn lift_night(
+        &self,
+        end: &Intent,
+        force: &TaskForce,
+        place: Hex,
+        waypoints: &[Hex],
+    ) -> Option<LiftNight> {
+        let view = self.view;
+        let risk = self.state.risk_read_up(end.id);
+        let (base, hexes) = crate::night::applies(view, risk, place)?;
+        let figures = view.ground_figures()?;
+        let near = crate::night::base_near_words(view, base, hexes, place);
+        let tried = crate::night::try_force(view, force.id, place, waypoints);
+        let port = view
+            .hex(place)
+            .and_then(|data| view.port_size(data.port_size));
+        let factor = view
+            .landing_rate_factor(force.id, place)
+            .unwrap_or(Fixed::ONE);
+        let mut found: Vec<&sim_core::state::Ship> = view
+            .ships()
+            .filter(|s| s.location == ShipLocation::TaskForce(force.id))
+            .collect();
+        found.sort_by_key(|s| s.id);
+        let ships = found
+            .iter()
+            .enumerate()
+            .map(|(index, s)| {
+                let class = view.ship_class(s.class);
+                let rate = port.map_or(Fixed::ZERO, |p| {
+                    if (index as u32) < p.berths {
+                        p.berth_rate_t_per_h
+                    } else {
+                        p.lighter_rate_t_per_h
+                    }
+                });
+                let capacity = class.map_or(Fixed::ZERO, |c| c.cargo_capacity_t);
+                let troops = class.map_or(0, |c| c.troop_capacity_men);
+                let men = s.troops.map_or(0, |t| t.men);
+                LiftShip {
+                    ship: s.id,
+                    rate: rate * factor,
+                    supply: s.supply_t,
+                    men,
+                    unit: s.troops.map(|t| t.unit),
+                    room: (capacity - s.supply_t - s.cargo_fuel_t).max(Fixed::ZERO),
+                    berths: troops.saturating_sub(men),
+                }
+            })
+            .collect();
+        Some(LiftNight {
+            near,
+            risk,
+            tried,
+            ships,
+            handling: figures.handling_t_per_man,
+        })
     }
 }
