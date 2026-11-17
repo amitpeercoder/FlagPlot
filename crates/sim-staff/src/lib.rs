@@ -127,7 +127,13 @@ use sim_core::view::SideView;
 /// radio silence at preserve the force where report figures are loaded. With
 /// no report figures, or command levels off, the orders and reasons are those
 /// `supply-17` gave.
-pub const DOCTRINE_VERSION: &str = "supply-18";
+/// `supply-19` adds decision 0137: a carrier force whose command has a
+/// commander weighs a contact that is its own at one level of risk more
+/// careful (cautious) or bolder (bold) than its task's in the closing rule,
+/// and says so in the reason. With no commander, a steady one, command
+/// levels off or no contact of its own, the orders and reasons are those
+/// `supply-18` gave.
+pub const DOCTRINE_VERSION: &str = "supply-19";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

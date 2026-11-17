@@ -23,7 +23,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use crate::belief::{AgeOutcome, ApplyOutcome, BeliefState, Report};
-use crate::ids::{AirGroupId, BaseId, EventId, LandUnitId, TaskForceId};
+use crate::commander::{Commander, NamedCommander};
+use crate::ids::{AirGroupId, BaseId, ContactId, EventId, LandUnitId, TaskForceId};
 use crate::refdata::SearchFigures;
 use crate::state::{AirGroupLocation, ShipLocation, Side, TruthState};
 use crate::time::Pulse;
@@ -94,9 +95,28 @@ pub struct CommandPost {
     /// reaching it by two roads is applied once. Pruned when older than a
     /// contact may be.
     pub(crate) heard: BTreeMap<EventId, (u32, Pulse)>,
+    /// The contacts of the picture that are the command's own (decision
+    /// 0137, 5): the report that last made or refreshed each there was the
+    /// command's, not one sent to it. Every contact not in it was told.
+    pub(crate) own: BTreeSet<ContactId>,
+    /// The command's commander, if the scenario names one (decision 0137,
+    /// 1). He goes with the command (item 4).
+    pub(crate) commander: Option<Commander>,
 }
 
 impl CommandPost {
+    /// A command under `superior` with `picture`, no report heard, no
+    /// contact of its own and no commander.
+    fn new(superior: Option<CommandRef>, picture: BeliefState) -> CommandPost {
+        CommandPost {
+            superior,
+            picture,
+            heard: BTreeMap::new(),
+            own: BTreeSet::new(),
+            commander: None,
+        }
+    }
+
     /// The command this one is under: `None` for the area command.
     pub fn superior(&self) -> Option<CommandRef> {
         self.superior
@@ -113,6 +133,50 @@ impl CommandPost {
     pub fn heard(&self) -> &BTreeMap<EventId, (u32, Pulse)> {
         &self.heard
     }
+
+    /// The contacts of the picture that are the command's own (decision
+    /// 0137, 5), in contact number order.
+    pub fn own(&self) -> &BTreeSet<ContactId> {
+        &self.own
+    }
+
+    /// The command's commander, if it has one (decision 0137, 1).
+    pub fn commander(&self) -> Option<&Commander> {
+        self.commander.as_ref()
+    }
+
+    /// Applies `report` to the picture and marks what it made or refreshed
+    /// as the command's own or as told (decision 0137, 5). A report heard
+    /// and changing nothing leaves the mark as it was; a contact dropped
+    /// loses it.
+    pub(crate) fn apply(
+        &mut self,
+        report: &Report,
+        figures: &SearchFigures,
+        own: bool,
+    ) -> ApplyOutcome {
+        let outcome = self.picture.apply_report(report, figures);
+        if let ApplyOutcome::Contact(made) = outcome {
+            if own {
+                self.own.insert(made.contact);
+            } else {
+                self.own.remove(&made.contact);
+            }
+        }
+        self.forget_dropped();
+        outcome
+    }
+
+    /// Ages the picture; a contact dropped loses its mark.
+    pub(crate) fn age(&mut self, figures: &SearchFigures) {
+        self.picture.age_contacts(figures);
+        self.forget_dropped();
+    }
+
+    fn forget_dropped(&mut self) {
+        let picture = &self.picture;
+        self.own.retain(|id| picture.contact(*id).is_some());
+    }
 }
 
 /// Who holds a report first (decision 0135, 1): the command or commands that
@@ -121,8 +185,12 @@ impl CommandPost {
 pub(crate) enum Holders {
     /// Every command, in the pulse the report is made: what a scenario
     /// starts a side with, and every report when there are no report
-    /// figures.
+    /// figures. Every command was told of it (decision 0137, 6).
     Every,
+    /// This command alone, as its own, and it is sent to no one: a contact
+    /// a scenario says one command saw (decision 0137, 6). A command that is
+    /// not one of the side's is a bug in the caller.
+    Only(CommandRef),
     /// These commands first; the rest are told by
     /// [`World::pass_report`](crate::passing). `key` is the event the report
     /// is known by (its own event; for "nothing there" the strike's), and
@@ -283,23 +351,12 @@ impl World {
         for side in Side::ALL {
             let own = &self.beliefs[&side];
             let mut posts = SideCommands::new();
-            posts.insert(
-                CommandRef::Area,
-                CommandPost {
-                    superior: None,
-                    picture: own.clone(),
-                    heard: BTreeMap::new(),
-                },
-            );
+            posts.insert(CommandRef::Area, CommandPost::new(None, own.clone()));
             for force in self.truth.task_forces.values() {
                 if force.side == side && !force_is_gone(&self.truth, force.id) {
                     posts.insert(
                         CommandRef::TaskForce(force.id),
-                        CommandPost {
-                            superior: Some(CommandRef::Area),
-                            picture: own.clone(),
-                            heard: BTreeMap::new(),
-                        },
+                        CommandPost::new(Some(CommandRef::Area), own.clone()),
                     );
                 }
             }
@@ -307,11 +364,7 @@ impl World {
                 if base.side == side {
                     posts.insert(
                         CommandRef::Base(base.id),
-                        CommandPost {
-                            superior: Some(CommandRef::Area),
-                            picture: own.clone(),
-                            heard: BTreeMap::new(),
-                        },
+                        CommandPost::new(Some(CommandRef::Area), own.clone()),
                     );
                 }
             }
@@ -388,6 +441,59 @@ impl World {
         Ok(())
     }
 
+    /// Names the commanders a scenario gives (decision 0137, 1 to 3),
+    /// before day 1 and before any event. With command levels off there are
+    /// no commands and none is held: a commander is read only with them on.
+    /// Fails if the game has begun, if a commander's note is empty, if his
+    /// command is not a command of the side, or if a command is given two.
+    pub fn name_commanders(&mut self, named: &[NamedCommander]) -> Result<(), SimError> {
+        if self.truth.day > 0 || !self.events.is_empty() {
+            return Err(SimError::InvalidSetup(
+                "commanders can only be named before day 1 and before any event".to_string(),
+            ));
+        }
+        let mut staged = self.chain.clone();
+        for entry in named {
+            let describe = || {
+                format!(
+                    "the {} commander {} named for {}",
+                    entry.side.name(),
+                    entry.commander.name,
+                    entry.command
+                )
+            };
+            if entry.commander.note.trim().is_empty() {
+                return Err(SimError::InvalidSetup(format!(
+                    "{}: his rating has no note of what it rests on",
+                    describe()
+                )));
+            }
+            let Some(chain) = staged.as_mut() else {
+                continue;
+            };
+            let Some(post) = chain
+                .get_mut(&entry.side)
+                .expect("both sides")
+                .get_mut(&entry.command)
+            else {
+                return Err(SimError::InvalidSetup(format!(
+                    "{}: {} is not a command of the side at the start",
+                    describe(),
+                    entry.command
+                )));
+            };
+            if post.commander.is_some() {
+                return Err(SimError::InvalidSetup(format!(
+                    "{}: the command has a commander already",
+                    describe()
+                )));
+            }
+            post.commander = Some(entry.commander.clone());
+        }
+        self.chain = staged;
+        Ok(())
+    }
+
     /// Whether command levels are on (decision 0134, 1).
     pub fn command_levels(&self) -> bool {
         self.chain.is_some()
@@ -451,6 +557,31 @@ impl World {
         figures: &SearchFigures,
     ) -> ApplyOutcome {
         let travel = self.reports_travel();
+        // A contact a scenario says one command saw: in that command's
+        // picture alone, as its own, and sent to no one (decision 0137, 6).
+        if let Holders::Only(command) = holders {
+            let outcome = self
+                .beliefs
+                .get_mut(&side)
+                .expect("both sides have a belief state")
+                .apply_report(report, figures);
+            if let Some(chain) = self.chain.as_mut() {
+                chain
+                    .get_mut(&side)
+                    .expect("both sides")
+                    .get_mut(command)
+                    .unwrap_or_else(|| panic!("{command} is not a command of the side"))
+                    .apply(report, figures, true);
+            }
+            return outcome;
+        }
+        // The commands that made the report, as commands of the side now.
+        let made_by: Vec<CommandRef> = match holders {
+            Holders::Commands { commands, .. } if self.chain.is_some() => {
+                self.resolve_holders(side, commands)
+            }
+            _ => Vec::new(),
+        };
         let holders = match holders {
             Holders::Commands {
                 commands,
@@ -471,14 +602,17 @@ impl World {
             let posts = chain.get_mut(&side).expect("both sides");
             match holders {
                 None => {
-                    for post in posts.values_mut() {
-                        post.picture.apply_report(report, figures);
+                    // Every command at once. The commands that made it, if
+                    // any, hold it as their own; the rest were told of it
+                    // (decision 0137, 5 and 6).
+                    for (command, post) in posts.iter_mut() {
+                        post.apply(report, figures, made_by.contains(command));
                     }
                 }
                 Some((holders, key, day, pulse)) => {
                     for (command, post) in posts.iter_mut() {
                         if holders.contains(command) {
-                            post.picture.apply_report(report, figures);
+                            post.apply(report, figures, true);
                             post.heard
                                 .insert(key, (day, pulse.unwrap_or(Pulse::Afternoon)));
                         }
@@ -524,7 +658,7 @@ impl World {
             .age_contacts(figures);
         if let Some(chain) = self.chain.as_mut() {
             for post in chain.get_mut(&side).expect("both sides").values_mut() {
-                post.picture.age_contacts(figures);
+                post.age(figures);
             }
         }
         outcomes
@@ -611,18 +745,12 @@ impl World {
             .get(&from)
             .or_else(|| posts.get(&CommandRef::Area))
             .expect("a side always has its area command");
-        let picture = source.picture.clone();
+        let mut post = CommandPost::new(Some(CommandRef::Area), source.picture.clone());
         // A command formed by copy has heard what the picture it copies has
-        // (decision 0135, 13).
-        let heard = source.heard.clone();
-        posts.insert(
-            command,
-            CommandPost {
-                superior: Some(CommandRef::Area),
-                picture,
-                heard,
-            },
-        );
+        // (decision 0135, 13). Every contact in it is one it was told of, and
+        // it has no commander (decision 0137, 4 and 5: a reading).
+        post.heard = source.heard.clone();
+        posts.insert(command, post);
     }
 }
 

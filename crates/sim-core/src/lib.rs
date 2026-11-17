@@ -13,6 +13,7 @@ pub mod bearing;
 pub mod belief;
 pub mod choices;
 pub mod command;
+pub mod commander;
 pub mod events;
 pub mod fixed;
 pub mod hash;

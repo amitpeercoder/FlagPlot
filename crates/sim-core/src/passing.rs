@@ -567,7 +567,9 @@ impl World {
         if post.heard.contains_key(&key) {
             return false;
         }
-        post.picture.apply_report(&report, &figures);
+        // A report sent to a command is one it was told of (decision 0137,
+        // 5).
+        post.apply(&report, &figures, false);
         post.heard.insert(key, made);
         true
     }

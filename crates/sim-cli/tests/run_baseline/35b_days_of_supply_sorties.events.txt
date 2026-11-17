@@ -2,12 +2,12 @@ Placeholder scenario 35b: Days of supply, a surge of sorties
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0e8b079706021c42  2 events
-day   2  hash 5f9641dd8713ed67  2 events
-day   3  hash e3b3dd6f677b87a6  5 events
-day   4  hash ead13a7d89668358  4 events
-day   5  hash e39e89e70279e94d  4 events
-day   6  hash c631ef9ac32f7790  4 events
+day   1  hash 73785e3bd023760b  2 events
+day   2  hash da348d3325ce354e  2 events
+day   3  hash 989bfc1c52627aab  5 events
+day   4  hash cf3ae076b45e5db9  4 events
+day   5  hash 6d1c910cb69965cc  4 events
+day   6  hash a0add1acb14a184d  4 events
 
 #1 D1 night     base:5 spent 4 t of supply on 20 aircraft at the base for the day, 396 t left
 #2 D1 -         base:5 at the end of the day: 396 t of supply, 20 aircraft ready: open

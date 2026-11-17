@@ -1,0 +1,32 @@
+# Report figures of scenario 64 (decision 0137, step 4 of stage 2b), the
+# same as scenario 63's. Every figure is a placeholder: invented so that the
+# scenario's hand calculation rests on no die (every chance is 0 or 1), not
+# historical. No row sizes any of them. Scenario 64
+# (tests/scenario_64_commanders_and_initiative.rs) names this file with its
+# `reports` key. The live figures are in reports.toml.
+
+# Required by the loader and ignored once read: the scenario carries the flag.
+placeholder = true
+
+# Placeholders (decision 0135, items 8 and 9; decision 0137; scenario 64): a
+# report arrives on time in every direction.
+[up]
+on_time = "1"
+late = "0"
+
+[sideways]
+on_time = "1"
+late = "0"
+
+[down]
+on_time = "1"
+late = "0"
+
+# Placeholders (decision 0135, items 7 and 9; scenarios 63 and 64). No row sizes any
+# of them.
+[radio_reach_nm]
+carrier = 600
+battleship = 600
+cruiser = 600
+other_ship = 300
+base = 1000

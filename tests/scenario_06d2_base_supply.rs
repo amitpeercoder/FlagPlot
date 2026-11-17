@@ -2885,7 +2885,10 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 && !stem.starts_with("62_")
                 // And scenario 63's, scenario 58 with command levels on, a
                 // silent force and report figures (decision 0136).
-                && !stem.starts_with("63_"))
+                && !stem.starts_with("63_")
+                // And scenario 64's, scenario 58 with command levels on, a
+                // commander and report figures (decision 0137).
+                && !stem.starts_with("64_"))
             .then(|| stem.to_string())
         })
         .collect();

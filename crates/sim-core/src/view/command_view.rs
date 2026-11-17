@@ -8,7 +8,10 @@
 //! With command levels off a command's view holds the side's own belief
 //! (item 16).
 
+use std::collections::BTreeSet;
+
 use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate};
+use crate::commander::Commander;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, ContactId, LandUnitId, TaskForceId};
 use crate::pictures::{self, CommandRef};
@@ -26,6 +29,11 @@ pub struct CommandView<'a> {
     superior: Option<CommandRef>,
     picture: &'a BeliefState,
     reports_travel: bool,
+    /// The contacts that are the command's own, with command levels on
+    /// (decision 0137, 5); `None` with them off.
+    own: Option<&'a BTreeSet<ContactId>>,
+    /// The command's commander, with command levels on (decision 0137, 3).
+    commander: Option<&'a Commander>,
 }
 
 impl std::fmt::Debug for CommandView<'_> {
@@ -82,6 +90,21 @@ impl<'a> CommandView<'a> {
             .find(|contact| contact.id.raw() == number)
     }
 
+    /// Whether the contact `id` of this picture is the command's own
+    /// (decision 0137, 5): the report that last made or refreshed it here was
+    /// the command's own search, strike or fight. False for one it was told
+    /// of, and for every contact while command levels are off.
+    pub fn is_own(&self, id: ContactId) -> bool {
+        self.own.is_some_and(|own| own.contains(&id))
+    }
+
+    /// The command's commander (decision 0137, 1 and 3): `None` for a
+    /// command with none named, who is steady, and for every command while
+    /// command levels are off.
+    pub fn commander(&self) -> Option<&'a Commander> {
+        self.commander
+    }
+
     /// What the command believes came of its side's fights, in the order the
     /// claims arrived.
     pub fn claims(&self) -> &'a [BattleClaim] {
@@ -134,6 +157,8 @@ impl<'a> SideView<'a> {
                 superior: post.superior(),
                 picture: post.picture(),
                 reports_travel: self.reports_travel(),
+                own: Some(post.own()),
+                commander: post.commander(),
             }),
             None => {
                 let own = match command {
@@ -155,6 +180,8 @@ impl<'a> SideView<'a> {
                     superior: None,
                     picture: self.belief,
                     reports_travel: false,
+                    own: None,
+                    commander: None,
                 })
             }
         }

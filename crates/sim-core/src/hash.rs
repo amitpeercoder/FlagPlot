@@ -213,8 +213,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 37 adds, after the reports in flight, what each side's area
 /// command holds of the commands under it (with the moment each is of), the
 /// state reports in flight, the task forces on radio silence and each silent
-/// force's unsent reports (decision 0136).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v37";
+/// force's unsent reports (decision 0136);
+/// version 38 adds, after each command's reports heard, the contacts of its
+/// picture that are its own and its commander (decision 0137).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v38";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -234,8 +236,9 @@ fn name_every_field(world: &World) {
         truth,
         beliefs,
         // Hashed after the command states, with every picture as a belief
-        // is hashed (decision 0134).
-        chain: _,
+        // is hashed (decision 0134); each post's fields are named in
+        // `name_post_fields`.
+        chain,
         // Hashed after the commands, each report with every field (decision
         // 0135).
         reports_in_flight: _,
@@ -671,6 +674,18 @@ fn name_every_field(world: &World) {
             } = status;
         }
         let _ = standing_off.iter().next();
+    }
+    // Each command's post (decisions 0134 to 0137), hashed after the command
+    // states.
+    for posts in chain.iter().flat_map(|chain| chain.values()) {
+        if let Some(crate::pictures::CommandPost {
+            superior: _,
+            picture: _,
+            heard: _,
+            own: _,
+            commander: _,
+        }) = posts.values().next()
+        {}
     }
     for belief in beliefs.values() {
         if let Some(Contact {
@@ -1657,6 +1672,25 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                         h.u32(event.raw());
                         h.u32(*day);
                         h.u64(pulse.code());
+                    }
+                    // After the reports heard (decision 0137): the contacts
+                    // that are the command's own, in number order, then its
+                    // commander, 0 for none, else 1, his name, his rating's
+                    // code and his note.
+                    h.count(post.own().len());
+                    for contact in post.own() {
+                        h.u32(contact.raw());
+                    }
+                    match post.commander() {
+                        None => h.u8(0),
+                        Some(commander) => {
+                            h.u8(1);
+                            h.count(commander.name.len());
+                            h.bytes(commander.name.as_bytes());
+                            h.u8(commander.initiative.code());
+                            h.count(commander.note.len());
+                            h.bytes(commander.note.as_bytes());
+                        }
                     }
                 }
             }

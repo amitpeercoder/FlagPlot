@@ -23,7 +23,7 @@ use crate::belief::{ApplyOutcome, Report, SightingReport};
 use crate::events::{Cause, EventKind};
 use crate::hex::Hex;
 use crate::ids::ContactId;
-use crate::pictures::Holders;
+use crate::pictures::{CommandRef, Holders};
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::world::{SimError, World};
@@ -69,6 +69,20 @@ impl World {
         &mut self,
         contacts: Vec<StartingContact>,
     ) -> Result<(), SimError> {
+        self.hold_starting_contacts_seen(contacts.into_iter().map(|c| (c, None)).collect())
+    }
+
+    /// [`World::hold_starting_contacts`], where an entry may name the one
+    /// command that saw it (decision 0137, 6): with command levels on it is
+    /// then in that command's picture alone, as its own, and in the side's
+    /// own belief, and is sent to no one. With them off it is the side's, as
+    /// any other. An entry with no command is one every command was told of.
+    /// Fails, beyond the failures of [`World::hold_starting_contacts`], if
+    /// command levels are on and the command named is not one of the side's.
+    pub fn hold_starting_contacts_seen(
+        &mut self,
+        contacts: Vec<(StartingContact, Option<CommandRef>)>,
+    ) -> Result<(), SimError> {
         if self.truth.day > 0 || !self.events.is_empty() {
             return Err(SimError::InvalidSetup(
                 "starting contacts can only be given before day 1, and once".to_string(),
@@ -82,33 +96,52 @@ impl World {
                 "there are starting contacts but no search figures".to_string(),
             ));
         }
-        for contact in &contacts {
+        for (contact, seen_by) in &contacts {
             if contact.ship_count == 0 {
                 return Err(SimError::InvalidSetup(format!(
                     "{} has no ships",
                     contact.describe()
                 )));
             }
+            if let Some(command) = seen_by {
+                if self.command_levels() && !self.is_command(contact.side, *command) {
+                    return Err(SimError::InvalidSetup(format!(
+                        "{} is seen by {command}, which is not a command of the side at the start",
+                        contact.describe()
+                    )));
+                }
+            }
         }
         let mut staged = self.clone();
         for side in Side::ALL {
-            let entries: Vec<&StartingContact> =
-                contacts.iter().filter(|c| c.side == side).collect();
+            let entries: Vec<(&StartingContact, Option<CommandRef>)> = contacts
+                .iter()
+                .filter(|(c, _)| c.side == side)
+                .map(|(c, seen_by)| (c, *seen_by))
+                .collect();
             staged.hold_for_side(side, &entries)?;
         }
         *self = staged;
         Ok(())
     }
 
-    fn hold_for_side(&mut self, side: Side, entries: &[&StartingContact]) -> Result<(), SimError> {
-        let Some(oldest) = entries.iter().map(|c| c.age_pulses).max() else {
+    fn hold_for_side(
+        &mut self,
+        side: Side,
+        entries: &[(&StartingContact, Option<CommandRef>)],
+    ) -> Result<(), SimError> {
+        let Some(oldest) = entries.iter().map(|(c, _)| c.age_pulses).max() else {
             return Ok(());
         };
         let figures = self.ref_data.search.clone().expect("checked by the caller");
         // Which entry made which contact, to name it in an error.
         let mut made: BTreeMap<ContactId, &StartingContact> = BTreeMap::new();
         for pulse in (0..=oldest).rev() {
-            for entry in entries.iter().filter(|c| c.age_pulses == pulse) {
+            for (entry, seen_by) in entries.iter().filter(|(c, _)| c.age_pulses == pulse) {
+                let holders = match seen_by {
+                    Some(command) if self.command_levels() => Holders::Only(*command),
+                    _ => Holders::Every,
+                };
                 let report = SightingReport {
                     estimated_hex: entry.hex,
                     estimated_ship_count: entry.ship_count,
@@ -116,12 +149,9 @@ impl World {
                     received_event: self.events.next_id(),
                     age_pulses: 0,
                 };
-                let ApplyOutcome::Contact(outcome) = self.apply_report(
-                    side,
-                    &Report::Sighting(report.clone()),
-                    &Holders::Every,
-                    &figures,
-                ) else {
+                let ApplyOutcome::Contact(outcome) =
+                    self.apply_report(side, &Report::Sighting(report.clone()), &holders, &figures)
+                else {
                     unreachable!("a sighting report makes or refreshes a contact");
                 };
                 if !outcome.created {

@@ -368,92 +368,92 @@
       "hash": "5ef7d142f1faa97f"
     }
   ],
-  "doctrine_version": "supply-18",
+  "doctrine_version": "supply-19",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "286ae8c58afb6346"
+      "hash": "1cfa94ca66a1b737"
     },
     {
       "day": 2,
-      "hash": "622cd6a17416a83e"
+      "hash": "302b81fbd3e1864b"
     },
     {
       "day": 3,
-      "hash": "3636f7d29be24f39"
+      "hash": "bfa6baa97b689058"
     },
     {
       "day": 4,
-      "hash": "efd5a0b83ee25111"
+      "hash": "503219ec4a7b5eee"
     },
     {
       "day": 5,
-      "hash": "ba4771075db7878a"
+      "hash": "0cfcd5538d4a795d"
     },
     {
       "day": 6,
-      "hash": "bc86fe780fc251af"
+      "hash": "63da734e98b9bd48"
     },
     {
       "day": 7,
-      "hash": "bbeddd5574c0e613"
+      "hash": "9f2b467a622224e8"
     },
     {
       "day": 8,
-      "hash": "6047f52bebda24bb"
+      "hash": "ac3f183b06320dc8"
     },
     {
       "day": 9,
-      "hash": "b4b9277d2a6df4bf"
+      "hash": "7b9dcb3d888105ca"
     },
     {
       "day": 10,
-      "hash": "14d1e6de7ada9aae"
+      "hash": "de81ac8978f49fb5"
     },
     {
       "day": 11,
-      "hash": "d012d8bb822aab43"
+      "hash": "2b9f1c70a8009c6c"
     },
     {
       "day": 12,
-      "hash": "bda5430b91251a6e"
+      "hash": "603b1a0fbe453c09"
     },
     {
       "day": 13,
-      "hash": "0859df2a6b396d0d"
+      "hash": "b850f5b8fb7d53e6"
     },
     {
       "day": 14,
-      "hash": "8f0fa0baa87e4e26"
+      "hash": "216658f0618a5a7b"
     },
     {
       "day": 15,
-      "hash": "b8e043a010a2f25a"
+      "hash": "6c1eb3644425b5ef"
     },
     {
       "day": 16,
-      "hash": "155e1f005193f484"
+      "hash": "3dcceeebadf44a07"
     },
     {
       "day": 17,
-      "hash": "016ba09467414284"
+      "hash": "48cca382cc3a71bd"
     },
     {
       "day": 18,
-      "hash": "8b9f595f1b57b17b"
+      "hash": "a5ab5d34de65bc1a"
     },
     {
       "day": 19,
-      "hash": "59dfa0ad1406f663"
+      "hash": "3987d8e133403322"
     },
     {
       "day": 20,
-      "hash": "6713cee38dc542e8"
+      "hash": "0ad8c66fa932165f"
     },
     {
       "day": 21,
-      "hash": "8d8d3364fbe5b224"
+      "hash": "0290fccdb0864063"
     }
   ],
   "orders": [
@@ -11056,6 +11056,6 @@
       "side": "japanese"
     }
   ],
-  "state_version": "flagplot-state-v37",
-  "version": 12
+  "state_version": "flagplot-state-v38",
+  "version": 13
 }
