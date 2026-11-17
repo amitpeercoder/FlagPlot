@@ -376,7 +376,7 @@ function checkSideSteps(replay, side, sr, model, label) {
 // ---- Command: the intent tree, the orders under each intent, the reasons (decisions 0107, 0116, 0117, 0120) ----
 // The page's tree is read from the steps' `commands` and the staff's reasons; here it is checked against `final.commands` and against
 // itself, with its own, separate table of who an intent is addressed to.
-const ADDRESSEE_OF = { keep_supplied: () => 'area', neutralise: () => 'area', deny: () => 'area', cover: i => 'base:' + i.base, hold: i => 'base:' + i.base, raid: i => 'base:' + i.base, strike_ships: i => 'base:' + i.base, search_waters: i => 'base:' + i.base, stand_at: i => 'task_force:' + i.task_force, operate_carriers: i => 'task_force:' + i.task_force, ready_landing: i => 'task_force:' + i.task_force, build_up: i => 'base:' + i.base, take_place: () => 'area', bombard: i => 'task_force:' + i.task_force };
+const ADDRESSEE_OF = { keep_supplied: () => 'area', neutralise: () => 'area', deny: () => 'area', cover: i => 'base:' + i.base, hold: i => 'base:' + i.base, raid: i => 'base:' + i.base, strike_ships: i => 'base:' + i.base, search_waters: i => 'base:' + i.base, stand_at: i => 'task_force:' + i.task_force, operate_carriers: i => 'task_force:' + i.task_force, ready_landing: i => 'task_force:' + i.task_force, build_up: i => 'base:' + i.base, take_place: () => 'area', control_island: () => 'area', bombard: i => 'task_force:' + i.task_force };
 
 function checkCommand(replay, model, label, sides) {
   const notes = { intents: 0, orders: 0, reasons: 0 };

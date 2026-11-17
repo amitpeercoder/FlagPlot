@@ -48,7 +48,7 @@ Decision 0116 says what an intent is and that intents form a tree. It leaves to 
 
 - **Taking a staff-made intent over,** and stating a sub-intent under a parent the commander names. Stage 3.
 - **A task force or a land formation as an addressee.** Steps 4 and 5, and stage 3.
-- **The staff withdrawing a sub-intent** because what it needs has gone. The cover doctrine's notice that it cannot meet the intent serves until a doctrine needs more.
+- **The staff withdrawing a sub-intent** because what it needs has gone. The cover doctrine's notice that it cannot meet the intent serves until a doctrine needs more. (Decision 0151 builds it: the staff may withdraw an intent it formed, and does so for a neutralising under an island whose base is taken, item 8b.)
 - **Friction between the levels** (decision 0116, 19).
 
 ## What it costs

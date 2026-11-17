@@ -86,6 +86,10 @@
 //! the mission `reconnaissance` and its `hex`; its state version is v43 and
 //! its daily hashes cover the grade of an estimate. A game of an older version
 //! is refused, not converted.
+//!
+//! Version 19 (decision 0151) adds the intent kind `control_island` (`island`
+//! and an optional `by_day`) in `"commands"`; its state version is v44. A game
+//! of an older version is refused, not converted.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -156,8 +160,11 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// converted. Version 18 (decision 0147) adds the air group order
 /// `set_air_mission` with the mission `reconnaissance` and its `hex`; its
 /// state version is v43 and its daily hashes cover the grade of an estimate.
-/// A game of an older version is refused, not converted.
-pub const VERSION: u32 = 18;
+/// A game of an older version is refused, not converted. Version 19
+/// (decision 0151) adds the intent kind `control_island` (`island` and an
+/// optional `by_day`) in `"commands"`; its state version is v44. A game of an
+/// older version lacks it and is refused, not converted.
+pub const VERSION: u32 = 19;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -841,6 +848,16 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        intent: IntentId::new(10),
+                        kind: IntentKind::ControlIsland {
+                            island: 2,
+                            by_day: Some(20),
+                        },
+                    },
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetIntent {
                         intent: IntentId::new(9),
                         kind: IntentKind::Bombard {
                             force: sim_core::ids::TaskForceId::new(2),
@@ -998,9 +1015,9 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 18);
+        assert_eq!(written["version"], 19);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 13);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 14);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

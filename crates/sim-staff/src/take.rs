@@ -341,7 +341,15 @@ impl Day<'_, '_> {
             };
             (choice, source, source_hex, staff_limit)
         } else {
-            match self.assemble(end, commander.as_ref(), place, risk) {
+            // Under "control an island" with no limit of its own, the take's
+            // choices are inside the island's limit, kind by kind (decision
+            // 0151, 4).
+            let within = commander.clone().or_else(|| {
+                self.state
+                    .island_on_chain(end.id)
+                    .and_then(|island| island.limits.forces.clone())
+            });
+            match self.assemble(end, within.as_ref(), place, risk) {
                 Ok(found) => (found.choice, found.source, found.source_hex, found.limit),
                 Err(none) => {
                     // Item 13: the notice once, the reason each morning.

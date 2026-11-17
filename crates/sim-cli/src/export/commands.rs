@@ -35,7 +35,9 @@ use super::num::Num;
 /// where there is none) or `{ "kind": "build_up", base, wants, defences }`
 /// (decision 0141); or `{ "kind": "take_place", hex, by_day }` (no `base` or
 /// `task_force`; `by_day` left out where there is none, decision 0142); or `{
-/// "kind": "bombard", task_force, target }` (decision 0146).
+/// "kind": "bombard", task_force, target }` (decision 0146); or `{ "kind":
+/// "control_island", island, by_day }` (`by_day` left out where there is none,
+/// decision 0151).
 #[derive(Serialize)]
 struct IntentKindOut {
     kind: &'static str,
@@ -67,6 +69,10 @@ struct IntentKindOut {
     /// The points of defences a build_up intent wants, where it wants them.
     #[serde(skip_serializing_if = "Option::is_none")]
     defences: Option<u32>,
+    /// The number of the island a control_island intent names (decision
+    /// 0151).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    island: Option<u32>,
 }
 
 fn intent_kind(kind: &IntentKind) -> IntentKindOut {
@@ -77,6 +83,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             interval_days,
         } => IntentKindOut {
             kind: "keep_supplied",
+            island: None,
             base: Some(base.raw()),
             target: None,
             hex: None,
@@ -93,6 +100,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         | IntentKind::StrikeShips { base }
         | IntentKind::SearchWaters { base } => IntentKindOut {
             kind: kind.name(),
+            island: None,
             base: Some(base.raw()),
             target: None,
             hex: None,
@@ -106,6 +114,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         },
         IntentKind::Neutralise { target } | IntentKind::Raid { target, .. } => IntentKindOut {
             kind: kind.name(),
+            island: None,
             base: kind.own_base().map(|base| base.raw()),
             target: Some(target.raw()),
             hex: None,
@@ -120,6 +129,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         IntentKind::StandAt { force, hex } | IntentKind::OperateCarriers { force, hex } => {
             IntentKindOut {
                 kind: kind.name(),
+                island: None,
                 base: None,
                 target: None,
                 hex: Some([hex.q, hex.r]),
@@ -135,6 +145,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         // Decision 0141.
         IntentKind::ReadyLanding { force, hex, by_day } => IntentKindOut {
             kind: kind.name(),
+            island: None,
             base: None,
             target: None,
             hex: Some([hex.q, hex.r]),
@@ -149,6 +160,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         // Decision 0142: a hex of land, the date left out where there is none.
         IntentKind::TakePlace { hex, by_day } => IntentKindOut {
             kind: kind.name(),
+            island: None,
             base: None,
             target: None,
             hex: Some([hex.q, hex.r]),
@@ -163,6 +175,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         // Decision 0146: the task force and the enemy base it bombards.
         IntentKind::Bombard { force, target } => IntentKindOut {
             kind: kind.name(),
+            island: None,
             base: None,
             target: Some(target.raw()),
             hex: None,
@@ -176,6 +189,7 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         },
         IntentKind::BuildUp { base, wants } => IntentKindOut {
             kind: kind.name(),
+            island: None,
             base: Some(base.raw()),
             target: None,
             hex: None,
@@ -190,8 +204,25 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
                 _ => None,
             }),
         },
+        // Decision 0151: the island's number, the date left out where there
+        // is none.
+        IntentKind::ControlIsland { island, by_day } => IntentKindOut {
+            kind: kind.name(),
+            island: Some(*island),
+            base: None,
+            target: None,
+            hex: None,
+            distance: None,
+            task_force: None,
+            floor_days: None,
+            interval_days: None,
+            by_day: *by_day,
+            wants: None,
+            defences: None,
+        },
         IntentKind::Deny { hex, distance } => IntentKindOut {
             kind: "deny",
+            island: None,
             base: None,
             target: None,
             hex: Some([hex.q, hex.r]),

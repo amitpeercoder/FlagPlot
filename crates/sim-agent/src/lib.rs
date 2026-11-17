@@ -40,6 +40,7 @@ mod common;
 mod deny;
 mod explain;
 mod hold;
+mod island;
 mod lines;
 mod measure;
 mod neutralise;
@@ -81,6 +82,7 @@ pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
 };
 pub use hold::{hold_measure, HoldMeasure};
+pub use island::{island_measure, IslandMeasure, PlaceMeasure, DEFAULT_FLOOR_DAYS};
 pub use lines::{
     AboardLine, AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, HaltLine, LandUnitLine,
     PropulsionLine,

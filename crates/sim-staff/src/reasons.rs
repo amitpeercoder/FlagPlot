@@ -144,6 +144,16 @@ pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
         IntentKind::Bombard { force, target } => {
             format!("bombard {} with {force}", base_words(view, target))
         }
+        // Decision 0151, 3.
+        IntentKind::ControlIsland { island, by_day } => {
+            let name = view
+                .island(island)
+                .map_or_else(String::new, |found| format!(" ({})", found.name));
+            match by_day {
+                Some(day) => format!("control island {island}{name} by the end of day {day}"),
+                None => format!("control island {island}{name}"),
+            }
+        }
     }
 }
 

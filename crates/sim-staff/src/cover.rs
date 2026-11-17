@@ -39,6 +39,13 @@ use crate::raid::{
 use crate::reasons::{base_words, serving};
 use crate::stand::{afloat, expected_words, stopped};
 
+/// Why no covering hex is found: no sea route reaches a hex within `reach`
+/// of the place, the reach set by the groups `sets`.
+pub(crate) struct NoCoveringHex {
+    pub(crate) reach: Fixed,
+    pub(crate) sets: String,
+}
+
 /// What the strike on the place hands the carrier doctrine's morning.
 #[derive(Default)]
 pub(crate) struct CoverStrike {
@@ -77,6 +84,19 @@ impl Day<'_, '_> {
             let in_scope = self.in_scope(id);
             self.form_cover_tasks(&end, &plan, hex, in_scope);
         }
+        // Decision 0151, 8a: the carrier tasks under an island's denial, after
+        // the landing's morning, by the carrier doctrine as it is.
+        let island_tasks = self.in_priority_order(|i| {
+            matches!(i.kind, IntentKind::OperateCarriers { .. }) && self.under_island(i).is_some()
+        });
+        for id in island_tasks {
+            let Some(task) = self.state.intents.get(&id).cloned() else {
+                continue;
+            };
+            if self.released(&task) {
+                self.serve_carrier(&task);
+            }
+        }
         let tasks = self.in_priority_order(|i| {
             matches!(i.kind, IntentKind::OperateCarriers { .. }) && self.under_take(i).is_some()
         });
@@ -108,6 +128,48 @@ impl Day<'_, '_> {
                 self.send_home(&task, &end);
             }
         }
+    }
+
+    /// The "control an island" a carrier task stands under, through the
+    /// denial it was formed under (decision 0151, 6 and 8a), where it does.
+    pub(crate) fn under_island(&self, task: &Intent) -> Option<Intent> {
+        let deny = task
+            .parent
+            .and_then(|p| self.state.intents.get(&p))
+            .filter(|p| matches!(p.kind, IntentKind::Deny { .. }))?;
+        deny.parent
+            .and_then(|p| self.state.intents.get(&p))
+            .filter(|p| matches!(p.kind, IntentKind::ControlIsland { .. }))
+            .cloned()
+    }
+
+    /// Decision 0151, 8a: the take the carrier task `task` under an island's
+    /// denial strikes the place of: the first take of the island's tree, in
+    /// the island's order, whose plan is released and not met and whose
+    /// place is within a bomber group's reach of `here`.
+    pub(crate) fn island_strike_take(
+        &self,
+        task: &Intent,
+        here: Hex,
+        reach_of: &BTreeMap<AirGroupId, Fixed>,
+    ) -> Option<Intent> {
+        let island = self.under_island(task)?;
+        let number = island.kind.island()?;
+        let places = self.view.island(number)?;
+        let reach = reach_of.values().copied().max()?;
+        places.places.iter().find_map(|place| {
+            if self.place_is_ours(place.hex) || distance_nm(here, place.hex) > reach {
+                return None;
+            }
+            self.state
+                .intents_in_force()
+                .find(|i| {
+                    i.parent == Some(island.id)
+                        && matches!(i.kind, IntentKind::TakePlace { hex, .. } if hex == place.hex)
+                        && self.released(i)
+                })
+                .cloned()
+        })
     }
 
     /// The "take a place" intent `task` stands under, where it does.
@@ -198,68 +260,24 @@ impl Day<'_, '_> {
             }
             // Item 2: the reach, the least normal strike radius among the
             // bomber groups aboard, and the covering hex.
-            let bombers: Vec<(AirGroupId, Fixed)> = aboard
-                .iter()
-                .filter_map(|g| bomber_reach(self.view, g).map(|r| (g.id, r)))
-                .collect();
-            let reach = bombers.iter().map(|(_, r)| *r).min();
-            let place_nm = distance_nm(here, place);
-            let (hex, hex_words) = match reach {
-                None => (
-                    here,
-                    format!(
-                        "no bomber group is aboard {id}, so the covering hex is the hex it lies in, {here}"
-                    ),
-                ),
-                Some(reach) => {
-                    let sets = bombers
-                        .iter()
-                        .filter(|(_, r)| *r == reach)
-                        .map(|(g, _)| g.to_string())
-                        .collect::<Vec<_>>()
-                        .join(" and ");
-                    if place_nm <= reach {
-                        (
-                            here,
-                            format!(
-                                "the least normal strike radius of the bomber groups aboard is {reach} nm, set by {sets}, and {place} is {place_nm} nm from {here}, within it: the covering hex is the hex {id} lies in, {here}"
-                            ),
+            let (hex, hex_words) = match self.covering_hex(id, here, &aboard, place) {
+                Ok(found) => found,
+                Err(NoCoveringHex { reach, sets }) => {
+                    let reason = serving(end, plan)
+                        .evidence(why.clone(), today)
+                        .evidence(
+                            format!("no sea route from {here} reaches a hex within {reach} nm of {place}"),
+                            today,
                         )
-                    } else {
-                        match self
-                            .view
-                            .sea_path(here, place)
-                            .and_then(|path| close_to(&path, place, reach))
-                        {
-                            Some(hex) => {
-                                let from_force = here.air_distance_nm(hex);
-                                let from_place = hex.air_distance_nm(place);
-                                (
-                                    hex,
-                                    format!(
-                                        "the least normal strike radius of the bomber groups aboard is {reach} nm, set by {sets}, and {place} is {place_nm} nm from {here}, beyond it: the first hex along the shortest sea route to {place} within {reach} nm of it is {hex}, {from_force} nm from {here} and {from_place} nm from {place}"
-                                    ),
-                                )
-                            }
-                            None => {
-                                let reason = serving(end, plan)
-                                    .evidence(why.clone(), today)
-                                    .evidence(
-                                        format!("no sea route from {here} reaches a hex within {reach} nm of {place}"),
-                                        today,
-                                    )
-                                    .binding("the covering hex is on the shortest sea route to the place")
-                                    .worked(format!(
-                                        "{id} is named in the forces limit of {}, but no sea route from {here} reaches a hex within the {reach} nm normal strike radius of {place}, set by {sets}, so the staff forms no carrier task for {id}. {why}.",
-                                        end.id
-                                    ))
-                                    .would_change("a sea route to the place")
-                                    .done();
-                                self.target(in_scope).no_orders.push(reason);
-                                continue;
-                            }
-                        }
-                    }
+                        .binding("the covering hex is on the shortest sea route to the place")
+                        .worked(format!(
+                            "{id} is named in the forces limit of {}, but no sea route from {here} reaches a hex within the {reach} nm normal strike radius of {place}, set by {sets}, so the staff forms no carrier task for {id}. {why}.",
+                            end.id
+                        ))
+                        .would_change("a sea route to the place")
+                        .done();
+                    self.target(in_scope).no_orders.push(reason);
+                    continue;
                 }
             };
             let kind = IntentKind::OperateCarriers { force: id, hex };
@@ -302,6 +320,64 @@ impl Day<'_, '_> {
                     end.id
                 ));
             }
+        }
+    }
+
+    /// Item 2: the covering hex of force `id`, lying at `here` with the air
+    /// groups `aboard`, for the place at `place`, with its words; or, where
+    /// no sea route reaches a hex within the reach, the reach and the groups
+    /// that set it. Decision 0151, 6, reckons it to an island's first place.
+    pub(crate) fn covering_hex(
+        &self,
+        id: TaskForceId,
+        here: Hex,
+        aboard: &[&sim_core::state::AirGroup],
+        place: Hex,
+    ) -> Result<(Hex, String), NoCoveringHex> {
+        let bombers: Vec<(AirGroupId, Fixed)> = aboard
+            .iter()
+            .filter_map(|g| bomber_reach(self.view, g).map(|r| (g.id, r)))
+            .collect();
+        let reach = bombers.iter().map(|(_, r)| *r).min();
+        let place_nm = distance_nm(here, place);
+        let Some(reach) = reach else {
+            return Ok((
+                here,
+                format!(
+                    "no bomber group is aboard {id}, so the covering hex is the hex it lies in, {here}"
+                ),
+            ));
+        };
+        let sets = bombers
+            .iter()
+            .filter(|(_, r)| *r == reach)
+            .map(|(g, _)| g.to_string())
+            .collect::<Vec<_>>()
+            .join(" and ");
+        if place_nm <= reach {
+            return Ok((
+                here,
+                format!(
+                    "the least normal strike radius of the bomber groups aboard is {reach} nm, set by {sets}, and {place} is {place_nm} nm from {here}, within it: the covering hex is the hex {id} lies in, {here}"
+                ),
+            ));
+        }
+        match self
+            .view
+            .sea_path(here, place)
+            .and_then(|path| close_to(&path, place, reach))
+        {
+            Some(hex) => {
+                let from_force = here.air_distance_nm(hex);
+                let from_place = hex.air_distance_nm(place);
+                Ok((
+                    hex,
+                    format!(
+                        "the least normal strike radius of the bomber groups aboard is {reach} nm, set by {sets}, and {place} is {place_nm} nm from {here}, beyond it: the first hex along the shortest sea route to {place} within {reach} nm of it is {hex}, {from_force} nm from {here} and {from_place} nm from {place}"
+                    ),
+                ))
+            }
+            None => Err(NoCoveringHex { reach, sets }),
         }
     }
 

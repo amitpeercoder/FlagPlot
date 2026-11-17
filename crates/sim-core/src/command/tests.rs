@@ -3977,3 +3977,263 @@ fn a_set_interrupt_and_a_standing_one_fire_on_one_morning_in_the_order_set_then_
         .unwrap();
     assert!(taken < first_fired);
 }
+
+// ---------------------------------------------------------------------------
+// Controlling an island (decision 0151).
+// ---------------------------------------------------------------------------
+
+/// A world with island 1 on its map: base 1's place and a coast hex at
+/// (5,0), and `control_island` of it taken in as intent 1, its plan
+/// released.
+fn world_with_island() -> World {
+    let mut world = world();
+    world.map.insert(
+        Hex::new(5, 0),
+        HexData {
+            kind: crate::map::HexKind::Coast,
+            ..HexData::open_sea()
+        },
+    );
+    world.map.add_island(crate::map::Island {
+        number: 1,
+        name: "Placeholder island".to_string(),
+        places: vec![
+            crate::map::IslandPlace {
+                base: Some(base(1)),
+                hex: HOME,
+            },
+            crate::map::IslandPlace {
+                base: None,
+                hex: Hex::new(5, 0),
+            },
+        ],
+    });
+    player(&mut world, island_intent(1, 1)).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    assert_eq!(state(&world, A).plans[&plan(1)].state, PlanState::Released);
+    world
+}
+
+fn island_intent(n: u32, island: u32) -> CommandKind {
+    CommandKind::SetIntent {
+        intent: intent(n),
+        kind: IntentKind::ControlIsland {
+            island,
+            by_day: None,
+        },
+    }
+}
+
+fn form_under(parent: u32, kind: IntentKind) -> CommandKind {
+    CommandKind::FormIntent {
+        parent: intent(parent),
+        kind,
+    }
+}
+
+fn island_hold(n: u32) -> IntentKind {
+    IntentKind::Hold { base: base(n) }
+}
+
+fn island_take(hex: Hex) -> IntentKind {
+    IntentKind::TakePlace { hex, by_day: None }
+}
+
+fn island_invariants(world: &World) {
+    for side in [A, J] {
+        let found = crate::invariants::check_command(
+            side,
+            world.command_state(side),
+            &world.truth,
+            world.truth.day,
+        );
+        assert!(found.is_empty(), "{found:?}");
+    }
+}
+
+/// Item 3: an island of the scenario is taken in and one the map does not
+/// have is refused, with nothing changed.
+#[test]
+fn controlling_an_island_is_taken_in_only_for_an_island_the_map_has() {
+    let mut world = world();
+    world.map.add_island(crate::map::Island {
+        number: 1,
+        name: "Placeholder island".to_string(),
+        places: vec![crate::map::IslandPlace {
+            base: Some(base(1)),
+            hex: HOME,
+        }],
+    });
+    refused(
+        &mut world,
+        Issuer::Player,
+        island_intent(1, 2),
+        CommandRefusal::NoSuchIsland(2),
+    );
+    assert_eq!(
+        CommandRefusal::NoSuchIsland(2).to_string(),
+        "island 2 is not an island of the scenario"
+    );
+    player(&mut world, island_intent(1, 1)).unwrap();
+    let found = &state(&world, A).intents[&intent(1)];
+    assert_eq!(
+        found.kind,
+        IntentKind::ControlIsland {
+            island: 1,
+            by_day: None
+        }
+    );
+    assert_eq!(found.parent, None);
+    assert_eq!(found.addressee, Addressee::Area);
+    assert_eq!(state(&world, A).plans[&plan(1)].state, PlanState::Draft);
+    island_invariants(&world);
+}
+
+/// Item 8b: the staff withdraws an intent it formed, and what lies beneath
+/// it, each with an event of its own; it may not withdraw the commander's.
+#[test]
+fn the_staff_withdraws_an_intent_it_formed_and_what_lies_beneath_it() {
+    let mut world = world_with_island();
+    staff(&mut world, form_under(1, island_hold(1))).unwrap();
+    staff(
+        &mut world,
+        form_under(
+            2,
+            IntentKind::KeepSupplied {
+                base: base(1),
+                floor_days: 10,
+                interval_days: Some(15),
+            },
+        ),
+    )
+    .unwrap();
+    assert!(state(&world, A).intents[&intent(3)].in_force());
+    let before = world.events.len();
+    staff(
+        &mut world,
+        CommandKind::WithdrawIntent { intent: intent(2) },
+    )
+    .unwrap();
+    let state_now = state(&world, A);
+    assert_eq!(state_now.intents[&intent(2)].withdrawn_day, Some(1));
+    assert_eq!(state_now.intents[&intent(3)].withdrawn_day, Some(1));
+    // The island and its plan stand.
+    assert!(state_now.intents[&intent(1)].in_force());
+    assert_eq!(state_now.plans[&plan(1)].state, PlanState::Released);
+    let withdrawn: Vec<_> = world
+        .events
+        .from_index(before)
+        .iter()
+        .filter_map(|event| match &event.kind {
+            EventKind::IntentWithdrawn {
+                intent: below,
+                parent,
+                ..
+            } => Some((*below, *parent)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(withdrawn, vec![(intent(3), intent(2))]);
+    island_invariants(&world);
+}
+
+#[test]
+fn the_staff_may_not_withdraw_an_intent_the_commander_made() {
+    let mut world = world_with_island();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        CommandKind::WithdrawIntent { intent: intent(1) },
+        CommandRefusal::NotYours,
+    );
+    // The commander still may not withdraw one the staff made.
+    staff(&mut world, form_under(1, island_hold(1))).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        CommandKind::WithdrawIntent { intent: intent(2) },
+        CommandRefusal::MadeByStaff(intent(2)),
+    );
+}
+
+/// Item 9: a "take a place" formed under an island drafts a plan of its own;
+/// a hold formed under it shares the island's.
+#[test]
+fn a_take_under_an_island_has_a_plan_of_its_own_and_a_hold_shares_the_islands() {
+    let mut world = world_with_island();
+    let before = world.events.len();
+    staff(&mut world, form_under(1, island_take(Hex::new(5, 0)))).unwrap();
+    let events: Vec<_> = world.events.from_index(before).to_vec();
+    assert!(matches!(events[0].kind, EventKind::CommandTaken { .. }));
+    assert!(matches!(events[1].kind, EventKind::IntentFormed { .. }));
+    assert_eq!(
+        events[2].kind,
+        EventKind::PlanDrafted {
+            side: A,
+            plan: plan(2),
+            intent: intent(2)
+        }
+    );
+    let take = &state(&world, A).intents[&intent(2)];
+    assert_eq!(take.parent, Some(intent(1)));
+    assert_eq!(take.maker, Maker::Staff);
+    assert_eq!(take.plan, plan(2));
+    assert_eq!(state(&world, A).plans[&plan(2)].intent, intent(2));
+    assert_eq!(state(&world, A).plans[&plan(2)].state, PlanState::Draft);
+    // A hold formed under the island is served by the island's plan.
+    staff(&mut world, form_under(1, island_hold(1))).unwrap();
+    let held = &state(&world, A).intents[&intent(3)];
+    assert_eq!(held.plan, plan(1));
+    assert_eq!(state(&world, A).next_plan, 3);
+    island_invariants(&world);
+}
+
+/// Items 3 and 12: withdrawing the island ends the plan of the take beneath
+/// it as a root's ends, complete if released, else cancelled.
+#[test]
+fn withdrawing_an_island_ends_the_plan_of_the_take_beneath_it() {
+    // A take whose plan is preparing is cancelled.
+    let mut world = world_with_island();
+    staff(&mut world, form_under(1, island_take(Hex::new(5, 0)))).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(2) }).unwrap();
+    assert_eq!(state(&world, A).plans[&plan(2)].state, PlanState::Preparing);
+    let before = world.events.len();
+    player(
+        &mut world,
+        CommandKind::WithdrawIntent { intent: intent(1) },
+    )
+    .unwrap();
+    assert_eq!(state(&world, A).intents[&intent(2)].withdrawn_day, Some(1));
+    assert_eq!(state(&world, A).plans[&plan(2)].state, PlanState::Cancelled);
+    assert_eq!(state(&world, A).plans[&plan(1)].state, PlanState::Complete);
+    let changed: Vec<_> = world
+        .events
+        .from_index(before)
+        .iter()
+        .filter_map(|event| match &event.kind {
+            EventKind::PlanStateChanged { plan, to, .. } => Some((*plan, *to)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        changed,
+        vec![
+            (plan(2), PlanState::Cancelled),
+            (plan(1), PlanState::Complete)
+        ]
+    );
+    island_invariants(&world);
+    // A take whose plan is released is complete.
+    let mut world = world_with_island();
+    staff(&mut world, form_under(1, island_take(Hex::new(5, 0)))).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(2) }).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(2) }).unwrap();
+    player(
+        &mut world,
+        CommandKind::WithdrawIntent { intent: intent(1) },
+    )
+    .unwrap();
+    assert_eq!(state(&world, A).plans[&plan(2)].state, PlanState::Complete);
+    island_invariants(&world);
+}

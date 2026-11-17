@@ -32,6 +32,7 @@ mod escort;
 mod fleet;
 mod handin;
 mod holding;
+mod island;
 mod look;
 mod morning;
 mod neutralise;
@@ -210,7 +211,7 @@ use sim_core::view::SideView;
 /// cover and escort), kept as the forces limit of the task it forms. A side
 /// with no "take a place", or one whose forces limit names all three, gets
 /// the orders and reasons `supply-29` gave.
-pub const DOCTRINE_VERSION: &str = "supply-30";
+pub const DOCTRINE_VERSION: &str = "supply-31";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

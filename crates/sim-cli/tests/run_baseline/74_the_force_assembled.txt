@@ -2,12 +2,12 @@ Placeholder scenario 74: The force assembled
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b1c9973c0107efa3  25 events
-day   2  hash 06dcfde60f3be917  24 events
-day   3  hash 2b838cd88cb146a4  16 events
-day   4  hash 6d88497a52289351  50 events
-day   5  hash dcc1d97e2b6be733  30 events
-day   6  hash ffb802125097f8f0  17 events
+day   1  hash 7920acfcd6400444  25 events
+day   2  hash 36b209755ad11a06  24 events
+day   3  hash 748e36ad2e0ff84d  16 events
+day   4  hash 84b47376ea7cbdea  50 events
+day   5  hash 8f342a180fe89e5c  30 events
+day   6  hash 890e71a69d637a53  17 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder transport force 2" (Allied): Idle at (0,6); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

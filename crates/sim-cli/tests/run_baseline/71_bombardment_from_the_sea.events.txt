@@ -2,12 +2,12 @@ Placeholder scenario 71: Bombardment from the sea
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b8256406214a6edd  36 events
-day   2  hash e8bf68a1644f0836  20 events
-day   3  hash 538d77c5f299d116  20 events
-day   4  hash e98e6c6cf2cd1ffe  20 events
-day   5  hash 74f1115b3128b864  10 events
-day   6  hash 3cacad0d44a8745d  4 events
+day   1  hash 682b147b1a2ba134  36 events
+day   2  hash c1fe85574f25e575  20 events
+day   3  hash 1551c799e7c542bf  20 events
+day   4  hash cce17c859dfea5b9  20 events
+day   5  hash 2123b002b36b264b  10 events
+day   6  hash d3c536db5519827e  4 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to bombard base:2 with task_force:1
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

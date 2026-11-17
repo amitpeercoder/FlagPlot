@@ -974,3 +974,25 @@ apply; a game that gives none of it is answered as before.
   nearest `forces`) is read as it binds: for the take_place, the commander's task forces, land units and source
   where he named them and the staff's choice where he did not; for an intent under it, what its own limit does not
   name of the three is the take_place's, so read.
+
+## Controlling an island (decision 0151)
+
+`version` is 24. Everything below is of the side's own command state.
+
+- **A fifth kind of end.** `set_intent` takes `intent_kind` `"control_island"`, addressed to the area, with `island`
+  (the number of an island the scenario names, required) and an optional `by_day` (a whole number from 1: each
+  take_place the staff forms under it is formed with that date). It takes no other key. For example
+  `{"intent_kind": "control_island", "island": 1, "by_day": 30}`. `form_intent` and the saved game write `island`
+  and `by_day` (left out when there is none). An island the scenario does not name is refused by the engine:
+  "island {number} is not an island of the scenario".
+- **`command_state`.** An intent's `kind` may be `control_island`. A new key `island` on every intent is the
+  island's number for a control_island and `null` for every other kind (`hex`, `base`, `target`, `distance`,
+  `task_force`, `phase`, `floor_days`, `interval_days`, `wants` and `defences` are `null` for it; `by_day` is its
+  date). A control_island intent has a `measure`: `days_in_force`, `days_controlled` (the days on which every
+  named place was the side's at the end of the day, with its supply above its reserves and its days of supply at
+  least the floor of the supply intent under the place's hold, 5 where there is none), `places` (in the island's
+  order, each `hex`, `base` (null for a bare coast hex), `ours` and `days_of_supply`, a decimal string or `null`)
+  and `text`, in the words "controlled on N of M days in force". `propose` and `plans` give the kind and `island`
+  the same way.
+- **`report`.** A new key `islands` lists each control_island intent in force with the same measure and its
+  `intent` and `island` numbers; the summary has a sentence for each.

@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 23
+      "const": 24
     },
     "kind": {
       "const": "command_state"
@@ -82,6 +82,7 @@
           "by_day",
           "wants",
           "defences",
+          "island",
           "phase",
           "interval",
           "set_day",
@@ -121,6 +122,7 @@
               "ready_landing",
               "build_up",
               "take_place",
+              "control_island",
               "bombard"
             ]
           },
@@ -196,6 +198,10 @@
               { "type": "null" }
             ],
             "description": "What a build_up intent wants, in order (decision 0141); null for the other kinds."
+          },
+          "island": {
+            "type": ["integer", "null"],
+            "description": "The number of the island a control_island intent names (decision 0151); null for the other kinds."
           },
           "defences": {
             "type": ["integer", "null"],
@@ -295,9 +301,12 @@
               },
               {
                 "$ref": "command_defs.schema.json#/$defs/deny_measure"
+              },
+              {
+                "$ref": "command_defs.schema.json#/$defs/island_measure"
               }
             ],
-            "description": "A hold intent (its hold measure), a neutralise intent (its neutralise measure) or a deny intent (its deny measure) only."
+            "description": "A hold intent (its hold measure), a neutralise intent (its neutralise measure), a deny intent (its deny measure) or a control_island intent (its island measure) only."
           }
         }
       },

@@ -16,6 +16,7 @@
     "fired_last_day",
     "summary",
     "holds",
+    "islands",
     "neutralisations",
     "denials",
     "refusals"
@@ -26,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 23
+      "const": 24
     },
     "kind": {
       "const": "report"
@@ -187,6 +188,60 @@
           },
           "base": {
             "$ref": "defs.schema.json#/$defs/handle"
+          }
+        }
+      }
+    },
+    "islands": {
+      "type": "array",
+      "description": "The control_island intents in force with the measure of each (decision 0151, 11).",
+      "items": {
+        "type": "object",
+        "description": "The measure of a control_island intent: the days it has been in force, the days of them on which every named place was the side's at the end of the day with its supply above its reserve and at least its floor of days of supply, each place as the side stands in it today, and the words.",
+        "required": [
+          "days_in_force",
+          "days_controlled",
+          "places",
+          "text",
+          "intent",
+          "island"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "days_in_force": {
+            "type": "integer"
+          },
+          "days_controlled": {
+            "type": "integer"
+          },
+          "places": {
+            "type": "array",
+            "description": "The island's named places in its order: hex, base (null for a bare coast hex), ours and days_of_supply (null where no figure).",
+            "items": {
+              "type": "object",
+              "required": ["hex", "base", "ours", "days_of_supply"],
+              "additionalProperties": false,
+              "properties": {
+                "hex": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+                "base": { "type": ["integer", "null"] },
+                "ours": { "type": "boolean" },
+                "days_of_supply": {
+                  "oneOf": [
+                    { "$ref": "defs.schema.json#/$defs/dec" },
+                    { "type": "null" }
+                  ]
+                }
+              }
+            }
+          },
+          "text": {
+            "type": "string"
+          },
+          "intent": {
+            "type": "integer"
+          },
+          "island": {
+            "type": "integer"
           }
         }
       }

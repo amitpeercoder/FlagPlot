@@ -175,6 +175,13 @@ pub enum IntentKind {
     /// and under "take a place" whose hex is the target's, and a commander may
     /// state it himself as a root. Added at the end.
     Bombard { force: TaskForceId, target: BaseId },
+    /// Control `island`, an island the scenario names (decision 0151, 1 and
+    /// 3): an end, addressed to the area, and a root. `by_day` is the day
+    /// each "take a place" the staff forms under it is to be met by, or
+    /// `None`. Under it the staff forms "take a place", "hold a place",
+    /// "deny an area" and "neutralise a base" (item 6). It is never marked
+    /// complete (item 12). Added at the end.
+    ControlIsland { island: u32, by_day: Option<u32> },
 }
 
 /// One thing a "build up a base" task wants (decision 0141, 8 and 10).
@@ -310,6 +317,7 @@ impl IntentKind {
             IntentKind::BuildUp { .. } => 12,
             IntentKind::TakePlace { .. } => 13,
             IntentKind::Bombard { .. } => 14,
+            IntentKind::ControlIsland { .. } => 15,
         }
     }
 
@@ -330,6 +338,7 @@ impl IntentKind {
             IntentKind::BuildUp { .. } => "build_up",
             IntentKind::TakePlace { .. } => "take_place",
             IntentKind::Bombard { .. } => "bombard",
+            IntentKind::ControlIsland { .. } => "control_island",
         }
     }
 
@@ -350,7 +359,8 @@ impl IntentKind {
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
             | IntentKind::ReadyLanding { .. }
-            | IntentKind::TakePlace { .. } => None,
+            | IntentKind::TakePlace { .. }
+            | IntentKind::ControlIsland { .. } => None,
         }
     }
 
@@ -364,7 +374,8 @@ impl IntentKind {
             | IntentKind::OperateCarriers { .. }
             | IntentKind::ReadyLanding { .. }
             | IntentKind::TakePlace { .. }
-            | IntentKind::Bombard { .. } => None,
+            | IntentKind::Bombard { .. }
+            | IntentKind::ControlIsland { .. } => None,
             other => other.base(),
         }
     }
@@ -395,6 +406,14 @@ impl IntentKind {
     pub const fn place(self) -> Option<Hex> {
         match self {
             IntentKind::TakePlace { hex, .. } => Some(hex),
+            _ => None,
+        }
+    }
+
+    /// The island a "control an island" end names (decision 0151, 3).
+    pub const fn island(self) -> Option<u32> {
+        match self {
+            IntentKind::ControlIsland { island, .. } => Some(island),
             _ => None,
         }
     }
@@ -455,7 +474,8 @@ impl IntentKind {
             IntentKind::KeepSupplied { .. }
             | IntentKind::Neutralise { .. }
             | IntentKind::Deny { .. }
-            | IntentKind::TakePlace { .. } => Addressee::Area,
+            | IntentKind::TakePlace { .. }
+            | IntentKind::ControlIsland { .. } => Addressee::Area,
             IntentKind::Cover { base }
             | IntentKind::Hold { base }
             | IntentKind::Raid { base, .. }
@@ -516,6 +536,14 @@ impl IntentKind {
             (IntentKind::KeepSupplied { base, .. }, IntentKind::Hold { base: held }) => {
                 base == held
             }
+            // Decision 0151, 6: the tree of an island.
+            (
+                IntentKind::TakePlace { .. }
+                | IntentKind::Hold { .. }
+                | IntentKind::Deny { .. }
+                | IntentKind::Neutralise { .. },
+                IntentKind::ControlIsland { .. },
+            ) => true,
             _ => false,
         }
     }
@@ -1280,10 +1308,70 @@ impl CommandState {
     ///
     /// On the chain of a "take a place" each limit is read as it binds there
     /// (decision 0149, 2 and 3): see [`CommandState::forces_as_bound`].
+    ///
+    /// An island's own limit binds only what it names, kind by kind (decision
+    /// 0151, 4): what it does not name of the task forces (with the ships),
+    /// the land units and the source is filled from the nearest limit beneath
+    /// it on the chain; with none beneath, it is read as set.
     pub fn forces_on_chain(&self, intent: IntentId) -> Vec<Cow<'_, ForcesLimit>> {
+        let mut found: Vec<Cow<'_, ForcesLimit>> = Vec::new();
+        for each in self.up_the_tree(intent) {
+            let Some(bound) = self.forces_as_bound(each) else {
+                continue;
+            };
+            let bound = match (each.kind, found.last()) {
+                (IntentKind::ControlIsland { .. }, Some(beneath)) => {
+                    Cow::Owned(fill_unnamed(bound.into_owned(), beneath))
+                }
+                _ => bound,
+            };
+            found.push(bound);
+        }
+        found
+    }
+
+    /// Whether `intent` owns a plan of its own: a root, or an intent formed
+    /// with one (see [`CommandState::forms_own_plan`]).
+    pub fn owns_plan(&self, intent: &Intent) -> bool {
+        match intent.parent {
+            None => true,
+            Some(parent) => self.forms_own_plan(intent.kind, parent),
+        }
+    }
+
+    /// Whether an intent of `kind` formed under `parent` has a plan of its own
+    /// (decision 0151, 9, the architect's additions on the build's findings):
+    /// a "take a place" under "control an island", prepared, released and
+    /// marked complete as a root take's is; and a "keep supplied" under a
+    /// "hold a place" under "control an island", whose runs are its own, as
+    /// a root supply intent's are, since the island's holds share one plan.
+    pub fn forms_own_plan(&self, kind: IntentKind, parent: IntentId) -> bool {
+        let Some(above) = self.intents.get(&parent) else {
+            return false;
+        };
+        match (kind, above.kind) {
+            (IntentKind::TakePlace { .. }, IntentKind::ControlIsland { .. }) => true,
+            (IntentKind::KeepSupplied { .. }, IntentKind::Hold { .. }) => above
+                .parent
+                .and_then(|p| self.intents.get(&p))
+                .is_some_and(|p| matches!(p.kind, IntentKind::ControlIsland { .. })),
+            _ => false,
+        }
+    }
+
+    /// The intent whose plan `intent` serves: the nearest on its chain,
+    /// itself included, that owns one (decision 0117, 9, and 0151, 9).
+    pub fn plan_owner(&self, intent: IntentId) -> IntentId {
         self.up_the_tree(intent)
-            .filter_map(|found| self.forces_as_bound(found))
-            .collect()
+            .find(|found| self.owns_plan(found))
+            .map_or(intent, |found| found.id)
+    }
+
+    /// The "control an island" on `intent`'s chain: itself or above it
+    /// (decision 0151).
+    pub fn island_on_chain(&self, intent: IntentId) -> Option<&Intent> {
+        self.up_the_tree(intent)
+            .find(|found| matches!(found.kind, IntentKind::ControlIsland { .. }))
     }
 
     /// The nearest forces limit on `intent`'s chain, for words: what binds is
@@ -1332,24 +1420,22 @@ impl CommandState {
         let Some(own) = own else {
             return Some(Cow::Owned(fill));
         };
-        let mut bound = own.clone();
-        if bound.task_forces.is_empty() && bound.ships.is_empty() {
-            bound.task_forces = fill.task_forces;
-            bound.ships = fill.ships;
-        }
-        if bound.land_units.is_empty() {
-            bound.land_units = fill.land_units;
-        }
-        if bound.source.is_none() {
-            bound.source = fill.source;
-        }
-        Some(Cow::Owned(bound))
+        Some(Cow::Owned(fill_unnamed(own.clone(), &fill)))
     }
 
     /// The air groups the forces limits on `intent`'s chain allow: those
     /// named in every one of them. `None` where none is set on the chain.
+    ///
+    /// Under "control an island" a limit that names no air group does not
+    /// bind the air groups (decision 0151, 4, the architect's addition on
+    /// the build's finding): with none on the chain naming one, `None`, so
+    /// an intent addressed to a base may use the groups based there.
     pub fn groups_on_chain(&self, intent: IntentId) -> Option<BTreeSet<AirGroupId>> {
-        let mut limits = self.forces_on_chain(intent).into_iter();
+        let island = self.island_on_chain(intent).is_some();
+        let mut limits = self
+            .forces_on_chain(intent)
+            .into_iter()
+            .filter(|limit| !island || !limit.air_groups.is_empty());
         let first = limits.next()?.air_groups.clone();
         Some(limits.fold(first, |allowed, limit| {
             allowed.intersection(&limit.air_groups).copied().collect()
@@ -1479,6 +1565,23 @@ impl CommandState {
     }
 }
 
+/// `own` with what it does not name of the task forces (with the ships), the
+/// land units and the source taken from `fill` (decisions 0149, 3, and 0151,
+/// 4). The air groups are `own`'s.
+fn fill_unnamed(mut own: ForcesLimit, fill: &ForcesLimit) -> ForcesLimit {
+    if own.task_forces.is_empty() && own.ships.is_empty() {
+        own.task_forces.clone_from(&fill.task_forces);
+        own.ships.clone_from(&fill.ships);
+    }
+    if own.land_units.is_empty() {
+        own.land_units.clone_from(&fill.land_units);
+    }
+    if own.source.is_none() {
+        own.source = fill.source;
+    }
+    own
+}
+
 // ---------------------------------------------------------------------------
 // Commands.
 // ---------------------------------------------------------------------------
@@ -1580,8 +1683,12 @@ impl CommandKind {
             CommandKind::SetLimit(Limit::Forces { .. }) => {
                 matches!(issuer, Issuer::Player | Issuer::Staff)
             }
+            // The staff withdraws an intent it formed (decision 0151, 8b);
+            // intake refuses it one the commander made.
+            CommandKind::WithdrawIntent { .. } => {
+                matches!(issuer, Issuer::Player | Issuer::Staff)
+            }
             CommandKind::SetIntent { .. }
-            | CommandKind::WithdrawIntent { .. }
             | CommandKind::SetLimit(_)
             | CommandKind::SetLeave { .. }
             | CommandKind::CancelPlan { .. }
@@ -1726,6 +1833,9 @@ pub enum CommandRefusal {
     /// The hex of a "take a place" end is not a hex of land on the map
     /// (decision 0142, 1). Added at the end.
     NotLand(Hex),
+    /// The island of a "control an island" end is not one the scenario
+    /// names (decision 0151, 1). Added at the end.
+    NoSuchIsland(u32),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -1809,6 +1919,9 @@ impl core::fmt::Display for CommandRefusal {
             }
             CommandRefusal::NotACoastHex(hex) => write!(f, "{hex} is not a coast hex on the map"),
             CommandRefusal::NotLand(hex) => write!(f, "{hex} is not a hex of land on the map"),
+            CommandRefusal::NoSuchIsland(number) => {
+                write!(f, "island {number} is not an island of the scenario")
+            }
         }
     }
 }
@@ -2012,6 +2125,13 @@ fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core
         IntentKind::Bombard { force, target } => write!(f, "bombard {target} with {force}"),
         IntentKind::TakePlace { hex, by_day } => {
             write!(f, "take the place at {hex}")?;
+            match by_day {
+                Some(day) => write!(f, " by the end of day {day}"),
+                None => Ok(()),
+            }
+        }
+        IntentKind::ControlIsland { island, by_day } => {
+            write!(f, "control island {island}")?;
             match by_day {
                 Some(day) => write!(f, " by the end of day {day}"),
                 None => Ok(()),

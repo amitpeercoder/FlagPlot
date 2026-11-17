@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -12,7 +12,7 @@ use sim_core::ids::{
     AirGroupId, AircraftTypeId, BaseId, FormationId, IntentId, LandUnitId, ShipClassId, ShipId,
     TaskForceId,
 };
-use sim_core::map::HexKind;
+use sim_core::map::{HexKind, Island, IslandPlace};
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
 use sim_core::orders::{
     Activity, AirGroupOrder, AirMission, BaseOrder, Cargo, Issuer, Job, LandUnitOrder, Mission,
@@ -138,6 +138,28 @@ struct ScenarioFile {
     /// Formations of land units, each with its parent (decision 0140, 7).
     #[serde(default)]
     formation: Vec<FormationSpec>,
+    /// Islands: named places a side may be asked to control (decision 0151,
+    /// 1). Data on the map, not state.
+    #[serde(default)]
+    island: Vec<IslandSpec>,
+}
+
+/// An island (decision 0151, 1): a number, a name and its places in order.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct IslandSpec {
+    number: u32,
+    name: String,
+    places: Vec<IslandPlaceSpec>,
+}
+
+/// One place of an island: exactly one of a base of the scenario and a coast
+/// hex as `[q, r]`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct IslandPlaceSpec {
+    base: Option<u32>,
+    hex: Option<[i32; 2]>,
 }
 
 /// A formation of land units (decision 0140, 7): its number, name, side and
@@ -2707,6 +2729,61 @@ impl Scenario {
         truth
             .arrivals
             .sort_by_key(|a| (a.day, a.air_group, a.aircraft, a.pilots));
+
+        // Islands are map data (decision 0151, 1); they are added before the
+        // world is built, so both sides' maps have them.
+        let mut islands_seen: BTreeSet<u32> = BTreeSet::new();
+        for spec in &file.island {
+            if !islands_seen.insert(spec.number) {
+                return Err(fail(format!("island {} appears twice", spec.number)));
+            }
+            if spec.places.is_empty() {
+                return Err(fail(format!("island {} has no place", spec.number)));
+            }
+            let mut places = Vec::new();
+            for (index, place) in spec.places.iter().enumerate() {
+                let what = format!("island {} place {}", spec.number, index + 1);
+                match (place.base, place.hex) {
+                    (Some(raw), None) => {
+                        let base_id = BaseId::new(raw);
+                        let base = truth.bases.get(&base_id).ok_or_else(|| {
+                            fail(format!(
+                                "{what} names {base_id}, which is not a base of the scenario"
+                            ))
+                        })?;
+                        places.push(IslandPlace {
+                            base: Some(base_id),
+                            hex: base.hex,
+                        });
+                    }
+                    (None, Some([q, r])) => {
+                        let hex = Hex::new(q, r);
+                        let data = map
+                            .get(hex)
+                            .ok_or_else(|| fail(format!("{what} is at {q},{r}, off the map")))?;
+                        if data.kind != HexKind::Coast {
+                            return Err(fail(format!("{what} is at {q},{r}, which is not coast")));
+                        }
+                        places.push(IslandPlace { base: None, hex });
+                    }
+                    (Some(_), Some(_)) => {
+                        return Err(fail(format!(
+                            "{what} has both \"base\" and \"hex\"; it takes exactly one"
+                        )));
+                    }
+                    (None, None) => {
+                        return Err(fail(format!(
+                            "{what} has neither \"base\" nor \"hex\"; it takes exactly one"
+                        )));
+                    }
+                }
+            }
+            map.add_island(Island {
+                number: spec.number,
+                name: spec.name.clone(),
+                places,
+            });
+        }
 
         let mut world =
             World::new(file.seed, ref_data, map, truth).map_err(|e| fail(e.to_string()))?;
@@ -6771,6 +6848,31 @@ task_force = 3
                 },
             }
         );
+        // Decision 0151: an island to control, with and without a date.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 6\nintent_kind = \"control_island\"\nisland = 2\nby_day = 9"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(6),
+                kind: IntentKind::ControlIsland {
+                    island: 2,
+                    by_day: Some(9),
+                },
+            }
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 6\nintent_kind = \"control_island\"\nisland = 2"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(6),
+                kind: IntentKind::ControlIsland {
+                    island: 2,
+                    by_day: None,
+                },
+            }
+        );
         // Decision 0146: a base to bombard with a task force.
         assert_eq!(
             only(&command(
@@ -6957,6 +7059,86 @@ task_force = 3
         assert!(intent(&format!("{place}\ndistance = 1")).contains("does not take \"distance\""));
         assert!(intent(&format!("{place}\nby_day = 0")).contains("by_day 0"));
         assert!(intent("intent_kind = \"take_place\"").contains("needs \"hex\""));
+    }
+
+    #[test]
+    fn a_control_island_intent_with_wrong_keys_is_refused() {
+        let intent = |body: &str| {
+            error_of(&command(&format!(
+                "kind = \"set_intent\"\nintent = 1\n{body}"
+            )))
+        };
+        let island = "intent_kind = \"control_island\"\nisland = 1";
+        assert!(intent(&format!("{island}\nbase = 1")).contains("does not take \"base\""));
+        assert!(intent(&format!("{island}\nhex = [6, 0]")).contains("does not take \"hex\""));
+        assert!(
+            intent(&format!("{island}\ntask_force = 1")).contains("does not take \"task_force\"")
+        );
+        assert!(intent(&format!("{island}\nby_day = 0")).contains("by_day 0"));
+        assert!(intent("intent_kind = \"control_island\"").contains("needs \"island\""));
+        // Another kind refuses the island key.
+        assert!(
+            intent("intent_kind = \"take_place\"\nhex = [6, 0]\nisland = 1")
+                .contains("does not take \"island\"")
+        );
+    }
+
+    // Islands (decision 0151, 1).
+
+    #[test]
+    fn an_island_loads_with_its_places_as_hexes_in_order() {
+        let scenario = landing(
+            false,
+            "\n[[island]]\nnumber = 3\nname = \"Placeholder island\"\nplaces = [{ hex = [8, 0] }, { base = 1 }]\n",
+        )
+        .expect("loads");
+        let map = scenario.world.map();
+        let island = map.island(3).expect("the island is on the map");
+        assert_eq!(island.name, "Placeholder island");
+        assert_eq!(island.places.len(), 2);
+        assert_eq!(island.places[0].base, None);
+        assert_eq!(island.places[0].hex, Hex::new(8, 0));
+        assert_eq!(island.places[1].base, Some(BaseId::new(1)));
+        assert_eq!(island.places[1].hex, Hex::new(0, 0));
+        assert!(map.island(4).is_none());
+        // It is kept through a copy for another seed.
+        let other = scenario.with_seed(77).expect("copies");
+        assert!(other.world.map().island(3).is_some());
+    }
+
+    #[test]
+    fn a_bad_island_is_a_load_error() {
+        let island = |body: &str| format!("\n[[island]]\nnumber = 1\nname = \"Island\"\n{body}\n");
+        // No place.
+        let message = landing_error(false, &island("places = []"));
+        assert!(message.contains("has no place"), "{message}");
+        // A base the scenario does not have.
+        let message = landing_error(false, &island("places = [{ base = 9 }]"));
+        assert!(message.contains("not a base of the scenario"), "{message}");
+        // A hex off the map.
+        let message = landing_error(false, &island("places = [{ hex = [99, 0] }]"));
+        assert!(message.contains("off the map"), "{message}");
+        // A hex that is not coast.
+        let message = landing_error(false, &island("places = [{ hex = [5, 0] }]"));
+        assert!(message.contains("not coast"), "{message}");
+        // Both keys, and neither.
+        let message = landing_error(false, &island("places = [{ base = 1, hex = [8, 0] }]"));
+        assert!(message.contains("both"), "{message}");
+        let message = landing_error(false, &island("places = [{}]"));
+        assert!(message.contains("neither"), "{message}");
+        // A number used twice.
+        let message = landing_error(
+            false,
+            &format!(
+                "{}{}",
+                island("places = [{ base = 1 }]"),
+                island("places = [{ base = 1 }]")
+            ),
+        );
+        assert!(message.contains("appears twice"), "{message}");
+        // An unknown key.
+        let message = landing_error(false, &island("places = [{ base = 1 }]\ncolour = 1"));
+        assert!(message.contains("colour"), "{message}");
     }
 
     #[test]
@@ -7198,7 +7380,7 @@ task_force = 3
             "kind = \"set_intent\"\nintent = 1\nintent_kind = \"win\"\nbase = 2"
         ))
         .contains(
-            "not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place or bombard"
+            "not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place, control_island or bombard"
         ));
         // Neutralise and raid name a target; a neutralise takes no base.
         let aimed = |kind: &str, extra: &str| {

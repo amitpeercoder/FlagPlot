@@ -211,7 +211,8 @@ pub enum InvariantViolation {
     InterruptUnsound(Side, InterruptRef),
     /// An intent whose place in the tree is unsound (decision 0117): a
     /// sub-intent whose parent does not exist, has a number not below its
-    /// own, or serves another plan; a sub-intent the commander made, or a
+    /// own, or serves another plan (but a take under an island, which owns
+    /// one, decision 0151, 9); a sub-intent the commander made, or a
     /// root the staff made; a sub-intent in force under a withdrawn parent;
     /// or an addressee that is not the one its kind sets. Added at the end
     /// of the enum.
@@ -1013,8 +1014,10 @@ pub(crate) fn check_command(
     }
 
     for intent in command.intents.values() {
-        // A sub-intent serves its root's plan (decision 0117, 9).
-        let root = command.root_of(intent.id);
+        // A sub-intent serves its root's plan (decision 0117, 9), except
+        // beneath a take formed under an island, which owns a plan of its
+        // own (decision 0151, 9): the plan's owner is the nearest of the two.
+        let root = command.plan_owner(intent.id);
         let named_back = command
             .plans
             .get(&intent.plan)
@@ -1026,7 +1029,7 @@ pub(crate) fn check_command(
             None => intent.maker == Maker::Commander,
             Some(parent) => command.intents.get(&parent).is_some_and(|found| {
                 found.id < intent.id
-                    && found.plan == intent.plan
+                    && (found.plan == intent.plan || command.owns_plan(intent))
                     && intent.maker == Maker::Staff
                     && (!intent.in_force() || found.in_force())
             }),

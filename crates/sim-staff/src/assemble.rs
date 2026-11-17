@@ -61,7 +61,7 @@ pub(crate) struct NoSource {
 /// The intents served before the end, out of its own tree, and what each
 /// names: what the staff may not take for the end (item 5).
 #[derive(Default)]
-struct Others {
+pub(crate) struct Others {
     forces: BTreeMap<TaskForceId, IntentId>,
     units: BTreeMap<LandUnitId, IntentId>,
     bases: BTreeMap<BaseId, IntentId>,
@@ -117,7 +117,7 @@ pub(crate) fn limit_words(limit: &ForcesLimit) -> String {
 
 impl Day<'_, '_> {
     /// Item 5: what the intents served before `end` name.
-    fn others_above(&self, end: &Intent) -> Others {
+    pub(crate) fn others_above(&self, end: &Intent) -> Others {
         let mut others = Others::default();
         let root = self.state.root_of(end.id);
         for id in self.in_priority_order(|_| true) {
@@ -149,7 +149,7 @@ impl Day<'_, '_> {
     }
 
     /// Item 5 for a task force: `Err(words)` where the staff may not take it.
-    fn may_take_force(&self, force: &TaskForce, others: &Others) -> Result<(), String> {
+    pub(crate) fn may_take_force(&self, force: &TaskForce, others: &Others) -> Result<(), String> {
         if let Some(day) = crate::available::force_waiting(self.view, force.id) {
             return Err(crate::available::named_with_day(force.id, day));
         }
@@ -188,7 +188,7 @@ impl Day<'_, '_> {
     }
 
     /// Item 5 for a base.
-    fn may_take_base(&self, base: BaseId, others: &Others) -> Result<(), String> {
+    pub(crate) fn may_take_base(&self, base: BaseId, others: &Others) -> Result<(), String> {
         if let Some(day) = crate::available::not_before(self.view, EntityRef::Base(base)) {
             return Err(crate::available::named_with_day(
                 base_words(self.view, base),
@@ -493,9 +493,12 @@ impl Day<'_, '_> {
             })
             .map(|f| f.id)
             .collect();
+        // Under "control an island" a take takes no carrier force: the
+        // carriers are the island's, under its denial (decision 0151, 8a).
+        let under_island = self.state.island_on_chain(end.id).is_some();
         let carrier: Vec<TaskForceId> = forces
             .iter()
-            .filter(|f| f.mission == Mission::Carrier)
+            .filter(|f| f.mission == Mission::Carrier && !under_island)
             .map(|f| f.id)
             .collect();
         let escort: Vec<TaskForceId> = forces
@@ -510,7 +513,9 @@ impl Day<'_, '_> {
             } else {
                 format!("to bombard the place: {}", list(&bombard))
             },
-            if carrier.is_empty() {
+            if under_island {
+                "the carrier forces are the island's, under its denial".to_string()
+            } else if carrier.is_empty() {
                 "no force on the carrier mission to cover the landing".to_string()
             } else {
                 format!("to cover the landing: {}", list(&carrier))
@@ -538,7 +543,14 @@ impl Day<'_, '_> {
         lines.push(risk_line);
         choice.lines = lines;
 
-        // Item 3: the limit, of what the commander did not name.
+        // Item 3: the limit, of what the commander did not name. Under an
+        // island, where what he named is the island's limit and not the
+        // take's, the staff's limit names the whole choice, so that the take
+        // reads it as it binds (decision 0151, 4).
+        let names_whole = end.limits.forces.is_none() && under_island;
+        let named_forces = named_forces.filter(|_| !names_whole);
+        let named_units = named_units.filter(|_| !names_whole);
+        let named_source = named_source.filter(|_| !names_whole);
         let picked: BTreeSet<LandUnitId> = choice.picks.iter().map(|p| p.id).collect();
         let mut task_forces: BTreeSet<TaskForceId> = BTreeSet::new();
         if named_forces.is_none() {

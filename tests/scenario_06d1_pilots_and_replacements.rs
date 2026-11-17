@@ -2226,7 +2226,10 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 && !stem.starts_with("73_")
                 // And scenario 74's, whose staff assembles the force
                 // (decision 0149).
-                && !stem.starts_with("74_"))
+                && !stem.starts_with("74_")
+                // And scenario 76's, whose staff controls an island
+                // (decision 0151).
+                && !stem.starts_with("76_"))
             .then(|| stem.to_string())
         })
         .collect();

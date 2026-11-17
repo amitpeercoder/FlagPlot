@@ -539,8 +539,10 @@ impl Day<'_, '_> {
                 continue;
             }
             // Under "take a place" the task is served after the landing's
-            // morning, by `take_carriers` (decision 0148).
-            if self.under_take(&task).is_some() {
+            // morning, by `take_carriers` (decision 0148), and so is one under
+            // an island's denial, whose strike reads the takes' plans
+            // (decision 0151, 8a).
+            if self.under_take(&task).is_some() || self.under_island(&task).is_some() {
                 continue;
             }
             self.serve_carrier(&task);
@@ -1331,7 +1333,14 @@ impl Day<'_, '_> {
                 // 0148, 4 to 6): the raid's rules decide the mission and the
                 // held share of the groups that go.
                 let mut cover = crate::cover::CoverStrike::default();
-                if let Some(end) = self.under_take(task) {
+                // Under "control an island" the task stands under the denial,
+                // and the strike on the place is for the first take of the
+                // tree in the island's order whose plan is released and not
+                // met, its place in the bombers' reach (decision 0151, 8a).
+                let end = self
+                    .under_take(task)
+                    .or_else(|| self.island_strike_take(task, here, &reach_of));
+                if let Some(end) = end {
                     cover =
                         self.cover_strike(task, &plan, &end, here, risk, &groups, &reach_of, &air);
                     air.orders.retain(|(g, order)| {

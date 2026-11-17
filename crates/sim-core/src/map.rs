@@ -97,6 +97,30 @@ pub struct Map {
     /// first. Reference data, like the rest of the map: not hashed. A map
     /// with none allows no march.
     land_links: BTreeSet<(Hex, Hex)>,
+    /// The islands a scenario names (decision 0151, 1), by number. Data, on
+    /// both sides' maps, as the map is: nothing of it changes in a game, and
+    /// it is not hashed (item 2).
+    islands: BTreeMap<u32, Island>,
+}
+
+/// One named place of an island (decision 0151, 1): a base, which means its
+/// hex, or a coast hex. The loader writes the hex of a base's place, so that
+/// both sides read the same hex whoever holds the base.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct IslandPlace {
+    /// The base the scenario names, or `None` for a bare coast hex.
+    pub base: Option<crate::ids::BaseId>,
+    pub hex: Hex,
+}
+
+/// An island a scenario names (decision 0151, 1): a number, a name and its
+/// places in order. The loader refuses one with no place, a place off the
+/// map and a number used twice.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Island {
+    pub number: u32,
+    pub name: String,
+    pub places: Vec<IslandPlace>,
 }
 
 /// Whether a hex has land men can stand on: land or coast.
@@ -107,6 +131,22 @@ const fn holds_land(kind: HexKind) -> bool {
 impl Map {
     pub fn new() -> Map {
         Map::default()
+    }
+
+    /// Adds an island (decision 0151, 1), replacing any earlier one of its
+    /// number. The loader checks it.
+    pub fn add_island(&mut self, island: Island) {
+        self.islands.insert(island.number, island);
+    }
+
+    /// The island of that number, if the scenario names one.
+    pub fn island(&self, number: u32) -> Option<&Island> {
+        self.islands.get(&number)
+    }
+
+    /// Every island the scenario names, by number.
+    pub fn islands(&self) -> impl Iterator<Item = &Island> + '_ {
+        self.islands.values()
     }
 
     /// Adds a hex, replacing any earlier data for it.

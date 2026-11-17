@@ -12,7 +12,7 @@
 //!
 //! | `kind` | other keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up`, `take_place` or `bombard`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise` and `deny`), `target` (`neutralise`, `raid` and `bombard`), `hex` as `[q, r]` and `distance` in whole hexes (`deny`: the waters within `distance` of `hex`), for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set); `ready_landing` (decision 0141) takes `task_force`, `hex` and `by_day` (left out when there is no date); `build_up` takes `base`, `wants`, a list of `airfield`, `mend`, `defences`, `port` and `aircraft` in order, and `defences`, the points from 1 to 100, written only when `defences` is a want; `take_place` (decision 0142) takes `hex` as `[q, r]` and `by_day` (left out when there is no date), and, in the tool, `base` in place of `hex` (the tool writes the base's hex); `bombard` (decision 0146) takes `task_force` and `target` |
+//! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up`, `take_place`, `control_island` or `bombard`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise` and `deny`), `target` (`neutralise`, `raid` and `bombard`), `hex` as `[q, r]` and `distance` in whole hexes (`deny`: the waters within `distance` of `hex`), for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set); `ready_landing` (decision 0141) takes `task_force`, `hex` and `by_day` (left out when there is no date); `build_up` takes `base`, `wants`, a list of `airfield`, `mend`, `defences`, `port` and `aircraft` in order, and `defences`, the points from 1 to 100, written only when `defences` is a want; `take_place` (decision 0142) takes `hex` as `[q, r]` and `by_day` (left out when there is no date), and, in the tool, `base` in place of `hex` (the tool writes the base's hex); `control_island` (decision 0151) takes `island`, the number of an island the scenario names, and `by_day` (left out when there is no date); `bombard` (decision 0146) takes `task_force` and `target` |
 //! | `form_intent` | `parent`, `intent_kind` (`keep_supplied` under a hold, with `floor_days` and optionally `interval_days`; `cover`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up` or `bombard`), `base` (not for a neutralise, a deny or a task of a task force), `by_day`, `wants` and `defences` (as for `set_intent`), `target` (for a raid), `hex` and `distance` (for a deny), `task_force` and `hex` (for `stand_at` and `operate_carriers`), `task_force` and `target` (for `bombard`): the staff's, a sub-intent under `parent` |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve` or `risk`) and its keys, below |
@@ -501,6 +501,14 @@ fn intent_kind_to_json(body: &mut Value, kind: IntentKind) {
                 body["by_day"] = json!(day);
             }
         }
+        // Decision 0151: the island's number, the date left out when none.
+        IntentKind::ControlIsland { island, by_day } => {
+            body["intent_kind"] = json!(kind.name());
+            body["island"] = json!(island);
+            if let Some(day) = by_day {
+                body["by_day"] = json!(day);
+            }
+        }
         // Decision 0146: the force and the enemy base it bombards.
         IntentKind::Bombard { force, target } => {
             body["intent_kind"] = json!(kind.name());
@@ -606,12 +614,16 @@ fn intent_kind_from_json(value: &Value) -> Result<IntentKind, String> {
                 hex: hex_pair(value, "hex")?,
                 by_day: small_opt(value, "by_day")?,
             }),
+            "control_island" => Ok(IntentKind::ControlIsland {
+                island: small(value, "island")?,
+                by_day: small_opt(value, "by_day")?,
+            }),
             "bombard" => Ok(IntentKind::Bombard {
                 force: TaskForceId::new(small(value, "task_force")?),
                 target: target()?,
             }),
             other => Err(format!(
-                "unknown intent kind \"{other}\" (keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place or bombard)"
+                "unknown intent kind \"{other}\" (keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place, control_island or bombard)"
             )),
         },
     }
@@ -668,7 +680,10 @@ pub fn command_to_json(command: &CommandKind) -> Value {
             // The two tasks of decision 0141.
             if kind.readies_units()
                 || kind.place().is_some()
-                || matches!(kind, IntentKind::Bombard { .. })
+                || matches!(
+                    kind,
+                    IntentKind::Bombard { .. } | IntentKind::ControlIsland { .. }
+                )
             {
                 intent_kind_to_json(&mut body, *kind);
             }
