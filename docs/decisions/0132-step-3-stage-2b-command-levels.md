@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 16, 2026, for the designer's app
 
 Summary: A plan for step 3, stage 2b: each task force and each base becomes a command with its own picture of the enemy, changed only by what it sees and what is reported to it; reports travel up, down and between neighbours in radio reach, on time, a pulse late or lost; a superior knows his forces as last reported, and a force may keep radio silence; a commander has an initiative rating read by one rule; a scenario turns command levels on, and with them off every game plays as it does today; refusal and relief are left out
 
-Standing: Confirmed by the designer, Nov 16, 2026, with his four answers; on radio silence he differed from the architect: the staff or a scenario may set it. Not built
+Standing: Confirmed by the designer, Nov 16, 2026, with his four answers; on radio silence he differed from the architect: the staff or a scenario may set it. Built in five steps (decisions 0134 to 0138) and closed by the designer on Nov 17, 2026, with one named miss (decision 0138)
 
 ## What stage 2b is
 
