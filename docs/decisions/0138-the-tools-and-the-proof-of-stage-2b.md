@@ -1,10 +1,10 @@
 # 0138: The tools and the proof of stage 2b: step 5, and the test plan written before the run
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 2b, that the designer confirmed on Nov 16, 2026 with its pass marks (decision 0132, step 5 of its five and "What it must pass"). It says what tools are built, and then what is run, how each condition is read and what passes, before any of it is run. The tools (items 1 to 7) were built on Nov 17, 2026 ("As built" below); the proof (items 8 to 17) was run on Nov 17, 2026, and passes as stated ("As run" below). A stricter count of condition 4, made after the run on the designer's word, gives 174 seeds against the mark of 200: see "The stricter count".
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 2b, that the designer confirmed on Nov 16, 2026 with its pass marks (decision 0132, step 5 of its five and "What it must pass"). It says what tools are built, and then what is run, how each condition is read and what passes, before any of it is run. The tools (items 1 to 7) were built on Nov 17, 2026 ("As built" below); the proof (items 8 to 17) was run on Nov 17, 2026, and passes as stated ("As run" below). A stricter count of condition 4, made after the run on the designer's word, gives 174 seeds against the mark of 200: see "The stricter count". The designer closed stage 2b on Nov 17, 2026, with condition 4 on the stricter count as a named miss: see "Closed on Nov 17, 2026".
 
 Summary: Step 5 of command levels: the tools that show who knew what (a command's picture and held state, when a report reached a command, why a group did not launch, refusals counted by cause, a seat at any command for a model, the viewer showing one command's picture beside the truth), and the test plan of the stage's proof: the Eastern Solomons from intents with command levels on over a thousand seeds, with the reading of each of the designer's pass marks fixed before the run
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0132, whose pass marks the designer confirmed on Nov 16, 2026. Tools built. Proof run Nov 17, 2026: passes as stated. Condition 4 by a stricter count made after the run: 174 of 200, which is the designer's to weigh
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0132, whose pass marks the designer confirmed on Nov 16, 2026. Tools built. Proof run Nov 17, 2026: passes as stated. Condition 4 by a stricter count made after the run: 174 of 200, which is the designer's to weigh. Closed by the designer, Nov 17, 2026, with that as a named miss
 
 ## The tools
 
@@ -101,3 +101,13 @@ Readings taken in the run, each in the report: condition 4's clauses as the scri
 The reading of condition 4 fixed before the run says that no group of the second command launches **at that hex** in the pulse. On 59 of the 233 seeds every case has the second command striking in that pulse at another hex, often the same enemy force reported from another place. The architect, who wrote the reading, judged it looser than he meant, told the designer, and on the designer's word counted again from the outputs kept, with nothing run again: a case counts only where the second command launches nothing at all in that pulse.
 
 **By the stricter count 174 of 1,000 seeds have a case** (193 cases; Allied on 118 seeds, Japanese on 67), against the mark of 200. By the reading fixed before the run it is 233 and the condition passes; by the stricter one it misses by 26 seeds. Both numbers stand in the record. What is made of the difference is the designer's.
+
+## Closed on Nov 17, 2026
+
+The designer closed stage 2b on Nov 17, 2026, with one named miss. No pass mark was changed, nothing was tuned, and the report stands as run with both counts in it.
+
+**The named miss.** A sighting reaches one command before another, and the two decide differently, on 174 of 1,000 seeds of the Eastern Solomons by the stricter count (the second command launches nothing at all in that pulse), against a mark of 200. By the reading fixed before the run (it launches nothing at that hex) it is 233. The count rests on the placeholder chances that a report is a pulse late or lost, 0.25 and 0.05, which wait on research; they are not moved to meet a mark.
+
+**What stage 2b proved.** With command levels on, the battle runs on 1,000 seeds with every invariant holding and no order refused; a reader told only what the tools say names who knew what in 12 of 12 cases; a staffed day costs 1.05 to 1.08 times what it costs with them off; the week of the slice still passes every condition of stage 2's proof; and with command levels off every game plays as it did.
+
+**What the proof showed that the stage does not mend,** each in `docs/open-work.md`: in a battle of one day late and lost reports cost little (the Allied side strikes on 818 seeds against 822); the initiative rule had nothing to act on, since no force holds a contact of its own on the morning before the first pulse; and a model seated at a carrier force did no better than the staff, and held its own search groups out of the air by ordering them wrongly.
