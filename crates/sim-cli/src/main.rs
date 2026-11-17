@@ -33,6 +33,9 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
        sim-cli hash <scenario.toml> [--seed N] [--reference DIR]
        sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--seed N] [--reference DIR]
        sim-cli events <scenario.toml | game.json> --why EVENT [--seed N] [--reference DIR]
+       sim-cli events <scenario.toml | game.json> --report EVENT [--command COMMAND] [--seed N] [--json] [--reference DIR]
+       sim-cli events <scenario.toml | game.json> --strike air_group:N --day D --pulse night|morning|afternoon
+                      [--report EVENT] [--seed N] [--json] [--reference DIR]
        sim-cli export <scenario.toml | game.json> --out <file.json> [--seed N] [--labels <anchors.csv>] [--reference DIR]
        sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S] [--label TEXT] [--reference DIR]
        sim-cli validate <batch.json> <measures.toml> [--out <report.md>] [--reference DIR]

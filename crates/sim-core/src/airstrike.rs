@@ -134,7 +134,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::belief::{ApplyOutcome, BattleClaim, BeliefState, Report};
+use crate::belief::{ApplyOutcome, BattleClaim, BeliefState, Contact, Report};
 use crate::choices::air::{AirAnswer, AirQuestion, BaseStrikeLaunch, EscortChoice, FighterSplit};
 use crate::choices::{Answer, Question};
 use crate::damage::{
@@ -154,6 +154,7 @@ use crate::search::{draw_report, ReportDraws};
 use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side, SystemState};
 use crate::time::{self, Pulse};
 use crate::upkeep::Sortie;
+use crate::view::strike_review::{ContactVerdict, StrikeStop};
 use crate::world::World;
 
 /// What a strike was launched at: the contact its side held (decision
@@ -775,39 +776,35 @@ impl World {
             .truth
             .air_groups
             .values()
-            .filter(|group| {
-                matches!(
-                    group.mission,
-                    AirMission::NavalStrike | AirMission::BaseStrike(_)
-                ) && group.ready > 0
-            })
+            .filter(|group| strike_mission_stop(group).is_none())
             .cloned()
             .collect();
         for group in groups {
-            let Some(origin) = self.truth.air_group_hex(&group) else {
+            let aircraft_type = &self.ref_data.aircraft_types[&group.aircraft_type];
+            // The gates of the group itself, in the order they are applied:
+            // a position, light, a weapon, aircraft able to fly (the
+            // question of decision 0100, asked only if the gates before it
+            // let the group through) and the share the group holds back
+            // (decision 0114, 8), applied once, to the whole number the
+            // limits gave. A strike of none is not launched and nothing is
+            // recorded. The one function: [`strike_group_gate`].
+            let Ok(StrikeGate {
+                origin,
+                able,
+                aircraft,
+            }) = strike_group_gate(
+                &group,
+                self.truth.air_group_hex(&group),
+                pulse,
+                aircraft_type.attack_weapon,
+                || self.aircraft_able_to_fly(&group),
+            )
+            else {
                 continue;
             };
-            if time::is_dark(origin, pulse) {
-                continue;
-            }
-            let aircraft_type = &self.ref_data.aircraft_types[&group.aircraft_type];
-            if aircraft_type.attack_weapon == AttackWeapon::None {
-                continue;
-            }
             // How far the group may strike: its type's radius on normal
             // reach, more on extended (decision 2 of 0059). The one function.
             let reach_nm = self.ref_data.reach_nm(group.aircraft_type, group.reach);
-            let able = self.aircraft_able_to_fly(&group);
-            if able == 0 {
-                continue;
-            }
-            // The share the group holds back (decision 0114, 8): applied
-            // once, to the whole number the limits gave. A strike of none is
-            // not launched and nothing is recorded.
-            let aircraft = strike_aircraft(able, group.strike_held_share);
-            if aircraft == 0 {
-                continue;
-            }
             let breakdown = self.config.record_breakdowns.then(|| Breakdown {
                 factors: vec![
                     Factor {
@@ -3183,17 +3180,48 @@ pub struct StrikeChoice {
     pub report_event: EventId,
 }
 
+/// What the strike rule makes of one contact of a picture for one group
+/// (decision 6 of 0063): the tests of age, kind and reach, in the order they
+/// are applied. A contact is one the group could launch at only if it
+/// [`ContactVerdict::Qualifies`]; [`contacts_to_strike`] keeps those. A side
+/// asking why a group did not strike at a contact reads this verdict, not a
+/// second copy of the tests (`view::strike_review`).
+pub(crate) fn contact_verdict(
+    contact: &Contact,
+    group: &AirGroup,
+    origin: Hex,
+    reach_nm: Fixed,
+    max_age_pulses: u32,
+) -> ContactVerdict {
+    if contact.age_pulses > max_age_pulses {
+        return ContactVerdict::TooOld {
+            age_pulses: contact.age_pulses,
+            limit_pulses: max_age_pulses,
+        };
+    }
+    if !group.target_priority.contains(&contact.estimated_kind) {
+        return ContactVerdict::KindNotOnList;
+    }
+    if !origin.air_distance_within(contact.estimated_hex, reach_nm) {
+        return ContactVerdict::OutOfReach {
+            distance_nm: origin.air_distance_nm(contact.estimated_hex),
+            reach_nm,
+        };
+    }
+    ContactVerdict::Qualifies
+}
+
 /// Every contact `group`, at `origin`, could launch at now (decision 6 of
 /// 0063), each with the ships it reports, in the order it chooses among
 /// them. A contact qualifies if it is no older than `max_age_pulses`, lies
 /// within `reach_nm` of `origin` and is taken for a kind on the group's
-/// target list. They are ordered by the kind that comes first on the list,
-/// then the nearest, then the lowest contact number; a group with sizing off
-/// takes the first.
+/// target list ([`contact_verdict`]). They are ordered by the kind that
+/// comes first on the list, then the nearest, then the lowest contact
+/// number; a group with sizing off takes the first.
 ///
 /// It reads the side's belief and the group's own state and orders, and
 /// nothing else: never the enemy.
-fn contacts_to_strike(
+pub(crate) fn contacts_to_strike(
     belief: &BeliefState,
     group: &AirGroup,
     origin: Hex,
@@ -3202,9 +3230,10 @@ fn contacts_to_strike(
 ) -> Vec<(StrikeChoice, u32)> {
     let mut found: Vec<_> = belief
         .contacts()
-        .filter(|contact| contact.age_pulses <= max_age_pulses)
-        .filter(|contact| group.target_priority.contains(&contact.estimated_kind))
-        .filter(|contact| origin.air_distance_within(contact.estimated_hex, reach_nm))
+        .filter(|contact| {
+            contact_verdict(contact, group, origin, reach_nm, max_age_pulses)
+                == ContactVerdict::Qualifies
+        })
         .collect();
     found.sort_by_key(|contact| {
         (
@@ -3230,6 +3259,72 @@ fn contacts_to_strike(
             )
         })
         .collect()
+}
+
+/// Why a group on neither strike mission, or with nothing ready, is not a
+/// strike group this pulse; `None` for a group the strike decision looks at.
+/// The strike decision's list of groups and [`strike_group_gate`] both ask it.
+pub(crate) fn strike_mission_stop(group: &AirGroup) -> Option<StrikeStop> {
+    if !matches!(
+        group.mission,
+        AirMission::NavalStrike | AirMission::BaseStrike(_)
+    ) {
+        return Some(StrikeStop::NotOnStrikeMission);
+    }
+    if group.ready == 0 {
+        return Some(StrikeStop::NoReadyAircraft);
+    }
+    None
+}
+
+/// What a group that passed the gates of [`strike_group_gate`] has: where it
+/// is, the aircraft it is able to fly and the aircraft a strike of it sends
+/// (those less the share held back).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) struct StrikeGate {
+    pub(crate) origin: Hex,
+    pub(crate) able: u32,
+    pub(crate) aircraft: u32,
+}
+
+/// The gates of the group itself that the strike decision applies, in the
+/// order it applies them (decisions 3 to 6 of 0026, 0114 and 0034): the
+/// strike missions, ready aircraft, a position (`origin`), light in the
+/// pulse, a weapon, aircraft able to fly (`able` is called only if the gates
+/// before it let the group through: it is the question of decision 0100 and
+/// is traced) and a share held back that leaves at least one. The strike
+/// decision and a side's review of a pulse both call it; the answer names the
+/// first gate that stops the group.
+pub(crate) fn strike_group_gate(
+    group: &AirGroup,
+    origin: Option<Hex>,
+    pulse: Pulse,
+    weapon: AttackWeapon,
+    able: impl FnOnce() -> u32,
+) -> Result<StrikeGate, StrikeStop> {
+    if let Some(stop) = strike_mission_stop(group) {
+        return Err(stop);
+    }
+    let origin = origin.ok_or(StrikeStop::NoPosition)?;
+    if time::is_dark(origin, pulse) {
+        return Err(StrikeStop::Dark);
+    }
+    if weapon == AttackWeapon::None {
+        return Err(StrikeStop::NoWeapon);
+    }
+    let able = able();
+    if able == 0 {
+        return Err(StrikeStop::NothingAbleToFly);
+    }
+    let aircraft = strike_aircraft(able, group.strike_held_share);
+    if aircraft == 0 {
+        return Err(StrikeStop::AllHeldBack);
+    }
+    Ok(StrikeGate {
+        origin,
+        able,
+        aircraft,
+    })
 }
 
 /// A naval strike a group would launch (decision 0118): the contact, the
@@ -3305,29 +3400,92 @@ pub(crate) fn naval_strike_launch(
     sent: &BTreeMap<ContactId, u32>,
 ) -> Option<NavalStrike> {
     let candidates = contacts_to_strike(belief, group, origin, reach_nm, max_age_pulses);
-    if !group.strike_sizing {
-        let (choice, _) = candidates.into_iter().next()?;
-        return Some(NavalStrike {
-            choice,
-            aircraft: can_send,
-            sizing: None,
-        });
+    strike_walk(&candidates, group, can_send, figures, sent)
+        .taken
+        .map(|(_, strike)| strike)
+}
+
+/// What the walk of [`strike_walk`] found among the candidates, in the order
+/// [`contacts_to_strike`] gave them.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub(crate) struct StrikeWalk {
+    /// The index of the candidate the group launches at and the strike. `None`:
+    /// it launches nothing, having no candidate, or every one served.
+    pub(crate) taken: Option<(usize, NavalStrike)>,
+    /// The candidates before the one taken (all of them, if none was) that
+    /// were served already, by index, with how it was found.
+    pub(crate) served: Vec<(usize, StrikeSizing)>,
+}
+
+/// Walks `candidates` (as [`contacts_to_strike`] orders them) as the strike
+/// decision does (decision 0118, 4 to 7): with sizing off it takes the first
+/// with all the group can send; with sizing on it takes the first whose need
+/// is above what has been sent there, sending the smaller of what it can send
+/// and what is still needed ([`sized_strike`]), and notes each it passed
+/// because it was served. The one place the walk is written: the strike
+/// question and a side's review of a pulse both read it.
+pub(crate) fn strike_walk(
+    candidates: &[(StrikeChoice, u32)],
+    group: &AirGroup,
+    can_send: u32,
+    figures: &AirCombatFigures,
+    sent: &BTreeMap<ContactId, u32>,
+) -> StrikeWalk {
+    let mut served = Vec::new();
+    for (index, (choice, ships)) in candidates.iter().enumerate() {
+        if !group.strike_sizing {
+            return StrikeWalk {
+                taken: Some((
+                    index,
+                    NavalStrike {
+                        choice: *choice,
+                        aircraft: can_send,
+                        sizing: None,
+                    },
+                )),
+                served,
+            };
+        }
+        match sized_strike(*choice, *ships, can_send, figures, sent) {
+            Ok(strike) => {
+                return StrikeWalk {
+                    taken: Some((index, strike)),
+                    served,
+                }
+            }
+            Err(sizing) => served.push((index, sizing)),
+        }
     }
-    for (choice, ships) in candidates {
-        let sent_before = sent.get(&choice.contact).copied().unwrap_or(0);
-        let need = strike_need(figures, choice.kind, ships);
-        let aircraft = match need {
-            None => can_send,
-            Some(need) if need > sent_before => can_send.min(need - sent_before),
-            Some(_) => continue,
-        };
-        return Some(NavalStrike {
-            choice,
-            aircraft,
-            sizing: Some(StrikeSizing { need, sent_before }),
-        });
+    StrikeWalk {
+        taken: None,
+        served,
     }
-    None
+}
+
+/// The strike of a group that sizes its strikes at one contact reporting
+/// `ships` ships (decision 0118, 4 to 7), with `sent` already launched at it
+/// by the side's groups before: the smaller of `can_send` and what is still
+/// needed, or everything for a kind with no figure. `Err`: the contact is
+/// served, its need no more than what was sent there.
+pub(crate) fn sized_strike(
+    choice: StrikeChoice,
+    ships: u32,
+    can_send: u32,
+    figures: &AirCombatFigures,
+    sent: &BTreeMap<ContactId, u32>,
+) -> Result<NavalStrike, StrikeSizing> {
+    let sent_before = sent.get(&choice.contact).copied().unwrap_or(0);
+    let need = strike_need(figures, choice.kind, ships);
+    let aircraft = match need {
+        None => can_send,
+        Some(need) if need > sent_before => can_send.min(need - sent_before),
+        Some(_) => return Err(StrikeSizing { need, sent_before }),
+    };
+    Ok(NavalStrike {
+        choice,
+        aircraft,
+        sizing: Some(StrikeSizing { need, sent_before }),
+    })
 }
 
 /// Whether `group`, on the base strike mission against `base`, launches in

@@ -23,6 +23,7 @@ mod supply;
 
 pub use supply::{DaysOfSupply, PlannedUse};
 mod movement_choices;
+pub mod strike_review;
 mod surface_choices;
 
 use std::collections::{BTreeMap, BTreeSet};
