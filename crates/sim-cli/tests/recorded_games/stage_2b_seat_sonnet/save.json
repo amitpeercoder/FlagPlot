@@ -1,0 +1,2877 @@
+{
+  "commands": [
+    {
+      "command": {
+        "base": 1,
+        "intent": 1,
+        "intent_kind": "hold",
+        "kind": "set_intent"
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "distance": 10,
+        "hex": [
+          2,
+          -4
+        ],
+        "intent": 2,
+        "intent_kind": "deny",
+        "kind": "set_intent"
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "intent": 2,
+        "kind": "set_limit",
+        "limit": "forces",
+        "ships": [],
+        "task_forces": [
+          1,
+          2
+        ]
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "hex": [
+          7,
+          -5
+        ],
+        "intent": 3,
+        "intent_kind": "operate_carriers",
+        "kind": "set_intent",
+        "task_force": 1
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "hex": [
+          7,
+          -5
+        ],
+        "intent": 4,
+        "intent_kind": "operate_carriers",
+        "kind": "set_intent",
+        "task_force": 2
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "given": true,
+        "kind": "set_leave",
+        "leave": "prepare"
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "given": true,
+        "kind": "set_leave",
+        "leave": "launch"
+      },
+      "day": 1,
+      "side": "allied"
+    },
+    {
+      "command": {
+        "distance": 10,
+        "hex": [
+          2,
+          -4
+        ],
+        "intent": 1,
+        "intent_kind": "deny",
+        "kind": "set_intent"
+      },
+      "day": 1,
+      "side": "japanese"
+    },
+    {
+      "command": {
+        "intent": 1,
+        "kind": "set_limit",
+        "limit": "forces",
+        "ships": [],
+        "task_forces": [
+          3,
+          4
+        ]
+      },
+      "day": 1,
+      "side": "japanese"
+    },
+    {
+      "command": {
+        "hex": [
+          8,
+          -11
+        ],
+        "intent": 2,
+        "intent_kind": "operate_carriers",
+        "kind": "set_intent",
+        "task_force": 3
+      },
+      "day": 1,
+      "side": "japanese"
+    },
+    {
+      "command": {
+        "hex": [
+          7,
+          -9
+        ],
+        "intent": 3,
+        "intent_kind": "operate_carriers",
+        "kind": "set_intent",
+        "task_force": 4
+      },
+      "day": 1,
+      "side": "japanese"
+    },
+    {
+      "command": {
+        "given": true,
+        "kind": "set_leave",
+        "leave": "prepare"
+      },
+      "day": 1,
+      "side": "japanese"
+    },
+    {
+      "command": {
+        "given": true,
+        "kind": "set_leave",
+        "leave": "launch"
+      },
+      "day": 1,
+      "side": "japanese"
+    }
+  ],
+  "data_files": [
+    {
+      "file": "data/scenarios/stage-2b-proof/../../map/south_pacific.csv",
+      "hash": "ba6cb3aea5cc45f5"
+    },
+    {
+      "file": "data/scenarios/stage-2b-proof/../../reference/ship_classes_eastern_solomons.csv",
+      "hash": "2716ae28c805274f"
+    },
+    {
+      "file": "data/scenarios/stage-2b-proof/../../reference/port_sizes.csv",
+      "hash": "77d7eaae34ffb5b5"
+    },
+    {
+      "file": "data/scenarios/stage-2b-proof/../../reference/aircraft_types_eastern_solomons.csv",
+      "hash": "8a7741632e7e7ec6"
+    },
+    {
+      "file": "data/scenarios/stage-2b-proof/../../reference/search.toml",
+      "hash": "5e9c6bee76140ec1"
+    },
+    {
+      "file": "data/scenarios/stage-2b-proof/../../reference/surface_combat.toml",
+      "hash": "9a7e47460bcaff50"
+    },
+    {
+      "file": "data/scenarios/stage-2b-proof/../../reference/air_combat.toml",
+      "hash": "92c5c79c62f24c17"
+    },
+    {
+      "file": "data/scenarios/stage-2b-proof/../../reference/reports.toml",
+      "hash": "88b652f9faa6f6c7"
+    }
+  ],
+  "doctrine_version": "supply-19",
+  "format": "flagplot-saved-game",
+  "hashes": [
+    {
+      "day": 1,
+      "hash": "6f5bf7b3edb5a7ad"
+    }
+  ],
+  "orders": [
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "search"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:3"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "search"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:4"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:2"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:25"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "combat_air_patrol"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:1"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_patrol_share",
+        "share": "0.7"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:1"
+    }
+  ],
+  "rules_version": 18,
+  "scenario": {
+    "file": "data/scenarios/stage-2b-proof/05a_eastern_solomons.toml",
+    "hash": "b59166876bd86e46"
+  },
+  "seats": {
+    "allied": "player",
+    "japanese": "script"
+  },
+  "seed": 1,
+  "staff": [
+    {
+      "day": 1,
+      "decisions": {
+        "commands": [
+          {
+            "kind": "approve",
+            "plan": 1,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:1 is a draft"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to prepare is given"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "level": {
+                  "base": 1
+                },
+                "plan": 1,
+                "statement": "hold base:1 (Henderson Field)"
+              },
+              "worked": "plan:1, the plan to hold base:1 (Henderson Field), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).",
+              "would_change": [
+                "leave to prepare withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 1,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:1 is preparing"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to launch is given"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "level": {
+                  "base": 1
+                },
+                "plan": 1,
+                "statement": "hold base:1 (Henderson Field)"
+              },
+              "worked": "plan:1, the plan to hold base:1 (Henderson Field), is ready and leave to launch is given: the staff releases it.",
+              "would_change": [
+                "leave to launch withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 2,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:2 is a draft"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to prepare is given"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": "area",
+                "plan": 2,
+                "statement": "deny the waters within 10 hexes of (2,-4)"
+              },
+              "worked": "plan:2, the plan to deny the waters within 10 hexes of (2,-4), is a draft inside the limits of intent:2 and leave to prepare is given: the staff makes it ready (preparing).",
+              "would_change": [
+                "leave to prepare withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 2,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:2 is preparing"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to launch is given"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": "area",
+                "plan": 2,
+                "statement": "deny the waters within 10 hexes of (2,-4)"
+              },
+              "worked": "plan:2, the plan to deny the waters within 10 hexes of (2,-4), is ready and leave to launch is given: the staff releases it.",
+              "would_change": [
+                "leave to launch withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 3,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:3 is a draft"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to prepare is given"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 1
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:1 from (7,-5)"
+              },
+              "worked": "plan:3, the plan to operate the carrier force task_force:1 from (7,-5), is a draft inside the limits of intent:3 and leave to prepare is given: the staff makes it ready (preparing).",
+              "would_change": [
+                "leave to prepare withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 3,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:3 is preparing"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to launch is given"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 1
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:1 from (7,-5)"
+              },
+              "worked": "plan:3, the plan to operate the carrier force task_force:1 from (7,-5), is ready and leave to launch is given: the staff releases it.",
+              "would_change": [
+                "leave to launch withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 4,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:4 is a draft"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to prepare is given"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "plan:4, the plan to operate the carrier force task_force:2 from (7,-5), is a draft inside the limits of intent:4 and leave to prepare is given: the staff makes it ready (preparing).",
+              "would_change": [
+                "leave to prepare withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 4,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:4 is preparing"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to launch is given"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "plan:4, the plan to operate the carrier force task_force:2 from (7,-5), is ready and leave to launch is given: the staff releases it.",
+              "would_change": [
+                "leave to launch withheld"
+              ]
+            }
+          },
+          {
+            "base": 1,
+            "intent_kind": "cover",
+            "kind": "form_intent",
+            "parent": 1,
+            "reason": {
+              "binding": [
+                "intent:1 is held and its plan is released"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "no cover intent for base:1 (Henderson Field) stands; 2 group(s) at the base can fly a patrol or search"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "level": {
+                  "base": 1
+                },
+                "plan": 1,
+                "statement": "hold base:1 (Henderson Field)"
+              },
+              "worked": "intent:1 holds base:1 (Henderson Field), its plan is released and no cover of it stands: the staff forms intent:5, cover of base:1 (Henderson Field) from the air, under it.",
+              "would_change": [
+                "a cover intent already standing for the base",
+                "no group at the base that can fly a patrol or search"
+              ]
+            }
+          }
+        ],
+        "no_orders": [
+          {
+            "binding": [
+              "intent:3 stands"
+            ],
+            "evidence": [
+              {
+                "day": 1,
+                "what": "task_force:1 is on the carrier mission with 1 carrier(s) afloat and 5 air group(s) aboard, and lies at (7,-5)"
+              },
+              {
+                "day": 1,
+                "what": "intent:3, the commander's task of task_force:1, is in force as a root"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": "area",
+              "plan": 2,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:3 (operate the carrier force task_force:1 from (7,-5)), the commander's, stands as a root: a force has one task of a kind, so the staff forms no other for task_force:1. task_force:1 is on the carrier mission with 1 carrier(s) afloat and 5 air group(s) aboard, and lies at (7,-5).",
+            "would_change": [
+              "intent:3 withdrawn"
+            ]
+          },
+          {
+            "binding": [
+              "intent:4 stands"
+            ],
+            "evidence": [
+              {
+                "day": 1,
+                "what": "task_force:2 is on the carrier mission with 1 carrier(s) afloat and 5 air group(s) aboard, and lies at (7,-5)"
+              },
+              {
+                "day": 1,
+                "what": "intent:4, the commander's task of task_force:2, is in force as a root"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": "area",
+              "plan": 2,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:4 (operate the carrier force task_force:2 from (7,-5)), the commander's, stands as a root: a force has one task of a kind, so the staff forms no other for task_force:2. task_force:2 is on the carrier mission with 1 carrier(s) afloat and 5 air group(s) aboard, and lies at (7,-5).",
+            "would_change": [
+              "intent:4 withdrawn"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 1,
+                "what": "task_force:1 has no home port and is stopped at no base of the side"
+              }
+            ],
+            "serves": {
+              "intent": 3,
+              "level": {
+                "task_force": 1
+              },
+              "plan": 3,
+              "statement": "operate the carrier force task_force:1 from (7,-5)"
+            },
+            "worked": "intent:3, operating the carrier force task_force:1 from (7,-5): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: the side holds no contact of ships 3 pulses old or less.",
+            "would_change": [
+              "a home port set"
+            ]
+          },
+          {
+            "binding": [
+              "search arc: no enemy base on the map and no contact: the arc is the whole circle"
+            ],
+            "evidence": [
+              {
+                "day": 1,
+                "what": "5 group(s) aboard task_force:1"
+              }
+            ],
+            "serves": {
+              "intent": 3,
+              "level": {
+                "task_force": 1
+              },
+              "plan": 3,
+              "statement": "operate the carrier force task_force:1 from (7,-5)"
+            },
+            "worked": "No order is given for these groups for intent:3, operating the carrier force task_force:1 from (7,-5) this morning: air_group:1 is held by the commander: no order; air_group:2 is held by the commander: no order; air_group:3 is held by the commander: no order; air_group:4 is held by the commander: no order; air_group:25 is held by the commander: no order.",
+            "would_change": [
+              "a group whose fatigue or standing orders differ from what the doctrine wants"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 1,
+                "what": "task_force:2 has no home port and is stopped at no base of the side"
+              }
+            ],
+            "serves": {
+              "intent": 4,
+              "level": {
+                "task_force": 2
+              },
+              "plan": 4,
+              "statement": "operate the carrier force task_force:2 from (7,-5)"
+            },
+            "worked": "intent:4, operating the carrier force task_force:2 from (7,-5): task_force:2 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:2 does not close: the side holds no contact of ships 3 pulses old or less.",
+            "would_change": [
+              "a home port set"
+            ]
+          }
+        ],
+        "orders": [
+          {
+            "intent": 5,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "combat_air_patrol"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:9, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "chain": [
+                  {
+                    "intent": 1,
+                    "maker": "commander",
+                    "statement": "hold base:1 (Henderson Field)"
+                  }
+                ],
+                "intent": 5,
+                "level": {
+                  "base": 1
+                },
+                "plan": 1,
+                "statement": "cover base:1 (Henderson Field) from the air"
+              },
+              "worked": "air_group:9, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies the combat air patrol of base:1 (Henderson Field): its mission is set from rest to combat air patrol.",
+              "would_change": [
+                "a fatigue above the level with another fighter group able to fly"
+              ]
+            },
+            "unit": "air_group:9"
+          },
+          {
+            "intent": 5,
+            "order": {
+              "kind": "set_patrol_share",
+              "share": "0.5"
+            },
+            "reason": {
+              "binding": [
+                "the patrol share of the balanced risk: 0.5 at balanced, the base not attacked from the air on the three days before"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:9, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies"
+                },
+                {
+                  "day": 1,
+                  "what": "its patrol share is 1"
+                }
+              ],
+              "serves": {
+                "chain": [
+                  {
+                    "intent": 1,
+                    "maker": "commander",
+                    "statement": "hold base:1 (Henderson Field)"
+                  }
+                ],
+                "intent": 5,
+                "level": {
+                  "base": 1
+                },
+                "plan": 1,
+                "statement": "cover base:1 (Henderson Field) from the air"
+              },
+              "worked": "The patrol share of air_group:9 is set from 1 to 0.5: 0.5 at balanced, the base not attacked from the air on the three days before.",
+              "would_change": [
+                "a different risk level",
+                "an air raid on the base, or none on the three days before"
+              ]
+            },
+            "unit": "air_group:9"
+          },
+          {
+            "intent": 5,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "search"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:10, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "chain": [
+                  {
+                    "intent": 1,
+                    "maker": "commander",
+                    "statement": "hold base:1 (Henderson Field)"
+                  }
+                ],
+                "intent": 5,
+                "level": {
+                  "base": 1
+                },
+                "plan": 1,
+                "statement": "cover base:1 (Henderson Field) from the air"
+              },
+              "worked": "air_group:10, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches: its mission is set from rest to search.",
+              "would_change": [
+                "a fatigue above the level"
+              ]
+            },
+            "unit": "air_group:10"
+          },
+          {
+            "intent": 5,
+            "order": {
+              "kind": "set_search_once",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "at balanced risk a search is flown once a day, in the morning"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:10, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it searches"
+                },
+                {
+                  "day": 1,
+                  "what": "its search once a day is off"
+                }
+              ],
+              "serves": {
+                "chain": [
+                  {
+                    "intent": 1,
+                    "maker": "commander",
+                    "statement": "hold base:1 (Henderson Field)"
+                  }
+                ],
+                "intent": 5,
+                "level": {
+                  "base": 1
+                },
+                "plan": 1,
+                "statement": "cover base:1 (Henderson Field) from the air"
+              },
+              "worked": "air_group:10, a search group, has fatigue 0 against the 45 of the balanced risk; it searches, and at balanced risk a search is flown once a day, in the morning: its search once a day is set on.",
+              "would_change": [
+                "a different risk level"
+              ]
+            },
+            "unit": "air_group:10"
+          },
+          {
+            "intent": 5,
+            "order": {
+              "from_deg": 0,
+              "kind": "set_search_arc",
+              "range_nm": "397",
+              "to_deg": 0
+            },
+            "reason": {
+              "binding": [
+                "the arc the threats give, at its type's range of 397 nm"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:10, a search group, has fatigue 0 against the 45 of the balanced risk; it is not above the level"
+                },
+                {
+                  "day": 1,
+                  "what": "its arc is: no search arc"
+                }
+              ],
+              "serves": {
+                "chain": [
+                  {
+                    "intent": 1,
+                    "maker": "commander",
+                    "statement": "hold base:1 (Henderson Field)"
+                  }
+                ],
+                "intent": 5,
+                "level": {
+                  "base": 1
+                },
+                "plan": 1,
+                "statement": "cover base:1 (Henderson Field) from the air"
+              },
+              "worked": "The search arc of air_group:10 is set to the whole circle out to 397 nm: threats: the waters to deny at (-8,-4), the waters to deny at (-8,-3), the waters to deny at (-8,-2), the waters to deny at (-8,-1), the waters to deny at (-8,0), the waters to deny at (-8,1), the waters to deny at (-8,2), the waters to deny at (-8,3), the waters to deny at (-8,4), the waters to deny at (-8,5), the waters to deny at (-8,6), the waters to deny at (-7,-5), the waters to deny at (-7,-4), the waters to deny at (-7,-3), the waters to deny at (-7,-2), the waters to deny at (-7,-1), the waters to deny at (-7,0), the waters to deny at (-7,1), the waters to deny at (-7,2), the waters to deny at (-7,3), the waters to deny at (-7,4), the waters to deny at (-7,5), the waters to deny at (-7,6), the waters to deny at (-6,-6), the waters to deny at (-6,-5), the waters to deny at (-6,-4), the waters to deny at (-6,-3), the waters to deny at (-6,-2), the waters to deny at (-6,-1), the waters to deny at (-6,0), the waters to deny at (-6,1), the waters to deny at (-6,2), the waters to deny at (-6,3), the waters to deny at (-6,4), the waters to deny at (-6,5), the waters to deny at (-6,6), the waters to deny at (-5,-7), the waters to deny at (-5,-6), the waters to deny at (-5,-5), the waters to deny at (-5,-4), the waters to deny at (-5,-3), the waters to deny at (-5,-2), the waters to deny at (-5,-1), the waters to deny at (-5,0), the waters to deny at (-5,1), the waters to deny at (-5,2), the waters to deny at (-5,3), the waters to deny at (-5,4), the waters to deny at (-5,5), the waters to deny at (-5,6), the waters to deny at (-4,-8), the waters to deny at (-4,-7), the waters to deny at (-4,-6), the waters to deny at (-4,-5), the waters to deny at (-4,-4), the waters to deny at (-4,-3), the waters to deny at (-4,-2), the waters to deny at (-4,-1), the waters to deny at (-4,0), the waters to deny at (-4,1), the waters to deny at (-4,2), the waters to deny at (-4,3), the waters to deny at (-4,4), the waters to deny at (-4,5), the waters to deny at (-4,6), the waters to deny at (-3,-9), the waters to deny at (-3,-8), the waters to deny at (-3,-7), the waters to deny at (-3,-6), the waters to deny at (-3,-5), the waters to deny at (-3,-4), the waters to deny at (-3,-3), the waters to deny at (-3,-2), the waters to deny at (-3,-1), the waters to deny at (-3,0), the waters to deny at (-3,1), the waters to deny at (-3,2), the waters to deny at (-3,3), the waters to deny at (-3,4), the waters to deny at (-3,5), the waters to deny at (-3,6), the waters to deny at (-2,-10), the waters to deny at (-2,-9), the waters to deny at (-2,-8), the waters to deny at (-2,-7), the waters to deny at (-2,-6), the waters to deny at (-2,-5), the waters to deny at (-2,-4), the waters to deny at (-2,-3), the waters to deny at (-2,-2), the waters to deny at (-2,-1), the waters to deny at (-2,0), the waters to deny at (-2,1), the waters to deny at (-2,2), the waters to deny at (-2,3), the waters to deny at (-2,4), the waters to deny at (-2,5), the waters to deny at (-2,6), the waters to deny at (-1,-11), the waters to deny at (-1,-10), the waters to deny at (-1,-9), the waters to deny at (-1,-8), the waters to deny at (-1,-7), the waters to deny at (-1,-6), the waters to deny at (-1,-5), the waters to deny at (-1,-4), the waters to deny at (-1,-3), the waters to deny at (-1,-2), the waters to deny at (-1,-1), the waters to deny at (-1,0), the waters to deny at (-1,1), the waters to deny at (-1,2), the waters to deny at (-1,3), the waters to deny at (-1,4), the waters to deny at (-1,5), the waters to deny at (-1,6), the waters to deny at (0,-12), the waters to deny at (0,-11), the waters to deny at (0,-10), the waters to deny at (0,-9), the waters to deny at (0,-8), the waters to deny at (0,-7), the waters to deny at (0,-6), the waters to deny at (0,-5), the waters to deny at (0,-4), the waters to deny at (0,-3), the waters to deny at (0,-2), the waters to deny at (0,-1), the waters to deny at (0,0), the waters to deny at (0,1), the waters to deny at (0,2), the waters to deny at (0,3), the waters to deny at (0,4), the waters to deny at (0,5), the waters to deny at (0,6), the waters to deny at (1,-13), the waters to deny at (1,-12), the waters to deny at (1,-11), the waters to deny at (1,-10), the waters to deny at (1,-9), the waters to deny at (1,-8), the waters to deny at (1,-7), the waters to deny at (1,-6), the waters to deny at (1,-5), the waters to deny at (1,-4), the waters to deny at (1,-3), the waters to deny at (1,-2), the waters to deny at (1,-1), the waters to deny at (1,0), the waters to deny at (1,1), the waters to deny at (1,2), the waters to deny at (1,3), the waters to deny at (1,4), the waters to deny at (1,5), the waters to deny at (1,6), the waters to deny at (2,-14), the waters to deny at (2,-13), the waters to deny at (2,-12), the waters to deny at (2,-11), the waters to deny at (2,-10), the waters to deny at (2,-9), the waters to deny at (2,-8), the waters to deny at (2,-7), the waters to deny at (2,-6), the waters to deny at (2,-5), the waters to deny at (2,-4), the waters to deny at (2,-3), the waters to deny at (2,-2), the waters to deny at (2,-1), the waters to deny at (2,0), the waters to deny at (2,1), the waters to deny at (2,2), the waters to deny at (2,3), the waters to deny at (2,4), the waters to deny at (2,5), the waters to deny at (2,6), the waters to deny at (3,-14), the waters to deny at (3,-13), the waters to deny at (3,-12), the waters to deny at (3,-11), the waters to deny at (3,-10), the waters to deny at (3,-9), the waters to deny at (3,-8), the waters to deny at (3,-7), the waters to deny at (3,-6), the waters to deny at (3,-5), the waters to deny at (3,-4), the waters to deny at (3,-3), the waters to deny at (3,-2), the waters to deny at (3,-1), the waters to deny at (3,0), the waters to deny at (3,1), the waters to deny at (3,2), the waters to deny at (3,3), the waters to deny at (3,4), the waters to deny at (3,5), the waters to deny at (4,-14), the waters to deny at (4,-13), the waters to deny at (4,-12), the waters to deny at (4,-11), the waters to deny at (4,-10), the waters to deny at (4,-9), the waters to deny at (4,-8), the waters to deny at (4,-7), the waters to deny at (4,-6), the waters to deny at (4,-5), the waters to deny at (4,-4), the waters to deny at (4,-3), the waters to deny at (4,-2), the waters to deny at (4,-1), the waters to deny at (4,0), the waters to deny at (4,1), the waters to deny at (4,2), the waters to deny at (4,3), the waters to deny at (4,4), the waters to deny at (5,-14), the waters to deny at (5,-13), the waters to deny at (5,-12), the waters to deny at (5,-11), the waters to deny at (5,-10), the waters to deny at (5,-9), the waters to deny at (5,-8), the waters to deny at (5,-7), the waters to deny at (5,-6), the waters to deny at (5,-5), the waters to deny at (5,-4), the waters to deny at (5,-3), the waters to deny at (5,-2), the waters to deny at (5,-1), the waters to deny at (5,0), the waters to deny at (5,1), the waters to deny at (5,2), the waters to deny at (5,3), the waters to deny at (6,-14), the waters to deny at (6,-13), the waters to deny at (6,-12), the waters to deny at (6,-11), the waters to deny at (6,-10), the waters to deny at (6,-9), the waters to deny at (6,-8), the waters to deny at (6,-7), the waters to deny at (6,-6), the waters to deny at (6,-5), the waters to deny at (6,-4), the waters to deny at (6,-3), the waters to deny at (6,-2), the waters to deny at (6,-1), the waters to deny at (6,0), the waters to deny at (6,1), the waters to deny at (6,2), the waters to deny at (7,-14), the waters to deny at (7,-13), the waters to deny at (7,-12), the waters to deny at (7,-11), the waters to deny at (7,-10), the waters to deny at (7,-9), the waters to deny at (7,-8), the waters to deny at (7,-7), the waters to deny at (7,-6), the waters to deny at (7,-5), the waters to deny at (7,-4), the waters to deny at (7,-3), the waters to deny at (7,-2), the waters to deny at (7,-1), the waters to deny at (7,0), the waters to deny at (7,1), the waters to deny at (8,-14), the waters to deny at (8,-13), the waters to deny at (8,-12), the waters to deny at (8,-11), the waters to deny at (8,-10), the waters to deny at (8,-9), the waters to deny at (8,-8), the waters to deny at (8,-7), the waters to deny at (8,-6), the waters to deny at (8,-5), the waters to deny at (8,-4), the waters to deny at (8,-3), the waters to deny at (8,-2), the waters to deny at (8,-1), the waters to deny at (8,0), the waters to deny at (9,-14), the waters to deny at (9,-13), the waters to deny at (9,-12), the waters to deny at (9,-11), the waters to deny at (9,-10), the waters to deny at (9,-9), the waters to deny at (9,-8), the waters to deny at (9,-7), the waters to deny at (9,-6), the waters to deny at (9,-5), the waters to deny at (9,-4), the waters to deny at (9,-3), the waters to deny at (9,-2), the waters to deny at (9,-1), the waters to deny at (10,-14), the waters to deny at (10,-13), the waters to deny at (10,-12), the waters to deny at (10,-11), the waters to deny at (10,-10), the waters to deny at (10,-9), the waters to deny at (10,-8), the waters to deny at (10,-7), the waters to deny at (10,-6), the waters to deny at (10,-5), the waters to deny at (10,-4), the waters to deny at (10,-3), the waters to deny at (10,-2), the waters to deny at (11,-14), the waters to deny at (11,-13), the waters to deny at (11,-12), the waters to deny at (11,-11), the waters to deny at (11,-10), the waters to deny at (11,-9), the waters to deny at (11,-8), the waters to deny at (11,-7), the waters to deny at (11,-6), the waters to deny at (11,-5), the waters to deny at (11,-4), the waters to deny at (11,-3), the waters to deny at (12,-14), the waters to deny at (12,-13), the waters to deny at (12,-12), the waters to deny at (12,-11), the waters to deny at (12,-10), the waters to deny at (12,-9), the waters to deny at (12,-8), the waters to deny at (12,-7), the waters to deny at (12,-6), the waters to deny at (12,-5), the waters to deny at (12,-4); no arc of under 360 degrees holds them: the whole circle.",
+              "would_change": [
+                "a new contact, or a contact dropped",
+                "an enemy base on the side's map that was not, or the reverse"
+              ]
+            },
+            "unit": "air_group:10"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "kind": "set_readiness",
+              "readiness": "battle"
+            },
+            "reason": {
+              "binding": [
+                "battle readiness while it is at its hex"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:1 is at its hex (7,-5)"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 1
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:1 from (7,-5)"
+              },
+              "worked": "intent:3, operating the carrier force task_force:1 from (7,-5): task_force:1 is at (7,-5), so it is set to battle readiness.",
+              "would_change": [
+                "the force away from its hex"
+              ]
+            },
+            "unit": "task_force:1"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "break_off": "0.5",
+              "keep_share": "0",
+              "kind": "set_rules_of_engagement",
+              "stance": "avoid",
+              "stragglers": "keep"
+            },
+            "reason": {
+              "binding": [
+                "the break-off level of the balanced risk: 0.5"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:1 has the stance engage and a break-off level of 0.5"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 1
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:1 from (7,-5)"
+              },
+              "worked": "A carrier force does not seek a gun action: the rules of engagement of task_force:1 are set to the stance avoid and the break-off level of the balanced risk, 0.5.",
+              "would_change": [
+                "a different risk level"
+              ]
+            },
+            "unit": "task_force:1"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_readiness",
+              "readiness": "battle"
+            },
+            "reason": {
+              "binding": [
+                "battle readiness while it is at its hex"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:2 is at its hex (7,-5)"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "intent:4, operating the carrier force task_force:2 from (7,-5): task_force:2 is at (7,-5), so it is set to battle readiness.",
+              "would_change": [
+                "the force away from its hex"
+              ]
+            },
+            "unit": "task_force:2"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "break_off": "0.5",
+              "keep_share": "0",
+              "kind": "set_rules_of_engagement",
+              "stance": "avoid",
+              "stragglers": "keep"
+            },
+            "reason": {
+              "binding": [
+                "the break-off level of the balanced risk: 0.5"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:2 has the stance engage and a break-off level of 0.5"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "A carrier force does not seek a gun action: the rules of engagement of task_force:2 are set to the stance avoid and the break-off level of the balanced risk, 0.5.",
+              "would_change": [
+                "a different risk level"
+              ]
+            },
+            "unit": "task_force:2"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "combat_air_patrol"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:5, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:5, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:5"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_patrol_share",
+              "share": "0.5"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:5, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its patrol share is 1"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:5, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:5"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "search"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:6, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:6 at fatigue 0 with 15 able to fly, air_group:7 at fatigue 0 with 15 able to fly, air_group:8 at fatigue 0 with 8 able to fly, air_group:26 at fatigue 0 with 5 able to fly): air_group:6 searches, has fatigue 0 not above the 45 of the balanced risk: it searches the whole circle out to 397 nm from (7,-5) (no enemy base on the map and no contact: the arc is the whole circle); at balanced risk a carrier force searches in both daylight pulses"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:6, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:6 at fatigue 0 with 15 able to fly, air_group:7 at fatigue 0 with 15 able to fly, air_group:8 at fatigue 0 with 8 able to fly, air_group:26 at fatigue 0 with 5 able to fly): air_group:6 searches, has fatigue 0 not above the 45 of the balanced risk: it searches the whole circle out to 397 nm from (7,-5) (no enemy base on the map and no contact: the arc is the whole circle); at balanced risk a carrier force searches in both daylight pulses.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:6"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "from_deg": 0,
+              "kind": "set_search_arc",
+              "range_nm": "397",
+              "to_deg": 0
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:6, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:6 at fatigue 0 with 15 able to fly, air_group:7 at fatigue 0 with 15 able to fly, air_group:8 at fatigue 0 with 8 able to fly, air_group:26 at fatigue 0 with 5 able to fly): air_group:6 searches, has fatigue 0 not above the 45 of the balanced risk: it searches the whole circle out to 397 nm from (7,-5) (no enemy base on the map and no contact: the arc is the whole circle); at balanced risk a carrier force searches in both daylight pulses"
+                },
+                {
+                  "day": 1,
+                  "what": "it has no search arc"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:6, a group that can search and attack a ship and, the force having no group that can only search, is the least tired of those that can fly, then the lowest numbered (air_group:6 at fatigue 0 with 15 able to fly, air_group:7 at fatigue 0 with 15 able to fly, air_group:8 at fatigue 0 with 8 able to fly, air_group:26 at fatigue 0 with 5 able to fly): air_group:6 searches, has fatigue 0 not above the 45 of the balanced risk: it searches the whole circle out to 397 nm from (7,-5) (no enemy base on the map and no contact: the arc is the whole circle); at balanced risk a carrier force searches in both daylight pulses.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:6"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:7, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:7, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:7"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:7, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "air_group": 7
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:7, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:4 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:7"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:8, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:8, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:8"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:8, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "air_group": 8
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:8, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:4 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:8"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:26, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "task_force": 2
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:26, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:26"
+          },
+          {
+            "intent": 4,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:26, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 4,
+                "level": {
+                  "air_group": 26
+                },
+                "plan": 4,
+                "statement": "operate the carrier force task_force:2 from (7,-5)"
+              },
+              "worked": "air_group:26, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:4 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:26"
+          }
+        ]
+      },
+      "side": "allied"
+    },
+    {
+      "day": 1,
+      "decisions": {
+        "commands": [
+          {
+            "kind": "approve",
+            "plan": 1,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:1 is a draft"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to prepare is given"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "level": "area",
+                "plan": 1,
+                "statement": "deny the waters within 10 hexes of (2,-4)"
+              },
+              "worked": "plan:1, the plan to deny the waters within 10 hexes of (2,-4), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).",
+              "would_change": [
+                "leave to prepare withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 1,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:1 is preparing"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to launch is given"
+                }
+              ],
+              "serves": {
+                "intent": 1,
+                "level": "area",
+                "plan": 1,
+                "statement": "deny the waters within 10 hexes of (2,-4)"
+              },
+              "worked": "plan:1, the plan to deny the waters within 10 hexes of (2,-4), is ready and leave to launch is given: the staff releases it.",
+              "would_change": [
+                "leave to launch withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 2,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:2 is a draft"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to prepare is given"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "plan:2, the plan to operate the carrier force task_force:3 from (8,-11), is a draft inside the limits of intent:2 and leave to prepare is given: the staff makes it ready (preparing).",
+              "would_change": [
+                "leave to prepare withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 2,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:2 is preparing"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to launch is given"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "plan:2, the plan to operate the carrier force task_force:3 from (8,-11), is ready and leave to launch is given: the staff releases it.",
+              "would_change": [
+                "leave to launch withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 3,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:3 is a draft"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to prepare is given"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "plan:3, the plan to operate the carrier force task_force:4 from (7,-9), is a draft inside the limits of intent:3 and leave to prepare is given: the staff makes it ready (preparing).",
+              "would_change": [
+                "leave to prepare withheld"
+              ]
+            }
+          },
+          {
+            "kind": "approve",
+            "plan": 3,
+            "reason": {
+              "binding": [],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "plan:3 is preparing"
+                },
+                {
+                  "day": 1,
+                  "what": "leave to launch is given"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "plan:3, the plan to operate the carrier force task_force:4 from (7,-9), is ready and leave to launch is given: the staff releases it.",
+              "would_change": [
+                "leave to launch withheld"
+              ]
+            }
+          }
+        ],
+        "no_orders": [
+          {
+            "binding": [
+              "intent:2 stands"
+            ],
+            "evidence": [
+              {
+                "day": 1,
+                "what": "task_force:3 is on the carrier mission with 2 carrier(s) afloat and 10 air group(s) aboard, and lies at (9,-19)"
+              },
+              {
+                "day": 1,
+                "what": "intent:2, the commander's task of task_force:3, is in force as a root"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "level": "area",
+              "plan": 1,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:2 (operate the carrier force task_force:3 from (8,-11)), the commander's, stands as a root: a force has one task of a kind, so the staff forms no other for task_force:3. task_force:3 is on the carrier mission with 2 carrier(s) afloat and 10 air group(s) aboard, and lies at (9,-19).",
+            "would_change": [
+              "intent:2 withdrawn"
+            ]
+          },
+          {
+            "binding": [
+              "intent:3 stands"
+            ],
+            "evidence": [
+              {
+                "day": 1,
+                "what": "task_force:4 is on the carrier mission with 1 carrier(s) afloat and 2 air group(s) aboard, and lies at (7,-18)"
+              },
+              {
+                "day": 1,
+                "what": "intent:3, the commander's task of task_force:4, is in force as a root"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "level": "area",
+              "plan": 1,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:3 (operate the carrier force task_force:4 from (7,-9)), the commander's, stands as a root: a force has one task of a kind, so the staff forms no other for task_force:4. task_force:4 is on the carrier mission with 1 carrier(s) afloat and 2 air group(s) aboard, and lies at (7,-18).",
+            "would_change": [
+              "intent:3 withdrawn"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 1,
+                "what": "task_force:3 has no home port and is stopped at no base of the side"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "task_force": 3
+              },
+              "plan": 2,
+              "statement": "operate the carrier force task_force:3 from (8,-11)"
+            },
+            "worked": "intent:2, operating the carrier force task_force:3 from (8,-11): task_force:3 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:3 does not close: the side holds no contact of ships 3 pulses old or less.",
+            "would_change": [
+              "a home port set"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 1,
+                "what": "task_force:4 has no home port and is stopped at no base of the side"
+              }
+            ],
+            "serves": {
+              "intent": 3,
+              "level": {
+                "task_force": 4
+              },
+              "plan": 3,
+              "statement": "operate the carrier force task_force:4 from (7,-9)"
+            },
+            "worked": "intent:3, operating the carrier force task_force:4 from (7,-9): task_force:4 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:4 does not close: the side holds no contact of ships 3 pulses old or less.",
+            "would_change": [
+              "a home port set"
+            ]
+          }
+        ],
+        "orders": [
+          {
+            "intent": 2,
+            "order": {
+              "break_off": "0.5",
+              "keep_share": "0",
+              "kind": "set_rules_of_engagement",
+              "stance": "avoid",
+              "stragglers": "keep"
+            },
+            "reason": {
+              "binding": [
+                "the break-off level of the balanced risk: 0.5"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:3 has the stance engage and a break-off level of 0.5"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "A carrier force does not seek a gun action: the rules of engagement of task_force:3 are set to the stance avoid and the break-off level of the balanced risk, 0.5.",
+              "would_change": [
+                "a different risk level"
+              ]
+            },
+            "unit": "task_force:3"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_speed",
+              "speed": "full"
+            },
+            "reason": {
+              "binding": [
+                "the force is kept at the task's hex"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:3 is at (9,-19), not at (8,-11)"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "intent:2, operating the carrier force task_force:3 from (8,-11): task_force:3 is at (9,-19), not in the task's hex and not on its way home, so it is routed to (8,-11) at full speed, cruise taking 20.133333 hours, more than the night's 12.",
+              "would_change": [
+                "the force in the hex"
+              ]
+            },
+            "unit": "task_force:3"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_route",
+              "waypoints": [
+                [
+                  8,
+                  -11
+                ]
+              ]
+            },
+            "reason": {
+              "binding": [
+                "the force is kept at the task's hex"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:3 is at (9,-19), not at (8,-11)"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "intent:2, operating the carrier force task_force:3 from (8,-11): task_force:3 is at (9,-19), not in the task's hex and not on its way home, so it is routed to (8,-11) at full speed, cruise taking 20.133333 hours, more than the night's 12.",
+              "would_change": [
+                "the force in the hex"
+              ]
+            },
+            "unit": "task_force:3"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "combat_air_patrol"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:11, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:11, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:11"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_patrol_share",
+              "share": "0.5"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:11, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its patrol share is 1"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:11, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:11"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:12, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:12, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:12"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:12, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "air_group": 12
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:12, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:2 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:12"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:13, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:13, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:13"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:13, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "air_group": 13
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:13, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:2 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:13"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "combat_air_patrol"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:14, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:14, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:14"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_patrol_share",
+              "share": "0.5"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:14, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its patrol share is 1"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:14, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:14"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:15, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:15, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:15"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:15, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "air_group": 15
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:15, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:2 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:15"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:16, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:16, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:16"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:16, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "air_group": 16
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:16, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:2 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:16"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "search"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:17, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 45 of the balanced risk: it searches 140 to 210 out to 398 nm from (9,-19) (threats: base:1 (Henderson Field) at (2,-4); the narrowest arc that holds them is 170 to 180, widened by 30 degrees at each end to 140 to 210); at balanced risk a carrier force searches in both daylight pulses"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:17, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 45 of the balanced risk: it searches 140 to 210 out to 398 nm from (9,-19) (threats: base:1 (Henderson Field) at (2,-4); the narrowest arc that holds them is 170 to 180, widened by 30 degrees at each end to 140 to 210); at balanced risk a carrier force searches in both daylight pulses.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:17"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "from_deg": 140,
+              "kind": "set_search_arc",
+              "range_nm": "398",
+              "to_deg": 210
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:17, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 45 of the balanced risk: it searches 140 to 210 out to 398 nm from (9,-19) (threats: base:1 (Henderson Field) at (2,-4); the narrowest arc that holds them is 170 to 180, widened by 30 degrees at each end to 140 to 210); at balanced risk a carrier force searches in both daylight pulses"
+                },
+                {
+                  "day": 1,
+                  "what": "it has no search arc"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:17, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 45 of the balanced risk: it searches 140 to 210 out to 398 nm from (9,-19) (threats: base:1 (Henderson Field) at (2,-4); the narrowest arc that holds them is 170 to 180, widened by 30 degrees at each end to 140 to 210); at balanced risk a carrier force searches in both daylight pulses.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:17"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:21, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:21, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:21"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:21, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "air_group": 21
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:21, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:2 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:21"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:22, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:22, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:22"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:22, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "air_group": 22
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:22, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:2 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:22"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "combat_air_patrol"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:23, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:23, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:23"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_patrol_share",
+              "share": "0.5"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:23, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its patrol share is 1"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:23, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:23"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "combat_air_patrol"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:24, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:24, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:24"
+          },
+          {
+            "intent": 2,
+            "order": {
+              "kind": "set_patrol_share",
+              "share": "0.5"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:24, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its patrol share is 1"
+                }
+              ],
+              "serves": {
+                "intent": 2,
+                "level": {
+                  "task_force": 3
+                },
+                "plan": 2,
+                "statement": "operate the carrier force task_force:3 from (8,-11)"
+              },
+              "worked": "air_group:24, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:24"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "break_off": "0.5",
+              "keep_share": "0",
+              "kind": "set_rules_of_engagement",
+              "stance": "avoid",
+              "stragglers": "keep"
+            },
+            "reason": {
+              "binding": [
+                "the break-off level of the balanced risk: 0.5"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:4 has the stance engage and a break-off level of 0.5"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "A carrier force does not seek a gun action: the rules of engagement of task_force:4 are set to the stance avoid and the break-off level of the balanced risk, 0.5.",
+              "would_change": [
+                "a different risk level"
+              ]
+            },
+            "unit": "task_force:4"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "kind": "set_speed",
+              "speed": "full"
+            },
+            "reason": {
+              "binding": [
+                "the force is kept at the task's hex"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:4 is at (7,-18), not at (7,-9)"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "intent:3, operating the carrier force task_force:4 from (7,-9): task_force:4 is at (7,-18), not in the task's hex and not on its way home, so it is routed to (7,-9) at full speed, cruise taking 25.714285 hours, more than the night's 12.",
+              "would_change": [
+                "the force in the hex"
+              ]
+            },
+            "unit": "task_force:4"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "kind": "set_route",
+              "waypoints": [
+                [
+                  7,
+                  -9
+                ]
+              ]
+            },
+            "reason": {
+              "binding": [
+                "the force is kept at the task's hex"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "task_force:4 is at (7,-18), not at (7,-9)"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "intent:3, operating the carrier force task_force:4 from (7,-9): task_force:4 is at (7,-18), not in the task's hex and not on its way home, so it is routed to (7,-9) at full speed, cruise taking 25.714285 hours, more than the night's 12.",
+              "would_change": [
+                "the force in the hex"
+              ]
+            },
+            "unit": "task_force:4"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "combat_air_patrol"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:18, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "air_group:18, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:18"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "kind": "set_patrol_share",
+              "share": "0.5"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:18, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts"
+                },
+                {
+                  "day": 1,
+                  "what": "its patrol share is 1"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "air_group:18, a fighter group, has fatigue 0 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:18"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "naval_strike"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:19, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "air_group:19, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:19"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "kind": "set_strike_sizing",
+              "on": true
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:19, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized"
+                },
+                {
+                  "day": 1,
+                  "what": "its standing orders differ from the table"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "air_group": 19
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "air_group:19, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized. The group decides the size of its strikes from the task it is under: intent:3 operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:19"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "kind": "set_air_mission",
+              "mission": "search"
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:20, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 45 of the balanced risk: it searches 140 to 210 out to 398 nm from (7,-18) (threats: base:1 (Henderson Field) at (2,-4); the narrowest arc that holds them is 170 to 180, widened by 30 degrees at each end to 140 to 210); at balanced risk a carrier force searches in both daylight pulses"
+                },
+                {
+                  "day": 1,
+                  "what": "its mission is rest"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "air_group:20, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 45 of the balanced risk: it searches 140 to 210 out to 398 nm from (7,-18) (threats: base:1 (Henderson Field) at (2,-4); the narrowest arc that holds them is 170 to 180, widened by 30 degrees at each end to 140 to 210); at balanced risk a carrier force searches in both daylight pulses.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:20"
+          },
+          {
+            "intent": 3,
+            "order": {
+              "from_deg": 140,
+              "kind": "set_search_arc",
+              "range_nm": "398",
+              "to_deg": 210
+            },
+            "reason": {
+              "binding": [
+                "rest above fatigue 45 at the balanced risk"
+              ],
+              "evidence": [
+                {
+                  "day": 1,
+                  "what": "air_group:20, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 45 of the balanced risk: it searches 140 to 210 out to 398 nm from (7,-18) (threats: base:1 (Henderson Field) at (2,-4); the narrowest arc that holds them is 170 to 180, widened by 30 degrees at each end to 140 to 210); at balanced risk a carrier force searches in both daylight pulses"
+                },
+                {
+                  "day": 1,
+                  "what": "it has no search arc"
+                }
+              ],
+              "serves": {
+                "intent": 3,
+                "level": {
+                  "task_force": 4
+                },
+                "plan": 3,
+                "statement": "operate the carrier force task_force:4 from (7,-9)"
+              },
+              "worked": "air_group:20, a group that can search and cannot attack a ship, searches, has fatigue 0 not above the 45 of the balanced risk: it searches 140 to 210 out to 398 nm from (7,-18) (threats: base:1 (Henderson Field) at (2,-4); the narrowest arc that holds them is 170 to 180, widened by 30 degrees at each end to 140 to 210); at balanced risk a carrier force searches in both daylight pulses.",
+              "would_change": [
+                "a different fatigue or risk level",
+                "a new contact, or a contact dropped"
+              ]
+            },
+            "unit": "air_group:20"
+          }
+        ]
+      },
+      "side": "japanese"
+    }
+  ],
+  "state_version": "flagplot-state-v38",
+  "version": 13
+}
