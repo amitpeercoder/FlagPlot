@@ -135,8 +135,8 @@
 //!   are not this scenario's.
 //! - **Two islands.** With a second island, "Placeholder island 2", of a
 //!   Japanese base 4 at C, (0,6), on the Allied map with nothing at it,
-//!   intent 2, control island 2, stated on day 1 after intent 1, and
-//!   unit 3 a fighting unit of 300 men usable from day 1: on the morning
+//!   intent 2, control island 2, stated on day 1 after intent 1, unit 3
+//!   a fighting unit of 300 men, and task force 2 usable from day 1: on the morning
 //!   of day 1 the take of base 2 takes task force 1 as its first lift
 //!   and sends no other, its first lift being on its way; the take of
 //!   base 4 takes task force 2 as its first lift and routes it to C. No
