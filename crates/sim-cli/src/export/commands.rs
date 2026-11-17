@@ -33,7 +33,8 @@ use super::num::Num;
 /// "operate_carriers", task_force, hex }` (decisions 0124 and 0125); or `{
 /// "kind": "ready_landing", task_force, hex, by_day }` (`by_day` left out
 /// where there is none) or `{ "kind": "build_up", base, wants, defences }`
-/// (decision 0141).
+/// (decision 0141); or `{ "kind": "take_place", hex, by_day }` (no `base` or
+/// `task_force`; `by_day` left out where there is none, decision 0142).
 #[derive(Serialize)]
 struct IntentKindOut {
     kind: &'static str,
@@ -55,7 +56,8 @@ struct IntentKindOut {
     floor_days: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     interval_days: Option<u32>,
-    /// The morning a ready_landing intent is to be ready by (decision 0141).
+    /// The morning a ready_landing intent is to be ready by, or a take_place
+    /// intent to have taken its place by (decisions 0141 and 0142).
     #[serde(skip_serializing_if = "Option::is_none")]
     by_day: Option<u32>,
     /// What a build_up intent wants, in order (decision 0141).
@@ -137,6 +139,20 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             hex: Some([hex.q, hex.r]),
             distance: None,
             task_force: Some(force.raw()),
+            floor_days: None,
+            interval_days: None,
+            by_day: *by_day,
+            wants: None,
+            defences: None,
+        },
+        // Decision 0142: a hex of land, the date left out where there is none.
+        IntentKind::TakePlace { hex, by_day } => IntentKindOut {
+            kind: kind.name(),
+            base: None,
+            target: None,
+            hex: Some([hex.q, hex.r]),
+            distance: None,
+            task_force: None,
             floor_days: None,
             interval_days: None,
             by_day: *by_day,

@@ -135,6 +135,11 @@ pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
         IntentKind::BuildUp { base, wants } => {
             format!("build up {}: {wants}", base_words(view, base))
         }
+        // Decision 0142, 1.
+        IntentKind::TakePlace { hex, by_day } => match by_day {
+            Some(day) => format!("take the place at {hex} by the end of day {day}"),
+            None => format!("take the place at {hex}"),
+        },
     }
 }
 

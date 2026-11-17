@@ -161,6 +161,22 @@ impl Day<'_, '_> {
             if !matches!(plan.state, PlanState::Preparing | PlanState::Released) {
                 continue;
             }
+            // Decision 0142, 20: the ready task under "take a place" is
+            // given nothing from the morning its force is routed.
+            if let IntentKind::ReadyLanding { force, hex, .. } = task.kind {
+                let under_place = task
+                    .parent
+                    .and_then(|p| self.state.intents.get(&p))
+                    .is_some_and(|p| matches!(p.kind, IntentKind::TakePlace { .. }));
+                let routed = self
+                    .view
+                    .task_forces()
+                    .find(|f| f.id == force)
+                    .is_some_and(|f| crate::take::routed(f, hex));
+                if under_place && routed {
+                    continue;
+                }
+            }
             match task.kind {
                 IntentKind::ReadyLanding { .. } => self.serve_landing(&task, &plan, &mut taken),
                 IntentKind::BuildUp { .. } => self.serve_build_up(&task, &plan, &mut taken),
@@ -171,7 +187,7 @@ impl Day<'_, '_> {
 
     /// Whether a notice of `kind` was handed in for `plan` on an earlier
     /// morning: what makes a notice handed in once.
-    fn noticed(&mut self, kind: NoticeKind, plan: sim_core::command::PlanId) -> bool {
+    pub(crate) fn noticed(&mut self, kind: NoticeKind, plan: sim_core::command::PlanId) -> bool {
         self.side_events().iter().any(|event| {
             matches!(
                 &event.kind,
@@ -183,7 +199,7 @@ impl Day<'_, '_> {
 
     /// Hands in `reason` as a decision to give no order, with a notice of
     /// `kind` resting on it.
-    fn notice(&mut self, in_scope: bool, reason: Reason, kind: NoticeKind, plan: &Plan) {
+    pub(crate) fn notice(&mut self, in_scope: bool, reason: Reason, kind: NoticeKind, plan: &Plan) {
         let out = self.target(in_scope);
         out.no_orders.push(reason);
         let index = out.no_orders.len() - 1;
@@ -527,13 +543,20 @@ impl Day<'_, '_> {
 
         // Readiness (item 5) and the date (item 6).
         let (load_needed, rehearsal_needed, at_standard) = thresholds(risk);
-        let ready = !landing_ordered
-            && !differs
-            && !roster.is_empty()
-            && loading_now >= load_needed
-            && members
-                .iter()
-                .all(|m| m.rehearsal >= rehearsal_needed && (!at_standard || !m.below()));
+        // Decision 0142, 14: a force that does not lie at a base of its side
+        // can gain no loading and its units no rehearsal, so the task is
+        // ready as it stands.
+        let at_base = crate::fleet::force_stopped_at(&force, force.from_hex)
+            && view.bases().any(|b| b.hex == force.from_hex);
+        let as_it_stands = !at_base && !roster.is_empty();
+        let ready = as_it_stands
+            || (!landing_ordered
+                && !differs
+                && !roster.is_empty()
+                && loading_now >= load_needed
+                && members
+                    .iter()
+                    .all(|m| m.rehearsal >= rehearsal_needed && (!at_standard || !m.below())));
         let loading_words = format!(
             "the force's loading for {hex} is {loading_now}, of the {load_needed} asked at {risk_text}"
         );
@@ -565,14 +588,38 @@ impl Day<'_, '_> {
         }
         self.target(in_scope).orders.extend(orders);
 
+        let without = as_it_stands.then(|| {
+            let rehearsals = if members.is_empty() {
+                String::new()
+            } else {
+                format!("; {member_words}")
+            };
+            format!(
+                "{force_id} does not lie at a base of its side, so it can gain no loading and its units no rehearsal: the landing is ready as it stands and goes without them, {loading_words}{rehearsals}"
+            )
+        });
         if ready {
+            self.landings.insert(
+                task.id,
+                crate::take::LandingReading {
+                    ready: true,
+                    ready_on: Some(today),
+                    words: format!("{loading_words}; {member_words}"),
+                },
+            );
             if !self.noticed(NoticeKind::Ready, plan.id) {
+                let worked = match &without {
+                    Some(words) => format!(
+                        "{words}. The staff gives no order and hands in the notice that it is ready."
+                    ),
+                    None => format!(
+                        "The landing at {hex} by {force_id} is ready: {loading_words}; {member_words}. The staff gives no order and hands in the notice that it is ready."
+                    ),
+                };
                 let reason = serving(task, plan)
                     .evidence(loading_words.clone(), today)
                     .evidence(member_words.clone(), today)
-                    .worked(format!(
-                        "The landing at {hex} by {force_id} is ready: {loading_words}; {member_words}. The staff gives no order and hands in the notice that it is ready."
-                    ))
+                    .worked(worked)
                     .would_change("a loss of loading or rehearsal")
                     .done();
                 self.notice(in_scope, reason, NoticeKind::Ready, plan);
@@ -639,6 +686,14 @@ impl Day<'_, '_> {
         }
         let (days, binds) = worst.unwrap_or((Some(0), Binds::Loading));
         let ready_on = days.map(|d| today + d);
+        self.landings.insert(
+            task.id,
+            crate::take::LandingReading {
+                ready: false,
+                ready_on,
+                words: format!("{loading_words}; {member_words}"),
+            },
+        );
         let projection = match ready_on {
             Some(morning) => format!("it would be ready on the morning of day {morning}"),
             None => "it cannot be ready while that holds".to_string(),
