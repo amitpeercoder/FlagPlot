@@ -474,6 +474,58 @@ pub struct RunCounts {
     /// day ended with a man ashore.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub ashore_by_day: Vec<AshoreOut>,
+    /// Refusals over the run by side and cause, from the log (decision
+    /// 0138, 4; batch version 6). Always present, so a script reads zeros.
+    pub refusals: RefusalsBySide,
+}
+
+/// The refusals of each side in a run.
+#[derive(Serialize)]
+pub struct RefusalsBySide {
+    pub japanese: Refusals,
+    pub allied: Refusals,
+}
+
+/// The refusals of one side in a run: staff orders refused because a unit
+/// was not as the area command held it (decision 0136, 14), staff orders
+/// refused for any other cause, and commands refused.
+#[derive(Serialize, Default, Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Refusals {
+    pub staff_orders_not_as_held: u64,
+    pub staff_orders_other: u64,
+    pub commands: u64,
+}
+
+/// Counts a run's refusals by side, from the log: an `OrderRejected` of an
+/// order whose origin issuer is `Staff` (by the side of the order), split by
+/// `RejectReason::is_not_as_held`, and a `CommandRefused` (by its side).
+pub fn refusals(world: &World) -> RefusalsBySide {
+    let mut counts = [Refusals::default(); 2];
+    let slot = |side: Side| SIDES.iter().position(|s| *s == side).expect("a side");
+    for event in world.events().iter() {
+        match &event.kind {
+            EventKind::OrderRejected { order, reason, .. } => {
+                let Some(order) = world.order(*order) else {
+                    continue;
+                };
+                if order.origin.issuer != sim_core::orders::Issuer::Staff {
+                    continue;
+                }
+                let row = &mut counts[slot(order.side)];
+                if reason.is_not_as_held() {
+                    row.staff_orders_not_as_held += 1;
+                } else {
+                    row.staff_orders_other += 1;
+                }
+            }
+            EventKind::CommandRefused { side, .. } => counts[slot(*side)].commands += 1,
+            _ => {}
+        }
+    }
+    RefusalsBySide {
+        japanese: counts[0],
+        allied: counts[1],
+    }
 }
 
 /// The men each side lost on one day, by every cause.
@@ -1436,6 +1488,7 @@ pub fn count(
                 })
             })
             .collect(),
+        refusals: refusals(world),
     }
 }
 

@@ -113,14 +113,14 @@ fn days_resolved(a: &Value) -> (u64, u64, u64) {
 }
 
 #[test]
-fn the_four_tools_follow_staff_orders_in_the_list_and_the_version_is_15() {
+fn the_four_tools_follow_staff_orders_in_the_list_and_the_version_is_16() {
     let at = |tool: &str| COMMAND_TOOLS.iter().position(|t| *t == tool).unwrap();
     assert_eq!(at("set_interrupt"), at("staff_orders") + 1);
     assert_eq!(at("acknowledge"), at("set_interrupt") + 1);
     assert_eq!(at("run"), at("acknowledge") + 1);
     assert_eq!(at("report"), at("run") + 1);
     assert_eq!(at("why"), at("report") + 1);
-    assert_eq!(sim_agent::VERSION, 15);
+    assert_eq!(sim_agent::VERSION, 16);
 }
 
 #[test]

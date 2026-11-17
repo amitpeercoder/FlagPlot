@@ -46,6 +46,21 @@ impl std::fmt::Debug for CommandView<'_> {
 }
 
 impl<'a> CommandView<'a> {
+    /// The side's own belief as a view, every report at once: the picture of
+    /// the easier setting at the area seat (decision 0119, answer 5, and
+    /// decision 0135, 19). It is the side's own and never the enemy's.
+    pub(super) fn of_side_belief(side: Side, belief: &'a BeliefState) -> CommandView<'a> {
+        CommandView {
+            side,
+            command: CommandRef::Area,
+            superior: None,
+            picture: belief,
+            reports_travel: false,
+            own: None,
+            commander: None,
+        }
+    }
+
     /// The side the command belongs to.
     pub fn side(&self) -> Side {
         self.side
@@ -140,6 +155,10 @@ impl<'a> SideView<'a> {
     /// task forces, then its bases. Empty with command levels off: there are
     /// no commands then (decision 0134, 1).
     pub fn commands(&self) -> Vec<CommandRef> {
+        // A seat at a command knows its own command and no other.
+        if let Some(seat) = self.seat {
+            return vec![seat];
+        }
         self.commands
             .map(|commands| commands.keys().copied().collect())
             .unwrap_or_default()
@@ -150,6 +169,11 @@ impl<'a> SideView<'a> {
     /// the area command and each of the side's own task forces and bases has
     /// a view, and each holds the side's own belief (item 16).
     pub fn command(&self, command: CommandRef) -> Option<CommandView<'a>> {
+        // A seat at a command is given its own command's view and no other
+        // (decision 0138, 5).
+        if self.seat.is_some_and(|seat| seat != command) {
+            return None;
+        }
         match self.commands {
             Some(commands) => commands.get(&command).map(|post| CommandView {
                 side: self.side,
@@ -193,7 +217,7 @@ impl<'a> SideView<'a> {
         self.truth
             .air_groups
             .get(&group)
-            .filter(|record| record.side == self.side)?;
+            .filter(|record| self.owns_group(record))?;
         pictures::command_of_group(self.truth, group)
     }
 
@@ -203,7 +227,7 @@ impl<'a> SideView<'a> {
         self.truth
             .task_forces
             .get(&force)
-            .filter(|record| record.side == self.side)?;
+            .filter(|record| self.owns_force(record))?;
         pictures::command_of_task_force(self.truth, force)
     }
 
@@ -213,7 +237,7 @@ impl<'a> SideView<'a> {
         self.truth
             .land_units
             .get(&unit)
-            .filter(|record| record.side == self.side)?;
+            .filter(|record| self.owns_land_unit(record))?;
         pictures::command_of_land_unit(self.truth, unit)
     }
 

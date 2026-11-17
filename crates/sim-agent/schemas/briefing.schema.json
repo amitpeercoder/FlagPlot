@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 15 },
+    "version": { "const": 16 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -83,6 +83,10 @@
       "additionalProperties": false,
       "properties": {
         "mission": { "$ref": "defs.schema.json#/$defs/string_or_null" },
+        "not_given_to_this_seat": {
+          "description": "True at a seat at a task force or a base, which is not given the side's mission and objectives: they are the area command's (decision 0138, 5). Left out otherwise.",
+          "const": true
+        },
         "objectives": { "type": "array", "items": { "$ref": "#/$defs/objective" } },
         "levels": {
           "description": "From day 1: the margins (a side's points less the enemy's) that make a minor, a major and a decisive victory; the same margins against a side are defeats of the same level, and a margin of less than minor either way is a stalemate. null when the scenario has no objectives.",

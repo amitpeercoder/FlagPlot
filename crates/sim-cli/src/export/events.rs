@@ -2,13 +2,14 @@
 
 use serde::Serialize;
 use sim_core::events::{
-    Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange, LandFatigueChange,
-    SupplyUse,
+    Arrival, Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange,
+    LandFatigueChange, ReportListener, SupplyUse,
 };
 use sim_core::fixed::Fixed;
 use sim_core::ids::UmpireKey;
 use sim_core::orders::{Cargo, RejectReason};
 use sim_core::state::AirGroupLocation;
+use sim_core::time::Pulse;
 
 use super::data::{Data, Field};
 use super::names;
@@ -50,7 +51,7 @@ struct FactorOut {
 }
 
 pub fn event(event: &Event, key: &UmpireKey) -> EventOut {
-    let (kind, data) = describe(&event.kind, key);
+    let (kind, data) = describe(&event.kind, key, (event.day, event.pulse));
     EventOut {
         id: event.id.umpire_raw(key),
         day: event.day,
@@ -213,7 +214,11 @@ fn cargo_named(data: Data, cargo: Cargo) -> Data {
     }
 }
 
-pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data) {
+pub(super) fn describe(
+    kind: &EventKind,
+    key: &UmpireKey,
+    at: (u32, Option<Pulse>),
+) -> (&'static str, Data) {
     let d = Data::new();
     match kind {
         EventKind::OrderAccepted { order, target } => (
@@ -2191,21 +2196,10 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .int("report", report.umpire_raw(key))
                 .with(
                     "listeners",
-                    Field::Strs(
+                    Field::Objs(
                         listeners
                             .iter()
-                            .map(|listener| {
-                                format!(
-                                    "{} {} {}",
-                                    listener.direction.name(),
-                                    command_word(listener.command),
-                                    match listener.arrival {
-                                        sim_core::events::Arrival::OnTime => "on_time",
-                                        sim_core::events::Arrival::Late => "late",
-                                        sim_core::events::Arrival::Never => "never",
-                                    }
-                                )
-                            })
+                            .map(|listener| report_listener(listener, at))
                             .collect(),
                     ),
                 ),
@@ -2258,11 +2252,43 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
 }
 
 /// A command as the export words it: `area`, `task_force:N` or `base:N`.
-fn command_word(command: sim_core::pictures::CommandRef) -> String {
+pub(super) fn command_word(command: sim_core::pictures::CommandRef) -> String {
     match command {
         sim_core::pictures::CommandRef::Area => "area".to_string(),
         sim_core::pictures::CommandRef::TaskForce(force) => format!("task_force:{}", force.raw()),
         sim_core::pictures::CommandRef::Base(base) => format!("base:{}", base.raw()),
+    }
+}
+
+/// One listener of a passed report (replay version 6): the command, the
+/// road (`up`, `sideways`, `down`), how it arrives (`on_time`, `late`,
+/// `never`) and, unless never, the day and pulse it arrives, worked out here
+/// so that the viewer need not. A report sent in an end-of-day phase (no
+/// pulse) is counted as the afternoon's last word, as the rules count it
+/// (decision 0135).
+fn report_listener(listener: &ReportListener, at: (u32, Option<Pulse>)) -> Data {
+    let (day, pulse) = at;
+    let sent = pulse.unwrap_or(Pulse::Afternoon);
+    let (arrival, when) = match listener.arrival {
+        Arrival::OnTime => ("on_time", Some((day, sent))),
+        Arrival::Late => ("late", Some(next_pulse(day, sent))),
+        Arrival::Never => ("never", None),
+    };
+    let data = Data::new()
+        .with("command", Field::Str(command_word(listener.command)))
+        .text("direction", listener.direction.name())
+        .text("arrival", arrival);
+    match when {
+        Some((day, pulse)) => data.int("day", day).text("pulse", pulse.name()),
+        None => data,
+    }
+}
+
+fn next_pulse(day: u32, pulse: Pulse) -> (u32, Pulse) {
+    match pulse {
+        Pulse::Night => (day, Pulse::Morning),
+        Pulse::Morning => (day, Pulse::Afternoon),
+        Pulse::Afternoon => (day + 1, Pulse::Night),
     }
 }
 
@@ -2272,5 +2298,61 @@ fn issuer_code(issuer: sim_core::orders::Issuer) -> &'static str {
         sim_core::orders::Issuer::Player => "player",
         sim_core::orders::Issuer::Staff => "staff",
         sim_core::orders::Issuer::LocalCommander => "local_commander",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sim_core::events::Direction;
+    use sim_core::pictures::CommandRef;
+
+    fn listener(arrival: Arrival) -> ReportListener {
+        ReportListener {
+            command: CommandRef::Area,
+            direction: Direction::Up,
+            arrival,
+        }
+    }
+
+    fn text(data: &Data) -> String {
+        serde_json::to_string(data).expect("data serialises")
+    }
+
+    /// An arrival is the moment of sending (on time), the next pulse (a
+    /// pulse late, which from the afternoon is the next day's night), or no
+    /// moment at all (never). A report sent in an end-of-day phase has no
+    /// pulse and is counted as the afternoon's.
+    #[test]
+    fn a_listeners_arrival_is_the_pulse_it_is_counted_from() {
+        let at = |arrival, day, pulse| text(&report_listener(&listener(arrival), (day, pulse)));
+        assert_eq!(
+            at(Arrival::OnTime, 2, Some(Pulse::Morning)),
+            r#"{"command":"area","direction":"up","arrival":"on_time","day":2,"pulse":"morning"}"#
+        );
+        assert_eq!(
+            at(Arrival::Late, 2, Some(Pulse::Night)),
+            r#"{"command":"area","direction":"up","arrival":"late","day":2,"pulse":"morning"}"#
+        );
+        assert_eq!(
+            at(Arrival::Late, 2, Some(Pulse::Morning)),
+            r#"{"command":"area","direction":"up","arrival":"late","day":2,"pulse":"afternoon"}"#
+        );
+        assert_eq!(
+            at(Arrival::Late, 2, Some(Pulse::Afternoon)),
+            r#"{"command":"area","direction":"up","arrival":"late","day":3,"pulse":"night"}"#
+        );
+        assert_eq!(
+            at(Arrival::Late, 2, None),
+            r#"{"command":"area","direction":"up","arrival":"late","day":3,"pulse":"night"}"#
+        );
+        assert_eq!(
+            at(Arrival::OnTime, 2, None),
+            r#"{"command":"area","direction":"up","arrival":"on_time","day":2,"pulse":"afternoon"}"#
+        );
+        assert_eq!(
+            at(Arrival::Never, 2, Some(Pulse::Night)),
+            r#"{"command":"area","direction":"up","arrival":"never"}"#
+        );
     }
 }

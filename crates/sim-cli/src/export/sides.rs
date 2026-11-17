@@ -144,8 +144,8 @@ pub fn events(world: &World, side: Side) -> Vec<SideEventOut> {
                 .events()
                 .get(event.id)
                 .expect("a side's event is an event of the log");
-            let (kind, _) = describe(&source.kind, &key);
-            let (data, cut) = describe_side(&event.kind, &key);
+            let (kind, _) = describe(&source.kind, &key, (event.day, event.pulse));
+            let (data, cut) = describe_side(&event.kind, &key, (event.day, event.pulse));
             let pulse = event.pulse.map(Pulse::name);
             let cause_text: Vec<String> = causes
                 .iter()
@@ -205,10 +205,10 @@ fn breakdown(breakdown: &SideBreakdown) -> BreakdownOut {
 /// the full log describes it; a cut one has only the fields the engine left
 /// it. The kind's code is not here: it is the log's, taken from the event the
 /// side's copy was made from.
-fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (Data, bool) {
+fn describe_side(kind: &SideEventKind, key: &UmpireKey, at: (u32, Option<Pulse>)) -> (Data, bool) {
     let d = Data::new();
     match kind {
-        SideEventKind::Whole(kind) => (describe(kind, key).1, false),
+        SideEventKind::Whole(kind) => (describe(kind, key, at).1, false),
         SideEventKind::Salvo {
             round,
             firer,

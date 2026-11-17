@@ -44,7 +44,7 @@ use super::state::{self, KeyedRecords, PerSide};
 /// What one entry lists of each kind of record: the records themselves in
 /// `changed`, their keys in `removed`. A kind with nothing is left out.
 #[derive(Serialize)]
-struct Lists<R, E> {
+struct Lists<R, E, P> {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     task_forces: Vec<R>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -59,9 +59,13 @@ struct Lists<R, E> {
     contacts: PerSide<R>,
     #[serde(skip_serializing_if = "PerSide::is_empty")]
     ground_estimates: PerSide<E>,
+    /// A command's whole picture where it differs from the step before's (or
+    /// is new), or the command's word where it is gone (replay version 6).
+    #[serde(skip_serializing_if = "PerSide::is_empty")]
+    pictures: PerSide<P>,
 }
 
-impl<R, E> Lists<R, E> {
+impl<R, E, P> Lists<R, E, P> {
     fn is_empty(&self) -> bool {
         self.task_forces.is_empty()
             && self.ships.is_empty()
@@ -70,6 +74,7 @@ impl<R, E> Lists<R, E> {
             && self.land_units.is_empty()
             && self.contacts.is_empty()
             && self.ground_estimates.is_empty()
+            && self.pictures.is_empty()
     }
 }
 
@@ -78,9 +83,9 @@ pub struct StepOut {
     day: u32,
     phase: &'static str,
     #[serde(skip_serializing_if = "Lists::is_empty")]
-    changed: Lists<Box<RawValue>, Box<RawValue>>,
+    changed: Lists<Box<RawValue>, Box<RawValue>, Box<RawValue>>,
     #[serde(skip_serializing_if = "Lists::is_empty")]
-    removed: Lists<u32, (i32, i32)>,
+    removed: Lists<u32, (i32, i32), String>,
     /// A side's whole command state (decision 0107) where it differs from the
     /// step before's. Left out of a step where neither side's does, so the
     /// steps of a run with no command are as they were.
@@ -91,7 +96,7 @@ pub struct StepOut {
 /// The records of one kind as the last step left them, by key.
 struct Seen<K: Ord>(BTreeMap<K, String>);
 
-impl<K: Ord + Copy> Seen<K> {
+impl<K: Ord + Clone> Seen<K> {
     /// The records of `now` that differ from the last step's, as JSON, in
     /// the order given, and the keys no longer there, in key order. Leaves
     /// `now` as the last step's.
@@ -108,7 +113,7 @@ impl<K: Ord + Copy> Seen<K> {
             .0
             .keys()
             .filter(|key| !kept.contains_key(key))
-            .copied()
+            .cloned()
             .collect();
         self.0 = kept;
         (changed, removed)
@@ -129,6 +134,7 @@ pub struct StepRecorder {
     land_units: Seen<u32>,
     contacts: [Seen<u32>; 2],
     estimates: [Seen<(i32, i32)>; 2],
+    pictures: [Seen<String>; 2],
     /// Each side's command state as the last step left it, as JSON text.
     commands: [Option<String>; 2],
 }
@@ -146,6 +152,7 @@ impl StepRecorder {
             land_units: Seen(BTreeMap::new()),
             contacts: [Seen(BTreeMap::new()), Seen(BTreeMap::new())],
             estimates: [Seen(BTreeMap::new()), Seen(BTreeMap::new())],
+            pictures: [Seen(BTreeMap::new()), Seen(BTreeMap::new())],
             commands: [None, None],
         }
     }
@@ -201,6 +208,7 @@ impl StepRecorder {
             land_units,
             contacts,
             ground_estimates,
+            pictures,
         } = state::records(world).keyed();
         let (task_forces_changed, task_forces_removed) = self.task_forces.diff(task_forces);
         let (ships_changed, ships_removed) = self.ships.diff(ships);
@@ -213,6 +221,8 @@ impl StepRecorder {
             self.estimates[0].diff(ground_estimates.allied);
         let (japanese_estimates, japanese_estimates_gone) =
             self.estimates[1].diff(ground_estimates.japanese);
+        let (allied_pictures, allied_pictures_gone) = self.pictures[0].diff(pictures.allied);
+        let (japanese_pictures, japanese_pictures_gone) = self.pictures[1].diff(pictures.japanese);
         let commands = StepCommands::diff(&mut self.commands, commands::texts(world));
         self.steps.push(StepOut {
             day,
@@ -231,6 +241,10 @@ impl StepRecorder {
                     allied: allied_estimates,
                     japanese: japanese_estimates,
                 },
+                pictures: PerSide {
+                    allied: allied_pictures,
+                    japanese: japanese_pictures,
+                },
             },
             removed: Lists {
                 task_forces: task_forces_removed,
@@ -245,6 +259,10 @@ impl StepRecorder {
                 ground_estimates: PerSide {
                     allied: allied_estimates_gone,
                     japanese: japanese_estimates_gone,
+                },
+                pictures: PerSide {
+                    allied: allied_pictures_gone,
+                    japanese: japanese_pictures_gone,
                 },
             },
             commands,

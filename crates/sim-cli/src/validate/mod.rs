@@ -142,14 +142,14 @@ pub fn command(
     let batch_hash = crate::save::hash_hex(&batch_bytes);
     let header: BatchHeader = serde_json::from_slice(&batch_bytes)
         .map_err(|e| format!("{batch_path}: not a batch file (decision 0062): {e}"))?;
-    if header.format != "flag-plot-batch" || header.version != 5 {
+    if header.format != "flag-plot-batch" || !matches!(header.version, 5 | 6) {
         let made_again = if header.version < 5 {
             "; make it again with the engine's `batch` (version 5 adds the strike launches of each run)"
         } else {
             ""
         };
         return Err(format!(
-            "{batch_path}: the batch is {} version {}; validate reads flag-plot-batch version 5 only{made_again}",
+            "{batch_path}: the batch is {} version {}; validate reads flag-plot-batch versions 5 and 6 only{made_again}",
             header.format, header.version
         ));
     }

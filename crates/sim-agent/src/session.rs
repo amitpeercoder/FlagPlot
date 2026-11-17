@@ -18,6 +18,7 @@ use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{OrderKind, OrderRequest, Origin, RejectReason, TaskForceOrder};
 use sim_core::pictures::CommandRef;
 use sim_core::state::Side;
+use sim_core::view::SideView;
 use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::World;
 
@@ -29,7 +30,9 @@ use crate::measure::{measure_in, MeasureContext, Question};
 use crate::objectives::result_part;
 use crate::orders::{is_orderable_unit, land_unit_number, order_from_json};
 use crate::queries::{get_entity, list_bases, list_contacts, list_forces};
-use crate::record::{seat_name, CallError, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS};
+use crate::record::{
+    seat_name, CallError, Post, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS,
+};
 use crate::staffing;
 
 /// The umpire's number given to a unit the side named that is none of its
@@ -98,6 +101,23 @@ fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32
         }
         return body;
     }
+    // An escort names the force it covers. A seat at a command names it as
+    // it numbers its own forces, and a number that names none of them becomes
+    // the number no force has (decision 0138, 5).
+    if body.get("kind").and_then(Value::as_str) == Some("escort") && ctx.view.seat().is_some() {
+        if let Some(number) = body
+            .get("charge")
+            .and_then(Value::as_str)
+            .and_then(|handle| handle.strip_prefix("task_force:"))
+            .and_then(|number| number.parse::<u32>().ok())
+        {
+            let raw = ctx
+                .own_force(number)
+                .map_or(NO_SUCH_UNIT, |force| force.id.raw());
+            body["charge"] = json!(format!("task_force:{raw}"));
+        }
+        return body;
+    }
     if !matches!(
         body.get("kind").and_then(Value::as_str),
         Some("detach" | "form_task_force")
@@ -135,6 +155,16 @@ fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32
 /// answers a unit that is not written as one an order can be for.
 pub const NOT_KNOWN: &str = "not known";
 
+/// The one refusal at a seat at a task force or a base for an order to a
+/// unit that is none of its command's: another unit of the side's, one of the
+/// enemy's and one that does not exist are refused alike (decision 0138, 5).
+pub const NOT_YOUR_COMMANDS_UNIT: &str = "not one of your command's units";
+
+/// What a call of the command tools is told at a seat that is not the area
+/// command's (decision 0138, 5).
+const NO_INTENTS_HERE: &str =
+    "stating intents from a seat that is not the area command's is not built (decision 0132)";
+
 /// A preview a seat was shown (decision 0107, step 3, rulings 25 and 26):
 /// what is needed to approve it and to say why it is void. It is the
 /// session's, not the world's: it is no state, no event and no hash.
@@ -171,6 +201,9 @@ pub struct Session {
     scenario: String,
     days: u32,
     seats: BTreeMap<Side, SeatState>,
+    /// Where each side's player seat sits; the area command where nothing
+    /// else was set (decision 0138, 5).
+    posts: BTreeMap<Side, Post>,
     handed_in: BTreeMap<u32, Vec<(Side, OrderRequest)>>,
     /// The staff each side is given, if any (decision 0107). The caller
     /// hands them in: this crate holds no doctrine.
@@ -222,6 +255,7 @@ impl Session {
             scenario: scenario.to_string(),
             days,
             seats,
+            posts: BTreeMap::new(),
             handed_in: BTreeMap::new(),
             staffs: BTreeMap::new(),
             commands: BTreeMap::new(),
@@ -249,6 +283,79 @@ impl Session {
         self
     }
 
+    /// This session with the side's seat at `post` (decision 0138, 5), before
+    /// play. A seat at a task force or a base needs command levels on and a
+    /// command of the side at the start; the refusal says which is wrong.
+    pub fn with_post(mut self, side: Side, post: Post) -> Result<Session, String> {
+        if self.world.day() != 0 {
+            return Err("a seat is placed before the first day is played".to_string());
+        }
+        if let Post::At(command) = post {
+            let view = self.world.side_view(side);
+            if !view.command_levels() {
+                return Err(
+                    "command levels are off in this scenario: the only seat is the area command's"
+                        .to_string(),
+                );
+            }
+            if !view.commands().contains(&command) {
+                return Err(format!(
+                    "{command} is not a task force or a base of the {} side at the start",
+                    seat_name(side)
+                ));
+            }
+        }
+        self.posts.insert(side, post);
+        Ok(self)
+    }
+
+    /// Where the side's seat sits.
+    pub fn post(&self, side: Side) -> Post {
+        self.posts.get(&side).copied().unwrap_or_default()
+    }
+
+    /// Whether the side's seat has the command tools of [`COMMAND_TOOLS`]:
+    /// its side has a staff and the seat is the area command's.
+    pub fn has_command_tools(&self, side: Side) -> bool {
+        self.has_staff(side) && !self.at_a_command(side)
+    }
+
+    /// Whether the side's seat is at a task force or a base.
+    fn at_a_command(&self, side: Side) -> bool {
+        matches!(self.post(side), Post::At(_))
+    }
+
+    /// The side's view as its seat reads it: the side's own for the area seat
+    /// (its units are given as the area command holds them by
+    /// [`Session::read`]), the side's own with its own picture under the
+    /// easier setting, and the view cut to the command at a task force or a
+    /// base. Refused if that command has ceased to be.
+    fn view_of(&self, side: Side) -> Result<SideView<'_>, CallError> {
+        let view = self.world.side_view(side);
+        match self.post(side) {
+            Post::Area => Ok(view),
+            Post::AreaEasier => Ok(view.with_side_picture()),
+            Post::At(command) => view.at_seat(command).ok_or_else(|| {
+                CallError::new(format!(
+                    "{command} has ceased to be a command of the side: this seat holds nothing now; end the day to go on"
+                ))
+            }),
+        }
+    }
+
+    /// Runs `read` on the view the side's seat reads its units from: for the
+    /// area seat as the area command holds them (decision 0136, 9).
+    fn read<R>(&self, side: Side, read: impl FnOnce(&SideView<'_>) -> R) -> Result<R, CallError> {
+        let view = self.view_of(side)?;
+        Ok(match self.post(side) {
+            Post::Area => {
+                let known = view.known_to(CommandRef::Area);
+                read(&known.view())
+            }
+            _ => read(&view),
+        })
+    }
+
     /// Whether the side has a staff in this session, and with it the tools
     /// of [`COMMAND_TOOLS`].
     pub fn has_staff(&self, side: Side) -> bool {
@@ -259,7 +366,7 @@ impl Session {
     /// [`COMMAND_TOOLS`] for a side with a staff.
     pub fn tools(&self, side: Side) -> Vec<&'static str> {
         let mut tools: Vec<&'static str> = TOOLS.to_vec();
-        if self.has_staff(side) {
+        if self.has_command_tools(side) {
             // `run` is offered only where exactly one seat is held by a
             // player (decision 0107, item 29).
             let runnable = self.player_seats() == 1;
@@ -386,17 +493,17 @@ impl Session {
                     Some(Value::Bool(b)) => *b,
                     Some(_) => return Err(CallError::new("\"text\" must be true or false")),
                 };
-                let side_view = self.world.side_view(side);
                 // The area seat reads its own units as the area command
                 // holds them (decision 0136, 9); the umpire's result below
                 // is read from the side's own view.
-                let known = side_view.known_to(CommandRef::Area);
-                let view = known.view();
-                let mut briefing = briefing_for_game(&view, &self.scenario, Some(self.days));
+                let mut briefing = self.read(side, |view| {
+                    briefing_for_game(view, &self.scenario, Some(self.days))
+                })?;
                 // The final briefing carries the umpire's result (decision 8
-                // of 0054): the game is over, so it is no longer a secret.
-                if let Some(result) = self.final_result() {
-                    briefing = briefing.with_result(&side_view, &result);
+                // of 0054): the game is over, so it is no longer a secret. A
+                // seat at a command is not given it: it is the side's.
+                if let Some(result) = self.final_result().filter(|_| !self.at_a_command(side)) {
+                    briefing = briefing.with_result(&self.world.side_view(side), &result);
                 }
                 if text {
                     Ok(json!({
@@ -411,24 +518,21 @@ impl Session {
             }
             "list_forces" => {
                 let area = area_of(&args)?;
-                let known = self.world.side_view(side).known_to(CommandRef::Area);
-                to_value(&list_forces(&known.view(), area))
+                to_value(&self.read(side, |view| list_forces(view, area))?)
             }
             "list_bases" => {
                 let area = area_of(&args)?;
-                let known = self.world.side_view(side).known_to(CommandRef::Area);
-                to_value(&list_bases(&known.view(), area))
+                to_value(&self.read(side, |view| list_bases(view, area))?)
             }
             "list_contacts" => {
                 let area = area_of(&args)?;
-                to_value(&list_contacts(&self.world.side_view(side), area))
+                to_value(&list_contacts(&self.view_of(side)?, area))
             }
             "get_entity" => {
                 let handle = args.get("handle").and_then(Value::as_str).ok_or_else(|| {
                     CallError::new("\"handle\" is needed, as text such as \"task_force:3\"")
                 })?;
-                let known = self.world.side_view(side).known_to(CommandRef::Area);
-                to_value(&get_entity(&known.view(), handle))
+                to_value(&self.read(side, |view| get_entity(view, handle))?)
             }
             "measure" => {
                 let question = Question::from_json(&arguments.to_string())
@@ -452,8 +556,7 @@ impl Session {
                     last_day: Some(self.days),
                     yard_check: Some(&check),
                 };
-                let known = self.world.side_view(side).known_to(CommandRef::Area);
-                to_value(&measure_in(&known.view(), &question, &context))
+                to_value(&self.read(side, |view| measure_in(view, &question, &context))?)
             }
             "explain" => {
                 let event = args
@@ -465,10 +568,13 @@ impl Session {
                             "\"event\" is needed, as the number of an event you were shown",
                         )
                     })?;
-                to_value(&explain(&self.world.side_view(side), event))
+                to_value(&explain(&self.view_of(side)?, event))
             }
             "issue_orders" => self.issue_orders(side, &args),
             "end_day" => self.end_day(side),
+            command if COMMAND_TOOLS.contains(&command) && self.at_a_command(side) => {
+                Err(CallError::new(NO_INTENTS_HERE))
+            }
             command if COMMAND_TOOLS.contains(&command) && self.has_staff(side) => {
                 self.command_tool(side, command, &args)
             }
@@ -526,7 +632,8 @@ impl Session {
         let mut accepted: Vec<OrderRequest> = Vec::new();
         let mut results = Vec::new();
         {
-            let ctx = Ctx::new(self.world.side_view(side));
+            let view = self.view_of(side)?;
+            let ctx = Ctx::new(view);
             let seat_queue = self.seats[&side].queued.clone();
             for (index, entry) in entries.iter().enumerate() {
                 let queued: Vec<OrderRequest> =
@@ -542,7 +649,7 @@ impl Session {
                             order: TaskForceOrder::SendToYard,
                         } = &request.kind
                         {
-                            if let Some(plan) = self.world.side_view(side).yard_plan(*target) {
+                            if let Some(plan) = view.yard_plan(*target) {
                                 let day = plan.return_day(self.world.day() + 1);
                                 result["day_of_return"] = json!(day);
                                 result["returns"] = json!(day <= self.days);
@@ -608,12 +715,22 @@ impl Session {
         entry: &Value,
         queued: &[OrderRequest],
     ) -> Result<OrderRequest, String> {
+        // At a seat at a command the one refusal is its own words (decision
+        // 0138, 5); everywhere else it is the side's.
+        let at_seat = ctx.view.seat().is_some();
+        let not_known = || {
+            if at_seat {
+                NOT_YOUR_COMMANDS_UNIT.to_string()
+            } else {
+                NOT_KNOWN.to_string()
+            }
+        };
         let unit = entry
             .get("unit")
             .and_then(Value::as_str)
             .ok_or_else(|| "malformed order: \"unit\" is missing or not text".to_string())?;
         if !is_orderable_unit(unit) {
-            return Err(NOT_KNOWN.to_string());
+            return Err(not_known());
         }
         let body = entry
             .get("order")
@@ -634,6 +751,11 @@ impl Session {
                 .contains_key(&BaseId::new(number))
                 .then_some(number),
             "task_force" => ctx.own_force(number).map(|f| f.id.raw()).or_else(|| {
+                // A seat at a command makes no force by an order: a number
+                // that is none of its own names nothing (decision 0138, 5).
+                if at_seat {
+                    return None;
+                }
                 // A number just past the side's forces names the force a
                 // queued forming order will make, in the order intake takes
                 // them in (decision 0111); any other number names nothing.
@@ -659,6 +781,17 @@ impl Session {
         .unwrap_or(NO_SUCH_UNIT);
         let mut stand_ins: BTreeMap<u32, u32> = BTreeMap::new();
         let body = unit_numbers_to_ids(ctx, body, &mut stand_ins);
+        // At a seat at a command an order that names a unit the command does
+        // not hold, as its target or in its body, is refused here with the one
+        // reason, before the engine is asked, so that no reason of the
+        // engine's can tell what the unit is (decision 0138, 5).
+        if at_seat
+            && (raw == NO_SUCH_UNIT
+                || !stand_ins.is_empty()
+                || body.to_string().contains(&NO_SUCH_UNIT.to_string()))
+        {
+            return Err(not_known());
+        }
         let kind = order_from_json(&format!("{kind_of_unit}:{raw}"), &body)
             .map_err(|e| format!("malformed order: {e}"))?;
         let request = OrderRequest {
@@ -667,19 +800,19 @@ impl Session {
         };
         match self.world.check_order_queued(side, &request, queued) {
             Ok(()) => Ok(request),
-            Err(RejectReason::NotYourUnit) => Err(NOT_KNOWN.to_string()),
+            Err(RejectReason::NotYourUnit) => Err(not_known()),
             // A posture order for a land unit that is not the side's own
             // (an enemy's, or one that does not exist) is refused alike.
             Err(RejectReason::NotYourLandUnit)
                 if matches!(request.kind, OrderKind::LandUnit { .. }) =>
             {
-                Err(NOT_KNOWN.to_string())
+                Err(not_known())
             }
             // The engine's words may name a ship by its umpire's number: show
             // the side's, or the number the side wrote for a stand-in.
-            Err(reason) => Err(map_unit_tokens(
-                &crate::words::refusal(&reason),
-                |kind, raw| match kind {
+            Err(reason) => {
+                let words = crate::words::refusal(&reason);
+                Err(map_unit_tokens(&words, |kind, raw| match kind {
                     "ship" => stand_ins
                         .get(&raw)
                         .copied()
@@ -689,8 +822,8 @@ impl Session {
                     }),
                     "land_unit" => ctx.land_unit_number(LandUnitId::new(raw)),
                     _ => ctx.group_number(AirGroupId::new(raw)),
-                },
-            )),
+                }))
+            }
         }
     }
 
@@ -1066,7 +1199,7 @@ impl Session {
         // The answer that reports the game over carries the umpire's result
         // for both sides, when the scenario has objectives (decision 8 of
         // 0054). Otherwise it is null.
-        let result = match self.final_result() {
+        let result = match self.final_result().filter(|_| !self.at_a_command(side)) {
             Some(result) => to_value(&result_part(&self.world.side_view(side), &result))?,
             None => Value::Null,
         };

@@ -16,6 +16,7 @@ use sim_core::command::{
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
+use sim_core::orders::Issuer;
 use sim_core::side_events::{SideCause, SideEvent, SideEventKind};
 use sim_core::view::SideView;
 
@@ -368,6 +369,71 @@ fn count_text(count: usize, singular: &str, plural: &str) -> String {
     }
 }
 
+/// The refusals of a game so far, counted by cause (decision 0138, 4).
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub(crate) struct RefusalCounts {
+    /// Staff orders refused because a unit was not as the area command held
+    /// it (decision 0136, 14).
+    pub staff_orders_not_as_held: u32,
+    /// Staff orders refused for any other cause.
+    pub staff_orders_other: u32,
+    /// Commands refused.
+    pub commands: u32,
+}
+
+/// One refusal, as the count reads it.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) enum Refused {
+    /// A staff order refused; `not_as_held` if the reason is
+    /// [`sim_core::orders::RejectReason::is_not_as_held`].
+    StaffOrder { not_as_held: bool },
+    /// A command refused.
+    Command,
+}
+
+/// The refusal an event is, if it is one: a staff order refused (an order
+/// whose origin issuer, by `issuer_of`, is `Staff`) or a command refused. An
+/// order `issuer_of` does not know is not counted.
+fn refused_of(
+    kind: &EventKind,
+    issuer_of: impl Fn(sim_core::ids::OrderId) -> Option<Issuer>,
+) -> Option<Refused> {
+    match kind {
+        EventKind::OrderRejected { order, reason, .. }
+            if issuer_of(*order) == Some(Issuer::Staff) =>
+        {
+            Some(Refused::StaffOrder {
+                not_as_held: reason.is_not_as_held(),
+            })
+        }
+        EventKind::CommandRefused { .. } => Some(Refused::Command),
+        _ => None,
+    }
+}
+
+/// Counts refusals by cause.
+pub(crate) fn tally(refusals: impl IntoIterator<Item = Refused>) -> RefusalCounts {
+    let mut counts = RefusalCounts::default();
+    for refused in refusals {
+        match refused {
+            Refused::StaffOrder { not_as_held: true } => counts.staff_orders_not_as_held += 1,
+            Refused::StaffOrder { not_as_held: false } => counts.staff_orders_other += 1,
+            Refused::Command => counts.commands += 1,
+        }
+    }
+    counts
+}
+
+/// The refusals of the side, from its own events.
+fn refusals_of(view: &SideView<'_>, events: &[SideEvent]) -> RefusalCounts {
+    let issuers: BTreeMap<sim_core::ids::OrderId, Issuer> =
+        view.orders().map(|o| (o.id, o.origin.issuer)).collect();
+    tally(events.iter().filter_map(|e| match &e.kind {
+        SideEventKind::Whole(kind) => refused_of(kind, |id| issuers.get(&id).copied()),
+        _ => None,
+    }))
+}
+
 /// `report`: what is open and what closed in the side's command of its
 /// staff, and the interrupts, worked from the side's events and stored
 /// nowhere (ruling 37).
@@ -510,10 +576,48 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             denied["text"].as_str().unwrap_or("")
         ));
     }
+    // Refusals by cause, over the whole game (decision 0138, 4): a sentence
+    // only when there is one.
+    let refusals = refusals_of(view, &events);
+    if refusals != RefusalCounts::default() {
+        let mut parts: Vec<String> = Vec::new();
+        if refusals.staff_orders_not_as_held > 0 {
+            parts.push(format!(
+                "{} refused because the force was not as the area command held it",
+                count_text(
+                    refusals.staff_orders_not_as_held as usize,
+                    "staff order",
+                    "staff orders"
+                )
+            ));
+        }
+        if refusals.staff_orders_other > 0 {
+            parts.push(format!(
+                "{} refused for another cause",
+                count_text(
+                    refusals.staff_orders_other as usize,
+                    "staff order",
+                    "staff orders"
+                )
+            ));
+        }
+        if refusals.commands > 0 {
+            parts.push(format!(
+                "{} refused",
+                count_text(refusals.commands as usize, "command", "commands")
+            ));
+        }
+        summary.push_str(&format!(" Refusals: {}.", parts.join("; ")));
+    }
     answer(
         "report",
         json!({
             "day": today,
+            "refusals": {
+                "staff_orders_not_as_held": refusals.staff_orders_not_as_held,
+                "staff_orders_other": refusals.staff_orders_other,
+                "commands": refusals.commands,
+            },
             "matters": matters_json,
             "holds": holds,
             "neutralisations": neutralisations,
@@ -534,4 +638,32 @@ pub(crate) fn firing_words(firings: &[Value]) -> String {
         .filter_map(|f| f["words"].as_str())
         .collect::<Vec<_>>()
         .join("; ")
+}
+
+#[cfg(test)]
+mod refusal_tests {
+    use super::*;
+
+    /// A log with two staff orders refused as not as held, one refused for
+    /// another cause and two commands refused is counted as 2, 1 and 2; the
+    /// staff's orders and the commands are all there is to count.
+    #[test]
+    fn refusals_are_counted_by_cause() {
+        let log = [
+            Refused::StaffOrder { not_as_held: true },
+            Refused::StaffOrder { not_as_held: true },
+            Refused::StaffOrder { not_as_held: false },
+            Refused::Command,
+            Refused::Command,
+        ];
+        assert_eq!(
+            tally(log),
+            RefusalCounts {
+                staff_orders_not_as_held: 2,
+                staff_orders_other: 1,
+                commands: 2,
+            }
+        );
+        assert_eq!(tally([]), RefusalCounts::default());
+    }
 }
