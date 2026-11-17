@@ -1,0 +1,29 @@
+Placeholder scenario 74: The force assembled
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash b1c9973c0107efa3  25 events
+day   2  hash 06dcfde60f3be917  24 events
+day   3  hash 2b838cd88cb146a4  16 events
+day   4  hash 6d88497a52289351  50 events
+day   5  hash dcc1d97e2b6be733  30 events
+day   6  hash ffb802125097f8f0  17 events
+
+task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder transport force 2" (Allied): Idle at (0,6); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder bombardment force 3" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:3 "Placeholder troop transport 3": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:4 "Placeholder battleship 4": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 928 t of supply in stock, 4856 t of fuel in stock
+base:2 "Placeholder airfield B" (Allied) at (4,0): 32 t of supply in stock
+base:3 "Placeholder base C" (Allied) at (0,6): 982 t of supply in stock
+base:4 "Landing at (4,0)" (Allied) at (4,0): 7 t of supply in stock, no airfield, formed in play, on its own side's map only
+land_unit:1 "Placeholder First" (Allied): 600 men ashore at (4,0), on attack
+land_unit:2 "Placeholder Second" (Allied): 600 men ashore at (0,0)
+land_unit:3 "Placeholder Assault" (Allied): 600 men ashore at (0,6)
+Allied: no contacts
+Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground, day 4 night
+Japanese: no contacts
+Japanese: no battle claims

@@ -1,0 +1,193 @@
+Placeholder scenario 74: The force assembled
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash b1c9973c0107efa3  25 events
+day   2  hash 06dcfde60f3be917  24 events
+day   3  hash 2b838cd88cb146a4  16 events
+day   4  hash 6d88497a52289351  50 events
+day   5  hash dcc1d97e2b6be733  30 events
+day   6  hash ffb802125097f8f0  17 events
+
+#1 D0 -         Allied ground report at (4,0): 300 enemy men ashore (told)
+#2 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)
+#3 D1 -         Allied plan:1 drafted for intent:1  <- #2
+#4 D1 -         Allied the commander's command taken: give the leave to prepare
+#5 D1 -         Allied the commander's command taken: give the leave to launch
+#6 D1 -         Allied the staff's command taken: approve plan:1
+#7 D1 -         Allied plan:1 went from draft to preparing  <- #6
+#8 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: take the place at (4,0); plan 1; decided at the level of the area]: plan:1, the plan to take the place at (4,0), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #6
+#9 D1 -         Allied the staff's command taken: form under intent:1 an intent to ready a landing at (4,0) by task_force:1
+#10 D1 -         Allied staff forms intent:2 under intent:1  <- #9
+#11 D1 -         Allied staff's reason for the command to form under intent:1 an intent to ready a landing at (4,0) by task_force:1 [serves intent 1: take the place at (4,0); plan 1; decided at the level of the area]: the side's estimate is 300 enemy men at (4,0); at balanced the staff wants 2 men for each, 600 men; the bases that could be the source, in base order: base:1 (Placeholder base A): task_force:1 with 1200 berths, its lift gives 600 men, 16 hours to (4,0); base:3 (Placeholder base C): task_force:2 with 600 berths, its lift gives 600 men, 21.2 hours to (4,0); the source is base:1 (Placeholder base A): its lift gives the men wanted with the shortest passage; the units in their order, the higher assault skill first, then the higher experience, then the lower number: land_unit:1 (Placeholder First): assault skill 2, experience 2, 600 men; land_unit:2 (Placeholder Second): assault skill 2, experience 2, 600 men; the berths: 600 men in 600 berths in 1 ship of task_force:1 (land_unit:1 takes 1 ship); left out: land_unit:2 (Placeholder Second) is not needed: the 600 men chosen are at least the 600 wanted; to bombard the place: task_force:3; no force on the carrier mission to cover the landing; no force on the escort mission at base:1 (Placeholder base A) to escort it; the supply is the daily charge of the 600 men chosen, 3 t a day, for 15 days = 45 t: 45 t to take; the days: 2 to embark (1 for the supply and 1 for each of the 1 unit ashore) and 1 day of passage (160 nm at 10 kn = 16 hours). The staff forms intent:2, ready a landing by task_force:1 at (4,0), under intent:1.  <- #9
+#12 D1 -         Allied the staff's command taken: limit intent:2's forces to 0 ships and 2 task forces from base:1
+#13 D1 -         Allied plan:1 amended, amendment 1  <- #12
+#14 D1 -         Allied staff's reason for the command to limit intent:2's forces to 0 ships and 2 task forces from base:1 [serves intent 1: take the place at (4,0); plan 1; decided at the level of the area]: the side's estimate is 300 enemy men at (4,0); at balanced the staff wants 2 men for each, 600 men; the bases that could be the source, in base order: base:1 (Placeholder base A): task_force:1 with 1200 berths, its lift gives 600 men, 16 hours to (4,0); base:3 (Placeholder base C): task_force:2 with 600 berths, its lift gives 600 men, 21.2 hours to (4,0); the source is base:1 (Placeholder base A): its lift gives the men wanted with the shortest passage; the units in their order, the higher assault skill first, then the higher experience, then the lower number: land_unit:1 (Placeholder First): assault skill 2, experience 2, 600 men; land_unit:2 (Placeholder Second): assault skill 2, experience 2, 600 men; the berths: 600 men in 600 berths in 1 ship of task_force:1 (land_unit:1 takes 1 ship); left out: land_unit:2 (Placeholder Second) is not needed: the 600 men chosen are at least the 600 wanted; to bombard the place: task_force:3; no force on the carrier mission to cover the landing; no force on the escort mission at base:1 (Placeholder base A) to escort it; the supply is the daily charge of the 600 men chosen, 3 t a day, for 15 days = 45 t: 45 t to take; the days: 2 to embark (1 for the supply and 1 for each of the 1 unit ashore) and 1 day of passage (160 nm at 10 kn = 16 hours). The staff sets the forces limit of intent:2 to task_force:1 and task_force:3, land_unit:1, base:1 as the source.  <- #12
+#15 D1 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1; decided at the level of the area]: The landing at (4,0) is not ready: the force's loading for (4,0) is 0, of the 100 asked at balanced; land_unit:1 (Placeholder First) has rehearsal 0 and experience 2; it expects the landing to be ready on the morning of day 2. The staff gives no order under intent:1 before then.
+#16 D1 -         order:1 accepted for task_force:1  <- order:1  [issued by the staff]
+#17 D1 -         Allied staff's reason for order:1 [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: task_force:1 is to land at (4,0) with land_unit:1: the staff gives it the landing order with that roster.  <- order:1, #16
+#18 D1 night     base:1 spent 6 t of supply on 1200 men ashore for the day, 994 t left
+#19 D1 night     Allied men ashore at (0,0): 1200 of 1200 fed from base:1, 0 unfed  <- #18
+#20 D1 night     base:3 spent 3 t of supply on 600 men ashore for the day, 997 t left
+#21 D1 night     Allied men ashore at (0,6): 600 of 600 fed from base:3, 0 unfed  <- #20
+#22 D1 -         task_force:1 loaded for the landing at (4,0): loading 100  <- order:1
+#23 D1 -         land_unit:1 rehearsed the landing at (4,0) with task_force:1: rehearsal 100  <- order:1
+#24 D1 -         base:1 at the end of the day: 994 t of supply, 0 aircraft ready: not open
+#25 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#26 D1 -         base:3 at the end of the day: 997 t of supply, 0 aircraft ready: not open
+#27 D2 -         Allied the staff's command taken: approve plan:1
+#28 D2 -         Allied plan:1 went from preparing to released  <- #27
+#29 D2 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The landing at (4,0) is ready (the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:1 (Placeholder First) has rehearsal 100 and experience 2) and leave to launch is given: the staff releases plan:1. It goes on what it was told, not on a count it has seen: the side's estimate of the enemy's men at (4,0) is 300 men, told, of day 0; at balanced it asks for a count of the enemy at (4,0) seen from the air or by men in contact, of any day.  <- #27
+#30 D2 -         Allied the staff's command taken: form under intent:1 an intent to bombard base:2 with task_force:3
+#31 D2 -         Allied staff forms intent:3 under intent:1  <- #30
+#32 D2 -         Allied staff's reason for the command to form under intent:1 an intent to bombard base:2 with task_force:3 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: task_force:3 is named in the forces limit of intent:1, its plan is released and no bombard task of task_force:3 is in force: task_force:3 is on the bombardment mission with 1 ship(s) afloat, so the staff forms intent:3, to bombard base:2 (Placeholder airfield B) with task_force:3, under it, for task_force:3 to carry out.  <- #30
+#33 D2 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is ready: the force's loading for (4,0) is 100, of the 100 asked at balanced; land_unit:1 (Placeholder First) has rehearsal 100 and experience 2. The staff gives no order and hands in the notice that it is ready.
+#34 D2 -         Allied staff's reason for giving no order [serves intent 3: bombard base:2 (Placeholder airfield B) with task_force:3; plan 1, amendment 1; decided at the level of task_force:3; under intent 1 (the commander's): take the place at (4,0)]: intent:3, bombarding base:2 (Placeholder airfield B) with task_force:3: base:2 (Placeholder airfield B) is at (4,0), 4 hexes from (0,0); the landing force task_force:1 is not yet routed to (4,0), so the day it is due there is not known; the force waits, and under take a place the force sorties on the night of the day the landing force is due, and on no other: task_force:3 does not sortie tonight.
+#35 D2 -         Allied staff's notice: plan:1's landing is ready  <- #33
+#36 D2 -         order:2 accepted for task_force:1  <- order:2  [issued by the staff]
+#37 D2 -         Allied staff's reason for order:2 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: plan:1 is released: the supply is the daily charge of the 600 men chosen, 3 t a day, for 15 days = 45 t: 45 t to take. The staff orders task_force:1 to load supply at the source until it has 45 t aboard.  <- order:2, #36
+#38 D2 -         order:3 accepted for task_force:3  <- order:3  [issued by the staff]
+#39 D2 -         Allied staff's reason for order:3 [serves intent 3: bombard base:2 (Placeholder airfield B) with task_force:3; plan 1, amendment 1; decided at the level of task_force:3; under intent 1 (the commander's): take the place at (4,0)]: task_force:3 has no home port and lies stopped at base:1 (Placeholder base A): its home port is set to base:1 (Placeholder base A), where it sorties from and comes back to.  <- order:3, #38
+#40 D2 -         order:4 accepted for task_force:3  <- order:4  [issued by the staff]
+#41 D2 -         Allied staff's reason for order:4 [serves intent 3: bombard base:2 (Placeholder airfield B) with task_force:3; plan 1, amendment 1; decided at the level of task_force:3; under intent 1 (the commander's): take the place at (4,0)]: A force that bombards by night engages: the rules of engagement of task_force:3 are set to the stance engage and the break-off level of the balanced risk, 0.5; its straggler instruction and keep share are left as they are.  <- order:4, #40
+#42 D2 night     base:1 spent 6 t of supply on 1200 men ashore for the day, 988 t left
+#43 D2 night     Allied men ashore at (0,0): 1200 of 1200 fed from base:1, 0 unfed  <- #42
+#44 D2 night     base:3 spent 3 t of supply on 600 men ashore for the day, 994 t left
+#45 D2 night     Allied men ashore at (0,6): 600 of 600 fed from base:3, 0 unfed  <- #44
+#46 D2 night     ship:1 loaded 45 t from base:1, 45 t aboard, 943 t in stock  <- order:2
+#47 D2 night     task_force:1 completed loading at base:1 at D2 18:18  <- #46
+#48 D2 -         base:1 at the end of the day: 943 t of supply, 0 aircraft ready: not open
+#49 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#50 D2 -         base:3 at the end of the day: 994 t of supply, 0 aircraft ready: not open
+#51 D3 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is ready and its notice was handed in: the staff gives no order.
+#52 D3 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: intent:3 (bombard base:2 (Placeholder airfield B) with task_force:3) stands under intent:1: a force has one bombard task, so the staff forms no other for task_force:3. task_force:3 is on the bombardment mission with 1 ship(s) afloat.
+#53 D3 -         Allied staff's reason for giving no order [serves intent 3: bombard base:2 (Placeholder airfield B) with task_force:3; plan 1, amendment 1; decided at the level of task_force:3; under intent 1 (the commander's): take the place at (4,0)]: intent:3, bombarding base:2 (Placeholder airfield B) with task_force:3: base:2 (Placeholder airfield B) is at (4,0), 4 hexes from (0,0); the landing force task_force:1 is not yet routed to (4,0), so the day it is due there is not known; the force waits, and under take a place the force sorties on the night of the day the landing force is due, and on no other: task_force:3 does not sortie tonight.
+#54 D3 -         order:5 accepted for task_force:1  <- order:5  [issued by the staff]
+#55 D3 -         Allied staff's reason for order:5 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: land_unit:1 (Placeholder First) has 600 men ashore at the source base:1: it is the next unit to go aboard, in number order. The staff orders task_force:1 to take it aboard, with no cargo.  <- order:5, #54
+#56 D3 -         order:6 accepted for land_unit:1  <- order:6  [issued by the staff]
+#57 D3 -         Allied staff's reason for order:6 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: land_unit:1 (Placeholder First) has 600 men ashore at the source base:1: it is the next unit to go aboard, in number order. It is set to attack the morning it goes aboard, so that it attacks when it lands.  <- order:6, #56
+#58 D3 night     base:1 spent 6 t of supply on 1200 men ashore for the day, 937 t left
+#59 D3 night     Allied men ashore at (0,0): 1200 of 1200 fed from base:1, 0 unfed  <- #58
+#60 D3 night     base:3 spent 3 t of supply on 600 men ashore for the day, 991 t left
+#61 D3 night     Allied men ashore at (0,6): 600 of 600 fed from base:3, 0 unfed  <- #60
+#62 D3 night     600 men of land_unit:1 went aboard ship:1 at (0,0): 600 aboard, 0 left ashore  <- order:5
+#63 D3 night     task_force:1 finished loading land_unit:1 at base:1 at D3 19:00  <- #62
+#64 D3 -         base:1 at the end of the day: 937 t of supply, 0 aircraft ready: not open
+#65 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#66 D3 -         base:3 at the end of the day: 991 t of supply, 0 aircraft ready: not open
+#67 D4 -         Allied staff's reason for giving no order [serves intent 2: ready a landing at (4,0) by task_force:1; plan 1, amendment 1; decided at the level of task_force:1; under intent 1 (the commander's): take the place at (4,0)]: The landing at (4,0) by task_force:1 is ready and its notice was handed in: the staff gives no order.
+#68 D4 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: intent:3 (bombard base:2 (Placeholder airfield B) with task_force:3) stands under intent:1: a force has one bombard task, so the staff forms no other for task_force:3. task_force:3 is on the bombardment mission with 1 ship(s) afloat.
+#69 D4 -         order:7 accepted for task_force:1  <- order:7  [issued by the staff]
+#70 D4 -         Allied staff's reason for order:7 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: Every unit chosen is aboard task_force:1 and its supply is aboard (the supply is the daily charge of the 600 men chosen, 3 t a day, for 15 days = 45 t, of which 45 t is aboard: nothing to take). It sails today (day 4, hour 72): 160 nm out at 10 kn = 16 hours, so it arrives at (4,0) at hour 88; 160 nm back to the source base:1. Fuel: ship:1 has 1000 t against 32 t needed, ship:2 has 1000 t against 32 t needed. At balanced risk a run is escorted on a threat, and no contact of ships is held within 15 hexes of (4,0): the run is not threatened, so it sails alone. This is the route order: out to the place and back to the source, acting at the place.  <- order:7, #69
+#71 D4 -         order:8 accepted for task_force:1  <- order:8  [issued by the staff]
+#72 D4 -         Allied staff's reason for order:8 [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: Every unit chosen is aboard task_force:1 and its supply is aboard (the supply is the daily charge of the 600 men chosen, 3 t a day, for 15 days = 45 t, of which 45 t is aboard: nothing to take). It sails today (day 4, hour 72): 160 nm out at 10 kn = 16 hours, so it arrives at (4,0) at hour 88; 160 nm back to the source base:1. Fuel: ship:1 has 1000 t against 32 t needed, ship:2 has 1000 t against 32 t needed. At balanced risk a run is escorted on a threat, and no contact of ships is held within 15 hexes of (4,0): the run is not threatened, so it sails alone. This is the unload order the route acts on: the landing.  <- order:8, #71
+#73 D4 -         order:9 accepted for task_force:3  <- order:9  [issued by the staff]
+#74 D4 -         Allied staff's reason for order:9 [serves intent 3: bombard base:2 (Placeholder airfield B) with task_force:3; plan 1, amendment 1; decided at the level of task_force:3; under intent 1 (the commander's): take the place at (4,0)]: intent:3, bombarding base:2 (Placeholder airfield B) with task_force:3: it sorties tonight, so task_force:3 is set to battle readiness.  <- order:9, #73
+#75 D4 -         order:10 accepted for task_force:3  <- order:10  [issued by the staff]
+#76 D4 -         Allied staff's reason for order:10 [serves intent 3: bombard base:2 (Placeholder airfield B) with task_force:3; plan 1, amendment 1; decided at the level of task_force:3; under intent 1 (the commander's): take the place at (4,0)]: intent:3, bombarding base:2 (Placeholder airfield B) with task_force:3: base:2 (Placeholder airfield B) is at (4,0), 4 hexes from (0,0); the landing force of intent:1 is due at the place today, day 4. 10 hours to the target at cruise. the passage to the target and home, by the engine's measure, times the 1.2 of the balanced risk: ship:4 has 2000 t aboard against 96 t needed: it has the fuel. At balanced risk ship:4 has 800 rounds against the level of 400 (0.5 of her outfit of 800): it has the rounds. It is routed to (4,0) and home to base:1 (Placeholder base A), the target's hex marked to act at: it halts there, fires in the night's bombardment and steams for home at morning.  <- order:10, #75
+#77 D4 night     base:1 spent 3 t of supply on 600 men ashore for the day, 934 t left
+#78 D4 night     Allied men ashore at (0,0): 600 of 600 fed from base:1, 0 unfed  <- #77
+#79 D4 night     base:3 spent 3 t of supply on 600 men ashore for the day, 988 t left
+#80 D4 night     Allied men ashore at (0,6): 600 of 600 fed from base:3, 0 unfed  <- #79
+#81 D4 night     task_force:1 steamed 120 nm at 10 kn from (0,0) to (3,0)  <- order:7
+#82 D4 night     ship:1 burned 12 t, 988 t remaining  <- #81
+#83 D4 night     ship:2 burned 12 t, 988 t remaining  <- #81
+#84 D4 night     task_force:3 steamed 160 nm at 16 kn from (0,0) to (4,0)  <- order:10
+#85 D4 night     ship:4 burned 40 t, 1960 t remaining  <- #84
+#86 D4 night     task_force:3 halted at (4,0) at D4 04:00 to bombard  <- order:10, #84
+#87 D4 night     ship:4 shelled base:2: 120 shells, 120 weighed shots x 0 = 0 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing; 680 rounds left  <- order:10, #86
+#88 D4 night     task_force:3 bombarded base:2 at (4,0): 120 shells, 120 weighed shots, 0 hits: 0 on aircraft, 0 on supply, 0 on men, 0 on nothing  <- #87
+#89 D4 night     Japanese report: 1 ship, battleship, at (3,0): new contact:1  <- #88
+#90 D4 night     Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground  <- #87
+#91 D4 morning   task_force:3 steamed on from (4,0): it has bombarded  <- order:10, #86, #88
+#92 D4 morning   task_force:1 steamed 40 nm at 10 kn from (3,0) to (4,0)  <- order:7
+#93 D4 morning   ship:1 burned 4 t, 984 t remaining  <- #92
+#94 D4 morning   ship:2 burned 4 t, 984 t remaining  <- #92
+#95 D4 morning   task_force:1 halted at (4,0) at D4 10:00 to work cargo  <- order:7, #92
+#96 D4 morning   task_force:3 steamed 96 nm at 16 kn from (4,0) to (2,0)  <- order:10
+#97 D4 morning   ship:4 burned 24 t, 1936 t remaining  <- #96
+#98 D4 morning   base:4 formed at (4,0) for the Allied side by the landing of task_force:1  <- order:8, #95
+#99 D4 morning   ship:1 landed 160 men of land_unit:1 at (4,0): 160 ashore, 440 left aboard  <- order:8, #95, #98
+#100 D4 morning   land_unit:1 lost its rehearsal of 100 for the landing at (4,0) (landed)  <- #99
+#101 D4 morning   land_unit:1 left the roster of task_force:1 (landed)  <- #99
+#102 D4 morning   Japanese contact:1 aged to 1 pulses  <- #89
+#103 D4 afternoon task_force:3 steamed 64 nm at 16 kn from (2,0) to (0,0)  <- order:10
+#104 D4 afternoon ship:4 burned 16 t, 1920 t remaining  <- #103
+#105 D4 afternoon task_force:3 arrived at (0,0) at D4 16:00  <- #103
+#106 D4 afternoon ship:1 landed 440 men of land_unit:1 at (4,0): 600 ashore, 0 left aboard  <- order:8, #95
+#107 D4 afternoon ship:1 unloaded 10 t at base:4, 35 t aboard, 10 t in stock  <- order:8, #95
+#108 D4 afternoon ship:4 took 80 t of fuel at base:1, 2000 t aboard, base:1 has 4920 t left  <- #105
+#109 D4 afternoon Japanese contact:1 aged to 2 pulses  <- #89
+#110 D4 -         the Japanese side is beaten at (4,0): 0 men ashore against 600, without a fight  <- order:6
+#111 D4 -         base:2 at (4,0) changed from the Japanese side to the Allied side: 0 t of supply and 0 t of fuel kept, 0 t and 0 t lost  <- #110, order:6
+#112 D4 -         allied men at (4,0) find no enemy men ashore; the estimate of 300 men of day 0 is cleared  <- #1
+#113 D4 -         base:1 at the end of the day: 934 t of supply, 0 aircraft ready: not open
+#114 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#115 D4 -         base:3 at the end of the day: 988 t of supply, 0 aircraft ready: not open
+#116 D4 -         base:4 at the end of the day: 10 t of supply, 0 aircraft ready: not open
+#117 D5 -         Allied the staff's command taken: mark plan:1 complete
+#118 D5 -         Allied plan:1 went from released to complete  <- #117
+#119 D5 -         Allied staff's reason for the command to mark plan:1 complete [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: The place at (4,0) is the side's: intent:1 is met. The staff marks the plan complete and hands in the notice that the intent is met; it orders nothing else.  <- #117
+#120 D5 -         Allied staff's reason for giving no order [serves intent 3: bombard base:2 (Placeholder airfield B) with task_force:3; plan 1, amendment 1; decided at the level of task_force:3; under intent 1 (the commander's): take the place at (4,0)]: intent:3, bombarding base:2 (Placeholder airfield B) with task_force:3: base:2 (Placeholder airfield B) is the side's own now, so the staff gives task_force:3 no route.
+#121 D5 -         Allied staff's notice: intent:1 is met  <- #119
+#122 D5 -         order:11 accepted for task_force:3  <- order:11  [issued by the staff]
+#123 D5 -         Allied staff's reason for order:11 [serves intent 3: bombard base:2 (Placeholder airfield B) with task_force:3; plan 1, amendment 1; decided at the level of task_force:3; under intent 1 (the commander's): take the place at (4,0)]: intent:3, bombarding base:2 (Placeholder airfield B) with task_force:3: base:2 (Placeholder airfield B) is the side's own now, so task_force:3 does not sortie and is set to normal readiness.  <- order:11, #122
+#124 D5 night     base:1 spent 3 t of supply on 600 men ashore for the day, 931 t left
+#125 D5 night     Allied men ashore at (0,0): 600 of 600 fed from base:1, 0 unfed  <- #124
+#126 D5 night     base:3 spent 3 t of supply on 600 men ashore for the day, 985 t left
+#127 D5 night     Allied men ashore at (0,6): 600 of 600 fed from base:3, 0 unfed  <- #126
+#128 D5 night     base:4 spent 3 t of supply on 600 men ashore for the day, 7 t left
+#129 D5 night     Allied men ashore at (4,0): 600 of 600 fed from base:4, 0 unfed  <- #128
+#130 D5 night     ship:1 unloaded 35 t at base:2, 0 t aboard, 35 t in stock  <- order:8, #95
+#131 D5 night     task_force:1 completed unloading at base:2 at D5 19:45  <- #130
+#132 D5 night     task_force:1 completed its unloading at (4,0): loading 100 spent, its order to prepare the landing done  <- #131
+#133 D5 night     Japanese contact:1 aged to 3 pulses  <- #89
+#134 D5 morning   task_force:1 steamed on from (4,0): its cargo work is done  <- order:7, #95, #131
+#135 D5 morning   task_force:1 steamed 60 nm at 10 kn from (4,0) to (2,0)  <- order:7
+#136 D5 morning   ship:1 burned 6 t, 978 t remaining  <- #135
+#137 D5 morning   ship:2 burned 6 t, 978 t remaining  <- #135
+#138 D5 morning   Japanese contact:1 aged to 4 pulses  <- #89
+#139 D5 afternoon task_force:1 steamed 60 nm at 10 kn from (2,0) to (1,0)  <- order:7
+#140 D5 afternoon ship:1 burned 6 t, 972 t remaining  <- #139
+#141 D5 afternoon ship:2 burned 6 t, 972 t remaining  <- #139
+#142 D5 afternoon Japanese contact:1 dropped at 5 pulses  <- #89
+#143 D5 -         base:1 at the end of the day: 931 t of supply, 0 aircraft ready: not open
+#144 D5 -         base:2 at the end of the day: 35 t of supply, 0 aircraft ready: not open
+#145 D5 -         base:3 at the end of the day: 985 t of supply, 0 aircraft ready: not open
+#146 D5 -         base:4 at the end of the day: 7 t of supply, 0 aircraft ready: not open
+#147 D6 -         Allied staff's reason for giving no order [serves intent 1: take the place at (4,0); plan 1, amendment 1; decided at the level of the area]: plan:1, the plan to take the place at (4,0), is complete, so the staff forms nothing and gives no order under intent:1.
+#148 D6 night     base:1 spent 3 t of supply on 600 men ashore for the day, 928 t left
+#149 D6 night     Allied men ashore at (0,0): 600 of 600 fed from base:1, 0 unfed  <- #148
+#150 D6 night     base:3 spent 3 t of supply on 600 men ashore for the day, 982 t left
+#151 D6 night     Allied men ashore at (0,6): 600 of 600 fed from base:3, 0 unfed  <- #150
+#152 D6 night     base:2 spent 3 t of supply on 600 men ashore for the day, 32 t left
+#153 D6 night     Allied men ashore at (4,0): 600 of 600 fed from base:2, 0 unfed  <- #152
+#154 D6 night     task_force:1 steamed 40 nm at 10 kn from (1,0) to (0,0)  <- order:7
+#155 D6 night     ship:1 burned 4 t, 968 t remaining  <- #154
+#156 D6 night     ship:2 burned 4 t, 968 t remaining  <- #154
+#157 D6 night     task_force:1 arrived at (0,0) at D6 22:00  <- #154
+#158 D6 night     ship:1 took 32 t of fuel at base:1, 1000 t aboard, base:1 has 4888 t left  <- #157
+#159 D6 night     ship:2 took 32 t of fuel at base:1, 1000 t aboard, base:1 has 4856 t left  <- #157
+#160 D6 -         base:1 at the end of the day: 928 t of supply, 0 aircraft ready: not open
+#161 D6 -         base:2 at the end of the day: 32 t of supply, 0 aircraft ready: not open
+#162 D6 -         base:3 at the end of the day: 982 t of supply, 0 aircraft ready: not open
+#163 D6 -         base:4 at the end of the day: 7 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder transport force 2" (Allied): Idle at (0,6); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder bombardment force 3" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:3 "Placeholder troop transport 3": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:4 "Placeholder battleship 4": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 928 t of supply in stock, 4856 t of fuel in stock
+base:2 "Placeholder airfield B" (Allied) at (4,0): 32 t of supply in stock
+base:3 "Placeholder base C" (Allied) at (0,6): 982 t of supply in stock
+base:4 "Landing at (4,0)" (Allied) at (4,0): 7 t of supply in stock, no airfield, formed in play, on its own side's map only
+land_unit:1 "Placeholder First" (Allied): 600 men ashore at (4,0), on attack
+land_unit:2 "Placeholder Second" (Allied): 600 men ashore at (0,0)
+land_unit:3 "Placeholder Assault" (Allied): 600 men ashore at (0,6)
+Allied: no contacts
+Allied claim from the sea at (4,0): 0 aircraft destroyed on the ground, day 4 night
+Japanese: no contacts
+Japanese: no battle claims

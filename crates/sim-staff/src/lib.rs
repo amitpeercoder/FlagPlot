@@ -21,6 +21,7 @@
 
 mod air;
 mod ammunition;
+mod assemble;
 mod available;
 mod bombard;
 pub mod carrier;
@@ -202,7 +203,14 @@ use sim_core::view::SideView;
 /// strike the enemy's base at the place on a morning with no ship to strike,
 /// and sends the force home when the place is taken. A side with no "take a
 /// place" gets the orders and reasons `supply-28` gave.
-pub const DOCTRINE_VERSION: &str = "supply-29";
+/// `supply-30` adds decision 0149: a "take a place" whose forces limit
+/// does not name all three of the task forces, the land units and the
+/// source has the rest chosen by the staff (the source by the lift each
+/// base gives, the units, the transport force and the forces to bombard,
+/// cover and escort), kept as the forces limit of the task it forms. A side
+/// with no "take a place", or one whose forces limit names all three, gets
+/// the orders and reasons `supply-29` gave.
+pub const DOCTRINE_VERSION: &str = "supply-30";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

@@ -131,7 +131,12 @@ pub(crate) fn setup<'a>(
         .limits
         .forces
         .as_ref()
-        .or_else(|| state.nearest_forces(intent.id))
+        // A limit read as set: no "keep supplied" stands under a "take a
+        // place", where a limit is read as it binds (decision 0149, 3).
+        .or_else(|| match state.nearest_forces(intent.id) {
+            Some(std::borrow::Cow::Borrowed(forces)) => Some(forces),
+            _ => None,
+        })
         .and_then(|forces| forces.source.map(|source| (forces, source)))
     else {
         return Setup::NoForces;
