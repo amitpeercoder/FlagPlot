@@ -876,3 +876,19 @@ nothing is held and every answer is as it was.
 - **A new task force order**, `set_radio_silence` (`on`, true or false): a silent force sends no state
   report and none of its own reports up or sideways until it fights, is attacked or launches a strike.
 - **Saved games** are as the engine writes them (decision 0136); the file's keys are unchanged.
+
+## A seat at any command, and what a command holds (decision 0138)
+
+`version` is 16. A seat at the area command is as it was; every new field below is left out where it does not apply.
+
+- **A seat at a task force or a base** (command levels on only): it is given its command's picture, its own
+  units exactly (numbered from 1 in the seat), every base's public facts, and the side's events that name its
+  own units only. It has the nine tools of play; the command tools are refused, and an order to any unit not
+  its command's is refused "not one of your command's units". The briefing's `objectives` has
+  `not_given_to_this_seat` there, and `result` is null at the end.
+- **The easier setting at the area seat:** the side's own picture and its forces exactly (no `as_of`).
+- **`command_state`**, with command levels on: `picture` (the area command's contacts with its own numbers,
+  each with `own`) and `forces_held` (each force and base as the area command holds it, with `as_of` and
+  `current`).
+- **`report`**: `refusals`, the staff orders refused because a force was not as the area command held it
+  (decision 0136, 14), the other staff orders refused, and the commands refused.

@@ -40,8 +40,14 @@ pub const FORMAT: &str = "flagplot-agent";
 /// 0136): the briefing, `list_forces`, `list_bases` and `get_entity` give a
 /// force or a base with an `as_of` (such as "the morning of day 1") where
 /// that is not the pulse just ended, a force's `radio_silence` where it is
-/// on, and the task force order `set_radio_silence` (`on`).
-pub const VERSION: u32 = 15;
+/// on, and the task force order `set_radio_silence` (`on`). 16 adds the
+/// seat at a command (decision 0138, 5): a seat at a task force or a base,
+/// given its command's picture and its own units only, with the nine tools
+/// of play; the easier setting at the area seat; `objectives`'
+/// `not_given_to_this_seat`; with command levels on, `command_state`'s
+/// `picture` and `forces_held`; and the command report's `refusals`
+/// (decision 0138, 3 and 4).
+pub const VERSION: u32 = 16;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

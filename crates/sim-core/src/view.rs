@@ -925,6 +925,20 @@ impl<'a> SideView<'a> {
         }
         let figures = self.ref_data.air_combat.as_ref()?;
         self.truth.air_group_hex(asked)?;
+        let sent = self.sent_before_group(group, figures);
+        self.naval_strike_of(asked, figures, &sent)
+    }
+
+    /// What the side's groups before `group`, in group number order, would
+    /// launch at each contact in the pulse, with what is already in flight
+    /// (decision 0118, 3): each on the naval strike mission with ready
+    /// aircraft and a weapon launching what its own walk gives. The one walk
+    /// [`SideView::naval_strike`] and the strike review both read.
+    pub(crate) fn sent_before_group(
+        &self,
+        group: AirGroupId,
+        figures: &crate::refdata::AirCombatFigures,
+    ) -> BTreeMap<crate::ids::ContactId, u32> {
         let mut sent = crate::airstrike::sent_at_contacts(self.pulse.strikes_in_flight, self.side);
         let mut before: Vec<&AirGroup> = self
             .air_groups()
@@ -946,7 +960,7 @@ impl<'a> SideView<'a> {
             }
             *sent.entry(launch.choice.contact).or_insert(0) += launch.aircraft;
         }
-        self.naval_strike_of(asked, figures, &sent)
+        sent
     }
 
     /// The naval strike of one of the side's own groups with `sent` already

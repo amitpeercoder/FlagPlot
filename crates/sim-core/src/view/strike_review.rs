@@ -24,7 +24,7 @@ use crate::hex::Hex;
 use crate::ids::{AirGroupId, ContactId, EventId};
 use crate::orders::{AirMission, Reach};
 use crate::pictures::CommandRef;
-use crate::refdata::{AttackWeapon, ShipKind};
+use crate::refdata::ShipKind;
 use crate::time::Pulse;
 use crate::view::SideView;
 
@@ -316,32 +316,12 @@ impl SideView<'_> {
     /// launches what its own walk of its command's picture gives.
     fn sent_before(&self, group: AirGroupId) -> BTreeMap<ContactId, u32> {
         let figures = self.ref_data.air_combat.as_ref();
-        let mut sent = crate::airstrike::sent_at_contacts(self.pulse.strikes_in_flight, self.side);
+        let sent = crate::airstrike::sent_at_contacts(self.pulse.strikes_in_flight, self.side);
         let (Some(figures), Some(_)) = (figures, self.air_groups().find(|own| own.id == group))
         else {
             return sent;
         };
-        let mut before: Vec<_> = self
-            .air_groups()
-            .filter(|own| own.id < group && own.mission == AirMission::NavalStrike)
-            .collect();
-        before.sort_by_key(|own| own.id);
-        for own in before {
-            let armed = self
-                .aircraft_type(own.aircraft_type)
-                .is_some_and(|kind| kind.attack_weapon != AttackWeapon::None);
-            if own.ready == 0 || !armed {
-                continue;
-            }
-            let Some(launch) = self.naval_strike_of(own, figures, &sent) else {
-                continue;
-            };
-            if launch.aircraft == 0 {
-                continue;
-            }
-            *sent.entry(launch.choice.contact).or_insert(0) += launch.aircraft;
-        }
-        sent
+        self.sent_before_group(group, figures)
     }
 }
 
