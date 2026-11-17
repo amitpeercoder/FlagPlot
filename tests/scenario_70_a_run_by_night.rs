@@ -140,6 +140,11 @@
 //!   balanced: as at press. The group flies nothing and draws nothing, so
 //!   the supply doctrine's sums are the main case's. (Item 2a, added by
 //!   the architect after the build.)
+//! - **The side's own fighters in a hex next to the place.** With an
+//!   Allied base that has an airfield and a fighter group on no mission
+//!   in a hex next to C, and none at C, at balanced: as at press. With
+//!   that base two hexes from C instead: the main case's seven orders.
+//!   The added base is under no intent and draws nothing. (Ruling 6.)
 //! - **An enemy base in the place's own hex only.** With base 3 at C and
 //!   not on the Allied side's way: as at press.
 //! - **No speed arrives in the dark, at balanced.** With base 2 and unit 1
