@@ -403,3 +403,11 @@ path = "scenario_66_units_made_ready.rs"
 [[test]]
 name = "scenario_67_taking_a_place"
 path = "scenario_67_taking_a_place.rs"
+
+[[test]]
+name = "scenario_68_ashore"
+path = "scenario_68_ashore.rs"
+
+[[test]]
+name = "scenario_69_taken_and_held"
+path = "scenario_69_taken_and_held.rs"

@@ -101,8 +101,10 @@ pub enum IntentKind {
     /// a commander may state it himself as a root. Added at the end.
     Cover { base: BaseId },
     /// Hold `base`, a base of the side (decision 0117, 12): an end. It has no
-    /// date. Under it the staff may form a cover intent for the same base.
-    /// Added at the end.
+    /// date. Under it the staff may form a cover intent for the same base,
+    /// and "keep supplied" for it (decision 0144, 7). It may name a base on
+    /// the side's map that is not the side's, and then waits for it to be
+    /// the side's (decision 0144, 1). Added at the end.
     Hold { base: BaseId },
     /// Neutralise `target`, a base on the side's map that is not the side's
     /// (decision 0120, 5): an end, addressed to the area. It has no date.
@@ -483,6 +485,10 @@ impl IntentKind {
             // Decision 0142, 12: the landing at the place's hex.
             (IntentKind::ReadyLanding { hex, .. }, IntentKind::TakePlace { hex: place, .. }) => {
                 hex == place
+            }
+            // Decision 0144, 7: the supply that follows, for the held base.
+            (IntentKind::KeepSupplied { base, .. }, IntentKind::Hold { base: held }) => {
+                base == held
             }
             _ => false,
         }

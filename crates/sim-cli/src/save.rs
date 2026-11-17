@@ -137,7 +137,11 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// `take_place` (`hex` and an optional `by_day`) in `"commands"` and the
 /// staff's `set_limit` of forces on an intent it formed in its hand-in; its
 /// state version is v41. A game of an older version lacks them and is
-/// refused, not converted.
+/// refused, not converted. Decision 0144 changes no key and no version: the
+/// staff's `form_intent` may now be `keep_supplied` under a hold, written
+/// with `intent_kind`, `base`, `floor_days` (which may be 0) and an optional
+/// `interval_days`, and a hold's `base` may be an enemy base on the side's
+/// map.
 pub const VERSION: u32 = 16;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;

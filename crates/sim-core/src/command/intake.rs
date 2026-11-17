@@ -19,8 +19,8 @@ use crate::command::{
     Addressee, Amendment, AmendmentChange, Baseline, Command, CommandKind, CommandRefusal,
     CommandState, Commitment, ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind,
     IntentLimits, InterruptCondition, InterruptRef, InterruptSetting, InterruptStatus, Leave,
-    Limit, Maker, NoticeBasis, Plan, PlanId, PlanOutcome, PlanState, Reason, Run, SetInterrupt,
-    StaffDecisions, StaffNotice, Staffs, StandingSubject,
+    Limit, Maker, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason, Run,
+    SetInterrupt, StaffDecisions, StaffNotice, Staffs, StandingSubject,
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
@@ -186,6 +186,24 @@ impl World {
         let Some(own) = self.truth.land_units.get(&unit).filter(|u| u.side == side) else {
             return false;
         };
+        // A hold may use the fighting units with men ashore in its base's
+        // hex where no forces limit on its chain names a land unit (decision
+        // 0144, 4).
+        if let IntentKind::Hold { base } = found.kind {
+            let named = state
+                .forces_on_chain(intent)
+                .iter()
+                .any(|forces| !forces.land_units.is_empty());
+            if !named {
+                return !own.working
+                    && own.men_ashore > 0
+                    && self
+                        .truth
+                        .bases
+                        .get(&base)
+                        .is_some_and(|b| Some(b.hex) == own.hex);
+            }
+        }
         match state.land_units_on_chain(intent) {
             Some(allowed) => allowed.contains(&unit),
             None => match found.kind {
@@ -356,6 +374,27 @@ impl World {
                     if self.truth.bases.get(&base).map(|b| b.hex) != Some(*hex) {
                         return Err(CommandRefusal::CannotStandUnder(*parent));
                     }
+                }
+                // "Keep supplied" formed under "hold a place" takes the
+                // hold's margin as its floor, which is 0 at press (decision
+                // 0144, 7 and 10): its floor is checked as at least 0.
+                if let (
+                    IntentKind::KeepSupplied {
+                        base,
+                        floor_days: 0,
+                        interval_days,
+                    },
+                    IntentKind::Hold { .. },
+                ) = (kind, found.kind)
+                {
+                    return self.check_intent_kind(
+                        side,
+                        &IntentKind::KeepSupplied {
+                            base: *base,
+                            floor_days: 1,
+                            interval_days: *interval_days,
+                        },
+                    );
                 }
                 self.check_intent_kind(side, kind)
             }
@@ -722,7 +761,17 @@ impl World {
     /// map that is not the side's, the hex of its waters (decision 0123, 1)
     /// is on the map, and a supply intent's days are at least 1.
     fn check_intent_kind(&self, side: Side, kind: &IntentKind) -> Result<(), CommandRefusal> {
-        if let Some(base) = kind.own_base() {
+        // A hold may name a base on the side's map that is not the side's:
+        // it waits for the base to be the side's (decision 0144, 1).
+        let enemy_hold = match kind {
+            IntentKind::Hold { base } => self
+                .truth
+                .bases
+                .get(base)
+                .is_some_and(|found| found.side != side && found.on_map),
+            _ => false,
+        };
+        if let Some(base) = kind.own_base().filter(|_| !enemy_hold) {
             if !self.own_base(side, base) {
                 return Err(CommandRefusal::NotYourBase(base));
             }
@@ -1260,6 +1309,19 @@ impl World {
                     NoticeBasis::Command(i) => command_reasons.get(i),
                     NoticeBasis::NoOrder(i) => no_order_reasons.get(i),
                 };
+                // The notice that a "take a place" is met says the
+                // intent's words (the ruling on decision 0142's reading 4).
+                let intent = (notice.kind == NoticeKind::Met)
+                    .then(|| {
+                        let state = self.command.get(side)?;
+                        let intent = state.plans.get(&notice.plan)?.intent;
+                        state
+                            .intents
+                            .get(&intent)
+                            .filter(|found| matches!(found.kind, IntentKind::TakePlace { .. }))
+                            .map(|found| found.id)
+                    })
+                    .flatten();
                 let event = self.events.record(
                     day,
                     None,
@@ -1268,6 +1330,7 @@ impl World {
                         kind: notice.kind,
                         plan: notice.plan,
                         run: notice.run,
+                        intent,
                     },
                     reason.map(|id| Cause::Event(*id)).into_iter().collect(),
                     None,

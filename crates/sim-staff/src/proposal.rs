@@ -119,7 +119,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
 
     let mut runs: Vec<ProposedRun> = Vec::new();
     let mut shortfall = served.shortfall.clone();
-    if let Setup::Ready(params) = setup(&view, intent, plan) {
+    if let Setup::Ready(params) = setup(&view, view.command_state(), intent, plan) {
         let planner = Planner::new(&view, &fleet, params, &before);
         if let Some(mut readings) = Readings::build(
             &view,

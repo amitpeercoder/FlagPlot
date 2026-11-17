@@ -299,9 +299,19 @@ pub(crate) fn interrupts_json(n: &Names<'_>, view: &SideView<'_>) -> Value {
 }
 
 /// The words of a matter, as the notice's event reads.
-fn matter_words(kind: NoticeKind, plan: PlanId, intent: Option<u32>, run: Option<u32>) -> String {
+fn matter_words(
+    kind: NoticeKind,
+    plan: PlanId,
+    intent: Option<(u32, IntentKind)>,
+    run: Option<u32>,
+) -> String {
     match (kind, run) {
-        (NoticeKind::CannotMeet, _) => match intent {
+        // The notice that a "take a place" is met says the intent's words
+        // (the ruling on decision 0142's reading 4).
+        (NoticeKind::Met, _) if matches!(intent, Some((_, IntentKind::TakePlace { .. }))) => {
+            format!("intent:{} is met", intent.map_or(0, |(id, _)| id))
+        }
+        (NoticeKind::CannotMeet, _) => match intent.map(|(id, _)| id) {
             Some(intent) => format!(
                 "plan:{} (intent:{intent}) cannot meet its intent",
                 plan.raw()
@@ -342,6 +352,7 @@ fn matters(events: &[SideEvent], side: sim_core::state::Side) -> Vec<Matter> {
             kind,
             plan,
             run,
+            ..
         }) = &event.kind
         else {
             continue;
@@ -467,8 +478,10 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             let open = is_open(m);
             let opened = m.history.first().map_or(0, |(day, _)| *day);
             let last = m.history.last().map_or(0, |(day, _)| *day);
-            let intent = state.plans.get(&m.plan).map(|p| p.intent.raw());
-            let words = matter_words(m.kind, m.plan, intent, m.run);
+            let intent = state.plans.get(&m.plan).map(|p| p.intent);
+            let intent_kind = intent.and_then(|id| state.intents.get(&id)).map(|i| i.kind);
+            let intent = intent.map(|id| id.raw());
+            let words = matter_words(m.kind, m.plan, intent.zip(intent_kind), m.run);
             if open {
                 open_words.push(format!("{words} (since day {opened})"));
             } else {

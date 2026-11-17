@@ -217,10 +217,24 @@ fn run_landings(
     let today = view.day() + 1;
     let mut landings = Vec::new();
     for plan in state.plans.values().filter(|plan| plan.state.approved()) {
-        let Some(intent) = state.intents.get(&plan.intent) else {
-            continue;
+        // The runs of a plan are its supply intent's: the plan's own intent,
+        // or the "keep supplied" the staff formed in the plan under a hold
+        // (decision 0144, 7).
+        let supply_base = |intent: &sim_core::command::Intent| match intent.kind {
+            IntentKind::KeepSupplied { base, .. } => Some(base),
+            _ => None,
         };
-        let IntentKind::KeepSupplied { base, .. } = intent.kind else {
+        let Some(base) = state
+            .intents
+            .get(&plan.intent)
+            .and_then(supply_base)
+            .or_else(|| {
+                state
+                    .intents_in_force()
+                    .filter(|i| i.plan == plan.id)
+                    .find_map(supply_base)
+            })
+        else {
             continue;
         };
         let Some(destination) = view.bases().find(|b| b.id == base) else {

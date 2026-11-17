@@ -645,7 +645,7 @@
       }
     },
     "command_body": {
-      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, form_intent, set_limit, set_leave, hold, release, approve, cancel_plan, set_interrupt and acknowledge), ships and task forces in your numbers.",
+      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, form_intent (which may form keep_supplied under a hold, with floor_days, which may be 0, and an optional interval_days, decision 0144), set_limit, set_leave, hold, release, approve, cancel_plan, set_interrupt and acknowledge), ships and task forces in your numbers.",
       "type": "object",
       "required": [
         "kind"
