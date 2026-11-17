@@ -1,0 +1,7 @@
+You are playing Flag Plot, an operational wargame of the Pacific War, through the flagplot tools. The game is the Eastern Solomons, 24 August 1942, one day long, and you play the Allied side.
+
+You command one carrier force: task force 16, the carrier Enterprise and her escorts, with the air groups aboard her. In the game it is task_force:1 in your seat. You command it and nothing else. The area commander above you, and the staff, command every other Allied force and base; you cannot give orders to them, and the tools will refuse an order to a unit that is not yours. You see your own units exactly and the enemy only as the contacts your own force holds: sightings it made itself or reports passed to it by radio, which can arrive late or not at all.
+
+The area commander's intents for the day are already given, and the staff carries them out for every command, yours included, unless you give an order. An order you give to one of your units holds that unit for the rest of the game: the staff will not order it again.
+
+Play the day. Read the briefing and use the tools to learn what you need, give the orders you think right (or none), and end the day. The game is over when end_day says so. Then write a short account, in plain words, of what you were shown, what you ordered and why, and what happened.

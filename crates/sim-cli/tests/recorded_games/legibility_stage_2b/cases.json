@@ -1,0 +1,350 @@
+[
+ {
+  "case": 1,
+  "seed": 1,
+  "side": "japanese",
+  "report": 245,
+  "day": 1,
+  "pulse": "morning",
+  "report_hex": [
+   7,
+   -5
+  ],
+  "A": "task_force:4",
+  "A_group": 19,
+  "A_launch": 250,
+  "A_launch_pulse": "morning",
+  "B": "task_force:3",
+  "B_group": 12,
+  "B_first_held": [
+   1,
+   2
+  ],
+  "B_launched_elsewhere_in_P": [
+   248,
+   249,
+   251,
+   252
+  ],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 1: why air_group:19 did or did not launch in the morning of day 1\nair_group:19 \"Ryujo attack unit\" (Japanese), belongs to task_force:4\nmission naval strike; at (7,-9); reach normal = 175 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n6 aircraft able to fly, the share held back is 0, 6 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 6 aircraft at contact 1 (cruiser) at (7,-5), 160 nm\nthe log has: #250 launched 6 aircraft at contact 1 at (7,-5), 160 nm\n1 contact in the picture of task_force:4:\n  contact 1 at (7,-5): a cruiser, 9 ships, 0 pulses old, rests on report #245, its own: chosen: 6 aircraft sent at it\nreport #245: held by task_force:4 as contact 1 at that moment\ntask_force:4 first held report #245 in the morning of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 1: why air_group:12 did or did not launch in the morning of day 1\nair_group:12 \"Shokaku bomber unit\" (Japanese), belongs to task_force:3\nmission naval strike; at (8,-11); reach normal = 252 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n18 aircraft able to fly, the share held back is 0, 18 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 18 aircraft at contact 1 (carrier) at (7,-6), 183 nm\nthe log has: #248 launched 18 aircraft at contact 1 at (7,-6), 183 nm\n1 contact in the picture of task_force:3:\n  contact 1 at (7,-6): a carrier, 10 ships, 0 pulses old, rests on report #242, told: chosen: 18 aircraft sent at it\nreport #245: not held by task_force:3 as a contact at that moment\ntask_force:3 first held report #245 in the afternoon of day 1: sent sideways by task_force:4 (event #246), a pulse late.",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 1: when report #245 reached task_force:3\ntask_force:3 first held report #245 in the afternoon of day 1: sent sideways by task_force:4 (event #246), a pulse late."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #245, made in the morning of day 1, and two commands of the Japanese side: task_force:3 and task_force:4. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:19 --day 1 --pulse morning --report 245\nScenario 5: Eastern Solomons, 24 August 1942, seed 1: why air_group:19 did or did not launch in the morning of day 1\nair_group:19 \"Ryujo attack unit\" (Japanese), belongs to task_force:4\nmission naval strike; at (7,-9); reach normal = 175 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n6 aircraft able to fly, the share held back is 0, 6 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 6 aircraft at contact 1 (cruiser) at (7,-5), 160 nm\nthe log has: #250 launched 6 aircraft at contact 1 at (7,-5), 160 nm\n1 contact in the picture of task_force:4:\n  contact 1 at (7,-5): a cruiser, 9 ships, 0 pulses old, rests on report #245, its own: chosen: 6 aircraft sent at it\nreport #245: held by task_force:4 as contact 1 at that moment\ntask_force:4 first held report #245 in the morning of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:12 --day 1 --pulse morning --report 245\nScenario 5: Eastern Solomons, 24 August 1942, seed 1: why air_group:12 did or did not launch in the morning of day 1\nair_group:12 \"Shokaku bomber unit\" (Japanese), belongs to task_force:3\nmission naval strike; at (8,-11); reach normal = 252 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n18 aircraft able to fly, the share held back is 0, 18 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 18 aircraft at contact 1 (carrier) at (7,-6), 183 nm\nthe log has: #248 launched 18 aircraft at contact 1 at (7,-6), 183 nm\n1 contact in the picture of task_force:3:\n  contact 1 at (7,-6): a carrier, 10 ships, 0 pulses old, rests on report #242, told: chosen: 18 aircraft sent at it\nreport #245: not held by task_force:3 as a contact at that moment\ntask_force:3 first held report #245 in the afternoon of day 1: sent sideways by task_force:4 (event #246), a pulse late.\n\nANSWER 3\n$ events --report 245 --command task_force:3\nScenario 5: Eastern Solomons, 24 August 1942, seed 1: when report #245 reached task_force:3\ntask_force:3 first held report #245 in the afternoon of day 1: sent sideways by task_force:4 (event #246), a pulse late.\n\nQUESTIONS\n1. Which of the two commands, task_force:3 or task_force:4, held the sighting (report #245) in the morning of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the morning of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 2,
+  "seed": 8,
+  "side": "japanese",
+  "report": 245,
+  "day": 1,
+  "pulse": "morning",
+  "report_hex": [
+   8,
+   -6
+  ],
+  "A": "task_force:4",
+  "A_group": 19,
+  "A_launch": 253,
+  "A_launch_pulse": "morning",
+  "B": "task_force:3",
+  "B_group": 12,
+  "B_first_held": null,
+  "B_launched_elsewhere_in_P": [
+   251,
+   252
+  ],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 8: why air_group:19 did or did not launch in the morning of day 1\nair_group:19 \"Ryujo attack unit\" (Japanese), belongs to task_force:4\nmission naval strike; at (7,-9); reach normal = 175 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n6 aircraft able to fly, the share held back is 0, 6 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 6 aircraft at contact 1 (carrier) at (8,-6), 144 nm\nthe log has: #253 launched 6 aircraft at contact 1 at (8,-6), 144 nm\n1 contact in the picture of task_force:4:\n  contact 1 at (8,-6): a carrier, 8 ships, 0 pulses old, rests on report #245, its own: chosen: 6 aircraft sent at it\nreport #245: held by task_force:4 as contact 1 at that moment\ntask_force:4 first held report #245 in the morning of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 8: why air_group:12 did or did not launch in the morning of day 1\nair_group:12 \"Shokaku bomber unit\" (Japanese), belongs to task_force:3\nmission naval strike; at (8,-11); reach normal = 252 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n18 aircraft able to fly, the share held back is 0, 18 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 18 aircraft at contact 1 (transport) at (7,-5), 223 nm\nthe log has: #251 launched 18 aircraft at contact 1 at (7,-5), 223 nm\n1 contact in the picture of task_force:3:\n  contact 1 at (7,-5): a transport, 10 ships, 0 pulses old, rests on report #242, told: chosen: 18 aircraft sent at it\nreport #245: not held by task_force:3 as a contact at that moment\ntask_force:3 never held report #245 (sent sideways by task_force:4, event #246: lost).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 8: when report #245 reached task_force:3\ntask_force:3 never held report #245 (sent sideways by task_force:4, event #246: lost)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #245, made in the morning of day 1, and two commands of the Japanese side: task_force:3 and task_force:4. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:19 --day 1 --pulse morning --report 245\nScenario 5: Eastern Solomons, 24 August 1942, seed 8: why air_group:19 did or did not launch in the morning of day 1\nair_group:19 \"Ryujo attack unit\" (Japanese), belongs to task_force:4\nmission naval strike; at (7,-9); reach normal = 175 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n6 aircraft able to fly, the share held back is 0, 6 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 6 aircraft at contact 1 (carrier) at (8,-6), 144 nm\nthe log has: #253 launched 6 aircraft at contact 1 at (8,-6), 144 nm\n1 contact in the picture of task_force:4:\n  contact 1 at (8,-6): a carrier, 8 ships, 0 pulses old, rests on report #245, its own: chosen: 6 aircraft sent at it\nreport #245: held by task_force:4 as contact 1 at that moment\ntask_force:4 first held report #245 in the morning of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:12 --day 1 --pulse morning --report 245\nScenario 5: Eastern Solomons, 24 August 1942, seed 8: why air_group:12 did or did not launch in the morning of day 1\nair_group:12 \"Shokaku bomber unit\" (Japanese), belongs to task_force:3\nmission naval strike; at (8,-11); reach normal = 252 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n18 aircraft able to fly, the share held back is 0, 18 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 18 aircraft at contact 1 (transport) at (7,-5), 223 nm\nthe log has: #251 launched 18 aircraft at contact 1 at (7,-5), 223 nm\n1 contact in the picture of task_force:3:\n  contact 1 at (7,-5): a transport, 10 ships, 0 pulses old, rests on report #242, told: chosen: 18 aircraft sent at it\nreport #245: not held by task_force:3 as a contact at that moment\ntask_force:3 never held report #245 (sent sideways by task_force:4, event #246: lost).\n\nANSWER 3\n$ events --report 245 --command task_force:3\nScenario 5: Eastern Solomons, 24 August 1942, seed 8: when report #245 reached task_force:3\ntask_force:3 never held report #245 (sent sideways by task_force:4, event #246: lost).\n\nQUESTIONS\n1. Which of the two commands, task_force:3 or task_force:4, held the sighting (report #245) in the morning of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the morning of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 3,
+  "seed": 24,
+  "side": "allied",
+  "report": 231,
+  "day": 1,
+  "pulse": "morning",
+  "report_hex": [
+   7,
+   -9
+  ],
+  "A": "task_force:2",
+  "A_group": 7,
+  "A_launch": 248,
+  "A_launch_pulse": "morning",
+  "B": "task_force:1",
+  "B_group": 3,
+  "B_first_held": [
+   1,
+   2
+  ],
+  "B_launched_elsewhere_in_P": [
+   246,
+   247,
+   251
+  ],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 24: why air_group:7 did or did not launch in the morning of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 1 (battleship) at (7,-9), 160 nm\nthe log has: #248 launched 15 aircraft at contact 1 at (7,-9), 160 nm\n1 contact in the picture of task_force:2:\n  contact 1 at (7,-9): a battleship, 3 ships, 0 pulses old, rests on report #231, its own: chosen: 15 aircraft sent at it\nreport #231: held by task_force:2 as contact 1 at that moment\ntask_force:2 first held report #231 in the morning of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 24: why air_group:3 did or did not launch in the morning of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 1 (carrier) at (8,-9), 144 nm\nthe log has: #246 launched 16 aircraft at contact 1 at (8,-9), 144 nm\n1 contact in the picture of task_force:1:\n  contact 1 at (8,-9): a carrier, 4 ships, 0 pulses old, rests on report #225, its own: chosen: 16 aircraft sent at it\nreport #231: not held by task_force:1 as a contact at that moment\ntask_force:1 first held report #231 in the afternoon of day 1: sent down by the area command (event #233), a pulse late; the area command had it from the passing up by task_force:2 (event #232, on time).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 24: when report #231 reached task_force:1\ntask_force:1 first held report #231 in the afternoon of day 1: sent down by the area command (event #233), a pulse late; the area command had it from the passing up by task_force:2 (event #232, on time)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #231, made in the morning of day 1, and two commands of the Allied side: task_force:1 and task_force:2. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:7 --day 1 --pulse morning --report 231\nScenario 5: Eastern Solomons, 24 August 1942, seed 24: why air_group:7 did or did not launch in the morning of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 1 (battleship) at (7,-9), 160 nm\nthe log has: #248 launched 15 aircraft at contact 1 at (7,-9), 160 nm\n1 contact in the picture of task_force:2:\n  contact 1 at (7,-9): a battleship, 3 ships, 0 pulses old, rests on report #231, its own: chosen: 15 aircraft sent at it\nreport #231: held by task_force:2 as contact 1 at that moment\ntask_force:2 first held report #231 in the morning of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:3 --day 1 --pulse morning --report 231\nScenario 5: Eastern Solomons, 24 August 1942, seed 24: why air_group:3 did or did not launch in the morning of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 1 (carrier) at (8,-9), 144 nm\nthe log has: #246 launched 16 aircraft at contact 1 at (8,-9), 144 nm\n1 contact in the picture of task_force:1:\n  contact 1 at (8,-9): a carrier, 4 ships, 0 pulses old, rests on report #225, its own: chosen: 16 aircraft sent at it\nreport #231: not held by task_force:1 as a contact at that moment\ntask_force:1 first held report #231 in the afternoon of day 1: sent down by the area command (event #233), a pulse late; the area command had it from the passing up by task_force:2 (event #232, on time).\n\nANSWER 3\n$ events --report 231 --command task_force:1\nScenario 5: Eastern Solomons, 24 August 1942, seed 24: when report #231 reached task_force:1\ntask_force:1 first held report #231 in the afternoon of day 1: sent down by the area command (event #233), a pulse late; the area command had it from the passing up by task_force:2 (event #232, on time).\n\nQUESTIONS\n1. Which of the two commands, task_force:1 or task_force:2, held the sighting (report #231) in the morning of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the morning of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 4,
+  "seed": 30,
+  "side": "allied",
+  "report": 373,
+  "day": 1,
+  "pulse": "afternoon",
+  "report_hex": [
+   7,
+   -9
+  ],
+  "A": "task_force:2",
+  "A_group": 7,
+  "A_launch": 390,
+  "A_launch_pulse": "afternoon",
+  "B": "task_force:1",
+  "B_group": 3,
+  "B_first_held": null,
+  "B_launched_elsewhere_in_P": [],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 30: why air_group:7 did or did not launch in the afternoon of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 3 (battleship) at (7,-9), 160 nm\nthe log has: #390 launched 15 aircraft at contact 3 at (7,-9), 160 nm\n2 contacts in the picture of task_force:2:\n  contact 1 at (8,-11): a carrier, 14 ships, 0 pulses old, rests on report #367, told: out of reach: 223 nm away, the reach is 200 nm\n  contact 3 at (7,-9): a battleship, 5 ships, 0 pulses old, rests on report #373, its own: chosen: 15 aircraft sent at it\nreport #373: held by task_force:2 as contact 3 at that moment\ntask_force:2 first held report #373 in the afternoon of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 30: why air_group:3 did or did not launch in the afternoon of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n8 aircraft able to fly, the share held back is 0, 8 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:3 in this pulse\n1 contact in the picture of task_force:1:\n  contact 1 at (8,-11): a carrier, 14 ships, 0 pulses old, rests on report #367, its own: out of reach: 223 nm away, the reach is 200 nm\nreport #373: not held by task_force:1 as a contact at that moment\ntask_force:1 never held report #373 (sent sideways by task_force:2, event #374, a pulse late: it fell due in the night of day 2 and the game had ended).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 30: when report #373 reached task_force:1\ntask_force:1 never held report #373 (sent sideways by task_force:2, event #374, a pulse late: it fell due in the night of day 2 and the game had ended)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #373, made in the afternoon of day 1, and two commands of the Allied side: task_force:1 and task_force:2. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:7 --day 1 --pulse afternoon --report 373\nScenario 5: Eastern Solomons, 24 August 1942, seed 30: why air_group:7 did or did not launch in the afternoon of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 3 (battleship) at (7,-9), 160 nm\nthe log has: #390 launched 15 aircraft at contact 3 at (7,-9), 160 nm\n2 contacts in the picture of task_force:2:\n  contact 1 at (8,-11): a carrier, 14 ships, 0 pulses old, rests on report #367, told: out of reach: 223 nm away, the reach is 200 nm\n  contact 3 at (7,-9): a battleship, 5 ships, 0 pulses old, rests on report #373, its own: chosen: 15 aircraft sent at it\nreport #373: held by task_force:2 as contact 3 at that moment\ntask_force:2 first held report #373 in the afternoon of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:3 --day 1 --pulse afternoon --report 373\nScenario 5: Eastern Solomons, 24 August 1942, seed 30: why air_group:3 did or did not launch in the afternoon of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n8 aircraft able to fly, the share held back is 0, 8 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:3 in this pulse\n1 contact in the picture of task_force:1:\n  contact 1 at (8,-11): a carrier, 14 ships, 0 pulses old, rests on report #367, its own: out of reach: 223 nm away, the reach is 200 nm\nreport #373: not held by task_force:1 as a contact at that moment\ntask_force:1 never held report #373 (sent sideways by task_force:2, event #374, a pulse late: it fell due in the night of day 2 and the game had ended).\n\nANSWER 3\n$ events --report 373 --command task_force:1\nScenario 5: Eastern Solomons, 24 August 1942, seed 30: when report #373 reached task_force:1\ntask_force:1 never held report #373 (sent sideways by task_force:2, event #374, a pulse late: it fell due in the night of day 2 and the game had ended).\n\nQUESTIONS\n1. Which of the two commands, task_force:1 or task_force:2, held the sighting (report #373) in the afternoon of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the afternoon of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 5,
+  "seed": 36,
+  "side": "japanese",
+  "report": 352,
+  "day": 1,
+  "pulse": "afternoon",
+  "report_hex": [
+   7,
+   -5
+  ],
+  "A": "task_force:3",
+  "A_group": 12,
+  "A_launch": 364,
+  "A_launch_pulse": "afternoon",
+  "B": "task_force:4",
+  "B_group": 19,
+  "B_first_held": null,
+  "B_launched_elsewhere_in_P": [],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 36: why air_group:12 did or did not launch in the afternoon of day 1\nair_group:12 \"Shokaku bomber unit\" (Japanese), belongs to task_force:3\nmission naval strike; at (8,-11); reach normal = 252 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n13 aircraft able to fly, the share held back is 0, 13 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 13 aircraft at contact 1 (cruiser) at (7,-5), 223 nm\nthe log has: #364 launched 13 aircraft at contact 1 at (7,-5), 223 nm\n1 contact in the picture of task_force:3:\n  contact 1 at (7,-5): a cruiser, 10 ships, 0 pulses old, rests on report #352, its own: chosen: 13 aircraft sent at it\nreport #352: held by task_force:3 as contact 1 at that moment\ntask_force:3 first held report #352 in the afternoon of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 36: why air_group:19 did or did not launch in the afternoon of day 1\nair_group:19 \"Ryujo attack unit\" (Japanese), belongs to task_force:4\nmission naval strike; at (7,-9); reach normal = 175 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n1 aircraft able to fly, the share held back is 0, 1 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:19 in this pulse\n1 contact in the picture of task_force:4:\n  contact 1 at (6,-4): a carrier, 10 ships, 0 pulses old, rests on report #358, its own: out of reach: 183 nm away, the reach is 175 nm\nreport #352: not held by task_force:4 as a contact at that moment\ntask_force:4 never held report #352 (sent sideways by task_force:3, event #353, a pulse late: it fell due in the night of day 2 and the game had ended).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 36: when report #352 reached task_force:4\ntask_force:4 never held report #352 (sent sideways by task_force:3, event #353, a pulse late: it fell due in the night of day 2 and the game had ended)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #352, made in the afternoon of day 1, and two commands of the Japanese side: task_force:3 and task_force:4. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:12 --day 1 --pulse afternoon --report 352\nScenario 5: Eastern Solomons, 24 August 1942, seed 36: why air_group:12 did or did not launch in the afternoon of day 1\nair_group:12 \"Shokaku bomber unit\" (Japanese), belongs to task_force:3\nmission naval strike; at (8,-11); reach normal = 252 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n13 aircraft able to fly, the share held back is 0, 13 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 13 aircraft at contact 1 (cruiser) at (7,-5), 223 nm\nthe log has: #364 launched 13 aircraft at contact 1 at (7,-5), 223 nm\n1 contact in the picture of task_force:3:\n  contact 1 at (7,-5): a cruiser, 10 ships, 0 pulses old, rests on report #352, its own: chosen: 13 aircraft sent at it\nreport #352: held by task_force:3 as contact 1 at that moment\ntask_force:3 first held report #352 in the afternoon of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:19 --day 1 --pulse afternoon --report 352\nScenario 5: Eastern Solomons, 24 August 1942, seed 36: why air_group:19 did or did not launch in the afternoon of day 1\nair_group:19 \"Ryujo attack unit\" (Japanese), belongs to task_force:4\nmission naval strike; at (7,-9); reach normal = 175 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n1 aircraft able to fly, the share held back is 0, 1 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:19 in this pulse\n1 contact in the picture of task_force:4:\n  contact 1 at (6,-4): a carrier, 10 ships, 0 pulses old, rests on report #358, its own: out of reach: 183 nm away, the reach is 175 nm\nreport #352: not held by task_force:4 as a contact at that moment\ntask_force:4 never held report #352 (sent sideways by task_force:3, event #353, a pulse late: it fell due in the night of day 2 and the game had ended).\n\nANSWER 3\n$ events --report 352 --command task_force:4\nScenario 5: Eastern Solomons, 24 August 1942, seed 36: when report #352 reached task_force:4\ntask_force:4 never held report #352 (sent sideways by task_force:3, event #353, a pulse late: it fell due in the night of day 2 and the game had ended).\n\nQUESTIONS\n1. Which of the two commands, task_force:3 or task_force:4, held the sighting (report #352) in the afternoon of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the afternoon of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 6,
+  "seed": 41,
+  "side": "allied",
+  "report": 282,
+  "day": 1,
+  "pulse": "afternoon",
+  "report_hex": [
+   7,
+   -9
+  ],
+  "A": "task_force:1",
+  "A_group": 3,
+  "A_launch": 299,
+  "A_launch_pulse": "afternoon",
+  "B": "task_force:2",
+  "B_group": 7,
+  "B_first_held": null,
+  "B_launched_elsewhere_in_P": [],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 41: why air_group:3 did or did not launch in the afternoon of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 2 (battleship) at (7,-9), 160 nm\nthe log has: #299 launched 16 aircraft at contact 2 at (7,-9), 160 nm\n1 contact in the picture of task_force:1:\n  contact 2 at (7,-9): a battleship, 4 ships, 0 pulses old, rests on report #282, its own: chosen: 16 aircraft sent at it\nreport #282: held by task_force:1 as contact 2 at that moment\ntask_force:1 first held report #282 in the afternoon of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 41: why air_group:7 did or did not launch in the afternoon of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:7 in this pulse\n0 contacts in the picture of task_force:2:\nreport #282: not held by task_force:2 as a contact at that moment\ntask_force:2 never held report #282 (sent sideways by task_force:1, event #283, a pulse late: it fell due in the night of day 2 and the game had ended).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 41: when report #282 reached task_force:2\ntask_force:2 never held report #282 (sent sideways by task_force:1, event #283, a pulse late: it fell due in the night of day 2 and the game had ended)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #282, made in the afternoon of day 1, and two commands of the Allied side: task_force:1 and task_force:2. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:3 --day 1 --pulse afternoon --report 282\nScenario 5: Eastern Solomons, 24 August 1942, seed 41: why air_group:3 did or did not launch in the afternoon of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 2 (battleship) at (7,-9), 160 nm\nthe log has: #299 launched 16 aircraft at contact 2 at (7,-9), 160 nm\n1 contact in the picture of task_force:1:\n  contact 2 at (7,-9): a battleship, 4 ships, 0 pulses old, rests on report #282, its own: chosen: 16 aircraft sent at it\nreport #282: held by task_force:1 as contact 2 at that moment\ntask_force:1 first held report #282 in the afternoon of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:7 --day 1 --pulse afternoon --report 282\nScenario 5: Eastern Solomons, 24 August 1942, seed 41: why air_group:7 did or did not launch in the afternoon of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:7 in this pulse\n0 contacts in the picture of task_force:2:\nreport #282: not held by task_force:2 as a contact at that moment\ntask_force:2 never held report #282 (sent sideways by task_force:1, event #283, a pulse late: it fell due in the night of day 2 and the game had ended).\n\nANSWER 3\n$ events --report 282 --command task_force:2\nScenario 5: Eastern Solomons, 24 August 1942, seed 41: when report #282 reached task_force:2\ntask_force:2 never held report #282 (sent sideways by task_force:1, event #283, a pulse late: it fell due in the night of day 2 and the game had ended).\n\nQUESTIONS\n1. Which of the two commands, task_force:1 or task_force:2, held the sighting (report #282) in the afternoon of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the afternoon of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 7,
+  "seed": 51,
+  "side": "allied",
+  "report": 230,
+  "day": 1,
+  "pulse": "morning",
+  "report_hex": [
+   7,
+   -9
+  ],
+  "A": "task_force:2",
+  "A_group": 7,
+  "A_launch": 249,
+  "A_launch_pulse": "morning",
+  "B": "task_force:1",
+  "B_group": 3,
+  "B_first_held": [
+   1,
+   2
+  ],
+  "B_launched_elsewhere_in_P": [],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 51: why air_group:7 did or did not launch in the morning of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 2 (battleship) at (7,-9), 160 nm\nthe log has: #249 launched 15 aircraft at contact 2 at (7,-9), 160 nm\n2 contacts in the picture of task_force:2:\n  contact 1 at (8,-11): a carrier, 14 ships, 0 pulses old, rests on report #224, told: out of reach: 223 nm away, the reach is 200 nm\n  contact 2 at (7,-9): a battleship, 4 ships, 0 pulses old, rests on report #230, its own: chosen: 15 aircraft sent at it\nreport #230: held by task_force:2 as contact 2 at that moment\ntask_force:2 first held report #230 in the morning of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 51: why air_group:3 did or did not launch in the morning of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:3 in this pulse\n1 contact in the picture of task_force:1:\n  contact 1 at (8,-11): a carrier, 14 ships, 0 pulses old, rests on report #224, its own: out of reach: 223 nm away, the reach is 200 nm\nreport #230: not held by task_force:1 as a contact at that moment\ntask_force:1 first held report #230 in the afternoon of day 1: sent down by the area command (event #371), on time; the area command had it from the passing up by task_force:2 (event #231, a pulse late).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 51: when report #230 reached task_force:1\ntask_force:1 first held report #230 in the afternoon of day 1: sent down by the area command (event #371), on time; the area command had it from the passing up by task_force:2 (event #231, a pulse late)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #230, made in the morning of day 1, and two commands of the Allied side: task_force:1 and task_force:2. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:7 --day 1 --pulse morning --report 230\nScenario 5: Eastern Solomons, 24 August 1942, seed 51: why air_group:7 did or did not launch in the morning of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 2 (battleship) at (7,-9), 160 nm\nthe log has: #249 launched 15 aircraft at contact 2 at (7,-9), 160 nm\n2 contacts in the picture of task_force:2:\n  contact 1 at (8,-11): a carrier, 14 ships, 0 pulses old, rests on report #224, told: out of reach: 223 nm away, the reach is 200 nm\n  contact 2 at (7,-9): a battleship, 4 ships, 0 pulses old, rests on report #230, its own: chosen: 15 aircraft sent at it\nreport #230: held by task_force:2 as contact 2 at that moment\ntask_force:2 first held report #230 in the morning of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:3 --day 1 --pulse morning --report 230\nScenario 5: Eastern Solomons, 24 August 1942, seed 51: why air_group:3 did or did not launch in the morning of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:3 in this pulse\n1 contact in the picture of task_force:1:\n  contact 1 at (8,-11): a carrier, 14 ships, 0 pulses old, rests on report #224, its own: out of reach: 223 nm away, the reach is 200 nm\nreport #230: not held by task_force:1 as a contact at that moment\ntask_force:1 first held report #230 in the afternoon of day 1: sent down by the area command (event #371), on time; the area command had it from the passing up by task_force:2 (event #231, a pulse late).\n\nANSWER 3\n$ events --report 230 --command task_force:1\nScenario 5: Eastern Solomons, 24 August 1942, seed 51: when report #230 reached task_force:1\ntask_force:1 first held report #230 in the afternoon of day 1: sent down by the area command (event #371), on time; the area command had it from the passing up by task_force:2 (event #231, a pulse late).\n\nQUESTIONS\n1. Which of the two commands, task_force:1 or task_force:2, held the sighting (report #230) in the morning of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the morning of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 8,
+  "seed": 57,
+  "side": "allied",
+  "report": 298,
+  "day": 1,
+  "pulse": "afternoon",
+  "report_hex": [
+   6,
+   -9
+  ],
+  "A": "task_force:1",
+  "A_group": 3,
+  "A_launch": 318,
+  "A_launch_pulse": "afternoon",
+  "B": "task_force:2",
+  "B_group": 7,
+  "B_first_held": null,
+  "B_launched_elsewhere_in_P": [],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 57: why air_group:3 did or did not launch in the afternoon of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 1 (carrier) at (6,-9), 183 nm\nthe log has: #318 launched 16 aircraft at contact 1 at (6,-9), 183 nm\n1 contact in the picture of task_force:1:\n  contact 1 at (6,-9): a carrier, 5 ships, 0 pulses old, rests on report #298, its own: chosen: 16 aircraft sent at it\nreport #298: held by task_force:1 as contact 1 at that moment\ntask_force:1 first held report #298 in the afternoon of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 57: why air_group:7 did or did not launch in the afternoon of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:7 in this pulse\n0 contacts in the picture of task_force:2:\nreport #298: not held by task_force:2 as a contact at that moment\ntask_force:2 never held report #298 (sent sideways by task_force:1, event #299, a pulse late: it fell due in the night of day 2 and the game had ended).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 57: when report #298 reached task_force:2\ntask_force:2 never held report #298 (sent sideways by task_force:1, event #299, a pulse late: it fell due in the night of day 2 and the game had ended)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #298, made in the afternoon of day 1, and two commands of the Allied side: task_force:1 and task_force:2. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:3 --day 1 --pulse afternoon --report 298\nScenario 5: Eastern Solomons, 24 August 1942, seed 57: why air_group:3 did or did not launch in the afternoon of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 1 (carrier) at (6,-9), 183 nm\nthe log has: #318 launched 16 aircraft at contact 1 at (6,-9), 183 nm\n1 contact in the picture of task_force:1:\n  contact 1 at (6,-9): a carrier, 5 ships, 0 pulses old, rests on report #298, its own: chosen: 16 aircraft sent at it\nreport #298: held by task_force:1 as contact 1 at that moment\ntask_force:1 first held report #298 in the afternoon of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:7 --day 1 --pulse afternoon --report 298\nScenario 5: Eastern Solomons, 24 August 1942, seed 57: why air_group:7 did or did not launch in the afternoon of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:7 in this pulse\n0 contacts in the picture of task_force:2:\nreport #298: not held by task_force:2 as a contact at that moment\ntask_force:2 never held report #298 (sent sideways by task_force:1, event #299, a pulse late: it fell due in the night of day 2 and the game had ended).\n\nANSWER 3\n$ events --report 298 --command task_force:2\nScenario 5: Eastern Solomons, 24 August 1942, seed 57: when report #298 reached task_force:2\ntask_force:2 never held report #298 (sent sideways by task_force:1, event #299, a pulse late: it fell due in the night of day 2 and the game had ended).\n\nQUESTIONS\n1. Which of the two commands, task_force:1 or task_force:2, held the sighting (report #298) in the afternoon of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the afternoon of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 9,
+  "seed": 76,
+  "side": "allied",
+  "report": 407,
+  "day": 1,
+  "pulse": "afternoon",
+  "report_hex": [
+   7,
+   -9
+  ],
+  "A": "task_force:1",
+  "A_group": 3,
+  "A_launch": 420,
+  "A_launch_pulse": "afternoon",
+  "B": "task_force:2",
+  "B_group": 7,
+  "B_first_held": null,
+  "B_launched_elsewhere_in_P": [],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 76: why air_group:3 did or did not launch in the afternoon of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 1 (cruiser) at (7,-9), 160 nm\nthe log has: #420 launched 15 aircraft at contact 1 at (7,-9), 160 nm\n1 contact in the picture of task_force:1:\n  contact 1 at (7,-9): a cruiser, 3 ships, 0 pulses old, rests on report #407, its own: chosen: 15 aircraft sent at it\nreport #407: held by task_force:1 as contact 1 at that moment\ntask_force:1 first held report #407 in the afternoon of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 76: why air_group:7 did or did not launch in the afternoon of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n14 aircraft able to fly, the share held back is 0, 14 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:7 in this pulse\n1 contact in the picture of task_force:2:\n  contact 1 at (7,-9): a cruiser, 2 ships, 0 pulses old, rests on report #357, its own: qualified, but served: it needs 18 aircraft and the groups before this one sent 22 at it\nreport #407: not held by task_force:2 as a contact at that moment\ntask_force:2 never held report #407 (sent sideways by task_force:1, event #408: lost).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 76: when report #407 reached task_force:2\ntask_force:2 never held report #407 (sent sideways by task_force:1, event #408: lost)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #407, made in the afternoon of day 1, and two commands of the Allied side: task_force:1 and task_force:2. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:3 --day 1 --pulse afternoon --report 407\nScenario 5: Eastern Solomons, 24 August 1942, seed 76: why air_group:3 did or did not launch in the afternoon of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 1 (cruiser) at (7,-9), 160 nm\nthe log has: #420 launched 15 aircraft at contact 1 at (7,-9), 160 nm\n1 contact in the picture of task_force:1:\n  contact 1 at (7,-9): a cruiser, 3 ships, 0 pulses old, rests on report #407, its own: chosen: 15 aircraft sent at it\nreport #407: held by task_force:1 as contact 1 at that moment\ntask_force:1 first held report #407 in the afternoon of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:7 --day 1 --pulse afternoon --report 407\nScenario 5: Eastern Solomons, 24 August 1942, seed 76: why air_group:7 did or did not launch in the afternoon of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n14 aircraft able to fly, the share held back is 0, 14 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:7 in this pulse\n1 contact in the picture of task_force:2:\n  contact 1 at (7,-9): a cruiser, 2 ships, 0 pulses old, rests on report #357, its own: qualified, but served: it needs 18 aircraft and the groups before this one sent 22 at it\nreport #407: not held by task_force:2 as a contact at that moment\ntask_force:2 never held report #407 (sent sideways by task_force:1, event #408: lost).\n\nANSWER 3\n$ events --report 407 --command task_force:2\nScenario 5: Eastern Solomons, 24 August 1942, seed 76: when report #407 reached task_force:2\ntask_force:2 never held report #407 (sent sideways by task_force:1, event #408: lost).\n\nQUESTIONS\n1. Which of the two commands, task_force:1 or task_force:2, held the sighting (report #407) in the afternoon of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the afternoon of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 10,
+  "seed": 78,
+  "side": "allied",
+  "report": 232,
+  "day": 1,
+  "pulse": "morning",
+  "report_hex": [
+   6,
+   -9
+  ],
+  "A": "task_force:2",
+  "A_group": 7,
+  "A_launch": 257,
+  "A_launch_pulse": "morning",
+  "B": "task_force:1",
+  "B_group": 3,
+  "B_first_held": null,
+  "B_launched_elsewhere_in_P": [
+   255,
+   256,
+   259
+  ],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 78: why air_group:7 did or did not launch in the morning of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 1 (carrier) at (6,-9), 183 nm\nthe log has: #257 launched 15 aircraft at contact 1 at (6,-9), 183 nm\n2 contacts in the picture of task_force:2:\n  contact 1 at (6,-9): a carrier, 5 ships, 0 pulses old, rests on report #232, its own: chosen: 15 aircraft sent at it\n  contact 2 at (8,-11): a battleship, 14 ships, 0 pulses old, rests on report #236, told: out of reach: 223 nm away, the reach is 200 nm\nreport #232: held by task_force:2 as contact 1 at that moment\ntask_force:2 first held report #232 in the morning of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 78: why air_group:3 did or did not launch in the morning of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 1 (carrier) at (7,-9), 160 nm\nthe log has: #255 launched 16 aircraft at contact 1 at (7,-9), 160 nm\n2 contacts in the picture of task_force:1:\n  contact 1 at (7,-9): a carrier, 4 ships, 0 pulses old, rests on report #226, its own: chosen: 16 aircraft sent at it\n  contact 2 at (8,-11): a battleship, 14 ships, 0 pulses old, rests on report #236, told: out of reach: 223 nm away, the reach is 200 nm\nreport #232: not held by task_force:1 as a contact at that moment\ntask_force:1 never held report #232 (sent sideways by task_force:2, event #233: lost).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 78: when report #232 reached task_force:1\ntask_force:1 never held report #232 (sent sideways by task_force:2, event #233: lost)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #232, made in the morning of day 1, and two commands of the Allied side: task_force:1 and task_force:2. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:7 --day 1 --pulse morning --report 232\nScenario 5: Eastern Solomons, 24 August 1942, seed 78: why air_group:7 did or did not launch in the morning of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 15 aircraft at contact 1 (carrier) at (6,-9), 183 nm\nthe log has: #257 launched 15 aircraft at contact 1 at (6,-9), 183 nm\n2 contacts in the picture of task_force:2:\n  contact 1 at (6,-9): a carrier, 5 ships, 0 pulses old, rests on report #232, its own: chosen: 15 aircraft sent at it\n  contact 2 at (8,-11): a battleship, 14 ships, 0 pulses old, rests on report #236, told: out of reach: 223 nm away, the reach is 200 nm\nreport #232: held by task_force:2 as contact 1 at that moment\ntask_force:2 first held report #232 in the morning of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:3 --day 1 --pulse morning --report 232\nScenario 5: Eastern Solomons, 24 August 1942, seed 78: why air_group:3 did or did not launch in the morning of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 1 (carrier) at (7,-9), 160 nm\nthe log has: #255 launched 16 aircraft at contact 1 at (7,-9), 160 nm\n2 contacts in the picture of task_force:1:\n  contact 1 at (7,-9): a carrier, 4 ships, 0 pulses old, rests on report #226, its own: chosen: 16 aircraft sent at it\n  contact 2 at (8,-11): a battleship, 14 ships, 0 pulses old, rests on report #236, told: out of reach: 223 nm away, the reach is 200 nm\nreport #232: not held by task_force:1 as a contact at that moment\ntask_force:1 never held report #232 (sent sideways by task_force:2, event #233: lost).\n\nANSWER 3\n$ events --report 232 --command task_force:1\nScenario 5: Eastern Solomons, 24 August 1942, seed 78: when report #232 reached task_force:1\ntask_force:1 never held report #232 (sent sideways by task_force:2, event #233: lost).\n\nQUESTIONS\n1. Which of the two commands, task_force:1 or task_force:2, held the sighting (report #232) in the morning of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the morning of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 11,
+  "seed": 79,
+  "side": "allied",
+  "report": 225,
+  "day": 1,
+  "pulse": "morning",
+  "report_hex": [
+   7,
+   -9
+  ],
+  "A": "task_force:1",
+  "A_group": 3,
+  "A_launch": 246,
+  "A_launch_pulse": "morning",
+  "B": "task_force:2",
+  "B_group": 7,
+  "B_first_held": [
+   1,
+   2
+  ],
+  "B_launched_elsewhere_in_P": [],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 79: why air_group:3 did or did not launch in the morning of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 1 (carrier) at (7,-9), 160 nm\nthe log has: #246 launched 16 aircraft at contact 1 at (7,-9), 160 nm\n1 contact in the picture of task_force:1:\n  contact 1 at (7,-9): a carrier, 4 ships, 0 pulses old, rests on report #225, its own: chosen: 16 aircraft sent at it\nreport #225: held by task_force:1 as contact 1 at that moment\ntask_force:1 first held report #225 in the morning of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 79: why air_group:7 did or did not launch in the morning of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:7 in this pulse\n0 contacts in the picture of task_force:2:\nreport #225: not held by task_force:2 as a contact at that moment\ntask_force:2 first held report #225 in the afternoon of day 1: sent down by the area command (event #227), a pulse late; the area command had it from the passing up by task_force:1 (event #226, on time).",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 79: when report #225 reached task_force:2\ntask_force:2 first held report #225 in the afternoon of day 1: sent down by the area command (event #227), a pulse late; the area command had it from the passing up by task_force:1 (event #226, on time)."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #225, made in the morning of day 1, and two commands of the Allied side: task_force:1 and task_force:2. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:3 --day 1 --pulse morning --report 225\nScenario 5: Eastern Solomons, 24 August 1942, seed 79: why air_group:3 did or did not launch in the morning of day 1\nair_group:3 \"VS-5\" (Allied), belongs to task_force:1\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n16 aircraft able to fly, the share held back is 0, 16 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 16 aircraft at contact 1 (carrier) at (7,-9), 160 nm\nthe log has: #246 launched 16 aircraft at contact 1 at (7,-9), 160 nm\n1 contact in the picture of task_force:1:\n  contact 1 at (7,-9): a carrier, 4 ships, 0 pulses old, rests on report #225, its own: chosen: 16 aircraft sent at it\nreport #225: held by task_force:1 as contact 1 at that moment\ntask_force:1 first held report #225 in the morning of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:7 --day 1 --pulse morning --report 225\nScenario 5: Eastern Solomons, 24 August 1942, seed 79: why air_group:7 did or did not launch in the morning of day 1\nair_group:7 \"VS-3\" (Allied), belongs to task_force:2\nmission naval strike; at (7,-5); reach normal = 200 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n15 aircraft able to fly, the share held back is 0, 15 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch nothing\nthe log has no launch of air_group:7 in this pulse\n0 contacts in the picture of task_force:2:\nreport #225: not held by task_force:2 as a contact at that moment\ntask_force:2 first held report #225 in the afternoon of day 1: sent down by the area command (event #227), a pulse late; the area command had it from the passing up by task_force:1 (event #226, on time).\n\nANSWER 3\n$ events --report 225 --command task_force:2\nScenario 5: Eastern Solomons, 24 August 1942, seed 79: when report #225 reached task_force:2\ntask_force:2 first held report #225 in the afternoon of day 1: sent down by the area command (event #227), a pulse late; the area command had it from the passing up by task_force:1 (event #226, on time).\n\nQUESTIONS\n1. Which of the two commands, task_force:1 or task_force:2, held the sighting (report #225) in the morning of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the morning of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ },
+ {
+  "case": 12,
+  "seed": 82,
+  "side": "japanese",
+  "report": 246,
+  "day": 1,
+  "pulse": "morning",
+  "report_hex": [
+   7,
+   -5
+  ],
+  "A": "task_force:4",
+  "A_group": 19,
+  "A_launch": 255,
+  "A_launch_pulse": "morning",
+  "B": "task_force:3",
+  "B_group": 12,
+  "B_first_held": [
+   1,
+   2
+  ],
+  "B_launched_elsewhere_in_P": [
+   253,
+   254,
+   256,
+   257
+  ],
+  "answers": {
+   "A_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 82: why air_group:19 did or did not launch in the morning of day 1\nair_group:19 \"Ryujo attack unit\" (Japanese), belongs to task_force:4\nmission naval strike; at (7,-9); reach normal = 175 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n6 aircraft able to fly, the share held back is 0, 6 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 6 aircraft at contact 1 (carrier) at (7,-5), 160 nm\nthe log has: #255 launched 6 aircraft at contact 1 at (7,-5), 160 nm\n2 contacts in the picture of task_force:4:\n  contact 1 at (7,-5): a carrier, 7 ships, 0 pulses old, rests on report #246, its own: chosen: 6 aircraft sent at it\n  contact 2 at (7,-6): a battleship, 10 ships, 0 pulses old, rests on report #243, its own: qualified, but contact 1 came first (the kind first on the list, then the nearest, then the lowest number)\nreport #246: held by task_force:4 as contact 1 at that moment\ntask_force:4 first held report #246 in the morning of day 1: its own (it made the report).",
+   "B_strike": "Scenario 5: Eastern Solomons, 24 August 1942, seed 82: why air_group:12 did or did not launch in the morning of day 1\nair_group:12 \"Shokaku bomber unit\" (Japanese), belongs to task_force:3\nmission naval strike; at (8,-11); reach normal = 252 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n18 aircraft able to fly, the share held back is 0, 18 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 18 aircraft at contact 2 (battleship) at (7,-6), 183 nm\nthe log has: #253 launched 18 aircraft at contact 2 at (7,-6), 183 nm\n2 contacts in the picture of task_force:3:\n  contact 1 at (8,-5): a cruiser, 8 ships, 0 pulses old, rests on report #238, its own: qualified, but contact 2 came first (the kind first on the list, then the nearest, then the lowest number)\n  contact 2 at (7,-6): a battleship, 10 ships, 0 pulses old, rests on report #243, told: chosen: 18 aircraft sent at it\nreport #246: not held by task_force:3 as a contact at that moment\ntask_force:3 first held report #246 in the afternoon of day 1: sent sideways by task_force:4 (event #247), a pulse late.",
+   "B_report": "Scenario 5: Eastern Solomons, 24 August 1942, seed 82: when report #246 reached task_force:3\ntask_force:3 first held report #246 in the afternoon of day 1: sent sideways by task_force:4 (event #247), a pulse late."
+  },
+  "prompt_text": "Below are three answers from the umpire's tools of a wargame, about one sighting report, report #246, made in the morning of day 1, and two commands of the Japanese side: task_force:3 and task_force:4. Read them and answer from them alone.\n\nANSWER 1\n$ events --strike air_group:19 --day 1 --pulse morning --report 246\nScenario 5: Eastern Solomons, 24 August 1942, seed 82: why air_group:19 did or did not launch in the morning of day 1\nair_group:19 \"Ryujo attack unit\" (Japanese), belongs to task_force:4\nmission naval strike; at (7,-9); reach normal = 175 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n6 aircraft able to fly, the share held back is 0, 6 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 6 aircraft at contact 1 (carrier) at (7,-5), 160 nm\nthe log has: #255 launched 6 aircraft at contact 1 at (7,-5), 160 nm\n2 contacts in the picture of task_force:4:\n  contact 1 at (7,-5): a carrier, 7 ships, 0 pulses old, rests on report #246, its own: chosen: 6 aircraft sent at it\n  contact 2 at (7,-6): a battleship, 10 ships, 0 pulses old, rests on report #243, its own: qualified, but contact 1 came first (the kind first on the list, then the nearest, then the lowest number)\nreport #246: held by task_force:4 as contact 1 at that moment\ntask_force:4 first held report #246 in the morning of day 1: its own (it made the report).\n\nANSWER 2\n$ events --strike air_group:12 --day 1 --pulse morning --report 246\nScenario 5: Eastern Solomons, 24 August 1942, seed 82: why air_group:12 did or did not launch in the morning of day 1\nair_group:12 \"Shokaku bomber unit\" (Japanese), belongs to task_force:3\nmission naval strike; at (8,-11); reach normal = 252 nm; contact age limit 0 pulses; targets, first first: carrier, battleship, cruiser, destroyer, transport, auxiliary\n18 aircraft able to fly, the share held back is 0, 18 to send; strikes sized; the pulse is not dark where the group is\nno gate of the group itself stops it\nthe rules gave: launch 18 aircraft at contact 2 (battleship) at (7,-6), 183 nm\nthe log has: #253 launched 18 aircraft at contact 2 at (7,-6), 183 nm\n2 contacts in the picture of task_force:3:\n  contact 1 at (8,-5): a cruiser, 8 ships, 0 pulses old, rests on report #238, its own: qualified, but contact 2 came first (the kind first on the list, then the nearest, then the lowest number)\n  contact 2 at (7,-6): a battleship, 10 ships, 0 pulses old, rests on report #243, told: chosen: 18 aircraft sent at it\nreport #246: not held by task_force:3 as a contact at that moment\ntask_force:3 first held report #246 in the afternoon of day 1: sent sideways by task_force:4 (event #247), a pulse late.\n\nANSWER 3\n$ events --report 246 --command task_force:3\nScenario 5: Eastern Solomons, 24 August 1942, seed 82: when report #246 reached task_force:3\ntask_force:3 first held report #246 in the afternoon of day 1: sent sideways by task_force:4 (event #247), a pulse late.\n\nQUESTIONS\n1. Which of the two commands, task_force:3 or task_force:4, held the sighting (report #246) in the morning of day 1?\n2. When, and by which road, did the other command come to hold it, or did it never?\n3. Why did the other command not strike at it in the morning of day 1?\nAnswer each in one or two sentences, numbered 1 to 3."
+ }
+]

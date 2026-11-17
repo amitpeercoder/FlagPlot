@@ -213,3 +213,10 @@ Regenerated after decision 0133 (a contact reported this pulse is refreshed agai
 Regenerated after decision 0137 (commanders and initiative: the state layout at version 38, saved game version 13, the doctrine version `supply-19`, the agent interface version still 15; Nov 17, 2026), with `regame.py`. Each `save.json` differs only in its versions and its day hashes; no transcript changed. None of these games turns command levels on or names a commander, so no order, report, event or result changed.
 
 Regenerated after decision 0138's tools (a seat at any command, `command_state`'s picture and held forces, and the command report's refusals: the agent interface version 16; the state layout, rules label, saved game version and doctrine unchanged; Nov 17, 2026), with `regame.py`. No `save.json` changed. Each transcript differs in the answers' `version` (15 to 16), and the one `report` answer, in `second_proof_week_sonnet`, gains `refusals` with every count 0. None of these games turns command levels on, so no order, report, event or result changed.
+
+## The proof of stage 2b (Nov 17, 2026)
+
+Two folders from the proof of stage 2b (decision 0138, `docs/validation/stage-2b-proof.md`), neither with a `game.jsonl`, so neither is replayed by `regame.py` or the `mcp` tests:
+
+- `legibility_stage_2b`: condition 5, the reading test of item 12: the twelve cases, the tools' answers each reader was given, the key, the answers of twelve Haiku readers with no tools and a Sonnet model's marks. 12 of 12 right.
+- `stage_2b_seat_sonnet`: item 17, a Sonnet model in the seat of one Allied carrier force (`--at task_force:1`) of the Eastern Solomons with command levels on, seed 1, the staff in every other seat: its prompt, calls, transcript, saved game and account. Not judged. The replay tools carry no seat's `--at`, which is why it has no `game.jsonl`.

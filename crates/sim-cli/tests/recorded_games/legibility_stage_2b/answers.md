@@ -1,0 +1,91 @@
+# Answers (Haiku, one reader per case, no tools)
+
+Each reader was a Haiku model (`claude-haiku-5-5`) run as `claude -p --model haiku --tools "" --strict-mcp-config --setting-sources "" --no-session-persistence`, with no tool of any kind, given the case's `prompt_NN.txt` alone on its input and the system prompt "You are a reader. You are given some text and questions about it. Answer from the text alone." Each ran one turn. The answers are verbatim.
+
+## Case 1
+
+1. task_force:4 held report #245 in the morning of day 1, since it made the report itself (as contact 1, a cruiser at (7,-5)).
+
+2. task_force:3 came to hold it only in the afternoon of day 1, when task_force:4 sent it sideways (event #246), a pulse late.
+
+3. task_force:3 did not hold report #245 as a contact in the morning, so it had no picture of that sighting to strike at; air_group:12 instead launched 18 aircraft at a carrier at (7,-6), contact 1 in its own picture, based on report #242.
+
+## Case 2
+
+1. task_force:4 held report #245 in the morning of day 1, since it made the report and held it as its contact 1.
+2. task_force:3 never came to hold it. task_force:4 sent the report sideways at event #246, and it was lost there.
+3. task_force:3 did not strike at it because the report never reached it as a contact; it launched 18 aircraft at its own contact 1, a transport resting on report #242.
+
+## Case 3
+
+1. task_force:2 held report #231 in the morning of day 1, since it made the report and it was its contact 1, a battleship at (7,-9).
+2. task_force:1 came to hold it in the afternoon of day 1, when the area command sent it down (event #233), one pulse late. The area command had received it from task_force:2 passing it up (event #232, on time).
+3. The report was not held by task_force:1 as a contact at that moment, so its air group 3 struck its own contact 1, a carrier at (8,-9), instead.
+
+## Case 4
+
+1. task_force:2 held report #373 in the afternoon of day 1, because it made the report and it was then contact 3, a battleship at (7,-9).
+
+2. task_force:1 never held report #373 in the game. Event #374 sent it sideways from task_force:2, but a pulse late, so it fell due in the night of day 2 after the game had ended.
+
+3. task_force:1 did not strike at it because it never held the sighting that afternoon. Its only contact was the carrier at (8,-11), 223 nm away, beyond its 200 nm reach, so it ordered no launch.
+
+## Case 5
+
+1. task_force:3 held the sighting (report #352, which it made itself) as contact 1 at (7,-5) in the afternoon of day 1.
+
+2. task_force:4 never held report #352: task_force:3 sent it sideways as event #353, a pulse late, and that delivery fell due in the night of day 2, after the game had ended.
+
+3. task_force:4 had no contact it could strike at in the afternoon of day 1 that it could reach, since its only contact (a carrier, report #358) was 183 nm away against a 175 nm reach, and it did not hold report #352 at that moment, so its air group was given no launch.
+
+## Case 6
+
+1. task_force:1 held the sighting, as contact 2 at (7,-9), a battleship; it made the report itself.
+2. task_force:2 never held it. task_force:1 passed report #282 sideways in event #283, a pulse late, which fell due in the night of day 2 after the game had ended.
+3. task_force:2 had no contacts in its picture and had not yet received report #282 at that time, so its rules gave no launch and the log shows none.
+
+## Case 7
+
+1. task_force:2 held the sighting (report #230) in the morning of day 1, as its own report, since it made the report and held it as contact 2.
+
+2. task_force:1 came to hold it in the afternoon of day 1, when the area command sent it down (event #371) on time, after the area command had received it from task_force:2 passing it up (event #231, a pulse late).
+
+3. Task_force:1 did not strike at it in the morning because it did not hold report #230 as a contact at that time, and its only contact was the carrier at (8,-11), which was out of reach at 223 nm against a 200 nm reach, so its air group 3 launched nothing.
+
+## Case 8
+
+1. task_force:1 held the sighting (report #298) in the afternoon of day 1, as contact 1, and it was the one that made the report.
+
+2. task_force:2 never held report #298 in the game: task_force:1 sent it sideways as event #299, but that transmission fell due a pulse late, in the night of day 2, after the game had ended.
+
+3. task_force:2 had no contact to strike at in the afternoon of day 1, since it held zero contacts and the report had not reached it, so the rules gave "launch nothing" and no launch was logged for air_group:7.
+
+## Case 9
+
+1. task_force:1 held the sighting, report #407, in the afternoon of day 1, since it made the report itself and held it as contact 1 at that moment.
+
+2. task_force:2 never came to hold it: report #407 was sent sideways from task_force:1 (event #408) and was lost, so task_force:2 never held it as a contact.
+
+3. Because task_force:2 never held report #407 as a contact, it had no sighting to act on; its only contact in the picture was a cruiser at (7,-9) resting on an older report (#357), which it judged qualified but already served, since the earlier groups had sent 22 aircraft against it and it needed 18.
+
+## Case 10
+
+1. task_force:2 held the sighting (report #232) in the morning of day 1, as its own contact 1 at (6,-9), since it made the report.
+
+2. task_force:1 came to hold it never; task_force:2 passed it sideways (event #233), and it was lost in transit.
+
+3. task_force:1 did not strike at it because it never held report #232 as a contact, so its picture showed only its own contacts (carrier at (7,-9) and battleship at (8,-11)) and it chose the carrier from its own reports.
+
+## Case 11
+
+1. task_force:1 held the sighting (report #225) in the morning of day 1, because it made the report itself and held it as contact 1 at that moment.
+
+2. task_force:2 came to hold it in the afternoon of day 1, when the area command sent it down (event #227), a pulse late; the area command had received it from task_force:1 passing it up (event #226, on time).
+
+3. task_force:2 did not strike at it in the morning of day 1 because it did not hold report #225 as a contact at that time, and it had no contacts in its picture, so its air_group:7 was given no launch.
+
+## Case 12
+
+1. task_force:4 held report #246 in the morning of day 1, as its contact 1 (a carrier), since it made the report itself.
+2. task_force:3 came to hold it in the afternoon of day 1, when task_force:4 passed it sideways in event #247, a pulse late.
+3. task_force:3 did not hold report #246 as a contact in the morning, so the sighting was not in its picture to strike at, and it only received the report later.

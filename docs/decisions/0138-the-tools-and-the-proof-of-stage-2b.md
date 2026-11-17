@@ -1,10 +1,10 @@
 # 0138: The tools and the proof of stage 2b: step 5, and the test plan written before the run
 
-Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 2b, that the designer confirmed on Nov 16, 2026 with its pass marks (decision 0132, step 5 of its five and "What it must pass"). It says what tools are built, and then what is run, how each condition is read and what passes, before any of it is run. The tools (items 1 to 7) were built on Nov 17, 2026 ("As built" below); the proof (items 8 to 17) is not run.
+Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, stage 2b, that the designer confirmed on Nov 16, 2026 with its pass marks (decision 0132, step 5 of its five and "What it must pass"). It says what tools are built, and then what is run, how each condition is read and what passes, before any of it is run. The tools (items 1 to 7) were built on Nov 17, 2026 ("As built" below); the proof (items 8 to 17) was run on Nov 17, 2026, and passes as stated ("As run" below).
 
 Summary: Step 5 of command levels: the tools that show who knew what (a command's picture and held state, when a report reached a command, why a group did not launch, refusals counted by cause, a seat at any command for a model, the viewer showing one command's picture beside the truth), and the test plan of the stage's proof: the Eastern Solomons from intents with command levels on over a thousand seeds, with the reading of each of the designer's pass marks fixed before the run
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0132, whose pass marks the designer confirmed on Nov 16, 2026. Tools built. Proof not run
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0132, whose pass marks the designer confirmed on Nov 16, 2026. Tools built. Proof run Nov 17, 2026: passes as stated
 
 ## The tools
 
@@ -83,3 +83,15 @@ Built on Nov 17, 2026. No rule of the game changed: no event, state, hash or dra
 
 `crates/sim-cli/tests/events_who_knew.rs` (10) and a test of every road in `events.rs`; `crates/sim-core/src/view/strike_review.rs` (3); `crates/sim-agent/tests/command_picture.rs` (6) and a tally test in `reporting.rs`; `crates/sim-cli/tests/batch.rs` (2 new); `crates/sim-agent/tests/seat.rs` (14), among them every tool's answer at a task force seat and a base seat the same in two worlds that differ only in what the seat's command does not hold (another force's place, fuel and aircraft, a base's stocks, a contact another force saw), at the start and after each day, and the week of the slice at every command; `crates/sim-cli/tests/seat.rs` (6); `crates/sim-cli/tests/export_pictures.rs` (6). Scenarios 62, 63 and 64 are read against their hand calculations by each tool. The recorded games' transcripts changed only in the agent interface version and, in one `report`, `refusals` all 0.
 
+## As run: the proof (items 8 to 17)
+
+Run on Nov 17, 2026, release build, live figures, seeds 1 to 1,000, from main at the merge of pull request 392. The report is `docs/validation/stage-2b-proof.md`; the files are in `data/scenarios/stage-2b-proof/`. Nothing was tuned and no reading was changed after a run. **The proof passes as stated:**
+
+- **Condition 3, the battle:** every invariant on all 1,000 seeds; no staff order and no command refused on any seed, for this record's cause (14 of decision 0136) or any other; both batches byte for byte the same.
+- **Condition 4:** 233 of 1,000 seeds have a case (Allied 148, Japanese 103), against 200.
+- **Condition 5:** 12 of 12 cases right, against 10 (`crates/sim-cli/tests/recorded_games/legibility_stage_2b/`).
+- **Condition 8, speed:** a day of the week with command levels on takes 1.05 times (early) and 1.08 times (late) what it takes with them off, against 3.
+
+Reported: the week with command levels on meets every condition of decision 0128 on every seed, its medians the third run's but for the margin (53.70 against 53.42); at Savo Island every Allied command holds the Hudson's report from the start, and the northern group holds a sighting made in play before its own fight on 850 of 999 seeds; strikes at ships on 818 and 976 seeds (Allied, Japanese) on, 822 and 979 off; of 106,724 passings 69.9% on time, 25.2% late, 4.9% never; the bold commanders change no event (no force holds a contact of its own on the morning the closing is weighed); and a model in the seat of task force 1 was given nothing its command did not hold (`stage_2b_seat_sonnet`).
+
+Readings taken in the run, each in the report: condition 4's clauses as the script reads them (a night report gives no case, and none arose; held is the `--report` tool's; a launch of B at another hex does not stop a case); "a staffed day" as `time`'s one day of the slice; condition 6 for arrangement (a) only; the Hudson's report held at the start as a sighting of the cruiser force.
