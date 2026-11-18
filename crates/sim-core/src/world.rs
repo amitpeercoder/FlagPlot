@@ -189,6 +189,10 @@ impl fmt::Display for SimError {
                     DayPart::Open => "open a day",
                     DayPart::Pulse => "resolve a pulse",
                     DayPart::Close => "close a day",
+                    DayPart::Orders => {
+                        "hand in orders inside a day, which is done only at 0600 or 1200, \
+                         with the morning or the afternoon pulse next"
+                    }
                 };
                 match in_hand {
                     None => write!(f, "cannot {asked}: no day is open"),
@@ -227,6 +231,9 @@ pub enum DayPart {
     Pulse,
     /// [`World::close_day`].
     Close,
+    /// [`World::submit_orders_inside_day`]: orders handed in while a day is
+    /// open, only with its morning or afternoon pulse next.
+    Orders,
 }
 
 /// The day opened and not yet closed (decision 0156): which day it is, the
@@ -309,6 +316,10 @@ pub struct World {
     pub(crate) made_ids: MadeIds,
     /// Orders submitted for the coming day, not yet taken in.
     pub(crate) pending: BTreeMap<Side, Vec<OrderRequest>>,
+    /// Orders handed in while a day is open, at 0600 or 1200, not yet taken
+    /// in (decision 0156): taken in at the start of the next pulse, so empty
+    /// at every day boundary and not hashed, as `pending` is not.
+    pub(crate) pending_inside_day: BTreeMap<Side, Vec<OrderRequest>>,
     /// Each side's command state (decision 0107): intents, limits, leaves,
     /// plans and commitments. Hashed after the beliefs.
     pub(crate) command: BTreeMap<Side, CommandState>,
@@ -527,6 +538,7 @@ impl World {
             order_ids: IdAllocator::new(),
             made_ids: MadeIds::new(),
             pending: BTreeMap::new(),
+            pending_inside_day: BTreeMap::new(),
             command: Side::ALL
                 .into_iter()
                 .map(|side| (side, CommandState::new()))
@@ -652,6 +664,54 @@ impl World {
     /// are rejected, at the start of the next [`World::resolve_day`].
     pub fn submit_orders(&mut self, side: Side, requests: Vec<OrderRequest>) {
         self.pending.entry(side).or_default().extend(requests);
+    }
+
+    /// Hands in orders from one side while a day is open, at 0600 or 1200
+    /// (decision 0156): with the day's night or morning resolved and its
+    /// morning or afternoon pulse next. They wait, and are taken in at the
+    /// start of that pulse, each checked then against the state as it
+    /// stands, with the pulse on its events. Only seven kinds may be given
+    /// inside a day ([`OrderKind::may_be_given_inside_a_day`]); any other is
+    /// refused there as given at dusk ([`RejectReason::GivenAtDusk`]).
+    /// Returns the pulse they will be taken in at.
+    ///
+    /// Fails with [`SimError::DayPartOutOfTurn`], changing nothing, if no
+    /// day is open, if its night is next or if its afternoon is resolved.
+    /// Whether a scenario allows orders inside a day is the scenario's to
+    /// say: the engine takes them wherever it is asked to.
+    ///
+    /// [`OrderKind::may_be_given_inside_a_day`]: crate::orders::OrderKind::may_be_given_inside_a_day
+    /// [`RejectReason::GivenAtDusk`]: crate::orders::RejectReason::GivenAtDusk
+    pub fn submit_orders_inside_day(
+        &mut self,
+        side: Side,
+        requests: Vec<OrderRequest>,
+    ) -> Result<Pulse, SimError> {
+        match self.day_in_hand {
+            Some(DayInHand {
+                next_pulse: Some(pulse @ (Pulse::Morning | Pulse::Afternoon)),
+                ..
+            }) => {
+                self.pending_inside_day
+                    .entry(side)
+                    .or_default()
+                    .extend(requests);
+                Ok(pulse)
+            }
+            in_hand => Err(SimError::DayPartOutOfTurn {
+                part: DayPart::Orders,
+                in_hand,
+            }),
+        }
+    }
+
+    /// The orders one side has handed in inside the open day and not yet
+    /// taken in, in the order handed in (decision 0156). Empty between days.
+    pub fn orders_waiting_inside_day(&self, side: Side) -> &[OrderRequest] {
+        self.pending_inside_day
+            .get(&side)
+            .map(Vec::as_slice)
+            .unwrap_or(&[])
     }
 
     /// Queues the commander's commands from one side for the coming day

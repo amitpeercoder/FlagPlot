@@ -116,9 +116,9 @@ For `tests/scenario_78_orders_inside_a_day.rs`, whose doc comment takes this sec
 
 **Beside the numbers,** tests that state what must always hold:
 
-- An order of a kind not among the seven, handed in at 0600, is refused as given at dusk, and the day is the day it would have been.
+- An order of a kind not among the seven, handed in at 0600, is refused as given at dusk and changes nothing but its event: the truth of each day is the truth without it, the arrival event's number set aside, and the daily hash is that of the same game with one order refused at dusk, since the hash counts orders and events (decision 0055).
 - The later the order, the farther the force: the same order at dusk of day 1 (8 kn for 24 hours), at 0600 and at 1200 gives 192, 288 and 336 miles steamed on day 1.
-- With a staff: in scenario 36, the one convoy, a `set_speed` at 0600 to the convoy's force, which is in the forces limit of the supply intent, records `HeldByOrder` in the morning pulse, and at the next dusk the staff's order to that force is refused as held, with a reason that says so.
+- With a staff: in scenario 36, the one convoy, a `set_speed` at 0600 to the convoy's force, which is in the forces limit of the supply intent, records `HeldByOrder` in the morning pulse. At the next dusk the staff gives the held force no order: it sets it aside as chapter 8 has it, ends the run with a reason that names the hold, frees the ship and forms another run with another ship.
 - A saved game of case A replays to the same daily hashes. The same file with the order's pulse changed to the afternoon replays to case B's.
 
 ## The conditions of its proof
@@ -161,4 +161,11 @@ The designer approved the plan on Nov 18, 2026 and said to build it. His five an
 3. On only where a scenario says, off by default; on for the small battles, off for the 39 days until the proof is read.
 4. `advance` can stop on a contact, an attack, a loss, a strike and a landing, as listed.
 5. It is built now, beside the planning of stage 4's two mends.
+
+## As built: step 2, and two rulings
+
+Steps 1 and 2 are built (pull requests 426 and 427): the day in parts, and orders inside a day as the rules above have them. Every number of the hand calculation is asserted and passes. Two lines of "Beside the numbers" were wrong as the architect first wrote them, and are corrected above; neither is a number of the hand calculation, and no rule changed for either.
+
+1. **A refused order and the hash.** The architect wrote that an order of a kind not allowed, refused at 0600, leaves "the day it would have been". The daily hash counts orders and events (decision 0055), and the truth keeps an event's number for an arrival, so the hash differs by that count. What is true and is asserted: the refusal is the only event that names the order; the events with it taken out are the events without it; the truth each day is the truth without it, the arrival event's number set aside; and the hash is that of the same game with one order refused at dusk.
+2. **What the staff does with a held convoy.** The architect wrote that the staff's order to the held force would be refused as held. The staff reads the hold and gives the force no order. It sets the force aside (chapter 8), ends the run with a reason naming the hold ("held by the commander's order of day 1; the 360 t aboard stay aboard"), frees the ship, and forms a second run with the other ship. So an order inside a day to a force on a staff's run takes that force out of the staff's hands until it is released, and the staff plans round it. This is the game's rule for a hold and is what a commander who reaches in should expect; the interface should say so before he signs.
 

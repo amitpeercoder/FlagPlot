@@ -325,6 +325,7 @@ fn execute_saved_checking(
     let held = sim_staff::staffs();
     let mut scenario = scenario.with_seed(saved.seed).map_err(|e| e.to_string())?;
     scenario.replace_script(saved.script.clone());
+    scenario.replace_script_inside_day(saved.script_inside_day.clone());
     scenario.replace_commands(saved.commands.clone());
     before_run(&scenario, &saved);
     let initial = scenario.world.umpire().clone();
@@ -585,6 +586,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             scenario.world.seed(),
             &remembered,
             remembered.script(),
+            remembered.script_inside_day(),
             remembered.commands(),
             &staff_handed_in,
             &save::script_seats(),

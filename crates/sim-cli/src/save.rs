@@ -90,6 +90,11 @@
 //! Version 19 (decision 0151) adds the intent kind `control_island` (`island`
 //! and an optional `by_day`) in `"commands"`; its state version is v44. A game
 //! of an older version is refused, not converted.
+//!
+//! Version 20 (decision 0156) adds `"pulse"` to an order given inside a day:
+//! `"morning"` for one given at 0600, `"afternoon"` for one given at 1200. It
+//! is left out for an order of dusk. A replay hands such an order in at its
+//! pulse. A game of an older version is refused, not converted.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -105,6 +110,7 @@ use sim_core::hash::StateHasher;
 use sim_core::ids::IntentId;
 use sim_core::orders::{Issuer, OrderRequest, Origin};
 use sim_core::state::Side;
+use sim_core::time::Pulse;
 use sim_data::Scenario;
 
 pub const FORMAT: &str = "flagplot-saved-game";
@@ -163,10 +169,16 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// A game of an older version is refused, not converted. Version 19
 /// (decision 0151) adds the intent kind `control_island` (`island` and an
 /// optional `by_day`) in `"commands"`; its state version is v44. A game of an
-/// older version lacks it and is refused, not converted.
-pub const VERSION: u32 = 19;
+/// older version lacks it and is refused, not converted. Version 20
+/// (decision 0156) adds an order's `"pulse"`, `"morning"` or `"afternoon"`,
+/// for an order given inside a day, left out for an order of dusk.
+pub const VERSION: u32 = 20;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
+
+/// The orders given inside a day, by day, each with its pulse and side
+/// (decision 0156).
+pub use sim_data::ScriptInsideDay;
 
 /// The commander's commands handed in, by day, in the order given.
 pub type Commands = BTreeMap<u32, Vec<(Side, CommandKind)>>;
@@ -194,6 +206,7 @@ fn side_from(name: &str) -> Result<Side, String> {
 /// scenario spends its script as it runs.
 pub struct Remembered {
     script: Script,
+    script_inside_day: ScriptInsideDay,
     commands: Commands,
     files: Vec<(String, String)>,
 }
@@ -261,6 +274,7 @@ pub fn remember(scenario: &Scenario) -> Result<Remembered, String> {
     }
     Ok(Remembered {
         script: scenario.scripted_orders().clone(),
+        script_inside_day: scenario.scripted_orders_inside_day().clone(),
         commands: scenario.scripted_commands().clone(),
         files,
     })
@@ -280,6 +294,12 @@ impl Remembered {
         &self.script
     }
 
+    /// The scenario's own orders inside a day, as they will be handed in
+    /// (decision 0156).
+    pub fn script_inside_day(&self) -> &ScriptInsideDay {
+        &self.script_inside_day
+    }
+
     /// The scenario's own commands, as they will be submitted.
     pub fn commands(&self) -> &Commands {
         &self.commands
@@ -287,7 +307,9 @@ impl Remembered {
 }
 
 /// Writes a saved game. `orders` are the orders as handed in to the engine,
-/// by day, for both sides; `commands` the commander's commands as handed in;
+/// by day, for both sides; `inside` the orders handed in inside a day, each
+/// with its pulse (decision 0156), written after the day's orders of dusk;
+/// `commands` the commander's commands as handed in;
 /// `staff` what each side's staff handed in; `hashes` are `(day, hash)` for
 /// each day resolved.
 #[allow(clippy::too_many_arguments)]
@@ -297,29 +319,42 @@ pub fn write(
     seed: u64,
     remembered: &Remembered,
     orders: &Script,
+    inside: &ScriptInsideDay,
     commands: &Commands,
     staff: &StaffHandIns,
     seats: &BTreeMap<Side, SeatKind>,
     hashes: &[(u32, u64)],
 ) -> Result<(), String> {
     let scenario_hash = file_hash(Path::new(scenario_path))?;
-    let mut order_list = Vec::new();
-    for (day, list) in orders {
-        for (side, request) in list {
-            order_list.push(json!({
-                "day": day,
-                "side": side_name(*side),
-                "unit": unit_text(&request.kind),
-                "order": order_to_json(&request.kind),
-                "origin": {
-                    "issuer": match request.origin.issuer {
-                        Issuer::Player => "player",
-                        Issuer::Staff => "staff",
-                        Issuer::LocalCommander => "local_commander",
-                    },
-                    "intent": request.origin.intent.map(|i| i.raw()),
+    let order_entry = |day: u32, side: Side, request: &OrderRequest, pulse: Option<Pulse>| {
+        let mut entry = json!({
+            "day": day,
+            "side": side_name(side),
+            "unit": unit_text(&request.kind),
+            "order": order_to_json(&request.kind),
+            "origin": {
+                "issuer": match request.origin.issuer {
+                    Issuer::Player => "player",
+                    Issuer::Staff => "staff",
+                    Issuer::LocalCommander => "local_commander",
                 },
-            }));
+                "intent": request.origin.intent.map(|i| i.raw()),
+            },
+        });
+        if let Some(pulse) = pulse {
+            entry["pulse"] = json!(pulse.name());
+        }
+        entry
+    };
+    let days: std::collections::BTreeSet<u32> =
+        orders.keys().chain(inside.keys()).copied().collect();
+    let mut order_list = Vec::new();
+    for day in days {
+        for (side, request) in orders.get(&day).into_iter().flatten() {
+            order_list.push(order_entry(day, *side, request, None));
+        }
+        for (pulse, side, request) in inside.get(&day).into_iter().flatten() {
+            order_list.push(order_entry(day, *side, request, Some(*pulse)));
         }
     }
     let command_list: Vec<Value> = commands
@@ -402,6 +437,8 @@ pub struct Saved {
     pub seed: u64,
     pub seats: BTreeMap<Side, SeatKind>,
     pub script: Script,
+    /// The orders given inside a day, each with its pulse (decision 0156).
+    pub script_inside_day: ScriptInsideDay,
     /// The commander's commands handed in, by day.
     pub commands: Commands,
     /// What each side's staff handed in, by day.
@@ -491,6 +528,7 @@ pub fn read(file: &str) -> Result<Saved, String> {
         }
     }
     let mut script: Script = BTreeMap::new();
+    let mut script_inside_day = ScriptInsideDay::new();
     for entry in value
         .get("orders")
         .and_then(Value::as_array)
@@ -521,13 +559,28 @@ pub fn read(file: &str) -> Result<Saved, String> {
                     .ok_or_else(|| bad("an intent is not a number".into()))?,
             )),
         };
-        script.entry(day).or_default().push((
-            side,
-            OrderRequest {
-                kind,
-                origin: Origin { issuer, intent },
-            },
-        ));
+        let request = OrderRequest {
+            kind,
+            origin: Origin { issuer, intent },
+        };
+        match entry.get("pulse") {
+            None => script.entry(day).or_default().push((side, request)),
+            Some(pulse) => {
+                let pulse = match pulse.as_str() {
+                    Some("morning") => Pulse::Morning,
+                    Some("afternoon") => Pulse::Afternoon,
+                    _ => {
+                        return Err(bad(format!(
+                            "the order on day {day} has pulse {pulse}: an order inside a day is given for the \"morning\" or the \"afternoon\""
+                        )))
+                    }
+                };
+                script_inside_day
+                    .entry(day)
+                    .or_default()
+                    .push((pulse, side, request));
+            }
+        }
     }
     let mut commands: Commands = BTreeMap::new();
     for entry in value
@@ -589,6 +642,7 @@ pub fn read(file: &str) -> Result<Saved, String> {
         seed,
         seats,
         script,
+        script_inside_day,
         commands,
         staff,
         doctrine_version,
@@ -702,6 +756,7 @@ mod tests {
         let scenario = concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml");
         let remembered = Remembered {
             script: BTreeMap::new(),
+            script_inside_day: ScriptInsideDay::new(),
             commands: BTreeMap::new(),
             files: Vec::new(),
         };
@@ -711,6 +766,7 @@ mod tests {
             9,
             &remembered,
             &script,
+            &ScriptInsideDay::new(),
             &BTreeMap::new(),
             &BTreeMap::new(),
             &script_seats(),
@@ -729,6 +785,76 @@ mod tests {
             })
             .collect();
         assert_eq!(back, kinds);
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Decision 0156: an order given inside a day keeps its pulse through a
+    /// saved game, after the day's orders of dusk; an order of dusk has no
+    /// `pulse` key; a pulse other than the morning or the afternoon is
+    /// refused when the file is read.
+    #[test]
+    fn an_order_inside_a_day_keeps_its_pulse_through_a_saved_game() {
+        use sim_core::orders::SpeedSetting;
+        let force = TaskForceId::new(1);
+        let dusk = request(OrderKind::TaskForce {
+            target: force,
+            order: TaskForceOrder::SetSpeed(SpeedSetting::Cruise),
+        });
+        let slow = request(OrderKind::TaskForce {
+            target: force,
+            order: TaskForceOrder::SetSpeed(SpeedSetting::Knots(Fixed::from_int(8))),
+        });
+        let mut script: Script = BTreeMap::new();
+        script.insert(1, vec![(Side::Allied, dusk.clone())]);
+        let mut inside = ScriptInsideDay::new();
+        inside.insert(
+            1,
+            vec![
+                (Pulse::Afternoon, Side::Allied, slow.clone()),
+                (Pulse::Morning, Side::Allied, dusk.clone()),
+            ],
+        );
+        let dir = std::env::temp_dir().join(format!("flagplot-save-0156-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("make the folder");
+        let file = dir.join("game.save.json").to_string_lossy().into_owned();
+        let scenario = concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml");
+        let remembered = Remembered {
+            script: BTreeMap::new(),
+            script_inside_day: ScriptInsideDay::new(),
+            commands: BTreeMap::new(),
+            files: Vec::new(),
+        };
+        write(
+            &file,
+            scenario,
+            9,
+            &remembered,
+            &script,
+            &inside,
+            &BTreeMap::new(),
+            &BTreeMap::new(),
+            &script_seats(),
+            &[],
+        )
+        .expect("writes");
+        let text = fs::read_to_string(&file).expect("reads");
+        let written: Value = serde_json::from_str(&text).expect("the file is JSON");
+        let orders = written["orders"].as_array().expect("orders");
+        assert_eq!(orders.len(), 3);
+        assert!(
+            orders[0].get("pulse").is_none(),
+            "an order of dusk has no pulse"
+        );
+        assert_eq!(orders[1]["pulse"], "afternoon");
+        assert_eq!(orders[2]["pulse"], "morning");
+        let saved = read(&file).expect("reads");
+        assert_eq!(saved.script, script);
+        assert_eq!(saved.script_inside_day, inside);
+        // Any other pulse is refused.
+        let night = text.replacen("\"afternoon\"", "\"night\"", 1);
+        fs::write(&file, night).expect("writes");
+        let refused = read(&file).err().expect("a night pulse is refused");
+        assert!(refused.contains("has pulse \"night\""), "{refused}");
         fs::remove_dir_all(&dir).ok();
     }
 
@@ -998,6 +1124,7 @@ mod tests {
         let scenario = concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml");
         let remembered = Remembered {
             script: BTreeMap::new(),
+            script_inside_day: ScriptInsideDay::new(),
             commands: BTreeMap::new(),
             files: Vec::new(),
         };
@@ -1007,6 +1134,7 @@ mod tests {
             9,
             &remembered,
             &BTreeMap::new(),
+            &ScriptInsideDay::new(),
             &commands,
             &staff,
             &script_seats(),
@@ -1015,7 +1143,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 19);
+        assert_eq!(written["version"], 20);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 14);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
@@ -1033,6 +1161,7 @@ mod tests {
             9,
             &remembered,
             &BTreeMap::new(),
+            &ScriptInsideDay::new(),
             &saved.commands,
             &saved.staff,
             &script_seats(),
