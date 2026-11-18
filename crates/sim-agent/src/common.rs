@@ -90,6 +90,9 @@ pub(crate) struct Ctx<'a> {
     numbers: BTreeMap<EventId, u32>,
     /// The side's own number for each of its orders, by the log's number.
     order_numbers: BTreeMap<OrderId, u32>,
+    /// What each of the side's own orders ordered, in words, for the event
+    /// that says it was taken in.
+    order_words: BTreeMap<OrderId, String>,
     /// How each base the side's events say was formed came to be, from
     /// `set_events` (decision 0110, item 8).
     formed: BTreeMap<BaseId, crate::briefing::BaseFormedBy>,
@@ -122,6 +125,10 @@ impl<'a> Ctx<'a> {
             }
             entry.push_str(&base.name);
         }
+        let order_words = view
+            .orders()
+            .map(|o| (o.id, crate::orders::order_words(&o.kind)))
+            .collect();
         let order_numbers = view
             .orders()
             .enumerate()
@@ -134,6 +141,7 @@ impl<'a> Ctx<'a> {
         Ctx {
             view,
             order_numbers,
+            order_words,
             ship_ids,
             force_ids,
             group_ids,
@@ -248,7 +256,16 @@ impl<'a> Ctx<'a> {
     pub fn event_text(&self, kind: &SideEventKind) -> String {
         let text = match kind {
             SideEventKind::Whole(EventKind::OrderAccepted { order, target }) => {
-                format!("order:{} accepted for {target}", self.order_number(*order))
+                // What was ordered, said to the side that gave it: without
+                // it a day's events do not tell what an order changed
+                // (decision 0156, the mend after its proof).
+                match self.order_words.get(order) {
+                    Some(words) => format!(
+                        "order:{} accepted for {target}: {words}",
+                        self.order_number(*order)
+                    ),
+                    None => format!("order:{} accepted for {target}", self.order_number(*order)),
+                }
             }
             SideEventKind::Whole(EventKind::OrderRejected {
                 order,

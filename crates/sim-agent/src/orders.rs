@@ -247,6 +247,44 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
     }
 }
 
+/// An order in a line of words, for the event that says it was taken in:
+/// its kind, then each thing it sets, as [`order_to_json`] writes them
+/// (`set_speed, knots 8`; `set_route, waypoints (5,0) (8,3)`). Ships are
+/// written as handles, so that the side's own numbers can be put in.
+pub fn order_words(kind: &OrderKind) -> String {
+    fn value_words(key: &str, value: &Value) -> String {
+        match value {
+            Value::String(text) => text.clone(),
+            Value::Array(items) => {
+                let hex = items.len() == 2
+                    && items.iter().all(Value::is_number)
+                    && matches!(key, "hex" | "waypoints" | "act_at" | "stand_at");
+                if hex {
+                    format!("({},{})", items[0], items[1])
+                } else {
+                    items
+                        .iter()
+                        .map(|item| match item {
+                            Value::Number(n) if key == "ships" => format!("ship:{n}"),
+                            other => value_words(key, other),
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                }
+            }
+            other => other.to_string(),
+        }
+    }
+    let body = order_to_json(kind);
+    let mut words = body["kind"].as_str().unwrap_or_default().to_string();
+    for (key, value) in body.as_object().into_iter().flatten() {
+        if key != "kind" {
+            words.push_str(&format!(", {key} {}", value_words(key, value)));
+        }
+    }
+    words
+}
+
 /// What a load the commander gives now would take below its base's reserve,
 /// worked as the engine works it (decision 9 of 0111) from the side's own
 /// view: the force's ships and their room, and the base's stock and reserve
@@ -781,6 +819,48 @@ mod tests {
             OrderKind::TaskForce { order, .. } => Ok(order),
             other => Err(format!("not a task force order: {other:?}")),
         }
+    }
+
+    /// The words of an order for the event that says it was taken in
+    /// (decision 0156, the mend after its proof): the kind, then what it
+    /// sets, with hexes as (q,r) and ships as handles.
+    #[test]
+    fn an_order_in_words_says_its_kind_and_what_it_sets() {
+        let words =
+            |unit: &str, body: Value| order_words(&order_from_json(unit, &body).expect("an order"));
+        assert_eq!(
+            words("task_force:1", json!({"kind": "set_speed", "knots": "8"})),
+            "set_speed, knots 8"
+        );
+        assert_eq!(
+            words(
+                "task_force:2",
+                json!({"kind": "set_readiness", "readiness": "battle"})
+            ),
+            "set_readiness, readiness battle"
+        );
+        assert_eq!(
+            words(
+                "air_group:6",
+                json!({"kind": "set_air_mission", "mission": "rest"})
+            ),
+            "set_air_mission, mission rest"
+        );
+        assert_eq!(
+            words(
+                "task_force:1",
+                json!({"kind": "set_route", "waypoints": [[5, 0], [8, 3]]})
+            ),
+            "set_route, waypoints (5,0) (8,3)"
+        );
+        assert_eq!(
+            words("task_force:1", json!({"kind": "detach", "ships": [3, 4]})),
+            "detach, ships ship:3 ship:4"
+        );
+        assert_eq!(
+            words("task_force:1", json!({"kind": "stand_down"})),
+            "stand_down"
+        );
     }
 
     fn written(order: TaskForceOrder) -> Value {

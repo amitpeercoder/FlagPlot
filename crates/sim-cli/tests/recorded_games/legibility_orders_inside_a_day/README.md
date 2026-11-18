@@ -7,3 +7,4 @@
 - `marks.md`: the marks, by a Sonnet model against the key, checked by the team lead.
 
 Nothing here is read by a test or a build step.
+- `mended/`: the check of the mend that followed the proof (decision 0156, "The mend after the proof"): the same six days with the event of an order taken in saying what was ordered, a key written by the architect before the readers ran, six fresh readers' answers and the architect's marks. Six of six. The files above are the proof's own and are left as they were.
