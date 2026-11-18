@@ -34,4 +34,22 @@ So, for a person in the chair:
 
 `table/directives/guadalcanal_allied.json` holds two directives for the Allied seat of the 39 days, from the Commander in Chief, Pacific Fleet, to the Commander, South Pacific: the first on the first evening ("Take Tulagi and Lunga"), the second when Lunga is the side's own ("Hold Lunga and get the field flying"). The bridge is given the file (`--directives`), and the page shows a directive when its condition first holds, read from the seat's own tools: at the start, or when a named base is the side's. A new one opens by itself and stays on the desk. The staff's full return is still there, under its own name. The page's address ending `#directives=all` shows every directive as if received, for reading the drafts.
 
-What the two say matters most was written from the scenario's objectives: the field at Lunga, held and open (20 points of the count), above any one ship (a carrier is 10); the carriers risked only against carriers; the cargo landed and the enemy's men lost both counting. Their dates are the scenario's: the aircraft for Lunga are due on its day 14, 20 August.
+(The first draft, as follows; the refinement below replaced its wording.) What the two say matters most was written from the scenario's objectives: the field at Lunga, held and open (20 points of the count), above any one ship (a carrier is 10); the carriers risked only against carriers; the cargo landed and the enemy's men lost both counting. Their dates are the scenario's: the aircraft for Lunga are due on its day 14, 20 August.
+
+## Refined the same day: shorter, and nothing the commander can find out
+
+Reading the first draft, the designer asked for a more military voice and for less: "I don't want to feed the user in the briefing, but rather give them a sense of maturity and accountability." What the enemy has ashore is not for the directive: a player "should be able to point and click at a place and view the last intelligence estimations". That the carriers will not be replaced is not for it either: the player can see it in the reinforcement schedule.
+
+So a directive is now three numbered paragraphs:
+
+1. **Situation.** What the commander above knows that bears on the mission, with its source where it is intelligence. No estimate of strength.
+2. **Mission.** The task and its purpose in one sentence ("Take and hold Tulagi and Lunga, to keep the line to Australia open").
+3. **Execution.** The method is the commander's. Further direction follows as the situation requires.
+
+"What depends on you" and "what you may risk" are taken out. This supersedes parts 1 and 4 of the direction above where they differ: priorities are no longer spelled out in words, and the purpose is what the commander goes by.
+
+Two things follow, and are open:
+
+- **The table must hold what the directive no longer says.** Touching a place gives the latest estimate of the enemy there with its age, and a schedule gives what is coming and when. Neither is in the table yet; today both are only in the staff's return.
+- **The count judges what was never said.** The points still weigh cargo landed, enemy men lost and each kind of ship. With the directive silent on them, the end-of-game assessment should read as the mission judged, held or not, with losses as its cost, or a player is marked on a scale he was never shown. This goes with setting the objectives scale from the record, before step 3's stage 5.
+

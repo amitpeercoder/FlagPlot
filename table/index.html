@@ -454,7 +454,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     [['From', d.from], ['To', d.to], ['Date', dateOf(received[d.number] - 2, true) || 'Day ' + received[d.number]], ['Subject', d.subject]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
     doc.appendChild(head);
     d.parts.forEach(function (p) { doc.appendChild(el('h3', '', p.heading)); p.text.forEach(function (t) { doc.appendChild(el('p', '', t)); }); });
-    doc.appendChild(el('div', 'foot', 'Written for the game. It is not a historical document. Your forces, what is coming and how the result is counted are kept elsewhere.'));
+    doc.appendChild(el('div', 'foot', 'Written for the game. Not a historical document.'));
     $('sheet-title').textContent = 'DIRECTIVE ' + d.number; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     if (!readOnes[d.number]) { readOnes[d.number] = true; showSignals(); }
   }

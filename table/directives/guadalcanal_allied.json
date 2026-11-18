@@ -1,98 +1,60 @@
 {
-  "note": "Directives for the Allied seat of the 39 days of Guadalcanal, 7 August to 14 September 1942. Written for the game in its own words: these are not historical documents and quote none. Their dates are the scenario's: day 1 is 7 August, and the aircraft for Lunga are due on day 14. What they say matters most is written from the scenario's objectives and must be kept in step with them by hand. Decision 0157.",
+  "note": "Directives for the Allied seat of the 39 days of Guadalcanal, 7 August to 14 September 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
   "directives": [
     {
       "number": 1,
       "when": "start",
       "from": "Commander in Chief, Pacific Fleet",
       "to": "Commander, South Pacific",
-      "subject": "Take Tulagi and Lunga",
+      "subject": "Tulagi and Lunga",
       "parts": [
         {
-          "heading": "The situation",
+          "heading": "1. Situation",
           "text": [
-            "The enemy took Tulagi in May and is building an airfield at Lunga, on Guadalcanal. When it flies, his aircraft will reach the sea lane to Australia.",
-            "What he has ashore is not known. It is believed to be mostly construction troops. His cruisers and his aircraft are at Rabaul, to the north-west. His carriers are away to the north and can be expected to come down once he knows you are ashore."
+            "The enemy took Tulagi in May. Intelligence reports he is building an airfield at Lunga, on Guadalcanal. Aircraft based there will reach the sea lane to Australia."
           ]
         },
         {
-          "heading": "Your task",
+          "heading": "2. Mission",
           "text": [
-            "Take Tulagi and Lunga. Finish the airfield, get it flying, and hold both places."
+            "Take and hold Tulagi and Lunga, to keep the line to Australia open."
           ]
         },
         {
-          "heading": "Why",
+          "heading": "3. Execution",
           "text": [
-            "To stop his advance to the south-east and keep the line to Australia open. The field at Lunga is the reason for the operation. In your hands and flying, it is worth more to me than any one ship of his you sink."
-          ]
-        },
-        {
-          "heading": "What depends on you",
-          "text": [
-            "Marine fighters and dive bombers are held ready for Lunga. They fly in from 20 August if the field is yours, and not before.",
-            "The men ashore are fed by what you carry to them from Espiritu Santo. Nobody else will do it."
-          ]
-        },
-        {
-          "heading": "What you may risk",
-          "text": [
-            "Your two carriers cannot soon be replaced. Risk them against his carriers and for nothing less.",
-            "The transports and what is in them are the operation: see them unloaded. Cruisers and destroyers are there to be used."
-          ]
-        },
-        {
-          "heading": "After this",
-          "text": [
-            "I will write again when Lunga is yours, or when what I know changes."
+            "The forces assigned are yours to employ. The method is yours.",
+            "Further direction will follow as the situation requires."
           ]
         }
       ]
     },
     {
       "number": 2,
-      "when": { "base_is_yours": 1 },
+      "when": {
+        "base_is_yours": 1
+      },
       "from": "Commander in Chief, Pacific Fleet",
       "to": "Commander, South Pacific",
-      "subject": "Hold Lunga and get the field flying",
+      "subject": "Lunga",
       "parts": [
         {
-          "heading": "The situation",
+          "heading": "1. Situation",
           "text": [
-            "Lunga is yours. He will try to take it back.",
-            "Expect his ships by night from Rabaul, his aircraft by day, and troops put ashore along the coast on either side of you. His carriers are expected to come down from the north to cover them."
+            "Lunga is in your hands. The enemy is expected to contest it by sea and by air from Rabaul, and to land troops on Guadalcanal. Intelligence expects his carriers to come south in support."
           ]
         },
         {
-          "heading": "Your task",
+          "heading": "2. Mission",
           "text": [
-            "Hold Lunga and Tulagi. Get the field flying and keep it flying every day. Keep the men ashore fed. Meet his carriers when they come."
+            "Hold Lunga and Tulagi. Bring the airfield into operation and keep it in operation, to deny the enemy the southern Solomons."
           ]
         },
         {
-          "heading": "Why",
+          "heading": "3. Execution",
           "text": [
-            "A field that flies at Lunga commands the water round it by day. From then on he can come only at night, and what he lands he cannot easily feed. Every day the field is open counts; a day it is shut is a day given back to him."
-          ]
-        },
-        {
-          "heading": "What depends on you",
-          "text": [
-            "The first Marine squadrons fly in on 20 August, and more follow to the middle of September. Each needs the field to be yours on the day.",
-            "Every ton you unload at Lunga and keep there counts. So does every man of his who does not get home."
-          ]
-        },
-        {
-          "heading": "What you may risk",
-          "text": [
-            "The carriers as before: against his carriers, and for nothing less.",
-            "Supply ships are worth risking by day under your own aircraft. Do not leave them off the beach at night without cover."
-          ]
-        },
-        {
-          "heading": "After this",
-          "text": [
-            "I will write again when his carriers are found, or if Lunga is in danger."
+            "As before. Directive 1 is superseded.",
+            "Further direction will follow as the situation requires."
           ]
         }
       ]
