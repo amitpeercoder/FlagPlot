@@ -7404,6 +7404,7 @@ task_force = 3
         );
         for (name, kind) in [
             ("cannot_meet", StandingKind::CannotMeet),
+            ("cannot_bring_enough", StandingKind::CannotBringEnough),
             ("waits_for_leave", StandingKind::WaitsForLeave),
             ("ship_lost", StandingKind::ShipLost),
         ] {

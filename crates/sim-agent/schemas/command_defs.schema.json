@@ -770,7 +770,8 @@
                   "run_ended",
                   "ready",
                   "late",
-                  "met"
+                  "met",
+                  "cannot_bring_enough"
                 ]
               },
               "plan": {
@@ -966,7 +967,8 @@
           "enum": [
             "cannot_meet",
             "waits_for_leave",
-            "ship_lost"
+            "ship_lost",
+            "cannot_bring_enough"
           ]
         },
         "plan": {
@@ -1057,7 +1059,8 @@
                 "enum": [
                   "cannot_meet",
                   "waits_for_leave",
-                  "ship_lost"
+                  "ship_lost",
+                  "cannot_bring_enough"
                 ]
               },
               "plan": {
@@ -1094,7 +1097,8 @@
             "enum": [
               "cannot_meet",
               "waits_for_leave",
-              "ship_lost"
+              "ship_lost",
+              "cannot_bring_enough"
             ]
           }
         },

@@ -150,7 +150,7 @@ impl Day<'_, '_> {
 
     /// Item 5 for a task force: `Err(words)` where the staff may not take it.
     pub(crate) fn may_take_force(&self, force: &TaskForce, others: &Others) -> Result<(), String> {
-        if let Some(day) = crate::available::force_waiting(self.view, force.id) {
+        if let Some(day) = self.not_before_choice(EntityRef::TaskForce(force.id)) {
             return Err(crate::available::named_with_day(force.id, day));
         }
         if let Some(hold) = self.state.hold_on_force(force.id, &force.ships) {
@@ -171,7 +171,7 @@ impl Day<'_, '_> {
 
     /// Item 5 for a land unit.
     fn may_take_unit(&self, unit: &LandUnit, others: &Others) -> Result<(), String> {
-        if let Some(day) = crate::available::not_before(self.view, EntityRef::LandUnit(unit.id)) {
+        if let Some(day) = self.not_before_choice(EntityRef::LandUnit(unit.id)) {
             return Err(crate::available::named_with_day(unit_words(unit), day));
         }
         let hold = sim_core::command::HoldTarget::LandUnit(unit.id);
@@ -189,7 +189,7 @@ impl Day<'_, '_> {
 
     /// Item 5 for a base.
     pub(crate) fn may_take_base(&self, base: BaseId, others: &Others) -> Result<(), String> {
-        if let Some(day) = crate::available::not_before(self.view, EntityRef::Base(base)) {
+        if let Some(day) = self.not_before_choice(EntityRef::Base(base)) {
             return Err(crate::available::named_with_day(
                 base_words(self.view, base),
                 day,

@@ -113,9 +113,15 @@
 //!   takes unit 2, and the reason says unit 1 serves the other intent.
 //! - **Short of men, at balanced.** With unit 2 left out and an opening
 //!   estimate of 500: the men wanted are 1,000. Base 1's lift gives 600
-//!   and base 3's gives 600: neither is enough, they are equal, and base
-//!   1 is the lower numbered. The staff goes with unit 1 and says it is
-//!   short by 400 men.
+//!   and base 3's gives 600: neither is enough, and no unit or force is
+//!   coming. The staff forms nothing and gives no order or command. On
+//!   day 1 it hands in the notice that it cannot bring enough, with
+//!   1,000 men wanted and 600 to hand, and on days 2 and 3 it gives the
+//!   reason and no second notice. (Restated by the architect on Nov 18,
+//!   2026, for decision 0159's rule B, item 7: before it, the staff went
+//!   with unit 1 from base 1 and said it was short by 400 men. At press
+//!   the men wanted are 500, base 1's lift gives them, and the staff
+//!   goes with unit 1 from base 1 on day 1, short of nothing.)
 //! - **Short of men, at preserve the force.** The same at preserve the
 //!   force: the men wanted are 1,500. The staff forms nothing, hands in
 //!   the notice that it cannot meet intent 1 on day 1 and gives the
@@ -1061,14 +1067,42 @@ fn a_unit_another_intent_has() {
 #[test]
 fn short_of_men_at_balanced() {
     let g = play(&short_of_men(500));
+    // Decision 0159, rule B, item 7: no unit or force is coming, so at
+    // balanced the staff forms nothing and asks the commander.
+    assert!(g.formed_landings().is_empty(), "{:?}", g.formed_landings());
+    for day in 1..=3 {
+        assert!(g.orders(day).is_empty(), "day {day}: {:?}", g.orders(day));
+        assert!(
+            g.commands(day).is_empty(),
+            "day {day}: {:?}",
+            g.commands(day)
+        );
+    }
+    assert_eq!(g.notices(), vec![(1, NoticeKind::CannotBringEnough, 1)]);
+    for day in 1..=3 {
+        let reasons = g.no_orders(day, 1);
+        assert_eq!(reasons.len(), 1, "day {day}: {reasons:?}");
+        assert_says(
+            &reasons[0],
+            &["The staff wants 1000 men and has 600 to hand"],
+        );
+        assert_eq!(
+            reasons[0].contains("hands in the notice that it cannot bring enough"),
+            day == 1,
+            "day {day}: {reasons:?}"
+        );
+    }
+}
+
+#[test]
+fn short_of_men_at_press_it_goes() {
+    // At press the men wanted are 500, base 1's lift gives them, and the
+    // staff goes with unit 1 from base 1 on day 1, short of nothing.
+    let g = play(&format!("{}{}", short_of_men(500), risk("press")));
     assert_eq!(g.formed_landings().first(), Some(&(1, landing_kind(1))));
-    assert_eq!(
-        g.staff_limit(1, 2),
-        Some((vec![1, 3], vec![1], Some(1))),
-        "{:?}",
-        g.commands(1)
-    );
-    assert_says(&g.reasons(1), &["short by 400 men"]);
+    let (_, units, source) = g.staff_limit(1, 2).expect("a limit on day 1");
+    assert_eq!((units, source), (vec![1], Some(1)), "{:?}", g.commands(1));
+    assert!(!g.reasons(1).contains("short by"), "{}", g.reasons(1));
 }
 
 #[test]

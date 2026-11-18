@@ -252,12 +252,18 @@ impl World {
     ) -> BTreeMap<StandingSubject, Vec<EventId>> {
         let mut holding: BTreeMap<StandingSubject, Vec<EventId>> = BTreeMap::new();
         match kind {
-            StandingKind::CannotMeet | StandingKind::WaitsForLeave => {
+            StandingKind::CannotMeet
+            | StandingKind::WaitsForLeave
+            | StandingKind::CannotBringEnough => {
                 for (notice, event) in notices.get(&side).into_iter().flatten() {
                     let counts = matches!(
                         (kind, notice.kind),
                         (StandingKind::CannotMeet, NoticeKind::CannotMeet)
                             | (StandingKind::WaitsForLeave, NoticeKind::WaitsForLeave(_))
+                            | (
+                                StandingKind::CannotBringEnough,
+                                NoticeKind::CannotBringEnough
+                            )
                     );
                     if counts {
                         holding

@@ -347,6 +347,10 @@ pub(crate) struct Day<'v, 'a> {
     /// readiness: what "take a place" reads to ask leave to launch
     /// (decision 0142, 15).
     pub(crate) landings: BTreeMap<IntentId, crate::take::LandingReading>,
+    /// The day a choice of units reads which units may be used on: `None`
+    /// for the day orders are given for. A take's first lift sets it while it
+    /// works the first day that brings the men it wants (decision 0159, 4).
+    pub(crate) as_of: std::cell::Cell<Option<u32>>,
     /// The lifts as they stand sent this morning, each with the intent that
     /// sent it (decision 0152, 5 and 8): a force is sent by one intent.
     pub(crate) lifts_sent: BTreeMap<sim_core::ids::TaskForceId, IntentId>,
@@ -501,6 +505,7 @@ impl<'v, 'a> Day<'v, 'a> {
             lines: Vec::new(),
             events: None,
             landings: BTreeMap::new(),
+            as_of: std::cell::Cell::new(None),
             lifts_sent: BTreeMap::new(),
             lifts_due: BTreeMap::new(),
         };
@@ -646,6 +651,13 @@ impl<'v, 'a> Day<'v, 'a> {
                         NoticeKind::WaitsForLeave(Leave::Prepare),
                         plan.id,
                     );
+                    return;
+                }
+                // Decision 0159, 6 and 7: a take whose first lift would sail
+                // short waits as a draft for the day that brings its men, or
+                // says it cannot bring them.
+                if let Some(waiting) = self.draft_take_waits(&intent) {
+                    self.hand_in_wait(&intent, &plan, &waiting);
                     return;
                 }
                 let reason = serving(&intent, &plan)

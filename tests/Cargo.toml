@@ -451,3 +451,7 @@ path = "scenario_78_orders_inside_a_day.rs"
 [[test]]
 name = "scenario_79_fed_before_it_is_taken"
 path = "scenario_79_fed_before_it_is_taken.rs"
+
+[[test]]
+name = "scenario_80_a_take_that_waits"
+path = "scenario_80_a_take_that_waits.rs"

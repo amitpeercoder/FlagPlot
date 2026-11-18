@@ -77,7 +77,8 @@
               "run_ended",
               "ready",
               "late",
-              "met"
+              "met",
+              "cannot_bring_enough"
             ]
           },
           "words": {

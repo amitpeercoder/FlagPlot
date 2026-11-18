@@ -2276,7 +2276,7 @@ function intentShapes(model, si, side, id) {
 }
 
 /** The staff notices at a step: the events of kind staff_notice of the step, as { event, side, notice, plan, run, text }. */
-const NOTICE_WORDS = { cannot_meet: 'cannot meet its intent', waits_for_leave_to_prepare: 'waits for leave to prepare', waits_for_leave_to_launch: 'waits for leave to launch', run_ended: 'a run ended' };
+const NOTICE_WORDS = { cannot_meet: 'cannot meet its intent', cannot_bring_enough: 'cannot bring the men it wants', waits_for_leave_to_prepare: 'waits for leave to prepare', waits_for_leave_to_launch: 'waits for leave to launch', run_ended: 'a run ended' };
 function noticeRow(ev) {
   const d = ev.data || {};
   return { event: ev.id, side: d.side, notice: d.notice, plan: d.plan, run: d.run, day: ev.day, words: NOTICE_WORDS[d.notice] || String(d.notice || 'notice'), text: splitText(ev.text).body };

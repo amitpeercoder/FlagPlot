@@ -1008,6 +1008,15 @@ mod tests {
                         },
                     },
                 ),
+                (
+                    Side::Allied,
+                    CommandKind::Acknowledge {
+                        interrupt: sim_core::command::InterruptRef::Standing {
+                            kind: sim_core::command::StandingKind::CannotBringEnough,
+                            subject: sim_core::command::StandingSubject::Plan(PlanId::new(2)),
+                        },
+                    },
+                ),
             ],
         );
         let reason = Reason {
@@ -1081,6 +1090,12 @@ mod tests {
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
                 },
                 sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::CannotBringEnough,
+                    plan: PlanId::new(2),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                },
+                sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::RunEnded,
                     plan: PlanId::new(1),
                     run: Some(2),
@@ -1145,7 +1160,7 @@ mod tests {
             .expect("the file is JSON");
         assert_eq!(written["version"], 20);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 14);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 15);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

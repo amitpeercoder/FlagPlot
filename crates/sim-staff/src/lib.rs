@@ -237,7 +237,14 @@ use sim_core::view::SideView;
 /// hold, as it does for a base that is the side's, and its reason says
 /// through which base the men are fed. A side with no such hold gets the
 /// orders `supply-34` gave.
-pub const DOCTRINE_VERSION: &str = "supply-35";
+/// `supply-36` adds decision 0159, rule B: a "take a place" whose first lift
+/// would sail short of the men wanted, at preserve the force or balanced,
+/// waits, as a draft where it is one, for the first day in reach that brings
+/// them (7 days ahead, or what can still be ready by its latest day), and at
+/// balanced, where no such day comes, hands in the notice that it cannot
+/// bring enough once and forms nothing. A side with no take short of men
+/// gets the orders `supply-35` gave.
+pub const DOCTRINE_VERSION: &str = "supply-36";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

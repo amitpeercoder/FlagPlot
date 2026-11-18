@@ -1037,3 +1037,11 @@ apply; a game that gives none of it is answered as before.
   `for_day` is that day. A passage or yard `measure` carries a note `inside_day` saying it is worked as if the force
   left at 1800, the start of the day's night, which has passed. The other read tools answer on the side's view as it
   stands, with no note; `report`'s `day` is the open day.
+
+## A take that cannot bring enough (decision 0159)
+
+The version is unchanged, 25. The notice kinds of `report`, `staff_orders` and a preview's decisions include
+`cannot_bring_enough`: a "take a place" at balanced that can bring the men it wants on no day in reach. It is handed in
+once for its plan, and its reason gives the men wanted, the men to hand and any unit coming with its day.
+`set_interrupt` and `acknowledge` take `standing` `"cannot_bring_enough"`, with `plan`: a fourth standing interrupt,
+on by default and armed apart for each plan.

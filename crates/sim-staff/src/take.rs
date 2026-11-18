@@ -55,6 +55,62 @@ pub(crate) struct LandingReading {
     pub(crate) words: String,
 }
 
+/// The days a take looks ahead for a day that brings the men it wants, where
+/// the commander gave no latest day (decision 0159, 6). The staff's figure,
+/// a placeholder.
+pub(crate) const WAIT_HORIZON_DAYS: u32 = 7;
+
+/// The first lift's choice (decision 0142, 6 to 10; decision 0149), or why
+/// there is none.
+pub(crate) enum FirstChoice {
+    Found {
+        choice: Choice,
+        source: BaseId,
+        source_hex: Hex,
+        /// The limit the staff sets on the landing it forms.
+        limit: ForcesLimit,
+    },
+    /// The commander named all three and no forces limit is found.
+    Unnamed,
+    /// The forces limit names no source of the side.
+    NoSource,
+    /// No transport force or no unit (evidence, working).
+    NoChoice(String, String),
+    /// The staff can assemble no force (decision 0149, 13).
+    NoAssembly(crate::assemble::NoSource),
+}
+
+/// What a take's first lift short of the men wanted does instead of sailing
+/// short (decision 0159, 6 and 7).
+pub(crate) enum Waiting {
+    /// Item 6: a later day in reach brings the men wanted; the staff waits
+    /// for it.
+    For {
+        day: u32,
+        wanted: u32,
+        have: u32,
+        /// The men that day's lift gives.
+        then: u32,
+        /// The units and forces that may be used by that day and not today,
+        /// each with its day, in words.
+        coming: Vec<String>,
+        /// Today's choice, in words.
+        words: String,
+    },
+    /// Item 7: no day in reach brings them; at balanced the staff hands in
+    /// the notice that it cannot bring enough and waits for the commander.
+    NoDay {
+        wanted: u32,
+        have: u32,
+        /// The units and forces named that may be used later, each with its
+        /// day and why it does not serve, in words.
+        coming: Vec<String>,
+        /// The days looked at, in words.
+        reach: String,
+        words: String,
+    },
+}
+
 /// The men the staff wants for each man of the estimate, by risk (item 10).
 /// The staff's figures, placeholders.
 pub(crate) fn men_per_man(risk: Risk) -> u32 {
@@ -404,89 +460,68 @@ impl Day<'_, '_> {
             return;
         }
         let risk = self.state.risk_read_up(end.id);
-        let commander = end.limits.forces.clone();
-        // Decision 0149: with all three named the end is decision 0142's;
-        // otherwise the staff assembles the rest.
-        let (choice, source, source_hex, staff_limit) = if crate::assemble::names_all(
-            commander.as_ref(),
-        ) {
-            let Some(limit) = commander else {
-                return;
-            };
-            let Some((source, source_hex)) = limit
-                .source
-                .and_then(|s| self.view.bases().find(|b| b.id == s).map(|b| (s, b.hex)))
-            else {
+        let (choice, source, source_hex, staff_limit) = match self.first_choice(end, place, risk) {
+            FirstChoice::Found {
+                choice,
+                source,
+                source_hex,
+                limit,
+            } => (choice, source, source_hex, limit),
+            FirstChoice::Unnamed => return,
+            FirstChoice::NoSource => {
                 let reason = serving(end, plan)
-                        .evidence("the forces limit names no source of the side", today)
-                        .worked(format!(
-                            "{} has no source of the side to sail from, so the staff gives no order under it.",
-                            end.id
-                        ))
-                        .would_change("a source of the side")
-                        .done();
+                    .evidence("the forces limit names no source of the side", today)
+                    .worked(format!(
+                        "{} has no source of the side to sail from, so the staff gives no order under it.",
+                        end.id
+                    ))
+                    .would_change("a source of the side")
+                    .done();
                 self.target(in_scope).no_orders.push(reason);
                 return;
-            };
-            let choice = match self.choose(end, &limit, place, source_hex, risk, false) {
-                Ok(choice) => choice,
-                Err((evidence, worked)) => {
-                    let reason = serving(end, plan)
-                        .evidence(evidence, today)
-                        .worked(worked)
-                        .would_change("a transport force or a unit the side may use")
-                        .done();
+            }
+            FirstChoice::NoChoice(evidence, worked) => {
+                let reason = serving(end, plan)
+                    .evidence(evidence, today)
+                    .worked(worked)
+                    .would_change("a transport force or a unit the side may use")
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                return;
+            }
+            FirstChoice::NoAssembly(none) => {
+                // Item 13: the notice once, the reason each morning.
+                let noticed = self.noticed(NoticeKind::CannotMeet, plan.id);
+                let reason = serving(end, plan)
+                    .evidence(none.evidence.clone(), today)
+                    .binding("no base can be the source")
+                    .worked(format!(
+                        "{}{}",
+                        none.worked,
+                        if noticed {
+                            ""
+                        } else {
+                            " It hands in the notice that it cannot meet the intent."
+                        }
+                    ))
+                    .would_change(
+                        "a transport force stopped at a base of the side, with a fighting unit beside it",
+                    )
+                    .done();
+                if noticed {
                     self.target(in_scope).no_orders.push(reason);
-                    return;
+                } else {
+                    self.notice(in_scope, reason, NoticeKind::CannotMeet, plan);
                 }
-            };
-            let staff_limit = ForcesLimit {
-                ships: BTreeSet::new(),
-                task_forces: BTreeSet::new(),
-                air_groups: BTreeSet::new(),
-                source: None,
-                land_units: choice.picks.iter().map(|p| p.id).collect(),
-            };
-            (choice, source, source_hex, staff_limit)
-        } else {
-            // Under "control an island" with no limit of its own, the take's
-            // choices are inside the island's limit, kind by kind (decision
-            // 0151, 4).
-            let within = commander.clone().or_else(|| {
-                self.state
-                    .island_on_chain(end.id)
-                    .and_then(|island| island.limits.forces.clone())
-            });
-            match self.assemble(end, within.as_ref(), place, risk) {
-                Ok(found) => (found.choice, found.source, found.source_hex, found.limit),
-                Err(none) => {
-                    // Item 13: the notice once, the reason each morning.
-                    let noticed = self.noticed(NoticeKind::CannotMeet, plan.id);
-                    let reason = serving(end, plan)
-                            .evidence(none.evidence.clone(), today)
-                            .binding("no base can be the source")
-                            .worked(format!(
-                                "{}{}",
-                                none.worked,
-                                if noticed {
-                                    ""
-                                } else {
-                                    " It hands in the notice that it cannot meet the intent."
-                                }
-                            ))
-                            .would_change(
-                                "a transport force stopped at a base of the side, with a fighting unit beside it",
-                            )
-                            .done();
-                    if noticed {
-                        self.target(in_scope).no_orders.push(reason);
-                    } else {
-                        self.notice(in_scope, reason, NoticeKind::CannotMeet, plan);
-                    }
-                    return;
-                }
+                return;
             }
         };
+        // Decision 0159, 6 and 7: a first lift short of the men wanted waits
+        // for the day that brings them, or says it cannot bring them.
+        if let Some(waiting) = self.wait_for_men(end, place, by_day, risk, &choice) {
+            self.hand_in_wait(end, plan, &waiting);
+            return;
+        }
         let assembled = !crate::assemble::names_all(end.limits.forces.as_ref());
         let choice_words = choice.lines.join("; ");
         // Item 10: at preserve the force, too few men is no landing.
@@ -639,6 +674,386 @@ impl Day<'_, '_> {
         }
     }
 
+    /// The first lift's choice for `end` (decision 0142, 6 to 10, and
+    /// decision 0149), as [`Self::prepare_place`] makes it, reading the units
+    /// that may be used on the day [`Day::as_of`] names.
+    pub(crate) fn first_choice(&self, end: &Intent, place: Hex, risk: Risk) -> FirstChoice {
+        let commander = end.limits.forces.clone();
+        // Decision 0149: with all three named the end is decision 0142's;
+        // otherwise the staff assembles the rest.
+        if crate::assemble::names_all(commander.as_ref()) {
+            let Some(limit) = commander else {
+                return FirstChoice::Unnamed;
+            };
+            let Some((source, source_hex)) = limit
+                .source
+                .and_then(|s| self.view.bases().find(|b| b.id == s).map(|b| (s, b.hex)))
+            else {
+                return FirstChoice::NoSource;
+            };
+            match self.choose(end, &limit, place, source_hex, risk, false) {
+                Ok(choice) => {
+                    let limit = ForcesLimit {
+                        ships: BTreeSet::new(),
+                        task_forces: BTreeSet::new(),
+                        air_groups: BTreeSet::new(),
+                        source: None,
+                        land_units: choice.picks.iter().map(|p| p.id).collect(),
+                    };
+                    FirstChoice::Found {
+                        choice,
+                        source,
+                        source_hex,
+                        limit,
+                    }
+                }
+                Err((evidence, worked)) => FirstChoice::NoChoice(evidence, worked),
+            }
+        } else {
+            // Under "control an island" with no limit of its own, the take's
+            // choices are inside the island's limit, kind by kind (decision
+            // 0151, 4).
+            let within = commander.clone().or_else(|| {
+                self.state
+                    .island_on_chain(end.id)
+                    .and_then(|island| island.limits.forces.clone())
+            });
+            match self.assemble(end, within.as_ref(), place, risk) {
+                Ok(found) => FirstChoice::Found {
+                    choice: found.choice,
+                    source: found.source,
+                    source_hex: found.source_hex,
+                    limit: found.limit,
+                },
+                Err(none) => FirstChoice::NoAssembly(none),
+            }
+        }
+    }
+
+    // -- A take that waits (decision 0159, rule B) -----------------------
+
+    /// Items 4 to 7 for a take whose plan is still a draft, read before the
+    /// leave to prepare is acted on: what the take does in place of forming
+    /// its landing, or `None` where it is as it was.
+    pub(crate) fn draft_take_waits(&self, end: &Intent) -> Option<Waiting> {
+        let IntentKind::TakePlace { hex: place, by_day } = end.kind else {
+            return None;
+        };
+        if self.place_is_ours(place) || self.landing_of(end).is_some() {
+            return None;
+        }
+        self.view.ground_figures()?;
+        let coast = self
+            .view
+            .hex(place)
+            .is_some_and(|data| data.kind == HexKind::Coast);
+        if !coast {
+            return None;
+        }
+        let risk = self.state.risk_read_up(end.id);
+        match self.first_choice(end, place, risk) {
+            FirstChoice::Found { choice, .. } => {
+                self.wait_for_men(end, place, by_day, risk, &choice)
+            }
+            _ => None,
+        }
+    }
+
+    /// Items 4 to 7: where today's first lift is short of the men wanted and
+    /// none of its men is aboard, the first later day in reach whose lift
+    /// gives them (item 6), or, at balanced, that none does (item 7). `None`
+    /// at press, where the lift is not short, where it is a lift as it stands,
+    /// and at preserve where no day in reach brings them (as before).
+    pub(crate) fn wait_for_men(
+        &self,
+        end: &Intent,
+        place: Hex,
+        by_day: Option<u32>,
+        risk: Risk,
+        today_choice: &Choice,
+    ) -> Option<Waiting> {
+        if risk == Risk::Press {
+            return None;
+        }
+        let (wanted, have) = today_choice.short?;
+        // A lift as it stands, or men already aboard, are as they were.
+        if today_choice.picks.iter().any(|p| p.aboard) {
+            return None;
+        }
+        let today = self.today;
+        let last = by_day.unwrap_or(today + WAIT_HORIZON_DAYS);
+        // Today's choice in words, without the line that it goes short.
+        let words = today_choice
+            .lines
+            .iter()
+            .filter(|l| {
+                !l.ends_with("the staff goes with what it has") && !l.starts_with("short by ")
+            })
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("; ");
+        for day in (today + 1)..=last {
+            self.as_of.set(Some(day));
+            let found = self.first_choice(end, place, risk);
+            let reach = match &found {
+                FirstChoice::Found {
+                    choice,
+                    source,
+                    source_hex,
+                    ..
+                } if choice.short.is_none() => match by_day {
+                    None => Some(choice.men),
+                    Some(date) => self
+                        .ready_by(end, choice, *source, *source_hex, place, risk, day, date)
+                        .then_some(choice.men),
+                },
+                _ => None,
+            };
+            let coming = match &found {
+                FirstChoice::Found { choice, .. } => self.coming_in(choice, today),
+                _ => Vec::new(),
+            };
+            self.as_of.set(None);
+            if let Some(then) = reach {
+                return Some(Waiting::For {
+                    day,
+                    wanted,
+                    have,
+                    then,
+                    coming,
+                    words,
+                });
+            }
+        }
+        if risk != Risk::Balanced {
+            return None;
+        }
+        let reach = match by_day {
+            Some(date) => format!(
+                "No day up to day {date} on which a landing begun could still be ready by its date for day {date} brings them"
+            ),
+            None => format!(
+                "No day up to day {last}, the {WAIT_HORIZON_DAYS} days the staff looks ahead, brings them"
+            ),
+        };
+        let coming = self
+            .named_later(end, today_choice)
+            .into_iter()
+            .map(|(unit, from)| {
+                let why = if from > last {
+                    match by_day {
+                        Some(date) => format!("after day {date}"),
+                        None => format!("beyond day {last}, the last the staff looks ahead to"),
+                    }
+                } else if let Some(date) = by_day {
+                    format!("too late to land by day {date}")
+                } else {
+                    "and with it the men are still too few".to_string()
+                };
+                format!("{}, {why}", crate::available::named_with_day(unit, from))
+            })
+            .collect();
+        Some(Waiting::NoDay {
+            wanted,
+            have,
+            coming,
+            reach,
+            words,
+        })
+    }
+
+    /// The units and the force of `choice` that may not be used `today`,
+    /// each with its day, in words.
+    fn coming_in(&self, choice: &Choice, today: u32) -> Vec<String> {
+        let view = self.view;
+        let mut coming = Vec::new();
+        if let Some(from) =
+            crate::available::not_before_on(view, EntityRef::TaskForce(choice.force), today)
+        {
+            coming.push(crate::available::named_with_day(choice.force, from));
+        }
+        for pick in &choice.picks {
+            if let Some(from) =
+                crate::available::not_before_on(view, EntityRef::LandUnit(pick.id), today)
+            {
+                let name = view
+                    .land_units()
+                    .find(|u| u.id == pick.id)
+                    .map_or_else(|| pick.id.to_string(), unit_words);
+                coming.push(crate::available::named_with_day(name, from));
+            }
+        }
+        coming
+    }
+
+    /// The units and task forces the take may use later and not today, each
+    /// with its day, in day and then number order: those its forces limit
+    /// names, or with none named every fighting unit and transport force of
+    /// the side.
+    fn named_later(&self, end: &Intent, today_choice: &Choice) -> Vec<(String, u32)> {
+        let view = self.view;
+        let limit = end.limits.forces.clone().or_else(|| {
+            self.state
+                .island_on_chain(end.id)
+                .and_then(|island| island.limits.forces.clone())
+        });
+        let mut found: Vec<(u32, u8, u32, String)> = Vec::new();
+        let named_forces = limit.as_ref().filter(|f| !f.task_forces.is_empty());
+        for force in view.task_forces() {
+            let named = named_forces.map_or(force.mission == Mission::Transport, |f| {
+                f.task_forces.contains(&force.id)
+            });
+            if !named || force.id == today_choice.force {
+                continue;
+            }
+            if let Some(from) = crate::available::not_before(view, EntityRef::TaskForce(force.id)) {
+                found.push((from, 0, force.id.raw(), force.id.to_string()));
+            }
+        }
+        let named_units = limit.as_ref().filter(|f| !f.land_units.is_empty());
+        for unit in view.land_units() {
+            if unit.working || named_units.is_some_and(|f| !f.land_units.contains(&unit.id)) {
+                continue;
+            }
+            if let Some(from) = crate::available::not_before(view, EntityRef::LandUnit(unit.id)) {
+                found.push((from, 1, unit.id.raw(), unit_words(unit)));
+            }
+        }
+        found.sort();
+        found
+            .into_iter()
+            .map(|(from, _, _, words)| (words, from))
+            .collect()
+    }
+
+    /// Item 6 with a latest day: whether a landing begun on `day` with
+    /// `choice` would be ready by the date the take sets its landing, by the
+    /// arithmetic of the notice that it is late (decision 0141, 6; decision
+    /// 0142, 13).
+    #[allow(clippy::too_many_arguments)]
+    fn ready_by(
+        &self,
+        end: &Intent,
+        choice: &Choice,
+        source: BaseId,
+        source_hex: Hex,
+        place: Hex,
+        risk: Risk,
+        day: u32,
+        by_day: u32,
+    ) -> bool {
+        let Some(figures) = self.view.ground_figures() else {
+            return false;
+        };
+        let Some(force) = self
+            .view
+            .task_forces()
+            .find(|f| f.id == choice.force)
+            .cloned()
+        else {
+            return false;
+        };
+        let units: Vec<LandUnitId> = choice.picks.iter().map(|p| p.id).collect();
+        let fed = self.with_aboard(&force, &units);
+        let check = self.hold_check(end, &force, &fed, figures, place);
+        let supply = self.supply(
+            &force,
+            &fed,
+            source,
+            source_hex,
+            figures,
+            check.as_ref().map(|c| (c.days, c.days_words.clone())),
+            self.draw_on(end, source),
+        );
+        let Ok(days) = self.days(&force, &units, &supply, place, source_hex, end) else {
+            return false;
+        };
+        let date = (by_day + 1)
+            .saturating_sub(days.embark + days.passage)
+            .max(1);
+        let left = i64::from(date) - i64::from(day);
+        self.days_to_ready(&force, place, &units, risk, Some(left))
+            .is_some_and(|d| day + d <= date)
+    }
+
+    /// Hands in the reason of a take that waits (item 6) or cannot bring
+    /// enough (item 7), with the notice of item 7 once.
+    pub(crate) fn hand_in_wait(&mut self, end: &Intent, plan: &Plan, waiting: &Waiting) {
+        let in_scope = self.in_scope(end.id);
+        let today = self.today;
+        match waiting {
+            Waiting::For {
+                day,
+                wanted,
+                have,
+                then,
+                coming,
+                words,
+            } => {
+                let coming_words = if coming.is_empty() {
+                    String::new()
+                } else {
+                    format!(" {}, and", coming.join(", "))
+                };
+                let worked = format!(
+                    "{words}. The staff wants {wanted} men and has {have} to hand.{coming_words} on day {day} the lift gives {then} men: it waits for day {day}, and forms nothing and gives no order under {} until then.",
+                    end.id
+                );
+                let reason = serving(end, plan)
+                    .evidence(words.clone(), today)
+                    .binding(format!(
+                        "{wanted} men wanted and {have} to hand until day {day}"
+                    ))
+                    .worked(worked.clone())
+                    .would_change("a unit's day, the risk, a limit or the estimate")
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                if in_scope {
+                    self.lines.push(worked);
+                }
+            }
+            Waiting::NoDay {
+                wanted,
+                have,
+                coming,
+                reach,
+                words,
+            } => {
+                let noticed = self.noticed(NoticeKind::CannotBringEnough, plan.id);
+                let coming_words = if coming.is_empty() {
+                    " No unit or force of the side is coming.".to_string()
+                } else {
+                    format!(" {}.", coming.join("; "))
+                };
+                let worked = format!(
+                    "{words}. The staff wants {wanted} men and has {have} to hand.{coming_words} {reach}: at balanced it does not go with what it has. It forms nothing and gives no order under {}{}, and waits for the commander.",
+                    end.id,
+                    if noticed {
+                        ""
+                    } else {
+                        ", hands in the notice that it cannot bring enough"
+                    }
+                );
+                let reason = serving(end, plan)
+                    .evidence(words.clone(), today)
+                    .binding(format!("{wanted} men wanted and {have} to hand"))
+                    .worked(worked.clone())
+                    .would_change(
+                        "the risk, a limit, the estimate, or a unit's day coming into reach",
+                    )
+                    .done();
+                if noticed {
+                    self.target(in_scope).no_orders.push(reason);
+                } else {
+                    self.notice(in_scope, reason, NoticeKind::CannotBringEnough, plan);
+                }
+                if in_scope {
+                    self.lines.push(worked);
+                }
+            }
+        }
+    }
+
     /// Items 6 to 10: the transport force and the units that land, or why
     /// there are none (evidence, working).
     #[allow(clippy::too_many_lines)]
@@ -674,7 +1089,7 @@ impl Day<'_, '_> {
                 refused.push(format!("{id} has no ship afloat that carries men"));
                 continue;
             }
-            if let Some(day) = crate::available::force_waiting(view, *id) {
+            if let Some(day) = self.not_before_choice(EntityRef::TaskForce(*id)) {
                 refused.push(crate::available::named_with_day(id, day));
                 continue;
             }
@@ -747,7 +1162,7 @@ impl Day<'_, '_> {
                 ));
                 continue;
             }
-            if let Some(day) = crate::available::not_before(view, EntityRef::LandUnit(*id)) {
+            if let Some(day) = self.not_before_choice(EntityRef::LandUnit(*id)) {
                 left.push(crate::available::named_with_day(unit_words(unit), day));
                 continue;
             }

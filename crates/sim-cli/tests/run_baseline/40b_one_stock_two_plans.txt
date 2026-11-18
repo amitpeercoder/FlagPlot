@@ -2,11 +2,11 @@ Placeholder scenario 40b: One stock and two plans
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 11d9fa8d5628bea1  56 events
-day   2  hash e18840df8f58a5d5  39 events
-day   3  hash 059781366bddbfcf  20 events
-day   4  hash 526e27fd5c90f85a  10 events
-day   5  hash b58ce761c7c1b66c  10 events
+day   1  hash e5b8de8a545e4b72  56 events
+day   2  hash 83359380ca3ab2c2  39 events
+day   3  hash 4b3dcf7566950624  20 events
+day   4  hash 926e9b51b4c2ad15  10 events
+day   5  hash c79e78653d2ed19b  10 events
 
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:1000002 "Formed at Placeholder base S, Allied" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
