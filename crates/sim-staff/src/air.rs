@@ -350,6 +350,10 @@ pub(crate) struct Day<'v, 'a> {
     /// The lifts as they stand sent this morning, each with the intent that
     /// sent it (decision 0152, 5 and 8): a force is sent by one intent.
     pub(crate) lifts_sent: BTreeMap<sim_core::ids::TaskForceId, IntentId>,
+    /// The later lifts as they stand a take sends this morning, each with
+    /// the take, set aside before a take lower in priority chooses its first
+    /// lift (decision 0152, 5b).
+    pub(crate) lifts_due: BTreeMap<sim_core::ids::TaskForceId, IntentId>,
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
@@ -498,6 +502,7 @@ impl<'v, 'a> Day<'v, 'a> {
             events: None,
             landings: BTreeMap::new(),
             lifts_sent: BTreeMap::new(),
+            lifts_due: BTreeMap::new(),
         };
         day.leaves();
         // Decision 0151: the tree of an island, formed before the doctrines

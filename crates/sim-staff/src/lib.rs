@@ -225,7 +225,11 @@ use sim_core::view::SideView;
 /// first neutralising of an enemy base at a named place. A side with no
 /// island, or none with a force on the bombardment mission, gets the orders
 /// `supply-32` gave.
-pub const DOCTRINE_VERSION: &str = "supply-33";
+/// `supply-34` adds decision 0152, item 5b: a take higher in priority that
+/// sends a later lift as it stands that morning is given it before a take
+/// lower in priority chooses its first lift. A side with at most one take
+/// in force gets the orders `supply-33` gave.
+pub const DOCTRINE_VERSION: &str = "supply-34";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

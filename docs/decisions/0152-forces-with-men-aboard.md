@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: A transport force with men aboard is a lift as it stands: "take a place" takes one as its first lift, sends each later one while the place is not taken and men are still wanted, and lands the working men aboard with the rest; a hold sends to its place a force with men aboard that no take needs; and the supply under a hold formed by "control an island" uses whatever transport forces lie empty at its source that morning
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings). Item 5b built on Nov 18, 2026; its readings await the architect's ruling (As built: item 5b)
 
 ## Why
 
@@ -110,3 +110,23 @@ Made on Nov 18, 2026, on reading the build.
 
 On Nov 18, 2026 the loading check of the proof (decision 0153: arrangement (a), seed 1) showed a fault of this record as built. The Japanese side asked for Guadalcanal first and Tulagi second. Its first lift went to Lunga. Every lift after it went to Tulagi: on the morning each became usable the tree of the second island was formed before the first island's take weighed its later lifts, so the lower take chose the force as its first lift and the higher take found it taken. Item 5 says a later lift goes to a take unless one higher in priority has taken it; the order of the morning's work had it the other way. Item 5b states the order, and scenario 77 gains the property "The higher take first".
 
+## As built: item 5b
+
+Built on Nov 18, 2026, on the branch `stage3-lift-order`. No state, engine or event change: the doctrine version rises to `supply-34` and nothing else (no state layout, saved game, agent interface or rules label). Nothing is tuned and no figure changed. `tests/scenario_77_forces_with_men_aboard.rs` gains the test `the_higher_take_first`, asserting the property "The higher take first" and no more; it fails on the code before the change (the take of base 4 forms a landing of task force 2 at C on day 4) and passes after. Every other test of scenario 77, "Two islands" among them, passes unchanged, and scenarios 67 to 76 hand in, day by day, the orders and commands they handed in before (`scenarios_67_to_76_give_the_orders_they_gave`). No expected number changed and nothing is ignored.
+
+### Readings taken
+
+1. **What a higher take sends that morning** is read for it right after its own preparing (so after any choice made again), before any take lower in priority prepares: its plan released, its landing formed, and its first lift lost, or with a unit of the operation ashore at the place, the first lift not on its way and the fit men that can attack fewer than the men wanted or no estimate held, or been to the place with none of its men ashore there; with no man of the operation ashore, a take whose men wanted are none sends nothing. Each force its later-lift survey (`later_lift_plan`, the one its launch uses) would send is set aside for it. These are the gates its launch applies.
+2. **Set aside** means the force is not a lower take's first lift as it stands, and its reason names it: "task_force:N is a later lift of intent:M, higher in priority, this morning"; nor is it taken as a transport at a base by the base rule of decision 0149, item 7.
+3. **A take whose plan is not yet released** when it is read (one released by leave to launch later that morning) sets nothing aside: its first lift has still to sail, and it sends no later lift that morning.
+4. **Between two higher takes** the first in priority to set a force aside is named with it; which of them sends it is decided at the launch, as before.
+5. **A side with at most one take in force** gets the orders and reasons `supply-33` gave.
+
+### Earlier tests, baselines and games that change
+
+None in more than versions. Remade by `scripts/regenerate.sh`: no run baseline, agent golden, pinned hash or batch fixture changed; of the recorded games each `save.json` changes its doctrine version only, and no transcript changed.
+
+### Files to read
+
+- `crates/sim-staff/src/take.rs`: `takes_prepare` and `later_lifts_due` (new); `units_ashore` is taken out of `ashore` unchanged, so that both read the units ashore one way.
+- `crates/sim-staff/src/assemble.rs` (`first_lift_as_it_stands` and the base rule's transports), `air.rs` (`Day::lifts_due`).
