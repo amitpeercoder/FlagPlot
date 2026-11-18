@@ -69,10 +69,10 @@
 //! | --- | --- | --- | --- |
 //! | 1 | 0 | Task force 1: `prepare_landing` at B, roster 1; a route to B and back to A, acting at B; an unload order | Sails at hour 0 and arrives at hour 8. In the night's last 4 hours each ship lands 320 men. In the morning ship 1 lands 280 men in 3.5 hours and then 30 t in 1.5 hours; ship 2 lands 80 men in an hour. Base 3, "Landing at (4,0)", is formed. The force steams for A at hour 18 |
 //! | 2 | 24 | Unit 1 set to attack | The force arrives at A at hour 34. Base 2 changes side at the end of the day |
-//! | 3 | 48 | Unit 1 set to defend | |
-//! | 4 | 72 | Task force 1: a load of supply to a weight of 85 t. Task force 2: a route to B and back to A, acting at B, and an unload order | Task force 2 sails at hour 72 and arrives at hour 88. With unit 2 at work on the port the rate is 28 t an hour: it lands 224 men in the morning's 2 hours, and in the afternoon 76 men and then 20 t. It steams for A at hour 96 |
-//! | 5 | 96 | Task force 1: a route to B and back to A, acting at B, and an unload order | Sails at hour 96, arrives at hour 112. With units 2 and 3 at work the rate is 34 t an hour: ship 1 lands 68 t in the morning's 2 hours and 17 t in the afternoon. Task force 2 arrives at A at hour 112 |
-//! | 6 to 8 | | none | Task force 1 steams for A at hour 120 and arrives at hour 136 |
+//! | 3 | 48 | Task force 3: a load of supply to a weight of 80 t. Unit 1 set to defend | Ship 4 loads 80 t at A |
+//! | 4 | 72 | Task force 3: a route to B and back to A, acting at B, and an unload order. Task force 2: the same | Both sail at hour 72 and arrive at hour 88. With unit 2 at work on the port the rate is 28 t an hour for each ship. Ship 4 lands 56 t in the morning's 2 hours and 24 t in the afternoon. Ship 3 lands 224 men in the morning, and in the afternoon 76 men and then 20 t. Both steam for A at hour 96 |
+//! | 5 | 96 | none | Task forces 2 and 3 arrive at A at hour 112 |
+//! | 6 to 8 | | none | |
 //!
 //! Ten orders in all. No staff order or command is refused.
 //!
@@ -88,22 +88,27 @@
 //!   task force 3 lies empty: the hold's forces limit is base 1 and task
 //!   force 3.
 //! - **Day 2.** No estimate is held: the judgement is to attack, and unit
-//!   1 is ashore and not on attack. At the end of the day the Japanese
-//!   side has a base and no man at B, and base 2 is Allied.
+//!   1 is ashore and not on attack. The hold of base 2 still waits, and
+//!   the side has base 3 in the hex with 1,000 men ashore: "keep base 3
+//!   supplied", with a floor of 5 days, is formed under the hold
+//!   (decision 0159, rule A). At the end of the day the Japanese side
+//!   has a base and no man at B, and base 2 is Allied.
 //! - **Day 3.** The take is met: its plan is marked complete. The hold of
-//!   base 2 is no longer waiting: unit 1 is set to defend, and "keep base
-//!   2 supplied", with a floor of 5 days, is formed under it. Task force
-//!   1 lies empty at base 1 beside task force 3: the hold's forces limit
-//!   is set to base 1 and task forces 1 and 3.
+//!   base 2 is no longer waiting: unit 1 is set to defend. No "keep base
+//!   2 supplied" is formed: one is in force for the hex. Task force 1
+//!   lies empty at base 1 beside task force 3: the hold's forces limit
+//!   is set to base 1 and task forces 1 and 3. The supply intent is
+//!   served for the first time, on the limit as it stood that morning,
+//!   base 1 and task force 3: the stock at B is 25 t, the use is 1,000 x
+//!   0.005 = 5 t a day, and the floor's stock is 25 t. A run ordered
+//!   today arrives on day 4, and the reading of day 5 is 25 - 10 = 15 t,
+//!   below 25: a run. Its load is the floor's stock on the day it
+//!   arrives, 25 t, less that day's reading, 20 t, plus 15 days of use,
+//!   75 t: 80 t. Ship 4's room covers it: task force 3 takes the run.
 //! - **Day 4.** Task force 2 may be used. It has men aboard, all of a
 //!   working unit, and no take is in force: the hold of base 2 sends it.
-//!   The supply intent is served for the first time: the stock at B is
-//!   20 t, the use is 1,000 x 0.005 = 5 t a day, and the floor's stock is
-//!   25 t. A run ordered today arrives on day 5, and the reading of day 6
-//!   is 20 - 10 = 10 t, below 25: a run. Its load is the floor's stock on
-//!   the day it arrives, 25 t, less that day's reading, 15 t, plus 15
-//!   days of use, 75 t: 85 t. The free ships in number order begin with
-//!   ship 1, whose room covers it: task force 1 takes the run.
+//!   No second run is called then or after: with the run due that day
+//!   the hex holds 115 t at the end of day 4 against a use of 6.5 t.
 //!
 //! ## Supply
 //!
@@ -111,11 +116,12 @@
 //!   men on the nights of days 2, 3 and 4: base 2, Allied from the end
 //!   of day 2 and the lower numbered, holds nothing on those nights. It
 //!   ends with 15 t.
-//! - **Base 2** takes 20 t on the afternoon of day 4. On the night of day
-//!   5 it pays 6.5 t for 1,300 men: 13.5 t. It takes 85 t on day 5:
-//!   98.5 t. It pays 6.5 t on the nights of days 6, 7 and 8: 79 t at the
-//!   end.
-//! - **Base 1** loads out 85 t and feeds nobody: 915 t at the end.
+//! - **Base 2** takes 80 t and 20 t on day 4: 100 t. It pays 6.5 t for
+//!   1,300 men on the nights of days 5, 6, 7 and 8: 74 t at the end.
+//! - **Base 1** loads out 80 t and feeds nobody: 920 t at the end.
+//! - **Fuel.** Ships 1 and 2 steam 80 nm to B and 160 nm home, and burn
+//!   24 t: 976 t at the end. Ships 3 and 4 steam 320 nm and burn 32 t:
+//!   968 t.
 //!
 //! ## The measure
 //!
@@ -132,12 +138,20 @@
 //! | 1 | 5 | none | 0 |
 //! | 2 | 5 | 2 (25 t, 5 days) | 1 |
 //! | 3 | 5 | 2 (day 3 has 20 t, 4 days) | 1 |
-//! | 4 | 6.5 | 4 (35 t; days 2 and 3 hold less than 32.5 t) | 1 |
+//! | 4 | 6.5 | 4 (115 t; days 2 and 3 hold less than 32.5 t) | 1 |
 //! | 5 to 8 | 6.5 | 4 and each day since | 2, 3, 4, 5 |
 //!
 //! At the end of the game the island is controlled on 5 of 8 days in
 //! force. The days of supply shown for the place are 6, 5 and 4 at the
 //! end of days 1 to 3.
+//!
+//! Restated by the architect on Nov 18, 2026, for decision 0159's rule A
+//! (doctrine supply-35): the men landed on day 1 are fed through base 3
+//! from day 2, before the airfield is taken, so the supply intent is
+//! formed a day sooner and for base 3, the run is called on day 3 and
+//! not day 4, it is 80 t and not 85 t, and task force 3 carries it and
+//! not task force 1. The orders are still ten. The measure's counts are
+//! as they were.
 //!
 //! Restated by the architect on Nov 18, 2026, on reading the build: the
 //! first writing counted day 2 to the end and gave 6 of 8, which a

@@ -81,9 +81,9 @@
 //! | 2 | 42 t | 4 | 42 - 12 = 30 t | Not below 30: no run |
 //! | 3 | 36 t | 5 | 36 - 12 = 24 t | Below 30: a run |
 //!
-//! On the morning of day 1 no run is ordered either: whether the staff
-//! works the sum on the morning it forms the intent is not asserted (the
-//! reading would be 48 - 12 = 36 t, not below 30).
+//! On the morning of day 1 no run is ordered either: a supply intent is
+//! first served on the morning after it is formed (and the reading would
+//! be 48 - 12 = 36 t, not below 30).
 //!
 //! The run's load: the floor's stock on the day it arrives, day 4, 30 t,
 //! less that day's reading, 30 t, which is 0; plus 15 days of use, 90 t.
