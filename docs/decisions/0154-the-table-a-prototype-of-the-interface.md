@@ -51,3 +51,5 @@ The designer asked on Nov 18, 2026 whether the pieces should be "kind of 3D NATO
 
 The table now draws all three, switched by "Pieces", for him to choose by eye: the plain blocks; tiles in the standard's frames and colours with letter codes; and period tiles in ink on cream with the same shapes and a silhouette. In the two tile styles the enemy's bases, contacts and estimates ashore are pieces too, the reported ones dashed and fading with age. The tiles lean toward the chair so that they read from a seat. Nothing is chosen yet. The letter codes and the silhouettes are the prototype's own and stand for a task force's mission, not for a ship class.
 
+**Chosen on Nov 18, 2026: the period tiles.** The designer compared the three on a game in progress and chose the period tiles. The blocks, the tiles in the standard's frames and the switch are taken out. The tiles now grow as the commander sits back and keep facing the chair when they move. Still rough: from the chair sat back a tile shows where a thing is more than what it is, and several pieces in one hex crowd each other.
+
