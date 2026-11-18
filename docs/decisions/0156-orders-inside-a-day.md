@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 18, 2026, for the designer's app
 
 Summary: A plan for commanding inside a day: where a scenario says so, a seat may stop the clock between pulses and give seven kinds of order to its own units, taken in at the start of the next pulse and holding the unit from the staff as an order at dusk does; commands to the staff are still taken in at dusk; time is advanced a pulse at a time by one new tool that stops on what the side was told, and a second gives a seat its events together; the engine resolves a day in parts with the same result; no state is added and a game with no order inside a day is the game it was. With the hand calculation, the conditions of its proof, five steps and five questions for the designer
 
-Standing: A plan by the architect, Nov 18, 2026, for the designer's approval. Nothing is built
+Standing: Confirmed by the designer, Nov 18, 2026, with his five answers, each as recommended. Being built step by step
 
 ## What differs from decision 0155, and why
 
@@ -151,3 +151,14 @@ Each is one branch and one pull request, read by the architect before it merges.
 3. **On only where a scenario says.** Recommended: yes, off by default, on for the small battles and off for the 39 days until its proof is read.
 4. **The five things `advance` can stop on.** Recommended as listed. A player chooses among them; the table's default would be contact, attack and loss.
 5. **When it is built.** Recommended: now, beside the planning of stage 4's two mends, since it touches the day loop and the tools and they touch the doctrine. Steps 1 to 3 are the engine's and the tools'; the proof follows.
+
+## Confirmed on Nov 18, 2026
+
+The designer approved the plan on Nov 18, 2026 and said to build it. His five answers, each as the architect recommended:
+
+1. Orders to units, not commands to the staff: accepted.
+2. An order of 0600 or 1200 acts in the pulse that follows.
+3. On only where a scenario says, off by default; on for the small battles, off for the 39 days until the proof is read.
+4. `advance` can stop on a contact, an attack, a loss, a strike and a landing, as listed.
+5. It is built now, beside the planning of stage 4's two mends.
+

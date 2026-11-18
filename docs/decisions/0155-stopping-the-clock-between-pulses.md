@@ -4,7 +4,7 @@ Status: a direction by the designer and a plan to be written, recorded by the ar
 
 Summary: The direction for when a commander may stop the clock and command: a day is shown pulse by pulse at once (done in the table, no rule changed); a commander may stop between the pulses of a day for a short list of commands, as a rule to be planned so that a game in which nobody commands inside a day is the game it was; a seat stops by day or by pulse as its command and its scenario say; and the staff does not plan again every pulse. With what the plan must settle
 
-Standing: Direction given by the designer, Nov 18, 2026. Step 1 done in the table. The rule of step 2 is planned in decision 0156, for his approval; nothing of it is built
+Standing: Direction given by the designer, Nov 18, 2026. Step 1 done in the table. The rule of step 2 is planned in decision 0156, which he confirmed the same day; it is being built
 
 ## What is so today
 
