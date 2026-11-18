@@ -1,0 +1,34 @@
+Placeholder scenario 79: Fed before it is taken
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash a50e4ea143e48fc8  28 events
+day   2  hash 3e43eb9fda355d24  14 events
+day   3  hash 7e3b35265003c19b  21 events
+day   4  hash 2d6802b9193fb0f5  24 events
+day   5  hash 77daeedfa659d0d3  19 events
+day   6  hash 1b678d645f64ad5d  11 events
+day   7  hash 4545bc45ffef82f2  11 events
+day   8  hash 65adc2bf8e7f0d0d  11 events
+day   9  hash 1cf297eb67600f1d  11 events
+day  10  hash b4bd279c94bf26e7  11 events
+day  11  hash 41f7fa37f02ba2c4  11 events
+day  12  hash 5e6eaf14fcfa967a  11 events
+day  13  hash 7e3f4d2cabe10e6e  11 events
+day  14  hash 2dcd848fba5414a6  11 events
+
+task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 910 t of supply in stock
+base:2 "Placeholder airfield B" (Japanese) at (4,0): 72 t of supply in stock
+base:3 "Placeholder beach at B" (Allied) at (4,0): 54 t of supply in stock, no airfield
+land_unit:1 "Placeholder First" (Allied): 600 men ashore at (4,0), fieldworks 30
+land_unit:2 "Placeholder Second" (Allied): 600 men ashore at (4,0), fieldworks 30
+land_unit:3 "Placeholder garrison" (Japanese): 400 men ashore at (4,0), fieldworks 30
+Allied: no contacts
+Allied: no battle claims
+Allied estimate at (4,0): 241 enemy men ashore, reported day 14 (men in contact)
+Japanese: no contacts
+Japanese: no battle claims
+Japanese estimate at (4,0): 1226 enemy men ashore, reported day 14 (men in contact)

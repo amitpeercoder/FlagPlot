@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 18, 2026, for the designer's app
 
 Summary: A plan for the opening of stage 4: men ashore at a place not yet taken are fed by supply runs to the base their landing formed; a take that cannot bring enough waits for the day the schedule brings it, and asks the commander where it never will, in place of going with what it has; a commander may tell a plan to wait (not before a day, until a force may be used, until another intent is met) and may say how much must be known before a landing, apart from the risk word; where nothing in reach can look, the staff may move a carrier force to look and says what that costs; and the staff hands in each plan as an order, with its phases, what each waits for and what it needs, so that a tool and the table can show it. With the arithmetic of its cases, the conditions of its proof, six steps and six questions for the designer
 
-Standing: Confirmed by the designer, Nov 18, 2026, with his six answers, each as recommended. Being built step by step
+Standing: Confirmed by the designer, Nov 18, 2026, with his six answers, each as recommended. Being built step by step; step 1, fed ashore, is built
 
 ## What is so today, read from the code
 
@@ -52,13 +52,13 @@ Standing: Confirmed by the designer, Nov 18, 2026, with his six answers, each as
 
 | | Reads | Writes |
 | --- | --- | --- |
-| A | the side's own bases in a hold's hex, its men ashore there | a "keep supplied" intent under the hold (command state, as today) |
+| A | the side's own bases in a hold's hex, its men ashore there | a "keep supplied" intent under the hold (command state, as today); command intake takes one under a hold for a base of the side in the held base's hex |
 | B | units and forces with the day each may be used, berths, the estimate, `by_day`, the risk | the take's task day; one new notice, "cannot bring enough" |
 | C | the three limits, the day, a unit's usable day, another intent's measure and plan | three new limits on an intent (command state: the hash version is raised) |
 | D | the knowledge limit, the estimate with grade and day, groups and their reach, carrier forces | one new limit; the "operate carriers" task that exists, with a hex chosen for reach |
 | E | the command state and the staff's own working | nothing in the state: the order is worked when asked |
 
-No rule of the engine's day changes. No random draw is added. The staff reads nothing of the enemy but the side's own estimates and contacts.
+No rule of a day's resolution changes. One rule of command intake does (rule A: "keep supplied" may stand under "hold a place" for a base of the side in the held base's hex). No random draw is added. The staff reads nothing of the enemy but the side's own estimates and contacts.
 
 ## What it costs
 
@@ -117,4 +117,14 @@ The designer approved the plan and answered the six questions "go with your reco
 4. A carrier force may be moved in order to look: at balanced without asking, at preserve with leave.
 5. Landing at a beach away from the enemy and marching is not in this plan.
 6. The six steps first, then the trial as its own plan.
+
+## As built: step 1
+
+Step 1, fed ashore (rule A, items 1 to 3), is built, with scenario 79 and its test (`tests/scenario_79_fed_before_it_is_taken.rs`). Every number of the hand calculation is asserted and passes: intent 2, keep base 3 supplied at a floor of 5 days, formed under the hold on day 1; no run on the morning of day 2 (42 t read, 30 t on day 4, not below the floor of 30 t) and on day 3 a run of 90 t (36 t read, 24 t on day 5), landed at B as 40 t and 50 t on day 4; three orders to task force 1 and none to a land unit; base 3 at 54 t, base 1 at 910 t, base 2 at 72 t, 968 t of fuel in each ship, and every man fed. Its five properties pass.
+
+The plan was wrong on one point: it said no rule of the engine changes for rule A. Command intake let "keep supplied" stand under "hold a place" only for the held base (decision 0144, 7), and so refused the one the staff forms for the side's own base in the held base's hex, every morning. The designer was told and left the ruling to the architect on Nov 18, 2026, who ruled that intake take it: "keep supplied" may stand under "hold a place" for the held base or for a base of the side in the held base's hex; one in another hex, or of the other side, is refused as before ("cannot stand under"). No state, refusal or random draw is added, the hash is unchanged and the rules label is not raised: no saved game holds such a command, because a commander states roots and the staff's commands are worked again under the doctrine version.
+
+In the doctrine (`crates/sim-staff`): a hold of a base not the side's reads the base's hex from the side's own map of the bases it does not hold, never from the truth. Where the side has a base of its own there and men of any unit ashore, it forms "keep supplied" for the lowest-numbered such base by the same rule as for a base that is the side's, and its reason says through which base the men are fed. Men who serve a "take a place" not yet met are counted, on the architect's ruling: rule A feeds any men of the side ashore in the hex. A hold with no man in the hex, or no base of its own there, plays as before. The doctrine is `supply-35`.
+
+Whether the staff works the supply sum on the morning it forms the intent was left unasserted by the hand calculation. It does not: the intent is formed by a command taken in that morning, and the supply doctrine serves it from day 2.
 

@@ -442,6 +442,25 @@ impl World {
                         return Err(CommandRefusal::CannotStandUnder(*parent));
                     }
                 }
+                // "Keep supplied" under "hold a place" is of the held base,
+                // or of a base of the side in the held base's hex, through
+                // which the side's men there are fed while the held base is
+                // not the side's (decisions 0144, 7, and 0159, A).
+                if let (IntentKind::KeepSupplied { base, .. }, IntentKind::Hold { base: held }) =
+                    (kind, found.kind)
+                {
+                    if *base != held {
+                        let held_hex = self.truth.bases.get(&held).map(|b| b.hex);
+                        let fits = self
+                            .truth
+                            .bases
+                            .get(base)
+                            .is_some_and(|b| b.side == side && Some(b.hex) == held_hex);
+                        if !fits {
+                            return Err(CommandRefusal::CannotStandUnder(*parent));
+                        }
+                    }
+                }
                 // A bombardment under "take a place" is of a base in the
                 // place's hex (decision 0146, 2).
                 if let (IntentKind::Bombard { target, .. }, IntentKind::TakePlace { hex, .. }) =

@@ -532,10 +532,10 @@ impl IntentKind {
             (IntentKind::Bombard { .. }, IntentKind::TakePlace { .. }) => true,
             // Decision 0148, 1: a carrier force under taking a place.
             (IntentKind::OperateCarriers { .. }, IntentKind::TakePlace { .. }) => true,
-            // Decision 0144, 7: the supply that follows, for the held base.
-            (IntentKind::KeepSupplied { base, .. }, IntentKind::Hold { base: held }) => {
-                base == held
-            }
+            // Decision 0144, 7: the supply that follows, for the held base;
+            // or, by decision 0159, A, for a base of the side in the held
+            // base's hex, which intake checks.
+            (IntentKind::KeepSupplied { .. }, IntentKind::Hold { .. }) => true,
             // Decision 0151, 6: the tree of an island.
             (
                 IntentKind::TakePlace { .. }

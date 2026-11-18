@@ -447,3 +447,7 @@ path = "scenario_77_forces_with_men_aboard.rs"
 [[test]]
 name = "scenario_78_orders_inside_a_day"
 path = "scenario_78_orders_inside_a_day.rs"
+
+[[test]]
+name = "scenario_79_fed_before_it_is_taken"
+path = "scenario_79_fed_before_it_is_taken.rs"
