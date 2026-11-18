@@ -2,18 +2,18 @@ Placeholder scenario 66: Units made ready, and a base built up
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 6231c643542f87d2  25 events
-day   2  hash 749844850997d489  9 events
-day   3  hash a24a2c35ec217ac2  10 events
-day   4  hash 278c478daf0a3d08  11 events
-day   5  hash e97a8c01539e85a1  8 events
-day   6  hash 359653b17c0cad9b  7 events
-day   7  hash feb7f173d3496637  7 events
-day   8  hash c275fde4a6d40e58  7 events
-day   9  hash 18ca5efddea2022a  6 events
-day  10  hash f9a483bd59aa496f  6 events
-day  11  hash 39c22c5d95b2de7a  6 events
-day  12  hash b34bffe052c28229  6 events
+day   1  hash 3efd2fd749a1932d  25 events
+day   2  hash 664aa766be9e8196  9 events
+day   3  hash 1f468bfc3baa1f11  10 events
+day   4  hash acc646fc3d533053  11 events
+day   5  hash 8ff271fbcac78852  8 events
+day   6  hash 42a5a99af690bab4  7 events
+day   7  hash 8560954e505ad660  7 events
+day   8  hash 7eb70d912acb8727  7 events
+day   9  hash f5dedeb287ea5141  6 events
+day  10  hash 235aa8db147152b4  6 events
+day  11  hash f2b86693d9124fdd  6 events
+day  12  hash b8e8b84e947cf0e2  6 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply

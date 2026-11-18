@@ -2,24 +2,24 @@ Placeholder scenario 42a: A shortage stops the clock
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 035276570d7886b6  30 events
-day   2  hash 5d8d0596cd85df8e  17 events
-day   3  hash 3f9f53f359c6c608  12 events
-day   4  hash 20c1b690ea6d4391  11 events
-day   5  hash ccf32c5e372596dd  5 events
-day   6  hash 3b73f6627dc7b02f  5 events
-day   7  hash a285b3b024b903d7  5 events
-day   8  hash ac9c7081672d993e  5 events
-day   9  hash 981e6e96d0638826  5 events
-day  10  hash 3dfbcd6322ab9541  5 events
-day  11  hash 8bde74394e5a423c  5 events
-day  12  hash d7b48e7188c6c411  5 events
-day  13  hash 0b38142ab220cbc9  6 events
-day  14  hash 0afe4af040bb03d8  5 events
-day  15  hash 48dfb175912fbe94  5 events
-day  16  hash 39b884f269661adc  12 events
-day  17  hash 01b8a0e156930e15  16 events
-day  18  hash 13848038f89ad9ba  12 events
+day   1  hash aabe4c2ac2a89d37  30 events
+day   2  hash 674dfbb4dca87449  17 events
+day   3  hash e232bc0b83c7e54d  12 events
+day   4  hash 2df05620d7395544  11 events
+day   5  hash 8762d4cbbcefe554  5 events
+day   6  hash a69e6c743e442892  5 events
+day   7  hash 893039fedd6a13ae  5 events
+day   8  hash 830008000d0f942f  5 events
+day   9  hash 894419fbfe5e9857  5 events
+day  10  hash 660f759004b4dc54  5 events
+day  11  hash 55c0277f6693a951  5 events
+day  12  hash 73429ca8d72448c0  5 events
+day  13  hash ec0cc54580c238f8  6 events
+day  14  hash 09d5d6515c740d3d  5 events
+day  15  hash 536875b3abc4dc59  5 events
+day  16  hash 88ca5ac9adea5579  12 events
+day  17  hash a65e55fc0cf75f02  16 events
+day  18  hash 3108cf27a73bfa6f  12 events
 
 task_force:1000001 "Formed at Placeholder base S, Allied" (Allied): Underway at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Placeholder cargo ship 1": afloat in task_force:1000001; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply

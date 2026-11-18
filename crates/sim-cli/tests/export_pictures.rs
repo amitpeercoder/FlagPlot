@@ -356,6 +356,8 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// and nothing else of it: every earlier scenario gives the events it gave.
 /// Remade again at the state layout v45 (decision 0159, step 2), which
 /// changes an export's state version and day hashes and nothing else.
+/// Remade again at the state layout v46 (decision 0159, step 3), which
+/// changes an export's state version and day hashes and nothing else.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -364,16 +366,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0xb34b_7cbf_562b_97c2),
-        ("04a_night_action", 0x3d05_25ea_bed5_496d),
-        ("05_eastern_solomons", 0xf97b_ee0f_69f4_ea5a),
-        ("21_landing", 0x197a_63ed_b0ae_a29d),
-        ("23_fight_ashore", 0x09ee_2ddf_dad6_9779),
-        ("31_airfield_damage", 0xa601_4cc8_3b21_41ee),
-        ("36_one_convoy", 0xd602_be87_57be_10d7),
-        ("43_keep_two_bases_fed", 0xf91e_f227_800f_708d),
-        ("50_neutralise_a_base", 0xc8eb_d13a_9303_3c37),
-        ("58_a_carrier_force_closes", 0xbdd9_5203_88bb_72af),
+        ("01_transit", 0xfe68_1297_2257_443e),
+        ("04a_night_action", 0x88fa_c277_3515_6a0c),
+        ("05_eastern_solomons", 0x940f_8692_e123_eeeb),
+        ("21_landing", 0x9681_23e8_6f73_eaea),
+        ("23_fight_ashore", 0x502f_4dcb_28b0_7755),
+        ("31_airfield_damage", 0x0d19_abba_379c_7fc0),
+        ("36_one_convoy", 0x59d5_596e_0d76_802c),
+        ("43_keep_two_bases_fed", 0xdb68_b10f_f74a_ee54),
+        ("50_neutralise_a_base", 0xab69_e7e7_8506_8e11),
+        ("58_a_carrier_force_closes", 0x878f_4692_d07d_121f),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;

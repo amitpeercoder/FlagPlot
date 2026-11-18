@@ -1045,3 +1045,17 @@ The version is unchanged, 25. The notice kinds of `report`, `staff_orders` and a
 once for its plan, and its reason gives the men wanted, the men to hand and any unit coming with its day.
 `set_interrupt` and `acknowledge` take `standing` `"cannot_bring_enough"`, with `plan`: a fourth standing interrupt,
 on by default and armed apart for each plan.
+
+## A plan told to wait (decision 0159, rule C)
+
+The version is unchanged, 25: fields and values are added and none changes its meaning. `set_limit` takes three
+more `limit` values, each only on a `take_place` or `control_island` of the commander's: `not_before` with
+`from_day`; `wait_for` with one of `task_force` and `land_unit`, in the side's numbers (a number naming none of the
+side's units is refused in the words a forces limit naming it gets); and `after` with `other_intent` (one that would close a ring of waits is refused as one naming its own intent is). Each with its
+other key left out clears the limit. In `command_state` and `plans`, each intent's `limits` gains `not_before` (a
+day), `wait_for` (`{"task_force": n}` or `{"land_unit": n}`, `command_defs.schema.json#/$defs/awaited`) and `after`
+(an intent's number), each null where not set on the intent; `limits_read_up` gains `not_before` and
+`not_before_from` (the latest day on the chain and the intent it is set on, both null where none is set), and
+`wait_for` and `after`, lists nearest first, each entry with `from`, the intent it is set on (`after`'s entries name
+the intent waited for as `intent`). A take held by one of them gives a reason that names what it waits for, and one
+that can never be met as it stands hands in `cannot_meet` once.

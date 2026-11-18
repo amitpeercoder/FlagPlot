@@ -271,7 +271,10 @@
         "area",
         "priority",
         "protected",
-        "risk"
+        "risk",
+        "not_before",
+        "wait_for",
+        "after"
       ],
       "additionalProperties": false,
       "properties": {
@@ -377,8 +380,36 @@
             null
           ],
           "description": "The risk level set on this intent itself; null where none is set (limits_read_up gives what it is read as)."
+        },
+        "not_before": {
+          "type": ["integer", "null"],
+          "description": "Decision 0159, 9: the day before which the staff does not release the plan, set on this intent itself; null where none is set."
+        },
+        "wait_for": {
+          "oneOf": [
+            { "$ref": "#/$defs/awaited" },
+            { "type": "null" }
+          ],
+          "description": "Decision 0159, 9: the task force or land unit, in the side's numbers, the staff waits for before it releases the plan, set on this intent itself; null where none is set."
+        },
+        "after": {
+          "type": ["integer", "null"],
+          "description": "Decision 0159, 9: the intent whose place must be the side's before the staff releases the plan, set on this intent itself; null where none is set."
         }
       }
+    },
+    "awaited": {
+      "description": "What a wait_for names (decision 0159, 9): one of task_force and land_unit, in the side's numbers.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_force": { "type": "integer" },
+        "land_unit": { "type": "integer" }
+      },
+      "oneOf": [
+        { "required": ["task_force"] },
+        { "required": ["land_unit"] }
+      ]
     },
     "run": {
       "type": "object",
@@ -1127,7 +1158,11 @@
         "area",
         "area_from",
         "priority",
-        "priority_from"
+        "priority_from",
+        "not_before",
+        "not_before_from",
+        "wait_for",
+        "after"
       ],
       "additionalProperties": false,
       "properties": {
@@ -1288,6 +1323,41 @@
             "integer",
             "null"
           ]
+        },
+        "not_before": {
+          "type": ["integer", "null"],
+          "description": "Decision 0159, 9: the latest not_before day on the intent and above it; null where none is set. Only a take_place's release reads it."
+        },
+        "not_before_from": {
+          "type": ["integer", "null"],
+          "description": "The intent that latest day is set on; null where none is set."
+        },
+        "wait_for": {
+          "type": "array",
+          "description": "Decision 0159, 9: every wait_for on the intent and above it, nearest first, each with the intent it is set on (from). Each binds.",
+          "items": {
+            "type": "object",
+            "required": ["from"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "type": "integer" },
+              "land_unit": { "type": "integer" },
+              "from": { "type": "integer" }
+            }
+          }
+        },
+        "after": {
+          "type": "array",
+          "description": "Decision 0159, 9: every after on the intent and above it, nearest first: the intent whose place must be the side's, and the intent the limit is set on (from). Each binds.",
+          "items": {
+            "type": "object",
+            "required": ["intent", "from"],
+            "additionalProperties": false,
+            "properties": {
+              "intent": { "type": "integer" },
+              "from": { "type": "integer" }
+            }
+          }
         }
       }
     },

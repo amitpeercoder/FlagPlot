@@ -18,9 +18,10 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    AmendmentChange, CommandKind, CommandRefusal, CommandState, Committed, Displacement, HoldMaker,
-    HoldTarget, Intent, IntentKind, IntentLimits, InterruptRef, InterruptSetting, Limit, Plan,
-    PlanState, Proposal, Run, RunDays, Staff, StaffDecisions, StandingSubject, SupplyProjection,
+    AmendmentChange, Awaited, CommandKind, CommandRefusal, CommandState, Committed, Displacement,
+    HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptRef, InterruptSetting, Limit,
+    Plan, PlanState, Proposal, Run, RunDays, Staff, StaffDecisions, StandingSubject,
+    SupplyProjection,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -316,7 +317,19 @@ fn limits_json(n: &Names<'_>, limits: &IntentLimits) -> Value {
         "priority": limits.priority,
         "protected": n.ships(&limits.protected),
         "risk": limits.risk.map(|risk| risk.name()),
+        "not_before": limits.not_before,
+        "wait_for": limits.wait_for.map(|awaited| awaited_json(n, awaited)),
+        "after": limits.after.map(IntentId::raw),
     })
+}
+
+/// What a "wait for" names (decision 0159, 9), in the side's numbers:
+/// `{"task_force": n}` or `{"land_unit": n}`.
+fn awaited_json(n: &Names<'_>, awaited: Awaited) -> Value {
+    match awaited {
+        Awaited::TaskForce(force) => json!({ "task_force": force_numbers(n, [&force])[0] }),
+        Awaited::LandUnit(unit) => json!({ "land_unit": n.land_units([&unit])[0] }),
+    }
 }
 
 /// `intent` and the intents above it, nearest first.
@@ -344,6 +357,7 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
     let bound_groups = state.groups_on_chain(intent.id);
     let priority = chain.iter().find(|i| i.limits.priority.is_some()).copied();
     let area = chain.iter().find(|i| i.limits.area.is_some()).copied();
+    let waits = state.waits_read_up(intent.id);
     json!({
         "forces": forces.and_then(|i| i.limits.forces.as_ref()).map(|f| forces_json(n, f)),
         "forces_from": from(forces),
@@ -379,6 +393,23 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
         "area_from": from(area),
         "priority": priority.and_then(|i| i.limits.priority),
         "priority_from": from(priority),
+        // Decision 0159, 9: every one on the chain binds.
+        "not_before": waits.not_before.map(|(day, _)| day),
+        "not_before_from": waits.not_before.map(|(_, on)| on.raw()),
+        "wait_for": waits
+            .wait_for
+            .iter()
+            .map(|(awaited, on)| {
+                let mut body = awaited_json(n, *awaited);
+                body["from"] = json!(on.raw());
+                body
+            })
+            .collect::<Vec<_>>(),
+        "after": waits
+            .after
+            .iter()
+            .map(|(other, on)| json!({ "intent": other.raw(), "from": on.raw() }))
+            .collect::<Vec<_>>(),
     })
 }
 
@@ -1750,6 +1781,10 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "supply_t",
             "fuel_t",
             "risk",
+            "from_day",
+            "task_force",
+            "land_unit",
+            "other_intent",
         ],
         "set_leave" => &["leave", "given"],
         "approve" | "cancel_plan" => &["plan"],
@@ -2027,7 +2062,13 @@ pub(crate) fn request(
             body.insert("task_force".into(), json!(id));
         }
     }
-    if tool == "hold" || tool == "release" || tool == "acknowledge" {
+    // A wait for names the force or unit by the side's number, as a hold
+    // does (decision 0159, 9).
+    if tool == "hold"
+        || tool == "release"
+        || tool == "acknowledge"
+        || (tool == "set_limit" && body.get("limit").and_then(Value::as_str) == Some("wait_for"))
+    {
         if body.contains_key("setting") && !body.contains_key("air_group") {
             return Err(CallError::new(format!(
                 "\"setting\" is an argument of {tool} only with \"air_group\" (the one setting that can be held is \"search_arc\")"

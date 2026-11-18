@@ -2,12 +2,12 @@ Placeholder scenario 71: Bombardment from the sea
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d7538c6987cd94df  36 events
-day   2  hash ff4fc807d92185b0  20 events
-day   3  hash cfe7f2107d1f0308  20 events
-day   4  hash d35848e4171cd178  20 events
-day   5  hash 5146c1197a5164d6  10 events
-day   6  hash a06dc93ccd60d323  4 events
+day   1  hash 952ffa170357a378  36 events
+day   2  hash ad7588da4bcab055  20 events
+day   3  hash 54dd4b405cc92e7b  20 events
+day   4  hash ba1e91b95e5ba419  20 events
+day   5  hash 2e0af70f0de8a79f  10 events
+day   6  hash f76c038d94a6c5ee  4 events
 
 task_force:1 "Placeholder bombardment force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Placeholder battleship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 320 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply

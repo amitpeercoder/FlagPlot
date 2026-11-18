@@ -50,6 +50,7 @@ pub mod search;
 pub mod stand;
 pub mod strike;
 mod take;
+mod told;
 mod units;
 
 pub use projection::project;
@@ -244,7 +245,13 @@ use sim_core::view::SideView;
 /// balanced, where no such day comes, hands in the notice that it cannot
 /// bring enough once and forms nothing. A side with no take short of men
 /// gets the orders `supply-35` gave.
-pub const DOCTRINE_VERSION: &str = "supply-36";
+/// `supply-37` adds decision 0159, rule C: a "take a place" whose landing is
+/// ready is not released, and leave to launch is not asked, while a limit
+/// "not before", "wait for" or "after" read up its tree is unmet; a limit
+/// that can never be met as it stands is said once with the notice that the
+/// intent cannot be met. A side with no such limit gets the orders
+/// `supply-36` gave.
+pub const DOCTRINE_VERSION: &str = "supply-37";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
