@@ -1095,6 +1095,17 @@ fn short_of_men_at_balanced() {
 }
 
 #[test]
+fn short_of_men_at_press_it_goes() {
+    // At press the men wanted are 500, base 1's lift gives them, and the
+    // staff goes with unit 1 from base 1 on day 1, short of nothing.
+    let g = play(&format!("{}{}", short_of_men(500), risk("press")));
+    assert_eq!(g.formed_landings().first(), Some(&(1, landing_kind(1))));
+    let (_, units, source) = g.staff_limit(1, 2).expect("a limit on day 1");
+    assert_eq!((units, source), (vec![1], Some(1)), "{:?}", g.commands(1));
+    assert!(!g.reasons(1).contains("short by"), "{}", g.reasons(1));
+}
+
+#[test]
 fn short_of_men_at_preserve_the_force() {
     let g = play(&format!("{}{}", short_of_men(500), risk("preserve")));
     assert!(g.formed_landings().is_empty(), "{:?}", g.formed_landings());
