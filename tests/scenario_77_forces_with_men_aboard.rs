@@ -165,6 +165,20 @@
 //!   base 4 takes task force 2 as its first lift and routes it to C. No
 //!   force but task force 1 is routed to B on day 1. Only the orders of
 //!   day 1 are asserted.
+//! - **The higher take first.** As "Two islands", but with task force 2
+//!   usable from day 4 as in the main case, and unit 10, Japanese, 2,000
+//!   men, ashore at B. On day 1 the take of base 2 takes task force 1 as
+//!   its first lift; the take of base 4 has no lift it may take and
+//!   forms nothing. On the morning of day 4 task force 2 may be used.
+//!   The take of base 2 is not met, its first lift landed on day 1, and
+//!   its 600 fit men are fewer than the men wanted whatever the
+//!   estimate: it is the higher in priority and sends task force 2 as a
+//!   later lift, with a route to B and back and an unload order, and
+//!   unit 3 is added to the forces limit of its task "ready a landing".
+//!   The take of base 4 forms nothing that morning and task force 2 is
+//!   given no route to C on any day. Only the orders of days 1 and 4 are
+//!   asserted. Added by the architect on Nov 18, 2026, with decision
+//!   0152's item 5b.
 //! - **Nothing aboard that can fight.** With unit 1 a working unit: no
 //!   lift as it stands has a fighting unit, and no base has a transport
 //!   force beside a fighting unit ashore. The take forms nothing, hands

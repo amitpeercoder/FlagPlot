@@ -25,6 +25,8 @@ The landings of 7 August begin with the men at sea. Every Japanese reinforcement
 
 5a. **Why the first lift must be in first** (amended on Nov 17, 2026, after the review of step 8). As first written, a side with no estimate sent every lift it had to its first place on the first morning, and a second island asked for the same day had nothing left to land: in the staff's setup of the 39 days the transports for Tulagi would have gone to Lunga. With the wait, the takes are served in priority order on the first morning, each with one lift, and a later lift goes where men are still wanted once the first is ashore.
 
+5b. **A higher take's later lift comes before a lower take's first** (added by the architect on Nov 18, 2026, on the loading check of the proof; "Amended on the loading check", below). On a morning, the takes are served in priority order for every lift as it stands: a take higher in priority that may send a later lift by item 5 is given each free lift it may take before any take lower in priority chooses its first lift from what is left. A lower take forms nothing that morning from a lift a higher take sends.
+
 ## Men for a place already held
 
 8. **A lift as it stands that no "take a place" in force can use,** because none is in force for a place not yet taken or its men are all working men, is sent by "hold a place": on a morning a hold's plan is released and its base is the side's, each such force, in force order, that no hold higher in priority has taken, is given a route to the base's hex and back to its source, marked to act there, and an unload order. Under "control an island" the holds are in the island's order, so the first place held has them.
@@ -103,4 +105,8 @@ Made on Nov 18, 2026, on reading the build.
 3. **The measure of an island counted a day on which the enemy still held the airfield,** because a base formed by the landing stood in the hex. Mended in this pull request: a place that names a base is the side's when that base is, on each day by the base's own day-end event. Decision 0151's item 10, the rulebook and the glossary say so.
 4. **The measure still keeps no record,** so it reads every past day at today's use and can count a day and later not count it (scenario 77: day 2 counts when read on days 2 and 3 and not from day 4, when more men are ashore). Scenario 77's hand calculation is restated to say exactly this: 5 of 8 days, with the reading of each day. A measure that keeps its days is state, and is built with the interface's work.
 5. **Known and left:** a commander's own hold with no forces limit sends no force with men aboard (reading 12), and says so each morning, which adds 21 lines of reasons to one recorded game.
+
+## Amended on the loading check
+
+On Nov 18, 2026 the loading check of the proof (decision 0153: arrangement (a), seed 1) showed a fault of this record as built. The Japanese side asked for Guadalcanal first and Tulagi second. Its first lift went to Lunga. Every lift after it went to Tulagi: on the morning each became usable the tree of the second island was formed before the first island's take weighed its later lifts, so the lower take chose the force as its first lift and the higher take found it taken. Item 5 says a later lift goes to a take unless one higher in priority has taken it; the order of the morning's work had it the other way. Item 5b states the order, and scenario 77 gains the property "The higher take first".
 
