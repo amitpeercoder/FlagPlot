@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: A transport force with men aboard is a lift as it stands: "take a place" takes one as its first lift, sends each later one while the place is not taken and men are still wanted, and lands the working men aboard with the rest; a hold sends to its place a force with men aboard that no take needs; and the supply under a hold formed by "control an island" uses whatever transport forces lie empty at its source that morning
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings for ruling
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -93,3 +93,14 @@ No expected number of an earlier test changed and no earlier test is ignored. `t
 
 - `crates/sim-staff/src/lifts.rs` (new: a lift as it stands, free, its source, the later-lift and hold surveys, `hold_lifts`).
 - `crates/sim-staff/src/assemble.rs` (`first_lift_as_it_stands`), `take.rs` (`move_step` with its place, source and `LiftKind`; `supply` with the draw; `later_lifts_alone`, `send_later_lifts`, `on_its_way`; the later lifts in `ashore`), `ready.rs` (ready as it stands), `island.rs` (`island_source` kept, `pool_at`, `island_pools`), `air.rs` (the hold's call).
+
+## The architect's rulings
+
+Made on Nov 18, 2026, on reading the build.
+
+1. **Readings 1 to 15 are accepted as built.** Five were ruled during the build, on the team's findings: a lift as it stands is ready wherever it lies; it is free, with no route left; it draws supply only at a base the staff may use; the pool of supply ships only grows; and a force a hold or a take sends is added to that intent's limit.
+2. **The landing of days 4 and 5 in scenario 77 was the architect's error and is restated;** the code stands. A working unit ashore works on the port by default (decision 0099), so the men of day 4 land at 28 t an hour and the supply of day 5 at 34 t an hour.
+3. **The measure of an island counted a day on which the enemy still held the airfield,** because a base formed by the landing stood in the hex. Mended in this pull request: a place that names a base is the side's when that base is, on each day by the base's own day-end event. Decision 0151's item 10, the rulebook and the glossary say so.
+4. **The measure still keeps no record,** so it reads every past day at today's use and can count a day and later not count it (scenario 77: day 2 counts when read on days 2 and 3 and not from day 4, when more men are ashore). Scenario 77's hand calculation is restated to say exactly this: 5 of 8 days, with the reading of each day. A measure that keeps its days is state, and is built with the interface's work.
+5. **Known and left:** a commander's own hold with no forces limit sends no force with men aboard (reading 12), and says so each morning, which adds 21 lines of reasons to one recorded game.
+

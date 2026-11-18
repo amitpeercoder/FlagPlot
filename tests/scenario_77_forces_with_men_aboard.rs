@@ -28,6 +28,14 @@
 //! landed its load steams on at the start of the next pulse. A hex is
 //! 40 nm and the transports make 10 kn.
 //!
+//! A working unit ashore at a base with nothing else to do works on its
+//! port (decision 0099): each man gives 1 of work a day, and the rate of
+//! unloading there is 1 + work / 1,000 times the lighter's 20 t an hour.
+//! Unit 2, 400 men, works from day 2: 1.4, 28 t an hour. Unit 3, 300 men,
+//! works from day 5: 1.7, 34 t an hour. (Restated by the architect on Nov
+//! 18, 2026: the first writing left the work out and had 20 t an hour on
+//! days 4 and 5.)
+//!
 //! ## Inputs
 //!
 //! The placeholder map of scenario 27: A at (0,0), port size 5, and B at
@@ -62,8 +70,8 @@
 //! | 1 | 0 | Task force 1: `prepare_landing` at B, roster 1; a route to B and back to A, acting at B; an unload order | Sails at hour 0 and arrives at hour 8. In the night's last 4 hours each ship lands 320 men. In the morning ship 1 lands 280 men in 3.5 hours and then 30 t in 1.5 hours; ship 2 lands 80 men in an hour. Base 3, "Landing at (4,0)", is formed. The force steams for A at hour 18 |
 //! | 2 | 24 | Unit 1 set to attack | The force arrives at A at hour 34. Base 2 changes side at the end of the day |
 //! | 3 | 48 | Unit 1 set to defend | |
-//! | 4 | 72 | Task force 1: a load of supply to a weight of 85 t. Task force 2: a route to B and back to A, acting at B, and an unload order | Task force 2 sails at hour 72 and arrives at hour 88. It lands 160 men in the morning, and in the afternoon 140 men in 1.75 hours and then 20 t in an hour. It steams for A at hour 96 |
-//! | 5 | 96 | Task force 1: a route to B and back to A, acting at B, and an unload order | Sails at hour 96, arrives at hour 112. Ship 1 lands 40 t in the morning and 45 t in the afternoon. Task force 2 arrives at A at hour 112 |
+//! | 4 | 72 | Task force 1: a load of supply to a weight of 85 t. Task force 2: a route to B and back to A, acting at B, and an unload order | Task force 2 sails at hour 72 and arrives at hour 88. With unit 2 at work on the port the rate is 28 t an hour: it lands 224 men in the morning's 2 hours, and in the afternoon 76 men and then 20 t. It steams for A at hour 96 |
+//! | 5 | 96 | Task force 1: a route to B and back to A, acting at B, and an unload order | Sails at hour 96, arrives at hour 112. With units 2 and 3 at work the rate is 34 t an hour: ship 1 lands 68 t in the morning's 2 hours and 17 t in the afternoon. Task force 2 arrives at A at hour 112 |
 //! | 6 to 8 | | none | Task force 1 steams for A at hour 120 and arrives at hour 136 |
 //!
 //! Ten orders in all. No staff order or command is refused.
@@ -111,16 +119,31 @@
 //!
 //! ## The measure
 //!
-//! Base 2 is the side's at the end of each day from day 2. The floor is
-//! 5 days. At the end of day 2 the hex holds 25 t at 5 t a day, 5 days:
-//! it counts. At the end of day 3 it holds 20 t, 4 days: it does not. At
-//! the end of day 4 it holds 35 t at 6.5 t a day, and from day 5 more
-//! than 90 t: it counts. The island is controlled on days 2 and 4 to 8:
-//! on 6 of 8 days in force.
+//! A place that names a base counts on a day when that base was the
+//! side's at the end of the day and the stock in its hex was at least
+//! the floor, 5 days, of use. Base 2 is the side's from the end of day
+//! 2; on day 1 the side has only base 3, formed by the landing, in the
+//! hex, and the place is not its own. The measure keeps no record of
+//! past days' use: it reads every past day at today's use (decision
+//! 0151, ruling 5).
 //!
-//! Restated by the architect on Nov 17, 2026, with decision 0151's
-//! amendment: the first writing counted any supply at all and gave 7 of
-//! 8, and had no neutralising of base 2.
+//! | Read at the end of day | Use, t a day | Days that count | Controlled |
+//! | --- | --- | --- | --- |
+//! | 1 | 5 | none | 0 |
+//! | 2 | 5 | 2 (25 t, 5 days) | 1 |
+//! | 3 | 5 | 2 (day 3 has 20 t, 4 days) | 1 |
+//! | 4 | 6.5 | 4 (35 t; days 2 and 3 hold less than 32.5 t) | 1 |
+//! | 5 to 8 | 6.5 | 4 and each day since | 2, 3, 4, 5 |
+//!
+//! At the end of the game the island is controlled on 5 of 8 days in
+//! force. The days of supply shown for the place are 6, 5 and 4 at the
+//! end of days 1 to 3.
+//!
+//! Restated by the architect on Nov 18, 2026, on reading the build: the
+//! first writing counted day 2 to the end and gave 6 of 8, which a
+//! measure that keeps no record cannot give; and the build counted day
+//! 1, on which the airfield was the enemy's, which is mended (a place
+//! that names a base is the side's when that base is).
 //!
 //! # Properties
 //!
@@ -979,19 +1002,18 @@ fn the_hours_of_the_landing_and_of_task_force_2() {
 }
 
 #[test]
-#[ignore = "mismatch with the hand calculation, reported to the architect: unit 2, a working unit, works at the port of base 2 by default from day 2 (decision 0099; works.rs, the unloading rate times 1 + work / work_to_double_unloading), so B no longer unloads at 20 t an hour: on day 4 ship 3 lands 224 men in the morning and 76 in the afternoon, not 160 and 140, and the 85 t of day 5 lands faster than 40 t and 45 t. The day-1 landing, the hours and every day-end stock agree"]
 fn the_men_and_supply_landed() {
     let g = main_game();
     // Day 1: in the night's last 4 hours each ship lands 320 men; in the
     // morning ship 1 lands 280 and ship 2 lands 80. Day 4: task force 2's
-    // ship lands 160 men in the morning and 140 in the afternoon.
+    // ship lands 224 men in the morning and 76 in the afternoon, at 28 t an hour.
     let mut want: Vec<String> = [
         (1, "Night", 1, 1, 320),
         (1, "Night", 2, 2, 320),
         (1, "Morning", 1, 1, 280),
         (1, "Morning", 2, 2, 80),
-        (4, "Morning", 3, 3, 160),
-        (4, "Afternoon", 3, 3, 140),
+        (4, "Morning", 3, 3, 224),
+        (4, "Afternoon", 3, 3, 76),
     ]
     .iter()
     .map(|(d, p, u, s, m)| format!("{d} {p} unit {u} ship {s} men {m}"))
@@ -999,12 +1021,12 @@ fn the_men_and_supply_landed() {
     want.sort();
     assert_eq!(g.landed(), want);
     // Supply: 30 t in the morning of day 1, 20 t in the afternoon of day 4,
-    // 40 t in the morning and 45 t in the afternoon of day 5.
+    // 68 t in the morning and 17 t in the afternoon of day 5, at 34 t an hour.
     let mut want_t: Vec<String> = [
         (1, "Morning", 1, 30),
         (4, "Afternoon", 3, 20),
-        (5, "Morning", 1, 40),
-        (5, "Afternoon", 1, 45),
+        (5, "Morning", 1, 68),
+        (5, "Afternoon", 1, 17),
     ]
     .iter()
     .map(|(d, p, s, t)| format!("{d} {p} ship {s} t {}", n(*t)))
@@ -1072,13 +1094,13 @@ fn the_supply_at_every_day_end() {
 }
 
 #[test]
-#[ignore = "mismatch with the hand calculation, reported to the architect: the measure applies today's daily use to every past day (decision 0151, reading 9, known and left by ruling 5), so at the end of day 8 day 2 is read as 25 t at 6.5 t a day, 3.8 days, and day 1 counts at the end of day 1 (base 3 in the place's hex, 30 t at 5 t a day); the build gives controlled on 5 of 8 days (days 4 to 8), not 6"]
-fn the_island_is_controlled_on_6_of_8_days() {
+fn the_island_is_controlled_on_5_of_8_days() {
     let g = main_game();
-    // Controlled on days 2 and 4 to 8.
-    assert_eq!(g.controlled(), vec![0, 0, 1, 1, 2, 3, 4, 5, 6]);
+    // The measure as read at the end of each day (the table of the hand
+    // calculation).
+    assert_eq!(g.controlled(), vec![0, 0, 1, 1, 1, 2, 3, 4, 5]);
     let m = g.measures[8].as_ref().expect("a measure");
-    assert_eq!((m.days_in_force, m.days_controlled), (8, 6));
+    assert_eq!((m.days_in_force, m.days_controlled), (8, 5));
     let at = |day: usize| {
         g.measures[day]
             .as_ref()
@@ -1089,11 +1111,12 @@ fn the_island_is_controlled_on_6_of_8_days() {
             .collect::<Vec<_>>()
     };
     // End of day 2: 25 t at 5 t a day, 5 days. End of day 3: 20 t, 4 days.
+    assert_eq!(at(1)[0], (false, Some(n(6))));
     assert_eq!(at(2)[0], (true, Some(n(5))));
     assert_eq!(at(3)[0], (true, Some(n(4))));
     assert_says(
         g.words.last().expect("words"),
-        &["controlled on 6 of 8 days in force"],
+        &["controlled on 5 of 8 days in force"],
     );
 }
 

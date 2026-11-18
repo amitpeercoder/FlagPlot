@@ -121,10 +121,21 @@ pub fn island_measure(view: &SideView<'_>, intent: IntentId) -> Option<IslandMea
     // The stock at the end of each day in each hex, summed over the side's
     // bases there, from the side's events; and the days on which a hex has
     // any such event.
+    //
+    // A side is given a base's day-end event only for a day on which the
+    // base was its own, so `own_on` is the days each base was the side's. A
+    // base named by a place is in its place's hex whoever holds it today.
+    let named_hex: BTreeMap<BaseId, Hex> = island
+        .places
+        .iter()
+        .filter_map(|place| place.base.map(|base| (base, place.hex)))
+        .collect();
     let mut stock_at: BTreeMap<(u32, Hex), Fixed> = BTreeMap::new();
+    let mut own_on: BTreeSet<(u32, BaseId)> = BTreeSet::new();
     for event in view.events() {
         if let SideEventKind::Whole(EventKind::BaseAtDayEnd { base, supply_t, .. }) = &event.kind {
-            if let Some(hex) = hex_of_own.get(base) {
+            own_on.insert((event.day, *base));
+            if let Some(hex) = hex_of_own.get(base).or_else(|| named_hex.get(base)) {
                 *stock_at.entry((event.day, *hex)).or_insert(Fixed::ZERO) += *supply_t;
             }
         }
@@ -139,7 +150,12 @@ pub fn island_measure(view: &SideView<'_>, intent: IntentId) -> Option<IslandMea
         places.push(PlaceMeasure {
             hex: place.hex,
             base: place.base,
-            ours: hex_hold(view, place.hex),
+            // A place that names a base is the side's when that base is: a
+            // base formed by a landing beside the enemy's does not make it so.
+            ours: match place.base {
+                Some(base) => hex_of_own.contains_key(&base),
+                None => hex_hold(view, place.hex),
+            },
             days_of_supply: today.and_then(|figure| figure.days),
         });
         if seen.insert(place.hex) {
@@ -152,19 +168,25 @@ pub fn island_measure(view: &SideView<'_>, intent: IntentId) -> Option<IslandMea
     let mut days_controlled = 0;
     if first <= last {
         for day in first..=last {
-            let controlled = rules.iter().all(|(hex, use_t, floor)| {
-                let Some(stock) = stock_at.get(&(day, *hex)) else {
-                    return false;
-                };
-                let reserve = reserve_at.get(hex).copied().unwrap_or(Fixed::ZERO);
-                if *stock <= reserve {
-                    return false;
-                }
-                // Stock over use at least the floor, as stock at least floor
-                // times use; with no use, the stock above the reserve is all
-                // that is asked.
-                use_t.is_zero() || *stock >= *floor * *use_t
-            });
+            let named_ours = island
+                .places
+                .iter()
+                .filter_map(|place| place.base)
+                .all(|base| own_on.contains(&(day, base)));
+            let controlled = named_ours
+                && rules.iter().all(|(hex, use_t, floor)| {
+                    let Some(stock) = stock_at.get(&(day, *hex)) else {
+                        return false;
+                    };
+                    let reserve = reserve_at.get(hex).copied().unwrap_or(Fixed::ZERO);
+                    if *stock <= reserve {
+                        return false;
+                    }
+                    // Stock over use at least the floor, as stock at least floor
+                    // times use; with no use, the stock above the reserve is all
+                    // that is asked.
+                    use_t.is_zero() || *stock >= *floor * *use_t
+                });
             if controlled {
                 days_controlled += 1;
             }
