@@ -356,6 +356,10 @@ fn need_json(n: &Names<'_>, need: &NeedToKnow) -> Value {
             "air_group": n.groups([&l.air_group])[0],
             "since_day": l.since_day,
         })),
+        "moved_to_look": need.moved_to_look.map(|m| json!({
+            "task_force": force_numbers(n, [&m.task_force])[0],
+            "hex": n.ctx.place(m.hex),
+        })),
         "met": need.met,
         "text": need_text(n, need),
     })
@@ -398,8 +402,17 @@ fn need_text(n: &Names<'_>, need: &NeedToKnow) -> String {
         },
         None => "none looking".to_string(),
     };
+    let moved = match need.moved_to_look {
+        Some(m) => format!(
+            "; task force {} moved to ({},{}) to look",
+            force_numbers(n, [&m.task_force])[0],
+            m.hex.q,
+            m.hex.r
+        ),
+        None => String::new(),
+    };
     format!(
-        "Asked by {by}: {}. {}; {looking}. {}.",
+        "Asked by {by}: {}. {}; {looking}{moved}. {}.",
         need.asked,
         held,
         if need.met { "Met" } else { "Not met" }

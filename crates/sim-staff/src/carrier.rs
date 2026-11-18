@@ -500,7 +500,7 @@ fn setting_words(speed: SpeedSetting) -> &'static str {
 /// The speed of a passage of `force` to `to` by decision 0130, 1, read from
 /// the engine's measure, and the words for it: "cruise", or full speed with
 /// the hours cruise would take.
-fn passage_speed(
+pub(crate) fn passage_speed(
     view: &sim_core::view::SideView<'_>,
     force: TaskForceId,
     risk: Risk,
@@ -564,8 +564,16 @@ impl Day<'_, '_> {
             .max()
     }
 
-    #[allow(clippy::too_many_lines)]
     pub(crate) fn serve_carrier(&mut self, task: &Intent) {
+        self.serve_carrier_with(task, true);
+    }
+
+    /// The carrier doctrine's morning for `task`. With `released` false (a
+    /// force moved to look while its take's plan is preparing, decision
+    /// 0159, 14) the strike on the place is not given; and a group the look
+    /// keeps on reconnaissance of the place is given no order at any time.
+    #[allow(clippy::too_many_lines)]
+    pub(crate) fn serve_carrier_with(&mut self, task: &Intent, released: bool) {
         let Some(plan) = self.plan_of(task) else {
             return;
         };
@@ -1339,7 +1347,8 @@ impl Day<'_, '_> {
                 // met, its place in the bombers' reach (decision 0151, 8a).
                 let end = self
                     .under_take(task)
-                    .or_else(|| self.island_strike_take(task, here, &reach_of));
+                    .or_else(|| self.island_strike_take(task, here, &reach_of))
+                    .filter(|_| released);
                 if let Some(end) = end {
                     cover =
                         self.cover_strike(task, &plan, &end, here, risk, &groups, &reach_of, &air);
@@ -1408,6 +1417,20 @@ impl Day<'_, '_> {
                 }
                 for (group, line) in &cover.lines {
                     lines.insert(*group, line.clone());
+                }
+                // A group the look keeps on reconnaissance of the place is
+                // the look's, not the carrier task's (decision 0159, 14).
+                let looking: Vec<AirGroupId> = groups
+                    .iter()
+                    .map(|g| g.id)
+                    .filter(|g| self.looking_groups.contains(g))
+                    .collect();
+                air.orders.retain(|(g, _)| !looking.contains(g));
+                for group in &looking {
+                    lines.insert(
+                        *group,
+                        format!("{group} looks at the place of the take this task stands under, on reconnaissance: no order"),
+                    );
                 }
                 orders.extend(std::mem::take(&mut cover.orders));
                 for (group, order) in &air.orders {

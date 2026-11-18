@@ -257,7 +257,16 @@ use sim_core::view::SideView;
 /// in place of the risk, which still sets the men wanted; and the need to
 /// know of each take whose plan is preparing is worked as data. A side with
 /// no such limit gets the orders and reasons `supply-37` gave.
-pub const DOCTRINE_VERSION: &str = "supply-38";
+/// `supply-39` adds decision 0159, rule D, item 14, as the architect ruled
+/// it on Nov 18, 2026: a take whose plan is preparing, whose need to know is
+/// not met, with no group its forces limit names that reaches the place, and
+/// a group it names that can search aboard a carrier force it names, forms
+/// that force's carrier task then, at the covering hex where the scout
+/// reaches the place, else the first hex on her way where one does (at
+/// preserve the force only with leave to launch); before release the task
+/// strikes nothing at the place and gives a group looking at it no order. A
+/// side with no such take gets the orders `supply-38` gave.
+pub const DOCTRINE_VERSION: &str = "supply-39";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
