@@ -113,9 +113,14 @@
 //!   takes unit 2, and the reason says unit 1 serves the other intent.
 //! - **Short of men, at balanced.** With unit 2 left out and an opening
 //!   estimate of 500: the men wanted are 1,000. Base 1's lift gives 600
-//!   and base 3's gives 600: neither is enough, they are equal, and base
-//!   1 is the lower numbered. The staff goes with unit 1 and says it is
-//!   short by 400 men.
+//!   and base 3's gives 600: neither is enough, and no unit or force is
+//!   coming. The staff forms nothing and gives no order or command. On
+//!   day 1 it hands in the notice that it cannot bring enough, with
+//!   1,000 men wanted and 600 to hand, and on days 2 and 3 it gives the
+//!   reason and no second notice. (Restated by the architect on Nov 18,
+//!   2026, for decision 0159's rule B, item 7: before it, the staff went
+//!   with unit 1 from base 1 and said it was short by 400 men. At press
+//!   it still does.)
 //! - **Short of men, at preserve the force.** The same at preserve the
 //!   force: the men wanted are 1,500. The staff forms nothing, hands in
 //!   the notice that it cannot meet intent 1 on day 1 and gives the
