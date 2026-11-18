@@ -58,6 +58,12 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order .pv { border-top: 1px dashed #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
 .order .pv b { font-size: 12px; color: var(--paper-dim); font-weight: 400; }
 .sheet { position: fixed; left: 50%; top: 56px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); max-height: calc(100% - 160px); overflow: auto; background: var(--paper); color: var(--paper-ink); padding: 16px 18px; border-radius: 2px; box-shadow: 0 10px 34px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 10px; }
+.sheet .doc { font-family: var(--f-type); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; gap: 10px; max-width: 62ch; }
+.sheet .doc[hidden] { display: none; }
+.sheet .doc .head { font-size: 13px; color: var(--paper-dim); border-bottom: 1px solid #8d8672; padding-bottom: 8px; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
+.sheet .doc h3 { margin: 6px 0 0; font-family: var(--f-ui); font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
+.sheet .doc p { margin: 0; }
+.sheet .doc .foot { font-size: 12px; color: var(--paper-dim); border-top: 1px dashed #8d8672; padding-top: 8px; }
 .sheet pre { margin: 0; font-family: var(--f-type); font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
 
 .bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; background: var(--panel); border-top: 1px solid var(--rule); padding: 10px 16px 12px; }
@@ -150,6 +156,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     <h2 id="sheet-title">THE BRIEFING</h2>
     <button type="button" id="sheet-close">PUT IT DOWN</button>
   </div>
+  <div class="doc" id="sheet-doc" hidden></div>
   <pre id="sheet-text"></pre>
 </section>
 
@@ -415,12 +422,43 @@ button:disabled { opacity: 0.45; cursor: default; }
       button(l, s.leaves.launch ? 'WITHHOLD IT' : 'GIVE LEAVE TO LAUNCH', !s.leaves.launch, function () { act('set_leave', { leave: 'launch', given: !s.leaves.launch }); });
     }
     if (s.queued && s.queued.length) slip('FROM YOU · SIGNED', 'SENT', s.queued.length + ' signal' + (s.queued.length > 1 ? 's go' : ' goes') + ' to the staff at 1800', s.queued.map(function (q) { return q.text || q.shown || (q.command && q.command.kind) || 'a command'; }).join('; ') + '.');
+    showDirectives();
     if (lastRun) { var y = slip(clock.at === 'dusk' ? 'YESTERDAY' : 'SO FAR TODAY', null, null, lastRun.summary); button(y, 'READ THE BRIEFING', false, readBriefing); }
-    else { var first = slip('ON YOUR DESK', null, null, 'The briefing for the first morning.'); button(first, 'READ THE BRIEFING', false, readBriefing); }
+    else { var first = slip('FROM STAFF', null, null, 'The staff\'s full return of your forces, bases and men.'); button(first, 'READ THE RETURN', false, readBriefing); }
     var dec = s.staff_decisions_yesterday || [];
     if (dec.length) { var d = slip('FROM STAFF', null, dec.length + ' decisions taken yesterday', dec.slice(0, 4).map(function (x) { return x.text || x.words || x.summary || ('decision ' + x.number); }).join(' · ')); }
   }
-  function readBriefing() { api('get_briefing', { text: true }).then(function (b) { $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
+  // ---- directives from the commander above ----
+  // A directive is received when its condition first holds, read from what
+  // the seat's own tools say; it then stays on the desk. Its date is the day
+  // it was received.
+  var received = {}, readOnes = {};
+  function directiveDue(d) {
+    if (location.hash === '#directives=all') return true; // to read the drafts: every directive as if received
+    if (d.when === 'start') return true;
+    if (d.when && d.when.base_is_yours != null) return M.bases.some(function (b) { return num(b.base.handle) === d.when.base_is_yours; });
+    return false;
+  }
+  function showDirectives() {
+    var list = config.directives || [], fresh = null;
+    list.forEach(function (d) { if (received[d.number] == null && directiveDue(d)) { received[d.number] = M.day; fresh = d; } });
+    list.slice().reverse().forEach(function (d) {
+      if (received[d.number] == null) return;
+      var isNew = !readOnes[d.number], a = slip('FROM ' + d.from.toUpperCase(), isNew ? 'NEW' : null, 'Directive ' + d.number + ': ' + d.subject, null, isNew);
+      button(a, 'READ THE DIRECTIVE', isNew, function () { readDirective(d); });
+    });
+    if (fresh && $('sheet').hidden) setTimeout(function () { readDirective(fresh); }, 0);
+  }
+  function readDirective(d) {
+    var doc = $('sheet-doc'), head = el('div', 'head'); doc.textContent = '';
+    [['From', d.from], ['To', d.to], ['Date', dateOf(received[d.number] - 2, true) || 'Day ' + received[d.number]], ['Subject', d.subject]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+    doc.appendChild(head);
+    d.parts.forEach(function (p) { doc.appendChild(el('h3', '', p.heading)); p.text.forEach(function (t) { doc.appendChild(el('p', '', t)); }); });
+    doc.appendChild(el('div', 'foot', 'Written for the game. It is not a historical document. Your forces, what is coming and how the result is counted are kept elsewhere.'));
+    $('sheet-title').textContent = 'DIRECTIVE ' + d.number; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    if (!readOnes[d.number]) { readOnes[d.number] = true; showSignals(); }
+  }
+  function readBriefing() { api('get_briefing', { text: true }).then(function (b) { $('sheet-title').textContent = 'THE STAFF\'S RETURN'; $('sheet-doc').hidden = true; $('sheet-text').hidden = false; $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
 
   // ---- time: you watch a day played out, and may stop between days ----

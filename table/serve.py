@@ -113,6 +113,11 @@ def main():
         help='an island the scenario names, as "1=Guadalcanal@1": its number, a name, '
         "and the number of a base that stands on it. No tool lists islands yet.",
     )
+    parser.add_argument(
+        "--directives",
+        default="",
+        help="a file of directives from the commander above, as table/directives/ has them",
+    )
     parser.add_argument("--port", type=int, default=8742)
     parser.add_argument("--sim-cli", default="target/release/sim-cli")
     args = parser.parse_args()
@@ -124,7 +129,16 @@ def main():
         number, rest = item.split("=", 1)
         name, base = rest.rsplit("@", 1)
         islands.append({"number": int(number), "name": name, "base": int(base)})
-    config = {"seat": args.seat, "start": args.start, "islands": islands}
+    directives = []
+    if args.directives:
+        with open(args.directives) as handle:
+            directives = json.load(handle)["directives"]
+    config = {
+        "seat": args.seat,
+        "start": args.start,
+        "islands": islands,
+        "directives": directives,
+    }
     chart = read_map(args.map)
     game = Game([args.sim_cli, "mcp", args.scenario, "--seat", args.seat])
 
