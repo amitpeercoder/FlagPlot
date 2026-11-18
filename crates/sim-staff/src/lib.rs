@@ -219,7 +219,13 @@ use sim_core::view::SideView;
 /// the supply under an island's holds keeps its source and sets each hold's
 /// forces limit each morning to a pool that only grows. A side with no force
 /// with men aboard and no island gets the orders `supply-31` gave.
-pub const DOCTRINE_VERSION: &str = "supply-32";
+/// `supply-33` adds decision 0151, item 8c: under "control an island" a
+/// take takes no force on the bombardment mission, and each such force
+/// stopped at a base of the side is given a bombard task under the island's
+/// first neutralising of an enemy base at a named place. A side with no
+/// island, or none with a force on the bombardment mission, gets the orders
+/// `supply-32` gave.
+pub const DOCTRINE_VERSION: &str = "supply-33";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
