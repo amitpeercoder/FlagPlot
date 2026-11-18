@@ -1,0 +1,6 @@
+
+When your intents and leaves are given, let time pass a pulse at a time with
+    PLAY N advance '{"pulses": 3, "stop_on": ["contact", "attack", "loss"]}'
+It stops at 0600 or 1200 when you were told of a new contact, an attack on your forces or a loss, so that you can act there. At each stop read what you were told (events, list_contacts, list_forces and the rest) and act as you judge: at 0600 and 1200 you may give orders to your own units with issue_orders, of seven kinds only (a task force's route, speed, readiness or rules of engagement; an air group's mission or search arc; a land unit's posture), taken in at the next pulse. Commands to the staff given inside the day are taken in only at the next dusk, which in this one-day game is after the end. Then advance again, and play to the end of the game.
+
+When the game is over (the answer says game_over is true), stop. Your final reply: the intents and leaves you gave, in one line each; each order you gave inside the day, with its hour; and the result the game gave (the margin and the outcome in words).

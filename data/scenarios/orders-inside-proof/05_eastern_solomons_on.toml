@@ -1,0 +1,1075 @@
+# THE PROOF OF DECISION 0156 (orders inside a day), step 5. It serves
+# conditions 2 and 5, and cases D and E of condition 6.
+#
+# Made by scripts/orders-inside-proof/make_arrangements.py from
+# data/scenarios/05_eastern_solomons.toml
+# by the smallest change. Do not edit by hand: change the script or the
+# source and make it again (`python3
+# scripts/orders-inside-proof/make_arrangements.py --check` says whether this
+# file is still the one it makes). It differs from its source in this
+# header; in the line `orders_inside_a_day = true` after `days`;
+# and, where the source lies in data/scenarios itself, in each reference
+# path, one folder deeper. Nothing else.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# Scenario 5: Eastern Solomons, 24 August 1942.
+#
+# Stage 5e of scenario 5. Two American carrier forces lie east of
+# Guadalcanal. The Japanese carrier striking force and the Ryujo detachment
+# come down from the north. What is in the scenario and what is left out is
+# docs/decisions/0031-eastern-solomons-scenario.md. The hand calculation is
+# in tests/scenario_05_eastern_solomons.rs.
+#
+# The ships and aircraft are real: their figures are derived from sourced
+# facts (data/reference/ship_classes_eastern_solomons.csv and
+# aircraft_types_eastern_solomons.csv, decisions 0020 and 0029). The map is
+# real. Air group strengths cite rows of data/oob/air_unit_facts.csv.
+#
+# PLACEHOLDER DATA all the same: the search, air combat and surface combat
+# figures and the scaling constants are invented. Full fuel at the start is
+# an assumption. The starting positions are worked back from positions that
+# are themselves good to about one hex.
+
+name = "Scenario 5: Eastern Solomons, 24 August 1942"
+placeholder = true
+seed = 1942
+days = 1
+orders_inside_a_day = true
+map = "../../map/south_pacific.csv"
+ship_classes = "../../reference/ship_classes_eastern_solomons.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types_eastern_solomons.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+
+# Henderson Field, in the hex of Lunga Point.
+[[base]]
+id = 1
+name = "Henderson Field"
+side = "allied"
+q = 2
+r = -4
+supply_t = 0
+
+# Task Force 16, Enterprise. It has the lower number, so a strike on the hex
+# attacks it first (decision 0026, 7), as on the day.
+[[task_force]]
+id = 1
+name = "Task Force 16"
+side = "allied"
+q = 7
+r = -5
+mission = "carrier"
+
+# Task Force 11, Saratoga, in the same hex.
+[[task_force]]
+id = 2
+name = "Task Force 11"
+side = "allied"
+q = 7
+r = -5
+mission = "carrier"
+
+# Nagumo's carriers with the ships of the vanguard, at the map's northern
+# edge at 18:00 on 23 August.
+[[task_force]]
+id = 3
+name = "Carrier striking force"
+side = "japanese"
+q = 9
+r = -19
+mission = "carrier"
+
+# The Ryujo detachment. It starts in (7,-18), on the same column of hexes as
+# its noon hex (7,-9), so its course is along an axis, 360 nm at 20 knots, and
+# it arrives at noon (decision 0058, decision 0031 amended).
+# Ryujo's noon hex is (7,-9) and not (7,-10). The record has her launch from
+# 200 to 202 miles from Guadalcanal (engagement_events 331, the 8th Cruiser
+# Division's war diary: "20 degrees 202 nm from the Guadalcanal base";
+# engagement_positions 310: 200 nautical miles north of Lunga Point). (7,-9)
+# is 200 miles from Henderson Field at (2,-4) by hex centres; (7,-10) is 223,
+# which is the grid's error and not the record.
+[[task_force]]
+id = 4
+name = "Ryujo detachment"
+side = "japanese"
+q = 7
+r = -18
+mission = "carrier"
+
+[[ship]]
+id = 1
+name = "USS Enterprise"
+class = 2020
+side = "allied"
+fuel_t = 4360
+task_force = 1
+
+[[ship]]
+id = 2
+name = "USS North Carolina"
+class = 2017
+side = "allied"
+fuel_t = 5550
+task_force = 1
+
+[[ship]]
+id = 3
+name = "USS Portland"
+class = 2019
+side = "allied"
+fuel_t = 2614
+task_force = 1
+
+[[ship]]
+id = 4
+name = "USS Atlanta"
+class = 2010
+side = "allied"
+fuel_t = 1481
+task_force = 1
+
+[[ship]]
+id = 5
+name = "USS Balch"
+class = 2018
+side = "allied"
+fuel_t = 651
+task_force = 1
+
+[[ship]]
+id = 6
+name = "USS Benham"
+class = 2011
+side = "allied"
+fuel_t = 491
+task_force = 1
+
+[[ship]]
+id = 7
+name = "USS Ellet"
+class = 2011
+side = "allied"
+fuel_t = 491
+task_force = 1
+
+[[ship]]
+id = 8
+name = "USS Maury"
+class = 2014
+side = "allied"
+fuel_t = 525
+task_force = 1
+
+[[ship]]
+id = 9
+name = "USS Grayson"
+class = 2013
+side = "allied"
+fuel_t = 467
+task_force = 1
+
+[[ship]]
+id = 10
+name = "USS Monssen"
+class = 2013
+side = "allied"
+fuel_t = 467
+task_force = 1
+
+[[ship]]
+id = 11
+name = "USS Saratoga"
+class = 2015
+side = "allied"
+fuel_t = 8400
+task_force = 2
+
+[[ship]]
+id = 12
+name = "USS New Orleans"
+class = 2016
+side = "allied"
+fuel_t = 1900
+task_force = 2
+
+[[ship]]
+id = 13
+name = "USS Minneapolis"
+class = 2016
+side = "allied"
+fuel_t = 1900
+task_force = 2
+
+[[ship]]
+id = 14
+name = "USS Farragut"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 15
+name = "USS Macdonough"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 16
+name = "USS Worden"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 17
+name = "USS Dale"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 18
+name = "USS Phelps"
+class = 2018
+side = "allied"
+fuel_t = 651
+task_force = 2
+
+[[ship]]
+id = 19
+name = "Shokaku"
+class = 2007
+side = "japanese"
+fuel_t = 4100
+task_force = 3
+
+[[ship]]
+id = 20
+name = "Zuikaku"
+class = 2006
+side = "japanese"
+fuel_t = 4100
+task_force = 3
+
+[[ship]]
+id = 21
+name = "Chikuma"
+class = 2008
+side = "japanese"
+fuel_t = 2690
+task_force = 3
+
+[[ship]]
+id = 22
+name = "Hiei"
+class = 2002
+side = "japanese"
+fuel_t = 6330
+task_force = 3
+
+[[ship]]
+id = 23
+name = "Kirishima"
+class = 2002
+side = "japanese"
+fuel_t = 6330
+task_force = 3
+
+[[ship]]
+id = 24
+name = "Kumano"
+class = 2003
+side = "japanese"
+fuel_t = 2310
+task_force = 3
+
+[[ship]]
+id = 25
+name = "Suzuya"
+class = 2003
+side = "japanese"
+fuel_t = 2310
+task_force = 3
+
+[[ship]]
+id = 26
+name = "Nagara"
+class = 2004
+side = "japanese"
+fuel_t = 1260
+task_force = 3
+
+[[ship]]
+id = 27
+name = "Akigumo"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 28
+name = "Kazagumo"
+class = 2009
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 29
+name = "Makigumo"
+class = 2009
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 30
+name = "Yugumo"
+class = 2009
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 31
+name = "Akizuki"
+class = 2000
+side = "japanese"
+fuel_t = 1071
+task_force = 3
+
+[[ship]]
+id = 32
+name = "Hatsukaze"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 33
+name = "Ryujo"
+class = 2005
+side = "japanese"
+fuel_t = 2490
+task_force = 4
+
+[[ship]]
+id = 34
+name = "Tone"
+class = 2008
+side = "japanese"
+fuel_t = 2690
+task_force = 4
+
+[[ship]]
+id = 35
+name = "Amatsukaze"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 4
+
+[[ship]]
+id = 36
+name = "Tokitsukaze"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 4
+
+# Air groups. Each strength cites its row in data/oob/air_unit_facts.csv.
+
+# aircraft_operational row 213.
+[[air_group]]
+id = 1
+name = "VF-6"
+side = "allied"
+ship = 1
+aircraft_type = 2000
+ready = 27
+
+# aircraft_on_hand rows 92, 214.
+[[air_group]]
+id = 2
+name = "VB-6"
+side = "allied"
+ship = 1
+aircraft_type = 2001
+ready = 17
+
+# aircraft_operational row 216.
+[[air_group]]
+id = 3
+name = "VS-5"
+side = "allied"
+ship = 1
+aircraft_type = 2001
+ready = 16
+
+# aircraft_operational row 218 has 14; seven of them flew the afternoon
+# search (air_unit_facts 253, the war diary's flight 395) and are this group.
+# The other seven are group 25 (decision 0081).
+[[air_group]]
+id = 4
+name = "VT-3"
+side = "allied"
+ship = 1
+aircraft_type = 2002
+ready = 7
+
+# aircraft_on_hand row 207.
+[[air_group]]
+id = 5
+name = "VF-5"
+side = "allied"
+ship = 11
+aircraft_type = 2000
+ready = 27
+
+# aircraft_operational row 209.
+[[air_group]]
+id = 6
+name = "VB-3"
+side = "allied"
+ship = 11
+aircraft_type = 2001
+ready = 15
+
+# aircraft_on_hand rows 151, 210.
+[[air_group]]
+id = 7
+name = "VS-3"
+side = "allied"
+ship = 11
+aircraft_type = 2001
+ready = 15
+
+# aircraft_on_hand rows 177, 211 have 13; eight of them launched in the strike
+# on Ryujo (engagement_outcomes 231) and are this group. The other five are
+# group 26 (decision 0081).
+[[air_group]]
+id = 8
+name = "VT-8"
+side = "allied"
+ship = 11
+aircraft_type = 2002
+ready = 8
+
+# aircraft_on_hand row 223.
+[[air_group]]
+id = 9
+name = "VMF-223"
+side = "allied"
+base = 1
+aircraft_type = 2000
+ready = 13
+
+# aircraft_on_hand row 224.
+[[air_group]]
+id = 10
+name = "VMSB-232"
+side = "allied"
+base = 1
+aircraft_type = 2001
+ready = 11
+
+# aircraft_operational row 227 has 26; three of them escorted the second wave
+# (engagement_outcomes 1163) and are group 23 (decision 0081). The 23 here are
+# the first wave's escort and the patrol.
+[[air_group]]
+id = 11
+name = "Shokaku fighter unit"
+side = "japanese"
+ship = 19
+aircraft_type = 2003
+ready = 23
+
+# aircraft_on_hand row 228 has 27: the 18 of the first wave
+# (engagement_outcomes 1159, 290) are this group, the 9 of the second wave
+# (1163) are group 21 (decision 0081).
+[[air_group]]
+id = 12
+name = "Shokaku bomber unit"
+side = "japanese"
+ship = 19
+aircraft_type = 2004
+ready = 18
+
+# aircraft_on_hand row 229.
+[[air_group]]
+id = 13
+name = "Shokaku attack unit"
+side = "japanese"
+ship = 19
+aircraft_type = 2005
+ready = 18
+
+# aircraft_operational row 231 has 25; six of them escorted the second wave
+# (engagement_outcomes 1169) and are group 24 (decision 0081). The 19 here are
+# the first wave's escort and the patrol.
+[[air_group]]
+id = 14
+name = "Zuikaku fighter unit"
+side = "japanese"
+ship = 20
+aircraft_type = 2003
+ready = 19
+
+# aircraft_on_hand row 232 has 27: the 9 of the first wave
+# (engagement_outcomes 1164, 290) are this group, the 18 of the second wave
+# (1169) are group 22 (decision 0081).
+[[air_group]]
+id = 15
+name = "Zuikaku bomber unit"
+side = "japanese"
+ship = 20
+aircraft_type = 2004
+ready = 9
+
+# aircraft_on_hand row 233.
+[[air_group]]
+id = 16
+name = "Zuikaku attack unit"
+side = "japanese"
+ship = 20
+aircraft_type = 2005
+ready = 18
+
+# aircraft_on_hand row 290, an establishment of June 1942.
+[[air_group]]
+id = 17
+name = "Chikuma floatplanes"
+side = "japanese"
+ship = 21
+aircraft_type = 2006
+ready = 5
+
+# aircraft_operational row 235.
+[[air_group]]
+id = 18
+name = "Ryujo fighter unit"
+side = "japanese"
+ship = 33
+aircraft_type = 2003
+ready = 23
+
+# aircraft_operational row 262.
+[[air_group]]
+id = 19
+name = "Ryujo attack unit"
+side = "japanese"
+ship = 33
+aircraft_type = 2005
+ready = 6
+
+# aircraft_on_hand row 285, an establishment of June 1942.
+[[air_group]]
+id = 20
+name = "Tone floatplanes"
+side = "japanese"
+ship = 34
+aircraft_type = 2006
+ready = 5
+
+# Decision 0081: an air group in a scenario is a launch the record has, where
+# the forms or rows give launches apart. Groups 21 to 26 are the launches that
+# the record has apart from the first ones of their units. Their numbers come
+# after every number the scenario had, so no group number changed its meaning.
+
+# The second wave from Shokaku: 9 dive bombers (engagement_outcomes 1163,
+# Shokaku's own form; 409), of the unit's 27 (air_unit_facts 228).
+[[air_group]]
+id = 21
+name = "Shokaku bomber unit, second wave"
+side = "japanese"
+ship = 19
+aircraft_type = 2004
+ready = 9
+
+# The second wave from Zuikaku: 18 dive bombers (engagement_outcomes 1169,
+# Zuikaku's own form; 409), of the unit's 27 (air_unit_facts 232).
+[[air_group]]
+id = 22
+name = "Zuikaku bomber unit, second wave"
+side = "japanese"
+ship = 20
+aircraft_type = 2004
+ready = 18
+
+# Shokaku's escort of the second wave: 3 fighters (engagement_outcomes 1163),
+# of the unit's 26 (air_unit_facts 227).
+[[air_group]]
+id = 23
+name = "Shokaku fighter unit, second wave escort"
+side = "japanese"
+ship = 19
+aircraft_type = 2003
+ready = 3
+
+# Zuikaku's escort of the second wave: 6 fighters (engagement_outcomes 1169),
+# of the unit's 25 (air_unit_facts 231).
+[[air_group]]
+id = 24
+name = "Zuikaku fighter unit, second wave escort"
+side = "japanese"
+ship = 20
+aircraft_type = 2003
+ready = 6
+
+# VT-3's other seven (air_unit_facts 218 less the seven of group 4): the 7
+# torpedo planes of Enterprise's attack group of 17:08, which found nothing
+# (engagement_outcomes 226, 378).
+[[air_group]]
+id = 25
+name = "VT-3, attack group"
+side = "allied"
+ship = 1
+aircraft_type = 2002
+ready = 7
+
+# VT-8's other five (air_unit_facts 177, 211 less the eight of group 8): the
+# torpedo planes of Saratoga's second group of 17:08 (engagement_outcomes 233,
+# 359).
+[[air_group]]
+id = 26
+name = "VT-8, second group"
+side = "allied"
+ship = 11
+aircraft_type = 2002
+ready = 5
+
+# Japanese: the striking force steams south-south-east at 17 knots, the Ryujo
+# detachment at 20.
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 3
+kind = "set_route"
+waypoints = [[8, -11]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 3
+kind = "set_speed"
+knots = "17"
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 4
+kind = "set_route"
+waypoints = [[7, -9]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 4
+kind = "set_speed"
+knots = "20"
+
+# Air orders. Fighters patrol; the American fighters keep everything
+# overhead (row 226: the seven fighters of Enterprise's 17:08 attack group did
+# not go, so no American fighter group is a launch apart). The Japanese
+# carriers' shares send the first wave's escort as the forms give it
+# (decision 0081): Shokaku 4 (engagement_outcomes 1159), 23 x 0.83 = 19.09,
+# so 19 patrol and 4 escort; Zuikaku 6 (1164), 19 x 0.7 = 13.3, so 13 patrol
+# and 6 escort. Ryujo keeps 0.35, so that 15 of her 23 fighters escort her
+# raid and 8 stay over her (1171).
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 5
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 9
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 11
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 11
+kind = "set_patrol_share"
+share = "0.83"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 14
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 14
+kind = "set_patrol_share"
+share = "0.7"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 18
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 18
+kind = "set_patrol_share"
+share = "0.35"
+
+# Searches. The American one is Enterprise's afternoon search (decision
+# 0081): 23 aircraft, 290 to 090 at 250 miles (engagement_events 158, her
+# action report; 157, the Navy narrative, has 270 to 090 and the same 250;
+# outcomes 222). It was 16 SBDs and 7 TBFs (air_unit_facts 252, 253, the war
+# diary's flight 395). VS-5 (group 3, 16) stands for the 16 SBDs, which were
+# of VB-6 and VS-5 together, the squadrons not split in any row (VB-6 crews
+# are named among them, outcomes 368); group 4 is the 7 TBFs of VT-3 (369).
+# The afternoon search is taken and not the dawn one (20 SBDs, 290 to 070 at
+# 200, 144, 146), because a standing order flies both pulses and the
+# afternoon's is the search that met the enemy; the dawn search found nothing.
+# 250 is within the SBD-3's search radius of 397 and the TBF-1's of 420
+# (decision 0075). The Japanese ones are set from the record (decision 0073).
+# A LIMIT OF THE RULES, not the record: a search group never attacks what it
+# finds. Two of VB-6's searchers bombed a carrier and two a cruiser, and two
+# of VT-3's bombed Ryujo (outcomes 368, 369), hitting nothing (372); the
+# scenario cannot say so.
+# Japanese times in the record are Tokyo time, two hours behind the
+# scenario's clock; a search flies in every daylight pulse, from the pulse's
+# start, with every aircraft its group can fly (docs/rules chapter 3).
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_search_arc"
+from_deg = 290
+to_deg = 90
+range_nm = 250
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 4
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 4
+kind = "set_search_arc"
+from_deg = 290
+to_deg = 90
+range_nm = 250
+
+# The vanguard's floatplanes: Nagumo's signal 19 had the 11th Sentai search
+# from 09:00 Tokyo time (11:00 here) on a base line of 150 degrees, six
+# aircraft (engagement_events 437); four flew, to the south and south-east,
+# to 330 miles at most (370), Chikuma's two at 09:00 (438) and Kumano's at
+# 09:20 to 09:40 (307, 439). Chikuma's No. 2 found the American carriers at
+# 12:05 Tokyo time, 153 degrees and about 260 miles from the carriers (441).
+# The arc is 120 to 180: south and south-east, about the base line, and it
+# holds the bearing of the sighting (a reading: search method 8 and "left
+# half" are defined on no page read). The range is the 330 flown, within the
+# E13A1's search radius of 398 (decision 0075). Chikuma's five floatplanes stand for
+# the four to six of the vanguard (the other cruisers' and the battleships'
+# floatplanes are not in the scenario).
+[[order]]
+day = 1
+side = "japanese"
+air_group = 17
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 17
+kind = "set_search_arc"
+from_deg = 120
+to_deg = 180
+range_nm = 330
+
+# A LIMIT OF THE RULES, not the record: the carriers' attack units are on
+# naval strike (below), as decision 0063 has them, but on the day they flew
+# the dawn search and found nothing (engagement_events 366, 368, 369, 440),
+# and in the afternoon they were held and neither searched nor struck. A
+# search cannot be ordered for one pulse, so the scenario cannot say so: an
+# order to search would add an afternoon search the record does not have, and
+# the dawn search finds nothing in the rules either (decision 0073).
+
+# Tone's floatplanes (group 20) have no order. No row has the Ryujo
+# detachment search on the 24th. The one row that has Tone launch searchers
+# (engagement_events 172, a website) puts her in the vanguard with Chikuma;
+# her own division's war diary has her detached with Ryujo from 02:00 (327),
+# and the search was ordered to the vanguard's commander (437).
+
+# Saratoga's strike on Ryujo: VB-3 (15), VS-3 (15) and the eight of VT-8
+# (group 8) strike ships. The record has 30 SBDs and 8 TBFs launched at 14:35
+# (engagement_outcomes 231), 29 and 7 reaching the target (333, 1238). VB-3's
+# two SBDs that flew later with Saratoga's second group (233) stay in VB-3:
+# no row makes them a launch the rules could fly apart (decision 0081).
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 6
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 7
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 8
+kind = "set_air_mission"
+mission = "naval_strike"
+
+# A LIMIT OF THE RULES, not the record: a strike that launches and finds
+# nothing cannot be ordered. Enterprise's attack group of 17:08, 11 SBDs and
+# 7 TBFs (engagement_outcomes 226), found nothing and attacked nothing (378).
+# VB-6 (group 2, 17; its 11 SBDs were hers) and VT-3's attack group (group
+# 25, 7) rest, which over the day has the record's effect: they attack
+# nothing. Saratoga's second group of 17:08 (233, 359; group 26, VT-8's five)
+# went at Kondo's force and Chitose, which the scenario does not hold, and
+# rests for the same reason. Rest is the default mission; it is ordered so
+# that the reason stands beside it (decision 0081).
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 25
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 26
+kind = "set_air_mission"
+mission = "rest"
+
+# Henderson's VMSB-232 (group 10) rests (decision 0081). No row has it strike
+# Ryujo; it struck the bombarding destroyers in the night of the 24th to 25th
+# (engagement_outcomes 317, 415) and the convoy on the 25th (314 to 316, 418),
+# both outside the scenario's one day. On naval strike it would strike Ryujo
+# with Saratoga's group, which the record does not have.
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 10
+kind = "set_air_mission"
+mission = "rest"
+
+# The fleet carriers' dive bomber groups (12 and 15) hold their strike for the
+# enemy's fleet: target list carrier, battleship, cruiser, transport. The
+# record names the enemy carriers as the object of their first wave
+# (engagement_events 371, Shokaku's action report: heading to attack enemy
+# carriers), and the enemy surface force if no carrier is found (425). The
+# architect reads the surface force as any force of ships but a destroyer or
+# an auxiliary met alone: a contact reported as a destroyer or an auxiliary is
+# a picket or a tender, not the fleet they were kept for, and the strike is
+# held for it. This is a reading of two rows, not a row. It was fixed on Nov
+# 12, 2026 after two trials: the default list sent both groups 250 miles at
+# one destroyer in the full slice on its own seed, and a list without
+# transports held them all day for a ten-ship force reported as transports.
+# Their torpedo units and Ryujo's groups get no target order.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 12
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 12
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser", "transport"]
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 13
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 15
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 15
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser", "transport"]
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 16
+kind = "set_air_mission"
+mission = "naval_strike"
+
+# A LIMIT OF THE RULES, not the record: the second wave (groups 21 and 22,
+# with their escorts, groups 23 and 24) rests. The record has it launch at
+# 14:00 Tokyo time, 16:00 here (engagement_outcomes 1163, 1169, 409; events
+# 202), 27 dive bombers and 9 fighters, find nothing and attack nothing (409,
+# 1163: bombs jettisoned). The rules cannot order a launch that finds
+# nothing, so the second wave gets the order whose effect over the day is the
+# record's: it attacks nothing. Its launch stays in the record as what the
+# scenario does not fly. Its losses after dark (293; 1170) are outside the
+# rules and the scenario's 18:00 end. What it costs: in the record these 36
+# aircraft were away from their carriers from 16:00; here they are aboard all
+# day, so if Shokaku or Zuikaku is sunk they go down with her, and a hit that
+# puts her flight deck out keeps them aboard, where in the record they would
+# have had to land elsewhere or ditch (decision 0081).
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 21
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 22
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 23
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 24
+kind = "set_air_mission"
+mission = "rest"
+
+# Ryujo's attack unit raids Henderson Field (decision 0063, "What it costs"):
+# the record has her launch 15 fighters and 6 attack planes at it
+# (engagement_outcomes 1171, her action report) from 200 to 202 miles
+# (engagement_events 331, engagement_positions 310). That is beyond the B5N2's
+# derived radius of 175 and within extended reach (218), so the raid is a base
+# strike at base 1 on extended reach.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 19
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 19
+kind = "set_reach"
+reach = "extended"
+
+# Missions and objectives (decision 0054). The points and the levels are the
+# placeholder scale of that decision, to be set from the record in step 2.
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+history = "Ryujo was sunk and Enterprise was damaged and withdrew for repair; Japanese aircraft losses were several times the American. Usually judged a limited American victory. (The architect's reading; not yet scored from the order-of-battle facts.)"
+
+[objectives.allied]
+mission = "Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action. The Japanese carriers are expected to come down from the north."
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[objectives.japanese]
+mission = "Destroy the American carriers east of Guadalcanal, and keep your own in action. The American carriers are believed to be south or east of Guadalcanal."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.japanese.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.japanese.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+

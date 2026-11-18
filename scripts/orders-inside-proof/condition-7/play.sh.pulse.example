@@ -1,0 +1,14 @@
+#!/bin/sh
+# The wrapper each player of condition 7 called, as made for the by-pulse arm
+# ($REPO the worktree, $OUT the folder of the games, outside the repository;
+# the by-days arm's is the same with "days" for "pulse" and no advance tool text).
+# play.sh N TOOL [ARGUMENTS_JSON]   -- one call to game N (seed N) of the pulse arm.
+# play.sh tools                      -- the tools, their descriptions and arguments.
+cd $REPO || exit 2
+if [ "$1" = "tools" ]; then
+  cat $OUT/tools.txt
+  if [ "pulse" = "pulse" ]; then cat $OUT/tools_advance.txt; fi
+  exit 0
+fi
+N="$1"; shift
+exec $REPO/target/release/sim-cli play --game $OUT/pulse/games/g$N.txt --scenario data/scenarios/orders-inside-proof/05c_allied_by_pulse.toml --seat allied --seed "$N" "$@"

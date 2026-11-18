@@ -1,0 +1,1294 @@
+{
+ "how": "Each case: the game played through a sim_agent Session by crates/sim-agent/tests/orders_inside_proof.rs, condition_6_the_six_days, on the live figures, seed as the file; the seat's events of day 1 as the events tool gave them at dusk of day 1. The reader is given only \"material\": number, pulse, kind and words of each event.",
+ "cases": [
+  {
+   "case": "A",
+   "game": "scenario 78 (scenario 1 with the key on), its order at 0600 taken out (case C text), Allied seat; at dusk the route to (8,3) and cruise speed; at 0600 set_speed 8 kn to task_force:1",
+   "order_given": {
+    "orders": [
+     {
+      "order": {
+       "kind": "set_speed",
+       "knots": "8"
+      },
+      "unit": "task_force:1"
+     }
+    ]
+   },
+   "answer_to_the_order": [
+    {
+     "for": "the morning pulse of day 1",
+     "index": 0,
+     "status": "queued"
+    }
+   ],
+   "events_count": 14,
+   "material": [
+    {
+     "number": 1,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:1 accepted for task_force:1"
+    },
+    {
+     "number": 2,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:2 accepted for task_force:1"
+    },
+    {
+     "number": 3,
+     "pulse": "night",
+     "kind": "task_force_steamed",
+     "words": "task_force:1 steamed 192 nm at 16 kn from (0,0) to (5,0)"
+    },
+    {
+     "number": 4,
+     "pulse": "night",
+     "kind": "fuel_burned",
+     "words": "ship:1 burned 48 t, 1952 t remaining"
+    },
+    {
+     "number": 5,
+     "pulse": "night",
+     "kind": "fuel_burned",
+     "words": "ship:2 burned 24 t, 476 t remaining"
+    },
+    {
+     "number": 6,
+     "pulse": "morning",
+     "kind": "order_accepted",
+     "words": "order:3 accepted for task_force:1"
+    },
+    {
+     "number": 7,
+     "pulse": "morning",
+     "kind": "task_force_steamed",
+     "words": "task_force:1 steamed 48 nm at 8 kn from (5,0) to (7,0)"
+    },
+    {
+     "number": 8,
+     "pulse": "morning",
+     "kind": "fuel_burned",
+     "words": "ship:1 burned 12 t, 1940 t remaining"
+    },
+    {
+     "number": 9,
+     "pulse": "morning",
+     "kind": "fuel_burned",
+     "words": "ship:2 burned 6 t, 470 t remaining"
+    },
+    {
+     "number": 10,
+     "pulse": "afternoon",
+     "kind": "task_force_steamed",
+     "words": "task_force:1 steamed 48 nm at 8 kn from (7,0) to (8,0)"
+    },
+    {
+     "number": 11,
+     "pulse": "afternoon",
+     "kind": "fuel_burned",
+     "words": "ship:1 burned 12 t, 1928 t remaining"
+    },
+    {
+     "number": 12,
+     "pulse": "afternoon",
+     "kind": "fuel_burned",
+     "words": "ship:2 burned 6 t, 464 t remaining"
+    },
+    {
+     "number": 13,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open"
+    },
+    {
+     "number": 14,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open"
+    }
+   ]
+  },
+  {
+   "case": "B",
+   "game": "the same as A, the order at 1200",
+   "order_given": {
+    "orders": [
+     {
+      "order": {
+       "kind": "set_speed",
+       "knots": "8"
+      },
+      "unit": "task_force:1"
+     }
+    ]
+   },
+   "answer_to_the_order": [
+    {
+     "for": "the afternoon pulse of day 1",
+     "index": 0,
+     "status": "queued"
+    }
+   ],
+   "events_count": 14,
+   "material": [
+    {
+     "number": 1,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:1 accepted for task_force:1"
+    },
+    {
+     "number": 2,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:2 accepted for task_force:1"
+    },
+    {
+     "number": 3,
+     "pulse": "night",
+     "kind": "task_force_steamed",
+     "words": "task_force:1 steamed 192 nm at 16 kn from (0,0) to (5,0)"
+    },
+    {
+     "number": 4,
+     "pulse": "night",
+     "kind": "fuel_burned",
+     "words": "ship:1 burned 48 t, 1952 t remaining"
+    },
+    {
+     "number": 5,
+     "pulse": "night",
+     "kind": "fuel_burned",
+     "words": "ship:2 burned 24 t, 476 t remaining"
+    },
+    {
+     "number": 6,
+     "pulse": "morning",
+     "kind": "task_force_steamed",
+     "words": "task_force:1 steamed 96 nm at 16 kn from (5,0) to (8,0)"
+    },
+    {
+     "number": 7,
+     "pulse": "morning",
+     "kind": "fuel_burned",
+     "words": "ship:1 burned 24 t, 1928 t remaining"
+    },
+    {
+     "number": 8,
+     "pulse": "morning",
+     "kind": "fuel_burned",
+     "words": "ship:2 burned 12 t, 464 t remaining"
+    },
+    {
+     "number": 9,
+     "pulse": "afternoon",
+     "kind": "order_accepted",
+     "words": "order:3 accepted for task_force:1"
+    },
+    {
+     "number": 10,
+     "pulse": "afternoon",
+     "kind": "task_force_steamed",
+     "words": "task_force:1 steamed 48 nm at 8 kn from (8,0) to (8,2)"
+    },
+    {
+     "number": 11,
+     "pulse": "afternoon",
+     "kind": "fuel_burned",
+     "words": "ship:1 burned 12 t, 1916 t remaining"
+    },
+    {
+     "number": 12,
+     "pulse": "afternoon",
+     "kind": "fuel_burned",
+     "words": "ship:2 burned 6 t, 458 t remaining"
+    },
+    {
+     "number": 13,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open"
+    },
+    {
+     "number": 14,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open"
+    }
+   ]
+  },
+  {
+   "case": "C",
+   "game": "data/scenarios/orders-inside-proof/36_one_convoy_on.toml, Allied seat, the script's commands; at 0600 set_speed 8 kn to the convoy the staff formed (task_force:1)",
+   "order_given": {
+    "orders": [
+     {
+      "order": {
+       "kind": "set_speed",
+       "knots": "8"
+      },
+      "unit": "task_force:1"
+     }
+    ]
+   },
+   "answer_to_the_order": [
+    {
+     "for": "the morning pulse of day 1",
+     "index": 0,
+     "status": "queued"
+    }
+   ],
+   "events_count": 30,
+   "material": [
+    {
+     "number": 1,
+     "pulse": null,
+     "kind": "command_taken",
+     "words": "Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days"
+    },
+    {
+     "number": 2,
+     "pulse": null,
+     "kind": "plan_drafted",
+     "words": "Allied plan:1 drafted for intent:1"
+    },
+    {
+     "number": 3,
+     "pulse": null,
+     "kind": "command_taken",
+     "words": "Allied the commander's command taken: limit intent:1's forces to 2 ships and 0 task forces from base:1"
+    },
+    {
+     "number": 4,
+     "pulse": null,
+     "kind": "command_taken",
+     "words": "Allied the commander's command taken: reserve 1000 t of supply and 0 t of fuel at base:1"
+    },
+    {
+     "number": 5,
+     "pulse": null,
+     "kind": "command_taken",
+     "words": "Allied the commander's command taken: give the leave to prepare"
+    },
+    {
+     "number": 6,
+     "pulse": null,
+     "kind": "command_taken",
+     "words": "Allied the commander's command taken: give the leave to launch"
+    },
+    {
+     "number": 7,
+     "pulse": null,
+     "kind": "command_taken",
+     "words": "Allied the staff's command taken: approve plan:1"
+    },
+    {
+     "number": 8,
+     "pulse": null,
+     "kind": "plan_state_changed",
+     "words": "Allied plan:1 went from draft to preparing"
+    },
+    {
+     "number": 9,
+     "pulse": null,
+     "kind": "staff_reason",
+     "words": "Allied staff's reason for the command to approve plan:1 [serves intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1; decided at the level of the area]: plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days of supply, is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing)."
+    },
+    {
+     "number": 10,
+     "pulse": null,
+     "kind": "command_taken",
+     "words": "Allied the staff's command taken: approve plan:1"
+    },
+    {
+     "number": 11,
+     "pulse": null,
+     "kind": "plan_state_changed",
+     "words": "Allied plan:1 went from preparing to released"
+    },
+    {
+     "number": 12,
+     "pulse": null,
+     "kind": "staff_reason",
+     "words": "Allied staff's reason for the command to approve plan:1 [serves intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1; decided at the level of the area]: plan:1, the plan to keep base:2 (Placeholder base T, Allied) at 30 days of supply, is ready and leave to launch is given: the staff releases it."
+    },
+    {
+     "number": 13,
+     "pulse": null,
+     "kind": "command_taken",
+     "words": "Allied the staff's command taken: add a run of 360 t with 1 ship to plan:1, loading day 1, due day 2"
+    },
+    {
+     "number": 14,
+     "pulse": null,
+     "kind": "staff_reason",
+     "words": "Allied staff's reason for the command to add a run of 360 t with 1 ship to plan:1, loading day 1, due day 2 [serves intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1; decided at the level of the area]: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.2 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 80 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 90 t. Load = max(0, 300 - 90) + 150 (15 days of use) = 360 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 360 t at base:2 = 18 hours, 1 day. Back at the source at hour 68 of the run and fuelled by hour 68.2 (0.2 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. The staff adds this run to the plan."
+    },
+    {
+     "number": 15,
+     "pulse": null,
+     "kind": "command_taken",
+     "words": "Allied the staff's command taken: commit 1 ship to plan:1 run 1 from day 1 to day 4"
+    },
+    {
+     "number": 16,
+     "pulse": null,
+     "kind": "staff_reason",
+     "words": "Allied staff's reason for the command to commit 1 ship to plan:1 run 1 from day 1 to day 4 [serves intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1; decided at the level of the area]: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.2 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 80 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 90 t. Load = max(0, 300 - 90) + 150 (15 days of use) = 360 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 360 t at base:2 = 18 hours, 1 day. Back at the source at hour 68 of the run and fuelled by hour 68.2 (0.2 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. The ships are committed from day 1 to day 4, the day before they are free."
+    },
+    {
+     "number": 17,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:1 accepted for base:1"
+    },
+    {
+     "number": 18,
+     "pulse": null,
+     "kind": "task_force_formed",
+     "words": "ship:1 formed into task_force:1 at base:1"
+    },
+    {
+     "number": 19,
+     "pulse": null,
+     "kind": "staff_reason",
+     "words": "Allied staff's reason for order:1 [serves intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1; decided at the level of the area]: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.2 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 80 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 90 t. Load = max(0, 300 - 90) + 150 (15 days of use) = 360 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 360 t at base:2 = 18 hours, 1 day. Back at the source at hour 68 of the run and fuelled by hour 68.2 (0.2 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. Form ship:1 lying in port at base:1 in no force into a force."
+    },
+    {
+     "number": 20,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:2 accepted for task_force:1"
+    },
+    {
+     "number": 21,
+     "pulse": null,
+     "kind": "staff_reason",
+     "words": "Allied staff's reason for order:2 [serves intent 1: keep base:2 (Placeholder base T, Allied) at 30 days of supply, a run every 15 days; plan 1; decided at the level of the area]: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 30 days. A run ordered on day 1 loads on day 1 (7.2 hours at the source = 1 day), sails on day 2, and is due at base:2 on day 2. Without it the reading of day 3 is 80 t against 30 days x 10 t = 300 t: below the floor, so a run is needed. The stock projected for the reading of day 2 is 90 t. Load = max(0, 300 - 90) + 150 (15 days of use) = 360 t. Ships ship:1: 1 x the pool's free ships in number order = a room that covers the load. Passage 200 nm out at 10 kn = 20 hours, 1 day; 200 nm back = 20 hours, 1 day; unloading 360 t at base:2 = 18 hours, 1 day. Back at the source at hour 68 of the run and fuelled by hour 68.2 (0.2 hours at 200 t an hour), its ships are free on day 5, the morning after the day the fuelling ends. Load order: until 360 t is aboard (0 t aboard now + the load of 360 t); ship:1 360 t at 50 t an hour = 7.2 hours."
+    },
+    {
+     "number": 22,
+     "pulse": "night",
+     "kind": "base_supply_spent",
+     "words": "base:2 spent 10 t of supply on 2000 men ashore for the day, 90 t left"
+    },
+    {
+     "number": 23,
+     "pulse": "night",
+     "kind": "men_fed",
+     "words": "Allied men ashore at (5,0): 2000 of 2000 fed from base:2, 0 unfed"
+    },
+    {
+     "number": 24,
+     "pulse": "night",
+     "kind": "cargo_loaded",
+     "words": "ship:1 loaded 360 t from base:1, 360 t aboard, 4640 t in stock"
+    },
+    {
+     "number": 25,
+     "pulse": "night",
+     "kind": "loading_complete",
+     "words": "task_force:1 completed loading at base:1 at D1 01:12"
+    },
+    {
+     "number": 26,
+     "pulse": "morning",
+     "kind": "order_accepted",
+     "words": "order:3 accepted for task_force:1"
+    },
+    {
+     "number": 27,
+     "pulse": "morning",
+     "kind": "held_by_order",
+     "words": "Allied holds task_force:1 by order:3"
+    },
+    {
+     "number": 28,
+     "pulse": null,
+     "kind": "fieldworks_changed",
+     "words": "land_unit:1 dug in: fieldworks 10"
+    },
+    {
+     "number": 29,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:1 at the end of the day: 4640 t of supply, 0 aircraft ready: not open"
+    },
+    {
+     "number": 30,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:2 at the end of the day: 90 t of supply, 0 aircraft ready: not open"
+    }
+   ]
+  },
+  {
+   "case": "D",
+   "game": "data/scenarios/orders-inside-proof/05_eastern_solomons_on.toml, Allied seat, the script's Allied orders given at dusk; at 0600 set_readiness battle to task_force:2 (Task Force 11)",
+   "order_given": {
+    "orders": [
+     {
+      "order": {
+       "kind": "set_readiness",
+       "readiness": "battle"
+      },
+      "unit": "task_force:2"
+     }
+    ]
+   },
+   "answer_to_the_order": [
+    {
+     "for": "the morning pulse of day 1",
+     "index": 0,
+     "status": "queued"
+    }
+   ],
+   "events_count": 59,
+   "material": [
+    {
+     "number": 1,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:1 accepted for air_group:1"
+    },
+    {
+     "number": 2,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:2 accepted for air_group:2"
+    },
+    {
+     "number": 3,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:3 accepted for air_group:3"
+    },
+    {
+     "number": 4,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:4 accepted for air_group:3"
+    },
+    {
+     "number": 5,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:5 accepted for air_group:4"
+    },
+    {
+     "number": 6,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:6 accepted for air_group:4"
+    },
+    {
+     "number": 7,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:7 accepted for air_group:5"
+    },
+    {
+     "number": 8,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:8 accepted for air_group:6"
+    },
+    {
+     "number": 9,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:9 accepted for air_group:7"
+    },
+    {
+     "number": 10,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:10 accepted for air_group:8"
+    },
+    {
+     "number": 11,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:11 accepted for air_group:9"
+    },
+    {
+     "number": 12,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:12 accepted for air_group:10"
+    },
+    {
+     "number": 13,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:13 accepted for air_group:11"
+    },
+    {
+     "number": 14,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:14 accepted for air_group:12"
+    },
+    {
+     "number": 15,
+     "pulse": "morning",
+     "kind": "order_accepted",
+     "words": "order:15 accepted for task_force:2"
+    },
+    {
+     "number": 16,
+     "pulse": "morning",
+     "kind": "search_flown",
+     "words": "air_group:3 searched 290-090 out to 250 nm from ship:1 at (7,-5) with 16 aircraft"
+    },
+    {
+     "number": 17,
+     "pulse": "morning",
+     "kind": "search_flown",
+     "words": "air_group:4 searched 290-090 out to 250 nm from ship:1 at (7,-5) with 7 aircraft"
+    },
+    {
+     "number": 18,
+     "pulse": "afternoon",
+     "kind": "search_flown",
+     "words": "air_group:3 searched 290-090 out to 250 nm from ship:1 at (7,-5) with 16 aircraft"
+    },
+    {
+     "number": 19,
+     "pulse": "afternoon",
+     "kind": "search_attempt",
+     "words": "air_group:3 searched and sighted a force"
+    },
+    {
+     "number": 20,
+     "pulse": "afternoon",
+     "kind": "report_received",
+     "words": "Allied report: 14 ships, carrier, at (8,-11): new contact:1"
+    },
+    {
+     "number": 21,
+     "pulse": "afternoon",
+     "kind": "search_attempt",
+     "words": "air_group:3 searched and sighted a force"
+    },
+    {
+     "number": 22,
+     "pulse": "afternoon",
+     "kind": "report_received",
+     "words": "Allied report: 4 ships, carrier, at (7,-9): new contact:2"
+    },
+    {
+     "number": 23,
+     "pulse": "afternoon",
+     "kind": "search_flown",
+     "words": "air_group:4 searched 290-090 out to 250 nm from ship:1 at (7,-5) with 7 aircraft"
+    },
+    {
+     "number": 24,
+     "pulse": "afternoon",
+     "kind": "strike_launched",
+     "words": "air_group:6 launched 15 aircraft at contact:2 at (7,-9), 160 nm"
+    },
+    {
+     "number": 25,
+     "pulse": "afternoon",
+     "kind": "strike_launched",
+     "words": "air_group:7 launched 15 aircraft at contact:2 at (7,-9), 160 nm"
+    },
+    {
+     "number": 26,
+     "pulse": "afternoon",
+     "kind": "strike_launched",
+     "words": "air_group:8 launched 8 aircraft at contact:2 at (7,-9), 160 nm"
+    },
+    {
+     "number": 27,
+     "pulse": "afternoon",
+     "kind": "aircraft_lost",
+     "words": "air_group:6 lost 1 aircraft, 14 left"
+    },
+    {
+     "number": 28,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's escorts: 4 shots"
+    },
+    {
+     "number": 29,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's bombers: 11 shots"
+    },
+    {
+     "number": 30,
+     "pulse": "afternoon",
+     "kind": "aircraft_lost",
+     "words": "air_group:1 lost 1 aircraft, 26 left"
+    },
+    {
+     "number": 31,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's escorts: 6 shots"
+    },
+    {
+     "number": 32,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's bombers: 6 shots"
+    },
+    {
+     "number": 33,
+     "pulse": "afternoon",
+     "kind": "aircraft_lost",
+     "words": "air_group:1 lost 1 aircraft, 25 left"
+    },
+    {
+     "number": 34,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:9 patrol at the enemy's escorts: 9 shots"
+    },
+    {
+     "number": 35,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:9 patrol at the enemy's bombers: 1 shots"
+    },
+    {
+     "number": 36,
+     "pulse": "afternoon",
+     "kind": "aircraft_lost",
+     "words": "air_group:9 lost 2 aircraft, 11 left"
+    },
+    {
+     "number": 37,
+     "pulse": "afternoon",
+     "kind": "air_attack",
+     "words": "air_group:6 bombs at a ship: 14 shots"
+    },
+    {
+     "number": 38,
+     "pulse": "afternoon",
+     "kind": "air_attack",
+     "words": "air_group:7 bombs at a ship: 15 shots"
+    },
+    {
+     "number": 39,
+     "pulse": "afternoon",
+     "kind": "air_attack",
+     "words": "air_group:8 torpedoes at a ship: 8 shots"
+    },
+    {
+     "number": 40,
+     "pulse": "afternoon",
+     "kind": "air_attack_against",
+     "words": "ship:1 attacked by 14 aircraft"
+    },
+    {
+     "number": 41,
+     "pulse": "afternoon",
+     "kind": "air_attack_against",
+     "words": "ship:1 attacked by 7 aircraft"
+    },
+    {
+     "number": 42,
+     "pulse": "afternoon",
+     "kind": "base_attacked_against",
+     "words": "bombs at base:1: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing"
+    },
+    {
+     "number": 43,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's bombers: 18 shots after the attack"
+    },
+    {
+     "number": 44,
+     "pulse": "afternoon",
+     "kind": "anti_aircraft_fire",
+     "words": "task_force:1 guns at a raid: 123 shots after the attack"
+    },
+    {
+     "number": 45,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's bombers: 9 shots after the attack"
+    },
+    {
+     "number": 46,
+     "pulse": "afternoon",
+     "kind": "anti_aircraft_fire",
+     "words": "task_force:1 guns at a raid: 123 shots after the attack"
+    },
+    {
+     "number": 47,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:9 patrol at the enemy's bombers: 3 shots after the attack"
+    },
+    {
+     "number": 48,
+     "pulse": "afternoon",
+     "kind": "report_received",
+     "words": "Allied report: 4 ships, cruiser, at (7,-9): refreshed contact:2"
+    },
+    {
+     "number": 49,
+     "pulse": "afternoon",
+     "kind": "report_received",
+     "words": "Allied report: 3 ships, carrier, at (7,-9): refreshed contact:2"
+    },
+    {
+     "number": 50,
+     "pulse": "afternoon",
+     "kind": "report_received",
+     "words": "Allied report: 3 ships, carrier, at (6,-8): refreshed contact:2"
+    },
+    {
+     "number": 51,
+     "pulse": "afternoon",
+     "kind": "ship_damaged",
+     "words": "ship:1 took 3 hits on flotation, 15.782826 points, now 15.782826"
+    },
+    {
+     "number": 52,
+     "pulse": "afternoon",
+     "kind": "ship_damaged",
+     "words": "ship:1 took 2 hits on fire, 10.521884 points, now 10.521884"
+    },
+    {
+     "number": 53,
+     "pulse": "afternoon",
+     "kind": "system_hit",
+     "words": "ship:1 flight deck hit, working -> degraded"
+    },
+    {
+     "number": 54,
+     "pulse": "afternoon",
+     "kind": "system_hit",
+     "words": "ship:1 main battery hit, no change, still working"
+    },
+    {
+     "number": 55,
+     "pulse": "afternoon",
+     "kind": "claim_received",
+     "words": "Allied claim at (7,-9): 8 hits on a carrier, 1 sunk"
+    },
+    {
+     "number": 56,
+     "pulse": "afternoon",
+     "kind": "claim_received",
+     "words": "Allied claim over (7,-5): 44 aircraft shot down"
+    },
+    {
+     "number": 57,
+     "pulse": "afternoon",
+     "kind": "claim_received",
+     "words": "Allied claim over (7,-5): 25 aircraft shot down"
+    },
+    {
+     "number": 58,
+     "pulse": "afternoon",
+     "kind": "claim_received",
+     "words": "Allied claim over (2,-4): 9 aircraft shot down"
+    },
+    {
+     "number": 59,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:1 at the end of the day: 0 t of supply, 22 aircraft ready: not open"
+    }
+   ]
+  },
+  {
+   "case": "E",
+   "game": "the same file and seat as D; at 1200 set_air_mission rest to air_group:6 (VB-3, on Saratoga, on the naval strike mission)",
+   "order_given": {
+    "orders": [
+     {
+      "order": {
+       "kind": "set_air_mission",
+       "mission": "rest"
+      },
+      "unit": "air_group:6"
+     }
+    ]
+   },
+   "answer_to_the_order": [
+    {
+     "for": "the afternoon pulse of day 1",
+     "index": 0,
+     "status": "queued"
+    }
+   ],
+   "events_count": 57,
+   "material": [
+    {
+     "number": 1,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:1 accepted for air_group:1"
+    },
+    {
+     "number": 2,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:2 accepted for air_group:2"
+    },
+    {
+     "number": 3,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:3 accepted for air_group:3"
+    },
+    {
+     "number": 4,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:4 accepted for air_group:3"
+    },
+    {
+     "number": 5,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:5 accepted for air_group:4"
+    },
+    {
+     "number": 6,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:6 accepted for air_group:4"
+    },
+    {
+     "number": 7,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:7 accepted for air_group:5"
+    },
+    {
+     "number": 8,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:8 accepted for air_group:6"
+    },
+    {
+     "number": 9,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:9 accepted for air_group:7"
+    },
+    {
+     "number": 10,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:10 accepted for air_group:8"
+    },
+    {
+     "number": 11,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:11 accepted for air_group:9"
+    },
+    {
+     "number": 12,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:12 accepted for air_group:10"
+    },
+    {
+     "number": 13,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:13 accepted for air_group:11"
+    },
+    {
+     "number": 14,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:14 accepted for air_group:12"
+    },
+    {
+     "number": 15,
+     "pulse": "morning",
+     "kind": "search_flown",
+     "words": "air_group:3 searched 290-090 out to 250 nm from ship:1 at (7,-5) with 16 aircraft"
+    },
+    {
+     "number": 16,
+     "pulse": "morning",
+     "kind": "search_flown",
+     "words": "air_group:4 searched 290-090 out to 250 nm from ship:1 at (7,-5) with 7 aircraft"
+    },
+    {
+     "number": 17,
+     "pulse": "afternoon",
+     "kind": "order_accepted",
+     "words": "order:15 accepted for air_group:6"
+    },
+    {
+     "number": 18,
+     "pulse": "afternoon",
+     "kind": "search_flown",
+     "words": "air_group:3 searched 290-090 out to 250 nm from ship:1 at (7,-5) with 16 aircraft"
+    },
+    {
+     "number": 19,
+     "pulse": "afternoon",
+     "kind": "search_attempt",
+     "words": "air_group:3 searched and sighted a force"
+    },
+    {
+     "number": 20,
+     "pulse": "afternoon",
+     "kind": "report_received",
+     "words": "Allied report: 14 ships, carrier, at (8,-11): new contact:1"
+    },
+    {
+     "number": 21,
+     "pulse": "afternoon",
+     "kind": "search_attempt",
+     "words": "air_group:3 searched and sighted a force"
+    },
+    {
+     "number": 22,
+     "pulse": "afternoon",
+     "kind": "report_received",
+     "words": "Allied report: 4 ships, carrier, at (7,-9): new contact:2"
+    },
+    {
+     "number": 23,
+     "pulse": "afternoon",
+     "kind": "search_flown",
+     "words": "air_group:4 searched 290-090 out to 250 nm from ship:1 at (7,-5) with 7 aircraft"
+    },
+    {
+     "number": 24,
+     "pulse": "afternoon",
+     "kind": "strike_launched",
+     "words": "air_group:7 launched 15 aircraft at contact:2 at (7,-9), 160 nm"
+    },
+    {
+     "number": 25,
+     "pulse": "afternoon",
+     "kind": "strike_launched",
+     "words": "air_group:8 launched 8 aircraft at contact:2 at (7,-9), 160 nm"
+    },
+    {
+     "number": 26,
+     "pulse": "afternoon",
+     "kind": "aircraft_lost",
+     "words": "air_group:7 lost 1 aircraft, 14 left"
+    },
+    {
+     "number": 27,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's escorts: 4 shots"
+    },
+    {
+     "number": 28,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's bombers: 11 shots"
+    },
+    {
+     "number": 29,
+     "pulse": "afternoon",
+     "kind": "aircraft_lost",
+     "words": "air_group:1 lost 1 aircraft, 26 left"
+    },
+    {
+     "number": 30,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's escorts: 6 shots"
+    },
+    {
+     "number": 31,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's bombers: 6 shots"
+    },
+    {
+     "number": 32,
+     "pulse": "afternoon",
+     "kind": "aircraft_lost",
+     "words": "air_group:1 lost 1 aircraft, 25 left"
+    },
+    {
+     "number": 33,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:9 patrol at the enemy's escorts: 9 shots"
+    },
+    {
+     "number": 34,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:9 patrol at the enemy's bombers: 1 shots"
+    },
+    {
+     "number": 35,
+     "pulse": "afternoon",
+     "kind": "aircraft_lost",
+     "words": "air_group:9 lost 2 aircraft, 11 left"
+    },
+    {
+     "number": 36,
+     "pulse": "afternoon",
+     "kind": "air_attack",
+     "words": "air_group:7 bombs at a ship: 14 shots"
+    },
+    {
+     "number": 37,
+     "pulse": "afternoon",
+     "kind": "air_attack",
+     "words": "air_group:8 torpedoes at a ship: 8 shots"
+    },
+    {
+     "number": 38,
+     "pulse": "afternoon",
+     "kind": "air_attack_against",
+     "words": "ship:1 attacked by 14 aircraft"
+    },
+    {
+     "number": 39,
+     "pulse": "afternoon",
+     "kind": "air_attack_against",
+     "words": "ship:1 attacked by 7 aircraft"
+    },
+    {
+     "number": 40,
+     "pulse": "afternoon",
+     "kind": "base_attacked_against",
+     "words": "bombs at base:1: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing"
+    },
+    {
+     "number": 41,
+     "pulse": "afternoon",
+     "kind": "aircraft_lost",
+     "words": "air_group:7 lost 2 aircraft, 12 left"
+    },
+    {
+     "number": 42,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's bombers: 18 shots after the attack"
+    },
+    {
+     "number": 43,
+     "pulse": "afternoon",
+     "kind": "anti_aircraft_fire",
+     "words": "task_force:1 guns at a raid: 123 shots after the attack"
+    },
+    {
+     "number": 44,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:1 patrol at the enemy's bombers: 9 shots after the attack"
+    },
+    {
+     "number": 45,
+     "pulse": "afternoon",
+     "kind": "anti_aircraft_fire",
+     "words": "task_force:1 guns at a raid: 123 shots after the attack"
+    },
+    {
+     "number": 46,
+     "pulse": "afternoon",
+     "kind": "air_fight",
+     "words": "air_group:9 patrol at the enemy's bombers: 3 shots after the attack"
+    },
+    {
+     "number": 47,
+     "pulse": "afternoon",
+     "kind": "report_received",
+     "words": "Allied report: 3 ships, carrier, at (6,-8): refreshed contact:2"
+    },
+    {
+     "number": 48,
+     "pulse": "afternoon",
+     "kind": "report_received",
+     "words": "Allied report: 3 ships, carrier, at (6,-8): refreshed contact:2"
+    },
+    {
+     "number": 49,
+     "pulse": "afternoon",
+     "kind": "ship_damaged",
+     "words": "ship:1 took 3 hits on flotation, 15.782826 points, now 15.782826"
+    },
+    {
+     "number": 50,
+     "pulse": "afternoon",
+     "kind": "ship_damaged",
+     "words": "ship:1 took 2 hits on fire, 10.521884 points, now 10.521884"
+    },
+    {
+     "number": 51,
+     "pulse": "afternoon",
+     "kind": "system_hit",
+     "words": "ship:1 flight deck hit, working -> degraded"
+    },
+    {
+     "number": 52,
+     "pulse": "afternoon",
+     "kind": "system_hit",
+     "words": "ship:1 main battery hit, no change, still working"
+    },
+    {
+     "number": 53,
+     "pulse": "afternoon",
+     "kind": "claim_received",
+     "words": "Allied claim at (7,-9): 5 hits on a carrier, 0 sunk"
+    },
+    {
+     "number": 54,
+     "pulse": "afternoon",
+     "kind": "claim_received",
+     "words": "Allied claim over (7,-5): 44 aircraft shot down"
+    },
+    {
+     "number": 55,
+     "pulse": "afternoon",
+     "kind": "claim_received",
+     "words": "Allied claim over (7,-5): 25 aircraft shot down"
+    },
+    {
+     "number": 56,
+     "pulse": "afternoon",
+     "kind": "claim_received",
+     "words": "Allied claim over (2,-4): 9 aircraft shot down"
+    },
+    {
+     "number": 57,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:1 at the end of the day: 0 t of supply, 22 aircraft ready: not open"
+    }
+   ]
+  },
+  {
+   "case": "F",
+   "game": "the same game as A to 1200; at 1200 set_route to (5,0) to task_force:1",
+   "order_given": {
+    "orders": [
+     {
+      "order": {
+       "kind": "set_route",
+       "waypoints": [
+        [
+         5,
+         0
+        ]
+       ]
+      },
+      "unit": "task_force:1"
+     }
+    ]
+   },
+   "answer_to_the_order": [
+    {
+     "for": "the afternoon pulse of day 1",
+     "index": 0,
+     "status": "queued"
+    }
+   ],
+   "events_count": 15,
+   "material": [
+    {
+     "number": 1,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:1 accepted for task_force:1"
+    },
+    {
+     "number": 2,
+     "pulse": null,
+     "kind": "order_accepted",
+     "words": "order:2 accepted for task_force:1"
+    },
+    {
+     "number": 3,
+     "pulse": "night",
+     "kind": "task_force_steamed",
+     "words": "task_force:1 steamed 192 nm at 16 kn from (0,0) to (5,0)"
+    },
+    {
+     "number": 4,
+     "pulse": "night",
+     "kind": "fuel_burned",
+     "words": "ship:1 burned 48 t, 1952 t remaining"
+    },
+    {
+     "number": 5,
+     "pulse": "night",
+     "kind": "fuel_burned",
+     "words": "ship:2 burned 24 t, 476 t remaining"
+    },
+    {
+     "number": 6,
+     "pulse": "morning",
+     "kind": "task_force_steamed",
+     "words": "task_force:1 steamed 96 nm at 16 kn from (5,0) to (8,0)"
+    },
+    {
+     "number": 7,
+     "pulse": "morning",
+     "kind": "fuel_burned",
+     "words": "ship:1 burned 24 t, 1928 t remaining"
+    },
+    {
+     "number": 8,
+     "pulse": "morning",
+     "kind": "fuel_burned",
+     "words": "ship:2 burned 12 t, 464 t remaining"
+    },
+    {
+     "number": 9,
+     "pulse": "afternoon",
+     "kind": "order_accepted",
+     "words": "order:3 accepted for task_force:1"
+    },
+    {
+     "number": 10,
+     "pulse": "afternoon",
+     "kind": "task_force_turned_back",
+     "words": "task_force:1 turned back toward (8,0), 26 nm from (8,1), now in (8,0)"
+    },
+    {
+     "number": 11,
+     "pulse": "afternoon",
+     "kind": "task_force_steamed",
+     "words": "task_force:1 steamed 96 nm at 16 kn from (8,0) to (6,0)"
+    },
+    {
+     "number": 12,
+     "pulse": "afternoon",
+     "kind": "fuel_burned",
+     "words": "ship:1 burned 24 t, 1904 t remaining"
+    },
+    {
+     "number": 13,
+     "pulse": "afternoon",
+     "kind": "fuel_burned",
+     "words": "ship:2 burned 12 t, 452 t remaining"
+    },
+    {
+     "number": 14,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open"
+    },
+    {
+     "number": 15,
+     "pulse": null,
+     "kind": "base_at_day_end",
+     "words": "base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open"
+    }
+   ]
+  }
+ ]
+}
