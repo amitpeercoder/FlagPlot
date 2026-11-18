@@ -19,9 +19,9 @@ use std::collections::BTreeMap;
 use crate::command::{
     Addressee, Amendment, AmendmentChange, Awaited, Baseline, Command, CommandKind, CommandRefusal,
     CommandState, Commitment, ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind,
-    IntentLimits, InterruptCondition, InterruptRef, InterruptSetting, InterruptStatus, Leave,
-    Limit, Maker, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason, Run,
-    SetInterrupt, StaffDecisions, StaffNotice, Staffs, StandingSubject,
+    IntentLimits, InterruptCondition, InterruptRef, InterruptSetting, InterruptStatus, Knowledge,
+    Leave, Limit, Maker, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason,
+    Run, SetInterrupt, StaffDecisions, StaffNotice, Staffs, StandingSubject,
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
@@ -515,6 +515,21 @@ impl World {
                     {
                         return Err(CommandRefusal::NoWaitLimitOn(intent));
                     }
+                    // Decision 0159, 12: so does "knowledge", and a recent
+                    // count is at least 1 day.
+                    if let Limit::Knowledge { knowledge, .. } = limit {
+                        if found.maker != Maker::Commander
+                            || !matches!(
+                                found.kind,
+                                IntentKind::TakePlace { .. } | IntentKind::ControlIsland { .. }
+                            )
+                        {
+                            return Err(CommandRefusal::NoKnowledgeLimitOn(intent));
+                        }
+                        if *knowledge == Some(Knowledge::RecentCount(0)) {
+                            return Err(CommandRefusal::RecentCountOfNoDays(intent));
+                        }
+                    }
                     if let Limit::Forces { limit, .. } = limit {
                         // Keeping a base supplied needs a source. Taking a
                         // place does not: the staff chooses what the
@@ -578,7 +593,10 @@ impl World {
                             }
                         }
                     }
-                    Limit::Priority { .. } | Limit::Risk { .. } | Limit::NotBefore { .. } => {}
+                    Limit::Priority { .. }
+                    | Limit::Risk { .. }
+                    | Limit::NotBefore { .. }
+                    | Limit::Knowledge { .. } => {}
                     // A force or unit not the side's is refused as a forces
                     // limit naming it is, so that a refusal tells nothing of
                     // the enemy (decision 0159, 9).
@@ -646,7 +664,8 @@ impl World {
                         | Limit::Reserve { .. }
                         | Limit::NotBefore { .. }
                         | Limit::WaitFor { .. }
-                        | Limit::After { .. } => true,
+                        | Limit::After { .. }
+                        | Limit::Knowledge { .. } => true,
                     };
                     if !narrows {
                         return Err(CommandRefusal::WiderThanParent(parent));
@@ -1167,6 +1186,9 @@ impl World {
                         Limit::NotBefore { day, .. } => intent.limits.not_before = *day,
                         Limit::WaitFor { awaited, .. } => intent.limits.wait_for = *awaited,
                         Limit::After { other, .. } => intent.limits.after = *other,
+                        Limit::Knowledge { knowledge, .. } => {
+                            intent.limits.knowledge = *knowledge;
+                        }
                         Limit::Reserve { .. } => {}
                     }
                     let plan_id = intent.plan;

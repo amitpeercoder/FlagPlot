@@ -32,15 +32,18 @@
 //! `"balanced"` or `"press"`). Decision 0159, 9: `"not_before"` has `intent`
 //! and `from_day`; `"wait_for"` has `intent` and one of `task_force` and
 //! `land_unit`; `"after"` has `intent` and `other_intent`. Each with its key
-//! left out clears the limit.
+//! left out clears the limit. Decision 0159, 12: `"knowledge"` has `intent`,
+//! `knowledge` (`"none"`, `"count"` or `"recent_count"`; left out clears the
+//! limit) and, with `"recent_count"` alone, `within_days` (3 where left
+//! out).
 
 use std::collections::BTreeSet;
 
 use serde::Deserialize;
 use sim_core::command::{
     Awaited, CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
-    InterruptRef, InterruptSetting, Leave, Limit, PlanId, Risk, StandingKind, StandingSubject,
-    Want, Wants,
+    InterruptRef, InterruptSetting, Knowledge, Leave, Limit, PlanId, Risk, StandingKind,
+    StandingSubject, Want, Wants,
 };
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId};
@@ -83,6 +86,8 @@ pub(crate) struct CommandSpec {
     risk: Option<String>,
     from_day: Option<u32>,
     other_intent: Option<u32>,
+    knowledge: Option<String>,
+    within_days: Option<i64>,
     leave: Option<String>,
     given: Option<bool>,
     plan: Option<u32>,
@@ -132,6 +137,8 @@ impl CommandSpec {
         note(self.risk.is_some(), "risk");
         note(self.from_day.is_some(), "from_day");
         note(self.other_intent.is_some(), "other_intent");
+        note(self.knowledge.is_some(), "knowledge");
+        note(self.within_days.is_some(), "within_days");
         note(self.leave.is_some(), "leave");
         note(self.given.is_some(), "given");
         note(self.plan.is_some(), "plan");
@@ -209,9 +216,10 @@ impl CommandSpec {
                 &["limit", "intent", "task_force", "land_unit"]
             }
             ("set_limit", Some("after")) => &["limit", "intent", "other_intent"],
+            ("set_limit", Some("knowledge")) => &["limit", "intent", "knowledge", "within_days"],
             ("set_limit", Some(other)) => {
                 return Err(format!(
-                    "{what} has limit \"{other}\", which is not forces, area, priority, protected, reserve, risk, not_before, wait_for or after"
+                    "{what} has limit \"{other}\", which is not forces, area, priority, protected, reserve, risk, not_before, wait_for, after or knowledge"
                 ))
             }
             ("set_limit", None) => {
@@ -478,6 +486,38 @@ impl CommandSpec {
                 Some("after") => Limit::After {
                     intent: intent()?,
                     other: self.other_intent.map(IntentId::new),
+                },
+                // Decision 0159, 12: `knowledge` left out clears the limit;
+                // `within_days` goes only with a recent count, 3 where it is
+                // left out. A count of 0 days reaches the game and is refused
+                // there; one below 0 cannot be written.
+                Some("knowledge") => Limit::Knowledge {
+                    intent: intent()?,
+                    knowledge: match (self.knowledge.as_deref(), self.within_days) {
+                        (Some("recent_count"), None) => {
+                            Some(Knowledge::RecentCount(Knowledge::RECENT_DAYS))
+                        }
+                        (Some("recent_count"), Some(days)) => Some(Knowledge::RecentCount(
+                            u32::try_from(days).map_err(|_| {
+                                format!(
+                                    "{what} has within_days {days}: a recent count is at least 1 day"
+                                )
+                            })?,
+                        )),
+                        (_, Some(_)) => {
+                            return Err(format!(
+                                "{what} has within_days, which only a knowledge of recent_count takes"
+                            ))
+                        }
+                        (Some("none"), None) => Some(Knowledge::NoCount),
+                        (Some("count"), None) => Some(Knowledge::Count),
+                        (Some(other), None) => {
+                            return Err(format!(
+                                "{what} has knowledge \"{other}\", which is not none, count or recent_count"
+                            ))
+                        }
+                        (None, None) => None,
+                    },
                 },
                 _ => {
                     let name = self

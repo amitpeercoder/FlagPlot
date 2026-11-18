@@ -1303,7 +1303,10 @@ impl Session {
                     false,
                 ))
             }
-            "plans" => Ok(self.noted(staffing::plans(&self.preview().side_view(side)), false)),
+            "plans" => Ok(self.noted(
+                staffing::plans(&self.preview().side_view(side), staff),
+                false,
+            )),
             "staff_orders" => {
                 let world = self.preview();
                 Ok(self.noted(staffing::staff_orders(&world.side_view(side), staff), false))

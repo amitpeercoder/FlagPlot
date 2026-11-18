@@ -175,8 +175,11 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// 21 (decision 0159, rule C) adds in `"commands"` the limits `not_before`
 /// (`from_day`), `wait_for` (`task_force` or `land_unit`) and `after`
 /// (`other_intent`); its state version is v46. A game of an older version
-/// lacks them and is refused, not converted.
-pub const VERSION: u32 = 21;
+/// lacks them and is refused, not converted. Version 22 (decision 0159, rule
+/// D) adds in `"commands"` the limit `knowledge` (`knowledge` and, for a
+/// recent count, `within_days`); its state version is v47. A game of an older
+/// version lacks it and is refused, not converted.
+pub const VERSION: u32 = 22;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -983,6 +986,36 @@ mod tests {
                         other: None,
                     }),
                 ),
+                // Decision 0159, 12: the knowledge limit, each setting and
+                // cleared.
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Knowledge {
+                        intent,
+                        knowledge: Some(sim_core::command::Knowledge::NoCount),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Knowledge {
+                        intent,
+                        knowledge: Some(sim_core::command::Knowledge::Count),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Knowledge {
+                        intent,
+                        knowledge: Some(sim_core::command::Knowledge::RecentCount(1)),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Knowledge {
+                        intent,
+                        knowledge: None,
+                    }),
+                ),
                 (
                     Side::Allied,
                     CommandKind::SetLeave {
@@ -1212,9 +1245,9 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 21);
+        assert_eq!(written["version"], 22);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 22);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 26);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

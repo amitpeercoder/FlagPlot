@@ -15,7 +15,7 @@
 //! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up`, `take_place`, `control_island` or `bombard`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise` and `deny`), `target` (`neutralise`, `raid` and `bombard`), `hex` as `[q, r]` and `distance` in whole hexes (`deny`: the waters within `distance` of `hex`), for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set); `ready_landing` (decision 0141) takes `task_force`, `hex` and `by_day` (left out when there is no date); `build_up` takes `base`, `wants`, a list of `airfield`, `mend`, `defences`, `port` and `aircraft` in order, and `defences`, the points from 1 to 100, written only when `defences` is a want; `take_place` (decision 0142) takes `hex` as `[q, r]` and `by_day` (left out when there is no date), and, in the tool, `base` in place of `hex` (the tool writes the base's hex); `control_island` (decision 0151) takes `island`, the number of an island the scenario names, and `by_day` (left out when there is no date); `bombard` (decision 0146) takes `task_force` and `target` |
 //! | `form_intent` | `parent`, `intent_kind` (`keep_supplied` under a hold, with `floor_days` and optionally `interval_days`; `cover`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up` or `bombard`), `base` (not for a neutralise, a deny or a task of a task force), `by_day`, `wants` and `defences` (as for `set_intent`), `target` (for a raid), `hex` and `distance` (for a deny), `task_force` and `hex` (for `stand_at` and `operate_carriers`), `task_force` and `target` (for `bombard`): the staff's, a sub-intent under `parent` |
 //! | `withdraw_intent` | `intent` |
-//! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve`, `risk`, `not_before`, `wait_for` or `after`) and its keys, below |
+//! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve`, `risk`, `not_before`, `wait_for`, `after` or `knowledge`) and its keys, below |
 //! | `set_leave` | `leave` (`prepare` or `launch`), `given` |
 //! | `approve`, `cancel_plan` | `plan` |
 //! | `commit_ships` | `plan`, `run` (left out when none), `ships`, `from_day`, `to_day` |
@@ -37,7 +37,9 @@
 //! (`preserve`, `balanced` or `press`). Decision 0159, 9: `not_before` has
 //! `intent` and `from_day` (`null` clears it); `wait_for` has `intent` and one
 //! of `task_force` and `land_unit` (neither clears it); `after` has `intent`
-//! and `other_intent` (`null` clears it).
+//! and `other_intent` (`null` clears it). Decision 0159, 12: `knowledge` has
+//! `intent`, `knowledge` (`none`, `count` or `recent_count`; `null` clears
+//! it) and, with `recent_count` alone, `within_days`.
 //!
 //! What a staff handed in for a day is `{"orders", "commands", "no_orders"}`
 //! and, left out when there is none, `"notices"` (each `{kind, plan, run,
@@ -57,7 +59,7 @@ use std::collections::BTreeSet;
 use serde_json::{json, Map, Value};
 use sim_core::command::{
     Addressee, Awaited, ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget,
-    IntentKind, InterruptCondition, InterruptRef, InterruptSetting, Leave, Limit, Maker,
+    IntentKind, InterruptCondition, InterruptRef, InterruptSetting, Knowledge, Leave, Limit, Maker,
     NoticeBasis, NoticeKind, PlanId, PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves,
     StaffCommand, StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject, Want,
     Wants,
@@ -88,6 +90,43 @@ fn small(value: &Value, key: &str) -> Result<u32, String> {
 }
 
 /// A whole number that may be left out or `null`.
+/// A "knowledge" limit's setting (decision 0159, 12): `knowledge` null or
+/// left out clears it; `within_days` goes with `recent_count` alone, 3 where
+/// left out. A count of 0 days is the game's to refuse; one below 0 is
+/// refused here.
+fn knowledge_from(value: &Value) -> Result<Option<Knowledge>, String> {
+    let days = match value.get("within_days") {
+        None | Some(Value::Null) => None,
+        Some(given) => {
+            let days = given
+                .as_i64()
+                .ok_or_else(|| "\"within_days\" must be a whole number".to_string())?;
+            Some(u32::try_from(days).map_err(|_| {
+                format!("\"within_days\" is {days}: a recent count is at least 1 day")
+            })?)
+        }
+    };
+    let name = match value.get("knowledge") {
+        None | Some(Value::Null) => None,
+        Some(Value::String(name)) => Some(name.as_str()),
+        Some(_) => return Err("\"knowledge\" must be none, count or recent_count".to_string()),
+    };
+    match (name, days) {
+        (Some("recent_count"), days) => Ok(Some(Knowledge::RecentCount(
+            days.unwrap_or(Knowledge::RECENT_DAYS),
+        ))),
+        (_, Some(_)) => {
+            Err("\"within_days\" goes only with \"knowledge\": \"recent_count\"".to_string())
+        }
+        (Some("none"), None) => Ok(Some(Knowledge::NoCount)),
+        (Some("count"), None) => Ok(Some(Knowledge::Count)),
+        (Some(other), None) => Err(format!(
+            "unknown knowledge \"{other}\": it is none, count or recent_count"
+        )),
+        (None, None) => Ok(None),
+    }
+}
+
 fn small_opt(value: &Value, key: &str) -> Result<Option<u32>, String> {
     match value.get(key) {
         None | Some(Value::Null) => Ok(None),
@@ -419,6 +458,19 @@ fn limit_to_json(limit: &Limit) -> Value {
             "intent": intent.raw(),
             "other_intent": other.map(IntentId::raw),
         }),
+        // Decision 0159, 12: a limit cleared is written with `null`.
+        Limit::Knowledge { intent, knowledge } => {
+            let mut body = json!({
+                "kind": "set_limit",
+                "limit": "knowledge",
+                "intent": intent.raw(),
+                "knowledge": knowledge.map(Knowledge::name),
+            });
+            if let Some(days) = knowledge.and_then(Knowledge::days) {
+                body["within_days"] = json!(days);
+            }
+            body
+        }
     }
 }
 
@@ -492,6 +544,10 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
         "after" => Ok(Limit::After {
             intent: intent()?,
             other: small_opt(value, "other_intent")?.map(IntentId::new),
+        }),
+        "knowledge" => Ok(Limit::Knowledge {
+            intent: intent()?,
+            knowledge: knowledge_from(value)?,
         }),
         other => Err(format!("unknown limit \"{other}\"")),
     }

@@ -6,7 +6,16 @@
 //!   the enemy at the place seen from the air or by men in contact, dated no
 //!   more than [`RECENT_DAYS`] days before the morning; at balanced such a
 //!   count of any day; at press none. A scenario's opening estimate (told)
-//!   never meets it.
+//!   never meets it. Where the commander sets the limit "knowledge" on the
+//!   take or above it (decision 0159, 12), it and not the risk says how much
+//!   must be known: none, a count, or a recent count of so many days; the
+//!   risk still says the men wanted. Where nothing can look, a recent count
+//!   is not launched on no count, as preserve was not, and a count goes, as
+//!   balanced did.
+//! - **The need as data** (decision 0159, 13): each morning a take's plan is
+//!   preparing, what is asked, what is held with its age and what it could
+//!   be in truth ([`could_be`]), who is looking and since when, and whether
+//!   it is met, kept for the staff's `needs_to_know` and stored nowhere.
 //! - **The group** (item 14), [`Day::look_orders`]: each morning the need is
 //!   unmet and the side has no fighting man ashore in the place's hex, one
 //!   air group is set to reconnaissance of the place; when the need is met
@@ -35,13 +44,16 @@ use std::collections::BTreeSet;
 
 use sim_core::belief::{GroundEstimate, GroundGrade};
 use sim_core::command::{
-    CommandKind, ForcesLimit, Intent, IntentKind, Limit, NoticeKind, Plan, PlanState, Risk,
-    StaffCommand, StaffOrder,
+    CommandKind, CountRange, ForcesLimit, HeldCount, Intent, IntentKind, Knowledge, Limit, Looking,
+    NeedToKnow, NoticeKind, Plan, PlanState, Risk, StaffCommand, StaffOrder,
 };
+use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, LandUnitId};
+use sim_core::ids::{AirGroupId, IntentId, LandUnitId};
 use sim_core::orders::{AirGroupOrder, AirMission, OrderKind};
+use sim_core::refdata::ReportError;
+use sim_core::side_events::SideEventKind;
 use sim_core::state::{AirGroup, AirGroupLocation, ShipLocation};
 
 use crate::air::{mission_words, Day};
@@ -49,8 +61,9 @@ use crate::reasons::serving;
 
 /// The days before the morning within which a count seen from the air or by
 /// men in contact meets the need at preserve the force (decision 0147, 13).
-/// A placeholder.
-pub(crate) const RECENT_DAYS: u32 = 3;
+/// A placeholder, kept with the setting it is the default of
+/// ([`Knowledge::RECENT_DAYS`], decision 0159, 12).
+pub(crate) const RECENT_DAYS: u32 = Knowledge::RECENT_DAYS;
 
 /// The group that is to look, with its range and its distance from the
 /// place.
@@ -64,10 +77,16 @@ pub(crate) struct Sender {
 /// What the staff holds of the enemy at the place against what the risk
 /// asks, and who could look.
 #[derive(Clone, Debug)]
-pub(crate) struct Knowledge {
+pub(crate) struct Known {
     pub(crate) estimate: Option<GroundEstimate>,
     pub(crate) met: bool,
-    /// What the risk asks for, in words.
+    /// What is asked: the commander's "knowledge" limit read up the tree, or
+    /// what the risk sets where none is set (decision 0159, 12).
+    pub(crate) asked: Knowledge,
+    /// The intent the "knowledge" limit is set on; `None` where the risk
+    /// sets what is asked.
+    pub(crate) asked_from: Option<IntentId>,
+    /// What is asked, in words.
     pub(crate) asks: String,
     /// The side has men of a fighting unit ashore in the place's hex.
     pub(crate) fighting_ashore: bool,
@@ -93,7 +112,37 @@ pub(crate) fn estimate_words(place: Hex, estimate: Option<&GroundEstimate>) -> S
     }
 }
 
-fn asks_words(risk: Risk, place: Hex) -> String {
+/// "1 day" or "2 days".
+fn days_words(days: u32) -> String {
+    if days == 1 {
+        "1 day".to_string()
+    } else {
+        format!("{days} days")
+    }
+}
+
+/// What is asked, in words. Where the risk sets it the words are those of
+/// decision 0147; where the commander's "knowledge" limit sets it they say
+/// so and on which intent it is set (decision 0159, 12).
+fn asks_words(risk: Risk, asked: Knowledge, from: Option<IntentId>, place: Hex) -> String {
+    let Some(on) = from else {
+        return risk_asks_words(risk, place);
+    };
+    match asked {
+        Knowledge::NoCount => format!(
+            "the knowledge limit set on {on} asks for no count of the enemy at {place}"
+        ),
+        Knowledge::Count => format!(
+            "the knowledge limit set on {on} asks for a count of the enemy at {place} seen from the air or by men in contact, of any day"
+        ),
+        Knowledge::RecentCount(days) => format!(
+            "the knowledge limit set on {on} asks for a count of the enemy at {place} seen from the air or by men in contact, no more than {} old on the morning it goes",
+            days_words(days)
+        ),
+    }
+}
+
+fn risk_asks_words(risk: Risk, place: Hex) -> String {
     match risk {
         Risk::Preserve => format!(
             "at preserve the force it asks for a count of the enemy at {place} seen from the air or by men in contact, dated no more than {RECENT_DAYS} days before the morning"
@@ -105,14 +154,39 @@ fn asks_words(risk: Risk, place: Hex) -> String {
     }
 }
 
-fn met(risk: Risk, estimate: Option<&GroundEstimate>, today: u32) -> bool {
-    match risk {
-        Risk::Press => true,
-        Risk::Balanced => estimate.is_some_and(|e| e.grade != GroundGrade::Told),
-        Risk::Preserve => estimate.is_some_and(|e| {
-            e.grade != GroundGrade::Told && today.saturating_sub(e.day) <= RECENT_DAYS
+/// Whether the estimate meets what is asked (decision 0147, 13, with the
+/// setting of decision 0159, 12): none is met by anything; a count by one
+/// seen from the air or by men in contact; a recent count by such a count
+/// no more than its days old on the morning. What was told meets neither.
+fn met(asked: Knowledge, estimate: Option<&GroundEstimate>, today: u32) -> bool {
+    meets(asked, estimate.map(|e| (e.grade, e.day)), today)
+}
+
+/// [`met`], on the grade and day of what is held.
+fn meets(asked: Knowledge, held: Option<(GroundGrade, u32)>, today: u32) -> bool {
+    match asked {
+        Knowledge::NoCount => true,
+        Knowledge::Count => held.is_some_and(|(grade, _)| grade != GroundGrade::Told),
+        Knowledge::RecentCount(days) => held.is_some_and(|(grade, day)| {
+            grade != GroundGrade::Told && today.saturating_sub(day) <= days
         }),
     }
+}
+
+/// What a count could be in truth, from its grade's error range (decision
+/// 0159, 13): a report is the truth times a factor between `low` and
+/// `high`, so the truth lies between the count over `high`, cut to a whole
+/// man, and the count over `low`, raised to a whole man. A `high` of 0 can
+/// only give a count of 0 and bounds nothing below: the lowest is 0. A `low`
+/// of 0 bounds nothing above: the highest is `None`.
+pub(crate) fn could_be(men: u32, error: ReportError) -> CountRange {
+    let scaled = i128::from(men) * i128::from(Fixed::SCALE);
+    let high = i128::from(error.high.raw());
+    let low = i128::from(error.low.raw());
+    let whole = |n: i128| u32::try_from(n).unwrap_or(u32::MAX);
+    let lowest = if high > 0 { whole(scaled / high) } else { 0 };
+    let highest = (low > 0).then(|| whole((scaled + low - 1) / low));
+    CountRange { lowest, highest }
 }
 
 fn list(units: &BTreeSet<LandUnitId>) -> String {
@@ -151,8 +225,19 @@ impl Day<'_, '_> {
         }
     }
 
+    /// What is asked of `end`: the "knowledge" limit read up its tree, with
+    /// the intent it is set on, or what the risk sets where none is set
+    /// (decision 0159, 12).
+    pub(crate) fn asked(&self, end: &Intent, risk: Risk) -> (Knowledge, Option<IntentId>) {
+        match self.state.knowledge_read_up(end.id) {
+            Some((knowledge, on)) => (knowledge, Some(on)),
+            None => (Knowledge::of_risk(risk), None),
+        }
+    }
+
     /// Item 13 and the groups of item 14, for the place at the risk.
-    pub(crate) fn knowledge(&self, end: &Intent, place: Hex, risk: Risk) -> Knowledge {
+    pub(crate) fn knowledge(&self, end: &Intent, place: Hex, risk: Risk) -> Known {
+        let (asked, asked_from) = self.asked(end, risk);
         let estimate = self.view.ground_estimate(place).copied();
         let fighting_ashore = self
             .view
@@ -215,15 +300,106 @@ impl Day<'_, '_> {
                 });
             }
         }
-        Knowledge {
-            met: met(risk, estimate.as_ref(), self.today),
-            asks: asks_words(risk, place),
+        Known {
+            met: met(asked, estimate.as_ref(), self.today),
+            asks: asks_words(risk, asked, asked_from, place),
+            asked,
+            asked_from,
             estimate,
             fighting_ashore,
             sender,
             on_it,
             left,
         }
+    }
+
+    /// What is held in words: the estimate, and where the commander's
+    /// "knowledge" limit sets what is asked, its age on the morning
+    /// (decision 0159, 12). Where the risk sets it the words are those of
+    /// decision 0147.
+    fn held_words(&self, place: Hex, k: &Known) -> String {
+        let have = estimate_words(place, k.estimate.as_ref());
+        match (k.asked_from, k.estimate) {
+            (Some(_), Some(e)) => format!(
+                "{have}, {} old",
+                days_words(self.today.saturating_sub(e.day))
+            ),
+            _ => have,
+        }
+    }
+
+    /// The day the side's log says `group`'s mission was set by the order
+    /// that set it; `None` where no order of the side set it (a mission the
+    /// scenario gave at the start).
+    fn mission_since(&mut self, group: AirGroupId) -> Option<u32> {
+        let order = self
+            .view
+            .air_groups()
+            .find(|g| g.id == group)?
+            .mission_order?;
+        self.side_events().iter().find_map(|e| match &e.kind {
+            SideEventKind::Whole(EventKind::OrderAccepted { order: o, .. }) if *o == order => {
+                Some(e.day)
+            }
+            _ => None,
+        })
+    }
+
+    /// Decision 0159, 13: the need to know of a take whose plan is
+    /// preparing, as data, kept for [`crate::SupplyStaff`]'s
+    /// `needs_to_know` and stored nowhere. The group looking is the one on
+    /// reconnaissance of the place after this morning's orders: where the
+    /// need is met, a group the commander holds on it (the staff sets the
+    /// rest to rest); where it is not, the first group on it, or else the
+    /// group the staff sends this morning, unless men of the side's own are
+    /// ashore there.
+    fn record_need(&mut self, end: &Intent, plan: &Plan, place: Hex, k: &Known) {
+        let held_on = |day: &Self, id: &AirGroupId| day.state.hold_on_group(*id).is_some();
+        let group = if k.met {
+            k.on_it.iter().find(|id| held_on(self, id)).copied()
+        } else if let Some(first) = k.on_it.first() {
+            Some(*first)
+        } else if k.fighting_ashore || k.asked == Knowledge::NoCount {
+            None
+        } else {
+            k.sender.map(|sender| sender.id)
+        };
+        let looking = group.map(|air_group| {
+            let since_day = if k.on_it.contains(&air_group) {
+                self.mission_since(air_group)
+            } else {
+                Some(self.today)
+            };
+            Looking {
+                air_group,
+                since_day,
+            }
+        });
+        let figures = self.view.ground_figures();
+        let held = k.estimate.map(|e| {
+            let error = match e.grade {
+                GroundGrade::Told => None,
+                GroundGrade::SeenFromAir => figures.and_then(|f| f.reconnaissance_error),
+                GroundGrade::MenInContact => figures.and_then(|f| f.report_error),
+            };
+            HeldCount {
+                men: e.men,
+                grade: e.grade,
+                day: e.day,
+                age_days: self.today.saturating_sub(e.day),
+                could_be: error.map(|error| could_be(e.men, error)),
+            }
+        });
+        self.needs.push(NeedToKnow {
+            plan: plan.id,
+            intent: end.id,
+            place,
+            asked: k.asked,
+            asked_from: k.asked_from,
+            held,
+            looking,
+            met: k.met,
+        });
     }
 
     // -- The group (items 14 and 15) -----------------------------------------
@@ -240,14 +416,21 @@ impl Day<'_, '_> {
             return;
         }
         let risk = self.state.risk_read_up(end.id);
-        // At press none is sent (item 14).
-        if risk == Risk::Press {
+        let k = self.knowledge(end, place, risk);
+        self.record_need(end, plan, place, &k);
+        // Where no count is asked (at press, or by the commander's
+        // "knowledge" limit) none is sent (item 14).
+        if k.asked == Knowledge::NoCount {
             return;
         }
+        let asker = if k.asked_from.is_some() {
+            "the knowledge limit"
+        } else {
+            "the risk"
+        };
         let in_scope = self.in_scope(end.id);
         let today = self.today;
-        let k = self.knowledge(end, place, risk);
-        let have = estimate_words(place, k.estimate.as_ref());
+        let have = self.held_words(place, &k);
         if k.met {
             // Item 15: the group is set to rest, by one order.
             for id in &k.on_it {
@@ -269,7 +452,7 @@ impl Day<'_, '_> {
                         k.asks,
                         mission_words(group.mission)
                     ))
-                    .would_change("a count older than the risk asks for")
+                    .would_change(format!("a count older than {asker} asks for"))
                     .done();
                 self.target(in_scope).orders.push(StaffOrder {
                     kind: OrderKind::AirGroup {
@@ -304,7 +487,9 @@ impl Day<'_, '_> {
                 "{have}; {}: the need is not met, so the staff sets {}, the lowest-numbered group the forces limit names that can search, may be used, is not held and reaches {place} (range {} nm, {} nm away), to reconnaissance of {place}: one aircraft looks each morning until the need is met.",
                 k.asks, sender.id, sender.range, sender.distance
             ))
-            .would_change("a count of the risk's grade, or a group that reaches the place")
+            .would_change(format!(
+                "a count of {asker}'s grade, or a group that reaches the place"
+            ))
             .done();
         self.target(in_scope).orders.push(StaffOrder {
             kind: OrderKind::AirGroup {
@@ -447,7 +632,12 @@ impl Day<'_, '_> {
         let today = self.today;
         let risk = self.state.risk_read_up(end.id);
         let k = self.knowledge(end, place, risk);
-        let have = estimate_words(place, k.estimate.as_ref());
+        let have = self.held_words(place, &k);
+        let asker = if k.asked_from.is_some() {
+            "the knowledge limit"
+        } else {
+            "the risk"
+        };
         if !k.met {
             // A group sent, or sent this morning: the landing waits for the
             // count (item 18).
@@ -468,7 +658,7 @@ impl Day<'_, '_> {
                         "The landing at {place} is ready ({ready_words}), but {have}; {}. {who}: the staff does not ask leave to launch and does not release {} until the need is met.",
                         k.asks, plan.id
                     ))
-                    .would_change("a count of the risk's grade")
+                    .would_change(format!("a count of {asker}'s grade"))
                     .done();
                 self.target(in_scope).no_orders.push(reason);
                 return None;
@@ -480,15 +670,23 @@ impl Day<'_, '_> {
             } else {
                 format!("nothing it may use can look: {}", k.left.join("; "))
             };
-            match risk {
-                Risk::Preserve => {
+            // Where nothing can look, what is asked decides (decision 0159,
+            // 12): a recent count is not launched on no count, as preserve
+            // the force was not; a count goes, as balanced did.
+            match k.asked {
+                Knowledge::RecentCount(_) => {
                     let noticed = self.noticed(NoticeKind::CannotMeet, plan.id);
+                    let who = if k.asked_from.is_some() {
+                        "With a recent count asked".to_string()
+                    } else {
+                        "At preserve the force".to_string()
+                    };
                     let reason = serving(end, plan)
                         .evidence(ready_words.to_string(), today)
                         .evidence(have.clone(), today)
                         .binding(k.asks.clone())
                         .worked(format!(
-                            "The landing at {place} is ready ({ready_words}), but {have}; {}. {why}. At preserve the force the staff does not launch on no count: it does not ask leave to launch and does not release {}{}.",
+                            "The landing at {place} is ready ({ready_words}), but {have}; {}. {why}. {who} the staff does not launch on no count: it does not ask leave to launch and does not release {}{}.",
                             k.asks,
                             plan.id,
                             if noticed {
@@ -497,7 +695,11 @@ impl Day<'_, '_> {
                                 ", and hands in the notice that it cannot meet the intent"
                             }
                         ))
-                        .would_change("a group that can look at the place, a count, or a bolder risk level")
+                        .would_change(if k.asked_from.is_some() {
+                            "a group that can look at the place, a count, or a knowledge limit that asks less"
+                        } else {
+                            "a group that can look at the place, a count, or a bolder risk level"
+                        })
                         .done();
                     if noticed {
                         self.target(in_scope).no_orders.push(reason);
@@ -506,7 +708,7 @@ impl Day<'_, '_> {
                     }
                     return None;
                 }
-                Risk::Balanced | Risk::Press => {}
+                Knowledge::Count | Knowledge::NoCount => {}
             }
         }
         // Decision 0142, 10, on the count held: at preserve the force
@@ -561,5 +763,58 @@ impl Day<'_, '_> {
             Some(_) => format!(" It goes on the count held: {have}."),
         };
         Some(goes)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{could_be, meets};
+    use sim_core::belief::GroundGrade;
+    use sim_core::command::{CountRange, Knowledge};
+    use sim_core::fixed::Fixed;
+    use sim_core::refdata::ReportError;
+
+    fn range(low: &str, high: &str) -> ReportError {
+        ReportError {
+            low: low.parse::<Fixed>().expect("a figure"),
+            high: high.parse::<Fixed>().expect("a figure"),
+        }
+    }
+
+    fn between(lowest: u32, highest: u32) -> CountRange {
+        CountRange {
+            lowest,
+            highest: Some(highest),
+        }
+    }
+
+    /// Scenario 82's property "The range", on the decision's figures.
+    #[test]
+    fn what_a_count_could_be_in_truth() {
+        // 3,000 seen from the air, 0.25 to 2: 1,500 to 12,000.
+        assert_eq!(could_be(3000, range("0.25", "2")), between(1500, 12000));
+        // 3,000 by men in contact, 0.5 to 1.5: 2,000 to 6,000.
+        assert_eq!(could_be(3000, range("0.5", "1.5")), between(2000, 6000));
+        // 100 with 0.25 to 2: 50 to 400.
+        assert_eq!(could_be(100, range("0.25", "2")), between(50, 400));
+        // 7 with 0.5 to 1.5: 4.67 cut to 4, 14.
+        assert_eq!(could_be(7, range("0.5", "1.5")), between(4, 14));
+    }
+
+    /// Scenario 82's property "A count, at preserve the force": a count
+    /// meets "a count" at any age; a recent count only within its days; what
+    /// was told meets neither; "none" is met by nothing held.
+    #[test]
+    fn what_meets_each_setting() {
+        let air = Some((GroundGrade::SeenFromAir, 1));
+        assert!(meets(Knowledge::Count, air, 3));
+        assert!(meets(Knowledge::Count, air, 1000));
+        assert!(meets(Knowledge::RecentCount(1), air, 2));
+        assert!(!meets(Knowledge::RecentCount(1), air, 3));
+        let told = Some((GroundGrade::Told, 0));
+        assert!(!meets(Knowledge::Count, told, 1));
+        assert!(!meets(Knowledge::RecentCount(3), told, 1));
+        assert!(meets(Knowledge::NoCount, None, 1));
+        assert!(!meets(Knowledge::Count, None, 1));
     }
 }
