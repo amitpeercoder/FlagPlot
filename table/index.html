@@ -478,8 +478,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     showDirectives();
     roots.forEach(function (r) { var op = slip('YOUR INTENT ' + r.number, r.in_force ? 'IN FORCE' : null, sayIntent(r, {}), null); button(op, 'READ THE PLAN', false, function () { readPlan(r.number); }); });
     if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) { var sch = slip('FROM STAFF', null, 'What is coming', null); button(sch, 'READ THE SCHEDULE', false, readSchedule); }
-    if (lastRun) { var y = slip(clock.at === 'dusk' ? 'YESTERDAY' : 'SO FAR TODAY', null, null, lastRun.summary); button(y, 'READ THE BRIEFING', false, readBriefing); }
-    else { var first = slip('FROM STAFF', null, null, 'The staff\'s full return of your forces, bases and men.'); button(first, 'READ THE RETURN', false, readBriefing); }
+    var rep = slip('FROM STAFF', null, clock.at === 'dusk' ? 'The evening report' : 'So far today', clock.at === 'dusk' ? null : (lastRun && lastRun.summary) || 'The staff reports at dusk.'); if (clock.at === 'dusk') button(rep, 'READ THE REPORT', false, readReport); else button(rep, 'READ THE RETURN', false, readBriefing);
     var dec = s.staff_decisions_yesterday || [];
     if (dec.length) { var d = slip('FROM STAFF', null, dec.length + ' decisions taken yesterday', dec.slice(0, 4).map(function (x) { return x.text || x.words || x.summary || ('decision ' + x.number); }).join(' · ')); }
   }
@@ -656,6 +655,68 @@ button:disabled { opacity: 0.45; cursor: default; }
     doc.appendChild(el('div', 'foot', 'Written for the game. Not a historical document.'));
     $('sheet-title').textContent = 'DIRECTIVE ' + d.number; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     if (!readOnes[d.number]) { readOnes[d.number] = true; showSignals(); }
+  }
+  // ---- the staff's evening report ----
+  // One sheet in place of the long return: where things stand, what happened
+  // since the last evening, what needs the commander, what comes this week.
+  // A part with nothing to say is left out. It is made at dusk, from the
+  // briefing's own figures, the command state and the schedule; where the
+  // shape of an entry is not known to the page it is counted, not described.
+  function readReport() {
+    api('get_briefing', { text: false }).then(function (b) {
+      var doc = $('sheet-doc'), st = M.state || {}, c = b.contacts || {}, a = b.action || {}, l = b.losses || {}, w = b.warnings || {}, lu = (b.land_units && !Array.isArray(b.land_units)) ? b.land_units : {}; doc.textContent = '';
+      function n(x) { return (x || []).length; }
+      function plural(k, one, many) { return k + ' ' + (k === 1 ? one : many || one + 's'); }
+      function names(list, key) { return list.map(function (x) { return (x[key] && x[key].name ? x[key].name : '?').replace(/^Placeholder /, ''); }).join(', '); }
+      function part(title, lines) { if (!lines.length) return; doc.appendChild(el('h3', '', title)); lines.forEach(function (t) { doc.appendChild(el('p', '', t)); }); }
+      var head = el('div', 'head'); [['From', 'Chief of Staff'], ['To', 'Commander'], ['Evening of', dateOf(M.day - 2, true) || 'day ' + (M.day - 1)], ['Orders for', dateOf(M.day - 1, true) || 'day ' + M.day]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); }); doc.appendChild(head);
+      // where things stand
+      var mine = M.bases.filter(function (x) { return !/^Landing at/.test(x.base.name); }), his = M.enemyBases, ashore = 0, aboard = 0, ready = 0, ships = 0, usable = 0;
+      M.units.forEach(function (u) { ashore += u.men_ashore || 0; aboard += u.men_aboard || 0; }); M.air.forEach(function (x) { ready += x.ready || 0; });
+      M.forces.forEach(function (f) { if (!(f.available_from > M.day)) { usable++; ships += f.ships_afloat || 0; } });
+      var stand = [(mine.length ? 'You hold ' + names(mine, 'base') + '.' : 'You hold nothing ashore.') + (his.length ? ' The enemy holds ' + names(his, 'base') + '.' : '')];
+      stand.push(plural(usable, 'force') + ' with ' + plural(ships, 'ship') + ' at your disposal, ' + commas(ready) + ' aircraft ready. ' + (ashore ? commas(ashore) + ' men ashore' : 'No men ashore') + (aboard ? ', ' + commas(aboard) + ' aboard ship.' : '.'));
+      stand.push(n(c.held) ? plural(n(c.held), 'contact') + ' held on the plot.' : 'No contact is held.');
+      part('1. Where we stand', stand);
+      // since the last evening
+      var since = [];
+      (c.new || []).forEach(function (x) { since.push('New contact: ' + plural(x.ship_count, 'ship') + (x.taken_for ? ', taken for ' + String(x.taken_for.kind || x.taken_for).replace(/_/g, ' ') : '') + ', at ' + hexWords(x.place) + '.'); });
+      if (n(c.refreshed)) since.push(plural(n(c.refreshed), 'contact') + ' sighted again.');
+      if (n(c.dropped)) since.push(plural(n(c.dropped), 'contact') + ' dropped from the plot: the report grew too old.');
+      if (n(c.not_there)) since.push(plural(n(c.not_there), 'contact') + ' looked for and not found.');
+      if (n(a.fights)) since.push(plural(n(a.fights), 'fight') + ' at sea.');
+      if (n(a.strikes)) since.push(plural(n(a.strikes), 'strike') + ' flown.');
+      if (n(a.attacks_on_ships)) since.push(plural(n(a.attacks_on_ships), 'attack') + ' on your ships.');
+      if (n(a.raids_on_bases)) since.push(plural(n(a.raids_on_bases), 'raid') + ' on bases.');
+      if (n(l.ships_sunk)) since.push('Ships lost: ' + (names(l.ships_sunk, 'ship').indexOf('?') < 0 ? names(l.ships_sunk, 'ship') : n(l.ships_sunk)) + '.');
+      if (n(l.ships_damaged)) since.push(plural(n(l.ships_damaged), 'ship') + ' damaged.');
+      var worn = [], wornN = 0; (l.aircraft || []).forEach(function (x) { var k = (x.shot_down || 0) + (x.written_off || 0) + (x.destroyed_on_ground || 0) + (x.lost_with_ship || 0); if (!k) return; if (x.written_off === k) { worn.push(x.air_group.name + ' ' + k); wornN += k; } else since.push(x.air_group.name + ' lost ' + plural(k, 'aircraft', 'aircraft') + (x.shot_down ? ', ' + x.shot_down + ' shot down' : '') + (x.destroyed_on_ground ? ', ' + x.destroyed_on_ground + ' on the ground' : '') + '.'); });
+      if (wornN) since.push(plural(wornN, 'aircraft', 'aircraft') + ' written off from wear (' + worn.join(', ') + ').');
+      if (n(l.claims)) since.push(plural(n(l.claims), 'claim') + ' by your people. A claim is what they believe.');
+      if (n(lu.landed_yesterday)) since.push('Men were landed (' + plural(n(lu.landed_yesterday), 'landing') + ').');
+      if (n(lu.lost_yesterday)) since.push('Men were lost ashore (' + plural(n(lu.lost_yesterday), 'report') + ').');
+      (lu.fed_last_night || []).forEach(function (x) { if (x.unfed) since.push(commas(x.unfed) + ' of ' + commas(x.men) + ' men at ' + ((x.base && x.base.name) || hexWords(x.place)) + ' went unfed.'); });
+      if (b.orders && n(b.orders.refused)) since.push(plural(n(b.orders.refused), 'order') + ' of yours refused.');
+      if (n(st.staff_decisions_yesterday)) since.push('The staff took ' + plural(n(st.staff_decisions_yesterday), 'decision') + ' on your intents.');
+      part('2. Since last evening', M.day > 1 ? (since.length ? since : ['Nothing to report.']) : []);
+      // what needs the commander
+      var needs = [], roots = (st.intents || []).filter(function (i) { return i.in_force && !i.parent; });
+      if (!roots.length) needs.push('You have stated no intent. The staff will do nothing tomorrow.');
+      (st.plans || []).forEach(function (p) { if ((p.state === 'preparing' && !st.leaves.launch) || (p.state === 'draft' && !st.leaves.prepare)) needs.push('Plan ' + p.number + ' waits for your leave.'); });
+      if (n(st.holds)) needs.push('You hold ' + plural(n(st.holds), 'force or unit', 'forces or units') + ' from the staff.');
+      if (n(w.base_supply_low)) needs.push('Short of supply: ' + names(w.base_supply_low, 'base') + '.');
+      if (n(w.base_without_fuel_with_force)) { var dry = {}; w.base_without_fuel_with_force.forEach(function (x) { dry[x.base.name] = (dry[x.base.name] || 0) + 1; }); Object.keys(dry).forEach(function (k) { needs.push('No fuel at ' + k + ', where ' + plural(dry[k], 'force lies', 'forces lie') + '.'); }); }
+      if (n(w.air_group_tired)) needs.push('Tired: ' + names(w.air_group_tired, 'air_group') + '.');
+      if (n(w.air_group_short_of_pilots)) needs.push('Short of pilots: ' + names(w.air_group_short_of_pilots, 'air_group') + '.');
+      Object.keys(w).forEach(function (k) { if (['base_supply_low', 'base_without_fuel_with_force', 'air_group_tired', 'air_group_short_of_pilots'].indexOf(k) < 0 && n(w[k])) needs.push(k.replace(/_/g, ' ').replace(/^./, function (ch) { return ch.toUpperCase(); }) + ': ' + n(w[k]) + '.'); });
+      part('3. For your decision or notice', needs);
+      // what comes this week
+      var soon = []; (b.arrivals && b.arrivals.due || []).forEach(function (x) { if (x.day >= M.day && x.day <= M.day + 7) soon.push([x.day, dateOf(x.day - 1) + ': ' + x.air_group.name + ', ' + x.aircraft + ' aircraft, to ' + x.at.name + (x.can_be_delivered ? '.' : '. Cannot be delivered as things stand.')]); });
+      M.forces.forEach(function (f) { if (f.available_from > M.day && f.available_from <= M.day + 7) soon.push([f.available_from, dateOf(f.available_from - 1) + ': ' + f.task_force.name.replace(/^Placeholder /, '') + ' may be used.']); });
+      part('4. Coming this week', soon.sort(function (x, y) { return x[0] - y[0]; }).map(function (x) { return x[1]; }));
+      var row = el('div', 'row'), full = el('button', '', 'THE FULL RETURN'); full.type = 'button'; full.addEventListener('click', readBriefing); row.appendChild(full); doc.appendChild(row);
+      $('sheet-title').textContent = 'EVENING REPORT'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    }).catch(function (e) { setStatus('The staff reports at dusk. ' + e.message); });
   }
   function readBriefing() { api('get_briefing', { text: true }).then(function (b) { $('sheet-title').textContent = 'THE STAFF\'S RETURN'; $('sheet-doc').hidden = true; $('sheet-text').hidden = false; $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });

@@ -63,3 +63,9 @@ The designer, the same day: a player should be able "to click an enemy unit or a
 
 Open from it: a seat at the theatre knows its own forces exactly, so an own card carries no age; where command levels are on, a superior knows a force by its last report, and the card should then give that report's age. An air group's reach, a unit's history and an enemy contact's track over time are not shown. The contact card was built from the tool's fields and has not been seen with a live contact.
 
+## As built in the table: the staff's evening report
+
+Part 5 of the direction, drafted in the table. At dusk the tray offers the staff's report in place of the long return: who holds what ashore, the forces, ships, aircraft and men at the commander's disposal and the contacts held; what happened since the last evening (contacts found, lost and not found, fights, strikes, raids, ships and aircraft lost, men landed, lost or unfed, orders refused, the staff's decisions); what is for the commander's decision or notice (no intent, a plan that waits, a base short of supply or with no fuel, tired groups); and what comes within a week. A part with nothing to say is left out, and the full return is one step away.
+
+It states facts and what needs the commander, and makes no judgement, as agreed. Where the page does not know the shape of an entry it counts it and does not describe it: a fight at sea is "1 fight at sea" and no more. A report in the middle of a day is not made: the briefing is given at dusk.
+
