@@ -1323,6 +1323,18 @@ impl Session {
                 let answer = staffing::propose(&world.side_view(side), staff, intent)?;
                 Ok(self.noted(answer, false))
             }
+            "order" => {
+                let intent = args
+                    .get("intent")
+                    .and_then(Value::as_u64)
+                    .and_then(|n| u32::try_from(n).ok())
+                    .ok_or_else(|| {
+                        CallError::new("\"intent\" is needed, as the number of an intent")
+                    })?;
+                let world = self.preview();
+                let answer = staffing::plan_order(&world.side_view(side), staff, intent)?;
+                Ok(self.noted(answer, false))
+            }
             "why" => {
                 let number = args
                     .get("number")

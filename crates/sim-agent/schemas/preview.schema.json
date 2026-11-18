@@ -32,7 +32,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 25
+      "const": 26
     },
     "kind": {
       "const": "preview"

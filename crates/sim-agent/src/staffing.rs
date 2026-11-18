@@ -1500,14 +1500,318 @@ pub fn plans(view: &SideView<'_>, staff: &dyn Staff) -> Value {
     )
 }
 
+/// The refusal for an intent that is not in force (or is not the side's to
+/// ask about): the same words for `propose` and `plan_order`.
+fn not_in_force(intent: u32) -> CallError {
+    CallError::new(format!(
+        "intent:{intent} is not an intent in force (command_state lists the intents)"
+    ))
+}
+
+/// A number with a comma between the thousands: 1,200.
+fn thousands(number: u32) -> String {
+    let digits = number.to_string();
+    let mut out = String::new();
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            out.push(',');
+        }
+        out.push(c);
+    }
+    out
+}
+
+/// A base as its number and name, from the side's view.
+fn base_words(view: &SideView<'_>, base: sim_core::ids::BaseId) -> String {
+    let name = view
+        .bases()
+        .find(|b| b.id == base)
+        .map(|b| b.name.clone())
+        .or_else(|| view.enemy_bases().find(|b| b.id == base).map(|b| b.name));
+    match name {
+        Some(name) => format!("{base} ({name})"),
+        None => base.to_string(),
+    }
+}
+
+/// A task of a plan order in words, from its kind alone.
+fn task_words(view: &SideView<'_>, kind: IntentKind) -> String {
+    match kind {
+        IntentKind::KeepSupplied {
+            base, floor_days, ..
+        } => format!(
+            "keep {} at {floor_days} day{} of supply",
+            base_words(view, base),
+            if floor_days == 1 { "" } else { "s" }
+        ),
+        IntentKind::Cover { base } => format!("cover {} from the air", base_words(view, base)),
+        IntentKind::Hold { base } => format!("hold {}", base_words(view, base)),
+        IntentKind::Neutralise { target } => {
+            format!("neutralise {}", base_words(view, target))
+        }
+        IntentKind::Raid { base, target } => format!(
+            "raid {} from {}",
+            base_words(view, target),
+            base_words(view, base)
+        ),
+        IntentKind::Deny { hex, distance } => {
+            format!("deny the waters within {distance} hexes of {hex}")
+        }
+        IntentKind::StrikeShips { base } => {
+            format!("strike ships from {}", base_words(view, base))
+        }
+        IntentKind::SearchWaters { base } => {
+            format!("search the waters from {}", base_words(view, base))
+        }
+        IntentKind::StandAt { force, hex } => format!("stand at {hex} with {force}"),
+        IntentKind::OperateCarriers { force, hex } => {
+            format!("operate the carrier force {force} from {hex}")
+        }
+        IntentKind::ReadyLanding { force, hex, by_day } => match by_day {
+            Some(day) => format!("ready a landing at {hex} by {force} by the morning of day {day}"),
+            None => format!("ready a landing at {hex} by {force}"),
+        },
+        IntentKind::BuildUp { base, wants } => {
+            format!("build up {}: {wants}", base_words(view, base))
+        }
+        IntentKind::TakePlace { hex, by_day } => match by_day {
+            Some(day) => format!("take the place at {hex} by the end of day {day}"),
+            None => format!("take the place at {hex}"),
+        },
+        IntentKind::Bombard { force, target } => {
+            format!("bombard {} with {force}", base_words(view, target))
+        }
+        IntentKind::ControlIsland { island, by_day } => match by_day {
+            Some(day) => format!("control island {island} by the end of day {day}"),
+            None => format!("control island {island}"),
+        },
+    }
+}
+
+/// One phase of a plan order, in the side's numbers, with its line.
+fn phase_json(n: &Names<'_>, phase: &sim_core::command::Phase) -> Value {
+    use sim_core::command::{PhaseEnd, PhaseStage};
+    let name = phase.name.name();
+    let (ends, place, base, end_words) = match phase.ends {
+        PhaseEnd::Released => (
+            "released",
+            Value::Null,
+            Value::Null,
+            "ends when the plan is released".to_string(),
+        ),
+        PhaseEnd::FirstManAshore(hex) => (
+            "first_man_ashore",
+            json!(n.ctx.place(hex)),
+            Value::Null,
+            format!("ends when the first man is ashore at ({},{})", hex.q, hex.r),
+        ),
+        PhaseEnd::PlaceIsTheSides(hex) => (
+            "place_is_the_sides",
+            json!(n.ctx.place(hex)),
+            Value::Null,
+            format!("ends when ({},{}) is the side's", hex.q, hex.r),
+        ),
+        PhaseEnd::BaseIsTheSides(base) => (
+            "base_is_the_sides",
+            Value::Null,
+            n.base(base),
+            format!("ends when {base} is the side's"),
+        ),
+        PhaseEnd::Never => (
+            "never",
+            Value::Null,
+            Value::Null,
+            "does not end".to_string(),
+        ),
+    };
+    let stage = match phase.stage {
+        PhaseStage::Done => "Done.",
+        PhaseStage::UnderWay => "Under way.",
+        PhaseStage::ToCome => "To come.",
+    };
+    let mut label = name.to_string();
+    if let Some(first) = label.get_mut(0..1) {
+        first.make_ascii_uppercase();
+    }
+    json!({
+        "name": name,
+        "stage": phase.stage.name(),
+        "ends": ends,
+        "place": place,
+        "base": base,
+        "text": format!("{label}: {end_words}. {stage}"),
+    })
+}
+
+/// One thing a plan order waits for, in the side's numbers, with its line.
+fn waited_json(n: &Names<'_>, waited: &sim_core::command::Waited) -> Value {
+    use sim_core::command::WaitedFor;
+    let (kind, label, detail) = match waited.thing {
+        WaitedFor::Men { wanted, to_hand } => (
+            "men",
+            "Men",
+            format!(
+                "{} wanted, {} to hand",
+                thousands(wanted),
+                thousands(to_hand)
+            ),
+        ),
+        WaitedFor::Leave(leave) => (
+            "leave",
+            match leave {
+                sim_core::command::Leave::Prepare => "Leave to prepare",
+                sim_core::command::Leave::Launch => "Leave to launch",
+            },
+            String::new(),
+        ),
+        WaitedFor::Day(day) => ("day", "A day", format!("not before day {day}")),
+        WaitedFor::Force(awaited) => (
+            "force",
+            "A force",
+            n.text(&format!("waiting for {awaited}")),
+        ),
+        WaitedFor::Intent(intent) => (
+            "intent",
+            "An intent",
+            format!("after intent {}", intent.raw()),
+        ),
+        WaitedFor::Knowledge(knowledge) => ("knowledge", "Knowledge", knowledge.to_string()),
+    };
+    let status = if waited.met { "met" } else { "not met" };
+    let expected = match (waited.met, waited.expected_day) {
+        (false, Some(day)) => format!("; expected day {day}"),
+        _ => String::new(),
+    };
+    let text = if detail.is_empty() {
+        format!("{label}: {status}{expected}.")
+    } else {
+        format!("{label}: {detail}; {status}{expected}.")
+    };
+    json!({
+        "kind": kind,
+        "met": waited.met,
+        "expected_day": waited.expected_day,
+        "wanted": match waited.thing { WaitedFor::Men { wanted, .. } => json!(wanted), _ => Value::Null },
+        "to_hand": match waited.thing { WaitedFor::Men { to_hand, .. } => json!(to_hand), _ => Value::Null },
+        "leave": match waited.thing {
+            WaitedFor::Leave(sim_core::command::Leave::Prepare) => json!("prepare"),
+            WaitedFor::Leave(sim_core::command::Leave::Launch) => json!("launch"),
+            _ => Value::Null,
+        },
+        "day": match waited.thing { WaitedFor::Day(day) => json!(day), _ => Value::Null },
+        "force": match waited.thing { WaitedFor::Force(awaited) => awaited_json(n, awaited), _ => Value::Null },
+        "intent": match waited.thing { WaitedFor::Intent(intent) => json!(intent.raw()), _ => Value::Null },
+        "knowledge": match waited.thing { WaitedFor::Knowledge(k) => knowledge_json(k), _ => Value::Null },
+        "text": text,
+    })
+}
+
+/// `plan_order`: the plan of one of the commander's intents as the staff
+/// hands it in (decision 0159, rule E): its mission, its phases and where
+/// each stands, what it waits for, the men, the day it expects to be ashore,
+/// the need to know and the staff's tasks under it. Read from the view and
+/// stored nowhere.
+pub fn plan_order(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result<Value, CallError> {
+    use sim_core::command::{PhaseName, PhaseStage};
+    let n = Names::new(view);
+    let today = view.day() + 1;
+    let Some(order) = staff
+        .plan_orders(*view)
+        .into_iter()
+        .find(|order| order.intent.raw() == intent)
+    else {
+        return Err(not_in_force(intent));
+    };
+    let phases: Vec<Value> = order.phases.iter().map(|p| phase_json(&n, p)).collect();
+    let waits_for: Vec<Value> = order.waits_for.iter().map(|w| waited_json(&n, w)).collect();
+    let tasks: Vec<Value> = order
+        .tasks
+        .iter()
+        .map(|task| {
+            json!({
+                "intent": task.intent.raw(),
+                "kind": task.kind.name(),
+                "statement": n.text(&task_words(view, task.kind)),
+                "phase": task.phase.map(PhaseName::name),
+            })
+        })
+        .collect();
+    let mission = n.text(&order.mission);
+    let mut text = vec![format!("Mission: {mission}.")];
+    if !order.phases.is_empty() {
+        let line: Vec<String> = order
+            .phases
+            .iter()
+            .map(|p| {
+                let mut label = p.name.name().to_string();
+                if let Some(first) = label.get_mut(0..1) {
+                    first.make_ascii_uppercase();
+                }
+                match p.stage {
+                    PhaseStage::Done => format!("{label} (done)"),
+                    PhaseStage::UnderWay => format!("{label} (under way)"),
+                    PhaseStage::ToCome => label,
+                }
+            })
+            .collect();
+        text.push(format!("Phases: {}.", line.join(", ")));
+    }
+    if order.waits_for.is_empty() {
+        text.push("It waits for nothing.".to_string());
+    } else {
+        let lines: Vec<String> = waits_for
+            .iter()
+            .filter_map(|w| w["text"].as_str().map(str::to_string))
+            .collect();
+        text.push(format!("It waits for: {}", lines.join(" ")));
+    }
+    if let Some(men) = order.men {
+        text.push(format!(
+            "Men wanted {}, to hand {}.",
+            thousands(men.wanted),
+            thousands(men.to_hand)
+        ));
+    }
+    let is_take = order
+        .phases
+        .iter()
+        .any(|p| p.name == PhaseName::Land || p.name == PhaseName::Move);
+    if is_take {
+        let moved = order
+            .phases
+            .iter()
+            .any(|p| p.name == PhaseName::Move && p.stage == PhaseStage::Done);
+        text.push(match order.expected_ashore {
+            Some(day) => format!("It expects to be ashore on day {day}."),
+            None if moved => "Its men are ashore.".to_string(),
+            None => "It cannot yet say when it will be ashore.".to_string(),
+        });
+    }
+    Ok(answer(
+        "plan_order",
+        json!({
+            "for_day": today,
+            "as_at": format!("the start of day {today}, with the commands you have queued taken in"),
+            "intent": intent,
+            "mission": mission,
+            "plan": {"number": order.plan.raw(), "state": order.plan_state.name()},
+            "phases": phases,
+            "waits_for": waits_for,
+            "men": order.men.map(|m| json!({"wanted": m.wanted, "to_hand": m.to_hand})),
+            "expected_ashore": order.expected_ashore,
+            "need_to_know": order.need_to_know.as_ref().map(|need| need_json(&n, need)),
+            "tasks": tasks,
+            "text": text,
+        }),
+    ))
+}
+
 /// `propose`: what the staff would do for one intent.
 pub fn propose(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result<Value, CallError> {
     let n = Names::new(view);
     let today = view.day() + 1;
     let Some(proposal) = staff.propose(*view, IntentId::new(intent)) else {
-        return Err(CallError::new(format!(
-            "intent:{intent} is not an intent in force (command_state lists the intents)"
-        )));
+        return Err(not_in_force(intent));
     };
     let in_force = view.command_state().intents_in_force().count();
     let displaces = if in_force <= 1 {

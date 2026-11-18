@@ -596,7 +596,7 @@ fn with_the_key_off_advance_is_not_a_tool_and_events_is() {
     let tools = s.tools(ALLIED);
     assert!(!tools.contains(&"advance"));
     assert!(tools.contains(&"events"));
-    assert_eq!(tools.len(), 28);
+    assert_eq!(tools.len(), 29);
     let e = refused(&mut s, ALLIED, "advance", json!({"pulses": 1}));
     assert!(e.message.contains("is not a tool"), "{e}");
     assert!(!e.allowed.contains(&"advance".to_string()));
@@ -608,9 +608,9 @@ fn with_the_key_off_advance_is_not_a_tool_and_events_is() {
         ALLIED,
     );
     let tools_on = on.tools(ALLIED);
-    assert_eq!(tools_on.len(), 29);
+    assert_eq!(tools_on.len(), 30);
     assert_eq!(tools_on.last(), Some(&"advance"));
-    assert_eq!(&tools_on[..28], tools.as_slice());
+    assert_eq!(&tools_on[..29], tools.as_slice());
     // With two players, as for run, no advance.
     let both = scenario("78_orders_inside_a_day.toml", &case_c_text());
     let name = both.name.clone();
@@ -786,6 +786,7 @@ fn the_staff_tools_at_0600_answer_on_the_state_as_it_stands_and_say_so() {
         ("plans", json!({}), "plans.schema.json"),
         ("staff_orders", json!({}), "staff_orders.schema.json"),
         ("propose", json!({"intent": 1}), "propose.schema.json"),
+        ("order", json!({"intent": 1}), "plan_order.schema.json"),
         (
             "preview",
             json!({"command": "set_limit", "limit": "reserve", "base": 1, "supply_t": 900, "fuel_t": 0}),
