@@ -1,0 +1,15 @@
+You are a reader in a test of whether a game's event log can be understood. Do not use any tools, do not read any files and do not search: answer from the text below alone, then give your answers as your final reply.
+
+Below is one side's log of the events of one day of a naval wargame, as the game gives them, one event a line: its number, its pulse (the day has three pulses, night, morning and afternoon; null is an event of the day's start or end, outside a pulse), its kind and its words. During this day the side's commander gave one order inside the day, between two pulses.
+
+Answer these three questions from the events alone, each in one or two sentences, and name the event numbers you rely on:
+(i) When was that order given: at 0600 (between the night and the morning) or at 1200 (between the morning and the afternoon)?
+(ii) In which pulse did it act?
+(iii) What did it change?
+
+Reply in the form:
+(i) ...
+(ii) ...
+(iii) ...
+
+The events:

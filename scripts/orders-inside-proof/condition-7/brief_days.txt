@@ -1,0 +1,4 @@
+
+When your intents and leaves are given, let the day pass with  PLAY N run '{"days": 1}'  and play to the end of the game: if run stops before the game is over, call run again. You give no orders inside the day.
+
+When the game is over (the answer says game_over is true), stop. Your final reply: the intents and leaves you gave, in one line each, and the result the game gave (the margin and the outcome in words).

@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 18, 2026, for the designer's app
 
 Summary: A plan for commanding inside a day: where a scenario says so, a seat may stop the clock between pulses and give seven kinds of order to its own units, taken in at the start of the next pulse and holding the unit from the staff as an order at dusk does; commands to the staff are still taken in at dusk; time is advanced a pulse at a time by one new tool that stops on what the side was told, and a second gives a seat its events together; the engine resolves a day in parts with the same result; no state is added and a game with no order inside a day is the game it was. With the hand calculation, the conditions of its proof, five steps and five questions for the designer
 
-Standing: Confirmed by the designer, Nov 18, 2026, with his five answers, each as recommended. Being built step by step
+Standing: Built in five steps, Nov 18, 2026. Its proof was run once and judged the same day: five of seven judged conditions hold and two miss (legibility of what an order changed, and speed at the tool on a near-empty day), which wait on the designer; off for the 39 days
 
 ## What differs from decision 0155, and why
 
@@ -196,3 +196,13 @@ The table (`table/`, decision 0154) stops between pulses where the scenario offe
 
 One more gap in the seat's tools was found: none tells a seat the hour. A page opened at 0600 reads it from the words of a refused briefing. Open, in `docs/open-work.md`.
 
+## As run: step 5, the proof
+
+Run once on Nov 18, 2026 and judged by the architect; `docs/validation/orders-inside-a-day-proof.md` has it in full, and nothing was changed after the run.
+
+- Conditions 1 to 5 hold: 1,000 seeds of the Eastern Solomons byte for byte the same before and after; by pulse and unused, 1,000 of 1,000 seeds agree from each seat; the hand calculation, 9 of 9 tests; a saved game replays and a changed key is refused; a seat's events at 0600 and 1200 are its view's.
+- Condition 6 misses: 5 of 6 by the key, 4 of 6 by the condition's words. An `order_accepted` event does not say what was ordered, so a change of readiness or of an air group's mission cannot be read from the day's events.
+- Condition 8 misses by the stricter reading: in the engine 0.946 and 0.996; at the tool 1.012 on the battle and 1.541 on ten near-empty days of the slice, about 46 microseconds a day.
+- Condition 7, not judged: a model in the Allied seat struck ships in 19 of 30 games by days (median margin 3.3) and 13 of 30 by pulse (0.675). The 12 games in which it gave orders inside the day struck in 2: an order takes a unit from the staff.
+
+The misses are the designer's to accept or have mended. The mend the architect recommends for the first: the event of an order taken in says what was ordered, to the side that gave it. The key stays off for the 39 days.

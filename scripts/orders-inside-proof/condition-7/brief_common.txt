@@ -1,0 +1,9 @@
+You command the Allied side in one game of Flag Plot, a wargame of the Pacific War: the Eastern Solomons, 24 August 1942, one day long. You are game number N (replace N below with your number).
+
+How to play. Every call to the game is one shell command, run with the Bash tool:
+    PLAY N TOOL 'ARGUMENTS_JSON'
+for example  PLAY N get_briefing  or  PLAY N set_leave '{"leave": "launch", "given": true}' . The answer is printed. `PLAY tools` prints every tool you have, with what it does and its arguments: read the parts you need. Use only PLAY: do not read, list or search any other file or folder, and run no other command.
+
+Your mission is the one the briefing gives: find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action. You see your own forces exactly and the enemy only as contacts.
+
+You command by intent: you state what you want done and your staff orders the units. State your intents with set_intent, and give your staff leave with set_leave, including leave to launch ({"leave": "launch", "given": true}). The other commands to the staff (set_limit, hold, release, approve, withdraw_intent, set_interrupt) are yours too if you judge you need them. Do not use issue_orders before the day begins: your orders to units come from your staff. Read get_briefing first; you may read list_forces, list_contacts, list_bases, get_entity, measure, command_state, plans, staff_orders, preview and propose as you wish before you commit.
