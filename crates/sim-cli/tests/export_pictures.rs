@@ -354,6 +354,8 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// 0151), which changes an export's state version and day hashes and gives
 /// every intent's kind the key `island` (null but for "control an island"),
 /// and nothing else of it: every earlier scenario gives the events it gave.
+/// Remade again at the state layout v45 (decision 0159, step 2), which
+/// changes an export's state version and day hashes and nothing else.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -362,16 +364,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0xf352_5dee_0bf6_d671),
-        ("04a_night_action", 0xfa22_95ec_f9ff_9880),
-        ("05_eastern_solomons", 0xa1e5_f1d7_c1d5_904c),
-        ("21_landing", 0x967f_1d27_3fc4_57e5),
-        ("23_fight_ashore", 0x6aa6_8beb_cb33_8283),
-        ("31_airfield_damage", 0x846d_e6ca_5b3f_93dc),
-        ("36_one_convoy", 0xbc50_1621_3f9b_e009),
-        ("43_keep_two_bases_fed", 0x823d_9795_f8b7_f44e),
-        ("50_neutralise_a_base", 0x9951_aa06_94be_2c0a),
-        ("58_a_carrier_force_closes", 0x5f40_5609_78bc_8cf4),
+        ("01_transit", 0xb34b_7cbf_562b_97c2),
+        ("04a_night_action", 0x3d05_25ea_bed5_496d),
+        ("05_eastern_solomons", 0xf97b_ee0f_69f4_ea5a),
+        ("21_landing", 0x197a_63ed_b0ae_a29d),
+        ("23_fight_ashore", 0x09ee_2ddf_dad6_9779),
+        ("31_airfield_damage", 0xa601_4cc8_3b21_41ee),
+        ("36_one_convoy", 0xd602_be87_57be_10d7),
+        ("43_keep_two_bases_fed", 0xf91e_f227_800f_708d),
+        ("50_neutralise_a_base", 0xc8eb_d13a_9303_3c37),
+        ("58_a_carrier_force_closes", 0xbdd9_5203_88bb_72af),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;

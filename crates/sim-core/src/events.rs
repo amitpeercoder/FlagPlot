@@ -4136,6 +4136,9 @@ impl fmt::Display for EventKind {
                         Some(intent) => write!(f, "{intent} is met"),
                         None => write!(f, "every want of {plan} is met"),
                     },
+                    (NoticeKind::CannotBringEnough, _) => {
+                        write!(f, "{plan} cannot bring the men it wants")
+                    }
                 }
             }
             EventKind::InterruptFired {
@@ -4166,6 +4169,9 @@ impl fmt::Display for EventKind {
                             write!(f, "{ship} was lost")
                         }
                         (StandingKind::ShipLost, subject) => write!(f, "{subject} was lost"),
+                        (StandingKind::CannotBringEnough, subject) => {
+                            write!(f, "{subject} cannot bring the men it wants")
+                        }
                     }
                 }
             },

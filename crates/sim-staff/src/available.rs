@@ -22,6 +22,15 @@ pub(crate) fn not_before(view: &SideView<'_>, unit: EntityRef) -> Option<u32> {
     }
 }
 
+/// The day from which `unit` may be used, where the side may not use it yet
+/// on `day`: `Some(from)` with `from` after `day`. `None` where it may be used
+/// by then, has no day, or is not the side's. With `day` the day orders are
+/// given for it is [`not_before`] (decision 0159, 4: a take works the first
+/// day that brings the men it wants).
+pub(crate) fn not_before_on(view: &SideView<'_>, unit: EntityRef, day: u32) -> Option<u32> {
+    view.available_from(unit).filter(|from| *from > day)
+}
+
 /// Whether the side may use the air group on the day it gives orders for.
 pub(crate) fn group_may_be_used(view: &SideView<'_>, group: AirGroupId) -> bool {
     view.may_use(EntityRef::AirGroup(group))
@@ -79,6 +88,18 @@ pub(crate) fn list_words<T: std::fmt::Display + Copy>(waiting: &[(T, u32)]) -> S
         .map(|(unit, day)| named_with_day(unit, *day))
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+impl crate::air::Day<'_, '_> {
+    /// The day from which `unit` may be used where it may not be used on
+    /// the day a choice of units reads ([`crate::air::Day::as_of`]): the day
+    /// orders are given for, unless a take is working a later day.
+    pub(crate) fn not_before_choice(&self, unit: EntityRef) -> Option<u32> {
+        match self.as_of.get() {
+            None => not_before(self.view, unit),
+            Some(day) => not_before_on(self.view, unit, day),
+        }
+    }
 }
 
 #[cfg(test)]

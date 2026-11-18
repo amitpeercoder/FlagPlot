@@ -232,8 +232,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// ground report in flight, and the air mission reconnaissance (code 6) with
 /// its hex (decision 0147);
 /// version 44 adds the kind "control an island", with its island and its
-/// date (decision 0151).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v44";
+/// date (decision 0151);
+/// version 45 adds the standing kind "cannot bring enough" (code 4) to a
+/// side's standing interrupts and the kinds switched off (decision 0159, 7).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v45";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does

@@ -2,12 +2,12 @@ Scenario 30: Units that work, and what they build
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5428682bbe9a6179  60 events
-day   2  hash 9f6e265ae415dd53  51 events
-day   3  hash b47721a351b71adc  43 events
-day   4  hash 9e1d01f98f4dd3a7  37 events
-day   5  hash 3a788306ba958aa7  38 events
-day   6  hash 511196678b17e131  31 events
+day   1  hash 3ddfad1625a2cbd6  60 events
+day   2  hash 299a3892a0b9e8e4  51 events
+day   3  hash 9053b1cad034cabf  43 events
+day   4  hash 8895d3077329be4c  37 events
+day   5  hash a6563de8ddb2ad5a  38 events
+day   6  hash 2eb6cdfab067dd34  31 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:3  <- order:2

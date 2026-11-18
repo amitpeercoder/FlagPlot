@@ -298,6 +298,47 @@ impl Day<'_, '_> {
         (kept, left)
     }
 
+    /// The days from the morning a landing by `force` at `hex` with `units`
+    /// on its roster is ordered to the morning it would be ready, by the
+    /// projection of item 6 (decision 0159, 6: whether a take begun on a later
+    /// day can still be ready by its date). `days_left` is the days from that
+    /// morning to the task's date, where it has one. `None` where it cannot
+    /// be ready.
+    pub(crate) fn days_to_ready(
+        &self,
+        force: &sim_core::state::TaskForce,
+        hex: Hex,
+        units: &[LandUnitId],
+        risk: Risk,
+        days_left: Option<i64>,
+    ) -> Option<u32> {
+        let figures = self.view.ground_figures()?;
+        let found: Vec<LandUnit> = units
+            .iter()
+            .filter_map(|id| self.view.land_units().find(|u| u.id == *id).cloned())
+            .collect();
+        let roster: BTreeSet<LandUnitId> = found.iter().map(|u| u.id).collect();
+        let prepared = force.preparation.as_ref();
+        let differs = prepared.is_none_or(|p| p.hex != hex || p.roster != roster);
+        let loading_now = prepared
+            .filter(|p| p.hex == hex)
+            .map_or(Fixed::ZERO, |p| p.loading);
+        let kept = force_preparation_kept(prepared, hex, &roster, figures);
+        let loading_after = if differs { kept } else { loading_now };
+        let (load_needed, rehearsal_needed, _) = thresholds(risk);
+        let loading_days = days_for(load_needed - loading_after, figures.preparation_per_day);
+        let members = members_of(self.view, &found, hex, figures);
+        let (days, _) = project(
+            &members,
+            loading_days,
+            rehearsal_needed,
+            risk,
+            days_left,
+            figures,
+        );
+        days.map(|d| d.max(u32::from(differs)))
+    }
+
     // -- Ready a landing ----------------------------------------------------
 
     #[allow(clippy::too_many_lines)]
@@ -445,32 +486,7 @@ impl Day<'_, '_> {
         }
 
         // Each fighting unit's day (items 3 and 4).
-        let base_hexes: BTreeSet<Hex> = view.bases().map(|b| b.hex).collect();
-        let strength = figures.assault_skill_strength;
-        let members: Vec<Member> = units
-            .iter()
-            .filter(|u| !u.working)
-            .map(|u| {
-                let aboard = view.men_aboard(u.id).unwrap_or(0);
-                Member {
-                    id: u.id,
-                    words: unit_words(u),
-                    experience: u.experience,
-                    training_days: u.training_days,
-                    activity: u.activity,
-                    rehearsal: if u.rehearsal_hex == Some(hex) {
-                        u.rehearsal
-                    } else {
-                        Fixed::ZERO
-                    },
-                    gain: figures.preparation_per_day * Skills::factor(u.skills.assault, strength),
-                    can_train: aboard == 0
-                        && u.men_ashore > 0
-                        && u.hex.is_some_and(|h| base_hexes.contains(&h))
-                        && u32::from(u.experience) < figures.training_ceiling,
-                }
-            })
-            .collect();
+        let members = members_of(view, &units, hex, figures);
         let hundred = Fixed::from_int(100);
         for m in &members {
             let needs = m.rehearsal_days(hundred);
@@ -672,51 +688,14 @@ impl Day<'_, '_> {
         let kept = force_preparation_kept(prepared, hex, &roster, figures);
         let loading_after = if differs { kept } else { loading_now };
         let loading_days = days_for(load_needed - loading_after, figures.preparation_per_day);
-        let mut worst: Option<(Option<u32>, Binds)> = Some((loading_days, Binds::Loading));
-        for m in &members {
-            let rehearse = m.rehearsal_days(rehearsal_needed);
-            let train: Option<u32> = if !m.below() {
-                Some(0)
-            } else {
-                match risk {
-                    Risk::Press => Some(0),
-                    Risk::Preserve => m.can_train.then(|| m.training_left(figures)),
-                    Risk::Balanced => {
-                        if !m.can_train {
-                            Some(0)
-                        } else {
-                            match (days_left, m.rehearsal_days(hundred)) {
-                                (None, _) => Some(m.training_left(figures)),
-                                (Some(left_days), Some(need)) => {
-                                    let room = u32::try_from((left_days - i64::from(need)).max(0))
-                                        .unwrap_or(0);
-                                    Some(m.training_left(figures).min(room))
-                                }
-                                (Some(_), None) => Some(0),
-                            }
-                        }
-                    }
-                }
-            };
-            let total = match (train, rehearse) {
-                (Some(t), Some(r)) => Some(t + r),
-                _ => None,
-            };
-            let binds = if train.is_none_or(|t| t > 0) {
-                Binds::Training(m.words.clone())
-            } else {
-                Binds::Rehearsal(m.words.clone())
-            };
-            let longer = match (&worst, total) {
-                (Some((Some(w), _)), Some(t)) => t > *w,
-                (Some((Some(_), _)), None) => true,
-                _ => false,
-            };
-            if longer {
-                worst = Some((total, binds));
-            }
-        }
-        let (days, binds) = worst.unwrap_or((Some(0), Binds::Loading));
+        let (days, binds) = project(
+            &members,
+            loading_days,
+            rehearsal_needed,
+            risk,
+            days_left,
+            figures,
+        );
         // A landing ordered this morning is not ready this morning (decision
         // 0147, 16: a roster that loses a unit costs no loading, so every
         // other need may already be met): the earliest is tomorrow.
@@ -930,6 +909,101 @@ impl Day<'_, '_> {
         }
         self.target(in_scope).orders.extend(orders);
     }
+}
+
+/// The days until a landing is ready (item 6): the longest of the force's
+/// loading and each unit's training and rehearsal, with what binds; `None`
+/// days where it cannot be ready while that holds.
+fn project(
+    members: &[Member],
+    loading_days: Option<u32>,
+    rehearsal_needed: Fixed,
+    risk: Risk,
+    days_left: Option<i64>,
+    figures: &GroundFigures,
+) -> (Option<u32>, Binds) {
+    let hundred = Fixed::from_int(100);
+    let mut worst: Option<(Option<u32>, Binds)> = Some((loading_days, Binds::Loading));
+    for m in members {
+        let rehearse = m.rehearsal_days(rehearsal_needed);
+        let train: Option<u32> = if !m.below() {
+            Some(0)
+        } else {
+            match risk {
+                Risk::Press => Some(0),
+                Risk::Preserve => m.can_train.then(|| m.training_left(figures)),
+                Risk::Balanced => {
+                    if !m.can_train {
+                        Some(0)
+                    } else {
+                        match (days_left, m.rehearsal_days(hundred)) {
+                            (None, _) => Some(m.training_left(figures)),
+                            (Some(left_days), Some(need)) => {
+                                let room = u32::try_from((left_days - i64::from(need)).max(0))
+                                    .unwrap_or(0);
+                                Some(m.training_left(figures).min(room))
+                            }
+                            (Some(_), None) => Some(0),
+                        }
+                    }
+                }
+            }
+        };
+        let total = match (train, rehearse) {
+            (Some(t), Some(r)) => Some(t + r),
+            _ => None,
+        };
+        let binds = if train.is_none_or(|t| t > 0) {
+            Binds::Training(m.words.clone())
+        } else {
+            Binds::Rehearsal(m.words.clone())
+        };
+        let longer = match (&worst, total) {
+            (Some((Some(w), _)), Some(t)) => t > *w,
+            (Some((Some(_), _)), None) => true,
+            _ => false,
+        };
+        if longer {
+            worst = Some((total, binds));
+        }
+    }
+    worst.unwrap_or((Some(0), Binds::Loading))
+}
+
+/// The fighting units of a landing's roster as the doctrine reads them this
+/// morning (items 3 and 4).
+fn members_of(
+    view: &sim_core::view::SideView<'_>,
+    units: &[LandUnit],
+    hex: Hex,
+    figures: &GroundFigures,
+) -> Vec<Member> {
+    let base_hexes: BTreeSet<Hex> = view.bases().map(|b| b.hex).collect();
+    let strength = figures.assault_skill_strength;
+    units
+        .iter()
+        .filter(|u| !u.working)
+        .map(|u| {
+            let aboard = view.men_aboard(u.id).unwrap_or(0);
+            Member {
+                id: u.id,
+                words: unit_words(u),
+                experience: u.experience,
+                training_days: u.training_days,
+                activity: u.activity,
+                rehearsal: if u.rehearsal_hex == Some(hex) {
+                    u.rehearsal
+                } else {
+                    Fixed::ZERO
+                },
+                gain: figures.preparation_per_day * Skills::factor(u.skills.assault, strength),
+                can_train: aboard == 0
+                    && u.men_ashore > 0
+                    && u.hex.is_some_and(|h| base_hexes.contains(&h))
+                    && u32::from(u.experience) < figures.training_ceiling,
+            }
+        })
+        .collect()
 }
 
 /// The loading a force keeps under a new landing order (decision 0095, 8

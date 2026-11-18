@@ -1098,11 +1098,13 @@ fn top_level_scenarios() -> Vec<PathBuf> {
 fn no_day_no_change_no_earlier_scenario_has_a_day_or_a_formation() {
     let mut checked = 0;
     for file in top_level_scenarios() {
-        // Scenario 77 also gives a force a day (decision 0152).
+        // Scenario 77 also gives a force a day (decision 0152), and scenario
+        // 80 a unit (decision 0159).
         if file == path()
-            || file
-                .file_name()
-                .is_some_and(|name| name.to_string_lossy().starts_with("77_"))
+            || file.file_name().is_some_and(|name| {
+                let name = name.to_string_lossy();
+                name.starts_with("77_") || name.starts_with("80_")
+            })
         {
             continue;
         }

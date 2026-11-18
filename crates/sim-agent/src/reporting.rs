@@ -142,6 +142,9 @@ fn standing_words(kind: StandingKind, subject_words: &str) -> String {
         StandingKind::CannotMeet => format!("{subject_words} cannot meet its intent"),
         StandingKind::WaitsForLeave => format!("{subject_words} waits for the commander's leave"),
         StandingKind::ShipLost => format!("{subject_words} was lost"),
+        StandingKind::CannotBringEnough => {
+            format!("{subject_words} cannot bring the men it wants")
+        }
     }
 }
 
@@ -317,6 +320,13 @@ fn matter_words(
                 plan.raw()
             ),
             None => format!("plan:{} cannot meet its intent", plan.raw()),
+        },
+        (NoticeKind::CannotBringEnough, _) => match intent.map(|(id, _)| id) {
+            Some(intent) => format!(
+                "plan:{} (intent:{intent}) cannot bring the men it wants",
+                plan.raw()
+            ),
+            None => format!("plan:{} cannot bring the men it wants", plan.raw()),
         },
         (NoticeKind::WaitsForLeave(leave), _) => {
             format!("plan:{} waits for leave to {}", plan.raw(), leave.name())

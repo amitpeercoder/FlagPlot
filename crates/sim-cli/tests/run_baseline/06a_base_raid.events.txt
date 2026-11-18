@@ -2,9 +2,9 @@ Scenario 6a: A raid on an airfield
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2e2622f660959f2b  24 events
-day   2  hash 3ce96e823ec5a097  17 events
-day   3  hash ff8f6b03e17501bf  17 events
+day   1  hash c14fd5389d7266f4  24 events
+day   2  hash 75e9aebe64cbece0  17 events
+day   3  hash 707c0832e72d72d0  17 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2

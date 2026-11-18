@@ -1,0 +1,151 @@
+# Scenario 80: a take that waits.
+#
+# Decision 0159, rule B (items 4 to 7), step 2 of the opening of stage 4.
+# The commander asks for an airfield the enemy is believed to hold with 600
+# men. At balanced the staff wants two men for each, 1,200. It has one unit
+# of 600 to hand; a second may be used from day 4. It does not sail short: it
+# waits for day 4 and goes with both.
+#
+# The map is scenario 27's: A at (0,0), a coast hex with port size 5, and B
+# at (4,0), a coast hex with port size 0. A to B is 4 hexes, 160 nm. Allied
+# base 1 lies at A; Japanese base 2, an airfield with no gun, no aircraft,
+# no man and no stock, lies at B, on the Allied map. No base has a reserve.
+# Task force 1, two placeholder troop transports, lies stopped in port at A
+# with nothing aboard. Two Allied fighting units are ashore at A; unit 2 may
+# be used from day 4 (decision 0140). The Allied side begins with an
+# estimate, told, of 600 enemy men at B, and has no air group, so nothing
+# can look. On day 1 the commander states "take the place at B", with a
+# forces limit of task force 1, units 1 and 2 and base 1 as the source, and
+# gives leave to prepare and to launch. The game is 12 days. There is no
+# Japanese man, so no die is rolled.
+#
+# The hand calculation is in tests/scenario_80_a_take_that_waits.rs. The
+# test runs this file on the frozen step 1 figures with one ground figure of
+# its own, preparation_per_day 100: scenario 69's figures,
+# data/reference/ground_placeholder_scenario_69.toml, which this file names,
+# so that run by itself it plays the game its test proves. It builds its
+# variants from the text of this file using the markers below.
+#
+# PLACEHOLDER DATA. The bases, ships, units, estimate, figures and map are
+# invented.
+
+name = "Placeholder scenario 80: A take that waits"
+placeholder = true
+seed = 1942
+days = 12
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground_placeholder_scenario_69.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel to give.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: no gun, no aircraft, no man, no stock.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The land units, ashore at A, fighting units on the defence, each at the
+# standard of experience, 2, the default.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+# Unit 2
+[[land_unit]]
+id = 2
+name = "Placeholder Second"
+side = "allied"
+men = 600
+q = 0
+r = 0
+# Unit 2 may be used from day 4 (decision 0140).
+available_from = 4
+
+# The Allied side's opening estimate of the enemy's men at B.
+[[estimate]]
+side = "allied"
+q = 4
+r = 0
+men = 600
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "take_place"
+hex = [4, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [1]
+land_units = [1, 2]
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

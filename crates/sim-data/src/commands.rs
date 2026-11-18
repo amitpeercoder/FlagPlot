@@ -19,7 +19,7 @@
 //! | `approve`, `cancel_plan` | `plan` |
 //! | `hold`, `release` | exactly one of `ship`, `task_force`, `air_group` and `land_unit`; with `air_group`, `setting` (`"search_arc"`) holds that setting alone, and with no `setting` the whole group is held; no other target takes `setting` |
 //!
-//! | `set_interrupt` | either `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`"cannot_meet"`, `"waits_for_leave"` or `"ship_lost"`) and `on` (switch a standing kind off or on); never a mixture of the two |
+//! | `set_interrupt` | either `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`"cannot_meet"`, `"waits_for_leave"`, `"ship_lost"` or `"cannot_bring_enough"`) and `on` (switch a standing kind off or on); never a mixture of the two |
 //! | `acknowledge` | either `interrupt`, or `standing` with exactly one of `plan` and `ship`; never a mixture |
 //!
 //! The limits: `limit = "forces"` has `intent` and, each optional (a list
@@ -263,7 +263,7 @@ impl CommandSpec {
         let standing_kind = |name: &str| {
             StandingKind::from_name(name).ok_or_else(|| {
                 format!(
-                    "{what} has standing kind \"{name}\", which is not cannot_meet, waits_for_leave or ship_lost"
+                    "{what} has standing kind \"{name}\", which is not cannot_meet, waits_for_leave, ship_lost or cannot_bring_enough"
                 )
             })
         };

@@ -4307,3 +4307,22 @@ fn keep_supplied_of_the_held_base_itself_stands_under_its_hold_as_before() {
         CommandRefusal::CannotStandUnder(intent(1)),
     );
 }
+
+#[test]
+fn cannot_bring_enough_has_its_names_and_codes() {
+    assert_eq!(NoticeKind::CannotBringEnough.code(), 8);
+    assert_eq!(NoticeKind::CannotBringEnough.name(), "cannot_bring_enough");
+    assert_eq!(
+        NoticeKind::from_name("cannot_bring_enough"),
+        Some(NoticeKind::CannotBringEnough)
+    );
+    assert_eq!(StandingKind::CannotBringEnough.code(), 4);
+    assert_eq!(
+        StandingKind::CannotBringEnough.name(),
+        "cannot_bring_enough"
+    );
+    assert_eq!(
+        StandingKind::from_name("cannot_bring_enough"),
+        Some(StandingKind::CannotBringEnough)
+    );
+}
