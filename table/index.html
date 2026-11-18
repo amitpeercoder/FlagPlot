@@ -341,7 +341,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     b.rotation.x = -0.42; b.position.y = 0.02 + Math.sin(0.42) * size / 2; b.castShadow = true; grp.add(b); scene.add(grp); return grp;
   }
   function forcePiece(f) { var big = f.mission === 'carrier'; return tile('own', kindOf(f.mission), true, big ? 0.26 : 0.21); }
-  function fixed(grp, v, dx, dz) { grp.position.set(v.x + (dx || 0), 0, v.z + (dz || 0)); statics.push(grp); return grp; }
+  function fixed(grp, v, dx, dz, thing) { grp.position.set(v.x + (dx || 0), 0, v.z + (dz || 0)); grp.userData.thing = thing || null; statics.push(grp); return grp; }
   var moveT = 1, mover = null;
   function layPieces() {
     statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels();
@@ -366,13 +366,13 @@ button:disabled { opacity: 0.45; cursor: default; }
     moveT = mover ? 0 : 1;
     M.bases.forEach(function (b) {
       var v = placeOf(b.place);
-      fixed(tile('own', 'base', true, 0.17), v, 0, -0.16);
+      fixed(tile('own', 'base', true, 0.17), v, 0, -0.16, { kind: 'base', base: b });
       var d = b.days_of_supply && b.days_of_supply.days; label([b.base.name.toUpperCase()], OWN, function () { return v; }, 0.5, -1, [0, 0.15]); label([b.base.name.toUpperCase(), 'Your base · supply ' + Math.round(parseFloat(b.supply_t)) + ' t' + (d != null ? ', ' + d + ' days' : '')], OWN, function () { return v; }, 0.85, 1, [-0.35, 0.1]);
     });
     {
-      M.enemyBases.forEach(function (b) { var v = placeOf(b.place); if (v) fixed(tile('enemy', 'base', true, 0.17), v, 0, -0.16); });
-      M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) fixed(tile('enemy', 'infantry', false, 0.16, Math.max(0.45, 1 - (e.age_days || 0) / 6)), v, 0.17, 0.02); });
-      M.contacts.forEach(function (c) { var v = placeOf(c.place); if (v) fixed(tile('enemy', kindOf(c.taken_for && (c.taken_for.kind || c.taken_for)), false, 0.2, Math.max(0.4, 1 - (c.age_pulses || 0) / 9)), v); });
+      M.enemyBases.forEach(function (b) { var v = placeOf(b.place); if (v) fixed(tile('enemy', 'base', true, 0.17), v, 0, -0.16, { kind: 'place', place: b.place, base: b }); });
+      M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) fixed(tile('enemy', 'infantry', false, 0.16, Math.max(0.45, 1 - (e.age_days || 0) / 6)), v, 0.17, 0.02, { kind: 'place', place: e.place }); });
+      M.contacts.forEach(function (c) { var v = placeOf(c.place); if (v) fixed(tile('enemy', kindOf(c.taken_for && (c.taken_for.kind || c.taken_for)), false, 0.2, Math.max(0.4, 1 - (c.age_pulses || 0) / 9)), v, 0.02, 0.2, { kind: 'contact', contact: c }); });
     }
     M.enemyBases.forEach(function (b) { var v = placeOf(b.place); label([b.base.name.toUpperCase()], RED, function () { return v; }, 0.45, -1, [0, -0.15]); label([b.base.name.toUpperCase(), 'Enemy base'], RED, function () { return v; }, 0.45, 1, [0, -0.2]); });
     var ashore = {};
@@ -500,6 +500,16 @@ button:disabled { opacity: 0.45; cursor: default; }
   function links(body, title, items) { if (!items.length) return; body.appendChild(el('div', 'sub', title)); var row = el('div', 'row'); items.forEach(function (i) { var b = el('button', '', i[0]); b.type = 'button'; b.addEventListener('click', i[1]); row.appendChild(b); }); body.appendChild(row); }
   function forcesAt(pl, but) { return M.forces.filter(function (f) { return sameHex(f.place, pl) && f !== but; }).map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }); }
   $('card-close').addEventListener('click', function () { $('card').hidden = true; });
+  // The tile under the pointer, if there is one: a touch on a tile is a touch
+  // on what it stands for, whatever else lies in the same hex.
+  function tileAt(cx, cy) {
+    var r = canvas.getBoundingClientRect(), meshes = [], of = [];
+    ray.setFromCamera({ x: ((cx - r.left) / r.width) * 2 - 1, y: -((cy - r.top) / r.height) * 2 + 1 }, camera);
+    Object.keys(pieces).forEach(function (h) { meshes.push(pieces[h].grp.children[0]); of.push({ kind: 'force', force: pieces[h].force }); });
+    statics.forEach(function (g) { if (g.userData.thing) { meshes.push(g.children[0]); of.push(g.userData.thing); } });
+    var hits = ray.intersectObjects(meshes, false); return hits.length ? of[meshes.indexOf(hits[0].object)] : null;
+  }
+  function contactsAt(pl) { return M.contacts.filter(function (c) { return sameHex(c.place, pl); }).map(function (c) { return ['Contact ' + num(c.contact.handle), function () { cardContact({ contact: c }); }]; }); }
   function look(p) {
     var best = null, bd = 0.32;
     function near(v, thing) { if (!v) return; var d = v.distanceTo(p); if (d < bd) { bd = d; best = thing; } }
@@ -514,7 +524,15 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   function cardContact(t) {
     var c = t.contact, body = openCard('CONTACT ' + num(c.contact.handle), 'ENEMY');
-    kv(body, [['Reported', c.ship_count + ' ship' + (c.ship_count === 1 ? '' : 's')], ['Taken for', c.taken_for && (c.taken_for.kind || c.taken_for)], ['Where', hexWords(c.place)], ['Age', pulsesOld(c.age_pulses)]]);
+    kv(body, [['Reported', c.ship_count + ' ship' + (c.ship_count === 1 ? '' : 's')], ['Taken for', c.taken_for && String(c.taken_for.kind || c.taken_for).replace(/_/g, ' ')], ['Where', hexWords(c.place)], ['Age', pulsesOld(c.age_pulses)]]);
+    var how = el('div'); body.appendChild(how);
+    api('get_entity', { handle: c.contact.handle }).then(function (a) {
+      var ev = a.entity && a.entity.last_report_event; if (ev == null) return;
+      return api('explain', { event: ev }).then(function (x) {
+        var lines = (x.nodes || []).filter(function (n) { return n.type === 'event' && n.depth <= 1 && n.text; }).map(function (n) { return (n.day != null ? 'Day ' + n.day + (n.pulse ? ', ' + n.pulse : '') + ': ' : '') + nameText(n.text); });
+        listOf(how, 'HOW WE KNOW', lines);
+      });
+    }).catch(function () {});
     body.appendChild(el('div', 'note', 'A report, not the truth. It may be wrong in number, in kind and in place, and it is where he was seen, not where he is now.'));
   }
   function cardPlace(t) {
@@ -524,7 +542,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (!t.sea || est) body.appendChild(el('div', 'sub', 'HIS MEN ASHORE'));
     if (est) kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]);
     else if (!t.sea) body.appendChild(el('div', '', t.base ? 'No estimate is held. Nobody of yours has seen the place.' : 'None reported.'));
-    listOf(body, 'CONTACTS HERE', here.map(function (c) { return 'Contact ' + num(c.contact.handle) + ': ' + c.ship_count + ' ships. ' + pulsesOld(c.age_pulses) + '.'; }));
+    links(body, 'CONTACTS HERE', contactsAt(pl));
     if (!here.length && !t.base) body.appendChild(el('div', '', 'No contact is held here.'));
     body.appendChild(el('div', 'note', t.base ? 'Of an enemy base you know its name, its place and who holds it. The rest comes from reports, and an estimate of men can be wrong by half either way.' : 'What is not reported is not known: an empty hex on the chart is not an empty sea.'));
   }
@@ -555,6 +573,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     listOf(body, 'MEN ASHORE', M.units.filter(function (u) { return u.men_ashore && sameHex(u.place, b.place); }).map(function (u) { return u.land_unit.name + ': ' + commas(u.men_ashore) + ' men, ' + u.posture; }));
     listOf(body, 'AIR GROUPS HERE', M.air.filter(function (x) { return x.location && x.location.handle === h; }).map(function (x) { return x.air_group.name + ' (' + x.aircraft_type + '): ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
     links(body, 'FORCES HERE', forcesAt(b.place, null));
+    links(body, 'ENEMY CONTACTS HERE', contactsAt(b.place));
     var est = M.estimates.filter(function (e) { return sameHex(e.place, b.place); })[0];
     if (est) { body.appendChild(el('div', 'sub', 'HIS MEN ASHORE HERE')); kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
     body.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.'));
@@ -630,7 +649,11 @@ button:disabled { opacity: 0.45; cursor: default; }
   // A directive is received when its condition first holds, read from what
   // the seat's own tools say; it then stays on the desk. Its date is the day
   // it was received.
-  var received = {}, readOnes = {};
+  var received = {}, readOnes = {}, KEPT = 'flagplot-directives-' + location.port, recalled = false;
+  // What has been received and read is remembered across a reload of the
+  // page, and forgotten when a new game begins (its day is earlier).
+  function recall() { if (recalled) return; recalled = true; try { var k = JSON.parse(localStorage.getItem(KEPT) || 'null'); if (k && k.day <= M.day) { received = k.received || {}; readOnes = k.read || {}; } } catch (e) {} }
+  function keep() { try { localStorage.setItem(KEPT, JSON.stringify({ day: M.day, received: received, read: readOnes })); } catch (e) {} }
   function directiveDue(d) {
     if (location.hash === '#directives=all') return true; // to read the drafts: every directive as if received
     if (d.when === 'start') return true;
@@ -638,14 +661,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     return false;
   }
   function showDirectives() {
-    var list = config.directives || [], fresh = null;
+    recall(); var list = config.directives || [], fresh = null;
     list.forEach(function (d) { if (received[d.number] == null && directiveDue(d)) { received[d.number] = M.day; fresh = d; } });
     list.slice().reverse().forEach(function (d) {
       if (received[d.number] == null) return;
       var isNew = !readOnes[d.number], a = slip('FROM ' + d.from.toUpperCase(), isNew ? 'NEW' : null, 'Directive ' + d.number + ': ' + d.subject, null, isNew);
       button(a, 'READ THE DIRECTIVE', isNew, function () { readDirective(d); });
     });
-    if (fresh && $('sheet').hidden) setTimeout(function () { readDirective(fresh); }, 0);
+    keep(); if (fresh && $('sheet').hidden) setTimeout(function () { readDirective(fresh); }, 0);
   }
   function readDirective(d) {
     var doc = $('sheet-doc'), head = el('div', 'head'); doc.textContent = '';
@@ -654,7 +677,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     d.parts.forEach(function (p) { doc.appendChild(el('h3', '', p.heading)); p.text.forEach(function (t) { doc.appendChild(el('p', '', t)); }); });
     doc.appendChild(el('div', 'foot', 'Written for the game. Not a historical document.'));
     $('sheet-title').textContent = 'DIRECTIVE ' + d.number; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
-    if (!readOnes[d.number]) { readOnes[d.number] = true; showSignals(); }
+    if (!readOnes[d.number]) { readOnes[d.number] = true; keep(); showSignals(); }
   }
   // ---- the staff's evening report ----
   // One sheet in place of the long return: where things stand, what happened
@@ -924,7 +947,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   function up(e) {
     delete ptrs[e.pointerId]; if (!Object.keys(ptrs).length) canvas.classList.remove('dragging'); pinch0 = 0;
     if (picking && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var p = onTable(e.clientX, e.clientY); if (p && Math.abs(p.x) <= TW / 2 && Math.abs(p.z) <= TD / 2) (picking === 'force' ? pickForce : picking === 'route' ? pickRoute : pick)(p); }
-    else if (!picking && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
+    else if (!picking && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); var hit = tileAt(e.clientX, e.clientY); if (hit) ({ force: cardForce, contact: cardContact, base: cardBase, place: cardPlace })[hit.kind](hit); else if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
     downAt = null;
   }
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
