@@ -1,20 +1,20 @@
 # Decision 0156: the proof of orders inside a day
 
-DRAFT, for the architect. Run on Nov 18, 2026, by the team lead of step 5, to the conditions of decision 0156 ("The conditions of its proof") as the architect's brief for step 5 sets out how each is run. Release build unless said, live figures, on the branch `orders-inside-proof` cut from `table-stops` at 1599a679 (steps 1 to 4 of decision 0156): state layout `flagplot-state-v44`, rules label 19, doctrine `supply-34`, agent interface 25, saved game 20. Apple M3 Pro, 11 cores. Nothing was tuned, and no rule, figure, doctrine, reading or condition was changed for or after a run.
+Run on Nov 18, 2026, by the team lead of step 5, and judged by the architect the same day, to the conditions of decision 0156 ("The conditions of its proof") as the architect's brief for step 5 sets out how each is run. Release build unless said, live figures, on the branch `orders-inside-proof` cut from `table-stops` at 1599a679 (steps 1 to 4 of decision 0156): state layout `flagplot-state-v44`, rules label 19, doctrine `supply-34`, agent interface 25, saved game 20. Apple M3 Pro, 11 cores. Nothing was tuned, and no rule, figure, doctrine, reading or condition was changed for or after a run.
 
-**Result: [the architect's].**
+**Result: five of the seven judged conditions hold, and two miss.** Nothing changed where the key is off, or where it is on and unused; the hand calculation passes; a saved game replays and a changed key is refused; a seat is told nothing more. Legibility misses: the events of a day do not say what an order changed, when what it changed is a unit's readiness or an air group's mission (4 of 6 by the condition's words, 5 of 6 by the key). Speed misses at the tool on a near-empty day (1.541 against 1.1) and holds in the engine and on a battle. What it is worth, which is not judged: a model in the Allied seat did worse advancing by pulse than by days. The judgement is at the end. Each figure below was checked by the architect against the run's own output.
 
 | Condition | Value | Mark | Holds |
 | --- | --- | --- | --- |
-| 1a, every generated file as the engine gives it | `regenerate.sh --check`: "every generated file is what the engine gives" | as written | [the architect's] |
-| 1b, the Eastern Solomons, 1,000 seeds, before and after | the two batch files byte for byte the same (4,336,400 bytes, sha256 d592f3dc...7139641) | identical | [the architect's] |
-| 2, on and unused: by pulse against by days | 1,000 of 1,000 seeds agree, from the Allied seat and from the Japanese seat; no seed differs | 1,000 | [the architect's] |
-| 3, the hand calculation of scenario 78 | 9 of 9 tests pass | pass | [the architect's] |
-| 4, a saved game replays, and refuses a changed key | replays to its three daily hashes; refused with the key changed (words below) | as written | [the architect's] |
-| 5, a seat is told nothing more | the two source tests pass; at 0600 and 1200, from each seat, `events` counts what the seat's view holds (14, 16; 44, 67), none of a pulse not resolved | as written | [the architect's] |
-| 6, legible | 5 of 6 cases pass all three questions; (i) and (ii) 6 of 6; one miss, case E, question (iii) | 6 of 6 | [the architect's] |
+| 1a, every generated file as the engine gives it | `regenerate.sh --check`: "every generated file is what the engine gives" | as written | yes |
+| 1b, the Eastern Solomons, 1,000 seeds, before and after | the two batch files byte for byte the same (4,336,400 bytes, sha256 d592f3dc...7139641) | identical | yes |
+| 2, on and unused: by pulse against by days | 1,000 of 1,000 seeds agree, from the Allied seat and from the Japanese seat; no seed differs | 1,000 | yes |
+| 3, the hand calculation of scenario 78 | 9 of 9 tests pass | pass | yes |
+| 4, a saved game replays, and refuses a changed key | replays to its three daily hashes; refused with the key changed (words below) | as written | yes |
+| 5, a seat is told nothing more | the two source tests pass; at 0600 and 1200, from each seat, `events` counts what the seat's view holds (14, 16; 44, 67), none of a pulse not resolved | as written | yes |
+| 6, legible | 5 of 6 cases pass all three questions; (i) and (ii) 6 of 6; one miss, case E, question (iii) | 6 of 6 | **no** |
 | 7, what it is worth (reported, not judged) | by days: 30 of 30 over, a strike at ships in 19, median Allied margin 3.3; by pulse: 30 of 30 over, a strike at ships in 13, median 0.675, orders inside the day median 0, most 14 | none | not judged |
-| 8, speed: three calls against one | the engine: 0.946 (the Eastern Solomons) and 0.996 (the slice, days 1 to 10); the session: 1.012 and **1.541** | 1.1 | [the architect's] |
+| 8, speed: three calls against one | the engine: 0.946 (the Eastern Solomons) and 0.996 (the slice, days 1 to 10); the session: 1.012 and **1.541** | 1.1 | **no**, at the tool on a near-empty day; yes in the engine and on the battle |
 
 ## 1. Nothing changed where it is off
 
@@ -91,10 +91,10 @@ Cases D, E and F, and their hours, were chosen before the games were played. Eac
 
 **The miss: case E, question (iii).** The key: air group 6 did not strike; in the afternoon air groups 7 and 8 launched at contact 2 and air group 6 launched nothing; an answer passes if it says air group 6 did not launch or was kept back from the afternoon's strike. The reader: "The events do not say what it changed. Event 17 only records that order:15 was accepted for air_group:6, and no later event for air_group:6 appears that day." The marker: a fail by the key's wording, and borderline.
 
-Read with the result, for the architect:
+Read with the result:
 
 - The words of an `order_accepted` name only the order's number and its unit, never what was ordered. So (iii) is read from what follows: the speed in `task_force_steamed` (A, B), the hold in `held_by_order` (C), the turn in `task_force_turned_back` (F). In D nothing shows Task Force 11's readiness, and in E only an absence shows.
-- **D passes (iii) by saying the events do not show the change**, as the key, written before the readers, allows. Whether that is legible is [the architect's].
+- **D passes (iii) by saying the events do not show the change**, as the key, written before the readers, allows. The architect's reading is below.
 
 ## 7. Reported, not judged: what it is worth
 
@@ -142,7 +142,7 @@ The test `condition_8_speed` (`orders_inside_proof.rs`, `#[ignore]`), `PROOF_REP
 | Session, the Eastern Solomons | 2.762 ms | 2.796 ms | 1.012 |
 | Session, the slice, days 1 to 10 | 0.852 ms | 1.312 ms | **1.541** |
 
-Run a second time to see it is steady: 0.948, 0.996, 1.017, 1.538. On the slice the session's three `advance` calls cost 0.46 ms more over ten days than `end_day`, about 46 microseconds a day, on days that cost some 85 microseconds each (the staff's setup with no intent: the staff does nothing). Why was not looked into. Which measure the condition means is [the architect's].
+Run a second time to see it is steady: 0.948, 0.996, 1.017, 1.538. On the slice the session's three `advance` calls cost 0.46 ms more over ten days than `end_day`, about 46 microseconds a day, on days that cost some 85 microseconds each (the staff's setup with no intent: the staff does nothing). Why was not measured. Which measure the condition means is ruled below.
 
 ## Before the pull request
 
@@ -153,3 +153,22 @@ On the branch at b0bdd540 (this step's files, with `origin/main` at c6f8fe01, th
 - Condition 7's games by pulse used the stops the players chose; no game was steered and none replayed. The 60 games are one model's play, read once.
 - The cause of the session's cost on the slice (condition 8) was not looked into.
 - In condition 4, the refusal of a changed key was not asked of a save whose scenario has no order with a pulse of its own.
+
+## The judgement
+
+By the architect, on the figures above, with nothing changed after the run.
+
+**Conditions 1 to 5 hold.** The two batch files were compared again by the architect and are the same; the lines for conditions 2, 3, 4, 5 and 8 are in the run's outputs as given here. In condition 4 the refusal comes from the loader or from the saved hash of the scenario file, and no check reads the key by itself. That is enough: the key is a line of the file, so a file whose key is changed is a changed file.
+
+**Condition 6 misses.** The condition asks that a reader say what the order changed, six of six. By the key the count is 5 of 6. By the condition's own words it is 4 of 6: in case D the reader said that the events do not show what the order changed, and the key, which the team lead wrote, lets that pass. Saying that the log does not tell is a right answer about the log and not the answer the condition asks for. Both counts miss, and the cause is one: an `order_accepted` event names the order's number and its unit and never what was ordered. A change of speed, a hold and a turn show in what the unit does next. A change of readiness shows nowhere in the day's events, and a group stood down shows only as a launch that did not happen. When and in which pulse an order acted were read right in all six.
+
+**Condition 8 misses, by the stricter reading.** The condition does not say where a call is counted, and a reading is not chosen after the run to make it pass. A seat resolves a day in three calls by `advance`, so the tool's figure counts. In the engine a day in parts costs no more than a day in one (0.946 and 0.996). At the tool it costs 1.012 on the battle and 1.541 on ten near-empty days of the slice. The size of it: about 46 microseconds a day, some 15 a call, on days of 85 microseconds. By reading the code and not by measuring: each `advance` builds the side's view before and after its pulse and its answer, which is the cost of answering three times, not of resolving. It does not grow with what happens in the day, as the battle's figure shows.
+
+**Condition 7, not judged, read plainly.** By days the model struck ships in 19 of 30 games with a median margin of 3.3; by pulse in 13 of 30 with 0.675. The staff from the stated intents, on the same 30 seeds and today's engine, strikes in 19 with 3.175, so the model by days does as the staff does. The 18 games by pulse in which the model gave no order inside the day struck in 11, much as by days. The 12 in which it did give orders, all at 1200, struck in 2. So the loss is in the games where the model used the new orders: an order to a unit takes it out of the staff's hands, and the model took units from a staff that was about to strike. Five games had 102 orders refused between them. This is one model's play, read once, with the faults in the running listed above; it shows no gain from commanding inside a day in a model's hands as the tools stand.
+
+**What follows, for the designer.** The proof is not rerun and nothing is tuned to it. The two misses are his to accept as named or to have mended:
+
+1. Legibility: the event of an order taken in says what was ordered, to the side that gave it (its own order; nothing of the enemy). This changes the words of an event, so the generated files are remade, and the six cases are read again as a check of the mend.
+2. Speed at the tool: accept as named. The cost is of answering, is small, and does not grow with the day.
+
+The key stays off for the 39 days. What condition 7 shows is a question of design more than of this build: a hold that takes a unit from the staff is a heavy thing to hand a player in the middle of a day.
