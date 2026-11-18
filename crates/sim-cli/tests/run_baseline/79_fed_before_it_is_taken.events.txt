@@ -2,20 +2,20 @@ Placeholder scenario 79: Fed before it is taken
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash bb4fc4e950799e9c  28 events
-day   2  hash 350d1ee2617e34d4  14 events
-day   3  hash 61184b5b134e7289  21 events
-day   4  hash 4569ef9267d3f57f  24 events
-day   5  hash e91e4ed29da9d283  19 events
-day   6  hash 9aef1c24856eccdf  11 events
-day   7  hash c41da2325559bf74  11 events
-day   8  hash 422afc495c2fe783  11 events
-day   9  hash dd816afb45a90245  11 events
-day  10  hash bf49da0e78ac65f9  11 events
-day  11  hash 090e15577b746b22  11 events
-day  12  hash 1a03c315c7c3e62e  11 events
-day  13  hash 4145b3227e047ab8  11 events
-day  14  hash 00c320d47a5fd506  11 events
+day   1  hash b4882416d2ee82fd  28 events
+day   2  hash 30611979d6720c85  14 events
+day   3  hash 2577946c9c7000a0  21 events
+day   4  hash 6e434a2e461fd77c  24 events
+day   5  hash 708bddf8f6c07f44  19 events
+day   6  hash 09046e0ef745f1ca  11 events
+day   7  hash 7df22fd86ce6bb89  11 events
+day   8  hash d40605d8ef8e5aae  11 events
+day   9  hash adc9b841871e96f2  11 events
+day  10  hash c7fe406e8a8195d8  11 events
+day  11  hash 09429b179a51de07  11 events
+day  12  hash 3efd31dcac71ab6d  11 events
+day  13  hash b1cd46714a8c6be1  11 events
+day  14  hash 5028a36473a154e9  11 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to hold base:2
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

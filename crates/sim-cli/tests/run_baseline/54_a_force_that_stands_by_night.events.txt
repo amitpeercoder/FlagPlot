@@ -2,10 +2,10 @@ Placeholder scenario 54: A force that stands by night
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0fb6a9556b35e5b4  40 events
-day   2  hash 34335af342f54b92  20 events
-day   3  hash bc830cd40a092cc2  5 events
-day   4  hash 8ccd90f7f365d480  3 events
+day   1  hash 88e12f05956de081  40 events
+day   2  hash b3e86a8ed0b1d425  20 events
+day   3  hash 073d0760333c9903  5 events
+day   4  hash 6dd04557ed48c86f  3 events
 
 #1 D0 -         Allied report: 3 ships, cruiser, at (10,0), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to deny the waters within 0 hexes of (3,0)

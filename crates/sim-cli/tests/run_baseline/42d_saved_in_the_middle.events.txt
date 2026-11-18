@@ -2,33 +2,33 @@ Placeholder scenario 42d: Saved in the middle
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2226a476a39a8adb  25 events
-day   2  hash 4ca0f5b4ae3ff7f9  8 events
-day   3  hash f14405a2836f5caa  25 events
-day   4  hash a43694943845ff3a  11 events
-day   5  hash 424d84fc5148d805  11 events
-day   6  hash 47c3171f66584f57  5 events
-day   7  hash c9754d18b1198a6b  5 events
-day   8  hash 5b2212cf2800284b  6 events
-day   9  hash 7eb5fd1ba5ad54f1  5 events
-day  10  hash a935cb7051e1f6f6  18 events
-day  11  hash db56282d81bbe67f  17 events
-day  12  hash 2cfb4714b67964eb  12 events
-day  13  hash f3c992ab236c565f  9 events
-day  14  hash 2fd5ffb492bbdab5  5 events
-day  15  hash 75e1733655f57ff6  5 events
-day  16  hash 00f186162f58e3c8  5 events
-day  17  hash ee14ec0dae164456  6 events
-day  18  hash 07f11d2731280d52  5 events
-day  19  hash 5aff6f758390b433  5 events
-day  20  hash 9b1836b031a36496  5 events
-day  21  hash d23d8132e4c07f49  5 events
-day  22  hash 8667c3059f4d9637  5 events
-day  23  hash 04861a21b87f2502  5 events
-day  24  hash e89161f6447cdf8c  5 events
-day  25  hash 7ff705fc4a9875b1  12 events
-day  26  hash de67385c4bc0c752  16 events
-day  27  hash eb21f45babb69005  12 events
+day   1  hash 68b927daf5d4fe00  25 events
+day   2  hash 6ad71f2ce36d5dc8  8 events
+day   3  hash bf7518bfe4ea1667  25 events
+day   4  hash 30e82e5a79b9e015  11 events
+day   5  hash d059a532b059d42a  11 events
+day   6  hash 704b422a9f2151e8  5 events
+day   7  hash c56b42c3145af184  5 events
+day   8  hash 108e55f2081a7bc8  6 events
+day   9  hash 6291e01cc90abc1e  5 events
+day  10  hash abd02a4d3b58a087  18 events
+day  11  hash 0c6f2b9147ca1bec  17 events
+day  12  hash 5f3f951fd90ab802  12 events
+day  13  hash 038b8ca83876cf0e  9 events
+day  14  hash 2a493c906b9419bc  5 events
+day  15  hash 7809198fe417a1b3  5 events
+day  16  hash 55cb2a27b0d61c29  5 events
+day  17  hash 73770811674748b3  6 events
+day  18  hash 2f74a5e7fc76d667  5 events
+day  19  hash af6431c155eacb9a  5 events
+day  20  hash 9e8f44c066cbd033  5 events
+day  21  hash f860b137237d8a18  5 events
+day  22  hash da766167fce924ce  5 events
+day  23  hash a83b2a0e8e73036b  5 events
+day  24  hash 9f87d1566a6bbba5  5 events
+day  25  hash 646a6cdc50831f50  12 events
+day  26  hash c61690d5cf902cb1  16 events
+day  27  hash b6e779ed9a922b74  12 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
