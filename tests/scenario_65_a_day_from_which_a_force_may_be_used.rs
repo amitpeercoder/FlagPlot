@@ -1098,7 +1098,12 @@ fn top_level_scenarios() -> Vec<PathBuf> {
 fn no_day_no_change_no_earlier_scenario_has_a_day_or_a_formation() {
     let mut checked = 0;
     for file in top_level_scenarios() {
-        if file == path() {
+        // Scenario 77 also gives a force a day (decision 0152).
+        if file == path()
+            || file
+                .file_name()
+                .is_some_and(|name| name.to_string_lossy().starts_with("77_"))
+        {
             continue;
         }
         let text = std::fs::read_to_string(&file).expect("a scenario reads");

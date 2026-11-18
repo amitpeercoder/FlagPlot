@@ -560,7 +560,21 @@ impl Day<'_, '_> {
         // ready as it stands.
         let at_base = crate::fleet::force_stopped_at(&force, force.from_hex)
             && view.bases().any(|b| b.hex == force.from_hex);
-        let as_it_stands = !at_base && !roster.is_empty();
+        // Decision 0152, 1 (the architect's ruling of Nov 18, 2026): a lift
+        // as it stands, every man of its roster aboard it and none ashore,
+        // needs no making ready wherever it lies.
+        let all_aboard = !roster.is_empty()
+            && units.iter().all(|u| {
+                let here: u32 = view
+                    .ships()
+                    .filter(|s| s.location == sim_core::state::ShipLocation::TaskForce(force_id))
+                    .filter_map(|s| s.troops)
+                    .filter(|t| t.unit == u.id)
+                    .map(|t| t.men)
+                    .sum();
+                u.men_ashore == 0 && here > 0 && Some(here) == view.men_aboard(u.id)
+            });
+        let as_it_stands = (!at_base || all_aboard) && !roster.is_empty();
         let ready = as_it_stands
             || (!landing_ordered
                 && !differs
@@ -606,9 +620,15 @@ impl Day<'_, '_> {
             } else {
                 format!("; {member_words}")
             };
-            format!(
-                "{force_id} does not lie at a base of its side, so it can gain no loading and its units no rehearsal: the landing is ready as it stands and goes without them, {loading_words}{rehearsals}"
-            )
+            if at_base {
+                format!(
+                    "{force_id} lies at a base of its side with every man of its roster aboard: it is a lift as it stands, which needs no making ready, so the landing is ready as it stands and goes without loading or rehearsal, {loading_words}{rehearsals}"
+                )
+            } else {
+                format!(
+                    "{force_id} does not lie at a base of its side, so it can gain no loading and its units no rehearsal: the landing is ready as it stands and goes without them, {loading_words}{rehearsals}"
+                )
+            }
         });
         if ready {
             self.landings.insert(
