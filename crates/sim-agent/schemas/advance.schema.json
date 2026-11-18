@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/advance",
+  "title": "advance: pulses resolved one at a time, stopping on what the side was told",
+  "description": "The answer of advance (decision 0156, rule 8): the pulses resolved, why it stopped, what the side was told in the last pulse of the things it named, where the clock stands, the interrupts that fired on the last day closed and the result when the game is over.",
+  "type": "object",
+  "required": ["format", "version", "kind", "pulses_resolved", "stop_on", "stopped", "told", "clock", "fired", "game_over", "result", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "flagplot-agent" },
+    "version": { "const": 25 },
+    "kind": { "const": "advance" },
+    "pulses_resolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["day", "pulse"],
+        "additionalProperties": false,
+        "properties": {
+          "day": { "type": "integer" },
+          "pulse": { "enum": ["night", "morning", "afternoon"] }
+        }
+      }
+    },
+    "stop_on": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/thing" }
+    },
+    "stopped": {
+      "enum": ["pulses", "told", "interrupt", "game_over"],
+      "description": "pulses: the pulses asked for were resolved; told: the side was told, in the last pulse, a thing of stop_on; interrupt: a day closed on which an interrupt of the side fired; game_over: the game ended."
+    },
+    "told": {
+      "description": "Of the things in stop_on, those the side was told in the last pulse resolved (for the afternoon, with the end of the day), each with the numbers of its events. contact: report_received with created true. attack: air_attack_against, base_attacked_against, shore_bombardment_against, salvo_against, engagement_begun. loss: ship_sunk; system_hit with propulsion or flight_deck going out. strike: strike_launched, base_strike_launched. landing: men_landed, ground_fight.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["thing", "events"],
+        "additionalProperties": false,
+        "properties": {
+          "thing": { "$ref": "#/$defs/thing" },
+          "events": { "type": "array", "items": { "type": "integer" } }
+        }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "required": ["day", "at", "next_pulse", "days_resolved", "words"],
+      "additionalProperties": false,
+      "properties": {
+        "day": { "type": "integer", "description": "The day whose pulse is next: the open day at 0600 or 1200, the coming day at dusk." },
+        "at": { "enum": ["dusk", "0600", "1200"] },
+        "next_pulse": { "enum": ["night", "morning", "afternoon", null], "description": "null once the game is over." },
+        "days_resolved": { "type": "integer" },
+        "words": { "type": "string" }
+      }
+    },
+    "fired": {
+      "description": "The firings of the last day closed in the call, as run gives them; empty when no day closed.",
+      "type": "array",
+      "items": { "$ref": "command_defs.schema.json#/$defs/firing" }
+    },
+    "game_over": { "type": "boolean" },
+    "result": {
+      "description": "When game_over is true and the scenario has objectives, the umpire's result for both sides; otherwise null.",
+      "oneOf": [
+        { "$ref": "briefing.schema.json#/$defs/result" },
+        { "type": "null" }
+      ]
+    },
+    "summary": { "type": "string" }
+  },
+  "$defs": {
+    "thing": { "enum": ["contact", "attack", "loss", "strike", "landing"] }
+  }
+}

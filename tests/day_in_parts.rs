@@ -269,3 +269,123 @@ fn the_error_says_what_was_called_and_what_is_open() {
         "cannot open a day: day 2 is open and its afternoon is resolved"
     );
 }
+
+// ---------------------------------------------------------------------
+// Step 3 of decision 0156: the copy with the open day treated as closed,
+// and the clock on a side's view.
+// ---------------------------------------------------------------------
+
+#[test]
+fn a_copy_of_a_closed_day_is_a_plain_clone() {
+    let mut scenario = load("36_one_convoy.toml");
+    let held = staffs();
+    scenario
+        .next_day_staffed(as_staffs(&held))
+        .expect("the day resolves");
+    let world = &scenario.world;
+    let copy = world.as_if_day_closed();
+    assert_eq!(copy.state_hash(), world.state_hash());
+    assert_eq!(copy.day(), world.day());
+    assert_eq!(copy.day_in_hand(), None);
+    assert_eq!(copy.events().len(), world.events().len());
+}
+
+#[test]
+fn a_copy_of_an_open_day_is_that_day_with_no_day_in_hand_and_the_world_is_untouched() {
+    let mut scenario = load("36_one_convoy.toml");
+    let held = staffs();
+    scenario
+        .next_day_staffed(as_staffs(&held))
+        .expect("the day resolves");
+    let world = &mut scenario.world;
+    world
+        .open_day(as_staffs(&held), &mut |_, _| {})
+        .expect("the day opens");
+    for _ in 0..2 {
+        let before = world.state_hash();
+        let in_hand = world.day_in_hand();
+        let copy = world.as_if_day_closed();
+        assert_eq!(copy.day(), 2);
+        assert_eq!(copy.day_in_hand(), None);
+        assert!(copy
+            .orders_waiting_inside_day(sim_core::state::Side::Allied)
+            .is_empty());
+        // The copy's staff step is that of day 3.
+        let staff_step = copy.at_staff_step();
+        assert_eq!(staff_step.day(), 2);
+        assert_eq!(world.state_hash(), before);
+        assert_eq!(world.day_in_hand(), in_hand);
+        assert_eq!(world.day(), 1);
+        world
+            .resolve_next_pulse(&mut |_, _| {})
+            .expect("the pulse resolves");
+    }
+}
+
+#[test]
+fn the_clock_on_a_sides_view_at_every_moment() {
+    use sim_core::held::AsOf;
+    use sim_core::state::Side;
+    let mut scenario = load("36_one_convoy.toml");
+    let held = staffs();
+    let world = &mut scenario.world;
+    let at = |world: &World| {
+        let view = world.side_view(Side::Allied);
+        (
+            view.day_in_hand().map(|h| (h.day, h.next_pulse)),
+            view.pulse_last_resolved(),
+            view.pulse_just_ended(),
+        )
+    };
+    let of = |day, pulse| AsOf::Pulse { day, pulse };
+    // Day 1, as the start is the moment before it.
+    assert_eq!(at(world), (None, AsOf::Start, AsOf::Start));
+    world
+        .open_day(as_staffs(&held), &mut |_, _| {})
+        .expect("the day opens");
+    assert_eq!(
+        at(world),
+        (Some((1, Some(Pulse::Night))), AsOf::Start, AsOf::Start)
+    );
+    world.resolve_next_pulse(&mut |_, _| {}).expect("the night");
+    assert_eq!(
+        at(world),
+        (
+            Some((1, Some(Pulse::Morning))),
+            of(1, Pulse::Night),
+            AsOf::Start
+        )
+    );
+    world
+        .resolve_next_pulse(&mut |_, _| {})
+        .expect("the morning");
+    assert_eq!(
+        at(world),
+        (
+            Some((1, Some(Pulse::Afternoon))),
+            of(1, Pulse::Morning),
+            AsOf::Start
+        )
+    );
+    world
+        .resolve_next_pulse(&mut |_, _| {})
+        .expect("the afternoon");
+    assert_eq!(
+        at(world),
+        (Some((1, None)), of(1, Pulse::Afternoon), AsOf::Start)
+    );
+    world.close_day(&mut |_, _| {}).expect("the day closes");
+    let ended = of(1, Pulse::Afternoon);
+    assert_eq!(at(world), (None, ended, ended));
+    // Day 2: with night next the last resolved is day 1's afternoon, which
+    // is what pulse_just_ended has been and stays inside the day.
+    world
+        .open_day(as_staffs(&held), &mut |_, _| {})
+        .expect("the day opens");
+    assert_eq!(at(world), (Some((2, Some(Pulse::Night))), ended, ended));
+    world.resolve_next_pulse(&mut |_, _| {}).expect("the night");
+    assert_eq!(
+        at(world),
+        (Some((2, Some(Pulse::Morning))), of(2, Pulse::Night), ended)
+    );
+}

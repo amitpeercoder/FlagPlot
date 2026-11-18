@@ -13,7 +13,7 @@ use sim_core::state::Side;
 use crate::answer::{FORMAT, VERSION};
 
 /// The tools of the interface: the whole vocabulary (decision 14 of 0050).
-pub const TOOLS: [&str; 9] = [
+pub const TOOLS: [&str; 10] = [
     "get_briefing",
     "list_forces",
     "list_contacts",
@@ -21,6 +21,7 @@ pub const TOOLS: [&str; 9] = [
     "get_entity",
     "measure",
     "explain",
+    "events",
     "issue_orders",
     "end_day",
 ];

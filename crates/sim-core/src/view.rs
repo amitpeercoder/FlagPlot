@@ -136,6 +136,11 @@ pub struct SideView<'a> {
     /// lost. Each holds both sides' entries, so whatever reads them keeps
     /// this side's own and nothing else.
     pulse: PulseScratch<'a>,
+    /// The day open and the pulse next, while a day is resolved in parts
+    /// (decision 0156): the clock, which both sides know, and no truth of
+    /// either side. Copied from the world when the view is made. `None`
+    /// between days.
+    day_in_hand: Option<crate::world::DayInHand>,
 }
 
 /// The world's scratch state of one pulse, by reference (see
@@ -176,6 +181,7 @@ impl<'a> SideView<'a> {
         command: &'a crate::command::CommandState,
         next_task_force: TaskForceId,
         pulse: PulseScratch<'a>,
+        day_in_hand: Option<crate::world::DayInHand>,
     ) -> SideView<'a> {
         SideView {
             side,
@@ -195,6 +201,54 @@ impl<'a> SideView<'a> {
             command,
             next_task_force,
             pulse,
+            day_in_hand,
+        }
+    }
+
+    /// The day open and the pulse next, while a day is resolved in parts:
+    /// at 0600 or 1200 of a game that stops between pulses (decision 0156).
+    /// `None` between days. It is the clock, known to both sides.
+    ///
+    /// For the agent interface's words only: no rule of the engine and
+    /// nothing of the staff reads it.
+    pub fn day_in_hand(&self) -> Option<crate::world::DayInHand> {
+        self.day_in_hand
+    }
+
+    /// The last pulse resolved (decision 0156): with no day open, what
+    /// [`SideView::pulse_just_ended`] is; with day D open, the afternoon of
+    /// D-1 while its night is next, the night of D while its morning is
+    /// next, the morning of D while its afternoon is next, and the afternoon
+    /// of D once that is resolved and the day not yet closed.
+    ///
+    /// For the agent interface's words only: no rule of the engine and
+    /// nothing of the staff reads it; they read `pulse_just_ended`.
+    pub fn pulse_last_resolved(&self) -> crate::held::AsOf {
+        use crate::held::AsOf;
+        let Some(in_hand) = self.day_in_hand else {
+            return self.pulse_just_ended();
+        };
+        let day = in_hand.day;
+        match in_hand.next_pulse {
+            Some(crate::time::Pulse::Night) => match day - 1 {
+                0 => AsOf::Start,
+                before => AsOf::Pulse {
+                    day: before,
+                    pulse: crate::time::Pulse::Afternoon,
+                },
+            },
+            Some(crate::time::Pulse::Morning) => AsOf::Pulse {
+                day,
+                pulse: crate::time::Pulse::Night,
+            },
+            Some(crate::time::Pulse::Afternoon) => AsOf::Pulse {
+                day,
+                pulse: crate::time::Pulse::Morning,
+            },
+            None => AsOf::Pulse {
+                day,
+                pulse: crate::time::Pulse::Afternoon,
+            },
         }
     }
 

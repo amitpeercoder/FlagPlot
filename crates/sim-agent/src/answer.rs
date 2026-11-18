@@ -74,8 +74,14 @@ pub const FORMAT: &str = "flagplot-agent";
 /// where he did not (decision 0149). 24 adds the intent kind
 /// `control_island` (`island`, `by_day`) of decision 0151, `island` in an
 /// intent of `command_state` (`null` for the other kinds), its measure, and
-/// `islands` in the command report.
-pub const VERSION: u32 = 24;
+/// `islands` in the command report. 25 adds the tool `events` (every seat)
+/// and, where a scenario lets a seat stop between pulses, the tool `advance`,
+/// orders given inside a day (`for_pulse` and each result's `for` in
+/// issue_orders), the refusal of get_briefing at 0600 and 1200, and the note
+/// `inside_day` on the answers worked at 0600 or 1200 on the state as it
+/// stands (command_state, plans, staff_orders, propose, preview, a queued
+/// command, and a passage or yard measure) (decision 0156).
+pub const VERSION: u32 = 25;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

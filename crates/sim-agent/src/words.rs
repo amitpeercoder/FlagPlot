@@ -154,6 +154,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::UnderWay => {
             " (load (of supply or fuel) and send_to_yard need the task force stopped at a base of your own side: a force that is under way, or that a route order in the same day sends under way, cannot take them; give the order on a day the force starts at the base with no route order)"
         }
+        R::GivenAtDusk => {
+            " (it is given when the day is over: advance to dusk, or end the day, and give it then for the coming day)"
+        }
         R::NoOwnBaseHere => {
             " (load needs the task force stopped in the hex of a base of your own side)"
         }

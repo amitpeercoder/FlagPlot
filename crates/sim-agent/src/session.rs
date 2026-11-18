@@ -18,6 +18,7 @@ use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{OrderKind, OrderRequest, Origin, RejectReason, TaskForceOrder};
 use sim_core::pictures::CommandRef;
 use sim_core::state::Side;
+use sim_core::time::Pulse;
 use sim_core::view::SideView;
 use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::World;
@@ -34,6 +35,12 @@ use crate::record::{
     seat_name, CallError, Post, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS,
 };
 use crate::staffing;
+use crate::told::{events_answer, told_since, DayPart, STOP_ON};
+
+/// The orders given inside a day, by day, each with its pulse and side, in
+/// the order handed in (decision 0156): a scenario's script, or what a
+/// session handed in, for the saved game.
+pub type OrdersInsideDay = BTreeMap<u32, Vec<(Pulse, Side, OrderRequest)>>;
 
 /// The umpire's number given to a unit the side named that is none of its
 /// own: no unit has it.
@@ -171,8 +178,11 @@ const NO_INTENTS_HERE: &str =
 struct PreviewRecord {
     number: u32,
     side: Side,
-    /// The day the preview was for: the day the game was on plus one.
+    /// The day the preview was for: the day its commands are taken in.
     day: u32,
+    /// Where the clock stood when it was made: the days resolved and the
+    /// pulse next if a day was open. A pulse resolved since voids it.
+    moment: (u32, Option<Pulse>),
     /// The side's revision when the preview was made.
     revision: u32,
     /// The command as the tool read it, with the numbers the side wrote.
@@ -187,6 +197,9 @@ struct SeatState {
     seat: Seat,
     /// The orders queued for the coming day, in the order given.
     queued: Vec<OrderRequest>,
+    /// The orders queued inside the open day, at 0600 or 1200, for the
+    /// next pulse (decision 0156).
+    queued_inside: Vec<OrderRequest>,
     /// The commands queued for the coming day, in the order given, with the
     /// umpire's ids inside (decision 0107, "The tools").
     commands: Vec<CommandKind>,
@@ -223,6 +236,14 @@ pub struct Session {
     revisions: BTreeMap<Side, u32>,
     /// The previews shown, numbered 1, 2, 3... in the session.
     previews: Vec<PreviewRecord>,
+    /// Whether a seat may stop the clock between pulses and give orders
+    /// inside a day: the scenario's key (decision 0156).
+    inside_day: bool,
+    /// The script's orders inside a day, for the seats the script holds.
+    script_inside: OrdersInsideDay,
+    /// The orders handed in to the engine inside a day, with their pulses,
+    /// for the saved game.
+    handed_in_inside: OrdersInsideDay,
 }
 
 /// The arguments of a call as a map: an object, or nothing.
@@ -245,6 +266,7 @@ impl Session {
                 SeatState {
                     seat,
                     queued: Vec::new(),
+                    queued_inside: Vec::new(),
                     commands: Vec::new(),
                     ended: false,
                 },
@@ -264,7 +286,115 @@ impl Session {
             transcript: Vec::new(),
             revisions: BTreeMap::new(),
             previews: Vec::new(),
+            inside_day: false,
+            script_inside: OrdersInsideDay::new(),
+            handed_in_inside: OrdersInsideDay::new(),
         }
+    }
+
+    /// This session with the scenario's key `orders_inside_a_day` (decision
+    /// 0156) and the script's orders inside a day. The script's are handed
+    /// in only for a seat the script holds, as its orders of dusk are.
+    pub fn with_orders_inside_a_day(mut self, on: bool, script: OrdersInsideDay) -> Session {
+        self.inside_day = on;
+        self.script_inside = script;
+        self
+    }
+
+    /// Whether the scenario lets a seat give orders inside a day.
+    pub fn orders_inside_a_day(&self) -> bool {
+        self.inside_day
+    }
+
+    /// The orders handed in to the engine inside a day, by day, each with
+    /// its pulse and side, in the order handed in. A saved game keeps them
+    /// beside the orders of dusk.
+    pub fn handed_in_inside_day(&self) -> &OrdersInsideDay {
+        &self.handed_in_inside
+    }
+
+    /// The day open and its next pulse, while the clock is stopped at 0600
+    /// or 1200 (decision 0156); `None` at dusk.
+    pub fn open_day(&self) -> Option<(u32, Pulse)> {
+        let in_hand = self.world.day_in_hand()?;
+        Some((in_hand.day, in_hand.next_pulse?))
+    }
+
+    /// Where the clock stands, in words: "dusk before day N", "0600 of day
+    /// N" or "1200 of day N".
+    fn clock_words(&self) -> String {
+        match self.open_day() {
+            Some((day, Pulse::Afternoon)) => format!("1200 of day {day}"),
+            Some((day, _)) => format!("0600 of day {day}"),
+            None if self.is_over() => {
+                format!("dusk at the end of day {}, the game over", self.world.day())
+            }
+            None => format!("dusk before day {}", self.world.day() + 1),
+        }
+    }
+
+    /// Where the clock stands, for an answer: the day whose pulse is next,
+    /// the stop (`dusk`, `0600` or `1200`), the pulse next (`null` once the
+    /// game is over) and the days resolved.
+    fn clock(&self) -> Value {
+        let (day, at, next) = match self.open_day() {
+            Some((day, Pulse::Afternoon)) => (day, "1200", Some("afternoon")),
+            Some((day, pulse)) => (day, "0600", Some(pulse.name())),
+            None => (
+                self.world.day() + 1,
+                "dusk",
+                (!self.is_over()).then_some("night"),
+            ),
+        };
+        json!({
+            "day": day,
+            "at": at,
+            "next_pulse": next,
+            "days_resolved": self.world.day(),
+            "words": self.clock_words(),
+        })
+    }
+
+    /// The day a command queued now is taken in: the day after the open day
+    /// while one is open, else the coming day.
+    fn command_day(&self) -> u32 {
+        match self.open_day() {
+            Some((day, _)) => day + 1,
+            None => self.world.day() + 1,
+        }
+    }
+
+    /// The words an answer worked on the state as it stands inside a day
+    /// carries (decision 0156, rule 6); `None` at dusk.
+    fn inside_day_note(&self, command: bool) -> Option<String> {
+        let (day, _) = self.open_day()?;
+        let at = self.clock_words();
+        Some(if command {
+            format!(
+                "Given at {at}: the command is queued for dusk at the end of day {day} and is taken in at the start of day {}; the staff is not asked again inside the day. It was checked on the state as it stands, as if day {day} were closed now, before the rest of the day, its fight ashore and its end are resolved; it is checked again when it is taken in at dusk, and if it is refused then its refusal is recorded as any refused command's is.",
+                day + 1
+            )
+        } else {
+            format!(
+                "Worked at {at} on the state as it stands, as if day {day} were closed now: before the rest of the day, its fight ashore and its end are resolved. The staff is asked at dusk at the end of day {day}, on the state as it is then, for day {}, and may then do otherwise.",
+                day + 1
+            )
+        })
+    }
+
+    /// `answer` with the note of [`Session::inside_day_note`] added while a
+    /// day is open.
+    fn noted(&self, mut answer: Value, command: bool) -> Value {
+        if let (Some(note), Some(map)) = (self.inside_day_note(command), answer.as_object_mut()) {
+            map.insert("inside_day".into(), json!(note));
+        }
+        answer
+    }
+
+    /// Whether `advance` is offered: the scenario lets a seat stop between
+    /// pulses and exactly one seat is a player's, as for `run`.
+    fn advance_offered(&self) -> bool {
+        self.inside_day && self.player_seats() == 1
     }
 
     /// This session with a staff for each side in `staffs`, asked on its
@@ -375,6 +505,11 @@ impl Session {
                     .iter()
                     .filter(|tool| **tool != "run" || runnable),
             );
+        }
+        // `advance` is offered where the scenario lets a seat stop between
+        // pulses and one seat is a player's (decision 0156, rule 8).
+        if self.advance_offered() {
+            tools.push("advance");
         }
         tools
     }
@@ -487,6 +622,13 @@ impl Session {
     fn dispatch(&mut self, side: Side, tool: &str, arguments: &Value) -> Result<Value, CallError> {
         let args = args_of(arguments)?;
         match tool {
+            "get_briefing" if self.open_day().is_some() => {
+                let (day, _) = self.open_day().expect("a day is open");
+                Err(CallError::new(format!(
+                    "the briefing is made at dusk, and the clock stands at {}: read events for day {day} so far (events {{\"day\": {day}}}), and list_forces, list_contacts and list_bases for the state as it stands",
+                    self.clock_words()
+                )))
+            }
             "get_briefing" => {
                 let text = match args.get("text") {
                     None | Some(Value::Null) => false,
@@ -556,7 +698,9 @@ impl Session {
                     last_day: Some(self.days),
                     yard_check: Some(&check),
                 };
-                to_value(&self.read(side, |view| measure_in(view, &question, &context))?)
+                let answer =
+                    to_value(&self.read(side, |view| measure_in(view, &question, &context))?)?;
+                Ok(self.measure_noted(answer))
             }
             "explain" => {
                 let event = args
@@ -570,6 +714,8 @@ impl Session {
                     })?;
                 to_value(&explain(&self.view_of(side)?, event))
             }
+            "events" => self.events_tool(side, &args),
+            "advance" if self.advance_offered() => self.advance(side, &args),
             "issue_orders" => self.issue_orders(side, &args),
             "end_day" => self.end_day(side),
             command if COMMAND_TOOLS.contains(&command) && self.at_a_command(side) => {
@@ -583,6 +729,223 @@ impl Session {
                 &self.tools(side),
             )),
         }
+    }
+
+    /// A measure of a passage or a yard trip, with its note while a day is
+    /// open: the engine works it from the start of the coming day's night,
+    /// which inside a day has passed (decision 0156).
+    fn measure_noted(&self, mut answer: Value) -> Value {
+        let Some((day, pulse)) = self.open_day() else {
+            return answer;
+        };
+        let at = self.clock_words();
+        let note = match answer.get("question").and_then(Value::as_str) {
+            Some("passage") => format!(
+                "Asked at {at}: this is worked as if the force left at 1800, the start of day {day}'s night, which has passed. An order given now is taken in at the next pulse, {} hours later than worked, so the times are early by about that much and the hours of darkness on the passage are not those worked.",
+                if pulse == Pulse::Afternoon { 18 } else { 12 }
+            ),
+            Some("yard") => format!(
+                "Asked at {at}: this is worked as if the force left at 1800, the start of day {day}'s night, which has passed. A yard order is given at dusk and taken in at the start of day {}, a day later than worked, so the days of leaving and return are a day early.",
+                day + 1
+            ),
+            _ => return answer,
+        };
+        if let Some(map) = answer.as_object_mut() {
+            map.insert("inside_day".into(), json!(note));
+        }
+        answer
+    }
+
+    /// `events`: the side's own events of a day, or of a part of it, each as
+    /// `explain` gives it (decision 0156, rule 9).
+    fn events_tool(
+        &self,
+        side: Side,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<Value, CallError> {
+        if let Some(key) = args
+            .keys()
+            .find(|k| !["day", "pulse"].contains(&k.as_str()))
+        {
+            return Err(CallError::naming(
+                format!("\"{key}\" is not an argument of events"),
+                &["day", "pulse"],
+            ));
+        }
+        // The day the clock is in: the open day, else the last resolved.
+        let current = self.open_day().map_or(self.world.day(), |(day, _)| day);
+        let day = match args.get("day") {
+            None | Some(Value::Null) => current.max(1),
+            Some(value) => value
+                .as_u64()
+                .and_then(|n| u32::try_from(n).ok())
+                .filter(|n| *n >= 1)
+                .ok_or_else(|| CallError::new("\"day\" must be a whole number, at least 1"))?,
+        };
+        let part = match args.get("pulse") {
+            None | Some(Value::Null) => None,
+            Some(value) => Some(value.as_str().and_then(DayPart::parse).ok_or_else(|| {
+                CallError::naming(
+                    "\"pulse\" must be one of the parts of a day",
+                    &["night", "morning", "afternoon", "end"],
+                )
+            })?),
+        };
+        let begun = day <= current;
+        let view = self.view_of(side)?;
+        Ok(events_answer(&view, day, part, begun, &self.clock_words()))
+    }
+
+    /// `advance`: resolves up to `pulses` pulses one at a time, stopping at
+    /// the end of the first in which the side was told any of `stop_on`, at
+    /// a dusk after a day on which an interrupt of the side fired, or when
+    /// the game is over (decision 0156, rule 8).
+    fn advance(
+        &mut self,
+        side: Side,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<Value, CallError> {
+        if let Some(key) = args
+            .keys()
+            .find(|k| !["pulses", "stop_on", "reason"].contains(&k.as_str()))
+        {
+            return Err(CallError::naming(
+                format!("\"{key}\" is not an argument of advance"),
+                &["pulses", "stop_on", "reason"],
+            ));
+        }
+        match args.get("reason") {
+            None | Some(Value::Null) | Some(Value::String(_)) => {}
+            Some(_) => return Err(CallError::new("\"reason\" must be text")),
+        }
+        if self.is_over() {
+            return Err(CallError::new("the game is over"));
+        }
+        let pulses = args
+            .get("pulses")
+            .and_then(Value::as_u64)
+            .and_then(|n| u32::try_from(n).ok())
+            .filter(|n| *n >= 1)
+            .ok_or_else(|| {
+                CallError::new("\"pulses\" is needed, as a whole number of pulses, at least 1")
+            })?;
+        let mut stop_on: Vec<&'static str> = Vec::new();
+        match args.get("stop_on") {
+            None | Some(Value::Null) => {}
+            Some(Value::Array(items)) => {
+                for item in items {
+                    let thing = item
+                        .as_str()
+                        .and_then(|t| STOP_ON.iter().copied().find(|s| *s == t))
+                        .ok_or_else(|| {
+                            CallError::naming(
+                                "each of \"stop_on\" must be one of the things advance can stop on",
+                                &STOP_ON,
+                            )
+                        })?;
+                    if !stop_on.contains(&thing) {
+                        stop_on.push(thing);
+                    }
+                }
+            }
+            Some(_) => {
+                return Err(CallError::naming(
+                    "\"stop_on\" must be a list of the things advance can stop on",
+                    &STOP_ON,
+                ))
+            }
+        }
+        let started = self.clock_words();
+        let mut resolved: Vec<Value> = Vec::new();
+        let mut told: Vec<Value>;
+        let mut last_closed: Option<u32> = None;
+        let stopped = loop {
+            // What the side held before the pulse: what it is told in it is
+            // its events after these.
+            let before = self.view_of(side).map_or(0, |view| view.events().len());
+            if self.open_day().is_none() {
+                self.begin_day()?;
+            }
+            let (day, pulse) = self.resolve_pulse()?;
+            resolved.push(json!({"day": day, "pulse": pulse.name()}));
+            let closed = self.open_day().is_none();
+            if closed {
+                last_closed = Some(day);
+            }
+            told = match self.view_of(side) {
+                Ok(view) => told_since(&view, before, &stop_on),
+                Err(_) => Vec::new(),
+            };
+            if self.is_over() {
+                break "game_over";
+            }
+            if closed && staffing::fired_on_day(&self.world.side_view(side), day) {
+                break "interrupt";
+            }
+            if !told.is_empty() {
+                break "told";
+            }
+            if u32::try_from(resolved.len()).expect("few pulses") >= pulses {
+                break "pulses";
+            }
+        };
+        let fired = match last_closed {
+            Some(day) => staffing::firings_json(&self.world.side_view(side), day),
+            None => Vec::new(),
+        };
+        let result = match self.final_result().filter(|_| !self.at_a_command(side)) {
+            Some(result) => to_value(&result_part(&self.world.side_view(side), &result))?,
+            None => Value::Null,
+        };
+        let count = resolved.len();
+        let why = match stopped {
+            "told" => {
+                let things: Vec<String> = told
+                    .iter()
+                    .map(|t| {
+                        let numbers: Vec<String> = t["events"]
+                            .as_array()
+                            .into_iter()
+                            .flatten()
+                            .map(|n| n.to_string())
+                            .collect();
+                        format!(
+                            "{} (event{} {})",
+                            t["thing"].as_str().unwrap_or_default(),
+                            if numbers.len() == 1 { "" } else { "s" },
+                            numbers.join(", ")
+                        )
+                    })
+                    .collect();
+                format!("you were told of {}", things.join("; "))
+            }
+            "interrupt" => format!("an interrupt fired: {}", staffing::firing_words(&fired)),
+            "game_over" => "the game is over".to_string(),
+            _ => format!(
+                "the {pulses} pulse{} asked for {} resolved",
+                if pulses == 1 { "" } else { "s" },
+                if pulses == 1 { "is" } else { "are" }
+            ),
+        };
+        let summary = format!(
+            "From {started}, resolved {count} pulse{}; stopped at {}: {why}.",
+            if count == 1 { "" } else { "s" },
+            self.clock_words()
+        );
+        Ok(json!({
+            "format": FORMAT,
+            "version": VERSION,
+            "kind": "advance",
+            "pulses_resolved": resolved,
+            "stop_on": stop_on,
+            "stopped": stopped,
+            "told": told,
+            "clock": self.clock(),
+            "fired": fired,
+            "game_over": self.is_over(),
+            "result": result,
+            "summary": summary,
+        }))
     }
 
     // -----------------------------------------------------------------
@@ -616,8 +979,16 @@ impl Session {
             None | Some(Value::Null) | Some(Value::String(_)) => {}
             Some(_) => return Err(CallError::new("\"reason\" must be text")),
         }
+        // While a day is open the orders are given inside it, for its next
+        // pulse, and only the seven kinds that may be (decision 0156).
+        let inside = self.open_day();
         if clear {
-            let queued = &mut self.seats.get_mut(&side).expect("both seats exist").queued;
+            let state = self.seats.get_mut(&side).expect("both seats exist");
+            let queued = if inside.is_some() {
+                &mut state.queued_inside
+            } else {
+                &mut state.queued
+            };
             if !queued.is_empty() {
                 queued.clear();
                 self.bump(side);
@@ -634,16 +1005,24 @@ impl Session {
         {
             let view = self.view_of(side)?;
             let ctx = Ctx::new(view);
-            let seat_queue = self.seats[&side].queued.clone();
+            let seat_queue = if inside.is_some() {
+                self.seats[&side].queued_inside.clone()
+            } else {
+                self.seats[&side].queued.clone()
+            };
             for (index, entry) in entries.iter().enumerate() {
                 let queued: Vec<OrderRequest> =
                     seat_queue.iter().chain(accepted.iter()).cloned().collect();
-                match self.judge(side, &ctx, entry, &queued) {
+                match self.judge(side, &ctx, entry, &queued, inside.is_some()) {
                     Ok(request) => {
                         // A yard order's acceptance states the day of return,
                         // worked by the function the order itself uses on the
                         // state as it stands (decision 0069).
                         let mut result = json!({ "index": index, "status": "queued" });
+                        if let Some((day, pulse)) = inside {
+                            result["for"] =
+                                json!(format!("the {} pulse of day {day}", pulse.name()));
+                        }
                         if let OrderKind::TaskForce {
                             target,
                             order: TaskForceOrder::SendToYard,
@@ -674,32 +1053,53 @@ impl Session {
         if !accepted.is_empty() {
             self.bump(side);
         }
-        self.seats
-            .get_mut(&side)
-            .expect("both seats exist")
-            .queued
-            .extend(accepted);
+        let state = self.seats.get_mut(&side).expect("both seats exist");
+        if inside.is_some() {
+            state.queued_inside.extend(accepted);
+        } else {
+            state.queued.extend(accepted);
+        }
         let refused = results.iter().filter(|r| r["status"] == "refused").count();
         let accepted = results.len() - refused;
-        let queued = self.seats[&side].queued.len();
-        let summary = format!(
-            "In this call {accepted} of {} orders queued and {refused} refused. A refused order is not queued and the others in the call stand. {queued} {} now queued for day {}.",
+        let (queued, for_what, for_day) = match inside {
+            Some((day, pulse)) => (
+                self.seats[&side].queued_inside.len(),
+                format!("for the {} pulse of day {day}", pulse.name()),
+                day,
+            ),
+            None => (
+                self.seats[&side].queued.len(),
+                format!("for day {}", self.world.day() + 1),
+                self.world.day() + 1,
+            ),
+        };
+        let mut summary = format!(
+            "In this call {accepted} of {} orders queued and {refused} refused. A refused order is not queued and the others in the call stand. {queued} {} now queued {for_what}.",
             results.len(),
             if queued == 1 { "order is" } else { "orders are" },
-            self.world.day() + 1
         );
-        Ok(json!({
+        if inside.is_some() {
+            summary.push_str(&format!(
+                " Given at {}: each is taken in at the start of that pulse and checked again then, on the state as it stands; one to a unit an intent's forces limit holds holds it from the staff. Commands to the staff are taken in at dusk.",
+                self.clock_words()
+            ));
+        }
+        let mut answer = json!({
             "format": FORMAT,
             "version": VERSION,
             "kind": "issue_orders",
-            "for_day": self.world.day() + 1,
+            "for_day": for_day,
             "cleared": clear,
             "results": results,
             "queued_in_call": accepted,
             "refused_in_call": refused,
             "queued": queued,
             "summary": summary,
-        }))
+        });
+        if let Some((_, pulse)) = inside {
+            answer["for_pulse"] = json!(pulse.name());
+        }
+        Ok(answer)
     }
 
     /// Decodes one order and asks the engine's own check, against the state as
@@ -714,6 +1114,7 @@ impl Session {
         ctx: &Ctx<'_>,
         entry: &Value,
         queued: &[OrderRequest],
+        inside_day: bool,
     ) -> Result<OrderRequest, String> {
         // At a seat at a command the one refusal is its own words (decision
         // 0138, 5); everywhere else it is the side's.
@@ -798,6 +1199,12 @@ impl Session {
             kind,
             origin: Origin::PLAYER,
         };
+        // Inside a day only seven kinds may be given; any other is refused
+        // there as given at dusk, as the engine refuses it at intake
+        // (decision 0156).
+        if inside_day && !request.kind.may_be_given_inside_a_day() {
+            return Err(crate::words::refusal(&RejectReason::GivenAtDusk));
+        }
         match self.world.check_order_queued(side, &request, queued) {
             Ok(()) => Ok(request),
             Err(RejectReason::NotYourUnit) => Err(not_known()),
@@ -843,7 +1250,12 @@ impl Session {
         queue: Option<(Side, &[CommandKind])>,
         extra: Option<(Side, &CommandKind)>,
     ) -> World {
-        let mut world = self.world.clone();
+        // While a day is open the copy is the state as it stands with the
+        // open day treated as closed: no end of the day is resolved, and the
+        // staff step taken is that of the day after it, when the commands
+        // queued now are taken in (decision 0156). Between days it is a
+        // plain copy.
+        let mut world = self.world.as_if_day_closed();
         let day = world.day() + 1;
         for (side, command) in self.commands.get(&day).into_iter().flatten() {
             world.submit_commands(*side, vec![command.clone()]);
@@ -856,6 +1268,10 @@ impl Session {
             };
             world.submit_commands(side, commands.to_vec());
             world.submit_orders(side, state.queued.clone());
+            // The orders queued at 0600 or 1200 are taken in before that
+            // dusk, at the next pulse: the copy takes them in at its dusk,
+            // where the override holds a unit as the pulse would.
+            world.submit_orders(side, state.queued_inside.clone());
         }
         if let Some((side, command)) = extra {
             world.submit_commands(side, vec![command.clone()]);
@@ -878,16 +1294,19 @@ impl Session {
         match tool {
             "command_state" => {
                 let world = self.preview();
-                Ok(staffing::command_state(
-                    &world.side_view(side),
-                    staff,
-                    &self.seats[&side].commands,
+                Ok(self.noted(
+                    staffing::command_state(
+                        &world.side_view(side),
+                        staff,
+                        &self.seats[&side].commands,
+                    ),
+                    false,
                 ))
             }
-            "plans" => Ok(staffing::plans(&self.preview().side_view(side))),
+            "plans" => Ok(self.noted(staffing::plans(&self.preview().side_view(side)), false)),
             "staff_orders" => {
                 let world = self.preview();
-                Ok(staffing::staff_orders(&world.side_view(side), staff))
+                Ok(self.noted(staffing::staff_orders(&world.side_view(side), staff), false))
             }
             "propose" => {
                 let intent = args
@@ -898,7 +1317,8 @@ impl Session {
                         CallError::new("\"intent\" is needed, as the number of an intent")
                     })?;
                 let world = self.preview();
-                staffing::propose(&world.side_view(side), staff, intent)
+                let answer = staffing::propose(&world.side_view(side), staff, intent)?;
+                Ok(self.noted(answer, false))
             }
             "why" => {
                 let number = args
@@ -912,7 +1332,10 @@ impl Session {
                     })?;
                 Ok(staffing::why(&self.world.side_view(side), number))
             }
-            "preview" => self.preview_tool(side, args),
+            "preview" => {
+                let answer = self.preview_tool(side, args)?;
+                Ok(self.noted(answer, false))
+            }
             "run" => self.run_days(side, args),
             "report" => {
                 if !args.is_empty() {
@@ -920,9 +1343,21 @@ impl Session {
                 }
                 Ok(staffing::report(&self.world.side_view(side)))
             }
-            "approve" if args.contains_key("preview") => self.approve_preview(side, args),
-            _ => self.queue_command(side, tool, args),
+            "approve" if args.contains_key("preview") => {
+                let answer = self.approve_preview(side, args)?;
+                Ok(self.noted(answer, true))
+            }
+            _ => {
+                let answer = self.queue_command(side, tool, args)?;
+                Ok(self.noted(answer, true))
+            }
         }
+    }
+
+    /// Where the clock stands: the days resolved, and the pulse next while
+    /// a day is open.
+    fn moment(&self) -> (u32, Option<Pulse>) {
+        (self.world.day(), self.open_day().map(|(_, pulse)| pulse))
     }
 
     /// The side's revision, which a queued order or command and a resolved
@@ -995,7 +1430,7 @@ impl Session {
     ) -> Result<Value, CallError> {
         // The script's commands of the side come first on the day, then the
         // seat's: the new command is the one after both.
-        let day = self.world.day() + 1;
+        let day = self.command_day();
         let before = self.commands.get(&day).map_or(0, |list| {
             list.iter().filter(|(who, _)| *who == side).count()
         }) + queue.len();
@@ -1049,7 +1484,7 @@ impl Session {
         };
         let request =
             staffing::request(&self.world.side_view(side), command, &rest, next_intent, 0)?;
-        let day = self.world.day() + 1;
+        let day = self.command_day();
         let before = self.commands.get(&day).map_or(0, |list| {
             list.iter().filter(|(who, _)| *who == side).count()
         }) + queue.len();
@@ -1080,6 +1515,7 @@ impl Session {
             number,
             side,
             day,
+            moment: self.moment(),
             revision: self.revision(side),
             request,
             commands: queue,
@@ -1129,12 +1565,21 @@ impl Session {
                 "preview {number} is not a preview you were shown"
             )));
         };
-        let (request, day, revision) = (record.request.clone(), record.day, record.revision);
+        let (request, day, revision, moment) = (
+            record.request.clone(),
+            record.day,
+            record.revision,
+            record.moment,
+        );
         let (was_commands, was_orders) = (record.commands.clone(), record.orders);
         let queue = self.seats[&side].commands.clone();
-        let void = if day != self.world.day() + 1 {
+        let void = if day != self.command_day() {
             Some(format!(
                 "preview {number} is void: a day was resolved after it"
+            ))
+        } else if moment != self.moment() {
+            Some(format!(
+                "preview {number} is void: a pulse was resolved after it; preview it again"
             ))
         } else if revision != self.revision(side) {
             let world = self.preview();
@@ -1323,10 +1768,25 @@ impl Session {
         }
     }
 
-    /// Hands in every seat's orders for the coming day through the engine's
-    /// own `submit_orders`, the script's commands through `submit_commands`,
-    /// and resolves the day, asking each side's staff (decision 0107).
+    /// Resolves the rest of the day: from dusk, the whole coming day; with a
+    /// day open, the rest of it, to its dusk (decision 0156). A day with no
+    /// order inside it is resolved exactly as `World::resolve_day_staffed`
+    /// resolves it, which is these same parts called in turn.
     fn resolve(&mut self) -> Result<(), CallError> {
+        if self.open_day().is_none() {
+            self.begin_day()?;
+        }
+        while self.open_day().is_some() {
+            self.resolve_pulse()?;
+        }
+        Ok(())
+    }
+
+    /// Hands in every seat's orders for the coming day through the engine's
+    /// own `submit_orders`, the script's commands and each seat's queued
+    /// commands through `submit_commands`, and opens the day, asking each
+    /// side's staff (decisions 0107 and 0156).
+    fn begin_day(&mut self) -> Result<(), CallError> {
         let day = self.world.day() + 1;
         for side in Side::ALL {
             self.bump(side);
@@ -1370,7 +1830,7 @@ impl Session {
         for (side, staff) in &self.staffs {
             staffs = staffs.with(*side, staff.as_ref());
         }
-        let resolved = self.world.resolve_day_staffed(staffs);
+        let opened = self.world.open_day(staffs, &mut |_, _| {});
         for (side, decisions) in self.world.staff_handed_in() {
             if !decisions.is_empty() {
                 self.staff_handed_in
@@ -1379,15 +1839,62 @@ impl Session {
                     .insert(*side, decisions.clone());
             }
         }
-        resolved.map(|_| ()).map_err(|e| {
-            // The engine's own words may name the other side's units: they go
-            // to the umpire's stderr, and the caller is told one fixed thing.
-            eprintln!("operator: the day could not be resolved: {e}");
-            CallError::new(
-                "the day could not be resolved: the game has stopped on an internal error; the operator has the details",
-            )
-        })
+        opened.map(|_| ()).map_err(internal)
     }
+
+    /// Resolves the next pulse of the open day, and closes the day after its
+    /// afternoon (decision 0156). Before the morning or the afternoon it
+    /// hands in the orders given inside the day for that pulse: the script's
+    /// for a seat the script holds, in the order the script gives them, and
+    /// each player seat's queued at 0600 or 1200. Returns the day and the
+    /// pulse resolved.
+    fn resolve_pulse(&mut self) -> Result<(u32, Pulse), CallError> {
+        let (day, pulse) = self
+            .open_day()
+            .ok_or_else(|| CallError::new("no day is open"))?;
+        if pulse != Pulse::Night {
+            let mut handed: Vec<(Side, OrderRequest)> = Vec::new();
+            for (at, side, request) in self.script_inside.get(&day).into_iter().flatten() {
+                if *at == pulse && self.seats[side].seat.kind() == SeatKind::Script {
+                    handed.push((*side, request.clone()));
+                }
+            }
+            for side in Side::ALL {
+                let state = self.seats.get_mut(&side).expect("both seats exist");
+                if state.seat.kind() == SeatKind::Player {
+                    for request in std::mem::take(&mut state.queued_inside) {
+                        handed.push((side, request));
+                    }
+                }
+            }
+            for (side, request) in handed {
+                self.handed_in_inside
+                    .entry(day)
+                    .or_default()
+                    .push((pulse, side, request.clone()));
+                self.world
+                    .submit_orders_inside_day(side, vec![request])
+                    .map_err(internal)?;
+            }
+        }
+        self.world
+            .resolve_next_pulse(&mut |_, _| {})
+            .map_err(internal)?;
+        if self.open_day().is_none() {
+            self.world.close_day(&mut |_, _| {}).map_err(internal)?;
+        }
+        Ok((day, pulse))
+    }
+}
+
+/// The one thing a caller is told when the engine cannot go on. The engine's
+/// own words may name the other side's units: they go to the umpire's
+/// stderr.
+fn internal(e: sim_core::SimError) -> CallError {
+    eprintln!("operator: the day could not be resolved: {e}");
+    CallError::new(
+        "the day could not be resolved: the game has stopped on an internal error; the operator has the details",
+    )
 }
 
 fn to_value<T: serde::Serialize>(answer: &T) -> Result<Value, CallError> {

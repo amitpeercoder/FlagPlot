@@ -777,6 +777,7 @@ impl World {
                 sorties: &self.sorties,
                 deck_losses: &self.deck_losses,
             },
+            self.day_in_hand,
         )
     }
 

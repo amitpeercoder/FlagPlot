@@ -258,6 +258,8 @@ Any other order handed in at 0600 or 1200 is refused when it is taken in, as giv
 
 **In a scenario's script.** An order of the script may carry `pulse = "morning"` (given at 0600) or `pulse = "afternoon"` (given at 1200), only in a scenario with the key on. An order with any other pulse, or with a pulse in a scenario without the key, is an error when the scenario is loaded. An order with no pulse is an order of dusk. A scripted side and a staff otherwise give their orders at dusk only. [0156, rule 10]
 
+**At the tools.** A seat stops the clock at 0600 and 1200 with the tool `advance`, offered where the key is on and one seat is a player's; it gives orders there with `issue_orders`, each checked at once and refused there already if it is not of the seven kinds. A command to the staff given there with the command tools is queued, as at dusk, and handed to the engine at the next dusk, so it is taken in at the start of the day after; it is checked at once on a copy of the game with the open day treated as closed, and again when it is taken in. The tools are the interface's, not rules: `crates/sim-agent/schemas/README.md` and `docs/commands.md`. [0156, rules 6 and 8]
+
 A side sees: its own orders given inside a day accepted or refused, with the reason and the pulse they were taken in, and the held by order events they make, as it sees its orders of dusk. The enemy sees nothing of them. [0047, 0156]
 
 ### Every reason an order is refused

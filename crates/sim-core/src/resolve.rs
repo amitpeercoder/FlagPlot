@@ -164,6 +164,39 @@ impl World {
         copy
     }
 
+    /// A copy of the world with the open day treated as closed, for checking
+    /// a command or working a preview while a day is open, at 0600 or 1200
+    /// (decision 0156, step 3). On a world with no day open it is a plain
+    /// clone.
+    ///
+    /// The copy is the state as it stands: it has run no end-of-day phase
+    /// (no fight ashore, no logistics, no base count, no afternoon state
+    /// reports) and no pulse still to come. Only what a closed day has and
+    /// an open one has not is set as a closed day leaves it: no day and no
+    /// pulse in hand, the day counter at the open day, and the scratch of a
+    /// pulse that is empty at every day boundary emptied (the orders waiting
+    /// inside the day, the forces that broke silence, the commands that
+    /// ceased to be, the strikes in flight and the sorties flown). The rest
+    /// of a pulse's scratch (the grounded bases, the damage of the fields,
+    /// the decks lost) a closed day keeps as its last pulse left it, and so
+    /// does the copy. Nothing of this world changes.
+    ///
+    /// It must never be resolved further or hashed for a game: it is for
+    /// [`World::at_staff_step`] and the check of a command, nothing else.
+    pub fn as_if_day_closed(&self) -> World {
+        let mut copy = self.clone();
+        if let Some(in_hand) = copy.day_in_hand.take() {
+            copy.pulse_in_hand = None;
+            copy.truth.day = in_hand.day;
+            copy.pending_inside_day.clear();
+            copy.broke_silence.clear();
+            copy.gone_commands.clear();
+            copy.strikes_in_flight.clear();
+            copy.sorties.clear();
+        }
+        copy
+    }
+
     /// Steps 1 to 3 of the day: the commander's commands, so that an
     /// intent, a limit or a reserve set today binds this morning (decision
     /// 0107); forces back from the yard, home first so that they are at

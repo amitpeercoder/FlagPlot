@@ -29,6 +29,8 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `run` | `run.schema.json` | `run` (offered where exactly one seat is held by a player) |
 | `report` | `report.schema.json` | `report` |
 | `end_day` | `end_day.schema.json` | `end_day` |
+| `events` | `events.schema.json` | `events`: the side's own events of a day, or of one part of it |
+| `advance` | `advance.schema.json` | `advance` (offered where the scenario lets a seat stop between pulses and exactly one seat is held by a player) |
 | `error` | `error.schema.json` | any call refused as a whole |
 | `transcript_entry` | `transcript_entry.schema.json` | one line of a game's transcript |
 
@@ -996,3 +998,42 @@ apply; a game that gives none of it is answered as before.
   the same way.
 - **`report`.** A new key `islands` lists each control_island intent in force with the same measure and its
   `intent` and `island` numbers; the summary has a sentence for each.
+
+## Orders inside a day: `events` and `advance` (decision 0156)
+
+`version` is 25. Nothing changes in a game whose scenario leaves `orders_inside_a_day` off, beside the new tool `events`.
+
+- **`events`** (every seat). Arguments `day` (a whole number from 1; by default the day the clock is in: the open day
+  at 0600 or 1200, else the last day resolved) and `pulse` (`night`, `morning`, `afternoon`, or `end` for the events
+  of the day that carry no pulse: those of its dusk and of its end). The answer has `day`, `pulse` (the part asked
+  for, or `null`), `begun` (false for a day not yet begun, whose list is empty), `count`, `events` and `summary`. Each
+  event has `number` (the number `explain` takes), `day`, `pulse`, `event_kind`, `text` and `entities`, exactly as
+  `explain` gives the same event as its node 0. It reads the side's own events and nothing else.
+- **`advance`** (offered where the scenario has `orders_inside_a_day = true` and exactly one seat is a player's).
+  Arguments `pulses` (a whole number, at least 1), `stop_on` (a list of `contact`, `attack`, `loss`, `strike`,
+  `landing`; none by default) and `reason`. It resolves up to `pulses` pulses one at a time: from dusk it first does
+  what `end_day` does; before a morning or afternoon pulse it hands in the orders given at 0600 or 1200; after the
+  afternoon it closes the day at once. The clock so stops only at dusk, at 0600 or at 1200. The answer has
+  `pulses_resolved` (each `day` and `pulse`), `stop_on`, `stopped` (`pulses`, `told`, `interrupt` or `game_over`),
+  `told` (the things of `stop_on` the side was told in the last pulse, each with the numbers of its events; for the
+  afternoon, with the events of the day's end), `clock` (`day`, the day whose pulse is next; `at`, `dusk`, `0600`
+  or `1200`; `next_pulse`, `null` once the game is over; `days_resolved`; `words`), `fired` (the firings of the last
+  day closed in the call, as `run` gives them), `game_over`, `result` and `summary`. The event kinds behind each
+  thing: `contact`, `report_received` that made a new contact (not a refresh); `attack`, `air_attack_against`,
+  `base_attacked_against`, `shore_bombardment_against`, `salvo_against`, `engagement_begun`; `loss`, `ship_sunk`, and
+  `system_hit` of the side's ship whose propulsion or flight deck goes out; `strike`, `strike_launched` and
+  `base_strike_launched`; `landing`, `men_landed` and `ground_fight` (a fight ashore, which a side is told of only
+  where it has men; it comes at the end of the day).
+- **`issue_orders` at 0600 and 1200.** Each order is checked at once and only the seven kinds may be given (a task
+  force's route, speed, readiness and rules of engagement, an air group's mission and search arc, a land unit's
+  posture); any other is refused with the engine's words "this kind of order is given at dusk: ..." and a hint. The
+  answer adds `for_pulse` (`morning` or `afternoon`) and each queued result's `for` ("the morning pulse of day 1");
+  `for_day` is the open day and `queued` counts the orders queued inside the day. `clear` empties those.
+- **`get_briefing` at 0600 and 1200** is refused: the briefing is made at dusk; `events` gives the day so far.
+- **`inside_day`.** At 0600 or 1200, `command_state`, `plans`, `staff_orders`, `propose`, `preview` and a queued
+  command (`set_intent` and the other command tools) carry a note `inside_day`: they are worked on the state as it
+  stands, as if the open day were closed now, before the rest of the day, its fight ashore and its end are resolved;
+  a command is queued for the next dusk, taken in at the start of the day after, and checked again then. Their
+  `for_day` is that day. A passage or yard `measure` carries a note `inside_day` saying it is worked as if the force
+  left at 1800, the start of the day's night, which has passed. The other read tools answer on the side's view as it
+  stands, with no note; `report`'s `day` is the open day.

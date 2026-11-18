@@ -19,11 +19,15 @@
   ],
   "additionalProperties": false,
   "properties": {
+    "inside_day": {
+      "type": "string",
+      "description": "Given only at 0600 or 1200, in a game that stops between pulses (decision 0156): the answer was worked on the state as it stands, as if the open day were closed now, before the rest of the day, its fight ashore and its end are resolved; a command is checked again when it is taken in at the next dusk."
+    },
     "format": {
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 24
+      "const": 25
     },
     "kind": {
       "const": "command"

@@ -537,7 +537,9 @@ pub(crate) fn fuel_line(ctx: &Ctx<'_>, ship: &sim_core::state::Ship) -> FuelLine
 /// just ended (decision 0136, 11); `None` otherwise.
 pub(crate) fn held_as_of_text(ctx: &Ctx<'_>, command: CommandRef) -> Option<String> {
     let held = ctx.view.held_as_of(command)?;
-    (held != ctx.view.pulse_just_ended()).then(|| held.to_string())
+    // The pulse last resolved: the pulse just ended between days, and the
+    // pulse before 0600 or 1200 inside one (decision 0156).
+    (held != ctx.view.pulse_last_resolved()).then(|| held.to_string())
 }
 
 /// `Some(true)` for a force on radio silence, else `None` (decision 0136, 15).
@@ -1237,7 +1239,12 @@ pub struct FallingBackLine {
 /// How the side's men ashore were fed in the last night pulse, by hex, from
 /// the side's own `MenFed` events (decision 0066, 16 and 17).
 pub(crate) fn fed_last_night(ctx: &Ctx<'_>) -> BTreeMap<Hex, &'static str> {
-    let day = ctx.view.day();
+    // The last night resolved: the last day's between days, and the open
+    // day's once its night is resolved (decision 0156).
+    let day = match ctx.view.day_in_hand() {
+        Some(in_hand) if in_hand.next_pulse != Some(Pulse::Night) => in_hand.day,
+        _ => ctx.view.day(),
+    };
     let mut out = BTreeMap::new();
     for e in ctx.view.events() {
         if e.day != day || e.pulse != Some(Pulse::Night) {
