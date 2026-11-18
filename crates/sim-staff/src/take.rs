@@ -32,7 +32,7 @@ use sim_core::command::{
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, EntityRef, LandUnitId, ShipId, TaskForceId};
+use sim_core::ids::{BaseId, EntityRef, IntentId, LandUnitId, ShipId, TaskForceId};
 use sim_core::map::HexKind;
 use sim_core::orders::{
     Cargo, CargoAction, LandUnitOrder, Mission, OrderKind, Posture, SpeedSetting, TaskForceOrder,
@@ -170,8 +170,13 @@ fn under_way(force: &TaskForce, place: Hex) -> bool {
 }
 
 /// Whether the force is on its way to `place` (decision 0152, 5): landing
-/// there, or with the place still ahead on its route.
+/// there, or with the place still ahead on its route. A force with no ship
+/// afloat is lost, and so is not on its way (decision 0152, reading 7; the
+/// architect's ruling of Nov 18, 2026).
 pub(crate) fn on_its_way(force: &TaskForce, place: Hex) -> bool {
+    if force.ships.is_empty() {
+        return false;
+    }
     force.landing_at == Some(place)
         || (force.route.act_at.contains(&place)
             && force
@@ -215,7 +220,87 @@ impl Day<'_, '_> {
                 continue;
             }
             self.prepare_place(&end, &plan);
+            // Decision 0152, 5b: the later lifts this take sends this
+            // morning are set aside before a take lower in priority chooses
+            // its first lift.
+            for force in self.later_lifts_due(id) {
+                self.lifts_due.entry(force).or_insert(id);
+            }
         }
+    }
+
+    /// Decision 0152, 5b: the lifts as they stand the take `id` sends as
+    /// later lifts this morning, read as `launch_place` reads them: its plan
+    /// released, its landing formed, and the first lift lost, or landed with
+    /// men ashore at the place, or been there with none ashore; and the wait
+    /// of item 5 not binding.
+    fn later_lifts_due(&self, id: IntentId) -> Vec<TaskForceId> {
+        let Some(end) = self.state.intents.get(&id) else {
+            return Vec::new();
+        };
+        let IntentKind::TakePlace { hex: place, .. } = end.kind else {
+            return Vec::new();
+        };
+        let released = self
+            .plan_of(end)
+            .is_some_and(|plan| plan.state == PlanState::Released);
+        let Some(task) = self.landing_of(end) else {
+            return Vec::new();
+        };
+        let IntentKind::ReadyLanding { force: first, .. } = task.kind else {
+            return Vec::new();
+        };
+        let view = self.view;
+        let Some(figures) = view.ground_figures() else {
+            return Vec::new();
+        };
+        if !released {
+            return Vec::new();
+        }
+        let risk = self.state.risk_read_up(end.id);
+        let wanted = view
+            .ground_estimate(place)
+            .map(|e| e.men * men_per_man(risk));
+        // The wait of item 5 with no man of the operation ashore.
+        let none_wanted = wanted == Some(0);
+        let waits = match view.task_forces().find(|f| f.id == first) {
+            None => none_wanted,
+            Some(force) => {
+                if self
+                    .state
+                    .forces_as_bound(end)
+                    .and_then(|f| f.source)
+                    .and_then(|s| view.bases().find(|b| b.id == s))
+                    .is_none()
+                {
+                    return Vec::new();
+                }
+                let units: Vec<LandUnitId> = self
+                    .state
+                    .land_units_on_chain(task.id)
+                    .map(|f| f.into_iter().collect())
+                    .unwrap_or_default();
+                let landed = units.iter().any(|u| {
+                    view.land_units()
+                        .any(|l| l.id == *u && l.men_ashore > 0 && l.hex == Some(place))
+                });
+                if landed {
+                    let (ops, _, _) = self.units_ashore(&units, place, risk, figures);
+                    let fit: u32 = ops.iter().filter(|a| a.can).map(|a| a.fit).sum();
+                    on_its_way(force, place) || wanted.is_some_and(|w| fit >= w)
+                } else if routed(force, place) && !on_its_way(force, place) {
+                    none_wanted
+                } else {
+                    return Vec::new();
+                }
+            }
+        };
+        if waits {
+            return Vec::new();
+        }
+        self.later_lift_plan(end, first, None)
+            .map(|plan| plan.send.into_iter().map(|s| s.force.id).collect())
+            .unwrap_or_default()
     }
 
     /// The "ready a landing" task the staff formed under `end`, if any.
@@ -2150,45 +2235,7 @@ impl Day<'_, '_> {
             .land_units_on_chain(task.id)
             .map(|f| f.into_iter().collect())
             .unwrap_or_default();
-        // Item 2: the mark.
-        let (num, den) = attack_share(risk);
-        let mark = Fixed::from_int(
-            figures
-                .attack_fatigue_limit
-                .mul_div(Fixed::from_int(num), Fixed::from_int(den))
-                .trunc(),
-        );
-        // Item 1: the units of the operation, ashore at the place.
-        let mut ops: Vec<Ashore> = Vec::new();
-        let mut held: Vec<String> = Vec::new();
-        for id in &task_units {
-            let Some(unit) = view.land_units().find(|u| u.id == *id) else {
-                continue;
-            };
-            if !(unit.men_ashore > 0 && unit.hex == Some(place)) {
-                continue;
-            }
-            if let Some(day) = crate::available::not_before(view, EntityRef::LandUnit(*id)) {
-                held.push(crate::available::named_with_day(unit_words(unit), day));
-                continue;
-            }
-            let target = HoldTarget::LandUnit(*id);
-            if let Some(found) = self.state.hold_of(target) {
-                held.push(format!(
-                    "{} ({} men ashore) is left out: {}",
-                    unit_words(unit),
-                    unit.men_ashore,
-                    hold_words(target, *found)
-                ));
-                continue;
-            }
-            ops.push(Ashore {
-                can: unit.posture == Posture::Attack || unit.fatigue <= mark,
-                fit: fit_men(unit),
-                unit: unit.clone(),
-            });
-        }
-        ops.sort_by_key(|a| a.unit.id);
+        let (ops, held, mark) = self.units_ashore(&task_units, place, risk, figures);
         // Item 4: the men wanted.
         let estimate = view.ground_estimate(place).map(|e| (e.men, e.day));
         let wanted = estimate.map(|(men, _)| men * men_per_man(risk));
@@ -2553,6 +2600,58 @@ impl Day<'_, '_> {
             place,
             (source, source_hex),
         );
+    }
+
+    /// Items 1 and 2 of decision 0143: the units of the operation ashore at
+    /// the place, with the words for those left out, and the mark.
+    fn units_ashore(
+        &self,
+        task_units: &[LandUnitId],
+        place: Hex,
+        risk: Risk,
+        figures: &sim_core::refdata::GroundFigures,
+    ) -> (Vec<Ashore>, Vec<String>, Fixed) {
+        let view = self.view;
+        // Item 2: the mark.
+        let (num, den) = attack_share(risk);
+        let mark = Fixed::from_int(
+            figures
+                .attack_fatigue_limit
+                .mul_div(Fixed::from_int(num), Fixed::from_int(den))
+                .trunc(),
+        );
+        // Item 1: the units of the operation, ashore at the place.
+        let mut ops: Vec<Ashore> = Vec::new();
+        let mut held: Vec<String> = Vec::new();
+        for id in task_units {
+            let Some(unit) = view.land_units().find(|u| u.id == *id) else {
+                continue;
+            };
+            if !(unit.men_ashore > 0 && unit.hex == Some(place)) {
+                continue;
+            }
+            if let Some(day) = crate::available::not_before(view, EntityRef::LandUnit(*id)) {
+                held.push(crate::available::named_with_day(unit_words(unit), day));
+                continue;
+            }
+            let target = HoldTarget::LandUnit(*id);
+            if let Some(found) = self.state.hold_of(target) {
+                held.push(format!(
+                    "{} ({} men ashore) is left out: {}",
+                    unit_words(unit),
+                    unit.men_ashore,
+                    hold_words(target, *found)
+                ));
+                continue;
+            }
+            ops.push(Ashore {
+                can: unit.posture == Posture::Attack || unit.fatigue <= mark,
+                fit: fit_men(unit),
+                unit: unit.clone(),
+            });
+        }
+        ops.sort_by_key(|a| a.unit.id);
+        (ops, held, mark)
     }
 
     /// Decision 0152, 5: on a morning the plan is released, no unit of the

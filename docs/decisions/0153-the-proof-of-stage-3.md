@@ -145,7 +145,28 @@ The three setup files and the run script were made and smoke-tested on Nov 18, 2
 
 ## After the loading check
 
-Nothing yet.
+The loading check was made on Nov 18, 2026, on main at 4d48a0e7: arrangement (a), seed 1, breakdowns on, with a save and its replay. Nothing in it is judged.
+
+**What it found.**
+
+- The game runs to day 39, the replay gives the same hash on every day, and no order or command of either staff or of the table is refused.
+- **The Allied side:** lands on Guadalcanal and on Tulagi on day 1 and takes both bases that day; lands supply at Lunga from day 9; flies searches, patrols and strikes from the field.
+- **The Japanese side:** lands 200 men at Lunga on day 10; bombards the airfield once, on the night of day 18, and then lacks the rounds to go again, Shortland holding no ammunition in the setup; lands every later lift at Tulagi, not at Lunga; and never attacks ashore.
+- **Each staff hands in "cannot meet" several times a morning** for intents the tree forms that have nothing to act with: 202 notices from the Japanese staff and 110 from the Allied over the 39 days. Most are raids from Rabaul, which no bomber reaches on normal reach, and the neutralising of a base far out of reach.
+
+**What is changed before the judged run,** in its own pull request with its hand calculation, as item 2 of the loading check allows for a fault in a rule:
+
+- **A first lift with no ship afloat is lost** (decision 0152, "Amended on the loading check"). On seed 1 the first Japanese lift landed its men at Lunga and its one ship was sunk; the staff read the empty force as still on its way and the take of Lunga waited for it to the end, while the take of Tulagi chose every later lift. This is why the Japanese lifts went to Tulagi.
+- **The order of the lifts** (decision 0152, item 5b): a higher take's later lift comes before a lower take's first. It was not the cause on seed 1; its property fails on the code as it was.
+
+With both mended, seed 1 was run again, unjudged: every Japanese lift lands at Lunga, on days 10 to 36, and nothing is refused.
+
+**What is not changed, and is run as it stands:**
+
+- **The Japanese side does not attack the airfield ashore** (the second part of condition 4). Its staff holds an estimate by men in contact of the enemy at Lunga, which on seed 1 runs from some 5,000 to 16,000 as the reports come, wants 2 men for each at balanced, and has a few hundred to a few thousand: by decision 0143 it waits. With the lifts mended, on seed 1 it has 4,789 fit men ashore on the last morning against an estimate of 4,864 and 9,728 wanted. This is the staff's judgement on a true count and not a fault of the setup's data, and it is a figure of a doctrine and the risk the commander did not set, neither of which may be changed here. The record's attacks were made on an estimate of some 2,000. The condition is run and, if it fails, named with this cause and put to the designer.
+- **Raids on the airfield from Rabaul are not flown,** the field lying beyond the bombers' normal reach. No condition counts them. It is reported.
+- **The bombardment force fires on one night.** The condition counts a seed on which it fires at all.
+- **The notices** are reported with how often each limit showed.
 
 ## As run
 

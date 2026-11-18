@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: A transport force with men aboard is a lift as it stands: "take a place" takes one as its first lift, sends each later one while the place is not taken and men are still wanted, and lands the working men aboard with the rest; a hold sends to its place a force with men aboard that no take needs; and the supply under a hold formed by "control an island" uses whatever transport forces lie empty at its source that morning
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built, with item 5b and a lost first lift mended on the loading check; its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -24,6 +24,8 @@ The landings of 7 August begin with the men at sea. Every Japanese reinforcement
 7. **One force a morning to a place** is not asked: each lift is its own force and goes when it can.
 
 5a. **Why the first lift must be in first** (amended on Nov 17, 2026, after the review of step 8). As first written, a side with no estimate sent every lift it had to its first place on the first morning, and a second island asked for the same day had nothing left to land: in the staff's setup of the 39 days the transports for Tulagi would have gone to Lunga. With the wait, the takes are served in priority order on the first morning, each with one lift, and a later lift goes where men are still wanted once the first is ashore.
+
+5b. **A higher take's later lift comes before a lower take's first** (added by the architect on Nov 18, 2026, on the loading check of the proof; "Amended on the loading check", below). On a morning, the takes are served in priority order for every lift as it stands: a take higher in priority that may send a later lift by item 5 is given each free lift it may take before any take lower in priority chooses its first lift from what is left. A lower take forms nothing that morning from a lift a higher take sends.
 
 ## Men for a place already held
 
@@ -103,4 +105,33 @@ Made on Nov 18, 2026, on reading the build.
 3. **The measure of an island counted a day on which the enemy still held the airfield,** because a base formed by the landing stood in the hex. Mended in this pull request: a place that names a base is the side's when that base is, on each day by the base's own day-end event. Decision 0151's item 10, the rulebook and the glossary say so.
 4. **The measure still keeps no record,** so it reads every past day at today's use and can count a day and later not count it (scenario 77: day 2 counts when read on days 2 and 3 and not from day 4, when more men are ashore). Scenario 77's hand calculation is restated to say exactly this: 5 of 8 days, with the reading of each day. A measure that keeps its days is state, and is built with the interface's work.
 5. **Known and left:** a commander's own hold with no forces limit sends no force with men aboard (reading 12), and says so each morning, which adds 21 lines of reasons to one recorded game.
+6. **Item 5b and the lost first lift, on reading their build (Nov 18, 2026).** Readings 1 to 6 of "As built: item 5b" are accepted. A force with no ship afloat is lost for the wait of item 5 and for the lifts set aside, and is left as it was where the staff judges the men already ashore.
 
+## Amended on the loading check
+
+On Nov 18, 2026 the loading check of the proof (decision 0153: arrangement (a), seed 1) showed the Japanese side, which asked for Guadalcanal first and Tulagi second, landing its first lift at Lunga and every lift after it at Tulagi. Two faults of this record as built lay behind it, and both are mended in one pull request before the judged run:
+
+1. **A first lift with no ship afloat was still read as on its way.** On seed 1 the first lift landed its men at Lunga and its one ship was then sunk. The engine keeps a force whose ships are all sunk, halted with its route as it stood, and the staff read that as a lift still on its way: by item 5 the first island's take then waited for it every morning, and the second island's take chose each new force. This was the cause on seed 1. A first lift with no ship afloat is lost, as reading 7 meant.
+2. **The order of the morning's work.** The architect first took this for the cause, and it was not the cause on seed 1, but it is a fault: the tree of a lower island was formed before a higher take weighed its later lifts, so a lower take could choose as its first lift a force the higher take was about to send. Item 5b states the order, and scenario 77's property "The higher take first" fails on the code as it was.
+
+## As built: item 5b
+
+Built on Nov 18, 2026, on the branch `stage3-lift-order`. No state, engine or event change: the doctrine version rises to `supply-34` and nothing else (no state layout, saved game, agent interface or rules label). Nothing is tuned and no figure changed. `tests/scenario_77_forces_with_men_aboard.rs` gains the test `the_higher_take_first`, asserting the property "The higher take first" and no more; it fails on the code before the change (the take of base 4 forms a landing of task force 2 at C on day 4) and passes after. Every other test of scenario 77, "Two islands" among them, passes unchanged, and scenarios 67 to 76 hand in, day by day, the orders and commands they handed in before (`scenarios_67_to_76_give_the_orders_they_gave`). No expected number changed and nothing is ignored.
+
+### Readings taken
+
+1. **What a higher take sends that morning** is read for it right after its own preparing (so after any choice made again), before any take lower in priority prepares: its plan released, its landing formed, and its first lift lost, or with a unit of the operation ashore at the place, the first lift not on its way and the fit men that can attack fewer than the men wanted or no estimate held, or been to the place with none of its men ashore there; with no man of the operation ashore, a take whose men wanted are none sends nothing. Each force its later-lift survey (`later_lift_plan`, the one its launch uses) would send is set aside for it. These are the gates its launch applies.
+2. **Set aside** means the force is not a lower take's first lift as it stands, and its reason names it: "task_force:N is a later lift of intent:M, higher in priority, this morning"; nor is it taken as a transport at a base by the base rule of decision 0149, item 7.
+3. **A take whose plan is not yet released** when it is read (one released by leave to launch later that morning) sets nothing aside: its first lift has still to sail, and it sends no later lift that morning.
+4. **Between two higher takes** the first in priority to set a force aside is named with it; which of them sends it is decided at the launch, as before.
+5. **A side with at most one take in force** gets the orders and reasons `supply-33` gave, where no first lift has lost every ship (reading 6).
+6. **A first lift with no ship afloat is lost** (the architect's ruling of Nov 18, 2026, on the team's finding on seed 1 of the proof: reading 7 as it was meant). The engine keeps a force whose every ship is sunk, halted where it was with its route as it stood, so a first lift sunk at the place after its landing was read as still on its way, and its take waited for it every morning and sent no later lift. `on_its_way` now reads a force with no ship in it as not on its way. That is the one place the test is made: the ashore judgement's wait, the later lifts sent alone, and `later_lifts_due` all read it; the test that the first lift is gone from the view (`launch_place`) is left as it is, so the morning's judgement of the men ashore still runs. `tests/scenario_77_forces_with_men_aboard.rs` gains a test of the team's own, not part of the hand calculation and marked so (`a_first_lift_with_no_ship_afloat_is_no_longer_on_its_way`): task force 1 lands its men and is sunk at B on day 2 by a placeholder Japanese cruiser force while it lands its supply, and task force 2 is sent as a later lift on day 4. It fails without the change.
+
+### Earlier tests, baselines and games that change
+
+None in more than versions. Remade by `scripts/regenerate.sh`: no run baseline, agent golden, pinned hash or batch fixture changed; of the recorded games each `save.json` changes its doctrine version only, and no transcript changed.
+
+### Files to read
+
+- `crates/sim-staff/src/take.rs`: `takes_prepare` and `later_lifts_due` (new); `on_its_way` (reading 6); `units_ashore` is taken out of `ashore` unchanged, so that both read the units ashore one way.
+- `crates/sim-staff/src/assemble.rs` (`first_lift_as_it_stands` and the base rule's transports), `air.rs` (`Day::lifts_due`).

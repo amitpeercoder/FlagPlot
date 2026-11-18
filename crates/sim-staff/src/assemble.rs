@@ -301,6 +301,7 @@ impl Day<'_, '_> {
                 .filter(|f| f.mission == Mission::Transport)
                 .filter(|f| self.berths_of(f.id) > 0)
                 .filter(|f| crate::fleet::force_stopped_at(f, hex))
+                .filter(|f| !self.lifts_due.contains_key(&f.id))
                 .collect();
             let here: BTreeSet<LandUnitId> = units
                 .iter()
@@ -651,6 +652,13 @@ impl Day<'_, '_> {
             }
             if let Some(other) = self.lifts_sent.get(&force.id) {
                 words.push(format!("{} is sent by {other} this morning", force.id));
+                continue;
+            }
+            if let Some(take) = self.lifts_due.get(&force.id) {
+                words.push(format!(
+                    "{} is a later lift of {take}, higher in priority, this morning",
+                    force.id
+                ));
                 continue;
             }
             if let Some(why) = Self::not_free(force) {
