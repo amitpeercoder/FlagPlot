@@ -1,0 +1,240 @@
+Placeholder scenario 79: Fed before it is taken
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash a50e4ea143e48fc8  28 events
+day   2  hash 3e43eb9fda355d24  14 events
+day   3  hash 7e3b35265003c19b  21 events
+day   4  hash 2d6802b9193fb0f5  24 events
+day   5  hash 77daeedfa659d0d3  19 events
+day   6  hash 1b678d645f64ad5d  11 events
+day   7  hash 4545bc45ffef82f2  11 events
+day   8  hash 65adc2bf8e7f0d0d  11 events
+day   9  hash 1cf297eb67600f1d  11 events
+day  10  hash b4bd279c94bf26e7  11 events
+day  11  hash 41f7fa37f02ba2c4  11 events
+day  12  hash 5e6eaf14fcfa967a  11 events
+day  13  hash 7e3f4d2cabe10e6e  11 events
+day  14  hash 2dcd848fba5414a6  11 events
+
+#1 D1 -         Allied the commander's command taken: set intent:1 to hold base:2
+#2 D1 -         Allied plan:1 drafted for intent:1  <- #1
+#3 D1 -         Allied the commander's command taken: limit intent:1's forces to 0 ships and 1 task force from base:1
+#4 D1 -         Allied the commander's command taken: give the leave to prepare
+#5 D1 -         Allied the commander's command taken: give the leave to launch
+#6 D1 -         Allied the staff's command taken: approve plan:1
+#7 D1 -         Allied plan:1 went from draft to preparing  <- #6
+#8 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: plan:1, the plan to hold base:2 (Placeholder airfield B), is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #6
+#9 D1 -         Allied the staff's command taken: approve plan:1
+#10 D1 -         Allied plan:1 went from preparing to released  <- #9
+#11 D1 -         Allied staff's reason for the command to approve plan:1 [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: plan:1, the plan to hold base:2 (Placeholder airfield B), is ready and leave to launch is given: the staff releases it.  <- #9
+#12 D1 -         Allied the staff's command taken: form under intent:1 an intent to keep base:3 supplied at 5 days
+#13 D1 -         Allied staff forms intent:2 under intent:1  <- #12
+#14 D1 -         Allied staff's reason for the command to form under intent:1 an intent to keep base:3 supplied at 5 days [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's, and the side's men in its hex are fed through base:3 (Placeholder beach at B), for which no supply is in force: the staff forms intent:2, keep base:3 (Placeholder beach at B) supplied from base:1, under it, with a floor of 5 days (the margin at balanced) and no interval, so that the staff uses 15 days. Its forces limit is intent:1's.  <- #12
+#15 D1 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#16 D1 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 42 t left
+#17 D1 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #16
+#18 D1 night     base:2 spent 2 t of supply on 400 men ashore for the day, 98 t left
+#19 D1 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #18
+#20 D1 -         Allied ground report at (4,0): 246 enemy men ashore (men in contact)
+#21 D1 -         Japanese ground report at (4,0): 1395 enemy men ashore (men in contact)
+#22 D1 -         Japanese found enemy base:3 at (4,0): it is on the Japanese side's map  <- #21
+#23 D1 -         land_unit:1 dug in: fieldworks 10
+#24 D1 -         land_unit:2 dug in: fieldworks 10
+#25 D1 -         land_unit:3 dug in: fieldworks 10
+#26 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#27 D1 -         base:2 at the end of the day: 98 t of supply, 0 aircraft ready: not open
+#28 D1 -         base:3 at the end of the day: 42 t of supply, 0 aircraft ready: not open
+#29 D2 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 42 t over 6 t a day = 7 days, against a floor of 5 days (30 t). A run ordered today would be due on day 3; the reading of day 4 is projected at 30 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 5 to fall below 5 days (30 t); it is expected to be ordered on day 3, due on day 4.
+#30 D2 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#31 D2 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 36 t left
+#32 D2 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #31
+#33 D2 night     base:2 spent 2 t of supply on 400 men ashore for the day, 96 t left
+#34 D2 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #33
+#35 D2 -         Allied ground report at (4,0): 346 enemy men ashore (men in contact), replacing the estimate held
+#36 D2 -         Japanese ground report at (4,0): 1140 enemy men ashore (men in contact), replacing the estimate held
+#37 D2 -         land_unit:1 dug in: fieldworks 20
+#38 D2 -         land_unit:2 dug in: fieldworks 20
+#39 D2 -         land_unit:3 dug in: fieldworks 20
+#40 D2 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#41 D2 -         base:2 at the end of the day: 96 t of supply, 0 aircraft ready: not open
+#42 D2 -         base:3 at the end of the day: 36 t of supply, 0 aircraft ready: not open
+#43 D3 -         Allied the staff's command taken: add a run of 90 t with 2 ships to plan:1, loading day 3, due day 4
+#44 D3 -         Allied staff's reason for the command to add a run of 90 t with 2 ships to plan:1, loading day 3, due day 4 [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 36 t over 6 t a day = 6 days, against a floor of 5 days. A run ordered on day 3 loads on day 3 (0.6 hours at the source = 1 day), sails on day 4, and is due at base:3 on day 4. Without it the reading of day 5 is 24 t against 5 days x 6 t = 30 t: below the floor, so a run is needed. The stock projected for the reading of day 4 is 30 t. Load = max(0, 30 - 30) + 90 (15 days of use) = 90 t. Ships ship:1, ship:2: 2 x the pool's free ships in number order = a room that covers the load. Passage 160 nm out at 10 kn = 16 hours, 1 day; 160 nm back = 16 hours, 1 day; unloading 90 t at base:3 = 4.5 hours, 1 day. Back at the source at hour 64 of the run and fuelled by hour 64.16 (0.16 hours at 200 t an hour), its ships are free on day 7, the morning after the day the fuelling ends. The staff adds this run to the plan.  <- #43
+#45 D3 -         Allied the staff's command taken: commit 2 ships to plan:1 run 1 from day 3 to day 6
+#46 D3 -         Allied staff's reason for the command to commit 2 ships to plan:1 run 1 from day 3 to day 6 [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 36 t over 6 t a day = 6 days, against a floor of 5 days. A run ordered on day 3 loads on day 3 (0.6 hours at the source = 1 day), sails on day 4, and is due at base:3 on day 4. Without it the reading of day 5 is 24 t against 5 days x 6 t = 30 t: below the floor, so a run is needed. The stock projected for the reading of day 4 is 30 t. Load = max(0, 30 - 30) + 90 (15 days of use) = 90 t. Ships ship:1, ship:2: 2 x the pool's free ships in number order = a room that covers the load. Passage 160 nm out at 10 kn = 16 hours, 1 day; 160 nm back = 16 hours, 1 day; unloading 90 t at base:3 = 4.5 hours, 1 day. Back at the source at hour 64 of the run and fuelled by hour 64.16 (0.16 hours at 200 t an hour), its ships are free on day 7, the morning after the day the fuelling ends. The ships are committed from day 3 to day 6, the day before they are free.  <- #45
+#47 D3 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#48 D3 -         order:1 accepted for task_force:1  <- order:1  [issued by the staff]
+#49 D3 -         Allied staff's reason for order:1 [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 36 t over 6 t a day = 6 days, against a floor of 5 days. A run ordered on day 3 loads on day 3 (0.6 hours at the source = 1 day), sails on day 4, and is due at base:3 on day 4. Without it the reading of day 5 is 24 t against 5 days x 6 t = 30 t: below the floor, so a run is needed. The stock projected for the reading of day 4 is 30 t. Load = max(0, 30 - 30) + 90 (15 days of use) = 90 t. Ships ship:1, ship:2: 2 x the pool's free ships in number order = a room that covers the load. Passage 160 nm out at 10 kn = 16 hours, 1 day; 160 nm back = 16 hours, 1 day; unloading 90 t at base:3 = 4.5 hours, 1 day. Back at the source at hour 64 of the run and fuelled by hour 64.16 (0.16 hours at 200 t an hour), its ships are free on day 7, the morning after the day the fuelling ends. Load order: until 90 t is aboard (0 t aboard now + the load of 90 t); ship:1 90 t at 150 t an hour = 0.6 hours.  <- order:1, #48
+#50 D3 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 30 t left
+#51 D3 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #50
+#52 D3 night     base:2 spent 2 t of supply on 400 men ashore for the day, 94 t left
+#53 D3 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #52
+#54 D3 night     ship:1 loaded 90 t from base:1, 90 t aboard, 910 t in stock  <- order:1
+#55 D3 night     task_force:1 completed loading at base:1 at D3 18:36  <- #54
+#56 D3 -         Allied ground report at (4,0): 361 enemy men ashore (men in contact), replacing the estimate held
+#57 D3 -         Japanese ground report at (4,0): 601 enemy men ashore (men in contact), replacing the estimate held
+#58 D3 -         land_unit:1 dug in: fieldworks 30
+#59 D3 -         land_unit:2 dug in: fieldworks 30
+#60 D3 -         land_unit:3 dug in: fieldworks 30
+#61 D3 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#62 D3 -         base:2 at the end of the day: 94 t of supply, 0 aircraft ready: not open
+#63 D3 -         base:3 at the end of the day: 30 t of supply, 0 aircraft ready: not open
+#64 D4 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#65 D4 -         order:2 accepted for task_force:1  <- order:2  [issued by the staff]
+#66 D4 -         Allied staff's reason for order:2 [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Run 1 of plan:1: the 90 t aboard are its load of 90 t; the load is complete, so it sails today (day 4, hour 72). 160 nm out at 10 kn = 16 hours, so it arrives at base:3 at hour 88 (day 4); 160 nm back = 16 hours. It acts at base:3: 90 t landed in the 8 hours of day 4 left, at 20 t an hour for ship:1, 20 t an hour for ship:2; unloading takes 4.5 hours, 1 day. At balanced risk a run is escorted on a threat, and no contact of ships is held within 15 hexes of (4,0): the run is not threatened, so it sails alone. This is the route order: out to the destination and back, acting at the destination.  <- order:2, #65
+#67 D4 -         order:3 accepted for task_force:1  <- order:3  [issued by the staff]
+#68 D4 -         Allied staff's reason for order:3 [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Run 1 of plan:1: the 90 t aboard are its load of 90 t; the load is complete, so it sails today (day 4, hour 72). 160 nm out at 10 kn = 16 hours, so it arrives at base:3 at hour 88 (day 4); 160 nm back = 16 hours. It acts at base:3: 90 t landed in the 8 hours of day 4 left, at 20 t an hour for ship:1, 20 t an hour for ship:2; unloading takes 4.5 hours, 1 day. At balanced risk a run is escorted on a threat, and no contact of ships is held within 15 hexes of (4,0): the run is not threatened, so it sails alone. This is the unload order the route acts on.  <- order:3, #67
+#69 D4 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 24 t left
+#70 D4 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #69
+#71 D4 night     base:2 spent 2 t of supply on 400 men ashore for the day, 92 t left
+#72 D4 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #71
+#73 D4 night     task_force:1 steamed 120 nm at 10 kn from (0,0) to (3,0)  <- order:2
+#74 D4 night     ship:1 burned 12 t, 988 t remaining  <- #73
+#75 D4 night     ship:2 burned 12 t, 988 t remaining  <- #73
+#76 D4 morning   task_force:1 steamed 40 nm at 10 kn from (3,0) to (4,0)  <- order:2
+#77 D4 morning   ship:1 burned 4 t, 984 t remaining  <- #76
+#78 D4 morning   ship:2 burned 4 t, 984 t remaining  <- #76
+#79 D4 morning   task_force:1 halted at (4,0) at D4 10:00 to work cargo  <- order:2, #76
+#80 D4 morning   ship:1 unloaded 40 t at base:3, 50 t aboard, 64 t in stock  <- order:3, #79
+#81 D4 afternoon ship:1 unloaded 50 t at base:3, 0 t aboard, 114 t in stock  <- order:3, #79
+#82 D4 afternoon task_force:1 completed unloading at base:3 at D4 14:30  <- #81
+#83 D4 -         Allied ground report at (4,0): 328 enemy men ashore (men in contact), replacing the estimate held
+#84 D4 -         Japanese ground report at (4,0): 1672 enemy men ashore (men in contact), replacing the estimate held
+#85 D4 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#86 D4 -         base:2 at the end of the day: 92 t of supply, 0 aircraft ready: not open
+#87 D4 -         base:3 at the end of the day: 114 t of supply, 0 aircraft ready: not open
+#88 D5 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 114 t over 6 t a day = 19 days, against a floor of 5 days (30 t). Run 1 is under way with 0 t aboard, due at base:3 on day 4. A run ordered today would be due on day 6; the reading of day 7 is projected at 102 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#89 D5 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#90 D5 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 108 t left
+#91 D5 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #90
+#92 D5 night     base:2 spent 2 t of supply on 400 men ashore for the day, 90 t left
+#93 D5 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #92
+#94 D5 night     task_force:1 steamed on from (4,0): its cargo work is done  <- order:2, #79, #82
+#95 D5 night     task_force:1 steamed 120 nm at 10 kn from (4,0) to (1,0)  <- order:2
+#96 D5 night     ship:1 burned 12 t, 972 t remaining  <- #95
+#97 D5 night     ship:2 burned 12 t, 972 t remaining  <- #95
+#98 D5 morning   task_force:1 steamed 40 nm at 10 kn from (1,0) to (0,0)  <- order:2
+#99 D5 morning   ship:1 burned 4 t, 968 t remaining  <- #98
+#100 D5 morning   ship:2 burned 4 t, 968 t remaining  <- #98
+#101 D5 morning   task_force:1 arrived at (0,0) at D5 10:00  <- #98
+#102 D5 -         Allied ground report at (4,0): 222 enemy men ashore (men in contact), replacing the estimate held
+#103 D5 -         Japanese ground report at (4,0): 864 enemy men ashore (men in contact), replacing the estimate held
+#104 D5 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#105 D5 -         base:2 at the end of the day: 90 t of supply, 0 aircraft ready: not open
+#106 D5 -         base:3 at the end of the day: 108 t of supply, 0 aircraft ready: not open
+#107 D6 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 108 t over 6 t a day = 18 days, against a floor of 5 days (30 t). A run ordered today would be due on day 7; the reading of day 8 is projected at 96 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#108 D6 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#109 D6 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 102 t left
+#110 D6 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #109
+#111 D6 night     base:2 spent 2 t of supply on 400 men ashore for the day, 88 t left
+#112 D6 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #111
+#113 D6 -         Allied ground report at (4,0): 557 enemy men ashore (men in contact), replacing the estimate held
+#114 D6 -         Japanese ground report at (4,0): 819 enemy men ashore (men in contact), replacing the estimate held
+#115 D6 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#116 D6 -         base:2 at the end of the day: 88 t of supply, 0 aircraft ready: not open
+#117 D6 -         base:3 at the end of the day: 102 t of supply, 0 aircraft ready: not open
+#118 D7 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 102 t over 6 t a day = 17 days, against a floor of 5 days (30 t). A run ordered today would be due on day 8; the reading of day 9 is projected at 90 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#119 D7 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#120 D7 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 96 t left
+#121 D7 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #120
+#122 D7 night     base:2 spent 2 t of supply on 400 men ashore for the day, 86 t left
+#123 D7 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #122
+#124 D7 -         Allied ground report at (4,0): 516 enemy men ashore (men in contact), replacing the estimate held
+#125 D7 -         Japanese ground report at (4,0): 1179 enemy men ashore (men in contact), replacing the estimate held
+#126 D7 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#127 D7 -         base:2 at the end of the day: 86 t of supply, 0 aircraft ready: not open
+#128 D7 -         base:3 at the end of the day: 96 t of supply, 0 aircraft ready: not open
+#129 D8 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 96 t over 6 t a day = 16 days, against a floor of 5 days (30 t). A run ordered today would be due on day 9; the reading of day 10 is projected at 84 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#130 D8 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#131 D8 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 90 t left
+#132 D8 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #131
+#133 D8 night     base:2 spent 2 t of supply on 400 men ashore for the day, 84 t left
+#134 D8 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #133
+#135 D8 -         Allied ground report at (4,0): 524 enemy men ashore (men in contact), replacing the estimate held
+#136 D8 -         Japanese ground report at (4,0): 1212 enemy men ashore (men in contact), replacing the estimate held
+#137 D8 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#138 D8 -         base:2 at the end of the day: 84 t of supply, 0 aircraft ready: not open
+#139 D8 -         base:3 at the end of the day: 90 t of supply, 0 aircraft ready: not open
+#140 D9 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 90 t over 6 t a day = 15 days, against a floor of 5 days (30 t). A run ordered today would be due on day 10; the reading of day 11 is projected at 78 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#141 D9 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#142 D9 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 84 t left
+#143 D9 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #142
+#144 D9 night     base:2 spent 2 t of supply on 400 men ashore for the day, 82 t left
+#145 D9 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #144
+#146 D9 -         Allied ground report at (4,0): 283 enemy men ashore (men in contact), replacing the estimate held
+#147 D9 -         Japanese ground report at (4,0): 1358 enemy men ashore (men in contact), replacing the estimate held
+#148 D9 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#149 D9 -         base:2 at the end of the day: 82 t of supply, 0 aircraft ready: not open
+#150 D9 -         base:3 at the end of the day: 84 t of supply, 0 aircraft ready: not open
+#151 D10 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 84 t over 6 t a day = 14 days, against a floor of 5 days (30 t). A run ordered today would be due on day 11; the reading of day 12 is projected at 72 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#152 D10 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#153 D10 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 78 t left
+#154 D10 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #153
+#155 D10 night     base:2 spent 2 t of supply on 400 men ashore for the day, 80 t left
+#156 D10 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #155
+#157 D10 -         Allied ground report at (4,0): 301 enemy men ashore (men in contact), replacing the estimate held
+#158 D10 -         Japanese ground report at (4,0): 1616 enemy men ashore (men in contact), replacing the estimate held
+#159 D10 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#160 D10 -         base:2 at the end of the day: 80 t of supply, 0 aircraft ready: not open
+#161 D10 -         base:3 at the end of the day: 78 t of supply, 0 aircraft ready: not open
+#162 D11 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 78 t over 6 t a day = 13 days, against a floor of 5 days (30 t). A run ordered today would be due on day 12; the reading of day 13 is projected at 66 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#163 D11 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#164 D11 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 72 t left
+#165 D11 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #164
+#166 D11 night     base:2 spent 2 t of supply on 400 men ashore for the day, 78 t left
+#167 D11 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #166
+#168 D11 -         Allied ground report at (4,0): 228 enemy men ashore (men in contact), replacing the estimate held
+#169 D11 -         Japanese ground report at (4,0): 1671 enemy men ashore (men in contact), replacing the estimate held
+#170 D11 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#171 D11 -         base:2 at the end of the day: 78 t of supply, 0 aircraft ready: not open
+#172 D11 -         base:3 at the end of the day: 72 t of supply, 0 aircraft ready: not open
+#173 D12 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 72 t over 6 t a day = 12 days, against a floor of 5 days (30 t). A run ordered today would be due on day 13; the reading of day 14 is projected at 60 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#174 D12 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#175 D12 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 66 t left
+#176 D12 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #175
+#177 D12 night     base:2 spent 2 t of supply on 400 men ashore for the day, 76 t left
+#178 D12 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #177
+#179 D12 -         Allied ground report at (4,0): 526 enemy men ashore (men in contact), replacing the estimate held
+#180 D12 -         Japanese ground report at (4,0): 1301 enemy men ashore (men in contact), replacing the estimate held
+#181 D12 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#182 D12 -         base:2 at the end of the day: 76 t of supply, 0 aircraft ready: not open
+#183 D12 -         base:3 at the end of the day: 66 t of supply, 0 aircraft ready: not open
+#184 D13 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 66 t over 6 t a day = 11 days, against a floor of 5 days (30 t). A run ordered today would be due on day 14; the reading of day 15 is projected at 54 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#185 D13 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#186 D13 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 60 t left
+#187 D13 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #186
+#188 D13 night     base:2 spent 2 t of supply on 400 men ashore for the day, 74 t left
+#189 D13 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #188
+#190 D13 -         Allied ground report at (4,0): 308 enemy men ashore (men in contact), replacing the estimate held
+#191 D13 -         Japanese ground report at (4,0): 737 enemy men ashore (men in contact), replacing the estimate held
+#192 D13 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#193 D13 -         base:2 at the end of the day: 74 t of supply, 0 aircraft ready: not open
+#194 D13 -         base:3 at the end of the day: 60 t of supply, 0 aircraft ready: not open
+#195 D14 -         Allied staff's reason for giving no order [serves intent 2: keep base:3 (Placeholder beach at B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area; under intent 1 (the commander's): hold base:2 (Placeholder airfield B)]: Reading today at base:3: 60 t over 6 t a day = 10 days, against a floor of 5 days (30 t). A run ordered today would be due on day 15; the reading of day 16 is projected at 48 t against 5 days x 6 t = 30 t: not below the floor, so no run is needed. The next run waits for the reading of day 20 to fall below 5 days (30 t); it is expected to be ordered on day 18, due on day 19.
+#196 D14 -         Allied staff's reason for giving no order [serves intent 1: hold base:2 (Placeholder airfield B); plan 1; decided at the level of base:2]: intent:1 holds base:2 (Placeholder airfield B), which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under intent:1 but the supply of the side's men in its hex, who are fed through base:3 (Placeholder beach at B).
+#197 D14 night     base:3 spent 6 t of supply on 1200 men ashore for the day, 54 t left
+#198 D14 night     Allied men ashore at (4,0): 1200 of 1200 fed from base:3, 0 unfed  <- #197
+#199 D14 night     base:2 spent 2 t of supply on 400 men ashore for the day, 72 t left
+#200 D14 night     Japanese men ashore at (4,0): 400 of 400 fed from base:2, 0 unfed  <- #199
+#201 D14 -         Allied ground report at (4,0): 241 enemy men ashore (men in contact), replacing the estimate held
+#202 D14 -         Japanese ground report at (4,0): 1226 enemy men ashore (men in contact), replacing the estimate held
+#203 D14 -         base:1 at the end of the day: 910 t of supply, 0 aircraft ready: not open
+#204 D14 -         base:2 at the end of the day: 72 t of supply, 0 aircraft ready: not open
+#205 D14 -         base:3 at the end of the day: 54 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 910 t of supply in stock
+base:2 "Placeholder airfield B" (Japanese) at (4,0): 72 t of supply in stock
+base:3 "Placeholder beach at B" (Allied) at (4,0): 54 t of supply in stock, no airfield
+land_unit:1 "Placeholder First" (Allied): 600 men ashore at (4,0), fieldworks 30
+land_unit:2 "Placeholder Second" (Allied): 600 men ashore at (4,0), fieldworks 30
+land_unit:3 "Placeholder garrison" (Japanese): 400 men ashore at (4,0), fieldworks 30
+Allied: no contacts
+Allied: no battle claims
+Allied estimate at (4,0): 241 enemy men ashore, reported day 14 (men in contact)
+Japanese: no contacts
+Japanese: no battle claims
+Japanese estimate at (4,0): 1226 enemy men ashore, reported day 14 (men in contact)

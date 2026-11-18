@@ -4237,3 +4237,73 @@ fn withdrawing_an_island_ends_the_plan_of_the_take_beneath_it() {
     assert_eq!(state(&world, A).plans[&plan(2)].state, PlanState::Complete);
     island_invariants(&world);
 }
+
+/// A world for decision 0159, A: the Allied commander holds `held`, with its
+/// plan released. Allied base 3 and Japanese base 10 are added at FAR, the
+/// hex of Japanese base 9.
+fn world_holding(held: u32) -> World {
+    let mut world = world();
+    for (id, side) in [(3, A), (10, J)] {
+        world.truth.bases.insert(
+            base(id),
+            Base::new(base(id), format!("Base {id}"), side, FAR),
+        );
+    }
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::Hold { base: base(held) },
+        },
+    )
+    .unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    world
+}
+
+/// Decision 0159, A, 1: "keep supplied" stands under a hold of a base that is
+/// not the side's for a base of the side in the held base's hex.
+#[test]
+fn keep_supplied_stands_under_a_hold_for_a_base_of_the_side_in_its_hex() {
+    let mut world = world_holding(9);
+    staff(&mut world, form_under(1, keep_supplied(3))).unwrap();
+    let formed = &state(&world, A).intents[&intent(2)];
+    assert_eq!(formed.kind, keep_supplied(3));
+    assert_eq!(formed.parent, Some(intent(1)));
+    assert_eq!(formed.maker, Maker::Staff);
+}
+
+/// Decision 0159, A, 1: not for a base of the side in another hex, nor for
+/// a base of the other side in the held base's hex.
+#[test]
+fn keep_supplied_under_a_hold_is_refused_in_another_hex_or_for_the_enemy() {
+    let mut world = world_holding(9);
+    refused(
+        &mut world,
+        Issuer::Staff,
+        form_under(1, keep_supplied(1)),
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+    refused(
+        &mut world,
+        Issuer::Staff,
+        form_under(1, keep_supplied(10)),
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+}
+
+/// Decision 0144, 7, as before: "keep supplied" of the held base itself.
+#[test]
+fn keep_supplied_of_the_held_base_itself_stands_under_its_hold_as_before() {
+    let mut world = world_holding(2);
+    staff(&mut world, form_under(1, keep_supplied(2))).unwrap();
+    assert_eq!(state(&world, A).intents[&intent(2)].kind, keep_supplied(2));
+    // Another base of the side in another hex is refused, as before.
+    refused(
+        &mut world,
+        Issuer::Staff,
+        form_under(1, keep_supplied(1)),
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+}

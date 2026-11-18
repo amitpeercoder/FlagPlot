@@ -1,0 +1,161 @@
+# Scenario 79: fed before it is taken.
+#
+# Decision 0159, rule A (items 1 to 3), step 1 of the opening of stage 4 of
+# step 3. Men are ashore beside an airfield the enemy still holds, living on
+# what their landing brought. The commander asks that the airfield be held.
+# The staff feeds the men through the base their own side has in the hex,
+# and sends the first run of supply when it is needed, without waiting for
+# the airfield to change hands.
+#
+# The map is scenario 27's: A at (0,0), a coast hex with port size 5, and B
+# at (4,0), a coast hex with port size 0. A to B is 4 hexes, 160 nm. Allied
+# base 1 lies at A. Japanese base 2, an airfield with no gun, no aircraft
+# and 100 t of supply, lies at B, on the Allied map. Allied base 3 lies at B
+# too: the base a landing forms, with no airfield, not on the Japanese map,
+# holding the 48 t the landing brought. No base has a reserve. Task force 1,
+# two placeholder troop transports, lies stopped in port at A with nothing
+# aboard. Two Allied fighting units of 600 men are ashore at B, and one
+# Japanese fighting unit of 400; all are on the defence, so nobody fights
+# and no die is rolled. The Allied side holds no estimate of the enemy. On
+# day 1 the Allied commander states "hold base 2", with a forces limit of
+# task force 1 and base 1 as the source, and gives leave to prepare and to
+# launch. The Japanese side is given nothing. The game is 14 days.
+#
+# The hand calculation is in tests/scenario_79_fed_before_it_is_taken.rs.
+# The test runs this file on the frozen step 1 figures and builds its
+# variants from the text of this file using the markers below.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures and map are invented.
+
+name = "Placeholder scenario 79: Fed before it is taken"
+placeholder = true
+seed = 1942
+days = 14
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel to give.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: an airfield with no gun and no aircraft, on the
+# Allied map.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 100
+fuel_t = 0
+
+# Allied base 3 at B: the base a landing forms, with no airfield and not on
+# the enemy's map, holding what the landing brought.
+[[base]]
+id = 3
+name = "Placeholder beach at B"
+side = "allied"
+q = 4
+r = 0
+supply_t = 48
+fuel_t = 0
+on_map = false
+airfield = false
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The Allied land units, ashore at B, fighting units on the defence.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 4
+r = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder Second"
+side = "allied"
+men = 600
+q = 4
+r = 0
+# End of the Allied land units
+
+# The Japanese land unit, ashore at B, a fighting unit on the defence.
+[[land_unit]]
+id = 3
+name = "Placeholder garrison"
+side = "japanese"
+men = 400
+q = 4
+r = 0
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "hold"
+base = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [1]
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
