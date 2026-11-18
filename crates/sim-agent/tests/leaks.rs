@@ -708,7 +708,7 @@ fn staff_answers(world: &World, side: Side) -> BTreeMap<String, String> {
         "command_state".to_string(),
         text(&command_state(&view, &staff, &[])),
     );
-    out.insert("plans".to_string(), text(&plans(&view)));
+    out.insert("plans".to_string(), text(&plans(&view, &staff)));
     out.insert(
         "staff_orders".to_string(),
         text(&staff_orders(&view, &staff)),

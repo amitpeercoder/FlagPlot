@@ -19,9 +19,9 @@ use std::collections::BTreeMap;
 use serde_json::{json, Map, Value};
 use sim_core::command::{
     AmendmentChange, Awaited, CommandKind, CommandRefusal, CommandState, Committed, Displacement,
-    HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptRef, InterruptSetting, Limit,
-    Plan, PlanState, Proposal, Run, RunDays, Staff, StaffDecisions, StandingSubject,
-    SupplyProjection,
+    HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptRef, InterruptSetting,
+    Knowledge, Limit, NeedToKnow, Plan, PlanState, Proposal, Run, RunDays, Staff, StaffDecisions,
+    StandingSubject, SupplyProjection,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -320,7 +320,90 @@ fn limits_json(n: &Names<'_>, limits: &IntentLimits) -> Value {
         "not_before": limits.not_before,
         "wait_for": limits.wait_for.map(|awaited| awaited_json(n, awaited)),
         "after": limits.after.map(IntentId::raw),
+        "knowledge": limits.knowledge.map(knowledge_json),
     })
+}
+
+/// A "knowledge" setting (decision 0159, 12): `{"setting": "none" | "count"
+/// | "recent_count", "within_days": n or null}`.
+fn knowledge_json(knowledge: Knowledge) -> Value {
+    json!({
+        "setting": knowledge.name(),
+        "within_days": knowledge.days(),
+    })
+}
+
+/// What must be known before a take's landing goes (decision 0159, 13), in
+/// the side's numbers, with the line the table shows.
+fn need_json(n: &Names<'_>, need: &NeedToKnow) -> Value {
+    let mut asked = knowledge_json(need.asked);
+    asked["from"] = json!(need.asked_from.map(IntentId::raw));
+    json!({
+        "intent": need.intent.raw(),
+        "place": n.ctx.place(need.place),
+        "asked": asked,
+        "held": need.held.map(|h| json!({
+            "men": h.men,
+            "came_from": h.grade.name(),
+            "day": h.day,
+            "age_days": h.age_days,
+            "could_be": h.could_be.map(|r| json!({
+                "lowest": r.lowest,
+                "highest": r.highest,
+            })),
+        })),
+        "looking": need.looking.map(|l| json!({
+            "air_group": n.groups([&l.air_group])[0],
+            "since_day": l.since_day,
+        })),
+        "met": need.met,
+        "text": need_text(n, need),
+    })
+}
+
+/// The need in one line: what is asked and by whom, what is held with its
+/// age and range, who is looking, and whether it is met.
+fn need_text(n: &Names<'_>, need: &NeedToKnow) -> String {
+    let by = match need.asked_from {
+        Some(on) => format!("the knowledge limit on intent:{}", on.raw()),
+        None => "the risk".to_string(),
+    };
+    let held = match need.held {
+        None => "Nothing held".to_string(),
+        Some(h) => {
+            let range = match h.could_be {
+                Some(r) => match r.highest {
+                    Some(high) => format!("; it could be {} to {high}", r.lowest),
+                    None => format!("; it could be {} or more", r.lowest),
+                },
+                None => String::new(),
+            };
+            format!(
+                "Held {} men, {}, of day {}, {} day{} old{range}",
+                h.men,
+                h.grade.name(),
+                h.day,
+                h.age_days,
+                if h.age_days == 1 { "" } else { "s" }
+            )
+        }
+    };
+    let looking = match need.looking {
+        Some(l) => match l.since_day {
+            Some(day) => format!(
+                "air group {} looking since day {day}",
+                n.groups([&l.air_group])[0]
+            ),
+            None => format!("air group {} looking", n.groups([&l.air_group])[0]),
+        },
+        None => "none looking".to_string(),
+    };
+    format!(
+        "Asked by {by}: {}. {}; {looking}. {}.",
+        need.asked,
+        held,
+        if need.met { "Met" } else { "Not met" }
+    )
 }
 
 /// What a "wait for" names (decision 0159, 9), in the side's numbers:
@@ -358,6 +441,7 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
     let priority = chain.iter().find(|i| i.limits.priority.is_some()).copied();
     let area = chain.iter().find(|i| i.limits.area.is_some()).copied();
     let waits = state.waits_read_up(intent.id);
+    let knowledge = state.knowledge_read_up(intent.id);
     json!({
         "forces": forces.and_then(|i| i.limits.forces.as_ref()).map(|f| forces_json(n, f)),
         "forces_from": from(forces),
@@ -410,6 +494,10 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
             .iter()
             .map(|(other, on)| json!({ "intent": other.raw(), "from": on.raw() }))
             .collect::<Vec<_>>(),
+        // Decision 0159, 12: the nearest on the chain; null where none is
+        // set and the risk decides.
+        "knowledge": knowledge.map(|(k, _)| knowledge_json(k)),
+        "knowledge_from": knowledge.map(|(_, on)| on.raw()),
     })
 }
 
@@ -816,7 +904,13 @@ fn run_json(n: &Names<'_>, run: &Run, today: u32, doing: bool) -> Value {
     out
 }
 
-fn plan_json(n: &Names<'_>, view: &SideView<'_>, plan: &Plan, doing: bool) -> Value {
+fn plan_json(
+    n: &Names<'_>,
+    view: &SideView<'_>,
+    plan: &Plan,
+    doing: bool,
+    needs: &[NeedToKnow],
+) -> Value {
     let today = view.day() + 1;
     let state = view.command_state();
     let intent_in_force = state
@@ -853,6 +947,12 @@ fn plan_json(n: &Names<'_>, view: &SideView<'_>, plan: &Plan, doing: bool) -> Va
             .values()
             .map(|run| run_json(n, run, today, doing))
             .collect::<Vec<_>>(),
+        // Decision 0159, 13: for a take whose plan is preparing this
+        // morning; null otherwise.
+        "need_to_know": needs
+            .iter()
+            .find(|need| need.plan == plan.id)
+            .map(|need| need_json(n, need)),
     })
 }
 
@@ -1166,6 +1266,7 @@ fn decisions_of_day(n: &Names<'_>, view: &SideView<'_>, day: u32) -> Vec<Value> 
 /// `queued` are the commands the seat has queued, in order.
 pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKind]) -> Value {
     let n = Names::new(view);
+    let needs = staff.needs_to_know(*view);
     let state = view.command_state();
     let today = view.day() + 1;
     let mut notes: Vec<String> = vec![STAFF_NOTE.to_string()];
@@ -1234,7 +1335,7 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
         "plans": state
             .plans
             .values()
-            .map(|plan| plan_json(&n, view, plan, false))
+            .map(|plan| plan_json(&n, view, plan, false, &needs))
             .collect::<Vec<_>>(),
         "commitments": state
             .commitments
@@ -1365,9 +1466,11 @@ fn in_tree_order(state: &CommandState) -> Vec<&Intent> {
     out
 }
 
-/// `plans`: the plans with their runs and what each run is doing.
-pub fn plans(view: &SideView<'_>) -> Value {
+/// `plans`: the plans with their runs and what each run is doing, and for a
+/// take whose plan is preparing what must be known before it goes.
+pub fn plans(view: &SideView<'_>, staff: &dyn Staff) -> Value {
     let n = Names::new(view);
+    let needs = staff.needs_to_know(*view);
     let today = view.day() + 1;
     answer(
         "plans",
@@ -1378,7 +1481,7 @@ pub fn plans(view: &SideView<'_>) -> Value {
                 .command_state()
                 .plans
                 .values()
-                .map(|plan| plan_json(&n, view, plan, true))
+                .map(|plan| plan_json(&n, view, plan, true, &needs))
                 .collect::<Vec<_>>(),
         }),
     )
@@ -1785,6 +1888,8 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "task_force",
             "land_unit",
             "other_intent",
+            "knowledge",
+            "within_days",
         ],
         "set_leave" => &["leave", "given"],
         "approve" | "cancel_plan" => &["plan"],

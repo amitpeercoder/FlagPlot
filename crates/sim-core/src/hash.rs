@@ -13,7 +13,8 @@ use crate::belief::{BattleClaim, Contact, GroundEstimate};
 use crate::command::{
     Addressee, Amendment, AmendmentChange, Awaited, Baseline, CommandState, Commitment,
     ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition,
-    InterruptStatus, Leaves, Limit, Maker, Plan, Run, RunDays, SetInterrupt, StandingSubject,
+    InterruptStatus, Knowledge, Leaves, Limit, Maker, Plan, Run, RunDays, SetInterrupt,
+    StandingSubject,
 };
 use crate::events::Cause;
 use crate::ids::{BaseId, IntentId};
@@ -237,8 +238,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// side's standing interrupts and the kinds switched off (decision 0159, 7);
 /// version 46 adds to an intent's limits, after its risk, "not before",
 /// "wait for" and "after", and to a limit set by a command the codes 7, 8
-/// and 9 for them (decision 0159, 9).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v46";
+/// and 9 for them (decision 0159, 9);
+/// version 47 adds to an intent's limits, after "after", "knowledge", and to
+/// a limit set by a command the code 10 for it (decision 0159, 12).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v47";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -820,6 +823,7 @@ fn name_limits(limits: &IntentLimits) {
         not_before: _,
         wait_for: _,
         after: _,
+        knowledge: _,
     } = limits;
     if let Some(ForcesLimit {
         ships: _,
@@ -902,7 +906,7 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
 }
 
 /// Hashes the limits of an intent: forces, area, priority, protected, risk,
-/// not before, wait for, after.
+/// not before, wait for, after, knowledge.
 fn hash_limits(h: &mut StateHasher, limits: &IntentLimits) {
     match &limits.forces {
         Some(forces) => {
@@ -935,6 +939,22 @@ fn hash_limits(h: &mut StateHasher, limits: &IntentLimits) {
     h.optional_u32(limits.not_before);
     hash_awaited(h, limits.wait_for);
     h.optional_u32(limits.after.map(IntentId::raw));
+    // Decision 0159, 12: knowledge.
+    hash_knowledge(h, limits.knowledge);
+}
+
+/// Hashes a "knowledge" limit: 0 for none, else its code, and for a recent
+/// count its days.
+fn hash_knowledge(h: &mut StateHasher, knowledge: Option<Knowledge>) {
+    match knowledge {
+        Some(knowledge) => {
+            h.u8(knowledge.code());
+            if let Knowledge::RecentCount(days) = knowledge {
+                h.u32(days);
+            }
+        }
+        None => h.u8(0),
+    }
 }
 
 /// Hashes what a "wait for" names: 0 for none, else its code and number.
@@ -1030,6 +1050,12 @@ fn hash_limit(h: &mut StateHasher, limit: &Limit) {
             h.u8(9);
             h.u32(intent.raw());
             h.optional_u32(other.map(IntentId::raw));
+        }
+        // Decision 0159, 12.
+        Limit::Knowledge { intent, knowledge } => {
+            h.u8(10);
+            h.u32(intent.raw());
+            hash_knowledge(h, *knowledge);
         }
     }
 }

@@ -15,7 +15,7 @@ use serde::Serialize;
 use serde_json::value::RawValue;
 use sim_core::command::{
     Amendment, AmendmentChange, Awaited, Baseline, CommandState, Commitment, Intent, IntentKind,
-    IntentLimits, Limit, Maker, Plan, Run, RunDays,
+    IntentLimits, Knowledge, Limit, Maker, Plan, Run, RunDays,
 };
 use sim_core::ids::ShipId;
 use sim_core::state::Side;
@@ -275,6 +275,11 @@ struct LimitsOut {
     wait_for: Option<AwaitedOut>,
     #[serde(skip_serializing_if = "Option::is_none")]
     after: Option<u32>,
+    /// Decision 0159, 12: left out where the intent sets none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    knowledge: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    within_days: Option<u32>,
 }
 
 /// What a "wait for" names: `{ "task_force": n }` or `{ "land_unit": n }`.
@@ -322,6 +327,8 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
         not_before: limits.not_before,
         wait_for: limits.wait_for.map(awaited),
         after: limits.after.map(|other| other.raw()),
+        knowledge: limits.knowledge.map(Knowledge::name),
+        within_days: limits.knowledge.and_then(Knowledge::days),
     }
 }
 
@@ -406,6 +413,12 @@ struct LimitOut {
     land_unit: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     other_intent: Option<u32>,
+    /// Decision 0159, 12: the setting of a "knowledge" limit and its days;
+    /// each left out where the limit is cleared.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    knowledge: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    within_days: Option<u32>,
 }
 
 fn limit(limit: &Limit) -> LimitOut {
@@ -424,6 +437,8 @@ fn limit(limit: &Limit) -> LimitOut {
         task_force: None,
         land_unit: None,
         other_intent: None,
+        knowledge: None,
+        within_days: None,
     };
     match limit {
         Limit::Forces { intent, limit } => LimitOut {
@@ -485,6 +500,12 @@ fn limit(limit: &Limit) -> LimitOut {
             intent: Some(intent.raw()),
             other_intent: other.map(|other| other.raw()),
             ..blank("after")
+        },
+        Limit::Knowledge { intent, knowledge } => LimitOut {
+            intent: Some(intent.raw()),
+            knowledge: knowledge.map(Knowledge::name),
+            within_days: knowledge.and_then(Knowledge::days),
+            ..blank("knowledge")
         },
     }
 }

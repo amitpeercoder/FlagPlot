@@ -274,7 +274,8 @@
         "risk",
         "not_before",
         "wait_for",
-        "after"
+        "after",
+        "knowledge"
       ],
       "additionalProperties": false,
       "properties": {
@@ -395,7 +396,93 @@
         "after": {
           "type": ["integer", "null"],
           "description": "Decision 0159, 9: the intent whose place must be the side's before the staff releases the plan, set on this intent itself; null where none is set."
+        },
+        "knowledge": {
+          "oneOf": [
+            { "$ref": "#/$defs/knowledge" },
+            { "type": "null" }
+          ],
+          "description": "Decision 0159, 12: how much must be known before the landing goes, set on this intent itself; null where none is set (the risk then decides)."
         }
+      }
+    },
+    "knowledge": {
+      "description": "A knowledge setting (decision 0159, 12): none (any count or none), count (seen from the air or by men in contact, of any day) or recent_count (such a count no more than within_days days old on the morning it goes).",
+      "type": "object",
+      "required": ["setting", "within_days"],
+      "additionalProperties": false,
+      "properties": {
+        "setting": { "enum": ["none", "count", "recent_count"] },
+        "within_days": { "type": ["integer", "null"], "minimum": 1 }
+      }
+    },
+    "need_to_know": {
+      "description": "Decision 0159, 13: what must be known of the enemy at a take's place before its landing goes, as the staff works it this morning, for a take whose plan is preparing. Worked when asked and stored nowhere; nothing of the enemy but your own estimate is in it.",
+      "type": "object",
+      "required": ["intent", "place", "asked", "held", "looking", "met", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "intent": { "type": "integer", "description": "The take_place whose plan it is." },
+        "place": { "$ref": "defs.schema.json#/$defs/place" },
+        "asked": {
+          "type": "object",
+          "required": ["setting", "within_days", "from"],
+          "additionalProperties": false,
+          "properties": {
+            "setting": { "enum": ["none", "count", "recent_count"] },
+            "within_days": { "type": ["integer", "null"] },
+            "from": { "type": ["integer", "null"], "description": "The intent the knowledge limit is set on; null where the risk sets what is asked (press none, balanced a count, preserve a recent count of 3 days)." }
+          }
+        },
+        "held": {
+          "description": "Your estimate of the enemy's men at the place; null where you hold none.",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["men", "came_from", "day", "age_days", "could_be"],
+              "additionalProperties": false,
+              "properties": {
+                "men": { "type": "integer" },
+                "came_from": { "enum": ["told", "seen from the air", "men in contact"] },
+                "day": { "type": "integer" },
+                "age_days": { "type": "integer", "description": "The morning's day less the count's day." },
+                "could_be": {
+                  "description": "What the count could be in truth, from its grade's error range in the ground figures: lowest is the count over the high end cut to a whole man, highest the count over the low end raised to a whole man (null where the low end is 0). Null for a count that was told, or where the figures give no range for its grade.",
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": ["lowest", "highest"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "lowest": { "type": "integer" },
+                        "highest": { "type": ["integer", "null"] }
+                      }
+                    },
+                    { "type": "null" }
+                  ]
+                }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "looking": {
+          "description": "The air group on reconnaissance of the place after this morning's orders, in your numbers, and the day it was set to it (null where no order of yours set it); null where none is looking.",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["air_group", "since_day"],
+              "additionalProperties": false,
+              "properties": {
+                "air_group": { "type": "integer" },
+                "since_day": { "type": ["integer", "null"] }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "met": { "type": "boolean" },
+        "text": { "type": "string", "description": "The need in one line." }
       }
     },
     "awaited": {
@@ -487,7 +574,8 @@
         "baseline",
         "baseline_day",
         "amendments",
-        "runs"
+        "runs",
+        "need_to_know"
       ],
       "additionalProperties": false,
       "properties": {
@@ -679,6 +767,13 @@
           "items": {
             "$ref": "#/$defs/run"
           }
+        },
+        "need_to_know": {
+          "description": "Decision 0159, 13: for a take_place whose plan is preparing this morning, what must be known before it goes; null for any other plan (a released plan is no longer asked).",
+          "oneOf": [
+            { "$ref": "#/$defs/need_to_know" },
+            { "type": "null" }
+          ]
         }
       }
     },
@@ -1162,7 +1257,9 @@
         "not_before",
         "not_before_from",
         "wait_for",
-        "after"
+        "after",
+        "knowledge",
+        "knowledge_from"
       ],
       "additionalProperties": false,
       "properties": {
@@ -1358,6 +1455,17 @@
               "from": { "type": "integer" }
             }
           }
+        },
+        "knowledge": {
+          "oneOf": [
+            { "$ref": "#/$defs/knowledge" },
+            { "type": "null" }
+          ],
+          "description": "Decision 0159, 12: the knowledge limit nearest on the intent and above it; null where none is set and the risk decides how much must be known."
+        },
+        "knowledge_from": {
+          "type": ["integer", "null"],
+          "description": "The intent that knowledge limit is set on; null where none is set."
         }
       }
     },

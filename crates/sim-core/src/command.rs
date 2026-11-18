@@ -697,6 +697,79 @@ pub struct IntentLimits {
     /// whose place must be the side's before the staff releases the plan
     /// (decision 0159, 9: "after"). Added at the end.
     pub after: Option<IntentId>,
+    /// How much must be known of the enemy at the place before the landing
+    /// goes (decision 0159, 12: "knowledge"). Set only on a "take a place"
+    /// or a "control an island" of the commander's; `None` where the risk
+    /// decides it. Added at the end.
+    pub knowledge: Option<Knowledge>,
+}
+
+/// How much must be known of the enemy at the place before a landing goes
+/// (decision 0159, 12): the commander's "knowledge" limit, or what the risk
+/// sets where it is not set.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Knowledge {
+    /// The landing may go on any count or on none.
+    NoCount,
+    /// On a count seen from the air or by men in contact, of any day.
+    Count,
+    /// On such a count no more than this many days old on the morning it
+    /// goes; at least 1.
+    RecentCount(u32),
+}
+
+impl Knowledge {
+    /// The days a recent count may be old where the commander gives no
+    /// number (decision 0159, 12). A placeholder.
+    pub const RECENT_DAYS: u32 = 3;
+
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            Knowledge::NoCount => 1,
+            Knowledge::Count => 2,
+            Knowledge::RecentCount(_) => 3,
+        }
+    }
+
+    /// The setting's name, as a command writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Knowledge::NoCount => "none",
+            Knowledge::Count => "count",
+            Knowledge::RecentCount(_) => "recent_count",
+        }
+    }
+
+    /// The days of a recent count; `None` for the other settings.
+    pub const fn days(self) -> Option<u32> {
+        match self {
+            Knowledge::RecentCount(days) => Some(days),
+            Knowledge::NoCount | Knowledge::Count => None,
+        }
+    }
+
+    /// What the risk sets where the limit is not set (decision 0147, 13):
+    /// press none, balanced a count, preserve a recent count of
+    /// [`Knowledge::RECENT_DAYS`].
+    pub const fn of_risk(risk: Risk) -> Knowledge {
+        match risk {
+            Risk::Press => Knowledge::NoCount,
+            Risk::Balanced => Knowledge::Count,
+            Risk::Preserve => Knowledge::RecentCount(Knowledge::RECENT_DAYS),
+        }
+    }
+}
+
+impl core::fmt::Display for Knowledge {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Knowledge::NoCount => write!(f, "no count"),
+            Knowledge::Count => write!(f, "a count"),
+            Knowledge::RecentCount(1) => write!(f, "a count no more than 1 day old"),
+            Knowledge::RecentCount(days) => write!(f, "a count no more than {days} days old"),
+        }
+    }
 }
 
 /// What a "wait for" limit names (decision 0159, 9): a task force or a land
@@ -801,6 +874,12 @@ pub enum Limit {
         intent: IntentId,
         other: Option<IntentId>,
     },
+    /// Decision 0159, 12: how much must be known before the landing goes;
+    /// `None` clears it, and the risk decides. Added at the end.
+    Knowledge {
+        intent: IntentId,
+        knowledge: Option<Knowledge>,
+    },
 }
 
 impl Limit {
@@ -814,7 +893,8 @@ impl Limit {
             | Limit::Risk { intent, .. }
             | Limit::NotBefore { intent, .. }
             | Limit::WaitFor { intent, .. }
-            | Limit::After { intent, .. } => Some(*intent),
+            | Limit::After { intent, .. }
+            | Limit::Knowledge { intent, .. } => Some(*intent),
             Limit::Reserve { .. } => None,
         }
     }
@@ -1576,6 +1656,14 @@ impl CommandState {
         found
     }
 
+    /// The "knowledge" limit binding `intent`, read up the tree (decision
+    /// 0159, 12): the nearest set on the chain, with the intent it is set
+    /// on; `None` where none is set and the risk decides.
+    pub fn knowledge_read_up(&self, intent: IntentId) -> Option<(Knowledge, IntentId)> {
+        self.up_the_tree(intent)
+            .find_map(|on| on.limits.knowledge.map(|knowledge| (knowledge, on.id)))
+    }
+
     /// The land units the forces limits on `intent`'s chain allow: those
     /// named in every one of them (decision 0141). `None` where none is set
     /// on the chain.
@@ -1967,6 +2055,13 @@ pub enum CommandRefusal {
     /// or "control an island" of the commander's (decision 0159, 9). Added
     /// at the end.
     NotAnEndToWaitFor(IntentId),
+    /// A "knowledge" limit is set on an intent that is not a "take a place"
+    /// or a "control an island" of the commander's (decision 0159, 12).
+    /// Added at the end.
+    NoKnowledgeLimitOn(IntentId),
+    /// A "knowledge" limit asks for a recent count of no days (decision
+    /// 0159, 12): a recent count is at least 1 day. Added at the end.
+    RecentCountOfNoDays(IntentId),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -2061,6 +2156,14 @@ impl core::fmt::Display for CommandRefusal {
                 f,
                 "{id} is not another take_place or control_island of the commander's to wait for"
             ),
+            CommandRefusal::NoKnowledgeLimitOn(id) => write!(
+                f,
+                "{id} is not a take_place or a control_island of the commander's: only those may be told how much must be known"
+            ),
+            CommandRefusal::RecentCountOfNoDays(id) => write!(
+                f,
+                "the knowledge limit on {id} asks for a recent count of no days: a recent count is at least 1 day old"
+            ),
         }
     }
 }
@@ -2150,6 +2253,10 @@ impl core::fmt::Display for CommandKind {
                 Limit::After { intent, other } => match other {
                     Some(other) => write!(f, "{intent} after {other}"),
                     None => write!(f, "clear {intent}'s after"),
+                },
+                Limit::Knowledge { intent, knowledge } => match knowledge {
+                    Some(knowledge) => write!(f, "{intent} goes on {knowledge}"),
+                    None => write!(f, "clear {intent}'s knowledge"),
                 },
             },
             CommandKind::SetLeave { leave, given } => write!(
@@ -2583,6 +2690,76 @@ pub trait Staff {
     fn propose(&self, _view: SideView<'_>, _intent: IntentId) -> Option<Proposal> {
         None
     }
+
+    /// What must be known before each "take a place" of the side whose plan
+    /// is preparing this morning goes, worked from the view as the staff
+    /// works it this morning and stored nowhere (decision 0159, 13). Empty
+    /// by default: a staff with no doctrine for a take asks nothing.
+    fn needs_to_know(&self, _view: SideView<'_>) -> Vec<NeedToKnow> {
+        Vec::new()
+    }
+}
+
+/// What must be known of the enemy at a place before a landing goes, and
+/// what is held (decision 0159, 13), for one plan of a "take a place". It is
+/// worked when asked and is not state: not hashed, not saved. Nothing of the
+/// enemy is in it but the side's own estimate.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct NeedToKnow {
+    pub plan: PlanId,
+    /// The "take a place" whose plan it is.
+    pub intent: IntentId,
+    pub place: Hex,
+    /// What is asked: the commander's "knowledge" limit, or what the risk
+    /// sets where it is not set.
+    pub asked: Knowledge,
+    /// The intent the "knowledge" limit is set on; `None` where the risk
+    /// sets what is asked.
+    pub asked_from: Option<IntentId>,
+    /// The side's estimate of the enemy's men at the place; `None` where it
+    /// holds none.
+    pub held: Option<HeldCount>,
+    /// The air group looking at the place after this morning's orders, and
+    /// since which day; `None` where none is.
+    pub looking: Option<Looking>,
+    /// Whether what is held meets what is asked.
+    pub met: bool,
+}
+
+/// The count the side holds of the enemy at a place, its day and age, and
+/// what it could be in truth (decision 0159, 13).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct HeldCount {
+    pub men: u32,
+    pub grade: crate::belief::GroundGrade,
+    /// The day of the report it rests on.
+    pub day: u32,
+    /// Its age in days on the morning: the morning's day less its day.
+    pub age_days: u32,
+    /// What the count could be in truth, from its grade's error range in
+    /// the ground figures; `None` for a count that was told, or where the
+    /// figures give no range for the grade.
+    pub could_be: Option<CountRange>,
+}
+
+/// What a count could be in truth: between the count over the high end of
+/// its error range, cut to a whole man, and the count over the low end,
+/// raised to a whole man (decision 0159, 13). `highest` is `None` where the
+/// low end is 0: the count then bounds nothing above.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct CountRange {
+    pub lowest: u32,
+    pub highest: Option<u32>,
+}
+
+/// An air group looking at a place, and the day it was set to.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Looking {
+    pub air_group: AirGroupId,
+    /// The day the order that set it to look was given (today for a group
+    /// the staff sends this morning); `None` where no order of the side set
+    /// it (a mission the scenario gave at the start).
+    pub since_day: Option<u32>,
 }
 
 /// One reading of the staff's projection: the stock at the start of `day`,

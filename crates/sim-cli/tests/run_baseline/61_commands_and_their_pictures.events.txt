@@ -2,9 +2,9 @@ Placeholder scenario 61: Commands and their pictures
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7ad9f96d4175d638  47 events
-day   2  hash 542d98add3273131  12 events
-day   3  hash fcf08a39366b9cdf  5 events
+day   1  hash da5379b2eefe3551  47 events
+day   2  hash 548e273a763bbbe0  12 events
+day   3  hash 9fea89d3d3646b5e  5 events
 
 #1 D0 -         Allied report: 1 ship, carrier, at (12,0), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to operate the carrier force task_force:1 from (0,0)

@@ -2,8 +2,8 @@ Placeholder scenario 55: A carrier force from an end
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 19ef10422abb4992  53 events
-day   2  hash 512eff9c874b86b9  8 events
+day   1  hash ef23aedbb1811539  53 events
+day   2  hash 2fd2bcfd10261d8c  8 events
 
 #1 D0 -         Allied report: 1 ship, carrier, at (0,4), held at the start: new contact:1
 #2 D0 -         Allied report: 2 ships, cruiser, at (3,0), held at the start: new contact:2

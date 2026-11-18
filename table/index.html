@@ -667,6 +667,10 @@ button:disabled { opacity: 0.45; cursor: default; }
       var lim = top.limits_read_up || {}, head = el('div', 'head');
       [['Your intent', plainWords(sayIntent(top, said))], ['Stated', 'day ' + top.set_day], ['Risk', lim.risk || 'balanced'], ['Forces', top.limits && top.limits.forces ? 'limited by you' : 'the staff\'s choice'], ['Leave to launch', st.leaves.launch ? 'given: a plan that is ready goes' : 'withheld: each plan waits for your word']].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
       doc.appendChild(head);
+      // What must be known before a take goes (decision 0159, 13): one line
+      // under the take, where the staff works the need this morning.
+      function need(p) { var k = p && p.need_to_know; if (!k) return null; var d = rich('div', 'work', 'To know: ' + nameText(k.text)); if (!k.met) d.style.color = 'var(--enemy)'; return d; }
+      var topNeed = need(top.plan != null ? plans[top.plan] : null); if (topNeed) doc.appendChild(topNeed);
       // The brief: one line a task, with a word for where it stands. What
       // the staff decided today and why is one step down, under each line.
       var lines = [], tally = {};
@@ -686,6 +690,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       lines.forEach(function (L) {
         var n = el('div', 'node'), who = el('div', 'who'), i = L.i, p = L.p; n.style.marginLeft = (L.depth - 1) * 18 + 'px'; if (L.word === 'ENDED' || L.word === 'DONE') n.style.opacity = 0.6;
         who.appendChild(rich('strong', '', said[i.number] ? said[i.number].replace(/^./, function (c) { return c.toUpperCase(); }) : sayIntent(i, said))); var tag = el('span', 'state', L.word); if (L.word === 'WAITS FOR YOU' || L.word === 'CANNOT BE MET') tag.style.color = 'var(--enemy)'; who.appendChild(tag); n.appendChild(who);
+        var known = need(p); if (known) n.appendChild(known);
         var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'WHY, AND HOW IT STANDS'; d.appendChild(sm);
         d.appendChild(el('div', 'work', (i.maker === 'staff' ? 'The staff\'s' : 'Yours') + ' · intent ' + i.number + (p ? ' · plan ' + p.number + ', ' + p.state : '')));
         if (i.measure && i.measure.text) d.appendChild(rich('div', '', 'So far: ' + i.measure.text + '.'));

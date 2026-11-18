@@ -358,6 +358,10 @@ pub(crate) struct Day<'v, 'a> {
     /// the take, set aside before a take lower in priority chooses its first
     /// lift (decision 0152, 5b).
     pub(crate) lifts_due: BTreeMap<sim_core::ids::TaskForceId, IntentId>,
+    /// The need to know of each take whose plan is preparing, as worked
+    /// this morning (decision 0159, 13): stored nowhere, read by
+    /// [`needs_to_know`].
+    pub(crate) needs: Vec<sim_core::command::NeedToKnow>,
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
@@ -398,6 +402,14 @@ pub(crate) fn decide(view: &SideView<'_>) -> StaffDecisions {
         }
         None => StaffDecisions::default(),
     }
+}
+
+/// What must be known before each take whose plan is preparing goes, as
+/// the staff works it this morning (decision 0159, 13), stored nowhere.
+pub(crate) fn needs_to_know(view: &SideView<'_>) -> Vec<sim_core::command::NeedToKnow> {
+    let known = view.known_to(sim_core::pictures::CommandRef::Area);
+    let area = known.view();
+    Day::run(view, &area, None).map_or_else(Vec::new, |day| day.needs)
 }
 
 /// What the air doctrine would hand in this morning for the tree of `intent`
@@ -508,6 +520,7 @@ impl<'v, 'a> Day<'v, 'a> {
             as_of: std::cell::Cell::new(None),
             lifts_sent: BTreeMap::new(),
             lifts_due: BTreeMap::new(),
+            needs: Vec::new(),
         };
         day.leaves();
         // Decision 0151: the tree of an island, formed before the doctrines

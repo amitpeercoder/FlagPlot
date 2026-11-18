@@ -251,7 +251,13 @@ use sim_core::view::SideView;
 /// that can never be met as it stands is said once with the notice that the
 /// intent cannot be met. A side with no such limit gets the orders
 /// `supply-36` gave.
-pub const DOCTRINE_VERSION: &str = "supply-37";
+/// `supply-38` adds decision 0159, rule D, items 12 and 13: a "knowledge"
+/// limit read up a take's tree sets how much must be known before the
+/// landing goes (none, a count, or a count no more than so many days old),
+/// in place of the risk, which still sets the men wanted; and the need to
+/// know of each take whose plan is preparing is worked as data. A side with
+/// no such limit gets the orders and reasons `supply-37` gave.
+pub const DOCTRINE_VERSION: &str = "supply-38";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
@@ -282,6 +288,10 @@ impl Staff for SupplyStaff {
         let mut proposal = proposal::propose(view, intent)?;
         reasons::state_intents_of_proposal(&view, &mut proposal);
         Some(proposal)
+    }
+
+    fn needs_to_know(&self, view: SideView<'_>) -> Vec<sim_core::command::NeedToKnow> {
+        air::needs_to_know(&view)
     }
 }
 
