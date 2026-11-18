@@ -415,11 +415,13 @@ impl World {
                     .get(&found.plan)
                     .map_or(PlanState::Draft, |plan| plan.state);
                 // "Ready a landing" under "take a place" is formed while the
-                // plan is preparing as well (decision 0142, 12).
+                // plan is preparing as well (decision 0142, 12), and so is
+                // "operate the carrier force from a hex", for a force moved to
+                // look at the place (decision 0159, 14).
                 let preparing_will_do = matches!(
                     (kind, found.kind),
                     (
-                        IntentKind::ReadyLanding { .. },
+                        IntentKind::ReadyLanding { .. } | IntentKind::OperateCarriers { .. },
                         IntentKind::TakePlace { .. }
                     )
                 ) && plan_state == PlanState::Preparing;

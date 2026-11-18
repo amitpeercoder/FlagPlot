@@ -610,6 +610,7 @@ fn the_need_each_morning() {
         asked_from,
         held,
         looking,
+        moved_to_look: None,
         met,
     };
     // Day 1: nothing held; air group 1 looks from day 1; not met.

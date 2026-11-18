@@ -1082,6 +1082,52 @@ fn taking_a_place_is_taken_in_and_its_landing_formed_while_preparing() {
     );
 }
 
+/// Decision 0159, 14: the staff forms "operate the carrier force from a hex"
+/// under "take a place" while its plan is preparing, as it forms "ready a
+/// landing" (a force moved to look); not while it is a draft.
+#[test]
+fn a_carrier_task_under_a_take_is_formed_while_preparing() {
+    const PLACE: Hex = Hex::new(5, 0);
+    let mut world = world();
+    world.map.insert(
+        PLACE,
+        HexData {
+            kind: crate::map::HexKind::Coast,
+            ..HexData::open_sea()
+        },
+    );
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::TakePlace {
+                hex: PLACE,
+                by_day: None,
+            },
+        },
+    )
+    .unwrap();
+    player(&mut world, set_forces(1, forces(&[], &[1]))).unwrap();
+    let cover = CommandKind::FormIntent {
+        parent: intent(1),
+        kind: IntentKind::OperateCarriers {
+            force: tf(1),
+            hex: Hex::new(3, 0),
+        },
+    };
+    refused(
+        &mut world,
+        Issuer::Staff,
+        cover.clone(),
+        CommandRefusal::WrongPlanState(PlanState::Draft),
+    );
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    staff(&mut world, cover).unwrap();
+    let formed = &state(&world, A).intents[&intent(2)];
+    assert_eq!(formed.maker, Maker::Staff);
+    assert_eq!(formed.parent, Some(intent(1)));
+}
+
 /// Decision 0149, items 1 to 3: a "take a place" needs no forces limit and
 /// none with a source; the staff's limit on the "ready a landing" it forms
 /// may name what the commander left out, and nothing outside what he named;

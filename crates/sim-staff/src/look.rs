@@ -45,7 +45,7 @@ use std::collections::BTreeSet;
 use sim_core::belief::{GroundEstimate, GroundGrade};
 use sim_core::command::{
     CommandKind, CountRange, ForcesLimit, HeldCount, Intent, IntentKind, Knowledge, Limit, Looking,
-    NeedToKnow, NoticeKind, Plan, PlanState, Risk, StaffCommand, StaffOrder,
+    MovedToLook, NeedToKnow, NoticeKind, Plan, PlanState, Risk, StaffCommand, StaffOrder,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -204,7 +204,7 @@ fn list(units: &BTreeSet<LandUnitId>) -> String {
 impl Day<'_, '_> {
     /// Where the air group is based now: its base's hex or its ship's
     /// position.
-    fn group_hex(&self, group: &AirGroup) -> Option<Hex> {
+    pub(crate) fn group_hex(&self, group: &AirGroup) -> Option<Hex> {
         match group.location {
             AirGroupLocation::Base(base) => self.view.bases().find(|b| b.id == base).map(|b| b.hex),
             AirGroupLocation::Ship(ship) => {
@@ -390,6 +390,15 @@ impl Day<'_, '_> {
                 could_be: error.map(|error| could_be(e.men, error)),
             }
         });
+        // Decision 0159, 14: the carrier force moved to look, while the need
+        // is not met. One formed later this morning is set where it is
+        // formed ([`Day::form_look_task`]).
+        let moved_to_look = if k.met {
+            None
+        } else {
+            self.carrier_task_under(end)
+                .map(|(_, task_force, hex)| MovedToLook { task_force, hex })
+        };
         self.needs.push(NeedToKnow {
             plan: plan.id,
             intent: end.id,
@@ -398,6 +407,7 @@ impl Day<'_, '_> {
             asked_from: k.asked_from,
             held,
             looking,
+            moved_to_look,
             met: k.met,
         });
     }
@@ -432,12 +442,18 @@ impl Day<'_, '_> {
         let today = self.today;
         let have = self.held_words(place, &k);
         if k.met {
-            // Item 15: the group is set to rest, by one order.
+            // Item 15: the group is set to rest, by one order; but a group
+            // aboard the carrier force moved to look is left to its carrier
+            // task, which sets it as on any morning (decision 0159, 14).
+            let look_force = self.carrier_task_under(end).map(|(_, force, _)| force);
             for id in &k.on_it {
                 let Some(group) = self.view.air_groups().find(|g| g.id == *id) else {
                     continue;
                 };
                 if self.state.hold_on_group(*id).is_some() {
+                    continue;
+                }
+                if look_force.is_some_and(|force| self.group_aboard(*id, force)) {
                     continue;
                 }
                 let reason = serving(end, plan)
@@ -465,6 +481,10 @@ impl Day<'_, '_> {
             }
             return;
         }
+        // A group on reconnaissance of the place while the need is not met
+        // is the look's: a carrier task gives it no order (decision 0159,
+        // 14).
+        self.looking_groups.extend(k.on_it.iter().copied());
         // Item 14: with men of the side's own ashore at the place they
         // report it and no group looks; a group already sent flies.
         if k.fighting_ashore || !k.on_it.is_empty() {
@@ -473,6 +493,7 @@ impl Day<'_, '_> {
         let Some(sender) = k.sender else {
             return;
         };
+        self.looking_groups.insert(sender.id);
         let reason = serving(end, plan)
             .evidence(have.clone(), today)
             .evidence(
@@ -656,6 +677,25 @@ impl Day<'_, '_> {
                     .binding(k.asks.clone())
                     .worked(format!(
                         "The landing at {place} is ready ({ready_words}), but {have}; {}. {who}: the staff does not ask leave to launch and does not release {} until the need is met.",
+                        k.asks, plan.id
+                    ))
+                    .would_change(format!("a count of {asker}'s grade"))
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                return None;
+            }
+            // Decision 0159, 14: a carrier force on its way to the hex from
+            // which a group of its own will look: the landing waits for it.
+            if let Some((look_task, force, hex)) =
+                self.carrier_task_under(end).filter(|_| !k.fighting_ashore)
+            {
+                let reason = serving(end, plan)
+                    .evidence(ready_words.to_string(), today)
+                    .evidence(have.clone(), today)
+                    .evidence(format!("{look_task} operates {force} from {hex}, to look at {place}"), today)
+                    .binding(k.asks.clone())
+                    .worked(format!(
+                        "The landing at {place} is ready ({ready_words}), but {have}; {}. {force} is moved to {hex} under {look_task}, from where a group aboard can look at {place}: the staff does not ask leave to launch and does not release {} until the need is met.",
                         k.asks, plan.id
                     ))
                     .would_change(format!("a count of {asker}'s grade"))

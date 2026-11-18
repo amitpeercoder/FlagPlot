@@ -419,7 +419,7 @@
     "need_to_know": {
       "description": "Decision 0159, 13: what must be known of the enemy at a take's place before its landing goes, as the staff works it this morning, for a take whose plan is preparing. Worked when asked and stored nowhere; nothing of the enemy but your own estimate is in it.",
       "type": "object",
-      "required": ["intent", "place", "asked", "held", "looking", "met", "text"],
+      "required": ["intent", "place", "asked", "held", "looking", "moved_to_look", "met", "text"],
       "additionalProperties": false,
       "properties": {
         "intent": { "type": "integer", "description": "The take_place whose plan it is." },
@@ -476,6 +476,21 @@
               "properties": {
                 "air_group": { "type": "integer" },
                 "since_day": { "type": ["integer", "null"] }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "moved_to_look": {
+          "description": "Decision 0159, 14: the carrier force, in your numbers, the staff moves or has moved to a hex from which a group aboard can look at the place, while the need is not met; null where none is.",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["task_force", "hex"],
+              "additionalProperties": false,
+              "properties": {
+                "task_force": { "type": "integer" },
+                "hex": { "$ref": "defs.schema.json#/$defs/place" }
               }
             },
             { "type": "null" }

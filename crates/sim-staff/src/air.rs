@@ -362,6 +362,10 @@ pub(crate) struct Day<'v, 'a> {
     /// this morning (decision 0159, 13): stored nowhere, read by
     /// [`needs_to_know`].
     pub(crate) needs: Vec<sim_core::command::NeedToKnow>,
+    /// The groups the look at a take's place keeps on reconnaissance of it
+    /// this morning, or sends to it: a carrier task gives them no order
+    /// (decision 0159, 14, item 4 of scenario 83's rule).
+    pub(crate) looking_groups: std::collections::BTreeSet<AirGroupId>,
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
@@ -521,6 +525,7 @@ impl<'v, 'a> Day<'v, 'a> {
             lifts_sent: BTreeMap::new(),
             lifts_due: BTreeMap::new(),
             needs: Vec::new(),
+            looking_groups: std::collections::BTreeSet::new(),
         };
         day.leaves();
         // Decision 0151: the tree of an island, formed before the doctrines

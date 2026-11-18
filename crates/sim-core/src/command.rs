@@ -2722,8 +2722,21 @@ pub struct NeedToKnow {
     /// The air group looking at the place after this morning's orders, and
     /// since which day; `None` where none is.
     pub looking: Option<Looking>,
+    /// The carrier force the staff moves, or has moved, to a hex from which
+    /// one of its groups can look at the place, while the need is not met
+    /// (decision 0159, 14); `None` where none is.
+    pub moved_to_look: Option<MovedToLook>,
     /// Whether what is held meets what is asked.
     pub met: bool,
+}
+
+/// A carrier force the staff moves to a hex in order to look at a take's
+/// place (decision 0159, 14): the force of its task "operate the carrier
+/// force from a hex", and that hex.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct MovedToLook {
+    pub task_force: TaskForceId,
+    pub hex: Hex,
 }
 
 /// The count the side holds of the enemy at a place, its day and age, and

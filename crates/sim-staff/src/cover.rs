@@ -13,6 +13,19 @@
 //! bomber group or it is within that reach already; none where there is no
 //! sea route.
 //!
+//! **Moved to look** (decision 0159, 14, as the architect ruled it on Nov
+//! 18, 2026, in scenario 83's hand calculation). Under a "take a place"
+//! whose plan is preparing, on a morning when the need to know is not met,
+//! no air group the forces limit names reaches the place from where it is,
+//! and the limit names a group that can search aboard a ship of a carrier
+//! force it names: the carrier task of that force is formed then, at the
+//! covering hex where a named scout aboard reaches the place from it, else
+//! at the first hex on her way from which one does
+//! ([`Day::form_look_task`]). At preserve the force only with leave to
+//! launch given. Before the plan is released the task gives every order but
+//! the strike on the place, and no order to a group the look keeps on
+//! reconnaissance of the place.
+//!
 //! **The force's morning** is the carrier doctrine's (`crate::carrier`), with
 //! the strike on the place (items 4 to 6, in [`Day::cover_strike`]) and,
 //! on the first morning the end is met, the way home (item 8,
@@ -26,9 +39,9 @@ use sim_core::command::{
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, TaskForceId};
+use sim_core::ids::{AirGroupId, IntentId, TaskForceId};
 use sim_core::orders::{AirGroupOrder, Mission, OrderKind, SpeedSetting, TaskForceOrder};
-use sim_core::state::AirGroupLocation;
+use sim_core::state::{AirGroupLocation, ShipLocation};
 
 use crate::air::{mission_words, Day};
 use crate::carrier::{close_to, CarrierAir, CarrierGroup, CarrierRole, CLOSE_MAX_AGE};
@@ -37,7 +50,7 @@ use crate::raid::{
     decide as raid_decide, held_share, least_weight, rest_level, BomberVerdict, RaidGroup, RaidRole,
 };
 use crate::reasons::{base_words, serving};
-use crate::stand::{afloat, expected_words, stopped};
+use crate::stand::{afloat, expected_words, hours_to, stopped};
 
 /// Why no covering hex is found: no sea route reaches a hex within `reach`
 /// of the place, the reach set by the groups `sets`.
@@ -72,6 +85,16 @@ impl Day<'_, '_> {
             let Some(end) = self.state.intents.get(&id).cloned() else {
                 continue;
             };
+            if self.preparing(&end) {
+                // Decision 0159, 14: a carrier force moved to look.
+                if let (Some(plan), IntentKind::TakePlace { hex, .. }) =
+                    (self.plan_of(&end), end.kind)
+                {
+                    let in_scope = self.in_scope(id);
+                    self.form_look_task(&end, &plan, hex, in_scope);
+                }
+                continue;
+            }
             if !self.released(&end) {
                 continue;
             }
@@ -109,6 +132,12 @@ impl Day<'_, '_> {
             };
             if self.released(&task) {
                 self.serve_carrier(&task);
+                continue;
+            }
+            // Decision 0159, 14: before the plan is released the task gives
+            // every order but the strike on the place.
+            if self.preparing(&task) {
+                self.serve_carrier_with(&task, false);
                 continue;
             }
             // Met this morning: the plan was released at the staff's hour
@@ -170,6 +199,267 @@ impl Day<'_, '_> {
                 })
                 .cloned()
         })
+    }
+
+    /// Whether the plan of `intent` is preparing in the planned state.
+    pub(crate) fn preparing(&self, intent: &Intent) -> bool {
+        self.state
+            .plans
+            .get(&intent.plan)
+            .is_some_and(|plan| plan.state == sim_core::command::PlanState::Preparing)
+    }
+
+    /// The carrier task in force under the take `end`, with its force and
+    /// hex: the force moved to look while the plan is preparing (decision
+    /// 0159, 14), or its cover once released.
+    pub(crate) fn carrier_task_under(&self, end: &Intent) -> Option<(IntentId, TaskForceId, Hex)> {
+        self.state.intents_in_force().find_map(|i| match i.kind {
+            IntentKind::OperateCarriers { force, hex } if i.parent == Some(end.id) => {
+                Some((i.id, force, hex))
+            }
+            _ => None,
+        })
+    }
+
+    /// Whether the air group `group` is aboard a ship of the force `force`.
+    pub(crate) fn group_aboard(&self, group: AirGroupId, force: TaskForceId) -> bool {
+        let Some(found) = self.view.air_groups().find(|g| g.id == group) else {
+            return false;
+        };
+        let AirGroupLocation::Ship(ship) = found.location else {
+            return false;
+        };
+        self.view
+            .ships()
+            .any(|s| s.id == ship && s.location == ShipLocation::TaskForce(force))
+    }
+
+    /// Decision 0159, 14, as the architect ruled it on Nov 18, 2026: under
+    /// `end`, whose plan is preparing and whose place is `place`, the carrier
+    /// task of the first carrier force its forces limit names that has a
+    /// group the limit names aboard that can search, formed on a morning the
+    /// need to know is not met and no group the limit names reaches the place
+    /// from where it is. Its hex is the covering hex where such a group
+    /// reaches the place from it, else the first hex along the shortest sea
+    /// route from which one does. At preserve the force it is formed only
+    /// with leave to launch given; without it the reason says where the
+    /// force could look from and that the staff waits for leave.
+    #[allow(clippy::too_many_lines)]
+    pub(crate) fn form_look_task(&mut self, end: &Intent, plan: &Plan, place: Hex, in_scope: bool) {
+        // One force moved to look, and one carrier task a take: where one
+        // stands under the take, nothing more is formed.
+        if self.carrier_task_under(end).is_some() {
+            return;
+        }
+        let risk = self.state.risk_read_up(end.id);
+        let k = self.knowledge(end, place, risk);
+        if k.met || k.fighting_ashore || !k.on_it.is_empty() {
+            return;
+        }
+        let may = self.may_use(end);
+        // The groups the limit names that can search and are not held, with
+        // their search range and where they lie now.
+        let mut scouts: Vec<(AirGroupId, Fixed)> = Vec::new();
+        for id in &may {
+            let Some(group) = self.view.air_groups().find(|g| g.id == *id) else {
+                continue;
+            };
+            let Some(range) = crate::deny::search_range(self.view, group) else {
+                continue;
+            };
+            // A group the limit names that reaches the place from where it
+            // is: no force is moved (it is sent, or the look says why not).
+            if let Some(origin) = self.group_hex(group) {
+                if Fixed::from_int(i64::from(origin.air_distance_nm(place))) <= range {
+                    return;
+                }
+            }
+            if self.state.hold_on_group(*id).is_some() {
+                continue;
+            }
+            scouts.push((*id, range));
+        }
+        if scouts.is_empty() {
+            return;
+        }
+        let named: std::collections::BTreeSet<TaskForceId> = self
+            .state
+            .nearest_forces(end.id)
+            .map(|f| f.task_forces.clone())
+            .unwrap_or_default();
+        let today = self.today;
+        for id in named {
+            let Some(force) = self.area.task_forces().find(|f| f.id == id).cloned() else {
+                continue;
+            };
+            if force.mission != Mission::Carrier {
+                continue;
+            }
+            if crate::available::force_waiting(self.area, id).is_some() {
+                continue;
+            }
+            if self.state.hold_on_force(id, &force.ships).is_some() {
+                continue;
+            }
+            // One carrier task a force, whoever made it, wherever it stands.
+            if self.state.intents_in_force().any(|other| {
+                other.kind.force() == Some(id)
+                    && matches!(other.kind, IntentKind::OperateCarriers { .. })
+            }) {
+                continue;
+            }
+            let ships = afloat(self.area, id);
+            let carriers: Vec<_> = ships
+                .iter()
+                .filter(|(_, _, _, kind)| *kind == sim_core::refdata::ShipKind::Carrier)
+                .map(|(ship, _, _, _)| *ship)
+                .collect();
+            if carriers.is_empty() {
+                continue;
+            }
+            let aboard: Vec<_> = self
+                .area
+                .air_groups()
+                .filter(
+                    |g| matches!(g.location, AirGroupLocation::Ship(s) if carriers.contains(&s)),
+                )
+                .collect();
+            let scouts_aboard: Vec<(AirGroupId, Fixed)> = scouts
+                .iter()
+                .copied()
+                .filter(|(g, _)| self.group_aboard(*g, id))
+                .collect();
+            let Some(longest) = scouts_aboard.iter().map(|(_, r)| *r).max() else {
+                continue;
+            };
+            let scout_words = scouts_aboard
+                .iter()
+                .map(|(g, r)| format!("{g}, which searches to {r} nm"))
+                .collect::<Vec<_>>()
+                .join(" and ");
+            let here = force.position();
+            let place_nm = distance_nm(here, place);
+            let reaching = |hex: Hex| {
+                let nm = distance_nm(hex, place);
+                scouts_aboard.iter().any(|(_, r)| nm <= *r)
+            };
+            // The covering hex where a scout aboard reaches from it, else the
+            // first hex on her way from which one does.
+            let covering = self.covering_hex(id, here, &aboard, place).ok();
+            let chosen = match covering {
+                Some((hex, words)) if reaching(hex) => Some((
+                    hex,
+                    format!("{words}; from there {place} is {} nm away, within the search of {scout_words}", distance_nm(hex, place)),
+                )),
+                covering => self
+                    .view
+                    .sea_path(here, place)
+                    .and_then(|path| close_to(&path, place, longest))
+                    .map(|hex| {
+                        let before = covering.map_or_else(
+                            || "no covering hex is found".to_string(),
+                            |(c, _)| format!("the covering hex {c} is beyond the search of {scout_words}"),
+                        );
+                        (
+                            hex,
+                            format!(
+                                "{before}: the first hex along the shortest sea route to {place} within {longest} nm of it is {hex}, {} nm from {here} and {} nm from {place}",
+                                distance_nm(here, hex),
+                                distance_nm(hex, place)
+                            ),
+                        )
+                    }),
+            };
+            let held = crate::reasons::force_held_words(self.area, id);
+            let have = crate::look::estimate_words(place, k.estimate.as_ref());
+            let why = format!(
+                "{have}; {}; no group the forces limit of {} names reaches {place} from where it is, and {held}, on the carrier mission at {here}, {place_nm} nm from {place}, has aboard {scout_words}",
+                k.asks, end.id
+            );
+            let Some((hex, hex_words)) = chosen else {
+                let reason = serving(end, plan)
+                    .evidence(why.clone(), today)
+                    .binding("the force looks from a hex on the shortest sea route to the place")
+                    .worked(format!(
+                        "{why}; but no sea route from {here} reaches a hex within {longest} nm of {place}, so the staff does not move {id} to look."
+                    ))
+                    .would_change("a sea route to the place")
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                continue;
+            };
+            let (speed, speed_text) = crate::carrier::passage_speed(self.view, id, risk, hex);
+            let passage = match hours_to(self.view, id, hex, speed) {
+                Some(h) => format!("the passage to {hex} is {h} hours at {speed_text}"),
+                None => format!("the engine's measure does not bring {id} to {hex}"),
+            };
+            let from_there = distance_nm(hex, place);
+            // At preserve the force the staff moves a force to look only with
+            // leave to launch given.
+            if risk == Risk::Preserve && !self.state.leaves.launch {
+                let reason = serving(end, plan)
+                    .evidence(why.clone(), today)
+                    .evidence(hex_words.clone(), today)
+                    .binding("at preserve the force a force is moved to look only with leave to launch")
+                    .worked(format!(
+                        "{why}. {id} could look from {hex}: {hex_words}; {passage}, and from there it is within {from_there} nm of {place}. At preserve the force the staff moves a force to look only with leave to launch, which is withheld, so it waits for leave to launch and gives {id} no order."
+                    ))
+                    .would_change("leave to launch given")
+                    .would_change("a group the forces limit names that reaches the place")
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                return;
+            }
+            let kind = IntentKind::OperateCarriers { force: id, hex };
+            let id_new = self.state.next_intent_number();
+            self.state.intents.insert(
+                id_new,
+                Intent {
+                    id: id_new,
+                    kind,
+                    parent: Some(end.id),
+                    maker: Maker::Staff,
+                    addressee: kind.addressee(),
+                    limits: IntentLimits::default(),
+                    set_day: today,
+                    plan: end.plan,
+                    withdrawn_day: None,
+                },
+            );
+            let reason = serving(end, plan)
+                .evidence(why.clone(), today)
+                .evidence(hex_words.clone(), today)
+                .evidence(passage.clone(), today)
+                .binding(k.asks.clone())
+                .worked(format!(
+                    "{why}. The need is not met while {} is preparing, so the staff moves {id} to look: {hex_words}. It forms {id_new}, to operate the carrier force {id} from {hex}, under {}, for {id} to carry out: {passage}, and from there it is within {from_there} nm of {place}. Until {} is released the task strikes nothing at the place.",
+                    plan.id, end.id, plan.id
+                ))
+                .would_change("a count of the grade asked for")
+                .would_change("a group the forces limit names that reaches the place")
+                .would_change(format!("{id} not named in the forces limit"))
+                .done();
+            self.target(in_scope).commands.push(StaffCommand {
+                kind: CommandKind::FormIntent {
+                    parent: end.id,
+                    kind,
+                },
+                reason,
+            });
+            if let Some(need) = self.needs.iter_mut().find(|n| n.plan == plan.id) {
+                need.moved_to_look = Some(sim_core::command::MovedToLook {
+                    task_force: id,
+                    hex,
+                });
+            }
+            if in_scope {
+                self.lines.push(format!(
+                    "{} would form {id_new}, to operate the carrier force {id} from {hex}, under it, to look at {place} ({hex_words}).",
+                    end.id
+                ));
+            }
+            return;
+        }
     }
 
     /// The "take a place" intent `task` stands under, where it does.

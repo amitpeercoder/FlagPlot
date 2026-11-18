@@ -2932,7 +2932,10 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 && !stem.starts_with("81_")
                 // And scenario 82's, whose take is told how much must be
                 // known (decision 0159, rule D).
-                && !stem.starts_with("82_"))
+                && !stem.starts_with("82_")
+                // And scenario 83's, whose staff moves a carrier force to
+                // look (decision 0159, rule D, item 14).
+                && !stem.starts_with("83_"))
             .then(|| stem.to_string())
         })
         .collect();
