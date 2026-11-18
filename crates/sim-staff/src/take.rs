@@ -96,6 +96,9 @@ pub(crate) enum Waiting {
         coming: Vec<String>,
         /// Today's choice, in words.
         words: String,
+        /// That day's lift: its force, units and source, what the plan
+        /// order works the day ashore from (decision 0159, 15).
+        lift: Lift,
     },
     /// Item 7: no day in reach brings them; at balanced the staff hands in
     /// the notice that it cannot bring enough and waits for the commander.
@@ -111,6 +114,26 @@ pub(crate) enum Waiting {
     },
 }
 
+/// A lift as a choice gives it: the transport force, the units and the
+/// source.
+#[derive(Clone, Debug)]
+pub(crate) struct Lift {
+    pub(crate) force: TaskForceId,
+    pub(crate) units: Vec<LandUnitId>,
+    pub(crate) source: BaseId,
+    pub(crate) source_hex: Hex,
+}
+
+/// What a take waits for in men this morning (decision 0159, rule B), kept
+/// for the plan order: the men wanted, the men to hand, and the day that
+/// brings them with its lift, or `None` where no day in reach does.
+#[derive(Clone, Debug)]
+pub(crate) struct MenWait {
+    pub(crate) wanted: u32,
+    pub(crate) have: u32,
+    pub(crate) then: Option<(u32, Lift)>,
+}
+
 /// The men the staff wants for each man of the estimate, by risk (item 10).
 /// The staff's figures, placeholders.
 pub(crate) fn men_per_man(risk: Risk) -> u32 {
@@ -119,6 +142,17 @@ pub(crate) fn men_per_man(risk: Risk) -> u32 {
         Risk::Balanced => 2,
         Risk::Press => 1,
     }
+}
+
+/// The men the staff wants against the side's estimate of the enemy at
+/// `place`, at `risk` (item 10); `None` where it holds no estimate.
+pub(crate) fn men_wanted(
+    view: &sim_core::view::SideView<'_>,
+    place: Hex,
+    risk: Risk,
+) -> Option<u32> {
+    view.ground_estimate(place)
+        .map(|e| e.men * men_per_man(risk))
 }
 
 /// Whether the force has been routed to the place: its route acts there, or
@@ -179,10 +213,30 @@ impl Supply {
 }
 
 /// The days of item 18.
-struct Days {
+pub(crate) struct Days {
     embark: u32,
     passage: u32,
     words: String,
+}
+
+impl Days {
+    /// The day the first men land of a lift whose landing is ready on the
+    /// morning of `ready`: it embarks for `embark` days, sails, and lands on
+    /// the last day of its passage. The latest day's sum read the other way
+    /// (item 13: the landing is to be ready on the morning of the latest day
+    /// less the days to embark and of passage, plus 1).
+    pub(crate) fn lands_on(&self, ready: u32) -> u32 {
+        (ready + self.embark + self.passage).saturating_sub(1)
+    }
+
+    /// Item 13: the morning a landing is to be ready by for the place to be
+    /// the side's by the end of `by_day`: that day less the days to embark
+    /// and of passage, plus 1, and never before day 1.
+    pub(crate) fn task_date(&self, by_day: u32) -> u32 {
+        (by_day + 1)
+            .saturating_sub(self.embark + self.passage)
+            .max(1)
+    }
 }
 
 /// The check that the place can be held (decision 0144, 10 to 17), made
@@ -314,9 +368,7 @@ impl Day<'_, '_> {
             return Vec::new();
         }
         let risk = self.state.risk_read_up(end.id);
-        let wanted = view
-            .ground_estimate(place)
-            .map(|e| e.men * men_per_man(risk));
+        let wanted = men_wanted(view, place, risk);
         // The wait of item 5 with no man of the operation ashore.
         let none_wanted = wanted == Some(0);
         let waits = match view.task_forces().find(|f| f.id == first) {
@@ -588,8 +640,7 @@ impl Day<'_, '_> {
             }
         };
         // Item 13: the task's date.
-        let task_date =
-            by_day.map(|day| (day + 1).saturating_sub(days.embark + days.passage).max(1));
+        let task_date = by_day.map(|day| days.task_date(day));
         let date_words = match (by_day, task_date) {
             (Some(day), Some(date)) => format!(
                 " The place is to be the side's by the end of day {day}: the landing is to be ready on the morning of day {day} - {} - {} + 1 = {date}.",
@@ -801,12 +852,20 @@ impl Day<'_, '_> {
                     source,
                     source_hex,
                     ..
-                } if choice.short.is_none() => match by_day {
-                    None => Some(choice.men),
-                    Some(date) => self
-                        .ready_by(end, choice, *source, *source_hex, place, risk, day, date)
-                        .then_some(choice.men),
-                },
+                } if choice.short.is_none() => {
+                    let lift = Lift {
+                        force: choice.force,
+                        units: choice.picks.iter().map(|p| p.id).collect(),
+                        source: *source,
+                        source_hex: *source_hex,
+                    };
+                    match by_day {
+                        None => Some((choice.men, lift)),
+                        Some(date) => self
+                            .ready_by(end, choice, *source, *source_hex, place, risk, day, date)
+                            .then_some((choice.men, lift)),
+                    }
+                }
                 _ => None,
             };
             let coming = match &found {
@@ -814,7 +873,7 @@ impl Day<'_, '_> {
                 _ => Vec::new(),
             };
             self.as_of.set(None);
-            if let Some(then) = reach {
+            if let Some((then, lift)) = reach {
                 return Some(Waiting::For {
                     day,
                     wanted,
@@ -822,6 +881,7 @@ impl Day<'_, '_> {
                     then,
                     coming,
                     words,
+                    lift,
                 });
             }
         }
@@ -954,23 +1014,11 @@ impl Day<'_, '_> {
             return false;
         };
         let units: Vec<LandUnitId> = choice.picks.iter().map(|p| p.id).collect();
-        let fed = self.with_aboard(&force, &units);
-        let check = self.hold_check(end, &force, &fed, figures, place);
-        let supply = self.supply(
-            &force,
-            &fed,
-            source,
-            source_hex,
-            figures,
-            check.as_ref().map(|c| (c.days, c.days_words.clone())),
-            self.draw_on(end, source),
-        );
-        let Ok(days) = self.days(&force, &units, &supply, place, source_hex, end) else {
+        let Ok(days) = self.lift_days(end, &force, &units, source, source_hex, place, figures)
+        else {
             return false;
         };
-        let date = (by_day + 1)
-            .saturating_sub(days.embark + days.passage)
-            .max(1);
+        let date = days.task_date(by_day);
         let left = i64::from(date) - i64::from(day);
         self.days_to_ready(&force, place, &units, risk, Some(left))
             .is_some_and(|d| day + d <= date)
@@ -981,6 +1029,26 @@ impl Day<'_, '_> {
     pub(crate) fn hand_in_wait(&mut self, end: &Intent, plan: &Plan, waiting: &Waiting) {
         let in_scope = self.in_scope(end.id);
         let today = self.today;
+        // Decision 0159, 15: kept for the plan order.
+        let kept = match waiting {
+            Waiting::For {
+                day,
+                wanted,
+                have,
+                lift,
+                ..
+            } => MenWait {
+                wanted: *wanted,
+                have: *have,
+                then: Some((*day, lift.clone())),
+            },
+            Waiting::NoDay { wanted, have, .. } => MenWait {
+                wanted: *wanted,
+                have: *have,
+                then: None,
+            },
+        };
+        self.men_waits.insert(end.id, kept);
         match waiting {
             Waiting::For {
                 day,
@@ -989,6 +1057,7 @@ impl Day<'_, '_> {
                 then,
                 coming,
                 words,
+                ..
             } => {
                 let coming_words = if coming.is_empty() {
                     String::new()
@@ -1725,6 +1794,36 @@ impl Day<'_, '_> {
             .map(|c| c.cruise_speed_kn)
             .min()
             .filter(|speed| *speed > Fixed::ZERO)
+    }
+
+    /// Item 18 for a lift of `units` by `force` from `source`: the supply it
+    /// takes, reckoned for every man aboard and by the check that the place
+    /// can be held (decision 0144, 13; decision 0152, 4), and from it the
+    /// days to embark and of the passage. The sums a latest day is worked by
+    /// ([`Self::ready_by`]), and the plan order's day ashore.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn lift_days(
+        &self,
+        end: &Intent,
+        force: &TaskForce,
+        units: &[LandUnitId],
+        source: BaseId,
+        source_hex: Hex,
+        place: Hex,
+        figures: &sim_core::refdata::GroundFigures,
+    ) -> Result<Days, String> {
+        let fed = self.with_aboard(force, units);
+        let check = self.hold_check(end, force, &fed, figures, place);
+        let supply = self.supply(
+            force,
+            &fed,
+            source,
+            source_hex,
+            figures,
+            check.as_ref().map(|c| (c.days, c.days_words.clone())),
+            self.draw_on(end, source),
+        );
+        self.days(force, units, &supply, place, source_hex, end)
     }
 
     /// Item 18: the days to embark and of the passage.
@@ -3091,10 +3190,7 @@ impl Day<'_, '_> {
         first_id: TaskForceId,
     ) -> bool {
         let risk = self.state.risk_read_up(end.id);
-        let wanted = self
-            .view
-            .ground_estimate(place)
-            .map(|e| e.men * men_per_man(risk));
+        let wanted = men_wanted(self.view, place, risk);
         // No man of the operation is ashore at the place: the fit men are
         // none.
         let wait = wanted

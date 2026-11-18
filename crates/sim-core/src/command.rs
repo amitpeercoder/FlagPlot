@@ -2698,6 +2698,159 @@ pub trait Staff {
     fn needs_to_know(&self, _view: SideView<'_>) -> Vec<NeedToKnow> {
         Vec::new()
     }
+
+    /// The plan order of each intent of the commander's in force: the
+    /// mission, the phases, what the plan waits for, what it needs and has,
+    /// the day it expects to be ashore, the need to know and the tasks
+    /// (decision 0159, rule E). Worked from the view as the staff works this
+    /// morning and stored nowhere. Empty by default.
+    fn plan_orders(&self, _view: SideView<'_>) -> Vec<PlanOrder> {
+        Vec::new()
+    }
+}
+
+/// A plan handed in as an order (decision 0159, rule E, items 15 to 17): for
+/// one intent of the commander's, what the staff already works out, as data.
+/// It is worked when asked, from the side's command state and the staff's own
+/// sums, and is not state: not hashed, not saved. The plan's state, its phases
+/// and its tasks are read from the command state as the morning finds it,
+/// before that morning's decisions; what it waits for, the men, the day
+/// ashore and the need to know are the staff's working of that morning.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct PlanOrder {
+    pub intent: IntentId,
+    /// The intent in words, as the staff's reasons state it.
+    pub mission: String,
+    pub plan: PlanId,
+    pub plan_state: PlanState,
+    /// The phases in order: a take's prepare, move and land; a hold's wait
+    /// and hold, or hold alone where the base is the side's. Empty for the
+    /// other kinds.
+    pub phases: Vec<Phase>,
+    /// What must be so before the phase under way can end, where the staff
+    /// waits on it. Empty once a take's plan is released.
+    pub waits_for: Vec<Waited>,
+    /// The men wanted and the men to hand, where the side holds a count of
+    /// the enemy at the place; `None` otherwise.
+    pub men: Option<MenCount>,
+    /// The day the take expects its first men ashore at the place, by the
+    /// sums it uses for a latest day; `None` where it cannot work one (a thing
+    /// waited for has no day) or where its men are already ashore.
+    pub expected_ashore: Option<u32>,
+    /// The need to know of a take whose plan is preparing, as
+    /// [`Staff::needs_to_know`] gives it.
+    pub need_to_know: Option<NeedToKnow>,
+    /// The staff's intents under it, each with its phase.
+    pub tasks: Vec<OrderTask>,
+}
+
+/// The name of a phase of a plan order (decision 0159, 16).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum PhaseName {
+    Prepare,
+    Move,
+    Land,
+    Wait,
+    Hold,
+}
+
+impl PhaseName {
+    /// The name as the tools write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            PhaseName::Prepare => "prepare",
+            PhaseName::Move => "move",
+            PhaseName::Land => "land",
+            PhaseName::Wait => "wait",
+            PhaseName::Hold => "hold",
+        }
+    }
+}
+
+/// The condition that ends a phase.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum PhaseEnd {
+    /// The plan is released.
+    Released,
+    /// The first man of the side is ashore at the place.
+    FirstManAshore(Hex),
+    /// The place is the side's: it holds a base there and the enemy none.
+    PlaceIsTheSides(Hex),
+    /// The base is the side's.
+    BaseIsTheSides(BaseId),
+    /// It does not end.
+    Never,
+}
+
+/// Where a phase stands.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum PhaseStage {
+    Done,
+    UnderWay,
+    ToCome,
+}
+
+impl PhaseStage {
+    /// The word as the tools write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            PhaseStage::Done => "done",
+            PhaseStage::UnderWay => "under_way",
+            PhaseStage::ToCome => "to_come",
+        }
+    }
+}
+
+/// One phase of a plan order: its name, what ends it and where it stands.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Phase {
+    pub name: PhaseName,
+    pub ends: PhaseEnd,
+    pub stage: PhaseStage,
+}
+
+/// One thing a plan waits for (decision 0159, 15), whether it is met, and the
+/// day it is expected to be met where the staff can work one.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Waited {
+    pub thing: WaitedFor,
+    pub met: bool,
+    pub expected_day: Option<u32>,
+}
+
+/// The kinds of thing a plan waits for.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum WaitedFor {
+    /// The men wanted, where the first lift would sail short of them
+    /// (decision 0159, rule B).
+    Men { wanted: u32, to_hand: u32 },
+    /// A leave the commander withholds.
+    Leave(Leave),
+    /// The commander's limit "not before" this day.
+    Day(u32),
+    /// The commander's limit "wait for" a task force or a land unit.
+    Force(Awaited),
+    /// The commander's limit "after" another intent.
+    Intent(IntentId),
+    /// The count asked before the landing goes (decision 0159, 12).
+    Knowledge(Knowledge),
+}
+
+/// The men a take wants against the side's count of the enemy, and the men
+/// it has to hand for them.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct MenCount {
+    pub wanted: u32,
+    pub to_hand: u32,
+}
+
+/// A task under a plan order: a staff intent in force, its kind and the phase
+/// it serves.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct OrderTask {
+    pub intent: IntentId,
+    pub kind: IntentKind,
+    pub phase: Option<PhaseName>,
 }
 
 /// What must be known of the enemy at a place before a landing goes, and

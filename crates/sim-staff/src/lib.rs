@@ -38,6 +38,7 @@ mod look;
 mod morning;
 mod neutralise;
 mod night;
+mod order;
 mod picture;
 mod planner;
 mod projection;
@@ -301,6 +302,10 @@ impl Staff for SupplyStaff {
 
     fn needs_to_know(&self, view: SideView<'_>) -> Vec<sim_core::command::NeedToKnow> {
         air::needs_to_know(&view)
+    }
+
+    fn plan_orders(&self, view: SideView<'_>) -> Vec<sim_core::command::PlanOrder> {
+        air::plan_orders(&view)
     }
 }
 

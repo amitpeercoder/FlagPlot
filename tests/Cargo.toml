@@ -467,3 +467,7 @@ path = "scenario_82_how_much_must_be_known.rs"
 [[test]]
 name = "scenario_83_a_force_moved_to_look"
 path = "scenario_83_a_force_moved_to_look.rs"
+
+[[test]]
+name = "scenario_84_the_plan_as_an_order"
+path = "scenario_84_the_plan_as_an_order.rs"
