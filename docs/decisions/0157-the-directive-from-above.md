@@ -53,3 +53,13 @@ Two things follow, and are open:
 - **The table must hold what the directive no longer says.** Touching a place gives the latest estimate of the enemy there with its age, and a schedule gives what is coming and when. Neither is in the table yet; today both are only in the staff's return.
 - **The count judges what was never said.** The points still weigh cargo landed, enemy men lost and each kind of ship. With the directive silent on them, the end-of-game assessment should read as the mission judged, held or not, with losses as its cost, or a player is marked on a scale he was never shown. This goes with setting the objectives scale from the record, before step 3's stage 5.
 
+## As built in the table: what is known of what is touched, and the schedule
+
+The designer, the same day: a player should be able "to click an enemy unit or area to get the intelligence report with its age, and to point at the player's own units and bases and get to see what's known about them". Built in the table from the seat's tools as they are, with no change to them:
+
+- **Of the enemy.** A contact: the ships reported, what they were taken for, where, and the report's age in pulses. A place: the latest estimate of his men, where it came from (told, seen from the air, men in contact) and its age in days; of an enemy base, that its name, place and holder are all that is known beyond reports. Each card says it is a report and can be wrong. An empty hex says that what is not reported is not known.
+- **Of the side's own.** A force: what it is doing, its ships with their fuel and damage, the air groups and men aboard, and whether the staff or the commander has it. A base: stock, days of supply, men ashore, air groups, and the forces lying there, each one touch away.
+- **The schedule.** The air groups due and the forces not yet available, by date, with what cannot be delivered as things stand.
+
+Open from it: a seat at the theatre knows its own forces exactly, so an own card carries no age; where command levels are on, a superior knows a force by its last report, and the card should then give that report's age. An air group's reach, a unit's history and an enemy contact's track over time are not shown. The contact card was built from the tool's fields and has not been seen with a live contact.
+
