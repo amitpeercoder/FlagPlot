@@ -175,6 +175,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   <div class="clock" id="clock">DAY 1</div>
   <div class="status" id="status" role="status">Laying the chart.</div>
   <div class="acts">
+    <button type="button" id="btn-pieces" title="Three ways of drawing the pieces, to compare">Pieces: blocks</button>
     <button type="button" id="btn-back">Sit back</button>
     <button type="button" id="btn-lean">Lean in</button>
     <button type="button" id="btn-force" hidden>Order a force</button>
@@ -260,7 +261,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 
   // ---- what the side knows, as the tools gave it ----
   var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [];
-  var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 1, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], state: null, over: false, result: null };
+  var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 0, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], state: null, over: false, result: null };
   var lastRun = null, draft = null;
   function baseByNumber(n) { var all = M.bases.concat(M.enemyBases), i; for (i = 0; i < all.length; i++) if (num(all[i].base.handle) === n) return all[i]; return null; }
   function intentPlace(it) {
@@ -307,8 +308,57 @@ button:disabled { opacity: 0.45; cursor: default; }
     var grp = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(len, 0.07, wid), blue); b.position.y = 0.035; b.castShadow = true; grp.add(b);
     var s = new THREE.Mesh(new THREE.BoxGeometry(len * 0.55, 0.012, wid * 0.3), cream); s.position.y = 0.076; grp.add(s); scene.add(grp); return grp;
   }
+  // ---- three ways of drawing the pieces, to compare (decision 0154) ----
+  // 'blocks': plain blocks for the side's forces, the enemy as rings on the
+  // chart. 'nato': tiles with the standard's frames and colours (a circle
+  // for a friend at sea, a rectangle ashore, a diamond for the enemy, a
+  // dashed frame for what is only reported) and letter codes. 'period':
+  // cream tiles in ink, the same grammar of shapes, with a silhouette.
+  var STYLES = ['blocks', 'nato', 'period'], pieceStyle = 'blocks', drawn = 'blocks';
+  function kindOf(word) { word = String(word || ''); return /carrier/.test(word) ? 'carrier' : /transport|cargo|auxiliary/.test(word) ? 'transport' : /escort|destroyer/.test(word) ? 'escort' : /surface|cruiser|battleship/.test(word) ? 'surface' : 'unknown'; }
+  function silhouette(g, kind) {
+    function hull(a, b) { g.beginPath(); g.moveTo(-a, 6); g.lineTo(a, 6); g.lineTo(a - 9, 18); g.lineTo(-a + 6, 18); g.closePath(); g.fill(); }
+    if (kind === 'carrier') { hull(50, 0); g.fillRect(-54, 0, 108, 6); g.fillRect(6, -14, 14, 14); g.fillRect(10, -22, 4, 8); }
+    else if (kind === 'surface') { hull(50, 0); g.fillRect(-12, -8, 24, 14); g.fillRect(-4, -19, 8, 11); g.fillRect(-36, -2, 12, 8); g.fillRect(24, -2, 12, 8); g.fillRect(-50, 0, 16, 3); g.fillRect(34, 0, 16, 3); }
+    else if (kind === 'transport') { hull(46, 0); g.fillRect(-8, -10, 16, 16); g.lineWidth = 3; [-28, 28].forEach(function (x) { g.beginPath(); g.moveTo(x, 6); g.lineTo(x, -22); g.moveTo(x, -20); g.lineTo(x + (x < 0 ? 14 : -14), -4); g.stroke(); }); }
+    else if (kind === 'escort') { hull(36, 0); g.fillRect(-8, -5, 14, 11); g.fillRect(-2, -13, 6, 8); g.fillRect(-26, 1, 8, 5); }
+    else if (kind === 'infantry') { g.lineWidth = 5; g.strokeRect(-34, -22, 68, 44); g.beginPath(); g.moveTo(-34, -22); g.lineTo(34, 22); g.moveTo(34, -22); g.lineTo(-34, 22); g.stroke(); }
+    else if (kind === 'base') { g.lineWidth = 5; g.beginPath(); g.moveTo(-14, 24); g.lineTo(-14, -26); g.stroke(); g.beginPath(); g.moveTo(-14, -26); g.lineTo(26, -14); g.lineTo(-14, -2); g.closePath(); g.fill(); g.beginPath(); g.arc(-14, 24, 5, 0, 7); g.fill(); }
+    else { g.font = '700 54px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 0, 2); }
+  }
+  function symbol(style, side, kind, sure) {
+    var c = document.createElement('canvas'), g = c.getContext('2d'), own = side === 'own', nato = style === 'nato'; c.width = c.height = 192;
+    g.fillStyle = nato ? '#f3f1ea' : '#efe6c8'; g.fillRect(0, 0, 192, 192);
+    var ink = nato ? '#111' : own ? OWN : RED, fill = nato ? (own ? '#80e0ff' : '#ff8080') : null;
+    g.translate(96, 96); g.strokeStyle = ink; g.lineWidth = nato ? 9 : 7; g.setLineDash(sure ? [] : [16, 11]);
+    g.beginPath();
+    if (!own) { g.moveTo(0, -82); g.lineTo(82, 0); g.lineTo(0, 82); g.lineTo(-82, 0); g.closePath(); }
+    else if (nato && kind !== 'infantry' && kind !== 'base') g.arc(0, 0, 76, 0, 7);
+    else g.rect(-80, -56, 160, 112);
+    if (fill) { g.fillStyle = fill; g.fill(); } g.stroke(); g.setLineDash([]);
+    g.fillStyle = ink; g.strokeStyle = ink;
+    if (nato) {
+      if (kind === 'infantry') { g.lineWidth = 7; g.beginPath(); if (own) { g.moveTo(-80, -56); g.lineTo(80, 56); g.moveTo(80, -56); g.lineTo(-80, 56); } else { g.moveTo(-41, -41); g.lineTo(41, 41); g.moveTo(41, -41); g.lineTo(-41, 41); } g.stroke(); }
+      else if (kind === 'base') { if (own) g.fillRect(-80, -74, 160, 18); else g.fillRect(-30, -74, 60, 16); }
+      else { g.font = '700 58px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText({ carrier: 'CV', surface: 'CA', transport: 'AP', escort: 'DD' }[kind] || '?', 0, 4); }
+    } else { if (!own) g.scale(0.78, 0.78); else g.scale(1.25, 1.25); silhouette(g, kind); }
+    return c;
+  }
+  var symCache = {};
+  function tile(side, kind, sure, size, alpha) {
+    var key = [pieceStyle, side, kind, sure].join('|'), tex = symCache[key];
+    if (!tex) { tex = symCache[key] = new THREE.CanvasTexture(symbol(pieceStyle, side, kind, sure)); tex.anisotropy = 8; }
+    var edge = new THREE.MeshStandardMaterial({ color: pieceStyle === 'nato' ? 0xd9d6cc : 0xcdbf94, roughness: 0.8, transparent: alpha < 1, opacity: alpha == null ? 1 : alpha });
+    var top = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, transparent: alpha < 1, opacity: alpha == null ? 1 : alpha });
+    var grp = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(size, 0.035, size), [edge, edge, top, edge, edge, edge]);
+    b.rotation.x = -0.42; b.position.y = 0.02 + Math.sin(0.42) * size / 2; b.castShadow = true; grp.add(b); scene.add(grp); return grp;
+  }
+  function forcePiece(f) { var big = f.mission === 'carrier'; if (pieceStyle === 'blocks') { var g = block(big ? 0.24 : 0.17, 0.08); g.rotation.y = 0.3; return g; } return tile('own', kindOf(f.mission), true, big ? 0.26 : 0.21); }
+  function fixed(grp, v, dx, dz) { grp.position.set(v.x + (dx || 0), 0, v.z + (dz || 0)); statics.push(grp); return grp; }
+  $('btn-pieces').addEventListener('click', function () { pieceStyle = STYLES[(STYLES.indexOf(pieceStyle) + 1) % STYLES.length]; this.textContent = 'Pieces: ' + (pieceStyle === 'nato' ? 'NATO style' : pieceStyle === 'period' ? 'period' : 'blocks'); layPieces(); drawMarks(); });
   var moveT = 1, mover = null;
   function layPieces() {
+    if (drawn !== pieceStyle) { Object.keys(pieces).forEach(function (h) { scene.remove(pieces[h].grp); delete pieces[h]; }); drawn = pieceStyle; }
     statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels();
     var byHex = {}, seen = {};
     M.forces.forEach(function (f) { if (!f.place) return; var k = f.place.q + ',' + f.place.r; (byHex[k] = byHex[k] || []).push(f); });
@@ -316,9 +366,9 @@ button:disabled { opacity: 0.45; cursor: default; }
     Object.keys(byHex).forEach(function (k) {
       var list = byHex[k], centre = placeOf(list[0].place);
       list.forEach(function (f, i) {
-        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? 0.07 + 0.035 * i : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, 0, Math.sin(an) * rad));
+        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? (pieceStyle === 'blocks' ? 0.07 + 0.035 * i : 0.14 + 0.06 * i) : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, 0, Math.sin(an) * rad));
         var p = pieces[h]; seen[h] = true;
-        if (!p) { p = pieces[h] = { grp: block(f.mission === 'carrier' ? 0.24 : 0.17, 0.08), from: to.clone(), to: to.clone() }; p.grp.position.copy(to); p.grp.rotation.y = 0.3; }
+        if (!p) { p = pieces[h] = { grp: forcePiece(f), from: to.clone(), to: to.clone() }; p.grp.position.copy(to); }
         else { p.from = p.grp.position.clone(); p.to = to; var d = p.from.distanceTo(to); if (d > far) { far = d; mover = p; } }
         p.force = f;
         var lines = [f.task_force.name.replace(/^Placeholder /, ''), f.ships_afloat + ' ships · ' + String(f.mission).replace(/_/g, ' ')];
@@ -330,14 +380,23 @@ button:disabled { opacity: 0.45; cursor: default; }
     Object.keys(pieces).forEach(function (h) { if (!seen[h]) { scene.remove(pieces[h].grp); delete pieces[h]; } });
     moveT = mover ? 0 : 1;
     M.bases.forEach(function (b) {
-      var v = placeOf(b.place), peg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.09, 20), blue); peg.position.copy(v).setY(0.045); peg.castShadow = true; scene.add(peg); statics.push(peg);
+      var v = placeOf(b.place);
+      if (pieceStyle === 'blocks') { var peg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.09, 20), blue); peg.position.copy(v).setY(0.045); peg.castShadow = true; scene.add(peg); statics.push(peg); }
+      else fixed(tile('own', 'base', true, 0.17), v, 0, -0.16);
       var d = b.days_of_supply && b.days_of_supply.days; label([b.base.name.toUpperCase()], OWN, function () { return v; }, 0.5, -1, [0, 0.15]); label([b.base.name.toUpperCase(), 'Your base · supply ' + Math.round(parseFloat(b.supply_t)) + ' t' + (d != null ? ', ' + d + ' days' : '')], OWN, function () { return v; }, 0.85, 1, [-0.35, 0.1]);
     });
+    if (pieceStyle !== 'blocks') {
+      M.enemyBases.forEach(function (b) { var v = placeOf(b.place); if (v) fixed(tile('enemy', 'base', true, 0.17), v, 0, -0.16); });
+      M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) fixed(tile('enemy', 'infantry', false, 0.16, Math.max(0.45, 1 - (e.age_days || 0) / 6)), v, 0.17, 0.02); });
+      M.contacts.forEach(function (c) { var v = placeOf(c.place); if (v) fixed(tile('enemy', kindOf(c.taken_for && (c.taken_for.kind || c.taken_for)), false, 0.2, Math.max(0.4, 1 - (c.age_pulses || 0) / 9)), v); });
+    }
     M.enemyBases.forEach(function (b) { var v = placeOf(b.place); label([b.base.name.toUpperCase()], RED, function () { return v; }, 0.45, -1, [0, -0.15]); label([b.base.name.toUpperCase(), 'Enemy base'], RED, function () { return v; }, 0.45, 1, [0, -0.2]); });
     var ashore = {};
     M.units.forEach(function (u) { if (!u.place || !u.men_ashore) return; var k = u.place.q + ',' + u.place.r; ashore[k] = ashore[k] || { place: u.place, men: 0, units: 0 }; ashore[k].men += u.men_ashore; ashore[k].units++; });
     Object.keys(ashore).forEach(function (k) {
-      var a = ashore[k], v = placeOf(a.place), sq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.03, 0.1), blue); sq.position.copy(v).add(new THREE.Vector3(-0.08, 0.015, 0.08)); sq.castShadow = true; scene.add(sq); statics.push(sq);
+      var a = ashore[k], v = placeOf(a.place), sq;
+      if (pieceStyle === 'blocks') { sq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.03, 0.1), blue); sq.position.copy(v).add(new THREE.Vector3(-0.08, 0.015, 0.08)); sq.castShadow = true; scene.add(sq); statics.push(sq); }
+      else sq = fixed(tile('own', 'infantry', true, 0.16), v, -0.17, 0.06);
       label(['YOUR MEN ASHORE', commas(a.men) + ' men, ' + a.units + ' units'], OWN, function () { return sq.position; }, 0.7, 1, [-0.6, 0.35]);
     });
     M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) label(['ENEMY ASHORE, ESTIMATED', 'About ' + commas(e.men) + ' men', e.age_days ? e.age_days + ' days old' : 'Reported today'], RED, function () { return v; }, 1.0, 1, [0.55, -0.4]); });
@@ -378,8 +437,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   function dateOf(days, year) { if (!config.start) return ''; var d = new Date(config.start + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + days); return d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + (year ? ' ' + d.getUTCFullYear() : ''); }
   function showClock() {
     $('btn-force').hidden = !(OFFERED.advance && clock.at !== 'dusk' && !M.over);
-    if (clock.at !== 'dusk') { var today = dateOf(M.day - 1, true); $('clock').textContent = (today ? today + ' · ' : '') + clock.at + ' · DAY ' + M.day + ' OF ' + M.lastDay; return; }
-    var day = Math.min(M.day, M.lastDay), dusk = dateOf(M.day - 2, true);
+    if (clock.at !== 'dusk') { var today = dateOf(M.day - 1, true); $('clock').textContent = (today ? today + ' · ' : '') + clock.at + ' · DAY ' + M.day + (M.lastDay ? ' OF ' + M.lastDay : ''); return; }
+    var day = M.lastDay ? Math.min(M.day, M.lastDay) : M.day, dusk = dateOf(M.day - 2, true);
     $('clock').textContent = (dusk ? dusk + ' · ' : '') + '1800 · ' + (M.over ? 'THE LAST DAY IS FOUGHT' : 'ORDERS FOR DAY ' + day + ' OF ' + M.lastDay);
   }
   function showPhase(day, phase) {
