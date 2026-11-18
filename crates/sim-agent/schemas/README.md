@@ -1075,5 +1075,6 @@ what must be known before its landing goes, worked from the side's view as the s
 sets it), `held` (the side's estimate: `men`, `came_from`, `day`, `age_days` and `could_be`, the `lowest` and
 `highest` it could be in truth from its grade's error range, `highest` null where the range's low end is 0; null for a
 count that was told or where the figures give no range; `held` is null where nothing is held), `looking` (the air
-group in the side's numbers and `since_day`, or null), `met` and `text`, the need in one line. It is null for every
-other plan, a released one too.
+group in the side's numbers and `since_day`, or null), `moved_to_look` (decision 0159, item 14: the carrier force in
+the side's numbers that the staff moves or has moved to look at the place while the need is not met, and its `hex`, or
+null), `met` and `text`, the need in one line. It is null for every other plan, a released one too.
