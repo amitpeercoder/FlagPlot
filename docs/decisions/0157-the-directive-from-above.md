@@ -61,7 +61,9 @@ The designer, the same day: a player should be able "to click an enemy unit or a
 - **Of the side's own.** A force: what it is doing, its ships with their fuel and damage, the air groups and men aboard, and whether the staff or the commander has it. A base: stock, days of supply, men ashore, air groups, and the forces lying there, each one touch away.
 - **The schedule.** The air groups due and the forces not yet available, by date, with what cannot be delivered as things stand.
 
-Open from it: a seat at the theatre knows its own forces exactly, so an own card carries no age; where command levels are on, a superior knows a force by its last report, and the card should then give that report's age. An air group's reach, a unit's history and an enemy contact's track over time are not shown. The contact card was built from the tool's fields and has not been seen with a live contact.
+Open from it: a seat at the theatre knows its own forces exactly, so an own card carries no age; where command levels are on, a superior knows a force by its last report, and the card should then give that report's age. An air group's reach, a unit's history and an enemy contact's track over time are not shown. The contact card was first built from the tool's fields alone; it has since been read on a live contact.
+
+Mended the same day, when the designer could not reach a contact: one lying in the hex of the side's own base was hidden behind the base, which took the touch. A touch on a tile now opens that tile's own thing, whatever else is in the hex, and a base or a place leads to the contacts lying there. A contact's card also says how it is known: the report that made or refreshed it and what led to that report, from `explain` on the contact's last report.
 
 ## As built in the table: the staff's evening report
 
