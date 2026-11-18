@@ -255,7 +255,7 @@ fn the_saved_game_holds_orders_with_their_origin_and_the_files_it_names() {
     let value: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
     assert_eq!(value["format"], "flagplot-saved-game");
-    assert_eq!(value["version"], 19);
+    assert_eq!(value["version"], 20);
     assert_eq!(
         value["state_version"],
         std::str::from_utf8(sim_core::hash::STATE_VERSION).expect("the version is text")
@@ -549,7 +549,7 @@ fn a_scenario_with_commands_saves_them_and_replays_to_the_same_hashes() {
     let game = save(&scenario, "commands-replay-save", &[]);
     let value: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
-    assert_eq!(value["version"], 19);
+    assert_eq!(value["version"], 20);
     assert_eq!(value["doctrine_version"], sim_staff::DOCTRINE_VERSION);
     let commands = value["commands"].as_array().expect("commands");
     assert_eq!(commands.len(), 5);
@@ -653,7 +653,7 @@ fn a_saved_game_of_version_2_is_refused_not_converted() {
         map.remove("staff");
         map.remove("doctrine_version");
     });
-    assert!(error.contains("saved game version 2, now 19"), "{error}");
+    assert!(error.contains("saved game version 2, now 20"), "{error}");
     assert!(error.contains("not converted"), "{error}");
 }
 
@@ -749,7 +749,7 @@ fn a_game_played_through_serve_saves_the_scenarios_commands_and_replays() {
     ok(&output, "serve");
     let value: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
-    assert_eq!(value["version"], 19);
+    assert_eq!(value["version"], 20);
     assert_eq!(value["commands"].as_array().expect("commands").len(), 5);
     // The staff the session was given handed in what it decided on day 1.
     assert_eq!(value["staff"][0]["day"], 1);
@@ -822,4 +822,68 @@ fn a_game_file_is_resumed_only_under_the_doctrine_it_was_begun_under() {
         error.contains("\"none\"") && error.contains(sim_staff::DOCTRINE_VERSION),
         "{error}"
     );
+}
+
+/// Decision 0156, scenario 78: a saved game keeps the pulse of an order
+/// given inside a day (and none on an order of dusk), and its replay hands
+/// the order in at that pulse, to the same daily hashes. The same file with
+/// the order's pulse changed to the afternoon, and its hashes to those of
+/// the scenario with the order at 1200 (case B), replays to case B's hashes.
+#[test]
+fn scenario_78_saves_and_replays_with_the_pulse_of_its_order() {
+    let scenario = "data/scenarios/78_orders_inside_a_day.toml";
+    let case_a = hash_lines(&binary(&["hash", scenario]));
+    assert_eq!(case_a.len(), 3);
+    let game = save(scenario, "78", &[]);
+    let game_text = game.to_string_lossy().into_owned();
+    let replayed_lines = |output: &Output| -> Vec<String> {
+        text(&output.stdout)
+            .lines()
+            .filter(|l| l.starts_with("day "))
+            .map(str::to_string)
+            .collect()
+    };
+    let replayed = binary(&["replay", &game_text]);
+    ok(&replayed, "replay of scenario 78");
+    assert_eq!(replayed_lines(&replayed), case_a);
+
+    let mut value: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
+    assert_eq!(value["version"], 20);
+    let orders = value["orders"].as_array().expect("orders");
+    assert_eq!(orders.len(), 3);
+    assert!(orders[..2].iter().all(|order| order.get("pulse").is_none()));
+    assert_eq!(orders[2]["pulse"], "morning");
+    assert_eq!(orders[2]["day"], 1);
+
+    // Case B's hashes: the scenario with its order at 1200.
+    let copy = standalone(scenario, "78-b");
+    let source = fs::read_to_string(&copy).expect("reads");
+    assert_eq!(source.matches("pulse = \"morning\"").count(), 1);
+    fs::write(
+        &copy,
+        source.replace("pulse = \"morning\"", "pulse = \"afternoon\""),
+    )
+    .expect("writes");
+    let case_b = hash_lines(&binary(&["hash", &copy.to_string_lossy()]));
+    assert_eq!(case_b.len(), 3);
+    assert_ne!(case_a[0], case_b[0]);
+
+    value["orders"][2]["pulse"] = serde_json::json!("afternoon");
+    value["hashes"] = serde_json::Value::Array(
+        case_b
+            .iter()
+            .map(|line| {
+                let words: Vec<&str> = line.split(' ').collect();
+                serde_json::json!({
+                    "day": words[1].parse::<u32>().expect("a day"),
+                    "hash": words[2],
+                })
+            })
+            .collect(),
+    );
+    fs::write(&game, serde_json::to_string_pretty(&value).expect("JSON")).expect("writes");
+    let replayed = binary(&["replay", &game_text]);
+    ok(&replayed, "replay of scenario 78 at the afternoon");
+    assert_eq!(replayed_lines(&replayed), case_b);
 }

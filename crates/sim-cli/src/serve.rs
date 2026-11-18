@@ -201,6 +201,9 @@ impl Kept {
                 self.seed,
                 &self.remembered,
                 session.handed_in(),
+                // A session hands in no order inside a day yet (decision
+                // 0156, step 3).
+                &save::ScriptInsideDay::new(),
                 session.commands_handed_in(),
                 session.staff_handed_in(),
                 &self.seats,

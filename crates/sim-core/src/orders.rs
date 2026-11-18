@@ -730,6 +730,29 @@ impl OrderKind {
         }
     }
 
+    /// Whether the order is one of the seven kinds that may be given inside a
+    /// day, at 0600 or 1200 (decision 0156, 3): a task force's route, speed,
+    /// readiness or rules of engagement, an air group's mission or search
+    /// arc, a land unit's posture. Every other kind is given at dusk.
+    pub fn may_be_given_inside_a_day(&self) -> bool {
+        matches!(
+            self,
+            OrderKind::TaskForce {
+                order: TaskForceOrder::SetRoute { .. }
+                    | TaskForceOrder::SetSpeed(_)
+                    | TaskForceOrder::SetReadiness(_)
+                    | TaskForceOrder::SetRulesOfEngagement { .. },
+                ..
+            } | OrderKind::AirGroup {
+                order: AirGroupOrder::SetAirMission(_) | AirGroupOrder::SetSearchArc { .. },
+                ..
+            } | OrderKind::LandUnit {
+                order: LandUnitOrder::SetPosture { .. },
+                ..
+            }
+        )
+    }
+
     /// Whether the order forms a task force: such orders are taken in before
     /// every other order of the day, so that an order to the new force on
     /// the same day finds it (decision 0111, As built).
@@ -994,6 +1017,12 @@ pub enum RejectReason {
     /// one with a search range (decision 0147, 4). Added at the end of the
     /// enum.
     AircraftCannotSearch,
+    /// An order handed in inside a day, at 0600 or 1200, of a kind that is
+    /// given only at dusk: inside a day only a task force's route, speed,
+    /// readiness and rules of engagement, an air group's mission and search
+    /// arc and a land unit's posture are taken (decision 0156, 3). Added at
+    /// the end of the enum.
+    GivenAtDusk,
 }
 
 impl RejectReason {
@@ -1048,6 +1077,9 @@ impl fmt::Display for RejectReason {
             RejectReason::AircraftCannotSearch => {
                 f.write_str("the air group's aircraft type cannot search")
             }
+            RejectReason::GivenAtDusk => f.write_str(
+                "this kind of order is given at dusk: inside a day only a task force's route, speed, readiness or rules of engagement, an air group's mission or search arc, or a land unit's posture may be ordered",
+            ),
             RejectReason::NotAFighter => {
                 f.write_str("the air group's aircraft type is not a fighter")
             }

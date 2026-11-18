@@ -10,14 +10,20 @@
 //! limits, the truth's ships, forces and air groups. Writes: the orders taken in, the
 //! side's holds, and a `HeldByOrder` event for each hold, citing the order and
 //! its acceptance. Draws no random number.
+//!
+//! The override acts inside a day too (decision 0156): an order handed in at
+//! 0600 or 1200 is taken in at the start of the next pulse, and if it is
+//! accepted and its unit lies in an intent's forces limit it holds the unit
+//! as at dusk, with the pulse on its events.
 
 use std::collections::BTreeSet;
 
 use crate::command::{Addressee, Hold, HoldMaker, HoldTarget};
 use crate::events::{Cause, EventKind};
-use crate::ids::ShipId;
-use crate::orders::{BaseOrder, Issuer, OrderKind, OrderRequest, TaskForceOrder};
+use crate::ids::{EventId, OrderId, ShipId};
+use crate::orders::{BaseOrder, Issuer, OrderKind, OrderRequest, RejectReason, TaskForceOrder};
 use crate::state::Side;
+use crate::time::Pulse;
 use crate::world::World;
 
 impl World {
@@ -53,35 +59,8 @@ impl World {
                 let request = pending[i].clone();
                 let (order_id, answer, accepted) =
                     self.take_in_order(day, None, side, request, Vec::new());
-                if !accepted {
-                    continue;
-                }
-                for target in targets {
-                    if self.command[&side].holds.contains_key(&target) {
-                        continue;
-                    }
-                    self.command
-                        .get_mut(&side)
-                        .expect("side has command state")
-                        .holds
-                        .insert(
-                            target,
-                            Hold {
-                                day,
-                                by: HoldMaker::Order(order_id),
-                            },
-                        );
-                    self.events.record(
-                        day,
-                        None,
-                        EventKind::HeldByOrder {
-                            side,
-                            target,
-                            order: order_id,
-                        },
-                        vec![Cause::Order(order_id), Cause::Event(answer)],
-                        None,
-                    );
+                if accepted {
+                    self.hold_by_order(day, None, side, order_id, answer, targets);
                 }
             }
             let rest: Vec<OrderRequest> = pending
@@ -91,6 +70,84 @@ impl World {
                 .map(|(_, request)| request)
                 .collect();
             self.pending.insert(side, rest);
+        }
+    }
+
+    /// Orders handed in inside a day, at 0600 or 1200 (decision 0156), taken
+    /// in at the start of `pulse`, before anything else of it: both sides,
+    /// each side's in the order intake sorts them, each through the order
+    /// check and intake with the pulse on its events. A kind not among the
+    /// seven that may be given inside a day is refused as given at dusk and
+    /// changes nothing but its event. An accepted order whose unit lies in
+    /// the forces limit of an intent in force holds the unit as the override
+    /// at dusk does ([`World::override_by_orders`]), with the pulse on the
+    /// `HeldByOrder` event. With nothing waiting nothing is recorded. Draws
+    /// no random number.
+    pub(crate) fn take_in_orders_inside_day(&mut self, day: u32, pulse: Pulse) {
+        let waiting = std::mem::take(&mut self.pending_inside_day);
+        for (side, mut requests) in waiting {
+            // The sort of intake (`intake_orders`), stable, so that one
+            // unit's orders keep their order and a later one replaces an
+            // earlier one.
+            requests
+                .sort_by_key(|request| (!request.kind.forms_task_force(), request.kind.target()));
+            for request in requests {
+                let given_at_dusk = !request.kind.may_be_given_inside_a_day();
+                let targets = if given_at_dusk {
+                    None
+                } else {
+                    self.override_targets(side, &request)
+                };
+                let forced = given_at_dusk.then_some(RejectReason::GivenAtDusk);
+                let (order_id, answer, accepted) =
+                    self.take_in_order_checked(day, Some(pulse), side, request, Vec::new(), forced);
+                if let (true, Some(targets)) = (accepted, targets) {
+                    self.hold_by_order(day, Some(pulse), side, order_id, answer, targets);
+                }
+            }
+        }
+    }
+
+    /// Holds each of `targets` that is not already held for the commander's
+    /// order `order_id`, accepted by the event `answer`, recording a
+    /// `HeldByOrder` event citing both (decision 0107, ruling 23). `pulse`
+    /// is `None` for the override at dusk and the pulse the order was taken
+    /// in at inside a day (decision 0156).
+    fn hold_by_order(
+        &mut self,
+        day: u32,
+        pulse: Option<Pulse>,
+        side: Side,
+        order_id: OrderId,
+        answer: EventId,
+        targets: Vec<HoldTarget>,
+    ) {
+        for target in targets {
+            if self.command[&side].holds.contains_key(&target) {
+                continue;
+            }
+            self.command
+                .get_mut(&side)
+                .expect("side has command state")
+                .holds
+                .insert(
+                    target,
+                    Hold {
+                        day,
+                        by: HoldMaker::Order(order_id),
+                    },
+                );
+            self.events.record(
+                day,
+                pulse,
+                EventKind::HeldByOrder {
+                    side,
+                    target,
+                    order: order_id,
+                },
+                vec![Cause::Order(order_id), Cause::Event(answer)],
+                None,
+            );
         }
     }
 

@@ -25,6 +25,7 @@ use sim_core::state::{
     AirGroup, AirGroupLocation, Arrival, Base, Formation, LandUnit, Replacement, Ship,
     ShipLocation, ShipSystem, ShipSystems, Side, Skills, SystemState, TaskForce, TruthState,
 };
+use sim_core::time::Pulse;
 use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::{DaySummary, Staffs, StartingContact, StartingEstimate, World};
 
@@ -132,6 +133,9 @@ struct ScenarioFile {
     /// Whether command levels are on (decision 0134, 1). Optional; off when
     /// absent.
     command_levels: Option<bool>,
+    /// Whether a side may give orders inside a day, at 0600 and 1200
+    /// (decision 0156, 1). Optional; off when absent.
+    orders_inside_a_day: Option<bool>,
     /// The commanders of the side's commands (decision 0137, 1 and 2).
     #[serde(default)]
     commander: Vec<CommanderSpec>,
@@ -596,6 +600,11 @@ struct OrderSpec {
     #[serde(default)]
     issuer: IssuerSpec,
     intent: Option<u32>,
+    /// The pulse an order given inside a day is handed in for: `"morning"`
+    /// (given at 0600) or `"afternoon"` (given at 1200). Left out for an
+    /// order of dusk. Only in a scenario with `orders_inside_a_day = true`
+    /// (decision 0156).
+    pulse: Option<String>,
     #[serde(flatten)]
     action: ActionSpec,
 }
@@ -1186,6 +1195,11 @@ fn build_objectives(
     })
 }
 
+/// The orders a scenario's script gives inside a day (decision 0156), by day,
+/// each with the pulse it is handed in for (morning or afternoon) and its
+/// side.
+pub type ScriptInsideDay = BTreeMap<u32, Vec<(Pulse, Side, OrderRequest)>>;
+
 /// A scenario ready to run: a game at its starting state plus the orders each
 /// side will give on each day.
 #[derive(Clone, Debug)]
@@ -1197,6 +1211,13 @@ pub struct Scenario {
     pub days: u32,
     pub world: World,
     script: BTreeMap<u32, Vec<(Side, OrderRequest)>>,
+    /// Whether a side may give orders inside a day (decision 0156): the
+    /// scenario's `orders_inside_a_day`, off when absent.
+    orders_inside_a_day: bool,
+    /// The orders still to be given inside a day, by day, each with the
+    /// pulse it is handed in for (morning or afternoon), in the order the
+    /// file gives them (decision 0156). Empty where the key is off.
+    script_inside_day: ScriptInsideDay,
     /// The commander's commands still to be given, by day, as they will be
     /// submitted (decision 0107, item 16).
     commands: BTreeMap<u32, Vec<(Side, CommandKind)>>,
@@ -2286,7 +2307,9 @@ impl Scenario {
             });
         }
 
+        let orders_inside_a_day = file.orders_inside_a_day == Some(true);
         let mut script: BTreeMap<u32, Vec<(Side, OrderRequest)>> = BTreeMap::new();
+        let mut script_inside_day = ScriptInsideDay::new();
         for spec in &file.order {
             if spec.day == 0 || spec.day > file.days {
                 return Err(fail(format!(
@@ -2294,6 +2317,25 @@ impl Scenario {
                     spec.day, file.days
                 )));
             }
+            // An order given inside a day (decision 0156): only where the
+            // scenario says, and only at 0600 or 1200.
+            let pulse = match spec.pulse.as_deref() {
+                None => None,
+                Some(_) if !orders_inside_a_day => {
+                    return Err(fail(format!(
+                        "the order on day {} has a pulse, and orders inside a day need orders_inside_a_day = true at the top of the scenario",
+                        spec.day
+                    )))
+                }
+                Some("morning") => Some(Pulse::Morning),
+                Some("afternoon") => Some(Pulse::Afternoon),
+                Some(other) => {
+                    return Err(fail(format!(
+                        "the order on day {} has pulse \"{other}\": an order inside a day is given for the \"morning\" (at 0600) or the \"afternoon\" (at 1200)",
+                        spec.day
+                    )))
+                }
+            };
             let origin = Origin {
                 issuer: spec.issuer.into(),
                 intent: spec.intent.map(IntentId::new),
@@ -2701,10 +2743,17 @@ impl Scenario {
                 }
             };
             let request = OrderRequest { kind, origin };
-            script
-                .entry(spec.day)
-                .or_default()
-                .push((spec.side.into(), request));
+            match pulse {
+                None => script
+                    .entry(spec.day)
+                    .or_default()
+                    .push((spec.side.into(), request)),
+                Some(pulse) => script_inside_day.entry(spec.day).or_default().push((
+                    pulse,
+                    spec.side.into(),
+                    request,
+                )),
+            }
         }
 
         let mut commands: BTreeMap<u32, Vec<(Side, CommandKind)>> = BTreeMap::new();
@@ -3004,6 +3053,8 @@ impl Scenario {
             days: file.days,
             world,
             script,
+            orders_inside_a_day,
+            script_inside_day,
             commands,
             contacts,
             estimates,
@@ -3036,6 +3087,26 @@ impl Scenario {
     /// given are submitted day by day in place of the scenario's own.
     pub fn replace_script(&mut self, script: BTreeMap<u32, Vec<(Side, OrderRequest)>>) {
         self.script = script;
+    }
+
+    /// Whether a side may give orders inside a day, at 0600 and 1200
+    /// (decision 0156): the scenario's key `orders_inside_a_day`, off when
+    /// absent.
+    pub fn orders_inside_a_day(&self) -> bool {
+        self.orders_inside_a_day
+    }
+
+    /// The orders still to be given inside a day, by day, each with its
+    /// pulse and side, in the order the file gives them (decision 0156).
+    pub fn scripted_orders_inside_day(&self) -> &ScriptInsideDay {
+        &self.script_inside_day
+    }
+
+    /// Replaces the orders given inside a day, for replaying a saved game
+    /// (decision 0156), as [`Scenario::replace_script`] replaces those of
+    /// dusk.
+    pub fn replace_script_inside_day(&mut self, script: ScriptInsideDay) {
+        self.script_inside_day = script;
     }
 
     /// The commander's commands still to be given, by day, as they will be
@@ -3089,6 +3160,8 @@ impl Scenario {
             days: self.days,
             world,
             script: self.script.clone(),
+            orders_inside_a_day: self.orders_inside_a_day,
+            script_inside_day: self.script_inside_day.clone(),
             commands: self.commands.clone(),
             contacts: self.contacts.clone(),
             estimates: self.estimates.clone(),
@@ -3136,7 +3209,25 @@ impl Scenario {
         for (side, request) in self.script.remove(&day).unwrap_or_default() {
             self.world.submit_orders(side, vec![request]);
         }
-        Ok(Some(self.world.resolve_day_watched(staffs, watch)?))
+        // A day with no order inside it resolves whole, as it always has.
+        let inside = self.script_inside_day.remove(&day).unwrap_or_default();
+        if inside.is_empty() {
+            return Ok(Some(self.world.resolve_day_watched(staffs, watch)?));
+        }
+        // A day with orders inside it is resolved in its parts (decision
+        // 0156), each order handed in before the pulse it is for, in the
+        // order the file gives them.
+        self.world.open_day(staffs, watch)?;
+        for pulse in Pulse::ALL {
+            for (at, side, request) in &inside {
+                if *at == pulse {
+                    self.world
+                        .submit_orders_inside_day(*side, vec![request.clone()])?;
+                }
+            }
+            self.world.resolve_next_pulse(watch)?;
+        }
+        Ok(Some(self.world.close_day(watch)?))
     }
 
     /// Runs every remaining day and returns their summaries.
@@ -3208,6 +3299,74 @@ r = 0
     fn parse_with(extra: &str) -> Result<Scenario, DataError> {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
         Scenario::parse(&format!("{HEAD}{extra}"), &path)
+    }
+
+    /// Decision 0156: an order may carry the pulse it is given for inside a
+    /// day only where the scenario turns orders inside a day on, and only
+    /// the morning (0600) or the afternoon (1200). The key is off when
+    /// absent, and an order with no pulse is an order of dusk.
+    #[test]
+    fn an_order_inside_a_day_needs_the_key_and_the_morning_or_the_afternoon() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let keyed = |on: &str, extra: &str| {
+            let head = HEAD.replacen("days = 2\n", &format!("days = 2\n{on}"), 1);
+            Scenario::parse(&format!("{head}{extra}"), &path)
+        };
+        let order = |pulse: &str| {
+            format!(
+                "\n[[order]]\nday = 1\n{pulse}side = \"allied\"\ntask_force = 1\nkind = \"set_speed\"\nspeed = \"full\"\n"
+            )
+        };
+        // Off when absent, and an order of dusk has no pulse.
+        let plain = parse_with(&order("")).expect("loads");
+        assert!(!plain.orders_inside_a_day());
+        assert_eq!(plain.scripted_orders()[&1].len(), 1);
+        assert!(plain.scripted_orders_inside_day().is_empty());
+        // On, with an order at 0600 and one at 1200.
+        let on = keyed(
+            "orders_inside_a_day = true\n",
+            &format!(
+                "{}{}{}",
+                order(""),
+                order("pulse = \"afternoon\"\n"),
+                order("pulse = \"morning\"\n")
+            ),
+        )
+        .expect("loads");
+        assert!(on.orders_inside_a_day());
+        assert_eq!(on.scripted_orders()[&1].len(), 1);
+        let pulses: Vec<Pulse> = on.scripted_orders_inside_day()[&1]
+            .iter()
+            .map(|(pulse, side, _)| {
+                assert_eq!(*side, Side::Allied);
+                *pulse
+            })
+            .collect();
+        assert_eq!(pulses, vec![Pulse::Afternoon, Pulse::Morning]);
+        // A pulse without the key, or with it off.
+        for off in ["", "orders_inside_a_day = false\n"] {
+            let message = keyed(off, &order("pulse = \"morning\"\n"))
+                .expect_err("refused")
+                .message;
+            assert!(
+                message.contains("orders inside a day need orders_inside_a_day = true"),
+                "{message}"
+            );
+        }
+        // Any pulse but the morning or the afternoon.
+        for bad in ["night", "dusk", "Morning"] {
+            let message = keyed(
+                "orders_inside_a_day = true\n",
+                &order(&format!("pulse = \"{bad}\"\n")),
+            )
+            .expect_err("refused")
+            .message;
+            assert!(
+                message.contains(&format!("has pulse \"{bad}\""))
+                    && message.contains("\"morning\" (at 0600) or the \"afternoon\" (at 1200)"),
+                "{message}"
+            );
+        }
     }
 
     /// Parses `HEAD` with its two reference lines replaced, as if it sat in

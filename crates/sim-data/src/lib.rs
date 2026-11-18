@@ -91,4 +91,4 @@ pub use reference::{
     load_fatigue_figures, load_ground_figures, load_port_sizes, load_report_figures,
     load_search_figures, load_ship_classes, load_surface_combat_figures,
 };
-pub use scenario::{LoadOptions, Scenario, FROZEN_REFERENCE_DIR};
+pub use scenario::{LoadOptions, Scenario, ScriptInsideDay, FROZEN_REFERENCE_DIR};

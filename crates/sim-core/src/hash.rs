@@ -283,6 +283,10 @@ fn name_every_field(world: &World) {
         made_ids: _,
         // Not hashed: orders waiting for the next day are not yet state.
         pending: _,
+        // Not hashed: orders handed in inside a day, waiting for the next
+        // pulse, are not yet state; taken in at the start of that pulse, so
+        // empty at every day boundary (decision 0156).
+        pending_inside_day: _,
         // Hashed after the beliefs, Allied then Japanese (decision 0107).
         command,
         // Not hashed: commands and a staff's hand-in waiting for the next

@@ -273,7 +273,8 @@ impl World {
     }
 
     /// Resolves the next pulse of the open day (decision 0156), in the order
-    /// night, morning, afternoon: late reports, alert, fatigue, the grounded
+    /// night, morning, afternoon: the orders handed in inside the day for it
+    /// ([`World::submit_orders_inside_day`]), late reports, alert, fatigue, the grounded
     /// bases, the pulse's phases and the ageing of contacts. `watch` is
     /// handed the world at the moment `PulseBegins` and before each phase.
     /// Returns the pulse resolved.
@@ -297,6 +298,10 @@ impl World {
         // A command formed in the pulse is held as of it (decision 0136,
         // 5).
         self.pulse_in_hand = Some(pulse);
+        // The orders handed in at 0600 or 1200 are taken in before anything
+        // else of the pulse, the override with them (decision 0156). With
+        // none waiting nothing is recorded.
+        self.take_in_orders_inside_day(day, pulse);
         // A report passed a pulse ago arrives before anything of this
         // pulse is seen (decision 0135, 12).
         self.deliver_late_reports(day, pulse);
@@ -351,6 +356,10 @@ impl World {
             return Err(self.out_of_turn(DayPart::Close));
         };
         self.day_in_hand = None;
+        // Orders handed in inside the day are taken in at the start of the
+        // pulse after, and none may be handed in after the morning, so none
+        // waits at the close (decision 0156).
+        debug_assert!(self.pending_inside_day.is_empty());
 
         for phase in END_OF_DAY_SEQUENCE {
             self.pass(watch, Moment::EndOfDay { day, phase });

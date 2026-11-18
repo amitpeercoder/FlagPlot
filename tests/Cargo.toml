@@ -443,3 +443,7 @@ path = "scenario_76_controlling_an_island.rs"
 [[test]]
 name = "scenario_77_forces_with_men_aboard"
 path = "scenario_77_forces_with_men_aboard.rs"
+
+[[test]]
+name = "scenario_78_orders_inside_a_day"
+path = "scenario_78_orders_inside_a_day.rs"
