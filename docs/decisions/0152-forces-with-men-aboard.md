@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: A transport force with men aboard is a lift as it stands: "take a place" takes one as its first lift, sends each later one while the place is not taken and men are still wanted, and lands the working men aboard with the rest; a hold sends to its place a force with men aboard that no take needs; and the supply under a hold formed by "control an island" uses whatever transport forces lie empty at its source that morning
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings). Item 5b built on Nov 18, 2026; its readings await the architect's ruling (As built: item 5b)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings). Item 5b built on Nov 18, 2026, with a first lift with no ship afloat read as lost; readings 1 to 5 accepted by the architect, reading 6 his ruling (As built: item 5b)
 
 ## Why
 
@@ -120,7 +120,8 @@ Built on Nov 18, 2026, on the branch `stage3-lift-order`. No state, engine or ev
 2. **Set aside** means the force is not a lower take's first lift as it stands, and its reason names it: "task_force:N is a later lift of intent:M, higher in priority, this morning"; nor is it taken as a transport at a base by the base rule of decision 0149, item 7.
 3. **A take whose plan is not yet released** when it is read (one released by leave to launch later that morning) sets nothing aside: its first lift has still to sail, and it sends no later lift that morning.
 4. **Between two higher takes** the first in priority to set a force aside is named with it; which of them sends it is decided at the launch, as before.
-5. **A side with at most one take in force** gets the orders and reasons `supply-33` gave.
+5. **A side with at most one take in force** gets the orders and reasons `supply-33` gave, where no first lift has lost every ship (reading 6).
+6. **A first lift with no ship afloat is lost** (the architect's ruling of Nov 18, 2026, on the team's finding on seed 1 of the proof: reading 7 as it was meant). The engine keeps a force whose every ship is sunk, halted where it was with its route as it stood, so a first lift sunk at the place after its landing was read as still on its way, and its take waited for it every morning and sent no later lift. `on_its_way` now reads a force with no ship in it as not on its way. That is the one place the test is made: the ashore judgement's wait, the later lifts sent alone, and `later_lifts_due` all read it; the test that the first lift is gone from the view (`launch_place`) is left as it is, so the morning's judgement of the men ashore still runs. `tests/scenario_77_forces_with_men_aboard.rs` gains a test of the team's own, not part of the hand calculation and marked so (`a_first_lift_with_no_ship_afloat_is_no_longer_on_its_way`): task force 1 lands its men and is sunk at B on day 2 by a placeholder Japanese cruiser force while it lands its supply, and task force 2 is sent as a later lift on day 4. It fails without the change.
 
 ### Earlier tests, baselines and games that change
 
@@ -128,5 +129,5 @@ None in more than versions. Remade by `scripts/regenerate.sh`: no run baseline, 
 
 ### Files to read
 
-- `crates/sim-staff/src/take.rs`: `takes_prepare` and `later_lifts_due` (new); `units_ashore` is taken out of `ashore` unchanged, so that both read the units ashore one way.
+- `crates/sim-staff/src/take.rs`: `takes_prepare` and `later_lifts_due` (new); `on_its_way` (reading 6); `units_ashore` is taken out of `ashore` unchanged, so that both read the units ashore one way.
 - `crates/sim-staff/src/assemble.rs` (`first_lift_as_it_stands` and the base rule's transports), `air.rs` (`Day::lifts_due`).

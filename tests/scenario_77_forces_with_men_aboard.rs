@@ -1407,6 +1407,65 @@ fn the_higher_take_first() {
     }
 }
 
+/// Not part of the hand calculation: the team lead's test of the
+/// architect's ruling of Nov 18, 2026 on decision 0152, reading 7 (a first
+/// lift with no ship afloat is lost, and so no longer on its way). As "A
+/// later lift of fighting men", but with 1,500 t of supply in ship 1, so that
+/// task force 1 is still landing it at B after its men are ashore, and a
+/// Japanese force of two placeholder cruisers, task force 10, stopped at
+/// (5,-1) and ordered on day 2 to B, where it sinks both transports of task
+/// force 1. The take sends task force 2, its next free lift, as a later lift
+/// on day 4, the first morning it may be used.
+fn first_lift_sunk_text() -> String {
+    let japanese_force = "# Task force 10: Japanese, two placeholder cruisers.\n[[task_force]]\nid = 10\nname = \"Placeholder cruiser force\"\nside = \"japanese\"\nq = 5\nr = -1\nmission = \"surface_combat\"\n\n[[ship]]\nid = 10\nname = \"Placeholder cruiser 1\"\nclass = 1\nside = \"japanese\"\nfuel_t = 2000\ntask_force = 10\n\n[[ship]]\nid = 11\nname = \"Placeholder cruiser 2\"\nclass = 1\nside = \"japanese\"\nfuel_t = 2000\ntask_force = 10\n\n";
+    let t = changed(&later_lift_text(), "supply_t = 30\n", "supply_t = 1500\n");
+    let t = changed(
+        &t,
+        ISLANDS_MARKER,
+        &format!("{japanese_force}{ISLANDS_MARKER}"),
+    );
+    format!(
+        "{t}\n[[order]]\nday = 2\nside = \"japanese\"\ntask_force = 10\nkind = \"set_route\"\nwaypoints = [[4, 0]]\n"
+    )
+}
+
+#[test]
+fn a_first_lift_with_no_ship_afloat_is_no_longer_on_its_way() {
+    let g = play(&first_lift_sunk_text());
+    // Task force 1 is the first lift and lands unit 1's 600 men at B on day 1.
+    assert!(g.orders(1).contains(&Given::Landing(1, B, vec![1])));
+    assert_eq!(g.unit_state(1, 1).men_ashore, 600);
+    assert_eq!(g.unit_state(1, 1).hex, Some(B));
+    // Then it has no ship afloat: both its ships sink at B on day 2, while it
+    // is landing its supply.
+    let sunk: Vec<(u32, u32)> = g
+        .events
+        .iter()
+        .filter_map(|e| match &e.kind {
+            EventKind::ShipSunk {
+                ship, task_force, ..
+            } if task_force.raw() == 1 => Some((e.day, ship.raw())),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(sunk, vec![(2, 2), (2, 1)]);
+    assert_eq!(
+        g.truth[2].task_forces[&TaskForceId::new(1)].landing_at,
+        Some(B)
+    );
+    // The take is not met by day 4.
+    let plan = g.intent_state(2).plan.raw();
+    assert!(g
+        .plan_day(plan, PlanState::Complete)
+        .is_none_or(|day| day > 4));
+    // Task force 2 is given no order before its day, and on day 4, the
+    // first morning it may be used, it is sent as a later lift: a route to B
+    // and back, and an unload order.
+    assert_eq!(g.orders_for_force(2, 1, 3), vec![]);
+    assert!(g.orders(4).contains(&route(2)), "{:?}", g.orders(4));
+    assert!(g.orders(4).contains(&Given::Unload(2)), "{:?}", g.orders(4));
+}
+
 #[test]
 fn nothing_aboard_that_can_fight() {
     // Unit 1 a working unit: no lift as it stands has a fighting unit.

@@ -170,8 +170,13 @@ fn under_way(force: &TaskForce, place: Hex) -> bool {
 }
 
 /// Whether the force is on its way to `place` (decision 0152, 5): landing
-/// there, or with the place still ahead on its route.
+/// there, or with the place still ahead on its route. A force with no ship
+/// afloat is lost, and so is not on its way (decision 0152, reading 7; the
+/// architect's ruling of Nov 18, 2026).
 pub(crate) fn on_its_way(force: &TaskForce, place: Hex) -> bool {
+    if force.ships.is_empty() {
+        return false;
+    }
     force.landing_at == Some(place)
         || (force.route.act_at.contains(&place)
             && force

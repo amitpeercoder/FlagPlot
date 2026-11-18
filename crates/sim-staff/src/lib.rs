@@ -227,8 +227,10 @@ use sim_core::view::SideView;
 /// `supply-32` gave.
 /// `supply-34` adds decision 0152, item 5b: a take higher in priority that
 /// sends a later lift as it stands that morning is given it before a take
-/// lower in priority chooses its first lift. A side with at most one take
-/// in force gets the orders `supply-33` gave.
+/// lower in priority chooses its first lift; and, by the architect's ruling
+/// on reading 7, a first lift with no ship afloat is lost and so no longer
+/// on its way. A side with at most one take in force, and none whose first
+/// lift has lost every ship, gets the orders `supply-33` gave.
 pub const DOCTRINE_VERSION: &str = "supply-34";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
