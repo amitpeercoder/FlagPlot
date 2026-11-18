@@ -347,6 +347,9 @@ pub(crate) struct Day<'v, 'a> {
     /// readiness: what "take a place" reads to ask leave to launch
     /// (decision 0142, 15).
     pub(crate) landings: BTreeMap<IntentId, crate::take::LandingReading>,
+    /// The lifts as they stand sent this morning, each with the intent that
+    /// sent it (decision 0152, 5 and 8): a force is sent by one intent.
+    pub(crate) lifts_sent: BTreeMap<sim_core::ids::TaskForceId, IntentId>,
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
@@ -494,6 +497,7 @@ impl<'v, 'a> Day<'v, 'a> {
             lines: Vec::new(),
             events: None,
             landings: BTreeMap::new(),
+            lifts_sent: BTreeMap::new(),
         };
         day.leaves();
         // Decision 0151: the tree of an island, formed before the doctrines
@@ -870,6 +874,8 @@ impl<'v, 'a> Day<'v, 'a> {
             if self.hold_men(&hold, &plan, base, in_scope) {
                 self.hold_supply(&hold, &plan, base, in_scope);
             }
+            // Decision 0152, 8: a force with men aboard that no take can use.
+            self.hold_lifts(&hold, &plan, base, in_scope);
             // The tasks of the forces its forces limit names (decisions
             // 0124, 8, and 0125, 2): cover from the sea, and carriers.
             if let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) {

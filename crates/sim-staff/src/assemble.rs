@@ -275,10 +275,15 @@ impl Day<'_, '_> {
         let estimate = view.ground_estimate(place).map(|e| e.men);
         let wanted = estimate.map(|men| men * men_per_man(risk));
 
+        // Decision 0152, 2: the lifts as they stand with a fighting unit
+        // aboard come before any base; the first is the lowest-numbered.
+        let (stand, stand_words) = self.first_lift_as_it_stands(end, &forces, &units, place, risk);
+
         // Item 7: each base that can be the source, and its lift.
         let mut bases: Vec<(BaseId, Hex)> = view
             .bases()
             .filter(|b| named_source.is_none_or(|s| s == b.id))
+            .filter(|_| stand.is_none())
             .map(|b| (b.id, b.hex))
             .collect();
         bases.sort_by_key(|(id, _)| *id);
@@ -354,7 +359,7 @@ impl Day<'_, '_> {
                 source: Some(base),
                 land_units: here,
             };
-            let choice = match self.choose(end, &limit, place, hex, risk) {
+            let choice = match self.choose(end, &limit, place, hex, risk, false) {
                 Ok(choice) => choice,
                 Err((evidence, _)) => {
                     missing.push(format!("{words}: {evidence}"));
@@ -408,15 +413,23 @@ impl Day<'_, '_> {
             format!("; the staff may not take: {}", not_taken.join("; "))
         };
 
+        let stand_line = if stand_words.is_empty() {
+            String::new()
+        } else {
+            format!(
+                "; the forces with men aboard, in force order: {}",
+                stand_words.join("; ")
+            )
+        };
         // Item 13: no base can be the source.
-        if lifts.is_empty() {
+        if lifts.is_empty() && stand.is_none() {
             let lack = if any_transport {
                 "no base has a transport force the staff may take stopped there with a fighting unit it may take ashore beside it"
             } else {
                 "no transport force the staff may take lies stopped at a base of the side"
             };
             let evidence = format!(
-                "{enemy}; no base can be the source: {lack}: {}{not_taken_words}",
+                "{enemy}{stand_line}; no base can be the source: {lack}: {}{not_taken_words}",
                 if lift_words.is_empty() {
                     "the side has no base the staff may take".to_string()
                 } else {
@@ -435,7 +448,12 @@ impl Day<'_, '_> {
             Some(want) => lifts.iter().filter(|l| l.choice.men >= want).collect(),
             None => Vec::new(),
         };
-        let (chosen, why) = if enough.is_empty() {
+        let (chosen, why) = if let Some(found) = &stand {
+            (
+                found,
+                "a lift as it stands with a fighting unit aboard comes before any base, and its source is its own",
+            )
+        } else if enough.is_empty() {
             let best = lifts
                 .iter()
                 .max_by_key(|l| {
@@ -475,11 +493,19 @@ impl Day<'_, '_> {
         let source = chosen.base;
         let source_hex = chosen.hex;
         let transport = chosen.choice.force;
-        let source_line = format!(
-            "the bases that could be the source, in base order: {}; the source is {}: {why}{not_taken_words}",
-            lift_words.join("; "),
-            base_words(view, source)
-        );
+        let source_line = if stand.is_some() {
+            format!(
+                "the forces with men aboard, in force order: {}; the first lift is {transport}, as it stands, and the source is {}: {why}{not_taken_words}",
+                stand_words.join("; "),
+                base_words(view, source)
+            )
+        } else {
+            format!(
+                "the bases that could be the source, in base order: {}; the source is {}: {why}{not_taken_words}",
+                lift_words.join("; "),
+                base_words(view, source)
+            )
+        };
 
         // Item 10: the risk on the way.
         let base_hexes: BTreeSet<Hex> = view.bases().map(|b| b.hex).collect();
@@ -534,6 +560,18 @@ impl Day<'_, '_> {
         let mut choice = chosen.choice.clone();
         let mut lines = vec![enemy, source_line];
         lines.extend(choice.lines.iter().skip(1).cloned());
+        // Decision 0152, 3: the working units aboard a lift as it stands
+        // land with it, and the reason names them.
+        if stand.is_some() {
+            if let Some(force) = forces.iter().find(|f| f.id == transport) {
+                let picked: Vec<LandUnitId> = choice.picks.iter().map(|p| p.id).collect();
+                let extra = self.also_aboard(force, &picked);
+                let extra = extra.trim().trim_end_matches('.');
+                if !extra.is_empty() {
+                    lines.push(extra.to_string());
+                }
+            }
+        }
         if let (Some((want, have)), false) = (choice.short, risk == Risk::Preserve) {
             lines.push(format!(
                 "short by {} men: the lift gives {have} men against the {want} wanted",
@@ -577,6 +615,99 @@ impl Day<'_, '_> {
             source_hex,
             limit,
         })
+    }
+
+    /// Decision 0152, 1 and 2: the first lift as it stands with a fighting
+    /// unit aboard, of the forces the staff may take (`forces`) and the
+    /// fighting units it may take (`units`), in force order; with the words
+    /// for each force with men aboard. Its units are its fighting units
+    /// aboard, whole; its source is its own (item 1).
+    fn first_lift_as_it_stands(
+        &self,
+        end: &Intent,
+        forces: &[TaskForce],
+        units: &[LandUnit],
+        place: Hex,
+        risk: Risk,
+    ) -> (Option<Lift>, Vec<String>) {
+        let mut words: Vec<String> = Vec::new();
+        for force in forces {
+            if !self.is_lift(force) {
+                continue;
+            }
+            let aboard = self.aboard_words(force.id);
+            if let Some(take) = self.lift_of_take(force.id, Some(end.id)) {
+                words.push(format!("{} is the lift of {take}", force.id));
+                continue;
+            }
+            if let Some(other) = self.lifts_sent.get(&force.id) {
+                words.push(format!("{} is sent by {other} this morning", force.id));
+                continue;
+            }
+            if let Some(why) = Self::not_free(force) {
+                words.push(why);
+                continue;
+            }
+            let fighting: BTreeSet<LandUnitId> = self
+                .aboard(force.id)
+                .into_iter()
+                .filter(|(u, _)| !u.working && units.iter().any(|t| t.id == u.id))
+                .map(|(u, _)| u.id)
+                .collect();
+            if fighting.is_empty() {
+                words.push(format!(
+                    "{} has {aboard} aboard, and no fighting unit the staff may take",
+                    force.id
+                ));
+                continue;
+            }
+            let Some((base, hex)) = self.lift_source(force) else {
+                words.push(format!(
+                    "{} has no base of the side to come back to",
+                    force.id
+                ));
+                continue;
+            };
+            let limit = ForcesLimit {
+                ships: BTreeSet::new(),
+                task_forces: BTreeSet::from([force.id]),
+                air_groups: BTreeSet::new(),
+                source: Some(base),
+                land_units: fighting,
+            };
+            let choice = match self.choose(end, &limit, place, hex, risk, true) {
+                Ok(choice) => choice,
+                Err((evidence, _)) => {
+                    words.push(format!("{}: {evidence}", force.id));
+                    continue;
+                }
+            };
+            let Some(hours) = self
+                .view
+                .forecast_passage(force.id, place, Some(SpeedSetting::Cruise))
+                .filter(|f| f.refusal.is_none())
+                .map(|f| f.hours)
+            else {
+                words.push(format!("{} has no passage to {place}", force.id));
+                continue;
+            };
+            words.push(format!(
+                "{} has {aboard} aboard, a lift as it stands, {hours} hours to {place}",
+                force.id
+            ));
+            let berths = self.berths_of(force.id);
+            return (
+                Some(Lift {
+                    base,
+                    hex,
+                    berths,
+                    hours,
+                    choice,
+                }),
+                words,
+            );
+        }
+        (None, words)
     }
 
     /// The limit the units are chosen again on (decision 0147, 16, and

@@ -368,7 +368,7 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-31",
+  "doctrine_version": "supply-32",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -429,31 +429,31 @@
     },
     {
       "day": 15,
-      "hash": "c83e99aee9370675"
+      "hash": "f53e130f71a70139"
     },
     {
       "day": 16,
-      "hash": "b58d9863d7fcb6d8"
+      "hash": "5a1baf6a3da8d08e"
     },
     {
       "day": 17,
-      "hash": "cb103fb8b375c359"
+      "hash": "4a88e1e501c8d130"
     },
     {
       "day": 18,
-      "hash": "da95405ae89b3bcf"
+      "hash": "9cfd9c3bd1d65de1"
     },
     {
       "day": 19,
-      "hash": "de25ef3126e9a6bd"
+      "hash": "5a6fb55557d440fd"
     },
     {
       "day": 20,
-      "hash": "304d651431731705"
+      "hash": "d1ce24d1a026ddca"
     },
     {
       "day": 21,
-      "hash": "50561d09af0be249"
+      "hash": "757140b46cc4f9da"
     }
   ],
   "orders": [
@@ -1419,6 +1419,27 @@
         ],
         "no_orders": [
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 15,
+                "what": "task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "level": {
+                "base": 1
+              },
+              "plan": 1,
+              "statement": "hold base:1 (Lunga)"
+            },
+            "worked": "intent:1 holds base:1 (Lunga), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1. The staff sends none to base:1 (Lunga).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "no source in the forces limit"
             ],
@@ -1439,6 +1460,27 @@
             "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
             "would_change": [
               "a source in the forces limit"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 15,
+                "what": "task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 4
+              },
+              "plan": 2,
+              "statement": "hold base:4 (Tulagi)"
+            },
+            "worked": "intent:2 holds base:4 (Tulagi), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2. The staff sends none to base:4 (Tulagi).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
             ]
           },
           {
@@ -3156,6 +3198,27 @@
               "a reading of day 24 below 133.575 t would call a run on day 21",
               "plan:3's commitment ending: ship:101, ship:102, ship:103, ship:104, ship:105 free on day 21",
               "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 15,
+                "what": "task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 2
+              },
+              "plan": 2,
+              "statement": "hold base:2 (Rabaul)"
+            },
+            "worked": "intent:2 holds base:2 (Rabaul), which is the side's. The forces with men aboard: task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2. The staff sends none to base:2 (Rabaul).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
             ]
           },
           {
@@ -5007,6 +5070,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 16,
+                "what": "task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "level": {
+                "base": 1
+              },
+              "plan": 1,
+              "statement": "hold base:1 (Lunga)"
+            },
+            "worked": "intent:1 holds base:1 (Lunga), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1. The staff sends none to base:1 (Lunga).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -5050,6 +5134,27 @@
             "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
             "would_change": [
               "a source in the forces limit"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 16,
+                "what": "task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 4
+              },
+              "plan": 2,
+              "statement": "hold base:4 (Tulagi)"
+            },
+            "worked": "intent:2 holds base:4 (Tulagi), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2. The staff sends none to base:4 (Tulagi).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
             ]
           },
           {
@@ -6072,6 +6177,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 16,
+                "what": "task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 2
+              },
+              "plan": 2,
+              "statement": "hold base:2 (Rabaul)"
+            },
+            "worked": "intent:2 holds base:2 (Rabaul), which is the side's. The forces with men aboard: task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2. The staff sends none to base:2 (Rabaul).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -6560,6 +6686,27 @@
         ],
         "no_orders": [
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 17,
+                "what": "task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "level": {
+                "base": 1
+              },
+              "plan": 1,
+              "statement": "hold base:1 (Lunga)"
+            },
+            "worked": "intent:1 holds base:1 (Lunga), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1. The staff sends none to base:1 (Lunga).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -6603,6 +6750,27 @@
             "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
             "would_change": [
               "a source in the forces limit"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 17,
+                "what": "task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 4
+              },
+              "plan": 2,
+              "statement": "hold base:4 (Tulagi)"
+            },
+            "worked": "intent:2 holds base:4 (Tulagi), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2. The staff sends none to base:4 (Tulagi).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
             ]
           },
           {
@@ -7268,6 +7436,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 17,
+                "what": "task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 2
+              },
+              "plan": 2,
+              "statement": "hold base:2 (Rabaul)"
+            },
+            "worked": "intent:2 holds base:2 (Rabaul), which is the side's. The forces with men aboard: task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2. The staff sends none to base:2 (Rabaul).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -7593,6 +7782,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 18,
+                "what": "task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "level": {
+                "base": 1
+              },
+              "plan": 1,
+              "statement": "hold base:1 (Lunga)"
+            },
+            "worked": "intent:1 holds base:1 (Lunga), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1. The staff sends none to base:1 (Lunga).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -7636,6 +7846,27 @@
             "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
             "would_change": [
               "a source in the forces limit"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 18,
+                "what": "task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 4
+              },
+              "plan": 2,
+              "statement": "hold base:4 (Tulagi)"
+            },
+            "worked": "intent:2 holds base:4 (Tulagi), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2. The staff sends none to base:4 (Tulagi).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
             ]
           },
           {
@@ -8152,6 +8383,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 18,
+                "what": "task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 2
+              },
+              "plan": 2,
+              "statement": "hold base:2 (Rabaul)"
+            },
+            "worked": "intent:2 holds base:2 (Rabaul), which is the side's. The forces with men aboard: task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2. The staff sends none to base:2 (Rabaul).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -8525,6 +8777,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 19,
+                "what": "task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "level": {
+                "base": 1
+              },
+              "plan": 1,
+              "statement": "hold base:1 (Lunga)"
+            },
+            "worked": "intent:1 holds base:1 (Lunga), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1. The staff sends none to base:1 (Lunga).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -8568,6 +8841,27 @@
             "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
             "would_change": [
               "a source in the forces limit"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 19,
+                "what": "task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 4
+              },
+              "plan": 2,
+              "statement": "hold base:4 (Tulagi)"
+            },
+            "worked": "intent:2 holds base:4 (Tulagi), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2. The staff sends none to base:4 (Tulagi).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
             ]
           },
           {
@@ -9045,6 +9339,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 19,
+                "what": "task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 2
+              },
+              "plan": 2,
+              "statement": "hold base:2 (Rabaul)"
+            },
+            "worked": "intent:2 holds base:2 (Rabaul), which is the side's. The forces with men aboard: task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2. The staff sends none to base:2 (Rabaul).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -9370,6 +9685,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 20,
+                "what": "task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "level": {
+                "base": 1
+              },
+              "plan": 1,
+              "statement": "hold base:1 (Lunga)"
+            },
+            "worked": "intent:1 holds base:1 (Lunga), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1. The staff sends none to base:1 (Lunga).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -9413,6 +9749,27 @@
             "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
             "would_change": [
               "a source in the forces limit"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 20,
+                "what": "task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 4
+              },
+              "plan": 2,
+              "statement": "hold base:4 (Tulagi)"
+            },
+            "worked": "intent:2 holds base:4 (Tulagi), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2. The staff sends none to base:4 (Tulagi).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
             ]
           },
           {
@@ -9890,6 +10247,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 20,
+                "what": "task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 2
+              },
+              "plan": 2,
+              "statement": "hold base:2 (Rabaul)"
+            },
+            "worked": "intent:2 holds base:2 (Rabaul), which is the side's. The forces with men aboard: task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2. The staff sends none to base:2 (Rabaul).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -10264,6 +10642,27 @@
             ]
           },
           {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 21,
+                "what": "task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1"
+              }
+            ],
+            "serves": {
+              "intent": 1,
+              "level": {
+                "base": 1
+              },
+              "plan": 1,
+              "statement": "hold base:1 (Lunga)"
+            },
+            "worked": "intent:1 holds base:1 (Lunga), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:1; task_force:26 is not in the forces limit of intent:1. The staff sends none to base:1 (Lunga).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
             "binding": [
               "intent:6 stands"
             ],
@@ -10307,6 +10706,27 @@
             "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
             "would_change": [
               "a source in the forces limit"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 21,
+                "what": "task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 4
+              },
+              "plan": 2,
+              "statement": "hold base:4 (Tulagi)"
+            },
+            "worked": "intent:2 holds base:4 (Tulagi), which is the side's. The forces with men aboard: task_force:24 is not in the forces limit of intent:2; task_force:26 is not in the forces limit of intent:2. The staff sends none to base:4 (Tulagi).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
             ]
           },
           {
@@ -10779,6 +11199,27 @@
             "would_change": [
               "a reading of day 25 below 136.575 t would call a run on day 22",
               "a larger use at the destination would bring the next run forward"
+            ]
+          },
+          {
+            "binding": [],
+            "evidence": [
+              {
+                "day": 21,
+                "what": "task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2"
+              }
+            ],
+            "serves": {
+              "intent": 2,
+              "level": {
+                "base": 2
+              },
+              "plan": 2,
+              "statement": "hold base:2 (Rabaul)"
+            },
+            "worked": "intent:2 holds base:2 (Rabaul), which is the side's. The forces with men aboard: task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2. The staff sends none to base:2 (Rabaul).",
+            "would_change": [
+              "a force with men aboard that no take can use, free and usable"
             ]
           },
           {

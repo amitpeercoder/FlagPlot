@@ -33,6 +33,7 @@ mod fleet;
 mod handin;
 mod holding;
 mod island;
+mod lifts;
 mod look;
 mod morning;
 mod neutralise;
@@ -211,7 +212,14 @@ use sim_core::view::SideView;
 /// cover and escort), kept as the forces limit of the task it forms. A side
 /// with no "take a place", or one whose forces limit names all three, gets
 /// the orders and reasons `supply-29` gave.
-pub const DOCTRINE_VERSION: &str = "supply-31";
+/// `supply-32` adds decision 0152: a transport force with men aboard is a
+/// lift as it stands, taken by "take a place" as its first lift before any
+/// base and sent as a later lift once the first is in, sent by "hold a
+/// place" where no take can use it, and ready as it stands wherever it lies;
+/// the supply under an island's holds keeps its source and sets each hold's
+/// forces limit each morning to a pool that only grows. A side with no force
+/// with men aboard and no island gets the orders `supply-31` gave.
+pub const DOCTRINE_VERSION: &str = "supply-32";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

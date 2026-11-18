@@ -102,7 +102,8 @@ impl Day<'_, '_> {
         // Item 8b: a neutralising that has done its work.
         self.withdraw_done(end, plan, in_scope);
 
-        // Item 8: the source of supply for the holds, worked once.
+        // Item 8: the source of supply for the holds, chosen on the first
+        // morning a base fits and kept (decision 0152, 10).
         let source = self.island_source(end, &places);
 
         // Item 6, in the order of the island's places.
@@ -110,6 +111,10 @@ impl Day<'_, '_> {
             self.island_take(end, plan, place.hex, by_day, &island_text, in_scope);
             self.island_hold(end, plan, place.hex, &source, &island_text, in_scope);
         }
+
+        // Decision 0152, 11: each hold's forces limit set each morning to
+        // the source and its pool.
+        self.island_pools(end, plan, &source, in_scope);
 
         // The denial, once, and the carrier forces under it.
         let deny = self.island_deny(end, plan, first.hex, &island_text, in_scope);
@@ -472,6 +477,41 @@ impl Day<'_, '_> {
     fn island_source(&self, end: &Intent, places: &[Place]) -> Source {
         let others = self.others_above(end);
         let named = end.limits.forces.as_ref().and_then(|f| f.source);
+        // Decision 0152, 10: where the commander names none, the source
+        // chosen on an earlier morning is kept: the source of a hold the
+        // staff formed under the island, where it is still the side's.
+        let kept = if named.is_none() {
+            self.state
+                .intents_in_force()
+                .filter(|i| {
+                    i.parent == Some(end.id)
+                        && i.maker == Maker::Staff
+                        && matches!(i.kind, IntentKind::Hold { .. })
+                })
+                .find_map(|i| i.limits.forces.as_ref()?.source)
+                .filter(|base| self.view.bases().any(|b| b.id == *base))
+        } else {
+            None
+        };
+        if let Some(base) = kept {
+            let forces = self.pool_at(base, &others);
+            return Source {
+                words: format!(
+                    "the source of supply is {}, chosen on an earlier morning and kept, with {} stopped there with nothing aboard",
+                    base_words(self.view, base),
+                    if forces.is_empty() {
+                        "no transport force".to_string()
+                    } else {
+                        forces
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    }
+                ),
+                chosen: Some((base, forces)),
+            };
+        }
         let place_hexes: BTreeSet<Hex> = places.iter().map(|p| p.hex).collect();
         let mut best: Option<(BaseId, sim_core::fixed::Fixed, BTreeSet<TaskForceId>)> = None;
         let mut lines: Vec<String> = Vec::new();
@@ -489,21 +529,10 @@ impl Day<'_, '_> {
                 lines.push(format!("{text}: {why}"));
                 continue;
             }
-            let mut forces: BTreeSet<TaskForceId> = BTreeSet::new();
-            for force in self.area.task_forces() {
-                if force.mission != Mission::Transport
-                    || !crate::fleet::force_stopped_at(force, base.hex)
-                    || afloat(self.area, force.id).is_empty()
-                {
-                    continue;
-                }
-                if self.may_take_force(force, &others).is_ok() {
-                    forces.insert(force.id);
-                }
-            }
+            let forces = self.pool_at(base.id, &others);
             if forces.is_empty() {
                 lines.push(format!(
-                    "{text}: no transport force the staff may take lies stopped there"
+                    "{text}: no transport force the staff may take lies stopped there with nothing aboard"
                 ));
                 continue;
             }
@@ -547,6 +576,105 @@ impl Day<'_, '_> {
                 },
                 chosen: None,
             },
+        }
+    }
+
+    /// Decision 0152, 10 and 11: the transport forces the staff may take
+    /// that lie stopped at `base` with nothing aboard, a ship afloat each.
+    fn pool_at(&self, base: BaseId, others: &crate::assemble::Others) -> BTreeSet<TaskForceId> {
+        let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) else {
+            return BTreeSet::new();
+        };
+        let mut forces = BTreeSet::new();
+        for force in self.area.task_forces() {
+            if force.mission != Mission::Transport
+                || !crate::fleet::force_stopped_at(force, hex)
+                || afloat(self.area, force.id).is_empty()
+            {
+                continue;
+            }
+            let empty = self
+                .area
+                .ships()
+                .filter(|s| s.location == sim_core::state::ShipLocation::TaskForce(force.id))
+                .all(|s| s.supply_t.is_zero() && s.cargo_fuel_t.is_zero() && s.troops.is_none());
+            if empty && self.may_take_force(force, others).is_ok() {
+                forces.insert(force.id);
+            }
+        }
+        forces
+    }
+
+    /// Decision 0152, 11: each morning, the forces limit of each hold the
+    /// staff formed under the island is set to the source and the transport
+    /// forces stopped there with nothing aboard, where that differs from the
+    /// limit it has. The pool only grows: a force once named stays while it
+    /// has a ship afloat (the architect's ruling of Nov 18, 2026), so that a
+    /// ship serving a run stays in the limit its orders are checked against.
+    fn island_pools(&mut self, end: &Intent, plan: &Plan, source: &Source, in_scope: bool) {
+        let Some((base, pool)) = &source.chosen else {
+            return;
+        };
+        let holds: Vec<Intent> = self
+            .state
+            .intents_in_force()
+            .filter(|i| {
+                i.parent == Some(end.id)
+                    && i.maker == Maker::Staff
+                    && matches!(i.kind, IntentKind::Hold { .. })
+            })
+            .cloned()
+            .collect();
+        for hold in holds {
+            let mut forces: BTreeSet<TaskForceId> = hold
+                .limits
+                .forces
+                .as_ref()
+                .filter(|f| f.source == Some(*base))
+                .map(|f| f.task_forces.clone())
+                .unwrap_or_default();
+            forces.retain(|f| !afloat(self.area, *f).is_empty());
+            forces.extend(pool.iter().copied());
+            let limit = ForcesLimit {
+                ships: BTreeSet::new(),
+                task_forces: forces.clone(),
+                air_groups: BTreeSet::new(),
+                source: Some(*base),
+                land_units: BTreeSet::new(),
+            };
+            if hold.limits.forces.as_ref() == Some(&limit) {
+                continue;
+            }
+            let IntentKind::Hold { base: held } = hold.kind else {
+                continue;
+            };
+            let base_text = base_words(self.view, held);
+            let reason = serving(end, plan)
+                .evidence(source.words.clone(), self.today)
+                .worked(format!(
+                    "{}: {}; the staff sets the forces limit of {}, the hold of {base_text}, to {} and {}: the source and the transport forces stopped there with nothing aboard, with those it named before.",
+                    end.id,
+                    source.words,
+                    hold.id,
+                    base_words(self.view, *base),
+                    forces
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ))
+                .would_change("another transport force stopped empty at the source")
+                .done();
+            if let Some(found) = self.state.intents.get_mut(&hold.id) {
+                found.limits.forces = Some(limit.clone());
+            }
+            self.target(in_scope).commands.push(StaffCommand {
+                kind: CommandKind::SetLimit(Limit::Forces {
+                    intent: hold.id,
+                    limit,
+                }),
+                reason,
+            });
         }
     }
 

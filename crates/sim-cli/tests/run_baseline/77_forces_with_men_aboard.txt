@@ -1,0 +1,30 @@
+Placeholder scenario 77: Forces with men aboard
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash d0f1e03a52818a68  73 events
+day   2  hash 1f932eb05ce03980  19 events
+day   3  hash 86d472cf99b857b3  25 events
+day   4  hash f1695a85c6560f2f  41 events
+day   5  hash abb5f4c357106792  31 events
+day   6  hash dc947d23f4401361  20 events
+day   7  hash 714be785094d1d13  12 events
+day   8  hash 561a0642a52412e0  12 events
+
+task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+task_force:2 "Placeholder transport force 2" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+task_force:3 "Placeholder transport force 3" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply
+ship:3 "Placeholder troop transport 3": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:4 "Placeholder troop transport 4": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 915 t of supply in stock
+base:2 "Placeholder airfield B" (Allied) at (4,0): 79 t of supply in stock
+base:3 "Landing at (4,0)" (Allied) at (4,0): 15 t of supply in stock, no airfield, 400 of work done on the airfield, formed in play, on its own side's map only
+land_unit:1 "Placeholder Infantry" (Allied): 600 men ashore at (4,0)
+land_unit:2 "Placeholder Pioneers" (Allied): 400 men ashore at (4,0)
+land_unit:3 "Placeholder Builders" (Allied): 300 men ashore at (4,0)
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
