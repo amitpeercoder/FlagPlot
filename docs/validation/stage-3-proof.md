@@ -4,6 +4,8 @@ Run on Nov 18, 2026, by the architect, to the plan of decision 0153, written bef
 
 **Result: not passed as stated.** Two conditions fail, both the Japanese side's, and both for one cause. Every other judged condition meets its mark.
 
+**Closed by the designer on Nov 18, 2026, with both as named misses** (the first of the three choices below; decision 0153, "Closed on Nov 18, 2026"). The report below is as it was written before he decided.
+
 | Condition | Value | Mark | Holds |
 | --- | --- | --- | --- |
 | 1, it runs, and the same start gives the same game | 3,000 games run to day 39; each arrangement's two batch files byte for byte the same; five exports of each made twice, the same | every seed; identical | yes |

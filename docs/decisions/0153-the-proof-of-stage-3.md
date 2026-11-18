@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 17, 2026, before step 8 of stage
 
 Summary: The plan for the proof of stage 3, written before the run: the 39 days of the staff's setup played on a thousand seeds with each side given area intents alone and no forces named, in three arrangements; what each side states; how each of decision 0139's eight conditions is read from the umpire's files; the rule that picks the 24 reasons; a loading check on one seed before any judged run, with what may and may not be changed after it; and what is reported and not judged
 
-Standing: A plan by the architect, Nov 17, 2026. Run Nov 18, 2026: not passed as stated (the Japanese side never attacks the airfield ashore, and does worse from its intents than given nothing; every other condition passes, legibility 23 of 23). The choices they raise are the designer's
+Standing: A plan by the architect, Nov 17, 2026. Run Nov 18, 2026: not passed as stated (the Japanese side never attacks the airfield ashore, and does worse from its intents than given nothing; every other condition passes, legibility 23 of 23). Closed by the designer on Nov 18, 2026 with both named misses
 
 ## Why it is written first
 
@@ -188,3 +188,23 @@ Run once, on Nov 18, 2026, on main at f92f8d8d, after the loading check was made
 **What is put to the designer:** to name both as misses and close the stage, with the two mends taken up at the start of stage 4 (the architect's recommendation); to change a doctrine and run again; or to restate what the Japanese commander states (a risk of press) and run again beside this run. One ruling of the architect's is also his to overturn: legibility with 23 reasons passing at five in six.
 
 **Owed:** a model's game of the 39 days by intent alone, reported and not judged, has not been played.
+
+## Closed on Nov 18, 2026
+
+The designer closed stage 3 on Nov 18, 2026, with two named misses. No pass mark, reading, intent or figure was changed, nothing was tuned, nothing was run again, and the report stands as run.
+
+**The named misses,** both the Japanese side's and of one cause:
+
+1. The Japanese side attacks the airfield ashore on 0 of 1,000 seeds, against a mark of 600. Its staff lands a median of 6,076 men at Lunga, wants two for each enemy man it counts at balanced (decision 0143), counts about rightly, never has them, and waits.
+2. The Japanese side does worse from its intents than given nothing: a median margin of -64.65 against -51.51. The largest part is the landed men, who wait unfed and starve.
+
+**The two mends, taken up at the start of stage 4,** each with its own decision record and hand calculation before it is built, and neither run against this proof's marks to turn a miss into a pass:
+
+1. Men ashore at a place that is not yet the side's are fed by runs, as a held base is.
+2. A take whose count says the men it can bring will not be enough either does not lift them, or lands them at a beach away from the enemy and waits there. The staff cannot choose a beach today.
+
+**What stage 3 proved.** From area intents alone, with no force named, the 39 days run on 1,000 seeds in three arrangements with the same start giving the same game and nothing refused; the Allied staff lands, takes the airfield, supplies it and flies from it on every seed and does far better than given nothing (64.65 against -59.95); the Japanese staff lands men after the Allied landing and bombards the airfield by night on every seed; a reader told only the staff's reasons answers both questions on 23 of 23; and a staffed day costs 17 ms against a budget of 40.
+
+**The architect's ruling on legibility stands:** the picking rule gave 23 reasons and not 24, and the test passed at five in six of those there were (reading 6). The designer did not overturn it.
+
+**Still owed,** each in `docs/open-work.md`: a model's game of the 39 days by intent alone, reported and not judged; "leave a place" (decision 0150, scenario 75).

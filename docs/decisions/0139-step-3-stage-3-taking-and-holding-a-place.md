@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 17, 2026, for the designer's app
 
 Summary: A plan for step 3, stage 3: the ends "take a place" and "leave a place" beside those of stage 2, an operation as a tree with phases, and the doctrines that carry it (units made ready, a base built up, the landing force chosen, loaded and rehearsed, the passage, the fight ashore, a run by night, bombardment from the sea, cover by carriers, reconnaissance as a branch of the plan, pulling out); the force for an operation assembled by the staff from the enemy's strength, the lift, the risk and what it takes to keep the men fed; the staff's setup of the 39 days with a day from which each force may be used; the area intent stated alone; and the proof, the 39 days staff against staff over a thousand seeds, with its conditions set before the run
 
-Standing: Confirmed by the designer, Nov 17, 2026, with his six answers and the pass marks as written; amended by him the same day to nine steps, the staff assembling the force before the proof. Being built step by step
+Standing: Confirmed by the designer, Nov 17, 2026, with his six answers and the pass marks as written; amended by him the same day to nine steps, the staff assembling the force before the proof. Built but for "leave a place"; its proof run and the stage closed by the designer on Nov 18, 2026 with two named misses (decision 0153)
 
 ## What stage 3 is
 
