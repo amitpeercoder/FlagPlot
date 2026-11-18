@@ -1,0 +1,153 @@
+# 0156: Orders inside a day: stopping the clock between pulses
+
+Status: a plan by the architect, written on Nov 18, 2026, for the designer's approval before anything of it is built. It plans step 2 of decision 0155: a commander who may stop the clock between the pulses of a day and act there. Nothing is built. It differs from decision 0155's wording in one thing, stated first below, which is the designer's to accept or refuse.
+
+Summary: A plan for commanding inside a day: where a scenario says so, a seat may stop the clock between pulses and give seven kinds of order to its own units, taken in at the start of the next pulse and holding the unit from the staff as an order at dusk does; commands to the staff are still taken in at dusk; time is advanced a pulse at a time by one new tool that stops on what the side was told, and a second gives a seat its events together; the engine resolves a day in parts with the same result; no state is added and a game with no order inside a day is the game it was. With the hand calculation, the conditions of its proof, five steps and five questions for the designer
+
+Standing: A plan by the architect, Nov 18, 2026, for the designer's approval. Nothing is built
+
+## What differs from decision 0155, and why
+
+Decision 0155 named the short list as commands to the staff: to hold a thing back, to withhold or give a leave, to change the risk, to withdraw. The code says those cannot act inside a day:
+
+- The staff is asked once, before the night (`resolve.rs`, step 4). A leave, a risk, a hold or a withdrawal given at 0600 is read by nobody until the next dusk.
+- A hold stops the staff from ordering a unit. It does not stop the unit: "A hold does not stop the game's rules" (`docs/step3-spec.md`). A group on a strike mission flies whether it is held or not, because the launch reads the group's mission and its command's picture and never the holds.
+- What acts inside a day is a unit's standing orders: its route, speed, readiness and rules of engagement, its air mission and search arc, its posture ashore.
+
+So to act inside a day a commander must speak to the unit, or the staff must be asked again. Decision 0155 left out asking the staff again every pulse, and this plan keeps to that. What is planned is therefore **orders to units**, of a short list of kinds, with the rule the game already has for a commander who orders a unit the staff is using: the order is taken in and the unit is held from the staff (decision 0107, ruling 23, the override).
+
+This is not ordering ship by ship as the way to play. The staff still plans and orders everything from intent. This is the commander reaching in: "turn the transports back", "stand that group down", "go to battle readiness". It is what the record's commanders did inside a day, and the interface gives it as a few verbs on a force.
+
+## The rules
+
+1. **Where it is on.** A scenario says so with a key, off by default. With it off nothing of this plan can happen and every game, tool list and file is as it was. The small battles a new player begins with have it on; the campaign need not.
+
+2. **The stops.** A day has three pulses. With the key on, a seat may stop the clock at two more moments than today: at 0600, between the night and the morning, and at 1200, between the morning and the afternoon. Dusk, 1800, is the stop it has now.
+
+3. **What may be ordered at 0600 and 1200.** Seven kinds of order, each a standing setting that the pulses read and none that makes or unmakes a force:
+
+   | Unit | Order | What it changes inside the day |
+   | --- | --- | --- |
+   | Task force | `set_route` | Where it steams from the next pulse |
+   | Task force | `set_speed` | How fast |
+   | Task force | `set_readiness` | Its readiness for a fight |
+   | Task force | `set_rules_of_engagement` | When it breaks off |
+   | Air group | `set_air_mission` | What it flies; `rest` stands it down |
+   | Air group | `set_search_arc` | Where it searches |
+   | Land unit | `set_posture` | Whether it attacks in the day's fight ashore |
+
+   Every other kind is refused there with one reason, "given at dusk": forming, joining, detaching and standing down a force, loading and unloading, a yard, a home port, a rebase, an escort, the preparation of a landing, a march, an activity, and the finer air settings. They may come later, each for a reason; the list starts short.
+
+4. **When it takes effect.** An order given at 0600 or 1200 is taken in at the start of the pulse that follows, before anything else of that pulse, and is checked then against the state as it stands, as every order is checked when it is taken in. Its events carry that pulse. This is the rule dusk already has: an order given at 1800 acts in the night that begins. No new delay is added (question 2).
+
+5. **The unit is held.** If the unit lies in the forces limit of an intent in force, the order holds it from the staff, with a `HeldByOrder` event, exactly as the override does at dusk. The staff's orders to it are refused, with its reason saying so, until the commander releases it. A unit no intent uses is not held, as today.
+
+6. **Commands to the staff.** At 0600 and 1200 a seat may still state an intent, set a limit or a leave, approve, hold, release, withdraw and set an interrupt. Each is queued and is taken in at the next dusk, and its answer says so. The staff is not asked again inside the day. So a new intent given at 0600 becomes the staff's orders at 1800: this is the time the staff takes, and it is the game's own clock, not a new figure.
+
+7. **What a seat may read there.** What it may read at dusk, on the state as it stands: its forces, bases and contacts, an entity, a measure, an explanation, its command state, plans and report. The briefing stays the document of dusk and is not made at 0600 or 1200; the seat reads its events of the day so far instead (rule 9).
+
+8. **Advancing time.** One new tool, offered only where the key is on and one seat is a player's, as `run` is: `advance`. It resolves up to a number of pulses and stops at the end of the first pulse in which the side was told any of the things the call names, or at a dusk where an interrupt fired as `run` stops, or when the game is over. What it can stop on is read from the side's own events of the pulse, as `run` reads the firings of a day, so it adds no state:
+
+   | Stop on | The side was told, in that pulse |
+   | --- | --- |
+   | `contact` | A contact it did not hold |
+   | `attack` | One of its forces or bases was attacked, from the air or the sea |
+   | `loss` | One of its ships was sunk or put out of action |
+   | `strike` | One of its own strikes or raids was launched or came back |
+   | `landing` | Men of its own landed, or a fight ashore |
+
+   Crossing a dusk, `advance` hands in the orders and commands queued for the day, as `end_day` does. `run` and `end_day` stay as they are and resolve whole days.
+
+9. **A seat's events together.** A second new tool, offered in every game: `events`, the side's own events of a day, or of one pulse of it, each with its number, pulse, kind, words and the units it names. It gives nothing `explain` does not already give one at a time.
+
+10. **The other side.** A scripted side and a staff give their orders at dusk and nothing inside a day. Their units still decide inside the pulses what they decide today. A scenario's script may give an order a pulse, for a test and for a replay. The proof reports what a seat gains from commanding inside a day (condition 7); the staff is not given the same until that is seen.
+
+## What is built in the engine
+
+- **A day in parts.** Today one function resolves a whole day. It becomes three that it calls in turn: open the day (the commands, the staff, the interrupts and the orders of dusk), resolve the next pulse, and close the day (the end-of-day phases, the invariants, the hash). The sequence, the events and the hash are the same. This step is a move and changes no rule.
+- **Orders handed in while a day is open** wait, unhashed as pending orders are, and are taken in at the start of the next pulse in the order intake sorts them. The engine already takes one kind of order inside a day, the local commander's order to a straggler, with its pulse on the events; this is the same path.
+- **No state is added.** The hash is taken at the end of a day, when no day is open and nothing waits. A saved game gains the pulse of an order given inside a day, left out for an order of dusk, and its version rises; the replay hands such an order in at its pulse.
+
+## Rule card
+
+- **Reads:** the side's orders handed in while a day is open; the state as it stands at the start of a pulse; the side's intents in force and their forces limits (for the hold); the side's own events of a pulse (for `advance`).
+- **Writes:** what the seven orders write today (a force's route, speed, readiness and rules of engagement; a group's mission and arc; a unit's posture); the side's holds, by the override; the events `OrderAccepted`, `OrderRejected` and `HeldByOrder`, with a pulse where they had none. Nothing else.
+- **Reuses:** the order check and intake; the override and its hold; the local commander's intake inside a day; `run`'s way of stopping on a side's events; the saved game and its replay.
+- **Draws:** no random number.
+
+## What it costs
+
+- **Versions.** The state layout stays `flagplot-state-v44` and the rules label stays 19, since no existing game changes; if the build finds either must rise, it comes back to the architect first. The saved game rises to 20 and the agent interface to 25. The doctrine version stays.
+- **The rulebook.** Chapter 1 ("A side gives its orders ... before a day and cannot interrupt or give orders inside it") is rewritten for a scenario with the key on, with the seven kinds, when each is taken in and the order of a pulse; chapter 8 says the override also acts inside a day. The glossary gains "an order inside a day".
+- **Named and not built:** the time an order takes to reach a force when command levels are on. Today an order of dusk reaches every force at once, and this plan keeps that for an order of 0600 or 1200. A delay downward is a rule of its own, with figures from rows.
+
+## The hand calculation
+
+For `tests/scenario_78_orders_inside_a_day.rs`, whose doc comment takes this section word for word. Written by the architect on Nov 18, 2026, before any code. If the code disagrees, the code or the rule is wrong: no number here is changed to make a test pass.
+
+**The setup** is scenario 1's, with the key on: one Allied task force, a cruiser (2,000 t of fuel, 0.25 t a mile at cruise) and a destroyer (500 t, 0.125 t a mile), ordered at dusk of day 1 from (0,0) to (8,3) at cruise, 16 kn. Scenario 1's hand calculation gives the path and the miles steamed when the force enters each hex: (1,0) at 19, (2,0) at 57.5, (3,0) at 95.5, (4,0) at 132.5, (5,0) at 168.5, (6,0) at 203, (7,0) at 235, (8,0) at 262, (8,1) at 294, (8,2) at 334, (8,3) at 374; the transit is 394 miles. A ship below its cruise speed burns its cruise rate a mile (chapter 2, Fuel burn), so fuel is miles times the rate at either speed.
+
+**Case A: at 0600 of day 1 the commander orders `set_speed` of 8 kn.**
+
+| Pulse | Hours | Speed | Miles | Total | Hexes entered | Position at its end |
+| --- | --- | --- | --- | --- | --- | --- |
+| Night | 12 | 16 kn | 192 | 192 | (1,0) to (5,0) | (5,0) |
+| Morning | 6 | 8 kn | 48 | 240 | (6,0) at 203, (7,0) at 235 | (7,0) |
+| Afternoon | 6 | 8 kn | 48 | 288 | (8,0) at 262 | (8,0) |
+
+- The order is accepted in the morning pulse of day 1; no event of the night names it.
+- End of day 1: 288 miles steamed, the force in (8,0). Fuel burned: cruiser 288 x 0.25 = 72 t, 1,928 t left; destroyer 288 x 0.125 = 36 t, 464 t left.
+- Day 2: 394 - 288 = 106 miles remain, 13.25 hours at 8 kn. The night steams 96, to 384, entering (8,1), (8,2) and (8,3). The last 10 miles take 1.25 hours of the morning: the force arrives 37.25 hours after the start, at 07:15 on day 2. Fuel on day 2: cruiser 26.5 t, destroyer 13.25 t.
+- Totals: cruiser 98.5 t, destroyer 49.25 t, as scenario 1's, since the miles are the same.
+
+**Case B: the same order at 1200 of day 1.**
+
+| Pulse | Hours | Speed | Miles | Total | Hexes entered | Position at its end |
+| --- | --- | --- | --- | --- | --- | --- |
+| Night | 12 | 16 kn | 192 | 192 | (1,0) to (5,0) | (5,0) |
+| Morning | 6 | 16 kn | 96 | 288 | (6,0), (7,0), (8,0) | (8,0) |
+| Afternoon | 6 | 8 kn | 48 | 336 | (8,1) at 294, (8,2) at 334 | (8,2) |
+
+- The order is accepted in the afternoon pulse of day 1.
+- End of day 1: 336 miles steamed, the force in (8,2). Fuel burned: cruiser 84 t, 1,916 t left; destroyer 42 t, 458 t left.
+- Day 2: 58 miles remain, 7.25 hours at 8 kn. The force enters (8,3) and arrives 31.25 hours after the start, at 01:15 on day 2, in the night pulse. Fuel on day 2: cruiser 14.5 t, destroyer 7.25 t. Totals as above.
+
+**Case C: the key on and no order inside a day.** Every daily hash is scenario 1's.
+
+**Beside the numbers,** tests that state what must always hold:
+
+- An order of a kind not among the seven, handed in at 0600, is refused as given at dusk, and the day is the day it would have been.
+- The later the order, the farther the force: the same order at dusk of day 1 (8 kn for 24 hours), at 0600 and at 1200 gives 192, 288 and 336 miles steamed on day 1.
+- With a staff: in scenario 36, the one convoy, a `set_speed` at 0600 to the convoy's force, which is in the forces limit of the supply intent, records `HeldByOrder` in the morning pulse, and at the next dusk the staff's order to that force is refused as held, with a reason that says so.
+- A saved game of case A replays to the same daily hashes. The same file with the order's pulse changed to the afternoon replays to case B's.
+
+## The conditions of its proof
+
+Written before anything is built. None is a tuning mark; each can fail.
+
+1. **Nothing changed where it is off.** Every run baseline, golden file, recorded game and pinned hash is as it was. A batch of 1,000 seeds of the Eastern Solomons made before and after is byte for byte the same.
+2. **Nothing changed where it is on and unused.** A game advanced a pulse at a time with no order inside a day has the daily hashes of the same game run by days, on 1,000 seeds of the Eastern Solomons with the key set on a copy.
+3. **The hand calculation** of scenario 78 passes, cases A, B and C, with the tests beside it.
+4. **A saved game replays,** and refuses a scenario whose key was changed.
+5. **A seat is told nothing more.** At 0600 and 1200 the tools answer from the side's view at that moment; the test that reads the agent's source still passes, and a seat's count of its events at 1200 is the count of what its view holds then.
+6. **Legible.** A reader given one side's events of a day with an order inside it says, for each of six such orders, when it was given, in which pulse it acted and what it changed: six of six.
+7. **Reported, not judged: what it is worth.** The Eastern Solomons, one day, played by a model in the Allied seat from intents alone, 30 games by days and 30 advancing by pulse: whether it strikes ships, and the margin. And the same with the staff alone, for comparison.
+8. **Speed.** A day resolved in three calls costs no more than 1.1 times the day resolved in one.
+
+## The steps
+
+Each is one branch and one pull request, read by the architect before it merges.
+
+1. **A day in parts.** The engine's day as open, pulse, close. No rule; every hash as it was.
+2. **Orders inside a day.** The seven kinds, the intake at a pulse, the hold, the scenario's key and the pulse of a scripted order, the saved game, scenario 78 and its tests, the rulebook and the glossary.
+3. **The tools.** `events` and `advance`, what each tool answers at 0600 and 1200, the schemas and the server.
+4. **The table.** It stops between pulses, and a force takes the verbs.
+5. **The proof,** run once, as written above.
+
+## Questions for the designer
+
+1. **Orders to units, not commands to the staff.** The finding at the top. Recommended: accept it. The other way is to ask the staff again at 0600 and 1200, which decision 0155 left out.
+2. **When an order of 0600 or 1200 acts.** Recommended: in the pulse that follows, as an order of dusk does. The other choice is a pulse later, which makes the commander's reach slower than his staff's own units and needs a reason the record would have to supply.
+3. **On only where a scenario says.** Recommended: yes, off by default, on for the small battles and off for the 39 days until its proof is read.
+4. **The five things `advance` can stop on.** Recommended as listed. A player chooses among them; the table's default would be contact, attack and loss.
+5. **When it is built.** Recommended: now, beside the planning of stage 4's two mends, since it touches the day loop and the tools and they touch the doctrine. Steps 1 to 3 are the engine's and the tools'; the proof follows.
