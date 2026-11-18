@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 18, 2026, for the designer's app
 
 Summary: A plan for the opening of stage 4: men ashore at a place not yet taken are fed by supply runs to the base their landing formed; a take that cannot bring enough waits for the day the schedule brings it, and asks the commander where it never will, in place of going with what it has; a commander may tell a plan to wait (not before a day, until a force may be used, until another intent is met) and may say how much must be known before a landing, apart from the risk word; where nothing in reach can look, the staff may move a carrier force to look and says what that costs; and the staff hands in each plan as an order, with its phases, what each waits for and what it needs, so that a tool and the table can show it. With the arithmetic of its cases, the conditions of its proof, six steps and six questions for the designer
 
-Standing: Written for the designer's approval, Nov 18, 2026. Nothing is built
+Standing: Confirmed by the designer, Nov 18, 2026, with his six answers, each as recommended. Being built step by step
 
 ## What is so today, read from the code
 
@@ -106,3 +106,15 @@ Each is one branch and one pull request, read by the architect before it merges.
 4. **A carrier force may be moved in order to look,** at balanced without asking and at preserve with your leave. Recommended: yes, in this opening; it is the cost of knowing made visible.
 5. **Landing at a beach away from the enemy and marching.** Recommended: not now. It waits for marching between hexes on the 39 days, which stage 4 of ground combat owns.
 6. **Order of work.** Recommended: these six steps, then the trial as its own plan. The trial needs a plan that says what it waits for and needs, which is what these steps give it.
+
+## Confirmed on Nov 18, 2026
+
+The designer approved the plan and answered the six questions "go with your recommendations":
+
+1. At balanced, a take that can never bring enough asks the commander and no longer goes with what it has.
+2. The staff waits by itself when the schedule will bring enough, within the latest day given or else 7 days, at preserve and at balanced.
+3. How much must be known is the commander's to set, apart from the risk word, in three levels with an age in days.
+4. A carrier force may be moved in order to look: at balanced without asking, at preserve with leave.
+5. Landing at a beach away from the enemy and marching is not in this plan.
+6. The six steps first, then the trial as its own plan.
+
