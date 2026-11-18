@@ -171,6 +171,17 @@
 //!   at base 2: it launches at base 2 on days 2, 3 and 4 and on no other
 //!   day. The force is given no route on any day: it is not sent home
 //!   when the take is met. The landing is the main case's.
+//! - **A bombardment force.** With scenario 74's battleship force, its
+//!   ship as it is there, as task force 3 on the bombardment mission,
+//!   stopped at base 1 with base 1 its home port: "bombard base 2 by
+//!   task force 3" is formed on day 1 under the neutralising of base 2,
+//!   and no bombard task is formed under the take, whose limit names no
+//!   bombardment force. On the morning of day 5, base 2 the side's, the
+//!   neutralising is withdrawn and the bombard task with it, and task
+//!   force 3 is given no route on that morning or after. Only the
+//!   forming and the withdrawal are asserted: the nights it fires are
+//!   the bombard doctrine's (scenario 71). Added by the architect on Nov
+//!   18, 2026, with decision 0151's item 8c.
 //! - **By a date.** With the island asked for by day 10: the take is
 //!   formed with the date of day 10, and the task "ready a landing" under
 //!   it with day 8, the take's day less the 2 days to embark and the day

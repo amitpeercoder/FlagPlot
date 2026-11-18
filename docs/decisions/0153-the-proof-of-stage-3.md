@@ -122,6 +122,8 @@ The scripts that read conditions 1 to 5 and pick the reasons were written and te
 10. **A base strike order** counts whatever intent it serves.
 11. **A run by night** is known by its reason's words, "goes by night".
 12. **Other staff commands,** such as an approval or a plan marked, belong to no doctrine and are not picked.
+13. **The sample of condition 1** is seeds 1, 2, 3, 500 and 1,000, each exported twice, as decision 0128's third run had it.
+14. **Speed** is read from `sim-cli time` on arrangement (a) as the sum of the two sides' median staff decision over the 39 days: both staffs work each day, so a staffed day costs both. It is to be no more than 40 ms.
 
 ## Reported and not judged
 
@@ -136,6 +138,10 @@ As decision 0139 has it, and with these:
 ## What is done with a failure
 
 A condition that fails is reported with its seeds and its cause from the staff's own reasons. Nothing is tuned to pass it. What it shows is put to the designer with the choice it raises: a doctrine to change, a limit of the stage to lift, or a miss to name.
+
+## Before the loading check
+
+The three setup files and the run script were made and smoke-tested on Nov 18, 2026, before decision 0152 was built (`docs/validation/stage-3-proof-setup.md`): each file loads, no command of the table is refused, and a game of arrangement (a) runs to day 39. Nothing was judged. The smoke test showed one fault of a rule, mended in its own pull request with a property of scenario 76 before the loading check: a bombardment force was never taken under an island (decision 0151, item 8c, and "Amended before the proof").
 
 ## After the loading check
 
