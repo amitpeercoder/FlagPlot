@@ -231,7 +231,13 @@ use sim_core::view::SideView;
 /// on reading 7, a first lift with no ship afloat is lost and so no longer
 /// on its way. A side with at most one take in force, and none whose first
 /// lift has lost every ship, gets the orders `supply-33` gave.
-pub const DOCTRINE_VERSION: &str = "supply-34";
+/// `supply-35` adds decision 0159, rule A: a "hold a place" whose base is not
+/// the side's, where the side has a base of its own in that hex and men
+/// ashore there, forms "keep supplied" for the side's own base under the
+/// hold, as it does for a base that is the side's, and its reason says
+/// through which base the men are fed. A side with no such hold gets the
+/// orders `supply-34` gave.
+pub const DOCTRINE_VERSION: &str = "supply-35";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

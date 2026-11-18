@@ -860,24 +860,40 @@ impl<'v, 'a> Day<'v, 'a> {
             };
             // Decision 0144, 1 to 3: a hold of a base that is not the side's,
             // or no longer is, waits for it.
+            // Decision 0159, A: where the side has men ashore in its hex, they
+            // are fed through the side's own base there, and nothing else is
+            // formed or ordered.
             if !self.view.bases().any(|b| b.id == base) {
                 let base_text = base_words(self.view, base);
+                let fed = self.fed_through(base);
+                let worked = match fed {
+                    None => format!(
+                        "{} holds {base_text}, which is not the side's: the staff waits for it to be the side's, and forms nothing and orders nothing under {} until then.",
+                        hold.id, hold.id
+                    ),
+                    Some(fed) => format!(
+                        "{} holds {base_text}, which is not the side's: the staff waits for it to be the side's, and until then forms nothing and orders nothing under {} but the supply of the side's men in its hex, who are fed through {}.",
+                        hold.id,
+                        hold.id,
+                        base_words(self.view, fed)
+                    ),
+                };
                 let reason = serving(&hold, &plan)
                     .evidence(format!("{base_text} is not the side's"), today)
                     .binding(format!("{base_text} is not the side's"))
-                    .worked(format!(
-                        "{} holds {base_text}, which is not the side's: the staff waits for it to be the side's, and forms nothing and orders nothing under {} until then.",
-                        hold.id, hold.id
-                    ))
+                    .worked(worked)
                     .would_change(format!("{base_text} the side's"))
                     .done();
                 self.target(in_scope).no_orders.push(reason);
+                if let Some(fed) = fed {
+                    self.hold_supply(&hold, &plan, base, fed, in_scope);
+                }
                 continue;
             }
             // Decision 0144, 4 to 9: the men at the base, and the supply
             // that follows.
             if self.hold_men(&hold, &plan, base, in_scope) {
-                self.hold_supply(&hold, &plan, base, in_scope);
+                self.hold_supply(&hold, &plan, base, base, in_scope);
             }
             // Decision 0152, 8: a force with men aboard that no take can use.
             self.hold_lifts(&hold, &plan, base, in_scope);

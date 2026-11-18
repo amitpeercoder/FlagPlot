@@ -76,6 +76,27 @@ impl Day<'_, '_> {
         found
     }
 
+    /// Decision 0159, A, 1: the side's own base through which its men are
+    /// fed in the hex of `held`, a base that is not the side's: the
+    /// lowest-numbered base of the side in that hex, where the side has
+    /// fighting or working men ashore there. The hex is read from the side's
+    /// own map of the bases it does not hold; a base not on it has none.
+    pub(crate) fn fed_through(&self, held: BaseId) -> Option<BaseId> {
+        let hex = self.view.enemy_bases().find(|b| b.id == held)?.hex;
+        let men = self
+            .view
+            .land_units()
+            .any(|u| u.men_ashore > 0 && u.hex == Some(hex));
+        if !men {
+            return None;
+        }
+        self.view
+            .bases()
+            .filter(|b| b.hex == hex)
+            .map(|b| b.id)
+            .min()
+    }
+
     /// Items 4 and 5: the men of the hold on attack are set to defend.
     /// Whether the hold has men at the base: a fighting unit of item 4,
     /// on attack or not, the side may use and the commander does not hold.
@@ -179,12 +200,25 @@ impl Day<'_, '_> {
     /// Items 7 and 9: "keep supplied" formed under the hold, on a morning it
     /// has men at the base (the supply follows the men: a hold with no man
     /// there plays as it did).
-    pub(crate) fn hold_supply(&mut self, hold: &Intent, plan: &Plan, base: BaseId, in_scope: bool) {
-        let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) else {
+    ///
+    /// `held` is the base the hold names and `fed` the side's base the supply
+    /// goes to: the same base where the hold's base is the side's, else the
+    /// side's own base in its hex through which its men there are fed
+    /// (decision 0159, A).
+    pub(crate) fn hold_supply(
+        &mut self,
+        hold: &Intent,
+        plan: &Plan,
+        held: BaseId,
+        fed: BaseId,
+        in_scope: bool,
+    ) {
+        let Some(hex) = self.view.bases().find(|b| b.id == fed).map(|b| b.hex) else {
             return;
         };
         let today = self.today;
-        let base_text = base_words(self.view, base);
+        let base_text = base_words(self.view, held);
+        let fed_text = base_words(self.view, fed);
         let standing = self.state.intents_in_force().any(|i| match i.kind {
             IntentKind::KeepSupplied { base: b, .. } => {
                 self.view
@@ -218,7 +252,7 @@ impl Day<'_, '_> {
         let risk = self.state.risk_read_up(hold.id);
         let floor_days = margin_days(risk);
         let kind = IntentKind::KeepSupplied {
-            base,
+            base: fed,
             floor_days,
             interval_days: None,
         };
@@ -257,17 +291,32 @@ impl Day<'_, '_> {
                 withdrawn_day: None,
             },
         );
-        let reason = serving(hold, plan)
-            .evidence(
+        let (evidence, opening) = if fed == held {
+            (
                 format!(
                     "{base_text} is the side's and no supply intent for its hex is in force; the forces limit names {source} as the source"
                 ),
-                today,
+                format!(
+                    "{} holds {base_text}, which is the side's, and no supply for it is in force",
+                    hold.id
+                ),
             )
+        } else {
+            (
+                format!(
+                    "{base_text} is not the side's, the side's men in its hex are fed through {fed_text}, and no supply intent for its hex is in force; the forces limit names {source} as the source"
+                ),
+                format!(
+                    "{} holds {base_text}, which is not the side's, and the side's men in its hex are fed through {fed_text}, for which no supply is in force",
+                    hold.id
+                ),
+            )
+        };
+        let reason = serving(hold, plan)
+            .evidence(evidence, today)
             .binding(format!("{} is held and its plan is released", hold.id))
             .worked(format!(
-                "{} holds {base_text}, which is the side's, and no supply for it is in force: the staff forms {id_new}, keep {base_text} supplied from {source}, under it, with a floor of {floor_days} {} (the margin at {}) and no interval, so that the staff uses 15 days. Its forces limit is {}'s.",
-                hold.id,
+                "{opening}: the staff forms {id_new}, keep {fed_text} supplied from {source}, under it, with a floor of {floor_days} {} (the margin at {}) and no interval, so that the staff uses 15 days. Its forces limit is {}'s.",
                 crate::units::days_word(floor_days),
                 risk.name(),
                 hold.id
@@ -277,7 +326,7 @@ impl Day<'_, '_> {
             .done();
         if in_scope {
             self.lines.push(format!(
-                "{} holds {base_text}: it would form {id_new}, keep {base_text} supplied from {source}, under it.",
+                "{} holds {base_text}: it would form {id_new}, keep {fed_text} supplied from {source}, under it.",
                 hold.id
             ));
         }
