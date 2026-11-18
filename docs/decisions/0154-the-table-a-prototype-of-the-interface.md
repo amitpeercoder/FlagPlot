@@ -53,3 +53,9 @@ The table now draws all three, switched by "Pieces", for him to choose by eye: t
 
 **Chosen on Nov 18, 2026: the period tiles.** The designer compared the three on a game in progress and chose the period tiles. The blocks, the tiles in the standard's frames and the switch are taken out. The tiles now grow as the commander sits back and keep facing the chair when they move. Still rough: from the chair sat back a tile shows where a thing is more than what it is, and several pieces in one hex crowd each other.
 
+## The plan sheet
+
+The designer asked on Nov 18, 2026 whether a player can see what a plan includes and change it. The game gives a seat the plan's parts through `command_state` (the intent tree, each node's plan, measure and limits), `plans` (state, amendments, runs) and `staff_orders` (the day's decisions with what each rests on, what binds it and what would change it); the table showed only a slip with "approve". The table now has a sheet for each intent of the commander's that lays these out as one tree, with the instructions that exist: approve a plan, cancel it, set the risk, withdraw the intent. To keep a force out of a plan the commander orders the force himself, which holds it.
+
+A plan is changed by instruction and not by editing it. That is the game's premise and is kept. What a commander cannot yet instruct, found while building the sheet, is listed in `docs/open-work.md` for the designer to choose from.
+

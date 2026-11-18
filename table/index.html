@@ -65,6 +65,10 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .sub { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--paper-dim); margin-top: 4px; }
 .card .note { font-size: 12px; color: var(--paper-dim); border-top: 1px dashed #8d8672; padding-top: 7px; }
 .card .headline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.sheet .doc .node { border-left: 2px solid #8d8672; padding: 2px 0 2px 12px; display: flex; flex-direction: column; gap: 5px; }
+.sheet .doc .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.sheet .doc .node .work { font-size: 13px; color: var(--paper-dim); }
+.sheet .doc .row { display: flex; flex-wrap: wrap; gap: 8px; }
 .sheet .doc[hidden] { display: none; }
 .sheet .doc .head { font-size: 13px; color: var(--paper-dim); border-bottom: 1px solid #8d8672; padding-bottom: 8px; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
 .sheet .doc h3 { margin: 6px 0 0; font-family: var(--f-ui); font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
@@ -472,6 +476,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     }
     if (s.queued && s.queued.length) slip('FROM YOU · SIGNED', 'SENT', s.queued.length + ' signal' + (s.queued.length > 1 ? 's go' : ' goes') + ' to the staff at 1800', s.queued.map(function (q) { return q.text || q.shown || (q.command && q.command.kind) || 'a command'; }).join('; ') + '.');
     showDirectives();
+    roots.forEach(function (r) { var op = slip('YOUR INTENT ' + r.number, r.in_force ? 'IN FORCE' : null, sayIntent(r, {}), null); button(op, 'READ THE PLAN', false, function () { readPlan(r.number); }); });
     if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) { var sch = slip('FROM STAFF', null, 'What is coming', null); button(sch, 'READ THE SCHEDULE', false, readSchedule); }
     if (lastRun) { var y = slip(clock.at === 'dusk' ? 'YESTERDAY' : 'SO FAR TODAY', null, null, lastRun.summary); button(y, 'READ THE BRIEFING', false, readBriefing); }
     else { var first = slip('FROM STAFF', null, null, 'The staff\'s full return of your forces, bases and men.'); button(first, 'READ THE RETURN', false, readBriefing); }
@@ -563,6 +568,63 @@ button:disabled { opacity: 0.45; cursor: default; }
     var g = el('div', 'head'); rows.forEach(function (r) { g.appendChild(el('span', '', dateOf(r[0] - 1) || 'Day ' + r[0])); g.appendChild(el('span', '', r[1])); });
     doc.appendChild(g); doc.appendChild(el('div', 'foot', 'This is all that is scheduled to come to you. What is not here is not coming.'));
     $('sheet-title').textContent = 'WHAT IS COMING'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+  }
+
+  // ---- the plan sheet: an intent and what the staff has made of it ----
+  // The commander's intent at the top, the staff's own intents under it as a
+  // tree, each with its plan's state, how it is going, and what the staff
+  // decided for the coming day with its reasons. All from command_state,
+  // plans and staff_orders. The commander changes a plan by instruction:
+  // leave, a limit, a cancel or a withdrawal; never line by line.
+  function nameText(t) {
+    return String(t).replace(/base:\d+ \(([^)]+)\)/g, '$1').replace(/(task_force|base|ship|air_group|land_unit):\d+/g, function (h) { return M.names[h] || h; }).replace(/(intent|plan|contact):(\d+)/g, '$1 $2').replace(/island \d+ \(([^)]+)\)/g, '$1').replace(/Placeholder /g, '');
+  }
+  function sayIntent(i, said) {
+    if (said[i.number]) return nameText(said[i.number]).replace(/^./, function (c) { return c.toUpperCase(); });
+    var where = (i.target && i.target.name) || (i.base && i.base.name) || (i.island != null && (config.islands.filter(function (x) { return x.number === i.island; })[0] || {}).name) || (i.hex && (M.hexNames[i.hex[0] + ',' + i.hex[1]] || '(' + i.hex[0] + ', ' + i.hex[1] + ')')) || '';
+    var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
+  }
+  function readPlan(root) {
+    Promise.all([api('command_state'), api('plans'), api('staff_orders').catch(function () { return {}; })]).then(function (a) {
+      var st = a[0], plans = {}, said = {}, work = {}, doc = $('sheet-doc'); doc.textContent = '';
+      (a[1].plans || []).forEach(function (p) { plans[p.number] = p; });
+      function note(r, verdict) { if (!r || !r.serves) return; var n = r.serves.intent; if (r.serves.statement) said[n] = r.serves.statement; (r.serves.chain || []).forEach(function (c) { said[c.intent] = c.statement; }); (work[n] = work[n] || []).push({ verdict: verdict, r: r }); }
+      (a[2].orders || []).forEach(function (o) { note(o.reason, 'An order goes out'); });
+      (a[2].commands || []).forEach(function (o) { note(o.reason, 'The staff adjusts'); });
+      (a[2].no_orders || []).forEach(function (o) { note(o, 'No order today'); });
+      var byNum = {}; st.intents.forEach(function (i) { byNum[i.number] = i; });
+      var top = byNum[root]; if (!top) { setStatus('That intent is no longer held.'); return; }
+      var lim = top.limits_read_up || {}, head = el('div', 'head');
+      [['Your intent', sayIntent(top, said)], ['Stated', 'day ' + top.set_day], ['Risk', lim.risk || 'balanced'], ['Forces', top.limits && top.limits.forces ? 'limited by you' : 'the staff\'s choice'], ['Leave to launch', st.leaves.launch ? 'given: a plan that is ready goes' : 'withheld: each plan waits for your word']].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+      doc.appendChild(head);
+      doc.appendChild(el('h3', '', 'What the staff has made of it'));
+      (function walk(i, depth) {
+        if (i.number !== root) {
+          var n = el('div', 'node'), p = i.plan != null ? plans[i.plan] : null, who = el('div', 'who'); n.style.marginLeft = (depth - 1) * 18 + 'px';
+          who.appendChild(el('span', '', (i.maker === 'staff' ? 'The staff\'s' : 'Yours') + ' · intent ' + i.number + (p ? ' · plan ' + p.number + ', ' + p.state : '') + (i.in_force ? '' : ' · no longer in force')));
+          n.appendChild(who); n.appendChild(el('strong', '', sayIntent(i, said)));
+          if (i.measure && i.measure.text) n.appendChild(el('div', '', 'So far: ' + nameText(i.measure.text) + '.'));
+          (work[i.number] || []).forEach(function (w) {
+            n.appendChild(el('div', '', w.verdict + '. ' + nameText(w.r.worked || '')));
+            if (w.r.binding && w.r.binding.length) n.appendChild(el('div', 'work', 'Bound by: ' + nameText(w.r.binding.join('; ')) + '.'));
+            if (w.r.would_change && w.r.would_change.length) n.appendChild(el('div', 'work', 'Would change with: ' + nameText(w.r.would_change.join('; ')) + '.'));
+          });
+          if (p && p.amendments && p.amendments.length) n.appendChild(el('div', 'work', 'Changed ' + p.amendments.length + ' time' + (p.amendments.length > 1 ? 's' : '') + ', last on day ' + p.amendments[p.amendments.length - 1].day + ': ' + nameText(p.amendments[p.amendments.length - 1].change) + '.'));
+          var waits = p && ((p.state === 'preparing' && !st.leaves.launch) || (p.state === 'draft' && !st.leaves.prepare)), live = p && p.state !== 'complete' && p.state !== 'released' && p.state !== 'cancelled';
+          if (live) { var row = el('div', 'row'); n.appendChild(row);
+            if (waits) { var ok = el('button', '', 'APPROVE PLAN ' + p.number); ok.type = 'button'; ok.addEventListener('click', function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.').then(function () { readPlan(root); }); }); row.appendChild(ok); }
+            var no = el('button', '', 'CANCEL PLAN ' + p.number); no.type = 'button'; no.addEventListener('click', function () { act('cancel_plan', { plan: p.number }, 'Plan ' + p.number + ' is cancelled from 1800.').then(function () { readPlan(root); }); }); row.appendChild(no); }
+          doc.appendChild(n);
+        }
+        st.intents.filter(function (c) { return c.parent === i.number; }).forEach(function (c) { walk(c, depth + 1); });
+      })(top, 0);
+      doc.appendChild(el('h3', '', 'Send it back to the staff'));
+      var row = el('div', 'row'); doc.appendChild(row);
+      ['preserve', 'balanced', 'press'].forEach(function (r) { var b = el('button', '', 'RISK: ' + r.toUpperCase() + ((lim.risk || 'balanced') === r ? ' ✓' : '')); b.type = 'button'; b.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.').then(function () { readPlan(root); }); }); row.appendChild(b); });
+      var w = el('button', '', 'WITHDRAW THIS INTENT'); w.type = 'button'; w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The intent is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); row.appendChild(w);
+      doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and order it yourself.'));
+      $('sheet-title').textContent = 'THE PLAN'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    }).catch(function (e) { setStatus('The plan could not be read: ' + e.message); });
   }
 
   // ---- directives from the commander above ----
