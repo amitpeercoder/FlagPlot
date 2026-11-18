@@ -2926,7 +2926,10 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 && !stem.starts_with("79_")
                 // And scenario 80's, whose take waits for its men (decision
                 // 0159).
-                && !stem.starts_with("80_"))
+                && !stem.starts_with("80_")
+                // And scenario 81's, whose take is told to wait (decision
+                // 0159, rule C).
+                && !stem.starts_with("81_"))
             .then(|| stem.to_string())
         })
         .collect();

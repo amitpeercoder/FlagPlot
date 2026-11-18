@@ -383,7 +383,6 @@
         },
         "not_before": {
           "type": ["integer", "null"],
-          "minimum": 0,
           "description": "Decision 0159, 9: the day before which the staff does not release the plan, set on this intent itself; null where none is set."
         },
         "wait_for": {
