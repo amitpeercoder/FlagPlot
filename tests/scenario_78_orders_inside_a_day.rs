@@ -48,9 +48,9 @@
 //!
 //! **Beside the numbers,** tests that state what must always hold:
 //!
-//! - An order of a kind not among the seven, handed in at 0600, is refused as given at dusk, and the day is the day it would have been.
+//! - An order of a kind not among the seven, handed in at 0600, is refused as given at dusk and changes nothing but its event: the truth of each day is the truth without it, the arrival event's number set aside, and the daily hash is that of the same game with one order refused at dusk, since the hash counts orders and events (decision 0055).
 //! - The later the order, the farther the force: the same order at dusk of day 1 (8 kn for 24 hours), at 0600 and at 1200 gives 192, 288 and 336 miles steamed on day 1.
-//! - With a staff: in scenario 36, the one convoy, a `set_speed` at 0600 to the convoy's force, which is in the forces limit of the supply intent, records `HeldByOrder` in the morning pulse, and at the next dusk the staff's order to that force is refused as held, with a reason that says so.
+//! - With a staff: in scenario 36, the one convoy, a `set_speed` at 0600 to the convoy's force, which is in the forces limit of the supply intent, records `HeldByOrder` in the morning pulse. At the next dusk the staff gives the held force no order: it sets it aside as chapter 8 has it, ends the run with a reason that names the hold, frees the ship and forms another run with another ship.
 //! - A saved game of case A replays to the same daily hashes. The same file with the order's pulse changed to the afternoon replays to case B's.
 
 mod common;
