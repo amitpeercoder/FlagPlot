@@ -1,0 +1,31 @@
+Units made ready: 3 reasons, from seed(s) 1; fewer than four on the first ten seeds; skipped for the same worked text: 27; passed over, taken by an earlier doctrine: 0
+   1. seed 1 day 1 #178 allied row 1a: order:5 task_force:20 prepare a landing at (2,-4) with land_unit:1, land_unit:2, land_unit:3
+   2. seed 1 day 1 #184 allied row 1a: order:8 task_force:21 prepare a landing at (3,-5) with land_unit:5, land_unit:6, land_unit:7, land_unit:8
+   3. seed 1 day 10 #2318 japanese row 1a: order:92 task_force:30 prepare a landing at (2,-4) with land_unit:16
+The force chosen: 4 reasons, from seed(s) 1; skipped for the same worked text: 0; passed over, taken by an earlier doctrine: 0
+   4. seed 1 day 1 #68 allied row 2a: staff command form_intent: form under intent:3 an intent to ready a landing at (2,-4) by task_force:20
+   5. seed 1 day 1 #71 allied row 2b: staff command set_limit: limit intent:14's forces to 0 ships and 1 task force from base:3
+   6. seed 1 day 1 #74 allied row 2a: staff command form_intent: form under intent:11 an intent to ready a landing at (3,-5) by task_force:21
+   7. seed 1 day 1 #77 allied row 2b: staff command set_limit: limit intent:15's forces to 0 ships and 1 task force from base:3
+Ashore: 4 reasons, from seed(s) 1; skipped for the same worked text: 0; passed over, taken by an earlier doctrine: 0
+   8. seed 1 day 2 #699 allied row 3b: order:48 land_unit:1 posture defend
+   9. seed 1 day 2 #701 allied row 3b: order:49 land_unit:2 posture defend
+  10. seed 1 day 2 #703 allied row 3b: order:50 land_unit:3 posture defend
+  11. seed 1 day 2 #705 allied row 3b: order:51 land_unit:5 posture defend
+The supply that follows: 4 reasons, from seed(s) 1; skipped for the same worked text: 0; passed over, taken by an earlier doctrine: 0
+  12. seed 1 day 8 #2040 allied row 4b: order:78 task_force:22 route via (2,-4), (7,6), acting at (2,-4)
+  13. seed 1 day 8 #2042 allied row 4b: order:79 task_force:22 unload supply into the base here
+  14. seed 1 day 23 #5398 allied row 4a: staff command add_run: add a run of 960 t with 3 ships to plan:5, loading day 23, due day 27
+  15. seed 1 day 23 #5400 allied row 4a: staff command commit_ships: commit 3 ships to plan:5 run 1 from day 23 to day 32
+By night: 4 reasons, from seed(s) 1; skipped for the same worked text: 0; passed over, taken by an earlier doctrine: 0
+  16. seed 1 day 1 #180 allied row 5a: order:6 task_force:20 route via (2,-4), (7,6), acting at (2,-4)
+  17. seed 1 day 1 #186 allied row 5a: order:9 task_force:21 speed full
+  18. seed 1 day 1 #188 allied row 5a: order:10 task_force:21 route via (3,-5), (7,6), acting at (3,-5)
+  19. seed 1 day 10 #2320 japanese row 5a: order:93 task_force:30 speed full
+Cover and reconnaissance: 4 reasons, from seed(s) 1; skipped for the same worked text: 0; passed over, taken by an earlier doctrine: 0
+  20. seed 1 day 1 #40 allied row 6b: staff command form_intent: form under intent:5 an intent to operate the carrier force task_force:1 from (7,-5)
+  21. seed 1 day 1 #43 allied row 6b: staff command form_intent: form under intent:5 an intent to operate the carrier force task_force:2 from (7,-5)
+  22. seed 1 day 1 #200 allied row 6c: order:16 air_group:103 air mission base_strike on base:1
+  23. seed 1 day 1 #204 allied row 6c: order:18 air_group:104 air mission base_strike on base:1
+picked in all: 23 of 24
+rows not tested on main: 4b (python3 pick.py --rows)
