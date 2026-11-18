@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: Step 8 of stage 3, second part: the end "control an island", stated alone, from which the staff draws the tree: "take a place" and "hold a place" for each named place that is not the side's, "hold a place" for each that is, the supply under each hold from a source it chooses, a denial of the island's waters with the carrier forces under it, and the neutralising of each enemy base near it, the base at a place still to be taken among them; with its measure, the days on which every named place was the side's and held supply for its floor of days
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139; amended after a review. Built; its readings ruled (The architect's rulings)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139; amended after a review. Built; its readings ruled (The architect's rulings); item 8c, amended before the proof, built on Nov 18, 2026, its readings 12 to 16 and one finding for the architect's ruling (As built: item 8c)
 
 ## Why
 
@@ -147,3 +147,25 @@ Made on Nov 18, 2026, on reading the build.
 
 On Nov 18, 2026, the three setup files of the proof were smoke-tested on main before decision 0152 was built (`docs/validation/stage-3-proof-setup.md`). The run was not a loading check and nothing was judged. It showed one fault of this record: a force on the bombardment mission was taken only by a take, on the one morning the take assembled its force (decision 0149, item 10), and never under an island's neutralising, since decision 0146 forms a bombard task only for a force a forces limit names and an island has none. In the staff's setup the Japanese bombardment force may be used from day 18, days after the first lift is assembled, so it would have lain at Shortland for the whole game. The record of the campaign has the airfield shelled from the sea through these weeks, and the proof's fourth condition counts it. Item 8c makes the bombardment forces the island's, as item 8a made the carriers. It is built in its own pull request, with a property of scenario 76, before the loading check.
 
+
+## As built: item 8c (Nov 18, 2026)
+
+Built on the branch `stage3-island-bombard`. No state, no engine change and no new event: the doctrine version rises to `supply-33` and nothing else. Nothing is tuned and no figure changed. `tests/scenario_76_controlling_an_island.rs` gains the property "A bombardment force" (`a_bombardment_force`, asserting only the forming and the withdrawal) and one test of the team's own, not part of the hand calculation and marked so (`a_bombardment_force_used_from_a_later_day_is_taken_on_its_first_morning`: the force may be used from day 3 and its task is formed on day 3 under intent 6). Both pass; no expected number changed and nothing is ignored. The main case of scenario 76 has no bombardment force and hands in what it did; scenarios 67 to 76 hand in, day by day, the orders and commands they handed in before (the test `scenarios_67_to_76_give_the_orders_they_gave`).
+
+### What was built
+
+- **`crates/sim-staff/src/bombard.rs`:** in the bombard step, a neutralising formed under an island takes no force by the forming of decision 0146 (the nearest forces limit); the island's first neutralising of an enemy base at a named place (`first_island_neutralise`) forms the island's bombard tasks (`form_island_bombard_tasks`).
+- **`crates/sim-staff/src/assemble.rs`:** a take under an island takes no force on the bombardment mission.
+- **The rulebook:** chapter 8, Bombarding a base (Forming), Taking a place (Under "control an island"), Controlling an island (the tree's table and "The bombardment forces"), the doctrine version; the glossary ("Control an island", "Task"); `docs/commands.md`.
+
+### Readings taken
+
+12. **The first neutralising in the island's order** is, for each named place in order, the neutralising in force whose parent is the island (whoever made it) of the lowest-numbered enemy base on the side's map in the place's hex. A neutralising of that base in another tree is not the island's, and nothing is formed under it by this.
+13. **"The staff may take"** is decision 0149's item 5 read against the intents above the island (`others_above` of the island), as for its carriers; a force the staff may not take, one before its day among them, gives a decision to give no order with the reason each morning, as the carriers' does. Where the island's own forces limit names task forces, only those are weighed (item 4, kind by kind); a force on the bombardment mission not stopped at a base of the side is passed over without a word.
+14. **No other neutralising under the island** takes a bombardment force, even one named in the island's limit: under an island the bombardment forces are the island's by this rule alone, so no base off the island is bombarded by it.
+15. **A bombard task of the island's own tree stands without a word;** one in another tree is named with its number, as decision 0146's forming names it.
+16. **The take's reason** says "the bombardment forces are the island's, under its neutralising" where a force on the bombardment mission lies stopped at a base of the side, and the words of before ("no force on the bombardment mission to bombard the place") where none does, so a take under an island with no such force gives the reason it gave.
+
+### Found by the build, for the architect's ruling
+
+1. **The readiness order on the morning the base is taken is not given.** The staff withdraws the neutralising and the bombard task with it in the island step, by a command; intake takes the staff's commands before its orders, and refuses a staff order whose intent is not in force (`OutsideForcesLimit`). So the task withdrawn cannot carry the readiness order of decision 0146, reading 2, and no intent in force commands the force (the island has no forces limit). The build gives no such order. In the property it is not needed: the force sorties on day 1, is then short of rounds at balanced (80 against 400, and base 1 cannot rearm it) and is set to normal readiness on day 2. A force that sortied on the night before the base was taken would be left at battle readiness. The smallest change is in intake (`staff_order_in_forces_limit`, `crates/sim-core/src/command/intake.rs`): take a staff order to a task force under a bombard task the staff's own command withdrew that same day, as decision 0146, reading 5, serves a task whose plan ended that morning; the bombard step would then serve such a task once. Not built: it is an engine change.

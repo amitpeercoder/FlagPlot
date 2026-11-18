@@ -508,8 +508,13 @@ impl Day<'_, '_> {
         };
 
         // Item 10: the risk on the way.
+        // Under "control an island" a take takes no carrier force and no
+        // force on the bombardment mission: the carriers are the island's,
+        // under its denial, and the bombardment forces under its
+        // neutralising (decision 0151, 8a and 8c).
+        let under_island = self.state.island_on_chain(end.id).is_some();
         let base_hexes: BTreeSet<Hex> = view.bases().map(|b| b.hex).collect();
-        let bombard: Vec<TaskForceId> = forces
+        let bombard_stopped: Vec<TaskForceId> = forces
             .iter()
             .filter(|f| f.mission == Mission::Bombardment)
             .filter(|f| {
@@ -519,9 +524,11 @@ impl Day<'_, '_> {
             })
             .map(|f| f.id)
             .collect();
-        // Under "control an island" a take takes no carrier force: the
-        // carriers are the island's, under its denial (decision 0151, 8a).
-        let under_island = self.state.island_on_chain(end.id).is_some();
+        let bombard: Vec<TaskForceId> = if under_island {
+            Vec::new()
+        } else {
+            bombard_stopped.clone()
+        };
         let carrier: Vec<TaskForceId> = forces
             .iter()
             .filter(|f| f.mission == Mission::Carrier && !under_island)
@@ -534,7 +541,9 @@ impl Day<'_, '_> {
             .map(|f| f.id)
             .collect();
         let risk_line = [
-            if bombard.is_empty() {
+            if under_island && !bombard_stopped.is_empty() {
+                "the bombardment forces are the island's, under its neutralising".to_string()
+            } else if bombard.is_empty() {
                 "no force on the bombardment mission to bombard the place".to_string()
             } else {
                 format!("to bombard the place: {}", list(&bombard))

@@ -1412,6 +1412,98 @@ fn a_carrier() {
     assert_eq!(g.changed_side_day(2), Some(4));
 }
 
+/// The text with scenario 74's battleship force added as task force 3, on
+/// the bombardment mission, stopped at base 1 with base 1 its home port: the
+/// ship as scenario 74 has it, and its class file named. `extra` is added to
+/// the task force's table.
+fn with_a_bombardment_force(extra: &str) -> String {
+    let force = format!("# Task force 3: scenario 74's placeholder battleship, stopped in port at\n# base 1, its home port, on the bombardment mission.\n[[task_force]]\nid = 3\nname = \"Placeholder bombardment force 3\"\nside = \"allied\"\nat_base = 1\nmission = \"bombardment\"\nstance = \"avoid\"\nhome_port = 1\n{extra}\n[[ship]]\nid = 4\nname = \"Placeholder battleship 4\"\nclass = 9\nside = \"allied\"\nfuel_t = 2000\ntask_force = 3\n\n");
+    changed(
+        &before_commands(&force),
+        "    \"../reference/ship_classes_placeholder_transports.csv\",\n]",
+        "    \"../reference/ship_classes_placeholder_transports.csv\",\n    \"../reference/ship_classes_placeholder_battleship.csv\",\n]",
+    )
+}
+
+fn bombard_kind(force: u32, target: u32) -> IntentKind {
+    IntentKind::Bombard {
+        force: TaskForceId::new(force),
+        target: BaseId::new(target),
+    }
+}
+
+#[test]
+fn a_bombardment_force() {
+    let g = play(&with_a_bombardment_force(""));
+    // "Bombard base 2 by task force 3" is formed on day 1 under the
+    // neutralising of base 2, intent 6.
+    assert_eq!(g.formed(neutralise_kind(2)), vec![(1, 1)]);
+    assert_eq!(g.formed(bombard_kind(3, 2)), vec![(1, 6)]);
+    // No bombard task is formed under the take, intent 2, whose limit names
+    // no bombardment force.
+    assert!(
+        g.forms()
+            .iter()
+            .all(|(_, p, k)| *p != 2 || !matches!(k, IntentKind::Bombard { .. })),
+        "{:?}",
+        g.forms()
+    );
+    for (day, c) in g.all_commands() {
+        if let Cmd::Limit(i, tfs, ..) = &c {
+            assert!(
+                !tfs.contains(&3),
+                "day {day}: the limit of {i} names task force 3"
+            );
+        }
+    }
+    let task = g
+        .formed_intents()
+        .into_iter()
+        .find(|(_, _, p)| *p == 6)
+        .map(|(_, i, _)| i)
+        .expect("the bombard task is formed");
+    assert!(matches!(
+        g.intent_state(task).kind,
+        IntentKind::Bombard { .. }
+    ));
+    // On the morning of day 5, base 2 the side's, the neutralising is
+    // withdrawn and the bombard task with it.
+    assert!(
+        g.commands(5).contains(&Cmd::Withdraw(6)),
+        "{:?}",
+        g.commands(5)
+    );
+    assert_eq!(g.intent_state(6).withdrawn_day, Some(5));
+    assert_eq!(g.intent_state(task).withdrawn_day, Some(5));
+    assert!(
+        g.withdrawn_with().contains(&(5, task, 6)),
+        "{:?}",
+        g.withdrawn_with()
+    );
+    // Task force 3 is given no route on that morning or after.
+    for day in 5..=g.days() {
+        for o in g.orders(day) {
+            let routed = match &o {
+                Given::Route(3, ..) => true,
+                Given::Other(text) => text.starts_with("task force 3") && text.contains("SetRoute"),
+                _ => false,
+            };
+            assert!(!routed, "day {day}: task force 3 is given a route: {o:?}");
+        }
+    }
+}
+
+/// Not part of the hand calculation: the team's own test of decision 0151,
+/// item 8c, the case of the proof, whose Japanese bombardment force may be
+/// used only from a later day. With scenario 74's battleship force as in the
+/// property "A bombardment force", may be used from day 3: it is taken on
+/// the morning of day 3, its first, and not before.
+#[test]
+fn a_bombardment_force_used_from_a_later_day_is_taken_on_its_first_morning() {
+    let g = play(&with_a_bombardment_force("available_from = 3\n"));
+    assert_eq!(g.formed(bombard_kind(3, 2)), vec![(3, 6)]);
+}
+
 #[test]
 fn by_a_date() {
     let g = play(&changed(

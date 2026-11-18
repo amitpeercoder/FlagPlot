@@ -29,7 +29,7 @@ use sim_core::command::{
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, TaskForceId};
+use sim_core::ids::{BaseId, IntentId, TaskForceId};
 use sim_core::orders::{Mission, OrderKind, Readiness, SpeedSetting, Stance, TaskForceOrder};
 use sim_core::state::{RulesOfEngagement, TaskForceStatus};
 use sim_core::view::SideView;
@@ -201,6 +201,188 @@ impl Day<'_, '_> {
         }
     }
 
+    /// Decision 0151, 8c: the first neutralising in force under `island`, in
+    /// the island's order, of an enemy base at a named place: for each place
+    /// in turn, the neutralising of the lowest-numbered enemy base on the
+    /// side's map in its hex.
+    fn first_island_neutralise(&self, island: &Intent) -> Option<IntentId> {
+        let IntentKind::ControlIsland { island: number, .. } = island.kind else {
+            return None;
+        };
+        let side = self.view.side();
+        let places = self.view.island(number)?;
+        let mut under: Vec<(BaseId, IntentId)> = self
+            .state
+            .intents_in_force()
+            .filter(|i| i.parent == Some(island.id))
+            .filter_map(|i| match i.kind {
+                IntentKind::Neutralise { target } => Some((target, i.id)),
+                _ => None,
+            })
+            .collect();
+        under.sort();
+        places.places.iter().find_map(|place| {
+            under.iter().find_map(|(target, id)| {
+                self.view
+                    .enemy_bases()
+                    .any(|b| b.id == *target && b.side != side && b.hex == place.hex)
+                    .then_some(*id)
+            })
+        })
+    }
+
+    /// Decision 0151, 8c: under the island's first neutralising of an enemy
+    /// base at a named place, a bombard task for each task force on the
+    /// bombardment mission with a ship afloat that the staff may take
+    /// (decision 0149, 5; inside the island's forces limit where it names
+    /// task forces) and that lies stopped at a base of the side, in task
+    /// force order, where no bombard task for that force is in force
+    /// anywhere on the side. One the island's own tree formed stands
+    /// without a word.
+    #[allow(clippy::too_many_lines)]
+    fn form_island_bombard_tasks(
+        &mut self,
+        island: &Intent,
+        end: &Intent,
+        plan: &Plan,
+        target: BaseId,
+        in_scope: bool,
+    ) {
+        let today = self.today;
+        let target_text = base_words(self.view, target);
+        let island_text = match island.kind {
+            IntentKind::ControlIsland { island: n, .. } => self.view.island(n).map_or_else(
+                || format!("island {n}"),
+                |i| format!("island {n} ({})", i.name),
+            ),
+            _ => return,
+        };
+        let others = self.others_above(island);
+        let named: Option<BTreeSet<TaskForceId>> = island
+            .limits
+            .forces
+            .as_ref()
+            .filter(|f| !f.task_forces.is_empty())
+            .map(|f| f.task_forces.clone());
+        let mut forces: Vec<_> = self
+            .area
+            .task_forces()
+            .filter(|f| f.mission == Mission::Bombardment)
+            .cloned()
+            .collect();
+        forces.sort_by_key(|f| f.id);
+        for force in forces {
+            let id = force.id;
+            if named.as_ref().is_some_and(|n| !n.contains(&id)) {
+                continue;
+            }
+            let ships = afloat(self.area, id);
+            if ships.is_empty() {
+                continue;
+            }
+            if let Err(why) = self.may_take_force(&force, &others) {
+                let reason = serving(end, plan)
+                    .evidence(why.clone(), today)
+                    .worked(format!(
+                        "{}: {why}, so the staff forms no bombard task for it under {}.",
+                        end.id, end.id
+                    ))
+                    .would_change("the force free to take")
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                continue;
+            }
+            let Some(at) = self
+                .view
+                .bases()
+                .filter(|b| crate::fleet::force_stopped_at(&force, b.hex))
+                .map(|b| b.id)
+                .min()
+            else {
+                continue;
+            };
+            let kind = IntentKind::Bombard { force: id, target };
+            let standing = self
+                .state
+                .intents_in_force()
+                .find(|other| other.kind.force() == Some(id) && other.kind.code() == kind.code())
+                .map(|other| (other.id, other.kind, other.parent));
+            if let Some((task, task_kind, parent)) = standing {
+                if self.state.root_of(task) == island.id {
+                    continue;
+                }
+                let aim = crate::reasons::aim(
+                    self.view,
+                    &Intent {
+                        kind: task_kind,
+                        ..end.clone()
+                    },
+                );
+                let place = match parent {
+                    Some(p) => format!("under {p}"),
+                    None => "as a root".to_string(),
+                };
+                let reason = serving(end, plan)
+                    .evidence(format!("{task}, a bombard task of {id}, is in force {place}"), today)
+                    .binding(format!("{task} stands"))
+                    .worked(format!(
+                        "{task} ({aim}) stands {place}: a force has one bombard task, so the staff forms no other for {id}."
+                    ))
+                    .would_change(format!("{task} withdrawn"))
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                continue;
+            }
+            let held = crate::reasons::force_held_words(self.area, id);
+            let why = format!(
+                "{held} is on the bombardment mission with {} ship(s) afloat and lies stopped at {}",
+                ships.len(),
+                base_words(self.view, at)
+            );
+            let id_new = self.state.next_intent_number();
+            self.state.intents.insert(
+                id_new,
+                Intent {
+                    id: id_new,
+                    kind,
+                    parent: Some(end.id),
+                    maker: Maker::Staff,
+                    addressee: kind.addressee(),
+                    limits: IntentLimits::default(),
+                    set_day: today,
+                    plan: end.plan,
+                    withdrawn_day: None,
+                },
+            );
+            let reason = serving(end, plan)
+                .evidence(why.clone(), today)
+                .binding(format!(
+                    "the bombardment forces are {}'s, under its first neutralising of an enemy base at a named place",
+                    island.id
+                ))
+                .worked(format!(
+                    "{} neutralises {target_text}, the enemy's base at a named place of {island_text}, its plan is released and no bombard task of {id} is in force: {why}. The staff forms {id_new}, to bombard {target_text} with {id}, under {}, for {id} to carry out.",
+                    end.id, end.id
+                ))
+                .would_change(format!("{id} taken by an intent higher in priority"))
+                .would_change("such a task already in force")
+                .done();
+            self.target(in_scope).commands.push(StaffCommand {
+                kind: CommandKind::FormIntent {
+                    parent: end.id,
+                    kind,
+                },
+                reason,
+            });
+            if in_scope {
+                self.lines.push(format!(
+                    "{} would form {id_new}, to bombard {target_text} with {id}, under it ({why}).",
+                    end.id
+                ));
+            }
+        }
+    }
+
     /// Decision 0146: the forming under each released "neutralise a base"
     /// and "take a place", then each bombard task's morning, in priority
     /// order.
@@ -236,6 +418,19 @@ impl Day<'_, '_> {
                 continue;
             };
             let in_scope = self.in_scope(id);
+            // Under "control an island" the bombardment forces are the
+            // island's (decision 0151, 8c): a neutralising formed under an
+            // island takes them by that rule and by no other.
+            let island = end
+                .parent
+                .and_then(|p| self.state.intents.get(&p).cloned())
+                .filter(|p| matches!(p.kind, IntentKind::ControlIsland { .. }));
+            if let (Some(island), IntentKind::Neutralise { .. }) = (island, end.kind) {
+                if self.first_island_neutralise(&island) == Some(end.id) {
+                    self.form_island_bombard_tasks(&island, &end, &plan, target, in_scope);
+                }
+                continue;
+            }
             self.form_bombard_tasks(&end, &plan, target, in_scope);
         }
         let tasks = self.in_priority_order(|i| matches!(i.kind, IntentKind::Bombard { .. }));
