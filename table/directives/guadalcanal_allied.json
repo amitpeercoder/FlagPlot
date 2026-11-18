@@ -1,0 +1,101 @@
+{
+  "note": "Directives for the Allied seat of the 39 days of Guadalcanal, 7 August to 14 September 1942. Written for the game in its own words: these are not historical documents and quote none. Their dates are the scenario's: day 1 is 7 August, and the aircraft for Lunga are due on day 14. What they say matters most is written from the scenario's objectives and must be kept in step with them by hand. Decision 0157.",
+  "directives": [
+    {
+      "number": 1,
+      "when": "start",
+      "from": "Commander in Chief, Pacific Fleet",
+      "to": "Commander, South Pacific",
+      "subject": "Take Tulagi and Lunga",
+      "parts": [
+        {
+          "heading": "The situation",
+          "text": [
+            "The enemy took Tulagi in May and is building an airfield at Lunga, on Guadalcanal. When it flies, his aircraft will reach the sea lane to Australia.",
+            "What he has ashore is not known. It is believed to be mostly construction troops. His cruisers and his aircraft are at Rabaul, to the north-west. His carriers are away to the north and can be expected to come down once he knows you are ashore."
+          ]
+        },
+        {
+          "heading": "Your task",
+          "text": [
+            "Take Tulagi and Lunga. Finish the airfield, get it flying, and hold both places."
+          ]
+        },
+        {
+          "heading": "Why",
+          "text": [
+            "To stop his advance to the south-east and keep the line to Australia open. The field at Lunga is the reason for the operation. In your hands and flying, it is worth more to me than any one ship of his you sink."
+          ]
+        },
+        {
+          "heading": "What depends on you",
+          "text": [
+            "Marine fighters and dive bombers are held ready for Lunga. They fly in from 20 August if the field is yours, and not before.",
+            "The men ashore are fed by what you carry to them from Espiritu Santo. Nobody else will do it."
+          ]
+        },
+        {
+          "heading": "What you may risk",
+          "text": [
+            "Your two carriers cannot soon be replaced. Risk them against his carriers and for nothing less.",
+            "The transports and what is in them are the operation: see them unloaded. Cruisers and destroyers are there to be used."
+          ]
+        },
+        {
+          "heading": "After this",
+          "text": [
+            "I will write again when Lunga is yours, or when what I know changes."
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "when": { "base_is_yours": 1 },
+      "from": "Commander in Chief, Pacific Fleet",
+      "to": "Commander, South Pacific",
+      "subject": "Hold Lunga and get the field flying",
+      "parts": [
+        {
+          "heading": "The situation",
+          "text": [
+            "Lunga is yours. He will try to take it back.",
+            "Expect his ships by night from Rabaul, his aircraft by day, and troops put ashore along the coast on either side of you. His carriers are expected to come down from the north to cover them."
+          ]
+        },
+        {
+          "heading": "Your task",
+          "text": [
+            "Hold Lunga and Tulagi. Get the field flying and keep it flying every day. Keep the men ashore fed. Meet his carriers when they come."
+          ]
+        },
+        {
+          "heading": "Why",
+          "text": [
+            "A field that flies at Lunga commands the water round it by day. From then on he can come only at night, and what he lands he cannot easily feed. Every day the field is open counts; a day it is shut is a day given back to him."
+          ]
+        },
+        {
+          "heading": "What depends on you",
+          "text": [
+            "The first Marine squadrons fly in on 20 August, and more follow to the middle of September. Each needs the field to be yours on the day.",
+            "Every ton you unload at Lunga and keep there counts. So does every man of his who does not get home."
+          ]
+        },
+        {
+          "heading": "What you may risk",
+          "text": [
+            "The carriers as before: against his carriers, and for nothing less.",
+            "Supply ships are worth risking by day under your own aircraft. Do not leave them off the beach at night without cover."
+          ]
+        },
+        {
+          "heading": "After this",
+          "text": [
+            "I will write again when his carriers are found, or if Lunga is in danger."
+          ]
+        }
+      ]
+    }
+  ]
+}

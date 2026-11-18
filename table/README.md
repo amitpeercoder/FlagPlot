@@ -15,15 +15,17 @@ python3 table/serve.py data/scenarios/stage-3-proof/07b_slice.toml --seat allied
 
 Then open http://127.0.0.1:8742/. That scenario is the 39 days of the staff's setup with the Japanese side's intents stated and the Allied side given nothing, so the Allied seat states its own.
 
-`--start` is the date of day 1, for the clock. `--island` names an island the scenario has (its number, a name for the order form, and the number of a base on it), because no tool lists a scenario's islands yet. `--map` is the map file to draw (the default is the slice's). `--port` is the port. The page loads its drawing library and its fonts from the network.
+`--start` is the date of day 1, for the clock. `--island` names an island the scenario has (its number, a name for the order form, and the number of a base on it), because no tool lists a scenario's islands yet. `--directives` is a file of directives from the commander above, as `table/directives/` has them (decision 0157); without it the table shows none. `--map` is the map file to draw (the default is the slice's). `--port` is the port. The page loads its drawing library and its fonts from the network.
 
 ## What is in it
 
 - `serve.py`: the bridge. It starts `sim-cli mcp SCENARIO --seat SIDE`, passes the page's tool calls to it one at a time, and serves the page and the map's hexes. Python's standard library only. It listens on this machine alone.
 - `index.html`: the page. One file, no build step.
+- `directives/`: the directives a seat is given from the commander above, one file a seat of a scenario, written by hand in the game's own words. `guadalcanal_allied.json` is for the Allied seat of the 39 days: add `--directives table/directives/guadalcanal_allied.json` to the command above.
 
 ## What it does
 
+- Shows the directive from the commander above when one is due: the first on the first evening, a later one when its condition holds (a named base is the side's own). A new one opens by itself and stays on the desk. It carries no points; the staff's full return, which does, is one step away under its own name. The page's address ending `#directives=all` shows every directive, for reading the drafts.
 - Draws the chart from the map's hexes, the side's forces as blocks, its bases, its men ashore, its contacts and its estimates of the enemy ashore. A contact and an estimate fade with age.
 - "State an intent": touch the chart at a base or at open water, choose the end and the risk on the order form, and read the staff's own preview before signing. Signing approves that preview; a risk other than balanced is set after it.
 - "One day" resolves a day. "Carry on" resolves days until something stops the clock (an interrupt fires, the game ends) or the player stops it. A day that has been resolved is then plotted pulse by pulse, the night, the morning, the afternoon and the end of the day: the forces move as the side's own events say they steamed in that pulse, and a list beside the chart gives what the side was told in it, with the names of its units and places. The events come from the tool `events`.
