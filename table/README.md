@@ -25,6 +25,8 @@ Then open http://127.0.0.1:8742/. That scenario is the 39 days of the staff's se
 
 ## What it does
 
+- A touch on the chart, when nothing is being drafted, shows what the side holds of the thing touched. Of the enemy: a contact with its age in pulses, or a place with the latest estimate of his men, where it came from and its age in days, and the words that it is a report and can be wrong. Of its own: a force (what it is doing, its ships and their fuel, the air groups and men aboard, whether the staff or the commander has it) or a base (its stock, days of supply, men ashore, air groups and the forces lying there). An own base leads to the forces at it.
+- "What is coming" in the signals tray is the schedule: the air groups due and the forces not yet available, by date. With the directive it takes the place of the lists in the staff's return.
 - Shows the directive from the commander above when one is due: the first on the first evening, a later one when its condition holds (a named base is the side's own). A new one opens by itself and stays on the desk. It carries no points; the staff's full return, which does, is one step away under its own name. The page's address ending `#directives=all` shows every directive, for reading the drafts.
 - Draws the chart from the map's hexes, the side's forces as blocks, its bases, its men ashore, its contacts and its estimates of the enemy ashore. A contact and an estimate fade with age.
 - "State an intent": touch the chart at a base or at open water, choose the end and the risk on the order form, and read the staff's own preview before signing. Signing approves that preview; a risk other than balanced is set after it.
