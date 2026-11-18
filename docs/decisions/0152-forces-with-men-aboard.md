@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 17, 2026, inside the plan for step 3, st
 
 Summary: A transport force with men aboard is a lift as it stands: "take a place" takes one as its first lift, sends each later one while the place is not taken and men are still wanted, and lands the working men aboard with the rest; a hold sends to its place a force with men aboard that no take needs; and the supply under a hold formed by "control an island" uses whatever transport forces lie empty at its source that morning
 
-Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built; its readings ruled (The architect's rulings). Item 5b built on Nov 18, 2026, with a first lift with no ship afloat read as lost; readings 1 to 5 accepted by the architect, reading 6 his ruling (As built: item 5b)
+Standing: Settled by the architect, Nov 17, 2026, inside decision 0139. Built, with item 5b and a lost first lift mended on the loading check; its readings ruled (The architect's rulings)
 
 ## Why
 
@@ -105,10 +105,14 @@ Made on Nov 18, 2026, on reading the build.
 3. **The measure of an island counted a day on which the enemy still held the airfield,** because a base formed by the landing stood in the hex. Mended in this pull request: a place that names a base is the side's when that base is, on each day by the base's own day-end event. Decision 0151's item 10, the rulebook and the glossary say so.
 4. **The measure still keeps no record,** so it reads every past day at today's use and can count a day and later not count it (scenario 77: day 2 counts when read on days 2 and 3 and not from day 4, when more men are ashore). Scenario 77's hand calculation is restated to say exactly this: 5 of 8 days, with the reading of each day. A measure that keeps its days is state, and is built with the interface's work.
 5. **Known and left:** a commander's own hold with no forces limit sends no force with men aboard (reading 12), and says so each morning, which adds 21 lines of reasons to one recorded game.
+6. **Item 5b and the lost first lift, on reading their build (Nov 18, 2026).** Readings 1 to 6 of "As built: item 5b" are accepted. A force with no ship afloat is lost for the wait of item 5 and for the lifts set aside, and is left as it was where the staff judges the men already ashore.
 
 ## Amended on the loading check
 
-On Nov 18, 2026 the loading check of the proof (decision 0153: arrangement (a), seed 1) showed a fault of this record as built. The Japanese side asked for Guadalcanal first and Tulagi second. Its first lift went to Lunga. Every lift after it went to Tulagi: on the morning each became usable the tree of the second island was formed before the first island's take weighed its later lifts, so the lower take chose the force as its first lift and the higher take found it taken. Item 5 says a later lift goes to a take unless one higher in priority has taken it; the order of the morning's work had it the other way. Item 5b states the order, and scenario 77 gains the property "The higher take first".
+On Nov 18, 2026 the loading check of the proof (decision 0153: arrangement (a), seed 1) showed the Japanese side, which asked for Guadalcanal first and Tulagi second, landing its first lift at Lunga and every lift after it at Tulagi. Two faults of this record as built lay behind it, and both are mended in one pull request before the judged run:
+
+1. **A first lift with no ship afloat was still read as on its way.** On seed 1 the first lift landed its men at Lunga and its one ship was then sunk. The engine keeps a force whose ships are all sunk, halted with its route as it stood, and the staff read that as a lift still on its way: by item 5 the first island's take then waited for it every morning, and the second island's take chose each new force. This was the cause on seed 1. A first lift with no ship afloat is lost, as reading 7 meant.
+2. **The order of the morning's work.** The architect first took this for the cause, and it was not the cause on seed 1, but it is a fault: the tree of a lower island was formed before a higher take weighed its later lifts, so a lower take could choose as its first lift a force the higher take was about to send. Item 5b states the order, and scenario 77's property "The higher take first" fails on the code as it was.
 
 ## As built: item 5b
 

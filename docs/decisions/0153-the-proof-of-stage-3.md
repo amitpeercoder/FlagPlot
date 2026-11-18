@@ -156,11 +156,14 @@ The loading check was made on Nov 18, 2026, on main at 4d48a0e7: arrangement (a)
 
 **What is changed before the judged run,** in its own pull request with its hand calculation, as item 2 of the loading check allows for a fault in a rule:
 
-- **The order of the lifts** (decision 0152, item 5b, and "Amended on the loading check"): a higher take's later lift comes before a lower take's first. This is why the Japanese lifts went to Tulagi.
+- **A first lift with no ship afloat is lost** (decision 0152, "Amended on the loading check"). On seed 1 the first Japanese lift landed its men at Lunga and its one ship was sunk; the staff read the empty force as still on its way and the take of Lunga waited for it to the end, while the take of Tulagi chose every later lift. This is why the Japanese lifts went to Tulagi.
+- **The order of the lifts** (decision 0152, item 5b): a higher take's later lift comes before a lower take's first. It was not the cause on seed 1; its property fails on the code as it was.
+
+With both mended, seed 1 was run again, unjudged: every Japanese lift lands at Lunga, on days 10 to 36, and nothing is refused.
 
 **What is not changed, and is run as it stands:**
 
-- **The Japanese side does not attack the airfield ashore** (the second part of condition 4). Its staff holds an estimate by men in contact of some 14,000 to 16,000 enemy men at Lunga, wants 2 men for each at balanced, and has a few hundred to a few thousand: by decision 0143 it waits. With the order of the lifts mended the whole of its men ashore by day 36 are some 6,000. This is the staff's judgement on a true count and not a fault of the setup's data, and it is a figure of a doctrine and the risk the commander did not set, neither of which may be changed here. The record's attacks were made on an estimate of some 2,000. The condition is run and, if it fails, named with this cause and put to the designer.
+- **The Japanese side does not attack the airfield ashore** (the second part of condition 4). Its staff holds an estimate by men in contact of the enemy at Lunga, which on seed 1 runs from some 5,000 to 16,000 as the reports come, wants 2 men for each at balanced, and has a few hundred to a few thousand: by decision 0143 it waits. With the lifts mended, on seed 1 it has 4,789 fit men ashore on the last morning against an estimate of 4,864 and 9,728 wanted. This is the staff's judgement on a true count and not a fault of the setup's data, and it is a figure of a doctrine and the risk the commander did not set, neither of which may be changed here. The record's attacks were made on an estimate of some 2,000. The condition is run and, if it fails, named with this cause and put to the designer.
 - **Raids on the airfield from Rabaul are not flown,** the field lying beyond the bombers' normal reach. No condition counts them. It is reported.
 - **The bombardment force fires on one night.** The condition counts a seed on which it fires at all.
 - **The notices** are reported with how often each limit showed.
