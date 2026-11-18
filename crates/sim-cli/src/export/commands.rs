@@ -14,7 +14,7 @@ use std::collections::BTreeSet;
 use serde::Serialize;
 use serde_json::value::RawValue;
 use sim_core::command::{
-    Amendment, AmendmentChange, Baseline, CommandState, Commitment, Intent, IntentKind,
+    Amendment, AmendmentChange, Awaited, Baseline, CommandState, Commitment, Intent, IntentKind,
     IntentLimits, Limit, Maker, Plan, Run, RunDays,
 };
 use sim_core::ids::ShipId;
@@ -268,6 +268,35 @@ struct LimitsOut {
     /// Left out where the intent sets none: it is read up the tree.
     #[serde(skip_serializing_if = "Option::is_none")]
     risk: Option<&'static str>,
+    /// Decision 0159, 9: each left out where the intent sets none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    not_before: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    wait_for: Option<AwaitedOut>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    after: Option<u32>,
+}
+
+/// What a "wait for" names: `{ "task_force": n }` or `{ "land_unit": n }`.
+#[derive(Serialize)]
+struct AwaitedOut {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    task_force: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    land_unit: Option<u32>,
+}
+
+fn awaited(awaited: Awaited) -> AwaitedOut {
+    match awaited {
+        Awaited::TaskForce(force) => AwaitedOut {
+            task_force: Some(force.raw()),
+            land_unit: None,
+        },
+        Awaited::LandUnit(unit) => AwaitedOut {
+            task_force: None,
+            land_unit: Some(unit.raw()),
+        },
+    }
 }
 
 fn ships(set: &BTreeSet<ShipId>) -> Vec<u32> {
@@ -290,6 +319,9 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
         priority: limits.priority,
         protected: ships(&limits.protected),
         risk: limits.risk.map(|risk| risk.name()),
+        not_before: limits.not_before,
+        wait_for: limits.wait_for.map(awaited),
+        after: limits.after.map(|other| other.raw()),
     }
 }
 
@@ -363,6 +395,17 @@ struct LimitOut {
     fuel_t: Option<Num>,
     #[serde(skip_serializing_if = "Option::is_none")]
     risk: Option<&'static str>,
+    /// Decision 0159, 9: the day of a "not before" (`from_day`), what a "wait
+    /// for" names and the intent of an "after" (`other_intent`); each left out where the limit is
+    /// cleared.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    from_day: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    task_force: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    land_unit: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    other_intent: Option<u32>,
 }
 
 fn limit(limit: &Limit) -> LimitOut {
@@ -377,6 +420,10 @@ fn limit(limit: &Limit) -> LimitOut {
         supply_t: None,
         fuel_t: None,
         risk: None,
+        from_day: None,
+        task_force: None,
+        land_unit: None,
+        other_intent: None,
     };
     match limit {
         Limit::Forces { intent, limit } => LimitOut {
@@ -419,6 +466,25 @@ fn limit(limit: &Limit) -> LimitOut {
             intent: Some(intent.raw()),
             risk: Some(risk.name()),
             ..blank("risk")
+        },
+        Limit::NotBefore { intent, day } => LimitOut {
+            intent: Some(intent.raw()),
+            from_day: *day,
+            ..blank("not_before")
+        },
+        Limit::WaitFor { intent, awaited } => {
+            let named = awaited.map(self::awaited);
+            LimitOut {
+                intent: Some(intent.raw()),
+                task_force: named.as_ref().and_then(|n| n.task_force),
+                land_unit: named.as_ref().and_then(|n| n.land_unit),
+                ..blank("wait_for")
+            }
+        }
+        Limit::After { intent, other } => LimitOut {
+            intent: Some(intent.raw()),
+            other_intent: other.map(|other| other.raw()),
+            ..blank("after")
         },
     }
 }

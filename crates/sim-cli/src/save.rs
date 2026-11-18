@@ -171,8 +171,12 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// optional `by_day`) in `"commands"`; its state version is v44. A game of an
 /// older version lacks it and is refused, not converted. Version 20
 /// (decision 0156) adds an order's `"pulse"`, `"morning"` or `"afternoon"`,
-/// for an order given inside a day, left out for an order of dusk.
-pub const VERSION: u32 = 20;
+/// for an order given inside a day, left out for an order of dusk. Version
+/// 21 (decision 0159, rule C) adds in `"commands"` the limits `not_before`
+/// (`from_day`), `wait_for` (`task_force` or `land_unit`) and `after`
+/// (`other_intent`); its state version is v46. A game of an older version
+/// lacks them and is refused, not converted.
+pub const VERSION: u32 = 21;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -929,6 +933,56 @@ mod tests {
                         risk: Risk::Preserve,
                     }),
                 ),
+                // Decision 0159, 9: the three limits that tell a plan to
+                // wait, set and cleared.
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::NotBefore {
+                        intent,
+                        day: Some(6),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::NotBefore { intent, day: None }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::WaitFor {
+                        intent,
+                        awaited: Some(sim_core::command::Awaited::TaskForce(TaskForceId::new(2))),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::WaitFor {
+                        intent,
+                        awaited: Some(sim_core::command::Awaited::LandUnit(
+                            sim_core::ids::LandUnitId::new(3),
+                        )),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::WaitFor {
+                        intent,
+                        awaited: None,
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::After {
+                        intent,
+                        other: Some(IntentId::new(7)),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::After {
+                        intent,
+                        other: None,
+                    }),
+                ),
                 (
                     Side::Allied,
                     CommandKind::SetLeave {
@@ -1158,9 +1212,9 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 20);
+        assert_eq!(written["version"], 21);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 15);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 22);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

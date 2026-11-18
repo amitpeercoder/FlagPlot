@@ -29,13 +29,16 @@
 //! `"priority"` has `intent` and `rank`; `"protected"` has `intent` and
 //! `ships`; `"reserve"` has `base`, `supply_t` and `fuel_t` as whole numbers
 //! or decimal strings; `"risk"` has `intent` and `risk` (`"preserve"`,
-//! `"balanced"` or `"press"`).
+//! `"balanced"` or `"press"`). Decision 0159, 9: `"not_before"` has `intent`
+//! and `from_day`; `"wait_for"` has `intent` and one of `task_force` and
+//! `land_unit`; `"after"` has `intent` and `other_intent`. Each with its key
+//! left out clears the limit.
 
 use std::collections::BTreeSet;
 
 use serde::Deserialize;
 use sim_core::command::{
-    CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
+    Awaited, CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
     InterruptRef, InterruptSetting, Leave, Limit, PlanId, Risk, StandingKind, StandingSubject,
     Want, Wants,
 };
@@ -78,6 +81,8 @@ pub(crate) struct CommandSpec {
     supply_t: Option<Quantity>,
     fuel_t: Option<Quantity>,
     risk: Option<String>,
+    from_day: Option<u32>,
+    other_intent: Option<u32>,
     leave: Option<String>,
     given: Option<bool>,
     plan: Option<u32>,
@@ -125,6 +130,8 @@ impl CommandSpec {
         note(self.supply_t.is_some(), "supply_t");
         note(self.fuel_t.is_some(), "fuel_t");
         note(self.risk.is_some(), "risk");
+        note(self.from_day.is_some(), "from_day");
+        note(self.other_intent.is_some(), "other_intent");
         note(self.leave.is_some(), "leave");
         note(self.given.is_some(), "given");
         note(self.plan.is_some(), "plan");
@@ -192,9 +199,19 @@ impl CommandSpec {
             ("set_limit", Some("protected")) => &["limit", "intent", "ships"],
             ("set_limit", Some("reserve")) => &["limit", "base", "supply_t", "fuel_t"],
             ("set_limit", Some("risk")) => &["limit", "intent", "risk"],
+            ("set_limit", Some("not_before")) => &["limit", "intent", "from_day"],
+            ("set_limit", Some("wait_for")) => {
+                if self.task_force.is_some() && self.land_unit.is_some() {
+                    return Err(format!(
+                        "{what} names both a task_force and a land_unit: a wait_for names one of them, or neither to clear it"
+                    ));
+                }
+                &["limit", "intent", "task_force", "land_unit"]
+            }
+            ("set_limit", Some("after")) => &["limit", "intent", "other_intent"],
             ("set_limit", Some(other)) => {
                 return Err(format!(
-                    "{what} has limit \"{other}\", which is not forces, area, priority, protected, reserve or risk"
+                    "{what} has limit \"{other}\", which is not forces, area, priority, protected, reserve, risk, not_before, wait_for or after"
                 ))
             }
             ("set_limit", None) => {
@@ -444,6 +461,23 @@ impl CommandSpec {
                     base: BaseId::new(need(self.base, "base")?),
                     supply_t: weight(&self.supply_t, "supply_t")?,
                     fuel_t: weight(&self.fuel_t, "fuel_t")?,
+                },
+                // Decision 0159, 9: a key left out clears the limit.
+                Some("not_before") => Limit::NotBefore {
+                    intent: intent()?,
+                    day: self.from_day,
+                },
+                Some("wait_for") => Limit::WaitFor {
+                    intent: intent()?,
+                    awaited: match (self.task_force, self.land_unit) {
+                        (Some(force), _) => Some(Awaited::TaskForce(TaskForceId::new(force))),
+                        (None, Some(unit)) => Some(Awaited::LandUnit(LandUnitId::new(unit))),
+                        (None, None) => None,
+                    },
+                },
+                Some("after") => Limit::After {
+                    intent: intent()?,
+                    other: self.other_intent.map(IntentId::new),
                 },
                 _ => {
                     let name = self

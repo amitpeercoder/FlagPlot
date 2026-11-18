@@ -17,7 +17,7 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use crate::command::{
-    Addressee, Amendment, AmendmentChange, Baseline, Command, CommandKind, CommandRefusal,
+    Addressee, Amendment, AmendmentChange, Awaited, Baseline, Command, CommandKind, CommandRefusal,
     CommandState, Commitment, ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind,
     IntentLimits, InterruptCondition, InterruptRef, InterruptSetting, InterruptStatus, Leave,
     Limit, Maker, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason, Run,
@@ -503,6 +503,18 @@ impl World {
                     if issuer == Issuer::Staff && found.maker != Maker::Staff {
                         return Err(CommandRefusal::NotYours);
                     }
+                    // Decision 0159, 9: the limits that tell a plan to wait
+                    // stand only on a "take a place" or a "control an
+                    // island" of the commander's.
+                    if limit.is_wait()
+                        && (found.maker != Maker::Commander
+                            || !matches!(
+                                found.kind,
+                                IntentKind::TakePlace { .. } | IntentKind::ControlIsland { .. }
+                            ))
+                    {
+                        return Err(CommandRefusal::NoWaitLimitOn(intent));
+                    }
                     if let Limit::Forces { limit, .. } = limit {
                         // Keeping a base supplied needs a source. Taking a
                         // place does not: the staff chooses what the
@@ -566,7 +578,40 @@ impl World {
                             }
                         }
                     }
-                    Limit::Priority { .. } | Limit::Risk { .. } => {}
+                    Limit::Priority { .. } | Limit::Risk { .. } | Limit::NotBefore { .. } => {}
+                    // A force or unit not the side's is refused as a forces
+                    // limit naming it is, so that a refusal tells nothing of
+                    // the enemy (decision 0159, 9).
+                    Limit::WaitFor { awaited, .. } => match awaited {
+                        Some(Awaited::TaskForce(force)) => {
+                            let own = self
+                                .truth
+                                .task_forces
+                                .get(force)
+                                .is_some_and(|found| found.side == side);
+                            if !own {
+                                return Err(CommandRefusal::NotYourForce(*force));
+                            }
+                        }
+                        Some(Awaited::LandUnit(unit)) if !self.own_land_unit(side, *unit) => {
+                            return Err(CommandRefusal::NotYourLandUnit(*unit));
+                        }
+                        Some(Awaited::LandUnit(_)) | None => {}
+                    },
+                    Limit::After { intent, other } => {
+                        if let Some(other) = other {
+                            let named = self.in_force_intent(side, *other)?;
+                            let fits = *other != *intent
+                                && named.maker == Maker::Commander
+                                && matches!(
+                                    named.kind,
+                                    IntentKind::TakePlace { .. } | IntentKind::ControlIsland { .. }
+                                );
+                            if !fits {
+                                return Err(CommandRefusal::NotAnEndToWaitFor(*other));
+                            }
+                        }
+                    }
                     Limit::Reserve {
                         base,
                         supply_t,
@@ -594,7 +639,10 @@ impl World {
                             .is_none_or(|above| hexes.is_subset(&above)),
                         Limit::Priority { .. }
                         | Limit::Protected { .. }
-                        | Limit::Reserve { .. } => true,
+                        | Limit::Reserve { .. }
+                        | Limit::NotBefore { .. }
+                        | Limit::WaitFor { .. }
+                        | Limit::After { .. } => true,
                     };
                     if !narrows {
                         return Err(CommandRefusal::WiderThanParent(parent));
@@ -1112,6 +1160,9 @@ impl World {
                             intent.limits.protected = ships.clone();
                         }
                         Limit::Risk { risk, .. } => intent.limits.risk = Some(*risk),
+                        Limit::NotBefore { day, .. } => intent.limits.not_before = *day,
+                        Limit::WaitFor { awaited, .. } => intent.limits.wait_for = *awaited,
+                        Limit::After { other, .. } => intent.limits.after = *other,
                         Limit::Reserve { .. } => {}
                     }
                     let plan_id = intent.plan;

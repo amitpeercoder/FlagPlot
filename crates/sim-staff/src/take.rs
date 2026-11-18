@@ -1949,6 +1949,12 @@ impl Day<'_, '_> {
                 return;
             };
             check_words.push_str(&goes_on);
+            // Decision 0159, 9 to 11: not released while a limit the
+            // commander set to tell the plan to wait is unmet, and leave to
+            // launch not asked.
+            if self.told_to_wait(end, plan, &reading.words) {
+                return;
+            }
             if !self.state.leaves.launch {
                 let days = self.days(&force, &units, &supply, place, source_hex, end);
                 let when = match days {

@@ -15,7 +15,7 @@
 //! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up`, `take_place`, `control_island` or `bombard`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise` and `deny`), `target` (`neutralise`, `raid` and `bombard`), `hex` as `[q, r]` and `distance` in whole hexes (`deny`: the waters within `distance` of `hex`), for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set); `ready_landing` (decision 0141) takes `task_force`, `hex` and `by_day` (left out when there is no date); `build_up` takes `base`, `wants`, a list of `airfield`, `mend`, `defences`, `port` and `aircraft` in order, and `defences`, the points from 1 to 100, written only when `defences` is a want; `take_place` (decision 0142) takes `hex` as `[q, r]` and `by_day` (left out when there is no date), and, in the tool, `base` in place of `hex` (the tool writes the base's hex); `control_island` (decision 0151) takes `island`, the number of an island the scenario names, and `by_day` (left out when there is no date); `bombard` (decision 0146) takes `task_force` and `target` |
 //! | `form_intent` | `parent`, `intent_kind` (`keep_supplied` under a hold, with `floor_days` and optionally `interval_days`; `cover`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up` or `bombard`), `base` (not for a neutralise, a deny or a task of a task force), `by_day`, `wants` and `defences` (as for `set_intent`), `target` (for a raid), `hex` and `distance` (for a deny), `task_force` and `hex` (for `stand_at` and `operate_carriers`), `task_force` and `target` (for `bombard`): the staff's, a sub-intent under `parent` |
 //! | `withdraw_intent` | `intent` |
-//! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve` or `risk`) and its keys, below |
+//! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve`, `risk`, `not_before`, `wait_for` or `after`) and its keys, below |
 //! | `set_leave` | `leave` (`prepare` or `launch`), `given` |
 //! | `approve`, `cancel_plan` | `plan` |
 //! | `commit_ships` | `plan`, `run` (left out when none), `ships`, `from_day`, `to_day` |
@@ -34,7 +34,10 @@
 //! `area` has `intent`, `hexes` as `[[q, r], ...]`; `priority` has `intent`
 //! and `rank` (`null` for unranked); `protected` has `intent`, `ships`;
 //! `reserve` has `base`, `supply_t`, `fuel_t`; `risk` has `intent` and `risk`
-//! (`preserve`, `balanced` or `press`).
+//! (`preserve`, `balanced` or `press`). Decision 0159, 9: `not_before` has
+//! `intent` and `from_day` (`null` clears it); `wait_for` has `intent` and one
+//! of `task_force` and `land_unit` (neither clears it); `after` has `intent`
+//! and `other_intent` (`null` clears it).
 //!
 //! What a staff handed in for a day is `{"orders", "commands", "no_orders"}`
 //! and, left out when there is none, `"notices"` (each `{kind, plan, run,
@@ -53,10 +56,11 @@ use std::collections::BTreeSet;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    Addressee, ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget, IntentKind,
-    InterruptCondition, InterruptRef, InterruptSetting, Leave, Limit, Maker, NoticeBasis,
-    NoticeKind, PlanId, PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves, StaffCommand,
-    StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject, Want, Wants,
+    Addressee, Awaited, ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget,
+    IntentKind, InterruptCondition, InterruptRef, InterruptSetting, Leave, Limit, Maker,
+    NoticeBasis, NoticeKind, PlanId, PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves,
+    StaffCommand, StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject, Want,
+    Wants,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -388,6 +392,33 @@ fn limit_to_json(limit: &Limit) -> Value {
             "intent": intent.raw(),
             "risk": risk.name(),
         }),
+        // Decision 0159, 9: a limit cleared is written with `null`, or with
+        // neither `task_force` nor `land_unit` for a wait for.
+        Limit::NotBefore { intent, day } => json!({
+            "kind": "set_limit",
+            "limit": "not_before",
+            "intent": intent.raw(),
+            "from_day": day,
+        }),
+        Limit::WaitFor { intent, awaited } => {
+            let mut body = json!({
+                "kind": "set_limit",
+                "limit": "wait_for",
+                "intent": intent.raw(),
+            });
+            match awaited {
+                Some(Awaited::TaskForce(force)) => body["task_force"] = json!(force.raw()),
+                Some(Awaited::LandUnit(unit)) => body["land_unit"] = json!(unit.raw()),
+                None => {}
+            }
+            body
+        }
+        Limit::After { intent, other } => json!({
+            "kind": "set_limit",
+            "limit": "after",
+            "intent": intent.raw(),
+            "other_intent": other.map(IntentId::raw),
+        }),
     }
 }
 
@@ -436,6 +467,31 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
         "risk" => Ok(Limit::Risk {
             intent: intent()?,
             risk: risk_from(text(value, "risk")?)?,
+        }),
+        "not_before" => Ok(Limit::NotBefore {
+            intent: intent()?,
+            day: small_opt(value, "from_day")?,
+        }),
+        "wait_for" => Ok(Limit::WaitFor {
+            intent: intent()?,
+            awaited: match (
+                small_opt(value, "task_force")?,
+                small_opt(value, "land_unit")?,
+            ) {
+                (Some(_), Some(_)) => {
+                    return Err(
+                        "a wait_for names one of \"task_force\" and \"land_unit\", not both"
+                            .to_string(),
+                    )
+                }
+                (Some(force), None) => Some(Awaited::TaskForce(TaskForceId::new(force))),
+                (None, Some(unit)) => Some(Awaited::LandUnit(LandUnitId::new(unit))),
+                (None, None) => None,
+            },
+        }),
+        "after" => Ok(Limit::After {
+            intent: intent()?,
+            other: small_opt(value, "other_intent")?.map(IntentId::new),
         }),
         other => Err(format!("unknown limit \"{other}\"")),
     }

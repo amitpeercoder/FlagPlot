@@ -686,6 +686,72 @@ pub struct IntentLimits {
     /// `None`: not set on this intent; read up the tree, and balanced where
     /// nothing above sets it (decision 0115, 4).
     pub risk: Option<Risk>,
+    /// The first day the staff may release the plan (decision 0159, 9: "not
+    /// before"). Set only on a "take a place" or a "control an island" of
+    /// the commander's. Added at the end.
+    pub not_before: Option<u32>,
+    /// A task force or land unit of the side the staff waits for before it
+    /// releases the plan (decision 0159, 9: "wait for"). Added at the end.
+    pub wait_for: Option<Awaited>,
+    /// Another "take a place" or "control an island" of the commander's
+    /// whose place must be the side's before the staff releases the plan
+    /// (decision 0159, 9: "after"). Added at the end.
+    pub after: Option<IntentId>,
+}
+
+/// What a "wait for" limit names (decision 0159, 9): a task force or a land
+/// unit of the side.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Awaited {
+    TaskForce(TaskForceId),
+    LandUnit(LandUnitId),
+}
+
+impl Awaited {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            Awaited::TaskForce(_) => 1,
+            Awaited::LandUnit(_) => 2,
+        }
+    }
+
+    /// The raw number of the force or unit.
+    pub const fn raw(self) -> u32 {
+        match self {
+            Awaited::TaskForce(force) => force.raw(),
+            Awaited::LandUnit(unit) => unit.raw(),
+        }
+    }
+}
+
+impl core::fmt::Display for Awaited {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Awaited::TaskForce(force) => write!(f, "{force}"),
+            Awaited::LandUnit(unit) => write!(f, "{unit}"),
+        }
+    }
+}
+
+/// The limits that tell a plan to wait (decision 0159, 9), read up the tree
+/// from an intent: every one on the chain binds. Each is given with the
+/// intent it is set on.
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
+pub struct WaitLimits {
+    /// The latest "not before" day on the chain, with its intent.
+    pub not_before: Option<(u32, IntentId)>,
+    /// Every "wait for" on the chain, nearest first.
+    pub wait_for: Vec<(Awaited, IntentId)>,
+    /// Every "after" on the chain, nearest first.
+    pub after: Vec<(IntentId, IntentId)>,
+}
+
+impl WaitLimits {
+    /// Whether no such limit is set on the chain.
+    pub fn is_empty(&self) -> bool {
+        self.not_before.is_none() && self.wait_for.is_empty() && self.after.is_empty()
+    }
 }
 
 /// One limit, as a command sets it. The reserve sets a base's reserves of
@@ -717,6 +783,24 @@ pub enum Limit {
         intent: IntentId,
         risk: Risk,
     },
+    /// Decision 0159, 9: the plan is not released before `day`; `None`
+    /// clears it. Added at the end.
+    NotBefore {
+        intent: IntentId,
+        day: Option<u32>,
+    },
+    /// Decision 0159, 9: the plan waits for the force or unit; `None`
+    /// clears it. Added at the end.
+    WaitFor {
+        intent: IntentId,
+        awaited: Option<Awaited>,
+    },
+    /// Decision 0159, 9: the plan waits until `other`'s place is the side's;
+    /// `None` clears it. Added at the end.
+    After {
+        intent: IntentId,
+        other: Option<IntentId>,
+    },
 }
 
 impl Limit {
@@ -727,9 +811,21 @@ impl Limit {
             | Limit::Area { intent, .. }
             | Limit::Priority { intent, .. }
             | Limit::Protected { intent, .. }
-            | Limit::Risk { intent, .. } => Some(*intent),
+            | Limit::Risk { intent, .. }
+            | Limit::NotBefore { intent, .. }
+            | Limit::WaitFor { intent, .. }
+            | Limit::After { intent, .. } => Some(*intent),
             Limit::Reserve { .. } => None,
         }
+    }
+
+    /// Whether the limit is one of the three that tell a plan to wait
+    /// (decision 0159, 9).
+    pub fn is_wait(&self) -> bool {
+        matches!(
+            self,
+            Limit::NotBefore { .. } | Limit::WaitFor { .. } | Limit::After { .. }
+        )
     }
 }
 
@@ -1459,6 +1555,27 @@ impl CommandState {
             .unwrap_or_default()
     }
 
+    /// The limits that tell `intent`'s plan to wait, read up the tree
+    /// (decision 0159, 9): the latest "not before" on the chain, and every
+    /// "wait for" and "after", nearest first. Each binds.
+    pub fn waits_read_up(&self, intent: IntentId) -> WaitLimits {
+        let mut found = WaitLimits::default();
+        for on in self.up_the_tree(intent) {
+            if let Some(day) = on.limits.not_before {
+                if found.not_before.is_none_or(|(latest, _)| day > latest) {
+                    found.not_before = Some((day, on.id));
+                }
+            }
+            if let Some(awaited) = on.limits.wait_for {
+                found.wait_for.push((awaited, on.id));
+            }
+            if let Some(other) = on.limits.after {
+                found.after.push((other, on.id));
+            }
+        }
+        found
+    }
+
     /// The land units the forces limits on `intent`'s chain allow: those
     /// named in every one of them (decision 0141). `None` where none is set
     /// on the chain.
@@ -1842,6 +1959,14 @@ pub enum CommandRefusal {
     /// The island of a "control an island" end is not one the scenario
     /// names (decision 0151, 1). Added at the end.
     NoSuchIsland(u32),
+    /// A "not before", "wait for" or "after" limit is set on an intent that
+    /// is not a "take a place" or a "control an island" of the commander's
+    /// (decision 0159, 9). Added at the end.
+    NoWaitLimitOn(IntentId),
+    /// An "after" limit names an intent that is not another "take a place"
+    /// or "control an island" of the commander's (decision 0159, 9). Added
+    /// at the end.
+    NotAnEndToWaitFor(IntentId),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -1928,6 +2053,14 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NoSuchIsland(number) => {
                 write!(f, "island {number} is not an island of the scenario")
             }
+            CommandRefusal::NoWaitLimitOn(id) => write!(
+                f,
+                "{id} is not a take_place or a control_island of the commander's: only those may be told to wait"
+            ),
+            CommandRefusal::NotAnEndToWaitFor(id) => write!(
+                f,
+                "{id} is not another take_place or control_island of the commander's to wait for"
+            ),
         }
     }
 }
@@ -2006,6 +2139,18 @@ impl core::fmt::Display for CommandKind {
                     "reserve {supply_t} t of supply and {fuel_t} t of fuel at {base}"
                 ),
                 Limit::Risk { intent, risk } => write!(f, "risk of {intent} is {}", risk.name()),
+                Limit::NotBefore { intent, day } => match day {
+                    Some(day) => write!(f, "{intent} not before day {day}"),
+                    None => write!(f, "clear {intent}'s not before"),
+                },
+                Limit::WaitFor { intent, awaited } => match awaited {
+                    Some(awaited) => write!(f, "{intent} waits for {awaited}"),
+                    None => write!(f, "clear {intent}'s wait for"),
+                },
+                Limit::After { intent, other } => match other {
+                    Some(other) => write!(f, "{intent} after {other}"),
+                    None => write!(f, "clear {intent}'s after"),
+                },
             },
             CommandKind::SetLeave { leave, given } => write!(
                 f,

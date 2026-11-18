@@ -11,9 +11,9 @@
 
 use crate::belief::{BattleClaim, Contact, GroundEstimate};
 use crate::command::{
-    Addressee, Amendment, AmendmentChange, Baseline, CommandState, Commitment, ForcesLimit, Hold,
-    HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition, InterruptStatus,
-    Leaves, Limit, Maker, Plan, Run, RunDays, SetInterrupt, StandingSubject,
+    Addressee, Amendment, AmendmentChange, Awaited, Baseline, CommandState, Commitment,
+    ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition,
+    InterruptStatus, Leaves, Limit, Maker, Plan, Run, RunDays, SetInterrupt, StandingSubject,
 };
 use crate::events::Cause;
 use crate::ids::{BaseId, IntentId};
@@ -234,8 +234,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 44 adds the kind "control an island", with its island and its
 /// date (decision 0151);
 /// version 45 adds the standing kind "cannot bring enough" (code 4) to a
-/// side's standing interrupts and the kinds switched off (decision 0159, 7).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v45";
+/// side's standing interrupts and the kinds switched off (decision 0159, 7);
+/// version 46 adds to an intent's limits, after its risk, "not before",
+/// "wait for" and "after", and to a limit set by a command the codes 7, 8
+/// and 9 for them (decision 0159, 9).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v46";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -814,6 +817,9 @@ fn name_limits(limits: &IntentLimits) {
         priority: _,
         protected: _,
         risk: _,
+        not_before: _,
+        wait_for: _,
+        after: _,
     } = limits;
     if let Some(ForcesLimit {
         ships: _,
@@ -895,7 +901,8 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
     }
 }
 
-/// Hashes the limits of an intent: forces, area, priority, protected, risk.
+/// Hashes the limits of an intent: forces, area, priority, protected, risk,
+/// not before, wait for, after.
 fn hash_limits(h: &mut StateHasher, limits: &IntentLimits) {
     match &limits.forces {
         Some(forces) => {
@@ -922,6 +929,21 @@ fn hash_limits(h: &mut StateHasher, limits: &IntentLimits) {
     }
     match limits.risk {
         Some(risk) => h.u8(risk.code()),
+        None => h.u8(0),
+    }
+    // Decision 0159, 9: not before, wait for, after.
+    h.optional_u32(limits.not_before);
+    hash_awaited(h, limits.wait_for);
+    h.optional_u32(limits.after.map(IntentId::raw));
+}
+
+/// Hashes what a "wait for" names: 0 for none, else its code and number.
+fn hash_awaited(h: &mut StateHasher, awaited: Option<Awaited>) {
+    match awaited {
+        Some(awaited) => {
+            h.u8(awaited.code());
+            h.u32(awaited.raw());
+        }
         None => h.u8(0),
     }
 }
@@ -992,6 +1014,22 @@ fn hash_limit(h: &mut StateHasher, limit: &Limit) {
             h.u8(6);
             h.u32(intent.raw());
             h.u8(risk.code());
+        }
+        // Decision 0159, 9.
+        Limit::NotBefore { intent, day } => {
+            h.u8(7);
+            h.u32(intent.raw());
+            h.optional_u32(*day);
+        }
+        Limit::WaitFor { intent, awaited } => {
+            h.u8(8);
+            h.u32(intent.raw());
+            hash_awaited(h, *awaited);
+        }
+        Limit::After { intent, other } => {
+            h.u8(9);
+            h.u32(intent.raw());
+            h.optional_u32(other.map(IntentId::raw));
         }
     }
 }
