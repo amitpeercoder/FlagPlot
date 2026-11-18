@@ -60,6 +60,12 @@ class Game:
             raise RuntimeError("the game's server has stopped")
         return json.loads(line)
 
+    def tools(self):
+        """The names of the tools this seat is offered in this game."""
+        with self.lock:
+            reply = self.request("tools/list", {})
+        return [tool["name"] for tool in reply.get("result", {}).get("tools", [])]
+
     def call(self, tool, arguments):
         """One tool call. Answers {"ok": the answer} or {"refused": the words}."""
         with self.lock:
@@ -140,6 +146,8 @@ def main():
                     self.answer(200, "text/html; charset=utf-8", page.read())
             elif self.path == "/config":
                 self.json(config)
+            elif self.path == "/tools":
+                self.json(game.tools())
             elif self.path == "/map":
                 self.json(chart)
             else:

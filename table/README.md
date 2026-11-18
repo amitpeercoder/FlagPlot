@@ -26,12 +26,24 @@ Then open http://127.0.0.1:8742/. That scenario is the 39 days of the staff's se
 
 - Draws the chart from the map's hexes, the side's forces as blocks, its bases, its men ashore, its contacts and its estimates of the enemy ashore. A contact and an estimate fade with age.
 - "State an intent": touch the chart at a base or at open water, choose the end and the risk on the order form, and read the staff's own preview before signing. Signing approves that preview; a risk other than balanced is set after it.
-- "One day" resolves a day. "Carry on" resolves days until something stops the clock (an interrupt fires, the game ends) or the player stops it. A day that has been resolved is then plotted pulse by pulse, the night, the morning, the afternoon and the end of the day: the forces move as the side's own events say they steamed in that pulse, and a list beside the chart gives what the side was told in it, with the names of its units and places. The events are read one at a time with `explain`, since no tool gives a day's events together.
+- "One day" resolves a day. "Carry on" resolves days until something stops the clock (an interrupt fires, the game ends) or the player stops it. A day that has been resolved is then plotted pulse by pulse, the night, the morning, the afternoon and the end of the day: the forces move as the side's own events say they steamed in that pulse, and a list beside the chart gives what the side was told in it, with the names of its units and places. The events come from the tool `events`.
 - The clock shows the hour a commander commands at: a game day runs from 1800 to 1800, so the orders for day 1, whose daylight is the date given as `--start`, go in at 1800 the evening before.
 - The signals tray shows what stopped the clock, each with the staff's reasons ("Why") and a way to switch that standing interrupt off; the plans that wait for leave; the standing leave to launch; what is signed and not yet taken up; and the briefing.
 
+## Where a scenario lets a seat stop inside a day
+
+A scenario with `orders_inside_a_day = true` (decision 0156) offers the tool `advance`, and the table then works a pulse at a time:
+
+- "Next pulse" resolves one pulse and "Carry on" resolves pulses until the clock is stopped. Each pulse is plotted as it is fought, from the tool `events`.
+- "The clock stops when I am told of" chooses what stops it: a contact, an attack, a ship lost, a strike away, men ashore. An interrupt of the staff's stops it at dusk as before.
+- At 0600 and 1200 "Order a force" takes an order to one of the side's task forces (its speed, its readiness, or a place to steam for) and to the air groups in its hex (stand down). The order is taken in at the start of the next pulse. The form says, before it is signed, that the staff plans round a force the commander has ordered until it is released; a held force shows in the signals with "Release to the staff".
+- An intent stated at 0600 or 1200 is taken up by the staff at dusk, and the tools' answers say so.
+
+In a scenario without the key the table resolves a day whole and then plots it, as before. To try it on the 39 days, copy `data/scenarios/stage-3-proof/07b_slice.toml` into a folder beside it and add `orders_inside_a_day = true` under its `name`.
+
 ## What it does not do
 
-- It cannot stop inside a day. The seat's tools answer only between days, so the plot of a day is of a day already fought, and stopping the clock takes effect when the day is plotted. Decision 0155 has the plan for stopping between pulses.
+- It reads the clock from the words of a refused briefing when it is opened at 0600 or 1200, since no tool tells a seat the hour.
+- Inside a day it orders only a force's speed, readiness and route and stands an air group down: not the rules of engagement, a search arc, another air mission or a land unit's posture, which the engine also takes.
 - It gives no order to a ship, a force, an air group or a unit, sets no forces limit, and withdraws no intent.
 - It has no check in CI and no test.
