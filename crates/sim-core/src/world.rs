@@ -162,6 +162,15 @@ pub enum SimError {
         day: u32,
         violations: Vec<InvariantViolation>,
     },
+    /// A part of a day was called out of its turn (decision 0156): a day
+    /// opened while one is open, a pulse resolved with no day open or after
+    /// the afternoon, or a day closed before its afternoon is resolved.
+    /// Nothing of the world changed. `in_hand` is the day that was open
+    /// when the call was made, if any.
+    DayPartOutOfTurn {
+        part: DayPart,
+        in_hand: Option<DayInHand>,
+    },
 }
 
 impl fmt::Display for SimError {
@@ -175,11 +184,62 @@ impl fmt::Display for SimError {
                 }
                 Ok(())
             }
+            SimError::DayPartOutOfTurn { part, in_hand } => {
+                let asked = match part {
+                    DayPart::Open => "open a day",
+                    DayPart::Pulse => "resolve a pulse",
+                    DayPart::Close => "close a day",
+                };
+                match in_hand {
+                    None => write!(f, "cannot {asked}: no day is open"),
+                    Some(DayInHand {
+                        day,
+                        next_pulse: Some(pulse),
+                        ..
+                    }) => write!(
+                        f,
+                        "cannot {asked}: day {day} is open and its {} pulse is next",
+                        pulse.name()
+                    ),
+                    Some(DayInHand {
+                        day,
+                        next_pulse: None,
+                        ..
+                    }) => write!(
+                        f,
+                        "cannot {asked}: day {day} is open and its afternoon is resolved"
+                    ),
+                }
+            }
         }
     }
 }
 
 impl std::error::Error for SimError {}
+
+/// The three parts a day is resolved in (decision 0156): its opening, each
+/// of its pulses and its close. Named by [`SimError::DayPartOutOfTurn`].
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum DayPart {
+    /// [`World::open_day`].
+    Open,
+    /// [`World::resolve_next_pulse`].
+    Pulse,
+    /// [`World::close_day`].
+    Close,
+}
+
+/// The day opened and not yet closed (decision 0156): which day it is, the
+/// pulse to be resolved next (`None` once the afternoon is resolved and the
+/// day is to be closed) and where in the event log its events begin, for
+/// its [`DaySummary`]. Held only between [`World::open_day`] and
+/// [`World::close_day`], so never at a day boundary.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct DayInHand {
+    pub day: u32,
+    pub next_pulse: Option<Pulse>,
+    pub first_event: usize,
+}
 
 /// What a resolved day produced.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -236,6 +296,11 @@ pub struct World {
     /// in it is held as of (decision 0136, 5). `None` outside the day's
     /// pulses and end phases, so not hashed.
     pub(crate) pulse_in_hand: Option<Pulse>,
+    /// The day opened and not yet closed, while a day is resolved in parts
+    /// (decision 0156). `None` at every day boundary: set by
+    /// [`World::open_day`] and cleared by [`World::close_day`] before the
+    /// hash is taken, so not hashed.
+    pub(crate) day_in_hand: Option<DayInHand>,
     /// Every order received, accepted or not, by ID.
     pub(crate) orders: BTreeMap<OrderId, Order>,
     pub(crate) order_ids: IdAllocator<OrderId>,
@@ -457,6 +522,7 @@ impl World {
             broke_silence: BTreeSet::new(),
             gone_commands: Vec::new(),
             pulse_in_hand: None,
+            day_in_hand: None,
             orders: BTreeMap::new(),
             order_ids: IdAllocator::new(),
             made_ids: MadeIds::new(),
@@ -574,6 +640,12 @@ impl World {
     /// The last day resolved. 0 before the first day.
     pub fn day(&self) -> u32 {
         self.truth.day
+    }
+
+    /// The day opened by [`World::open_day`] and not yet closed: which day,
+    /// and which pulse comes next. `None` between days (decision 0156).
+    pub fn day_in_hand(&self) -> Option<DayInHand> {
+        self.day_in_hand
     }
 
     /// Queues orders from one side for the coming day. They take effect, or

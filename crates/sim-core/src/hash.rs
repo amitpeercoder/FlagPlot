@@ -272,6 +272,10 @@ fn name_every_field(world: &World) {
         gone_commands: _,
         // Not hashed: the pulse being resolved, `None` outside a day.
         pulse_in_hand: _,
+        // Not hashed: the day opened and not yet closed while a day is
+        // resolved in parts, `None` at every day boundary and cleared before
+        // the hash is taken (decision 0156).
+        day_in_hand: _,
         // Hashed by count and next number only.
         orders: _,
         order_ids: _,

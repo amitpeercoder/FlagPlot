@@ -79,4 +79,4 @@ pub use invariants::InvariantViolation;
 pub use movement::{PassageEnd, PassageForecast, ShipPassage};
 pub use start::StartingContact;
 pub use view::DaysOfSupply;
-pub use world::{DaySummary, SimConfig, SimError, World};
+pub use world::{DayInHand, DayPart, DaySummary, SimConfig, SimError, World};

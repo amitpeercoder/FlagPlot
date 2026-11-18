@@ -32,7 +32,7 @@ use crate::command::{StaffDecisions, StaffOrder, Staffs};
 
 use crate::choices::Moment;
 use crate::time::Pulse;
-use crate::world::{DaySummary, SimError, World};
+use crate::world::{DayInHand, DayPart, DaySummary, SimError, World};
 
 /// A step inside a pulse.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -117,6 +117,15 @@ const END_OF_DAY_SEQUENCE: [EndOfDayPhase; 5] = [
     EndOfDayPhase::BaseCount,
 ];
 
+/// The pulse resolved after `pulse` in a day, `None` after the afternoon.
+const fn pulse_after(pulse: Pulse) -> Option<Pulse> {
+    match pulse {
+        Pulse::Night => Some(Pulse::Morning),
+        Pulse::Morning => Some(Pulse::Afternoon),
+        Pulse::Afternoon => None,
+    }
+}
+
 const fn pulse_sequence(pulse: Pulse) -> &'static [PulsePhase] {
     match pulse {
         Pulse::Night => &NIGHT_SEQUENCE,
@@ -179,6 +188,11 @@ impl World {
     /// moment the engine answers them. It is the umpire's: the world it is
     /// handed is the truth.
     ///
+    /// The day is resolved in its three parts, called in turn (decision
+    /// 0156): [`World::open_day`], [`World::resolve_next_pulse`] for the
+    /// night, the morning and the afternoon, and [`World::close_day`]. Fails
+    /// with [`SimError::DayPartOutOfTurn`] if a day is already open.
+    ///
     /// The day's order (decision 0107, "The order of a day"):
     ///
     /// 1. the commander's commands handed in for the day are taken in;
@@ -205,19 +219,42 @@ impl World {
         staffs: Staffs<'_>,
         watch: &mut dyn FnMut(&World, Moment),
     ) -> Result<DaySummary, SimError> {
-        let day = self.truth.day + 1;
-        let first_event = self.events.len();
-        let mut pass = |world: &World, moment: Moment| {
-            world.pass_moment(moment);
-            watch(world, moment);
-        };
+        self.open_day(staffs, watch)?;
+        for _ in Pulse::ALL {
+            self.resolve_next_pulse(watch)?;
+        }
+        self.close_day(watch)
+    }
 
-        pass(self, Moment::DayBegins { day });
+    /// Opens the next day (decision 0156): everything of the day before its
+    /// first pulse, steps 1 to 5 of the day's order as
+    /// [`World::resolve_day_watched`] lists them, then repair in port.
+    /// `watch` is handed the world at the moments `DayBegins` and `Orders`.
+    /// Returns the day opened; its night pulse is next.
+    ///
+    /// Fails with [`SimError::DayPartOutOfTurn`], changing nothing, if a day
+    /// is already open.
+    pub fn open_day(
+        &mut self,
+        staffs: Staffs<'_>,
+        watch: &mut dyn FnMut(&World, Moment),
+    ) -> Result<u32, SimError> {
+        if self.day_in_hand.is_some() {
+            return Err(self.out_of_turn(DayPart::Open));
+        }
+        let day = self.truth.day + 1;
+        self.day_in_hand = Some(DayInHand {
+            day,
+            next_pulse: Some(Pulse::Night),
+            first_event: self.events.len(),
+        });
+
+        self.pass(watch, Moment::DayBegins { day });
         // Steps 1 to 3: the commander's commands, forces back from the yard
         // and the override of the commander's orders to units in an intent's
         // forces limit (decision 0107, ruling 23).
         self.take_steps_one_to_three(day);
-        pass(self, Moment::Orders { day });
+        self.pass(watch, Moment::Orders { day });
         // Step 4: each side's staff, on its view as it now stands.
         let handed_in = self.ask_staffs(&staffs);
         // Step 4b: the reading of each set interrupt's base now, the one the
@@ -232,39 +269,91 @@ impl World {
         self.intake_orders(day, &handed_in);
         self.staff_handed_in = handed_in;
         self.repair_in_port(day);
+        Ok(day)
+    }
 
-        for pulse in Pulse::ALL {
-            pass(self, Moment::PulseBegins { day, pulse });
-            // A command formed in the pulse is held as of it (decision 0136,
-            // 5).
-            self.pulse_in_hand = Some(pulse);
-            // A report passed a pulse ago arrives before anything of this
-            // pulse is seen (decision 0135, 12).
-            self.deliver_late_reports(day, pulse);
-            // Alert from belief comes before the pulse's first phase
-            // (decision 3 of `docs/decisions/0021-readiness-and-alarm.md`).
-            self.alert_from_belief(day, pulse);
-            // Then fatigue of the forces, which reads who is alert
-            // (decision 2 of `docs/decisions/0037-fatigue-at-battle-readiness.md`).
-            self.tire_and_rest_forces(day, pulse);
-            // A base with no supply at the start of the pulse flies nothing
-            // in it (decision 7 of 0039).
-            self.work_out_grounded_bases();
-            for phase in pulse_sequence(pulse) {
-                pass(
-                    self,
-                    Moment::Phase {
-                        day,
-                        pulse,
-                        phase: *phase,
-                    },
-                );
-                self.run_pulse_phase(day, pulse, *phase);
-            }
-            self.age_contacts_at_end_of_pulse(day, pulse);
+    /// Resolves the next pulse of the open day (decision 0156), in the order
+    /// night, morning, afternoon: late reports, alert, fatigue, the grounded
+    /// bases, the pulse's phases and the ageing of contacts. `watch` is
+    /// handed the world at the moment `PulseBegins` and before each phase.
+    /// Returns the pulse resolved.
+    ///
+    /// Fails with [`SimError::DayPartOutOfTurn`], changing nothing, if no
+    /// day is open or its afternoon is already resolved.
+    pub fn resolve_next_pulse(
+        &mut self,
+        watch: &mut dyn FnMut(&World, Moment),
+    ) -> Result<Pulse, SimError> {
+        let Some(DayInHand {
+            day,
+            next_pulse: Some(pulse),
+            ..
+        }) = self.day_in_hand
+        else {
+            return Err(self.out_of_turn(DayPart::Pulse));
+        };
+
+        self.pass(watch, Moment::PulseBegins { day, pulse });
+        // A command formed in the pulse is held as of it (decision 0136,
+        // 5).
+        self.pulse_in_hand = Some(pulse);
+        // A report passed a pulse ago arrives before anything of this
+        // pulse is seen (decision 0135, 12).
+        self.deliver_late_reports(day, pulse);
+        // Alert from belief comes before the pulse's first phase
+        // (decision 3 of `docs/decisions/0021-readiness-and-alarm.md`).
+        self.alert_from_belief(day, pulse);
+        // Then fatigue of the forces, which reads who is alert
+        // (decision 2 of `docs/decisions/0037-fatigue-at-battle-readiness.md`).
+        self.tire_and_rest_forces(day, pulse);
+        // A base with no supply at the start of the pulse flies nothing
+        // in it (decision 7 of 0039).
+        self.work_out_grounded_bases();
+        for phase in pulse_sequence(pulse) {
+            self.pass(
+                watch,
+                Moment::Phase {
+                    day,
+                    pulse,
+                    phase: *phase,
+                },
+            );
+            self.run_pulse_phase(day, pulse, *phase);
         }
+        self.age_contacts_at_end_of_pulse(day, pulse);
+
+        if let Some(in_hand) = self.day_in_hand.as_mut() {
+            in_hand.next_pulse = pulse_after(pulse);
+        }
+        Ok(pulse)
+    }
+
+    /// Closes the open day once its afternoon is resolved (decision 0156):
+    /// the end-of-day phases, the afternoon's state reports, the invariants,
+    /// the day counter and the state hash. `watch` is handed the world
+    /// before each end-of-day phase.
+    ///
+    /// Fails with [`SimError::DayPartOutOfTurn`], changing nothing, if no
+    /// day is open or a pulse of it is still to be resolved. The day is no
+    /// longer open once this is called past that check, whether it then
+    /// returns the day's summary or [`SimError::InvariantsViolated`], as a
+    /// day that breaks an invariant was never counted.
+    pub fn close_day(
+        &mut self,
+        watch: &mut dyn FnMut(&World, Moment),
+    ) -> Result<DaySummary, SimError> {
+        let Some(DayInHand {
+            day,
+            next_pulse: None,
+            first_event,
+        }) = self.day_in_hand
+        else {
+            return Err(self.out_of_turn(DayPart::Close));
+        };
+        self.day_in_hand = None;
+
         for phase in END_OF_DAY_SEQUENCE {
-            pass(self, Moment::EndOfDay { day, phase });
+            self.pass(watch, Moment::EndOfDay { day, phase });
             self.run_end_of_day_phase(day, phase);
         }
         // The afternoon's state reports are made at the end of the day,
@@ -299,6 +388,20 @@ impl World {
             first_event,
             event_count: self.events.len() - first_event,
         })
+    }
+
+    /// Marks the moment for the trace and hands the world to `watch`.
+    fn pass(&self, watch: &mut dyn FnMut(&World, Moment), moment: Moment) {
+        self.pass_moment(moment);
+        watch(self, moment);
+    }
+
+    /// The error for `part` called out of its turn, naming the day open.
+    fn out_of_turn(&self, part: DayPart) -> SimError {
+        SimError::DayPartOutOfTurn {
+            part,
+            in_hand: self.day_in_hand,
+        }
     }
 
     pub(crate) fn run_pulse_phase(&mut self, day: u32, pulse: Pulse, phase: PulsePhase) {
