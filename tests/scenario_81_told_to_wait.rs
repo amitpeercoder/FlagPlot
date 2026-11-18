@@ -968,23 +968,90 @@ fn a_wait_that_can_never_end() {
         .into_iter()
         .filter(|(_, k, p)| *k == NoticeKind::CannotMeet && *p == 1)
         .collect();
-    assert_eq!(cannot, vec![(3, NoticeKind::CannotMeet, 1)]);
-    let day3 = g.no_orders(3, 1);
-    assert_eq!(day3.len(), 1, "{day3:?}");
+    assert_eq!(cannot, vec![(2, NoticeKind::CannotMeet, 1)]);
+    let day2 = g.no_orders(2, 1);
+    assert_eq!(day2.len(), 1, "{day2:?}");
     assert_says(
-        &day3[0],
+        &day2[0],
         &[
             "after intent:3",
             "intent:3 is withdrawn",
             "hands in the notice",
         ],
     );
-    assert!(g.notices_1(4).is_empty());
+    for day in 3..=4 {
+        assert!(
+            !g.notices_1(day).contains(&NoticeKind::CannotMeet),
+            "day {day}"
+        );
+        assert!(g.notices_1(day).is_empty(), "day {day}");
+    }
     for day in 2..=6 {
         assert!(g.commands_1(day).is_empty(), "day {day}");
         assert!(g.orders_1(day).is_empty(), "day {day}");
     }
+    assert_eq!(g.plan_day(1, PlanState::Preparing), Some(1));
     assert_eq!(g.plan_day(1, PlanState::Released), None);
+}
+
+const UNIT_3: &str = "\n# Unit 3, usable from day 5, not in intent 1's forces limit.\n[[land_unit]]\nid = 3\nname = \"Placeholder Third\"\nside = \"allied\"\nmen = 600\nq = 0\nr = 0\navailable_from = 5\n";
+
+const WAIT_FOR_UNIT_3: &str = "[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"wait_for\"\nintent = 1\nland_unit = 3\n";
+
+#[test]
+fn wait_for_a_unit() {
+    let t = with_commands(
+        &changed(
+            &without_not_before(&text()),
+            "# The Allied commander's commands",
+            &format!("{UNIT_3}\n# The Allied commander's commands"),
+        ),
+        WAIT_FOR_UNIT_3,
+    );
+    let g = play(&t);
+    assert!(g.refused().is_empty(), "{:?}", g.refused());
+    assert_day_1(&g);
+    for day in 2..=4 {
+        assert_held(&g, day, &["land_unit:3", "day 5"]);
+    }
+    assert_released_on(&g, 5);
+    for day in 1..=g.days() {
+        assert!(
+            !g.handed[&day].orders.iter().any(|o| matches!(
+                &o.kind,
+                OrderKind::LandUnit { target, .. } if *target == unit(3)
+            ) || matches!(
+                &o.kind,
+                OrderKind::TaskForce {
+                    order: TaskForceOrder::LoadUnit { unit: u, .. },
+                    ..
+                } if *u == unit(3)
+            )),
+            "day {day}"
+        );
+    }
+}
+
+#[test]
+fn no_ring_of_waits() {
+    // Intent 1 waits for intent 3; an "after" on intent 3 naming intent 1
+    // would have each wait for the other.
+    let ring = "[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"after\"\nintent = 3\nother_intent = 1\n";
+    let own = "[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"after\"\nintent = 3\nother_intent = 3\n";
+    let t = changed(&after_text(), "days = 13\n", "days = 1\n");
+    let g = play(&with_commands(&with_commands(&t, ring), own));
+    let refusals: Vec<CommandRefusal> = g
+        .command_refusals()
+        .into_iter()
+        .map(|(_, _, reason)| reason)
+        .collect();
+    assert_eq!(
+        refusals,
+        vec![
+            CommandRefusal::NotAnEndToWaitFor(intent(1)),
+            CommandRefusal::NotAnEndToWaitFor(intent(3)),
+        ]
+    );
 }
 
 #[test]

@@ -1051,7 +1051,7 @@ on by default and armed apart for each plan.
 The version is unchanged, 25: fields and values are added and none changes its meaning. `set_limit` takes three
 more `limit` values, each only on a `take_place` or `control_island` of the commander's: `not_before` with
 `from_day`; `wait_for` with one of `task_force` and `land_unit`, in the side's numbers (a number naming none of the
-side's units is refused in the words a forces limit naming it gets); and `after` with `other_intent`. Each with its
+side's units is refused in the words a forces limit naming it gets); and `after` with `other_intent` (one that would close a ring of waits is refused as one naming its own intent is). Each with its
 other key left out clears the limit. In `command_state` and `plans`, each intent's `limits` gains `not_before` (a
 day), `wait_for` (`{"task_force": n}` or `{"land_unit": n}`, `command_defs.schema.json#/$defs/awaited`) and `after`
 (an intent's number), each null where not set on the intent; `limits_read_up` gains `not_before` and

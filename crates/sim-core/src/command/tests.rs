@@ -4326,3 +4326,91 @@ fn cannot_bring_enough_has_its_names_and_codes() {
         Some(StandingKind::CannotBringEnough)
     );
 }
+
+// ---------------------------------------------------------------------------
+// Decision 0159, rule C: no ring of waits (the architect's ruling on step 3).
+// ---------------------------------------------------------------------------
+
+/// A world with three takes of the commander's, intents 1, 2 and 3, each of
+/// a land hex of its own.
+fn three_takes() -> World {
+    let mut world = world();
+    for (n, q) in [(1, 5), (2, 6), (3, 7)] {
+        let hex = Hex::new(q, 0);
+        world.map.insert(
+            hex,
+            HexData {
+                kind: crate::map::HexKind::Coast,
+                ..HexData::open_sea()
+            },
+        );
+        player(
+            &mut world,
+            CommandKind::SetIntent {
+                intent: intent(n),
+                kind: IntentKind::TakePlace { hex, by_day: None },
+            },
+        )
+        .unwrap();
+    }
+    world
+}
+
+fn after(on: u32, other: u32) -> CommandKind {
+    CommandKind::SetLimit(Limit::After {
+        intent: intent(on),
+        other: Some(intent(other)),
+    })
+}
+
+/// Two takes that would wait for each other: the second "after" is refused
+/// as one naming its own intent is, and nothing changes.
+#[test]
+fn an_after_that_closes_a_ring_of_two_is_refused() {
+    let mut world = three_takes();
+    player(&mut world, after(1, 2)).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        after(2, 1),
+        CommandRefusal::NotAnEndToWaitFor(intent(1)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        after(1, 1),
+        CommandRefusal::NotAnEndToWaitFor(intent(1)),
+    );
+}
+
+/// A ring through a third take is refused too.
+#[test]
+fn an_after_that_closes_a_ring_of_three_is_refused() {
+    let mut world = three_takes();
+    player(&mut world, after(1, 2)).unwrap();
+    player(&mut world, after(2, 3)).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        after(3, 1),
+        CommandRefusal::NotAnEndToWaitFor(intent(1)),
+    );
+}
+
+/// A chain that is not a ring is taken in: 1 after 2, 2 after 3, and 1
+/// after 3 as well.
+#[test]
+fn a_chain_of_afters_that_is_not_a_ring_is_taken_in() {
+    let mut world = three_takes();
+    player(&mut world, after(1, 2)).unwrap();
+    player(&mut world, after(2, 3)).unwrap();
+    player(&mut world, after(1, 3)).unwrap();
+    assert_eq!(
+        state(&world, A).intents[&intent(1)].limits.after,
+        Some(intent(3))
+    );
+    assert_eq!(
+        state(&world, A).intents[&intent(2)].limits.after,
+        Some(intent(3))
+    );
+}

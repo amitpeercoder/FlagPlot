@@ -607,7 +607,11 @@ impl World {
                                     named.kind,
                                     IntentKind::TakePlace { .. } | IntentKind::ControlIsland { .. }
                                 );
-                            if !fits {
+                            // No ring of waits (the architect's ruling on
+                            // decision 0159, step 3): walking the "after"
+                            // limits from the intent named, each read up
+                            // the tree, must not come back to this one.
+                            if !fits || closes_ring(state, *intent, *other) {
                                 return Err(CommandRefusal::NotAnEndToWaitFor(*other));
                             }
                         }
@@ -1739,4 +1743,30 @@ fn amend(plan: &mut Plan, day: u32, change: AmendmentChange) -> u32 {
         change,
     });
     number
+}
+
+/// Whether an "after" set on `intent` naming `other` would close a ring of
+/// waits (the architect's ruling on decision 0159, step 3): walking the
+/// "after" limits from `other`, each intent's read up the tree, reaches
+/// `intent` again, directly or through others. The walk visits each intent
+/// once, in number order.
+fn closes_ring(state: &CommandState, intent: IntentId, other: IntentId) -> bool {
+    let mut seen: std::collections::BTreeSet<IntentId> = std::collections::BTreeSet::new();
+    let mut next = vec![other];
+    while let Some(at) = next.pop() {
+        if at == intent {
+            return true;
+        }
+        if !seen.insert(at) || !state.intents.contains_key(&at) {
+            continue;
+        }
+        next.extend(
+            state
+                .waits_read_up(at)
+                .after
+                .into_iter()
+                .map(|(waited, _)| waited),
+        );
+    }
+    false
 }
