@@ -706,6 +706,59 @@ fn a_take_place_intent_names_a_hex_or_an_enemy_base_and_shows_its_phase() {
     assert_eq!(intents[1]["by_day"], Value::Null);
 }
 
+/// A seat states "control an island" by the tool, as the tool's schema says
+/// it may. Until Nov 18, 2026 the argument check refused "island" before the
+/// intent was read, so only a scenario file could state this end.
+#[test]
+fn a_control_island_intent_names_an_island_of_the_scenario() {
+    let scenario = load("76_controlling_an_island.toml", 1942);
+    let (mut session, _) = support::play::session_of(scenario, &[Side::Allied]);
+    session = session.with_staffs(sim_staff::staffs());
+    let schemas = schemas();
+    let mut call = |tool: &str, args: Value| -> Result<Value, CallError> {
+        let result = session.call(Side::Allied, tool, &args);
+        if let Ok(answer) = &result {
+            let kind = answer["kind"].as_str().expect("a kind");
+            let errors = schemas.check(&format!("{kind}.schema.json"), answer);
+            assert!(errors.is_empty(), "{tool} {args}: {errors:?}\n{answer}");
+        }
+        result
+    };
+    let a = call(
+        "set_intent",
+        json!({"intent_kind": "control_island", "island": 1, "intent": 90}),
+    )
+    .expect("answered");
+    assert_eq!(a["status"], "queued", "{a}");
+    let state = call("command_state", json!({})).expect("answered");
+    let stated = state["intents"]
+        .as_array()
+        .expect("intents")
+        .iter()
+        .find(|i| i["kind"] == "control_island")
+        .expect("the intent stated");
+    assert_eq!(stated["kind"], "control_island");
+    assert_eq!(stated["island"], 1);
+    // The preview takes the same argument.
+    let p = call(
+        "preview",
+        json!({"command": "set_intent", "intent_kind": "control_island", "island": 1, "intent": 91}),
+    );
+    assert!(p.is_ok(), "{:?}", p.err().map(|e| e.to_json()));
+    // An island the scenario does not name, and a key of another kind, are refused.
+    for args in [
+        json!({"intent_kind": "control_island", "island": 99, "intent": 92}),
+        json!({"intent_kind": "control_island", "island": 1, "base": 1, "intent": 92}),
+        json!({"intent_kind": "control_island", "intent": 92}),
+    ] {
+        let refused = match call("set_intent", args.clone()) {
+            Err(_) => true,
+            Ok(a) => a["status"] == "refused",
+        };
+        assert!(refused, "{args}");
+    }
+}
+
 #[test]
 fn a_bombard_intent_names_a_task_force_and_an_enemy_base() {
     let scenario = load("06_rabaul_guadalcanal.toml", 1942);
