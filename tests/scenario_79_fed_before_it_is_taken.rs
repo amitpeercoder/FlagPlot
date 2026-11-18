@@ -559,10 +559,11 @@ fn the_hold_says_through_which_base_the_men_are_fed() {
     }
 }
 
-/// The mornings of days 2 and 3: the stock read, 42 t and 36 t, and the
-/// reading of the day checked, 30 t and 24 t, against a floor of 30 t.
+/// The mornings of days 1 to 3: nothing served on day 1; on days 2 and 3
+/// the stock read, 42 t and 36 t, and the reading of the day checked, 30 t
+/// and 24 t, against a floor of 30 t.
 #[test]
-fn the_mornings_of_days_2_and_3() {
+fn the_mornings_of_days_1_to_3() {
     let g = main_game();
     // The stock the staff reads on a morning is the stock at the end of the
     // day before.
@@ -577,6 +578,14 @@ fn the_mornings_of_days_2_and_3() {
         ],
     );
     assert!(g.orders(2).is_empty());
+    // A supply intent is first served on the morning after it is formed: on
+    // day 1 no run and no supply sum is handed in for intent 2.
+    assert!(g.orders(1).is_empty());
+    assert!(g.no_orders(1, 2).is_empty(), "{:?}", g.no_orders(1, 2));
+    assert!(!g
+        .commands(1)
+        .iter()
+        .any(|c| matches!(c, Cmd::AddRun(..) | Cmd::Commit(..))));
     let run = Cmd::AddRun(1, vec![1, 2], n(90), (3, 4, 4));
     assert_says(
         &text_of(g.command_reason(3, &run)),

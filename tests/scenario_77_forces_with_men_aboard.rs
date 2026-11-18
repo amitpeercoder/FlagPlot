@@ -956,15 +956,22 @@ fn the_neutralising_is_withdrawn_on_day_3_by_the_staff() {
 }
 
 #[test]
-fn keep_base_2_supplied_with_floor_5_is_formed_on_day_3_under_the_hold() {
+fn keep_base_3_supplied_with_floor_5_is_formed_on_day_2_under_the_hold() {
     let g = main_game();
-    assert_eq!(g.formed(keep_kind(2)), vec![(3, 3)]);
-    assert_eq!(g.formed_intents().last(), Some(&(3, 7, 3)));
-    assert_eq!(g.intent_state(7).kind, keep_kind(2));
-    // Nothing of the sort before the base is the side's.
-    for day in 1..=2 {
-        assert!(!g.commands(day).contains(&Cmd::Form(3, keep_kind(2))));
-    }
+    // Decision 0159, rule A: the hold of base 2 still waits on day 2, and the
+    // side has base 3 in the hex with its men ashore.
+    assert_eq!(g.formed(keep_kind(3)), vec![(2, 3)]);
+    assert_eq!(g.formed_intents().last(), Some(&(2, 7, 3)));
+    assert_eq!(g.intent_state(7).kind, keep_kind(3));
+    // None is formed for base 2 on day 3, or on any day: one is in force
+    // for the hex.
+    assert!(g.formed(keep_kind(2)).is_empty(), "{:?}", g.forms());
+    // It is served for the first time on day 3: nothing serves it on day 2.
+    assert!(g.reasons_serving(2, 7).is_empty(), "{}", g.reasons_serving(2, 7));
+    assert_says(
+        &g.reasons_serving(3, 7),
+        &["25 t over 5 t a day", "15 t"],
+    );
 }
 
 #[test]
@@ -976,9 +983,12 @@ fn the_orders_of_days_1_to_8_ten_in_all_none_refused() {
             vec![Given::Landing(1, B, vec![1]), route(1), Given::Unload(1)],
         ),
         (2, vec![Given::Attack(1)]),
-        (3, vec![Given::Defend(1)]),
-        (4, vec![Given::LoadTo(1, n(85)), route(2), Given::Unload(2)]),
-        (5, vec![route(1), Given::Unload(1)]),
+        (3, vec![Given::LoadTo(3, n(80)), Given::Defend(1)]),
+        (
+            4,
+            vec![route(3), Given::Unload(3), route(2), Given::Unload(2)],
+        ),
+        (5, vec![]),
         (6, vec![]),
         (7, vec![]),
         (8, vec![]),
@@ -1000,32 +1010,28 @@ fn the_orders_of_days_1_to_8_ten_in_all_none_refused() {
 }
 
 #[test]
-fn the_hours_of_the_landing_and_of_task_force_2() {
+fn the_hours_of_the_landing_and_of_task_forces_2_and_3() {
     let g = main_game();
-    // Task force 1 sails at hour 0 and arrives at B at hour 8, arrives at A
-    // at hour 34, sails again at hour 96 and arrives at B at hour 112, and
-    // arrives at A at hour 136.
-    assert_eq!(
-        g.arrivals_of(1),
-        vec![(B, n(8)), (A, n(34)), (B, n(112)), (A, n(136))]
-    );
-    // The force steams for A at hour 18 (the afternoon of day 1), sails at
-    // hour 96 (the night of day 5) and steams for A at hour 120 (the night
-    // of day 6).
+    // Task force 1 sails at hour 0 and arrives at B at hour 8, steams for A
+    // at hour 18 (the afternoon of day 1) and arrives at A at hour 34. It
+    // carries no run.
+    assert_eq!(g.arrivals_of(1), vec![(B, n(8)), (A, n(34))]);
     let steaming = g.steaming_of(1);
-    for want in [
-        (1, Pulse::Afternoon, B),
-        (5, Pulse::Night, A),
-        (6, Pulse::Night, B),
-    ] {
-        assert!(steaming.contains(&want), "{want:?} in {steaming:?}");
-    }
-    // Task force 2 sails at hour 72, arrives at B at hour 88, steams for A
-    // at hour 96 and arrives at A at hour 112.
-    assert_eq!(g.arrivals_of(2), vec![(B, n(88)), (A, n(112))]);
-    let steaming_2 = g.steaming_of(2);
-    for want in [(4, Pulse::Night, A), (5, Pulse::Night, B)] {
-        assert!(steaming_2.contains(&want), "{want:?} in {steaming_2:?}");
+    assert!(
+        steaming.contains(&(1, Pulse::Afternoon, B)),
+        "{steaming:?}"
+    );
+    // Task forces 2 and 3 sail at hour 72, arrive at B at hour 88, steam for
+    // A at hour 96 and arrive at A at hour 112.
+    for tf in [2, 3] {
+        assert_eq!(g.arrivals_of(tf), vec![(B, n(88)), (A, n(112))], "{tf}");
+        let steaming_tf = g.steaming_of(tf);
+        for want in [(4, Pulse::Night, A), (5, Pulse::Night, B)] {
+            assert!(
+                steaming_tf.contains(&want),
+                "task force {tf}: {want:?} in {steaming_tf:?}"
+            );
+        }
     }
 }
 
@@ -1048,13 +1054,14 @@ fn the_men_and_supply_landed() {
     .collect();
     want.sort();
     assert_eq!(g.landed(), want);
-    // Supply: 30 t in the morning of day 1, 20 t in the afternoon of day 4,
-    // 68 t in the morning and 17 t in the afternoon of day 5, at 34 t an hour.
+    // Supply: 30 t in the morning of day 1; on day 4, at 28 t an hour for
+    // each ship, ship 4 lands 56 t in the morning and 24 t in the afternoon,
+    // and ship 3 lands 20 t in the afternoon.
     let mut want_t: Vec<String> = [
         (1, "Morning", 1, 30),
         (4, "Afternoon", 3, 20),
-        (5, "Morning", 1, 68),
-        (5, "Afternoon", 1, 17),
+        (4, "Morning", 4, 56),
+        (4, "Afternoon", 4, 24),
     ]
     .iter()
     .map(|(d, p, s, t)| format!("{d} {p} ship {s} t {}", n(*t)))
@@ -1104,21 +1111,27 @@ fn the_supply_at_every_day_end() {
     for (day, t) in [(1, 30), (2, 25), (3, 20), (4, 15), (5, 15), (8, 15)] {
         assert_eq!(g.supply(day, 3), n(t), "base 3, day {day}");
     }
-    // Base 2: nothing until day 4, 20 t on the afternoon of day 4, then 6.5 t
-    // paid on the night of day 5: 13.5 t, and 85 t taken on day 5: 98.5 t;
-    // 6.5 t on each night of days 6 to 8: 79 t at the end.
+    // Base 2: nothing until day 4, 80 t and 20 t on day 4: 100 t; then
+    // 6.5 t paid for 1,300 men on the nights of days 5 to 8: 74 t at the end.
     assert_eq!(g.supply(1, 2), n(0));
     assert_eq!(g.supply(2, 2), n(0));
     assert_eq!(g.supply(3, 2), n(0));
-    assert_eq!(g.supply(4, 2), n(20));
-    assert_eq!(g.supply(5, 2), fx("98.5"));
-    assert_eq!(g.supply(6, 2), n(92));
-    assert_eq!(g.supply(7, 2), fx("85.5"));
-    assert_eq!(g.supply(8, 2), n(79));
-    // Base 1 loads out 85 t and feeds nobody: 915 t at the end.
-    assert_eq!(g.supply(3, 1), n(1000));
-    assert_eq!(g.supply(4, 1), n(915));
-    assert_eq!(g.supply(8, 1), n(915));
+    assert_eq!(g.supply(4, 2), n(100));
+    assert_eq!(g.supply(5, 2), fx("93.5"));
+    assert_eq!(g.supply(6, 2), n(87));
+    assert_eq!(g.supply(7, 2), fx("80.5"));
+    assert_eq!(g.supply(8, 2), n(74));
+    // The hex holds 115 t at the end of day 4.
+    assert_eq!(g.supply(4, 2) + g.supply(4, 3), n(115));
+    // Base 1 loads out 80 t on day 3 and feeds nobody: 920 t at the end.
+    assert_eq!(g.supply(2, 1), n(1000));
+    assert_eq!(g.supply(3, 1), n(920));
+    assert_eq!(g.supply(8, 1), n(920));
+    // Fuel: ships 1 and 2 steam 80 nm to B and 160 nm home and burn 24 t,
+    // 976 t at the end; ships 3 and 4 steam 320 nm and burn 32 t, 968 t.
+    for (s, t) in [(1, 976), (2, 976), (3, 968), (4, 968)] {
+        assert_eq!(g.ship(8, s).fuel_t, n(t), "ship {s}");
+    }
 }
 
 #[test]
@@ -1149,16 +1162,16 @@ fn the_island_is_controlled_on_5_of_8_days() {
 }
 
 #[test]
-fn the_supply_run_is_ordered_on_day_4_only() {
+fn the_supply_run_is_ordered_on_day_3_only() {
     let g = main_game();
-    // Task force 1 takes the run of 85 t on day 4; no run is ordered on any
+    // Task force 3 takes the run of 80 t on day 3; no run is ordered on any
     // other day.
     let loads: Vec<(u32, Given)> = g
         .all_orders()
         .into_iter()
         .filter(|(_, o)| matches!(o, Given::LoadTo(..)))
         .collect();
-    assert_eq!(loads, vec![(4, Given::LoadTo(1, n(85)))]);
+    assert_eq!(loads, vec![(3, Given::LoadTo(3, n(80)))]);
 }
 
 // ---------------------------------------------------------------- The properties
@@ -1277,8 +1290,11 @@ fn two_islands_each_take_has_its_own_first_lift() {
 /// and no staff order of the Allied side is refused on any day, and no run
 /// of one island's supply intent is read as the other's: every route order
 /// under island 1's intents acts at B (and goes to B or A), and under
-/// island 2's at C (and goes to C or A); a keep-supplied intent's base lies
-/// at its island.
+/// island 2's at C (and goes to C or A); a keep-supplied intent's base is a
+/// base of the side lying in the hex of its island's place, and it stands
+/// under the hold of that island's place. Restated for decision 0159's rule
+/// A: the keep-supplied intent may now name the side's own base in the
+/// place's hex (a base a landing formed) rather than the held base itself.
 #[test]
 fn two_islands_no_refusal_and_no_run_is_read_as_the_other_islands() {
     let g = two_islands();
@@ -1303,7 +1319,9 @@ fn two_islands_no_refusal_and_no_run_is_read_as_the_other_islands() {
                 other => panic!("day {day}: an order serves intent {served:?}, root {other}"),
             };
             if let IntentKind::KeepSupplied { base: kept, .. } = g.intent_state(served.raw()).kind {
-                assert_eq!(kept.raw(), base, "day {day}: {served:?}");
+                let found = g.base(day, kept.raw()).expect("the kept base");
+                assert_eq!(found.side, Side::Allied, "day {day}: {served:?}");
+                assert_eq!(found.hex, hex, "day {day}: {served:?} (island of base {base})");
             }
             if let Given::Route(_, waypoints, act) = given(order) {
                 assert!(
@@ -1323,17 +1341,20 @@ fn two_islands_no_refusal_and_no_run_is_read_as_the_other_islands() {
         seen_route_under.0 && seen_route_under.1,
         "{seen_route_under:?}"
     );
-    // Every keep-supplied intent stands under a hold of its own base, under
-    // the island that has the base.
+    // Every keep-supplied intent stands under the hold of its island's
+    // place, and its base is a base of the side in that place's hex.
+    let last = g.days();
     for intent_state in g.state.intents.values() {
         if let IntentKind::KeepSupplied { base, .. } = intent_state.kind {
             let parent = intent_state.parent.expect("a parent");
-            assert_eq!(g.intent_state(parent.raw()).kind, hold_kind(base.raw()));
             let island = match g.intent_state(root_of(parent.raw())).kind {
                 IntentKind::ControlIsland { island, .. } => island,
                 other => panic!("{other:?}"),
             };
-            assert_eq!(base.raw(), if island == 1 { 2 } else { 4 });
+            let (place, hex) = if island == 1 { (2, B) } else { (4, C) };
+            assert_eq!(g.intent_state(parent.raw()).kind, hold_kind(place));
+            let found = g.base(last, base.raw()).expect("the kept base");
+            assert_eq!((found.side, found.hex), (Side::Allied, hex), "{base:?}");
         }
     }
 }
