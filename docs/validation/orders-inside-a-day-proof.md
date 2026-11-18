@@ -18,7 +18,7 @@ DRAFT, for the architect. Run on Nov 18, 2026, by the team lead of step 5, to th
 
 ## 1. Nothing changed where it is off
 
-**(a)** `sh scripts/regenerate.sh --check` on the branch at 1599a679, before anything of this step was added: "every generated file is what the engine gives", exit 0 (the run baselines, the agent goldens, the viewer's measure fixture, the recorded games, the pinned hashes and the batch fixture). Run again on the branch as pushed: [see "Before the pull request"].
+**(a)** `sh scripts/regenerate.sh --check` on the branch at 1599a679, before anything of this step was added: "every generated file is what the engine gives", exit 0 (the run baselines, the agent goldens, the viewer's measure fixture, the recorded games, the pinned hashes and the batch fixture). Run again on the branch with this step's files and `origin/main` merged in (b0bdd540): the same words, exit 0.
 
 **(b)** `sim-cli batch data/scenarios/05_eastern_solomons.toml --runs 1000 --first-seed 1 --label proof`, release, each run from the top of its own worktree:
 
@@ -146,7 +146,7 @@ Run a second time to see it is steady: 0.948, 0.996, 1.017, 1.538. On the slice 
 
 ## Before the pull request
 
-[filled in by the team lead when pushed: the four checks.]
+On the branch at b0bdd540 (this step's files, with `origin/main` at c6f8fe01, the merge of pull request 429, merged in, which changed no file): `cargo fmt --all -- --check` clean; `cargo clippy --workspace --all-targets -- -D warnings` clean; `cargo test --workspace` 208 test binaries, none failed; `sh scripts/regenerate.sh --check` "every generated file is what the engine gives". The only edit to a test file after the measuring runs was `cargo fmt` of `orders_inside_proof.rs`, which moves lines and changes nothing they do.
 
 ## What this did not do
 
