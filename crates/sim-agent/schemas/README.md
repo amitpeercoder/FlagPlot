@@ -1059,3 +1059,21 @@ day), `wait_for` (`{"task_force": n}` or `{"land_unit": n}`, `command_defs.schem
 `wait_for` and `after`, lists nearest first, each entry with `from`, the intent it is set on (`after`'s entries name
 the intent waited for as `intent`). A take held by one of them gives a reason that names what it waits for, and one
 that can never be met as it stands hands in `cannot_meet` once.
+
+## How much must be known (decision 0159, rule D, items 12 and 13)
+
+The version is unchanged, 25: fields and values are added and none changes its meaning. `set_limit` takes the
+`limit` value `knowledge`, only on a `take_place` or `control_island` of the commander's, with `knowledge` (`none`,
+`count` or `recent_count`) and, with `recent_count` alone, `within_days` (3 where left out; 0 is refused by the game as
+a recent count of no days, below 0 by the tool); `knowledge` left out clears the limit. Each intent's `limits` gains
+`knowledge` (`command_defs.schema.json#/$defs/knowledge`: `setting` and `within_days`, null for none and count), null
+where not set on the intent; `limits_read_up` gains `knowledge` and `knowledge_from`, the nearest on the chain and the
+intent it is set on, both null where none is set and the risk decides. Every plan in `plans` and `command_state` gains
+`need_to_know` (`command_defs.schema.json#/$defs/need_to_know`): for a take whose plan is preparing this morning,
+what must be known before its landing goes, worked from the side's view as the staff works it and stored nowhere:
+`intent`, `place`, `asked` (`setting`, `within_days` and `from`, the intent the limit is set on, null where the risk
+sets it), `held` (the side's estimate: `men`, `came_from`, `day`, `age_days` and `could_be`, the `lowest` and
+`highest` it could be in truth from its grade's error range, `highest` null where the range's low end is 0; null for a
+count that was told or where the figures give no range; `held` is null where nothing is held), `looking` (the air
+group in the side's numbers and `since_day`, or null), `met` and `text`, the need in one line. It is null for every
+other plan, a released one too.
