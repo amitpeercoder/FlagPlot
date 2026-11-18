@@ -189,3 +189,10 @@ What the build settled that the plan and the brief did not say:
 - `advance` is listed last, after the command tools; `play --tools`, which has no game, lists the 28 tools without it.
 
 Left as it is, and named: `measure` works a passage or a yard trip from the start of the coming day's night, which at 0600 or 1200 has passed, and says so in the note; a forecast from a given pulse is the engine's to give (`docs/open-work.md`). At 0600 and 1200 `command_state`'s `forces_held` marks as current only a state held as of the afternoon of the open day, since it is worked on the copy. A briefing line's "moved yesterday" and a base's works of the day before read the last day closed.
+
+## As built: step 4, the table
+
+The table (`table/`, decision 0154) stops between pulses where the scenario offers `advance`: it resolves a pulse at a time and plots each as it is fought from `events`, the player chooses which of the five things stop the clock, and at 0600 and 1200 a force takes an order from the chart (its speed, its readiness or a place to steam for, and its air groups stood down), with the warning that the staff plans round an ordered force until it is released. Tried by hand on a copy of the 39 days with the key on: an intent signed at dusk, the clock stopped at 0600 of day 1, a transport force slowed to 8 knots, and the morning plotted to a stop at 1200. `table/serve.py` gains the list of the tools a seat is offered. In a scenario without the key the table works as it did, reading a day's events from `events` in place of `explain`.
+
+One more gap in the seat's tools was found: none tells a seat the hour. A page opened at 0600 reads it from the words of a refused briefing. Open, in `docs/open-work.md`.
+
