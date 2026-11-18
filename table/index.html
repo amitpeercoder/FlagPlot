@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flag Plot Table</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=Libre+Caslon+Text:ital@1&display=swap">
+<style>
+/* The table fills the room; the commander's papers lie flat at its edges: signals right, clock below. */
+:root {
+  color-scheme: dark;
+  --room: #121816; --panel: rgba(22, 30, 27, 0.9); --rule: #3b4843;
+  --ink: #ece6d3; --ink-dim: #bdb69f;
+  --paper: #fbf3dc; --paper-old: #e6dfc9; --paper-ink: #2b2a26; --paper-dim: #5a5548;
+  --own: #12335c; --enemy: #8a2019;
+  --f-ui: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --f-type: 'Courier Prime', 'Courier New', monospace;
+}
+html, body { height: 100%; margin: 0; }
+body { background: var(--room); color: var(--ink); font-family: var(--f-ui); overflow: hidden; }
+[hidden] { display: none !important; }
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#scene.dragging { cursor: grabbing; }
+#scene.picking { cursor: crosshair; }
+#shade { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.55) 100%); }
+button { font-family: var(--f-ui); cursor: pointer; }
+button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
+button:disabled { opacity: 0.45; cursor: default; }
+
+.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 16px 8px; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.top p { margin: 0; font-size: 17px; letter-spacing: 0.05em; color: var(--ink-dim); }
+
+.tray { position: fixed; top: 60px; right: 16px; width: min(350px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
+.tray h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
+#signals { display: flex; flex-direction: column; gap: 10px; }
+.slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
+.slip.decide { background: var(--paper); }
+.slip .from { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.stamp { font-family: var(--f-ui); font-weight: 700; font-size: 14px; letter-spacing: 0.12em; color: var(--enemy); border: 2px solid var(--enemy); padding: 0 6px; transform: rotate(-2deg); white-space: nowrap; }
+.stamp.ok { color: var(--own); border-color: var(--own); }
+.slip strong { font-size: 15px; }
+.slip .why { border-top: 1px dashed #8d8672; padding-top: 7px; display: flex; flex-direction: column; gap: 6px; }
+.slip .row, .order .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.slip button, .order button, .sheet button { min-height: 42px; padding: 0 14px; border-radius: 2px; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; background: transparent; color: var(--paper-ink); border: 1.5px solid var(--paper-ink); }
+.slip button.go, .order button.go { background: var(--own); color: var(--paper); border-color: var(--own); }
+
+.order { position: fixed; left: 16px; bottom: 92px; width: min(420px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 14px 16px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 10px; }
+.order h2, .sheet h2 { margin: 0; font-family: var(--f-ui); font-size: 19px; font-weight: 700; letter-spacing: 0.12em; }
+.order fieldset { border: 0; border-top: 1px dashed #8d8672; margin: 0; padding: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.order legend { font-size: 12px; color: var(--paper-dim); padding: 0 6px 0 0; }
+.order label { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; cursor: pointer; }
+.order input { accent-color: var(--own); width: 18px; height: 18px; margin: 0; }
+.order .pv { border-top: 1px dashed #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.order .pv b { font-size: 12px; color: var(--paper-dim); font-weight: 400; }
+.sheet { position: fixed; left: 50%; top: 56px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); max-height: calc(100% - 160px); overflow: auto; background: var(--paper); color: var(--paper-ink); padding: 16px 18px; border-radius: 2px; box-shadow: 0 10px 34px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 10px; }
+.sheet pre { margin: 0; font-family: var(--f-type); font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+
+.bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; background: var(--panel); border-top: 1px solid var(--rule); padding: 10px 16px 12px; }
+.clock { font-family: var(--f-type); font-size: 21px; font-weight: 700; letter-spacing: 0.03em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.status { font-size: 17px; color: var(--ink-dim); letter-spacing: 0.03em; flex: 1 1 200px; min-width: 0; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 2px; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.acts button.main { background: var(--ink); color: var(--room); border-color: var(--ink); font-weight: 700; padding: 0 24px; }
+#fatal { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 20px; background: var(--room); }
+@media (max-width: 720px) {
+  .tray { top: auto; bottom: 150px; left: 16px; width: auto; max-height: 30%; }
+  .order { bottom: 150px; max-height: 55%; }
+  .acts { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<canvas id="scene" aria-label="A chart table seen from the commander's chair. Drag to look along the table, scroll or pinch to lean in."></canvas>
+<div id="shade"></div>
+<div id="fatal" hidden></div>
+
+<div class="top">
+  <h1>Flag Plot</h1>
+  <p id="seat">The table</p>
+</div>
+
+<aside class="tray" aria-label="Signals">
+  <h2>Signals</h2>
+  <div id="signals"></div>
+</aside>
+
+<form class="order" id="order" hidden aria-label="Operation order">
+  <h2>OPERATION ORDER · DRAFT</h2>
+  <div>To the staff. At <strong id="o-place">this place</strong> I intend to:</div>
+  <fieldset id="o-ends"><legend>END</legend></fieldset>
+  <fieldset><legend>RISK</legend>
+    <label><input type="radio" name="risk" id="o-risk-preserve" value="preserve"> Preserve</label>
+    <label><input type="radio" name="risk" id="o-risk-balanced" value="balanced" checked> Balanced</label>
+    <label><input type="radio" name="risk" id="o-risk-press" value="press"> Press</label>
+  </fieldset>
+  <div>Forces: the staff's choice.</div>
+  <div class="pv" aria-live="polite"><b>THE STAFF'S PREVIEW, FOR THE COMING MORNING</b><div id="o-preview">Asking the staff.</div></div>
+  <div class="row">
+    <button type="submit" class="go" id="o-sign" disabled>SIGN AND SEND</button>
+    <button type="button" id="o-cancel">TEAR UP</button>
+  </div>
+</form>
+
+<section class="sheet" id="sheet" hidden aria-label="The briefing">
+  <div class="row" style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+    <h2 id="sheet-title">THE BRIEFING</h2>
+    <button type="button" id="sheet-close">PUT IT DOWN</button>
+  </div>
+  <pre id="sheet-text"></pre>
+</section>
+
+<footer class="bar">
+  <div class="clock" id="clock">DAY 1</div>
+  <div class="status" id="status" role="status">Laying the chart.</div>
+  <div class="acts">
+    <button type="button" id="btn-back">Sit back</button>
+    <button type="button" id="btn-lean">Lean in</button>
+    <button type="button" id="btn-intent">State an intent</button>
+    <button type="button" id="btn-day">One day</button>
+    <button type="button" class="main" id="btn-go">Carry on</button>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function fatal(words) { $('fatal').textContent = words; $('fatal').hidden = false; }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function setStatus(s) { $('status').textContent = s; }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function num(handle) { return parseInt(String(handle).split(':')[1], 10); }
+  function commas(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+  // Every word the table shows of the game comes through this: one tool of the seat, one answer.
+  function api(tool, args) {
+    return fetch('/call', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tool: tool, arguments: args || {} }) })
+      .then(function (r) { return r.json(); })
+      .then(function (a) { if (a.refused != null) throw new Error(a.refused); return a.ok; });
+  }
+  if (!window.THREE) { fatal('The table needs its drawing library, which did not load. Check the network and reload.'); return; }
+
+  var canvas = $('scene'), renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true }); } catch (e) { fatal('This table needs WebGL, which this browser has turned off.'); return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputEncoding = THREE.sRGBEncoding;
+  var scene = new THREE.Scene(); scene.background = new THREE.Color(0x121816); scene.fog = new THREE.Fog(0x121816, 16, 36);
+  var camera = new THREE.PerspectiveCamera(38, 1, 0.05, 80);
+
+  // ---- the chart, drawn from the game's own map ----
+  var config = { islands: [], start: '', seat: 'allied' }, hexes = [], hexAt = {};
+  var TW = 10, TD = 8, K = 1, lonMid = 0, latMid = 0, HEXR = 0.05, PX = 200;
+  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh;
+  function world(lat, lon, y) { return new THREE.Vector3((lon - lonMid) * K, y || 0, (latMid - lat) * K); }
+  function cpx(v) { return [(v.x + TW / 2) * PX, (v.z + TD / 2) * PX]; }
+  function placeOf(p) { return p ? world(parseFloat(p.lat), parseFloat(p.lon)) : null; }
+
+  function layChart() {
+    var lo = 1e9, hi = -1e9, la = 1e9, ha = -1e9, step = 1;
+    hexes.forEach(function (h) { lo = Math.min(lo, h[4]); hi = Math.max(hi, h[4]); la = Math.min(la, h[3]); ha = Math.max(ha, h[3]); hexAt[h[0] + ',' + h[1]] = h; });
+    var a = hexAt['0,0'], b = hexAt['1,0']; if (a && b) step = Math.abs(b[4] - a[4]);
+    K = TW / (hi - lo + step); lonMid = (lo + hi) / 2; latMid = (la + ha) / 2; TD = (ha - la + step) * K; HEXR = step * K / Math.sqrt(3);
+    PX = Math.min(200, Math.floor(4096 / Math.max(TW, TD)));
+    [chartCanvas, baseCanvas].forEach(function (c) { c.width = Math.round(TW * PX); c.height = Math.round(TD * PX); });
+    var b2 = baseCanvas.getContext('2d'), W = baseCanvas.width, H = baseCanvas.height, s = 7;
+    function rnd() { s = (s * 16807) % 2147483647; return s / 2147483647; }
+    b2.fillStyle = '#e9e1c9'; b2.fillRect(0, 0, W, H);
+    for (var i = 0; i < 5000; i++) { b2.fillStyle = rnd() > 0.5 ? 'rgba(120,105,70,0.10)' : 'rgba(255,255,255,0.22)'; b2.fillRect(rnd() * W, rnd() * H, 3, 3); }
+    b2.strokeStyle = 'rgba(90,80,55,0.16)'; b2.lineWidth = 3; b2.beginPath(); b2.moveTo(W / 2, 0); b2.lineTo(W / 2, H); b2.moveTo(0, H / 2); b2.lineTo(W, H / 2); b2.stroke();
+    // a line every two degrees
+    b2.strokeStyle = '#b6c0c0'; b2.lineWidth = 1.2; b2.fillStyle = '#56605f'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
+    for (var lon = Math.ceil(lo / 2) * 2; lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lon + '° E', x + 6, H - 14); }
+    for (var lat = Math.ceil(la / 2) * 2; lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
+    // the land, hex by hex as the game has it
+    var R = HEXR * PX * 1.02;
+    hexes.forEach(function (h) {
+      if (h[2] === 'deep_sea') return;
+      var c = cpx(world(h[3], h[4]));
+      b2.beginPath(); for (var k = 0; k < 6; k++) { var an = Math.PI / 6 + k * Math.PI / 3; b2[k ? 'lineTo' : 'moveTo'](c[0] + R * Math.cos(an), c[1] + R * Math.sin(an)); } b2.closePath();
+      if (h[2] === 'land') { b2.fillStyle = '#c3b383'; b2.fill(); b2.strokeStyle = '#c3b383'; b2.lineWidth = 2; b2.stroke(); }
+      else { b2.fillStyle = 'rgba(195,179,131,' + (0.35 + 0.65 * Math.min(100, h[5]) / 100).toFixed(2) + ')'; b2.fill(); b2.strokeStyle = 'rgba(74,70,59,0.55)'; b2.lineWidth = 1.5; b2.stroke(); }
+    });
+    b2.strokeStyle = '#3f3b31'; b2.lineWidth = 6; b2.strokeRect(14, 14, W - 28, H - 28);
+    g = chartCanvas.getContext('2d');
+    chartTex = new THREE.CanvasTexture(chartCanvas); chartTex.encoding = THREE.sRGBEncoding; chartTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    var wood = new THREE.MeshStandardMaterial({ color: 0x3a281b, roughness: 0.55 });
+    var top = new THREE.Mesh(new THREE.BoxGeometry(TW + 1, 0.3, TD + 1), wood); top.position.y = -0.152; top.receiveShadow = true; scene.add(top);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (p) { var leg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.8, 0.3), wood); leg.position.set(p[0] * (TW / 2 + 0.2), -1.6, p[1] * (TD / 2 + 0.2)); scene.add(leg); });
+    chartMesh = new THREE.Mesh(new THREE.PlaneGeometry(TW, TD), new THREE.MeshStandardMaterial({ map: chartTex, roughness: 0.96 }));
+    chartMesh.rotation.x = -Math.PI / 2; chartMesh.position.y = 0.002; chartMesh.receiveShadow = true; scene.add(chartMesh);
+    var floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: 0x0e1312, roughness: 1 })); floor.rotation.x = -Math.PI / 2; floor.position.y = -3; scene.add(floor);
+    scene.add(new THREE.HemisphereLight(0xcfd8d4, 0x1a1410, 0.38));
+    var lamp = new THREE.SpotLight(0xffe6bd, 1.25, 34, 0.78, 0.55, 1.1); lamp.position.set(0.5, 9.5, 1.5); lamp.target.position.set(0.2, 0, -0.2); lamp.castShadow = true;
+    lamp.shadow.mapSize.set(2048, 2048); lamp.shadow.camera.near = 2; lamp.shadow.camera.far = 18; lamp.shadow.bias = -0.0006; scene.add(lamp); scene.add(lamp.target);
+  }
+
+  // ---- what the side knows, as the tools gave it ----
+  var M = { day: 1, lastDay: 1, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], state: null, over: false, result: null };
+  var lastRun = null, draft = null;
+  function baseByNumber(n) { var all = M.bases.concat(M.enemyBases), i; for (i = 0; i < all.length; i++) if (num(all[i].base.handle) === n) return all[i]; return null; }
+  function intentPlace(it) {
+    var i, b;
+    if (it.island != null) { for (i = 0; i < config.islands.length; i++) if (config.islands[i].number === it.island) { b = baseByNumber(config.islands[i].base); return b ? placeOf(b.place) : null; } return null; }
+    if (it.hex) { var h = hexAt[it.hex[0] + ',' + it.hex[1]]; return h ? world(h[3], h[4]) : null; }
+    b = baseByNumber(it.base != null ? it.base : it.target); return b ? placeOf(b.place) : null;
+  }
+  var WORD = { control_island: 'CONTROL THE ISLAND', take_place: 'TAKE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR' };
+
+  function drawMarks() {
+    g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(baseCanvas, 0, 0);
+    var u = PX / 100;
+    function ring(v, r, colour, alpha, dash, width) { var c = cpx(v); g.save(); g.globalAlpha = alpha; g.strokeStyle = colour; g.lineWidth = (width || 2.4) * u; g.setLineDash(dash ? [6 * u, 5 * u] : []); g.beginPath(); g.arc(c[0], c[1], r * u, 0.15, 6.5); g.stroke(); g.restore(); return c; }
+    g.font = '700 ' + Math.round(11 * u) + "px 'Courier Prime', monospace";
+    M.enemyBases.forEach(function (b) { var v = placeOf(b.place), c = ring(v, 9, '#a3211a', 0.6, false, 2); g.save(); g.globalAlpha = 0.6; g.beginPath(); g.arc(c[0], c[1], 9 * u, 0, 7); g.clip(); g.strokeStyle = '#a3211a'; g.lineWidth = u; g.beginPath(); for (var k = -20; k < 20; k += 4) { g.moveTo(c[0] + k * u, c[1] - 10 * u); g.lineTo(c[0] + (k + 10) * u, c[1] + 10 * u); } g.stroke(); g.restore(); });
+    M.contacts.forEach(function (c) { var v = placeOf(c.place); if (!v) return; var a = Math.max(0.25, 1 - (c.age_pulses || 0) / 9), p = ring(v, 11, '#a3211a', a, (c.age_pulses || 0) > 3, 2.6); g.save(); g.globalAlpha = a; g.fillStyle = '#8a2019'; g.fillText(String(c.ship_count), p[0] - 4 * u, p[1] + 4 * u); g.restore(); });
+    M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) ring(v, 16, '#a3211a', Math.max(0.3, 1 - (e.age_days || 0) / 6), (e.age_days || 0) > 1, 2); });
+    var intents = M.state ? M.state.intents.filter(function (i) { return i.in_force && !i.parent; }) : [];
+    intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; g.fillText('INTENT ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), c[0] + (36 + k * 4) * u, c[1] + (4 + k * 14) * u); });
+    if (draft) ring(draft.v, 30, '#1f4e8c', 1, true, 2.2);
+    chartTex.needsUpdate = true;
+  }
+
+  // ---- slips that stand over the table and face the chair ----
+  var labels = [];
+  function label(lines, colour, anchor, h, tier, off) {
+    var cv = document.createElement('canvas'); cv.width = lines.length === 1 ? Math.max(180, 44 + String(lines[0]).length * 19) : 600; cv.height = 34 + lines.length * 40;
+    var c = cv.getContext('2d'); c.fillStyle = '#f7f1df'; c.fillRect(0, 0, cv.width, cv.height); c.strokeStyle = colour; c.lineWidth = 5; c.strokeRect(2.5, 2.5, cv.width - 5, cv.height - 5);
+    lines.forEach(function (t, i) { c.font = (i ? '400 ' : '700 ') + "30px 'Courier Prime', 'Courier New', monospace"; c.fillStyle = i ? '#2b2a26' : colour; c.fillText(String(t).slice(0, 31), 20, 46 + i * 40); });
+    var tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
+    var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true })); sp.renderOrder = 10; scene.add(sp);
+    var pin = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0x2b2a26 })); scene.add(pin);
+    var L = { sp: sp, pin: pin, tex: tex, anchor: anchor, h: h, tier: tier, off: off || [0, 0], aspect: cv.width / cv.height, wide: cv.width / 600 };
+    labels.push(L); return L;
+  }
+  function dropLabels() { labels.forEach(function (L) { scene.remove(L.sp); scene.remove(L.pin); L.tex.dispose(); L.sp.material.dispose(); L.pin.geometry.dispose(); }); labels = []; }
+  var OWN = '#12335c', RED = '#8a2019';
+
+  // ---- the pieces: a block is yours and known exactly ----
+  var blue = new THREE.MeshStandardMaterial({ color: 0x24507f, roughness: 0.5 }), cream = new THREE.MeshStandardMaterial({ color: 0xe9e1c9, roughness: 0.8 });
+  var pieces = {}, statics = [];
+  function block(len, wid) {
+    var grp = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(len, 0.07, wid), blue); b.position.y = 0.035; b.castShadow = true; grp.add(b);
+    var s = new THREE.Mesh(new THREE.BoxGeometry(len * 0.55, 0.012, wid * 0.3), cream); s.position.y = 0.076; grp.add(s); scene.add(grp); return grp;
+  }
+  var moveT = 1, mover = null;
+  function layPieces() {
+    statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels();
+    var byHex = {}, seen = {};
+    M.forces.forEach(function (f) { if (!f.place) return; var k = f.place.q + ',' + f.place.r; (byHex[k] = byHex[k] || []).push(f); });
+    mover = null; var far = 0.04;
+    Object.keys(byHex).forEach(function (k) {
+      var list = byHex[k], centre = placeOf(list[0].place);
+      list.forEach(function (f, i) {
+        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? 0.07 + 0.035 * i : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, 0, Math.sin(an) * rad));
+        var p = pieces[h]; seen[h] = true;
+        if (!p) { p = pieces[h] = { grp: block(f.mission === 'carrier' ? 0.24 : 0.17, 0.08), from: to.clone(), to: to.clone() }; p.grp.position.copy(to); p.grp.rotation.y = 0.3; }
+        else { p.from = p.grp.position.clone(); p.to = to; var d = p.from.distanceTo(to); if (d > far) { far = d; mover = p; } }
+        p.force = f;
+        var lines = [f.task_force.name.replace(/^Placeholder /, ''), f.ships_afloat + ' ships · ' + String(f.mission).replace(/_/g, ' ')];
+        if (list.length === 1) label(lines, OWN, function () { return p.grp.position; }, 0.5, 1);
+        else label(lines, OWN, function () { return p.grp.position; }, 0.35 + 0.24 * i, 1, [0.3 + 0.1 * i, 0]);
+      });
+      if (list.length > 1) { var nm = list[0].place.name; }
+    });
+    Object.keys(pieces).forEach(function (h) { if (!seen[h]) { scene.remove(pieces[h].grp); delete pieces[h]; } });
+    moveT = mover ? 0 : 1;
+    M.bases.forEach(function (b) {
+      var v = placeOf(b.place), peg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.09, 20), blue); peg.position.copy(v).setY(0.045); peg.castShadow = true; scene.add(peg); statics.push(peg);
+      var d = b.days_of_supply && b.days_of_supply.days; label([b.base.name.toUpperCase()], OWN, function () { return v; }, 0.5, -1, [0, 0.15]); label([b.base.name.toUpperCase(), 'Your base · supply ' + Math.round(parseFloat(b.supply_t)) + ' t' + (d != null ? ', ' + d + ' days' : '')], OWN, function () { return v; }, 0.85, 1, [-0.35, 0.1]);
+    });
+    M.enemyBases.forEach(function (b) { var v = placeOf(b.place); label([b.base.name.toUpperCase()], RED, function () { return v; }, 0.45, -1, [0, -0.15]); label([b.base.name.toUpperCase(), 'Enemy base'], RED, function () { return v; }, 0.45, 1, [0, -0.2]); });
+    var ashore = {};
+    M.units.forEach(function (u) { if (!u.place || !u.men_ashore) return; var k = u.place.q + ',' + u.place.r; ashore[k] = ashore[k] || { place: u.place, men: 0, units: 0 }; ashore[k].men += u.men_ashore; ashore[k].units++; });
+    Object.keys(ashore).forEach(function (k) {
+      var a = ashore[k], v = placeOf(a.place), sq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.03, 0.1), blue); sq.position.copy(v).add(new THREE.Vector3(-0.08, 0.015, 0.08)); sq.castShadow = true; scene.add(sq); statics.push(sq);
+      label(['YOUR MEN ASHORE', commas(a.men) + ' men, ' + a.units + ' units'], OWN, function () { return sq.position; }, 0.7, 1, [-0.6, 0.35]);
+    });
+    M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) label(['ENEMY ASHORE, ESTIMATED', 'About ' + commas(e.men) + ' men', e.age_days ? e.age_days + ' days old' : 'Reported today'], RED, function () { return v; }, 1.0, 1, [0.55, -0.4]); });
+    M.contacts.forEach(function (c) { var v = placeOf(c.place); if (v) label(['CONTACT', c.ship_count + ' ships' + (c.taken_for ? ', taken for ' + (c.taken_for.kind || c.taken_for) : ''), c.age_pulses ? 'Report ' + c.age_pulses + ' pulses old' : 'Fresh report'], RED, function () { return v; }, 0.6, 0, [0.2, -0.3]); });
+  }
+
+  // ---- the plotter's stick ----
+  var rake = new THREE.Group(), stickMat = new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: 0.5 });
+  var stick = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.018, 1, 10), stickMat); stick.castShadow = true; rake.add(stick);
+  var head = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.05, 0.022), stickMat); head.castShadow = true; rake.add(head); rake.visible = false; scene.add(rake);
+  var UP = new THREE.Vector3(0, 1, 0);
+  function placeRake(h, dir) {
+    var hand = new THREE.Vector3(h.x - 2.6, 1.3, h.z + 1.6), d = hand.sub(h), len = d.length();
+    head.position.copy(h); head.rotation.y = -Math.atan2(dir.z, dir.x) + Math.PI / 2;
+    stick.position.copy(h).addScaledVector(d, 0.5); stick.scale.set(1, len, 1); stick.quaternion.setFromUnitVectors(UP, d.normalize());
+  }
+  function ease(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+
+  // ---- reading the picture ----
+  function refresh() {
+    return Promise.all([api('list_forces'), api('list_bases'), api('list_contacts'), api('command_state'), api('get_briefing', { text: false })]).then(function (a) {
+      M.forces = a[0].task_forces || []; M.units = a[0].land_units || [];
+      M.bases = a[1].bases || []; M.enemyBases = a[1].enemy_bases || [];
+      M.contacts = a[2].contacts || []; M.estimates = a[2].ground_estimates || [];
+      M.state = a[3]; M.day = a[4].heading.day; M.lastDay = a[4].heading.last_day;
+      layPieces(); drawMarks(); showClock(); showSignals();
+    });
+  }
+  function showClock() {
+    var t = 'DAY ' + Math.min(M.day, M.lastDay) + ' OF ' + M.lastDay;
+    if (config.start) { var d = new Date(config.start + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + M.day - 1); t = d.getUTCDate() + ' ' + ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][d.getUTCMonth()] + ' ' + d.getUTCFullYear() + ' · 0600 · ' + t; }
+    $('clock').textContent = t;
+  }
+
+  // ---- the signals tray ----
+  function slip(from, stamp, title, body, decide) {
+    var a = el('article', 'slip' + (decide ? ' decide' : '')), f = el('div', 'from'); f.appendChild(el('span', '', from)); if (stamp) f.appendChild(el('span', 'stamp' + (stamp === 'FOR DECISION' || stamp === 'STOPPED THE CLOCK' ? '' : ' ok'), stamp));
+    a.appendChild(f); if (title) a.appendChild(el('strong', '', title)); if (body) a.appendChild(el('div', '', body)); $('signals').appendChild(a); return a;
+  }
+  function button(parent, text, go, fn) { var row = parent.querySelector('.row') || parent.appendChild(el('div', 'row')), b = el('button', go ? 'go' : '', text); b.type = 'button'; b.addEventListener('click', function () { fn(b); }); row.appendChild(b); return b; }
+  function act(tool, args, done) { return api(tool, args).then(function (a) { setStatus(done || a.summary || 'Done.'); return refresh(); }).catch(function (e) { setStatus('Refused: ' + e.message); }); }
+  function askWhy(a, numbers, b) {
+    b.disabled = true; var box = a.appendChild(el('div', 'why'));
+    numbers.slice(0, 3).reduce(function (p, n) {
+      return p.then(function () { return api('why', { number: n }); }).then(function (w) {
+        box.appendChild(el('div', '', w.serves || ''));
+        if (w.reason && w.reason.worked) box.appendChild(el('div', '', w.reason.worked));
+        if (w.reason && w.reason.would_change && w.reason.would_change.length) box.appendChild(el('div', '', 'What would change it: ' + w.reason.would_change.join('; ') + '.'));
+      });
+    }, Promise.resolve()).catch(function (e) { box.appendChild(el('div', '', e.message)); });
+  }
+  function showSignals() {
+    var box = $('signals'), s = M.state; box.textContent = '';
+    if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
+    if (lastRun && lastRun.fired) lastRun.fired.forEach(function (f) {
+      var a = slip('FROM STAFF · DAY ' + f.day, 'STOPPED THE CLOCK', f.words.replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, true);
+      if (f.why && f.why.length) button(a, 'WHY', true, function (b) { askWhy(a, f.why, b); });
+      if (f.standing) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
+    });
+    var roots = s.intents.filter(function (i) { return i.in_force && !i.parent; });
+    if (!roots.length) slip('FROM STAFF', 'FOR DECISION', 'No intent is stated', 'The staff does nothing for your side until you state one. Press "State an intent" and touch the chart.', true);
+    s.plans.forEach(function (p) {
+      var waits = (p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare); if (!waits) return;
+      var a = slip('FROM STAFF', 'FOR DECISION', 'Plan ' + p.number + ' for intent ' + p.intent + ' is ' + p.state, p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.', true);
+      button(a, 'APPROVE', true, function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.'); });
+    });
+    if (roots.length) {
+      var l = slip('STANDING LEAVE', s.leaves.launch ? 'GIVEN' : null, s.leaves.launch ? 'The staff may launch a plan that is ready' : 'Every plan waits for your word before it launches', null, !s.leaves.launch);
+      button(l, s.leaves.launch ? 'WITHHOLD IT' : 'GIVE LEAVE TO LAUNCH', !s.leaves.launch, function () { act('set_leave', { leave: 'launch', given: !s.leaves.launch }); });
+    }
+    if (s.queued && s.queued.length) slip('FROM YOU · SIGNED', 'SENT', s.queued.length + ' signal' + (s.queued.length > 1 ? 's go' : ' goes') + ' to the staff at 0600', s.queued.map(function (q) { return q.text || q.shown || (q.command && q.command.kind) || 'a command'; }).join('; ') + '.');
+    if (lastRun) { var y = slip('YESTERDAY', null, null, lastRun.summary); button(y, 'READ THE BRIEFING', false, readBriefing); }
+    else { var first = slip('ON YOUR DESK', null, null, 'The briefing for the first morning.'); button(first, 'READ THE BRIEFING', false, readBriefing); }
+    var dec = s.staff_decisions_yesterday || [];
+    if (dec.length) { var d = slip('FROM STAFF', null, dec.length + ' decisions taken yesterday', dec.slice(0, 4).map(function (x) { return x.text || x.words || x.summary || ('decision ' + x.number); }).join(' · ')); }
+  }
+  function readBriefing() { api('get_briefing', { text: true }).then(function (b) { $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
+  $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
+
+  // ---- time: you watch a day played out, and may stop between days ----
+  var playing = false;
+  function advance(until) {
+    if (M.over) { setStatus('The game is over.'); return; }
+    closeOrder(); playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true;
+    (function step() {
+      setStatus('Day ' + M.day + ' is being fought.');
+      api('run', { days: 1 }).then(function (r) {
+        lastRun = r; if (r.game_over) { M.over = true; M.result = r.result; }
+        return refresh().then(function () { return sleep(2000); }).then(function () {
+          var stop = !until || !playing || r.game_over || (r.fired && r.fired.length);
+          if (!stop) return step();
+          playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false;
+          setStatus(r.game_over ? 'The game is over.' : r.fired && r.fired.length ? 'The clock is stopped: ' + r.fired.length + ' signal' + (r.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : 'The clock is stopped at the morning of day ' + M.day + '.');
+        });
+      }).catch(function (e) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; setStatus('Refused: ' + e.message); });
+    })();
+  }
+  $('btn-go').addEventListener('click', function () { if (playing) { playing = false; setStatus('The clock stops when this day is done.'); } else advance(true); });
+  $('btn-day').addEventListener('click', function () { advance(false); });
+
+  // ---- stating an intent: touch the chart, fill the order, read the staff's preview, sign ----
+  var picking = false, previewNo = null, previewSeq = 0;
+  function closeOrder() { $('order').hidden = true; draft = null; picking = false; canvas.classList.remove('picking'); if (g) drawMarks(); }
+  function ends(target) {
+    var list = [], n = target.base ? num(target.base.base.handle) : null;
+    if (n != null) config.islands.forEach(function (i) { if (i.base === n) list.push(['Control ' + i.name, { intent_kind: 'control_island', island: i.number }]); });
+    if (target.kind === 'enemy') list.push(['Take it', { intent_kind: 'take_place', base: n }], ['Neutralise it', { intent_kind: 'neutralise', target: n }]);
+    if (target.kind === 'own') list.push(['Hold it', { intent_kind: 'hold', base: n }], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }], ['Cover it from the air', { intent_kind: 'cover', base: n }]);
+    if (target.kind === 'waters') list.push(['Deny these waters, 2 hexes round', { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }], ['Deny these waters, 4 hexes round', { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }]);
+    return list;
+  }
+  function pick(p) {
+    var best = null, bd = 0.32;
+    M.bases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'own', base: b, name: b.base.name, v: placeOf(b.place) }; } });
+    M.enemyBases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'enemy', base: b, name: b.base.name, v: placeOf(b.place) }; } });
+    if (!best) { var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } }); if (!hh) return; best = { kind: 'waters', q: hh[0], r: hh[1], name: 'the waters about hex ' + hh[0] + ', ' + hh[1], v: world(hh[3], hh[4]) }; }
+    draft = best; draft.ends = ends(best); picking = false; canvas.classList.remove('picking');
+    $('o-place').textContent = best.name;
+    var box = $('o-ends'); while (box.children.length > 1) box.removeChild(box.lastChild);
+    draft.ends.forEach(function (e, i) { var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'end'; r.value = String(i); r.id = 'o-end-' + i; r.checked = i === 0; l.appendChild(r); l.appendChild(document.createTextNode(' ' + e[0])); box.appendChild(l); });
+    $('o-risk-balanced').checked = true; $('order').hidden = false; drawMarks(); askPreview();
+    setStatus('A draft. Nothing is ordered until you sign.');
+  }
+  function chosen(name) { var r = document.querySelector('#order input[name="' + name + '"]:checked'); return r ? r.value : ''; }
+  function askPreview() {
+    if (!draft) return; var seq = ++previewSeq, out = $('o-preview'), e = draft.ends[parseInt(chosen('end'), 10) || 0];
+    previewNo = null; $('o-sign').disabled = true; out.textContent = 'Asking the staff.';
+    var args = { command: 'set_intent' }; Object.keys(e[1]).forEach(function (k) { args[k] = e[1][k]; });
+    api('preview', args).then(function (p) {
+      if (seq !== previewSeq) return; out.textContent = ''; var w = p.with_change || {};
+      out.appendChild(el('div', '', 'It would ' + p.shown + '. On the first morning the staff would give ' + (w.orders || []).length + ' orders and ' + (w.commands || []).length + ' commands of its own.'));
+      (w.no_orders || []).slice(0, 3).forEach(function (n) { out.appendChild(el('div', '', 'It cannot yet: ' + (n.worked || (n.binding || []).join('; ')))); });
+      if ((w.no_orders || []).length > 3) out.appendChild(el('div', '', 'And ' + ((w.no_orders || []).length - 3) + ' more it cannot yet do.'));
+      if (chosen('risk') !== 'balanced') out.appendChild(el('div', '', 'The preview is worked at balanced; your risk goes with the order.'));
+      previewNo = p.preview; $('o-sign').disabled = false;
+    }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; });
+  }
+  $('order').addEventListener('change', function (e) { if (e.target.name === 'end') askPreview(); });
+  $('btn-intent').addEventListener('click', function () { if (playing) return; closeOrder(); picking = true; canvas.classList.add('picking'); setStatus('Touch the chart where you mean: a base, or open water.'); });
+  $('o-cancel').addEventListener('click', function () { closeOrder(); setStatus('The draft is torn up. Nothing was ordered.'); });
+  $('order').addEventListener('submit', function (e) {
+    e.preventDefault(); if (previewNo == null) return; var risk = chosen('risk'); $('o-sign').disabled = true;
+    api('approve', { preview: previewNo }).then(function (a) {
+      if (a.status && a.status !== 'queued') throw new Error(a.summary || 'refused');
+      return risk === 'balanced' ? a : api('set_limit', { limit: 'risk', intent: a.intent, risk: risk }).then(function () { return a; });
+    }).then(function (a) { closeOrder(); setStatus('Signed: intent ' + a.intent + '. The staff takes it up at 0600.'); return refresh(); })
+      .catch(function (err) { setStatus('Refused: ' + err.message); askPreview(); });
+  });
+
+  // ---- the chair: you lean, you do not fly ----
+  var goal = { x: 0, z: 0, zoom: 0 }, cur = { x: 0, z: 0, zoom: 0 }, camDist = 12;
+  function clampGoal() { goal.x = Math.max(-TW / 2, Math.min(TW / 2, goal.x)); goal.z = Math.max(-TD / 2, Math.min(TD / 2, goal.z)); goal.zoom = Math.max(0, Math.min(1, goal.zoom)); }
+  function placeCamera() {
+    var k = 0.12; cur.x += (goal.x - cur.x) * k; cur.z += (goal.z - cur.z) * k; cur.zoom += (goal.zoom - cur.zoom) * k;
+    var far = Math.max(12.5, TD * 1.35) * Math.max(1, 1.35 / camera.aspect), e = ease(cur.zoom);
+    camDist = far * Math.pow(1.5 / far, e); var elv = (32 + 38 * e) * Math.PI / 180;
+    camera.position.set(cur.x, camDist * Math.sin(elv), cur.z + camDist * Math.cos(elv)); camera.lookAt(cur.x, 0, cur.z - (1 - e) * 0.6);
+  }
+  var ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  function onTable(cx, cy) { var r = canvas.getBoundingClientRect(); ray.setFromCamera({ x: ((cx - r.left) / r.width) * 2 - 1, y: -((cy - r.top) / r.height) * 2 + 1 }, camera); var p = new THREE.Vector3(); return ray.ray.intersectPlane(plane, p) ? p : null; }
+  var ptrs = {}, pinch0 = 0, zoom0 = 0, downAt = null;
+  canvas.addEventListener('pointerdown', function (e) {
+    canvas.setPointerCapture(e.pointerId); ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; downAt = { x: e.clientX, y: e.clientY }; canvas.classList.add('dragging');
+    var ids = Object.keys(ptrs); if (ids.length === 2) { pinch0 = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); zoom0 = goal.zoom; }
+  });
+  canvas.addEventListener('pointermove', function (e) {
+    var p = ptrs[e.pointerId]; if (!p) return; var ids = Object.keys(ptrs);
+    if (ids.length === 1) { var s = camDist * 0.0016; goal.x -= (e.clientX - p.x) * s; goal.z -= (e.clientY - p.y) * s * 1.5; clampGoal(); }
+    p.x = e.clientX; p.y = e.clientY;
+    if (ids.length === 2 && pinch0) { var d = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); goal.zoom = zoom0 + Math.log(d / pinch0) * 0.5; clampGoal(); }
+  });
+  function up(e) {
+    delete ptrs[e.pointerId]; if (!Object.keys(ptrs).length) canvas.classList.remove('dragging'); pinch0 = 0;
+    if (picking && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var p = onTable(e.clientX, e.clientY); if (p && Math.abs(p.x) <= TW / 2 && Math.abs(p.z) <= TD / 2) pick(p); }
+    downAt = null;
+  }
+  canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+  canvas.addEventListener('wheel', function (e) { e.preventDefault(); var dz = -e.deltaY * 0.0012, p = dz > 0 ? onTable(e.clientX, e.clientY) : null; goal.zoom += dz; if (p) { goal.x += (p.x - goal.x) * 0.18; goal.z += (p.z - goal.z) * 0.18; } clampGoal(); }, { passive: false });
+  $('btn-lean').addEventListener('click', function () {
+    if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
+    else goal.zoom += 0.2; clampGoal();
+  });
+  $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
+  function resize() { var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  window.addEventListener('resize', resize); resize();
+
+  var tmp = new THREE.Vector3(), last = performance.now();
+  function frame(now) {
+    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (moveT < 1) {
+      moveT = Math.min(1, moveT + dt / 1.7); var e = ease(moveT);
+      Object.keys(pieces).forEach(function (h) { var p = pieces[h]; p.grp.position.lerpVectors(p.from, p.to, e); var d = p.to.clone().sub(p.from); if (d.length() > 0.02) p.grp.rotation.y = -Math.atan2(d.z, d.x); });
+      if (mover) { var dir = mover.to.clone().sub(mover.from).normalize(); placeRake(mover.grp.position.clone().addScaledVector(dir, -0.15).setY(0.03), dir); rake.visible = moveT < 1; }
+    } else rake.visible = false;
+    placeCamera();
+    labels.forEach(function (L) {
+      var a = L.anchor(), show = L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3);
+      L.sp.visible = show; L.pin.visible = show; if (!show) return;
+      tmp.set(a.x + L.off[0], L.h, a.z + L.off[1]); L.sp.position.copy(tmp);
+      var s = Math.max(0.14, Math.min(1.2, camera.position.distanceTo(tmp) * 0.085)); L.sp.scale.set(s * 1.6 * L.wide, s * 1.6 * L.wide / L.aspect, 1);
+      var pos = L.pin.geometry.attributes.position; pos.setXYZ(0, a.x, 0.02, a.z); pos.setXYZ(1, tmp.x, tmp.y, tmp.z); pos.needsUpdate = true;
+    });
+    renderer.render(scene, camera); requestAnimationFrame(frame);
+  }
+
+  Promise.all([fetch('/config').then(function (r) { return r.json(); }), fetch('/map').then(function (r) { return r.json(); })]).then(function (a) {
+    config = a[0]; hexes = a[1]; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
+    var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return refresh(); });
+  }).then(function () { setStatus('The clock is stopped at the morning of day ' + M.day + '. Drag to look along the table; scroll to lean in.'); })
+    .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
+})();
+</script>
+</body>
+</html>

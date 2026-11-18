@@ -21,6 +21,7 @@ Where things are in the repository and which crate may depend on which. Moved ou
 | `tests` | One test file per scenario, each with its hand calculation written out |
 | `scripts` | Commands for working on the repository, not parts of the game: shell scripts run from the top of the repository, each described in `docs/commands.md` |
 | `viewer` | The read-only replay viewer (decision 0018): one HTML page with no build step, its check script, and `replays/` (git-ignored) for exported runs |
+| `table` | A prototype of the player's interface (decision 0154): a bridge that serves one seat's tools to a browser on this machine, and one HTML page with no build step. It plays the game: it is given a seat's tools and the map file and nothing else |
 
 Crate boundaries:
 
@@ -31,5 +32,6 @@ Crate boundaries:
 - The staff is passed in. `sim-core` defines the `Staff` trait (given a side's view, it hands in orders, staff commands and reasons) and the function that resolves a day takes each side's staff or none (`Staffs`), so `sim-core` still depends on nothing. Every loop that resolves days passes the staffs it is given: the session, `run`, `batch`, `export`, `hash`, `events`, `time` and `replay --check-staff`. `sim-agent`'s session is handed its staffs by its caller and still depends on `sim-core` only. `sim_staff::staffs()` is the one place a runner gets its staffs, and `sim_staff::DOCTRINE_VERSION` the doctrine version (decision 0107). `sim-agent` may have `sim-staff` as a dev-dependency, for its tests only. Its session alone takes `World::at_staff_step()`, the copy of the world at the step a staff is asked, and hands the staff and the tools only a `SideView` of it.
 - `sim-agent` depends on `sim-core` only. Its library code takes a `SideView` and never the world, the umpire's view or the full event log; a test reads its source to check.
 - The replay viewer (`viewer/`) is an umpire's tool like `sim-cli`: it shows the truth. Nothing that plays the game may use it or the replay files.
+- The table (`table/`) plays the game. It reads the answers of one seat's tools and the map file, and never a replay, a save, a batch file, the event log or a scenario file (decision 0154).
 - `sim-cli validate` (`crates/sim-cli/src/validate/`) reads `data/validation` and a batch file, and writes reports under `docs/validation/`. It is the umpire's tool and shows the truth: nothing that plays the game may depend on it or read its reports. A test reads `sim-agent`'s manifest to check.
 - `sim-cli validate --passages` (`crates/sim-cli/src/validate/passages.rs`) reads `data/oob/place_positions.csv` for the positions of the places a passage names, and nothing else under `data/oob`. It is the umpire's tool and not the simulation: the simulation still never reads `data/oob`. It reads the file with a small reader of its own (the `csv` crate, four columns), not `oob-check`'s, so `sim-cli` stays free of that crate.
