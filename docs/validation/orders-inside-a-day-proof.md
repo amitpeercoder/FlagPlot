@@ -172,3 +172,14 @@ By the architect, on the figures above, with nothing changed after the run.
 2. Speed at the tool: accept as named. The cost is of answering, is small, and does not grow with the day.
 
 The key stays off for the 39 days. What condition 7 shows is a question of design more than of this build: a hold that takes a unit from the staff is a heavy thing to hand a player in the middle of a day.
+
+## After the judgement: the mend of legibility, and its check
+
+The designer chose on Nov 18, 2026 to have the legibility miss mended. The proof's result stands as judged above; what follows is a check of the mend and not a second run.
+
+**The mend.** The event that says an order was taken in now says what was ordered, to the side that gave it: `order:15 accepted for task_force:2: set_readiness, readiness battle`. Only the words a seat's tools write for that event changed (`sim-agent`, `Ctx::event_text` and `orders::order_words`). The engine, the event log, every hash and the umpire's files are as they were; of the generated files one recorded game's transcript changed, in two lines of that kind.
+
+**The check.** The six days were made again by `condition_6_the_six_days`; in each, only the words of `order_accepted` events differ from the proof's material. The architect wrote a key before any reader ran: (iii) passes only if the answer says what the order set, and an answer that says the events do not tell fails. Six fresh Haiku readers were given the proof's own prompt and one case each, and the architect marked them. **Six of six**, each of the three questions. `crates/sim-cli/tests/recorded_games/legibility_orders_inside_a_day/mended/` keeps the material, the key, the answers and the marks.
+
+The speed miss is left as named.
+

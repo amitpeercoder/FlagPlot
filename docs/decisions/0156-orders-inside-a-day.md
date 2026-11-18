@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 18, 2026, for the designer's app
 
 Summary: A plan for commanding inside a day: where a scenario says so, a seat may stop the clock between pulses and give seven kinds of order to its own units, taken in at the start of the next pulse and holding the unit from the staff as an order at dusk does; commands to the staff are still taken in at dusk; time is advanced a pulse at a time by one new tool that stops on what the side was told, and a second gives a seat its events together; the engine resolves a day in parts with the same result; no state is added and a game with no order inside a day is the game it was. With the hand calculation, the conditions of its proof, five steps and five questions for the designer
 
-Standing: Built in five steps, Nov 18, 2026. Its proof was run once and judged the same day: five of seven judged conditions hold and two miss (legibility of what an order changed, and speed at the tool on a near-empty day), which wait on the designer; off for the 39 days
+Standing: Built in five steps, Nov 18, 2026. Its proof was run once and judged the same day: five of seven judged conditions hold and two miss. The designer had the first mended (the event of an order taken in now says what was ordered; six of six on a check); the second, speed at the tool on a near-empty day, is a named miss. Off for the 39 days
 
 ## What differs from decision 0155, and why
 
@@ -206,3 +206,9 @@ Run once on Nov 18, 2026 and judged by the architect; `docs/validation/orders-in
 - Condition 7, not judged: a model in the Allied seat struck ships in 19 of 30 games by days (median margin 3.3) and 13 of 30 by pulse (0.675). The 12 games in which it gave orders inside the day struck in 2: an order takes a unit from the staff.
 
 The misses are the designer's to accept or have mended. The mend the architect recommends for the first: the event of an order taken in says what was ordered, to the side that gave it. The key stays off for the 39 days.
+
+## The mend after the proof
+
+On Nov 18, 2026 the designer chose to have the legibility miss mended. The event that says an order was taken in says what was ordered, to the side that gave it, in the words a seat's tools write: the order's kind and what it sets, as a saved game writes them (`order:3 accepted for task_force:1: set_speed, knots 8`). It is the side's own order, so nothing of the enemy is told. No rule, no state and no hash changed, and the interface's version is not raised: the event's fields are as they were and its words say more.
+
+Checked by reading the six days again, with a key written before the readers ran: six of six. The proof's own result is not changed by this. The speed miss stays a named miss.
