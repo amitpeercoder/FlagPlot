@@ -120,7 +120,8 @@
 //!   reason and no second notice. (Restated by the architect on Nov 18,
 //!   2026, for decision 0159's rule B, item 7: before it, the staff went
 //!   with unit 1 from base 1 and said it was short by 400 men. At press
-//!   it still does.)
+//!   the men wanted are 500, base 1's lift gives them, and the staff
+//!   goes with unit 1 from base 1 on day 1, short of nothing.)
 //! - **Short of men, at preserve the force.** The same at preserve the
 //!   force: the men wanted are 1,500. The staff forms nothing, hands in
 //!   the notice that it cannot meet intent 1 on day 1 and gives the
