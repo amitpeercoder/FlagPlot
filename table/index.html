@@ -62,10 +62,15 @@ button:disabled { opacity: 0.45; cursor: default; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 2px; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
 .acts button.main { background: var(--ink); color: var(--room); border-color: var(--ink); font-weight: 700; padding: 0 24px; }
+.plot { position: fixed; left: 16px; top: 60px; width: min(330px, calc(100% - 32px)); max-height: calc(100% - 180px); overflow-y: auto; background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 13px; line-height: 1.36; padding: 10px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
+.plot .phase { display: flex; flex-direction: column; gap: 3px; }
+.plot b { font-family: var(--f-ui); font-size: 15px; letter-spacing: 0.12em; }
+.plot .red { color: var(--enemy); }
 #fatal { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 20px; background: var(--room); }
 @media (max-width: 720px) {
   .tray { top: auto; bottom: 150px; left: 16px; width: auto; max-height: 30%; }
   .order { bottom: 150px; max-height: 55%; }
+  .plot { top: 56px; max-height: 26%; }
   .acts { margin-left: 0; }
 }
 </style>
@@ -74,6 +79,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 <canvas id="scene" aria-label="A chart table seen from the commander's chair. Drag to look along the table, scroll or pinch to lean in."></canvas>
 <div id="shade"></div>
 <div id="fatal" hidden></div>
+
+<aside class="plot" id="plot" hidden aria-label="The plot of the day" aria-live="polite"></aside>
 
 <div class="top">
   <h1>Flag Plot</h1>
@@ -197,7 +204,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
 
   // ---- what the side knows, as the tools gave it ----
-  var M = { day: 1, lastDay: 1, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], state: null, over: false, result: null };
+  var M = { names: {}, hexNames: {}, day: 1, lastDay: 1, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], state: null, over: false, result: null };
   var lastRun = null, draft = null;
   function baseByNumber(n) { var all = M.bases.concat(M.enemyBases), i; for (i = 0; i < all.length; i++) if (num(all[i].base.handle) === n) return all[i]; return null; }
   function intentPlace(it) {
@@ -300,12 +307,26 @@ button:disabled { opacity: 0.45; cursor: default; }
       M.bases = a[1].bases || []; M.enemyBases = a[1].enemy_bases || [];
       M.contacts = a[2].contacts || []; M.estimates = a[2].ground_estimates || [];
       M.state = a[3]; M.day = a[4].heading.day; M.lastDay = a[4].heading.last_day;
+      M.names = {}; M.hexNames = {};
+      M.forces.forEach(function (f) { M.names[f.task_force.handle] = f.task_force.name.replace(/^Placeholder /, ''); });
+      M.units.forEach(function (u) { M.names[u.land_unit.handle] = u.land_unit.name; });
+      (a[4].air_groups || []).forEach(function (x) { M.names[x.air_group.handle] = x.air_group.name; });
+      M.bases.concat(M.enemyBases).forEach(function (b) { M.names[b.base.handle] = b.base.name; if (b.place && !/^Landing at/.test(b.base.name)) M.hexNames[b.place.q + ',' + b.place.r] = b.base.name; });
       layPieces(); drawMarks(); showClock(); showSignals();
     });
   }
+  var MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  // The date `days` after the daylight of day 1. A game day runs from 1800 to 1800: the night, the morning, the afternoon.
+  function dateOf(days, year) { if (!config.start) return ''; var d = new Date(config.start + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + days); return d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + (year ? ' ' + d.getUTCFullYear() : ''); }
   function showClock() {
-    var t = 'DAY ' + Math.min(M.day, M.lastDay) + ' OF ' + M.lastDay;
-    if (config.start) { var d = new Date(config.start + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + M.day - 1); t = d.getUTCDate() + ' ' + ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][d.getUTCMonth()] + ' ' + d.getUTCFullYear() + ' · 0600 · ' + t; }
+    var day = Math.min(M.day, M.lastDay), dusk = dateOf(M.day - 2, true);
+    $('clock').textContent = (dusk ? dusk + ' · ' : '') + '1800 · ' + (M.over ? 'THE LAST DAY IS FOUGHT' : 'ORDERS FOR DAY ' + day + ' OF ' + M.lastDay);
+  }
+  function showPhase(day, phase) {
+    var eve = dateOf(day - 2), date = dateOf(day - 1), t = 'DAY ' + day + ' · ';
+    if (phase === 'night') t += 'THE NIGHT' + (date ? ' OF ' + eve + ' TO ' + date : '');
+    else if (phase === 'end') t += (date ? date + ' · ' : '') + '1800 · THE DAY\'S REPORTS';
+    else t += (date ? date + ' · ' : '') + 'THE ' + phase.toUpperCase();
     $('clock').textContent = t;
   }
 
@@ -345,7 +366,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       var l = slip('STANDING LEAVE', s.leaves.launch ? 'GIVEN' : null, s.leaves.launch ? 'The staff may launch a plan that is ready' : 'Every plan waits for your word before it launches', null, !s.leaves.launch);
       button(l, s.leaves.launch ? 'WITHHOLD IT' : 'GIVE LEAVE TO LAUNCH', !s.leaves.launch, function () { act('set_leave', { leave: 'launch', given: !s.leaves.launch }); });
     }
-    if (s.queued && s.queued.length) slip('FROM YOU · SIGNED', 'SENT', s.queued.length + ' signal' + (s.queued.length > 1 ? 's go' : ' goes') + ' to the staff at 0600', s.queued.map(function (q) { return q.text || q.shown || (q.command && q.command.kind) || 'a command'; }).join('; ') + '.');
+    if (s.queued && s.queued.length) slip('FROM YOU · SIGNED', 'SENT', s.queued.length + ' signal' + (s.queued.length > 1 ? 's go' : ' goes') + ' to the staff at 1800', s.queued.map(function (q) { return q.text || q.shown || (q.command && q.command.kind) || 'a command'; }).join('; ') + '.');
     if (lastRun) { var y = slip('YESTERDAY', null, null, lastRun.summary); button(y, 'READ THE BRIEFING', false, readBriefing); }
     else { var first = slip('ON YOUR DESK', null, null, 'The briefing for the first morning.'); button(first, 'READ THE BRIEFING', false, readBriefing); }
     var dec = s.staff_decisions_yesterday || [];
@@ -355,24 +376,80 @@ button:disabled { opacity: 0.45; cursor: default; }
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
 
   // ---- time: you watch a day played out, and may stop between days ----
-  var playing = false;
+  // The seat's tools answer between days, so a day is fought and then plotted: the table plays the three
+  // pulses in turn from what the side was told in each. Stopping the clock takes effect when the day is plotted.
+  var playing = false, seenEvent = 0, flashes = [];
+  var QUIET = { fuel_burned: 1, air_group_fatigue: 1, task_force_fatigue: 1, land_unit_fatigue: 1, aircraft_worn: 1, cargo_unloaded: 1, order_accepted: 1, staff_reason: 1, command_taken: 1, intent_formed: 1, plan_drafted: 1, plan_state_changed: 1, plan_amended: 1, fight_day_counted: 1, ground_fire: 1, left_roster: 1, search_flown: 1, strike_mission_cleared: 1, base_at_day_end: 1, task_force_halted: 1, task_force_steamed: 1, staff_notice: 1, interrupt_fired: 1, men_fed: 1 };
+  function known(n) { return api('explain', { event: n }).then(function (e) { return e.kind === 'explain' ? e.nodes[0] : null; }); }
+  async function findSeen() { var lo = 0, hi = 1; while (await known(hi)) { lo = hi; hi *= 2; } while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (await known(mid)) lo = mid; else hi = mid; } seenEvent = lo; }
+  async function newEvents() {
+    var out = [];
+    for (;;) {
+      var batch = [], k; for (k = 1; k <= 24; k++) batch.push(known(seenEvent + k));
+      var got = await Promise.all(batch), n = 0; while (n < got.length && got[n]) { out.push(got[n]); n++; }
+      seenEvent += n; if (n < got.length) return out;
+    }
+  }
+  function named(text) {
+    return text.replace(/\b(?:task_force|air_group|land_unit|base|ship):\d+\b/g, function (h) { return M.names[h] || h; })
+      .replace(/\((-?\d+),(-?\d+)\)/g, function (all, q, r) { return M.hexNames[q + ',' + r] || all; });
+  }
+  function hexIn(text) { var m = /\((-?\d+),(-?\d+)\)/.exec(text); return m ? hexAt[m[1] + ',' + m[2]] : null; }
+  function flash(h, colour) {
+    if (!h) return; var ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 40), new THREE.MeshBasicMaterial({ color: colour, transparent: true, opacity: 0.9, depthTest: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.copy(world(h[3], h[4], 0.012)); ring.userData.t = 0; scene.add(ring); flashes.push(ring);
+  }
+  function digest(events) {
+    var lines = [], landed = {}, perKind = {};
+    events.forEach(function (e) {
+      if (e.event_kind === 'men_landed') { var m = /landed (\d+) men .* at (\(-?\d+,-?\d+\))/.exec(e.text); if (m) { landed[m[2]] = (landed[m[2]] || 0) + parseInt(m[1], 10); return; } }
+      if (QUIET[e.event_kind]) return;
+      perKind[e.event_kind] = (perKind[e.event_kind] || 0) + 1; if (perKind[e.event_kind] > 3) return;
+      lines.push({ text: named(e.text), hex: hexIn(e.text), red: /enemy|attack|bomb|sunk|hit|lost|contact|fight|surrender/.test(e.text) });
+    });
+    Object.keys(landed).forEach(function (k) { lines.unshift({ text: commas(landed[k]) + ' men landed at ' + named(k), hex: hexIn(k), red: false }); });
+    Object.keys(perKind).forEach(function (k) { if (perKind[k] > 3) lines.push({ text: 'and ' + (perKind[k] - 3) + ' more reports of ' + k.replace(/_/g, ' ') }); });
+    return lines;
+  }
+  var TITLE = { night: 'THE NIGHT', morning: 'THE MORNING', afternoon: 'THE AFTERNOON', end: 'AT THE END OF THE DAY' };
+  async function plot(day, events) {
+    var groups = { night: [], morning: [], afternoon: [], end: [] }, phases = ['night', 'morning', 'afternoon', 'end'], log = $('plot');
+    events.forEach(function (e) { groups[e.pulse || 'end'].push(e); });
+    log.textContent = ''; log.hidden = false;
+    for (var i = 0; i < phases.length; i++) {
+      var ph = phases[i], evs = groups[ph], far = 0.04, any = false; showPhase(day, ph); mover = null;
+      Object.keys(pieces).forEach(function (h) { var p = pieces[h]; p.from = p.grp.position.clone(); p.to = p.from.clone(); });
+      evs.forEach(function (e) {
+        if (e.event_kind !== 'task_force_steamed') return; var m = /^(task_force:\d+) .* to \((-?\d+),(-?\d+)\)/.exec(e.text); if (!m) return;
+        var p = pieces[m[1]], h = hexAt[m[2] + ',' + m[3]]; if (!p || !h) return;
+        p.to = world(h[3], h[4]); any = true; var d = p.from.distanceTo(p.to); if (d > far) { far = d; mover = p; }
+      });
+      moveT = any ? 0 : 1;
+      var lines = digest(evs), box = el('div', 'phase'); box.appendChild(el('b', '', TITLE[ph])); log.appendChild(box); log.scrollTop = log.scrollHeight;
+      if (!lines.length) box.appendChild(el('div', '', any ? 'Your forces steam on. Nothing else is reported.' : 'Nothing is reported.'));
+      for (var k = 0; k < lines.length; k++) { box.appendChild(el('div', lines[k].red ? 'red' : '', lines[k].text)); flash(lines[k].hex, lines[k].red ? 0xa3211a : 0x1f4e8c); log.scrollTop = log.scrollHeight; if (!calm) await sleep(Math.min(420, 2400 / lines.length)); }
+      if (!calm) await sleep(any || lines.length ? 1500 : 500);
+    }
+  }
+  var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function advance(until) {
     if (M.over) { setStatus('The game is over.'); return; }
     closeOrder(); playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true;
-    (function step() {
-      setStatus('Day ' + M.day + ' is being fought.');
-      api('run', { days: 1 }).then(function (r) {
-        lastRun = r; if (r.game_over) { M.over = true; M.result = r.result; }
-        return refresh().then(function () { return sleep(2000); }).then(function () {
-          var stop = !until || !playing || r.game_over || (r.fired && r.fired.length);
-          if (!stop) return step();
-          playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false;
-          setStatus(r.game_over ? 'The game is over.' : r.fired && r.fired.length ? 'The clock is stopped: ' + r.fired.length + ' signal' + (r.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : 'The clock is stopped at the morning of day ' + M.day + '.');
-        });
-      }).catch(function (e) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; setStatus('Refused: ' + e.message); });
+    function rest(words) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; setStatus(words); }
+    (async function () {
+      try {
+        for (;;) {
+          var day = M.day; setStatus('Day ' + day + ' is being fought.');
+          var r = await api('run', { days: 1 }); lastRun = r; if (r.game_over) { M.over = true; M.result = r.result; }
+          setStatus('Day ' + day + ': the plot, pulse by pulse, from what your side was told.');
+          await plot(day, await newEvents()); await refresh();
+          var fired = r.fired && r.fired.length;
+          if (!until || !playing || r.game_over || fired) return rest(r.game_over ? 'The game is over.' : fired ? 'The clock is stopped: ' + r.fired.length + ' signal' + (r.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : 'The clock is stopped. Your orders for day ' + M.day + ' go in at 1800.');
+        }
+      } catch (e) { rest('Refused: ' + e.message); }
     })();
   }
-  $('btn-go').addEventListener('click', function () { if (playing) { playing = false; setStatus('The clock stops when this day is done.'); } else advance(true); });
+  $('btn-go').addEventListener('click', function () { if (playing) { playing = false; setStatus('The clock stops when this day is plotted. A day cannot be stopped inside it yet.'); } else advance(true); });
   $('btn-day').addEventListener('click', function () { advance(false); });
 
   // ---- stating an intent: touch the chart, fill the order, read the staff's preview, sign ----
@@ -420,7 +497,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     api('approve', { preview: previewNo }).then(function (a) {
       if (a.status && a.status !== 'queued') throw new Error(a.summary || 'refused');
       return risk === 'balanced' ? a : api('set_limit', { limit: 'risk', intent: a.intent, risk: risk }).then(function () { return a; });
-    }).then(function (a) { closeOrder(); setStatus('Signed: intent ' + a.intent + '. The staff takes it up at 0600.'); return refresh(); })
+    }).then(function (a) { closeOrder(); setStatus('Signed: intent ' + a.intent + '. The staff takes it up at 1800.'); return refresh(); })
       .catch(function (err) { setStatus('Refused: ' + err.message); askPreview(); });
   });
 
@@ -469,6 +546,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       Object.keys(pieces).forEach(function (h) { var p = pieces[h]; p.grp.position.lerpVectors(p.from, p.to, e); var d = p.to.clone().sub(p.from); if (d.length() > 0.02) p.grp.rotation.y = -Math.atan2(d.z, d.x); });
       if (mover) { var dir = mover.to.clone().sub(mover.from).normalize(); placeRake(mover.grp.position.clone().addScaledVector(dir, -0.15).setY(0.03), dir); rake.visible = moveT < 1; }
     } else rake.visible = false;
+    flashes = flashes.filter(function (f) { f.userData.t += dt / 1.3; var k = f.userData.t; f.scale.setScalar(0.08 + k * 0.42); f.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(f); f.geometry.dispose(); f.material.dispose(); return false; } return true; });
     placeCamera();
     labels.forEach(function (L) {
       var a = L.anchor(), show = L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3);
@@ -483,8 +561,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   Promise.all([fetch('/config').then(function (r) { return r.json(); }), fetch('/map').then(function (r) { return r.json(); })]).then(function (a) {
     config = a[0]; hexes = a[1]; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return refresh(); });
-  }).then(function () { setStatus('The clock is stopped at the morning of day ' + M.day + '. Drag to look along the table; scroll to lean in.'); })
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return refresh(); }).then(findSeen);
+  }).then(function () { setStatus('The clock is stopped. Your orders for day ' + M.day + ' go in at 1800. Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
 })();
 </script>
