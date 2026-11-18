@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 17, 2026, before step 8 of stage
 
 Summary: The plan for the proof of stage 3, written before the run: the 39 days of the staff's setup played on a thousand seeds with each side given area intents alone and no forces named, in three arrangements; what each side states; how each of decision 0139's eight conditions is read from the umpire's files; the rule that picks the 24 reasons; a loading check on one seed before any judged run, with what may and may not be changed after it; and what is reported and not judged
 
-Standing: A plan by the architect, Nov 17, 2026. Not run
+Standing: A plan by the architect, Nov 17, 2026. Run Nov 18, 2026: not passed as stated (the Japanese side never attacks the airfield ashore, and does worse from its intents than given nothing; every other condition passes, legibility 23 of 23). The choices they raise are the designer's
 
 ## Why it is written first
 
@@ -170,4 +170,21 @@ With both mended, seed 1 was run again, unjudged: every Japanese lift lands at L
 
 ## As run
 
-Nothing yet.
+Run once, on Nov 18, 2026, on main at f92f8d8d, after the loading check was made again on that commit. The report is `docs/validation/stage-3-proof.md`; the legibility test's files are in `crates/sim-cli/tests/recorded_games/legibility_stage_3/`. Nothing was changed after the run.
+
+**Not passed as stated.** Of the conditions:
+
+1. **It runs:** passes. 3,000 games to day 39; each arrangement's two batches the same byte for byte, and the sample's exports.
+2. **Refused:** passes. Nothing, on any seed.
+3. **The Allied side does something:** passes, each part on 1,000 seeds of 1,000 (marks 900, 800, 800 and 600).
+4. **The Japanese side does something:** lands men after the Allied landing on 1,000 (mark 800) and bombards on 1,000 (mark 600); **attacks the airfield ashore on 0 (mark 600): fails.**
+5. **Better than given nothing:** the Allied side passes (median margin 64.65 against -59.95). **The Japanese side fails** (-64.65 from its intents against -51.51 given nothing).
+6. **Legibility:** passes, 23 of 23 against 20. The pick gave 23 reasons and not 24 (reading 6).
+7. **Speed:** passes, 17.06 ms against 40 ms.
+8. **The hand calculations:** pass.
+
+**The cause of both failures, from the staff's own reasons.** The Japanese staff lands a median of 6,076 men at Lunga and each morning wants two for each enemy man it counts, at balanced; its estimate is about right (a median of 10,012 against 11,056 true), so it never has them, and it waits to the end on every seed (at best 0.72 of what it wants, on one seed). The men it landed are fed with some 348 t in all and a median of 1,543 of them starve, which is the largest part of what the side loses on the scale by acting. No rule of this stage feeds men ashore at a place not yet the side's, and the staff cannot choose a beach away from the enemy.
+
+**What is put to the designer:** to name both as misses and close the stage, with the two mends taken up at the start of stage 4 (the architect's recommendation); to change a doctrine and run again; or to restate what the Japanese commander states (a risk of press) and run again beside this run. One ruling of the architect's is also his to overturn: legibility with 23 reasons passing at five in six.
+
+**Owed:** a model's game of the 39 days by intent alone, reported and not judged, has not been played.
