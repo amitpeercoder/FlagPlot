@@ -139,11 +139,25 @@
 //!   of 90 t is ordered. Days 1 to 6 are asserted for intent 1, and for
 //!   intent 3 the hours and the day base 4 changes side.
 //! - **A wait that can never end.** As "After another place", with the
-//!   commander's command of day 2 that withdraws intent 3: on day 3 the
-//!   staff hands in one notice that intent 1 cannot be met as it stands,
-//!   naming the limit and the withdrawn intent; on day 4 none. Plan 1 is
-//!   preparing on every day to day 6 and is not released. Days 1 to 6
-//!   are asserted.
+//!   commander's command of day 2 that withdraws intent 3: a command of
+//!   a day is taken in before the staff is asked that morning, so on day
+//!   2 the staff hands in one notice that intent 1 cannot be met as it
+//!   stands, naming the limit and the withdrawn intent; on days 3 and 4
+//!   none. Plan 1 is preparing on every day to day 6 and is not
+//!   released. Days 1 to 6 are asserted. (Restated by the architect on
+//!   Nov 18, 2026, on reading the build: the first writing had the
+//!   notice on day 3, a day after the command, which is not how a
+//!   command is taken in, as "The limit lifted" above already has it.)
+//! - **Wait for a unit.** With unit 3, Allied, a fighting unit of 600
+//!   men ashore at A and usable from day 5, not in intent 1's forces
+//!   limit; no "not before"; and the limit "wait for land unit 3" on
+//!   intent 1. As "Wait for a force": on days 2, 3 and 4 the plan is not
+//!   released and the reason names unit 3 and day 5; on day 5 plan 1 is
+//!   approved to released and the load of 90 t is ordered. Unit 3 is
+//!   given no order. Days 1 to 5 are asserted.
+//! - **No ring of waits.** An "after" that would have two intents each
+//!   wait for the other, directly or through a third, is refused at
+//!   intake as an "after" naming its own intent is.
 //! - **Refused at intake.** A "not before" on a "hold" is refused. An
 //!   "after" that names its own intent, a "hold", or an intent of the
 //!   staff's is refused. A "wait for" that names a task force of the
