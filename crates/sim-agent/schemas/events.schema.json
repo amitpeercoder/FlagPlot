@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/events",
+  "title": "events: the side's own events of a day, or of one part of it",
+  "description": "Each event as explain gives it as its node 0: its number (the number explain takes), day, pulse, kind, words and the units it names. It reads the side's own events and nothing else (decision 0156, rule 9).",
+  "type": "object",
+  "required": ["format", "version", "kind", "day", "pulse", "begun", "count", "events", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "flagplot-agent" },
+    "version": { "const": 25 },
+    "kind": { "const": "events" },
+    "day": { "type": "integer", "description": "The day asked for, or the day the clock is in." },
+    "pulse": {
+      "description": "The part of the day asked for: a pulse, or end for the events of the day that carry no pulse (those of its dusk and its end); null for the whole day.",
+      "enum": ["night", "morning", "afternoon", "end", null]
+    },
+    "begun": { "type": "boolean", "description": "false for a day not yet begun: the list is then empty." },
+    "count": { "type": "integer" },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["number", "day", "pulse", "event_kind", "text", "entities"],
+        "additionalProperties": false,
+        "properties": {
+          "number": { "type": "integer" },
+          "day": { "type": "integer" },
+          "pulse": { "enum": ["night", "morning", "afternoon", null] },
+          "event_kind": { "type": "string" },
+          "text": { "type": "string" },
+          "entities": { "$ref": "defs.schema.json#/$defs/handles" }
+        }
+      }
+    },
+    "summary": { "type": "string" }
+  }
+}

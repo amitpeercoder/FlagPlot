@@ -456,7 +456,9 @@ fn refusals_of(view: &SideView<'_>, events: &[SideEvent]) -> RefusalCounts {
 pub(crate) fn report(view: &SideView<'_>) -> Value {
     let n = Names::new(view);
     let events = view.events();
-    let today = view.day();
+    // The day the clock is in: the last day resolved, or the open day at
+    // 0600 or 1200 (decision 0156), whose dusk has been and gone.
+    let today = view.day_in_hand().map_or(view.day(), |in_hand| in_hand.day);
     let state = view.command_state();
     let mut found = matters(&events, view.side());
     // Open first, then closed; each by first day, then plan, run, kind code.

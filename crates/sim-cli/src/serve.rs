@@ -164,12 +164,14 @@ pub fn open(
     let (allied, japanese) = (seat(Side::Allied), seat(Side::Japanese));
     let seed = scenario.world.seed();
     let (name, days) = (scenario.name.clone(), scenario.days);
+    let inside_day = scenario.orders_inside_a_day();
     // The staff each side is given comes from the doctrine; the commands are
     // the scenario's own, given as the commander's (decision 0107).
     let staffs = sim_staff::staffs();
     let mut session = Session::new(scenario.world, &name, days, allied, japanese)
         .with_staffs(staffs)
-        .with_commands(remembered.commands().clone());
+        .with_commands(remembered.commands().clone())
+        .with_orders_inside_a_day(inside_day, remembered.script_inside_day().clone());
     for (side, post) in posts {
         session = session.with_post(*side, *post)?;
     }
@@ -201,9 +203,9 @@ impl Kept {
                 self.seed,
                 &self.remembered,
                 session.handed_in(),
-                // A session hands in no order inside a day yet (decision
-                // 0156, step 3).
-                &save::ScriptInsideDay::new(),
+                // The orders given inside a day, each with its pulse
+                // (decision 0156).
+                session.handed_in_inside_day(),
                 session.commands_handed_in(),
                 session.staff_handed_in(),
                 &self.seats,

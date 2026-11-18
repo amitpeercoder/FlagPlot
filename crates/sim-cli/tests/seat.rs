@@ -279,6 +279,7 @@ fn mcp_at_a_seat_offers_the_nine_tools_and_says_where_the_seat_is() {
             "get_entity",
             "measure",
             "explain",
+            "events",
             "issue_orders",
             "end_day"
         ]
@@ -307,7 +308,7 @@ fn mcp_at_the_area_seat_still_offers_the_staff_tools() {
             json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}),
         ],
     );
-    assert_eq!(answers[1]["result"]["tools"].as_array().unwrap().len(), 27);
+    assert_eq!(answers[1]["result"]["tools"].as_array().unwrap().len(), 28);
 }
 
 fn play(game: &Path, args: &[&str]) -> Output {

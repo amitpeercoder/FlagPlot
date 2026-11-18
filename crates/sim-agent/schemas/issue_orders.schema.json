@@ -22,13 +22,17 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 24
+      "const": 25
     },
     "kind": {
       "const": "issue_orders"
     },
     "for_day": {
       "type": "integer"
+    },
+    "for_pulse": {
+      "description": "Given only for orders given inside a day, at 0600 or 1200 (decision 0156): the pulse of for_day at whose start they are taken in.",
+      "enum": ["morning", "afternoon"]
     },
     "cleared": {
       "type": "boolean"
@@ -50,6 +54,10 @@
               },
               "status": {
                 "const": "queued"
+              },
+              "for": {
+                "description": "For an order given inside a day: the pulse it is taken in at, in words, such as \"the morning pulse of day 1\".",
+                "type": "string"
               },
               "below_reserve": {
                 "description": "For a queued load of supply or fuel (decision 0111): present when, as the stocks stand now, the load may take tons below the reserve of the base it loads from. Your own load order is not held to the reserve; the staff's is. tons is the tons below; text is the sentence a player reads.",
