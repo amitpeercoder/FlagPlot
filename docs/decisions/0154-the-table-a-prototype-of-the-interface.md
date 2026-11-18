@@ -44,3 +44,10 @@ Also seen, and left: a preview is worked at the risk in force, so the order form
 ## What it costs
 
 Two files and a page of documents. It has no test: a change to the seat's tools can break it and nothing will say so. That is accepted for a prototype and is to be mended before it is anything more.
+
+## Three ways of drawing the pieces, to compare
+
+The designer asked on Nov 18, 2026 whether the pieces should be "kind of 3D NATO symbols". The architect's view: take the grammar and not the modern set. Shape says whose a piece is (so colour is not the only sign), an icon says what it is, and a dashed frame says it is only reported, which is what a contact is. The set itself is decades later than 1942, is dense for a player who does not know it, and is thin at sea, where this game mostly is.
+
+The table now draws all three, switched by "Pieces", for him to choose by eye: the plain blocks; tiles in the standard's frames and colours with letter codes; and period tiles in ink on cream with the same shapes and a silhouette. In the two tile styles the enemy's bases, contacts and estimates ashore are pieces too, the reported ones dashed and fading with age. The tiles lean toward the chair so that they read from a seat. Nothing is chosen yet. The letter codes and the silhouettes are the prototype's own and stand for a task force's mission, not for a ship class.
+
