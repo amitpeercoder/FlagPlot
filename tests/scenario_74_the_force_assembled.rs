@@ -1066,14 +1066,31 @@ fn a_unit_another_intent_has() {
 #[test]
 fn short_of_men_at_balanced() {
     let g = play(&short_of_men(500));
-    assert_eq!(g.formed_landings().first(), Some(&(1, landing_kind(1))));
-    assert_eq!(
-        g.staff_limit(1, 2),
-        Some((vec![1, 3], vec![1], Some(1))),
-        "{:?}",
-        g.commands(1)
-    );
-    assert_says(&g.reasons(1), &["short by 400 men"]);
+    // Decision 0159, rule B, item 7: no unit or force is coming, so at
+    // balanced the staff forms nothing and asks the commander.
+    assert!(g.formed_landings().is_empty(), "{:?}", g.formed_landings());
+    for day in 1..=3 {
+        assert!(g.orders(day).is_empty(), "day {day}: {:?}", g.orders(day));
+        assert!(
+            g.commands(day).is_empty(),
+            "day {day}: {:?}",
+            g.commands(day)
+        );
+    }
+    assert_eq!(g.notices(), vec![(1, NoticeKind::CannotBringEnough, 1)]);
+    for day in 1..=3 {
+        let reasons = g.no_orders(day, 1);
+        assert_eq!(reasons.len(), 1, "day {day}: {reasons:?}");
+        assert_says(
+            &reasons[0],
+            &["The staff wants 1000 men and has 600 to hand"],
+        );
+        assert_eq!(
+            reasons[0].contains("hands in the notice that it cannot bring enough"),
+            day == 1,
+            "day {day}: {reasons:?}"
+        );
+    }
 }
 
 #[test]
