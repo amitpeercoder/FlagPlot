@@ -1733,6 +1733,7 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "by_day",
             "wants",
             "defences",
+            "island",
         ],
         "withdraw_intent" => &["intent"],
         "set_limit" => &[

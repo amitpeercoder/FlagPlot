@@ -2,7 +2,7 @@
 //!
 //! It knows exactly what those schemas use: `type` (one name or a list),
 //! `const`, `enum`, `required`, `properties`, `additionalProperties` (a
-//! boolean), `items`, `oneOf` (exactly one branch must match), `$ref` (to
+//! boolean), `items`, `minItems`, `maxItems`, `oneOf` (exactly one branch must match), `$ref` (to
 //! `#/$defs/name` in the same file or `file#/$defs/name` in another file of the
 //! folder), and `format: "decimal"` for strings. Any other keyword that
 //! constrains a value is an error, so a schema cannot quietly use something
@@ -27,6 +27,8 @@ const KNOWN: &[&str] = &[
     "properties",
     "additionalProperties",
     "items",
+    "minItems",
+    "maxItems",
     "oneOf",
     "$ref",
     "format",
@@ -167,6 +169,19 @@ impl Schemas {
                             errors.push(format!("{path}: {name} is not allowed"));
                         }
                     }
+                }
+            }
+        }
+        if let Some(array) = inst.as_array() {
+            let count = array.len() as u64;
+            if let Some(least) = schema.get("minItems").and_then(Value::as_u64) {
+                if count < least {
+                    errors.push(format!("{path}: {count} items, fewer than {least}"));
+                }
+            }
+            if let Some(most) = schema.get("maxItems").and_then(Value::as_u64) {
+                if count > most {
+                    errors.push(format!("{path}: {count} items, more than {most}"));
                 }
             }
         }
