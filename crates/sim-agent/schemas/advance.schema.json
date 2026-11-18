@@ -31,7 +31,7 @@
       "description": "pulses: the pulses asked for were resolved; told: the side was told, in the last pulse, a thing of stop_on; interrupt: a day closed on which an interrupt of the side fired; game_over: the game ended."
     },
     "told": {
-      "description": "Of the things in stop_on, those the side was told in the last pulse resolved (for the afternoon, with the end of the day), each with the numbers of its events. contact: report_received with created true. attack: air_attack_against, base_attacked_against, shore_bombardment_against, salvo_against, engagement_begun. loss: ship_sunk; system_hit with propulsion or flight_deck going out. strike: strike_launched, base_strike_launched. landing: men_landed, ground_fight.",
+      "description": "Of the things in stop_on, those the side was told in the last pulse resolved (for the afternoon, with the end of the day), each with the numbers of its events. contact: report_received with created true. attack: air_attack_against, base_attacked_against, shore_bombardment_against, salvo_against, engagement_begun. loss: ship_sunk, ship_lost_with_base; system_hit with propulsion or flight_deck going out. strike: strike_launched, base_strike_launched. landing: men_landed, ground_fight.",
       "type": "array",
       "items": {
         "type": "object",

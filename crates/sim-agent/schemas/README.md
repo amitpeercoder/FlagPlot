@@ -1020,7 +1020,7 @@ apply; a game that gives none of it is answered as before.
   or `1200`; `next_pulse`, `null` once the game is over; `days_resolved`; `words`), `fired` (the firings of the last
   day closed in the call, as `run` gives them), `game_over`, `result` and `summary`. The event kinds behind each
   thing: `contact`, `report_received` that made a new contact (not a refresh); `attack`, `air_attack_against`,
-  `base_attacked_against`, `shore_bombardment_against`, `salvo_against`, `engagement_begun`; `loss`, `ship_sunk`, and
+  `base_attacked_against`, `shore_bombardment_against`, `salvo_against`, `engagement_begun`; `loss`, `ship_sunk`, `ship_lost_with_base`, and
   `system_hit` of the side's ship whose propulsion or flight deck goes out; `strike`, `strike_launched` and
   `base_strike_launched`; `landing`, `men_landed` and `ground_fight` (a fight ashore, which a side is told of only
   where it has men; it comes at the end of the day).

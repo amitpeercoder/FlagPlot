@@ -145,7 +145,8 @@ pub const STOP_ON: [&str; 5] = ["contact", "attack", "loss", "strike", "landing"
 ///   `shore_bombardment_against` (one of its bases shelled from the sea),
 ///   `salvo_against` (one of its ships fired at in a surface fight) and
 ///   `engagement_begun` (a surface fight its force is in has begun).
-/// - `loss`: `ship_sunk` of one of its ships, and `system_hit` of one of its
+/// - `loss`: `ship_sunk` or `ship_lost_with_base` of one of its ships, and
+///   `system_hit` of one of its
 ///   ships whose propulsion or flight deck went out.
 /// - `strike`: `strike_launched` and `base_strike_launched` of one of its
 ///   air groups.
@@ -160,7 +161,9 @@ pub fn told_as(event: &SideEvent) -> Option<&'static str> {
         | SideEventKind::ShoreBombardmentAgainst { .. }
         | SideEventKind::SalvoAgainst { .. }
         | SideEventKind::EngagementBegun { .. } => Some("attack"),
-        SideEventKind::Whole(EventKind::ShipSunk { .. }) => Some("loss"),
+        SideEventKind::Whole(EventKind::ShipSunk { .. } | EventKind::ShipLostWithBase { .. }) => {
+            Some("loss")
+        }
         SideEventKind::Whole(EventKind::SystemHit {
             system: ShipSystem::Propulsion | ShipSystem::FlightDeck,
             before,
