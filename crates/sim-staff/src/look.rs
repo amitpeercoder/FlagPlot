@@ -367,7 +367,7 @@ impl Day<'_, '_> {
             return;
         };
         let risk = self.state.risk_read_up(end.id);
-        let Ok(choice) = self.choose(end, &limit, place, source_hex, risk) else {
+        let Ok(choice) = self.choose(end, &limit, place, source_hex, risk, false) else {
             return;
         };
         // At preserve the force too few men is no landing (item 10 of 0142):
@@ -520,7 +520,7 @@ impl Day<'_, '_> {
                     .source
                     .and_then(|s| self.view.bases().find(|b| b.id == s).map(|b| b.hex))
                 {
-                    if let Ok(choice) = self.choose(end, &limit, place, source_hex, risk) {
+                    if let Ok(choice) = self.choose(end, &limit, place, source_hex, risk, false) {
                         if let Some((wanted, chosen)) = choice.short {
                             let noticed = self.noticed(NoticeKind::CannotMeet, plan.id);
                             let reason = serving(end, plan)

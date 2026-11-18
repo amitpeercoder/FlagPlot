@@ -40,7 +40,7 @@ Each morning the plan is released, the staff forms what is missing, by `form_int
 
 ## Its measure
 
-10. **Controlled on a day:** at the end of the day every named place holds a base of the side, and in each the side's supply is above the reserves of its bases there and its days of supply in the hex are at least the floor of the supply intent under the place's hold (5 days unless the commander set another). Worked from the side's own view and events, stored nowhere, as a hold's measure is (decision 0117, item 14).
+10. **Controlled on a day:** at the end of the day every named place is the side's (a place that names a base, when that base is the side's; mended on Nov 18, 2026, decision 0152's ruling 3), and in each the side's supply is above the reserves of its bases there and its days of supply in the hex are at least the floor of the supply intent under the place's hold (5 days unless the commander set another). Worked from the side's own view and events, stored nowhere, as a hold's measure is (decision 0117, item 14).
 11. **It gives** the days in force, the days controlled, and for each place whether it is the side's and its days of supply today. It is shown in `command_state` and in `report`, in the words "controlled on N of M days in force".
 12. **The intent is never marked complete.** It stands, and what it formed stands, until the commander withdraws it.
 

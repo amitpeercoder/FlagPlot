@@ -435,3 +435,7 @@ path = "scenario_74_the_force_assembled.rs"
 [[test]]
 name = "scenario_76_controlling_an_island"
 path = "scenario_76_controlling_an_island.rs"
+
+[[test]]
+name = "scenario_77_forces_with_men_aboard"
+path = "scenario_77_forces_with_men_aboard.rs"

@@ -1,0 +1,193 @@
+# Scenario 77: forces with men aboard.
+#
+# Decision 0152, step 8 of stage 3, third part. The commander says "control
+# the island" and nothing else. The island has one place: an airfield the enemy
+# holds with nobody on it (base 2, at B). The side's men are at sea in their
+# transports, as on 7 August 1942. The staff lands them, takes the airfield,
+# sends the builders who become usable on day 4, and feeds the place with the
+# ships that lie empty at the source.
+#
+# The map is scenario 27's: A at (0,0), a coast hex with port size 5, B at
+# (4,0), a coast hex with port size 0, and C at (0,6), a coast hex with port
+# size 0. Allied base 1 lies at A with 1,000 t of supply; Japanese base 2, an
+# airfield with no gun, no aircraft, no man and no stock, lies at B, on the
+# Allied map. No base has a reserve or fuel. Task force 1, two placeholder troop
+# transports, lies stopped at sea at (2,0), its home port base 1, with unit 1
+# (600 fighting men) in ship 1 with 30 t of supply and unit 2 (400 working men)
+# in ship 2. Task force 2, one transport, lies in port at base 1 and may be used
+# from day 4, with unit 3 (300 working men) and 20 t of supply aboard. Task force
+# 3, one transport, lies stopped at base 1 with nothing aboard. The Allied side
+# holds no contact and no estimate. The island is island 1, "Placeholder island":
+# base 2. On day 1 the commander states "control island 1", names no forces, and
+# gives leave to prepare and to launch. The game is 8 days. There is no Japanese
+# man, so no die is rolled.
+#
+# The hand calculation is in tests/scenario_77_forces_with_men_aboard.rs. The
+# test runs this file on the frozen step 1 figures, in
+# data/reference/ground_placeholder_scenario_77.toml, which this file names and
+# which has no figure of its own, so that run by itself it plays the game its
+# test proves. It builds its variants from the text of this file using the
+# markers below.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures, island and map are
+# invented.
+
+name = "Placeholder scenario 77: Forces with men aboard"
+placeholder = true
+seed = 1942
+days = 8
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+ground = "../reference/ground_placeholder_scenario_77.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: no gun, no aircraft, no man, no stock.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped at sea at (2,0), with
+# base 1 their home port. Unit 1 fills ship 1, which has 30 t of supply
+# aboard; unit 2 goes into ship 2.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+q = 2
+r = 0
+home_port = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 30
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# Task force 2: one placeholder troop transport in port at base 1, usable from
+# day 4 (decision 0140), with unit 3 and 20 t of supply aboard.
+[[task_force]]
+id = 2
+name = "Placeholder transport force 2"
+side = "allied"
+at_base = 1
+home_port = 1
+available_from = 4
+mission = "transport"
+
+[[ship]]
+id = 3
+name = "Placeholder troop transport 3"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 20
+task_force = 2
+
+# Task force 3: one placeholder troop transport, stopped at base 1, empty.
+[[task_force]]
+id = 3
+name = "Placeholder transport force 3"
+side = "allied"
+at_base = 1
+home_port = 1
+mission = "transport"
+
+[[ship]]
+id = 4
+name = "Placeholder troop transport 4"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 3
+
+# The land units, aboard. Unit 1 is a fighting unit, units 2 and 3 are working
+# units; each at the standard of experience, 2, and with every skill at 2, the
+# defaults.
+# UNITS_MARKER
+[[land_unit]]
+id = 1
+name = "Placeholder Infantry"
+side = "allied"
+men = 600
+task_force = 1
+
+[[land_unit]]
+id = 2
+name = "Placeholder Pioneers"
+side = "allied"
+working = true
+men = 400
+task_force = 1
+
+[[land_unit]]
+id = 3
+name = "Placeholder Builders"
+side = "allied"
+working = true
+men = 300
+task_force = 2
+
+# The island: base 2.
+# ISLANDS_MARKER
+[[island]]
+number = 1
+name = "Placeholder island"
+places = [{ base = 2 }]
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "control_island"
+island = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
