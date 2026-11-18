@@ -609,7 +609,7 @@ fn the_run() {
                 base,
                 loaded_t,
                 ..
-            } => Some((e.day, ship.raw(), *loaded_t)).filter(|_| base.raw() == 1),
+            } if base.raw() == 1 => Some((e.day, ship.raw(), *loaded_t)),
             _ => None,
         })
         .collect();

@@ -967,11 +967,12 @@ fn keep_base_3_supplied_with_floor_5_is_formed_on_day_2_under_the_hold() {
     // for the hex.
     assert!(g.formed(keep_kind(2)).is_empty(), "{:?}", g.forms());
     // It is served for the first time on day 3: nothing serves it on day 2.
-    assert!(g.reasons_serving(2, 7).is_empty(), "{}", g.reasons_serving(2, 7));
-    assert_says(
-        &g.reasons_serving(3, 7),
-        &["25 t over 5 t a day", "15 t"],
+    assert!(
+        g.reasons_serving(2, 7).is_empty(),
+        "{}",
+        g.reasons_serving(2, 7)
     );
+    assert_says(&g.reasons_serving(3, 7), &["25 t over 5 t a day", "15 t"]);
 }
 
 #[test]
@@ -1017,10 +1018,7 @@ fn the_hours_of_the_landing_and_of_task_forces_2_and_3() {
     // carries no run.
     assert_eq!(g.arrivals_of(1), vec![(B, n(8)), (A, n(34))]);
     let steaming = g.steaming_of(1);
-    assert!(
-        steaming.contains(&(1, Pulse::Afternoon, B)),
-        "{steaming:?}"
-    );
+    assert!(steaming.contains(&(1, Pulse::Afternoon, B)), "{steaming:?}");
     // Task forces 2 and 3 sail at hour 72, arrive at B at hour 88, steam for
     // A at hour 96 and arrive at A at hour 112.
     for tf in [2, 3] {
@@ -1321,7 +1319,10 @@ fn two_islands_no_refusal_and_no_run_is_read_as_the_other_islands() {
             if let IntentKind::KeepSupplied { base: kept, .. } = g.intent_state(served.raw()).kind {
                 let found = g.base(day, kept.raw()).expect("the kept base");
                 assert_eq!(found.side, Side::Allied, "day {day}: {served:?}");
-                assert_eq!(found.hex, hex, "day {day}: {served:?} (island of base {base})");
+                assert_eq!(
+                    found.hex, hex,
+                    "day {day}: {served:?} (island of base {base})"
+                );
             }
             if let Given::Route(_, waypoints, act) = given(order) {
                 assert!(
