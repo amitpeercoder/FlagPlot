@@ -541,9 +541,16 @@ pub enum TaskForceOrder {
     /// 0111). A level, not an addition: a force with that much aboard loads
     /// nothing. A standing order of the "cargo" kind, accepted under the
     /// conditions of `Load`, with a weight above 0. Added at the end.
+    ///
+    /// `each_t`, where given, is the most any one ship is to hold of the
+    /// cargo (decision 0162, 1): each ship, in ship order, takes the least of
+    /// its room, what is left of the weight and `each_t` less what it has
+    /// aboard of the cargo, not below 0. A level, like the weight: a ship
+    /// holding that much or more takes none and gives none up. Above 0.
     LoadTo {
         cargo: Cargo,
         weight_t: Fixed,
+        each_t: Option<Fixed>,
     },
     /// Join this force to the named force of the side, stopped at the same
     /// base (decision 13 of 0111). The named force keeps its number, orders
@@ -1023,6 +1030,9 @@ pub enum RejectReason {
     /// arc and a land unit's posture are taken (decision 0156, 3). Added at
     /// the end of the enum.
     GivenAtDusk,
+    /// A load order's level, the most a ship is to hold, is 0 or below
+    /// (decision 0162, 3). Added at the end of the enum.
+    LevelNotAboveZero(Fixed),
 }
 
 impl RejectReason {
@@ -1170,6 +1180,9 @@ impl fmt::Display for RejectReason {
             ),
             RejectReason::WeightNotAboveZero(weight) => {
                 write!(f, "weight {weight} t is not above 0")
+            }
+            RejectReason::LevelNotAboveZero(level) => {
+                write!(f, "the most a ship is to hold, {level} t, is not above 0")
             }
             RejectReason::NoShipsToForm => f.write_str("no ships are listed to form a force"),
             RejectReason::ShipNamedTwice(ship) => write!(f, "{ship} is listed twice"),

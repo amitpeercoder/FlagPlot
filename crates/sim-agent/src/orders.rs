@@ -74,11 +74,23 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
             TaskForceOrder::Unload => json!({ "kind": "unload" }),
             // A load up to a weight (decision 0111): the cargo is always
             // named, so the weight belongs to one.
-            TaskForceOrder::LoadTo { cargo, weight_t } => json!({
-                "kind": "load",
-                "cargo": cargo.name(),
-                "weight_t": fixed_text(*weight_t),
-            }),
+            // A level is written only where there is one, so a load with
+            // none is written as it was (decision 0162).
+            TaskForceOrder::LoadTo {
+                cargo,
+                weight_t,
+                each_t,
+            } => {
+                let mut body = json!({
+                    "kind": "load",
+                    "cargo": cargo.name(),
+                    "weight_t": fixed_text(*weight_t),
+                });
+                if let Some(level) = each_t {
+                    body["each_t"] = json!(fixed_text(*level));
+                }
+                body
+            }
             // The force joined to is written as the engine's handle, as a
             // land unit is in a saved game.
             TaskForceOrder::JoinTo(into) => json!({
@@ -296,13 +308,17 @@ pub(crate) fn below_reserve(ctx: &crate::common::Ctx<'_>, kind: &OrderKind) -> O
     let OrderKind::TaskForce { target, order } = kind else {
         return None;
     };
-    let (cargo, weight) = match order {
-        TaskForceOrder::Load => (Cargo::Supply, None),
-        TaskForceOrder::LoadFuel => (Cargo::Fuel, None),
-        TaskForceOrder::LoadTo { cargo, weight_t } => (*cargo, Some(*weight_t)),
+    let (cargo, weight, level) = match order {
+        TaskForceOrder::Load => (Cargo::Supply, None, None),
+        TaskForceOrder::LoadFuel => (Cargo::Fuel, None, None),
+        TaskForceOrder::LoadTo {
+            cargo,
+            weight_t,
+            each_t,
+        } => (*cargo, Some(*weight_t), *each_t),
         TaskForceOrder::LoadUnit {
             cargo: Some(cargo), ..
-        } => (*cargo, None),
+        } => (*cargo, None, None),
         _ => return None,
     };
     let force = ctx.forces.get(target)?;
@@ -321,10 +337,13 @@ pub(crate) fn below_reserve(ctx: &crate::common::Ctx<'_>, kind: &OrderKind) -> O
                 Cargo::Supply => ship.supply_t,
                 Cargo::Fuel => ship.cargo_fuel_t,
             };
-            (
-                aboard + of_cargo,
-                room + capacity - ship.supply_t - ship.cargo_fuel_t,
-            )
+            // With a level a ship's room counts only up to it (decision
+            // 0162), as the engine reckons it.
+            let mut ship_room = capacity - ship.supply_t - ship.cargo_fuel_t;
+            if let Some(level) = level {
+                ship_room = ship_room.min((level - of_cargo).max(Fixed::ZERO));
+            }
+            (aboard + of_cargo, room + ship_room)
         },
     );
     let asks = match weight {
@@ -419,7 +438,10 @@ pub fn land_unit_number(handle: &str) -> Option<u32> {
 ///
 /// A load with no unit may name `"weight_t"`, a decimal string: the tons of
 /// the cargo the force is to have aboard, all its ships together (decision
-/// 0111). A weight with a unit is malformed.
+/// 0111). A weight with a unit is malformed. With a weight it may name
+/// `"each_t"`, a decimal string above 0: the most any one ship is to hold of
+/// the cargo (decision 0162). A level with no weight, with a unit, or at 0 or
+/// below is malformed.
 fn load_from(value: &Value) -> Result<TaskForceOrder, String> {
     let cargo = match value.get("cargo") {
         None => None,
@@ -429,6 +451,23 @@ fn load_from(value: &Value) -> Result<TaskForceOrder, String> {
         None | Some(Value::Null) => None,
         Some(_) => Some(fixed(value, "weight_t")?),
     };
+    let level = match value.get("each_t") {
+        None | Some(Value::Null) => None,
+        Some(_) => Some(fixed(value, "each_t")?),
+    };
+    if let Some(level) = level {
+        if weight.is_none() {
+            return Err(
+                "\"each_t\" is for a load with a \"weight_t\": the most a ship is to hold goes with the weight the force is to have"
+                    .to_string(),
+            );
+        }
+        if level <= Fixed::ZERO {
+            return Err(format!(
+                "\"each_t\" is {level}: the most a ship is to hold must be above 0"
+            ));
+        }
+    }
     if weight.is_some() && value.get("unit").is_some() {
         return Err(
             "\"weight_t\" is for a load of supply or fuel with no \"unit\": a load with a unit takes the unit"
@@ -445,6 +484,7 @@ fn load_from(value: &Value) -> Result<TaskForceOrder, String> {
                         Cargo::Supply
                     },
                     weight_t: weight.expect("checked"),
+                    each_t: level,
                 })
             }
             None | Some("supply") => Ok(TaskForceOrder::Load),
@@ -966,10 +1006,37 @@ mod tests {
             order,
             TaskForceOrder::LoadTo {
                 cargo: Cargo::Fuel,
-                weight_t: "40".parse().expect("a decimal")
+                weight_t: "40".parse().expect("a decimal"),
+                each_t: None,
             }
         );
         assert_eq!(written(order), fuel);
+        // A level reads and writes back (decision 0162).
+        let level: Value = serde_json::from_str(
+            r#"{"kind":"load","cargo":"supply","weight_t":"100","each_t":"40"}"#,
+        )
+        .expect("JSON");
+        let order = load_of(&level).expect("parses");
+        assert_eq!(
+            order,
+            TaskForceOrder::LoadTo {
+                cargo: Cargo::Supply,
+                weight_t: "100".parse().expect("a decimal"),
+                each_t: Some("40".parse().expect("a decimal")),
+            }
+        );
+        assert_eq!(written(order), level);
+        // Refused with no weight, with a unit, and at 0 or below.
+        for text in [
+            r#"{"kind":"load","each_t":"40"}"#,
+            r#"{"kind":"load","unit":"land_unit:3","each_t":"40"}"#,
+            r#"{"kind":"load","unit":"land_unit:3","weight_t":"100","each_t":"40"}"#,
+            r#"{"kind":"load","weight_t":"100","each_t":"0"}"#,
+            r#"{"kind":"load","weight_t":"100","each_t":"-5"}"#,
+        ] {
+            let value: Value = serde_json::from_str(text).expect("JSON");
+            assert!(load_of(&value).is_err(), "{text}");
+        }
         // No cargo named is supply.
         let bare: Value =
             serde_json::from_str(r#"{"kind":"load","weight_t":"7.5"}"#).expect("JSON");

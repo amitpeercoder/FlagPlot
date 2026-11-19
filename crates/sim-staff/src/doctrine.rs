@@ -1086,13 +1086,15 @@ fn new_run(
             target,
             Step::LoadTo {
                 weight_t: run.weight_t,
+                each_t: run.level.as_ref().map(|(level, _)| *level),
             },
             base_reason(&format!(
-                "Load order: until {} is aboard ({} aboard now + the load of {}); {}.",
+                "Load order: until {} is aboard ({} aboard now + the load of {}); {}.{}",
                 tons(run.weight_t),
                 tons(run.aboard_before_t),
                 tons(run.taken_t),
-                slowest_line(&run.timing.load)
+                slowest_line(&run.timing.load),
+                run.level.as_ref().map_or("", |(_, words)| words.as_str())
             ))
             .done(),
         );
@@ -1828,8 +1830,9 @@ fn limits_words(lines: &[(ShipId, Fixed, Fixed)], night: Fixed) -> String {
         .join(", ")
 }
 
-/// Decision 0145, 4 to 8, on the morning a run is ordered: where it goes by
-/// night, the speed it will go at, and its load cut to the night's limit.
+/// Decision 0145, 4 to 7, and decision 0162, 5 to 8, on the morning a run
+/// is ordered: where it goes by night, the speed it will go at, the level no
+/// ship is to hold more than, and its load cut to what the levels allow.
 fn night_load(planner: &Planner<'_, '_>, run: &mut RunPlan) {
     let params = &planner.params;
     let risk = planner.state().risk_read_up(params.intent.id);
@@ -1840,14 +1843,54 @@ fn night_load(planner: &Planner<'_, '_>, run: &mut RunPlan) {
     let near = crate::night::base_near_words(planner.view, base, hexes, params.destination_hex);
     let tried = tried_for(planner, &run.ships);
     let tried_text = crate::night::tried_words(&tried);
+    // Each ship's supply aboard and room, in ship order, and the rate it
+    // lands at (the berths first, in ship order, then by lighter).
+    let ships: Vec<(ShipId, Fixed, Fixed)> = run
+        .ships
+        .iter()
+        .filter_map(|id| {
+            let ship = planner.fleet.ships.get(id)?;
+            Some((*id, ship.supply_t, planner.ship_room(ship)))
+        })
+        .collect();
+    let lines: Vec<(Fixed, Fixed)> = ships
+        .iter()
+        .map(|(_, aboard, room)| (*aboard, *room))
+        .collect();
     let after: Vec<(ShipId, Fixed)> = planner
         .distribute(&run.ships, run.taken_t)
         .into_iter()
         .map(|(ship, _, after)| (ship, after))
         .collect();
-    let rated = landing_rates(planner, &after);
-    let loads: Vec<(Fixed, Fixed)> = rated.iter().map(|(_, tons, rate)| (*tons, *rate)).collect();
-    let Some(chosen) = crate::night::choose(&tried, &loads) else {
+    let rates: Vec<Fixed> = landing_rates(planner, &after)
+        .into_iter()
+        .map(|(_, _, rate)| rate)
+        .collect();
+    // The level at a speed's night hours: the least of the ships' limits
+    // (decision 0162, 6).
+    let level_at = |night: Fixed| {
+        rates
+            .iter()
+            .map(|rate| *rate * night)
+            .min()
+            .unwrap_or(Fixed::ZERO)
+    };
+    // Room for the load at a speed (decision 0162, 7): the load as the level
+    // spreads it is all taken, and each ship's part is inside its limit.
+    let fits = |night: Fixed| {
+        if rates.len() != lines.len() {
+            return false;
+        }
+        let parts = crate::night::spread(&lines, run.taken_t, level_at(night));
+        let taken = parts.iter().fold(Fixed::ZERO, |sum, part| sum + *part);
+        taken == run.taken_t
+            && lines
+                .iter()
+                .zip(parts.iter())
+                .zip(rates.iter())
+                .all(|(((aboard, _), part), rate)| *aboard + *part <= *rate * night)
+    };
+    let Some(chosen) = crate::night::choose_by(&tried, fits) else {
         let then = match risk {
             Risk::Preserve => "at preserve the force it is loaded and will not sail while no speed brings it there in the dark",
             _ => "at balanced it goes by day at cruising speed",
@@ -1858,41 +1901,62 @@ fn night_load(planner: &Planner<'_, '_>, run: &mut RunPlan) {
         return;
     };
     let night = chosen.night.unwrap_or(Fixed::ZERO);
-    let lines: Vec<(Fixed, Fixed, Fixed)> = run
-        .ships
-        .iter()
-        .zip(rated.iter())
-        .filter_map(|(id, (_, _, rate))| {
-            let ship = planner.fleet.ships.get(id)?;
-            Some((ship.supply_t, planner.ship_room(ship), *rate * night))
-        })
-        .collect();
-    let most = crate::night::weight_within(&lines);
+    let level = level_at(night);
+    let most = crate::night::most_within(&lines, level);
+    let level_text = level_words(&rates, night, level);
     let mut cut_words = String::new();
-    if run.weight_t > most {
+    if run.taken_t > most {
         let before = run.weight_t;
-        let taken = (most - run.aboard_before_t).max(Fixed::ZERO);
-        run.taken_t = taken;
-        run.weight_t = run.aboard_before_t + taken;
+        run.taken_t = most;
+        run.weight_t = run.aboard_before_t + most;
         run.load_t = run.weight_t;
         let cut = format!(
-            "the night's limit: no ship carries more than it can land in the night's {night} hours, so the load of {before} t is cut to {} t",
+            "the night's limit: no ship is to hold more than {level} t ({level_text}), so the load of {before} t is cut to {} t",
             run.weight_t
         );
         cut_words = format!(" The load of {before} t is cut to {} t.", run.weight_t);
         run.cuts.push(cut);
     }
-    let after: Vec<(ShipId, Fixed)> = planner
-        .distribute(&run.ships, run.taken_t)
-        .into_iter()
-        .map(|(ship, _, after)| (ship, after))
+    let parts = crate::night::spread(&lines, run.taken_t, level);
+    let spread: Vec<(ShipId, Fixed, Fixed)> = ships
+        .iter()
+        .zip(parts.iter())
+        .zip(rates.iter())
+        .map(|(((id, aboard, _), part), rate)| (*id, *aboard + *part, *rate))
         .collect();
-    let rated = landing_rates(planner, &after);
-    run.night = Some(format!(
-        "By night: {near}; {tried_text}. It goes at {}, with {night} hours of the night left on arrival: {}.{cut_words} Its days are reckoned at cruising speed.",
-        crate::night::speed_name(chosen.speed),
-        limits_words(&rated, night)
+    let takes = ships
+        .iter()
+        .zip(parts.iter())
+        .map(|((id, aboard, _), part)| {
+            format!("{id} takes {part} t and holds {} t", *aboard + *part)
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    run.level = Some((
+        level,
+        format!(" No ship is to hold more than {level} t ({level_text}): {takes}."),
     ));
+    run.night = Some(format!(
+        "By night: {near}; {tried_text}. It goes at {}, with {night} hours of the night left on arrival: no ship is to hold more than {level} t ({level_text}); {}.{cut_words} Its days are reckoned at cruising speed.",
+        crate::night::speed_name(chosen.speed),
+        limits_words(&spread, night)
+    ));
+}
+
+/// How the level was reached (decision 0162, 6): the least of the ships'
+/// limits, each the place's rate for it times the night's hours.
+fn level_words(rates: &[Fixed], night: Fixed, level: Fixed) -> String {
+    let distinct: BTreeSet<Fixed> = rates.iter().copied().collect();
+    match distinct.len() {
+        1 => format!(
+            "{} t an hour x {night} hours, the limit of every ship",
+            distinct.iter().next().copied().unwrap_or(Fixed::ZERO)
+        ),
+        _ => format!(
+            "the least of the ships' limits, at {} t an hour x {night} hours = {level} t",
+            distinct.iter().next().copied().unwrap_or(Fixed::ZERO)
+        ),
+    }
 }
 
 /// Decision 0145, 5, 11 and 12, on the morning a loaded run sails: its

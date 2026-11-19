@@ -215,10 +215,12 @@ fn examples() -> Vec<OrderKind> {
         tf(TaskForceOrder::LoadTo {
             cargo: Cargo::Supply,
             weight_t: fx("250.5"),
+            each_t: None,
         }),
         tf(TaskForceOrder::LoadTo {
             cargo: Cargo::Fuel,
             weight_t: fx("40"),
+            each_t: None,
         }),
         tf(TaskForceOrder::JoinTo(TaskForceId::new(5))),
         tf(TaskForceOrder::StandDown),

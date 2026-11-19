@@ -130,6 +130,10 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::NotAFighter => base("not_a_fighter"),
         RejectReason::AircraftCannotSearch => base("aircraft_cannot_search"),
         RejectReason::GivenAtDusk => base("given_at_dusk"),
+        // Decision 0162.
+        RejectReason::LevelNotAboveZero(level) => {
+            base("level_not_above_zero").num("each_t", *level)
+        }
         RejectReason::PatrolShareOutOfRange(share) => {
             base("patrol_share_out_of_range").num("share", *share)
         }

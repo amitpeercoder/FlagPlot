@@ -621,6 +621,7 @@ fn a_commanders_second_load_may_take_the_stock_below_the_reserve() {
             *o == TaskForceOrder::LoadTo {
                 cargo: Cargo::Supply,
                 weight_t: n(450),
+                each_t: None,
             }
         })
     };

@@ -284,6 +284,7 @@ fn given(o: &StaffOrder) -> Given {
                 TaskForceOrder::LoadTo {
                     cargo: Cargo::Supply,
                     weight_t,
+                    ..
                 },
             ..
         } => Given::LoadTo(*weight_t),
@@ -789,12 +790,26 @@ fn the_nights_limit() {
     });
     let g = play_with(&text(), &options);
     let limit = n(4) * (n(12) - fast());
-    assert_eq!(g.orders(5), vec![Given::LoadTo(limit)]);
+    // As the doc comment restates it for decision 0162: the load of 60 t is
+    // cut to 42 2/3 t, 21 1/3 t in each ship, and the order names the level.
+    let load = limit + limit;
+    assert_eq!(g.orders(5), vec![Given::LoadTo(load)]);
+    let level = g.handed[&5].orders.iter().find_map(|o| match &o.kind {
+        OrderKind::TaskForce {
+            order: TaskForceOrder::LoadTo { each_t, .. },
+            ..
+        } => Some(*each_t),
+        _ => None,
+    });
+    assert_eq!(level, Some(Some(limit)));
     assert_eq!(g.truth[5].ships[&ShipId::new(1)].supply_t, limit);
-    assert_eq!(g.truth[5].ships[&ShipId::new(2)].supply_t, Fixed::ZERO);
+    assert_eq!(g.truth[5].ships[&ShipId::new(2)].supply_t, limit);
     assert_says(
-        &text_of(g.order_reason(5, &Given::LoadTo(limit))),
-        &[&format!("is cut to {limit} t")],
+        &text_of(g.order_reason(5, &Given::LoadTo(load))),
+        &[
+            &format!("is cut to {load} t"),
+            &format!("No ship is to hold more than {limit} t"),
+        ],
     );
 }
 

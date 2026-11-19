@@ -964,6 +964,10 @@ impl World {
                     TaskForceOrder::LoadTo { weight_t, .. } if *weight_t <= Fixed::ZERO => {
                         Err(RejectReason::WeightNotAboveZero(*weight_t))
                     }
+                    TaskForceOrder::LoadTo {
+                        each_t: Some(level),
+                        ..
+                    } if *level <= Fixed::ZERO => Err(RejectReason::LevelNotAboveZero(*level)),
                     TaskForceOrder::Load
                     | TaskForceOrder::LoadFuel
                     | TaskForceOrder::LoadTo { .. } => {
@@ -1705,9 +1709,14 @@ impl World {
                             ..CargoOrder::new(CargoAction::LoadFuel, order.id, None)
                         });
                     }
-                    TaskForceOrder::LoadTo { cargo, weight_t } => {
+                    TaskForceOrder::LoadTo {
+                        cargo,
+                        weight_t,
+                        each_t,
+                    } => {
                         task_force.cargo_order = Some(CargoOrder {
                             weight_t: Some(*weight_t),
+                            each_t: *each_t,
                             heeds_reserve,
                             ..CargoOrder::new(CargoAction::load_of(Some(*cargo)), order.id, None)
                         });

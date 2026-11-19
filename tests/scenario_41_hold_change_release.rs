@@ -666,6 +666,7 @@ fn load_to(raw: u32, weight: i64) -> OrderKind {
         TaskForceOrder::LoadTo {
             cargo: sim_core::orders::Cargo::Supply,
             weight_t: n(weight),
+            each_t: None,
         },
     )
 }

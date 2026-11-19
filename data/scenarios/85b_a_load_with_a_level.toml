@@ -1,0 +1,85 @@
+# Scenario 85b: a load with a level, the order alone.
+#
+# Decision 0162, the second game of scenario 85's hand calculation. On the
+# map of scenario 85 with no staff: task force 1, three placeholder fast
+# transports with 50 t of cargo (class 13), stopped at Allied base 1 with
+# 10 t, nothing and 45 t of supply aboard. The Allied side orders a load of
+# supply to a weight of 100 t, no ship to hold more than 40 t. The ships end
+# with 40 t, 15 t and 45 t; base 1 ends with 955 t. The game is 1 day.
+#
+# The hand calculation is in tests/scenario_85_a_nights_load_spread.rs. The
+# test runs this file on the frozen step 1 figures and builds its variants
+# from its text.
+#
+# PLACEHOLDER DATA. The bases, ships and map are invented.
+
+name = "Placeholder scenario 85b: A load with a level"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_fast_transport_50t.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+# Allied base 1 at A.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 1000
+
+# Task force 1: three placeholder fast transports with 50 t of cargo,
+# stopped at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder fast transport 1"
+class = 13
+side = "allied"
+fuel_t = 500
+supply_t = 10
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder fast transport 2"
+class = 13
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder fast transport 3"
+class = 13
+side = "allied"
+fuel_t = 500
+supply_t = 45
+task_force = 1
+
+# The Allied side's order: supply to a weight of 100 t, no ship to hold more
+# than 40 t.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "load"
+cargo = "supply"
+weight_t = 100
+each_t = 40
