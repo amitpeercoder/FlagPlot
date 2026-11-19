@@ -89,3 +89,13 @@ Readings the record did not make:
 3. **Readings 3 to 6 stand as made.** Asagiri stays out; ruling 12 needs no exception; the run of 4 September is read; no entry is made for a run no ship is read from.
 4. **The other disputed runs are not ruled here** (29 August, 5 and 6 September, the ships of 31 August and of 11 September): no ship's figure rests on them in part A. They are ruled with step 5, where the scenario's runs must each be given their men.
 
+## After the Navy's data book of 1945
+
+Read on Nov 19, 2026 with the designer's leave to download it (`docs/research/oob/ships-data-1945.md`; volume III, the auxiliaries, as of 15 April 1945). The architect checked one page against the print (Heywood, printed p. 247: limiting displacement 14,450 tons, troops 75 officers and 1,203 enlisted).
+
+- **It does not unblock part B.** The book gives no radius or endurance for any auxiliary, fuel only in barrels with no weight for a barrel, and no standard or light displacement for these ships: only a trial and a limiting displacement, both of the ship loaded. The American transports, cargo ships and destroyer-transports stay placeholders (decision 0165, answer 2).
+- **What it adds:** cargo by weight and by volume, troop capacity, speed (seven as designed, the rest on trial) and the battery, for the 17 transports and cargo ships and the two destroyer-transports still afloat in 1945. McCawley, George F. Elliott, Colhoun, Gregory, Little and McKean are not in it.
+- **A figure of April 1945 is not read for August 1942** where the ship was rebuilt between: the transports became attack transports, with more boats and troop spaces and other guns. A designed speed is of the hull and may be read. Whether a 1945 cargo or troop figure may stand for 1942 is ruled ship by ship when part B is built, and not before.
+- **Rule 2 stands on other rows.** The light displacements it reads are those the earlier round filed from other sources; this book has none.
+- **What would unblock part B:** an endurance with its speed and a fuel capacity in tons, or the Navy's weight for a barrel of its fuel oil with a radius. The sources still unread are the ships' own action reports and logs for August 1942 and the war diaries of the transport divisions. They are not sought now: the Japanese runs are the larger gain for the game and are derived.
+
