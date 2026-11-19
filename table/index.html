@@ -36,10 +36,13 @@ button:disabled { opacity: 0.45; cursor: default; }
 .view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
 .view button { min-height: 34px; padding: 0 12px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
 .view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
-.tray h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
+.tray h2 { margin: 4px 0 0; font-size: 14px; font-weight: 600; letter-spacing: 0.16em; opacity: 0.85; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
 .papers { display: flex; flex-wrap: wrap; gap: 6px; }
 .papers:empty { display: none; }
+.tray h2:has(+ .papers:empty), .tray h2:has(+ #signals:empty) { display: none; }
+.tray h2 + .papers, .tray h2 + #signals { margin-top: -4px; }
+.papers .mark { display: inline-block; min-width: 18px; height: 18px; margin-left: 8px; padding: 0 5px; border-radius: 9px; background: var(--enemy); color: #fff; font-size: 12px; line-height: 18px; text-align: center; letter-spacing: 0; vertical-align: 1px; }
 .papers button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 34px; padding: 0 12px; background: var(--paper-old); color: var(--paper-ink); border: 0; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
 .slip.decide { background: var(--paper); }
@@ -193,8 +196,11 @@ button:disabled { opacity: 0.45; cursor: default; }
 </div>
 
 <aside class="tray" aria-label="Signals">
+  <h2>Command</h2>
+  <div id="papers" class="papers" role="toolbar" aria-label="Your directives, intents and what you have signed"></div>
+  <h2>Staff</h2>
+  <div id="papers-staff" class="papers" role="toolbar" aria-label="The staff's standing papers"></div>
   <h2>Signals</h2>
-  <div id="papers" class="papers" role="toolbar" aria-label="Standing papers"></div>
   <div id="signals"></div>
 </aside>
 
@@ -727,7 +733,9 @@ button:disabled { opacity: 0.45; cursor: default; }
   // ---- the signals tray ----
   // A standing paper the commander may read at any time: a button in the
   // row above the signals, not a signal of its own.
-  function paper(text, fn) { var b = el('button', '', text); b.type = 'button'; b.addEventListener('click', fn); $('papers').appendChild(b); return b; }
+  function paper(text, fn, staff) { var b = el('button', '', text); b.type = 'button'; b.addEventListener('click', fn); $(staff ? 'papers-staff' : 'papers').appendChild(b); return b; }
+  // A mark on a paper that wants the commander: a count, and what it counts.
+  function mark(b, n, words) { if (!n) return; var m = el('span', 'mark', String(n)); b.appendChild(m); b.title = (b.title ? b.title + '. ' : '') + words; b.setAttribute('aria-label', b.textContent.replace(/\d+$/, '').trim() + ': ' + words); }
   function slip(from, stamp, title, body, decide) {
     var a = el('article', 'slip' + (decide ? ' decide' : '')), f = el('div', 'from'); f.appendChild(el('span', '', from)); if (stamp) f.appendChild(el('span', 'stamp' + (stamp === 'FOR DECISION' || stamp === 'STOPPED THE CLOCK' ? '' : ' ok'), stamp));
     a.appendChild(f); if (title) a.appendChild(el('strong', '', plainWords(title))); if (body) a.appendChild(el('div', '', plainWords(body))); $('signals').appendChild(a); return a;
@@ -746,7 +754,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   function showSignals() {
-    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = '';
+    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = '';
     if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
     lastTold.forEach(function (t) { slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, t.lines.slice(0, 4).join(' · '), true); });
     (s.holds || []).forEach(function (h) {
@@ -771,11 +779,22 @@ button:disabled { opacity: 0.45; cursor: default; }
       var l = slip('STANDING LEAVE', s.leaves.launch ? 'GIVEN' : null, s.leaves.launch ? 'The staff may launch a plan that is ready' : 'Every plan waits for your word before it launches', null, !s.leaves.launch);
       button(l, s.leaves.launch ? 'WITHHOLD IT' : 'GIVE LEAVE TO LAUNCH', !s.leaves.launch, function () { act('set_leave', { leave: 'launch', given: !s.leaves.launch }); });
     }
-    if (s.queued && s.queued.length) paper('Signed \u00B7 ' + s.queued.length, readSigned).title = 'What you have signed, for the staff at 1800';
+    // Command: the directives, the commander's own intents and what he has
+    // signed. An intent is marked where a plan under it waits for his word.
     showDirectives();
-    roots.forEach(function (r) { var b = paper(sayIntent(r, {}), function () { readPlan(r.number); }); b.title = 'Your intent ' + r.number + (r.in_force ? ', in force' : ', ended') + ': read the plan'; if (!r.in_force) b.style.opacity = 0.6; });
-    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) paper('Reinforcements', readSchedule);
-    if (clock.at === 'dusk') paper('Report', readReport); else { paper('Return', readBriefing); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
+    roots.forEach(function (r) {
+      var b = paper(sayIntent(r, {}), function () { readPlan(r.number); }); b.title = 'Your intent ' + r.number + (r.in_force ? ', in force' : ', ended') + ': read the plan'; if (!r.in_force) b.style.opacity = 0.6;
+      var under = {}; (function walk(n) { under[n] = true; s.intents.forEach(function (c) { if (c.parent === n) walk(c.number); }); })(r.number);
+      var waiting = s.plans.filter(function (p) { return under[p.intent] && ((p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare)); }).length;
+      mark(b, waiting, waiting + (waiting === 1 ? ' plan waits' : ' plans wait') + ' for your word');
+    });
+    if (s.queued && s.queued.length) paper('Signed \u00B7 ' + s.queued.length, readSigned).title = 'What you have signed, for the staff at 1800';
+    // Staff: what is coming, marked with what is due by tomorrow, and the report.
+    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) {
+      var due = (M.arrivals || []).filter(function (a) { return a.day >= M.day && a.day <= M.day + 1; }).length + M.forces.filter(function (f) { return f.available_from === M.day + 1; }).length;
+      mark(paper('Reinforcements', readSchedule, true), due, due + ' due by tomorrow');
+    }
+    if (clock.at === 'dusk') paper('Report', readReport, true); else { paper('Return', readBriefing, true); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
     var dec = s.staff_decisions_yesterday || [];
     if (dec.length) { var d = slip('FROM STAFF', null, dec.length + ' decisions taken yesterday', dec.slice(0, 4).map(function (x) { return x.text || x.words || x.summary || ('decision ' + x.number); }).join(' · ')); }
   }
@@ -1194,6 +1213,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (received[d.number] == null) return;
       var isNew = !readOnes[d.number];
       if (!isNew) { paper('Directive ' + d.number, function () { readDirective(d); }); return; }
+      mark(paper('Directive ' + d.number, function () { readDirective(d); }), 1, 'new, not yet read');
       var a = slip('FROM ' + d.from.toUpperCase(), 'NEW', 'Directive ' + d.number + ': ' + d.subject, null, true);
       button(a, 'READ THE DIRECTIVE', true, function () { readDirective(d); });
     });
