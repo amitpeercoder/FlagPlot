@@ -404,6 +404,12 @@ pub struct Raid {
     pub base: Handle,
     /// Aircraft that attacked.
     pub aircraft: Dec,
+    /// What they attacked with: a raid on a base is with bombs (decision
+    /// 0167, 1).
+    pub weapon: &'static str,
+    /// The type of aircraft, by the name its data has, where the base's
+    /// people recognised it; `None` where they did not (decision 0167, 2).
+    pub recognised: Option<String>,
     pub hits: u32,
     pub hits_on_aircraft: u32,
     pub hits_on_supply: u32,
@@ -420,14 +426,22 @@ pub struct AttackOnShip {
     /// The ship or air group that attacked is not named (decision 0065).
     pub by: &'static str,
     pub against: Handle,
-    /// `None` for an air attack, whose weapon the side is not told.
-    pub weapon: Option<&'static str>,
+    /// What the ship was attacked with. Air attacks on one ship are counted
+    /// by weapon, as salvos are (decision 0167, 1).
+    pub weapon: &'static str,
     pub attacks: u32,
     /// The aircraft counted in the air attacks.
     pub aircraft: Option<Dec>,
     /// The side's own numbers of the air attacks counted here; empty for
     /// salvos fired at the ship.
     pub events: Vec<u32>,
+    /// The types of aircraft the ship's people recognised in these
+    /// attacks, by the names their data has, each once, in the order first
+    /// recognised (decision 0167, 2). Empty for salvos.
+    pub recognised: Vec<String>,
+    /// The air attacks counted here whose type was not made out; 0 for
+    /// salvos.
+    pub not_recognised: u32,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -2669,7 +2683,7 @@ impl Day {
         let mut air_fire = Vec::new();
         let mut guns = Vec::new();
         let mut ship_attacks: BTreeMap<(ShipId, Weapon), AttackOnShip> = BTreeMap::new();
-        let mut air_attacks: BTreeMap<ShipId, AttackOnShip> = BTreeMap::new();
+        let mut air_attacks: BTreeMap<(ShipId, Weapon), AttackOnShip> = BTreeMap::new();
         let mut sunk = Vec::new();
         let mut sunk_ids: BTreeSet<ShipId> = BTreeSet::new();
         let mut damaged: BTreeMap<ShipId, DamagedShip> = BTreeMap::new();
@@ -3940,25 +3954,47 @@ impl Day {
                         .or_insert_with(|| AttackOnShip {
                             by: "ship",
                             against: ctx.ship(*target),
-                            weapon: Some(words::weapon(*weapon)),
+                            weapon: words::weapon(*weapon),
                             attacks: 0,
                             aircraft: None,
                             events: Vec::new(),
+                            recognised: Vec::new(),
+                            not_recognised: 0,
                         })
                         .attacks += 1;
                 }
-                SideEventKind::AirAttackAgainst { ship, shots, .. } => {
-                    let entry = air_attacks.entry(*ship).or_insert_with(|| AttackOnShip {
-                        by: "aircraft",
-                        against: ctx.ship(*ship),
-                        weapon: None,
-                        attacks: 0,
-                        aircraft: Some(Dec(Fixed::ZERO)),
-                        events: Vec::new(),
-                    });
+                SideEventKind::AirAttackAgainst {
+                    ship,
+                    shots,
+                    weapon,
+                    recognised,
+                    ..
+                } => {
+                    let entry =
+                        air_attacks
+                            .entry((*ship, *weapon))
+                            .or_insert_with(|| AttackOnShip {
+                                by: "aircraft",
+                                against: ctx.ship(*ship),
+                                weapon: words::weapon(*weapon),
+                                attacks: 0,
+                                aircraft: Some(Dec(Fixed::ZERO)),
+                                events: Vec::new(),
+                                recognised: Vec::new(),
+                                not_recognised: 0,
+                            });
                     entry.attacks += 1;
                     entry.events.push(id);
                     entry.aircraft = Some(Dec(entry.aircraft.map_or(*shots, |d| d.0 + *shots)));
+                    match recognised {
+                        Some(aircraft_type) => {
+                            let name = ctx.aircraft_type_name(*aircraft_type);
+                            if !entry.recognised.contains(&name) {
+                                entry.recognised.push(name);
+                            }
+                        }
+                        None => entry.not_recognised += 1,
+                    }
                 }
                 SideEventKind::AirAttack {
                     air_group,
@@ -3997,10 +4033,13 @@ impl Day {
                     hits_on_aircraft,
                     hits_on_supply,
                     hits_on_men,
+                    recognised,
                     ..
                 } => raids.push(Raid {
                     base: ctx.base(*base),
                     aircraft: Dec(*shots),
+                    weapon: words::weapon(Weapon::Bomb),
+                    recognised: recognised.map(|t| ctx.aircraft_type_name(t)),
                     hits: *hits,
                     hits_on_aircraft: *hits_on_aircraft,
                     hits_on_supply: *hits_on_supply,

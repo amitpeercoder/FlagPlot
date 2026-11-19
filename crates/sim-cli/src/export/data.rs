@@ -106,6 +106,15 @@ impl Data {
         }
     }
 
+    /// An id written only when there is one, so that a file made where
+    /// there is never one is unchanged (decision 0167: the type recognised).
+    pub fn id_when_some<T: EntityId>(self, key: &'static str, id: Option<T>) -> Data {
+        match id {
+            Some(id) => self.id(key, id),
+            None => self,
+        }
+    }
+
     pub fn text(self, key: &'static str, t: &'static str) -> Data {
         self.with(key, Field::Text(t))
     }

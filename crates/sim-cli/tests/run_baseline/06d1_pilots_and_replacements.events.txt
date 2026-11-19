@@ -46,7 +46,7 @@ day   6  hash f2640c7ba12c7294  23 events
 #35 D2 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 0 hits  <- #31
 #36 D2 morning   air_group:3 lost 2 aircraft, 9 left  <- #33
 #37 D2 morning   air_group:3 lost 1 pilot, 10 left  <- #36
-#38 D2 morning   air_group:1 bombs at base:2: 17 shots x 0.2 = 3.4 expected, 5 hits: 1 on aircraft, 2 on supply, 2 on nothing  <- #31
+#38 D2 morning   air_group:1 bombs at base:2: 17 shots x 0.2 = 3.4 expected, 5 hits: 1 on aircraft, 2 on supply, 2 on nothing; recognised as aircraft_type:3  <- #31
 #39 D2 morning   air_group:3 patrol at the bombers of air_group:1: 6 shots x 0.3 = 1.8 expected, 2 hits after the attack  <- #31, #38
 #40 D2 morning   air_group:1 lost 2 aircraft, 16 left  <- #39
 #41 D2 morning   air_group:1 lost 2 pilots, 15 left  <- #40
@@ -69,7 +69,7 @@ day   6  hash f2640c7ba12c7294  23 events
 #58 D3 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 0 hits  <- #54
 #59 D3 morning   air_group:2 lost 1 aircraft, 10 left  <- #57
 #60 D3 morning   air_group:2 lost 1 pilot, 10 left  <- #59
-#61 D3 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #54
+#61 D3 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing; recognised as aircraft_type:3  <- #54
 #62 D3 morning   air_group:3 patrol at the bombers of air_group:1: 5 shots x 0.3 = 1.5 expected, 2 hits after the attack  <- #54, #61
 #63 D3 morning   air_group:1 lost 2 aircraft, 16 left  <- #62
 #64 D3 morning   air_group:1 lost 2 pilots, 14 left  <- #63
@@ -93,7 +93,7 @@ day   6  hash f2640c7ba12c7294  23 events
 #82 D4 morning   air_group:3 lost 2 pilots, 8 left  <- #81
 #83 D4 morning   air_group:2 lost 1 aircraft, 9 left  <- #79
 #84 D4 morning   air_group:2 lost 1 pilot, 9 left  <- #83
-#85 D4 morning   air_group:1 bombs at base:2: 12 shots x 0.2 = 2.4 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #76
+#85 D4 morning   air_group:1 bombs at base:2: 12 shots x 0.2 = 2.4 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing; recognised as aircraft_type:3  <- #76
 #86 D4 morning   air_group:3 patrol at the bombers of air_group:1: 5 shots x 0.3 = 1.5 expected, 1 hit after the attack  <- #76, #85
 #87 D4 morning   air_group:1 lost 1 aircraft, 14 left  <- #86
 #88 D4 morning   air_group:1 lost 1 pilot, 11 left  <- #87
@@ -143,7 +143,7 @@ day   6  hash f2640c7ba12c7294  23 events
 #132 D6 morning   air_group:2 lost 1 pilot, 8 left  <- #131
 #133 D6 morning   air_group:1 lost 1 aircraft, 10 left  <- #128
 #134 D6 morning   air_group:1 lost 1 pilot, 5 left  <- #133
-#135 D6 morning   air_group:1 bombs at base:2: 5 shots x 0.2 = 1 expected, 1 hit: 1 on aircraft, 0 on supply, 0 on nothing  <- #124, #133
+#135 D6 morning   air_group:1 bombs at base:2: 5 shots x 0.2 = 1 expected, 1 hit: 1 on aircraft, 0 on supply, 0 on nothing; recognised as aircraft_type:3  <- #124, #133
 #136 D6 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 0 hits after the attack  <- #124, #135
 #137 D6 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #124, #135
 #138 D6 morning   air_group:3 lost 1 aircraft on the ground at base:2, 8 left  <- #135

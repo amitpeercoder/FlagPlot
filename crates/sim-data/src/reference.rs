@@ -701,6 +701,8 @@ struct AirCombatFile {
     patrol_drawn_off_share: Quantity,
     /// Decision 0087.
     patrol_before_attack_share: Quantity,
+    /// Decision 0167. Required.
+    raid_recognised_chance: Quantity,
     /// Decision 0118, 2. Optional: a file without it gives no figure for
     /// any kind, and sizing a strike does nothing.
     strike_aircraft_per_ship: Option<StrikeAircraftTable>,
@@ -836,6 +838,7 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             .as_ref()
             .map(StrikeAircraftTable::to_map)
             .unwrap_or_default(),
+        raid_recognised_chance: number("raid_recognised_chance", &file.raid_recognised_chance)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1474,6 +1477,23 @@ mod tests {
         assert_eq!(figures.patrol_drawn_off_share, Fixed::ZERO);
         // Decision 0087: the live figure is a placeholder, 0.4.
         assert_eq!(figures.patrol_before_attack_share, Fixed::from_ratio(4, 10));
+        // Decision 0167: the live figure is a placeholder, 0.75.
+        assert_eq!(figures.raid_recognised_chance, Fixed::from_ratio(75, 100));
+    }
+
+    #[test]
+    fn the_raid_recognised_chance_is_required_and_a_chance() {
+        let bad = |from: &str, to: &str| {
+            let text = air_combat_text().replace(from, to);
+            assert_ne!(text, air_combat_text(), "{from} is in the file");
+            parse_air_combat_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        let line = "raid_recognised_chance = \"0.75\"";
+        assert!(bad(line, "").contains("raid_recognised_chance"));
+        assert!(bad(line, "raid_recognised_chance = \"1.5\"").contains("raid recognised chance"));
+        assert!(bad(line, "raid_recognised_chance = 0.75").contains("raid_recognised_chance"));
     }
 
     #[test]

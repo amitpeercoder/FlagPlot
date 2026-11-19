@@ -1300,6 +1300,8 @@ fn work_the_raid(
                 hits_on_supply: on_supply,
                 // No men ashore at the base (decision 0092, 8).
                 hits_on_men: 0,
+                // The frozen figures recognise no type (decision 0167).
+                recognised: None,
             },
             "seed {seed}, day {day}"
         );

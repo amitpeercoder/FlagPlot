@@ -149,6 +149,13 @@ patrol_drawn_off_share = "0"
 # inside 0.22 to 0.61.
 patrol_before_attack_share = "0.4"
 
+# The chance the people of a ship attacked from the air, or of a base raided,
+# recognise the type of the aircraft (decision 0167): one draw for each attack
+# on a ship and each raid on a base. A type not recognised is not named.
+# Placeholder set by the architect for decision 0167, resting on no source: no
+# row sizes it. 0 in the frozen step 1 figures, where no type is named.
+raid_recognised_chance = "0.75"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

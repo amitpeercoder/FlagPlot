@@ -831,6 +831,7 @@ fn work_the_run(run: &Run, config: &Config) -> Vec<Raid> {
                     hits_on_supply: on_supply,
                     // No men ashore at the base (decision 0092, 8).
                     hits_on_men: 0,
+                    recognised: None,
                 },
                 "seed {seed}, day {day}"
             );

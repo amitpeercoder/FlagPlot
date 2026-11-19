@@ -92,7 +92,7 @@ day   8  hash 937d3185db60d9a0  17 events
 #79 D3 morning   air_group:2 searched 050-120 out to 300 nm from ship:1 at (4,0) with 6 aircraft  <- order:7, order:8
 #80 D3 morning   air_group:3 launched 10 aircraft at base:2 at (10,0), 240 nm  <- order:13
 #81 D3 morning   air_group:1 sent 6 escorts with air_group:3  <- order:5, order:6, #80
-#82 D3 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 3 hits: 0 on aircraft, 1 on supply, 2 on nothing  <- #80
+#82 D3 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 3 hits: 0 on aircraft, 1 on supply, 2 on nothing; recognised as aircraft_type:3  <- #80
 #83 D3 morning   1 hit on the airfield of base:2 (Japanese), damage 2  <- #82
 #84 D3 morning   Allied claim at (10,0): 2 aircraft destroyed on the ground  <- #82
 #85 D3 afternoon air_group:2 searched 050-120 out to 300 nm from ship:1 at (4,0) with 6 aircraft  <- order:7, order:8
@@ -113,7 +113,7 @@ day   8  hash 937d3185db60d9a0  17 events
 #100 D4 morning   air_group:2 searched 050-120 out to 300 nm from ship:1 at (4,0) with 6 aircraft  <- order:7, order:8
 #101 D4 morning   air_group:3 launched 10 aircraft at base:2 at (10,0), 240 nm  <- order:13
 #102 D4 morning   air_group:1 sent 6 escorts with air_group:3  <- order:5, order:6, #101
-#103 D4 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #101
+#103 D4 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing; recognised as aircraft_type:3  <- #101
 #104 D4 morning   Allied claim at (10,0): 1 aircraft destroyed on the ground  <- #103
 #105 D4 afternoon air_group:2 searched 050-120 out to 300 nm from ship:1 at (4,0) with 6 aircraft  <- order:7, order:8
 #106 D4 -         base:1 at the end of the day: 889 t of supply, 0 aircraft ready: not open
@@ -153,7 +153,7 @@ day   8  hash 937d3185db60d9a0  17 events
 #140 D6 morning   air_group:2 searched 050-120 out to 300 nm from ship:1 at (4,0) with 6 aircraft  <- order:7, order:8
 #141 D6 morning   air_group:3 launched 10 aircraft at base:2 at (10,0), 240 nm  <- order:13
 #142 D6 morning   air_group:1 sent 6 escorts with air_group:3  <- order:5, order:6, #141
-#143 D6 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #141
+#143 D6 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing; recognised as aircraft_type:3  <- #141
 #144 D6 morning   Allied claim at (10,0): 1 aircraft destroyed on the ground  <- #143
 #145 D6 morning   task_force:2 steamed 40 nm at 10 kn from (9,0) to (10,0)  <- order:17
 #146 D6 morning   ship:2 burned 4 t, 960 t remaining  <- #145

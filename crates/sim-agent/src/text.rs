@@ -327,10 +327,16 @@ impl Briefing {
             } else {
                 String::new()
             };
+            // What the base's people made of the aircraft (decision 0167).
+            let seen = match &x.recognised {
+                Some(name) => format!("recognised as {name}"),
+                None => "type not made out".to_string(),
+            };
             format!(
-                "Raid on {}: {} aircraft attacked, {} {}, {} on aircraft, {} on supply, {men}{} on nothing{}",
+                "Raid on {}: {} aircraft attacked with {}, {seen}, {} {}, {} on aircraft, {} on supply, {men}{} on nothing{}",
                 x.base.text(),
                 x.aircraft.0,
+                x.weapon,
                 x.hits,
                 if x.hits == 1 { "hit" } else { "hits" },
                 x.hits_on_aircraft,
@@ -386,15 +392,32 @@ impl Briefing {
                         x.against.text(),
                         n.0
                     );
+                    s.push_str(&format!(" with {}", x.weapon));
                     if x.attacks > 1 {
                         s.push_str(&format!(", {}", plural(x.attacks, "attack", "attacks")));
+                    }
+                    // What the ship's people made of the aircraft (decision
+                    // 0167): the types recognised, then the attacks whose
+                    // type was not made out.
+                    if !x.recognised.is_empty() {
+                        s.push_str(&format!(", recognised as {}", x.recognised.join(" and ")));
+                    }
+                    if x.not_recognised > 0 {
+                        if x.recognised.is_empty() {
+                            s.push_str(", type not made out");
+                        } else {
+                            s.push_str(&format!(
+                                ", {} not made out",
+                                plural(x.not_recognised, "attack", "attacks")
+                            ));
+                        }
                     }
                     s.push_str(&evs(&x.events));
                     s
                 }
                 None => format!(
                     "Fired on: enemy {} at {}: {}",
-                    x.weapon.unwrap_or("guns"),
+                    x.weapon,
                     x.against.text(),
                     plural(x.attacks, "salvo", "salvos")
                 ),

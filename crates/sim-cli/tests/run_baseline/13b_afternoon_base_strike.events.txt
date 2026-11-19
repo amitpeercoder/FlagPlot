@@ -14,7 +14,7 @@ day   2  hash 7e74d84767298f0e  5 events
 #7 D1 morning   ship:1 burned 32 t, 2904 t remaining  <- #6
 #8 D1 morning   ship:2 burned 12 t, 464 t remaining  <- #6
 #9 D1 afternoon air_group:1 launched 18 aircraft at base:1 at (0,0), 200 nm  <- order:2
-#10 D1 afternoon air_group:1 bombs at base:1: 18 shots x 0.2 = 3.6 expected, 2 hits: 0 on aircraft, 1 on supply, 1 on nothing  <- #9
+#10 D1 afternoon air_group:1 bombs at base:1: 18 shots x 0.2 = 3.6 expected, 2 hits: 0 on aircraft, 1 on supply, 1 on nothing; recognised as aircraft_type:3  <- #9
 #11 D1 afternoon base:1 lost 50 t of supply, 950 t left  <- #10
 #12 D1 afternoon Allied claim at (0,0): 6 aircraft destroyed on the ground  <- #10
 #13 D1 afternoon task_force:1 steamed 72 nm at 16 kn from (5,0) to (3,0)  <- order:1

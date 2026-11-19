@@ -15,8 +15,8 @@ use crate::fixed::Fixed;
 use crate::held::AsOf;
 use crate::hex::Hex;
 use crate::ids::{
-    AirGroupId, BaseId, ContactId, EntityRef, EventId, IntentId, LandUnitId, OrderId, ShipId,
-    TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, ContactId, EntityRef, EventId, IntentId, LandUnitId,
+    OrderId, ShipId, TaskForceId,
 };
 use crate::orders::{Cargo, Issuer, Job, RejectReason};
 use crate::pictures::CommandRef;
@@ -903,6 +903,10 @@ pub enum EventKind {
         chance: Fixed,
         expected: Fixed,
         hits: u32,
+        /// What the draw of decision 0167 gave: the aircraft's type where the
+        /// people of the ship recognised it, `None` where they did not. Never
+        /// a type other than the group's own (decision 0167, 4).
+        recognised: Option<AircraftTypeId>,
     },
     /// A fighter group sent escorts with a raid (decision 5 of
     /// `docs/decisions/0027-fighters-and-anti-aircraft-fire.md`).
@@ -1024,6 +1028,9 @@ pub enum EventKind {
         /// Hits that landed on men ashore (decision 0092, 8 and 10): 0 when
         /// the base's side had no men in its hex.
         hits_on_men: u32,
+        /// What the draw of decision 0167 gave: the aircraft's type where the
+        /// people of the base recognised it, `None` where they did not.
+        recognised: Option<AircraftTypeId>,
     },
     /// Hits on aircraft destroyed aircraft of an air group on the ground
     /// (decision 8 of 0034). `remaining` is what the group has ready
@@ -2750,6 +2757,7 @@ impl fmt::Display for EventKind {
                 hits_on_aircraft,
                 hits_on_supply,
                 hits_on_men,
+                recognised,
             } => {
                 write!(
                     f,
@@ -2765,7 +2773,8 @@ impl fmt::Display for EventKind {
                     f,
                     "{} on nothing",
                     hits - hits_on_aircraft - hits_on_supply - hits_on_men
-                )
+                )?;
+                recognised_suffix(f, *recognised)
             }
             EventKind::AircraftDestroyedOnGround {
                 air_group,
@@ -2978,13 +2987,19 @@ impl fmt::Display for EventKind {
                 chance,
                 expected,
                 hits,
+                recognised,
                 ..
-            } => write!(
-                f,
-                "{air_group} {} at {ship}: {shots} shots x {chance} = {expected} expected, {hits} {}",
-                weapon.name(),
-                if *hits == 1 { "hit" } else { "hits" }
-            ),
+            } => {
+                write!(
+                    f,
+                    "{air_group} {} at {ship}: {shots} shots x {chance} = {expected} expected, {hits} {}",
+                    weapon.name(),
+                    if *hits == 1 { "hit" } else { "hits" },
+                )?;
+                // Named only where recognised, so a world where no type is
+                // recognised reads as it did before decision 0167.
+                recognised_suffix(f, *recognised)
+            }
             EventKind::EscortsSent {
                 air_group,
                 with_air_group,
@@ -4331,6 +4346,34 @@ pub fn base_is_open(supply_t: Fixed, aircraft_ready: u32) -> bool {
 }
 
 /// Ship IDs written as a list, such as `ship:2, ship:4`.
+/// The true event's words of what the people under an attack made of the
+/// aircraft (decision 0167): "; recognised as aircraft_type:3" where they
+/// recognised them, nothing where they did not, so that a world where no type
+/// is recognised reads as it did before the rule.
+fn recognised_suffix(
+    f: &mut fmt::Formatter<'_>,
+    recognised: Option<AircraftTypeId>,
+) -> fmt::Result {
+    match recognised {
+        Some(_) => write!(f, "; {}", RecognisedWords(recognised)),
+        None => Ok(()),
+    }
+}
+
+/// What the people under an air attack or a raid made of the aircraft
+/// (decision 0167): "recognised as aircraft_type:3", or "type not made out".
+/// The attacked side's event says it either way.
+pub struct RecognisedWords(pub Option<AircraftTypeId>);
+
+impl fmt::Display for RecognisedWords {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.0 {
+            Some(aircraft_type) => write!(f, "recognised as {aircraft_type}"),
+            None => write!(f, "type not made out"),
+        }
+    }
+}
+
 fn join_ships(ships: &[ShipId]) -> String {
     let names: Vec<String> = ships.iter().map(ShipId::to_string).collect();
     names.join(", ")

@@ -117,11 +117,17 @@ pub enum Draw {
     /// (decision 0147, 8): one stream for each air group, in the morning
     /// pulse, in the intelligence subsystem, keyed on the air group.
     Reconnaissance,
+    /// Whether the people of a ship attacked from the air, or of a base
+    /// raided, recognised the aircraft's type (decision 0167, 5): one stream
+    /// for each ship or base attacked and pulse, in the air combat
+    /// subsystem, keyed on the ship or the base. Its attacks in the pulse
+    /// draw from it in turn, in the order they are recorded.
+    RaidRecognised,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 13] = [
+    pub const ALL: [Draw; 14] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -135,6 +141,7 @@ impl Draw {
         Draw::ReportPassedDown,
         Draw::StateReport,
         Draw::Reconnaissance,
+        Draw::RaidRecognised,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -154,6 +161,7 @@ impl Draw {
             Draw::ReportPassedDown => 10,
             Draw::StateReport => 11,
             Draw::Reconnaissance => 12,
+            Draw::RaidRecognised => 13,
         }
     }
 }

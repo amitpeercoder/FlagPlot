@@ -369,14 +369,18 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
                 }
             }
         }
-        // Fired at: the view carries no shots (salvo) and no weapon or aircraft
-        // figures but the count (air attack); never the chance or the hits.
+        // Fired at: the view carries no shots (salvo) and no aircraft figures
+        // but the count, the weapon and the type recognised (air attack,
+        // decision 0167); never the chance or the hits.
         let printed = format!("{:?}", event.kind);
         if printed.starts_with("SalvoAgainst") {
             assert!(!printed.contains("shots:"), "{at}: {printed}");
         }
         if printed.starts_with("AirAttackAgainst") {
-            assert!(!printed.contains("weapon:"), "{at}: {printed}");
+            assert!(
+                !printed.contains("chance:") && !printed.contains("hits:"),
+                "{at}: {printed}"
+            );
         }
         // The firing kinds only: an event cut of nothing but the enemy's
         // name keeps its own figures.

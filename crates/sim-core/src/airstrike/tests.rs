@@ -307,6 +307,7 @@ fn attack_of(event: &Event) -> (u32, u32, u32, Weapon, Fixed, Fixed, Fixed, u32)
             chance,
             expected,
             hits,
+            ..
         } => (
             air_group.raw(),
             task_force.raw(),

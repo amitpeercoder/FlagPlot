@@ -833,6 +833,11 @@ pub struct AirCombatFigures {
     /// A kind with no entry has no figure and needs everything; an empty
     /// table, as a file with none gives, is every kind so.
     pub strike_aircraft_per_ship: BTreeMap<ShipKind, u32>,
+    /// The chance the people of a ship attacked from the air, or of a base
+    /// raided, recognise the aircraft's type (decision 0167, 2 and 3): one
+    /// draw for each attack on a ship and each raid on a base. 0 names no
+    /// type, as step 1 did; 1 names every one.
+    pub raid_recognised_chance: Fixed,
 }
 
 impl AirCombatFigures {
@@ -926,6 +931,7 @@ impl AirCombatFigures {
                 self.anti_aircraft_false_claim_chance,
             ),
             ("bomb false claim chance", self.bomb_false_claim_chance),
+            ("raid recognised chance", self.raid_recognised_chance),
         ];
         for (label, value) in chances {
             if !in_unit(value) {
@@ -1884,6 +1890,9 @@ impl AirCombatFigures {
             // Step 1's rule (decision 0087); the unit tests are worked on it.
             patrol_before_attack_share: Fixed::ONE,
             strike_aircraft_per_ship: BTreeMap::new(),
+            // Step 1's rule (decision 0167): no type is named, so the unit
+            // tests' events are as they were but for the weapon.
+            raid_recognised_chance: Fixed::ZERO,
         }
     }
 }

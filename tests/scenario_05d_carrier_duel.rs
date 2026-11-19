@@ -1207,7 +1207,8 @@ fn work_the_run(run: &Run) -> Worked {
                     shots: int(left),
                     chance: tenths(2),
                     expected,
-                    hits
+                    hits,
+                    recognised: None,
                 },
                 "seed {seed} pulse {index}"
             );

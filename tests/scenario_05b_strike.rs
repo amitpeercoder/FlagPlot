@@ -709,6 +709,7 @@ fn an_attack_is_18_bombs_at_0_2_each_rolled_on_carrier_b_while_she_is_afloat() {
                 chance,
                 expected,
                 hits,
+                ..
             } = event.kind
             else {
                 unreachable!()

@@ -185,7 +185,9 @@ fn aircraft_are_counted_as_aircraft_and_guns_as_shots() {
         "{text}"
     );
     assert!(
-        text.contains("- Attack on ship:1 \"USS Enterprise\" from the air: 27 aircraft, 2 attacks"),
+        text.contains(
+            "- Attack on ship:1 \"USS Enterprise\" from the air: 27 aircraft with bombs, 2 attacks"
+        ),
         "{text}"
     );
     assert!(!text.contains("16 shots"));
@@ -198,7 +200,7 @@ fn aircraft_are_counted_as_aircraft_and_guns_as_shots() {
         }
     });
     assert!(
-        day3.contains("\": 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing"),
+        day3.contains("\": 15 aircraft attacked with bombs, type not made out, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing"),
         "{day3}"
     );
 }
