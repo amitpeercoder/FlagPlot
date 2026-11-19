@@ -80,8 +80,7 @@ pub(crate) fn check(
     let own = half
         .ships
         .keys()
-        .map(|id| id.to_string())
-        .zip(half.ships.keys().map(|id| id.raw()))
+        .map(|id| (id.to_string(), id.raw()))
         .chain(half.task_forces.keys().map(|id| (id.to_string(), id.raw())))
         .chain(half.air_groups.keys().map(|id| (id.to_string(), id.raw())))
         .chain(half.land_units.keys().map(|id| (id.to_string(), id.raw())));

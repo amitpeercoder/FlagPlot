@@ -96,7 +96,7 @@ It is in `tests/scenario_93_the_enemys_half.rs`, written before the code. Its ca
 
 ## As built
 
-Built on Nov 19, 2026, on the branch `enemy-half-build`, from the head of decision 0173's build with main merged in. Every case and property of the hand calculation holds (`tests/scenario_93_the_enemys_half.rs`, 28 tests). No number or statement of the hand calculation was changed. Over worlds 1 to 1000 of case 6 the two reports are one force in 514. One statement could not be met on the data as written, and the test meets it with one more class given to the Allied side alone (reading 20).
+Built on Nov 19, 2026, on the branch `enemy-half-build`, from the head of decision 0173's build with main merged in. Every case and property of the hand calculation holds (`tests/scenario_93_the_enemys_half.rs`, 29 tests: 28 to the hand calculation and one of the refusals of rule 20 and of a belief not the tried side's). No number or statement of the hand calculation was changed. Over worlds 1 to 1000 of case 6 the two reports are one force in 514. One statement could not be met on the data as written, and the test meets it with one more class given to the Allied side alone (reading 20).
 
 **What was built.**
 

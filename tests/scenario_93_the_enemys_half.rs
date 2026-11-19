@@ -1227,3 +1227,32 @@ fn property_making_and_playing_pictures_leaves_the_live_game_as_it_was() {
         assert_eq!(live.world.state_hash(), untouched.world.state_hash());
     }
 }
+
+#[test]
+fn a_trial_is_refused_where_the_side_reaches_the_made_numbers_or_a_belief_is_not_its_own() {
+    // Rule 20: a ship of the side's own numbered 900,001.
+    let text = std::fs::read_to_string(path()).expect("the scenario file reads");
+    let text = common::replace_once(&text, "[[ship]]\nid = 1\n", "[[ship]]\nid = 900001\n");
+    let numbered = common::from_text(&text, &path()).expect("the scenario loads");
+    let refused = pictures(
+        &numbered.world.side_view(ALLIED),
+        &Believed::default(),
+        &figures(&numbered),
+        trial(1, 1),
+    )
+    .expect_err("a ship numbered 900,001 refuses the trial");
+    assert!(refused.0.contains("ship:900001"), "{refused}");
+
+    // A belief of the other side's is not the tried side's.
+    let scenario = scenario(&cruisers("present"));
+    let mut beliefs = believed(&scenario);
+    beliefs.forces[0].side = JAPANESE;
+    let refused = pictures(
+        &scenario.world.side_view(ALLIED),
+        &beliefs,
+        &figures(&scenario),
+        trial(1, 1),
+    )
+    .expect_err("a Japanese belief refuses an Allied trial");
+    assert!(refused.0.contains("the Japanese side's"), "{refused}");
+}
