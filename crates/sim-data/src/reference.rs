@@ -703,6 +703,8 @@ struct AirCombatFile {
     patrol_before_attack_share: Quantity,
     /// Decision 0167. Required.
     raid_recognised_chance: Quantity,
+    /// Decision 0168. Required.
+    raid_recognised_experience_strength: Quantity,
     /// Decision 0118, 2. Optional: a file without it gives no figure for
     /// any kind, and sizing a strike does nothing.
     strike_aircraft_per_ship: Option<StrikeAircraftTable>,
@@ -839,6 +841,10 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             .map(StrikeAircraftTable::to_map)
             .unwrap_or_default(),
         raid_recognised_chance: number("raid_recognised_chance", &file.raid_recognised_chance)?,
+        raid_recognised_experience_strength: number(
+            "raid_recognised_experience_strength",
+            &file.raid_recognised_experience_strength,
+        )?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1479,6 +1485,37 @@ mod tests {
         assert_eq!(figures.patrol_before_attack_share, Fixed::from_ratio(4, 10));
         // Decision 0167: the live figure is a placeholder, 0.75.
         assert_eq!(figures.raid_recognised_chance, Fixed::from_ratio(75, 100));
+        // Decision 0168: the live figure is a placeholder, 0.25.
+        assert_eq!(
+            figures.raid_recognised_experience_strength,
+            Fixed::from_ratio(25, 100)
+        );
+    }
+
+    #[test]
+    fn the_raid_recognised_experience_strength_is_required_and_from_0_to_half() {
+        let line = "raid_recognised_experience_strength = \"0.25\"";
+        let with = |to: &str| {
+            let text = air_combat_text().replace(line, to);
+            assert_ne!(text, air_combat_text(), "{line} is in the file");
+            parse_air_combat_figures(&text, here())
+        };
+        let bad = |to: &str| with(to).expect_err("rejected").message;
+        assert!(bad("").contains("raid_recognised_experience_strength"));
+        assert!(bad("raid_recognised_experience_strength = \"-0.01\"")
+            .contains("raid recognised experience strength"));
+        assert!(bad("raid_recognised_experience_strength = \"0.51\"")
+            .contains("raid recognised experience strength"));
+        assert!(bad("raid_recognised_experience_strength = 0.25")
+            .contains("raid_recognised_experience_strength"));
+        for edge in ["0", "0.5"] {
+            let figures = with(&format!("raid_recognised_experience_strength = \"{edge}\""))
+                .expect("read at the edge");
+            assert_eq!(
+                figures.raid_recognised_experience_strength,
+                edge.parse::<Fixed>().expect("a number")
+            );
+        }
     }
 
     #[test]

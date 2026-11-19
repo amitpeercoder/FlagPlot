@@ -88,6 +88,12 @@ patrol_before_attack_share = "1"
 # a stream of its own and alters no fight.
 raid_recognised_chance = "0"
 
+# How much the experience of the ship attacked moves that chance (decision
+# 0168). FROZEN at "0" (the live figure being 0.25, a placeholder): the chance
+# is the plain figure above at every experience, so decision 0167's hand
+# calculation on these figures holds as written.
+raid_recognised_experience_strength = "0"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

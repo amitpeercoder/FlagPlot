@@ -369,6 +369,10 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// not made out"), their `recognised`
 /// field where a type was recognised and the attacked side's `weapon`, and
 /// nothing else: with those taken back out each file hashes as pinned before.
+/// Remade again for decision 0168, in the same four scenarios: each changes
+/// in the hash of `air_combat.toml` alone, which gained
+/// `raid_recognised_experience_strength`; with the old hash put back each
+/// file hashes as pinned before.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -379,14 +383,14 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
     let before: [(&str, u64); 10] = [
         ("01_transit", 0x6fd4_3935_c8c0_ab2e),
         ("04a_night_action", 0x3a18_7ee3_05f4_fdcf),
-        ("05_eastern_solomons", 0xd685_0321_f029_2f71),
+        ("05_eastern_solomons", 0x4c16_9a20_4b63_17f6),
         ("21_landing", 0x683b_4443_825d_250f),
         ("23_fight_ashore", 0x7ffb_464b_9c3f_0fda),
-        ("31_airfield_damage", 0x62b4_1c5d_8d20_3847),
+        ("31_airfield_damage", 0x443f_b3db_06c1_8e24),
         ("36_one_convoy", 0x9120_78a8_3caf_83b2),
         ("43_keep_two_bases_fed", 0xf0c2_7b11_3554_79b1),
-        ("50_neutralise_a_base", 0x5553_643f_b8ac_cdf8),
-        ("58_a_carrier_force_closes", 0x1a44_9fa5_ba47_b79b),
+        ("50_neutralise_a_base", 0x149f_0d55_830a_c093),
+        ("58_a_carrier_force_closes", 0xa2ec_be9a_971c_bb6a),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;

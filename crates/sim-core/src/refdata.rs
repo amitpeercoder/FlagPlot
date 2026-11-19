@@ -544,7 +544,8 @@ pub const MIN_UNREADY_GUN_SHARE: Fixed = Fixed::from_raw(Fixed::SCALE / 10);
 /// The most a strength of experience may be (decision 0064, 6).
 pub const MAX_EXPERIENCE_STRENGTH: Fixed = Fixed::from_raw(Fixed::SCALE / 2);
 
-/// The factor an experience gives a chance in a dark fight:
+/// The factor an experience gives a chance in a dark fight, and a ship's
+/// chance of recognising the aircraft that attacked it (decision 0168):
 /// `1 + strength x (experience - 2)` (decision 0064, 6). `experience` is a
 /// ship's value, or a force's mean in the fixed arithmetic. At a strength of
 /// 0 it is exactly 1.
@@ -838,6 +839,12 @@ pub struct AirCombatFigures {
     /// draw for each attack on a ship and each raid on a base. 0 names no
     /// type, as step 1 did; 1 names every one.
     pub raid_recognised_chance: Fixed,
+    /// How much the experience of a ship attacked from the air moves the
+    /// chance its people recognise the aircraft (decision 0168): the chance
+    /// is `raid_recognised_chance` times [`experience_factor`] with this
+    /// strength and the ship's experience, and 1 at most. From 0 to 0.5. At
+    /// 0 the chance is the plain figure. A raid on a base is not moved.
+    pub raid_recognised_experience_strength: Fixed,
 }
 
 impl AirCombatFigures {
@@ -873,9 +880,39 @@ impl AirCombatFigures {
             .min(Fixed::ONE)
     }
 
+    /// The chance the people of a ship of `experience` attacked from the
+    /// air recognise the aircraft (decisions 0167 and 0168):
+    /// `min(1, raid_recognised_chance x factor)`, the factor
+    /// `1 + raid_recognised_experience_strength x (experience - 2)`. With the
+    /// strength at 0 nothing is multiplied and it is the plain figure.
+    pub fn ship_recognised_chance(&self, experience: u8) -> Fixed {
+        if self.raid_recognised_experience_strength == Fixed::ZERO {
+            return self.raid_recognised_chance;
+        }
+        (self.raid_recognised_chance * self.ship_recognised_factor(experience)).min(Fixed::ONE)
+    }
+
+    /// The factor a ship's `experience` gives the chance of recognising the
+    /// aircraft that attacked it (decision 0168, 2).
+    pub fn ship_recognised_factor(&self, experience: u8) -> Fixed {
+        experience_factor(
+            self.raid_recognised_experience_strength,
+            Fixed::from_int(i64::from(experience)),
+        )
+    }
+
     /// Describes what is wrong with the figures, if anything.
     pub fn problem(&self) -> Option<String> {
         let in_unit = |value: Fixed| value >= Fixed::ZERO && value <= Fixed::ONE;
+        // Decision 0168, 5: no factor of experience may fall below 0.
+        if self.raid_recognised_experience_strength < Fixed::ZERO
+            || self.raid_recognised_experience_strength > MAX_EXPERIENCE_STRENGTH
+        {
+            return Some(format!(
+                "air combat raid recognised experience strength {} is not between 0 and 0.5",
+                self.raid_recognised_experience_strength
+            ));
+        }
         // Decisions 2, 3 and 6 of 0059. A reach beyond double the radius, or
         // a chance per radius beyond of more than 100, is a mistake.
         for (label, value) in [
@@ -1893,6 +1930,8 @@ impl AirCombatFigures {
             // Step 1's rule (decision 0167): no type is named, so the unit
             // tests' events are as they were but for the weapon.
             raid_recognised_chance: Fixed::ZERO,
+            // Step 1's rule (decision 0168): experience moves nothing.
+            raid_recognised_experience_strength: Fixed::ZERO,
         }
     }
 }
