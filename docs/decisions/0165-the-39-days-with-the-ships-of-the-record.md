@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the de
 
 Summary: A plan to replace the placeholder transports of the 39 days with the ships the record names. Its 78 placeholders that stand for real ships stand for 54 ships the record now names and 14 it does not, but a name is not what keeps them out: a real ship may carry no invented figure, and the transports, the destroyer-transports and three classes of Japanese destroyer still lack facts a class is derived from. Six steps: a second round of research for those facts, the derivation rules a transport needs, the classes, the American landings at the record's 15 and 8 ships, the Japanese runs as the destroyers that made them, and the baseline run again. It is done before stage 4's proof. With six questions for the designer
 
-Standing: Confirmed by the designer, Nov 19, 2026, with his six answers, each as recommended. Step 1, the second round of research, is under way
+Standing: Confirmed by the designer, Nov 19, 2026, with his six answers, each as recommended. Step 1, the second round of research, is done (`docs/research/oob/class-facts-39-days.md`); step 2 is decision 0166
 
 ## What is so today
 
