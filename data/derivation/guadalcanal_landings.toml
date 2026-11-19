@@ -137,8 +137,9 @@ ships_in_run = 6
 reason = "combinedfleet's about 1,000 men (row 161) over its six destroyers in two sections (row 162). Which section led is disputed (ship_facts 2359, 2360) but both readings name the same six ships and the same men, so the figure does not rest on it. Decision 0166, 15."
 
 # The class ids, pinned (decision 0077), continuing from the highest id any
-# list has pinned (3008, cape_esperance.toml). Two rows of the Fubuki class,
-# because the runs give them different troop capacities.
+# list has pinned (3008, cape_esperance.toml). A class has a row for each
+# troop capacity its ships' runs give: three of the Fubuki class, two each of
+# the Shiratsuyu and Hatsuharu classes.
 [class_ids]
 3009 = ["fubuki", "shirayuki"]
 3010 = ["hatsuyuki", "amagiri"]
