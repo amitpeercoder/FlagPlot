@@ -28,7 +28,7 @@ ACTION YESTERDAY
 - Patrol fire: air_group:1 "Placeholder defending fighters" at the enemy's bombers, 3 shots [event 16]
 - Anti-aircraft fire: base:2 "Placeholder airfield B" at a raid, 20 shots [event 17]
 - Strikes and attacks flown: none
-- Raid on base:2 "Placeholder airfield B": 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing [event 19]
+- Raid on base:2 "Placeholder airfield B": 15 aircraft attacked with bombs, type not made out, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing [event 19]
 - Attacks on ships: none
 
 LOSSES YESTERDAY

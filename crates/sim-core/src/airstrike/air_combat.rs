@@ -4,6 +4,7 @@
 
 use super::raids::{group_raids, send_escorts};
 use super::*;
+use crate::ids::AircraftTypeId;
 
 impl World {
     /// The air combat step of one daylight pulse (decisions 7 to 12 and 16
@@ -247,7 +248,17 @@ impl World {
         }
         outcomes.sort_by_key(|(group, _)| *group);
 
-        // Record what each strike found, in group order.
+        // Record what each strike found, in group order. Each attack on a
+        // ship and each raid on a base draws whether the people under it
+        // recognised the aircraft (decision 0167, 2 and 5): one stream for
+        // each ship or base attacked in the pulse, its own, so that no fight
+        // draws differently.
+        let recognised_chance = self
+            .ref_data
+            .air_combat
+            .as_ref()
+            .map_or(Fixed::ZERO, |air| air.raid_recognised_chance);
+        let mut recognition: BTreeMap<EntityRef, RngStream> = BTreeMap::new();
         let mut attack_events: Vec<EventId> = Vec::new();
         for (_, outcome) in &outcomes {
             match outcome {
@@ -279,6 +290,14 @@ impl World {
                                 .map(|(_, event)| Cause::Event(*event)),
                         )
                         .collect();
+                    let recognised = self.recognised(
+                        &mut recognition,
+                        day,
+                        pulse,
+                        EntityRef::Base(attack.base),
+                        attack.air_group,
+                        recognised_chance,
+                    );
                     let event = self.events.record(
                         day,
                         Some(pulse),
@@ -292,6 +311,7 @@ impl World {
                             hits_on_aircraft: attack.hits_on_aircraft,
                             hits_on_supply: attack.hits_on_supply,
                             hits_on_men: attack.hits_on_men,
+                            recognised,
                         },
                         causes,
                         attack.breakdown.clone(),
@@ -314,6 +334,14 @@ impl World {
                                 .map(|(_, event)| Cause::Event(*event)),
                         )
                         .collect();
+                    let recognised = self.recognised(
+                        &mut recognition,
+                        day,
+                        pulse,
+                        EntityRef::Ship(attack.ship),
+                        attack.air_group,
+                        recognised_chance,
+                    );
                     let event = self.events.record(
                         day,
                         Some(pulse),
@@ -326,6 +354,7 @@ impl World {
                             chance: attack.chance,
                             expected: attack.expected,
                             hits: attack.hits,
+                            recognised,
                         },
                         causes,
                         attack.breakdown.clone(),
@@ -589,5 +618,39 @@ impl World {
         // Each side that fired in a raid claims what it believes it did, once
         // the raid is resolved (decision 0056).
         self.record_raid_claims(day, pulse, tallies);
+    }
+}
+
+impl World {
+    /// Whether the people of the ship or base `target` recognised the
+    /// aircraft of `air_group` that attacked it (decision 0167, 2 and 5): one
+    /// draw with `chance` from the target's stream of the pulse, opened at
+    /// its first attack and drawn from in turn by each attack after it. The
+    /// type recognised is the group's own: never another (decision 0167, 4).
+    fn recognised(
+        &self,
+        streams: &mut BTreeMap<EntityRef, RngStream>,
+        day: u32,
+        pulse: Pulse,
+        target: EntityRef,
+        air_group: AirGroupId,
+        chance: Fixed,
+    ) -> Option<AircraftTypeId> {
+        let stream = streams.entry(target).or_insert_with(|| {
+            self.rng(
+                day,
+                Some(pulse),
+                Subsystem::AirCombat,
+                Draw::RaidRecognised,
+                target,
+            )
+        });
+        if !stream.chance(chance) {
+            return None;
+        }
+        self.truth
+            .air_groups
+            .get(&air_group)
+            .map(|group| group.aircraft_type)
     }
 }

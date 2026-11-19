@@ -72,15 +72,18 @@ fn l5_the_air_attack_line_carries_the_sides_own_event_numbers() {
     b.action.attacks_on_ships = vec![AttackOnShip {
         by: "aircraft",
         against: handle("ship:1", "USS Enterprise"),
-        weapon: None,
+        weapon: "bombs",
         attacks: 2,
         aircraft: Some(Dec(Fixed::from_int(21))),
         events: vec![43, 44],
+        recognised: Vec::new(),
+        not_recognised: 2,
     }];
     let text = b.to_text();
+    // The weapon and what was made of the type (decision 0167).
     assert!(
         text.contains(
-            "Attack on ship:1 \"USS Enterprise\" from the air: 21 aircraft, 2 attacks [events 43, 44]"
+            "Attack on ship:1 \"USS Enterprise\" from the air: 21 aircraft with bombs, 2 attacks, type not made out [events 43, 44]"
         ),
         "{text}"
     );

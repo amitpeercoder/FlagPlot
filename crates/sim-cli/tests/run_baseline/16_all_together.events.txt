@@ -129,9 +129,9 @@ day   1  hash 55de2cc8c1f25e9f  152 events
 #123 D1 afternoon air_group:3 lost 5 aircraft, 6 left  <- #120
 #124 D1 afternoon air_group:7 lost 1 aircraft, 11 left  <- #121
 #125 D1 afternoon air_group:7 lost 1 pilot, 11 left  <- #124
-#126 D1 afternoon air_group:2 bombs at ship:2: 1 shots x 0.2 = 0.2 expected, 0 hits  <- #116
-#127 D1 afternoon air_group:5 bombs at ship:1: 6 shots x 0.2 = 1.2 expected, 1 hit  <- #117
-#128 D1 afternoon air_group:6 bombs at base:1: 4 shots x 0.2 = 0.8 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #118
+#126 D1 afternoon air_group:2 bombs at ship:2: 1 shots x 0.2 = 0.2 expected, 0 hits; recognised as aircraft_type:3  <- #116
+#127 D1 afternoon air_group:5 bombs at ship:1: 6 shots x 0.2 = 1.2 expected, 1 hit; recognised as aircraft_type:3  <- #117
+#128 D1 afternoon air_group:6 bombs at base:1: 4 shots x 0.2 = 0.8 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing; recognised as aircraft_type:3  <- #118
 #129 D1 afternoon air_group:3 patrol at the bombers of air_group:5: 3 shots x 0.3 = 0.9 expected, 1 hit after the attack  <- #117, #127
 #130 D1 afternoon air_group:5 lost 1 aircraft, 5 left  <- #129
 #131 D1 afternoon air_group:5 lost 1 pilot, 5 left  <- #130

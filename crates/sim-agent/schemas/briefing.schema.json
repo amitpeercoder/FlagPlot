@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 27 },
+    "version": { "const": 28 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -537,12 +537,14 @@
           "items": {
             "type": "object",
             "required": [
-              "base", "aircraft", "hits", "hits_on_aircraft", "hits_on_supply", "event"
+              "base", "aircraft", "weapon", "recognised", "hits", "hits_on_aircraft", "hits_on_supply", "event"
             ],
             "additionalProperties": false,
             "properties": {
               "base": { "$ref": "defs.schema.json#/$defs/handle" },
               "aircraft": { "$ref": "defs.schema.json#/$defs/dec" },
+              "weapon": { "description": "What the raid attacked with: a raid on a base is with bombs (decision 0167, 1).", "const": "bombs" },
+              "recognised": { "description": "The type of the aircraft, by the name its data has, where the base's people recognised it; null where they did not (decision 0167, 2).", "type": ["string", "null"] },
               "hits": { "type": "integer" },
               "hits_on_aircraft": { "type": "integer" },
               "hits_on_supply": { "type": "integer" },
@@ -612,15 +614,17 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["by", "against", "weapon", "attacks", "aircraft", "events"],
+            "required": ["by", "against", "weapon", "attacks", "aircraft", "events", "recognised", "not_recognised"],
             "additionalProperties": false,
             "properties": {
               "by": { "enum": ["ship", "aircraft"] },
               "against": { "$ref": "defs.schema.json#/$defs/handle" },
-              "weapon": { "$ref": "#/$defs/weapon_or_null" },
+              "weapon": { "description": "What the ship was attacked with. Air attacks on one ship are counted by weapon, as salvos are (decision 0167, 1).", "$ref": "#/$defs/weapon" },
               "attacks": { "type": "integer" },
               "aircraft": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
-              "events": { "$ref": "defs.schema.json#/$defs/event_numbers" }
+              "events": { "$ref": "defs.schema.json#/$defs/event_numbers" },
+              "recognised": { "description": "The types of aircraft the ship's people recognised in these attacks, by the names their data has, each once, in the order first recognised (decision 0167, 2). Empty for salvos.", "type": "array", "items": { "type": "string" } },
+              "not_recognised": { "description": "The air attacks counted here whose type was not made out; 0 for salvos.", "type": "integer" }
             }
           }
         }

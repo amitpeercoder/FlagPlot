@@ -235,10 +235,14 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey, at: (u32, Option<Pulse>)
             task_force,
             ship,
             shots,
+            weapon,
+            recognised,
         } => (
             d.id("task_force", *task_force)
                 .id("ship", *ship)
-                .num("shots", *shots),
+                .num("shots", *shots)
+                .text("weapon", names::weapon(*weapon))
+                .id_when_some("recognised", *recognised),
             true,
         ),
         SideEventKind::AirAttack {
@@ -304,6 +308,7 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey, at: (u32, Option<Pulse>)
             hits_on_aircraft,
             hits_on_supply,
             hits_on_men,
+            recognised,
         } => (
             d.id("base", *base)
                 .num("shots", *shots)
@@ -312,7 +317,8 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey, at: (u32, Option<Pulse>)
                 .int("hits", *hits)
                 .int("hits_on_aircraft", *hits_on_aircraft)
                 .int("hits_on_supply", *hits_on_supply)
-                .int_when_nonzero("hits_on_men", *hits_on_men),
+                .int_when_nonzero("hits_on_men", *hits_on_men)
+                .id_when_some("recognised", *recognised),
             true,
         ),
         SideEventKind::SearchAttempt { air_group } => (d.id("air_group", *air_group), true),

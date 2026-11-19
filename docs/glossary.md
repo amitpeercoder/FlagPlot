@@ -49,6 +49,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Straggler** | A ship whose propulsion is degraded or out. The straggler instruction acts on it | Heavily damaged |
 | **Degraded, out** | The two damaged states of a named system. Degraded halves what the system does; out stops it | |
 | **Raid** | The strikes launched in one pulse from one place at one hex, with their escorts | One air group's strike |
+| **Recognised** | Of an air attack on a ship or a raid on a base: that the people under it made out the type of the attacking aircraft, by one draw at `raid_recognised_chance` when the attack is recorded. The attacked side's event then names the type, by the name its data has; where it was not recognised it names none, and never a wrong one. The weapon is told either way (decision 0167) | Identified as a unit: the air group that attacked is never named to the attacked side |
 | **Mission** | What an air group is ordered to fly: rest, search, naval strike, combat air patrol. A task force also has a mission; two are read: a force on the bombardment mission fires at an enemy base (decision 0092), and a force on the escort mission may be given a charge (decision 0121). No other mission of a task force is read by a rule | |
 | **Placeholder** | A figure invented so that the engine runs. Never historical | |
 | **Settled** | A choice between sourced figures, made by the architect and written down with its reason | Stated by a source |

@@ -625,6 +625,7 @@ pub(super) fn describe(
             hits_on_aircraft,
             hits_on_supply,
             hits_on_men,
+            recognised,
         } => (
             "base_attacked",
             d.id("air_group", *air_group)
@@ -635,7 +636,8 @@ pub(super) fn describe(
                 .int("hits", *hits)
                 .int("hits_on_aircraft", *hits_on_aircraft)
                 .int("hits_on_supply", *hits_on_supply)
-                .int_when_nonzero("hits_on_men", *hits_on_men),
+                .int_when_nonzero("hits_on_men", *hits_on_men)
+                .id_when_some("recognised", *recognised),
         ),
         EventKind::AircraftDestroyedOnGround {
             air_group,
@@ -1392,6 +1394,7 @@ pub(super) fn describe(
             chance,
             expected,
             hits,
+            recognised,
         } => (
             "air_attack",
             d.id("air_group", *air_group)
@@ -1401,7 +1404,8 @@ pub(super) fn describe(
                 .num("shots", *shots)
                 .num("chance", *chance)
                 .num("expected", *expected)
-                .int("hits", *hits),
+                .int("hits", *hits)
+                .id_when_some("recognised", *recognised),
         ),
         EventKind::EscortsSent {
             air_group,

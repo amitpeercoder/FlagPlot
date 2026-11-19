@@ -487,3 +487,7 @@ path = "scenario_86_fed_with_the_lift.rs"
 [[test]]
 name = "scenario_87_the_order_of_a_staffs_take"
 path = "scenario_87_the_order_of_a_staffs_take.rs"
+
+[[test]]
+name = "scenario_88_what_the_attacked_saw"
+path = "scenario_88_what_the_attacked_saw.rs"

@@ -897,7 +897,8 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
                 shots: int(bombers_attacking),
                 chance: bomb_chance,
                 expected: attack_expected,
-                hits: attack_hits
+                hits: attack_hits,
+                recognised: None,
             },
             "seed {seed}"
         );

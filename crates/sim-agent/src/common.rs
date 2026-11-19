@@ -3,11 +3,12 @@
 use std::collections::BTreeMap;
 
 use serde::{Serialize, Serializer};
-use sim_core::events::EventKind;
+use sim_core::events::{EventKind, RecognisedWords};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
-    AirGroupId, BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId, TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId,
+    TaskForceId,
 };
 use sim_core::side_events::{SideEvent, SideEventKind};
 use sim_core::state::{AirGroup, AirGroupLocation, Base, LandUnit, Ship, ShipLocation, TaskForce};
@@ -276,9 +277,30 @@ impl<'a> Ctx<'a> {
                 self.order_number(*order),
                 crate::words::refusal(reason)
             ),
+            // The type the side's people recognised is said by the name its
+            // data has (decision 0167, 6), not by its number.
+            SideEventKind::AirAttackAgainst {
+                recognised: Some(aircraft_type),
+                ..
+            }
+            | SideEventKind::BaseAttackedAgainst {
+                recognised: Some(aircraft_type),
+                ..
+            } => kind.to_string().replace(
+                &RecognisedWords(Some(*aircraft_type)).to_string(),
+                &format!("recognised as {}", self.aircraft_type_name(*aircraft_type)),
+            ),
             other => other.to_string(),
         };
         self.map_text(&text)
+    }
+
+    /// The name the data gives an aircraft type: reference data, so common
+    /// knowledge. Its number where the data has no such type.
+    pub fn aircraft_type_name(&self, id: AircraftTypeId) -> String {
+        self.view
+            .aircraft_type(id)
+            .map_or_else(|| id.to_string(), |t| t.name.clone())
     }
 
     /// The side's number of one of its own ships (decision 0086).

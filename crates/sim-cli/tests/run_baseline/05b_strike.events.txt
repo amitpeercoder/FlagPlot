@@ -13,7 +13,7 @@ day   1  hash 131a8c7b82cbcc2c  15 events
 #7 D1 afternoon air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: sighted  <- #6
 #8 D1 afternoon Allied report: 3 ships, carrier, at (9,0): new contact:1  <- #7
 #9 D1 afternoon air_group:2 launched 18 aircraft at contact:1 at (9,0), 200 nm  <- order:3, #8
-#10 D1 afternoon air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 5 hits  <- #9
+#10 D1 afternoon air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 5 hits; recognised as aircraft_type:3  <- #9
 #11 D1 afternoon ship:3 took 5 hits on flotation, 50 points, now 50  <- #10
 #12 D1 afternoon ship:3 propulsion hit, working -> degraded  <- #10
 #13 D1 afternoon ship:3 main battery hit, no change, still working  <- #10

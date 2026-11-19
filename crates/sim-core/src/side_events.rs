@@ -45,12 +45,14 @@ use core::fmt;
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::events::{
-    AirFirer, AirTarget, Breakdown, Cause, EngagementEndReason, Event, EventKind, Factor, Weapon,
+    AirFirer, AirTarget, Breakdown, Cause, EngagementEndReason, Event, EventKind, Factor,
+    RecognisedWords, Weapon,
 };
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
-    AirGroupId, BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId, TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId,
+    TaskForceId,
 };
 use crate::state::{Side, TruthState};
 use crate::time::{ClockTime, Pulse};
@@ -145,13 +147,17 @@ pub enum SideEventKind {
         target: ShipId,
         weapon: Weapon,
     },
-    /// An air attack on the side's ship: on which ship of which force, and
-    /// how many aircraft it can count. Not the chance or the hits, nor the
-    /// air group that attacked.
+    /// An air attack on the side's ship: on which ship of which force, how
+    /// many aircraft it can count, what they attacked with, and their type
+    /// where the ship's people recognised it (decision 0167): `None` where
+    /// they did not. Not the chance or the hits, nor the air group that
+    /// attacked.
     AirAttackAgainst {
         task_force: TaskForceId,
         ship: ShipId,
         shots: Fixed,
+        weapon: Weapon,
+        recognised: Option<AircraftTypeId>,
     },
     /// The side's own air attack on a ship. Not the ship or its force.
     AirAttack {
@@ -194,7 +200,9 @@ pub enum SideEventKind {
         shots: Fixed,
     },
     /// A raid on the side's own base: everything the log has but the air
-    /// group that raided.
+    /// group that raided. A raid is with bombs, and its words say so; the
+    /// aircraft's type is given where the base's people recognised it
+    /// (decision 0167).
     BaseAttackedAgainst {
         base: BaseId,
         shots: Fixed,
@@ -204,6 +212,7 @@ pub enum SideEventKind {
         hits_on_aircraft: u32,
         hits_on_supply: u32,
         hits_on_men: u32,
+        recognised: Option<AircraftTypeId>,
     },
     /// The side's own search that sighted a force: which group. Not the
     /// distance or the chance, which are worked from where the force really
@@ -401,8 +410,19 @@ impl fmt::Display for SideEventKind {
                 target,
                 weapon,
             } => write!(f, "round {round}: {} at {target}", weapon.name()),
-            SideEventKind::AirAttackAgainst { ship, shots, .. } => {
-                write!(f, "{ship} attacked by {shots} aircraft")
+            SideEventKind::AirAttackAgainst {
+                ship,
+                shots,
+                weapon,
+                recognised,
+                ..
+            } => {
+                write!(
+                    f,
+                    "{ship} attacked by {shots} aircraft with {}, {}",
+                    weapon.name(),
+                    RecognisedWords(*recognised)
+                )
             }
             SideEventKind::AirAttack {
                 air_group,
@@ -458,6 +478,7 @@ impl fmt::Display for SideEventKind {
                 hits_on_aircraft,
                 hits_on_supply,
                 hits_on_men,
+                recognised,
             } => {
                 write!(
                     f,
@@ -470,8 +491,9 @@ impl fmt::Display for SideEventKind {
                 }
                 write!(
                     f,
-                    "{} on nothing",
-                    hits - hits_on_aircraft - hits_on_supply - hits_on_men
+                    "{} on nothing; {}",
+                    hits - hits_on_aircraft - hits_on_supply - hits_on_men,
+                    RecognisedWords(*recognised)
                 )
             }
             SideEventKind::SearchAttempt { air_group } => {
@@ -957,22 +979,29 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             ship,
             weapon,
             shots,
+            recognised,
             ..
         } => {
             if own_group(air_group) {
+                // The attacker is told nothing new (decision 0167, 7): not
+                // whether the ship's people recognised his aircraft.
                 Seen::Cut(SideEventKind::AirAttack {
                     air_group: *air_group,
                     weapon: *weapon,
                     shots: *shots,
                 })
             } else {
-                // The ship attacked: it can count the aircraft.
+                // The ship attacked: it can count the aircraft, it knows
+                // what was dropped at it, and it names their type only
+                // where its people recognised it (decision 0167, 1 and 2).
                 cut_if(
                     own_ship(ship),
                     SideEventKind::AirAttackAgainst {
                         task_force: *task_force,
                         ship: *ship,
                         shots: *shots,
+                        weapon: *weapon,
+                        recognised: *recognised,
                     },
                 )
             }
@@ -1033,8 +1062,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             hits_on_aircraft,
             hits_on_supply,
             hits_on_men,
+            recognised,
         } => {
             if own_base(base) {
+                // The type only where the base's people recognised it
+                // (decision 0167, 2 and 3).
                 Seen::Cut(SideEventKind::BaseAttackedAgainst {
                     base: *base,
                     shots: *shots,
@@ -1044,8 +1076,10 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
                     hits_on_aircraft: *hits_on_aircraft,
                     hits_on_supply: *hits_on_supply,
                     hits_on_men: *hits_on_men,
+                    recognised: *recognised,
                 })
             } else {
+                // The attacker is told nothing new (decision 0167, 7).
                 cut_if(
                     own_group(air_group),
                     SideEventKind::BaseAttacked {
@@ -3444,14 +3478,24 @@ mod tests {
                     chance: Fixed::from_ratio(2, 5),
                     expected: fx(4),
                     hits: 3,
+                    recognised: Some(AircraftTypeId::new(3)),
                 },
+                // The attacker is told nothing new (decision 0167, 7); the
+                // attacked side is told the weapon and the type recognised.
                 Cut(
                     "AirAttack",
-                    &["task_force", "ship", "chance", "expected", "hits"],
+                    &[
+                        "task_force",
+                        "ship",
+                        "chance",
+                        "expected",
+                        "hits",
+                        "recognised",
+                    ],
                 ),
                 Cut(
                     "AirAttackAgainst",
-                    &["air_group", "weapon", "chance", "expected", "hits"],
+                    &["air_group", "chance", "expected", "hits"],
                 ),
             ),
             row(
@@ -3579,6 +3623,7 @@ mod tests {
                     hits_on_aircraft: 2,
                     hits_on_supply: 1,
                     hits_on_men: 0,
+                    recognised: Some(AircraftTypeId::new(3)),
                 },
                 Cut(
                     "BaseAttacked",
@@ -3589,6 +3634,7 @@ mod tests {
                         "hits_on_aircraft",
                         "hits_on_supply",
                         "hits_on_men",
+                        "recognised",
                     ],
                 ),
                 Cut("BaseAttackedAgainst", &["air_group"]),

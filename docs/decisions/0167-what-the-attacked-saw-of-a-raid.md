@@ -1,10 +1,10 @@
 # 0167: What the attacked saw of a raid: its weapon and, where recognised, its aircraft. A plan
 
-Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the designer the same day with the answers the architect recommended; one of them fell away in writing the hand calculation (Confirmed, below). The hand calculation is written. To be built.
+Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the designer the same day with the answers the architect recommended; one of them fell away in writing the hand calculation (Confirmed, below). The hand calculation is written. Built on Nov 19, 2026 (As built, below).
 
 Summary: A side whose ship or base is raided from the air is told only how many aircraft came. It is not told what they attacked with, nor what kind of aircraft they were, though the men under the attack saw both. The plan: the attacked side is always told the weapon, bombs or torpedoes; and it is told the type of aircraft where its people recognised it, which they do with a chance that is lower by night. A type not recognised is not named, and no wrong name is given in the first build. With six questions for the designer
 
-Standing: Confirmed by the designer, Nov 19, 2026, as recommended. The hand calculation is written; the build is next
+Standing: Confirmed by the designer, Nov 19, 2026, as recommended. Built on Nov 19, 2026
 
 ## Why
 
@@ -75,4 +75,38 @@ The designer confirmed the plan: "Yes, as recommended."
 ## The hand calculation
 
 It is in `tests/scenario_88_what_the_attacked_saw.rs`, written before the code. It has no scenario file of its own: it plays the morning raid of scenario 19a, an attack on a ship that is certain to be made, and the first raid of scenario 6a, on a base, with the figure at 1, at 0 and at 0.75.
+
+## As built
+
+Built on Nov 19, 2026, on the branch `raid-seen`. Every statement of the hand calculation holds (`tests/scenario_88_what_the_attacked_saw.rs`, 13 tests); over seeds 1 to 1000 at 0.75 the type is recognised on 766 seeds, within 696 to 804.
+
+**What changed where.**
+
+- `sim-core`, `events.rs`: the true `AirAttack` and `BaseAttacked` gain one field, `recognised: Option<AircraftTypeId>`, the type the people under the attack recognised, or none. Their words end "; recognised as aircraft_type:N" or "; type not made out" (`RecognisedWords`, which the side's events share).
+- `sim-core`, `side_events.rs`: `AirAttackAgainst` gains `weapon` and `recognised`; its words are "ship:N attacked by A aircraft with bombs, recognised as aircraft_type:N" or "..., type not made out". `BaseAttackedAgainst` gains `recognised`; its words begin "bombs at" as before and end "; recognised as aircraft_type:N" or "; type not made out". The attacker's `AirAttack` and `BaseAttacked` are cut of `recognised` and are as they were. The cut table test says so.
+- `sim-core`, `rng.rs`: `Draw::RaidRecognised`, code 13, added at the end. No pinned number changed.
+- `sim-core`, `airstrike/air_combat.rs`: the draw, made as each `AirAttack` and `BaseAttacked` is recorded (step 4 of the air combat step), in the air combat subsystem, keyed on the day, the pulse and the ship or base attacked.
+- `sim-core`, `refdata.rs`, and `sim-data`, `reference.rs`: the figure `raid_recognised_chance`, required, a chance from 0 to 1; 0 in the unit tests' figures.
+- Data: `data/reference/air_combat.toml` 0.75, a placeholder resting on no source; `data/reference/step1/air_combat.toml` 0, and its `README.md` says so. No scenario names a placeholder variant of the air combat file: every scenario names `data/reference/air_combat.toml` (the live figures, or the frozen copy through `LoadOptions`), so there was no other file to give the figure.
+- `sim-agent`: the events tool and `explain` say the type by the name its data has ("recognised as Placeholder dive bomber"). The briefing's `attacks_on_ships` from the air are counted by ship and weapon, as salvos are, each with `weapon`, `recognised` (the names, each once) and `not_recognised` (a count); `raids_on_bases` gain `weapon` ("bombs") and `recognised` (a name or null). Its text: "Attack on ship:1 ... from the air: 27 aircraft with bombs, 2 attacks, recognised as ..." and "Raid on ...: 6 aircraft attacked with bombs, type not made out, ...". The schemas and `schemas/README.md` say so.
+- `sim-cli`: the export's true events carry `recognised` where a type was recognised, and the attacked side's air attack `weapon` and `recognised`; a file where none is recognised has no new key there.
+- The rulebook: chapter 5, "What the attacked saw", and the two attacks' "A side sees"; chapter 1, the tables of what a side sees and the list of `Draw` values; chapter 8, the versions. The glossary gains "Recognised".
+
+**Versions.** The agent interface rises from 27 to 28: an air attack's `weapon` in the briefing changes meaning (it was always null) and the side's events' words change. The state's layout (`flagplot-state-v48`) and the hash do not change: no field of the state is added, and the event log enters the hash by its count only. The saved game's version (23) does not change: a saved game holds no event. The rules label (20) does not change: see reading 6.
+
+**Generated and pinned files.** Remade by `sh scripts/regenerate.sh`: 20 run baselines (`*.events.txt` of scenarios 5, 5b, 5c, 5d, 6, 6a to 6d2, 7, 12a, 12b, 12c, 13b, 16, 31, 50, 73 and 83), in the words of 117 attack lines only, no hash line; 3 agent goldens, in the words of the raid and attack lines only; 5 recorded games, in the answers' version and, in three, the words of what the attacked side is told (their README has the paragraph), and 4 of their `save.json` in the hash of `air_combat.toml` only; the batch fixture of scenario 6, in the hash of `air_combat.toml` only. No pinned hash changed. By hand, wording and versions only: `tests/scenario_06b_wear_and_repair.rs` and ten other scenario tests (`recognised: None` in an expected true event, or `..` in a pattern; no number moved), the unit test of the attack's words in `airstrike/tests.rs`, `crates/sim-agent/tests/legibility.rs` and `amendments.rs` (the new words), `play.rs`, `validator.rs`, `holds_and_preview.rs` and `interrupts.rs` (version 28), and the four export digests of `crates/sim-cli/tests/export_pictures.rs` for scenarios 5, 31, 50 and 58, checked by taking the new words, fields and file hash back out, after which each export hashes as pinned before.
+
+**Readings made that the record did not, for the architect to rule on.**
+
+1. **One field carries the outcome.** The rule card's "one field" is `recognised: Option<AircraftTypeId>` on each true event: the type where recognised, none where not. The type is the attacking group's own, read when the attack is recorded.
+2. **A raid on a base gains no weapon field.** Its side's words already begin "bombs at", which says it; the briefing's raid gains `weapon`, always "bombs".
+3. **Two attacks on one ship in a pulse share its stream.** Item 5 keys the stream on the ship or base alone. Each ship or base attacked opens one stream for the pulse, and each attack on it draws the next number, in the order the attacks are recorded (group order). A stream opened afresh for each attack would give every attack on one ship in one pulse the same draw; keying it on the attacking group too would make what the side is told move with the enemy's group numbers.
+4. **The draw is taken at 0 and at 1 too.** `chance` always takes a number. It is a stream of its own, so nothing else moves.
+5. **The air subsystem is `Subsystem::AirCombat`.** The claims of a raid draw in the intelligence subsystem; this draw is in the air combat one, as item 5 says.
+6. **The rules label is not raised.** The record's "What it costs" expected the saved game's version and the rules label to rise. By the project's rule the label rises when a change makes an existing game do something else; this one changes no fight, order, staff choice or daily hash, and a replay of a saved game gives the same hashes. A game saved before it is refused anyway, since `air_combat.toml` changed. The saved game holds no event, so its version stays too.
+7. **The briefing counts air attacks on a ship by weapon.** One entry per ship and weapon, as salvos are, so that each entry has one weapon. The types recognised are listed once each, and the attacks not made out are counted.
+8. **"A game saved and replayed gives the same"** is tested in scenario 88 as the same scenario, seed and orders played again from a fresh load, which is what a replay does; the save and replay of `sim-cli` are exercised on the recorded games, whose daily hashes did not move.
+9. **"Nothing more is told"** is tested with the enemy's task force and air groups renamed: the Allied side's events are the same, field and word.
+10. **The record's summary** still speaks of a chance "lower by night", which the confirmation dropped. It is the architect's line and is left as it is.
+11. **The figures' list.** `docs/validation/tuning/air-figures-closed.md`, which lists every air figure, does not yet name `raid_recognised_chance`; it is left to the architect, who keeps the tuning records.
 

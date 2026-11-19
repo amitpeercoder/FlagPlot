@@ -86,8 +86,13 @@ pub const FORMAT: &str = "flagplot-agent";
 /// waits for, its men and the day it expects to be ashore (decision 0159,
 /// rule E). 27 adds to the load order with a `weight_t` the level `each_t`,
 /// a decimal string, the most any one ship is to hold of the cargo, and the
-/// refusal `LevelNotAboveZero` (decision 0162).
-pub const VERSION: u32 = 27;
+/// refusal `LevelNotAboveZero` (decision 0162). 28 tells the side what an
+/// air attack on its ship was made with and, where its people recognised
+/// them, the aircraft's type: the briefing's `attacks_on_ships` from the air
+/// are counted by weapon, with `weapon`, `recognised` and `not_recognised`,
+/// a raid on a base has `weapon` and `recognised`, and the words of both
+/// events say it (decision 0167).
+pub const VERSION: u32 = 28;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

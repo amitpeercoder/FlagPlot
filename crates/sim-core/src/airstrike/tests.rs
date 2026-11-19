@@ -307,6 +307,7 @@ fn attack_of(event: &Event) -> (u32, u32, u32, Weapon, Fixed, Fixed, Fixed, u32)
             chance,
             expected,
             hits,
+            ..
         } => (
             air_group.raw(),
             task_force.raw(),
@@ -706,7 +707,7 @@ fn the_attack_event_reads_as_the_decision_says_and_cites_the_launch_with_a_break
     assert_eq!(
         attack.kind.to_string(),
         format!(
-            "air_group:1 bombs at ship:2: 18 shots x 0.2 = 3.6 expected, {hits} {}",
+            "air_group:1 bombs at ship:2: 18 shots x 0.2 = 3.6 expected, {hits} {}; type not made out",
             if hits == 1 { "hit" } else { "hits" }
         )
     );

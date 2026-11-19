@@ -23,7 +23,7 @@ day   1  hash b6ff847eba858b52  33 events
 #17 D1 afternoon air_group:4 lost 4 aircraft, 8 left  <- #14
 #18 D1 afternoon air_group:3 lost 1 aircraft, 11 left  <- #15
 #19 D1 afternoon air_group:2 lost 1 aircraft, 17 left  <- #16
-#20 D1 afternoon air_group:2 bombs at ship:3: 17 shots x 0.2 = 3.4 expected, 5 hits  <- #12, #19
+#20 D1 afternoon air_group:2 bombs at ship:3: 17 shots x 0.2 = 3.4 expected, 5 hits; recognised as aircraft_type:3  <- #12, #19
 #21 D1 afternoon air_group:4 patrol at the bombers of air_group:2: 6 shots x 0.3 = 1.8 expected, 0 hits after the attack  <- #12, #20
 #22 D1 afternoon task_force:2 guns at the raid of air_group:2: 36 shots x 0.05 = 1.8 expected, 2 hits after the attack  <- #12, #20
 #23 D1 afternoon air_group:2 lost 2 aircraft, 15 left  <- #22

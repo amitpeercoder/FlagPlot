@@ -56,7 +56,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 27. A field removed from an answer, or a field whose meaning
+`version` is 28. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -1107,3 +1107,16 @@ kinds none), `waits_for` (each with `kind`, one of `men`, `leave`, `day`, `force
 and `to_hand`, or null), `expected_ashore` (a day, or null where the staff cannot say or the men are ashore),
 `need_to_know` (as in `plans`, or null), `tasks` (the staff's intents under it: `intent`, `kind`, `statement`, `phase`)
 and `text`, the brief as an array of lines. Nothing else is in it: no reasons.
+
+## What the attacked saw of a raid (decision 0167)
+
+`version` is 28. A side is told what an air attack on its ship was made with, and, where its people recognised the
+aircraft, their type, by the name its data has; a type not recognised is not named, and never named as another. In the
+briefing, an entry of `attacks_on_ships` with `by` `"aircraft"` now has `weapon` (`"bombs"` or `"torpedoes"`, where it
+was `null`), and air attacks on one ship are counted by weapon, as salvos are: one entry for each ship and weapon.
+Each entry gains `recognised`, the names of the types its people recognised in those attacks, each once, in the order
+first recognised, and `not_recognised`, the attacks whose type was not made out; a salvo's entry has `[]` and 0. An
+entry of `raids_on_bases` gains `weapon` (always `"bombs"`) and `recognised`, the type's name or `null`. The words of
+the side's events say it too: "ship:N attacked by A aircraft with bombs, recognised as NAME" or "..., type not made
+out", and a raid on a base ends "; recognised as NAME" or "; type not made out"; `explain` and `events` give those
+words. The side that attacked is told nothing new.

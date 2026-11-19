@@ -362,6 +362,12 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// changes an export's state version and day hashes and nothing else.
 /// Remade again at the state layout v48 (decision 0162), which changes an
 /// export's state version and day hashes and nothing else.
+/// Remade again for decision 0167, in the four scenarios with an air attack
+/// or a raid (5, 31, 50 and 58): each changes in the hash of
+/// `air_combat.toml`, the words of those events (the type recognised or
+/// "type not made out", and the attacked side's weapon), their `recognised`
+/// field where a type was recognised and the attacked side's `weapon`, and
+/// nothing else: with those taken back out each file hashes as pinned before.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -372,14 +378,14 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
     let before: [(&str, u64); 10] = [
         ("01_transit", 0x6fd4_3935_c8c0_ab2e),
         ("04a_night_action", 0x3a18_7ee3_05f4_fdcf),
-        ("05_eastern_solomons", 0xfc2f_cee4_4129_a52a),
+        ("05_eastern_solomons", 0xd685_0321_f029_2f71),
         ("21_landing", 0x683b_4443_825d_250f),
         ("23_fight_ashore", 0x7ffb_464b_9c3f_0fda),
-        ("31_airfield_damage", 0x2b8f_93f2_bd1b_3f0e),
+        ("31_airfield_damage", 0xbaf1_5f19_efac_5920),
         ("36_one_convoy", 0x9120_78a8_3caf_83b2),
         ("43_keep_two_bases_fed", 0xf0c2_7b11_3554_79b1),
-        ("50_neutralise_a_base", 0xacac_26a1_d839_6296),
-        ("58_a_carrier_force_closes", 0xa49e_efa0_a425_a93b),
+        ("50_neutralise_a_base", 0x1f7d_4cd2_b506_9c9a),
+        ("58_a_carrier_force_closes", 0x1a44_9fa5_ba47_b79b),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;

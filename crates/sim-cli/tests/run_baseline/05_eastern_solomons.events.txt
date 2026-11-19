@@ -129,12 +129,12 @@ day   1  hash 587a8367cadee1c4  174 events
 #123 D1 afternoon air_group:9 patrol at the bombers of air_group:19: 1 shots x 0.3 = 0.3 expected, 0 hits  <- #103
 #124 D1 afternoon air_group:9 lost 2 aircraft, 11 left  <- #121
 #125 D1 afternoon air_group:18 lost 2 aircraft, 21 left  <- #122
-#126 D1 afternoon air_group:6 bombs at ship:33: 14 shots x 0.2 = 2.8 expected, 2 hits  <- #98, #105
-#127 D1 afternoon air_group:7 bombs at ship:33: 15 shots x 0.2 = 3 expected, 2 hits  <- #99
-#128 D1 afternoon air_group:8 torpedoes at ship:33: 8 shots x 0.15 = 1.2 expected, 2 hits  <- #100
-#129 D1 afternoon air_group:12 bombs at ship:1: 14 shots x 0.2 = 2.8 expected, 5 hits  <- #101, #112
-#130 D1 afternoon air_group:15 bombs at ship:1: 7 shots x 0.2 = 1.4 expected, 0 hits  <- #102, #119
-#131 D1 afternoon air_group:19 bombs at base:1: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #103
+#126 D1 afternoon air_group:6 bombs at ship:33: 14 shots x 0.2 = 2.8 expected, 2 hits; recognised as aircraft_type:2001  <- #98, #105
+#127 D1 afternoon air_group:7 bombs at ship:33: 15 shots x 0.2 = 3 expected, 2 hits; recognised as aircraft_type:2001  <- #99
+#128 D1 afternoon air_group:8 torpedoes at ship:33: 8 shots x 0.15 = 1.2 expected, 2 hits; recognised as aircraft_type:2002  <- #100
+#129 D1 afternoon air_group:12 bombs at ship:1: 14 shots x 0.2 = 2.8 expected, 5 hits; recognised as aircraft_type:2004  <- #101, #112
+#130 D1 afternoon air_group:15 bombs at ship:1: 7 shots x 0.2 = 1.4 expected, 0 hits; recognised as aircraft_type:2004  <- #102, #119
+#131 D1 afternoon air_group:19 bombs at base:1: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing; recognised as aircraft_type:2005  <- #103
 #132 D1 afternoon air_group:18 patrol at the bombers of air_group:6: 5 shots x 0.16875 = 0.84375 expected, 0 hits after the attack  <- #98, #126, #127, #128
 #133 D1 afternoon task_force:4 guns at the raid of air_group:6: 26 shots x 0.028125 = 0.73125 expected, 0 hits after the attack  <- #98, #126, #127, #128
 #134 D1 afternoon air_group:1 patrol at the bombers of air_group:12: 18 shots x 0.3 = 5.4 expected, 7 hits after the attack  <- #101, #129

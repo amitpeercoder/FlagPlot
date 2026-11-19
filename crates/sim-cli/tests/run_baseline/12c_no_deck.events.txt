@@ -18,8 +18,8 @@ day   1  hash f282e951a29e12e2  47 events
 #12 D1 morning   Japanese report: 1 ship, transport, at (9,5): new contact:1  <- #11
 #13 D1 morning   air_group:2 launched 18 aircraft at contact:1 at (9,0), 200 nm  <- order:3, #9
 #14 D1 morning   air_group:3 launched 18 aircraft at contact:1 at (9,5), 200 nm  <- order:4, #12
-#15 D1 morning   air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 3 hits  <- #13
-#16 D1 morning   air_group:3 bombs at ship:7: 18 shots x 0.2 = 3.6 expected, 4 hits  <- #14
+#15 D1 morning   air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 3 hits; recognised as aircraft_type:3  <- #13
+#16 D1 morning   air_group:3 bombs at ship:7: 18 shots x 0.2 = 3.6 expected, 4 hits; recognised as aircraft_type:3  <- #14
 #17 D1 morning   ship:3 took 3 hits on flotation, 30 points, now 30  <- #15
 #18 D1 morning   ship:3 flight deck hit, working -> degraded  <- #15
 #19 D1 morning   ship:3 propulsion hit, working -> degraded  <- #15
@@ -39,8 +39,8 @@ day   1  hash f282e951a29e12e2  47 events
 #33 D1 afternoon air_group:4 searched for task_force:3 at 200 nm, chance 0.509295: not sighted  <- #32
 #34 D1 afternoon air_group:2 launched 18 aircraft at contact:1 at (9,0), 200 nm  <- order:3, #31
 #35 D1 afternoon air_group:3 launched 9 aircraft at contact:1 at (9,5), 200 nm  <- order:4, #26
-#36 D1 afternoon air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 5 hits  <- #34
-#37 D1 afternoon air_group:3 bombs at ship:7: 9 shots x 0.2 = 1.8 expected, 1 hit  <- #35
+#36 D1 afternoon air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 5 hits; recognised as aircraft_type:3  <- #34
+#37 D1 afternoon air_group:3 bombs at ship:7: 9 shots x 0.2 = 1.8 expected, 1 hit; type not made out  <- #35
 #38 D1 afternoon ship:3 took 5 hits on flotation, 50 points, now 80  <- #36
 #39 D1 afternoon ship:3 propulsion hit, degraded -> out  <- #36
 #40 D1 afternoon ship:3 main battery hit, no change, still working  <- #36

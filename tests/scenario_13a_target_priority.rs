@@ -397,6 +397,7 @@ fn attack_of(event: &Event) -> Attack {
             chance,
             expected,
             hits,
+            ..
         } => Attack {
             id: event.id,
             group: air_group.raw(),
