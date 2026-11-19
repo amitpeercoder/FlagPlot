@@ -154,7 +154,11 @@ def main():
     if os.path.exists(names_path):
         with open(names_path) as handle:
             names = json.load(handle)["names"]
-    game = Game([args.sim_cli, "mcp", args.scenario, "--seat", args.seat])
+    command = [args.sim_cli, "mcp", args.scenario, "--seat", args.seat]
+    # The game in play. A restart ends it and begins the scenario again from
+    # its first evening: nothing of the old game is kept.
+    held = {"game": Game(command)}
+    swap = threading.Lock()
 
     class Handler(BaseHTTPRequestHandler):
         def answer(self, status, kind, body):
@@ -175,7 +179,7 @@ def main():
             elif self.path == "/config":
                 self.json(config)
             elif self.path == "/tools":
-                self.json(game.tools())
+                self.json(held["game"].tools())
             elif self.path == "/map":
                 self.json(chart)
             elif self.path == "/coast" and coast is not None:
@@ -186,13 +190,24 @@ def main():
                 self.answer(404, "text/plain", b"not found")
 
         def do_POST(self):
-            if self.path != "/call":
+            if self.path not in ("/call", "/restart"):
                 self.answer(404, "text/plain", b"not found")
                 return
             # Only this machine's own page may call: a page of another site
             # cannot send JSON here without asking first, and is not answered.
             if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
                 self.json({"refused": "send JSON"}, 415)
+                return
+            if self.path == "/restart":
+                with swap:
+                    old = held["game"]
+                    try:
+                        held["game"] = Game(command)
+                    except (RuntimeError, OSError) as error:
+                        self.json({"refused": str(error)}, 500)
+                        return
+                    old.process.terminate()
+                self.json({"ok": True})
                 return
             try:
                 length = int(self.headers.get("Content-Length", "0"))
@@ -202,7 +217,7 @@ def main():
                 self.json({"refused": "a call is {tool, arguments}"}, 400)
                 return
             try:
-                self.json(game.call(tool, arguments))
+                self.json(held["game"].call(tool, arguments))
             except RuntimeError as error:
                 self.json({"refused": str(error)}, 500)
 
@@ -216,7 +231,7 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
-        game.process.terminate()
+        held["game"].process.terminate()
 
 
 if __name__ == "__main__":

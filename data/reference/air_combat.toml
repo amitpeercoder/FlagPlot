@@ -156,6 +156,15 @@ patrol_before_attack_share = "0.4"
 # row sizes it. 0 in the frozen step 1 figures, where no type is named.
 raid_recognised_chance = "0.75"
 
+# How much the experience of the ship attacked moves that chance (decision
+# 0168): for an air attack on a ship the chance is
+# min(1, raid_recognised_chance x (1 + strength x (experience - 2))), the form
+# of the dark surface fight; a raid on a base keeps the plain chance. From 0 to
+# 0.5; at 0 the chance is the plain figure. Placeholder set by the architect
+# for decision 0168, resting on no source: no row sizes it. 0 in the frozen
+# step 1 figures.
+raid_recognised_experience_strength = "0.25"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 
