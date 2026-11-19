@@ -419,8 +419,8 @@ pub(crate) fn needs_to_know(view: &SideView<'_>) -> Vec<sim_core::command::NeedT
     Day::run(view, &area, None).map_or_else(Vec::new, |day| day.needs)
 }
 
-/// The plan order of each intent of the commander's in force (decision 0159,
-/// rule E), from the staff's working of this morning, stored nowhere.
+/// The plan order of each intent of the commander's in force and of each
+/// take the staff formed (decision 0159, rule E; decision 0164), from the staff's working of this morning, stored nowhere.
 pub(crate) fn plan_orders(view: &SideView<'_>) -> Vec<sim_core::command::PlanOrder> {
     let known = view.known_to(sim_core::pictures::CommandRef::Area);
     let area = known.view();

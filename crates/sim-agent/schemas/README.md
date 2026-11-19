@@ -24,7 +24,7 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `command` | `command.schema.json` | `set_intent`, `withdraw_intent`, `set_limit`, `set_leave`, `hold`, `release`, `set_interrupt`, `acknowledge`, `approve` (of a plan or of a preview), `cancel_plan`: queued or refused; also `preview` of a command the tool refuses, and `approve` of a void preview |
 | `preview` | `preview.schema.json` | `preview` |
 | `propose` | `propose.schema.json` | `propose` |
-| `plan_order` | `plan_order.schema.json` | `order` (a seat whose side has a staff): the plan of one of the commander's intents as the staff hands it in |
+| `plan_order` | `plan_order.schema.json` | `order` (a seat whose side has a staff): the plan of one of the commander's intents, or of a take the staff formed, as the staff hands it in |
 | `staff_orders` | `staff_orders.schema.json` | `staff_orders` |
 | `why` | `why.schema.json` | `why` (or `not_known`) |
 | `run` | `run.schema.json` | `run` (offered where exactly one seat is held by a player) |
@@ -1092,9 +1092,11 @@ with no `each_t` is as it was. The words of a queued load say "no ship to hold m
 ## The plan as an order: the tool `order` (decision 0159, rule E, items 15 to 17)
 
 `version` is 26. The tool `order` (a seat whose side has a staff; argument `intent`, the number of one of the commander's
-intents in force) gives the answer `plan_order` (`plan_order.schema.json`); it changes nothing and is worked on the
-state as the coming day will find it, with the commands queued taken in. An intent not in force, the staff's own or
-not the side's is refused in the words `propose` uses. The answer has `for_day`, `as_at`, `intent`, `mission` (the
+intents in force, or of a `take_place` in force that the staff formed, decision 0164) gives the answer `plan_order`
+(`plan_order.schema.json`); it changes nothing and is worked on the state as the coming day will find it, with the
+commands queued taken in. An intent not in force, the staff's own other than a `take_place`, or not the side's is
+refused in the words `propose` uses. The order of a take the staff formed is worked as a commander's take is, and the
+answer's shape is the same. The answer has `for_day`, `as_at`, `intent`, `mission` (the
 intent in words), `plan` (`number`, `state`), `phases` (in order: `name`, one of `prepare`, `move`, `land`, `wait`,
 `hold`; `stage`, `done`, `under_way` or `to_come`; `ends`, one of `released`, `first_man_ashore`,
 `place_is_the_sides`, `base_is_the_sides` and `never`; `place`, a place, for the first two; `base`, a handle, for

@@ -166,8 +166,13 @@ struct Played {
     /// The tool's answer for each order of each morning, by intent.
     answers: BTreeMap<u32, BTreeMap<u32, serde_json::Value>>,
     /// The tool's refusals of each morning: of intent 1 asked on the
-    /// Japanese side, of each staff intent, and of intent 99.
+    /// Japanese side, of each staff intent that is not a take, and of
+    /// intent 99.
     refusals: BTreeMap<u32, Vec<(Side, u32, String)>>,
+    /// The commander's intents in force on each morning.
+    commanders: BTreeMap<u32, Vec<u32>>,
+    /// The takes the staff formed in force on each morning.
+    staff_takes: BTreeMap<u32, Vec<u32>>,
     hashes: Vec<u64>,
 }
 
@@ -178,6 +183,8 @@ fn play(name: &str, text: &str, ask: bool) -> Played {
         orders: BTreeMap::new(),
         answers: BTreeMap::new(),
         refusals: BTreeMap::new(),
+        commanders: BTreeMap::new(),
+        staff_takes: BTreeMap::new(),
         hashes: Vec::new(),
     };
     loop {
@@ -185,6 +192,8 @@ fn play(name: &str, text: &str, ask: bool) -> Played {
         let mut morning: Option<Vec<PlanOrder>> = None;
         let mut answers = BTreeMap::new();
         let mut refusals = Vec::new();
+        let mut commanders = Vec::new();
+        let mut staff_takes = Vec::new();
         let summary = scenario
             .next_day_watched(as_staffs(&held), &mut |world, moment| {
                 if !ask {
@@ -195,13 +204,17 @@ fn play(name: &str, text: &str, ask: bool) -> Played {
                     let orders = SupplyStaff.plan_orders(view);
                     for o in &orders {
                         let answer = sim_agent::plan_order(&view, &SupplyStaff, o.intent.raw())
-                            .expect("the tool answers for the commander's intent");
+                            .expect("the tool answers for an intent that has an order");
                         answers.insert(o.intent.raw(), answer);
                     }
+                    // The staff's intents that are not a take: a take the
+                    // staff formed has an order (decision 0164) and is
+                    // answered above.
                     let staff_intents: Vec<u32> = view
                         .command_state()
                         .intents_in_force()
                         .filter(|i| i.maker == sim_core::command::Maker::Staff)
+                        .filter(|i| !matches!(i.kind, IntentKind::TakePlace { .. }))
                         .map(|i| i.id.raw())
                         .collect();
                     for number in staff_intents.into_iter().chain([99]) {
@@ -213,6 +226,16 @@ fn play(name: &str, text: &str, ask: bool) -> Played {
                     let refused =
                         sim_agent::plan_order(&japanese, &SupplyStaff, 1).expect_err("refused");
                     refusals.push((Side::Japanese, 1, refused.message));
+                    for i in view.command_state().intents_in_force() {
+                        match i.maker {
+                            sim_core::command::Maker::Commander => commanders.push(i.id.raw()),
+                            sim_core::command::Maker::Staff => {
+                                if matches!(i.kind, IntentKind::TakePlace { .. }) {
+                                    staff_takes.push(i.id.raw());
+                                }
+                            }
+                        }
+                    }
                     morning = Some(orders);
                 }
             })
@@ -226,6 +249,8 @@ fn play(name: &str, text: &str, ask: bool) -> Played {
                 .insert(day, morning.expect("the staff's moment was passed"));
             played.answers.insert(day, answers);
             played.refusals.insert(day, refusals);
+            played.commanders.insert(day, commanders);
+            played.staff_takes.insert(day, staff_takes);
         }
     }
     played.hashes = scenario.world.day_hashes().to_vec();
@@ -720,6 +745,20 @@ fn a_seats_tool_gives_it() {
     assert!(game("80").refusals[&5]
         .iter()
         .any(|(side, n, _)| *side == Side::Allied && *n == 2));
+    // Every order answered is of an intent of the commander's or of a take
+    // the staff formed: no other intent of the staff's has one.
+    for (key, g) in games() {
+        for (day, orders) in &g.orders {
+            for o in orders {
+                assert!(
+                    g.commanders[day].contains(&o.intent.raw())
+                        || g.staff_takes[day].contains(&o.intent.raw()),
+                    "{key} {day}: intent {}",
+                    o.intent.raw()
+                );
+            }
+        }
+    }
 }
 
 #[test]
