@@ -1,10 +1,10 @@
 # 0179: The type of the aircraft claimed destroyed on the ground
 
-Status: a plan by the architect, written on Nov 19, 2026, at the designer's word ("if the type is known, it should say which type"). To be read by a reviewer who has not seen it written, and amended, before it is built.
+Status: a plan by the architect, written on Nov 19, 2026, at the designer's word ("if the type is known, it should say which type"). Read by a reviewer who had not seen it written, and amended on that reading ("Amended on review", at the end) before it is built.
 
-Summary: A raid on a base claims a number of aircraft destroyed on the ground and says nothing of what they were. The raiders now make out the type of each aircraft they claim, or do not, by a chance. A type they name is a type that was on the field; the number against it may be more than the truth, as the claim's number already may. A bombardment from the sea makes out none
+Summary: A raid on a base claims a number of aircraft destroyed on the ground and says nothing of what they were. The raiders now make out the types of the aircraft they claim, or do not, by one chance for the claim. A type they name is a type that was on the field; the number against it may be more than the truth, as the claim's number already may. A bombardment from the sea makes out none
 
-Standing: A plan, written by the architect on Nov 19, 2026. Under review
+Standing: A plan, written by the architect on Nov 19, 2026, and amended on review. To be built
 
 ## Why
 
@@ -20,22 +20,25 @@ What is so today, read from the code:
 
 ## The rules
 
-1. **A claim of aircraft destroyed on the ground may name types.** It gains a list of pairs, a type of aircraft and a number, in order of the type's number, each number above 0. The numbers add to no more than the aircraft claimed on the ground; what is left over is aircraft whose type was not made out.
-2. **What each claimed aircraft is, before any is made out:**
-   - an aircraft the raid's bombs really destroyed is of its own group's type;
-   - an aircraft claimed falsely is of the type most numerous on the field as it was counted for the pulse, before any raid of the pulse (the count of the second bullet above, added up by type); where two types are equally numerous, the one with the lower number;
-   - where the field was counted empty, a false claim has no type and is never made out.
-3. **Each such aircraft is made out or not,** by a chance, `claim_type_made_out_chance` of the air combat figures: for each type in order of its number, the number made out is drawn as shots are (`roll_shots`: that many whole draws at the chance). Those made out are named in the list under their type; the rest are not named.
-4. **The draws are the claim's own:** a stream keyed as the claim's stream is (the raid's first group and the base), with a draw value of its own, `Draw::ClaimType`, added at the end. No other draw moves: a fight, a claim's numbers and every other claim are what they were at any setting of the chance.
-5. **A bombardment's claim names no type.** Ships firing from the sea make out none.
-6. **A claim of aircraft shot down names no type** by this record (later).
-7. **The claim's words** give the types after the number: "5 aircraft destroyed on the ground (3 of type T, 2 of a type not made out)", with a type named as decision 0167 names one. Where no type is made out the words are what they were.
-8. **Who sees it:** whoever sees the claim (decision 0056, 0135), and no one else. The other side is told nothing of it, as now.
-9. **The figure** is a placeholder: 0.75 in the live figures, the figure decision 0167 gave for recognising a raid; 0 in the frozen step 1 figures, so that every game on them names no type and is what it was.
+1. **A claim of aircraft destroyed on the ground may name types.** It gains a list of pairs, a type of aircraft and a number, in order of the type's number, each number above 0. The list is empty, or its numbers add to exactly the aircraft claimed on the ground.
+2. **The field** is the aircraft on the ground at the raided base as they are counted at the start of the air combat step, before any raid of the pulse lands, added up by the type of each group. The count the hits are taken from is changed by each raid, so the field is kept apart, as it first stood.
+3. **What each claimed aircraft is:**
+   - an aircraft the raid's bombs really destroyed is of the type of the air group it belonged to, the group on the ground, not the group that bombed it; the number is the number really taken from that group;
+   - the aircraft claimed falsely are shared over the types of the field in proportion to their numbers there: each type is given the whole part of the false number times its share; what is left is given one at a time to the types with the largest part cut off, a tie going to the type with the lower number. No draw.
+4. **The types are made out or not, once for the claim,** by one draw at `raid_recognised_chance`, the chance with which men make out a type of aircraft in a raid (decision 0167). Made out, the list is every type of rule 3 with its number. Not made out, the list is empty. Where the field was counted empty, or nothing is claimed on the ground, there is no draw and the list is empty.
+5. **The draw is its own:** `Draw::ClaimType`, code 18, added at the end; on a stream keyed as the claim's stream is (`rng_pair`, the intelligence subsystem, the raiding side's first unit to fire and the raid's first group), with that draw value. No other draw moves: a fight, a claim's numbers and every other claim are what they were at any setting of the chance.
+6. **A bombardment's claim names no type.** Ships firing from the sea make out none.
+7. **A claim of aircraft shot down names no type** by this record (later).
+8. **The claim's words** give the types after the number: "5 aircraft destroyed on the ground (3 of type T, 2 of type U)", with a type named as decision 0167 names one, and the seat's tools naming it by its name in the data as they do there. Where the list is empty the words are what they were.
+9. **Who sees it:** whoever sees the claim (decisions 0056 and 0135), and no one else. The other side is told nothing of it, as now.
+10. **The claim's breakdown** gains the field by type, the aircraft really destroyed by type, the false aircraft by type, the chance and whether the types were made out. It is the umpire's, as every claim's breakdown is.
+11. **No new figure.** `raid_recognised_chance` is 0.75 in the live figures and 0 in the frozen step 1 figures, so every game on the frozen figures names no type and draws nothing new. If a source ever asks for the two chances to differ, they are parted then.
 
 ## What a side learns by it
 
-A type named in a claim was on that field at the start of that pulse: this is true knowledge of the enemy, and it is what a pilot over a field sees. The number against a type is a claim: never below the truth for that type made out, and it may be well above. A side cannot tell a real aircraft from a false one by its type, since both are made out by the same chance and a false one is given a type that was there. Where no type at all is made out among several claimed, the field may have been empty; that is as much as the rule gives away.
+- **A type named in a claim was on that field at the start of that pulse.** This is true knowledge of the enemy, and it is what a pilot over a field sees.
+- **The number against a type is a claim:** never below the truth for that type, and it may be well above, since the false aircraft are spread over every type on the field by its share. A type with few aircraft there may be given none of the false ones, and its number is then the truth; the side cannot tell when.
+- **A claim whose types are not made out** is three times in four, at the placeholder chance, a claim on an empty field, where they are never made out: one claim with no type says little, and many raids on one field with never a type say it is empty. That is knowledge a side would have: men over an empty field see no aircraft to name.
 
 ## What it leaves for later
 
@@ -45,20 +48,35 @@ A type named in a claim was on that field at the start of that pulse: this is tr
 
 ## Rule card
 
-- **Reads:** the count of aircraft on the ground at the raided base at the start of the air combat step; the types of the groups there; the aircraft a raid's bombs really destroyed, by group; the figure.
+- **Reads:** the count of aircraft on the ground at the raided base at the start of the air combat step; the types of the groups there; the aircraft a raid's bombs really destroyed, by group; `raid_recognised_chance`.
 - **Writes:** the list of types on the raiding side's claim, and on the event that records its arrival.
-- **Reuses:** the claim, its stream's key, `roll_shots`, the wording of a type (decision 0167), the passing of a claim between commands.
-- **New:** one figure, one draw value, one field of a claim.
+- **Reuses:** the claim, its stream's key, the chance and the wording of a type (decision 0167), the passing of a claim between commands.
+- **New:** one draw value, one field of a claim.
 
 ## What it costs
 
-- **State:** one field of a claim, so the hash version rises and the golden files are remade (decision 0057). It is named in `hash::name_every_field`. A picture carries it (decision 0170), and a saved game.
-- **No game on the frozen figures changes** but for the hash version: the chance is 0 there.
-- **The live figures:** games on them gain the draws of the new stream and the types in claims; no fight changes, and no other claim.
-- **The agent interface:** a claim in the seat's listings and briefing gains the list; its version rises.
+- **State:** one field of a claim, so the hash version rises and the golden files are remade (decision 0057). It is named in `hash::name_every_field` and hashed in the claim's hash, which also covers a claim in flight between commands. A picture carries it (decision 0170): a picture's claim can no longer be copied bit for bit and is cloned. No figures file changes.
+- **In the code:** what a base's hits destroy is returned by group, in the numbers really taken (after the cap by what the group has); a raid's tally keeps them by type over all its strike groups; the field is kept as it first stood. Every place that builds or takes apart a claim, a picture's claim or the claim's event changes with the field: the surface fight's and the bombardment's claims (empty lists), the objectives, the reports passed, the replay export.
+- **No game on the frozen figures changes** but for the hash version: the chance is 0 there and no draw is made.
+- **The live figures:** games on them gain one draw a claim and the types in claims; no fight changes, and no other claim.
+- **The agent interface:** a claim in the seat's briefing and report gains the list, with the types by name; its schemas change and its version rises, and the recorded transcripts are remade.
 - **The table:** the line of a claim names the types.
-- **Documents:** the rulebook's chapter on air combat (claims) and chapter 1's table of who sees what; the glossary; the figures' notes.
+- **Documents:** the rulebook's chapter 3 (claims), chapter 1's list of draws and its table of who sees what, chapter 8's versions; the glossary.
 
 ## The hand calculation
 
-It is in `tests/scenario_98_the_type_claimed_on_the_ground.rs`, written before the code: the base raid of scenario 11's hand calculation, three mornings, whose pool is one group of one type, with the chances at 0 and at 1; and the rule's own function on small fields of two types.
+It is in `tests/scenario_98_the_type_claimed_on_the_ground.rs`, written before the code: the base raid of scenario 11's hand calculation, three mornings, whose field is one group; the same with that group of another type than the bombers that raid it; and the rule's own function on fields of two and three types.
+
+## Amended on review
+
+An independent reading of the plan and its hand calculation, against the code, found the following; each was weighed before it was taken.
+
+1. **A real aircraft could be told from a false one.** Every false aircraft went to the most numerous type, so any other type named was the truth. The false aircraft are now shared over the field's types in proportion (rule 3), with no draw, and "What a side learns by it" says what is left.
+2. **Making out each aircraft apart made a claim with no type near proof of an empty field.** The types are now made out once for the claim (rule 4). What that still tells is said plainly.
+3. **"Its own group's type" could be read as the raiders'.** Reworded (rule 3), and the hand calculation has a case in which the two differ.
+4. **The stream's key was given wrongly.** Rule 5 gives it as the code has it. The draw keeps a value of its own, as every new rule's does.
+5. **The field as first counted is not kept today,** and what is really destroyed is not known by type where the claim is made. Both are named under "What it costs".
+6. **A figure absent from a file is not possible,** and a new figure would have changed the frozen figures file and what is pinned to it. The rule now uses the chance decision 0167 already has (rule 11).
+7. **No breakdown was named.** Rule 10.
+8. **The property over many seeds assumed one type on the field.** It now tests each named type against the field of that pulse.
+9. **The list of what changes was short.** "What it costs" names the rest.
