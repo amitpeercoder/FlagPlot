@@ -156,8 +156,8 @@
 //!   that it cannot meet its intent on day 1 and gives the reason each
 //!   morning. Base 1 is the source of supply from day 1, with no force
 //!   (decision 0163, item 1), and "keep base 3 supplied", with a floor
-//!   of 5 days, is formed under the hold of its place on day 4, with no
-//!   ship to send. The island is controlled on 0 of 14 days. (Restated
+//!   of 5 days, is formed under the hold of its place (intent 4) on
+//!   day 1, with no ship to send. The island is controlled on 0 of 14 days. (Restated
 //!   by the architect on Nov 19, 2026, for decision 0163: before it no
 //!   base could be the source of supply either, and the holds formed no
 //!   supply.)
@@ -1311,8 +1311,8 @@ fn no_source_of_the_landing() {
     let m = g.measures[14].as_ref().expect("a measure");
     assert_eq!((m.days_in_force, m.days_controlled), (14, 0));
     // "Keep base 3 supplied", floor 5 days, is formed under the hold of its
-    // place on day 4, with no ship to send.
-    assert_eq!(g.formed(keep_kind(3)), vec![(4, 4)], "{:?}", g.forms());
+    // place, intent 4, on day 1, with no ship to send.
+    assert_eq!(g.formed(keep_kind(3)), vec![(1, 4)], "{:?}", g.forms());
 }
 
 #[test]
