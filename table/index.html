@@ -40,7 +40,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
 .papers { display: flex; flex-wrap: wrap; gap: 6px; }
 .papers:empty { display: none; }
-.papers button { min-height: 34px; padding: 0 12px; background: var(--paper-old); color: var(--paper-ink); border: 0; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
+.papers button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 34px; padding: 0 12px; background: var(--paper-old); color: var(--paper-ink); border: 0; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
 .slip.decide { background: var(--paper); }
 .slip .from { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
@@ -545,8 +545,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     }
     if (s.queued && s.queued.length) slip('FROM YOU · SIGNED', 'SENT', s.queued.length + ' signal' + (s.queued.length > 1 ? 's go' : ' goes') + ' to the staff at 1800', s.queued.map(function (q) { return q.text || q.shown || (q.command && q.command.kind) || 'a command'; }).join('; ') + '.');
     showDirectives();
-    roots.forEach(function (r) { var op = slip('YOUR INTENT ' + r.number, r.in_force ? 'IN FORCE' : null, sayIntent(r, {}), null); button(op, 'READ THE PLAN', false, function () { readPlan(r.number); }); });
-    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) paper('Schedule', readSchedule);
+    roots.forEach(function (r) { var b = paper(sayIntent(r, {}), function () { readPlan(r.number); }); b.title = 'Your intent ' + r.number + (r.in_force ? ', in force' : ', ended') + ': read the plan'; if (!r.in_force) b.style.opacity = 0.6; });
+    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) paper('Reinforcements', readSchedule);
     if (clock.at === 'dusk') paper('Report', readReport); else { paper('Return', readBriefing); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
     var dec = s.staff_decisions_yesterday || [];
     if (dec.length) { var d = slip('FROM STAFF', null, dec.length + ' decisions taken yesterday', dec.slice(0, 4).map(function (x) { return x.text || x.words || x.summary || ('decision ' + x.number); }).join(' · ')); }
