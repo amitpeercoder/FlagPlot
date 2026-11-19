@@ -431,7 +431,7 @@ impl Day<'_, '_> {
                     "{}: {}; so the staff sets no forces limit on {hold}, the hold of {base_text}, and it forms no supply.",
                     end.id, source.words
                 ))
-                .would_change("a transport force the staff may take stopped at a base of the side off the island")
+                .would_change("a base of the side off the island, that the staff may take, with supply above its reserve")
                 .done();
             self.target(in_scope).no_orders.push(reason);
             return;
@@ -450,11 +450,15 @@ impl Day<'_, '_> {
                 end.id,
                 source.words,
                 base_words(self.view, *base),
-                forces
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
+                if forces.is_empty() {
+                    "no force".to_string()
+                } else {
+                    forces
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                }
             ))
             .would_change("another source of supply")
             .done();
@@ -472,8 +476,9 @@ impl Day<'_, '_> {
 
     /// Item 8: the source of supply. The commander's, where his forces limit
     /// names one; else the side's base in no named place's hex that the
-    /// staff may take, at which a transport force it may take lies stopped,
-    /// with the most supply above its reserve, then the lower number.
+    /// staff may take with the most supply above its reserve, then the lower
+    /// number, none with nothing above it (decision 0163, 1: no transport
+    /// force need lie there). With it, the pool there, which may be empty.
     fn island_source(&self, end: &Intent, places: &[Place]) -> Source {
         let others = self.others_above(end);
         let named = end.limits.forces.as_ref().and_then(|f| f.source);
@@ -529,22 +534,33 @@ impl Day<'_, '_> {
                 lines.push(format!("{text}: {why}"));
                 continue;
             }
+            // Decision 0163, 1: no transport force need lie there; the pool
+            // may be empty (item 2).
             let forces = self.pool_at(base.id, &others);
-            if forces.is_empty() {
+            let pool_words = if forces.is_empty() {
+                "no transport force stopped there with nothing aboard".to_string()
+            } else {
+                format!(
+                    "{} stopped there with nothing aboard",
+                    forces
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            };
+            let above = base.supply_t - base.supply_reserve_t;
+            // The commander's source is his, whatever it holds; one the staff
+            // chooses must have supply above its reserve.
+            if named.is_none() && above <= sim_core::fixed::Fixed::ZERO {
                 lines.push(format!(
-                    "{text}: no transport force the staff may take lies stopped there with nothing aboard"
+                    "{text}: nothing above its reserve, so it cannot be the source"
                 ));
                 continue;
             }
-            let above = base.supply_t - base.supply_reserve_t;
             lines.push(format!(
-                "{text}: {} t of supply above its reserve, with {} stopped there",
-                above,
-                forces
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
+                "{text}: {} t of supply above its reserve, with {pool_words}",
+                above.max(sim_core::fixed::Fixed::ZERO)
             ));
             let better = best.as_ref().is_none_or(|(_, most, _)| above > *most);
             if better {
@@ -657,11 +673,15 @@ impl Day<'_, '_> {
                     source.words,
                     hold.id,
                     base_words(self.view, *base),
-                    forces
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
+                    if forces.is_empty() {
+                        "no force".to_string()
+                    } else {
+                        forces
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    }
                 ))
                 .would_change("another transport force stopped empty at the source")
                 .done();

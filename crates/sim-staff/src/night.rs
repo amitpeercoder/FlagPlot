@@ -235,7 +235,12 @@ pub(crate) fn try_force(
 /// The burn of `miles` at `knots` for `ship` (chapter 2, Fuel burn): the
 /// cruise rate a mile, times the square of the speed over the cruise speed
 /// above it.
-fn burn_of(view: &SideView<'_>, ship: ShipId, miles: Fixed, knots: Fixed) -> Option<Fixed> {
+pub(crate) fn burn_of(
+    view: &SideView<'_>,
+    ship: ShipId,
+    miles: Fixed,
+    knots: Fixed,
+) -> Option<Fixed> {
     let found = view.ships().find(|s| s.id == ship)?;
     let class = view.ship_class(found.class)?;
     let base = miles.mul_div(class.fuel_capacity_t, class.endurance_nm);

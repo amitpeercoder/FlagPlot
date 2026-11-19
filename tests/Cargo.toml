@@ -479,3 +479,7 @@ path = "scenario_85_a_nights_load_spread.rs"
 [[test]]
 name = "proof_0159_orders"
 path = "proof_0159_orders.rs"
+
+[[test]]
+name = "scenario_86_fed_with_the_lift"
+path = "scenario_86_fed_with_the_lift.rs"

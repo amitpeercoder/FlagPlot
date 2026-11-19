@@ -70,28 +70,28 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-40",
+  "doctrine_version": "supply-41",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "17558fe57c73bc98"
+      "hash": "9bfe6d01b52c2c08"
     },
     {
       "day": 2,
-      "hash": "6c60a9d38e7e8c64"
+      "hash": "94e35edf712289fc"
     },
     {
       "day": 3,
-      "hash": "63223c3cdc2fe1c4"
+      "hash": "d2c332d320f2e7b4"
     },
     {
       "day": 4,
-      "hash": "604d521f4f5a206b"
+      "hash": "b6e74b89414e6bfb"
     },
     {
       "day": 5,
-      "hash": "27b661e56a807087"
+      "hash": "19753b4e6f54a7df"
     }
   ],
   "orders": [
@@ -862,7 +862,7 @@
   "rules_version": 20,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "ea80088f7a6c0c9c"
+    "hash": "776a640417bd1143"
   },
   "seats": {
     "allied": "player",
