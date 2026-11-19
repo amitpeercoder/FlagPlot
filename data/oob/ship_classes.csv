@@ -64,3 +64,5 @@ id,key,name,nation,type
 1060,us-bellatrix-class,Bellatrix class,us,cargo_ship
 1061,us-procyon-class,Procyon class,us,cargo_ship
 1062,jp-hatsuharu-class,Hatsuharu class,jp,destroyer
+1066,us-libra-class,Libra class,us,cargo_ship
+1063,us-caldwell-class,Caldwell class,us,destroyer
