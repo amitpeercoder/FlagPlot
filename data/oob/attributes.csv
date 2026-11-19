@@ -146,3 +146,7 @@ tonnage_note,ship,text,,many,A tonnage a source gives without saying which kind
 radar_fit_note,ship,text,,many,"A statement of a ship's radar, or that she had none, where no set is named"
 fuel_rate_note,ship_class,text,,many,"A source's figure for fuel burned per day or per hour at a stated speed or condition; the value gives the unit, speed, displacement and data period"
 fuelling_note,ship,text,,many,"A source's statement of fuel taken, on hand or left to a ship, with date, quantity and unit as the source gives them"
+units_embarked_note,ship,text,,many,"Units or parts of units a source says the ship carried on a voyage, with men where given; valid_from and valid_to are the voyage's dates"
+formation_note,ship,text,,many,"The task group, transport group, transport division or destroyer division a source places the ship in on the dates"
+movement_note,ship,text,,many,"A dated arrival, start or end of unloading, or departure a source states for the ship, with the clock time in the value where given"
+damage_note,ship,text,,many,"Damage a source says the ship took on the date, where not covered by sunk or out_of_action_from"
