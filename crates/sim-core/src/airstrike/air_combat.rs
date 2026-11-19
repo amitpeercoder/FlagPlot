@@ -252,7 +252,8 @@ impl World {
         // ship and each raid on a base draws whether the people under it
         // recognised the aircraft (decision 0167, 2 and 5): one stream for
         // each ship or base attacked in the pulse, its own, so that no fight
-        // draws differently.
+        // draws differently. A base's chance is the plain figure; a ship's is
+        // moved by its own experience (decision 0168).
         let recognised_chance = self
             .ref_data
             .air_combat
@@ -340,7 +341,7 @@ impl World {
                         pulse,
                         EntityRef::Ship(attack.ship),
                         attack.air_group,
-                        recognised_chance,
+                        self.ship_recognised_chance(attack.ship),
                     );
                     let event = self.events.record(
                         day,
@@ -622,6 +623,23 @@ impl World {
 }
 
 impl World {
+    /// The chance the people of `ship`, attacked from the air, recognise the
+    /// aircraft (decision 0168, 1): the plain figure moved by the ship's own
+    /// experience, read and never written.
+    fn ship_recognised_chance(&self, ship: ShipId) -> Fixed {
+        let experience = self
+            .truth
+            .ships
+            .get(&ship)
+            .map_or(crate::state::Ship::DEFAULT_EXPERIENCE, |ship| {
+                ship.experience
+            });
+        self.ref_data
+            .air_combat
+            .as_ref()
+            .map_or(Fixed::ZERO, |air| air.ship_recognised_chance(experience))
+    }
+
     /// Whether the people of the ship or base `target` recognised the
     /// aircraft of `air_group` that attacked it (decision 0167, 2 and 5): one
     /// draw with `chance` from the target's stream of the pulse, opened at
