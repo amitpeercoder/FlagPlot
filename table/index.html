@@ -55,6 +55,15 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order { position: fixed; left: 16px; bottom: 92px; width: min(420px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 14px 16px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 10px; }
 .order h2, .sheet h2 { margin: 0; font-family: var(--f-ui); font-size: 19px; font-weight: 700; letter-spacing: 0.12em; }
 .order fieldset { border: 0; border-top: 1px dashed #8d8672; margin: 0; padding: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.frow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.frow .fl { flex: 0 0 82px; font-size: 12px; color: var(--paper-dim); }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 0; }
+.order .seg label { min-height: 0; gap: 0; margin: 0 -1px -1px 0; }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg label > span { display: block; padding: 7px 11px; border: 1px solid var(--paper-dim); line-height: 1.2; }
+.seg input:checked + span { background: var(--own); color: var(--paper); border-color: var(--own); }
+.seg input:focus-visible + span { outline: 2px solid var(--own); outline-offset: 2px; }
+.seg label:hover > span { border-color: var(--paper-ink); }
 .order input[type=range] { flex: 1 1 100%; accent-color: var(--own); }
 .order legend { font-size: 12px; color: var(--paper-dim); padding: 0 6px 0 0; }
 .order label { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; cursor: pointer; }
@@ -187,29 +196,26 @@ button:disabled { opacity: 0.45; cursor: default; }
 <form class="order" id="force" hidden aria-label="Order to a force">
   <h2>ORDER · <span id="f-name"></span></h2>
   <div id="f-when"></div>
-  <fieldset><legend>SPEED</legend>
-    <label><input type="radio" name="spd" value="" checked> As it is<span id="f-spd-now"></span></label>
-    <label><input type="radio" name="spd" value="cruise"> Cruising</label>
-    <label><input type="radio" name="spd" value="full"> Full</label>
-    <label><input type="radio" name="spd" value="knots"> <span id="f-kn-out">12</span> knots</label>
+  <div class="frow"><span class="fl">Speed</span><span class="seg">
+    <label><input type="radio" name="spd" value="cruise"><span>Cruise</span></label>
+    <label><input type="radio" name="spd" value="full"><span>Full</span></label>
+    <label><input type="radio" name="spd" value="knots"><span><span id="f-kn-out">12</span> knots</span></label></span>
     <input type="range" id="f-kn" min="4" max="30" step="1" value="12" aria-label="Knots" hidden>
-  </fieldset>
-  <fieldset><legend>READINESS</legend>
-    <label><input type="radio" name="rdy" value="" checked> As it is<span id="f-rdy-now"></span></label>
-    <label><input type="radio" name="rdy" value="normal"> Normal</label>
-    <label><input type="radio" name="rdy" value="battle"> Battle</label>
-  </fieldset>
-  <fieldset><legend>COURSE</legend>
-    <label><input type="radio" name="crs" value="" checked> As it is</label>
-    <label><input type="radio" name="crs" value="route"> Steam for a place I touch</label>
-  </fieldset>
-  <fieldset><legend>ITS SHIPS</legend>
-    <label><input type="radio" name="shp" value="" checked> As they are</label>
-    <label><input type="radio" name="shp" value="detach"> Detach the ships I tick as a new force</label>
-    <label id="f-l-join"><input type="radio" name="shp" value="join"> Join another force here</label>
-    <label id="f-l-down"><input type="radio" name="shp" value="down"> Stand it down in port</label>
-  </fieldset>
-  <fieldset id="f-ships" hidden><legend>DETACH</legend></fieldset>
+  </div>
+  <div class="frow"><span class="fl">Readiness</span><span class="seg">
+    <label><input type="radio" name="rdy" value="normal"><span>Normal</span></label>
+    <label><input type="radio" name="rdy" value="battle"><span>Battle</span></label></span>
+  </div>
+  <div class="frow"><span class="fl">Course</span><span class="seg">
+    <label><input type="checkbox" id="f-crs"><span>Steam for a place I touch</span></label></span>
+  </div>
+  <div class="frow" id="f-shp"><span class="fl">Its ships</span><span class="seg">
+    <label><input type="radio" name="shp" value="" checked><span>As they are</span></label>
+    <label id="f-l-detach"><input type="radio" name="shp" value="detach"><span>Detach some</span></label>
+    <label id="f-l-join"><input type="radio" name="shp" value="join"><span>Join a force here</span></label>
+    <label id="f-l-down"><input type="radio" name="shp" value="down"><span>Stand down in port</span></label></span>
+  </div>
+  <fieldset id="f-ships" hidden><legend>DETACH AS A NEW FORCE</legend></fieldset>
   <fieldset id="f-join" hidden><legend>JOIN</legend></fieldset>
   <div id="f-route" hidden></div>
   <fieldset id="f-air" hidden><legend>AIR GROUPS HERE</legend></fieldset>
@@ -1152,13 +1158,15 @@ button:disabled { opacity: 0.45; cursor: default; }
     picking = false; canvas.classList.remove('picking'); force = { f: best.force, route: null };
     $('f-name').textContent = best.force.task_force.name.replace(/^Placeholder /, '').toUpperCase();
     $('f-when').textContent = clock.at === 'dusk' ? 'It is 1800. The order goes in with tonight\'s orders.' : 'It is ' + clock.at + '. The order is taken in at the start of the ' + (clock.at === '0600' ? 'morning' : 'afternoon') + ' pulse.';
-    ['spd', 'rdy', 'crs', 'shp'].forEach(function (n) { document.querySelector('#force input[name="' + n + '"][value=""]').checked = true; }); $('f-kn').hidden = true; $('f-kn').value = 12; $('f-kn-out').textContent = '12'; $('f-spd-now').textContent = best.force.speed ? ': ' + best.force.speed : ''; $('f-rdy-now').textContent = best.force.readiness ? ': ' + best.force.readiness : ''; $('f-route').hidden = true; $('f-result').textContent = ''; $('f-summary').textContent = 'Nothing is changed yet.';
+    var spdNow = String(best.force.speed || ''), kn = parseFloat(spdNow), rdyNow = String(best.force.readiness || ''); force.now = { spd: isNaN(kn) ? spdNow : 'knots', kn: isNaN(kn) ? null : String(Math.round(kn)), rdy: rdyNow };
+    Array.prototype.forEach.call(document.querySelectorAll('#force input[name="spd"], #force input[name="rdy"]'), function (c) { c.checked = c.value === (c.name === 'spd' ? force.now.spd : force.now.rdy); }); document.querySelector('#force input[name="shp"][value=""]').checked = true; $('f-crs').checked = false;
+    $('f-kn').hidden = force.now.spd !== 'knots'; $('f-kn').value = force.now.kn || 12; $('f-kn-out').textContent = $('f-kn').value; $('f-route').hidden = true; $('f-result').textContent = ''; $('f-summary').textContent = 'Nothing is changed yet.';
     var fs = $('f-ships'), fj = $('f-join'), fhere = best.force; fs.hidden = true; fj.hidden = true;
     while (fs.children.length > 1) fs.removeChild(fs.lastChild); while (fj.children.length > 1) fj.removeChild(fj.lastChild);
-    api('get_entity', { handle: fhere.task_force.handle }).then(function (a) { if (!force || force.f !== fhere) return; ((a.entity && a.entity.ships) || []).filter(function (x) { return !x.sunk; }).forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.value = num(x.ship.handle); l.appendChild(c); l.appendChild(document.createTextNode(' ' + String(x.ship.name || x.ship.handle).replace(/^Placeholder /, ''))); fs.appendChild(l); }); }).catch(function () {});
+    api('get_entity', { handle: fhere.task_force.handle }).then(function (a) { if (!force || force.f !== fhere) return; ((a.entity && a.entity.ships) || []).filter(function (x) { return !x.sunk; }).forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.value = num(x.ship.handle); l.appendChild(c); l.appendChild(document.createTextNode(' ' + String(x.ship.name || x.ship.handle).replace(/^Placeholder /, ''))); fs.appendChild(l); }); $('f-l-detach').hidden = fs.querySelectorAll('input').length < 2; $('f-shp').hidden = $('f-l-detach').hidden && $('f-l-join').hidden && $('f-l-down').hidden; }).catch(function () {});
     var others = M.forces.filter(function (o) { return o !== fhere && sameHex(o.place, fhere.place) && !(o.available_from > M.day); }), atBase = M.bases.some(function (b) { return sameHex(b.place, fhere.place); });
     others.forEach(function (o, i) { var l = el('label'), c = el('input'); c.type = 'radio'; c.name = 'into'; c.value = o.task_force.handle; c.checked = i === 0; l.appendChild(c); l.appendChild(document.createTextNode(' ' + o.task_force.name.replace(/^Placeholder /, ''))); fj.appendChild(l); });
-    $('f-l-join').hidden = !(atBase && others.length); $('f-l-down').hidden = !atBase;
+    $('f-l-join').hidden = !(atBase && others.length); $('f-l-down').hidden = !atBase; $('f-l-detach').hidden = false; $('f-shp').hidden = false;
     var box = $('f-air'), here = M.air.filter(function (x) { return x.place && best.force.place && x.place.q === best.force.place.q && x.place.r === best.force.place.r; });
     while (box.children.length > 1) box.removeChild(box.lastChild);
     here.forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.id = 'f-air-' + num(x.air_group.handle); c.value = x.air_group.handle; l.appendChild(c); l.appendChild(document.createTextNode(' Stand down ' + x.air_group.name)); box.appendChild(l); });
@@ -1173,10 +1181,10 @@ button:disabled { opacity: 0.45; cursor: default; }
   // What the draft would order, as the orders themselves and as words.
   function forceDraft() {
     var unit = force.f.task_force.handle, orders = [], words = [], reshapes = false, spd = fPick('spd'), rdy = fPick('rdy'), shp = fPick('shp');
-    if (spd === 'knots') { orders.push({ unit: unit, order: { kind: 'set_speed', knots: String($('f-kn').value) } }); words.push('Speed ' + $('f-kn').value + ' knots.'); }
+    if (spd === 'knots' && force.now.spd === 'knots' && String($('f-kn').value) === force.now.kn) { /* as it is */ } else if (spd === force.now.spd && spd !== 'knots') { /* as it is */ } else if (spd === 'knots') { orders.push({ unit: unit, order: { kind: 'set_speed', knots: String($('f-kn').value) } }); words.push('Speed ' + $('f-kn').value + ' knots.'); }
     else if (spd) { orders.push({ unit: unit, order: { kind: 'set_speed', speed: spd } }); words.push(spd === 'full' ? 'Full speed.' : 'Cruising speed.'); }
-    if (rdy) { orders.push({ unit: unit, order: { kind: 'set_readiness', readiness: rdy } }); words.push(rdy === 'battle' ? 'Battle readiness.' : 'Normal readiness.'); }
-    if (fPick('crs') === 'route') { if (!force.route) return { error: 'Touch the chart for the place first.', words: ['Steam for a place: touch the chart.'] }; orders.push({ unit: unit, order: { kind: 'set_route', waypoints: [force.route] } }); words.push('Steam ' + $('f-route').textContent.replace(/^To /, 'for ')); }
+    if (rdy && rdy !== force.now.rdy) { orders.push({ unit: unit, order: { kind: 'set_readiness', readiness: rdy } }); words.push(rdy === 'battle' ? 'Battle readiness.' : 'Normal readiness.'); }
+    if ($('f-crs').checked) { if (!force.route) return { error: 'Touch the chart for the place first.', words: ['Steam for a place: touch the chart.'] }; orders.push({ unit: unit, order: { kind: 'set_route', waypoints: [force.route] } }); words.push('Steam ' + $('f-route').textContent.replace(/^To /, 'for ')); }
     if (shp === 'detach') { var picked = Array.prototype.map.call(document.querySelectorAll('#f-ships input:checked'), function (c) { return +c.value; }), all = document.querySelectorAll('#f-ships input').length;
       if (!picked.length) return { error: 'Tick the ships to detach.', words: words.concat('Detach: tick the ships.') }; if (picked.length === all) return { error: 'A force cannot detach every ship. Leave one.', words: words };
       orders.push({ unit: unit, order: { kind: 'detach', ships: picked } }); words.push('Detach ' + picked.length + (picked.length > 1 ? ' ships' : ' ship') + ' as a new force.'); }
@@ -1190,7 +1198,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   $('force').addEventListener('change', function (e) {
     if (e.target.name === 'spd') $('f-kn').hidden = fPick('spd') !== 'knots';
     if (e.target.name === 'shp') { $('f-ships').hidden = fPick('shp') !== 'detach'; $('f-join').hidden = fPick('shp') !== 'join'; }
-    if (e.target.name === 'crs') { if (fPick('crs') === 'route') { picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); } else { picking = false; canvas.classList.remove('picking'); force.route = null; $('f-route').hidden = true; } }
+    if (e.target.id === 'f-crs') { if ($('f-crs').checked) { picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); } else { picking = false; canvas.classList.remove('picking'); force.route = null; $('f-route').hidden = true; } }
     forceSummary(); });
   $('f-cancel').addEventListener('click', function () { closeForce(); setStatus('The draft is torn up. Nothing was ordered.'); });
   $('force').addEventListener('submit', function (e) {
