@@ -78,6 +78,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .lhead span + span { font-family: var(--f-type); font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--paper-dim); }
 .card .lrow { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 3px 0; border-bottom: 1px dotted rgba(90,85,72,0.35); }
 .card .lrow:last-child { border-bottom: 0; }
+.card .lstem { color: var(--paper-dim); font-size: 12px; padding: 1px 0 3px; }
 .card .lrow .ref { text-align: left !important; }
 .card .lrow .fig { flex: none; max-width: 55%; text-align: right; font-variant-numeric: tabular-nums; }
 .card .lmore summary { cursor: pointer; padding: 5px 0; color: var(--paper-dim); font-size: 12px; }
@@ -600,7 +601,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   function cardUnit(u) {
     var body = openCard(u.land_unit.name.toUpperCase(), 'YOURS', true);
     kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', String(u.fed_last_night || '').replace(/_/g, ' ')], ['Experience', u.experience]]);
-    if ((u.aboard || []).length) { body.appendChild(el('div', 'sub', 'ABOARD')); body.appendChild(rich('div', '', u.aboard.map(function (a) { return a.ship.handle + ' ' + a.men; }).join(', '))); }
+    if ((u.aboard || []).length) { listOf(body, 'ABOARD', u.aboard.map(function (a) { return a.ship.handle + ': ' + commas(a.men); }), 'men'); }
    
   }
   function cardEntity(h) {
@@ -651,7 +652,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     var box = el('div', 'rows'), more = null; body.appendChild(box);
     lines.forEach(function (l, i) { var at = l.indexOf(': '), row = el('div', 'lrow');
       row.appendChild(rich('span', '', at < 0 ? l : l.slice(0, at))); if (at >= 0) row.appendChild(el('span', 'fig', l.slice(at + 2)));
-      if (lines.length > 8 && i >= 6) { if (!more) { more = el('details', 'lmore'); more.appendChild(el('summary', '', 'and ' + (lines.length - 6) + ' more')); box.appendChild(more); } more.appendChild(row); } else box.appendChild(row); }); }
+      if (lines.length > 8 && i >= 6) { if (!more) { more = el('details', 'lmore'); more.appendChild(el('summary', '', 'and ' + (lines.length - 6) + ' more')); box.appendChild(more); } more.appendChild(row); } else box.appendChild(row); });
+    // Where every row is one name that differs only in its number ("troop
+    // transport, Guadalcanal 1" to "8"), the name is said once and the rows
+    // carry the numbers.
+    var refs = [].map.call(box.querySelectorAll('.lrow'), function (r) { var f = r.firstChild; return f.childNodes.length === 1 && f.firstChild.className === 'ref' ? f.firstChild : null; }), stem = null;
+    if (refs.length >= 3 && refs.every(function (b) { var m = b && /^(.+) (\d+)$/.exec(b.textContent); if (!m) return false; if (stem == null) stem = m[1]; return stem === m[1]; })) {
+      refs.forEach(function (b) { b.title = b.textContent; b.setAttribute('aria-label', b.textContent); b.textContent = 'No. ' + b.textContent.slice(stem.length + 1); });
+      box.insertBefore(el('div', 'lstem', stem), box.firstChild); } }
   function links(body, title, items) { if (!items.length) return; body.appendChild(el('div', 'sub', title)); var row = el('div', 'row'); items.forEach(function (i) { var b = el('button', '', i[0]); b.type = 'button'; b.addEventListener('click', i[1]); row.appendChild(b); }); body.appendChild(row); }
   // The forces at a place: those the commander may use now as buttons, and
   // those not yet his to use folded beneath, each with the day it comes.
