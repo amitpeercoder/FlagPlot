@@ -471,3 +471,7 @@ path = "scenario_83_a_force_moved_to_look.rs"
 [[test]]
 name = "scenario_84_the_plan_as_an_order"
 path = "scenario_84_the_plan_as_an_order.rs"
+
+[[test]]
+name = "proof_0159_orders"
+path = "proof_0159_orders.rs"

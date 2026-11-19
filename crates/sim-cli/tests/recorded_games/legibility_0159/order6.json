@@ -1,0 +1,51 @@
+{
+  "as_at": "the start of day 3, with the commands you have queued taken in",
+  "expected_ashore": null,
+  "for_day": 3,
+  "format": "flagplot-agent",
+  "intent": 1,
+  "kind": "plan_order",
+  "men": null,
+  "mission": "hold base:2 (Placeholder airfield B)",
+  "need_to_know": null,
+  "phases": [
+    {
+      "base": {
+        "handle": "base:2",
+        "name": "Placeholder airfield B"
+      },
+      "ends": "base_is_the_sides",
+      "name": "wait",
+      "place": null,
+      "stage": "under_way",
+      "text": "Wait: ends when base:2 is the side's. Under way."
+    },
+    {
+      "base": null,
+      "ends": "never",
+      "name": "hold",
+      "place": null,
+      "stage": "to_come",
+      "text": "Hold: does not end. To come."
+    }
+  ],
+  "plan": {
+    "number": 1,
+    "state": "released"
+  },
+  "tasks": [
+    {
+      "intent": 2,
+      "kind": "keep_supplied",
+      "phase": "wait",
+      "statement": "keep base:3 (Placeholder beach at B) at 5 days of supply"
+    }
+  ],
+  "text": [
+    "Mission: hold base:2 (Placeholder airfield B).",
+    "Phases: Wait (under way), Hold.",
+    "It waits for nothing."
+  ],
+  "version": 26,
+  "waits_for": []
+}
