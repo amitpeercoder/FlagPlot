@@ -147,6 +147,13 @@ def main():
     if os.path.exists(coast_path):
         with open(coast_path) as handle:
             coast = json.load(handle)
+    # The names lettered on the chart, where the map has a file of them: for
+    # the eye only, as the coastline is.
+    names = None
+    names_path = coast_path.replace("_coast.json", "_names.json")
+    if os.path.exists(names_path):
+        with open(names_path) as handle:
+            names = json.load(handle)["names"]
     game = Game([args.sim_cli, "mcp", args.scenario, "--seat", args.seat])
 
     class Handler(BaseHTTPRequestHandler):
@@ -173,6 +180,8 @@ def main():
                 self.json(chart)
             elif self.path == "/coast" and coast is not None:
                 self.json(coast)
+            elif self.path == "/names" and names is not None:
+                self.json(names)
             else:
                 self.answer(404, "text/plain", b"not found")
 
