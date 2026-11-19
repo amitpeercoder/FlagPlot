@@ -55,3 +55,9 @@ In a scenario without the key the table resolves a day whole and then plots it, 
 - Inside a day it orders only a force's speed, readiness and route and stands an air group down: not the rules of engagement, a search arc, another air mission or a land unit's posture, which the engine also takes.
 - It gives no order to a ship, a force, an air group or a unit, sets no forces limit, and withdraws no intent.
 - It has no check in CI and no test.
+
+## The chart's coastline
+
+`table/chart/south_pacific_coast.json` is the coastline the page draws when the hexes are not shown. It is for the eye only: the game plays on the hexes of `data/map/south_pacific.csv` and nothing in the simulation, the staff or a seat's tools reads it. The bridge serves it at `/coast` when a file named for the map lies in `table/chart/`; with none, the page shapes the land from the hexes themselves.
+
+It is cut from Natural Earth's 1:10m land and minor islands (naturalearthdata.com, public domain), clipped to 142 to 175 degrees east and 26.5 degrees south to 2 degrees north and rounded to three decimals, by `table/chart/clip_coast.py`, which takes the two downloaded GeoJSON files and the output path. Natural Earth's files are not kept in the repository.
