@@ -38,6 +38,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
 .tray h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
+.papers { display: flex; flex-wrap: wrap; gap: 6px; }
+.papers:empty { display: none; }
+.papers button { min-height: 34px; padding: 0 12px; background: var(--paper-old); color: var(--paper-ink); border: 0; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
 .slip.decide { background: var(--paper); }
 .slip .from { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
@@ -122,6 +125,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 <aside class="tray" aria-label="Signals">
   <h2>Signals</h2>
+  <div id="papers" class="papers" role="toolbar" aria-label="Standing papers"></div>
   <div id="signals"></div>
 </aside>
 
@@ -495,6 +499,9 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
 
   // ---- the signals tray ----
+  // A standing paper the commander may read at any time: a button in the
+  // row above the signals, not a signal of its own.
+  function paper(text, fn) { var b = el('button', '', text); b.type = 'button'; b.addEventListener('click', fn); $('papers').appendChild(b); return b; }
   function slip(from, stamp, title, body, decide) {
     var a = el('article', 'slip' + (decide ? ' decide' : '')), f = el('div', 'from'); f.appendChild(el('span', '', from)); if (stamp) f.appendChild(el('span', 'stamp' + (stamp === 'FOR DECISION' || stamp === 'STOPPED THE CLOCK' ? '' : ' ok'), stamp));
     a.appendChild(f); if (title) a.appendChild(el('strong', '', title)); if (body) a.appendChild(el('div', '', body)); $('signals').appendChild(a); return a;
@@ -513,7 +520,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   function showSignals() {
-    var box = $('signals'), s = M.state; box.textContent = '';
+    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = '';
     if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
     lastTold.forEach(function (t) { slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, t.lines.slice(0, 4).join(' · '), true); });
     (s.holds || []).forEach(function (h) {
@@ -539,8 +546,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (s.queued && s.queued.length) slip('FROM YOU · SIGNED', 'SENT', s.queued.length + ' signal' + (s.queued.length > 1 ? 's go' : ' goes') + ' to the staff at 1800', s.queued.map(function (q) { return q.text || q.shown || (q.command && q.command.kind) || 'a command'; }).join('; ') + '.');
     showDirectives();
     roots.forEach(function (r) { var op = slip('YOUR INTENT ' + r.number, r.in_force ? 'IN FORCE' : null, sayIntent(r, {}), null); button(op, 'READ THE PLAN', false, function () { readPlan(r.number); }); });
-    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) { var sch = slip('FROM STAFF', null, 'What is coming', null); button(sch, 'READ THE SCHEDULE', false, readSchedule); }
-    var rep = slip('FROM STAFF', null, clock.at === 'dusk' ? 'The evening report' : 'So far today', clock.at === 'dusk' ? null : (lastRun && lastRun.summary) || 'The staff reports at dusk.'); if (clock.at === 'dusk') button(rep, 'READ THE REPORT', false, readReport); else button(rep, 'READ THE RETURN', false, readBriefing);
+    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) paper('Schedule', readSchedule);
+    if (clock.at === 'dusk') paper('Report', readReport); else { paper('Return', readBriefing); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
     var dec = s.staff_decisions_yesterday || [];
     if (dec.length) { var d = slip('FROM STAFF', null, dec.length + ' decisions taken yesterday', dec.slice(0, 4).map(function (x) { return x.text || x.words || x.summary || ('decision ' + x.number); }).join(' · ')); }
   }
@@ -845,8 +852,10 @@ button:disabled { opacity: 0.45; cursor: default; }
     list.forEach(function (d) { if (received[d.number] == null && directiveDue(d)) { received[d.number] = M.day; fresh = d; } });
     list.slice().reverse().forEach(function (d) {
       if (received[d.number] == null) return;
-      var isNew = !readOnes[d.number], a = slip('FROM ' + d.from.toUpperCase(), isNew ? 'NEW' : null, 'Directive ' + d.number + ': ' + d.subject, null, isNew);
-      button(a, 'READ THE DIRECTIVE', isNew, function () { readDirective(d); });
+      var isNew = !readOnes[d.number];
+      if (!isNew) { paper('Directive ' + d.number, function () { readDirective(d); }); return; }
+      var a = slip('FROM ' + d.from.toUpperCase(), 'NEW', 'Directive ' + d.number + ': ' + d.subject, null, true);
+      button(a, 'READ THE DIRECTIVE', true, function () { readDirective(d); });
     });
     keep(); if (fresh && $('sheet').hidden) setTimeout(function () { readDirective(fresh); }, 0);
   }
