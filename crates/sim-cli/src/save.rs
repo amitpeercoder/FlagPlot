@@ -1251,7 +1251,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 22);
+        assert_eq!(written["version"], 23);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 26);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
