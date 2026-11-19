@@ -2,7 +2,7 @@
 
 Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the designer the same day with the answers the architect recommended; one of them fell away in writing the hand calculation (Confirmed, below). The hand calculation is written. Built on Nov 19, 2026 (As built, below).
 
-Summary: A side whose ship or base is raided from the air is told only how many aircraft came. It is not told what they attacked with, nor what kind of aircraft they were, though the men under the attack saw both. The plan: the attacked side is always told the weapon, bombs or torpedoes; and it is told the type of aircraft where its people recognised it, which they do with a chance that is lower by night. A type not recognised is not named, and no wrong name is given in the first build. With six questions for the designer
+Summary: A side whose ship or base is raided from the air is told only how many aircraft came. It is not told what they attacked with, nor what kind of aircraft they were, though the men under the attack saw both. The plan: the attacked side is always told the weapon, bombs or torpedoes; and it is told the type of aircraft where its people recognised it, which they do with a chance, one figure. A type not recognised is not named, and no wrong name is given in the first build. With six questions for the designer
 
 Standing: Confirmed by the designer, Nov 19, 2026, as recommended. Built on Nov 19, 2026
 
@@ -112,3 +112,14 @@ Built on Nov 19, 2026, on the branch `raid-seen`. Every statement of the hand ca
 12. **The true event says nothing where no type was recognised.** It names the type where one was recognised ("; recognised as aircraft_type:N") and is word for word as before where none was. A first build that wrote "; type not made out" in the true event too broke the word-for-word checks of the step 1 hand calculations (scenarios 5, 5b, 5c, 5d, 6a and 11 compare the log's words), whose worlds are on the frozen figures and recognise nothing; the attacked side's event still says "type not made out", since that is what the side is told.
 13. **Scenario 9a's property is amended to the new rule.** Its check that a side is given no truth of the enemy asserted that an air attack against the side carries no `weapon`, decision 0065's cut; decision 0167, item 1, tells the weapon. The check now asserts that the event carries no chance and no hits. It is a code comment and an assertion, not a statement of a hand calculation; the architect may prefer another form.
 
+## The architect's rulings
+
+Made on Nov 19, 2026, on reading the build.
+
+1. **The thirteen readings of "As built" stand as made.**
+2. **The rules label is not raised** (reading 6), against "What it costs". The label is raised where a game recorded under the old rules would play differently under the new. Here no fight, order, staff choice or daily hash moves: only what a side is told of a raid. A saved game made before is refused anyway, since a figures file changed. The agent interface version rises, as the side's events changed shape.
+3. **Scenario 9a's assertion is amended rightly** (reading 13). It asserted that a side attacked from the air is not told the weapon, which was decision 0065's rule and is what item 1 of this record overturns. It now asserts what still holds: never the chance and never the hits.
+4. **The true event says nothing where no type was recognised** (reading 12). Its words are those it had before the rule, so the hand calculations that check them word for word hold; the field carries the outcome either way.
+5. **A draw is taken at 0 and at 1** (reading 4). It keeps a target's later attacks in a pulse on the same draws whatever the figure, which decision 0168 leans on.
+6. **The summary's "lower by night" is struck** (reading 10): the rule has one figure.
+7. **Owed:** the note on what the figure rests on, in `docs/validation/tuning/air-figures-closed.md` (reading 11). It is written with decision 0168's strength figure, which belongs beside it.
