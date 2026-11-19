@@ -2,12 +2,12 @@ Placeholder scenario 35a: Days of supply, men
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 99285d35bbf2f66c  47 events
-day   2  hash e4d38dd1edebcd37  35 events
-day   3  hash 99f78d54f83c72ae  36 events
-day   4  hash 2ec2e27857374684  17 events
-day   5  hash 571027eae97c196c  16 events
-day   6  hash e3283b75dc1357ec  15 events
+day   1  hash 51900d3852e0231d  47 events
+day   2  hash 0abbc81a18869480  35 events
+day   3  hash 8d9740303a0d7273  36 events
+day   4  hash f6a73b844abc2ec7  17 events
+day   5  hash f9e5fc9b2747ce19  16 events
+day   6  hash ba2efb33f5204bb3  15 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

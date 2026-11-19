@@ -1,10 +1,10 @@
 # 0162: A night's load spread over its ships: the first part of the first mend of stage 4
 
-Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 1 of its nine, "fed with the lift"). Step 1 is written in two records: this one, the load of a supply run by night; and the next, the supply formed with the lift. It adds one field to an order of the engine. Not built.
+Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 1 of its nine, "fed with the lift"). Step 1 is written in two records: this one, the load of a supply run by night; and the next, the supply formed with the lift. It adds one field to an order of the engine. Built on Nov 19, 2026 (As built, below).
 
 Summary: A supply run timed to the dark carried no more than its first ship could land in the night, and the ships after it sailed empty: on the 39 days a run of five ships asked for 110.3 t carried 25 t. A load to a weight may now say the most any one ship is to hold, and the staff's run by night says it, so each ship carries what it can land in the night's hours: the same five ships carry the 110.3 t
 
-Standing: Settled by the architect, Nov 19, 2026, inside decision 0161. Not built
+Standing: Settled by the architect, Nov 19, 2026, inside decision 0161. Built on Nov 19, 2026
 
 ## Why
 
@@ -59,3 +59,31 @@ This is not the whole of the hunger. The trace names four more causes, and each 
 It is in `tests/scenario_85_a_nights_load_spread.rs`, written before the code. Three fast transports of 50 t each feed a garrison 160 nm away under an enemy base. They have not the fuel for full speed, so they go at cruise and arrive with two hours of the night left: 40 t a ship. The load asked is 150 t. As the rule stood it would be cut to 40 t, in the first ship. Now each ship loads 40 t and the run lands 120 t in the dark.
 
 A second case, of the order alone, is in the same file: ships with 10 t, nothing and 45 t aboard, a weight of 100 t and a level of 40 t, end with 40 t, 15 t and 45 t.
+
+## As built
+
+Built on Nov 19, 2026, on the branch `night-load-spread`.
+
+- **The engine.** `TaskForceOrder::LoadTo` takes `each_t: Option<Fixed>`, and the cargo order of the state keeps it (`CargoOrder::each_t`), hashed after `heeds_reserve`. In the cargo rule each ship's load is cut by its level less what it holds of the cargo (`World::level_left`), and a load is complete when no ship can take more by its room and the level (item 2). A level of 0 or below is refused at intake with the new refusal `LevelNotAboveZero`, added at the end of the enum. The loaded event's breakdown gains the factor `each_t` only where a level is named, so a breakdown with none is as it was.
+- **The loader and the decoder.** The scenario key `each_t` of a `load` order, and the agent's `"each_t"`, a decimal string, are refused with no weight, with a unit, and at 0 or below. The agent writes `each_t` only where there is one, so a load with none is written as before. The order schema, the issue_orders description and the agent's README name it.
+- **The staff.** `night_load` in `doctrine.rs` reckons the level at each speed's night (the least of the ships' limits), chooses the speed on the load as spread (`night::choose_by`), cuts the load to what the levels allow (`night::most_within`), and names the level on the load order of every supply run that goes by night. The load order's reason gives the level, how it was reached and what each ship takes and holds; the night's words say no ship is to hold more than the level. `night::weight_within` is kept for the lift alone (item 9), which names no level.
+- **Versions.** State layout `flagplot-state-v48`, saved game 23, agent interface 27, rules label 20, doctrine `supply-40`.
+- **Scenario 85** (`data/scenarios/85_a_nights_load_spread.toml`, and `85b_a_load_with_a_level.toml` for the order alone) and class 13 in `data/reference/ship_classes_placeholder_fast_transport_50t.csv`, with its frozen copy in `data/reference/step1`. Every number of the hand calculation is asserted, and every one agrees. Scenario 70's property "The night's limit" is asserted as restated, and agrees.
+
+Readings the record did not make:
+
+1. **The engine cannot be given a level with no weight or with a unit:** its order type has a weight and no unit. Those two are refused by the loader and the decoder; the engine refuses a level at 0 or below.
+2. **A ship at its level takes no berth** for the load: it has no cargo to move, as a ship whose room is full has none.
+3. **A load the commander orders below a reserve** (decision 0111, item 9): what it asks counts each ship's room only up to the level less what it holds, in the engine and in the agent's answer.
+4. **A load held at the reserve** (decision 0111, items 4 and 8) reads "room aboard" as a ship that can still take more by its room and the level.
+5. **"The most the run may carry" (item 5)** is read as the most it may take on top of the supply aboard, which is what the engine will load: the run's weight is cut to the supply aboard plus that. Where nothing is aboard the two readings are one.
+6. **Room at a speed (item 7)** is read as: the whole load is taken when spread under that speed's level, and each ship's supply aboard plus its part is within its own limit at that speed's hours. A ship already holding more than its limit fails it, as before.
+7. **Not changed: the run's times.** The load and unloading hours a run's reasons give, and the days they reckon, are still worked on the load filled in ship order as first asked, before the night's cut, as they were before this record. Scenario 85's reason says "ship:1 50 t at 150 t an hour = 0.333333 hours" for the load and "unloading 120 t at base:2 = 2.5 hours", where the ships take 40 t each and land them in 2 hours. No day moves in scenario 85; it is left for the architect.
+8. **The lift's check of an order already given** (`take.rs`) compares the weight only, as before.
+
+What changed in the games already built:
+
+- **Scenario 70.** Its main case goes by night at full speed, inside the limit, and now names the level (106 2/3 t) on its load order; it loads and lands as before, and only the reasons' words change in its run baseline. Its property "The night's limit" is asserted as the architect restated it: 21 1/3 t in each of its two ships, 42 2/3 t in all, where 21 1/3 t went in the first.
+- **Every other run baseline, the recorded games, the pinned hashes and the batch fixture** change in their versions and hashes only. No recorded game has a supply run by night, and no transcript changes but in its `version`.
+- **The three arrangements of stage 3's proof** (`data/scenarios/stage-3-proof/`), run once each on their own seed, 1942: no supply run by night is ordered in any of them; every run by night in them is a lift, which this record leaves as it was, so each plays as before. On seed 1 of arrangement (a), the seed the record traces, the Japanese supply run of day 17 now loads 110.3 t, 25 t in each of four ships and 10.3 t in the fifth, where it loaded 25 t in the first; the game then differs, and the run of day 23 loads 94.1 t. Nothing in them is judged here: the proof is run again with the next record.
+

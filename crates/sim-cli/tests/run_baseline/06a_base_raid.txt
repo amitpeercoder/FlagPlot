@@ -2,9 +2,9 @@ Scenario 6a: A raid on an airfield
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3e4b626adaea5d12  24 events
-day   2  hash 9ffcbb90a13bfe32  17 events
-day   3  hash d490c04d74db5252  17 events
+day   1  hash 90971cf0ba4651af  24 events
+day   2  hash 6751de292a8d818b  17 events
+day   3  hash 66cad22fe31eb8a3  17 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 10 ready, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 10 ready, mission CombatAirPatrol, patrol share 0.5, no arc
