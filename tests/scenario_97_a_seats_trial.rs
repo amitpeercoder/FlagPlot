@@ -46,13 +46,16 @@
 //!
 //! The standing commands are the three he queued, in the order queued;
 //! the scenario has none of its own. Intent 1 is queued, so it may be
-//! tried. Both leaves are the side's or queued: the course adds nothing.
-//! The trial is trial 1, of 4 worlds for 8 days.
+//! tried. Leave to prepare the side holds and leave to launch is among
+//! the standing commands: the course is empty. The side has no other
+//! intent, so no second trial is asked. The trial is trial 1, of 4
+//! worlds for 8 days.
 //!
 //! This is scenario 95's trial: the same picture, the same beliefs and
 //! figures, the same worlds, and the same four commands taken in on the
 //! first morning (scenario 95's course gives leave to prepare as well,
-//! which the side already has).
+//! which the side already has; there the launch leave was the course's
+//! and was named as given by it, and here it is the commander's own).
 //!
 //! ## The answer
 //!
@@ -69,7 +72,10 @@
 //!   300; every other cost 0, 0, 0.
 //! - **What it needs and has:** men wanted 400, to hand 600; it waits
 //!   for nothing; the day expected ashore is day 4; a count of the
-//!   enemy at the place is asked for and not held.
+//!   enemy at the place is asked for, and the one held is the opening
+//!   estimate, 200 men, told on day 0, which does not meet it.
+//! - **What its other plans lost:** the side has no other plan to
+//!   weigh.
 //! - **What was assumed:** the enemy's base at B with 200 t of supply
 //!   and 0 t of fuel, in 4 worlds; 200 men at B from the side's
 //!   estimate, in 4; 400 men believed at B, standing unknown, in 2 and
@@ -84,13 +90,17 @@
 //! In the answer the base is named as the seat's tools name a base, the
 //! place as they give a place, the task under the plan order in the
 //! words the tool `order` uses for it ("ready a landing at ... by ..."),
-//! and task force 1 and unit 1 by the side's own numbers. No number of
-//! a unit made for the enemy (900,001 or 900,002) is anywhere in it.
+//! with no number of a task or a plan, and task force 1 and unit 1 by
+//! the side's own numbers. The 200 men are "from your estimate of" the
+//! place and the 400 "believed, standing unknown".
 //!
+//! Every number of a unit, a task force or a base in the answer, fields
+//! and words, is one the seat's own tools give in the live game; no
+//! run of digits in it is 900001 or 900002, with or without a comma.
 //! Its words name "2 of 4 worlds"; they hold no per cent sign, neither
 //! "chance" nor "points", and none of these marks of the engine's own
-//! names: "TaskForceId", "LandUnitId", "Hex {", "ReadyLanding",
-//! "TakePlace", "intent:", "base:" followed by a number alone.
+//! names: "TaskForceId", "LandUnitId", "PlanId", "Hex {", "Some(",
+//! "None", "ReadyLanding", "TakePlace", "ready_landing", "take_place".
 //!
 //! ## Nothing is changed
 //!
@@ -103,12 +113,19 @@
 //!   called: the same daily hashes. (In the live game the 600 men meet
 //!   1,200 on day 4, not the 200 or 600 of the trial: the trial was not
 //!   told.)
+//! - **The live enemy is not read.** The same scenario with 900 men at
+//!   B in place of 1,200, and the same calls: the answer of `trial` is
+//!   the same, byte for byte.
+//! - **The other side's commands are not in it.** In a session with
+//!   both seats played, the Japanese seat queues a command of its own
+//!   before the Allied seat asks: the Allied answer is the same, byte
+//!   for byte.
 //!
 //! # Properties
 //!
 //! - **Asked twice, the same.** A second `trial` of intent 1 at `small`
 //!   on the same evening is answered with the same fields and words, as
-//!   estimate 2. `estimates` then lists two, each with the evening it
+//!   estimate 2. `trials` then lists two, each with the evening it
 //!   was asked on and what was asked; and gives estimate 1 again by its
 //!   number, equal to the first answer.
 //! - **A larger size is more of the same worlds.** At `standard`, 8
@@ -129,23 +146,32 @@
 //!   The landing is ashore on day 4 in every world as before: met and
 //!   kept in 2 of 4 on day 4, not met by day 9 in 2.
 //! - **Refused, each with its own words and nothing played:**
-//!   - at the seat of a command, in a scenario with command levels;
-//!   - in a scenario that names no file of the trial's figures: the
-//!     game has no trial;
 //!   - while a day is open, after the night pulse of day 1 with the
-//!     clock stopped;
+//!     clock stopped (in a copy of the scenario with orders inside a
+//!     day on);
+//!   - after the last day, the game being over;
+//!   - intent 1 once its withdrawal is queued;
 //!   - with both `intent` and `preview`, and with neither;
 //!   - intent 7, which the side does not have;
 //!   - the staff's own intent, the landing it formed, on the evening of
 //!     day 1;
 //!   - a preview that is void, a command having been queued after it;
 //!   - the size `vast`.
-//! - **The tools are listed** for a seat with a staff in a game that
-//!   has a trial, and `trial` is refused by name in one that has none.
+//! - **The tools `trial` and `trials` are listed** for a seat with a
+//!   staff that plays a whole side in a game that has a trial. At a
+//!   command's seat, and in a game that names no file of the trial's
+//!   figures, they are not listed and a call is answered as a call of
+//!   any tool the seat does not have.
+//! - **Leave given by the course is the side's.** Without step 3: the
+//!   course gives leave to launch, the answer names it as "leave given
+//!   to the side", and the figures are those above.
+//! - **The session is built in this test as `sim-cli` builds one,** on
+//!   the frozen figures. A test of `sim-cli` proves that it hands a
+//!   runner in exactly where the scenario names a trial's figures.
 //! - **The agent's library names no picture and no world built from
 //!   one:** its source test passes unchanged in what it bans.
 //! - **A game with no trial is as it was:** the recorded games replay
 //!   as they did, but for the version of the agent's interface in each
-//!   answer.
+//!   answer; and every tool listed for them is one listed before.
 
 // The tests are written by the build, to the statements above.
