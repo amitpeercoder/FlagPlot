@@ -34,6 +34,7 @@ The short form; `README.md` has it in plain words and the decision records have 
 - **Owed from decision 0170:** a test, across a picture, of each rule that reads the log of earlier days (the words of a refusal to a force that is gone, an interrupt's count of the day's losses, yard trips in the score, a note not written twice): rulings, 7. With step 4 of decision 0161.
 - **To build, decision 0171 (a side's own half of a picture):** the first part of step 4 of stage 4 (decision 0161, C), settled on Nov 19, 2026 with its hand calculation in `tests/scenario_92_a_sides_own_half.rs`. It waits for decision 0170's build to merge. Two more records of step 4 are to be written: what a scenario says a side believed and which side uses a class; and the enemy's half with the crate `sim-trial`.
 - **To build, decision 0173 (what a side believed, and whose a class is):** the second part of step 4 of stage 4. A file of sides for classes and types, and `[[believed_force]]` and `[[believed_intent]]` in a scenario. The 39 days' entries are placeholders: what each command believed of the other in the first week of August 1942 is owed as rows in `data/oob`.
+- **To build, decision 0174 (the enemy's half, by rule):** the third part of step 4 of stage 4, with the crate `sim-trial`; its hand calculation is in `tests/scenario_93_the_enemys_half.rs`. It waits for decisions 0171 and 0173 to be built. Left by it, and the first to mend once the trial is proved: no land air group is built at an enemy base.
 
 ## The clean-up after stage 3's proof, before stage 4
 
