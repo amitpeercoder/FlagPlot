@@ -329,8 +329,8 @@ impl Remembered {
 /// `staff` what each side's staff handed in; `hashes` are `(day, hash)` for
 /// each day resolved. `stopped_inside_day` is the day a game held open
 /// stopped inside when the engine could not resolve it (decision 0172, 3):
-/// the saved game then says so, under `stopped_inside_day`, and holds the
-/// orders of that day, which a replay stops on again.
+/// the saved game then says so, under `stopped_inside_day`. It holds the
+/// orders of that day too; a replay runs only the days resolved before it.
 #[allow(clippy::too_many_arguments)]
 pub fn write(
     file: &str,
