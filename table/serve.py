@@ -140,6 +140,13 @@ def main():
         "directives": directives,
     }
     chart = read_map(args.map)
+    # The coastline drawn on the chart, where the map has one beside this
+    # script: for the eye only. The game plays on the hexes and reads none of it.
+    coast = None
+    coast_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chart", os.path.splitext(os.path.basename(args.map))[0] + "_coast.json")
+    if os.path.exists(coast_path):
+        with open(coast_path) as handle:
+            coast = json.load(handle)
     game = Game([args.sim_cli, "mcp", args.scenario, "--seat", args.seat])
 
     class Handler(BaseHTTPRequestHandler):
@@ -164,6 +171,8 @@ def main():
                 self.json(game.tools())
             elif self.path == "/map":
                 self.json(chart)
+            elif self.path == "/coast" and coast is not None:
+                self.json(coast)
             else:
                 self.answer(404, "text/plain", b"not found")
 

@@ -243,7 +243,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   // ---- the chart, drawn from the game's own map ----
   var config = { islands: [], start: '', seat: 'allied' }, hexes = [], hexAt = {};
   var TW = 10, TD = 8, K = 1, lonMid = 0, latMid = 0, HEXR = 0.05, PX = 200;
-  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh, paintBase = function () {}, showHexes = false;
+  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh, paintBase = function () {}, showHexes = false, coast = null;
   try { showHexes = localStorage.getItem('flagplot.hexes') === '1'; } catch (e) {}
   function world(lat, lon, y) { return new THREE.Vector3((lon - lonMid) * K, y || 0, (latMid - lat) * K); }
   function cpx(v) { return [(v.x + TW / 2) * PX, (v.z + TD / 2) * PX]; }
@@ -266,6 +266,12 @@ button:disabled { opacity: 0.45; cursor: default; }
     b2.strokeStyle = '#b6c0c0'; b2.lineWidth = 1.2; b2.fillStyle = '#56605f'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
     for (var lon = Math.ceil(lo / 2) * 2; lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lon + '° E', x + 6, H - 14); }
     for (var lat = Math.ceil(la / 2) * 2; lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
+    // the scale along the border: a short tick each half degree, a long one each degree
+    var border = function () {
+      b2.strokeStyle = '#3f3b31'; b2.lineWidth = 2;
+      for (var tl = Math.ceil(lo * 2) / 2; tl <= hi; tl += 0.5) { var tx = cpx(world(latMid, tl))[0], len = tl % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(tx, 14); b2.lineTo(tx, 14 + len); b2.moveTo(tx, H - 14); b2.lineTo(tx, H - 14 - len); b2.stroke(); }
+      for (var ta = Math.ceil(la * 2) / 2; ta <= ha; ta += 0.5) { var ty = cpx(world(ta, lonMid))[1], ln = ta % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(14, ty); b2.lineTo(14 + ln, ty); b2.moveTo(W - 14, ty); b2.lineTo(W - 14 - ln, ty); b2.stroke(); }
+    };
     if (showHexes) {
     // the land, hex by hex as the game has it
     var R = HEXR * PX * 1.02;
@@ -276,6 +282,14 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (h[2] === 'land') { b2.fillStyle = '#c3b383'; b2.fill(); b2.strokeStyle = '#c3b383'; b2.lineWidth = 2; b2.stroke(); }
       else { b2.fillStyle = 'rgba(195,179,131,' + (0.35 + 0.65 * Math.min(100, h[5]) / 100).toFixed(2) + ')'; b2.fill(); b2.strokeStyle = 'rgba(74,70,59,0.55)'; b2.lineWidth = 1.5; b2.stroke(); }
     });
+    } else if (coast) {
+      // The chart as a chart: the coastline of Natural Earth (public domain),
+      // for the eye only. The game plays on the hexes behind it.
+      var trace = function () { b2.beginPath(); coast.forEach(function (r) { for (var n = 0; n < r.length; n += 2) { var c = cpx(world(r[n + 1], r[n])); b2[n ? 'lineTo' : 'moveTo'](c[0], c[1]); } b2.closePath(); }); };
+      b2.lineJoin = 'round'; trace(); b2.strokeStyle = 'rgba(150,176,176,0.30)'; b2.lineWidth = HEXR * PX * 0.5; b2.stroke();
+      trace(); b2.strokeStyle = 'rgba(150,176,176,0.35)'; b2.lineWidth = HEXR * PX * 0.22; b2.stroke();
+      trace(); b2.fillStyle = '#c9bb8f'; b2.fill(); b2.strokeStyle = '#4e4636'; b2.lineWidth = 2.2; b2.stroke();
+      border();
     } else {
       // The chart as a chart: the land drawn from the game's own hexes, each
       // by its share of land, run together and inked along the shore. The
@@ -292,10 +306,7 @@ button:disabled { opacity: 0.45; cursor: default; }
         else d[n + 3] = 0; }
       c2.filter = 'none'; c2.clearRect(0, 0, mw, mh); c2.putImageData(img, 0, 0);
       b2.imageSmoothingEnabled = true; b2.drawImage(m2, 0, 0, mw, mh, 0, 0, mw * q, mh * q);
-      // the scale along the border: a short tick each half degree, a long one each degree
-      b2.strokeStyle = '#3f3b31'; b2.lineWidth = 2;
-      for (var tl = Math.ceil(lo * 2) / 2; tl <= hi; tl += 0.5) { var tx = cpx(world(latMid, tl))[0], len = tl % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(tx, 14); b2.lineTo(tx, 14 + len); b2.moveTo(tx, H - 14); b2.lineTo(tx, H - 14 - len); b2.stroke(); }
-      for (var ta = Math.ceil(la * 2) / 2; ta <= ha; ta += 0.5) { var ty = cpx(world(ta, lonMid))[1], ln = ta % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(14, ty); b2.lineTo(14 + ln, ty); b2.moveTo(W - 14, ty); b2.lineTo(W - 14 - ln, ty); b2.stroke(); }
+      border();
     }
     b2.strokeStyle = '#3f3b31'; b2.lineWidth = 6; b2.strokeRect(14, 14, W - 28, H - 28);
     };
@@ -1180,8 +1191,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     renderer.render(scene, camera); requestAnimationFrame(frame);
   }
 
-  Promise.all([fetch('/config').then(function (r) { return r.json(); }), fetch('/map').then(function (r) { return r.json(); })]).then(function (a) {
-    config = a[0]; hexes = a[1]; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
+  Promise.all([fetch('/config').then(function (r) { return r.json(); }), fetch('/map').then(function (r) { return r.json(); }), fetch('/coast').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (a) {
+    config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return fetch('/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
   }).then(function () { var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} setStatus(shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
