@@ -66,6 +66,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
 .slip.decide { background: var(--paper); }
 .slip.opens { cursor: pointer; }
+.slip .told + .told { margin-top: 6px; padding-top: 6px; border-top: 1px dotted #8d8672; }
 .slip.opens:hover, .slip.opens:focus-visible { outline: 2px solid var(--own); outline-offset: -2px; }
 .slip.opens .more { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--own); }
 .slip.leave { padding: 7px 10px; gap: 4px; }
@@ -864,7 +865,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   function showSignals() {
     var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = '';
     if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
-    lastTold.forEach(function (t) { slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, t.lines.slice(0, 4).join(' · '), true); });
+    lastTold.forEach(function (t) { var a = slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, null, true); t.lines.slice(0, 6).forEach(function (l) { a.appendChild(rich('div', 'told', l)); }); if (t.lines.length > 6) a.appendChild(el('div', 'told', 'And ' + (t.lines.length - 6) + ' more: see the war diary.')); });
     (s.holds || []).forEach(function (h) {
       var a = slip('HELD FROM THE STAFF', null, null, null), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
       var since = /day (\d+)/.exec(h.text || ''); a.appendChild(what ? rich('div', '', what + ', held by your direct order' + (since ? ' of day ' + since[1] : '')) : el('div', '', h.text));
@@ -1309,7 +1310,9 @@ button:disabled { opacity: 0.45; cursor: default; }
     else if (k === 'men_lost_to_fire' && R('^' + H + ' lost (\\d+) men to fire on ' + H + '.*, (\\d+) left')) out = N(m[1]) + ' lost ' + fig(m[2]) + (m[2] === '1' ? ' man' : ' men') + ' to fire at ' + N(m[3]) + '; ' + fig(m[4]) + ' remain';
     else if (k === 'airfield_damaged' && R('^(\\d+) hits? on the airfield of ' + H)) out = m[1] + (m[1] === '1' ? ' hit' : ' hits') + ' on the airfield at ' + N(m[2]);
     else if ((k === 'aircraft_lost' || k === 'pilots_lost') && R('^' + H + ' lost (\\d+) (aircraft|pilots?), (\\d+) left')) out = N(m[1]) + ' lost ' + m[2] + ' ' + m[3] + '; ' + m[4] + ' left';
-    else if (k === 'base_attacked_against' && R('bombs at ' + H + ': .*?(\\d+) hits?: (.*)$')) out = N(m[1]) + ' was bombed: ' + (m[2] === '0' ? 'no hits' : m[2] + (m[2] === '1' ? ' hit' : ' hits')) + (function (d) { var seen = /; (?:recognised as (.+)|(type not made out))$/.exec(d); if (seen) d = d.slice(0, seen.index); d = d.split(', ').filter(function (x) { return !/on nothing/.test(x) && !/^0 /.test(x); }); return (d.length ? ' (' + d.join(', ') + ')' : '') + (seen ? (seen[1] ? '. The aircraft were recognised as ' + seen[1].replace(/^Placeholder /, '') : '. Their type was not made out') : ''); })(m[3]);
+    else if (k === 'base_attacked_against' && R('bombs at ' + H + ': .*?(\\d+) hits?: (.*)$')) out = (function (d) { var seen = /; (?:recognised as (.+)|(type not made out))$/.exec(d); if (seen) d = d.slice(0, seen.index);
+      var parts = d.split(', ').filter(function (x) { return !/^0 /.test(x); }).map(function (x) { return x.replace(/on nothing/, 'to no effect'); });
+      return N(m[1]) + ' was bombed' + (seen ? (seen[1] ? ' by ' + seen[1].replace(/^Placeholder /, '') + ' aircraft' : ' by aircraft of a type not made out') : '') + ': ' + (m[2] === '0' ? 'no bomb fell on the base' : m[2] + (m[2] === '1' ? ' bomb' : ' bombs') + ' on the base' + (parts.length ? ', ' + parts.join(', ') : '')); })(m[3]);
     else if (k === 'air_fight' && R('^' + H + ' patrol at ([^:]*)')) out = N(m[1]) + ' engaged ' + m[2];
     else if (k === 'airfield_built' && R('^' + H)) out = 'The airfield at ' + N(m[1]) + ' is complete';
     else if (k === 'air_attack_against' && R('^' + H + ' attacked by (\\d+) aircraft(?: with (\\w+), (?:recognised as (.+)|(type not made out)))?')) out = N(m[1]) + ' was attacked' + (m[3] ? ' with ' + m[3] : '') + ' by ' + m[2] + ' aircraft' + (m[4] ? ', recognised as ' + m[4].replace(/^Placeholder /, '') : m[5] ? ', type not made out' : '');
@@ -1912,7 +1915,7 @@ button:disabled { opacity: 0.45; cursor: default; }
               await plotPhase(done.day, done.pulse, evs);
               if (done.pulse === 'afternoon') { var end = await eventsOf(done.day, 'end'); end.forEach(function (e) { byNumber[e.number] = e; }); await plotPhase(done.day, 'end', end); }
             }
-            (r.told || []).forEach(function (t) { lastTold.push({ thing: t.thing, lines: t.events.map(function (n) { return byNumber[n] ? named(byNumber[n].text) : 'event ' + n; }) }); });
+            (r.told || []).forEach(function (t) { lastTold.push({ thing: t.thing, lines: t.events.filter(function (n) { return byNumber[n]; }).map(function (n) { return sayEvent(byNumber[n], true); }) }); });
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
             if (!until || !playing || r.game_over || r.stopped !== 'pulses') {
               var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
