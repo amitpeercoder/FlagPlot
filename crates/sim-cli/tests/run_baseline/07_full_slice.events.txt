@@ -2,45 +2,45 @@ Scenario 7: The full slice, 7 August to 14 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c7b1f517c9473347  246 events
-day   2  hash a0bf252e004a0eb1  146 events
-day   3  hash 69f2f42214bfd3af  147 events
-day   4  hash 63ca5a7725eb1154  152 events
-day   5  hash b49b3aecae197a75  140 events
-day   6  hash 8b7d84027665b079  34 events
-day   7  hash 65419acefd36cf8c  30 events
-day   8  hash dd48b4f1f9f75946  43 events
-day   9  hash d9911145974500fc  48 events
-day  10  hash 120a8bd49242a441  55 events
-day  11  hash a06986c37a28faca  79 events
-day  12  hash 304a0a2f5629496a  68 events
-day  13  hash de63c4092c969d97  102 events
-day  14  hash c54d86589996153c  84 events
-day  15  hash 3df8172e72f5962b  92 events
-day  16  hash ba5b352e6b652fa7  87 events
-day  17  hash 60125ee181229565  49 events
-day  18  hash 3bb774b5550232d8  210 events
-day  19  hash 5d5f0c04a9c7c379  258 events
-day  20  hash ffe3b605810ab151  207 events
-day  21  hash 8ef968c18af51eca  255 events
-day  22  hash a3b5aa2e034bc678  159 events
-day  23  hash 46894ab8eacbc477  225 events
-day  24  hash 69b75b5d45db4156  221 events
-day  25  hash 53d3c4bee8853472  238 events
-day  26  hash 54d6062628a65afa  170 events
-day  27  hash a95663469f465306  196 events
-day  28  hash 0036a8f7cbdaf395  150 events
-day  29  hash 4a941bbd82e38b48  144 events
-day  30  hash 75d2b8d07ee2a631  186 events
-day  31  hash 82a3799038333502  184 events
-day  32  hash bc24ca4ba58f041d  161 events
-day  33  hash 0b7f40cfdf7ac42b  122 events
-day  34  hash 041eb7b41f57a9bd  142 events
-day  35  hash ae1411eddf7fc7c8  168 events
-day  36  hash 3b2eb176fea0dba2  153 events
-day  37  hash af80190e1f3a5207  220 events
-day  38  hash 4faaf74c00cf9e14  151 events
-day  39  hash 56a5ff96f5591a30  139 events
+day   1  hash e6e979e33d21adbf  246 events
+day   2  hash 60c979ee62a95dd9  146 events
+day   3  hash 8959868ab0625787  147 events
+day   4  hash da9979d04cd71efc  152 events
+day   5  hash 69498bb377fc3635  140 events
+day   6  hash 125f110a42d3e909  34 events
+day   7  hash 3bf1096e7cdd02d4  30 events
+day   8  hash e7e2a1fd2a40cb9e  43 events
+day   9  hash 7b3aec17a12ce89c  48 events
+day  10  hash 1771b268ad492559  55 events
+day  11  hash 2a0a4f617c6cbc5a  79 events
+day  12  hash 91fd46c61b743e62  68 events
+day  13  hash 6657cbdad2749d4f  102 events
+day  14  hash b988d18b393f0316  84 events
+day  15  hash 78850b6fd03c6e85  92 events
+day  16  hash e635a03cdc9c21b1  87 events
+day  17  hash f3fc86d2c8a49adb  49 events
+day  18  hash d05611d05e2821d6  210 events
+day  19  hash 370cdd136376622f  258 events
+day  20  hash f883bf7e0358761b  207 events
+day  21  hash 593074b6b9427784  255 events
+day  22  hash 774886f08017d016  159 events
+day  23  hash f55cecb089ffdbd5  225 events
+day  24  hash 922fbe23df5e2084  221 events
+day  25  hash 4f5c1b925297c7c0  238 events
+day  26  hash a6aff6f2ca79eea0  170 events
+day  27  hash 7444eac68bd1a394  196 events
+day  28  hash 1b45e57af080fe5f  150 events
+day  29  hash 809c0b7efdd4ac52  144 events
+day  30  hash 6e0d1915657edc6b  186 events
+day  31  hash 20282397af3ff9d8  184 events
+day  32  hash 0a5000dda60faf07  161 events
+day  33  hash d9e3e4da7665e4d5  122 events
+day  34  hash 0d44006e65ef342b  142 events
+day  35  hash 8e0a83b01b7f836e  168 events
+day  36  hash 15f71e40a16c0570  153 events
+day  37  hash ff1a8c1d946176c9  220 events
+day  38  hash 5809374077829a8a  151 events
+day  39  hash c251c1be7062ff4a  139 events
 
 #1 D0 -         Allied ground report at (2,-4): 5275 enemy men ashore (told)
 #2 D0 -         Allied ground report at (3,-5): 1850 enemy men ashore (told)
@@ -1388,11 +1388,11 @@ day  39  hash 56a5ff96f5591a30  139 events
 #1344 D14 morning   ship:104 burned 14.416015 t, 221.605472 t remaining  <- #1340
 #1345 D14 morning   ship:105 burned 14.416015 t, 221.605472 t remaining  <- #1340
 #1346 D14 morning   task_force:31 arrived at (-5,-13) at D14 08:46  <- #1340
-#1347 D14 morning   ship:101 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 4721.605472 t left  <- #1346
-#1348 D14 morning   ship:102 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 4443.210944 t left  <- #1346
-#1349 D14 morning   ship:103 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 4164.816416 t left  <- #1346
-#1350 D14 morning   ship:104 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 3886.421888 t left  <- #1346
-#1351 D14 morning   ship:105 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 3608.02736 t left  <- #1346
+#1347 D14 morning   ship:101 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 49721.605472 t left  <- #1346
+#1348 D14 morning   ship:102 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 49443.210944 t left  <- #1346
+#1349 D14 morning   ship:103 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 49164.816416 t left  <- #1346
+#1350 D14 morning   ship:104 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 48886.421888 t left  <- #1346
+#1351 D14 morning   ship:105 took 278.394528 t of fuel at base:2, 500 t aboard, base:2 has 48608.02736 t left  <- #1346
 #1352 D14 morning   Allied contact:1 aged to 3 pulses  <- #1250
 #1353 D14 morning   Japanese contact:1 aged to 3 pulses  <- #1251
 #1354 D14 afternoon task_force:24 stood down  <- #1210
@@ -5904,7 +5904,7 @@ ship:131 "Placeholder fast transport with cargo, task force 38, 4": afloat in ta
 ship:132 "Placeholder fast transport with cargo, task force 39, 1": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 ship:133 "Placeholder fast transport with cargo, task force 39, 2": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 base:1 "Lunga" (Allied) at (2,-4): 1632.025 t of supply in stock, 0 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day, 20063 of work done on the airfield
-base:2 "Rabaul" (Japanese) at (-5,-13): 8118.32 t of supply in stock, 3608.02736 t of fuel in stock, repairs 4 aircraft a day
+base:2 "Rabaul" (Japanese) at (-5,-13): 8118.32 t of supply in stock, 48608.02736 t of fuel in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 2561.1 t of supply in stock, 0 t of fuel in stock
 base:4 "Tulagi" (Allied) at (3,-5): 0 t of supply in stock, no airfield
 base:5 "Placeholder Japanese stock at Taivu" (Japanese) at (3,-4): 10.95 t of supply in stock, no airfield, formed in play, on its own side's map only

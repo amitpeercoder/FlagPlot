@@ -75,23 +75,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "fdb4ba793a57b2a0"
+      "hash": "9bfe6d01b52c2c08"
     },
     {
       "day": 2,
-      "hash": "a2f589749fa507d4"
+      "hash": "94e35edf712289fc"
     },
     {
       "day": 3,
-      "hash": "365da6744c636ca4"
+      "hash": "d2c332d320f2e7b4"
     },
     {
       "day": 4,
-      "hash": "5f97df686e9a45c3"
+      "hash": "b6e74b89414e6bfb"
     },
     {
       "day": 5,
-      "hash": "06c91fd799510e17"
+      "hash": "19753b4e6f54a7df"
     }
   ],
   "orders": [
@@ -862,7 +862,7 @@
   "rules_version": 20,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "daa0567fa3a7846b"
+    "hash": "776a640417bd1143"
   },
   "seats": {
     "allied": "player",
