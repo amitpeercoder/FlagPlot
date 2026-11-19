@@ -2284,6 +2284,9 @@ impl Day<'_, '_> {
                     order: TaskForceOrder::LoadTo {
                         cargo: Cargo::Supply,
                         weight_t: supply_level,
+                        // A lift's load is cut as decision 0145 has it, with
+                        // no level (decision 0162, 9).
+                        each_t: None,
                     },
                 },
                 intent: end.id,

@@ -162,6 +162,9 @@ pub(crate) struct RunPlan {
     pub(crate) cuts: Vec<String>,
     /// The run by night, in words, where it goes by night (decision 0145).
     pub(crate) night: Option<String>,
+    /// The most a ship is to hold, where the run goes by night, and the
+    /// words of the load order that give it (decision 0162, 5 and 10).
+    pub(crate) level: Option<(Fixed, String)>,
 }
 
 /// Why a run that is needed cannot be made.
@@ -987,6 +990,7 @@ impl<'a, 'v> Planner<'a, 'v> {
                     aboard_before_t,
                     cuts,
                     night: None,
+                    level: None,
                 });
             }
         }

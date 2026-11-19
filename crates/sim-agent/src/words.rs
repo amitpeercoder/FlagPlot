@@ -232,6 +232,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::WeightNotAboveZero(_) => {
             " (a load with weight_t names the tons of supply or fuel the whole force is to have aboard, above 0; leave weight_t out to fill the room)"
         }
+        R::LevelNotAboveZero(_) => {
+            " (each_t names the most any one ship is to hold of the cargo, above 0; leave each_t out to fill the ships in ship order)"
+        }
         R::NoShipsToForm => {
             " (form_task_force needs ships: a list of your ship numbers lying in port at the base in no force; the base's line in the briefing and get_entity lists them under ships_in_port)"
         }

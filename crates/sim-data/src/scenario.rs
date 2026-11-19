@@ -650,11 +650,13 @@ enum ActionSpec {
     /// `cargo` is "supply" or "fuel" and defaults to supply (decision 0046).
     /// With a `unit` (decision 0066) it may also be "none".
     /// With `weight_t` and no `unit` (decision 0111): load until the force
-    /// has that many tons aboard.
+    /// has that many tons aboard. With `weight_t` it may give `each_t`
+    /// (decision 0162): the most any one ship is to hold, above 0.
     Load {
         cargo: Option<CargoSpec>,
         unit: Option<u32>,
         weight_t: Option<Quantity>,
+        each_t: Option<Quantity>,
     },
     Unload {},
     /// Join the force to another of its side stopped at the same base
@@ -2400,6 +2402,7 @@ impl Scenario {
                             cargo,
                             unit,
                             weight_t: Some(weight),
+                            each_t,
                         } => {
                             // A weight does not apply to men (decision 5 of
                             // 0111). Its sign is for intake to refuse.
@@ -2417,17 +2420,42 @@ impl Scenario {
                                     )))
                                 }
                             };
+                            // The level is refused at 0 or below as it is
+                            // read (decision 0162, 3).
+                            let each_t = match each_t {
+                                Some(level) => {
+                                    let level = level
+                                        .to_fixed()
+                                        .map_err(|e| fail(format!("each_t on day {day} {e}")))?;
+                                    if level <= Fixed::ZERO {
+                                        return Err(fail(format!(
+                                            "the load order on day {day} gives an each_t of {level}: the most a ship is to hold must be above 0"
+                                        )));
+                                    }
+                                    Some(level)
+                                }
+                                None => None,
+                            };
                             TaskForceOrder::LoadTo {
                                 cargo,
                                 weight_t: weight
                                     .to_fixed()
                                     .map_err(|e| fail(format!("weight_t on day {day} {e}")))?,
+                                each_t,
                             }
+                        }
+                        ActionSpec::Load {
+                            each_t: Some(_), ..
+                        } => {
+                            return Err(fail(format!(
+                                "the load order on day {day} gives an each_t and no weight_t: the most a ship is to hold goes with a weight"
+                            )))
                         }
                         ActionSpec::Load {
                             cargo,
                             unit,
                             weight_t: None,
+                            each_t: None,
                         } => match (unit, cargo) {
                             (None, None | Some(CargoSpec::Supply)) => TaskForceOrder::Load,
                             (None, Some(CargoSpec::Fuel)) => TaskForceOrder::LoadFuel,
@@ -5979,7 +6007,8 @@ task_force = 3
             orders,
             vec![TaskForceOrder::LoadTo {
                 cargo: Cargo::Supply,
-                weight_t: Fixed::from_int(250)
+                weight_t: Fixed::from_int(250),
+                each_t: None,
             }]
         );
         assert_eq!(
@@ -5987,14 +6016,16 @@ task_force = 3
                 .expect("loads"),
             vec![TaskForceOrder::LoadTo {
                 cargo: Cargo::Supply,
-                weight_t: Fixed::from_ratio(5, 2)
+                weight_t: Fixed::from_ratio(5, 2),
+                each_t: None,
             }]
         );
         assert_eq!(
             loaded_orders("kind = \"load\"\ncargo = \"fuel\"\nweight_t = 80").expect("loads"),
             vec![TaskForceOrder::LoadTo {
                 cargo: Cargo::Fuel,
-                weight_t: Fixed::from_int(80)
+                weight_t: Fixed::from_int(80),
+                each_t: None,
             }]
         );
         // The sign is for intake to refuse, as it is for knots.
@@ -6002,13 +6033,48 @@ task_force = 3
             loaded_orders("kind = \"load\"\nweight_t = 0").expect("loads"),
             vec![TaskForceOrder::LoadTo {
                 cargo: Cargo::Supply,
-                weight_t: Fixed::ZERO
+                weight_t: Fixed::ZERO,
+                each_t: None,
             }]
         );
         assert!(loaded_orders("kind = \"load\"\nweight_t = -5").is_ok());
         // A float is never a quantity; an unload takes no weight.
         assert!(loaded_orders("kind = \"load\"\nweight_t = 2.5").is_err());
         assert!(loaded_orders("kind = \"unload\"\nweight_t = 5").is_err());
+    }
+
+    #[test]
+    fn a_load_to_a_weight_may_name_a_level_above_0() {
+        assert_eq!(
+            loaded_orders("kind = \"load\"\nweight_t = 100\neach_t = 40").expect("loads"),
+            vec![TaskForceOrder::LoadTo {
+                cargo: Cargo::Supply,
+                weight_t: Fixed::from_int(100),
+                each_t: Some(Fixed::from_int(40)),
+            }]
+        );
+        assert_eq!(
+            loaded_orders("kind = \"load\"\ncargo = \"fuel\"\nweight_t = 100\neach_t = \"2.5\"")
+                .expect("loads"),
+            vec![TaskForceOrder::LoadTo {
+                cargo: Cargo::Fuel,
+                weight_t: Fixed::from_int(100),
+                each_t: Some(Fixed::from_ratio(5, 2)),
+            }]
+        );
+        // Refused with no weight, with a unit, at 0 or below, and as a float
+        // (decision 0162, 3).
+        for text in [
+            "kind = \"load\"\neach_t = 40",
+            "kind = \"load\"\nunit = 3\neach_t = 40",
+            "kind = \"load\"\nunit = 3\nweight_t = 100\neach_t = 40",
+            "kind = \"load\"\nweight_t = 100\neach_t = 0",
+            "kind = \"load\"\nweight_t = 100\neach_t = -5",
+            "kind = \"load\"\nweight_t = 100\neach_t = 2.5",
+            "kind = \"unload\"\neach_t = 5",
+        ] {
+            assert!(loaded_orders(text).is_err(), "{text}");
+        }
     }
 
     #[test]

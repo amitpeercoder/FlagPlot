@@ -473,5 +473,9 @@ name = "scenario_84_the_plan_as_an_order"
 path = "scenario_84_the_plan_as_an_order.rs"
 
 [[test]]
+name = "scenario_85_a_nights_load_spread"
+path = "scenario_85_a_nights_load_spread.rs"
+
+[[test]]
 name = "proof_0159_orders"
 path = "proof_0159_orders.rs"

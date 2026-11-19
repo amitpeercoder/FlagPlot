@@ -1997,6 +1997,7 @@ mod tests {
                     order: TaskForceOrder::LoadTo {
                         cargo: Cargo::Supply,
                         weight_t: Fixed::from_raw(1_200_500_000),
+                        each_t: None,
                     },
                 },
                 intent: IntentId::new(1),

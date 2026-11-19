@@ -387,6 +387,7 @@ fn load_to(tons: i64) -> Given {
         TaskForceOrder::LoadTo {
             cargo: Cargo::Supply,
             weight_t: n(tons),
+            each_t: None,
         },
     )
 }

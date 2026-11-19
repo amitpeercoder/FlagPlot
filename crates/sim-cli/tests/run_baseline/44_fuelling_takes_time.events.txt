@@ -2,8 +2,8 @@ Scenario 44: Refuelling that takes time
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c85867f138f2f274  16 events
-day   2  hash 5dce3ecbefd67980  12 events
+day   1  hash 8b8d31422716957f  16 events
+day   2  hash c5cd4e92727db42f  12 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 night     ship:1 loaded 500 t from base:1, 500 t aboard, 1500 t in stock  <- order:1

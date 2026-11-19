@@ -89,9 +89,18 @@ fn text(kind: &OrderKind) -> String {
                 }
             }
             // Decision 0111.
-            TaskForceOrder::LoadTo { cargo, weight_t } => {
-                format!("load {} from the base here up to {weight_t} t", cargo.name())
-            }
+            // Decision 0162: a level, where there is one.
+            TaskForceOrder::LoadTo {
+                cargo,
+                weight_t,
+                each_t,
+            } => match each_t {
+                Some(level) => format!(
+                    "load {} from the base here up to {weight_t} t, no ship to hold more than {level} t",
+                    cargo.name()
+                ),
+                None => format!("load {} from the base here up to {weight_t} t", cargo.name()),
+            },
             TaskForceOrder::JoinTo(other) => format!("join {other} at the base here"),
             TaskForceOrder::StandDown => "stand down in port".to_string(),
             // Decision 0121.

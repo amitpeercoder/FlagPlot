@@ -372,6 +372,7 @@ fn given(o: &StaffOrder) -> Given {
                 TaskForceOrder::LoadTo {
                     cargo: Cargo::Supply,
                     weight_t,
+                    ..
                 } => Given::LoadTo(tf, *weight_t),
                 TaskForceOrder::LoadUnit { unit, cargo: None } => Given::LoadUnit(tf, unit.raw()),
                 TaskForceOrder::SetRoute {

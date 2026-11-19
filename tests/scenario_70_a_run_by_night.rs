@@ -158,9 +158,10 @@
 //!   On the morning of day 6 and on each morning after, the staff gives
 //!   no order and hands in the notice that it cannot meet intent 1.
 //! - **The night's limit.** With the lighter rate of a size 0 port at
-//!   4 t an hour: a ship's limit is 4 x 5 1/3 = 21 1/3 t. A load fills
-//!   ship 1 first, so the load is cut to 21 1/3 t, all in ship 1, and
-//!   ship 2 goes with its force empty. The reason gives the cut.
+//!   4 t an hour: a ship's limit is 4 x 5 1/3 = 21 1/3 t. The load of
+//!   60 t is cut to 42 2/3 t, 21 1/3 t in each ship (decision 0162; as
+//!   the rule stood it was 21 1/3 t, all in ship 1). The reason gives
+//!   the cut and the level.
 //! - **Not the fuel for full speed.** With each ship holding 300 t and
 //!   base 1 no fuel: at 36 kn a ship needs 303.75 t and has 300. Full
 //!   speed is passed over, cruise arrives by day, and at balanced the run
@@ -283,6 +284,7 @@ fn given(o: &StaffOrder) -> Given {
                 TaskForceOrder::LoadTo {
                     cargo: Cargo::Supply,
                     weight_t,
+                    ..
                 },
             ..
         } => Given::LoadTo(*weight_t),
@@ -788,12 +790,26 @@ fn the_nights_limit() {
     });
     let g = play_with(&text(), &options);
     let limit = n(4) * (n(12) - fast());
-    assert_eq!(g.orders(5), vec![Given::LoadTo(limit)]);
+    // As the doc comment restates it for decision 0162: the load of 60 t is
+    // cut to 42 2/3 t, 21 1/3 t in each ship, and the order names the level.
+    let load = limit + limit;
+    assert_eq!(g.orders(5), vec![Given::LoadTo(load)]);
+    let level = g.handed[&5].orders.iter().find_map(|o| match &o.kind {
+        OrderKind::TaskForce {
+            order: TaskForceOrder::LoadTo { each_t, .. },
+            ..
+        } => Some(*each_t),
+        _ => None,
+    });
+    assert_eq!(level, Some(Some(limit)));
     assert_eq!(g.truth[5].ships[&ShipId::new(1)].supply_t, limit);
-    assert_eq!(g.truth[5].ships[&ShipId::new(2)].supply_t, Fixed::ZERO);
+    assert_eq!(g.truth[5].ships[&ShipId::new(2)].supply_t, limit);
     assert_says(
-        &text_of(g.order_reason(5, &Given::LoadTo(limit))),
-        &[&format!("is cut to {limit} t")],
+        &text_of(g.order_reason(5, &Given::LoadTo(load))),
+        &[
+            &format!("is cut to {load} t"),
+            &format!("No ship is to hold more than {limit} t"),
+        ],
     );
 }
 
