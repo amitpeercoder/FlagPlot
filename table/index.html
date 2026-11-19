@@ -717,10 +717,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     b.position.y = 0.022; b.castShadow = true; grp.add(b); scene.add(grp); return grp;
   }
   function forcePiece(f) { var big = f.mission === 'carrier'; return tile('own', kindOf(f.mission), true, big ? 0.26 : 0.21); }
-  function fixed(grp, v, dx, dz, thing) { grp.position.set(v.x + (dx || 0) * tk(), 0, v.z + (dz || 0) * tk()); grp.userData.thing = thing || null; statics.push(grp); return grp; }
+  // Pieces at one place are stacked as counters are, each on the one before:
+  // two tops at one height would shimmer through each other.
+  var lifts = {};
+  function lift(v) { var k = Math.round(v.x * 100) + ',' + Math.round(v.z * 100), n = lifts[k] || 0; lifts[k] = n + 1; return n * 0.042; }
+  function fixed(grp, v, dx, dz, thing) { grp.position.set(v.x + (dx || 0) * tk(), lift(v), v.z + (dz || 0) * tk()); grp.userData.thing = thing || null; statics.push(grp); return grp; }
   var moveT = 1, mover = null;
   function layPieces() {
-    statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels(); ghosted = false;
+    statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels(); ghosted = false; lifts = {};
     var byHex = {}, seen = {};
     // A force not yet the commander's to use has no piece: it is on the reinforcements paper until its day.
     M.forces.forEach(function (f) { if (!f.place || f.available_from > M.day) return; var k = f.place.q + ',' + f.place.r; (byHex[k] = byHex[k] || []).push(f); });
@@ -728,7 +732,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     Object.keys(byHex).forEach(function (k) {
       var list = byHex[k], centre = placeOf(list[0].place);
       list.forEach(function (f, i) {
-        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? (0.16 + 0.07 * i) * tk() : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, 0, Math.sin(an) * rad));
+        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? (0.16 + 0.07 * i) * tk() : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, lift(centre), Math.sin(an) * rad));
         var p = pieces[h]; seen[h] = true;
         if (!p) { p = pieces[h] = { grp: forcePiece(f), from: to.clone(), to: to.clone() }; p.grp.position.copy(to); }
         else { p.from = p.grp.position.clone(); p.to = to; var d = p.from.distanceTo(to); if (d > far) { far = d; mover = p; } }
