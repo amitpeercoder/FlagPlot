@@ -1,16 +1,16 @@
 # 0161: The trial: the staff's war game of a plan, and the estimate a commander decides on. The plan for stage 4 of step 3
 
-Status: a plan by the architect, written on Nov 19, 2026 for the designer's approval. Nothing is built. It settles the contracts `docs/step3-spec.md` leaves to this record ("The trial") and takes in the two mends decision 0159 left for it.
+Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the designer the same day with the seven answers the architect recommended. Nothing is built yet. It settles the contracts `docs/step3-spec.md` leaves to this record ("The trial") and takes in the two mends decision 0159 left for it.
 
 Summary: The plan for stage 4 of step 3. A commander who has stated an intent can ask the staff to try the plan before it goes: the staff builds private worlds from what the side knows and believes, never from the live enemy, plays the plan in each with both sides on doctrine, and hands in an estimate: what the plan needs, when it could go, what it may cost, how often it came off, and what was assumed about what is not seen. The same course is tried at two or three dates, so the estimate says what waiting buys and what the enemy may do with the days. Nine steps, the first two the mends of decision 0159; a world built from a picture is the one new means in the engine; a new crate plays the trials. With the conditions of its proof and seven questions for the designer.
 
-Standing: Proposed by the architect, Nov 19, 2026. Waits for the designer
+Standing: Confirmed by the designer, Nov 19, 2026, with his seven answers, each as recommended. Step 1, fed with the lift, is next
 
 ## The target
 
 Stated to be ambitious and reachable, as step 3's target is.
 
-On the 39 days, from the Allied seat on the evening of 6 August, a commander states "control Guadalcanal", presses "try it", and inside the time the designer accepts reads an estimate that says, in a page: what the operation needs and has; that it could land on 7 August or wait for a named thing; in how many of the worlds tried the airfield was taken by a stated day and held to the end of the trial, and at what cost in men and ships between which bounds; what the enemy was assumed to hold and to want, with the cases where his carriers come and where they do not shown apart; and what waiting to a second date would buy. The same question asked twice gives the same page. Asking it changes nothing in the game. Two games that differ only in what the commander cannot see give the same page.
+On the 39 days, from the Allied seat on the evening of 6 August, a commander states "control Guadalcanal", asks for a dry run, and inside the time the designer accepts reads an estimate that says, in a page: what the operation needs and has; that it could land on 7 August or wait for a named thing; in how many of the worlds tried the airfield was taken by a stated day and held to the end of the trial, and at what cost in men and ships between which bounds; what the enemy was assumed to hold and to want, with the cases where his carriers come and where they do not shown apart; and what waiting to a second date would buy. The same question asked twice gives the same page. Asking it changes nothing in the game. Two games that differ only in what the commander cannot see give the same page.
 
 It is proved by a test that can fail: the estimate's spreads are checked against the engine it runs, over independent games, by a rule with numbers written before the run.
 
@@ -79,7 +79,7 @@ They come first because a trial plays the doctrine: a doctrine that starves the 
 18. **A what-if varies one thing:** the date, the troops, the shipping, a reserve, the risk or a priority, as a draft beside the plan. Trying one changes no commitment; approving one applies that one, by the commands a seat already has.
 19. **Where a limit binds the staff offers the comparison itself:** keep the convoy where it is, or borrow it and take the shortage, each with its estimate at the small size.
 20. **The staff's own decisions stay doctrine's.** A staff does not launch, hold or choose by a trial in this stage, with one exception: before it asks leave to launch a take, it attaches a trial at the small size to the plan order, so the commander is asked with the estimate in hand. Doctrine weighed by trials is stage 5's question.
-21. **A seat's tool `trial`** takes an intent of the commander's, a size and, where wanted, what to vary; it answers with the estimate, or with why it cannot be tried. The table's plan sheet gains "Try it", shows the estimate under the plan order, brief first with the assumptions one step down, and the window as two or three columns.
+21. **A seat's tool `trial`** takes an intent of the commander's, a size and, where wanted, what to vary; it answers with the estimate, or with why it cannot be tried. The table's plan sheet gains "Dry run", shows the estimate under the plan order, brief first with the assumptions one step down, and the window as two or three columns.
 
 ### H. What is left out
 
@@ -155,3 +155,17 @@ Each is one branch and one pull request, read by the architect before it merges.
 5. **The mends first,** as steps 1 and 2. The architect recommends it: every trial of a landing is poorer until they are in.
 6. **Looking back is left out** of this stage's first build. The architect recommends it.
 7. **No points in an estimate.** Places, days, men, ships and aircraft only, as the directive from above has none. The architect recommends it.
+
+## Confirmed on Nov 19, 2026
+
+The designer confirmed the plan: "go with your recommendations."
+
+1. Counts of worlds, not chances.
+2. An unseen force with nothing to support a chance is shown as two cases apart.
+3. What the enemy wants is stated by the scenario as what the side believes of him, and shown.
+4. The staff attaches a small trial before it asks leave to launch a take, and otherwise does not act on trials in this stage.
+5. The mends first.
+6. Looking back is left out of this stage's first build.
+7. No points in an estimate.
+
+He also named the thing a person presses: a "dry run" or something of that sort, not "try it". The table's button is "Dry run"; the seat's tool keeps the name `trial`, and the records go on calling the thing a trial.
