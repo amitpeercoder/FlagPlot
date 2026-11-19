@@ -1857,8 +1857,17 @@ impl Day<'_, '_> {
                 .iter()
                 .find(|l| l.ship == line.ship)
                 .map_or(Fixed::ZERO, |l| l.burned_t);
-            let on_t = (line.burned_t - out_t).max(Fixed::ZERO);
-            let lacks = line.runs_dry || line.fuel_t < line.burned_t;
+            // A ship the measure runs dry burns only what it has: its need is
+            // the burn of the whole way at the speed, by the rule the measure
+            // burns by, as the night's measure gives it (chapter 2, Fuel burn).
+            let whole_t = if line.runs_dry {
+                crate::night::burn_of(view, line.ship, whole_way.route_nm, whole_way.speed_kn)
+                    .unwrap_or(line.burned_t)
+            } else {
+                line.burned_t
+            };
+            let on_t = (whole_t - out_t).max(Fixed::ZERO);
+            let lacks = line.runs_dry || line.fuel_t < whole_t;
             short |= lacks;
             lines.push(format!(
                 "{} has {} against {} to {place} and {} on to {on_text}, {}{}",
@@ -1866,9 +1875,9 @@ impl Day<'_, '_> {
                 tons(line.fuel_t),
                 tons(out_t),
                 tons(on_t),
-                tons(line.burned_t),
+                tons(whole_t),
                 if line.runs_dry {
-                    " and more, running dry short of it"
+                    ", running dry short of it"
                 } else {
                     ""
                 }

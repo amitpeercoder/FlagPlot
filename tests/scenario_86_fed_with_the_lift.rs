@@ -857,7 +857,7 @@ fn the_neutralising_is_withdrawn_on_day_3_by_the_staff() {
 }
 
 #[test]
-fn base_3_landing_at_4_0_is_formed_and_base_2_changes_side_at_the_end_of_day_2() {
+fn base_5_landing_at_4_0_is_formed_and_base_2_changes_side_at_the_end_of_day_2() {
     let g = main_game();
     let formed: Vec<(u32, BaseId)> = g
         .events
@@ -874,8 +874,8 @@ fn base_3_landing_at_4_0_is_formed_and_base_2_changes_side_at_the_end_of_day_2()
         .collect();
     assert_eq!(formed.len(), 1, "{formed:?}");
     assert_eq!(formed[0].0, 1);
-    // The hand calculation calls it base 3.
-    assert_eq!(formed[0].1.raw(), 3);
+    // Bases 1, 2 and 4 are in the scenario: the landing's is base 5.
+    assert_eq!(formed[0].1.raw(), 5);
     assert_eq!(
         g.base(1, landing(g)).expect("formed").name,
         "Landing at (4,0)"
@@ -902,14 +902,21 @@ fn keep_the_landing_base_supplied_with_floor_5_is_formed_on_day_2_under_the_hold
 }
 
 #[test]
-fn day_3_the_supply_intent_is_served_on_base_1_and_no_force_and_a_run_is_wanted() {
+fn day_3_the_supply_intent_is_served_on_base_1_and_no_force_with_no_ship_afloat() {
     let g = main_game();
-    // The stock at B is 25 t, the use 5 t a day, the floor's stock 25 t; a
-    // run ordered today would arrive on day 4 and the reading of day 5 is
-    // 15 t, below 25: a run is wanted and no ship of the limit can carry it.
-    // The staff gives no order for it and gives the reason.
+    // The pool has no ship afloat: no order for it, and its one reason says
+    // no ship of the pool is afloat and there is nothing to send. The stock
+    // and the run are not reckoned.
     let reasons = g.reasons_serving(3, 7);
-    assert_says(&reasons, &["25 t over 5 t a day", "15 t", "no ship of"]);
+    assert_says(
+        &reasons,
+        &[
+            "No ship of the pool of intent:7 is afloat, so there is nothing to send",
+            "no ship of the pool is afloat",
+        ],
+    );
+    assert!(!reasons.contains("a day"), "{reasons}");
+    assert_eq!(reasons.split(" || ").count(), 1, "one reason: {reasons}");
     assert_eq!(g.orders(3), vec![Given::Defend(1)]);
 }
 
@@ -1094,26 +1101,48 @@ fn a_base_with_nothing_cannot_be_the_source() {
 
 #[test]
 fn not_the_fuel_to_go_on() {
-    let t = text().replace("fuel_t = 1000", "fuel_t = 20");
+    // Base 1's supply 0, base 4's 1,000 t, the home port base 1 and 26 t of
+    // fuel a ship: the source is base 4.
+    let t = changed(&text(), "supply_t = 1000", "supply_t = 0");
+    let t = replace_base_4_supply(&t);
+    let t = changed(&t, "home_port = 4", "home_port = 1");
+    let t = t.replace("fuel_t = 1000", "fuel_t = 26");
     let g = play(&t);
-    // The lift is routed to B and back to base 4, as before.
-    assert!(
-        g.orders(1).contains(&Given::Route(1, vec![B, C], vec![B])),
-        "{:?}",
-        g.orders(1)
-    );
-    // The route's reason gives the two figures: 8 t to B and 16 t on to A,
-    // against 20 t.
+    assert_eq!(g.staff_limit(1, 3).map(|(_, _, s)| s), Some(Some(4)));
+    // The lift is routed to B and back to base 1, as before.
+    assert!(g.orders(1).contains(&route(1)), "{:?}", g.orders(1));
+    // The route's reason says it does not go on to base 4 and gives each
+    // ship's fuel against the burn to B (8 t) and on, more than the 18 t
+    // left.
     let reasons = g.reasons(1);
     assert_says(
         &reasons,
         &[
-            "It does not go on to base:1 (Placeholder base A)",
+            "It does not go on to base:4 (Placeholder staging C)",
             "not every ship has the fuel",
-            "ship:1 has 20 t against 8 t to (4,0) and 16 t on to base:1",
-            "so it goes back to base:4",
+            "ship:1 has 26 t against 8 t to (4,0) and ",
+            "ship:2 has 26 t against 8 t to (4,0) and ",
+            "so it goes back to base:1, where it came from",
         ],
     );
+    let on = reasons
+        .split("ship:1 has 26 t against 8 t to (4,0) and ")
+        .nth(1)
+        .and_then(|rest| rest.split(" t on to base:4").next())
+        .expect("the burn on");
+    let on: Fixed = on.parse().expect("a figure");
+    assert!(on > n(18), "the burn on to base 4 is {on}");
+    eprintln!("the burn on from B to base 4: {on} t");
+}
+
+/// Base 4's supply set to 1,000 t.
+fn replace_base_4_supply(text: &str) -> String {
+    let at = text.find("id = 4\n").expect("base 4");
+    let (head, tail) = text.split_at(at);
+    format!(
+        "{head}{}",
+        tail.replacen("supply_t = 0", "supply_t = 1000", 1)
+    )
 }
 
 #[test]

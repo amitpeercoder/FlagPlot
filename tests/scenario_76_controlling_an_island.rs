@@ -1272,22 +1272,25 @@ fn the_commander_names_the_source() {
 }
 
 #[test]
-fn no_source() {
+fn no_source_of_the_landing() {
     let g = play(&with(&hold_force(1, 1)));
-    // The holds form no supply and say so.
-    assert!(!g
-        .forms()
-        .iter()
-        .any(|(_, _, k)| matches!(k, IntentKind::KeepSupplied { .. })));
+    // Base 1 is the source of supply from day 1, with no force (decision
+    // 0163, item 1).
+    assert_eq!(g.staff_limit(1, 3), Some((vec![], vec![], Some(1))));
+    assert_eq!(g.staff_limit(1, 4), Some((vec![], vec![], Some(1))));
     assert_says(
         &g.reasons_serving(1, 1),
         &[
-            "no base can be the source of supply",
-            "so the staff sets no forces limit on intent:3",
-            "so the staff sets no forces limit on intent:4",
-            "and it forms no supply",
+            "the source is base:1 (Placeholder base A)",
+            "with no transport force stopped there with nothing aboard",
+            "to base:1 (Placeholder base A) and no force",
         ],
     );
+    let all: String = (1..=14)
+        .map(|d| g.reasons(d))
+        .collect::<Vec<_>>()
+        .join(" || ");
+    assert_says(&all, &["is afloat, so there is nothing to send"]);
     // The take hands in the notice that it cannot meet its intent on day 1
     // and gives the reason each morning.
     let plan = g.intent_state(2).plan.raw();
@@ -1307,6 +1310,9 @@ fn no_source() {
     // The island is controlled on 0 of 14 days.
     let m = g.measures[14].as_ref().expect("a measure");
     assert_eq!((m.days_in_force, m.days_controlled), (14, 0));
+    // "Keep base 3 supplied", floor 5 days, is formed under the hold of its
+    // place on day 4, with no ship to send.
+    assert_eq!(g.formed(keep_kind(3)), vec![(4, 4)], "{:?}", g.forms());
 }
 
 #[test]
