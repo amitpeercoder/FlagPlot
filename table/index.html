@@ -28,14 +28,14 @@ button { font-family: var(--f-ui); cursor: pointer; }
 button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
 button:disabled { opacity: 0.45; cursor: default; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 310px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 390px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
 .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .top p { margin: 0; font-size: 17px; letter-spacing: 0.05em; color: var(--ink-dim); }
 
 .tray { position: fixed; top: 60px; right: 16px; width: min(350px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
 .view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
 .view button { min-height: 34px; padding: 0 12px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
-.view button:hover, .view button:focus-visible { color: var(--ink); border-color: var(--ink); }
+.view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
 .tray h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
@@ -190,6 +190,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 <div class="view" role="group" aria-label="Your view of the table">
   <button type="button" id="btn-back">Sit back</button>
   <button type="button" id="btn-lean">Lean in</button>
+  <button type="button" id="btn-hexes" aria-pressed="false">Hexes</button>
   <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
 </div>
 <fieldset class="stops" id="stops" hidden>
@@ -242,7 +243,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   // ---- the chart, drawn from the game's own map ----
   var config = { islands: [], start: '', seat: 'allied' }, hexes = [], hexAt = {};
   var TW = 10, TD = 8, K = 1, lonMid = 0, latMid = 0, HEXR = 0.05, PX = 200;
-  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh;
+  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh, paintBase = function () {}, showHexes = false;
+  try { showHexes = localStorage.getItem('flagplot.hexes') === '1'; } catch (e) {}
   function world(lat, lon, y) { return new THREE.Vector3((lon - lonMid) * K, y || 0, (latMid - lat) * K); }
   function cpx(v) { return [(v.x + TW / 2) * PX, (v.z + TD / 2) * PX]; }
   function placeOf(p) { return p ? world(parseFloat(p.lat), parseFloat(p.lon)) : null; }
@@ -254,6 +256,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     K = TW / (hi - lo + step); lonMid = (lo + hi) / 2; latMid = (la + ha) / 2; TD = (ha - la + step) * K; HEXR = step * K / Math.sqrt(3);
     PX = Math.min(200, Math.floor(4096 / Math.max(TW, TD)));
     [chartCanvas, baseCanvas].forEach(function (c) { c.width = Math.round(TW * PX); c.height = Math.round(TD * PX); });
+    paintBase = function () {
     var b2 = baseCanvas.getContext('2d'), W = baseCanvas.width, H = baseCanvas.height, s = 7;
     function rnd() { s = (s * 16807) % 2147483647; return s / 2147483647; }
     b2.fillStyle = '#e9e1c9'; b2.fillRect(0, 0, W, H);
@@ -263,6 +266,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     b2.strokeStyle = '#b6c0c0'; b2.lineWidth = 1.2; b2.fillStyle = '#56605f'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
     for (var lon = Math.ceil(lo / 2) * 2; lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lon + '° E', x + 6, H - 14); }
     for (var lat = Math.ceil(la / 2) * 2; lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
+    if (showHexes) {
     // the land, hex by hex as the game has it
     var R = HEXR * PX * 1.02;
     hexes.forEach(function (h) {
@@ -272,7 +276,30 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (h[2] === 'land') { b2.fillStyle = '#c3b383'; b2.fill(); b2.strokeStyle = '#c3b383'; b2.lineWidth = 2; b2.stroke(); }
       else { b2.fillStyle = 'rgba(195,179,131,' + (0.35 + 0.65 * Math.min(100, h[5]) / 100).toFixed(2) + ')'; b2.fill(); b2.strokeStyle = 'rgba(74,70,59,0.55)'; b2.lineWidth = 1.5; b2.stroke(); }
     });
+    } else {
+      // The chart as a chart: the land drawn from the game's own hexes, each
+      // by its share of land, run together and inked along the shore. The
+      // hexes are behind it: nothing here is a coastline from outside the game.
+      var q = 2, mw = Math.ceil(W / q), mh = Math.ceil(H / q), m1 = document.createElement('canvas'), m2 = document.createElement('canvas'); m1.width = m2.width = mw; m1.height = m2.height = mh;
+      var c1 = m1.getContext('2d'), c2 = m2.getContext('2d'), Rm = HEXR * PX / q; c1.fillStyle = '#000';
+      hexes.forEach(function (h) { if (h[2] === 'deep_sea') return; var share = h[2] === 'land' ? 1 : Math.min(100, h[5]) / 100; if (share < 0.04) return; var c = cpx(world(h[3], h[4])); c1.beginPath(); c1.arc(c[0] / q, c[1] / q, Rm * (0.42 + 0.66 * Math.sqrt(share)), 0, Math.PI * 2); c1.fill(); });
+      try { c2.filter = 'blur(' + Math.max(2, Rm * 0.42).toFixed(1) + 'px)'; } catch (e) {} c2.drawImage(m1, 0, 0);
+      var img = c2.getImageData(0, 0, mw, mh), d = img.data;
+      for (var n = 0; n < d.length; n += 4) { var al = d[n + 3];
+        if (al > 150) { d[n] = 201; d[n + 1] = 187; d[n + 2] = 143; d[n + 3] = 255; }
+        else if (al > 128) { d[n] = 78; d[n + 1] = 70; d[n + 2] = 54; d[n + 3] = 235; }
+        else if (al > 40) { d[n] = 150; d[n + 1] = 176; d[n + 2] = 176; d[n + 3] = Math.round((al - 40) * 0.9); }
+        else d[n + 3] = 0; }
+      c2.filter = 'none'; c2.clearRect(0, 0, mw, mh); c2.putImageData(img, 0, 0);
+      b2.imageSmoothingEnabled = true; b2.drawImage(m2, 0, 0, mw, mh, 0, 0, mw * q, mh * q);
+      // the scale along the border: a short tick each half degree, a long one each degree
+      b2.strokeStyle = '#3f3b31'; b2.lineWidth = 2;
+      for (var tl = Math.ceil(lo * 2) / 2; tl <= hi; tl += 0.5) { var tx = cpx(world(latMid, tl))[0], len = tl % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(tx, 14); b2.lineTo(tx, 14 + len); b2.moveTo(tx, H - 14); b2.lineTo(tx, H - 14 - len); b2.stroke(); }
+      for (var ta = Math.ceil(la * 2) / 2; ta <= ha; ta += 0.5) { var ty = cpx(world(ta, lonMid))[1], ln = ta % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(14, ty); b2.lineTo(14 + ln, ty); b2.moveTo(W - 14, ty); b2.lineTo(W - 14 - ln, ty); b2.stroke(); }
+    }
     b2.strokeStyle = '#3f3b31'; b2.lineWidth = 6; b2.strokeRect(14, 14, W - 28, H - 28);
+    };
+    paintBase();
     g = chartCanvas.getContext('2d');
     chartTex = new THREE.CanvasTexture(chartCanvas); chartTex.encoding = THREE.sRGBEncoding; chartTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     var wood = new THREE.MeshStandardMaterial({ color: 0x3a281b, roughness: 0.55 });
@@ -561,7 +588,11 @@ button:disabled { opacity: 0.45; cursor: default; }
   function sameHex(a, b) { return a && b && a.q === b.q && a.r === b.r; }
   function pulsesOld(n) { return !n ? 'Reported this pulse' : n === 1 ? 'Report 1 pulse old' : 'Report ' + n + ' pulses old'; }
   function daysOld(e) { return e.day === 0 ? 'Told at the start; not seen since' : !e.age_days ? 'Reported today' : e.age_days === 1 ? 'Report 1 day old' : 'Report ' + e.age_days + ' days old'; }
-  function hexWords(pl) { return (pl.name || M.hexNames[pl.q + ',' + pl.r] || 'open water') + ' (' + pl.q + ', ' + pl.r + ')'; }
+  // Where a place is: its latitude and longitude as a chart gives them, or
+  // its hex where the hexes are shown or the map has no latitudes.
+  function dm(v, pos, neg) { var a = Math.abs(v), d = Math.floor(a), m = Math.round((a - d) * 60); if (m === 60) { d += 1; m = 0; } return d + '\u00B0' + (m < 10 ? '0' : '') + m + '\u2032' + (v < 0 ? neg : pos); }
+  function whereIs(pl) { var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4]; return showHexes || lat == null || lon == null ? '(' + pl.q + ', ' + pl.r + ')' : dm(lat, 'N', 'S') + ' ' + dm(lon, 'E', 'W'); }
+  function hexWords(pl) { return (pl.name || M.hexNames[pl.q + ',' + pl.r] || 'open water') + ' ' + whereIs(pl); }
   function openCard(title, stamp, own) {
     var body = $('card-body'), head = el('div', 'headline'); body.textContent = '';
     head.appendChild(el('h2', '', title)); if (stamp) head.appendChild(el('span', 'stamp' + (own ? ' ok' : ''), stamp)); body.appendChild(head);
@@ -623,7 +654,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   function cardPlace(t) {
     var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY BASE' : null);
     var est = M.estimates.filter(function (e) { return sameHex(e.place, pl); })[0], here = M.contacts.filter(function (c) { return sameHex(c.place, pl); });
-    kv(body, [['Where', '(' + pl.q + ', ' + pl.r + ')']]);
+    kv(body, [['Where', whereIs(pl)]]);
     // What is believed of the place, a line for each thing held, each with
     // where it came from and how old it is. A thing not held has no line.
     if (est) { body.appendChild(el('div', 'sub', 'MEN ASHORE')); kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
@@ -655,7 +686,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   function cardBase(t) {
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
-    kv(body, [['Where', '(' + b.place.q + ', ' + b.place.r + ')'], ['Supply', commas(b.supply_t) + ' t'], ['Fuel for ships', commas(b.fuel_t) + ' t'],
+    kv(body, [['Where', whereIs(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Fuel for ships', commas(b.fuel_t) + ' t'],
       ['Days of supply', dos.days != null ? dos.days + ' at ' + commas(dos.planned_use_t) + ' t a day' : 'No figure: nothing is planned to be used here today'],
       ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
     listOf(body, 'MEN ASHORE', M.units.filter(function (u) { return u.men_ashore && sameHex(u.place, b.place); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_ashore) + ' men, ' + u.posture; }));
@@ -1119,6 +1150,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
     else goal.zoom += 0.2; clampGoal();
   });
+  $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
+  $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
