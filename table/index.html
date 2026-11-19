@@ -28,16 +28,19 @@ button { font-family: var(--f-ui); cursor: pointer; }
 button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
 button:disabled { opacity: 0.45; cursor: default; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 310px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 390px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
 .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .top p { margin: 0; font-size: 17px; letter-spacing: 0.05em; color: var(--ink-dim); }
 
 .tray { position: fixed; top: 60px; right: 16px; width: min(350px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
 .view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
 .view button { min-height: 34px; padding: 0 12px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
-.view button:hover, .view button:focus-visible { color: var(--ink); border-color: var(--ink); }
+.view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
 .tray h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
+.papers { display: flex; flex-wrap: wrap; gap: 6px; }
+.papers:empty { display: none; }
+.papers button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 34px; padding: 0 12px; background: var(--paper-old); color: var(--paper-ink); border: 0; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
 .slip.decide { background: var(--paper); }
 .slip .from { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
@@ -63,6 +66,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order input { accent-color: var(--own); width: 18px; height: 18px; margin: 0; }
 .order .pv { border-top: 1px dashed #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
 .order .pv b { font-size: 12px; color: var(--paper-dim); font-weight: 400; }
+.order details.pv { display: block; }
+.order details.pv summary { font-size: 12px; color: var(--paper-dim); cursor: pointer; min-height: 28px; }
+.order details.pv > div { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
 .sheet { position: fixed; left: 50%; top: 56px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); max-height: calc(100% - 160px); overflow: auto; background: var(--paper); color: var(--paper-ink); padding: 16px 18px; border-radius: 2px; box-shadow: 0 10px 34px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 10px; }
 .sheet .doc { font-family: var(--f-type); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; gap: 10px; max-width: 62ch; }
 .card { left: 16px; bottom: auto; top: 60px; width: min(340px, calc(100% - 32px)); max-height: calc(100% - 170px); }
@@ -94,6 +100,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .status:empty { display: none; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 2px; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.acts button.cue { border-color: #e9c46a; color: #f4dc9a; box-shadow: 0 0 0 0 rgba(233,196,106,0.7); animation: cue 2.2s ease-out infinite; }
+@keyframes cue { 0% { box-shadow: 0 0 0 0 rgba(233,196,106,0.65); } 70% { box-shadow: 0 0 0 12px rgba(233,196,106,0); } 100% { box-shadow: 0 0 0 0 rgba(233,196,106,0); } }
+@media (prefers-reduced-motion: reduce) { .acts button.cue { animation: none; box-shadow: 0 0 0 3px rgba(233,196,106,0.5); } }
 .acts button.main { background: var(--ink); color: var(--room); border-color: var(--ink); font-weight: 700; padding: 0 24px; }
 .plot { position: fixed; left: 16px; top: 60px; width: min(330px, calc(100% - 32px)); max-height: calc(100% - 180px); overflow-y: auto; background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 13px; line-height: 1.36; padding: 10px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
 .plot .phase { display: flex; flex-direction: column; gap: 3px; }
@@ -122,6 +131,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 <aside class="tray" aria-label="Signals">
   <h2>Signals</h2>
+  <div id="papers" class="papers" role="toolbar" aria-label="Standing papers"></div>
   <div id="signals"></div>
 </aside>
 
@@ -135,7 +145,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     <label><input type="radio" name="risk" id="o-risk-press" value="press"> Press</label>
   </fieldset>
   <div>Forces: the staff's choice.</div>
-  <div class="pv" aria-live="polite"><b>THE STAFF'S PREVIEW, FOR THE COMING MORNING</b><div id="o-preview">Asking the staff.</div></div>
+  <details class="pv" id="o-pv"><summary id="o-pv-sum">THE STAFF'S PREVIEW</summary><div id="o-preview" aria-live="polite">Asking the staff.</div></details>
   <div class="row">
     <button type="submit" class="go" id="o-sign" disabled>SIGN AND SEND</button>
     <button type="button" id="o-cancel">TEAR UP</button>
@@ -190,6 +200,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 <div class="view" role="group" aria-label="Your view of the table">
   <button type="button" id="btn-back">Sit back</button>
   <button type="button" id="btn-lean">Lean in</button>
+  <button type="button" id="btn-hexes" aria-pressed="false">Hexes</button>
   <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
 </div>
 <fieldset class="stops" id="stops" hidden>
@@ -242,7 +253,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   // ---- the chart, drawn from the game's own map ----
   var config = { islands: [], start: '', seat: 'allied' }, hexes = [], hexAt = {};
   var TW = 10, TD = 8, K = 1, lonMid = 0, latMid = 0, HEXR = 0.05, PX = 200;
-  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh;
+  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh, paintBase = function () {}, showHexes = false, coast = null;
+  try { showHexes = localStorage.getItem('flagplot.hexes') === '1'; } catch (e) {}
   function world(lat, lon, y) { return new THREE.Vector3((lon - lonMid) * K, y || 0, (latMid - lat) * K); }
   function cpx(v) { return [(v.x + TW / 2) * PX, (v.z + TD / 2) * PX]; }
   function placeOf(p) { return p ? world(parseFloat(p.lat), parseFloat(p.lon)) : null; }
@@ -254,6 +266,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     K = TW / (hi - lo + step); lonMid = (lo + hi) / 2; latMid = (la + ha) / 2; TD = (ha - la + step) * K; HEXR = step * K / Math.sqrt(3);
     PX = Math.min(200, Math.floor(4096 / Math.max(TW, TD)));
     [chartCanvas, baseCanvas].forEach(function (c) { c.width = Math.round(TW * PX); c.height = Math.round(TD * PX); });
+    paintBase = function () {
     var b2 = baseCanvas.getContext('2d'), W = baseCanvas.width, H = baseCanvas.height, s = 7;
     function rnd() { s = (s * 16807) % 2147483647; return s / 2147483647; }
     b2.fillStyle = '#e9e1c9'; b2.fillRect(0, 0, W, H);
@@ -263,6 +276,13 @@ button:disabled { opacity: 0.45; cursor: default; }
     b2.strokeStyle = '#b6c0c0'; b2.lineWidth = 1.2; b2.fillStyle = '#56605f'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
     for (var lon = Math.ceil(lo / 2) * 2; lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lon + '° E', x + 6, H - 14); }
     for (var lat = Math.ceil(la / 2) * 2; lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
+    // the scale along the border: a short tick each half degree, a long one each degree
+    var border = function () {
+      b2.strokeStyle = '#3f3b31'; b2.lineWidth = 2;
+      for (var tl = Math.ceil(lo * 2) / 2; tl <= hi; tl += 0.5) { var tx = cpx(world(latMid, tl))[0], len = tl % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(tx, 14); b2.lineTo(tx, 14 + len); b2.moveTo(tx, H - 14); b2.lineTo(tx, H - 14 - len); b2.stroke(); }
+      for (var ta = Math.ceil(la * 2) / 2; ta <= ha; ta += 0.5) { var ty = cpx(world(ta, lonMid))[1], ln = ta % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(14, ty); b2.lineTo(14 + ln, ty); b2.moveTo(W - 14, ty); b2.lineTo(W - 14 - ln, ty); b2.stroke(); }
+    };
+    if (showHexes) {
     // the land, hex by hex as the game has it
     var R = HEXR * PX * 1.02;
     hexes.forEach(function (h) {
@@ -272,7 +292,35 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (h[2] === 'land') { b2.fillStyle = '#c3b383'; b2.fill(); b2.strokeStyle = '#c3b383'; b2.lineWidth = 2; b2.stroke(); }
       else { b2.fillStyle = 'rgba(195,179,131,' + (0.35 + 0.65 * Math.min(100, h[5]) / 100).toFixed(2) + ')'; b2.fill(); b2.strokeStyle = 'rgba(74,70,59,0.55)'; b2.lineWidth = 1.5; b2.stroke(); }
     });
+    } else if (coast) {
+      // The chart as a chart: the coastline of Natural Earth (public domain),
+      // for the eye only. The game plays on the hexes behind it.
+      var trace = function () { b2.beginPath(); coast.forEach(function (r) { for (var n = 0; n < r.length; n += 2) { var c = cpx(world(r[n + 1], r[n])); b2[n ? 'lineTo' : 'moveTo'](c[0], c[1]); } b2.closePath(); }); };
+      b2.lineJoin = 'round'; trace(); b2.strokeStyle = 'rgba(150,176,176,0.30)'; b2.lineWidth = HEXR * PX * 0.5; b2.stroke();
+      trace(); b2.strokeStyle = 'rgba(150,176,176,0.35)'; b2.lineWidth = HEXR * PX * 0.22; b2.stroke();
+      trace(); b2.fillStyle = '#c9bb8f'; b2.fill(); b2.strokeStyle = '#4e4636'; b2.lineWidth = 2.2; b2.stroke();
+      border();
+    } else {
+      // The chart as a chart: the land drawn from the game's own hexes, each
+      // by its share of land, run together and inked along the shore. The
+      // hexes are behind it: nothing here is a coastline from outside the game.
+      var q = 2, mw = Math.ceil(W / q), mh = Math.ceil(H / q), m1 = document.createElement('canvas'), m2 = document.createElement('canvas'); m1.width = m2.width = mw; m1.height = m2.height = mh;
+      var c1 = m1.getContext('2d'), c2 = m2.getContext('2d'), Rm = HEXR * PX / q; c1.fillStyle = '#000';
+      hexes.forEach(function (h) { if (h[2] === 'deep_sea') return; var share = h[2] === 'land' ? 1 : Math.min(100, h[5]) / 100; if (share < 0.04) return; var c = cpx(world(h[3], h[4])); c1.beginPath(); c1.arc(c[0] / q, c[1] / q, Rm * (0.42 + 0.66 * Math.sqrt(share)), 0, Math.PI * 2); c1.fill(); });
+      try { c2.filter = 'blur(' + Math.max(2, Rm * 0.42).toFixed(1) + 'px)'; } catch (e) {} c2.drawImage(m1, 0, 0);
+      var img = c2.getImageData(0, 0, mw, mh), d = img.data;
+      for (var n = 0; n < d.length; n += 4) { var al = d[n + 3];
+        if (al > 150) { d[n] = 201; d[n + 1] = 187; d[n + 2] = 143; d[n + 3] = 255; }
+        else if (al > 128) { d[n] = 78; d[n + 1] = 70; d[n + 2] = 54; d[n + 3] = 235; }
+        else if (al > 40) { d[n] = 150; d[n + 1] = 176; d[n + 2] = 176; d[n + 3] = Math.round((al - 40) * 0.9); }
+        else d[n + 3] = 0; }
+      c2.filter = 'none'; c2.clearRect(0, 0, mw, mh); c2.putImageData(img, 0, 0);
+      b2.imageSmoothingEnabled = true; b2.drawImage(m2, 0, 0, mw, mh, 0, 0, mw * q, mh * q);
+      border();
+    }
     b2.strokeStyle = '#3f3b31'; b2.lineWidth = 6; b2.strokeRect(14, 14, W - 28, H - 28);
+    };
+    paintBase();
     g = chartCanvas.getContext('2d');
     chartTex = new THREE.CanvasTexture(chartCanvas); chartTex.encoding = THREE.sRGBEncoding; chartTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     var wood = new THREE.MeshStandardMaterial({ color: 0x3a281b, roughness: 0.55 });
@@ -370,7 +418,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   function layPieces() {
     statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels();
     var byHex = {}, seen = {};
-    M.forces.forEach(function (f) { if (!f.place) return; var k = f.place.q + ',' + f.place.r; (byHex[k] = byHex[k] || []).push(f); });
+    // A force not yet the commander's to use has no piece: it is on the reinforcements paper until its day.
+    M.forces.forEach(function (f) { if (!f.place || f.available_from > M.day) return; var k = f.place.q + ',' + f.place.r; (byHex[k] = byHex[k] || []).push(f); });
     mover = null; var far = 0.15;
     Object.keys(byHex).forEach(function (k) {
       var list = byHex[k], centre = placeOf(list[0].place);
@@ -457,6 +506,9 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
 
   // ---- the signals tray ----
+  // A standing paper the commander may read at any time: a button in the
+  // row above the signals, not a signal of its own.
+  function paper(text, fn) { var b = el('button', '', text); b.type = 'button'; b.addEventListener('click', fn); $('papers').appendChild(b); return b; }
   function slip(from, stamp, title, body, decide) {
     var a = el('article', 'slip' + (decide ? ' decide' : '')), f = el('div', 'from'); f.appendChild(el('span', '', from)); if (stamp) f.appendChild(el('span', 'stamp' + (stamp === 'FOR DECISION' || stamp === 'STOPPED THE CLOCK' ? '' : ' ok'), stamp));
     a.appendChild(f); if (title) a.appendChild(el('strong', '', title)); if (body) a.appendChild(el('div', '', body)); $('signals').appendChild(a); return a;
@@ -475,7 +527,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   function showSignals() {
-    var box = $('signals'), s = M.state; box.textContent = '';
+    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = '';
     if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
     lastTold.forEach(function (t) { slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, t.lines.slice(0, 4).join(' · '), true); });
     (s.holds || []).forEach(function (h) {
@@ -488,7 +540,8 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (f.standing) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
     });
     var roots = s.intents.filter(function (i) { return i.in_force && !i.parent; });
-    if (!roots.length) slip('FROM STAFF', 'FOR DECISION', 'No intent is stated', 'The staff does nothing for your side until you state one. Press "State an intent" and touch the chart.', true);
+    // With no intent stated the staff does nothing: the button that states one is marked, and nothing is said.
+    $('btn-intent').classList.toggle('cue', !roots.length && !M.over);
     s.plans.forEach(function (p) {
       var waits = (p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare); if (!waits) return;
       var a = slip('FROM STAFF', 'FOR DECISION', 'Plan ' + p.number + ' for intent ' + p.intent + ' is ' + p.state, p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.', true);
@@ -498,11 +551,11 @@ button:disabled { opacity: 0.45; cursor: default; }
       var l = slip('STANDING LEAVE', s.leaves.launch ? 'GIVEN' : null, s.leaves.launch ? 'The staff may launch a plan that is ready' : 'Every plan waits for your word before it launches', null, !s.leaves.launch);
       button(l, s.leaves.launch ? 'WITHHOLD IT' : 'GIVE LEAVE TO LAUNCH', !s.leaves.launch, function () { act('set_leave', { leave: 'launch', given: !s.leaves.launch }); });
     }
-    if (s.queued && s.queued.length) slip('FROM YOU · SIGNED', 'SENT', s.queued.length + ' signal' + (s.queued.length > 1 ? 's go' : ' goes') + ' to the staff at 1800', s.queued.map(function (q) { return q.text || q.shown || (q.command && q.command.kind) || 'a command'; }).join('; ') + '.');
+    if (s.queued && s.queued.length) paper('Signed \u00B7 ' + s.queued.length, readSigned).title = 'What you have signed, for the staff at 1800';
     showDirectives();
-    roots.forEach(function (r) { var op = slip('YOUR INTENT ' + r.number, r.in_force ? 'IN FORCE' : null, sayIntent(r, {}), null); button(op, 'READ THE PLAN', false, function () { readPlan(r.number); }); });
-    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) { var sch = slip('FROM STAFF', null, 'What is coming', null); button(sch, 'READ THE SCHEDULE', false, readSchedule); }
-    var rep = slip('FROM STAFF', null, clock.at === 'dusk' ? 'The evening report' : 'So far today', clock.at === 'dusk' ? null : (lastRun && lastRun.summary) || 'The staff reports at dusk.'); if (clock.at === 'dusk') button(rep, 'READ THE REPORT', false, readReport); else button(rep, 'READ THE RETURN', false, readBriefing);
+    roots.forEach(function (r) { var b = paper(sayIntent(r, {}), function () { readPlan(r.number); }); b.title = 'Your intent ' + r.number + (r.in_force ? ', in force' : ', ended') + ': read the plan'; if (!r.in_force) b.style.opacity = 0.6; });
+    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) paper('Reinforcements', readSchedule);
+    if (clock.at === 'dusk') paper('Report', readReport); else { paper('Return', readBriefing); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
     var dec = s.staff_decisions_yesterday || [];
     if (dec.length) { var d = slip('FROM STAFF', null, dec.length + ' decisions taken yesterday', dec.slice(0, 4).map(function (x) { return x.text || x.words || x.summary || ('decision ' + x.number); }).join(' · ')); }
   }
@@ -561,7 +614,16 @@ button:disabled { opacity: 0.45; cursor: default; }
   function sameHex(a, b) { return a && b && a.q === b.q && a.r === b.r; }
   function pulsesOld(n) { return !n ? 'Reported this pulse' : n === 1 ? 'Report 1 pulse old' : 'Report ' + n + ' pulses old'; }
   function daysOld(e) { return e.day === 0 ? 'Told at the start; not seen since' : !e.age_days ? 'Reported today' : e.age_days === 1 ? 'Report 1 day old' : 'Report ' + e.age_days + ' days old'; }
-  function hexWords(pl) { return (pl.name || M.hexNames[pl.q + ',' + pl.r] || 'open water') + ' (' + pl.q + ', ' + pl.r + ')'; }
+  // Where a place is: its latitude and longitude as a chart gives them, or
+  // its hex where the hexes are shown or the map has no latitudes.
+  function dm(v, pos, neg) { var a = Math.abs(v), d = Math.floor(a), m = Math.round((a - d) * 60); if (m === 60) { d += 1; m = 0; } return d + '\u00B0' + (m < 10 ? '0' : '') + m + '\u2032' + (v < 0 ? neg : pos); }
+  function whereIs(pl) { var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4]; return showHexes || lat == null || lon == null ? '(' + pl.q + ', ' + pl.r + ')' : dm(lat, 'N', 'S') + ' ' + dm(lon, 'E', 'W'); }
+  // A distance the game counts in hexes, as a chart gives it: in nautical
+  // miles, or in hexes where the hexes are shown. A hex's width is read
+  // from the map itself.
+  function hexMiles() { var a = hexAt['0,0'], b = hexAt['1,0']; if (!a || !b) return 40; var rad = Math.PI / 180, dlat = (b[3] - a[3]) * rad, dlon = (b[4] - a[4]) * rad, h = Math.pow(Math.sin(dlat / 2), 2) + Math.cos(a[3] * rad) * Math.cos(b[3] * rad) * Math.pow(Math.sin(dlon / 2), 2); return Math.round(2 * 3440.065 * Math.asin(Math.sqrt(h)) / 5) * 5; }
+  function round(n) { return showHexes ? n + ' hexes round' : 'within ' + n * hexMiles() + ' miles'; }
+  function hexWords(pl) { return (pl.name || M.hexNames[pl.q + ',' + pl.r] || 'open water') + ' ' + whereIs(pl); }
   function openCard(title, stamp, own) {
     var body = $('card-body'), head = el('div', 'headline'); body.textContent = '';
     head.appendChild(el('h2', '', title)); if (stamp) head.appendChild(el('span', 'stamp' + (own ? ' ok' : ''), stamp)); body.appendChild(head);
@@ -570,7 +632,16 @@ button:disabled { opacity: 0.45; cursor: default; }
   function kv(body, rows) { var g = el('div', 'kv'); rows.forEach(function (r) { if (r[1] == null || r[1] === '') return; g.appendChild(el('span', '', r[0])); g.appendChild(el('span', '', String(r[1]))); }); body.appendChild(g); return g; }
   function listOf(body, title, lines) { if (!lines.length) return; body.appendChild(el('div', 'sub', title)); lines.forEach(function (l) { body.appendChild(rich('div', '', l)); }); }
   function links(body, title, items) { if (!items.length) return; body.appendChild(el('div', 'sub', title)); var row = el('div', 'row'); items.forEach(function (i) { var b = el('button', '', i[0]); b.type = 'button'; b.addEventListener('click', i[1]); row.appendChild(b); }); body.appendChild(row); }
-  function forcesAt(pl, but) { return M.forces.filter(function (f) { return sameHex(f.place, pl) && f !== but; }).map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }); }
+  // The forces at a place: those the commander may use now as buttons, and
+  // those not yet his to use folded beneath, each with the day it comes.
+  function forcesHere(body, title, pl, but) {
+    var all = M.forces.filter(function (f) { return sameHex(f.place, pl) && f !== but; }), now = all.filter(function (f) { return !(f.available_from > M.day); }), later = all.filter(function (f) { return f.available_from > M.day; });
+    links(body, title, now.map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }));
+    if (!later.length) return;
+    var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'NOT YET YOURS TO USE (' + later.length + ')'; sm.className = 'sub'; sm.style.cursor = 'pointer'; d.appendChild(sm);
+    later.sort(function (a, b) { return a.available_from - b.available_from; }).forEach(function (f) { d.appendChild(rich('div', '', f.task_force.handle + ', from ' + (dateOf(f.available_from - 1) || 'day ' + f.available_from))); });
+    body.appendChild(d);
+  }
   // The way back: each card remembers what was open before it, a card or a
   // sheet, until the card is put down or the clock moves.
   var trail = [], shown = null, trailAt = '';
@@ -623,7 +694,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   function cardPlace(t) {
     var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY BASE' : null);
     var est = M.estimates.filter(function (e) { return sameHex(e.place, pl); })[0], here = M.contacts.filter(function (c) { return sameHex(c.place, pl); });
-    kv(body, [['Where', '(' + pl.q + ', ' + pl.r + ')']]);
+    kv(body, [['Where', whereIs(pl)]]);
     // What is believed of the place, a line for each thing held, each with
     // where it came from and how old it is. A thing not held has no line.
     if (est) { body.appendChild(el('div', 'sub', 'MEN ASHORE')); kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
@@ -647,20 +718,20 @@ button:disabled { opacity: 0.45; cursor: default; }
       listOf(ships, 'AIR GROUPS ABOARD', M.air.filter(function (x) { return x.location && mine[x.location.handle]; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
       listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; var cls = String(x.class || '').replace(/^Placeholder /, ''); return x.ship.handle + (cls && String(x.ship.name || '').toLowerCase().indexOf(cls.toLowerCase()) < 0 ? ', ' + cls : '') + ': ' + commas(x.fuel_t) + ' t fuel' + (x.sunk ? ', SUNK' : hurt); }));
     }).catch(function (e) { ships.appendChild(el('div', '', 'The ships could not be listed: ' + e.message)); });
-    if (!M.over && !playing) { var row = el('div', 'row'), b = el('button', '', held ? 'ORDER IT' : 'TAKE CHARGE OF IT'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
+    if (!M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', held ? 'ORDER IT' : 'TAKE CHARGE OF IT'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
       if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
       body.appendChild(row); }
-    links(body, 'ALSO HERE', forcesAt(f.place, f));
+    forcesHere(body, 'ALSO HERE', f.place, f);
    
   }
   function cardBase(t) {
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
-    kv(body, [['Where', '(' + b.place.q + ', ' + b.place.r + ')'], ['Supply', commas(b.supply_t) + ' t'], ['Fuel for ships', commas(b.fuel_t) + ' t'],
+    kv(body, [['Where', whereIs(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Fuel for ships', commas(b.fuel_t) + ' t'],
       ['Days of supply', dos.days != null ? dos.days + ' at ' + commas(dos.planned_use_t) + ' t a day' : 'No figure: nothing is planned to be used here today'],
       ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
     listOf(body, 'MEN ASHORE', M.units.filter(function (u) { return u.men_ashore && sameHex(u.place, b.place); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_ashore) + ' men, ' + u.posture; }));
     listOf(body, 'AIR GROUPS HERE', M.air.filter(function (x) { return x.location && x.location.handle === h; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
-    links(body, 'FORCES HERE', forcesAt(b.place, null));
+    forcesHere(body, 'FORCES HERE', b.place, null);
     var port = el('div'); body.appendChild(port);
     if (!M.over && !playing) api('get_entity', { handle: h }).then(function (a) {
       var inPort = (a.entity && a.entity.ships_in_port) || []; if (!inPort.length) return;
@@ -674,6 +745,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     var est = M.estimates.filter(function (e) { return sameHex(e.place, b.place); })[0];
     if (est) { body.appendChild(el('div', 'sub', 'INTELLIGENCE')); kv(body, [['Enemy men ashore', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
    
+  }
+  // What the commander has signed and the staff has not yet taken in: a
+  // record to look at, not a signal that asks anything of him.
+  function readSigned() {
+    var doc = $('sheet-doc'), q = (M.state && M.state.queued) || []; doc.textContent = '';
+    q.forEach(function (x, i) { doc.appendChild(rich('p', '', (i + 1) + '. ' + String(x.text || x.shown || (x.command && x.command.kind) || 'a command').replace(/^./, function (c) { return c.toUpperCase(); }))); });
+    doc.appendChild(el('div', 'foot', 'These go to the staff at 1800.'));
+    $('sheet-title').textContent = 'SIGNED'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
   function readSchedule() {
     var doc = $('sheet-doc'), rows = []; doc.textContent = '';
@@ -696,7 +775,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   function sayIntent(i, said) {
     if (said[i.number]) return nameText(said[i.number]).replace(/^./, function (c) { return c.toUpperCase(); });
-    var where = (i.target && i.target.name) || (i.base && i.base.name) || (i.island != null && (config.islands.filter(function (x) { return x.number === i.island; })[0] || {}).name) || (i.hex && (M.hexNames[i.hex[0] + ',' + i.hex[1]] || '(' + i.hex[0] + ', ' + i.hex[1] + ')')) || '';
+    var where = (i.target && i.target.name) || (i.base && i.base.name) || (i.island != null && (config.islands.filter(function (x) { return x.number === i.island; })[0] || {}).name) || (i.hex && (M.hexNames[i.hex[0] + ',' + i.hex[1]] || whereIs({ q: i.hex[0], r: i.hex[1] }))) || '';
     var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
   }
   function readPlan(root) {
@@ -803,8 +882,10 @@ button:disabled { opacity: 0.45; cursor: default; }
     list.forEach(function (d) { if (received[d.number] == null && directiveDue(d)) { received[d.number] = M.day; fresh = d; } });
     list.slice().reverse().forEach(function (d) {
       if (received[d.number] == null) return;
-      var isNew = !readOnes[d.number], a = slip('FROM ' + d.from.toUpperCase(), isNew ? 'NEW' : null, 'Directive ' + d.number + ': ' + d.subject, null, isNew);
-      button(a, 'READ THE DIRECTIVE', isNew, function () { readDirective(d); });
+      var isNew = !readOnes[d.number];
+      if (!isNew) { paper('Directive ' + d.number, function () { readDirective(d); }); return; }
+      var a = slip('FROM ' + d.from.toUpperCase(), 'NEW', 'Directive ' + d.number + ': ' + d.subject, null, true);
+      button(a, 'READ THE DIRECTIVE', true, function () { readDirective(d); });
     });
     keep(); if (fresh && $('sheet').hidden) setTimeout(function () { readDirective(fresh); }, 0);
   }
@@ -998,7 +1079,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var fs = $('f-ships'), fj = $('f-join'), fhere = best.force; fs.hidden = true; fj.hidden = true;
     while (fs.children.length > 1) fs.removeChild(fs.lastChild); while (fj.children.length > 1) fj.removeChild(fj.lastChild);
     api('get_entity', { handle: fhere.task_force.handle }).then(function (a) { if (!force || force.f !== fhere) return; ((a.entity && a.entity.ships) || []).filter(function (x) { return !x.sunk; }).forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.value = num(x.ship.handle); l.appendChild(c); l.appendChild(document.createTextNode(' ' + String(x.ship.name || x.ship.handle).replace(/^Placeholder /, ''))); fs.appendChild(l); }); }).catch(function () {});
-    var others = M.forces.filter(function (o) { return o !== fhere && sameHex(o.place, fhere.place); }), atBase = M.bases.some(function (b) { return sameHex(b.place, fhere.place); });
+    var others = M.forces.filter(function (o) { return o !== fhere && sameHex(o.place, fhere.place) && !(o.available_from > M.day); }), atBase = M.bases.some(function (b) { return sameHex(b.place, fhere.place); });
     others.forEach(function (o, i) { var l = el('label'), c = el('input'); c.type = 'radio'; c.name = 'into'; c.value = o.task_force.handle; c.checked = i === 0; l.appendChild(c); l.appendChild(document.createTextNode(' ' + o.task_force.name.replace(/^Placeholder /, ''))); fj.appendChild(l); });
     $('f-l-join').hidden = !(atBase && others.length); $('f-l-down').hidden = !atBase;
     var box = $('f-air'), here = M.air.filter(function (x) { return x.place && best.force.place && x.place.q === best.force.place.q && x.place.r === best.force.place.r; });
@@ -1044,14 +1125,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (n != null) config.islands.forEach(function (i) { if (i.base === n) list.push(['Control ' + i.name, { intent_kind: 'control_island', island: i.number }]); });
     if (target.kind === 'enemy') list.push(['Take it', { intent_kind: 'take_place', base: n }], ['Neutralise it', { intent_kind: 'neutralise', target: n }]);
     if (target.kind === 'own') list.push(['Hold it', { intent_kind: 'hold', base: n }], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }], ['Cover it from the air', { intent_kind: 'cover', base: n }]);
-    if (target.kind === 'waters') list.push(['Deny these waters, 2 hexes round', { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }], ['Deny these waters, 4 hexes round', { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }]);
+    if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }]);
     return list;
   }
   function pick(p) {
     var best = null, bd = 0.32;
     M.bases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'own', base: b, name: b.base.name, v: placeOf(b.place) }; } });
     M.enemyBases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'enemy', base: b, name: b.base.name, v: placeOf(b.place) }; } });
-    if (!best) { var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } }); if (!hh) return; best = { kind: 'waters', q: hh[0], r: hh[1], name: 'the waters about hex ' + hh[0] + ', ' + hh[1], v: world(hh[3], hh[4]) }; }
+    if (!best) { var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } }); if (!hh) return; best = { kind: 'waters', q: hh[0], r: hh[1], name: 'the waters about ' + (showHexes ? 'hex ' + hh[0] + ', ' + hh[1] : whereIs({ q: hh[0], r: hh[1] })), v: world(hh[3], hh[4]) }; }
     draft = best; draft.ends = ends(best); picking = false; canvas.classList.remove('picking');
     $('o-place').textContent = best.name;
     var box = $('o-ends'); while (box.children.length > 1) box.removeChild(box.lastChild);
@@ -1062,16 +1143,16 @@ button:disabled { opacity: 0.45; cursor: default; }
   function chosen(name) { var r = document.querySelector('#order input[name="' + name + '"]:checked'); return r ? r.value : ''; }
   function askPreview() {
     if (!draft) return; var seq = ++previewSeq, out = $('o-preview'), e = draft.ends[parseInt(chosen('end'), 10) || 0];
-    previewNo = null; $('o-sign').disabled = true; out.textContent = 'Asking the staff.';
+    previewNo = null; $('o-sign').disabled = true; out.textContent = 'Asking the staff.'; $('o-pv').open = false; $('o-pv-sum').textContent = 'THE STAFF\'S PREVIEW';
     var args = { command: 'set_intent' }; Object.keys(e[1]).forEach(function (k) { args[k] = e[1][k]; });
     api('preview', args).then(function (p) {
       if (seq !== previewSeq) return; out.textContent = ''; var w = p.with_change || {};
-      out.appendChild(el('div', '', 'It would ' + p.shown + '. On the first morning the staff would give ' + (w.orders || []).length + ' orders and ' + (w.commands || []).length + ' commands of its own.'));
-      (w.no_orders || []).slice(0, 3).forEach(function (n) { out.appendChild(el('div', '', 'It cannot yet: ' + (n.worked || (n.binding || []).join('; ')))); });
+      out.appendChild(rich('div', '', 'It would ' + p.shown + '. On the first morning the staff would give ' + (w.orders || []).length + ' orders and ' + (w.commands || []).length + ' commands of its own.'));
+      (w.no_orders || []).slice(0, 3).forEach(function (n) { out.appendChild(rich('div', '', 'It cannot yet: ' + (n.worked || (n.binding || []).join('; ')))); });
       if ((w.no_orders || []).length > 3) out.appendChild(el('div', '', 'And ' + ((w.no_orders || []).length - 3) + ' more it cannot yet do.'));
       if (chosen('risk') !== 'balanced') out.appendChild(el('div', '', 'The preview is worked at balanced; your risk goes with the order.'));
       previewNo = p.preview; $('o-sign').disabled = false;
-    }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; });
+    }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; });
   }
   $('order').addEventListener('change', function (e) { if (e.target.name === 'end') askPreview(); });
   $('btn-intent').addEventListener('click', function () { if (playing) return; closeOrder(); closeForce(); picking = true; canvas.classList.add('picking'); setStatus('Touch the chart where you mean: a base, or open water.'); });
@@ -1119,6 +1200,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
     else goal.zoom += 0.2; clampGoal();
   });
+  $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
+  $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
@@ -1147,8 +1230,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     renderer.render(scene, camera); requestAnimationFrame(frame);
   }
 
-  Promise.all([fetch('/config').then(function (r) { return r.json(); }), fetch('/map').then(function (r) { return r.json(); })]).then(function (a) {
-    config = a[0]; hexes = a[1]; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
+  Promise.all([fetch('/config').then(function (r) { return r.json(); }), fetch('/map').then(function (r) { return r.json(); }), fetch('/coast').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (a) {
+    config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return fetch('/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
   }).then(function () { var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} setStatus(shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
