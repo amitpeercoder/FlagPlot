@@ -614,6 +614,11 @@ button:disabled { opacity: 0.45; cursor: default; }
   // its hex where the hexes are shown or the map has no latitudes.
   function dm(v, pos, neg) { var a = Math.abs(v), d = Math.floor(a), m = Math.round((a - d) * 60); if (m === 60) { d += 1; m = 0; } return d + '\u00B0' + (m < 10 ? '0' : '') + m + '\u2032' + (v < 0 ? neg : pos); }
   function whereIs(pl) { var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4]; return showHexes || lat == null || lon == null ? '(' + pl.q + ', ' + pl.r + ')' : dm(lat, 'N', 'S') + ' ' + dm(lon, 'E', 'W'); }
+  // A distance the game counts in hexes, as a chart gives it: in nautical
+  // miles, or in hexes where the hexes are shown. A hex's width is read
+  // from the map itself.
+  function hexMiles() { var a = hexAt['0,0'], b = hexAt['1,0']; if (!a || !b) return 40; var rad = Math.PI / 180, dlat = (b[3] - a[3]) * rad, dlon = (b[4] - a[4]) * rad, h = Math.pow(Math.sin(dlat / 2), 2) + Math.cos(a[3] * rad) * Math.cos(b[3] * rad) * Math.pow(Math.sin(dlon / 2), 2); return Math.round(2 * 3440.065 * Math.asin(Math.sqrt(h)) / 5) * 5; }
+  function round(n) { return showHexes ? n + ' hexes round' : 'within ' + n * hexMiles() + ' miles'; }
   function hexWords(pl) { return (pl.name || M.hexNames[pl.q + ',' + pl.r] || 'open water') + ' ' + whereIs(pl); }
   function openCard(title, stamp, own) {
     var body = $('card-body'), head = el('div', 'headline'); body.textContent = '';
@@ -757,7 +762,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   function sayIntent(i, said) {
     if (said[i.number]) return nameText(said[i.number]).replace(/^./, function (c) { return c.toUpperCase(); });
-    var where = (i.target && i.target.name) || (i.base && i.base.name) || (i.island != null && (config.islands.filter(function (x) { return x.number === i.island; })[0] || {}).name) || (i.hex && (M.hexNames[i.hex[0] + ',' + i.hex[1]] || '(' + i.hex[0] + ', ' + i.hex[1] + ')')) || '';
+    var where = (i.target && i.target.name) || (i.base && i.base.name) || (i.island != null && (config.islands.filter(function (x) { return x.number === i.island; })[0] || {}).name) || (i.hex && (M.hexNames[i.hex[0] + ',' + i.hex[1]] || whereIs({ q: i.hex[0], r: i.hex[1] }))) || '';
     var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
   }
   function readPlan(root) {
@@ -1107,14 +1112,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (n != null) config.islands.forEach(function (i) { if (i.base === n) list.push(['Control ' + i.name, { intent_kind: 'control_island', island: i.number }]); });
     if (target.kind === 'enemy') list.push(['Take it', { intent_kind: 'take_place', base: n }], ['Neutralise it', { intent_kind: 'neutralise', target: n }]);
     if (target.kind === 'own') list.push(['Hold it', { intent_kind: 'hold', base: n }], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }], ['Cover it from the air', { intent_kind: 'cover', base: n }]);
-    if (target.kind === 'waters') list.push(['Deny these waters, 2 hexes round', { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }], ['Deny these waters, 4 hexes round', { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }]);
+    if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }]);
     return list;
   }
   function pick(p) {
     var best = null, bd = 0.32;
     M.bases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'own', base: b, name: b.base.name, v: placeOf(b.place) }; } });
     M.enemyBases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'enemy', base: b, name: b.base.name, v: placeOf(b.place) }; } });
-    if (!best) { var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } }); if (!hh) return; best = { kind: 'waters', q: hh[0], r: hh[1], name: 'the waters about hex ' + hh[0] + ', ' + hh[1], v: world(hh[3], hh[4]) }; }
+    if (!best) { var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } }); if (!hh) return; best = { kind: 'waters', q: hh[0], r: hh[1], name: 'the waters about ' + (showHexes ? 'hex ' + hh[0] + ', ' + hh[1] : whereIs({ q: hh[0], r: hh[1] })), v: world(hh[3], hh[4]) }; }
     draft = best; draft.ends = ends(best); picking = false; canvas.classList.remove('picking');
     $('o-place').textContent = best.name;
     var box = $('o-ends'); while (box.children.length > 1) box.removeChild(box.lastChild);
