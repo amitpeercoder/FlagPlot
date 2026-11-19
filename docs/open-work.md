@@ -25,6 +25,7 @@ The short form; `README.md` has it in plain words and the decision records have 
 
 - **Open from decision 0166 (the ships of the runs):** two sources say the Kamikaze class lost a gun and a pair of torpedo tubes in 1941 or 1942 (fits 1100 to 1103, disputed). Yunagi at Savo Island is derived with four guns and six tubes. Left as it is while Savo Island is closed; to be ruled by the next round that opens it.
 - **Built, decision 0168 (a raid recognised by the experience of the ship attacked):** built on Nov 19, 2026 (scenario 89): one strength figure, `raid_recognised_experience_strength` (0.25, a placeholder), moves a ship's chance of recognising the aircraft by its own experience; a base keeps the plain chance. Waiting on the architect's reading of its "As built": the breakdown of the draw (item 8) is not recorded. Left for later, as the record says: a base's men, experience that grows, and the fighters' pilots.
+- **Owed from decision 0168, a gap in traceability:** the draw of whether a raid was recognised (decisions 0167 and 0168) records no breakdown of its chance, though a ship's chance is now worked from its experience. It needs a home of its own, since an attack's breakdown is that of its hits. To be closed with the next change to the events of an air attack.
 
 ## The clean-up after stage 3's proof, before stage 4
 

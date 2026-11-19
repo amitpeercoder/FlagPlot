@@ -47,8 +47,10 @@
 //! | 3                    | 1 + 0.25 = 1.25     | 0.75 x 1.25 = 0.9375    |
 //! | 4                    | 1 + 0.5  = 1.5      | 1.125, cut to 1         |
 //!
-//! The breakdown of the draw, with breakdowns on, gives the plain chance,
-//! the experience and the factor of the row, and the chance of the row.
+//! (Struck by the architect on Nov 19, 2026, ruling 1 of decision 0168: the
+//! statement that the breakdown of the draw gives the plain chance, the
+//! experience, the factor and the chance of the row. No breakdown of the
+//! draw is recorded yet; it is owed.)
 //!
 //! ## Scenario 19a, the morning raid, over seeds 1 to 1000
 //!

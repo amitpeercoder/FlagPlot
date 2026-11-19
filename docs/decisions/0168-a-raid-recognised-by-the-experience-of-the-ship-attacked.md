@@ -100,3 +100,11 @@ Built on Nov 19, 2026, on the branch `raid-experience-build`, from the head of d
 8. **The comments of `data/scenarios/04_savo_island.toml`** and its two copies (`stage-2b-proof/`, `step2-frozen/`) say a ship's experience is "read only in a dark fight". It is still true there, where no raid flies, and the files are left as they are: the frozen copy may not change, and the scenario's hash is in its saved games and batch files.
 9. **The figures page.** The two figures are sorted as placeholders, as the brief and ruling 7 say, though no tuned measure reads either (the page's "No battle reads it" is for a figure no battle can move; these move only what a side is told). The page lists the figures it listed on Nov 13 and two more; `[strike_aircraft_per_ship]` (decision 0118) is still not on it, and its count is not corrected for it.
 
+## The architect's rulings
+
+Made on Nov 19, 2026, on reading the build.
+
+1. **The breakdown of the draw is not built, and is owed** (reading 1). Item 8 asked for it. The only breakdown an attack's event carries is that of its expected hits: putting the factors of recognition there would change factor lists that step 1's hand calculations assert, would tell a raided base's side a factor of a rule it is told nothing else of, and would read as part of a product it is no part of. A faithful breakdown needs a home of its own. Until it has one the draw is a chance worked with no breakdown recorded, which the rule of traceability does not allow: it is a named gap, written in `docs/open-work.md`, and is closed with the next change to the events of an air attack. The statement of the hand calculation that asserts the breakdown is struck by the architect, in the test file.
+2. **The rules label is not raised** (reading 2), against "What it costs", by the test of ruling 2 on decision 0167: no fight, order, staff choice or daily hash moves.
+3. **The other readings stand as made.** At a strength of 0 the plain figure is returned unmultiplied; experience is read when the attack is recorded; the stale comment in scenario 4's files stays, since its frozen copy may not change.
+
