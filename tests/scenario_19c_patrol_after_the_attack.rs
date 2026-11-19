@@ -699,6 +699,7 @@ fn patrol_draws(case: Case, seed: u64, count: usize) -> Vec<bool> {
         entity: EntityRef::AirGroup(AirGroupId::new(case.patrol_first)),
         other: Some(EntityRef::AirGroup(AirGroupId::new(case.strike))),
         draw: Draw::Legacy,
+        domain: None,
     }
     .stream();
     (0..count).map(|_| stream.chance(hundredths(30))).collect()
@@ -715,6 +716,7 @@ fn gun_draws(seed: u64) -> Vec<bool> {
         entity: EntityRef::Ship(ShipId::new(1)),
         other: Some(EntityRef::AirGroup(AirGroupId::new(2))),
         draw: Draw::Legacy,
+        domain: None,
     }
     .stream();
     (0..20).map(|_| stream.chance(hundredths(5))).collect()

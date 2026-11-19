@@ -495,3 +495,7 @@ path = "scenario_88_what_the_attacked_saw.rs"
 [[test]]
 name = "scenario_89_a_raid_recognised_by_experience"
 path = "scenario_89_a_raid_recognised_by_experience.rs"
+
+[[test]]
+name = "scenario_91_a_world_from_a_picture"
+path = "scenario_91_a_world_from_a_picture.rs"

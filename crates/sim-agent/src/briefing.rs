@@ -3877,6 +3877,9 @@ impl Day {
                     // command (decision 0136): the briefing does not list it.
                     | EventKind::StateReportLate { .. }
                     | EventKind::StateReportLost { .. }
+                    // The picture a world was built from (decision 0170): no
+                    // game played through the agent has one.
+                    | EventKind::BuiltFromPicture { .. }
                     | EventKind::MenSurrenderedAshore { .. }
                     | EventKind::GroundAttackFailed { .. }
                     | EventKind::CommandTaken { .. }

@@ -785,6 +785,7 @@ fn stream_of(
         entity,
         other: Some(other),
         draw: Draw::Legacy,
+        domain: None,
     }
     .stream()
 }
@@ -2777,6 +2778,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             entity: EntityRef::AirGroup(AirGroupId::new(launch.group)),
             other: None,
             draw: Draw::Ditch,
+            domain: None,
         }
         .stream();
         let ditched = hits_from(&mut stream, came_back, chance);

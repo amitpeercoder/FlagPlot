@@ -183,6 +183,28 @@ pub struct RngKey {
     /// The rule that draws. With [`Draw::Legacy`] the stream is exactly
     /// what it was before this field existed.
     pub draw: Draw,
+    /// The domain of a world built from a picture (decision 0170, 12): the
+    /// trial and the world within it. `None` for a live game, whose stream
+    /// is then exactly what it was before this field existed.
+    pub domain: Option<Domain>,
+}
+
+/// The domain of a draw's key (decision 0170, 12): the number of a trial
+/// and the number of a world within it. A world built from a picture draws
+/// in its own domain, so that no trial reads the live game's dice and no two
+/// worlds of a trial read each other's. A live game has none.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct Domain {
+    pub trial: u32,
+    pub world: u32,
+}
+
+/// What a world built from a picture draws from (decision 0170, 12): a seed
+/// and a domain, both given by whoever builds the world.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Stream {
+    pub seed: u64,
+    pub domain: Domain,
 }
 
 const GOLDEN: u64 = 0x9E37_79B9_7F4A_7C15;
@@ -194,6 +216,10 @@ const TAG_ENTITY: u64 = 0x5899_65CC_7537_4CC3;
 const TAG_OTHER: u64 = 0xD1B5_4A32_D192_ED03;
 /// Tag for the rule that draws. Part of the save format.
 const TAG_DRAW: u64 = 0x2545_F491_4F6C_DD1D;
+/// Tags for a domain's trial and world (decision 0170, 12). Part of the
+/// save format.
+const TAG_TRIAL: u64 = 0xC2B2_AE3D_27D4_EB4F;
+const TAG_WORLD: u64 = 0x1656_67B1_9E37_79F9;
 
 /// SplitMix64 finaliser.
 const fn mix64(mut z: u64) -> u64 {
@@ -225,6 +251,12 @@ impl RngKey {
         }
         if self.draw.code() != 0 {
             base = absorb(base, TAG_DRAW, self.draw.code());
+        }
+        // After everything else, and only where there is one (decision
+        // 0170, 12).
+        if let Some(domain) = self.domain {
+            base = absorb(base, TAG_TRIAL, u64::from(domain.trial));
+            base = absorb(base, TAG_WORLD, u64::from(domain.world));
         }
         RngStream { base, counter: 0 }
     }
@@ -281,6 +313,7 @@ mod tests {
             entity,
             other: None,
             draw: Draw::Legacy,
+            domain: None,
         }
     }
 
@@ -412,6 +445,7 @@ mod tests {
             entity: ship(1),
             other: None,
             draw: Draw::Legacy,
+            domain: None,
         };
         let b = RngKey {
             seed: 2,
@@ -470,6 +504,7 @@ mod tests {
             entity: EntityRef::TaskForce(TaskForceId::new(1)),
             other: None,
             draw: Draw::Legacy,
+            domain: None,
         };
         assert_eq!(draws(end_of_day, 2), PINNED_END_OF_DAY);
     }
@@ -518,6 +553,31 @@ mod tests {
         let one = draws(pair_key(air_group(1), task_force(1)), 4);
         let two = draws(pair_key(air_group(1), task_force(2)), 4);
         assert_ne!(one, two);
+    }
+
+    /// A domain moves every draw, each domain to a stream of its own, and
+    /// a key with no domain is the key as it was (decision 0170, 12): the
+    /// pinned values above are read with none.
+    #[test]
+    fn a_domain_moves_the_stream_and_none_leaves_it() {
+        let in_domain = |trial, world| {
+            draws(
+                RngKey {
+                    domain: Some(Domain { trial, world }),
+                    ..key(ship(3))
+                },
+                3,
+            )
+        };
+        let none = draws(key(ship(3)), 3);
+        assert_eq!(none, PINNED_SHIP_3);
+        let all = [none, in_domain(1, 1), in_domain(1, 2), in_domain(2, 1)];
+        for (i, a) in all.iter().enumerate() {
+            for b in &all[i + 1..] {
+                assert_ne!(a, b);
+            }
+        }
+        assert_eq!(in_domain(1, 2), in_domain(1, 2));
     }
 
     const PINNED_SHIP_3: [u64; 3] = [

@@ -2009,6 +2009,14 @@ pub enum EventKind {
         command: CommandRef,
         as_of: AsOf,
     },
+    /// The world was built from a picture of the evening of `day` (decision
+    /// 0170, 7): the first event of such a world, event 1, on that day with
+    /// no pulse and no cause. What the state and belief held as reported or
+    /// done before the picture cites it. Both sides see it. Added at the
+    /// end.
+    BuiltFromPicture {
+        day: u32,
+    },
 }
 
 impl EventKind {
@@ -2412,6 +2420,8 @@ impl EventKind {
             | EventKind::StateReportLost { command, .. } => {
                 command_entity(*command).into_iter().collect()
             }
+            // About the whole world, and no unit of it (decision 0170, 7).
+            EventKind::BuiltFromPicture { .. } => Vec::new(),
             EventKind::MeetingNotHeld {
                 charge, escorts, ..
             } => std::iter::once(*charge)
@@ -4306,6 +4316,10 @@ impl fmt::Display for EventKind {
             EventKind::StateReportLost {
                 command, as_of, ..
             } => write!(f, "{command}'s state report of {as_of} is lost"),
+            EventKind::BuiltFromPicture { day } => write!(
+                f,
+                "the world was built from a picture of the evening of day {day}"
+            ),
         }
     }
 }

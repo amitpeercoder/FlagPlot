@@ -1,10 +1,10 @@
 # 0170: A world built from a picture: the one new means of stage 4
 
-Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 3 of its ten, section B, rules 3 to 5), which the designer confirmed. The hand calculation is written. To be built.
+Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 3 of its ten, section B, rules 3 to 5), which the designer confirmed. The hand calculation is written. Built on Nov 19, 2026 (As built, below).
 
 Summary: A trial plays a course forward in worlds that are not the live one. Today a world can only be made at day 0 from a scenario: belief, the numbers of units made in play, the order book and the command state cannot be given to it, and every setup path refuses once a day has passed. This record adds a picture, plain data that holds everything a world needs on an evening, and one checked constructor in `sim-core` that builds a world from it. A world so built has no history before its day; what would cite an earlier cause cites the picture. Its draws come from a stream of their own, so that no trial reads the live game's dice
 
-Standing: Settled by the architect, Nov 19, 2026, inside decision 0161. The hand calculation is written; the build is next
+Standing: Settled by the architect, Nov 19, 2026, inside decision 0161. Built on Nov 19, 2026
 
 ## Why
 
@@ -83,3 +83,46 @@ It is in `tests/scenario_91_a_world_from_a_picture.rs`, written before the code.
 - **By hand.** Scenario 1's force, a cruiser and a destroyer at Noumea with a route to Espiritu Santo at cruise, given as a picture of the evening of day 4. The world's first day is day 5, and days 5 to 7 resolve as scenario 1's days 1 to 3 do, pulse for pulse and ton for ton, but for the day.
 - **Nothing lost.** A live game stopped on an evening, its whole picture taken by the umpire, and a world built from it on the game's own stream, plays on as the live game does: the state at the end of each later day is the live game's, unit for unit.
 - **What it refuses,** one picture for each line of item 6.
+
+## As built
+
+Built on Nov 19, 2026, on the branch `world-from-picture-build`, from the head of the record's own branch. Every statement of the hand calculation holds (`tests/scenario_91_a_world_from_a_picture.rs`, 17 tests). No number of the hand calculation was changed.
+
+**The statement left to the build.** Scenario 1's frozen search figures drop a contact that reaches `contact_drop_age_pulses = 5` (`data/reference/step1/search.toml`). The contact of case 1, 2 pulses old in the picture, is aged to 3 at the end of the night of day 5 and to 4 at the end of the morning, and is dropped at the end of the afternoon of day 5, aged 5: the "contact dropped" event of that pulse, citing event 1, as a contact of that age is dropped in a game from day 0. So it is not held at the end of day 5. The claim and the estimate stay.
+
+**Nothing lost.** Scenario 1 stopped on the evening of day 1 and scenario 86 on the evening of day 3, each rebuilt by the umpire from its whole picture on its own seed, play on as the live game does on every later day: the ships, task forces, bases, air groups and land units read the same field for field (an order's and an event's number read as `_` outside the engine, so they are left out by the reading itself), each side's command state reads the same, and the staff hands in the same orders, commands, decisions to give none and notices on every day (one order on day 4, two on day 5, none after). Scenario 86 ends with base 1 at 915 t, base 2 at 70 t and base 5 at 10 t. No rule was found that reads a history the built world does not have. The rules the record names that read the log of earlier days (the words of a refusal to a force gone, an interrupt that counts a day's losses, yard trips in the score, a note already written) are not reached by either game after its picture; nothing tests them across a picture.
+
+**What changed where.**
+
+- `sim-core`, a new module `world_picture.rs`: the picture, `WorldPicture` (the day, the state as a `TruthState`, each side's `PictureBelief` of `PictureContact`, `PictureClaim` and `PictureEstimate`, each side's `CommandState`, the orders as a list of `PictureOrder`, each side's `PictureCounters`, the objectives); `World::from_picture(picture, ref_data, map, stream)`; the umpire's `World::whole_picture(&self, key)` and `World::rebuild_from_picture(picture, ref_data, map, seed, key)`; and one walk, `walk_held_ids`, over every number of an order or an event that the state and the command states hold, which names each struct that holds one with all its fields, so that a field added there does not compile until it is walked. The checks, the re-pointing to event 1 and the renumbering of the umpire's picture all go through it.
+- `rng.rs`: `RngKey` gains `domain: Option<Domain>`, absorbed after the rule's draw, the trial and then the world, each with a tag of its own (`TAG_TRIAL`, `TAG_WORLD`), and only where there is one; `Domain { trial, world }` and `Stream { seed, domain }`. A unit test shows the pinned values read with no domain and four keys that differ by domain alone giving four streams. Every struct literal of a key in the tests gains `domain: None`; no number in them moved.
+- `world.rs`: the world holds `domain`, used by `rng` and `rng_pair`, read by `World::domain`; `MadeIds::at` and `MadeIds::first`. `World::new` is as it was.
+- `hash.rs`: the domain is named in `name_every_field` and written last in `hash_world`, after the count of events, and only where there is one. `STATE_VERSION` is not raised.
+- `belief.rs`: `BeliefState::from_picture`, crate-private, makes a side's belief from the picture's entries, each held as reported by event 1.
+- `events.rs`: the event `BuiltFromPicture { day }`, added at the end, with no unit and no cause; `side_events.rs` gives it whole to both sides, with a row in its table test; the export names it `built_from_picture` with its day; the batch record and the briefing leave it out.
+- `sim-agent`, the test that reads the library's source: `from_picture`, `whole_picture` and `WorldPicture` are banned words beside `World::new`.
+- The rulebook: chapter 1 gains "How a world begins" (a game from a scenario, and a world built from a picture), the event in the table of what a side sees, the domain in the key of a draw and in the passage on the hash, and the invariant on belief now names the belief a picture gives. `docs/engineering/determinism.md` gains the domain. The glossary gains "picture of a world", kept apart from a command's picture, and "domain (of a draw)".
+
+**The public surface added to `sim-core`.**
+
+1. The module `world_picture` with its seven plain types, all fields public.
+2. `WorldPicture::order_at(place) -> OrderId`: the one way outside the engine to make an order's number, the order at a place of a picture's list. Nothing else of the opaque numbers is opened: no event number can be made outside the engine (reading 3).
+3. `PictureCounters::first(side)`, the counters of a side that has made nothing.
+4. `World::from_picture`, `World::rebuild_from_picture` (asks for the umpire's key), `World::whole_picture` (asks for it too), `World::domain`.
+5. `rng::Domain`, `rng::Stream` and the field `RngKey::domain`.
+6. The event `EventKind::BuiltFromPicture`.
+
+**Readings the record did not make.**
+
+1. *The name.* The type is `WorldPicture`, in a module of its own, and the rulebook says "a picture of a world", so that neither the code nor the words meet a command's picture (`crate::pictures`, decisions 0134 to 0138).
+2. *The day is given once.* The state carries its own day; the picture refuses a state whose day is not the picture's rather than overwrite either.
+3. *No event number from outside.* A state that holds an event's number where it is not optional (a halt's event, a yard trip's departure) cannot be written by a picture made outside the engine, which cannot make one; the umpire's whole picture holds them, set to 1, and the copying of a side's half from its view (step 4) is in `sim-core`, where it can. Nothing else was opened.
+4. *A side not given.* A side missing from the beliefs, the command states or the counters believes nothing, has the empty command state with its next plan 1, or starts its counters at its first numbers.
+5. *The words and the order of the refusals.* Every refusal of item 6 is `SimError::InvalidSetup` whose words begin "the picture is not sound:" and name the unit, the place in the list, the counter, the hex or the day at fault; what `World::new` refuses is refused in its own words, and a command state that breaks the day's end invariants is `SimError::InvariantsViolated` on the picture's day, as a state that breaks the state's invariants is. The checks run in this order: the day; the orders referred to; the counters; the next plans; belief; hits on men; then everything `World::new` checks; then the command states' invariants; then the objectives, as `set_objectives` checks them. Only the first fault is named.
+6. *A unit made in play* is one numbered above 1,000,000, and it is held against its own side's counter of its kind.
+7. *Not checked, as item 6 does not ask:* an order's day of issue against the picture's day; an order's side against its unit's; a contact's age against the age at which contacts are dropped (such a contact is dropped at the end of the first pulse).
+8. *The belief is made, not changed.* `BeliefState::apply_report` stays the only way a belief changes. A built world's belief is made whole by `BeliefState::from_picture`, as a game's empty one is made by `BeliefState::new`: made by sightings, two contacts of a picture within the merge distance would have become one.
+9. *The umpire's whole picture* holds the orders the state and the command states refer to, renumbered from 1 in the order of their numbers in the live game, and only those; every event number its state holds is set to 1; it is refused while a day is open; it leaves out, as the picture does, the orders, commands and staff's hand-in waiting for the next day and command levels.
+10. *The event's name.* It is `BuiltFromPicture`, "world built from a picture" in words: the agent's briefing must name every kind of event, and the lint on the agent's library forbids the word `World` outside `session.rs`, so the kind may not carry it.
+11. *The agent's lint* bans the new names outright, though the umpire's key already keeps the two umpire's calls from it: no tool builds a world yet, and `World::from_picture` needs no key.
+
