@@ -18,6 +18,10 @@ enemy_base_supply_t = 0
 # tons (decision 0174, 5). Placeholder: none.
 enemy_base_fuel_t = 0
 
+# The seed every trial draws on (decision 0175, amended point 7): the
+# trial's, never the live game's. Placeholder: any whole number would do.
+seed = 1942
+
 # The three sizes of a trial (decision 0175, 2). Placeholders, as in
 # trial.toml.
 [small]

@@ -3733,6 +3733,7 @@ struct TrialFile {
     placeholder: bool,
     enemy_base_supply_t: Quantity,
     enemy_base_fuel_t: Quantity,
+    seed: u64,
     small: TrialSizeFile,
     standard: TrialSizeFile,
     full: TrialSizeFile,
@@ -3758,11 +3759,12 @@ impl TrialSizeFile {
 /// Loads a trial's figures file (decision 0174, "The figures"), named by a
 /// scenario's optional `trial` key: a `placeholder` flag and what a base of
 /// the enemy's is given, `enemy_base_supply_t` and `enemy_base_fuel_t`, each
-/// a whole number or a decimal string, neither below 0; and the three sizes
-/// of a trial (decision 0175, 2), the tables `small`, `standard` and `full`,
-/// each of `worlds` and `days` as whole numbers, at least one day and a
-/// count of worlds that is a power of two. Every key is required, as the
-/// file's other figures are: a file without the sizes is refused.
+/// a whole number or a decimal string, neither below 0; the `seed` every
+/// trial draws on (decision 0175, amended point 7), a whole number; and the
+/// three sizes of a trial (decision 0175, 2), the tables `small`,
+/// `standard` and `full`, each of `worlds` and `days` as whole numbers, at
+/// least one world and one day. Every key is required, as the file's other
+/// figures are: a file without the seed or the sizes is refused.
 pub fn load_trial_figures(path: &Path) -> Result<TrialFigures, DataError> {
     let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
     parse_trial_figures(&text, path)
@@ -3781,6 +3783,7 @@ fn parse_trial_figures(text: &str, path: &Path) -> Result<TrialFigures, DataErro
         placeholder: file.placeholder,
         enemy_base_supply_t: number("enemy_base_supply_t", &file.enemy_base_supply_t)?,
         enemy_base_fuel_t: number("enemy_base_fuel_t", &file.enemy_base_fuel_t)?,
+        seed: file.seed,
         small: file.small.size(),
         standard: file.standard.size(),
         full: file.full.size(),
@@ -3795,7 +3798,7 @@ fn parse_trial_figures(text: &str, path: &Path) -> Result<TrialFigures, DataErro
 mod trial_figures_tests {
     use super::*;
 
-    const SIZES: &str = "[small]\nworlds = 8\ndays = 7\n[standard]\nworlds = 16\ndays = 14\n[full]\nworlds = 64\ndays = 21\n";
+    const SIZES: &str = "seed = 1942\n[small]\nworlds = 8\ndays = 7\n[standard]\nworlds = 16\ndays = 14\n[full]\nworlds = 64\ndays = 21\n";
 
     #[test]
     fn a_trial_figures_file_is_read_and_refused_where_it_is_wrong() {
@@ -3810,6 +3813,7 @@ mod trial_figures_tests {
         assert!(figures.placeholder);
         assert_eq!(figures.enemy_base_supply_t, Fixed::from_int(1000));
         assert_eq!(figures.enemy_base_fuel_t, Fixed::from_ratio(1001, 2));
+        assert_eq!(figures.seed, 1942);
         assert_eq!(figures.small, TrialSize { worlds: 8, days: 7 });
         assert_eq!(
             figures.standard,
@@ -3843,22 +3847,23 @@ mod trial_figures_tests {
                 "guns",
             ),
             (
-                "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\n".to_string(),
+                "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\nseed = 1\n"
+                    .to_string(),
                 "small",
             ),
             (
                 format!(
                     "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\n{}",
-                    SIZES.replace("worlds = 16", "worlds = 12")
+                    SIZES.replace("seed = 1942\n", "")
                 ),
-                "the standard size has 12 worlds, not a power of two",
+                "seed",
             ),
             (
                 format!(
                     "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\n{}",
                     SIZES.replace("worlds = 64", "worlds = 0")
                 ),
-                "the full size has 0 worlds",
+                "the full size has no world",
             ),
             (
                 format!(

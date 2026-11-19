@@ -167,7 +167,7 @@ mod common;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-use sim_core::command::{CommandKind, IntentKind, Leave, PlanState, StaffOrder};
+use sim_core::command::{CommandKind, IntentKind, Leave, PlanId, PlanState, StaffOrder};
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -175,10 +175,13 @@ use sim_core::ids::{BaseId, IntentId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{Cargo, LandUnitOrder, OrderKind, Posture, TaskForceOrder};
 use sim_core::refdata::{TrialFigures, TrialSize};
 use sim_core::state::{Side, TruthState};
-use sim_core::world::SimError;
+use sim_core::world_picture::PictureCounters;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
-use sim_trial::{begin, pictures, Asked, Believed, Played, Playing, Stepped, Trial};
+use sim_trial::{
+    begin, begin_from_pictures, pictures, Asked, Believed, CourseCommand, Played, PlayedWorld,
+    Playing, Stepped, Trial,
+};
 
 const ALLIED: Side = Side::Allied;
 const JAPANESE: Side = Side::Japanese;
@@ -209,9 +212,9 @@ fn scenario() -> Scenario {
     scenario_with("")
 }
 
-/// The course: intent 1, control island 1; leave to prepare; leave to
-/// launch.
-fn course() -> Vec<CommandKind> {
+/// The commands of the course: intent 1, control island 1; leave to
+/// prepare; leave to launch.
+fn commands() -> Vec<CommandKind> {
     vec![
         CommandKind::SetIntent {
             intent: IntentId::new(1),
@@ -231,16 +234,31 @@ fn course() -> Vec<CommandKind> {
     ]
 }
 
-fn asked(worlds: u32, days: u32, course: Vec<CommandKind>) -> Asked {
+/// The course of case 1: its three commands on day 1 of the world.
+fn course() -> Vec<CourseCommand> {
+    on_day(1)
+}
+
+/// The course of case 1 with each command on day `day` of the world.
+fn on_day(day: u32) -> Vec<CourseCommand> {
+    commands()
+        .into_iter()
+        .map(|command| CourseCommand { day, command })
+        .collect()
+}
+
+fn asked(worlds: u32, days: u32, course: Vec<CourseCommand>) -> Asked {
     Asked {
-        trial: Trial {
-            seed: 1942,
-            trial: 1,
-            worlds,
-        },
+        trial: 1,
+        worlds,
         days,
         course,
     }
+}
+
+/// The world a played world's play left.
+fn world_of(played: &PlayedWorld) -> &sim_core::World {
+    played.world.as_ref().expect("the world was built")
 }
 
 fn believed(scenario: &Scenario) -> Believed {
@@ -279,6 +297,8 @@ struct Snapshot {
     hash: u64,
     truth: TruthState,
     japanese_intents: usize,
+    allied_state: sim_core::command::CommandState,
+    japanese_state: sim_core::command::CommandState,
 }
 
 /// A trial stepped to its end, with a snapshot of each day played.
@@ -303,8 +323,10 @@ fn step_out(mut playing: Playing) -> Stepping {
             world,
             day,
             hash,
-            truth: current.world.umpire().clone(),
-            japanese_intents: current.world.command_state(JAPANESE).intents.len(),
+            truth: world_of(current).umpire().clone(),
+            japanese_intents: world_of(current).command_state(JAPANESE).intents.len(),
+            allied_state: world_of(current).command_state(ALLIED).clone(),
+            japanese_state: world_of(current).command_state(JAPANESE).clone(),
         });
     }
     Stepping {
@@ -380,7 +402,7 @@ fn given(o: &StaffOrder) -> Given {
 
 /// The orders `side`'s staff gave on each day of a world, in the order
 /// given, sorted by their text so that the comparison is of the set.
-fn orders_by_day(world: &sim_trial::PlayedWorld, side: Side) -> Vec<(u32, Vec<String>)> {
+fn orders_by_day(world: &PlayedWorld, side: Side) -> Vec<(u32, Vec<String>)> {
     world
         .days
         .iter()
@@ -430,11 +452,7 @@ fn base_side(truth: &TruthState, base: u32) -> Side {
 }
 
 /// The day a plan of the Allied side became `to`, from a world's events.
-fn plan_day(
-    world: &sim_core::World,
-    plan: sim_core::command::PlanId,
-    to: PlanState,
-) -> Option<u32> {
+fn plan_day(world: &sim_core::World, plan: PlanId, to: PlanState) -> Option<u32> {
     world.events().iter().find_map(|e| match &e.kind {
         EventKind::PlanStateChanged {
             side,
@@ -461,6 +479,7 @@ fn the_inputs_are_scenario_86_with_its_commands_taken_out() {
     assert!(f.placeholder);
     assert_eq!(f.enemy_base_supply_t, n(0));
     assert_eq!(f.enemy_base_fuel_t, n(0));
+    assert_eq!(f.seed, 1942);
     // Scenario 86's own file, but for its commands, its name, its header
     // and the two files named.
     let eighty_six = common::load(&common::data_dir().join("scenarios/86_fed_with_the_lift.toml"))
@@ -529,7 +548,7 @@ fn case_1_the_orders_are_those_scenario_86_gives_when_played_itself() {
     let end = eighty_six.world.umpire();
     for w in &case_1().played.worlds {
         assert_eq!(orders_by_day(w, ALLIED), by_day, "world {}", w.number);
-        let truth = w.world.umpire();
+        let truth = world_of(w).umpire();
         for b in [1, 2, 5] {
             let id = BaseId::new(b);
             assert_eq!(
@@ -555,7 +574,7 @@ fn case_1_base_2_is_allied_from_the_end_of_day_2_and_the_take_is_met_on_day_3() 
         );
     }
     for w in &g.played.worlds {
-        let state = w.world.command_state(ALLIED);
+        let state = world_of(w).command_state(ALLIED);
         // The take is the staff's intent 2, under intent 1 (scenario 86).
         let take = &state.intents[&IntentId::new(2)];
         assert_eq!(
@@ -566,13 +585,13 @@ fn case_1_base_2_is_allied_from_the_end_of_day_2_and_the_take_is_met_on_day_3() 
             }
         );
         assert_eq!(
-            plan_day(&w.world, take.plan, PlanState::Complete),
+            plan_day(world_of(w), take.plan, PlanState::Complete),
             Some(3),
             "world {}",
             w.number
         );
         // Base 2 changed side on day 2.
-        let changed = w.world.events().iter().find_map(|e| match &e.kind {
+        let changed = world_of(w).events().iter().find_map(|e| match &e.kind {
             EventKind::BaseChangedSide { base, .. } if base.raw() == 2 => Some(e.day),
             _ => None,
         });
@@ -584,8 +603,8 @@ fn case_1_base_2_is_allied_from_the_end_of_day_2_and_the_take_is_met_on_day_3() 
 fn case_1_at_the_end_of_day_8() {
     let g = case_1();
     for w in &g.played.worlds {
-        let truth = w.world.umpire();
-        assert_eq!(w.world.day(), 8);
+        let truth = world_of(w).umpire();
+        assert_eq!(world_of(w).day(), 8);
         let supply = |b: u32| truth.bases[&BaseId::new(b)].supply_t;
         assert_eq!(supply(1), n(915), "world {}", w.number);
         assert_eq!(supply(2), n(70), "world {}", w.number);
@@ -609,27 +628,26 @@ fn case_1_at_the_end_of_day_8() {
     }
 }
 
-/// The statement as the hand calculation writes it. It does not hold on
-/// the code as it stands: a built world's hash covers its stream's domain,
-/// the trial and the world (decision 0170, 12, and its "What it costs":
-/// "The domain is a field of the world: it is named with every field, and
-/// it enters the hash"), so worlds 1 to 4 have four hashes on every day
-/// even where all else is equal. Ignored, not changed: the mismatch goes
-/// back to the architect. What holds is in the next test.
 #[test]
-#[ignore = "mismatch with decision 0170, 12: a built world's hash covers its world's number; for the architect"]
-fn case_1_the_four_worlds_have_the_same_hash_at_the_end_of_every_day() {
+fn case_1_the_four_worlds_hold_the_same_state_at_the_end_of_every_day() {
     let g = case_1();
-    let first = &g.played.worlds[0].days;
-    for w in &g.played.worlds[1..] {
-        assert_eq!(
-            w.days.iter().map(|d| d.hash).collect::<Vec<_>>(),
-            first.iter().map(|d| d.hash).collect::<Vec<_>>(),
-            "world {}",
-            w.number
-        );
+    for day in 1..=8 {
+        let of_day: Vec<&Snapshot> = g.days.iter().filter(|snap| snap.day == day).collect();
+        assert_eq!(of_day.len(), 4, "day {day}");
+        let first = of_day[0];
+        for snap in &of_day[1..] {
+            let (a, b) = (&first.truth, &snap.truth);
+            let at = format!("world {} day {day}", snap.world);
+            assert_eq!(a.ships, b.ships, "{at}: ships");
+            assert_eq!(a.task_forces, b.task_forces, "{at}: task forces");
+            assert_eq!(a.bases, b.bases, "{at}: bases");
+            assert_eq!(a.land_units, b.land_units, "{at}: land units");
+            assert_eq!(first.allied_state, snap.allied_state, "{at}: Allied");
+            assert_eq!(first.japanese_state, snap.japanese_state, "{at}: Japanese");
+        }
     }
-    // The steps report the hashes the worlds keep.
+    // The steps report the hashes the worlds keep. The hashes of two worlds
+    // differ, as a world's hash holds its own number.
     let stepped: Vec<(u32, u32, u64)> = g.days.iter().map(|s| (s.world, s.day, s.hash)).collect();
     let kept: Vec<(u32, u32, u64)> = g
         .played
@@ -683,7 +701,7 @@ fn case_1_every_world_is_scenario_86s_game_day_for_day() {
     for w in &g.played.worlds {
         for day in 1..=8 {
             assert_eq!(
-                events_of(&w.world, day),
+                events_of(world_of(w), day),
                 events_of(&eighty_six.world, day),
                 "world {} day {day}",
                 w.number
@@ -691,7 +709,7 @@ fn case_1_every_world_is_scenario_86s_game_day_for_day() {
         }
         for side in [ALLIED, JAPANESE] {
             assert_eq!(
-                format!("{:?}", w.world.command_state(side)),
+                format!("{:?}", world_of(w).command_state(side)),
                 format!("{:?}", eighty_six.world.command_state(side)),
                 "world {} {side:?}",
                 w.number
@@ -739,6 +757,27 @@ fn case_2_the_live_game_is_not_touched() {
     assert_eq!(with_trial, never);
 }
 
+#[test]
+fn case_2_a_trial_on_every_evening_changes_nothing() {
+    let mut live = scenario();
+    let held = staffs();
+    while live.world.day() < 8 {
+        let played = begun(&live, asked(2, 2, course())).play_out();
+        assert_eq!(
+            played.worlds.len(),
+            2,
+            "evening of day {}",
+            live.world.day()
+        );
+        assert!(played.failed().is_empty());
+        live.next_day_staffed(as_staffs(&held))
+            .expect("a day resolves")
+            .expect("a day to resolve");
+    }
+    let (never, ..) = live_days(scenario());
+    assert_eq!(live.world.day_hashes(), never.as_slice());
+}
+
 // ---------------------------------------------------------------- 3. The sizes
 
 #[test]
@@ -779,7 +818,7 @@ fn case_3_the_sizes() {
             w.days.iter().map(|d| d.day).collect::<Vec<_>>(),
             (1..=7).collect::<Vec<_>>()
         );
-        assert_eq!(w.world.day(), 7, "world {}", w.number);
+        assert_eq!(world_of(w).day(), 7, "world {}", w.number);
     }
 }
 
@@ -808,7 +847,7 @@ fn case_4_world_3_of_4_is_world_3_of_8() {
             &believed(&s),
             &figures(&s),
             Trial {
-                seed: 1942,
+                seed: figures(&s).seed,
                 trial: 1,
                 worlds,
             },
@@ -816,13 +855,8 @@ fn case_4_world_3_of_4_is_world_3_of_8() {
         .expect("the pictures are made")
     };
     assert_eq!(make(4)[2], make(8)[2]);
-    // Worlds 1 to 8 do not all have the same hash at the end of day 1.
-    let day_1: std::collections::BTreeSet<u64> =
-        of_8.worlds.iter().map(|w| w.days[0].hash).collect();
-    assert!(day_1.len() > 1, "{day_1:?}");
-    // And not by their numbers alone (a world's hash covers its number,
-    // decision 0170, 12): the worlds differ in where the force is. Each
-    // world's play is kept to its end, so its picture is read for the hex.
+    // In the pictures of worlds 1 to 8 the Japanese force is not at the
+    // same hex in all of them.
     let pictures_of_8 = make(8);
     let hexes: std::collections::BTreeSet<Hex> = pictures_of_8
         .iter()
@@ -887,7 +921,7 @@ fn case_6_an_empty_course_orders_nothing() {
                 assert!(orders.is_empty(), "world {} {side:?} day {day}", w.number);
             }
         }
-        let truth = w.world.umpire();
+        let truth = world_of(w).umpire();
         let tf = &truth.task_forces[&TaskForceId::new(1)];
         assert_eq!(tf.from_hex, AT_SEA, "world {}", w.number);
         assert_eq!(tf.toward_hex, None, "world {}", w.number);
@@ -919,8 +953,8 @@ fn property_the_course_goes_to_the_side_tried_and_to_no_other() {
         );
     }
     for w in &g.played.worlds {
-        assert!(w.world.command_state(JAPANESE).intents.is_empty());
-        let one = &w.world.command_state(ALLIED).intents[&IntentId::new(1)];
+        assert!(world_of(w).command_state(JAPANESE).intents.is_empty());
+        let one = &world_of(w).command_state(ALLIED).intents[&IntentId::new(1)];
         assert_eq!(
             one.kind,
             IntentKind::ControlIsland {
@@ -932,36 +966,178 @@ fn property_the_course_goes_to_the_side_tried_and_to_no_other() {
 }
 
 #[test]
-fn property_a_failed_world_is_reported_and_the_others_are_played() {
-    let mut playing = begun(&scenario(), asked(4, 8, course()));
-    // The means of the test: world 2 is made to break an invariant before
-    // its day 2 is resolved (`test-means`, decision 0175).
-    playing.break_world_on(2, 2);
-    let mut failed_steps = Vec::new();
-    while let Some(stepped) = playing.step() {
-        if let Stepped::Failed(f) = stepped {
-            failed_steps.push((f.world, f.day));
-        }
-    }
-    assert_eq!(failed_steps, vec![(2, 2)]);
-    let played = playing.play_out();
+fn property_a_world_that_cannot_be_played_is_reported_and_the_others_are_played() {
+    let live = scenario();
+    let mut made = pictures(
+        &live.world.side_view(ALLIED),
+        &believed(&live),
+        &figures(&live),
+        Trial {
+            seed: figures(&live).seed,
+            trial: 1,
+            worlds: 4,
+        },
+    )
+    .expect("the pictures are made");
+    // The means of the test: world 2's Allied counter of forces set below
+    // the side's first number, so that its world is refused when built.
+    let first = PictureCounters::first(ALLIED);
+    made[1]
+        .picture
+        .counters
+        .entry(ALLIED)
+        .or_insert(first)
+        .next_task_force = first.next_task_force - 1;
+    let played = begin_from_pictures(
+        made,
+        live.world.ref_data(),
+        live.world.map(),
+        asked(4, 8, course()),
+    )
+    .expect("the trial begins")
+    .play_out();
     let failed = played.failed();
     assert_eq!(failed.len(), 1);
-    assert_eq!((failed[0].world, failed[0].day), (2, 2));
+    assert_eq!((failed[0].world, failed[0].day), (2, 0));
     assert!(
-        matches!(failed[0].error, SimError::InvariantsViolated { day: 2, .. }),
-        "{:?}",
-        failed[0].error
+        failed[0].words.starts_with("invalid setup: "),
+        "{}",
+        failed[0].words
     );
     assert_eq!(played.worlds.len(), 4);
     let two = &played.worlds[1];
     assert_eq!(two.number, 2);
-    assert_eq!(two.days.len(), 1, "world 2 played its day 1 only");
-    assert_eq!(two.days[0], case_1().played.worlds[1].days[0]);
+    assert!(two.days.is_empty() && two.world.is_none());
     for (w, want) in played.worlds.iter().zip(&case_1().played.worlds) {
         if w.number != 2 {
             assert!(w.failed.is_none());
             assert_eq!(w.days, want.days, "world {}", w.number);
         }
     }
+}
+
+const HOLD_BASE_2: &str = "[[believed_intent]]\nside = \"allied\"\nintent_kind = \"hold\"\nbase \
+                           = 2\nplaceholder = true\nnote = \"Scenario 94, a property.\"\n\n";
+
+#[test]
+fn property_the_enemys_intents_are_handed_in_once() {
+    let s = scenario_with(HOLD_BASE_2);
+    let played = begun(&s, asked(4, 1, course())).play_out();
+    assert_eq!(played.worlds.len(), 4);
+    for w in &played.worlds {
+        let world = world_of(w);
+        let kinds: Vec<IntentKind> = world
+            .command_state(JAPANESE)
+            .intents
+            .values()
+            .map(|i| i.kind)
+            .collect();
+        assert_eq!(
+            kinds,
+            vec![IntentKind::Hold {
+                base: BaseId::new(2)
+            }],
+            "world {}",
+            w.number
+        );
+        let refused = world.events().iter().any(
+            |e| matches!(&e.kind, EventKind::CommandRefused { side, .. } if *side == JAPANESE),
+        );
+        assert!(!refused, "world {}", w.number);
+    }
+}
+
+#[test]
+fn property_two_courses_the_same_worlds() {
+    let s = scenario_with(CONTACT);
+    let with = begun(&s, asked(4, 3, course()));
+    let without = begun(&s, asked(4, 3, vec![]));
+    assert_eq!(with.to_play().len(), 4);
+    assert_eq!(with.to_play(), without.to_play());
+}
+
+#[test]
+fn property_the_seed_is_the_trials() {
+    let live = scenario();
+    let other = live.with_seed(77).expect("another seed");
+    assert_ne!(other.world.seed(), live.world.seed());
+    let a = begun(&live, asked(4, 8, course()));
+    let b = begun(&other, asked(4, 8, course()));
+    assert_eq!(a.to_play(), b.to_play());
+    assert_eq!(hashes(&b.play_out()), hashes(&case_1().played));
+}
+
+#[test]
+fn property_a_command_on_its_day() {
+    let played = begun(&scenario(), asked(4, 8, on_day(3))).play_out();
+    assert!(played.failed().is_empty());
+    for w in &played.worlds {
+        for side in [ALLIED, JAPANESE] {
+            for (day, orders) in orders_by_day(w, side).into_iter().take(2) {
+                assert!(orders.is_empty(), "world {} {side:?} day {day}", w.number);
+            }
+        }
+        let day_3: Vec<Given> = w.days[2].staff[&ALLIED].orders.iter().map(given).collect();
+        assert!(
+            day_3.contains(&Given::Landing(1, B, vec![1])),
+            "world {}: {day_3:?}",
+            w.number
+        );
+        assert!(w.refused.is_empty());
+    }
+}
+
+#[test]
+fn property_a_refused_command_is_reported() {
+    let mut with_fourth = course();
+    with_fourth.push(CourseCommand::first_day(CommandKind::Approve {
+        plan: PlanId::new(99),
+    }));
+    let played = begun(&scenario(), asked(4, 8, with_fourth)).play_out();
+    assert!(played.failed().is_empty());
+    for (w, want) in played.worlds.iter().zip(&case_1().played.worlds) {
+        assert_eq!(w.refused.len(), 1, "world {}", w.number);
+        let refused = &w.refused[0];
+        assert_eq!(refused.day, 1);
+        assert_eq!(
+            refused.command,
+            CommandKind::Approve {
+                plan: PlanId::new(99)
+            }
+        );
+        // The engine's words, as its refusal event gives them.
+        let words = world_of(w)
+            .events()
+            .iter()
+            .find_map(|e| match &e.kind {
+                EventKind::CommandRefused { side, reason, .. } if *side == ALLIED => {
+                    Some(reason.to_string())
+                }
+                _ => None,
+            })
+            .expect("the refusal is in the world's log");
+        assert!(!refused.words.is_empty());
+        assert_eq!(refused.words, words);
+        // The world plays as in case 1.
+        assert_eq!(orders_by_day(w, ALLIED), orders_by_day(want, ALLIED));
+        assert_eq!(
+            format!("{:?}", world_of(w).umpire()),
+            format!("{:?}", world_of(want).umpire()),
+            "world {}",
+            w.number
+        );
+    }
+}
+
+/// Amended points 4 and 9: the record says which leaves the course gave
+/// that the side had not, and whether the count of worlds was even.
+#[test]
+fn property_the_record_says_what_the_course_gave_and_whether_worlds_were_even() {
+    let played = begun(&scenario(), asked(4, 1, course())).play_out();
+    assert!(!played.uneven);
+    assert_eq!(played.leaves_given, vec![Leave::Launch]);
+    let three = begun(&scenario(), asked(3, 1, vec![])).play_out();
+    assert!(three.uneven);
+    assert_eq!(three.worlds.len(), 3);
+    assert!(three.leaves_given.is_empty());
 }

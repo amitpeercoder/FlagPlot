@@ -16,6 +16,10 @@ enemy_base_supply_t = 1000
 # tons (decision 0174, 5). Placeholder.
 enemy_base_fuel_t = 500
 
+# The seed every trial draws on (decision 0175, amended point 7): the
+# trial's, never the live game's. Placeholder: any whole number would do.
+seed = 1942
+
 # The three sizes of a trial (decision 0175, 2): a number of worlds and a
 # horizon in days. Each count of worlds is a power of two, so that the forces
 # of unknown standing are tried evenly (decision 0174, 14). Set by what is

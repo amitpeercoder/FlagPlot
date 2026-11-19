@@ -1172,8 +1172,11 @@ pub struct TrialFigures {
     pub enemy_base_supply_t: Fixed,
     /// The fuel for ships a base of the enemy's is given, in tons (rule 5).
     pub enemy_base_fuel_t: Fixed,
+    /// The seed every trial draws on (decision 0175, amended point 7): the
+    /// trial's, never the live game's.
+    pub seed: u64,
     /// The three sizes of a trial (decision 0175, 2): small, standard and
-    /// full.
+    /// full, each a name for two numbers.
     pub small: TrialSize,
     pub standard: TrialSize,
     pub full: TrialSize,
@@ -1205,9 +1208,10 @@ impl TrialFigures {
     }
 
     /// Describes what is wrong with the figures, if anything: a figure below
-    /// 0, or a size of no world or no day, or whose count of worlds is not a
-    /// power of two (decision 0175, 2: so that the forces of unknown
-    /// standing are tried evenly, decision 0174, 14).
+    /// 0, or a size of no world or no day. A count of worlds that is not a
+    /// power of two is allowed: such a trial is played, and its record says
+    /// the forces of unknown standing were not tried evenly (decision 0175,
+    /// amended point 9).
     pub fn problem(&self) -> Option<String> {
         for (name, value) in [
             ("enemy_base_supply_t", self.enemy_base_supply_t),
@@ -1221,11 +1225,8 @@ impl TrialFigures {
             if size.days == 0 {
                 return Some(format!("the {name} size has no day"));
             }
-            if !size.worlds.is_power_of_two() {
-                return Some(format!(
-                    "the {name} size has {} worlds, not a power of two",
-                    size.worlds
-                ));
+            if size.worlds == 0 {
+                return Some(format!("the {name} size has no world"));
             }
         }
         None

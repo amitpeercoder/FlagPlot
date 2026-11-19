@@ -20,11 +20,14 @@
 //!   (decision 0170, 12), and hands in for the enemy, for the first morning,
 //!   the intents the side believed he held (rule 19).
 //! - [`begin`] and [`play`] play a trial (decision 0175): one course, the
-//!   commander's commands of the side tried, in each world from 1, for a
-//!   horizon of days, with both sides' staffs on doctrine. [`Playing`] is
-//!   worked a world's day at a time and can be dropped at any step;
-//!   [`Played`] is the worlds as played, each with its number, its
-//!   assumptions, its days and the world as its play left it.
+//!   commander's commands of the side tried each on a day of the world, in
+//!   each world from 1, for a horizon of days, with both sides' staffs on
+//!   doctrine, on the trial's figures' seed. [`begin_from_pictures`] plays
+//!   pictures handed in. [`Playing`] is worked a world's day at a time and
+//!   can be dropped at any step; [`Played`] is the worlds as played, each
+//!   with its number, its assumptions, its days, the commands of the course
+//!   it refused, why it could not be played if it could not, and the world
+//!   as its play left it.
 //!
 //! What the rules read is fixed (decision 0161, 6): a side's view, what the
 //! scenario says that side believed, and the trial's figures and settings.
@@ -45,7 +48,10 @@ mod enemy;
 mod play;
 
 pub use assumption::{Assumption, NotMade, Source};
-pub use play::{begin, play, Asked, Failed, Played, PlayedDay, PlayedWorld, Playing, Stepped};
+pub use play::{
+    begin, begin_from_pictures, play, Asked, CourseCommand, Failed, Played, PlayedDay, PlayedWorld,
+    Playing, RefusedCommand, Stepped,
+};
 pub use sim_core::refdata::TrialSize;
 
 use core::fmt;

@@ -1127,7 +1127,8 @@ fn property_no_peek_what_the_side_cannot_see_gives_it_the_same_pictures() {
         placeholder: true,
         enemy_base_supply_t: kn(1000),
         enemy_base_fuel_t: kn(500),
-        // The sizes of a trial (decision 0175) are read by no rule of the
+        seed: 1942,
+        // The seed and the sizes of a trial (decision 0175) are read by no rule of the
         // enemy's half; these are trial.toml's.
         small: TrialSize { worlds: 8, days: 7 },
         standard: TrialSize {

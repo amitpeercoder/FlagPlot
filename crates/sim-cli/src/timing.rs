@@ -64,6 +64,7 @@ struct Settings {
     trial_figures: String,
     trial_late: u32,
     only_trial: bool,
+    trial_size: Option<String>,
 }
 
 fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
@@ -81,6 +82,7 @@ fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
         trial_figures: DEFAULT_TRIAL_FIGURES.to_string(),
         trial_late: 20,
         only_trial: false,
+        trial_size: None,
     };
     let mut words = args.iter();
     while let Some(word) = words.next() {
@@ -111,6 +113,15 @@ fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
                 settings.trial_late = number("--trial-late-day", value("--trial-late-day")?)?
             }
             "--only-trial" => settings.only_trial = true,
+            "--trial-size" => {
+                let name = value("--trial-size")?.clone();
+                if !["small", "standard", "full"].contains(&name.as_str()) {
+                    return Err(format!(
+                        "--trial-size \"{name}\" is not small, standard or full"
+                    ));
+                }
+                settings.trial_size = Some(name);
+            }
             other => return Err(format!("unknown argument \"{other}\"\n\n{usage}")),
         }
     }
@@ -405,33 +416,21 @@ fn games(start: &Start, games: u32, days: u32) -> Result<(Spread, Duration, u32)
     Ok((spread(times), total, played))
 }
 
-/// The course of the measure (decision 0175, 9): of the scenario's commands
-/// of day 1, the Allied side's first intent stated and its leaves, in the
-/// order given.
-fn trial_course(scenario: &Scenario) -> Result<Vec<sim_core::command::CommandKind>, String> {
-    use sim_core::command::CommandKind;
-    let day_1 = scenario
+/// The course of the measure from the evening before day 1 (decision 0175,
+/// amended point 13): the Allied side's own commands of day 1 in the
+/// slice, each on the world's first day, in the order given.
+fn trial_course(scenario: &Scenario) -> Result<Vec<sim_trial::CourseCommand>, String> {
+    let course: Vec<sim_trial::CourseCommand> = scenario
         .scripted_commands()
         .get(&1)
         .cloned()
-        .unwrap_or_default();
-    let mut course = Vec::new();
-    let mut intent = false;
-    for (side, command) in day_1 {
-        if side != sim_core::state::Side::Allied {
-            continue;
-        }
-        match command {
-            CommandKind::SetIntent { .. } if !intent => {
-                intent = true;
-                course.push(command);
-            }
-            CommandKind::SetLeave { .. } => course.push(command),
-            _ => {}
-        }
-    }
-    if !intent {
-        return Err("the trial's slice states no Allied intent on day 1".to_string());
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|(side, _)| *side == sim_core::state::Side::Allied)
+        .map(|(_, command)| sim_trial::CourseCommand::first_day(command))
+        .collect();
+    if course.is_empty() {
+        return Err("the trial's slice gives the Allied side no command on day 1".to_string());
     }
     Ok(course)
 }
@@ -468,7 +467,7 @@ struct TrialTime {
 fn time_trial(
     live: &Scenario,
     figures: &sim_core::refdata::TrialFigures,
-    course: &[sim_core::command::CommandKind],
+    course: &[sim_trial::CourseCommand],
     size: (&'static str, sim_core::refdata::TrialSize),
 ) -> Result<TrialTime, String> {
     let side = sim_core::state::Side::Allied;
@@ -477,11 +476,8 @@ fn time_trial(
         intents: live.believed_intents(side).cloned().collect(),
     };
     let asked = sim_trial::Asked {
-        trial: sim_trial::Trial {
-            seed: live.world.seed(),
-            trial: 1,
-            worlds: size.1.worlds,
-        },
+        trial: 1,
+        worlds: size.1.worlds,
         days: size.1.days,
         course: course.to_vec(),
     };
@@ -500,7 +496,7 @@ fn time_trial(
     let failed = played
         .failed()
         .iter()
-        .map(|f| format!("world {} day {}: {}", f.world, f.day, f.error))
+        .map(|f| format!("world {} day {}: {}", f.world, f.day, f.words))
         .collect();
     drop(played);
     let time = begin.elapsed();
@@ -528,15 +524,20 @@ fn trials(s: &Settings, options: &LoadOptions) -> Result<Vec<TrialTime>, String>
     let late = trial_live_game(&s.trial_slice, s.trial_late, options)?;
     println!();
     println!(
-        "h. A trial of the Allied side's first intent of {} (decision 0175, 9), with its leaves: {} command(s) in the course; both staffs; once each, timed from the making of the pictures to the dropping of the worlds:",
+        "h. A trial of the Allied side on {} (decision 0175, 9): from the evening before day 1 with its own {} command(s) of day 1 as the course, and from the evening of day {} with an empty course; the trial's seed {}, trial 1; both staffs; once each, timed from the making of the pictures to the dropping of the worlds:",
         s.trial_slice,
-        course.len()
+        course.len(),
+        s.trial_late,
+        figures.seed
     );
     let mut times = Vec::new();
-    for live in [&early, &late] {
+    for (live, course) in [(&early, course.as_slice()), (&late, &[][..])] {
         let before = live.world.state_hash();
         for size in figures.sizes() {
-            let t = time_trial(live, &figures, &course, size)?;
+            if s.trial_size.as_deref().is_some_and(|name| name != size.0) {
+                continue;
+            }
+            let t = time_trial(live, &figures, course, size)?;
             println!(
                 "  {:<8} {:>2} worlds x {:>2} days ({:>4} days of play) from the evening of day {:>2}: {:>10}   {} days played{}",
                 t.size,
