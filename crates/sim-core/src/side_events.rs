@@ -885,6 +885,10 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         EventKind::StateReportLate { side: owner, .. }
         | EventKind::StateReportLost { side: owner, .. } => whole_if(*owner == side),
 
+        // The picture a world was built from (decision 0170, 7): it names no
+        // unit and no report, only the day, and both sides see it whole.
+        EventKind::BuiltFromPicture { .. } => Seen::Whole,
+
         // For a side that has come to know of the fight, with its own force
         // of the two and without the enemy's.
         EventKind::EngagementBegun {
@@ -1555,6 +1559,7 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::ReportSent { .. }
             | EventKind::StateReportLate { .. }
             | EventKind::StateReportLost { .. }
+            | EventKind::BuiltFromPicture { .. }
             | EventKind::ContactAged { .. }
             | EventKind::ContactDropped { .. }
             | EventKind::EngagementBegun { .. }
@@ -1766,6 +1771,7 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::ReportSent { .. }
         | EventKind::StateReportLate { .. }
         | EventKind::StateReportLost { .. }
+        | EventKind::BuiltFromPicture { .. }
         | EventKind::ContactAged { .. }
         | EventKind::ContactDropped { .. }
         | EventKind::EngagementBegun { .. }
@@ -2111,6 +2117,7 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::ReportSent { .. }
             | EventKind::StateReportLate { .. }
             | EventKind::StateReportLost { .. }
+            | EventKind::BuiltFromPicture { .. }
             | EventKind::ContactAged { .. }
             | EventKind::ContactDropped { .. }
             | EventKind::EngagementBegun { .. }
@@ -2350,6 +2357,7 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::ReportSent { .. }
         | EventKind::StateReportLate { .. }
         | EventKind::StateReportLost { .. }
+        | EventKind::BuiltFromPicture { .. }
         | EventKind::ContactAged { .. }
         | EventKind::ContactDropped { .. }
         | EventKind::ShipDamaged { .. }
@@ -2633,6 +2641,7 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::ReportSent { .. }
                     | EventKind::StateReportLate { .. }
                     | EventKind::StateReportLost { .. }
+                    | EventKind::BuiltFromPicture { .. }
                     | EventKind::ContactAged { .. }
                     | EventKind::ContactDropped { .. }
                     | EventKind::EngagementBegun { .. }
@@ -4658,6 +4667,9 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // The picture a world was built from (decision 0170, 7): both
+            // sides see it whole.
+            row(EventKind::BuiltFromPicture { day: 4 }, Whole, Whole),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -4698,7 +4710,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 148, "the log has 148 kinds of event");
+        assert_eq!(all.len(), 149, "the log has 149 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

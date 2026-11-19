@@ -412,6 +412,7 @@ fn stream_of(seed: u64, day: u32, pulse: Pulse, entity: EntityRef, other: Entity
         entity,
         other: Some(other),
         draw: Draw::Legacy,
+        domain: None,
     }
     .stream()
 }

@@ -499,3 +499,7 @@ path = "scenario_89_a_raid_recognised_by_experience.rs"
 [[test]]
 name = "scenario_90_a_take_that_does_not_go_to_starve"
 path = "scenario_90_a_take_that_does_not_go_to_starve.rs"
+
+[[test]]
+name = "scenario_91_a_world_from_a_picture"
+path = "scenario_91_a_world_from_a_picture.rs"

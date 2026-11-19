@@ -328,6 +328,7 @@ mod tests {
             entity: EntityRef::Ship(ShipId::new(entity)),
             other: None,
             draw: crate::rng::Draw::Legacy,
+            domain: None,
         }
         .stream()
     }

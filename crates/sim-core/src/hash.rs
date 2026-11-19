@@ -324,6 +324,9 @@ fn name_every_field(world: &World) {
         // Not state: the trace of choices, how to record, never what
         // happens (decision 0100, 7).
         choice_trace: _,
+        // Hashed last, and only where there is one (decision 0170, 12): a
+        // live game has none, and its hash is what it was.
+        domain: _,
     } = world;
     let TruthState {
         day: _,
@@ -1975,6 +1978,15 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(world.made_ids.next_air_group(side));
     }
     h.count(world.events.len());
+
+    // Last, and only where there is one (decision 0170, 12): the domain of
+    // a world built from a picture, its trial and then its world. A live
+    // game has none and writes nothing here, so its hash is what it was and
+    // the layout's version is not raised.
+    if let Some(domain) = world.domain {
+        h.u32(domain.trial);
+        h.u32(domain.world);
+    }
 
     h.finish()
 }

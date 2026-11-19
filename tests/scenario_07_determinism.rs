@@ -515,7 +515,7 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     //
     // The kind of decision 0110, `GroundFoundEmpty`: the frozen copy has no
     // land unit. Scenario 38 records it, and its own test reads it.
-    const NOT_IN_THE_FULL_SLICE: [&str; 86] = [
+    const NOT_IN_THE_FULL_SLICE: [&str; 87] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -612,6 +612,9 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "StateReportLate",
         "StateReportLost",
         "ReconnaissanceFlown",
+        // A game begun from a scenario is not built from a picture
+        // (decision 0170). Scenario 91 records it.
+        "BuiltFromPicture",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

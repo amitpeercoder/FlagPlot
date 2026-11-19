@@ -1158,6 +1158,7 @@ pub fn count(
             | EventKind::ReportSent { .. }
             | EventKind::StateReportLate { .. }
             | EventKind::StateReportLost { .. }
+            | EventKind::BuiltFromPicture { .. }
             | EventKind::ContactAged { .. }
             | EventKind::ContactDropped { .. }
             | EventKind::SightingRoll { .. }

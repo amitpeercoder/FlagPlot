@@ -283,6 +283,57 @@ impl BeliefState {
         }
     }
 
+    /// A side's belief as a picture gives it (decision 0170, 8 and 10): its
+    /// contacts numbered from 1 in the order given, its claims in the order
+    /// given, its estimates by hex, every one held as reported by `event`,
+    /// the picture's own. It is a belief made, not one changed: a world
+    /// built from a picture begins with it, as a world begun from a scenario
+    /// begins with an empty one. The caller has checked that no two
+    /// estimates share a hex.
+    pub(crate) fn from_picture(
+        side: Side,
+        contacts: impl IntoIterator<Item = (Hex, u32, ShipKind, u32)>,
+        claims: impl IntoIterator<Item = BattleClaim>,
+        estimates: impl IntoIterator<Item = GroundEstimate>,
+        event: EventId,
+    ) -> BeliefState {
+        let mut belief = BeliefState::new(side);
+        for (hex, ship_count, kind, age_pulses) in contacts {
+            let id = belief.contact_ids.alloc();
+            belief.contacts.insert(
+                id,
+                Contact {
+                    id,
+                    estimated_hex: hex,
+                    estimated_ship_count: ship_count,
+                    estimated_kind: kind,
+                    age_pulses,
+                    last_report_event: event,
+                },
+            );
+        }
+        belief.claims = claims
+            .into_iter()
+            .map(|claim| BattleClaim {
+                received_event: event,
+                ..claim
+            })
+            .collect();
+        belief.ground_estimates = estimates
+            .into_iter()
+            .map(|estimate| {
+                (
+                    estimate.hex,
+                    GroundEstimate {
+                        report_event: event,
+                        ..estimate
+                    },
+                )
+            })
+            .collect();
+        belief
+    }
+
     pub fn side(&self) -> Side {
         self.side
     }

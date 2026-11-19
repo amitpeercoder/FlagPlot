@@ -773,6 +773,7 @@ fn stream_of(
         entity,
         other,
         draw: Draw::Legacy,
+        domain: None,
     }
     .stream()
 }

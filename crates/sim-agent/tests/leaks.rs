@@ -1031,7 +1031,8 @@ fn a_difference_the_side_can_meet_does_change_what_it_is_given() {
 /// What the lint allows (stage 9d, decision 0050). Code lines of every source
 /// file of the library, doc comments left out, may not contain `umpire`,
 /// `EventLog`, `TruthState`, `BeliefState`, `std::fs`, `std::net`, the hash
-/// collections, `f32`, `f64` or `unsafe`, and may not contain the word `World`
+/// collections, `f32`, `f64` or `unsafe`, nor a way to build a world from a
+/// picture or take one (decision 0170), and may not contain the word `World`
 /// with one exception: `session.rs`, the module that holds the game, may. That
 /// file is held to a further list, below, so that holding the game does not
 /// become a way to read it: it may not call the world's truth (`umpire`), its
@@ -1064,6 +1065,11 @@ fn the_library_code_names_nothing_of_the_truth() {
         // its own, or a hasher fed an id.
         "IdAllocator",
         "World::new",
+        // A world built from a picture, and the whole picture of a world
+        // (decision 0170): nothing that plays the game builds a world.
+        "from_picture",
+        "whole_picture",
+        "WorldPicture",
         "Hasher",
         "TruthState",
         "BeliefState",
