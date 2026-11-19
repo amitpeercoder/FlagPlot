@@ -538,6 +538,7 @@ button:disabled { opacity: 0.45; cursor: default; }
         body.appendChild(el('div', 'sub', 'BASED AT')); body.appendChild(rich('div', '', x.location.handle)); return; }
       if (e.entity_kind === 'ship') { var b2 = openCard(e.ship.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true), sys = e.systems || {}, out = Object.keys(sys).filter(function (k) { return sys[k] !== 'working'; }); turnTo(e.place);
         kv(b2, [['Class', e.class], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Fuel', commas(e.fuel_t) + ' t, ' + commas(e.range_nm) + ' miles'], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
+        if (e.troops) { b2.appendChild(el('div', 'sub', 'MEN ABOARD')); b2.appendChild(rich('div', '', e.troops.land_unit.handle + ': ' + commas(e.troops.men) + ' men')); }
         if (e.task_force) { b2.appendChild(el('div', 'sub', 'IN')); b2.appendChild(rich('div', '', e.task_force.handle)); }
         if ((e.air_groups || []).length) { b2.appendChild(el('div', 'sub', 'AIR GROUPS ABOARD')); b2.appendChild(rich('div', '', e.air_groups.map(function (g) { M.names[g.handle] = g.name; return g.handle; }).join(', '))); }
         return; }
