@@ -1080,6 +1080,15 @@ group in the side's numbers and `since_day`, or null), `moved_to_look` (decision
 the side's numbers that the staff moves or has moved to look at the place while the need is not met, and its `hex`, or
 null), `met` and `text`, the need in one line. It is null for every other plan, a released one too.
 
+## A level for each ship in a load (decision 0162)
+
+`version` is 27. The order `load` with a `weight_t` (and no `unit`) may carry `each_t`, a decimal string above 0: the
+most any one ship is to hold of the cargo. Each ship, in ship order, takes the least of its room, what is left of the
+weight and `each_t` less what it holds of that cargo, not below 0. `each_t` is refused in the decoder with no
+`weight_t`, with a `unit`, and at 0 or below. The engine's refusal for 0 or below is `LevelNotAboveZero`: in the
+answer a rejection with `reason` `level_not_above_zero` and `each_t`, and a line saying what `each_t` names. A load
+with no `each_t` is as it was. The words of a queued load say "no ship to hold more than L t" where a level is named.
+
 ## The plan as an order: the tool `order` (decision 0159, rule E, items 15 to 17)
 
 `version` is 26. The tool `order` (a seat whose side has a staff; argument `intent`, the number of one of the commander's
