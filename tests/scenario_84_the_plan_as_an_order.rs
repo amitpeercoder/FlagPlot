@@ -54,10 +54,14 @@
 //! | 2 | draft | to come | to come | to come | men: not met, expected day 4 | 1,200, 600 | day 8 |
 //! | 5 | preparing | under way | to come | to come | nothing unmet | 1,200, 1,200 | day 8 |
 //! | 6 | released | done | under way | to come | nothing | 1,200, 1,200 | day 8 |
-//! | 9 | released | done | done | done | nothing | 1,200, 1,200 | none: it is ashore |
+//! | 9 | released | done | done | done | nothing | none: no count is held | none: it is ashore |
 //!
 //! On morning 2 the take has no task under it. On mornings 5 and 6 its
-//! one task is intent 2, ready a landing. On morning 9 base 2 is the
+//! one task is intent 2, ready a landing. The men landed on day 8 found
+//! no enemy at B and said so, which cleared the count the side held, and
+//! the order gives men only where a count is held: on morning 9 it gives
+//! none (restated by the architect on Nov 19, 2026; the first table had
+//! 1,200 and 1,200). On morning 9 base 2 is the
 //! side's and the plan is not yet marked complete: that is done by the
 //! staff later that morning.
 //!
@@ -86,11 +90,17 @@
 //! | Morning | Plan | Prepare | Waits for | The need to know |
 //! | --- | --- | --- | --- | --- |
 //! | 2 | preparing | under way | knowledge: met | 150, seen from the air, of day 1, 1 day old; met |
-//! | 3 | preparing | under way | knowledge: not met, no day | the same count, 2 days old; not met; nobody looking yet |
+//! | 3 | preparing | under way | knowledge: not met, no day | the same count, 2 days old; not met; air group 1 looking since day 3 |
 //! | 4 | preparing | under way | knowledge: met | 150, of day 3, 1 day old; met |
 //! | 5 | released | done | nothing | not asked: the plan is released |
 //!
 //! The men wanted and to hand are 300 and 600 on mornings 3, 4 and 5.
+//!
+//! The need to know is step 4's, which names the group the staff sends
+//! that morning: on morning 3, air group 1, as scenario 82's own table
+//! has it (restated by the architect on Nov 19, 2026; the first table
+//! had "nobody looking yet"). The plan's state, phases and tasks are as
+//! they stand before the morning's decisions.
 //!
 //! ## Scenario 79, fed before it is taken (intent 1, a hold)
 //!
@@ -127,7 +137,7 @@ use sim_core::command::{
     WaitedFor,
 };
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, IntentId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, IntentId, TaskForceId};
 use sim_core::state::Side;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
@@ -418,7 +428,8 @@ fn scenario_80_morning_9_the_place_is_the_sides() {
 
 #[test]
 fn scenario_80_morning_9_men_wanted_and_to_hand() {
-    assert_eq!(game("80").order(9, 1).men, men(1200, 1200));
+    // No count is held: the men ashore found no enemy at B.
+    assert_eq!(game("80").order(9, 1).men, None);
 }
 
 #[test]
@@ -557,9 +568,19 @@ fn scenario_82_morning_3() {
 
 #[test]
 fn scenario_82_morning_3_the_need_to_know() {
-    // The same count, 2 days old; not met; nobody looking yet.
+    // The same count, 2 days old; not met; air group 1 looking since day 3.
     let o = game("82").order(3, 1);
-    assert_eq!(o.need_to_know, need(seen_150(1, 2), None, false));
+    assert_eq!(
+        o.need_to_know,
+        need(
+            seen_150(1, 2),
+            Some(Looking {
+                air_group: AirGroupId::new(1),
+                since_day: Some(3),
+            }),
+            false
+        )
+    );
 }
 
 #[test]
