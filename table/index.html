@@ -65,6 +65,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .papers button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 34px; padding: 0 12px; background: var(--paper-old); color: var(--paper-ink); border: 0; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
 .slip.decide { background: var(--paper); }
+.slip.opens { cursor: pointer; }
+.slip.opens:hover, .slip.opens:focus-visible { outline: 2px solid var(--own); outline-offset: -2px; }
+.slip.opens .more { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--own); }
 .slip.leave { padding: 7px 10px; gap: 4px; }
 .slip.leave .lv { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--paper-dim); }
 .slip.leave .seg { display: inline-flex; }
@@ -859,7 +862,10 @@ button:disabled { opacity: 0.45; cursor: default; }
       var since = /day (\d+)/.exec(h.text || ''); a.appendChild(what ? rich('div', '', what + ', held by your direct order' + (since ? ' of day ' + since[1] : '')) : el('div', '', h.text));
       button(a, 'RELEASE TO THE STAFF', false, function () { act('release', args, 'Released. The staff may use it again from dusk.'); });
     });
+    // A plan that waits for the commander's leave has one notice, below, which
+    // opens its order: the clock's own slip for it would say the same twice.
     if (lastRun && lastRun.fired) lastRun.fired.forEach(function (f) {
+      if (f.standing === 'waits_for_leave') return;
       var a = slip('FROM STAFF · DAY ' + f.day, 'STOPPED THE CLOCK', f.words.replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, true);
       if (f.why && f.why.length) button(a, 'WHY', true, function (b) { askWhy(a, f.why, b); });
       if (f.standing) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
@@ -868,9 +874,11 @@ button:disabled { opacity: 0.45; cursor: default; }
     // With no intent stated the staff does nothing: the button that states one is marked, and nothing is said.
     $('btn-intent').classList.toggle('cue', !roots.length && !M.over);
     s.plans.forEach(function (p) {
-      var waits = (p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare); if (!waits) return;
-      var a = slip('FROM STAFF', 'FOR DECISION', 'Plan ' + p.number + ' for order ' + p.intent + ' is ' + p.state, p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.', true);
-      button(a, 'APPROVE', true, function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.'); });
+      var waits = (p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare); if (!waits || signed('approve', 'plan', p.number)) return;
+      var po = planOf(p.number), name = po.name ? po.name.charAt(0).toUpperCase() + po.name.slice(1) : 'Plan ' + p.number, root = po.root != null ? po.root : p.intent;
+      var a = slip('FROM STAFF', 'FOR DECISION', name, p.state === 'preparing' ? 'The plan is ready and waits for your leave to launch.' : 'The plan waits for your leave to prepare.', true);
+      a.appendChild(el('div', 'more', 'Open the order \u203A')); a.classList.add('opens'); a.tabIndex = 0; a.setAttribute('role', 'button'); a.setAttribute('aria-label', name + ': open the order to give or withhold your leave');
+      var open = function () { readPlan(root); }; a.addEventListener('click', open); a.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     });
     if (roots.length) {
       // The leave is for every plan, now and to come: the slip says so, and
@@ -888,10 +896,17 @@ button:disabled { opacity: 0.45; cursor: default; }
     roots.forEach(function (r) {
       var b = paper(sayIntent(r, {}), function () { readPlan(r.number); }); b.title = 'Your order ' + r.number + (r.in_force ? ', in force' : ', ended') + ': read the plan'; if (!r.in_force) b.style.opacity = 0.6;
       var under = {}; (function walk(n) { under[n] = true; s.intents.forEach(function (c) { if (c.parent === n) walk(c.number); }); })(r.number);
-      var waiting = s.plans.filter(function (p) { return under[p.intent] && ((p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare)); }).length;
+      var waiting = s.plans.filter(function (p) { return under[p.intent] && !signed('approve', 'plan', p.number) && ((p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare)); }).length;
       mark(b, waiting, waiting + (waiting === 1 ? ' plan waits' : ' plans wait') + ' for your word');
     });
-    if (s.queued && s.queued.length) paper('Signed \u00B7 ' + s.queued.length, readSigned).title = 'What you have signed, for the staff at 1800';
+    // An order signed today is not the staff's until 1800: it stands in the
+    // list at once, marked, so that nothing signed is out of sight.
+    (s.queued || []).forEach(function (x) {
+      var c = x.command || {}; if (c.kind !== 'set_intent' || s.intents.some(function (i) { return i.number === c.intent; })) return;
+      var at = function (n) { var b = baseByNumber(n); return b ? { name: b.base.name } : null; };
+      var words = sayIntent({ number: 'signed ' + c.intent, kind: c.intent_kind, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {});
+      var b = paper(words + ' \u00B7 from 1800', function () { setStatus(words + ': signed. The staff takes it up at 1800.'); }); b.title = 'Signed today; the staff takes it up at 1800'; b.style.fontStyle = 'italic';
+    });
     // Staff: what is coming, marked with what is due by tomorrow, and the report.
     if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) {
       var due = (M.arrivals || []).filter(function (a) { return a.day >= M.day && a.day <= M.day + 1; }).length + M.forces.filter(function (f) { return f.available_from === M.day + 1; }).length;
@@ -1225,14 +1240,6 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (est) { body.appendChild(el('div', 'sub', 'INTELLIGENCE')); kv(body, [['Enemy men ashore', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
    
   }
-  // What the commander has signed and the staff has not yet taken in: a
-  // record to look at, not a signal that asks anything of him.
-  function readSigned() {
-    var doc = $('sheet-doc'), q = (M.state && M.state.queued) || []; doc.textContent = '';
-    q.forEach(function (x, i) { doc.appendChild(rich('p', '', (i + 1) + '. ' + String(x.text || x.shown || (x.command && x.command.kind) || 'a command').replace(/^./, function (c) { return c.toUpperCase(); }))); });
-    doc.appendChild(el('div', 'foot', 'These go to the staff at 1800.'));
-    sheetAs('SIGNED'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
-  }
   // ---- an event in the staff's words ----
   // What the game reports of an event, said as a staff would write it: names
   // for handles (from the event's own list, then what the table has seen), a
@@ -1361,6 +1368,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   var D_ROUTINE = { air_group_fatigue: 1, land_unit_fatigue: 1, task_force_fatigue: 1, aircraft_worn: 1, aircraft_repaired: 1, fieldworks_changed: 1, unit_worked: 1, base_supply_spent: 1, men_fed: 1, base_at_day_end: 1, search_flown: 1, fuel_burned: 1, ship_refuelled: 1, contact_aged: 1, fight_day_counted: 1, left_roster: 1, loading_lost: 1, ground_fire: 1, task_force_steamed: 1, escorts_sent: 1, airfield_mended: 1, base_anti_aircraft_fire: 1, anti_aircraft_fire: 1, salvo: 1, salvo_against: 1 }, diaryLast = 0;
   function diaryWords(t) { t = nameText(plainWords(String(t).replace(/^(Allied|Japanese) /, ''))).replace(/_/g, ' '); t = t.charAt(0).toUpperCase() + t.slice(1); return /[.!?]$/.test(t) ? t : t + '.'; }
   // A plan said by what it is for, and the intent of the commander's it comes under.
+  // Whether the commander has signed this already, for the staff at 1800.
+  function signed(kind, key, value) { return ((M.state && M.state.queued) || []).some(function (x) { return x.command && x.command.kind === kind && x.command[key] === value; }); }
   function planOf(n) { var st = M.state || {}, p = (st.plans || []).filter(function (x) { return x.number === n; })[0], by = {}; (st.intents || []).forEach(function (i) { by[i.number] = i; }); var i = p && by[p.intent]; if (!i) return { name: '', root: null }; var r = i; while (r.parent != null && by[r.parent]) r = by[r.parent]; var w = sayIntent(i, {}); return { name: w.charAt(0).toLowerCase() + w.slice(1), root: r.number }; }
   function intentWords(n) { var i = ((M.state || {}).intents || []).filter(function (x) { return x.number === n; })[0]; if (!i) return ''; var w = sayIntent(i, {}); return w.charAt(0).toLowerCase() + w.slice(1); }
   function planWords(t) { return t.replace(/plan:(\d+)('s)?/g, function (x, n, own) { var p = planOf(parseInt(n, 10)); return 'plan ' + n + (p.name ? (own ? ' (' + p.name + ')' : ', ' + p.name + ',') : '') + (own || ''); }).replace(/,( cannot|\.|$)/, function (x, y) { return y === ' cannot' ? ', cannot' : y; }); }
@@ -1535,16 +1544,31 @@ button:disabled { opacity: 0.45; cursor: default; }
       // under the take, where the staff works the need this morning.
       function need(p) { var k = p && p.need_to_know; if (!k) return null; var d = rich('div', 'work', 'To know: ' + nameText(k.text)); if (!k.met) d.style.color = 'var(--enemy)'; return d; }
       var topNeed = need(top.plan != null ? plans[top.plan] : null); if (topNeed) doc.appendChild(topNeed);
+      // The order's own plan: where it stands, and the commander's word on
+      // it, given here and nowhere else.
+      (function (p) {
+        if (!p || p.state === 'complete' || p.state === 'cancelled') return;
+        var gone = p.state === 'released', ok = signed('approve', 'plan', p.number), off = signed('cancel_plan', 'plan', p.number), waits = !ok && !off && ((p.state === 'preparing' && !st.leaves.launch) || (p.state === 'draft' && !st.leaves.prepare));
+        var n = el('div', 'node'), who = el('div', 'who'); who.appendChild(el('strong', '', 'Plan ' + p.number + ' \u00B7 ' + (gone ? 'launched' : p.state)));
+        var tag = el('span', 'state', off ? 'CANCELLED FROM 1800' : ok ? 'APPROVED' : waits ? 'WAITS FOR YOU' : ''); if (waits) tag.style.color = 'var(--enemy)'; who.appendChild(tag); n.appendChild(who);
+        if (off) n.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
+        else if (ok) n.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
+        else if (waits) n.appendChild(el('div', 'work', p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.'));
+        if (!off && !gone) { var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', '', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
+          if (waits) press('APPROVE PLAN ' + p.number, 'approve', 'Plan ' + p.number + ' approved.');
+          press('CANCEL PLAN ' + p.number, 'cancel_plan', 'Plan ' + p.number + ' is cancelled from 1800.'); n.appendChild(row); }
+        doc.appendChild(n);
+      })(top.plan != null ? plans[top.plan] : null);
       // The brief: one line a task, with a word for where it stands. What
       // the staff decided today and why is one step down, under each line.
       var lines = [], tally = {};
       (function walk(i, depth) {
         if (i.number !== root) {
           var p = i.plan != null ? plans[i.plan] : null, w = work[i.number] || [];
-          var waits = p && ((p.state === 'preparing' && !st.leaves.launch) || (p.state === 'draft' && !st.leaves.prepare)), live = p && p.state !== 'complete' && p.state !== 'released' && p.state !== 'cancelled';
+          var ok = p && signed('approve', 'plan', p.number), off = p && signed('cancel_plan', 'plan', p.number), waits = p && !ok && !off && ((p.state === 'preparing' && !st.leaves.launch) || (p.state === 'draft' && !st.leaves.prepare)), live = p && p.state !== 'complete' && p.state !== 'released' && p.state !== 'cancelled';
           var acts = w.some(function (x) { return x.verdict !== 'No order today'; }), cannot = w.some(function (x) { return /cannot (meet|be met)/i.test(x.r.worked || ''); });
-          var word = !i.in_force ? 'ENDED' : (p && p.state === 'complete') ? 'DONE' : waits ? 'WAITS FOR YOU' : acts ? 'ORDERS TODAY' : cannot ? 'CANNOT BE MET' : (p && (p.state === 'preparing' || p.state === 'draft')) ? 'PREPARING' : 'STANDING';
-          tally[word] = (tally[word] || 0) + 1; lines.push({ i: i, p: p, w: w, depth: depth, word: word, waits: waits, live: live });
+          var word = !i.in_force ? 'ENDED' : (p && p.state === 'complete') ? 'DONE' : off ? 'CANCELLED FROM 1800' : ok ? 'APPROVED' : waits ? 'WAITS FOR YOU' : acts ? 'ORDERS TODAY' : cannot ? 'CANNOT BE MET' : (p && (p.state === 'preparing' || p.state === 'draft')) ? 'PREPARING' : 'STANDING';
+          tally[word] = (tally[word] || 0) + 1; lines.push({ i: i, p: p, w: w, depth: depth, word: word, waits: waits, live: live, ok: ok, off: off });
         }
         st.intents.filter(function (c) { return c.parent === i.number; }).forEach(function (c) { walk(c, depth + 1); });
       })(top, 0);
@@ -1572,7 +1596,7 @@ button:disabled { opacity: 0.45; cursor: default; }
         doc.appendChild(box);
       })(a[3]);
       doc.appendChild(el('h3', '', '1. The brief'));
-      var order = ['WAITS FOR YOU', 'CANNOT BE MET', 'ORDERS TODAY', 'PREPARING', 'STANDING', 'DONE', 'ENDED'], sum = order.filter(function (k) { return tally[k]; }).map(function (k) { return tally[k] + ' ' + k.toLowerCase(); });
+      var order = ['WAITS FOR YOU', 'APPROVED', 'CANCELLED FROM 1800', 'CANNOT BE MET', 'ORDERS TODAY', 'PREPARING', 'STANDING', 'DONE', 'ENDED'], sum = order.filter(function (k) { return tally[k]; }).map(function (k) { return tally[k] + ' ' + k.toLowerCase(); });
       doc.appendChild(el('p', '', lines.length ? 'The staff has made ' + lines.length + ' task' + (lines.length === 1 ? '' : 's') + ' of it: ' + sum.join(', ') + '.' : 'The staff has made nothing of it yet. It plans at 1800.'));
       lines.forEach(function (L) {
         var n = el('div', 'node'), who = el('div', 'who'), i = L.i, p = L.p; n.style.marginLeft = (L.depth - 1) * 18 + 'px'; if (L.word === 'ENDED' || L.word === 'DONE') n.style.opacity = 0.6;
@@ -1588,7 +1612,9 @@ button:disabled { opacity: 0.45; cursor: default; }
         });
         if (p && p.amendments && p.amendments.length) d.appendChild(rich('div', 'work', 'Changed ' + p.amendments.length + ' time' + (p.amendments.length > 1 ? 's' : '') + ', last on day ' + p.amendments[p.amendments.length - 1].day + ': ' + p.amendments[p.amendments.length - 1].change + '.'));
         n.appendChild(d);
-        if (L.live) { var row = el('div', 'row'); (L.waits ? n : d).appendChild(row);
+        if (L.off) d.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
+        else if (L.ok) d.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
+        if (L.live && !L.off) { var row = el('div', 'row'); (L.waits ? n : d).appendChild(row);
           if (L.waits) { var ok = el('button', '', 'APPROVE PLAN ' + p.number); ok.type = 'button'; ok.addEventListener('click', function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.').then(function () { readPlan(root); }); }); row.appendChild(ok); }
           var no = el('button', '', 'CANCEL PLAN ' + p.number); no.type = 'button'; no.addEventListener('click', function () { act('cancel_plan', { plan: p.number }, 'Plan ' + p.number + ' is cancelled from 1800.').then(function () { readPlan(root); }); }); row.appendChild(no); }
         doc.appendChild(n);
@@ -1733,7 +1759,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   // it. Closing the sheet forgets the lot.
   var sheetTrail = [], sheetHere = null, sheetBacking = false;
   function tracked(name, fn, keyOf) { var w = function () { var args = arguments, key = name + (keyOf ? ':' + keyOf.apply(null, args) : ''), again = function () { w.apply(null, args); }; if ($('sheet').hidden) sheetTrail = []; else if (sheetHere && sheetHere.key !== key && !sheetBacking) sheetTrail.push(sheetHere); sheetBacking = false; sheetHere = { key: key, fn: again }; return fn.apply(null, args); }; return w; }
-  readSigned = tracked('signed', readSigned); readDiary = tracked('diary', readDiary); readSchedule = tracked('schedule', readSchedule); readPlan = tracked('plan', readPlan, function (root) { return root; });
+  readDiary = tracked('diary', readDiary); readSchedule = tracked('schedule', readSchedule); readPlan = tracked('plan', readPlan, function (root) { return root; });
   readOob = tracked('oob', readOob); readInTray = tracked('in', readInTray); readDirective = tracked('directive', readDirective, function (d) { return d.number; }); readReport = tracked('report', readReport); readBriefing = tracked('situation', readBriefing);
   $('sheet-back').addEventListener('click', function () { var p = sheetTrail.pop(); if (!p) return; sheetBacking = true; p.fn(); });
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
