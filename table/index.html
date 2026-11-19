@@ -418,7 +418,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   function layPieces() {
     statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels();
     var byHex = {}, seen = {};
-    M.forces.forEach(function (f) { if (!f.place) return; var k = f.place.q + ',' + f.place.r; (byHex[k] = byHex[k] || []).push(f); });
+    // A force not yet the commander's to use has no piece: it is on the reinforcements paper until its day.
+    M.forces.forEach(function (f) { if (!f.place || f.available_from > M.day) return; var k = f.place.q + ',' + f.place.r; (byHex[k] = byHex[k] || []).push(f); });
     mover = null; var far = 0.15;
     Object.keys(byHex).forEach(function (k) {
       var list = byHex[k], centre = placeOf(list[0].place);
@@ -717,7 +718,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       listOf(ships, 'AIR GROUPS ABOARD', M.air.filter(function (x) { return x.location && mine[x.location.handle]; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
       listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; var cls = String(x.class || '').replace(/^Placeholder /, ''); return x.ship.handle + (cls && String(x.ship.name || '').toLowerCase().indexOf(cls.toLowerCase()) < 0 ? ', ' + cls : '') + ': ' + commas(x.fuel_t) + ' t fuel' + (x.sunk ? ', SUNK' : hurt); }));
     }).catch(function (e) { ships.appendChild(el('div', '', 'The ships could not be listed: ' + e.message)); });
-    if (!M.over && !playing) { var row = el('div', 'row'), b = el('button', '', held ? 'ORDER IT' : 'TAKE CHARGE OF IT'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
+    if (!M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', held ? 'ORDER IT' : 'TAKE CHARGE OF IT'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
       if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
       body.appendChild(row); }
     forcesHere(body, 'ALSO HERE', f.place, f);
@@ -1078,7 +1079,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var fs = $('f-ships'), fj = $('f-join'), fhere = best.force; fs.hidden = true; fj.hidden = true;
     while (fs.children.length > 1) fs.removeChild(fs.lastChild); while (fj.children.length > 1) fj.removeChild(fj.lastChild);
     api('get_entity', { handle: fhere.task_force.handle }).then(function (a) { if (!force || force.f !== fhere) return; ((a.entity && a.entity.ships) || []).filter(function (x) { return !x.sunk; }).forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.value = num(x.ship.handle); l.appendChild(c); l.appendChild(document.createTextNode(' ' + String(x.ship.name || x.ship.handle).replace(/^Placeholder /, ''))); fs.appendChild(l); }); }).catch(function () {});
-    var others = M.forces.filter(function (o) { return o !== fhere && sameHex(o.place, fhere.place); }), atBase = M.bases.some(function (b) { return sameHex(b.place, fhere.place); });
+    var others = M.forces.filter(function (o) { return o !== fhere && sameHex(o.place, fhere.place) && !(o.available_from > M.day); }), atBase = M.bases.some(function (b) { return sameHex(b.place, fhere.place); });
     others.forEach(function (o, i) { var l = el('label'), c = el('input'); c.type = 'radio'; c.name = 'into'; c.value = o.task_force.handle; c.checked = i === 0; l.appendChild(c); l.appendChild(document.createTextNode(' ' + o.task_force.name.replace(/^Placeholder /, ''))); fj.appendChild(l); });
     $('f-l-join').hidden = !(atBase && others.length); $('f-l-down').hidden = !atBase;
     var box = $('f-air'), here = M.air.filter(function (x) { return x.place && best.force.place && x.place.q === best.force.place.q && x.place.r === best.force.place.r; });
