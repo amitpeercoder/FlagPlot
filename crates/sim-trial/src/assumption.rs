@@ -5,6 +5,7 @@
 
 use core::fmt;
 
+use sim_core::believed::Standing;
 use sim_core::command::IntentKind;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -131,6 +132,53 @@ pub enum Assumption {
     /// Rule 19: the side believes nothing of what the enemy wants. He is
     /// given no intent and holds what he holds.
     EnemyGivenNoIntent,
+    /// Decision 0176, rule 2: believed men made, a fighting unit of their men
+    /// in their hex on defend, made as the unit of an estimate is. Named by
+    /// their place in the side's list of believed men, from 1.
+    BelievedMenMade {
+        unit: LandUnitId,
+        place: u32,
+        name: String,
+        hex: Hex,
+        men: u32,
+        standing: Standing,
+    },
+    /// Decision 0176, rule 2: believed men believed absent, made in no world.
+    BelievedMenRuledOut {
+        place: u32,
+        name: String,
+        hex: Hex,
+        men: u32,
+    },
+    /// Decision 0176, rule 2: believed men of unknown standing, not made in
+    /// this world.
+    BelievedMenNotInWorld {
+        place: u32,
+        name: String,
+        hex: Hex,
+        men: u32,
+    },
+    /// Decision 0176, amended 6: believed men set aside, made in no world, for
+    /// the side knows better.
+    BelievedMenSetAside {
+        place: u32,
+        name: String,
+        hex: Hex,
+        men: u32,
+        standing: Standing,
+        why: SetAside,
+    },
+}
+
+/// Why believed men were set aside (decision 0176, amended 6).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum SetAside {
+    /// The side holds an estimate of the hex of a day after the scenario's
+    /// start: a count it has had since, of that day.
+    CountSince { day: u32 },
+    /// The place is the side's: it holds a base in the hex and the enemy
+    /// none there on its map.
+    PlaceIsTheSides,
 }
 
 /// Why no force was made.
@@ -146,9 +194,25 @@ pub enum NotMade {
 }
 
 impl Assumption {
-    /// The number of the rule of decision 0174 it was made by.
+    /// The decision whose rule it was made by: 174, or 176 for believed men.
+    pub const fn decision(&self) -> u32 {
+        match self {
+            Assumption::BelievedMenMade { .. }
+            | Assumption::BelievedMenRuledOut { .. }
+            | Assumption::BelievedMenNotInWorld { .. }
+            | Assumption::BelievedMenSetAside { .. } => 176,
+            _ => 174,
+        }
+    }
+
+    /// The number of the rule it was made by, of decision 0174, or of
+    /// decision 0176 for believed men ([`Assumption::decision`]).
     pub const fn rule(&self) -> u32 {
         match self {
+            Assumption::BelievedMenMade { .. }
+            | Assumption::BelievedMenRuledOut { .. }
+            | Assumption::BelievedMenNotInWorld { .. }
+            | Assumption::BelievedMenSetAside { .. } => 2,
             Assumption::EnemyBase { .. } => 5,
             Assumption::MenAshore { .. } => 6,
             Assumption::KindRaised { .. } => 11,
@@ -188,7 +252,11 @@ fn role_name(role: AircraftRole) -> &'static str {
 
 impl fmt::Display for Assumption {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "rule {}: ", self.rule())?;
+        if self.decision() == 174 {
+            write!(f, "rule {}: ", self.rule())?;
+        } else {
+            write!(f, "rule {} of decision 0{}: ", self.rule(), self.decision())?;
+        }
         match self {
             Assumption::EnemyBase {
                 base,
@@ -318,6 +386,58 @@ impl fmt::Display for Assumption {
                 f,
                 "the side believes nothing of what the enemy wants: he is given no intent"
             ),
+            Assumption::BelievedMenMade {
+                unit,
+                place,
+                name,
+                hex,
+                men,
+                standing,
+            } => write!(
+                f,
+                "{unit}, a fighting unit of {men} men, believed men {place} ({name}), standing \
+                 {}, is ashore at {hex} on defend",
+                standing.name()
+            ),
+            Assumption::BelievedMenRuledOut {
+                place,
+                name,
+                hex,
+                men,
+            } => write!(
+                f,
+                "believed men {place} ({name}), {men} at {hex}, are believed absent: the side \
+                 ruled them out"
+            ),
+            Assumption::BelievedMenNotInWorld {
+                place,
+                name,
+                hex,
+                men,
+            } => write!(
+                f,
+                "believed men {place} ({name}), {men} at {hex}, their standing unknown, are not \
+                 in this world"
+            ),
+            Assumption::BelievedMenSetAside {
+                place,
+                name,
+                hex,
+                men,
+                why,
+                ..
+            } => match why {
+                SetAside::CountSince { day } => write!(
+                    f,
+                    "believed men {place} ({name}), {men} at {hex}, are set aside: the side has \
+                     a count of the place since, of day {day}"
+                ),
+                SetAside::PlaceIsTheSides => write!(
+                    f,
+                    "believed men {place} ({name}), {men} at {hex}, are set aside: the place is \
+                     the side's"
+                ),
+            },
         }
     }
 }

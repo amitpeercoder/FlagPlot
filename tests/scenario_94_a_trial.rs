@@ -265,6 +265,7 @@ fn believed(scenario: &Scenario) -> Believed {
     Believed {
         forces: scenario.believed_forces(ALLIED).cloned().collect(),
         intents: scenario.believed_intents(ALLIED).cloned().collect(),
+        men: scenario.believed_men(ALLIED).cloned().collect(),
     }
 }
 

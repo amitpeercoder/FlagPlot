@@ -516,3 +516,7 @@ path = "scenario_93_the_enemys_half.rs"
 [[test]]
 name = "scenario_94_a_trial"
 path = "scenario_94_a_trial.rs"
+
+[[test]]
+name = "scenario_95_the_estimate"
+path = "scenario_95_the_estimate.rs"
