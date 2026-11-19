@@ -23,15 +23,18 @@
 //! it between days: it hands in commands, and resolves a day with the
 //! staffs; it reads the world's day, a day's hash and events, and what the
 //! staffs handed in; and at each day's end it takes the side tried's view,
-//! to record where bases stand and, on the first day, the side's plan
-//! orders (decision 0176, amended 1). Every world it touches it built
-//! itself; no call of the crate takes a world.
+//! to record where bases stand, on the first day the side's plan orders
+//! (decision 0176, amended 1), and at the end of the day the course is
+//! taken in, the side's plan orders and the landings it has formed
+//! (decision 0177, amended 7). Every world it touches it built itself; no
+//! call of the crate takes a world.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sim_core::command::{CommandKind, Leave, PlanOrder, Staff, StaffDecisions};
+use sim_core::command::{CommandKind, IntentKind, Leave, PlanOrder, Staff, StaffDecisions};
 use sim_core::events::EventKind;
 use sim_core::hex::Hex;
+use sim_core::ids::{IntentId, LandUnitId, TaskForceId};
 use sim_core::map::Map;
 use sim_core::orders::Issuer;
 use sim_core::refdata::{RefData, TrialFigures};
@@ -157,8 +160,44 @@ pub struct PlayedWorld {
     /// view at the end of the first day played (decision 0176, amended 1);
     /// `None` where no day was played.
     pub plan_orders: Option<Vec<PlanOrder>>,
+    /// What the side tried had at the end of the day its course was taken
+    /// in (decision 0177, amended 7); `None` where the course has no command
+    /// or that day was not played.
+    pub taken_in: Option<TakenIn>,
     /// The world as its play left it; `None` where its picture was refused.
     pub world: Option<World>,
+}
+
+/// What the side tried had at the end of the day its course's first command
+/// was taken in (decision 0177, amended 7): its plan orders as its staff
+/// works them, and each landing it has formed.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct TakenIn {
+    /// The day of the game.
+    pub day: u32,
+    pub plan_orders: Vec<PlanOrder>,
+    /// The side's landings in force, "ready a landing" intents, in the order
+    /// of their numbers.
+    pub landings: Vec<Landing>,
+}
+
+/// A landing a side has formed (decision 0177, amended 7 and 8): its intent,
+/// the root of its tree, the force, the place, and the land units its forces
+/// limit names, each with its men ashore and aboard at the day's end.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Landing {
+    pub intent: IntentId,
+    pub root: IntentId,
+    pub force: TaskForceId,
+    pub hex: Hex,
+    pub units: Vec<(LandUnitId, u32)>,
+}
+
+impl Landing {
+    /// The men of its units.
+    pub fn men(&self) -> u32 {
+        self.units.iter().map(|(_, men)| men).sum()
+    }
 }
 
 /// A trial played out (decision 0175, 7): its worlds in the order of their
@@ -208,6 +247,8 @@ pub struct Playing {
     map: Map,
     days: u32,
     course: Vec<CourseCommand>,
+    /// The day of the world the course's first command is taken in.
+    taken_in: Option<u32>,
     staffs: BTreeMap<Side, Box<dyn Staff + Send>>,
     in_play: Option<InPlay>,
     played: Vec<PlayedWorld>,
@@ -221,9 +262,105 @@ pub struct Playing {
 }
 
 /// A world in play: its record and the side tried.
-struct InPlay {
-    record: PlayedWorld,
-    side: Side,
+#[derive(Clone)]
+pub(crate) struct InPlay {
+    pub(crate) record: PlayedWorld,
+    pub(crate) side: Side,
+}
+
+/// The world of a picture, built and not yet played; or, where its picture
+/// is refused, the record of a world that could not be played (day 0).
+pub(crate) fn start(
+    picture: TrialPicture,
+    ref_data: &RefData,
+    map: &Map,
+) -> Result<InPlay, Box<PlayedWorld>> {
+    match build_world(&picture, ref_data.clone(), map.clone()) {
+        Ok(built) => Ok(InPlay {
+            record: PlayedWorld {
+                number: picture.world,
+                assumptions: picture.assumptions,
+                days: Vec::new(),
+                refused: Vec::new(),
+                failed: None,
+                plan_orders: None,
+                taken_in: None,
+                world: Some(built),
+            },
+            side: picture.side,
+        }),
+        Err(error) => Err(Box::new(PlayedWorld {
+            number: picture.world,
+            assumptions: picture.assumptions,
+            days: Vec::new(),
+            refused: Vec::new(),
+            failed: Some(Failed {
+                world: picture.world,
+                day: 0,
+                words: error.to_string(),
+            }),
+            plan_orders: None,
+            taken_in: None,
+            world: None,
+        })),
+    }
+}
+
+/// What a trial is to play, read from what it was asked (decision 0175):
+/// the course, the day its first command is taken in, the horizon, and the
+/// leaves the course gives that the side had not. Refused where the horizon
+/// has no day, or a command of the course has a day outside it.
+pub(crate) struct Setup {
+    pub(crate) course: Vec<CourseCommand>,
+    pub(crate) taken_in: Option<u32>,
+    pub(crate) days: u32,
+    pub(crate) leaves_given: Vec<Leave>,
+}
+
+pub(crate) fn setup(made: &[TrialPicture], asked: &Asked) -> Result<Setup, Refused> {
+    if asked.days == 0 {
+        return Err(Refused("a trial's horizon has no day".to_string()));
+    }
+    if let Some(outside) = asked
+        .course
+        .iter()
+        .find(|c| c.day == 0 || c.day > asked.days)
+    {
+        return Err(Refused(format!(
+            "a command of the course is for day {} of the world, outside the horizon of {} days",
+            outside.day, asked.days
+        )));
+    }
+    if made.windows(2).any(|pair| pair[0].side != pair[1].side) {
+        return Err(Refused(
+            "the pictures handed in are of two sides".to_string(),
+        ));
+    }
+    // The leaves the course gives that the side has not given (amended
+    // point 4), read from its own half: the same in every picture.
+    let held = made
+        .first()
+        .and_then(|first| first.picture.command.get(&first.side))
+        .map(|state| state.leaves)
+        .unwrap_or_default();
+    let mut leaves_given = Vec::new();
+    for c in &asked.course {
+        if let CommandKind::SetLeave { leave, given: true } = c.command {
+            let had = match leave {
+                Leave::Prepare => held.prepare,
+                Leave::Launch => held.launch,
+            };
+            if !had && !leaves_given.contains(&leave) {
+                leaves_given.push(leave);
+            }
+        }
+    }
+    Ok(Setup {
+        course: asked.course.clone(),
+        taken_in: asked.course.iter().map(|c| c.day).min(),
+        days: asked.days,
+        leaves_given,
+    })
 }
 
 /// Begins a trial (decision 0175): makes the pictures of worlds 1 to
@@ -269,56 +406,21 @@ pub fn begin_from_pictures(
     map: &Map,
     asked: Asked,
 ) -> Result<Playing, Refused> {
-    if asked.days == 0 {
-        return Err(Refused("a trial's horizon has no day".to_string()));
-    }
-    if let Some(outside) = asked
-        .course
-        .iter()
-        .find(|c| c.day == 0 || c.day > asked.days)
-    {
-        return Err(Refused(format!(
-            "a command of the course is for day {} of the world, outside the horizon of {} days",
-            outside.day, asked.days
-        )));
-    }
-    if made.windows(2).any(|pair| pair[0].side != pair[1].side) {
-        return Err(Refused(
-            "the pictures handed in are of two sides".to_string(),
-        ));
-    }
-    // The leaves the course gives that the side has not given (amended
-    // point 4), read from its own half: the same in every picture.
-    let held = made
-        .first()
-        .and_then(|first| first.picture.command.get(&first.side))
-        .map(|state| state.leaves)
-        .unwrap_or_default();
-    let mut leaves_given = Vec::new();
-    for c in &asked.course {
-        if let CommandKind::SetLeave { leave, given: true } = c.command {
-            let had = match leave {
-                Leave::Prepare => held.prepare,
-                Leave::Launch => held.launch,
-            };
-            if !had && !leaves_given.contains(&leave) {
-                leaves_given.push(leave);
-            }
-        }
-    }
+    let set = setup(&made, &asked)?;
     let side = made.first().map(|first| first.side);
     Ok(Playing {
         side,
         to_begin: made.into_iter(),
         ref_data: ref_data.clone(),
         map: map.clone(),
-        days: asked.days,
-        course: asked.course,
+        days: set.days,
+        course: set.course,
+        taken_in: set.taken_in,
         staffs: sim_staff::staffs(),
         in_play: None,
         played: Vec::new(),
         uneven: !asked.worlds.is_power_of_two(),
-        leaves_given,
+        leaves_given: set.leaves_given,
         #[cfg(test)]
         fail_on: None,
     })
@@ -330,42 +432,34 @@ impl Playing {
     pub fn step(&mut self) -> Option<Stepped> {
         if self.in_play.is_none() {
             let picture = self.to_begin.next()?;
-            match build_world(&picture, self.ref_data.clone(), self.map.clone()) {
-                Ok(built) => {
-                    self.in_play = Some(InPlay {
-                        record: PlayedWorld {
-                            number: picture.world,
-                            assumptions: picture.assumptions,
-                            days: Vec::new(),
-                            refused: Vec::new(),
-                            failed: None,
-                            plan_orders: None,
-                            world: Some(built),
-                        },
-                        side: picture.side,
-                    });
-                }
-                Err(error) => {
-                    let failed = Failed {
-                        world: picture.world,
-                        day: 0,
-                        words: error.to_string(),
-                    };
-                    self.played.push(PlayedWorld {
-                        number: picture.world,
-                        assumptions: picture.assumptions,
-                        days: Vec::new(),
-                        refused: Vec::new(),
-                        failed: Some(failed.clone()),
-                        plan_orders: None,
-                        world: None,
-                    });
+            match start(picture, &self.ref_data, &self.map) {
+                Ok(begun) => self.in_play = Some(begun),
+                Err(refused) => {
+                    let failed = refused
+                        .failed
+                        .clone()
+                        .expect("a world refused has its fault");
+                    self.played.push(*refused);
                     return Some(Stepped::Failed(failed));
                 }
             }
         }
         let mut current = self.in_play.take()?;
-        let stepped = self.play_day(&mut current);
+        #[cfg(test)]
+        let fail = self.fail_on
+            == Some((
+                current.record.number,
+                u32::try_from(current.record.days.len()).unwrap_or(u32::MAX) + 1,
+            ));
+        #[cfg(not(test))]
+        let fail = false;
+        let stepped = play_day(
+            &self.staffs,
+            &self.course,
+            self.taken_in,
+            &mut current,
+            fail,
+        );
         let finished = current.record.failed.is_some()
             || u32::try_from(current.record.days.len()).ok() >= Some(self.days);
         if finished {
@@ -374,102 +468,6 @@ impl Playing {
             self.in_play = Some(current);
         }
         Some(stepped)
-    }
-
-    /// Hands in the course's commands of the world's next day and resolves
-    /// it with the staffs.
-    fn play_day(&self, current: &mut InPlay) -> Stepped {
-        let number = current.record.number;
-        let of_world = u32::try_from(current.record.days.len()).unwrap_or(u32::MAX) + 1;
-        let Some(world) = current.record.world.as_mut() else {
-            // A world with no world is recorded as refused when it was
-            // begun, and never kept in play.
-            return Stepped::Failed(Failed {
-                world: number,
-                day: 0,
-                words: "the world was not built".to_string(),
-            });
-        };
-        let day = world.day() + 1;
-        let commands: Vec<CommandKind> = self
-            .course
-            .iter()
-            .filter(|c| c.day == of_world)
-            .map(|c| c.command.clone())
-            .collect();
-        if !commands.is_empty() {
-            world.submit_commands(current.side, commands);
-        }
-        #[cfg(test)]
-        let resolved = if self.fail_on == Some((number, of_world)) {
-            Err(sim_core::world::SimError::InvalidSetup(
-                "a day made to fail by a test of the crate".to_string(),
-            ))
-        } else {
-            world.resolve_day_staffed(sim_staff::as_staffs(&self.staffs))
-        };
-        #[cfg(not(test))]
-        let resolved = world.resolve_day_staffed(sim_staff::as_staffs(&self.staffs));
-        match resolved {
-            Ok(summary) => {
-                // The commands of the side tried that the engine refused this
-                // day: only the course hands in a commander's command for that
-                // side.
-                for event in world
-                    .events()
-                    .iter()
-                    .skip(summary.first_event)
-                    .take(summary.event_count)
-                {
-                    if let EventKind::CommandRefused {
-                        side,
-                        issuer: Issuer::Player,
-                        command,
-                        reason,
-                    } = &event.kind
-                    {
-                        if *side == current.side {
-                            current.record.refused.push(RefusedCommand {
-                                day: summary.day,
-                                command: command.clone(),
-                                words: reason.to_string(),
-                            });
-                        }
-                    }
-                }
-                // What the estimate reads of the day's end (decision 0176,
-                // amended 1), from the side tried's view of the world, and
-                // nothing else of it: where bases stand; and on the first
-                // day, the side's plan orders as its staff works them.
-                let view = world.side_view(current.side);
-                if current.record.days.is_empty() {
-                    current.record.plan_orders = self
-                        .staffs
-                        .get(&current.side)
-                        .map(|staff| staff.plan_orders(view));
-                }
-                current.record.days.push(PlayedDay {
-                    day: summary.day,
-                    hash: summary.state_hash,
-                    staff: world.staff_handed_in().clone(),
-                    bases: BasesAt::of(&view),
-                });
-                Stepped::Day {
-                    world: number,
-                    day: summary.day,
-                    hash: summary.state_hash,
-                }
-            }
-            Err(error) => {
-                let failed = Failed {
-                    world: number,
-                    day,
-                    words: error.to_string(),
-                };
-                current.record.failed = Some(failed.clone());
-                Stepped::Failed(failed)
-            }
-        }
     }
 
     /// The pictures of the worlds not yet begun, the next first: before the
@@ -499,6 +497,160 @@ impl Playing {
             leaves_given: self.leaves_given,
         }
     }
+}
+
+/// Hands in the course's commands of the world's next day and resolves it
+/// with the staffs (decision 0175), and records the day: the commands of the
+/// side tried the engine refused; at its end where bases stand; on the first
+/// day the side's plan orders; and on the day the course is taken in
+/// (`taken_in`, a day of the world) the side's plan orders and landings.
+/// `fail` makes the day fail, for a test of the crate.
+pub(crate) fn play_day(
+    staffs: &BTreeMap<Side, Box<dyn Staff + Send>>,
+    course: &[CourseCommand],
+    taken_in: Option<u32>,
+    current: &mut InPlay,
+    fail: bool,
+) -> Stepped {
+    let number = current.record.number;
+    let of_world = u32::try_from(current.record.days.len()).unwrap_or(u32::MAX) + 1;
+    let Some(world) = current.record.world.as_mut() else {
+        // A world with no world is recorded as refused when it was begun,
+        // and never kept in play.
+        return Stepped::Failed(Failed {
+            world: number,
+            day: 0,
+            words: "the world was not built".to_string(),
+        });
+    };
+    let day = world.day() + 1;
+    let commands: Vec<CommandKind> = course
+        .iter()
+        .filter(|c| c.day == of_world)
+        .map(|c| c.command.clone())
+        .collect();
+    if !commands.is_empty() {
+        world.submit_commands(current.side, commands);
+    }
+    let resolved = if fail {
+        Err(sim_core::world::SimError::InvalidSetup(
+            "a day made to fail by a test of the crate".to_string(),
+        ))
+    } else {
+        world.resolve_day_staffed(sim_staff::as_staffs(staffs))
+    };
+    match resolved {
+        Ok(summary) => {
+            // The commands of the side tried that the engine refused this
+            // day: only the course hands in a commander's command for that
+            // side.
+            for event in world
+                .events()
+                .iter()
+                .skip(summary.first_event)
+                .take(summary.event_count)
+            {
+                if let EventKind::CommandRefused {
+                    side,
+                    issuer: Issuer::Player,
+                    command,
+                    reason,
+                } = &event.kind
+                {
+                    if *side == current.side {
+                        current.record.refused.push(RefusedCommand {
+                            day: summary.day,
+                            command: command.clone(),
+                            words: reason.to_string(),
+                        });
+                    }
+                }
+            }
+            // What the estimate and the window read of the day's end
+            // (decision 0176, amended 1; decision 0177, amended 7), from the
+            // side tried's view of the world, and nothing else of it: where
+            // bases stand; on the first day, the side's plan orders as its
+            // staff works them; and on the day the course is taken in, its
+            // plan orders and the landings it has formed.
+            let view = world.side_view(current.side);
+            let plan_orders_now = || {
+                staffs
+                    .get(&current.side)
+                    .map(|staff| staff.plan_orders(view))
+            };
+            if current.record.days.is_empty() {
+                current.record.plan_orders = plan_orders_now();
+            }
+            if taken_in == Some(of_world) {
+                current.record.taken_in = Some(TakenIn {
+                    day: summary.day,
+                    plan_orders: plan_orders_now().unwrap_or_default(),
+                    landings: landings(&view),
+                });
+            }
+            current.record.days.push(PlayedDay {
+                day: summary.day,
+                hash: summary.state_hash,
+                staff: world.staff_handed_in().clone(),
+                bases: BasesAt::of(&view),
+            });
+            Stepped::Day {
+                world: number,
+                day: summary.day,
+                hash: summary.state_hash,
+            }
+        }
+        Err(error) => {
+            let failed = Failed {
+                world: number,
+                day,
+                words: error.to_string(),
+            };
+            current.record.failed = Some(failed.clone());
+            Stepped::Failed(failed)
+        }
+    }
+}
+
+/// The side's landings in force (decision 0177, amended 7): each "ready a
+/// landing" intent, with the root of its tree and the units its forces limit
+/// names, each with its men ashore and aboard, read from the side's own
+/// command state through its view.
+fn landings(view: &SideView<'_>) -> Vec<Landing> {
+    let state = view.command_state();
+    state
+        .intents_in_force()
+        .filter_map(|intent| {
+            let IntentKind::ReadyLanding { force, hex, .. } = intent.kind else {
+                return None;
+            };
+            let units = intent
+                .limits
+                .forces
+                .as_ref()
+                .map(|limit| {
+                    limit
+                        .land_units
+                        .iter()
+                        .map(|unit| {
+                            let ashore = view
+                                .land_units()
+                                .find(|u| u.id == *unit)
+                                .map_or(0, |u| u.men_ashore);
+                            (*unit, ashore + view.men_aboard(*unit).unwrap_or(0))
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            Some(Landing {
+                intent: intent.id,
+                root: state.root_of(intent.id),
+                force,
+                hex,
+                units,
+            })
+        })
+        .collect()
 }
 
 #[cfg(test)]

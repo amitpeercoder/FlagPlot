@@ -1,0 +1,37 @@
+# A TRIAL'S FIGURES of scenario 96 (decision 0177): what the Allied side is
+# taken to assume, when the enemy's half of a picture is made, of what it
+# cannot see, and the sizes of a trial. Named by scenario 96 with its `trial`
+# key. Only scenario 96 names it.
+#
+# PLACEHOLDER DATA. Every figure is set by the architect for scenario 96's hand
+# calculation and rests on no source; they are scenario 95's. An enemy base is
+# assumed to hold 200 t of supply, scenario 68's base 2, and no fuel. The sizes
+# are decision 0175's.
+
+placeholder = true
+
+# The supply a base of the enemy's on the side's map is given, in tons
+# (decision 0174, 5). Placeholder: scenario 68's base 2.
+enemy_base_supply_t = 200
+
+# The fuel for ships a base of the enemy's on the side's map is given, in
+# tons (decision 0174, 5). Placeholder: none.
+enemy_base_fuel_t = 0
+
+# The seed every trial draws on (decision 0175, amended point 7): the
+# trial's, never the live game's. Placeholder: any whole number would do.
+seed = 1942
+
+# The three sizes of a trial (decision 0175, 2). Placeholders, as in
+# trial.toml.
+[small]
+worlds = 8
+days = 7
+
+[standard]
+worlds = 16
+days = 14
+
+[full]
+worlds = 64
+days = 21

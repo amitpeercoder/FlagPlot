@@ -54,6 +54,7 @@ mod take;
 mod told;
 mod units;
 
+pub use available::{counted_by_a_take, Counted};
 pub use projection::project;
 
 use std::collections::BTreeMap;

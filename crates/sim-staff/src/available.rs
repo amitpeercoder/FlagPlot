@@ -8,8 +8,47 @@
 //! for anything but choosing what to order (decision 0140, 4): it is there,
 //! it can be seen and attacked. Only a choice of what to order calls this.
 
+use sim_core::command::ForcesLimit;
 use sim_core::ids::{AirGroupId, EntityRef, ShipId, TaskForceId};
+use sim_core::orders::Mission;
+use sim_core::state::{LandUnit, TaskForce};
 use sim_core::view::SideView;
+
+/// What a take counts as its to use, whether now or later (decision 0159,
+/// rule B, item 7): the task forces and the land units its forces limit
+/// names; of a kind the limit does not name, and with no limit, every
+/// transport force and every fighting unit of the side. Each in number
+/// order. The one notion: the take reads it where it names the units it may
+/// use later and not today, and a trial's window reads it for the days on
+/// which something the course may use first becomes usable (decision 0177,
+/// amended 3).
+#[derive(Clone, Debug, Default)]
+pub struct Counted<'a> {
+    pub task_forces: Vec<&'a TaskForce>,
+    pub land_units: Vec<&'a LandUnit>,
+}
+
+/// [`Counted`] for a take whose forces limit is `limit`.
+pub fn counted_by_a_take<'a>(view: &SideView<'a>, limit: Option<&ForcesLimit>) -> Counted<'a> {
+    let named_forces = limit.filter(|f| !f.task_forces.is_empty());
+    let named_units = limit.filter(|f| !f.land_units.is_empty());
+    Counted {
+        task_forces: view
+            .task_forces()
+            .filter(|force| {
+                named_forces.map_or(force.mission == Mission::Transport, |f| {
+                    f.task_forces.contains(&force.id)
+                })
+            })
+            .collect(),
+        land_units: view
+            .land_units()
+            .filter(|unit| {
+                !unit.working && named_units.is_none_or(|f| f.land_units.contains(&unit.id))
+            })
+            .collect(),
+    }
+}
 
 /// The day from which `unit` may be used, where the side may not use it yet
 /// on the day it gives orders for: `Some(day)`. `None` where it may be used,

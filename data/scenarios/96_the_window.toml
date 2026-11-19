@@ -1,0 +1,140 @@
+# Scenario 96: the window.
+#
+# Decision 0177, step 7 of step 3's stage 4. The same landing is tried at two
+# dates in the same worlds: now, with the one unit that is to hand, and on the
+# day a second unit may first be used. The 200 men the Allied side believes
+# are at B dig in while it waits.
+#
+# It is scenario 68 (ashore) with these changes, as the hand calculation's
+# inputs give them:
+#   1. Two Allied units: unit 1, 600 fighting men at A, usable from day 1;
+#      unit 2, 600 fighting men at A, usable from day 4. No unit 3.
+#   2. No opening estimate: the Allied side holds no count of B.
+#   3. The Allied side believes 200 men are at B, standing present
+#      ([[believed_men]]).
+#   4. No commands: the course the test tries is intent 1, take the place at
+#      (4,0), with its forces limit naming task force 1, units 1 and 2 and
+#      base 1 as the source, and both leaves given, each on day 1 of the
+#      course. The live game is given none of them.
+#   5. Its ground figures are scenario 68's with three of its own:
+#      fieldworks_per_day 10, fieldworks_limit 100 and cover_in_fight 0.5
+#      (ground_placeholder_scenario_96.toml).
+#   6. It names a file of the trial's figures,
+#      trial_placeholder_scenario_96.toml, in which an enemy base is assumed
+#      to hold 200 t of supply and 0 t of fuel and the seed is 1942; and a file
+#      of sides, class_sides_placeholder_scenario_96.csv, that gives every
+#      class and type to both sides.
+#
+# The Japanese garrison of the live game is as scenario 68 has it, 1,200 men.
+# The window is not told. The game is 14 days, as scenario 68's.
+#
+# The hand calculation is in tests/scenario_96_the_window.rs. The test runs
+# this file on the frozen step 1 figures with this scenario's ground figures,
+# which this file names: every shot is a whole shot and hits, and no die
+# changes anything. The ground figures, the trial's figures and the file of
+# sides have frozen copies in data/reference/step1. The test builds its
+# variants from the text of this file.
+#
+# PLACEHOLDER DATA. The bases, ships, units, beliefs, figures and map are
+# invented.
+
+name = "Placeholder scenario 96: The window"
+placeholder = true
+seed = 1942
+days = 14
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground_placeholder_scenario_96.toml"
+class_sides = "../reference/class_sides_placeholder_scenario_96.csv"
+trial = "../reference/trial_placeholder_scenario_96.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel to give.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: an airfield with 200 t of supply and no fuel.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 200
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The Allied land units, ashore at A: two fighting units on the defence, at
+# the standard of experience, 2, the default, as is the garrison. Unit 2 may
+# first be used on day 4.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder Second"
+side = "allied"
+men = 600
+q = 0
+r = 0
+available_from = 4
+
+# The Japanese garrison of B, on the defence.
+[[land_unit]]
+id = 10
+name = "Placeholder Garrison"
+side = "japanese"
+men = 1200
+q = 4
+r = 0
+
+# The men the Allied side believes are at B: it holds no count of them.
+[[believed_men]]
+side = "allied"
+name = "Garrison believed at B"
+at_base = 2
+men = 200
+standing = "present"
+placeholder = true
+note = "Scenario 96's hand calculation: 200 men are believed at B, with no count of them. Rests on no source."

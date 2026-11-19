@@ -262,8 +262,8 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 use sim_trial::{
     begin, begin_from_pictures, estimate, pictures, Asked, Assumed, AssumedOf, Assumption,
-    Believed, Costs, CourseCommand, End, Estimate, Losses, PartSide, PartedBy, Parting, Played,
-    PlayedWorld, SetAside, Spread, Stepped, Trial, Went,
+    Believed, Costs, CourseCommand, End, Estimate, Kept, Losses, OtherPlan, PartSide, PartedBy,
+    Parting, Played, PlayedWorld, SetAside, Spread, Stepped, Trial, Went,
 };
 
 const ALLIED: Side = Side::Allied;
@@ -1452,13 +1452,14 @@ fn the_same_twice_and_the_live_game_untouched() {
 
 // ---------------------------------------------------------------- A plan displaced
 
-/// A plan displaced: reported by the build for the architect to state, and
-/// not asserted. A second Allied unit of 600 men at A; intent 2 stated in the
+/// A plan displaced, as the architect stated it on Nov 19, 2026, from the
+/// build's run. A second Allied unit of 600 men at A; intent 2 stated in the
 /// live game on day 1, to take the place at base 2 with that unit and task
 /// force 1, its leaves given, the live game played to the evening of day 1;
-/// the course, intent 10, takes the same place with task force 1 and unit 1. Run with `--nocapture` to read what it gives.
+/// the course, intent 10, takes the same place with task force 1 and unit 1.
+/// Run with `--nocapture` to read what it gives.
 #[test]
-fn a_plan_displaced_is_played_and_reported() {
+fn a_plan_displaced() {
     let second = r#"
 [[land_unit]]
 id = 2
@@ -1562,5 +1563,61 @@ given = true
     println!("{e:#?}");
     println!("{e}");
     assert_eq!(e.worlds.len(), 4, "every world played");
-    assert!(e.other_plans.is_some());
+    // Stated by the architect on Nov 19, 2026, from the build's run: without
+    // the course unit 2 lands on day 4; with it unit 1 lands on day 4 and
+    // unit 2 stays at A.
+    let landed = |w: &PlayedWorld| -> Vec<(u32, u32)> {
+        let mut days: Vec<(u32, u32)> = world_of(w)
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::MenLanded { unit, .. } => Some((e.day, unit.raw())),
+                _ => None,
+            })
+            .collect();
+        days.dedup();
+        days
+    };
+    for w in &stand.worlds {
+        assert_eq!(
+            landed(w),
+            vec![(4, 2)],
+            "without the course, world {}",
+            w.number
+        );
+    }
+    for w in &with.worlds {
+        assert_eq!(
+            landed(w),
+            vec![(4, 1)],
+            "with the course, world {}",
+            w.number
+        );
+        let two = &world_of(w).umpire().land_units[&LandUnitId::new(2)];
+        assert_eq!(
+            (two.hex, two.men_ashore),
+            (Some(A), 600),
+            "unit 2 stays at A, world {}",
+            w.number
+        );
+    }
+    // Intent 2 is met and kept in worlds 1 and 3 with a middle day of 4,
+    // with the course and without: it is not named as displaced.
+    let kept = Kept {
+        worlds: vec![1, 3],
+        middle_day: Some(4),
+    };
+    assert_eq!(
+        e.other_plans,
+        Some(vec![OtherPlan {
+            intent: IntentId::new(2),
+            kind: IntentKind::TakePlace {
+                hex: B,
+                by_day: None
+            },
+            with_course: kept.clone(),
+            without: kept,
+            displaced: None,
+        }])
+    );
 }

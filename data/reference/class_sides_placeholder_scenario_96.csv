@@ -1,0 +1,23 @@
+# FILE OF SIDES of scenario 96 (decision 0177): whose each class of ship and
+# type of aircraft of ship_classes.csv, ship_classes_placeholder_transports.csv
+# and aircraft_types.csv is. Written by hand. Columns: table (ship_class or
+# aircraft_type), id, side (allied, japanese or both), note.
+#
+# PLACEHOLDER DATA. Every class and type here is a placeholder, invented so
+# the engine has something to run, and takes both (decision 0173, 3): either
+# side may use it. Scenario 96's hand calculation gives every class to both
+# sides, as scenario 95's does.
+table,id,side,note
+ship_class,1,both,Placeholder cruiser: invented and used by either side
+ship_class,2,both,Placeholder destroyer: invented and used by either side
+ship_class,3,both,Placeholder cargo ship: invented and used by either side
+ship_class,4,both,Placeholder carrier: invented and used by either side
+ship_class,5,both,Placeholder carrier with guns: invented and used by either side
+ship_class,6,both,Placeholder cruiser with guns: invented and used by either side
+ship_class,8,both,Placeholder cruiser with wing tubes: invented and used by either side
+ship_class,10,both,Placeholder troop transport: invented and used by either side
+ship_class,11,both,Placeholder fast transport: invented and used by either side
+aircraft_type,1,both,Placeholder flying boat: invented and used by either side
+aircraft_type,2,both,Placeholder carrier scout: invented and used by either side
+aircraft_type,3,both,Placeholder dive bomber: invented and used by either side
+aircraft_type,4,both,Placeholder fighter: invented and used by either side

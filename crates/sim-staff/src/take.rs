@@ -1030,23 +1030,16 @@ impl Day<'_, '_> {
                 .and_then(|island| island.limits.forces.clone())
         });
         let mut found: Vec<(u32, u8, u32, String)> = Vec::new();
-        let named_forces = limit.as_ref().filter(|f| !f.task_forces.is_empty());
-        for force in view.task_forces() {
-            let named = named_forces.map_or(force.mission == Mission::Transport, |f| {
-                f.task_forces.contains(&force.id)
-            });
-            if !named || force.id == today_choice.force {
+        let counted = crate::available::counted_by_a_take(view, limit.as_ref());
+        for force in counted.task_forces {
+            if force.id == today_choice.force {
                 continue;
             }
             if let Some(from) = crate::available::not_before(view, EntityRef::TaskForce(force.id)) {
                 found.push((from, 0, force.id.raw(), force.id.to_string()));
             }
         }
-        let named_units = limit.as_ref().filter(|f| !f.land_units.is_empty());
-        for unit in view.land_units() {
-            if unit.working || named_units.is_some_and(|f| !f.land_units.contains(&unit.id)) {
-                continue;
-            }
+        for unit in counted.land_units {
             if let Some(from) = crate::available::not_before(view, EntityRef::LandUnit(unit.id)) {
                 found.push((from, 1, unit.id.raw(), unit_words(unit)));
             }
