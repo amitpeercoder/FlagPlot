@@ -728,7 +728,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       sq = fixed(tile('own', 'infantry', true, 0.16), v, -0.17, 0.06);
       label(['YOUR MEN ASHORE', commas(a.men) + ' men, ' + a.units + ' units'], OWN, function () { return sq.position; }, 0.7, 1, [-0.6, 0.35]);
     });
-    M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) label(['ENEMY ASHORE, ESTIMATED', 'About ' + commas(e.men) + ' men', e.age_days ? e.age_days + ' days old' : 'Reported today'], RED, function () { return v; }, 1.0, 1, [0.55, -0.4]); });
+    M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) label(['ENEMY ASHORE \u00B7 ' + strengthOf(e.men).toUpperCase().replace(' STRENGTH', '').replace(/^A /, '').replace('MORE THAN A BATTALION', 'BATTALION +'), 'About ' + aboutMen(e.men) + ' men', e.age_days ? e.age_days + ' days old' : 'Reported today'], RED, function () { return v; }, 1.0, 1, [0.55, -0.4]); });
     M.contacts.forEach(function (c) { var v = placeOf(c.place); if (v) label(['CONTACT', c.ship_count + ' ships' + (c.taken_for ? ', taken for ' + (c.taken_for.kind || c.taken_for) : ''), c.age_pulses ? 'Report ' + c.age_pulses + ' pulses old' : 'Fresh report'], RED, function () { return v; }, 0.6, 0, [0.2, -0.3]); });
   }
 
@@ -1149,6 +1149,12 @@ button:disabled { opacity: 0.45; cursor: default; }
   // place by its name, a clock time for "D10 20:30", figures rounded. A kind
   // with no sentence of its own is said as the game has it, tidied.
   function fig(x) { var n = parseFloat(x); if (isNaN(n)) return x; return commas(Math.abs(n) >= 100 ? Math.round(n) : Math.round(n * 10) / 10); }
+  // A count of the enemy ashore as a staff would pass it on: rounded, with
+  // the size of force it makes. The count is the game's; the round figure
+  // and the word are the table's.
+  function aboutMen(n) { n = parseInt(n, 10) || 0; var step = n < 1000 ? 10 : n < 10000 ? 100 : 500; return commas(Math.max(step, Math.round(n / step) * step)); }
+  function strengthOf(n) { n = parseInt(n, 10) || 0; return n < 20 ? 'a patrol' : n < 80 ? 'platoon strength' : n < 300 ? 'company strength' : n < 1000 ? 'battalion strength' : n < 2500 ? 'more than a battalion' : n < 6000 ? 'regimental strength' : n < 12000 ? 'brigade strength' : 'divisional strength'; }
+  function enemyForce(n) { var w = strengthOf(n); return (w === 'a patrol' ? 'an enemy patrol' : w === 'more than a battalion' ? 'an enemy force of more than a battalion' : 'an enemy force of ' + w) + ', about ' + aboutMen(n) + ' men'; }
   function sayEvent(e, linked) {
     var names = {}; (e.entities || []).forEach(function (x) { if (x && x.handle && x.name) names[x.handle] = String(x.name).replace(/^Placeholder /, ''); });
     // Where the sentence is to carry links, a unit stays as its handle, which the
@@ -1169,7 +1175,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     else if (k === 'ground_fight' && R('fight ashore at ' + AT)) out = 'Fighting ashore at ' + P(m[1], m[2]);
     else if (k === 'men_lost_in_fight' && R('^' + H + ' lost (\\d+) men in the fight at ' + AT + ', (\\d+) left')) out = N(m[1]) + ' lost ' + fig(m[2]) + (m[2] === '1' ? ' man' : ' men') + ' in the fighting at ' + P(m[3], m[4]) + '; ' + fig(m[5]) + ' remain ashore';
     else if (k === 'base_changed_side' && R('^' + H + ' at ' + AT + ' changed from the (\\w+) side to the (\\w+) side: ([\\d.]+) t of supply and ([\\d.]+) t of fuel kept')) out = (m[5].toLowerCase() === config.seat) ? N(m[1]) + ' is taken. Captured: ' + fig(m[6]) + ' t of supply and ' + fig(m[7]) + ' t of fuel' : N(m[1]) + ' is lost to the enemy';
-    else if (k === 'ground_report_received' && R('ground report at ' + AT + ': (\\d+) enemy men ashore(?: \\(([^)]*)\\))?')) out = 'Report from ashore at ' + P(m[1], m[2]) + ': ' + fig(m[3]) + ' enemy men' + (m[4] ? ', ' + m[4] : '');
+    else if (k === 'ground_report_received' && R('ground report at ' + AT + ': (\\d+) enemy men ashore(?: \\(([^)]*)\\))?')) out = (m[4] === 'men in contact' ? 'Our troops at ' + P(m[1], m[2]) + ' are in contact with ' + enemyForce(m[3]) : m[4] === 'seen from the air' ? 'Air reconnaissance of ' + P(m[1], m[2]) + ' reports ' + enemyForce(m[3]) : 'Intelligence gives ' + enemyForce(m[3]) + ' at ' + P(m[1], m[2]));
     else if (k === 'ground_found_empty' && R('men at ' + AT + ' find no enemy')) out = 'Our men at ' + P(m[1], m[2]) + ' find no enemy ashore';
     else if (k === 'report_received' && R('report: (.*), at ' + AT + ': (new|refreshed) contact:(\\d+)')) out = 'Sighting report: ' + m[1] + ', at ' + P(m[2], m[3]) + (m[4] === 'new' ? '. Plotted as contact ' + m[5] : '. Contact ' + m[5] + ' confirmed');
     else if (k === 'search_attempt' && R('^' + H + ' searched and sighted (.*)$')) out = N(m[1]) + ' sighted ' + m[2];
