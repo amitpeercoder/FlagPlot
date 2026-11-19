@@ -27,11 +27,14 @@ button { font-family: var(--f-ui); cursor: pointer; }
 button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
 button:disabled { opacity: 0.45; cursor: default; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 16px 8px; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 190px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
 .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .top p { margin: 0; font-size: 17px; letter-spacing: 0.05em; color: var(--ink-dim); }
 
 .tray { position: fixed; top: 60px; right: 16px; width: min(350px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
+.view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
+.view button { min-height: 34px; padding: 0 12px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+.view button:hover, .view button:focus-visible { color: var(--ink); border-color: var(--ink); }
 .tray h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
@@ -181,12 +184,15 @@ button:disabled { opacity: 0.45; cursor: default; }
   <pre id="sheet-text"></pre>
 </section>
 
+<div class="view" role="group" aria-label="Your view of the table">
+  <button type="button" id="btn-back">Sit back</button>
+  <button type="button" id="btn-lean">Lean in</button>
+</div>
+
 <footer class="bar">
   <div class="clock" id="clock">DAY 1</div>
   <div class="status" id="status" role="status">Laying the chart.</div>
   <div class="acts">
-    <button type="button" id="btn-back">Sit back</button>
-    <button type="button" id="btn-lean">Lean in</button>
     <button type="button" id="btn-force" hidden>Order a force</button>
     <button type="button" id="btn-intent">State an intent</button>
     <button type="button" id="btn-day">One day</button>
