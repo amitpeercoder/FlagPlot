@@ -1,6 +1,6 @@
 # 0166: Deriving a transport, and the rulings on the ships of the runs
 
-Status: settled by the architect on Nov 19, 2026. It is step 2 of decision 0165's plan, written after the second round of research (`docs/research/oob/class-facts-39-days.md`). It adds rules to the derivation and rulings on fact rows. It changes no rule of the engine and no scenario. To be built in two parts (The build, below).
+Status: settled by the architect on Nov 19, 2026. It is step 2 of decision 0165's plan, written after the second round of research (`docs/research/oob/class-facts-39-days.md`). It adds rules to the derivation and rulings on fact rows. It changes no rule of the engine and no scenario. Built in two parts (The build, below): part A, the Japanese destroyers, on Nov 19, 2026; part B, the transports, waits for fuel and endurance.
 
 Summary: The rules by which a real transport, cargo ship and destroyer-transport become a ship class, and the rulings that let the Japanese destroyers of the troop runs be derived. A transport's kind is transport, its toughness is read from its light displacement, its cargo from a stated cargo capacity, its men from what it carried on 2 August, and its guns are left out. The Kagero, Shiratsuyu, Hatsuharu and Fubuki classes can be derived now; Oite and the American ships cannot yet, for want of ammunition, fuel and range, and stay placeholders until a source gives them
 
@@ -51,3 +51,41 @@ In two parts, each one pull request read by the architect.
 - **The engine:** nothing.
 - **The derivation:** rules 1 to 5 are new code in `oob-derive` (part B). Part A is rows in two data files.
 - **Earlier lists:** none changes. The exceptions name classes no other list reads, and `oob-derive --check` on every list must say so.
+
+## As built: part A
+
+Built on Nov 19, 2026, on the branch `runs-destroyers`. Rows in two data files and the class file made again; no tool code, no fact row, no row's standing and no scenario changed.
+
+- **The exceptions** (`data/derivation/rules.toml`, agreed 2026-11-19): `main_rounds_per_gun` of the Kagero, Shiratsuyu and Hatsuharu classes from ship_class_facts 2450, 2451 and 2452 (ruling 9); `endurance_nm` and `endurance_speed_kn` of the Shiratsuyu class from 2455 and 2456 (ruling 10); the same of the Hatsuharu class from 2460 and 2461 (ruling 11). Ruling 12 needed none (reading 4).
+- **The ships** (`data/derivation/guadalcanal_landings.toml`), each under the working assumption that unknown radar means none (ruling 14), with the class ids pinned after 3010:
+
+  | Class id | Ships | Class | Run read | Troops |
+  | --- | --- | --- | --- | --- |
+  | 3011 | Kagero, Arashi, Hagikaze, Hamakaze, Tanikaze, Urakaze | Kagero | 18 August, 916 men (troop_lift_facts 141) over 6 ships (138), by the architect's ruling 1 | 152 |
+  | 3012 | Kawakaze, Umikaze, Suzukaze | Shiratsuyu | 31 August, 1,200 men (47) over 8 ships (155) | 150 |
+  | 3013 | Yudachi | Shiratsuyu | 4 September, about 1,000 men (161) over 6 ships (162) | 166 |
+  | 3014 | Yugure | Hatsuharu | 2 September, about 150 men (159) over 2 ships (160) | 75 |
+  | 3015 | Ariake | Hatsuharu | 4 September, as above | 166 |
+  | 3016 | Murakumo, Uranami, Shikinami | Fubuki | 4 September, as above | 166 |
+
+  The run of 31 August, read already for Hatsuyuki and Amagiri, now names five ships of its eight; the run of 18 August is a new entry; the runs of 2 and 4 September are new entries. Fubuki, Shirayuki, Hatsuyuki and Amagiri keep the runs they were read from.
+- **Left out:** Asagiri (reading 3); Oite and the Mutsuki class, as the record says. The list's header says who is in and who is out and why.
+- **The class file** `data/reference/ship_classes_guadalcanal_landings.csv` and its `.ships.csv` and `.sources.csv` were made again by `oob-derive`. The four classes of the list as it was are unchanged. `oob-derive --check` passes on every list, and the class files of Savo Island, the Eastern Solomons, Cape Esperance and Rabaul made again are as they were: the Eastern Solomons list reads Kagero-class ships, but with their surface weapons not modelled, so the new rounds per gun is not read there.
+- **What changed in the games:** nothing. No scenario names a new class id. `sh scripts/regenerate.sh` remade the saves of two recorded games, `full_slice_five_days_sonnet` and `second_proof_week_sonnet`, each in one line, the hash of the class file they load; no run baseline, golden, daily hash or transcript changed.
+
+Readings the record did not make:
+
+1. **One run a ship.** The tool reads a ship for one run only, and most of these ships made several of the scenario's runs. Each is read from the first run of the scenario (task forces 31 to 38) that she made whose men and ships are not disputed; the four ships the list first had keep their runs. So Kagero is read on 31 August and not on 18 August, Kawakaze and Umikaze on 31 August and not on 29 August, Yudachi on 4 September (her 31 August rests on Zimmerman's "all the above craft" alone, row 1331, against combinedfleet's eight of row 155, which the run's figure reads). A ruling on a disputed run may move a ship to it.
+2. **The run of 18 August is disputed in its men** (900 in troop_lift_facts 43, 44 and 179; 916 in 141, which the scenario reads; 917 in 703; about 1,000 in 142), so it is not read. Arashi, Hagikaze and Hamakaze made no other run of the scenario, and Tanikaze and Urakaze only the run of 1 September, which the scenario does not hold; all five can be derived in every other figure and wait for a ruling.
+3. **Asagiri** is named by ruling 13, but her one run, Desdiv 20's of 28 August (550 men, troop_lift_facts 143, over 4 ships, 144), was aborted and is not a run of the scenario; with no run she would be derived with no troops, so she is left out until her run is ruled.
+4. **Ruling 12 needs no exception.** The six Type 90 tubes are fits 1083 to 1085, already preferred and agreed, and the Type 93 and eight-tube readings (1086, 1087) are disputed, so the tool reads the six tubes by its own rule. The comment in `rules.toml` says so.
+5. **The run of 4 September is read in spite of its dispute.** Its two pages disagree on which section led (ship_facts 2359, 2360), but both name the same six ships and the same 1,000 men, so the figure does not rest on which was which.
+6. **No entry for the runs no ship is read from.** The runs of 29 August (beyond the two ships already read on it), 5 and 6 September are disputed, and the run of 11 September (637 men, 168, over 3 ships, 169) is made only by ships read on an earlier run; the tool takes no run without a ship, so none of them is listed.
+
+## The architect's rulings on part A
+
+1. **The run of 18 August carried 916 men in six destroyers** (Nov 19, 2026). The build left the run unread because its men are disputed. 916 is the one preferred row (troop_lift_facts 141) and the figure the scenario has read since decision 0101; the three official histories' 900 is the same number rounded; the second page's 917 is one man off and Miller's "about 1,000" is a round figure for the echelon. 916 over the six ships Zimmerman names (138) is 152 a ship. Kagero is read on this run, her first, and Arashi, Hagikaze, Hamakaze, Tanikaze and Urakaze with her: class 3011, six ships, 152 men. Reading 2 is closed by this.
+2. **One run a ship stands for part A, and is not the last word.** A troop figure read from one run is a load carried, and sisters now differ by the run each is read on: Yugure has 75, from a run of two ships with "about 150 men". When the scenario is given these ships (decision 0165, step 5) a ship must be able to carry what she carried on each of her runs, and that needs a rule for a class's figure across its runs, with a change to the tool. It is written with step 5. Until then no scenario reads these classes.
+3. **Readings 3 to 6 stand as made.** Asagiri stays out; ruling 12 needs no exception; the run of 4 September is read; no entry is made for a run no ship is read from.
+4. **The other disputed runs are not ruled here** (29 August, 5 and 6 September, the ships of 31 August and of 11 September): no ship's figure rests on them in part A. They are ruled with step 5, where the scenario's runs must each be given their men.
+
