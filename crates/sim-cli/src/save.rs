@@ -227,7 +227,7 @@ pub fn hash_hex(bytes: &[u8]) -> String {
     format!("{:016x}", hasher.finish())
 }
 
-fn file_hash(path: &Path) -> Result<String, String> {
+pub(crate) fn file_hash(path: &Path) -> Result<String, String> {
     let bytes = fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
     Ok(hash_hex(&bytes))
 }
@@ -299,6 +299,12 @@ pub fn script_seats() -> BTreeMap<Side, SeatKind> {
 }
 
 impl Remembered {
+    /// Every data file the scenario names, with its hash, in the order the
+    /// scenario names them, as a saved game records them.
+    pub fn files(&self) -> &[(String, String)] {
+        &self.files
+    }
+
     /// The scenario's own script, as it will be submitted.
     pub fn script(&self) -> &Script {
         &self.script
@@ -321,7 +327,10 @@ impl Remembered {
 /// with its pulse (decision 0156), written after the day's orders of dusk;
 /// `commands` the commander's commands as handed in;
 /// `staff` what each side's staff handed in; `hashes` are `(day, hash)` for
-/// each day resolved.
+/// each day resolved. `stopped_inside_day` is the day a game held open
+/// stopped inside when the engine could not resolve it (decision 0172, 3):
+/// the saved game then says so, under `stopped_inside_day`. It holds the
+/// orders of that day too; a replay runs only the days resolved before it.
 #[allow(clippy::too_many_arguments)]
 pub fn write(
     file: &str,
@@ -334,6 +343,7 @@ pub fn write(
     staff: &StaffHandIns,
     seats: &BTreeMap<Side, SeatKind>,
     hashes: &[(u32, u64)],
+    stopped_inside_day: Option<u32>,
 ) -> Result<(), String> {
     let scenario_hash = file_hash(Path::new(scenario_path))?;
     let order_entry = |day: u32, side: Side, request: &OrderRequest, pulse: Option<Pulse>| {
@@ -419,6 +429,10 @@ pub fn write(
             .map(|(day, hash)| json!({ "day": day, "hash": format!("{hash:016x}") }))
             .collect::<Vec<_>>(),
     });
+    let mut value = value;
+    if let Some(day) = stopped_inside_day {
+        value["stopped_inside_day"] = json!(day);
+    }
     let mut text = serde_json::to_string_pretty(&value).map_err(|e| e.to_string())?;
     text.push('\n');
     fs::write(file, text).map_err(|e| format!("{file}: {e}"))
@@ -783,6 +797,7 @@ mod tests {
             &BTreeMap::new(),
             &script_seats(),
             &[],
+            None,
         )
         .expect("writes");
         let saved = read(&file).expect("reads");
@@ -847,6 +862,7 @@ mod tests {
             &BTreeMap::new(),
             &script_seats(),
             &[],
+            None,
         )
         .expect("writes");
         let text = fs::read_to_string(&file).expect("reads");
@@ -1247,6 +1263,7 @@ mod tests {
             &staff,
             &script_seats(),
             &[],
+            None,
         )
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
@@ -1274,6 +1291,7 @@ mod tests {
             &saved.staff,
             &script_seats(),
             &[],
+            None,
         )
         .expect("writes again");
         assert_eq!(

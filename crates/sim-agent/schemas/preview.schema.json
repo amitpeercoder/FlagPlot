@@ -39,7 +39,7 @@
     },
     "preview": {
       "type": "integer",
-      "description": "The preview's number in the game, 1 up."
+      "description": "The preview's number among the previews this side was shown, 1 up: another side's previews are not counted (decision 0172, 4)."
     },
     "day": {
       "type": "integer",

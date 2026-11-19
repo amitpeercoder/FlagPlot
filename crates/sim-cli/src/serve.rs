@@ -187,6 +187,17 @@ pub fn open(
 }
 
 impl Kept {
+    /// The seed the game is played on: the one given, or the scenario's.
+    pub fn seed(&self) -> u64 {
+        self.seed
+    }
+
+    /// Every data file the scenario names, with its hash, in the order the
+    /// scenario names them, as they were when the game was opened.
+    pub fn data_files(&self) -> &[(String, String)] {
+        self.remembered.files()
+    }
+
     /// Writes the saved game and the transcript, as asked.
     pub fn finish(
         &self,
@@ -210,6 +221,9 @@ impl Kept {
                 session.staff_handed_in(),
                 &self.seats,
                 &hashes,
+                // A game that stopped inside a day says so (decision 0172,
+                // 3).
+                session.stopped_inside_day(),
             )?;
         }
         if let Some(file) = transcript {

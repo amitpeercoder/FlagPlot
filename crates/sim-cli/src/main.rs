@@ -591,6 +591,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             &staff_handed_in,
             &save::script_seats(),
             &hashes,
+            None,
         )?;
     }
 

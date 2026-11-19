@@ -110,18 +110,21 @@ pub fn served_json(side: Side, request: &OrderRequest) -> Value {
         };
         let number = if owner == side { number } else { 90_000 + raw };
         doc["unit"] = json!(format!("{kind}:{number}"));
-        // A join names the force joined to by the side's number too.
-        if let Some(into) = doc["order"]
-            .get("into")
-            .and_then(Value::as_str)
-            .and_then(|handle| handle.strip_prefix("task_force:"))
-            .and_then(|raw| raw.parse::<u32>().ok())
-        {
-            let (owner, number) = n.forces[&into];
-            doc["order"]["into"] = json!(format!(
-                "task_force:{}",
-                if owner == side { number } else { 90_000 + into }
-            ));
+        // A join names the force joined to by the side's number too, and an
+        // escort its charge (decision 0172, 2).
+        for key in ["into", "charge"] {
+            if let Some(raw) = doc["order"]
+                .get(key)
+                .and_then(Value::as_str)
+                .and_then(|handle| handle.strip_prefix("task_force:"))
+                .and_then(|raw| raw.parse::<u32>().ok())
+            {
+                let (owner, number) = n.forces[&raw];
+                doc["order"][key] = json!(format!(
+                    "task_force:{}",
+                    if owner == side { number } else { 90_000 + raw }
+                ));
+            }
         }
         if let Some(ships) = doc["order"].get_mut("ships").and_then(Value::as_array_mut) {
             for ship in ships {
