@@ -634,10 +634,10 @@ button:disabled { opacity: 0.45; cursor: default; }
       ['In whose hands', held ? 'Yours, by your order. The staff plans round it.' : 'The staff\'s']]);
     var ships = el('div'); body.appendChild(ships);
     api('get_entity', { handle: h }).then(function (a) {
-      var list = (a.entity && a.entity.ships) || [], mine = {}; list.forEach(function (x) { mine[x.ship.handle] = true; });
-      listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; return x.ship.handle + (x.class ? ', ' + x.class : '') + ': ' + commas(x.fuel_t) + ' t fuel' + (x.sunk ? ', SUNK' : hurt); }));
-      listOf(ships, 'AIR GROUPS ABOARD', M.air.filter(function (x) { return x.location && mine[x.location.handle]; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
+      var list = (a.entity && a.entity.ships) || [], mine = {}; list.forEach(function (x) { mine[x.ship.handle] = true; if (x.ship.name) M.names[x.ship.handle] = x.ship.name.replace(/^Placeholder /, ''); });
       listOf(ships, 'MEN ABOARD', M.units.filter(function (u) { return (u.aboard || []).some(function (b) { return mine[b.ship.handle]; }); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_aboard) + ' men'; }));
+      listOf(ships, 'AIR GROUPS ABOARD', M.air.filter(function (x) { return x.location && mine[x.location.handle]; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
+      listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; var cls = String(x.class || '').replace(/^Placeholder /, ''); return x.ship.handle + (cls && String(x.ship.name || '').toLowerCase().indexOf(cls.toLowerCase()) < 0 ? ', ' + cls : '') + ': ' + commas(x.fuel_t) + ' t fuel' + (x.sunk ? ', SUNK' : hurt); }));
     }).catch(function (e) { ships.appendChild(el('div', '', 'The ships could not be listed: ' + e.message)); });
     links(body, 'ALSO HERE', forcesAt(f.place, f));
    
