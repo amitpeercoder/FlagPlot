@@ -2942,7 +2942,10 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 && !stem.starts_with("85_")
                 // And scenario 86's, whose staff names the source of supply
                 // and sends the lift on to it (decision 0163).
-                && !stem.starts_with("86_"))
+                && !stem.starts_with("86_")
+                // And scenario 90's, whose take does not lift men it
+                // cannot feed (decision 0169).
+                && !stem.starts_with("90_"))
             .then(|| stem.to_string())
         })
         .collect();

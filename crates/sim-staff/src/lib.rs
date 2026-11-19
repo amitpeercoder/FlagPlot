@@ -281,7 +281,15 @@ use sim_core::view::SideView;
 /// it came from. A side with no "control an island" and no hold whose
 /// source differs from where its lifts came from gets the orders
 /// `supply-40` gave.
-pub const DOCTRINE_VERSION: &str = "supply-41";
+/// `supply-42` adds decision 0169: at balanced a lift of a take with men
+/// aboard, a later lift as it stands or a second lift, short of the men
+/// wanted with too few in reach by the take's last day, goes only where its
+/// men can be fed: the place can be held by decision 0144's check and what
+/// it has aboard lasts until supply follows. Where they cannot, the take
+/// does not lift and hands in `cannot_bring_enough` once. A side whose
+/// takes hold no estimate, or whose lifts are not short, gets the orders
+/// `supply-41` gave.
+pub const DOCTRINE_VERSION: &str = "supply-42";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
