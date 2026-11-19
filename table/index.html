@@ -547,11 +547,17 @@ button:disabled { opacity: 0.45; cursor: default; }
     var day = M.lastDay ? Math.min(M.day, M.lastDay) : M.day, dusk = dateOf(M.day - 2, true);
     $('clock').textContent = (dusk ? dusk + ' · ' : '') + '1800 · ' + (M.over ? 'THE LAST DAY IS FOUGHT' : 'ORDERS FOR DAY ' + day + ' OF ' + M.lastDay);
   }
+  // A pulse by its date and its hours: "12-13 AUG · NIGHT · 1800-0600". The
+  // hours are the theatre's own, one clock for the whole chart.
+  var HOURS = { night: '1800\u20130600', morning: '0600\u20131200', afternoon: '1200\u20131800' };
+  function phaseWords(day, phase) {
+    var eve = dateOf(day - 2), date = dateOf(day - 1), when = date || 'DAY ' + day;
+    if (phase === 'end') return when + ' \u00b7 1800 \u00b7 END OF DAY';
+    if (phase === 'night' && date) when = (eve.split(' ')[1] === date.split(' ')[1] ? eve.split(' ')[0] : eve) + '\u2013' + date;
+    return when + ' \u00b7 ' + phase.toUpperCase() + ' \u00b7 ' + HOURS[phase];
+  }
   function showPhase(day, phase) {
-    var eve = dateOf(day - 2), date = dateOf(day - 1), t = 'DAY ' + day + ' · ';
-    if (phase === 'night') t += 'THE NIGHT' + (date ? ' OF ' + eve + ' TO ' + date : '');
-    else if (phase === 'end') t += (date ? date + ' · ' : '') + '1800 · THE DAY\'S REPORTS';
-    else t += (date ? date + ' · ' : '') + 'THE ' + phase.toUpperCase();
+    var t = 'DAY ' + day + ' \u00b7 ' + phaseWords(day, phase);
     $('clock').textContent = t;
   }
 
@@ -1070,7 +1076,6 @@ button:disabled { opacity: 0.45; cursor: default; }
     Object.keys(perKind).forEach(function (k) { if (perKind[k] > 3) lines.push({ text: 'and ' + (perKind[k] - 3) + ' more reports of ' + k.replace(/_/g, ' ') }); });
     return lines;
   }
-  var TITLE = { night: 'THE NIGHT', morning: 'THE MORNING', afternoon: 'THE AFTERNOON', end: 'AT THE END OF THE DAY' };
   async function plotPhase(day, ph, evs) {
     var log = $('plot'), far = 0.04, any = false; log.hidden = false; showPhase(day, ph); mover = null;
     Object.keys(pieces).forEach(function (h) { var p = pieces[h]; p.from = p.grp.position.clone(); p.to = p.from.clone(); });
@@ -1080,7 +1085,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       p.to = world(h[3], h[4]); any = true; var d = p.from.distanceTo(p.to); if (d > far) { far = d; mover = p; }
     });
     moveT = any ? 0 : 1;
-    var lines = digest(evs), box = el('div', 'phase'); box.appendChild(el('b', '', 'DAY ' + day + ' · ' + TITLE[ph])); log.appendChild(box); log.scrollTop = log.scrollHeight;
+    var lines = digest(evs), box = el('div', 'phase'); box.appendChild(el('b', '', phaseWords(day, ph))); log.appendChild(box); log.scrollTop = log.scrollHeight;
     if (!lines.length) box.appendChild(el('div', '', any ? 'Your forces steam on. Nothing else is reported.' : 'Nothing is reported.'));
     for (var k = 0; k < lines.length; k++) { box.appendChild(el('div', lines[k].red ? 'red' : '', lines[k].text)); flash(lines[k].hex, lines[k].red ? 0xa3211a : 0x1f4e8c); log.scrollTop = log.scrollHeight; if (!calm) await sleep(Math.min(420, 2400 / lines.length)); }
     if (!calm) await sleep(any || lines.length ? 1500 : 500);
