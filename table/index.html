@@ -575,7 +575,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   function paper(text, fn) { var b = el('button', '', text); b.type = 'button'; b.addEventListener('click', fn); $('papers').appendChild(b); return b; }
   function slip(from, stamp, title, body, decide) {
     var a = el('article', 'slip' + (decide ? ' decide' : '')), f = el('div', 'from'); f.appendChild(el('span', '', from)); if (stamp) f.appendChild(el('span', 'stamp' + (stamp === 'FOR DECISION' || stamp === 'STOPPED THE CLOCK' ? '' : ' ok'), stamp));
-    a.appendChild(f); if (title) a.appendChild(el('strong', '', title)); if (body) a.appendChild(el('div', '', body)); $('signals').appendChild(a); return a;
+    a.appendChild(f); if (title) a.appendChild(el('strong', '', plainWords(title))); if (body) a.appendChild(el('div', '', plainWords(body))); $('signals').appendChild(a); return a;
   }
   function button(parent, text, go, fn) { var row = parent.querySelector('.row') || parent.appendChild(el('div', 'row')), b = el('button', go ? 'go' : '', text); b.type = 'button'; b.addEventListener('click', function () { fn(b); }); row.appendChild(b); return b; }
   function act(tool, args, done) { return api(tool, args).then(function (a) { setStatus(done || a.summary || 'Done.'); return refresh(); }).catch(function (e) { setStatus('Refused: ' + e.message); }); }
@@ -583,9 +583,9 @@ button:disabled { opacity: 0.45; cursor: default; }
     b.disabled = true; var box = a.appendChild(el('div', 'why'));
     numbers.slice(0, 3).reduce(function (p, n) {
       return p.then(function () { return api('why', { number: n }); }).then(function (w) {
-        box.appendChild(el('div', '', w.serves || ''));
-        if (w.reason && w.reason.worked) box.appendChild(el('div', '', w.reason.worked));
-        if (w.reason && w.reason.would_change && w.reason.would_change.length) box.appendChild(el('div', '', 'What would change it: ' + w.reason.would_change.join('; ') + '.'));
+        box.appendChild(el('div', '', plainWords(w.serves || '')));
+        if (w.reason && w.reason.worked) box.appendChild(el('div', '', plainWords(w.reason.worked)));
+        if (w.reason && w.reason.would_change && w.reason.would_change.length) box.appendChild(el('div', '', plainWords('What would change it: ' + w.reason.would_change.join('; ') + '.')));
       });
     }, Promise.resolve()).catch(function (e) { box.appendChild(el('div', '', e.message)); });
   }
@@ -630,7 +630,15 @@ button:disabled { opacity: 0.45; cursor: default; }
   // chair to where it is. The page's address ending "#see=task_force:1"
   // does the same, so a thing can be pointed at.
   var MENTION = /((?:task_force|base|ship|air_group|land_unit|contact):\d+)(?: \(([^)]+)\))?/g;
-  function plainWords(t) { return String(t).replace(/(intent|plan):(\d+)/g, '$1 $2').replace(/island \d+ \(([^)]+)\)/g, '$1').replace(/Placeholder /g, ''); }
+  // The game's words as the table says them: "plan:1" as "plan 1", and, while
+  // the hexes are not shown, a hex as its place or its position and a count
+  // of hexes as miles.
+  function plainWords(t) {
+    t = String(t).replace(/(intent|plan):(\d+)/gi, '$1 $2').replace(/island \d+ \(([^)]+)\)/g, '$1').replace(/Placeholder /g, '');
+    if (showHexes) return t;
+    return t.replace(/(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return (+n * hexMiles()) + ' miles'; })
+      .replace(/(?:hex )?\((-?\d+), ?(-?\d+)\)/g, function (m, q, r) { var pl = { q: +q, r: +r }; if (!hexAt[q + ',' + r]) return m; return M.hexNames[q + ',' + r] || whereIs(pl); });
+  }
   function nameOf(h, given) { var n = M.names[h] || given; return n ? n.replace(/^Placeholder /, '') : /^contact:/.test(h) ? 'contact ' + num(h) : h.replace('_', ' ').replace(':', ' '); }
   function refTo(h, given) { var b = el('button', 'ref' + (/^contact:/.test(h) || M.enemyBases.some(function (x) { return x.base.handle === h; }) ? ' enemy' : ''), nameOf(h, given)); b.type = 'button'; b.addEventListener('click', function (e) { e.stopPropagation(); see(h); }); return b; }
   function rich(tag, cls, text) {
