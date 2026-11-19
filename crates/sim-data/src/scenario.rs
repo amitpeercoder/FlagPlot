@@ -3,6 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
+use sim_core::believed::{BelievedForce, BelievedIntent, LastKnown, Standing};
 use sim_core::choices::Moment;
 use sim_core::command::CommandKind;
 use sim_core::commander::{Commander, Initiative, NamedCommander};
@@ -29,14 +30,15 @@ use sim_core::time::Pulse;
 use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::{DaySummary, Staffs, StartingContact, StartingEstimate, World};
 
-use crate::commands::CommandSpec;
+use crate::commands::{BelievedIntentSpec, CommandSpec};
 use crate::error::DataError;
 use crate::map::{load_land_links, load_map};
 use crate::quantity::Quantity;
 use crate::reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
-    load_fatigue_figures, load_ground_figures, load_port_sizes, load_report_figures,
-    load_search_figures, load_ship_classes, load_surface_combat_figures, parse_kind,
+    load_class_sides, load_fatigue_figures, load_ground_figures, load_port_sizes,
+    load_report_figures, load_search_figures, load_ship_classes, load_surface_combat_figures,
+    parse_kind,
 };
 
 /// One file name or a list of them (decision 0043).
@@ -104,6 +106,11 @@ struct ScenarioFile {
     /// `LoadOptions::reference_root`: it is read where the scenario names it,
     /// as the map is, since the frozen step 1 figures have no report figures.
     reports: Option<String>,
+    /// Path to the file of sides, relative to the scenario file (decision
+    /// 0173, 1): whose each class of ship and type of aircraft is. Optional:
+    /// without it no class or type has a side. A reference file, redirected
+    /// by `LoadOptions::reference_root` as the class files are.
+    class_sides: Option<String>,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -128,6 +135,13 @@ struct ScenarioFile {
     /// Opening estimates of the enemy's men ashore (decision 0092, 16).
     #[serde(default)]
     estimate: Vec<EstimateSpec>,
+    /// The enemy forces a side believes in and holds no contact of
+    /// (decision 0173, 5).
+    #[serde(default)]
+    believed_force: Vec<BelievedForceSpec>,
+    /// The intents a side believes the enemy holds (decision 0173, 7).
+    #[serde(default)]
+    believed_intent: Vec<BelievedIntentSpec>,
     /// Missions and objectives (decision 0054). Optional.
     objectives: Option<ObjectivesSpec>,
     /// Whether command levels are on (decision 0134, 1). Optional; off when
@@ -310,6 +324,29 @@ struct EstimateSpec {
     q: i32,
     r: i32,
     men: u32,
+}
+
+/// A force of the enemy's a side believes in and holds no contact of
+/// (decision 0173, 5): the side that believes it, a name, the kind of its
+/// most important ship, its ships, its standing (`present`, `absent` or
+/// `unknown`), and where it was last known: `at_base`, an enemy base on the
+/// side's map, or `q` and `r`, with `day` (0, the default, for before the
+/// first day); or neither, where the side does not know where. `placeholder`
+/// is true where the belief rests on no source, and then `note` is required.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BelievedForceSpec {
+    side: SideSpec,
+    name: String,
+    kind: String,
+    ships: u32,
+    standing: String,
+    at_base: Option<u32>,
+    q: Option<i32>,
+    r: Option<i32>,
+    day: Option<u32>,
+    placeholder: Option<bool>,
+    note: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -1197,6 +1234,167 @@ fn build_objectives(
     })
 }
 
+/// The note an entry rests on, or why it is wrong: a placeholder needs one,
+/// and a note given is not empty (decision 0173, 5).
+fn entry_note(
+    placeholder: bool,
+    note: &Option<String>,
+    what: &str,
+) -> Result<Option<String>, String> {
+    match note {
+        Some(text) if text.trim().is_empty() => Err(format!("{what} has an empty note")),
+        Some(text) => Ok(Some(text.clone())),
+        None if placeholder => Err(format!(
+            "{what} is a placeholder and has no note of what it rests on"
+        )),
+        None => Ok(None),
+    }
+}
+
+/// A believed force as the scenario states it, checked (decision 0173, 5,
+/// 6 and 9) against the world as loaded: its base is an enemy base on the
+/// believing side's map, its hex is on the map, its day no later than the
+/// last.
+fn believed_force(
+    spec: &BelievedForceSpec,
+    index: usize,
+    days: u32,
+    world: &World,
+) -> Result<BelievedForce, String> {
+    let side: Side = spec.side.into();
+    let what = format!("believed force {} ({})", index + 1, spec.name);
+    let kind = parse_kind(&spec.kind).ok_or_else(|| {
+        format!(
+            "{what} has unknown kind \"{}\": carrier, battleship, cruiser, destroyer, transport or auxiliary",
+            spec.kind
+        )
+    })?;
+    if spec.ships == 0 {
+        return Err(format!(
+            "{what} has no ship: it is believed to have 1 or more"
+        ));
+    }
+    let standing = Standing::from_name(&spec.standing).ok_or_else(|| {
+        format!(
+            "{what} has unknown standing \"{}\": present, absent or unknown",
+            spec.standing
+        )
+    })?;
+    let day = spec.day.unwrap_or(0);
+    if day > days {
+        return Err(format!(
+            "{what} was known there on day {day}, after the scenario's last, day {days}"
+        ));
+    }
+    let last_known = match (spec.at_base, spec.q, spec.r) {
+        (Some(_), Some(_), _) | (Some(_), _, Some(_)) => {
+            return Err(format!(
+                "{what} has both \"at_base\" and a hex; it takes one or neither"
+            ))
+        }
+        (Some(raw), None, None) => {
+            let id = BaseId::new(raw);
+            let base = world.umpire().bases.get(&id).ok_or_else(|| {
+                format!("{what} is at base {raw}, which is not a base of the scenario")
+            })?;
+            if base.side == side {
+                return Err(format!(
+                    "{what} is at base {raw} ({}), which is the {} side's own: a believed force is the enemy's",
+                    base.name,
+                    side.name()
+                ));
+            }
+            if !base.on_map {
+                return Err(format!(
+                    "{what} is at base {raw} ({}), which is not on the {} side's map",
+                    base.name,
+                    side.name()
+                ));
+            }
+            LastKnown::AtBase {
+                base: id,
+                hex: base.hex,
+                day,
+            }
+        }
+        (None, Some(q), Some(r)) => {
+            let hex = Hex::new(q, r);
+            if !world.map().contains(hex) {
+                return Err(format!("{what} is at {q},{r}, off the map"));
+            }
+            LastKnown::AtHex { hex, day }
+        }
+        (None, Some(_), None) | (None, None, Some(_)) => {
+            return Err(format!(
+                "{what} gives one of \"q\" and \"r\"; a hex takes both"
+            ))
+        }
+        (None, None, None) => {
+            if spec.day.is_some() {
+                return Err(format!(
+                    "{what} gives a day and no place; the day is the day it was known at a place"
+                ));
+            }
+            LastKnown::NotKnown
+        }
+    };
+    let placeholder = spec.placeholder.unwrap_or(false);
+    Ok(BelievedForce {
+        side,
+        name: spec.name.clone(),
+        kind,
+        ships: spec.ships,
+        standing,
+        last_known,
+        placeholder,
+        note: entry_note(placeholder, &spec.note, &what)?,
+    })
+}
+
+/// A believed intent as the scenario states it, checked (decision 0173, 7
+/// and 9) as a `set_intent` command of its kind would be for the enemy's
+/// side, and every base it names on the believing side's map.
+fn believed_intent(
+    spec: &BelievedIntentSpec,
+    index: usize,
+    world: &World,
+) -> Result<BelievedIntent, String> {
+    let side: Side = spec.side.into();
+    let what = format!("believed intent {} of the {} side", index + 1, side.name());
+    let kind = spec.intent_kind(&what)?;
+    let enemy = match side {
+        Side::Allied => Side::Japanese,
+        Side::Japanese => Side::Allied,
+    };
+    for raw in [kind.own_base(), kind.target()].into_iter().flatten() {
+        let on_map = world
+            .umpire()
+            .bases
+            .get(&raw)
+            .is_some_and(|base| base.side == side || base.on_map);
+        if !on_map {
+            return Err(format!(
+                "{what} names base {}, which is not on the {} side's map",
+                raw.raw(),
+                side.name()
+            ));
+        }
+    }
+    world.check_root_intent(enemy, &kind).map_err(|refusal| {
+        format!(
+            "{what} could not be given to the {} side: {refusal}",
+            enemy.name()
+        )
+    })?;
+    let placeholder = spec.placeholder.unwrap_or(false);
+    Ok(BelievedIntent {
+        side,
+        kind,
+        placeholder,
+        note: entry_note(placeholder, &spec.note, &what)?,
+    })
+}
+
 /// The orders a scenario's script gives inside a day (decision 0156), by day,
 /// each with the pulse it is handed in for (morning or afternoon) and its
 /// side.
@@ -1241,6 +1439,12 @@ pub struct Scenario {
     /// Every file the scenario names, as the paths it reads them from, in a
     /// fixed order (decision 0043, 9).
     data_files: Vec<PathBuf>,
+    /// The enemy forces each side believed in (decision 0173, 5): the
+    /// scenario's, not the world's, never hashed and read by no rule.
+    believed_forces: Vec<BelievedForce>,
+    /// The intents each side believed the enemy held (decision 0173, 7),
+    /// kept as the forces are.
+    believed_intents: Vec<BelievedIntent>,
 }
 
 /// How a scenario is loaded, beyond the file itself.
@@ -1421,6 +1625,50 @@ impl Scenario {
         if let Some(reports) = &reports_file {
             ref_data.reports = Some(load_report_figures(reports)?);
         }
+        // The file of sides (decision 0173, 1 and 2): whole and true of the
+        // reference files. Whether a ship or an air group is of a class or
+        // type given to the other side alone is checked once they are built.
+        let class_sides_file = match &file.class_sides {
+            Some(name) => Some(reference(name)?),
+            None => None,
+        };
+        if let Some(sides_path) = &class_sides_file {
+            let sides = load_class_sides(sides_path)?;
+            let shown = sides_path.display();
+            for id in ref_data.ship_classes.keys() {
+                if !sides.ship_classes.contains_key(id) {
+                    return Err(fail(format!(
+                        "ship class {} has no row in the file of sides {shown}",
+                        id.raw()
+                    )));
+                }
+            }
+            for id in sides.ship_classes.keys() {
+                if !ref_data.ship_classes.contains_key(id) {
+                    return Err(fail(format!(
+                        "the file of sides {shown} gives ship class {}, which the scenario's class files do not give",
+                        id.raw()
+                    )));
+                }
+            }
+            for id in ref_data.aircraft_types.keys() {
+                if !sides.aircraft_types.contains_key(id) {
+                    return Err(fail(format!(
+                        "aircraft type {} has no row in the file of sides {shown}",
+                        id.raw()
+                    )));
+                }
+            }
+            for id in sides.aircraft_types.keys() {
+                if !ref_data.aircraft_types.contains_key(id) {
+                    return Err(fail(format!(
+                        "the file of sides {shown} gives aircraft type {}, which the scenario's type files do not give",
+                        id.raw()
+                    )));
+                }
+            }
+            ref_data.class_sides = Some(sides);
+        }
 
         let mut data_files: Vec<PathBuf> = vec![folder.join(&file.map)];
         data_files.extend(land_links_file);
@@ -1446,6 +1694,7 @@ impl Scenario {
             data_files.push(reference(name)?);
         }
         data_files.extend(reports_file);
+        data_files.extend(class_sides_file);
 
         let mut truth = TruthState::default();
 
@@ -2862,6 +3111,39 @@ impl Scenario {
             });
         }
 
+        // No ship or air group is of a class or type the file of sides gives
+        // to the other side alone (decision 0173, 2).
+        if let Some(sides) = &ref_data.class_sides {
+            for ship in truth.ships.values() {
+                if let Some(side) = sides.ship_classes.get(&ship.class) {
+                    if !side.used_by(ship.side) {
+                        return Err(fail(format!(
+                            "ship {} ({}) is {} and of ship class {}, which the file of sides gives to the {} side alone",
+                            ship.id.raw(),
+                            ship.name,
+                            ship.side.name(),
+                            ship.class.raw(),
+                            side.name()
+                        )));
+                    }
+                }
+            }
+            for group in truth.air_groups.values() {
+                if let Some(side) = sides.aircraft_types.get(&group.aircraft_type) {
+                    if !side.used_by(group.side) {
+                        return Err(fail(format!(
+                            "air group {} ({}) is {} and of aircraft type {}, which the file of sides gives to the {} side alone",
+                            group.id.raw(),
+                            group.name,
+                            group.side.name(),
+                            group.aircraft_type.raw(),
+                            side.name()
+                        )));
+                    }
+                }
+            }
+        }
+
         let mut world =
             World::new(file.seed, ref_data, map, truth).map_err(|e| fail(e.to_string()))?;
         // Command levels go on before anything that reaches a belief
@@ -3075,6 +3357,17 @@ impl Scenario {
             .hold_starting_estimates(estimates.clone())
             .map_err(|e| fail(e.to_string()))?;
 
+        // What each side believed of the enemy (decision 0173, 5 to 9):
+        // checked and kept with the scenario, never put into the world.
+        let mut believed_forces = Vec::new();
+        for (index, spec) in file.believed_force.iter().enumerate() {
+            believed_forces.push(believed_force(spec, index, file.days, &world).map_err(&fail)?);
+        }
+        let mut believed_intents = Vec::new();
+        for (index, spec) in file.believed_intent.iter().enumerate() {
+            believed_intents.push(believed_intent(spec, index, &world).map_err(&fail)?);
+        }
+
         Ok(Scenario {
             name: file.name,
             placeholder: file.placeholder,
@@ -3090,7 +3383,25 @@ impl Scenario {
             radio_silent,
             commanders,
             data_files,
+            believed_forces,
+            believed_intents,
         })
+    }
+
+    /// The enemy forces `side` believed in and held no contact of when the
+    /// game began (decision 0173, 5), in the order the file gives them.
+    pub fn believed_forces(&self, side: Side) -> impl Iterator<Item = &BelievedForce> + '_ {
+        self.believed_forces
+            .iter()
+            .filter(move |force| force.side == side)
+    }
+
+    /// The intents `side` believed the enemy held when the game began
+    /// (decision 0173, 7), in the order the file gives them.
+    pub fn believed_intents(&self, side: Side) -> impl Iterator<Item = &BelievedIntent> + '_ {
+        self.believed_intents
+            .iter()
+            .filter(move |intent| intent.side == side)
     }
 
     /// The superiors the scenario names, if command levels are on (decision
@@ -3197,6 +3508,8 @@ impl Scenario {
             radio_silent: self.radio_silent.clone(),
             commanders: self.commanders.clone(),
             data_files: self.data_files.clone(),
+            believed_forces: self.believed_forces.clone(),
+            believed_intents: self.believed_intents.clone(),
         })
     }
 
@@ -7720,5 +8033,415 @@ task_force = 3
         let state = scenario.world.command_state(Side::Allied);
         assert_eq!(state.intents[&IntentId::new(1)].withdrawn_day, Some(2));
         assert!(scenario.world.command_state(Side::Japanese).is_empty());
+    }
+
+    // -----------------------------------------------------------------
+    // What a side believed, and whose a class is (decision 0173).
+    // -----------------------------------------------------------------
+
+    /// Writes a file of sides with `rows` under the system's temporary
+    /// folder and returns its absolute path, which a scenario may name.
+    fn sides_file(rows: &str) -> PathBuf {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        static NEXT: AtomicUsize = AtomicUsize::new(0);
+        let path = std::env::temp_dir().join(format!(
+            "flagplot_class_sides_{}_{}.csv",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ));
+        fs::write(&path, format!("table,id,side,note\n{rows}")).expect("write the file of sides");
+        path
+    }
+
+    /// The rows of a whole file of sides for the placeholder classes and
+    /// types of `HEAD` (the record's statement 1): class 1 the Allied side's,
+    /// every other class and every type both sides'.
+    const PLACEHOLDER_SIDES: &str = "ship_class,1,allied,test\n\
+        ship_class,2,both,test\n\
+        ship_class,3,both,test\n\
+        ship_class,4,both,test\n\
+        ship_class,5,both,test\n\
+        ship_class,6,both,test\n\
+        ship_class,8,both,test\n\
+        aircraft_type,1,both,test\n\
+        aircraft_type,2,both,test\n\
+        aircraft_type,3,both,test\n\
+        aircraft_type,4,both,test\n";
+
+    /// `HEAD` naming the file of sides `rows`, plus `extra`.
+    fn parse_with_sides(rows: &str, extra: &str) -> Result<Scenario, DataError> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let sides = sides_file(rows);
+        let head = HEAD.replacen(
+            "days = 2\n",
+            &format!("days = 2\nclass_sides = \"{}\"\n", sides.display()),
+            1,
+        );
+        let result = Scenario::parse(&format!("{head}{extra}"), &path);
+        fs::remove_file(&sides).expect("remove the file of sides");
+        result
+    }
+
+    /// Statement 1: a file of sides, by hand.
+    #[test]
+    fn a_file_of_sides_says_whose_a_class_is_and_is_refused_where_it_is_not_whole_or_true() {
+        use sim_core::refdata::ClassSide;
+        let scenario = parse_with_sides(PLACEHOLDER_SIDES, "").expect("loads");
+        let ref_data = scenario.world.ref_data();
+        assert_eq!(
+            ref_data.ship_class_side(ShipClassId::new(1)),
+            Some(ClassSide::Allied)
+        );
+        assert_eq!(
+            ref_data.ship_class_side(ShipClassId::new(2)),
+            Some(ClassSide::Both)
+        );
+        assert_eq!(
+            ref_data.aircraft_type_side(AircraftTypeId::new(3)),
+            Some(ClassSide::Both)
+        );
+        // A side's view reads it as it reads a class.
+        let view = scenario.world.side_view(Side::Japanese);
+        assert_eq!(
+            view.ship_class_side(ShipClassId::new(1)),
+            Some(ClassSide::Allied)
+        );
+        assert_eq!(
+            view.ship_class_side(ShipClassId::new(2)),
+            Some(ClassSide::Both)
+        );
+        assert_eq!(
+            view.aircraft_type_side(AircraftTypeId::new(4)),
+            Some(ClassSide::Both)
+        );
+        // The file is one of the scenario's data files, last.
+        assert!(scenario
+            .data_files()
+            .last()
+            .expect("files")
+            .to_string_lossy()
+            .contains("flagplot_class_sides_"));
+        // A scenario that names no file has none.
+        let plain = parse_with("").expect("loads");
+        assert_eq!(plain.world.ref_data().class_sides, None);
+        assert_eq!(
+            plain
+                .world
+                .side_view(Side::Allied)
+                .ship_class_side(ShipClassId::new(1)),
+            None
+        );
+
+        let refused = |rows: &str, extra: &str| -> String {
+            parse_with_sides(rows, extra)
+                .expect_err("the scenario is refused")
+                .message
+        };
+        // A class the files give with no row.
+        let message = refused(
+            &PLACEHOLDER_SIDES.replace("ship_class,4,both,test\n", ""),
+            "",
+        );
+        assert!(
+            message.contains("ship class 4 has no row in the file of sides"),
+            "{message}"
+        );
+        // A type the files give with no row.
+        let message = refused(
+            &PLACEHOLDER_SIDES.replace("aircraft_type,2,both,test\n", ""),
+            "",
+        );
+        assert!(
+            message.contains("aircraft type 2 has no row in the file of sides"),
+            "{message}"
+        );
+        // A row for a class they do not give.
+        let message = refused(&format!("{PLACEHOLDER_SIDES}ship_class,99,both,test\n"), "");
+        assert!(
+            message.contains("gives ship class 99, which the scenario's class files do not give"),
+            "{message}"
+        );
+        // A class given twice.
+        let message = refused(
+            &format!("{PLACEHOLDER_SIDES}ship_class,2,japanese,test\n"),
+            "",
+        );
+        assert!(message.contains("ship_class 2 is given twice"), "{message}");
+        // A Japanese ship of class 1.
+        let japanese_force = "[[task_force]]\nid = 1\nname = \"TF\"\nside = \"japanese\"\nat_base = 2\nmission = \"escort\"\n";
+        let japanese_ship = "[[ship]]\nid = 1\nname = \"S\"\nclass = 1\nside = \"japanese\"\nfuel_t = 100\ntask_force = 1\n";
+        let message = refused(
+            PLACEHOLDER_SIDES,
+            &format!("\n{japanese_force}\n{japanese_ship}"),
+        );
+        assert!(
+            message.contains("ship 1 (S) is Japanese and of ship class 1, which the file of sides gives to the allied side alone"),
+            "{message}"
+        );
+        // The same ship of class 2, both sides', loads.
+        parse_with_sides(
+            PLACEHOLDER_SIDES,
+            &format!(
+                "\n{japanese_force}\n{}",
+                japanese_ship.replace("class = 1", "class = 2")
+            ),
+        )
+        .expect("a class of both sides loads");
+        // A side and a table the file does not know, and an empty note.
+        let message = refused(
+            &PLACEHOLDER_SIDES.replace("1,allied,test", "1,french,test"),
+            "",
+        );
+        assert!(message.contains("unknown side \"french\""), "{message}");
+        let message = refused(&format!("{PLACEHOLDER_SIDES}land_unit,1,both,test\n"), "");
+        assert!(message.contains("unknown table \"land_unit\""), "{message}");
+        let message = refused(&PLACEHOLDER_SIDES.replace("1,allied,test", "1,allied,"), "");
+        assert!(message.contains("the note is empty"), "{message}");
+    }
+
+    fn believed_force(body: &str) -> String {
+        format!("\n[[believed_force]]\nside = \"allied\"\nname = \"A force\"\nkind = \"carrier\"\n{body}\n")
+    }
+
+    /// Statement 2: a believed force.
+    #[test]
+    fn a_believed_force_is_kept_as_written_and_refused_where_it_cannot_be() {
+        use sim_core::believed::{LastKnown, Standing};
+        let text = format!(
+            "{}{}{}",
+            believed_force("ships = 6\nstanding = \"present\"\nat_base = 2\nplaceholder = true\nnote = \"Rests on no source.\""),
+            believed_force("ships = 8\nstanding = \"unknown\"").replace("A force", "Carriers"),
+            believed_force("ships = 1\nstanding = \"absent\"\nq = 7\nr = -1\nday = 2")
+                .replace("carrier", "cruiser")
+                .replace("A force", "Ruled out"),
+        );
+        let scenario = parse_with(&text).expect("loads");
+        let forces: Vec<_> = scenario.believed_forces(Side::Allied).collect();
+        assert_eq!(forces.len(), 3);
+        // Present, at a base: kept with that base's hex, before the first day.
+        assert_eq!(forces[0].side, Side::Allied);
+        assert_eq!(forces[0].enemy(), Side::Japanese);
+        assert_eq!(forces[0].name, "A force");
+        assert_eq!(forces[0].kind, ShipKind::Carrier);
+        assert_eq!(forces[0].ships, 6);
+        assert_eq!(forces[0].standing, Standing::Present);
+        assert_eq!(
+            forces[0].last_known,
+            LastKnown::AtBase {
+                base: BaseId::new(2),
+                hex: Hex::new(5, 0),
+                day: 0
+            }
+        );
+        assert!(forces[0].placeholder);
+        assert_eq!(forces[0].note.as_deref(), Some("Rests on no source."));
+        // Unknown, where not known.
+        assert_eq!(forces[1].name, "Carriers");
+        assert_eq!(forces[1].ships, 8);
+        assert_eq!(forces[1].standing, Standing::Unknown);
+        assert_eq!(forces[1].last_known, LastKnown::NotKnown);
+        assert!(!forces[1].placeholder);
+        assert_eq!(forces[1].note, None);
+        // Absent, at a hex on a day.
+        assert_eq!(forces[2].kind, ShipKind::Cruiser);
+        assert_eq!(forces[2].standing, Standing::Absent);
+        assert_eq!(
+            forces[2].last_known,
+            LastKnown::AtHex {
+                hex: Hex::new(7, -1),
+                day: 2
+            }
+        );
+        // The other side believes none; they are kept for another seed.
+        assert_eq!(scenario.believed_forces(Side::Japanese).count(), 0);
+        let other = scenario.with_seed(77).expect("copies");
+        assert_eq!(
+            other
+                .believed_forces(Side::Allied)
+                .cloned()
+                .collect::<Vec<_>>(),
+            scenario
+                .believed_forces(Side::Allied)
+                .cloned()
+                .collect::<Vec<_>>()
+        );
+
+        let refused = |body: &str| error_of(&believed_force(body));
+        for (body, words) in [
+            ("ships = 0\nstanding = \"present\"", "has no ship"),
+            (
+                "ships = 2\nstanding = \"likely\"",
+                "unknown standing \"likely\"",
+            ),
+            (
+                "ships = 2\nstanding = \"present\"\nat_base = 1",
+                "the Allied side's own",
+            ),
+            (
+                "ships = 2\nstanding = \"present\"\nq = 99\nr = 0",
+                "at 99,0, off the map",
+            ),
+            (
+                "ships = 2\nstanding = \"present\"\nat_base = 2\nq = 5\nr = 0",
+                "both \"at_base\" and a hex",
+            ),
+            (
+                "ships = 2\nstanding = \"present\"\nat_base = 2\nday = 3",
+                "on day 3, after the scenario's last, day 2",
+            ),
+            (
+                "ships = 2\nstanding = \"present\"\nspeed = 3",
+                "unknown field `speed`",
+            ),
+            (
+                "ships = 2\nstanding = \"present\"\nplaceholder = true",
+                "no note of what it rests on",
+            ),
+            (
+                "ships = 2\nstanding = \"present\"\nday = 1",
+                "gives a day and no place",
+            ),
+            (
+                "ships = 2\nstanding = \"present\"\nq = 3",
+                "a hex takes both",
+            ),
+            (
+                "ships = 2\nstanding = \"present\"\nat_base = 9",
+                "not a base of the scenario",
+            ),
+        ] {
+            let message = refused(body);
+            assert!(message.contains(words), "{body}: {message}");
+        }
+        // An unknown kind.
+        let message = error_of(
+            &believed_force("ships = 2\nstanding = \"present\"").replace("carrier", "dreadnought"),
+        );
+        assert!(
+            message.contains("unknown kind \"dreadnought\""),
+            "{message}"
+        );
+        // A base off the believing side's map.
+        let hidden = HEAD.replacen("q = 5\nr = 0\n", "q = 5\nr = 0\non_map = false\n", 1);
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let message = Scenario::parse(
+            &format!(
+                "{hidden}{}",
+                believed_force("ships = 2\nstanding = \"present\"\nat_base = 2")
+            ),
+            &path,
+        )
+        .expect_err("refused")
+        .message;
+        assert!(
+            message.contains("not on the Allied side's map"),
+            "{message}"
+        );
+        // A side it does not know.
+        assert!(parse_with(
+            &believed_force("ships = 2\nstanding = \"present\"")
+                .replace("\"allied\"", "\"french\"")
+        )
+        .is_err());
+    }
+
+    fn believed_intent(body: &str) -> String {
+        format!("\n[[believed_intent]]\nside = \"allied\"\n{body}\n")
+    }
+
+    /// Statement 3: a believed intent.
+    #[test]
+    fn a_believed_intent_is_checked_as_the_enemys_command_on_the_believing_sides_map() {
+        use sim_core::command::IntentKind;
+        let scenario = parse_with(&believed_intent(
+            "intent_kind = \"hold\"\nbase = 2\nplaceholder = true\nnote = \"Rests on no source.\"",
+        ))
+        .expect("loads");
+        let intents: Vec<_> = scenario.believed_intents(Side::Allied).collect();
+        assert_eq!(intents.len(), 1);
+        assert_eq!(intents[0].side, Side::Allied);
+        assert_eq!(intents[0].enemy(), Side::Japanese);
+        assert_eq!(
+            intents[0].kind,
+            IntentKind::Hold {
+                base: BaseId::new(2)
+            }
+        );
+        assert!(intents[0].placeholder);
+        assert_eq!(scenario.believed_intents(Side::Japanese).count(), 0);
+        // It is no command: neither side's command state holds an intent.
+        assert!(scenario.world.command_state(Side::Japanese).is_empty());
+        assert!(scenario.scripted_commands().is_empty());
+
+        // An intent naming a base not on the Allied side's map.
+        let hidden = HEAD.replacen("q = 5\nr = 0\n", "q = 5\nr = 0\non_map = false\n", 1);
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let message = Scenario::parse(
+            &format!(
+                "{hidden}{}",
+                believed_intent("intent_kind = \"hold\"\nbase = 2")
+            ),
+            &path,
+        )
+        .expect_err("refused")
+        .message;
+        assert!(
+            message.contains("names base 2, which is not on the Allied side's map"),
+            "{message}"
+        );
+        // A kind only the staff may give.
+        let message = error_of(&believed_intent(
+            "intent_kind = \"search_waters\"\nbase = 2",
+        ));
+        assert!(
+            message.contains("could not be given to the Japanese side"),
+            "{message}"
+        );
+        // An unknown key, and a key the kind does not take.
+        let message = error_of(&believed_intent(
+            "intent_kind = \"hold\"\nbase = 2\nday = 1",
+        ));
+        assert!(message.contains("unknown field `day`"), "{message}");
+        let message = error_of(&believed_intent(
+            "intent_kind = \"hold\"\nbase = 2\ntarget = 1",
+        ));
+        assert!(message.contains("does not take \"target\""), "{message}");
+        // An intent the enemy could not be given: a supply intent for a base
+        // that is not his, a neutralise of his own base, no kind.
+        let message = error_of(&believed_intent(
+            "intent_kind = \"keep_supplied\"\nbase = 1\nfloor_days = 3",
+        ));
+        assert!(
+            message.contains("could not be given to the Japanese side"),
+            "{message}"
+        );
+        let message = error_of(&believed_intent("intent_kind = \"neutralise\"\ntarget = 2"));
+        assert!(
+            message.contains("could not be given to the Japanese side"),
+            "{message}"
+        );
+        let message = error_of(&believed_intent("base = 2"));
+        assert!(message.contains("needs \"intent_kind\""), "{message}");
+        // A hold of the believing side's own base, on both maps, loads.
+        parse_with(&believed_intent("intent_kind = \"hold\"\nbase = 1")).expect("loads");
+    }
+
+    /// Statement 5, in part: entries and a file of sides change no game.
+    /// The world loaded with them is the world loaded without them, hash and
+    /// log alike.
+    #[test]
+    fn believed_entries_and_a_file_of_sides_change_nothing_in_the_world() {
+        let plain = parse_with("").expect("loads");
+        let with = parse_with_sides(
+            PLACEHOLDER_SIDES,
+            &format!(
+                "{}{}",
+                believed_force("ships = 6\nstanding = \"present\"\nat_base = 2"),
+                believed_intent("intent_kind = \"hold\"\nbase = 2")
+            ),
+        )
+        .expect("loads");
+        assert_eq!(plain.world.state_hash(), with.world.state_hash());
+        assert_eq!(plain.world.events().len(), with.world.events().len());
     }
 }

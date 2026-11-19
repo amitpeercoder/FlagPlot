@@ -1112,9 +1112,65 @@ pub struct RefData {
     /// file: with command levels on, every report reaches every command at
     /// once (decision 0135, item 10).
     pub reports: Option<ReportFigures>,
+    /// Whose each class of ship and each type of aircraft is (decision
+    /// 0173, 1 to 4). `None` if the scenario names no file of sides: then no
+    /// class or type has a side, and the game plays as before. No rule of
+    /// play reads it.
+    pub class_sides: Option<ClassSides>,
+}
+
+/// The side that uses a class of ship or a type of aircraft (decision 0173,
+/// 1): one side alone, or both.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum ClassSide {
+    Allied,
+    Japanese,
+    Both,
+}
+
+impl ClassSide {
+    /// The word a file of sides gives it: `allied`, `japanese` or `both`.
+    pub const fn name(self) -> &'static str {
+        match self {
+            ClassSide::Allied => "allied",
+            ClassSide::Japanese => "japanese",
+            ClassSide::Both => "both",
+        }
+    }
+
+    /// Whether `side` uses the class or type.
+    pub const fn used_by(self, side: crate::state::Side) -> bool {
+        match self {
+            ClassSide::Both => true,
+            ClassSide::Allied => matches!(side, crate::state::Side::Allied),
+            ClassSide::Japanese => matches!(side, crate::state::Side::Japanese),
+        }
+    }
+}
+
+/// A scenario's file of sides as loaded (decision 0173, 1 and 2): every
+/// class and every type its reference files give, each with its side. The
+/// loader refuses a file that is not whole, so a class or type of the game
+/// with no entry here does not occur while the file is named.
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
+pub struct ClassSides {
+    pub ship_classes: BTreeMap<ShipClassId, ClassSide>,
+    pub aircraft_types: BTreeMap<AircraftTypeId, ClassSide>,
 }
 
 impl RefData {
+    /// Whose the class of ship `id` is (decision 0173, 4): `None` when the
+    /// scenario names no file of sides or the class is not in it.
+    pub fn ship_class_side(&self, id: ShipClassId) -> Option<ClassSide> {
+        self.class_sides.as_ref()?.ship_classes.get(&id).copied()
+    }
+
+    /// Whose the type of aircraft `id` is (decision 0173, 4): `None` when the
+    /// scenario names no file of sides or the type is not in it.
+    pub fn aircraft_type_side(&self, id: AircraftTypeId) -> Option<ClassSide> {
+        self.class_sides.as_ref()?.aircraft_types.get(&id).copied()
+    }
+
     /// How far a strike or an escort of an air group of type `aircraft_type`
     /// may go with the reach `reach` in force, in miles: the type's strike
     /// radius on normal reach, and the extended reach of

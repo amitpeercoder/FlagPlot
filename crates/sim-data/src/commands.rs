@@ -162,7 +162,15 @@ impl CommandSpec {
                 "a command is set for day {day}, outside days 1 to {days}"
             ));
         }
-        let what = format!("the {} command on day {day}", self.kind);
+        let kind = self.build_kind(&format!("the {} command on day {day}", self.kind))?;
+        Ok((day, self.side.into(), kind))
+    }
+
+    /// The command the table states, its keys checked as its kind takes
+    /// them; `what` names the table in a refusal.
+    fn build_kind(&self, what: &str) -> Result<CommandKind, String> {
+        let day = self.day;
+        let what = what.to_string();
         // The keys the kind takes, and so the keys it refuses.
         let allowed: &[&str] = match (self.kind.as_str(), self.limit.as_deref()) {
             ("set_intent", _) => match self.intent_kind.as_deref() {
@@ -641,6 +649,96 @@ impl CommandSpec {
                 plan: PlanId::new(need(self.plan, "plan")?),
             },
         };
-        Ok((day, self.side.into(), kind))
+        Ok(kind)
+    }
+}
+
+/// One `[[believed_intent]]` table (decision 0173, 7): an intent a side
+/// believes the enemy holds. It has `side`, the side that believes it,
+/// `intent_kind` (required) and the keys that kind of `set_intent` takes, as
+/// in a `[[command]]` table, with no `day`, `kind` or `intent` number; and
+/// `placeholder` and `note`. The keys are checked by the same code as a
+/// command's, for the enemy's side.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct BelievedIntentSpec {
+    pub(crate) side: SideSpec,
+    intent_kind: Option<String>,
+    base: Option<u32>,
+    target: Option<u32>,
+    hex: Option<[i32; 2]>,
+    distance: Option<u32>,
+    floor_days: Option<u32>,
+    interval_days: Option<u32>,
+    task_force: Option<u32>,
+    wants: Option<Vec<String>>,
+    defences: Option<u32>,
+    by_day: Option<u32>,
+    island: Option<u32>,
+    pub(crate) placeholder: Option<bool>,
+    pub(crate) note: Option<String>,
+}
+
+impl BelievedIntentSpec {
+    /// The intent the believing side's enemy is believed to hold, its keys
+    /// checked as those of a `set_intent` command of that kind; `what` names
+    /// the table in a refusal. What the game would refuse of it (a base, a
+    /// force, a hex) is checked after, against the world.
+    pub(crate) fn intent_kind(&self, what: &str) -> Result<IntentKind, String> {
+        if self.intent_kind.is_none() {
+            return Err(format!("{what} needs \"intent_kind\""));
+        }
+        let enemy = match Side::from(self.side) {
+            Side::Allied => SideSpec::Japanese,
+            Side::Japanese => SideSpec::Allied,
+        };
+        let command = CommandSpec {
+            day: 1,
+            side: enemy,
+            kind: "set_intent".to_string(),
+            limit: None,
+            intent: Some(1),
+            intent_kind: self.intent_kind.clone(),
+            base: self.base,
+            target: self.target,
+            hex: self.hex,
+            distance: self.distance,
+            floor_days: self.floor_days,
+            interval_days: self.interval_days,
+            ships: None,
+            task_forces: None,
+            air_groups: None,
+            land_units: None,
+            wants: self.wants.clone(),
+            defences: self.defences,
+            by_day: self.by_day,
+            island: self.island,
+            source: None,
+            hexes: None,
+            rank: None,
+            supply_t: None,
+            fuel_t: None,
+            risk: None,
+            from_day: None,
+            other_intent: None,
+            knowledge: None,
+            within_days: None,
+            leave: None,
+            given: None,
+            plan: None,
+            ship: None,
+            task_force: self.task_force,
+            air_group: None,
+            land_unit: None,
+            setting: None,
+            interrupt: None,
+            below_days: None,
+            standing: None,
+            on: None,
+        };
+        match command.build_kind(what)? {
+            CommandKind::SetIntent { kind, .. } => Ok(kind),
+            _ => unreachable!("a set_intent table builds a set_intent command"),
+        }
     }
 }

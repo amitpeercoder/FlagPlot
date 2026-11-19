@@ -20,6 +20,14 @@ Where figures come from, the order-of-battle facts, who settles them, and how th
 - **Engagement rows are history to test against.** A scenario may take starting positions, readiness and contacts already held from them. Its result is compared with the recorded outcome and is never scripted to match it.
 - **Run `oob-check` after any change to `data/oob`.**
 
+### The file of sides
+
+A scenario may name a file of sides (`class_sides`, decision 0173): a hand-written CSV in `data/reference` that gives each class of ship and type of aircraft its reference files give the side that uses it, `allied`, `japanese` or `both`, with a note on every row. It is a file of its own so that no generated class or type file changes for it.
+
+- **What a row rests on.** A class or type derived from the order of battle takes the side of the ships or aircraft its derivation list gives it, the nation of each in `data/oob/ships.csv` or `data/oob/aircraft_types.csv`, and its note names the list. A placeholder class takes `both` unless its note says why not. The side of a real class is a fact of the navy that built it and needs no figure.
+- **Whole and true.** The loader refuses a file with no row for a class or type the scenario's reference files give, a row for one they do not, one given twice, or a ship or air group of the scenario of a class or type given to the other side alone. Where a side cannot be told from the repository's own data, the row is left out and the scenario does not load: a missing side is not guessed.
+- **Its frozen copy.** It is a reference file, so `data/reference/step1` holds a copy with rows for exactly the frozen classes and types, which the scenario reads when it is loaded on the frozen figures.
+
 ### Who settles data
 
 - **The architect settles data, not the designer.** Which of two disputed rows to prefer, which weak row to read by exception, what to assume where the sources are silent: the architect decides these to the best of its knowledge and does not ask Amit to approve them. This replaces the earlier practice of a settlement sheet for his approval (decisions 0015, 0019, 0023).

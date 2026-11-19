@@ -68,6 +68,10 @@
     {
       "file": "data/scenarios/../reference/ground.toml",
       "hash": "3b3353e3ccc0e0d7"
+    },
+    {
+      "file": "data/scenarios/../reference/class_sides_full_slice.csv",
+      "hash": "7548c1b108bf6d74"
     }
   ],
   "doctrine_version": "supply-42",
@@ -862,7 +866,7 @@
   "rules_version": 20,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "776a640417bd1143"
+    "hash": "984de13e1d2a00a4"
   },
   "seats": {
     "allied": "player",
