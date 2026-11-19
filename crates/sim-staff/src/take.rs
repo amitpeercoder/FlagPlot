@@ -1785,6 +1785,121 @@ impl Day<'_, '_> {
         Ok((waypoints, out.out_nm, back.out_nm))
     }
 
+    /// Decision 0163, 4 and 6: where a lift goes when it has landed. On to
+    /// the source of the hold of the place, where a hold of it with a source
+    /// is in force and every ship of the force has the fuel for the passage
+    /// to the place and on to that source, by the engine's measure at the
+    /// speed it goes; else back to `source`, where it came from. Where the
+    /// two are one base nothing changes, and the words are `None`.
+    pub(crate) fn lift_end(
+        &self,
+        end: &Intent,
+        force: &TaskForce,
+        place: Hex,
+        (source, source_hex): (BaseId, Hex),
+    ) -> (BaseId, Hex, Option<String>) {
+        let home = (source, source_hex);
+        let Some((hold, on, on_hex)) = self.hold_of_place(place) else {
+            return (source, source_hex, None);
+        };
+        if on == source || on_hex == source_hex {
+            return (source, source_hex, None);
+        }
+        let view = self.view;
+        let on_text = crate::reasons::base_words(view, on);
+        let not_on = |why: String| {
+            (
+                home.0,
+                home.1,
+                Some(format!(
+                    "It does not go on to {on_text}, the source of supply of {}, the hold of {place}: {why}; so it goes back to {source}, where it came from.",
+                    hold.id
+                )),
+            )
+        };
+        let waypoints = match self.route_for(force, place, on_hex, end) {
+            Ok((waypoints, _, _)) => waypoints,
+            Err(why) => return not_on(why),
+        };
+        let area = self.state.area_read_up(end.id);
+        let Some(out) = crate::route::route_between(view, force.position(), place, area.as_ref())
+        else {
+            return not_on(format!(
+                "ships cannot go from {} to {place}",
+                force.position()
+            ));
+        };
+        // The speed it goes: by night, the speed the night's choice gives,
+        // else cruising speed; by day, its own.
+        let speed = match self.lift_night(end, force, place, &waypoints) {
+            Some(night) => crate::night::choose(&night.tried, &night.loads(&night.ships))
+                .map_or(SpeedSetting::Cruise, |chosen| chosen.speed),
+            None => force.speed,
+        };
+        let speed_text = crate::night::speed_name(speed);
+        let measured = view
+            .forecast_route(force.id, &out.out, Some(speed))
+            .filter(|f| f.refusal.is_none())
+            .zip(
+                view.forecast_route(force.id, &waypoints, Some(speed))
+                    .filter(|f| f.refusal.is_none()),
+            );
+        let Some((to_place, whole_way)) = measured else {
+            return not_on(format!(
+                "the engine would refuse the passage to {place} and on to {on_text}"
+            ));
+        };
+        let mut lines = Vec::new();
+        let mut short = false;
+        for line in &whole_way.ships {
+            let out_t = to_place
+                .ships
+                .iter()
+                .find(|l| l.ship == line.ship)
+                .map_or(Fixed::ZERO, |l| l.burned_t);
+            // A ship the measure runs dry burns only what it has: its need is
+            // the burn of the whole way at the speed, by the rule the measure
+            // burns by, as the night's measure gives it (chapter 2, Fuel burn).
+            let whole_t = if line.runs_dry {
+                crate::night::burn_of(view, line.ship, whole_way.route_nm, whole_way.speed_kn)
+                    .unwrap_or(line.burned_t)
+            } else {
+                line.burned_t
+            };
+            let on_t = (whole_t - out_t).max(Fixed::ZERO);
+            let lacks = line.runs_dry || line.fuel_t < whole_t;
+            short |= lacks;
+            lines.push(format!(
+                "{} has {} against {} to {place} and {} on to {on_text}, {}{}",
+                line.ship,
+                tons(line.fuel_t),
+                tons(out_t),
+                tons(on_t),
+                tons(whole_t),
+                if line.runs_dry {
+                    ", running dry short of it"
+                } else {
+                    ""
+                }
+            ));
+        }
+        let measure = format!(
+            "by the engine's measure at {speed_text}, {}",
+            lines.join(", ")
+        );
+        if short {
+            return not_on(format!("not every ship has the fuel, {measure}"));
+        }
+        (
+            on,
+            on_hex,
+            Some(format!(
+                "It goes on to {on_text}, the source of supply of {}, the hold of {place}, to join the ships that feed the place: every ship has the fuel, {measure}.",
+                hold.id
+            )),
+        )
+    }
+
     /// The slowest cruise speed of the force's ships afloat.
     pub(crate) fn speed_of(&self, force: &TaskForce) -> Option<Fixed> {
         self.view
@@ -2192,9 +2307,11 @@ impl Day<'_, '_> {
             return;
         }
         let cargo_order = force.cargo_order.as_ref();
+        // Decision 0163, 4: where it goes when it has landed.
+        let (back, back_hex, onward_words) = self.lift_end(end, force, place, (source, source_hex));
         // Decision 0145: a lift timed to the dark.
         let night = self
-            .route_for(force, place, source_hex, end)
+            .route_for(force, place, back_hex, end)
             .ok()
             .and_then(|(waypoints, _, _)| self.lift_night(end, force, place, &waypoints));
 
@@ -2460,7 +2577,7 @@ impl Day<'_, '_> {
         }
 
         // Item 19: the passage.
-        let (waypoints, out_nm, back_nm) = match self.route_for(force, place, source_hex, end) {
+        let (waypoints, out_nm, back_nm) = match self.route_for(force, place, back_hex, end) {
             Ok(found) => found,
             Err(why) => {
                 let reason = serving(end, plan)
@@ -2654,8 +2771,14 @@ impl Day<'_, '_> {
             ),
             LiftKind::AsItStands(head) | LiftKind::Hold(head) => head.clone(),
         };
+        let back_words = if back == source {
+            format!("{back_nm} nm back to the source {source}")
+        } else {
+            format!("{back_nm} nm on to {back}")
+        };
+        let onward_text = onward_words.map_or_else(String::new, |w| format!(" {w}"));
         let worked = format!(
-            "{head}{left_text} It sails today (day {today}, hour {sail_hour}): {out_nm} nm out at {speed} kn = {hours_out} hours, so it arrives at {place} at hour {}; {back_nm} nm back to the source {source}. Fuel: {}.{}{loading_words}{night_words}",
+            "{head}{left_text} It sails today (day {today}, hour {sail_hour}): {out_nm} nm out at {speed} kn = {hours_out} hours, so it arrives at {place} at hour {}; {back_words}.{onward_text} Fuel: {}.{}{loading_words}{night_words}",
             sail_hour + hours_out,
             fuel_lines.join(", "),
             escort_words.map_or_else(String::new, |w| format!(" {w}"))
@@ -2703,9 +2826,11 @@ impl Day<'_, '_> {
                 reason: speed_reason,
             });
         }
-        let route_reason = reason(
-            "This is the route order: out to the place and back to the source, acting at the place.",
-        );
+        let route_reason = reason(if back == source {
+            "This is the route order: out to the place and back to the source, acting at the place."
+        } else {
+            "This is the route order: out to the place and on to the source of supply of the hold of the place, acting at the place."
+        });
         let unload_reason = reason("This is the unload order the route acts on: the landing.");
         let out = self.target(in_scope);
         out.orders.push(StaffOrder {

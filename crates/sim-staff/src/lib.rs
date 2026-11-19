@@ -273,7 +273,15 @@ use sim_core::view::SideView;
 /// first ship; the speed is chosen on the load as spread. A side with no
 /// supply run by night gets the orders `supply-39` gave; one whose run was
 /// cut now carries more.
-pub const DOCTRINE_VERSION: &str = "supply-40";
+/// `supply-41` adds decision 0163: under "control an island" the source of
+/// supply is the side's base with the most supply above its reserve, named
+/// on the first morning with no transport force lying there; and a lift of
+/// a take, or a force a hold sends, that has landed goes on to the source
+/// of the hold of the place where every ship has the fuel, else back where
+/// it came from. A side with no "control an island" and no hold whose
+/// source differs from where its lifts came from gets the orders
+/// `supply-40` gave.
+pub const DOCTRINE_VERSION: &str = "supply-41";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
