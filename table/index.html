@@ -36,10 +36,13 @@ button:disabled { opacity: 0.45; cursor: default; }
 .view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
 .view button { min-height: 34px; padding: 0 12px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
 .view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
-.tray h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
+.tray h2 { margin: 4px 0 0; font-size: 14px; font-weight: 600; letter-spacing: 0.16em; opacity: 0.85; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
 .papers { display: flex; flex-wrap: wrap; gap: 6px; }
 .papers:empty { display: none; }
+.tray h2:has(+ .papers:empty), .tray h2:has(+ #signals:empty) { display: none; }
+.tray h2 + .papers, .tray h2 + #signals { margin-top: -4px; }
+.papers .mark { display: inline-block; min-width: 18px; height: 18px; margin-left: 8px; padding: 0 5px; border-radius: 9px; background: var(--enemy); color: #fff; font-size: 12px; line-height: 18px; text-align: center; letter-spacing: 0; vertical-align: 1px; }
 .papers button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 34px; padding: 0 12px; background: var(--paper-old); color: var(--paper-ink); border: 0; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
 .slip.decide { background: var(--paper); }
@@ -144,7 +147,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .sheet .doc .node .work { font-size: 13px; color: var(--paper-dim); }
 .sheet .doc .row { display: flex; flex-wrap: wrap; gap: 8px; }
-.ref { display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
+.ref { text-align: left; display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
 .ref.enemy { color: var(--enemy) !important; }
 .ref:hover, .ref:focus-visible { border-bottom-color: currentColor !important; }
 .sheet .doc details { font-size: 13px; }
@@ -193,8 +196,11 @@ button:disabled { opacity: 0.45; cursor: default; }
 </div>
 
 <aside class="tray" aria-label="Signals">
+  <h2>Command</h2>
+  <div id="papers" class="papers" role="toolbar" aria-label="Your directives, intents and what you have signed"></div>
+  <h2>Staff</h2>
+  <div id="papers-staff" class="papers" role="toolbar" aria-label="The staff's standing papers"></div>
   <h2>Signals</h2>
-  <div id="papers" class="papers" role="toolbar" aria-label="Standing papers"></div>
   <div id="signals"></div>
 </aside>
 
@@ -275,7 +281,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 <div class="view" role="group" aria-label="Your view of the table">
   <button type="button" id="btn-back">Sit back</button>
   <button type="button" id="btn-lean">Lean in</button>
+  <button type="button" id="btn-view" title="See the table from the chair, or the chart from above">View: table</button>
   <button type="button" id="btn-hexes" aria-pressed="false">Hexes</button>
+  <button type="button" id="btn-pieces" title="Which pieces stand on the chart">Pieces: all</button>
   <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
 </div>
 <fieldset class="stops" id="stops" hidden>
@@ -552,6 +560,9 @@ button:disabled { opacity: 0.45; cursor: default; }
     var intents = M.state ? M.state.intents.filter(function (i) { return i.in_force && !i.parent; }) : [];
     intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; g.fillText('INTENT ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), c[0] + (36 + k * 4) * u, c[1] + (4 + k * 14) * u); });
     if (draft) ring(draft.v, 30, '#1f4e8c', 1, true, 2.2);
+    // Where the side's own forces are, marked on the chart itself with a ring
+    // the size of the hex, while their pieces are put away.
+    if (!sideShown('own')) (function () { var done = {}, rad = HEXR * PX * 0.82; g.save(); M.forces.forEach(function (f) { if (!f.place || f.available_from > M.day) return; var k = f.place.q + ',' + f.place.r; if (done[k]) return; done[k] = true; var c = cpx(placeOf(f.place)); g.beginPath(); g.arc(c[0], c[1], rad, 0, 7); g.fillStyle = 'rgba(18,51,92,0.16)'; g.fill(); g.strokeStyle = 'rgba(18,51,92,0.85)'; g.lineWidth = 2.6 * u; g.stroke(); }); g.restore(); })();
     // The bases by name, lettered on the chart beside their marks.
     var bz = planZoom(), bu = u * bz; planDrawnAt = camDist; g.save(); g.font = '700 ' + Math.round(15 * bu) + "px 'Libre Caslon Text', Georgia, serif"; g.textBaseline = 'middle'; g.lineJoin = 'round'; try { g.letterSpacing = Math.round(1.5 * bu) + 'px'; } catch (e) {}
     M.bases.concat(M.enemyBases).forEach(function (b) { if (/^Landing at/.test(b.base.name)) return; var c = cpx(placeOf(b.place)), mine = M.bases.indexOf(b) >= 0, t = b.base.name.toUpperCase(); g.strokeStyle = 'rgba(232,238,230,0.85)'; g.lineWidth = 4 * bu; g.strokeText(t, c[0] + 12 * u, c[1] - 12 * u); g.fillStyle = mine ? '#12335c' : '#8a2019'; g.fillText(t, c[0] + 12 * u, c[1] - 12 * u); });
@@ -569,7 +580,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
     var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true })); sp.renderOrder = 10; scene.add(sp);
     var pin = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0x2b2a26 })); scene.add(pin);
-    var L = { sp: sp, pin: pin, tex: tex, anchor: anchor, h: h, tier: tier, off: off || [0, 0], aspect: cv.width / cv.height, wide: cv.width / 600 };
+    var L = { side: colour === RED ? 'enemy' : 'own', sp: sp, pin: pin, tex: tex, anchor: anchor, h: h, tier: tier, off: off || [0, 0], aspect: cv.width / cv.height, wide: cv.width / 600 };
     labels.push(L); return L;
   }
   function dropLabels() { labels.forEach(function (L) { scene.remove(L.sp); scene.remove(L.pin); L.tex.dispose(); L.sp.material.dispose(); L.pin.geometry.dispose(); }); labels = []; }
@@ -577,6 +588,10 @@ button:disabled { opacity: 0.45; cursor: default; }
 
   // ---- the pieces: a block is yours and known exactly ----
   var pieces = {}, statics = [];
+  // Which pieces stand on the chart: all, the side's own, the enemy's, or none.
+  var PIECES = ['all', 'own', 'enemy', 'none'], PIECE_WORD = { all: 'Pieces: all', own: 'Pieces: ours', enemy: 'Pieces: enemy', none: 'Pieces: off' }, piecesShown = 'all';
+  try { var kept = localStorage.getItem('flagplot.pieces'); if (PIECES.indexOf(kept) >= 0) piecesShown = kept; } catch (e) {}
+  function sideShown(side) { return piecesShown === 'all' || (piecesShown !== 'none' && (piecesShown === 'own') === (side === 'own')); }
   // ---- the pieces: period tiles (decision 0154) ----
   // Cream tiles in ink. A rectangle is the side's own and a diamond the
   // enemy's, a silhouette says what it is, and a dashed frame says it is
@@ -603,16 +618,20 @@ button:disabled { opacity: 0.45; cursor: default; }
     silhouette(g, kind); return c;
   }
   var symCache = {};
+  // No piece is larger than a hex, at any distance: the largest, a carrier
+  // force's, is four fifths of a hex across, and the rest keep their share of it.
+  function tk() { return 0.8 * HEXR * Math.sqrt(3) / 0.26; }
   function tile(side, kind, sure, size, alpha) {
+    size = size * tk();
     var key = [side, kind, sure].join('|'), tex = symCache[key];
     if (!tex) { tex = symCache[key] = new THREE.CanvasTexture(symbol(side, kind, sure)); tex.anisotropy = 8; }
     var edge = new THREE.MeshStandardMaterial({ color: 0xcdbf94, roughness: 0.8, transparent: alpha < 1, opacity: alpha == null ? 1 : alpha });
     var top = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, transparent: alpha < 1, opacity: alpha == null ? 1 : alpha });
-    var grp = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(size, 0.04, size), [edge, edge, top, edge, edge, edge]);
+    var grp = new THREE.Group(); grp.userData.side = side; var b = new THREE.Mesh(new THREE.BoxGeometry(size, 0.04, size), [edge, edge, top, edge, edge, edge]);
     b.position.y = 0.022; b.castShadow = true; grp.add(b); scene.add(grp); return grp;
   }
   function forcePiece(f) { var big = f.mission === 'carrier'; return tile('own', kindOf(f.mission), true, big ? 0.26 : 0.21); }
-  function fixed(grp, v, dx, dz, thing) { grp.position.set(v.x + (dx || 0), 0, v.z + (dz || 0)); grp.userData.thing = thing || null; statics.push(grp); return grp; }
+  function fixed(grp, v, dx, dz, thing) { grp.position.set(v.x + (dx || 0) * tk(), 0, v.z + (dz || 0) * tk()); grp.userData.thing = thing || null; statics.push(grp); return grp; }
   var moveT = 1, mover = null;
   function layPieces() {
     statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels();
@@ -623,7 +642,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     Object.keys(byHex).forEach(function (k) {
       var list = byHex[k], centre = placeOf(list[0].place);
       list.forEach(function (f, i) {
-        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? 0.16 + 0.07 * i : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, 0, Math.sin(an) * rad));
+        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? (0.16 + 0.07 * i) * tk() : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, 0, Math.sin(an) * rad));
         var p = pieces[h]; seen[h] = true;
         if (!p) { p = pieces[h] = { grp: forcePiece(f), from: to.clone(), to: to.clone() }; p.grp.position.copy(to); }
         else { p.from = p.grp.position.clone(); p.to = to; var d = p.from.distanceTo(to); if (d > far) { far = d; mover = p; } }
@@ -714,7 +733,9 @@ button:disabled { opacity: 0.45; cursor: default; }
   // ---- the signals tray ----
   // A standing paper the commander may read at any time: a button in the
   // row above the signals, not a signal of its own.
-  function paper(text, fn) { var b = el('button', '', text); b.type = 'button'; b.addEventListener('click', fn); $('papers').appendChild(b); return b; }
+  function paper(text, fn, staff) { var b = el('button', '', text); b.type = 'button'; b.addEventListener('click', fn); $(staff ? 'papers-staff' : 'papers').appendChild(b); return b; }
+  // A mark on a paper that wants the commander: a count, and what it counts.
+  function mark(b, n, words) { if (!n) return; var m = el('span', 'mark', String(n)); b.appendChild(m); b.title = (b.title ? b.title + '. ' : '') + words; b.setAttribute('aria-label', b.textContent.replace(/\d+$/, '').trim() + ': ' + words); }
   function slip(from, stamp, title, body, decide) {
     var a = el('article', 'slip' + (decide ? ' decide' : '')), f = el('div', 'from'); f.appendChild(el('span', '', from)); if (stamp) f.appendChild(el('span', 'stamp' + (stamp === 'FOR DECISION' || stamp === 'STOPPED THE CLOCK' ? '' : ' ok'), stamp));
     a.appendChild(f); if (title) a.appendChild(el('strong', '', plainWords(title))); if (body) a.appendChild(el('div', '', plainWords(body))); $('signals').appendChild(a); return a;
@@ -733,7 +754,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   function showSignals() {
-    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = '';
+    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = '';
     if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
     lastTold.forEach(function (t) { slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, t.lines.slice(0, 4).join(' · '), true); });
     (s.holds || []).forEach(function (h) {
@@ -758,11 +779,22 @@ button:disabled { opacity: 0.45; cursor: default; }
       var l = slip('STANDING LEAVE', s.leaves.launch ? 'GIVEN' : null, s.leaves.launch ? 'The staff may launch a plan that is ready' : 'Every plan waits for your word before it launches', null, !s.leaves.launch);
       button(l, s.leaves.launch ? 'WITHHOLD IT' : 'GIVE LEAVE TO LAUNCH', !s.leaves.launch, function () { act('set_leave', { leave: 'launch', given: !s.leaves.launch }); });
     }
-    if (s.queued && s.queued.length) paper('Signed \u00B7 ' + s.queued.length, readSigned).title = 'What you have signed, for the staff at 1800';
+    // Command: the directives, the commander's own intents and what he has
+    // signed. An intent is marked where a plan under it waits for his word.
     showDirectives();
-    roots.forEach(function (r) { var b = paper(sayIntent(r, {}), function () { readPlan(r.number); }); b.title = 'Your intent ' + r.number + (r.in_force ? ', in force' : ', ended') + ': read the plan'; if (!r.in_force) b.style.opacity = 0.6; });
-    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) paper('Reinforcements', readSchedule);
-    if (clock.at === 'dusk') paper('Report', readReport); else { paper('Return', readBriefing); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
+    roots.forEach(function (r) {
+      var b = paper(sayIntent(r, {}), function () { readPlan(r.number); }); b.title = 'Your intent ' + r.number + (r.in_force ? ', in force' : ', ended') + ': read the plan'; if (!r.in_force) b.style.opacity = 0.6;
+      var under = {}; (function walk(n) { under[n] = true; s.intents.forEach(function (c) { if (c.parent === n) walk(c.number); }); })(r.number);
+      var waiting = s.plans.filter(function (p) { return under[p.intent] && ((p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare)); }).length;
+      mark(b, waiting, waiting + (waiting === 1 ? ' plan waits' : ' plans wait') + ' for your word');
+    });
+    if (s.queued && s.queued.length) paper('Signed \u00B7 ' + s.queued.length, readSigned).title = 'What you have signed, for the staff at 1800';
+    // Staff: what is coming, marked with what is due by tomorrow, and the report.
+    if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) {
+      var due = (M.arrivals || []).filter(function (a) { return a.day >= M.day && a.day <= M.day + 1; }).length + M.forces.filter(function (f) { return f.available_from === M.day + 1; }).length;
+      mark(paper('Reinforcements', readSchedule, true), due, due + ' due by tomorrow');
+    }
+    if (clock.at === 'dusk') paper('Report', readReport, true); else { paper('Return', readBriefing, true); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
     var dec = s.staff_decisions_yesterday || [];
     if (dec.length) { var d = slip('FROM STAFF', null, dec.length + ' decisions taken yesterday', dec.slice(0, 4).map(function (x) { return x.text || x.words || x.summary || ('decision ' + x.number); }).join(' · ')); }
   }
@@ -935,7 +967,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     links(body, title, now.map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }));
     if (!later.length) return;
     var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'NOT YET YOURS TO USE (' + later.length + ')'; sm.className = 'sub'; sm.style.cursor = 'pointer'; d.appendChild(sm);
-    later.sort(function (a, b) { return a.available_from - b.available_from; }).forEach(function (f) { d.appendChild(rich('div', '', f.task_force.handle + ', from ' + (dateOf(f.available_from - 1) || 'day ' + f.available_from))); });
+    var rows = el('div', 'rows'); d.appendChild(rows);
+    later.sort(function (a, b) { return a.available_from - b.available_from; }).forEach(function (f) { var row = el('div', 'lrow'); row.appendChild(rich('span', '', f.task_force.handle)); row.appendChild(el('span', 'fig', dateOf(f.available_from - 1) || 'day ' + f.available_from)); rows.appendChild(row); });
     body.appendChild(d);
   }
   // The way back: each card remembers what was open before it, a card or a
@@ -957,8 +990,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   function tileAt(cx, cy) {
     var r = canvas.getBoundingClientRect(), meshes = [], of = [];
     ray.setFromCamera({ x: ((cx - r.left) / r.width) * 2 - 1, y: -((cy - r.top) / r.height) * 2 + 1 }, camera);
-    Object.keys(pieces).forEach(function (h) { meshes.push(pieces[h].grp.children[0]); of.push({ kind: 'force', force: pieces[h].force }); });
-    statics.forEach(function (g) { if (g.userData.thing) { meshes.push(g.children[0]); of.push(g.userData.thing); } });
+    if (sideShown('own')) Object.keys(pieces).forEach(function (h) { meshes.push(pieces[h].grp.children[0]); of.push({ kind: 'force', force: pieces[h].force }); });
+    statics.forEach(function (g) { if (g.userData.thing && sideShown(g.userData.side)) { meshes.push(g.children[0]); of.push(g.userData.thing); } });
     var hits = ray.intersectObjects(meshes, false); return hits.length ? of[meshes.indexOf(hits[0].object)] : null;
   }
   function contactsAt(pl) { return M.contacts.filter(function (c) { return sameHex(c.place, pl); }).map(function (c) { return ['Contact ' + num(c.contact.handle), function () { cardContact({ contact: c }); }]; }); }
@@ -1180,6 +1213,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (received[d.number] == null) return;
       var isNew = !readOnes[d.number];
       if (!isNew) { paper('Directive ' + d.number, function () { readDirective(d); }); return; }
+      mark(paper('Directive ' + d.number, function () { readDirective(d); }), 1, 'new, not yet read');
       var a = slip('FROM ' + d.from.toUpperCase(), 'NEW', 'Directive ' + d.number + ': ' + d.subject, null, true);
       button(a, 'READ THE DIRECTIVE', true, function () { readDirective(d); });
     });
@@ -1491,11 +1525,16 @@ button:disabled { opacity: 0.45; cursor: default; }
   // ---- the chair: you lean, you do not fly ----
   var goal = { x: 0, z: 0, zoom: 0 }, cur = { x: 0, z: 0, zoom: 0 }, camDist = 12;
   function clampGoal() { goal.x = Math.max(-TW / 2, Math.min(TW / 2, goal.x)); goal.z = Math.max(-TD / 2, Math.min(TD / 2, goal.z)); goal.zoom = Math.max(0, Math.min(1, goal.zoom)); }
+  var chartView = false, flat = 0;
+  try { chartView = localStorage.getItem('flagplot.view') === 'chart'; flat = chartView ? 1 : 0; } catch (e) {}
   function placeCamera() {
     var k = 0.12; cur.x += (goal.x - cur.x) * k; cur.z += (goal.z - cur.z) * k; cur.zoom += (goal.zoom - cur.zoom) * k;
     var far = Math.max(12.5, TD * 1.35) * Math.max(1, 1.35 / camera.aspect), e = ease(cur.zoom);
-    camDist = far * Math.pow(1.5 / far, e); var elv = (32 + 38 * e) * Math.PI / 180;
-    camera.position.set(cur.x, camDist * Math.sin(elv), cur.z + camDist * Math.cos(elv)); camera.lookAt(cur.x, 0, cur.z - (1 - e) * 0.6);
+    // From the chair the table is seen at an angle; from above, as a chart is
+    // read, straight down with north up. `flat` goes from one to the other.
+    flat += ((chartView ? 1 : 0) - flat) * k; if (Math.abs((chartView ? 1 : 0) - flat) < 0.002) flat = chartView ? 1 : 0;
+    var half = Math.tan(camera.fov * Math.PI / 360), above = Math.max((TD / 2 + 0.9) / half, (TW / 2 + 0.3) / (half * camera.aspect)), d0 = far * Math.pow(1.5 / far, e), d1 = above * Math.pow(1.5 / above, e); camDist = d0 + (d1 - d0) * flat; var elv = ((32 + 38 * e) * (1 - flat) + 89.9 * flat) * Math.PI / 180;
+    camera.position.set(cur.x, camDist * Math.sin(elv), cur.z + camDist * Math.cos(elv)); camera.lookAt(cur.x, 0, cur.z - (1 - e) * 0.6 * (1 - flat));
   }
   var ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   function onTable(cx, cy) { var r = canvas.getBoundingClientRect(); ray.setFromCamera({ x: ((cx - r.left) / r.width) * 2 - 1, y: -((cy - r.top) / r.height) * 2 + 1 }, camera); var p = new THREE.Vector3(); return ray.ray.intersectPlane(plane, p) ? p : null; }
@@ -1506,7 +1545,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   });
   canvas.addEventListener('pointermove', function (e) {
     var p = ptrs[e.pointerId]; if (!p) { if (e.pointerType === 'mouse') canvas.classList.toggle('over', !picking && !playing && !!tileAt(e.clientX, e.clientY)); return; } var ids = Object.keys(ptrs);
-    if (ids.length === 1) { var s = camDist * 0.0016; goal.x -= (e.clientX - p.x) * s; goal.z -= (e.clientY - p.y) * s * 1.5; clampGoal(); }
+    if (ids.length === 1) { var s = camDist * 0.0016; goal.x -= (e.clientX - p.x) * s; goal.z -= (e.clientY - p.y) * s * (1.5 - 0.5 * flat); clampGoal(); }
     p.x = e.clientX; p.y = e.clientY;
     if (ids.length === 2 && pinch0) { var d = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); goal.zoom = zoom0 + Math.log(d / pinch0) * 0.5; clampGoal(); }
   });
@@ -1522,6 +1561,10 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
     else goal.zoom += 0.2; clampGoal();
   });
+  $('btn-pieces').textContent = PIECE_WORD[piecesShown];
+  $('btn-pieces').addEventListener('click', function () { piecesShown = PIECES[(PIECES.indexOf(piecesShown) + 1) % PIECES.length]; try { localStorage.setItem('flagplot.pieces', piecesShown); } catch (e) {} this.textContent = PIECE_WORD[piecesShown]; if (g) drawMarks(); });
+  $('btn-view').textContent = chartView ? 'View: chart' : 'View: table';
+  $('btn-view').addEventListener('click', function () { chartView = !chartView; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} this.textContent = chartView ? 'View: chart' : 'View: table'; });
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
   $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
@@ -1538,15 +1581,17 @@ button:disabled { opacity: 0.45; cursor: default; }
       Object.keys(pieces).forEach(function (h) { var p = pieces[h]; p.grp.position.lerpVectors(p.from, p.to, e); });
       if (mover) { var dir = mover.to.clone().sub(mover.from).normalize(); placeRake(mover.grp.position.clone().addScaledVector(dir, -0.15).setY(0.03), dir); rake.visible = moveT < 1; }
     } else rake.visible = false;
-    // The tiles lie flat on the chart, and grow a little as the commander sits back.
+    // The tiles lie flat on the chart at one size. Which of them show is the commander's choice.
     if (g && Math.abs(camDist - planDrawnAt) > planDrawnAt * 0.06) drawMarks();
-    var grow = Math.max(1, Math.min(1.45, camDist / 4.5)); function size(g) { g.scale.setScalar(grow); g.children[0].scale.y = 1 / grow; } Object.keys(pieces).forEach(function (h) { size(pieces[h].grp); }); statics.forEach(size);
+    Object.keys(pieces).forEach(function (h) { pieces[h].grp.visible = sideShown('own'); }); statics.forEach(function (m) { m.visible = sideShown(m.userData.side); });
     flashes = flashes.filter(function (f) { f.userData.t += dt / 1.3; var k = f.userData.t; f.scale.setScalar(0.08 + k * 0.42); f.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(f); f.geometry.dispose(); f.material.dispose(); return false; } return true; });
     placeCamera();
     labels.forEach(function (L) {
-      var a = L.anchor(), show = L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3);
+      var a = L.anchor(), show = sideShown(L.side) && (L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3));
       L.sp.visible = show; L.pin.visible = show; if (!show) return;
-      tmp.set(a.x + L.off[0], L.h, a.z + L.off[1]); L.sp.position.copy(tmp);
+      // From above a slip lies on the chart beside what it names, north of it
+      // by its height from the chair, so that stacked slips stay apart.
+      tmp.set(a.x + L.off[0] + 0.22 * flat, L.h * (1 - flat) + 0.06 * flat, a.z + L.off[1] - L.h * 0.55 * flat); L.sp.position.copy(tmp);
       var s = Math.max(0.14, Math.min(1.2, camera.position.distanceTo(tmp) * 0.085)); L.sp.scale.set(s * 1.6 * L.wide, s * 1.6 * L.wide / L.aspect, 1);
       var pos = L.pin.geometry.attributes.position; pos.setXYZ(0, a.x, 0.02, a.z); pos.setXYZ(1, tmp.x, tmp.y, tmp.z); pos.needsUpdate = true;
     });
