@@ -87,3 +87,8 @@ What changed in the games already built:
 - **Every other run baseline, the recorded games, the pinned hashes and the batch fixture** change in their versions and hashes only. No recorded game has a supply run by night, and no transcript changes but in its `version`.
 - **The three arrangements of stage 3's proof** (`data/scenarios/stage-3-proof/`), run once each on their own seed, 1942: no supply run by night is ordered in any of them; every run by night in them is a lift, which this record leaves as it was, so each plays as before. On seed 1 of arrangement (a), the seed the record traces, the Japanese supply run of day 17 now loads 110.3 t, 25 t in each of four ships and 10.3 t in the fifth, where it loaded 25 t in the first; the game then differs, and the run of day 23 loads 94.1 t. Nothing in them is judged here: the proof is run again with the next record.
 
+
+## The architect's rulings
+
+1. **The hours a run's reasons give are still worked on the load filled in ship order** (Nov 19, 2026). The load and unloading hours in a night run's reasons are reckoned as before this record, on the uncut load filled ship after ship: in scenario 85 they say 2.5 hours of unloading where the ships land their 40 t each in 2. This stands for now. The days of a run are reckoned at cruise as before (decision 0145, item 10) and no day moves by it; the hours given are never shorter than the hours taken, so nothing is promised that is not kept. The reasons should give the hours of the load as spread, and that is owed as a correction of words with the next change to the supply run.
+2. **The seven readings of "As built" stand as made.**
