@@ -1139,6 +1139,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     var H = '((?:task_force|air_group|land_unit|base|ship|contact):\\d+)', AT = '\\((-?\\d+),(-?\\d+)\\)', CL = 'D\\d+ (\\d\\d):(\\d\\d)';
     var t = String(e.text).replace(/^(Allied|Japanese|allied|japanese) /, ''), m, k = e.event_kind;
     function R(pattern) { m = new RegExp(pattern).exec(t); return m; }
+    // An event of a fight at sea carries its round first: the round is the game's, not the staff's.
+    t = t.replace(/^round \d+: /, '');
     var out = null;
     if (k === 'task_force_arrived' && R('^' + H + ' arrived at ' + AT + ' at ' + CL)) out = N(m[1]) + ' arrived at ' + P(m[2], m[3]) + ', ' + m[4] + m[5];
     else if (k === 'task_force_halted' && R('^' + H + ' halted at ' + AT + ' at ' + CL + ' to work cargo')) out = N(m[1]) + ' hove to off ' + P(m[2], m[3]) + ' at ' + m[4] + m[5] + ' to work cargo';
@@ -1172,13 +1174,23 @@ button:disabled { opacity: 0.45; cursor: default; }
     else if (k === 'air_fight' && R('^' + H + ' patrol at ([^:]*)')) out = N(m[1]) + ' engaged ' + m[2];
     else if (k === 'airfield_built' && R('^' + H)) out = 'The airfield at ' + N(m[1]) + ' is complete';
     else if (k === 'air_attack_against' && R('^' + H + ' attacked by (\\d+) aircraft')) out = N(m[1]) + ' was attacked by ' + m[2] + ' aircraft';
-    else if (k === 'ship_damaged' && R('^' + H + ' took (\\d+) hits? on (\\w+)')) out = N(m[1]) + ' took ' + m[2] + (m[2] === '1' ? ' hit' : ' hits') + ' on ' + m[3];
-    else if (k === 'system_hit' && R('^' + H + ' (.*) hit, (\\w+) -> (\\w+)')) out = N(m[1]) + ': ' + m[2] + ' hit, now ' + m[3];
     else if (k === 'aircraft_landed_elsewhere' && R('^' + H + ' had no deck: (\\d+) aircraft landed at ' + H)) out = m[2] + ' aircraft of ' + N(m[1]) + ', with no deck to return to, landed aboard ' + N(m[3]);
     else if (k === 'aircraft_repaired' && R('^' + H + ' had (\\d+) aircraft repaired aboard ' + H + ', (\\d+) ready and (\\d+) damaged')) out = N(m[1]) + ': ' + m[2] + ' aircraft repaired aboard ' + N(m[3]) + '; ' + m[4] + ' ready, ' + m[5] + ' damaged';
     else if (k === 'base_supply_spent' && R('^' + H + ' spent ([\\d.]+) t of supply on (\\d+) men ashore for the day, ([\\d.]+) t left')) out = N(m[1]) + ' issued ' + fig(m[2]) + ' t of supply to ' + fig(m[3]) + ' men; ' + fig(m[4]) + ' t in stock';
     else if (k === 'ship_refuelled' && R('^' + H + ' took ([\\d.]+) t of fuel at ' + H)) out = N(m[1]) + ' took ' + fig(m[2]) + ' t of fuel at ' + N(m[3]);
     else if (k === 'strike_mission_cleared' && R('^' + H + ' has no mission: the base it was to strike, ' + H)) out = N(m[1]) + ' stood down from its strike: ' + N(m[2]) + ' is ours';
+    if (out == null) {
+      if (k === 'engagement_begun' && R('^' + H + ' met the enemy at ' + AT + ' at ' + CL)) out = N(m[1]) + ' met the enemy at ' + P(m[2], m[3]) + ', ' + m[4] + m[5] + '. Action joined';
+      else if (k === 'force_surprised' && R('^' + H + ' was surprised')) out = N(m[1]) + ' was taken by surprise';
+      else if (k === 'force_became_alert' && R('^' + H)) out = N(m[1]) + ' came to action stations';
+      else if (k === 'ship_sunk' && R('^' + H + ' of ' + H + ' sank')) out = N(m[1]) + ', of ' + N(m[2]) + ', was sunk';
+      else if (k === 'force_broke_off' && R('^' + H + ' broke off, ([\\d.]+) of its ships')) out = N(m[1]) + ' broke off the action, ' + (m[2] === '0.5' ? 'half' : m[2] === '1' ? 'all' : Math.round(parseFloat(m[2]) * 100) + ' in a hundred') + ' of its ships sunk or crippled';
+      else if (k === 'engagement_ended' && R('^engagement of ' + H + ' at ' + AT + ' ended in round \\d+: (.*)$')) out = 'The action of ' + N(m[1]) + ' at ' + P(m[2], m[3]) + ' ended' + (/broke off/.test(m[4]) ? ': a force broke off' : '');
+      else if (k === 'claim_received' && R('claims (\\d+) enemy ships? sunk at ' + AT)) out = 'Claimed at ' + P(m[2], m[3]) + ': ' + (m[1] === '0' ? 'no enemy ship' : m[1] + (m[1] === '1' ? ' enemy ship' : ' enemy ships')) + ' sunk';
+      else if (R('^' + H + ' looked, chance [^:]*: (\\w+)')) out = N(m[1]) + (m[2] === 'sighted' ? ' sighted the enemy' : ' looked and sighted nothing');
+      else if (k === 'ship_damaged' && R('^' + H + ' took (\\d+) hits? on (\\w+)')) out = N(m[1]) + ' took ' + m[2] + (m[2] === '1' ? ' hit' : ' hits') + (m[3] === 'fire' ? ', starting fires' : m[3] === 'flotation' ? ' on the hull' : ' on ' + m[3]);
+      else if (k === 'system_hit' && R('^' + H + ' (.*) hit, (?:no change, still (\\w+)|(\\w+) -> (\\w+))')) { var same = m[3] || (m[4] === m[5] ? m[5] : ''); out = N(m[1]) + ': ' + m[2] + ' hit, ' + (same ? (same === 'working' ? 'still in action' : same === 'out' ? 'already out of action' : 'still ' + same) : 'now ' + (m[5] === 'working' ? 'in action' : m[5] === 'out' ? 'out of action' : m[5])); }
+    }
     if (out == null) out = t.replace(new RegExp(H, 'g'), function (h) { return N(h); }).replace(new RegExp(AT, 'g'), function (x, q, r) { return P(q, r); }).replace(/D\d+ (\d\d):(\d\d)/g, '$1$2').replace(/\d+\.\d{2,}/g, function (x) { return fig(x); }).replace(/(intent|plan|contact|order):(\d+)/g, '$1 $2').replace(/_/g, ' ');
     out = out.charAt(0).toUpperCase() + out.slice(1); return /[.!?]$/.test(out) ? out : out + '.';
   }
@@ -1188,7 +1200,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   // what was ordered, what was done and what was reported. It is the seat's
   // own events (the tool `events`), in its own words; an entry opens what led
   // to it (the tool `explain`). What the staff does every day is folded.
-  var D_ROUTINE = { air_group_fatigue: 1, land_unit_fatigue: 1, task_force_fatigue: 1, aircraft_worn: 1, aircraft_repaired: 1, fieldworks_changed: 1, unit_worked: 1, base_supply_spent: 1, men_fed: 1, base_at_day_end: 1, search_flown: 1, fuel_burned: 1, ship_refuelled: 1, contact_aged: 1, fight_day_counted: 1, left_roster: 1, loading_lost: 1, ground_fire: 1, task_force_steamed: 1, escorts_sent: 1, airfield_mended: 1, base_anti_aircraft_fire: 1, anti_aircraft_fire: 1 }, diaryLast = 0;
+  var D_ROUTINE = { air_group_fatigue: 1, land_unit_fatigue: 1, task_force_fatigue: 1, aircraft_worn: 1, aircraft_repaired: 1, fieldworks_changed: 1, unit_worked: 1, base_supply_spent: 1, men_fed: 1, base_at_day_end: 1, search_flown: 1, fuel_burned: 1, ship_refuelled: 1, contact_aged: 1, fight_day_counted: 1, left_roster: 1, loading_lost: 1, ground_fire: 1, task_force_steamed: 1, escorts_sent: 1, airfield_mended: 1, base_anti_aircraft_fire: 1, anti_aircraft_fire: 1, salvo: 1, salvo_against: 1 }, diaryLast = 0;
   function diaryWords(t) { t = nameText(plainWords(String(t).replace(/^(Allied|Japanese) /, ''))).replace(/_/g, ' '); t = t.charAt(0).toUpperCase() + t.slice(1); return /[.!?]$/.test(t) ? t : t + '.'; }
   // A plan said by what it is for, and the intent of the commander's it comes under.
   function planOf(n) { var st = M.state || {}, p = (st.plans || []).filter(function (x) { return x.number === n; })[0], by = {}; (st.intents || []).forEach(function (i) { by[i.number] = i; }); var i = p && by[p.intent]; if (!i) return { name: '', root: null }; var r = i; while (r.parent != null && by[r.parent]) r = by[r.parent]; var w = sayIntent(i, {}); return { name: w.charAt(0).toLowerCase() + w.slice(1), root: r.number }; }
