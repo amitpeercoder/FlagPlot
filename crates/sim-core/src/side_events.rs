@@ -874,8 +874,26 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         EventKind::ReportReceived { side: owner, .. }
         | EventKind::ContactAged { side: owner, .. }
         | EventKind::ContactDropped { side: owner, .. }
-        | EventKind::ClaimReceived { side: owner, .. }
         | EventKind::ContactNotThere { side: owner, .. } => whole_if(*owner == side),
+
+        // A side's own claim, whole, and nothing of it to the enemy
+        // (decisions 0056 and 0135). The types it names were on the enemy's
+        // field and are what the raiders made out (decision 0179, 9); the
+        // units it names are the side's own, with what each claims (decision
+        // 0180, 9). Both are the claim, seen by whoever sees the claim.
+        EventKind::ClaimReceived {
+            side: owner,
+            hex: _,
+            claimed_sunk: _,
+            claimed_hits: _,
+            claimed_kind: _,
+            claimed_shot_down: _,
+            claimed_on_ground: _,
+            from_air: _,
+            from_bombardment: _,
+            ground_types: _,
+            by_unit: _,
+        } => whole_if(*owner == side),
 
         // A side's own passing of its own reports between its commands, and
         // nothing of the enemy's (decision 0135, 21): it names no enemy unit,
@@ -3300,6 +3318,8 @@ mod tests {
                     claimed_on_ground: 0,
                     from_air: false,
                     from_bombardment: false,
+                    ground_types: Vec::new(),
+                    by_unit: Vec::new(),
                 },
                 Whole,
                 Nothing,
@@ -5092,6 +5112,8 @@ mod tests {
             claimed_on_ground: 0,
             from_air: true,
             from_bombardment: false,
+            ground_types: Vec::new(),
+            by_unit: Vec::new(),
         };
         let mut events = log(vec![claim.clone()]);
         events[0].breakdown = Some(Breakdown {

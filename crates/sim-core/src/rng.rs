@@ -142,11 +142,17 @@ pub enum Draw {
     /// At which base of the enemy's a believed force of no known place is
     /// (decision 0174, 17): keyed as [`Draw::TrialBelievedHex`] is.
     TrialBelievedBase,
+    /// Whether the raiders make out the types of the aircraft they claim
+    /// destroyed on the ground (decision 0179, 4 and 5): one draw for the
+    /// claim, on a stream keyed as the claim's own is (the intelligence
+    /// subsystem, the raiding side's first unit to fire and the raid's
+    /// first strike group), with this value.
+    ClaimType,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 18] = [
+    pub const ALL: [Draw; 19] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -165,6 +171,7 @@ impl Draw {
         Draw::TrialPair,
         Draw::TrialBelievedHex,
         Draw::TrialBelievedBase,
+        Draw::ClaimType,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -189,6 +196,7 @@ impl Draw {
             Draw::TrialPair => 15,
             Draw::TrialBelievedHex => 16,
             Draw::TrialBelievedBase => 17,
+            Draw::ClaimType => 18,
         }
     }
 }

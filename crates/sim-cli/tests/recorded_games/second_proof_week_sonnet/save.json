@@ -373,87 +373,87 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "76e7b1fe1ffbce60"
+      "hash": "4f8f153ba13ae2ed"
     },
     {
       "day": 2,
-      "hash": "d7d3ff9cbc9ef20e"
+      "hash": "0b42981f3d56cbe7"
     },
     {
       "day": 3,
-      "hash": "7a4d9b9f24114ce1"
+      "hash": "67b84b6a3c88dc2c"
     },
     {
       "day": 4,
-      "hash": "c2734bb2a47e4f4a"
+      "hash": "e6da699d636bc4d3"
     },
     {
       "day": 5,
-      "hash": "72b5d01ee924165f"
+      "hash": "e017b45f9b0d68ca"
     },
     {
       "day": 6,
-      "hash": "fd1b0a206c9dd69e"
+      "hash": "76e62d2d82dd1183"
     },
     {
       "day": 7,
-      "hash": "0ab9911aaf96b7c8"
+      "hash": "4ef0e0a3a62ee9c9"
     },
     {
       "day": 8,
-      "hash": "30d6a965ae4ffaee"
+      "hash": "a5e37fbf7470bcf9"
     },
     {
       "day": 9,
-      "hash": "ac0f1e51b2263a78"
+      "hash": "43031b4f76cdac95"
     },
     {
       "day": 10,
-      "hash": "9c06d9984623fbd5"
+      "hash": "1537c2605ccef0f0"
     },
     {
       "day": 11,
-      "hash": "31544d7ef8e31596"
+      "hash": "5ce3c1cc1b2128c7"
     },
     {
       "day": 12,
-      "hash": "21c5bc0c84898c1b"
+      "hash": "41a15359671542c4"
     },
     {
       "day": 13,
-      "hash": "8058ce0a7f3533f2"
+      "hash": "db20796fb256fb07"
     },
     {
       "day": 14,
-      "hash": "aa6ab081b4eed745"
+      "hash": "be43b6e18dd911f8"
     },
     {
       "day": 15,
-      "hash": "8ef09ea39b928eff"
+      "hash": "778d52faf02b1ae4"
     },
     {
       "day": 16,
-      "hash": "99f1a1fca124c1d4"
+      "hash": "e7366ae0ecf52c28"
     },
     {
       "day": 17,
-      "hash": "82991f966b87c8f4"
+      "hash": "5f57c2b4341f9a3e"
     },
     {
       "day": 18,
-      "hash": "2796a76bb3833c91"
+      "hash": "5c211953fac70ecf"
     },
     {
       "day": 19,
-      "hash": "1a7799746da1a39d"
+      "hash": "e96507d996957f35"
     },
     {
       "day": 20,
-      "hash": "fb7fd08ee4d83134"
+      "hash": "d7fa859563b01f95"
     },
     {
       "day": 21,
-      "hash": "938a6d33821a20ca"
+      "hash": "5985d41ba957d21b"
     }
   ],
   "orders": [
@@ -11568,6 +11568,6 @@
       "side": "japanese"
     }
   ],
-  "state_version": "flagplot-state-v48",
+  "state_version": "flagplot-state-v49",
   "version": 23
 }

@@ -2,45 +2,45 @@ Scenario 7: The full slice, 7 August to 14 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e6e979e33d21adbf  246 events
-day   2  hash 60c979ee62a95dd9  146 events
-day   3  hash 8959868ab0625787  147 events
-day   4  hash da9979d04cd71efc  152 events
-day   5  hash 69498bb377fc3635  140 events
-day   6  hash 125f110a42d3e909  34 events
-day   7  hash 3bf1096e7cdd02d4  30 events
-day   8  hash e7e2a1fd2a40cb9e  43 events
-day   9  hash 7b3aec17a12ce89c  48 events
-day  10  hash 1771b268ad492559  55 events
-day  11  hash 2a0a4f617c6cbc5a  79 events
-day  12  hash 91fd46c61b743e62  68 events
-day  13  hash 6657cbdad2749d4f  102 events
-day  14  hash b988d18b393f0316  84 events
-day  15  hash 78850b6fd03c6e85  92 events
-day  16  hash e635a03cdc9c21b1  87 events
-day  17  hash f3fc86d2c8a49adb  49 events
-day  18  hash d05611d05e2821d6  210 events
-day  19  hash 370cdd136376622f  258 events
-day  20  hash f883bf7e0358761b  207 events
-day  21  hash 593074b6b9427784  255 events
-day  22  hash 774886f08017d016  159 events
-day  23  hash f55cecb089ffdbd5  225 events
-day  24  hash 922fbe23df5e2084  221 events
-day  25  hash 4f5c1b925297c7c0  238 events
-day  26  hash a6aff6f2ca79eea0  170 events
-day  27  hash 7444eac68bd1a394  196 events
-day  28  hash 1b45e57af080fe5f  150 events
-day  29  hash 809c0b7efdd4ac52  144 events
-day  30  hash 6e0d1915657edc6b  186 events
-day  31  hash 20282397af3ff9d8  184 events
-day  32  hash 0a5000dda60faf07  161 events
-day  33  hash d9e3e4da7665e4d5  122 events
-day  34  hash 0d44006e65ef342b  142 events
-day  35  hash 8e0a83b01b7f836e  168 events
-day  36  hash 15f71e40a16c0570  153 events
-day  37  hash ff1a8c1d946176c9  220 events
-day  38  hash 5809374077829a8a  151 events
-day  39  hash c251c1be7062ff4a  139 events
+day   1  hash 622885121595cd1a  246 events
+day   2  hash fa4aa96862454ab8  146 events
+day   3  hash d9958b9050e14a42  147 events
+day   4  hash 058d3474403c36d9  152 events
+day   5  hash 07f44d6be21cad08  140 events
+day   6  hash 408037b1ed0792dc  34 events
+day   7  hash b070f1011bd9ab9d  30 events
+day   8  hash 8f4c19182dfceced  43 events
+day   9  hash cc3aaea4d3ea5a89  48 events
+day  10  hash 5fc815c819e3639c  55 events
+day  11  hash 58dd7791f9ef55ef  79 events
+day  12  hash 95ce7beda760351d  68 events
+day  13  hash 32418ebbdfc8f8a2  102 events
+day  14  hash e6b223ec7d3ac2b3  84 events
+day  15  hash f9c0f0e351a5f83e  92 events
+day  16  hash 9c58bf6e25383a36  87 events
+day  17  hash 31cbf7f4534ac03c  49 events
+day  18  hash 7a8a4a114c5cbae7  210 events
+day  19  hash 5fa87d8400bbb6ff  258 events
+day  20  hash 46bca802111bb261  207 events
+day  21  hash 72d5919ddcbed822  255 events
+day  22  hash affcec0a7378892b  159 events
+day  23  hash 63f6fa3c1581319b  225 events
+day  24  hash 9f198f1647e7eabf  221 events
+day  25  hash 26e9f36272d7f00d  238 events
+day  26  hash e5b7a2360f5682bb  170 events
+day  27  hash b688bf6453d23a63  196 events
+day  28  hash 51a94edc1970c7b2  150 events
+day  29  hash 86d6e7fcfb411855  144 events
+day  30  hash 51ddf4334cbc17cf  186 events
+day  31  hash b2b86314efaf91a4  184 events
+day  32  hash 5b99d0058ccb711f  161 events
+day  33  hash bc5cf9b8bff8f1bd  122 events
+day  34  hash 8fb86dddde9e7c7b  142 events
+day  35  hash 4e095cf0296fac7c  168 events
+day  36  hash 80977a43c3acaa60  153 events
+day  37  hash b9aeac6955fa5c1d  220 events
+day  38  hash 2d5e55847f84209d  151 events
+day  39  hash 5116f9603919e7d5  139 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -276,59 +276,59 @@ land_unit:24 "Aoba Detachment, part" (Japanese): 637 men ashore at (2,-5), field
 land_unit:25 "Oka group" (Japanese): 249 men ashore at (2,-4), fatigue 95
 Allied contact:13 at (0,10): 3 ships, carrier, age 3 pulses
 Allied contact:14 at (8,-12): 15 ships, transport, age 1 pulses
-Allied claim over (2,-4): 9 aircraft shot down, day 18 afternoon
-Allied claim over (2,-4): 7 aircraft shot down, day 19 morning
-Allied claim at (7,-9): 1 hit on a carrier, 0 sunk, day 19 morning
-Allied claim at (7,-9): 17 hits on a carrier, 1 sunk, day 19 morning
-Allied claim over (2,-4): 3 aircraft shot down, day 19 morning
-Allied claim over (7,-5): 29 aircraft shot down, day 19 afternoon
-Allied claim over (7,-5): 26 aircraft shot down, day 19 afternoon
-Allied claim over (2,-4): 4 aircraft shot down, day 20 morning
-Allied claim at (7,-9): 2 hits on a cruiser, 0 sunk, day 20 afternoon
-Allied claim at (7,-9): 5 hits on a cruiser, 1 sunk, day 20 afternoon
+Allied claim over (2,-4): 9 aircraft shot down; claimed by air_group:10: 9 shot down, day 18 afternoon
+Allied claim over (2,-4): 7 aircraft shot down; claimed by air_group:10: 6 shot down; by base:1: 1 shot down, day 19 morning
+Allied claim at (7,-9): 1 hit on a carrier, 0 sunk; claimed by air_group:11: 1 hit, day 19 morning
+Allied claim at (7,-9): 17 hits on a carrier, 1 sunk; claimed by air_group:106: 6 hits; by air_group:107: 6 hits; by air_group:108: 5 hits, day 19 morning
+Allied claim over (2,-4): 3 aircraft shot down; claimed by air_group:10: 1 shot down; by base:1: 2 shot down, day 19 morning
+Allied claim over (7,-5): 29 aircraft shot down; claimed by air_group:101: 7 shot down; by air_group:105: 11 shot down; by task_force:1: 11 shot down, day 19 afternoon
+Allied claim over (7,-5): 26 aircraft shot down; claimed by air_group:101: 9 shot down; by air_group:105: 8 shot down; by task_force:1: 9 shot down, day 19 afternoon
+Allied claim over (2,-4): 4 aircraft shot down; claimed by air_group:10: 2 shot down; by base:1: 2 shot down, day 20 morning
+Allied claim at (7,-9): 2 hits on a cruiser, 0 sunk; claimed by air_group:11: 2 hits, day 20 afternoon
+Allied claim at (7,-9): 5 hits on a cruiser, 1 sunk; claimed by air_group:106: 1 hit; by air_group:107: 4 hits, day 20 afternoon
 Allied claims 0 enemy ships sunk at (0,10), day 21 night
 Allied claims 0 enemy ships sunk at (0,10), day 21 night
 Allied claims 0 enemy ships sunk at (0,10), day 21 morning
-Allied claim over (7,-5): 16 aircraft shot down, day 22 morning
-Allied claim over (7,-5): 9 aircraft shot down, day 22 morning
-Allied claim over (2,-4): 2 aircraft shot down, day 23 morning
-Allied claim over (2,-4): 13 aircraft shot down, day 24 morning
+Allied claim over (7,-5): 16 aircraft shot down; claimed by air_group:101: 4 shot down; by air_group:105: 6 shot down; by task_force:1: 6 shot down, day 22 morning
+Allied claim over (7,-5): 9 aircraft shot down; claimed by air_group:101: 2 shot down; by air_group:105: 7 shot down, day 22 morning
+Allied claim over (2,-4): 2 aircraft shot down; claimed by air_group:10: 1 shot down; by base:1: 1 shot down, day 23 morning
+Allied claim over (2,-4): 13 aircraft shot down; claimed by air_group:13: 13 shot down, day 24 morning
 Allied claims 1 enemy ship sunk at (-4,12), day 25 night
-Allied claim over (2,-4): 12 aircraft shot down, day 27 morning
-Allied claim over (2,-4): 7 aircraft shot down, day 30 morning
-Allied claim over (2,-4): 1 aircraft shot down, day 34 morning
-Allied claim over (2,-4): 6 aircraft shot down, day 35 morning
-Allied claim over (2,-4): 22 aircraft shot down, day 36 morning
-Allied claim over (2,-4): 8 aircraft shot down, day 37 morning
-Allied claim over (2,-4): 20 aircraft shot down, day 38 morning
+Allied claim over (2,-4): 12 aircraft shot down; claimed by air_group:13: 12 shot down, day 27 morning
+Allied claim over (2,-4): 7 aircraft shot down; claimed by air_group:10: 1 shot down; by air_group:13: 6 shot down, day 30 morning
+Allied claim over (2,-4): 1 aircraft shot down; claimed by base:1: 1 shot down, day 34 morning
+Allied claim over (2,-4): 6 aircraft shot down; claimed by air_group:13: 6 shot down, day 35 morning
+Allied claim over (2,-4): 22 aircraft shot down; claimed by air_group:13: 3 shot down; by air_group:15: 18 shot down; by base:1: 1 shot down, day 36 morning
+Allied claim over (2,-4): 8 aircraft shot down; claimed by air_group:15: 8 shot down, day 37 morning
+Allied claim over (2,-4): 20 aircraft shot down; claimed by air_group:13: 2 shot down; by air_group:15: 9 shot down; by air_group:16: 9 shot down, day 38 morning
 Allied estimate at (2,-4): 1343 enemy men ashore, reported day 39 (men in contact)
 Japanese: no contacts
-Japanese claim over (2,-4): 11 aircraft shot down, day 18 afternoon
-Japanese claim at (2,-4): 20 aircraft shot down, 3 aircraft destroyed on the ground, day 19 morning
-Japanese claim over (7,-9): 1 aircraft shot down, day 19 morning
-Japanese claim over (7,-9): 5 aircraft shot down, day 19 morning
-Japanese claim over (2,-4): 8 aircraft shot down, day 19 morning
-Japanese claim at (7,-5): 1 hit on a carrier, 0 sunk, 3 aircraft shot down, day 19 afternoon
-Japanese claim at (7,-5): 3 hits on a carrier, 0 sunk, 5 aircraft shot down, day 19 afternoon
-Japanese claim at (2,-4): 10 aircraft shot down, 4 aircraft destroyed on the ground, day 20 morning
-Japanese claim over (7,-9): 1 aircraft shot down, day 20 afternoon
-Japanese claim over (7,-9): 1 aircraft shot down, day 20 afternoon
+Japanese claim over (2,-4): 11 aircraft shot down; claimed by air_group:118: 11 shot down, day 18 afternoon
+Japanese claim at (2,-4): 20 aircraft shot down, 3 aircraft destroyed on the ground (3 of aircraft_type:2100); claimed by air_group:2: 20 shot down; by air_group:1: 3 on the ground, day 19 morning
+Japanese claim over (7,-9): 1 aircraft shot down; claimed by task_force:4: 1 shot down, day 19 morning
+Japanese claim over (7,-9): 5 aircraft shot down; claimed by air_group:118: 3 shot down; by task_force:4: 2 shot down, day 19 morning
+Japanese claim over (2,-4): 8 aircraft shot down; claimed by air_group:118: 8 shot down, day 19 morning
+Japanese claim at (7,-5): 1 hit on a carrier, 0 sunk, 3 aircraft shot down; claimed by air_group:111: 3 shot down; by air_group:112: 1 hit, day 19 afternoon
+Japanese claim at (7,-5): 3 hits on a carrier, 0 sunk, 5 aircraft shot down; claimed by air_group:114: 5 shot down; by air_group:115: 3 hits, day 19 afternoon
+Japanese claim at (2,-4): 10 aircraft shot down, 4 aircraft destroyed on the ground; claimed by air_group:2: 10 shot down; by air_group:1: 4 on the ground, day 20 morning
+Japanese claim over (7,-9): 1 aircraft shot down; claimed by task_force:4: 1 shot down, day 20 afternoon
+Japanese claim over (7,-9): 1 aircraft shot down; claimed by task_force:4: 1 shot down, day 20 afternoon
 Japanese claims 1 enemy ship sunk at (0,10), day 21 night
 Japanese claims 1 enemy ship sunk at (0,10), day 21 night
 Japanese claims 2 enemy ships sunk at (0,10), day 21 morning
 Japanese claims 2 enemy ships sunk at (0,10), day 21 afternoon
-Japanese claim at (7,-5): 0 hits on a battleship, 0 sunk, 1 aircraft shot down, day 22 morning
-Japanese claim at (7,-5): 0 hits on a battleship, 0 sunk, 3 aircraft shot down, day 22 morning
+Japanese claim at (7,-5): 0 hits on a battleship, 0 sunk, 1 aircraft shot down; claimed by air_group:111: 1 shot down, day 22 morning
+Japanese claim at (7,-5): 0 hits on a battleship, 0 sunk, 3 aircraft shot down; claimed by air_group:114: 3 shot down, day 22 morning
 Japanese claims 0 enemy ships sunk at (-4,14), day 23 night
-Japanese claim at (2,-4): 7 aircraft shot down, 4 aircraft destroyed on the ground, day 23 morning
-Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 24 morning
-Japanese claim at (2,-4): 21 aircraft shot down, 1 aircraft destroyed on the ground, day 27 morning
-Japanese claim at (2,-4): 17 aircraft shot down, 3 aircraft destroyed on the ground, day 30 morning
-Japanese claim at (2,-4): 2 aircraft destroyed on the ground, day 34 morning
-Japanese claim at (2,-4): 12 aircraft shot down, 4 aircraft destroyed on the ground, day 35 morning
-Japanese claim at (2,-4): 9 aircraft shot down, 1 aircraft destroyed on the ground, day 36 morning
-Japanese claim over (2,-4): 2 aircraft shot down, day 37 morning
-Japanese claim over (2,-4): 2 aircraft shot down, day 38 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 4 aircraft destroyed on the ground; claimed by air_group:2: 7 shot down; by air_group:1: 4 on the ground, day 23 morning
+Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground (1 of aircraft_type:2101); claimed by air_group:2: 6 shot down; by air_group:1: 1 on the ground, day 24 morning
+Japanese claim at (2,-4): 21 aircraft shot down, 1 aircraft destroyed on the ground (1 of aircraft_type:2101); claimed by air_group:2: 9 shot down; by air_group:3: 12 shot down; by air_group:1: 1 on the ground, day 27 morning
+Japanese claim at (2,-4): 17 aircraft shot down, 3 aircraft destroyed on the ground; claimed by air_group:2: 8 shot down; by air_group:3: 9 shot down; by air_group:1: 3 on the ground, day 30 morning
+Japanese claim at (2,-4): 2 aircraft destroyed on the ground (1 of aircraft_type:2100, 1 of aircraft_type:2101); claimed by air_group:1: 2 on the ground, day 34 morning
+Japanese claim at (2,-4): 12 aircraft shot down, 4 aircraft destroyed on the ground (1 of aircraft_type:2100, 3 of aircraft_type:2101); claimed by air_group:2: 8 shot down; by air_group:3: 4 shot down; by air_group:1: 4 on the ground, day 35 morning
+Japanese claim at (2,-4): 9 aircraft shot down, 1 aircraft destroyed on the ground; claimed by air_group:2: 5 shot down; by air_group:3: 4 shot down; by air_group:1: 1 on the ground, day 36 morning
+Japanese claim over (2,-4): 2 aircraft shot down; claimed by air_group:3: 2 shot down, day 37 morning
+Japanese claim over (2,-4): 2 aircraft shot down; claimed by air_group:2: 1 shot down; by air_group:3: 1 shot down, day 38 morning
 Japanese estimate at (2,-4): 19202 enemy men ashore, reported day 39 (men in contact)
 
 Result (the placeholder scale of decision 0054):

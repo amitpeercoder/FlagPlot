@@ -531,3 +531,11 @@ path = "scenario_96_the_window.rs"
 [[test]]
 name = "scenario_97_a_seats_trial"
 path = "scenario_97_a_seats_trial.rs"
+
+[[test]]
+name = "scenario_98_the_type_claimed_on_the_ground"
+path = "scenario_98_the_type_claimed_on_the_ground.rs"
+
+[[test]]
+name = "scenario_99_a_groups_tally_of_claims"
+path = "scenario_99_a_groups_tally_of_claims.rs"

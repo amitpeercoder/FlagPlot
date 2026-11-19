@@ -415,6 +415,8 @@ fn cited_by_group(group: &AirGroup, out: &mut Vec<(String, Cited)>) {
         search_once: _,
         search_once_order,
         available_from: _,
+        // A tally cites no order and no event (decision 0180).
+        claims: _,
     } = group;
     for (what, held) in [
         ("mission", mission_order),

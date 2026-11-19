@@ -26,10 +26,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate, GroundGrade};
+use crate::claims::UnitClaim;
 use crate::command::{CommandState, Hold, HoldMaker};
 use crate::events::{Cause, EventKind, EventLog};
 use crate::hex::Hex;
-use crate::ids::{EventId, IdAllocator, OrderId, UmpireKey};
+use crate::ids::{AircraftTypeId, EntityRef, EventId, IdAllocator, OrderId, UmpireKey};
 use crate::map::Map;
 use crate::objectives::Objectives;
 use crate::orders::{Order, OrderKind, Origin};
@@ -96,7 +97,7 @@ pub struct PictureContact {
 }
 
 /// A claim in a picture: a [`BattleClaim`] without its event.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct PictureClaim {
     pub hex: Hex,
     pub day: u32,
@@ -108,6 +109,11 @@ pub struct PictureClaim {
     pub claimed_on_ground: u32,
     pub from_air: bool,
     pub from_bombardment: bool,
+    /// The types claimed on the ground (decision 0179).
+    pub ground_types: Vec<(AircraftTypeId, u32)>,
+    /// Who claims what (decision 0180): every unit named is of the claim's
+    /// side.
+    pub by_unit: Vec<UnitClaim>,
 }
 
 /// An estimate of the enemy's men ashore in a picture: a
@@ -377,6 +383,8 @@ fn walk_air_group(group: &mut AirGroup, visit: &mut dyn FnMut(String, HeldId<'_>
         search_once: _,
         search_once_order,
         available_from: _,
+        // A tally holds no order and no event (decision 0180).
+        claims: _,
     } = group;
     for (what, held) in [
         ("mission", mission_order),
@@ -614,6 +622,8 @@ fn belief_of<'a>(
                     from_air,
                     from_bombardment,
                     received_event: _,
+                    ground_types,
+                    by_unit,
                 } = claim.clone();
                 PictureClaim {
                     hex,
@@ -626,6 +636,8 @@ fn belief_of<'a>(
                     claimed_on_ground,
                     from_air,
                     from_bombardment,
+                    ground_types,
+                    by_unit,
                 }
             })
             .collect(),
@@ -637,6 +649,25 @@ fn belief_of<'a>(
                 grade: estimate.grade,
             })
             .collect(),
+    }
+}
+
+/// Whether a claim of `side` may name `unit` (decision 0180, 12): an air
+/// group or a task force the picture holds as the side's, or a base the
+/// picture holds of either side, since a base may change hands after its
+/// guns claimed. A unit of another kind is never named by a claim.
+fn claimer_of(truth: &TruthState, unit: EntityRef, side: Side) -> bool {
+    match unit {
+        EntityRef::AirGroup(group) => truth
+            .air_groups
+            .get(&group)
+            .is_some_and(|group| group.side == side),
+        EntityRef::TaskForce(force) => truth
+            .task_forces
+            .get(&force)
+            .is_some_and(|force| force.side == side),
+        EntityRef::Base(base) => truth.bases.contains_key(&base),
+        _ => false,
     }
 }
 
@@ -764,6 +795,7 @@ fn build(
     // Each side's belief: a contact on the map with a ship; a claim and an
     // estimate of no day after the picture's; one estimate for a hex.
     for (side, belief) in &beliefs {
+        let belief_side = *side;
         let side = side.name();
         for (place, contact) in (1..).zip(&belief.contacts) {
             if contact.ship_count == 0 {
@@ -781,6 +813,18 @@ fn build(
                 return Err(refuse(format!(
                     "the {side} claim {place} is of day {}, after the picture's day, {day}",
                     claim.day
+                )));
+            }
+            // Every unit a claim names is of the claim's side (decision
+            // 0180, 12).
+            if let Some(unit) = claim
+                .by_unit
+                .iter()
+                .map(|line| line.unit)
+                .find(|unit| !claimer_of(&truth, *unit, belief_side))
+            {
+                return Err(refuse(format!(
+                    "the {side} claim {place} names {unit}, which is not of the {side} side"
                 )));
             }
         }
@@ -869,6 +913,8 @@ fn build(
                     from_air: c.from_air,
                     from_bombardment: c.from_bombardment,
                     received_event: picture_event,
+                    ground_types: c.ground_types.clone(),
+                    by_unit: c.by_unit.clone(),
                 }),
                 given.estimates.iter().map(|e| GroundEstimate {
                     hex: e.hex,

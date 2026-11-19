@@ -95,8 +95,13 @@ pub const FORMAT: &str = "flagplot-agent";
 /// tools `trial` and `trials` of a seat with a staff that plays a whole side,
 /// and their answers `trial`, the estimate of an intent or a previewed draft
 /// in a commander's words, and `trials`, the estimates the seat was shown
-/// (decision 0178).
-pub const VERSION: u32 = 29;
+/// (decision 0178). 30 adds to a claim from the air the types of the aircraft
+/// claimed destroyed on the ground, by name, where the raiders made them out
+/// (`ground_types`), and who claims what (`claimed_by`: each unit with what
+/// it claims, a unit no longer in the game `since_dissolved`), with both in
+/// the claim's words, and to an air group's line its tally of its claims
+/// since the game began (`claimed_to_date`) (decisions 0179 and 0180).
+pub const VERSION: u32 = 30;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

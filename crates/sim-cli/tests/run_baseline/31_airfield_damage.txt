@@ -2,12 +2,12 @@ Scenario 31: An airfield damaged and mended
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e481e6b16723677f  24 events
-day   2  hash 5a4a56ff3903f16d  23 events
-day   3  hash 2fe35d0ebc1edda9  26 events
-day   4  hash 271427600b060df2  22 events
-day   5  hash 92b8e462b53b9cdb  21 events
-day   6  hash f94980ed21d3b804  21 events
+day   1  hash 69391851008081ba  24 events
+day   2  hash 5f513fef6d1518c3  23 events
+day   3  hash 8aef0f68139a0fd7  26 events
+day   4  hash aa0fabc5ec66e215  22 events
+day   5  hash 3fefe4fc9950a1ab  21 events
+day   6  hash c42746107ab9f3e9  21 events
 
 air_group:1 "Placeholder patrol squadron" (Allied) at base:1: 12 ready, mission Search, arc 060-120 to 400 nm
 air_group:2 "Placeholder fighter squadron 1" (Allied) at base:1: 12 ready, mission Rest, no arc
@@ -21,17 +21,17 @@ base:4 "Placeholder base 4" (Japanese) at (5,4): 4950 t of supply in stock, no a
 land_unit:1 "Placeholder unit 1" (Allied): 500 men ashore at (0,0)
 land_unit:2 "Placeholder unit 2" (Allied): 1000 men ashore at (5,0), fieldworks 30
 Allied: no contacts
-Allied claim at (10,0): 2 aircraft destroyed on the ground, day 1 morning
+Allied claim at (10,0): 2 aircraft destroyed on the ground; claimed by air_group:4: 2 on the ground, day 1 morning
 Allied claim over (5,4): 0 aircraft shot down, day 1 morning
 Allied claim over (10,0): 0 aircraft shot down, day 2 morning
-Allied claim at (5,4): 1 aircraft destroyed on the ground, day 2 morning
+Allied claim at (5,4): 1 aircraft destroyed on the ground; claimed by air_group:5: 1 on the ground, day 2 morning
 Allied claim over (10,0): 0 aircraft shot down, day 3 morning
 Allied claim over (5,4): 0 aircraft shot down, day 3 morning
 Allied claim over (10,0): 0 aircraft shot down, day 4 morning
-Allied claim at (5,4): 1 aircraft destroyed on the ground, day 4 morning
-Allied claim at (10,0): 1 aircraft destroyed on the ground, day 5 morning
-Allied claim at (5,4): 1 aircraft destroyed on the ground, day 5 morning
+Allied claim at (5,4): 1 aircraft destroyed on the ground; claimed by air_group:5: 1 on the ground, day 4 morning
+Allied claim at (10,0): 1 aircraft destroyed on the ground; claimed by air_group:4: 1 on the ground, day 5 morning
+Allied claim at (5,4): 1 aircraft destroyed on the ground; claimed by air_group:5: 1 on the ground, day 5 morning
 Allied claim over (10,0): 0 aircraft shot down, day 6 morning
-Allied claim at (5,4): 1 aircraft destroyed on the ground, day 6 morning
+Allied claim at (5,4): 1 aircraft destroyed on the ground; claimed by air_group:5: 1 on the ground, day 6 morning
 Japanese: no contacts
 Japanese: no battle claims

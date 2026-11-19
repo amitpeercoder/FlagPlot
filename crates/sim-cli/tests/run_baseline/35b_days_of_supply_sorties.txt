@@ -2,12 +2,12 @@ Placeholder scenario 35b: Days of supply, a surge of sorties
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash cef0cd54c9d63cae  2 events
-day   2  hash 94e155ef2476ad39  2 events
-day   3  hash 1756b111a931c2b4  5 events
-day   4  hash 1dd4e81e918973d6  4 events
-day   5  hash 45f3d35bae5eef49  4 events
-day   6  hash 8414052411f3461a  4 events
+day   1  hash ad0fc440abd41d9f  2 events
+day   2  hash f7fd61bcf44573b4  2 events
+day   3  hash e4215ece6b2810b9  5 events
+day   4  hash 03b27138e633e89b  4 events
+day   5  hash 21368745f23f8a2c  4 events
+day   6  hash 4d2b5a57ff73942f  4 events
 
 air_group:1 "Placeholder fighter group 1" (Allied) at base:5: 20 ready, mission CombatAirPatrol, patrol share 1, no arc
 base:5 "Placeholder base 5" (Allied) at (12,4): 296 t of supply in stock

@@ -28,8 +28,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::claims::UnitClaim;
 use crate::hex::Hex;
-use crate::ids::{ContactId, EventId, IdAllocator};
+use crate::ids::{AircraftTypeId, ContactId, EventId, IdAllocator};
 use crate::refdata::{SearchFigures, ShipKind};
 use crate::state::Side;
 use crate::time::Pulse;
@@ -180,6 +181,17 @@ pub struct BattleClaim {
     pub from_bombardment: bool,
     /// The event that records this claim's arrival.
     pub received_event: EventId,
+    /// The types of the aircraft claimed destroyed on the ground, each with
+    /// its number, in order of the type's number and none with 0 (decision
+    /// 0179, 1): empty, or adding to `claimed_on_ground`. Only a raid's
+    /// claim on a base whose raiders made the types out names any.
+    pub ground_types: Vec<(AircraftTypeId, u32)>,
+    /// Who claims what (decision 0180, 1): for each unit whose fire a raid's
+    /// claim rests on and that claims something, its line, in the order the
+    /// units first fired. The lines add to the claim's aircraft shot down,
+    /// aircraft on the ground and hits. Empty for a surface fight's claim
+    /// and a bombardment's.
+    pub by_unit: Vec<UnitClaim>,
 }
 
 impl BattleClaim {
@@ -195,6 +207,8 @@ impl BattleClaim {
             self.claimed_on_ground,
             self.from_air,
             self.from_bombardment,
+            &self.ground_types,
+            &self.by_unit,
         )
     }
 }
@@ -874,6 +888,8 @@ mod tests {
             from_air: false,
             from_bombardment: false,
             received_event: EventId::new(40),
+            ground_types: Vec::new(),
+            by_unit: Vec::new(),
         };
         let outcome = belief.apply_report(&Report::BattleClaim(claim.clone()), &figures());
         assert_eq!(outcome, ApplyOutcome::Claim);
@@ -897,6 +913,8 @@ mod tests {
             from_air: true,
             from_bombardment: false,
             received_event: EventId::new(90),
+            ground_types: Vec::new(),
+            by_unit: Vec::new(),
         };
         belief.apply_report(&Report::BattleClaim(later.clone()), &figures());
         assert_eq!(belief.claims().len(), 2);
@@ -916,6 +934,8 @@ mod tests {
             from_air: _,
             from_bombardment: _,
             received_event: _,
+            ground_types: _,
+            by_unit: _,
         } = belief.claims()[0].clone();
     }
 

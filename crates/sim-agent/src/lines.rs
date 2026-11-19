@@ -275,6 +275,19 @@ pub struct AirGroupLine {
     /// otherwise.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub awaiting_arrival: Option<AwaitingArrival>,
+    /// What the group has claimed since the game began (decision 0180, 6):
+    /// the sum of its lines in every raid's claim, which may be well above
+    /// what it really did. Left out while it has claimed nothing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub claimed_to_date: Option<ClaimedToDate>,
+}
+
+/// An air group's tally of its claims (decision 0180, 6).
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize)]
+pub struct ClaimedToDate {
+    pub shot_down: u32,
+    pub on_ground: u32,
+    pub hits: u32,
 }
 
 /// An empty air group's arrival that is still to come (decision 0110, item
@@ -842,6 +855,13 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
         moved_yesterday: group.rebased_day == Some(ctx.view.day()),
         kept_on_ground_by_field: aircraft_kept_by_field(ctx, group),
         awaiting_arrival: awaiting_arrival(ctx, group),
+        claimed_to_date: (group.claims != sim_core::state::ClaimTally::default()).then_some(
+            ClaimedToDate {
+                shot_down: group.claims.shot_down,
+                on_ground: group.claims.on_ground,
+                hits: group.claims.hits,
+            },
+        ),
         air_group: ctx.group(group.id),
         role: aircraft_type.map(|t| crate::words::role(t.role)),
         aircraft_type: aircraft_type

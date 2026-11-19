@@ -7,6 +7,7 @@
 use core::fmt;
 
 use crate::belief::GroundGrade;
+use crate::claims::UnitClaim;
 use crate::command::{
     CommandKind, CommandRefusal, HoldTarget, InterruptCondition, InterruptRef, NoticeKind, PlanId,
     PlanState, Reason, StandingKind, StandingSubject,
@@ -782,6 +783,14 @@ pub enum EventKind {
         from_air: bool,
         /// True for the claim of a shore bombardment (decision 0092, 17).
         from_bombardment: bool,
+        /// The types of the aircraft claimed destroyed on the ground, each
+        /// with its number, in order of the type's number (decision 0179):
+        /// empty, or adding to `claimed_on_ground`.
+        ground_types: Vec<(AircraftTypeId, u32)>,
+        /// Who claims what (decision 0180): each unit of the side whose fire
+        /// a raid's claim rests on and that claims something, in the order
+        /// it first fired. Empty for a surface fight's and a bombardment's.
+        by_unit: Vec<UnitClaim>,
     },
     /// A hit knocked, or tried to knock, one named system of a ship down one
     /// level (decision 0016). `before == after` when the ship lacks the
@@ -3262,6 +3271,8 @@ impl fmt::Display for EventKind {
                 claimed_on_ground,
                 from_air,
                 from_bombardment,
+                ground_types,
+                by_unit,
             } => f.write_str(&claim_text(
                 *side,
                 *hex,
@@ -3272,6 +3283,8 @@ impl fmt::Display for EventKind {
                 *claimed_on_ground,
                 *from_air,
                 *from_bombardment,
+                ground_types,
+                by_unit,
             )),
             EventKind::ShipsDetached {
                 parent,
@@ -4582,6 +4595,48 @@ pub fn claim_text(
     claimed_on_ground: u32,
     from_air: bool,
     from_bombardment: bool,
+    ground_types: &[(AircraftTypeId, u32)],
+    by_unit: &[UnitClaim],
+) -> String {
+    let types: Vec<(String, u32)> = ground_types
+        .iter()
+        .map(|(aircraft_type, aircraft)| (aircraft_type.to_string(), *aircraft))
+        .collect();
+    let units: Vec<(String, UnitClaim)> = by_unit
+        .iter()
+        .map(|line| (line.unit.to_string(), *line))
+        .collect();
+    claim_words(
+        side,
+        hex,
+        claimed_sunk,
+        claimed_hits,
+        claimed_kind,
+        claimed_shot_down,
+        claimed_on_ground,
+        from_air,
+        from_bombardment,
+        &types,
+        &units,
+    )
+}
+
+/// A claim's words, with its types and its units each given in the words
+/// to say them by: the log's own (`aircraft_type:3`, `air_group:2`) in
+/// [`claim_text`], names in a seat's tools.
+#[allow(clippy::too_many_arguments)]
+pub fn claim_words(
+    side: Side,
+    hex: Hex,
+    claimed_sunk: u32,
+    claimed_hits: u32,
+    claimed_kind: Option<ShipKind>,
+    claimed_shot_down: u32,
+    claimed_on_ground: u32,
+    from_air: bool,
+    from_bombardment: bool,
+    types: &[(String, u32)],
+    units: &[(String, UnitClaim)],
 ) -> String {
     if from_bombardment {
         return format!(
@@ -4602,8 +4657,40 @@ pub fn claim_text(
         claimed_kind.map(ShipKind::name),
         claimed_shot_down,
         claimed_on_ground,
+        types,
     );
-    format!("{} claim {place} {hex}: {words}", side.name())
+    format!(
+        "{} claim {place} {hex}: {words}{}",
+        side.name(),
+        claimed_by_words(units)
+    )
+}
+
+/// The clause at the end of a raid's claim that names who claims what
+/// (decision 0180, 10): "; claimed by U: 2 shot down; by V: 16 on the
+/// ground, 3 hits", each unit by the words given for it, and only what it
+/// claims. Nothing where the claim names no unit.
+pub fn claimed_by_words(units: &[(String, UnitClaim)]) -> String {
+    let mut words = String::new();
+    for (index, (unit, line)) in units.iter().enumerate() {
+        let mut parts: Vec<String> = Vec::new();
+        if line.shot_down != 0 {
+            parts.push(format!("{} shot down", line.shot_down));
+        }
+        if line.on_ground != 0 {
+            parts.push(format!("{} on the ground", line.on_ground));
+        }
+        if line.hits != 0 {
+            parts.push(format!(
+                "{} {}",
+                line.hits,
+                if line.hits == 1 { "hit" } else { "hits" }
+            ));
+        }
+        let by = if index == 0 { "claimed by" } else { "by" };
+        words.push_str(&format!("; {by} {unit}: {}", parts.join(", ")));
+    }
+    words
 }
 
 /// What a claim from the air says, in words, and whether it is a claim
@@ -4615,6 +4702,7 @@ pub fn air_claim_words(
     claimed_kind: Option<&str>,
     claimed_shot_down: u32,
     claimed_on_ground: u32,
+    ground_types: &[(String, u32)],
 ) -> (&'static str, String) {
     let mut parts: Vec<String> = Vec::new();
     if let Some(kind) = claimed_kind {
@@ -4630,8 +4718,19 @@ pub fn air_claim_words(
         parts.push(format!("{claimed_shot_down} aircraft shot down"));
     }
     if claimed_on_ground != 0 {
+        // The types made out, after the number (decision 0179, 8): "5
+        // aircraft destroyed on the ground (3 of T, 2 of U)".
+        let types = if ground_types.is_empty() {
+            String::new()
+        } else {
+            let each: Vec<String> = ground_types
+                .iter()
+                .map(|(aircraft_type, aircraft)| format!("{aircraft} of {aircraft_type}"))
+                .collect();
+            format!(" ({})", each.join(", "))
+        };
         parts.push(format!(
-            "{claimed_on_ground} aircraft destroyed on the ground"
+            "{claimed_on_ground} aircraft destroyed on the ground{types}"
         ));
     }
     // Only aircraft shot down: a claim over the hex.

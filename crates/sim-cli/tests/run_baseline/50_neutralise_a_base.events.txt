@@ -2,18 +2,18 @@ Placeholder scenario 50: Neutralise a base
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2a3a85b5bad7afa9  35 events
-day   2  hash bd2b1f893b5171de  16 events
-day   3  hash a39054d2993b8afa  16 events
-day   4  hash e027aeb5e2656e15  16 events
-day   5  hash 937f7c3ab957f39d  16 events
-day   6  hash 469702076f6abd69  16 events
-day   7  hash 134f1789b47603d9  16 events
-day   8  hash 9258aa744bfcc517  16 events
-day   9  hash aec33035c79ef890  14 events
-day  10  hash 62bceb4a013b4e61  20 events
-day  11  hash 40f13a5cac7b9993  16 events
-day  12  hash 998c851260076836  14 events
+day   1  hash 334d3515145260e5  35 events
+day   2  hash d0be4e837b3beb17  16 events
+day   3  hash 5b8ff69c274810e6  16 events
+day   4  hash 46b843c0a88a76f0  16 events
+day   5  hash 5ab4bee345020af1  16 events
+day   6  hash 5b77db95983cbef1  16 events
+day   7  hash 7d8cd61fcc219cb5  16 events
+day   8  hash 66502948ee0245be  16 events
+day   9  hash 72d8d17d97ead12d  14 events
+day  10  hash 5519ddaa65915f03  20 events
+day  11  hash ebec305c9616f39c  16 events
+day  12  hash 6ce37ebedd8a6bed  14 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to neutralise base:2
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
@@ -41,7 +41,7 @@ day  12  hash 998c851260076836  14 events
 #24 D1 morning   air_group:2 sent 8 escorts with air_group:1  <- order:2, order:3, #22
 #25 D1 morning   air_group:1 bombs at base:2: 10 shots x 0.2 = 2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #22
 #26 D1 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 2 hits: 1 on aircraft, 0 on supply, 1 on nothing; recognised as aircraft_type:3  <- #23
-#27 D1 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground  <- #25, #26
+#27 D1 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground  <- #25, #26
 #28 D1 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 11  <- #22
 #29 D1 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 11  <- #24
 #30 D1 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 11  <- #23
@@ -57,7 +57,7 @@ day  12  hash 998c851260076836  14 events
 #40 D2 morning   air_group:2 sent 7 escorts with air_group:1  <- order:2, order:3, #38
 #41 D2 morning   air_group:1 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 4 hits: 0 on aircraft, 0 on supply, 4 on nothing; recognised as aircraft_type:3  <- #38
 #42 D2 morning   air_group:3 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #39
-#43 D2 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #41, #42
+#43 D2 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:3: 2 on the ground  <- #41, #42
 #44 D2 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 17  <- #38
 #45 D2 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 17  <- #40
 #46 D2 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 17  <- #39
@@ -73,7 +73,7 @@ day  12  hash 998c851260076836  14 events
 #56 D3 morning   air_group:2 sent 7 escorts with air_group:1  <- order:2, order:3, #54
 #57 D3 morning   air_group:1 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing; recognised as aircraft_type:3  <- #54
 #58 D3 morning   air_group:3 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 3 hits: 0 on aircraft, 0 on supply, 3 on nothing; recognised as aircraft_type:3  <- #55
-#59 D3 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground  <- #57, #58
+#59 D3 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground  <- #57, #58
 #60 D3 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 23  <- #54
 #61 D3 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 23  <- #56
 #62 D3 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 23  <- #55
@@ -89,7 +89,7 @@ day  12  hash 998c851260076836  14 events
 #72 D4 morning   air_group:2 sent 6 escorts with air_group:1  <- order:2, order:3, #70
 #73 D4 morning   air_group:1 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing; recognised as aircraft_type:3  <- #70
 #74 D4 morning   air_group:3 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #71
-#75 D4 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #73, #74
+#75 D4 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 2 on the ground  <- #73, #74
 #76 D4 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 29  <- #70
 #77 D4 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 29  <- #72
 #78 D4 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 29  <- #71
@@ -105,7 +105,7 @@ day  12  hash 998c851260076836  14 events
 #88 D5 morning   air_group:2 sent 6 escorts with air_group:1  <- order:2, order:3, #86
 #89 D5 morning   air_group:1 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #86
 #90 D5 morning   air_group:3 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #87
-#91 D5 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #89, #90
+#91 D5 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 2 on the ground  <- #89, #90
 #92 D5 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 35  <- #86
 #93 D5 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 35  <- #88
 #94 D5 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 35  <- #87
@@ -121,7 +121,7 @@ day  12  hash 998c851260076836  14 events
 #104 D6 morning   air_group:2 sent 5 escorts with air_group:1  <- order:2, order:3, #102
 #105 D6 morning   air_group:1 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing; recognised as aircraft_type:3  <- #102
 #106 D6 morning   air_group:3 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing; recognised as aircraft_type:3  <- #103
-#107 D6 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #105, #106
+#107 D6 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 1 on the ground; by air_group:3: 1 on the ground  <- #105, #106
 #108 D6 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 41  <- #102
 #109 D6 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 41  <- #104
 #110 D6 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 41  <- #103
@@ -153,7 +153,7 @@ day  12  hash 998c851260076836  14 events
 #136 D8 morning   air_group:2 sent 4 escorts with air_group:1  <- order:2, order:3, #134
 #137 D8 morning   air_group:1 bombs at base:2: 5 shots x 0.2 = 1 expected, 3 hits: 0 on aircraft, 2 on supply, 1 on nothing; recognised as aircraft_type:3  <- #134
 #138 D8 morning   air_group:3 bombs at base:2: 5 shots x 0.2 = 1 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #135
-#139 D8 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground  <- #137, #138
+#139 D8 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground; claimed by air_group:1: 1 on the ground  <- #137, #138
 #140 D8 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 53  <- #134
 #141 D8 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 53  <- #136
 #142 D8 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 53  <- #135
@@ -187,7 +187,7 @@ day  12  hash 998c851260076836  14 events
 #170 D10 morning   air_group:2 sent 4 escorts with air_group:1  <- order:2, order:3, #168
 #171 D10 morning   air_group:1 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #168
 #172 D10 morning   air_group:3 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing; recognised as aircraft_type:3  <- #169
-#173 D10 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #171, #172
+#173 D10 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:3: 2 on the ground  <- #171, #172
 #174 D10 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 49  <- #168
 #175 D10 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 49  <- #170
 #176 D10 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 49  <- #169
@@ -203,7 +203,7 @@ day  12  hash 998c851260076836  14 events
 #186 D11 morning   air_group:2 sent 4 escorts with air_group:1  <- order:2, order:3, #184
 #187 D11 morning   air_group:1 bombs at base:2: 5 shots x 0.2 = 1 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing; recognised as aircraft_type:3  <- #184
 #188 D11 morning   air_group:3 bombs at base:2: 5 shots x 0.2 = 1 expected, 3 hits: 0 on aircraft, 1 on supply, 2 on nothing  <- #185
-#189 D11 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #187, #188
+#189 D11 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 2 on the ground  <- #187, #188
 #190 D11 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 55  <- #184
 #191 D11 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 55  <- #186
 #192 D11 morning   air_group:3 gained 11 fatigue from its base strike sortie of 400 nm, now 55  <- #185
@@ -233,15 +233,15 @@ air_group:3 "Placeholder dive bombers 3" (Allied) at base:1: 10 ready, mission R
 base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock
 base:2 "Placeholder base 2" (Japanese) at (5,0): 0 t of supply in stock
 Allied: no contacts
-Allied claim at (5,0): 1 aircraft destroyed on the ground, day 1 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 2 morning
-Allied claim at (5,0): 1 aircraft destroyed on the ground, day 3 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 4 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 5 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 6 morning
+Allied claim at (5,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground, day 1 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:3: 2 on the ground, day 2 morning
+Allied claim at (5,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground, day 3 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 2 on the ground, day 4 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 2 on the ground, day 5 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 1 on the ground; by air_group:3: 1 on the ground, day 6 morning
 Allied claim over (5,0): 0 aircraft shot down, day 7 morning
-Allied claim at (5,0): 1 aircraft destroyed on the ground, day 8 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 10 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 11 morning
+Allied claim at (5,0): 1 aircraft destroyed on the ground; claimed by air_group:1: 1 on the ground, day 8 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:3: 2 on the ground, day 10 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 2 on the ground, day 11 morning
 Japanese: no contacts
 Japanese: no battle claims

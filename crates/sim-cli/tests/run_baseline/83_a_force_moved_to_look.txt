@@ -2,15 +2,15 @@ Placeholder scenario 83: A force moved to look
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e34dfe419d969f3c  49 events
-day   2  hash c6c52d63f38d5fb6  15 events
-day   3  hash b1943c8c532d0549  17 events
-day   4  hash 0000afcf0c8d398b  23 events
-day   5  hash 64c1c05cff4a8ecf  20 events
-day   6  hash 53e2d62a2d4debb2  27 events
-day   7  hash 0231efd11e17e2b2  32 events
-day   8  hash f2f1f01ea7d4b21b  29 events
-day   9  hash 9c930f24166b9f57  19 events
+day   1  hash 1c0593ff10492fbd  49 events
+day   2  hash a75faf5693901a25  15 events
+day   3  hash 80432b6af09f1e98  17 events
+day   4  hash f65d3c504d1e28a7  23 events
+day   5  hash 74e4fdf30f448d5a  20 events
+day   6  hash a7f4141af25751bc  27 events
+day   7  hash 076eb5f45dd0bda3  32 events
+day   8  hash 0b5d763ceed486b4  29 events
+day   9  hash 0e07eae23c8c6708  19 events
 
 task_force:1 "Placeholder carrier force 1" (Allied): Arrived at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:2 "Placeholder transport force 2" (Allied): Underway at (1,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -26,9 +26,9 @@ base:3 "Landing at (10,0)" (Allied) at (10,0): 7 t of supply in stock, no airfie
 land_unit:1 "Placeholder First" (Allied): 600 men ashore at (10,0), on attack
 land_unit:2 "Placeholder Second" (Allied): 600 men ashore at (0,0)
 Allied: no contacts
-Allied claim at (10,0): 1 aircraft destroyed on the ground, day 4 morning
-Allied claim at (10,0): 1 aircraft destroyed on the ground, day 5 morning
-Allied claim at (10,0): 1 aircraft destroyed on the ground, day 6 morning
-Allied claim at (10,0): 1 aircraft destroyed on the ground, day 7 morning
+Allied claim at (10,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground, day 4 morning
+Allied claim at (10,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground, day 5 morning
+Allied claim at (10,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground, day 6 morning
+Allied claim at (10,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground, day 7 morning
 Japanese: no contacts
 Japanese: no battle claims

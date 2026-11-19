@@ -89,7 +89,10 @@ impl World {
     /// 0092): aircraft are destroyed on the ground, the lowest group first,
     /// no more than `pool` says were there at the start, supply is
     /// destroyed, no more than the base has, and men ashore are lost, no
-    /// more than are there. Records each, citing `attack_event`.
+    /// more than are there. Records each, citing `attack_event`. Gives the
+    /// aircraft really destroyed, by group, in the order taken (a group
+    /// twice where its damaged and its ready aircraft were both hit), each
+    /// as really taken from the group (decision 0179, 3).
     pub(crate) fn apply_base_hits(
         &mut self,
         day: u32,
@@ -98,7 +101,7 @@ impl World {
         hits: BaseHits,
         attack_event: EventId,
         pool: &mut [(AirGroupId, Stock, u32)],
-    ) -> u32 {
+    ) -> Vec<(AirGroupId, u32)> {
         let per_hit = self
             .ref_data
             .air_combat
@@ -121,7 +124,7 @@ impl World {
         });
         // The lowest group first, its damaged aircraft before its ready ones
         // (decision 11 of 0035): one event for each kind of aircraft hit.
-        let mut destroyed_in_all = 0;
+        let mut destroyed_by_group = Vec::new();
         for (group, stock, destroyed) in take_ground(hits.aircraft, pool) {
             let air_group = self
                 .truth
@@ -132,7 +135,7 @@ impl World {
                 Stock::Ready => {
                     let destroyed = destroyed.min(air_group.ready);
                     air_group.ready -= destroyed;
-                    destroyed_in_all += destroyed;
+                    destroyed_by_group.push((group, destroyed));
                     EventKind::AircraftDestroyedOnGround {
                         air_group: group,
                         base,
@@ -143,7 +146,7 @@ impl World {
                 Stock::Damaged => {
                     let destroyed = destroyed.min(air_group.damaged);
                     air_group.damaged -= destroyed;
-                    destroyed_in_all += destroyed;
+                    destroyed_by_group.push((group, destroyed));
                     EventKind::DamagedAircraftDestroyedOnGround {
                         air_group: group,
                         base,
@@ -199,6 +202,6 @@ impl World {
         }
         self.apply_hits_on_men(day, pulse, base, hits.men, attack_event);
         self.apply_hits_on_airfield(day, pulse, base, hits.airfield, attack_event);
-        destroyed_in_all
+        destroyed_by_group
     }
 }

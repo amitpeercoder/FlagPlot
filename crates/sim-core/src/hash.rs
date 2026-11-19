@@ -10,6 +10,7 @@
 //! `docs/decisions/0004-state-hash.md`.
 
 use crate::belief::{BattleClaim, Contact, GroundEstimate};
+use crate::claims::UnitClaim;
 use crate::command::{
     Addressee, Amendment, AmendmentChange, Awaited, Baseline, CommandState, Commitment,
     ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition,
@@ -22,8 +23,8 @@ use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent}
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, DayWork, Formation, Halt,
-    HaltWork, HitsOnMen, LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement,
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, ClaimTally, DayWork, Formation,
+    Halt, HaltWork, HitsOnMen, LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement,
     SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState,
     YardTrip,
 };
@@ -242,8 +243,15 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 47 adds to an intent's limits, after "after", "knowledge", and to
 /// a limit set by a command the code 10 for it (decision 0159, 12);
 /// version 48 adds a cargo order's level, `each_t`, after `heeds_reserve`
-/// (decision 0162).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v48";
+/// (decision 0162);
+/// version 49 adds a claim's `ground_types` (the count, then each type and
+/// its number) and `by_unit` (the count, then each unit by its kind code and
+/// number, with its aircraft shot down, aircraft on the ground and hits)
+/// after its `from_bombardment`, in a side's belief, a command's picture and
+/// a report in flight alike, and an air group's `claims` (aircraft shot
+/// down, on the ground, hits) after its `available_from` (decisions 0179 and
+/// 0180).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v49";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -529,7 +537,14 @@ fn name_every_field(world: &World) {
             search_once: _,
             search_once_order: _,
             available_from: _,
+            // After `available_from` (decision 0180).
+            claims,
         } = group;
+        let ClaimTally {
+            shot_down: _,
+            on_ground: _,
+            hits: _,
+        } = claims;
         if let Some(SearchArc {
             from_deg: _,
             to_deg: _,
@@ -767,8 +782,19 @@ fn name_every_field(world: &World) {
             from_air: _,
             from_bombardment: _,
             received_event: _,
+            // After `from_bombardment` (decisions 0179 and 0180).
+            ground_types: _,
+            by_unit,
         }) = belief.claims().first()
-        {}
+        {
+            if let Some(UnitClaim {
+                unit: _,
+                shot_down: _,
+                on_ground: _,
+                hits: _,
+            }) = by_unit.first()
+            {}
+        }
         if let Some(GroundEstimate {
             hex: _,
             men: _,
@@ -1120,6 +1146,21 @@ fn hash_claim(h: &mut StateHasher, claim: &crate::belief::BattleClaim) {
     h.u8(u8::from(claim.from_air));
     // After `from_air` (decision 0092).
     h.u8(u8::from(claim.from_bombardment));
+    // After `from_bombardment`: the types claimed on the ground (decision
+    // 0179), then who claims what (decision 0180).
+    h.count(claim.ground_types.len());
+    for (aircraft_type, aircraft) in &claim.ground_types {
+        h.u32(aircraft_type.raw());
+        h.u32(*aircraft);
+    }
+    h.count(claim.by_unit.len());
+    for line in &claim.by_unit {
+        h.u8(line.unit.kind_code());
+        h.u32(line.unit.raw_id());
+        h.u32(line.shot_down);
+        h.u32(line.on_ground);
+        h.u32(line.hits);
+    }
 }
 
 /// Hashes a report in flight (decision 0135): a code for its kind, then its
@@ -1670,6 +1711,10 @@ pub(crate) fn hash_air_group(h: &mut StateHasher, group: &AirGroup) {
     h.optional_u32(group.search_once_order.map(|id| id.raw()));
     // After the search once order (decision 0140).
     h.optional_u32(group.available_from);
+    // After the day it may be used (decision 0180).
+    h.u32(group.claims.shot_down);
+    h.u32(group.claims.on_ground);
+    h.u32(group.claims.hits);
 }
 
 /// One `LandUnit`, every field in one fixed order. Used for the truth state and for

@@ -1048,6 +1048,21 @@ pub struct AirGroup {
     /// aboard a ship takes the later of this and the ship's. Added at the
     /// end.
     pub available_from: Option<u32>,
+    /// What the group has claimed since the game began (decision 0180, 6):
+    /// the sum of its lines in every raid's claim. A record, read by no
+    /// rule; kept whatever becomes of the group. Added at the end.
+    pub claims: ClaimTally,
+}
+
+/// An air group's tally of its claims (decision 0180, 6): the aircraft it
+/// has claimed shot down, the aircraft it has claimed destroyed on the
+/// ground and the hits it has claimed on ships, each the sum of its lines in
+/// every raid's claim since the game began.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct ClaimTally {
+    pub shot_down: u32,
+    pub on_ground: u32,
+    pub hits: u32,
 }
 
 impl AirGroup {
@@ -1080,6 +1095,7 @@ impl AirGroup {
     ) -> AirGroup {
         AirGroup {
             available_from: None,
+            claims: ClaimTally::default(),
             id,
             name,
             side,

@@ -582,6 +582,17 @@
           "description": "Given (true) only for a group that flies its search once a day, in the morning (set_search_once, decision 0131). Left out where it is off.",
           "const": true
         },
+        "claimed_to_date": {
+          "description": "The group's tally of its claims since the game began (decision 0180, 6): aircraft its people believe they shot down, aircraft they believe they destroyed on the ground, and hits they believe they scored. Claims, never below the truth. Left out while the group has claimed nothing.",
+          "type": "object",
+          "required": ["shot_down", "on_ground", "hits"],
+          "additionalProperties": false,
+          "properties": {
+            "shot_down": { "type": "integer" },
+            "on_ground": { "type": "integer" },
+            "hits": { "type": "integer" }
+          }
+        },
         "moved_yesterday": {
           "description": "Given (true) only for a group that a rebase order moved to its present base on the day just resolved (decision 0091): it flew nothing on that day, and its aircraft were on the ground at this base. Left out otherwise.",
           "const": true
@@ -826,7 +837,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 29
+          "const": 30
         },
         "kind": {
           "const": "not_known"

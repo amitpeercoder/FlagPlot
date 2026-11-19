@@ -49,6 +49,20 @@ impl World {
             let flying = self.aircraft_flying(pulse, &strikes, &raids, &fighters);
             self.aircraft_on_the_ground(&strikes, &flying)
         };
+        // The field of each raided base as it first stood, by the type of
+        // each group, before any raid's hits come off the count (decision
+        // 0179, 2).
+        let fields: BTreeMap<BaseId, Vec<(AircraftTypeId, u32)>> = ground
+            .iter()
+            .map(|(base, pool)| {
+                let mut by_type: BTreeMap<AircraftTypeId, u32> = BTreeMap::new();
+                for (group, _, aircraft) in pool {
+                    let aircraft_type = self.truth.air_groups[group].aircraft_type;
+                    *by_type.entry(aircraft_type).or_insert(0) += aircraft;
+                }
+                (*base, by_type.into_iter().collect())
+            })
+            .collect();
         if self.notes_sorties() {
             // What flew, for the wear step: the patrols and the strikes now;
             // the escorts as they are recorded; the losses as they are taken.
@@ -94,6 +108,10 @@ impl World {
                 hex: first.hex,
                 target,
                 taken_for: first.taken_for,
+                field: match target {
+                    RaidTarget::Base(base) => fields.get(&base).cloned().unwrap_or_default(),
+                    RaidTarget::Ships(_) => Vec::new(),
+                },
                 first_group: first.air_group,
                 strike_groups: raid.strikes.iter().map(|strike| strike.air_group).collect(),
                 attacker_side: first.side,
@@ -321,7 +339,11 @@ impl World {
                     if let Some(index) = tally_of.get(&attack.air_group) {
                         let side = &mut tallies[*index].attacker;
                         side.fired(EntityRef::AirGroup(attack.air_group), event);
+                        side.claims_for(EntityRef::AirGroup(attack.air_group));
                         side.bombs += whole_shots(attack.shots);
+                        // What its bombs destroyed is added as they land.
+                        side.strikes
+                            .push((attack.air_group, whole_shots(attack.shots), 0));
                     }
                 }
                 Outcome::Attack(attack) => {
@@ -367,8 +389,14 @@ impl World {
                     if let Some(index) = tally_of.get(&attack.air_group) {
                         let side = &mut tallies[*index].attacker;
                         side.fired(EntityRef::AirGroup(attack.air_group), event);
+                        side.claims_for(EntityRef::AirGroup(attack.air_group));
                         side.hits += attack.hits;
                         side.hit_misses += whole_shots(attack.shots).saturating_sub(attack.hits);
+                        side.strikes.push((
+                            attack.air_group,
+                            whole_shots(attack.shots),
+                            attack.hits,
+                        ));
                     }
                 }
             }
@@ -491,7 +519,24 @@ impl World {
                         pool,
                     );
                     if let Some(index) = tally_of.get(&attack.air_group) {
-                        tallies[*index].attacker.real_on_ground += destroyed;
+                        let side = &mut tallies[*index].attacker;
+                        for (group, aircraft) in destroyed {
+                            side.real_on_ground += aircraft;
+                            // Of the type of the group on the ground, not
+                            // the group that bombed it (decision 0179, 3).
+                            let aircraft_type = self.truth.air_groups[&group].aircraft_type;
+                            *side
+                                .real_on_ground_by_type
+                                .entry(aircraft_type)
+                                .or_insert(0) += aircraft;
+                            if let Some(line) = side
+                                .strikes
+                                .iter_mut()
+                                .find(|(bomber, _, _)| *bomber == attack.air_group)
+                            {
+                                line.2 += aircraft;
+                            }
+                        }
                     }
                     continue;
                 }
