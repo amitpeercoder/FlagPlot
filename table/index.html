@@ -66,6 +66,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order input { accent-color: var(--own); width: 18px; height: 18px; margin: 0; }
 .order .pv { border-top: 1px dashed #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
 .order .pv b { font-size: 12px; color: var(--paper-dim); font-weight: 400; }
+.order details.pv { display: block; }
+.order details.pv summary { font-size: 12px; color: var(--paper-dim); cursor: pointer; min-height: 28px; }
+.order details.pv > div { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
 .sheet { position: fixed; left: 50%; top: 56px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); max-height: calc(100% - 160px); overflow: auto; background: var(--paper); color: var(--paper-ink); padding: 16px 18px; border-radius: 2px; box-shadow: 0 10px 34px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 10px; }
 .sheet .doc { font-family: var(--f-type); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; gap: 10px; max-width: 62ch; }
 .card { left: 16px; bottom: auto; top: 60px; width: min(340px, calc(100% - 32px)); max-height: calc(100% - 170px); }
@@ -142,7 +145,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     <label><input type="radio" name="risk" id="o-risk-press" value="press"> Press</label>
   </fieldset>
   <div>Forces: the staff's choice.</div>
-  <div class="pv" aria-live="polite"><b>THE STAFF'S PREVIEW, FOR THE COMING MORNING</b><div id="o-preview">Asking the staff.</div></div>
+  <details class="pv" id="o-pv"><summary id="o-pv-sum">THE STAFF'S PREVIEW</summary><div id="o-preview" aria-live="polite">Asking the staff.</div></details>
   <div class="row">
     <button type="submit" class="go" id="o-sign" disabled>SIGN AND SEND</button>
     <button type="button" id="o-cancel">TEAR UP</button>
@@ -1130,16 +1133,16 @@ button:disabled { opacity: 0.45; cursor: default; }
   function chosen(name) { var r = document.querySelector('#order input[name="' + name + '"]:checked'); return r ? r.value : ''; }
   function askPreview() {
     if (!draft) return; var seq = ++previewSeq, out = $('o-preview'), e = draft.ends[parseInt(chosen('end'), 10) || 0];
-    previewNo = null; $('o-sign').disabled = true; out.textContent = 'Asking the staff.';
+    previewNo = null; $('o-sign').disabled = true; out.textContent = 'Asking the staff.'; $('o-pv').open = false; $('o-pv-sum').textContent = 'THE STAFF\'S PREVIEW';
     var args = { command: 'set_intent' }; Object.keys(e[1]).forEach(function (k) { args[k] = e[1][k]; });
     api('preview', args).then(function (p) {
       if (seq !== previewSeq) return; out.textContent = ''; var w = p.with_change || {};
-      out.appendChild(el('div', '', 'It would ' + p.shown + '. On the first morning the staff would give ' + (w.orders || []).length + ' orders and ' + (w.commands || []).length + ' commands of its own.'));
-      (w.no_orders || []).slice(0, 3).forEach(function (n) { out.appendChild(el('div', '', 'It cannot yet: ' + (n.worked || (n.binding || []).join('; ')))); });
+      out.appendChild(rich('div', '', 'It would ' + p.shown + '. On the first morning the staff would give ' + (w.orders || []).length + ' orders and ' + (w.commands || []).length + ' commands of its own.'));
+      (w.no_orders || []).slice(0, 3).forEach(function (n) { out.appendChild(rich('div', '', 'It cannot yet: ' + (n.worked || (n.binding || []).join('; ')))); });
       if ((w.no_orders || []).length > 3) out.appendChild(el('div', '', 'And ' + ((w.no_orders || []).length - 3) + ' more it cannot yet do.'));
       if (chosen('risk') !== 'balanced') out.appendChild(el('div', '', 'The preview is worked at balanced; your risk goes with the order.'));
       previewNo = p.preview; $('o-sign').disabled = false;
-    }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; });
+    }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; });
   }
   $('order').addEventListener('change', function (e) { if (e.target.name === 'end') askPreview(); });
   $('btn-intent').addEventListener('click', function () { if (playing) return; closeOrder(); closeForce(); picking = true; canvas.classList.add('picking'); setStatus('Touch the chart where you mean: a base, or open water.'); });
