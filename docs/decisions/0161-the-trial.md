@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the de
 
 Summary: The plan for stage 4 of step 3. A commander who has stated an intent can ask the staff to try the plan before it goes: the staff builds private worlds from what the side knows and believes, never from the live enemy, plays the plan in each with both sides on doctrine, and hands in an estimate: what the plan needs, when it could go, what it may cost, how often it came off, and what was assumed about what is not seen. The same course is tried at two or three dates, so the estimate says what waiting buys and what the enemy may do with the days. Nine steps, the first two the mends of decision 0159; a world built from a picture is the one new means in the engine; a new crate plays the trials. With the conditions of its proof and seven questions for the designer.
 
-Standing: Confirmed by the designer, Nov 19, 2026, with his seven answers, each as recommended. Step 1, fed with the lift, is next
+Standing: Confirmed by the designer, Nov 19, 2026, with his seven answers, each as recommended. Step 1 is built (decisions 0162 and 0163); step 2 is next. A tenth step, the enemy's approaches, was added by the designer the same day
 
 ## The target
 
@@ -145,6 +145,7 @@ Each is one branch and one pull request, read by the architect before it merges.
 7. **The window** (F).
 8. **Courses, the tool and the table** (G).
 9. **The proof,** run once.
+10. **The enemy's approaches** (added on Nov 19, 2026, below): its own record and plan, confirmed by the designer before it is built. It comes after the proof and is not judged by it.
 
 ## Questions for the designer
 
@@ -169,3 +170,17 @@ The designer confirmed the plan: "go with your recommendations."
 7. No points in an estimate.
 
 He also named the thing a person presses: a "dry run" or something of that sort, not "try it". The table's button is "Dry run"; the seat's tool keeps the name `trial`, and the records go on calling the thing a trial.
+
+## Added on Nov 19, 2026: a tenth step, the enemy's approaches
+
+The designer asked whether the staff works out where the enemy is likely to come from, so that it can plan a landing with that in mind and set a force, or part of one, to deny the way. It does not. Around a take it denies a circle of fixed size round the place (decision 0151), stations its carriers within their bombers' reach of it, searches, and neutralises the enemy bases it knows. Nothing in that is reasoned from the enemy's likely routes. The designer added the work to this stage.
+
+What the step is to give, each point to be settled in its own decision record, which is a plan for the designer's confirmation before anything is built:
+
+1. **An estimate of the approaches.** For a place the side means to take or hold: where the enemy could come from, read from the side's own picture and nothing else (the enemy bases it knows, the forces it believes he has and what it believes he intends, which are rules 7 and 8 of this record, and its contacts), the ways by sea from each to the place by the engine's own routes, and how soon a force from each could be there. It is part of the plan order, and is drawn on the table's chart with the plan.
+2. **A force set across an approach.** Where the side has a surface force with no other task, or a force large enough to part with some of its ships, the staff may set it on an approach rather than leave it inside the circle; and it lays its searches across the approaches. Whether it detaches part of a force, and by what rule, is that record's question.
+3. **The landing's days read against the enemy's.** The plan order says the earliest the enemy could arrive beside the day the men are to be ashore and the days the ships will lie off the beach.
+4. **A dry run shows what the approach costs.** The courses a trial plays for the enemy (rule 8) are the same ones the estimate names, so a commander can see the plan with the covering force and without it.
+
+Where it stands in the order: after step 9. The trial's pictures are what the estimate is made from, so it cannot come before step 4; and it changes what a staff does in a live game, which this record's proof must not have moving under it, so it is not built before the proof is run. It has a proof of its own, set in its record. It is doctrine, chosen by written rule; a staff that chooses between such dispositions by trial stays stage 5's (rule 23).
+
