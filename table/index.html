@@ -501,10 +501,12 @@ button:disabled { opacity: 0.45; cursor: default; }
         m.when = a.outcome === 'arrives' && a.ends ? (dateOf(a.ends.day - 1) || 'DAY ' + a.ends.day) + ', ' + a.ends.pulse : a.outcome ? String(a.outcome).replace(/_/g, ' ') : '';
       }).catch(function () {}));
     }
+    // A force is drawn on the task that is its own before any task that may only use it:
+    // a landing's forces limit names the carriers that cover it, and they do not land.
+    tree.forEach(function (i) { if (i.task_force != null && i.hex) move('task_force:' + i.task_force, i.hex, i.kind === 'ready_landing' ? 'landing' : 'cover', i); });
     tree.forEach(function (i) {
       var b;
-      if (i.task_force != null && i.hex) move('task_force:' + i.task_force, i.hex, i.kind === 'ready_landing' ? 'landing' : 'cover', i);
-      if (i.kind === 'ready_landing' && i.hex && i.limits && i.limits.forces) (i.limits.forces.task_forces || []).forEach(function (n) { move('task_force:' + n, i.hex, 'landing', i); });
+      if (i.kind === 'ready_landing' && i.hex && i.limits && i.limits.forces) (i.limits.forces.task_forces || []).forEach(function (n) { var lf = M.forces.filter(function (x) { return x.task_force.handle === 'task_force:' + n; })[0]; if (lf && lf.mission === 'transport') move('task_force:' + n, i.hex, 'landing', i); });
       if (i.kind === 'take_place' && i.hex) { var tk = { v: hexV(i.hex[0], i.hex[1]), r: 27, label: 'TAKE', dash: pending(i) }; if (tk.v) { marks.rings.push(tk);
         // The day the staff expects the first men ashore, where its plan order gives one.
         asks.push(api('order', { intent: i.number }).then(function (o) { if (o && o.expected_ashore != null) tk.label = 'TAKE \u00B7 ASHORE ' + (dateOf(o.expected_ashore - 1) || 'DAY ' + o.expected_ashore); else if (o) { var stage = {}; (o.phases || []).forEach(function (ph) { stage[ph.name] = ph.stage; }); if (stage.land === 'done') tk.label = 'TAKEN'; else if (stage.move === 'done') tk.label = 'TAKE \u00B7 MEN ASHORE'; } }).catch(function () {})); } }
@@ -553,7 +555,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     // One ring a place, with what is to be done there and who stands there.
     order.forEach(function (at) { var c = ring(at.v, at.r, navy, 0.9, at.dash, 2.6), lines = []; if (at.words.length) lines.push(at.words.join(' \u00B7 ')); at.names.forEach(function (n) { lines.push(n); }); if (at.names.length) lines[lines.length - 1] += ' \u00B7 on station'; tag(c[0], c[1] + at.r * u0 + (12 + 8 * lines.length) * u, lines); });
     planMarks.moves.forEach(function (m) {
-      var w = ({ landing: 7, cover: 4.5, supply: 3.2, air: 2.4 })[m.kind] || 3, P = m.pts.filter(Boolean).map(cpx), k;
+      var block = m.kind === 'landing' && !m.dash, w = block ? 13 : ({ landing: 7, cover: 4.5, supply: 3.2, air: 2.4 })[m.kind] || 3, P = m.pts.filter(Boolean).map(cpx), k;
       if (P.length < 2) return;
       if (P.length > 4) { var Q = [P[0]]; for (k = 2; k < P.length - 1; k += 2) Q.push(P[k]); Q.push(P[P.length - 1]); P = Q; }
       var end = P[P.length - 1], prev = P[P.length - 2], ang = Math.atan2(end[1] - prev[1], end[0] - prev[0]), hl = (w * 2.4 + 7) * u, stop = [end[0] - Math.cos(ang) * hl * 0.85, end[1] - Math.sin(ang) * hl * 0.85];
@@ -563,7 +565,11 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (P.length === 2) g.lineTo(stop[0], stop[1]);
       else for (k = 1; k < P.length - 1; k++) { if (k === P.length - 2) g.quadraticCurveTo(P[k][0], P[k][1], stop[0], stop[1]); else g.quadraticCurveTo(P[k][0], P[k][1], (P[k][0] + P[k + 1][0]) / 2, (P[k][1] + P[k + 1][1]) / 2); }
       g.stroke(); g.setLineDash([]);
-      g.beginPath(); g.moveTo(end[0], end[1]); g.lineTo(end[0] - Math.cos(ang - 0.42) * hl, end[1] - Math.sin(ang - 0.42) * hl); g.lineTo(end[0] - Math.cos(ang + 0.42) * hl, end[1] - Math.sin(ang + 0.42) * hl); g.closePath(); g.fill();
+      // The landing, the plan's main movement, is drawn as the axis of an
+      // advance is on a staff's map: two lines and an open head.
+      if (block) { g.save(); g.globalCompositeOperation = 'source-over'; g.strokeStyle = 'rgba(206,224,230,0.96)'; g.lineWidth = (w - 4.4) * u; g.lineCap = 'butt'; g.stroke(); g.restore(); }
+      g.beginPath(); g.moveTo(end[0], end[1]); g.lineTo(end[0] - Math.cos(ang - 0.42) * hl, end[1] - Math.sin(ang - 0.42) * hl); g.lineTo(end[0] - Math.cos(ang + 0.42) * hl, end[1] - Math.sin(ang + 0.42) * hl); g.closePath();
+      if (block) { g.fillStyle = 'rgba(206,224,230,0.96)'; g.fill(); g.lineWidth = 2.2 * u; g.strokeStyle = navy; g.stroke(); g.fillStyle = navy; } else g.fill();
       g.globalAlpha = 1; var a = P[Math.floor((P.length - 1) / 2)], b = P[Math.ceil((P.length - 1) / 2)];
       tag((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, m.when ? [m.label, m.when.toUpperCase()] : [m.label]);
     });
@@ -587,7 +593,10 @@ button:disabled { opacity: 0.45; cursor: default; }
     M.contacts.forEach(function (c) { var v = placeOf(c.place); if (!v) return; var a = Math.max(0.25, 1 - (c.age_pulses || 0) / 9), p = ring(v, 11, '#a3211a', a, (c.age_pulses || 0) > 3, 2.6); g.save(); g.globalAlpha = a; g.fillStyle = '#8a2019'; g.fillText(String(c.ship_count), p[0] - 4 * u, p[1] + 4 * u); g.restore(); });
     M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) ring(v, 16, '#a3211a', Math.max(0.3, 1 - (e.age_days || 0) / 6), (e.age_days || 0) > 1, 2); });
     var intents = M.state ? M.state.intents.filter(function (i) { return i.in_force && !i.parent; }) : [];
-    intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; g.fillText('INTENT ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), c[0] + (36 + k * 4) * u, c[1] + (4 + k * 14) * u); });
+    // The intents' own rings and words give way to a plan shown on the chart, and their words keep their size as the commander leans in.
+    var iz = planZoom(); g.save(); g.font = '700 ' + Math.round(12 * u * iz) + "px 'Courier Prime', monospace";
+    if (!planMarks) intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; g.fillText('INTENT ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), c[0] + (36 + k * 4) * u, c[1] + (4 + k * 14 * iz) * u); });
+    g.restore();
     if (draft) ring(draft.v, 30, '#1f4e8c', 1, true, 2.2);
     // Where the side's own forces are, marked on the chart itself with a ring
     // the size of the hex, while their pieces are put away.
@@ -616,7 +625,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   var OWN = '#12335c', RED = '#8a2019';
 
   // ---- the pieces: a block is yours and known exactly ----
-  var pieces = {}, statics = [];
+  var pieces = {}, statics = [], ghosted = false;
   // Which pieces stand on the chart: all, the side's own, the enemy's, or none.
   var PIECES = ['all', 'own', 'enemy', 'none'], PIECE_WORD = { all: 'Pieces: all', own: 'Pieces: ours', enemy: 'Pieces: enemy', none: 'Pieces: off' }, piecesShown = 'all';
   try { var kept = localStorage.getItem('flagplot.pieces'); if (PIECES.indexOf(kept) >= 0) piecesShown = kept; } catch (e) {}
@@ -656,14 +665,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (!tex) { tex = symCache[key] = new THREE.CanvasTexture(symbol(side, kind, sure)); tex.anisotropy = 8; }
     var edge = new THREE.MeshStandardMaterial({ color: 0xcdbf94, roughness: 0.8, transparent: alpha < 1, opacity: alpha == null ? 1 : alpha });
     var top = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, transparent: alpha < 1, opacity: alpha == null ? 1 : alpha });
-    var grp = new THREE.Group(); grp.userData.side = side; var b = new THREE.Mesh(new THREE.BoxGeometry(size, 0.04, size), [edge, edge, top, edge, edge, edge]);
+    var grp = new THREE.Group(); grp.userData.side = side; grp.userData.alpha = alpha == null ? 1 : alpha; var b = new THREE.Mesh(new THREE.BoxGeometry(size, 0.04, size), [edge, edge, top, edge, edge, edge]);
     b.position.y = 0.022; b.castShadow = true; grp.add(b); scene.add(grp); return grp;
   }
   function forcePiece(f) { var big = f.mission === 'carrier'; return tile('own', kindOf(f.mission), true, big ? 0.26 : 0.21); }
   function fixed(grp, v, dx, dz, thing) { grp.position.set(v.x + (dx || 0) * tk(), 0, v.z + (dz || 0) * tk()); grp.userData.thing = thing || null; statics.push(grp); return grp; }
   var moveT = 1, mover = null;
   function layPieces() {
-    statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels();
+    statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels(); ghosted = false;
     var byHex = {}, seen = {};
     // A force not yet the commander's to use has no piece: it is on the reinforcements paper until its day.
     M.forces.forEach(function (f) { if (!f.place || f.available_from > M.day) return; var k = f.place.q + ',' + f.place.r; (byHex[k] = byHex[k] || []).push(f); });
@@ -1798,6 +1807,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     // The tiles lie flat on the chart at one size. Which of them show is the commander's choice.
     if (g && Math.abs(camDist - planDrawnAt) > planDrawnAt * 0.06) drawMarks();
     Object.keys(pieces).forEach(function (h) { pieces[h].grp.visible = sideShown('own'); }); statics.forEach(function (m) { m.visible = sideShown(m.userData.side); });
+    // With a plan on the chart the pieces and their slips stand back, so that the plan is read.
+    var faint = !!planMarks; if (faint !== ghosted) { ghosted = faint; var dim = function (grp) { var mats = grp.children[0].material, base = grp.userData.alpha == null ? 1 : grp.userData.alpha; (mats.length ? mats : [mats]).forEach(function (mt) { mt.transparent = faint || base < 1; mt.opacity = faint ? base * 0.3 : base; mt.needsUpdate = true; }); grp.children[0].castShadow = !faint; }; Object.keys(pieces).forEach(function (h) { dim(pieces[h].grp); }); statics.forEach(dim); labels.forEach(function (L) { L.sp.material.opacity = faint ? 0.3 : 1; L.pin.material.transparent = true; L.pin.material.opacity = faint ? 0.25 : 1; }); }
     flashes = flashes.filter(function (f) { f.userData.t += dt / 1.3; var k = f.userData.t; f.scale.setScalar(0.08 + k * 0.42); f.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(f); f.geometry.dispose(); f.material.dispose(); return false; } return true; });
     placeCamera();
     labels.forEach(function (L) {
