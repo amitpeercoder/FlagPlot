@@ -187,6 +187,14 @@ button:disabled { opacity: 0.45; cursor: default; }
 .reason .rpoints { margin: 3px 0 2px; padding-left: 18px; }
 .reason .rpoints li { margin: 2px 0; }
 .reason .rpoint { margin: 2px 0 0 12px; }
+.cret { border-top: 2px solid #8d8672; margin-top: 6px; padding-top: 8px; }
+.cret h3 { margin-bottom: 4px; }
+.cret .crow { display: grid; grid-template-columns: 1fr 86px 110px; gap: 0 10px; padding: 3px 0; border-bottom: 1px dotted rgba(90,85,72,0.35); }
+.cret .crow span:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
+.cret .chead { color: var(--paper-dim); font-size: 12px; border-bottom: 1px solid #8d8672; }
+.cret .ctotal { font-weight: 700; border-bottom: 1px solid #8d8672; }
+.cret .cnote { color: var(--paper-dim); font-size: 13px; margin-top: 5px; }
+.cret details summary { cursor: pointer; color: var(--paper-dim); font-size: 13px; padding: 4px 0 2px; }
 .diary details { margin-top: 3px; }
 .diary details summary { cursor: pointer; color: var(--paper-dim); font-size: 13px; padding: 2px 0; }
 .diary details .dline { font-size: 13px; }
@@ -1132,9 +1140,11 @@ button:disabled { opacity: 0.45; cursor: default; }
   // place by its name, a clock time for "D10 20:30", figures rounded. A kind
   // with no sentence of its own is said as the game has it, tidied.
   function fig(x) { var n = parseFloat(x); if (isNaN(n)) return x; return commas(Math.abs(n) >= 100 ? Math.round(n) : Math.round(n * 10) / 10); }
-  function sayEvent(e) {
+  function sayEvent(e, linked) {
     var names = {}; (e.entities || []).forEach(function (x) { if (x && x.handle && x.name) names[x.handle] = String(x.name).replace(/^Placeholder /, ''); });
-    function N(h) { return names[h] || M.names[h] || h.replace('_', ' ').replace(':', ' '); }
+    // Where the sentence is to carry links, a unit stays as its handle, which the
+    // page turns into its name and a way to its card; the name is noted for that.
+    function N(h) { if (linked && !/^contact:/.test(h)) { if (!M.names[h] && names[h]) M.names[h] = names[h]; return h; } return names[h] || M.names[h] || h.replace('_', ' ').replace(':', ' '); }
     function P(q, r) { return M.hexNames[q + ',' + r] || whereIs({ q: parseInt(q, 10), r: parseInt(r, 10) }); }
     var H = '((?:task_force|air_group|land_unit|base|ship|contact):\\d+)', AT = '\\((-?\\d+),(-?\\d+)\\)', CL = 'D\\d+ (\\d\\d):(\\d\\d)';
     var t = String(e.text).replace(/^(Allied|Japanese|allied|japanese) /, ''), m, k = e.event_kind;
@@ -1181,6 +1191,9 @@ button:disabled { opacity: 0.45; cursor: default; }
     else if (k === 'strike_mission_cleared' && R('^' + H + ' has no mission: the base it was to strike, ' + H)) out = N(m[1]) + ' stood down from its strike: ' + N(m[2]) + ' is ours';
     if (out == null) {
       if (k === 'engagement_begun' && R('^' + H + ' met the enemy at ' + AT + ' at ' + CL)) out = N(m[1]) + ' met the enemy at ' + P(m[2], m[3]) + ', ' + m[4] + m[5] + '. Action joined';
+      else if (k === 'men_lost_unfed' && R('^' + H + ' lost (\\d+) men unfed at ' + AT + ', (\\d+) left')) out = N(m[1]) + ' lost ' + fig(m[2]) + (m[2] === '1' ? ' man' : ' men') + ' for want of food at ' + P(m[3], m[4]) + '; ' + fig(m[5]) + ' remain ashore';
+      else if (k === 'men_lost_with_ship' && R('^(\\d+) men of ' + H + ' were lost with ' + H)) out = fig(m[1]) + (m[1] === '1' ? ' man' : ' men') + ' of ' + N(m[2]) + ' were lost with ' + N(m[3]);
+      else if (k === 'unit_surrendered' && R('^' + H + ' of the \\w+ side surrendered at ' + AT + ': (\\d+) men lost')) out = N(m[1]) + ' surrendered at ' + P(m[2], m[3]) + ': ' + fig(m[4]) + ' men lost';
       else if (k === 'force_surprised' && R('^' + H + ' was surprised')) out = N(m[1]) + ' was taken by surprise';
       else if (k === 'force_became_alert' && R('^' + H)) out = N(m[1]) + ' came to action stations';
       else if (k === 'ship_sunk' && R('^' + H + ' of ' + H + ' sank')) out = N(m[1]) + ', of ' + N(m[2]) + ', was sunk';
@@ -1191,8 +1204,48 @@ button:disabled { opacity: 0.45; cursor: default; }
       else if (k === 'ship_damaged' && R('^' + H + ' took (\\d+) hits? on (\\w+)')) out = N(m[1]) + ' took ' + m[2] + (m[2] === '1' ? ' hit' : ' hits') + (m[3] === 'fire' ? ', starting fires' : m[3] === 'flotation' ? ' on the hull' : ' on ' + m[3]);
       else if (k === 'system_hit' && R('^' + H + ' (.*) hit, (?:no change, still (\\w+)|(\\w+) -> (\\w+))')) { var same = m[3] || (m[4] === m[5] ? m[5] : ''); out = N(m[1]) + ': ' + m[2] + ' hit, ' + (same ? (same === 'working' ? 'still in action' : same === 'out' ? 'already out of action' : 'still ' + same) : 'now ' + (m[5] === 'working' ? 'in action' : m[5] === 'out' ? 'out of action' : m[5])); }
     }
-    if (out == null) out = t.replace(new RegExp(H, 'g'), function (h) { return N(h); }).replace(new RegExp(AT, 'g'), function (x, q, r) { return P(q, r); }).replace(/D\d+ (\d\d):(\d\d)/g, '$1$2').replace(/\d+\.\d{2,}/g, function (x) { return fig(x); }).replace(/(intent|plan|contact|order):(\d+)/g, '$1 $2').replace(/_/g, ' ');
-    out = out.charAt(0).toUpperCase() + out.slice(1); return /[.!?]$/.test(out) ? out : out + '.';
+    if (out == null) out = t.replace(new RegExp(H, 'g'), function (h) { return N(h); }).replace(new RegExp(AT, 'g'), function (x, q, r) { return P(q, r); }).replace(/D\d+ (\d\d):(\d\d)/g, '$1$2').replace(/\d+\.\d{2,}/g, function (x) { return fig(x); }).replace(/(intent|plan|contact|order):(\d+)/g, '$1 $2').replace(/_(?![a-z]*:\d)/g, ' ');
+    if (!/^(?:task_force|base|ship|air_group|land_unit):\d/.test(out)) out = out.charAt(0).toUpperCase() + out.slice(1); return /[.!?]$/.test(out) ? out : out + '.';
+  }
+
+  // ---- the casualty return ----
+  // The men the side lost on a day, by how they were lost, and since the
+  // start. It is added up from the side's own events and nothing else: a
+  // loss the game does not record (a ship's company) is not in it, and the
+  // return says so where a ship went down.
+  var dayCache = {};
+  function dayEvents(d) { if (dayCache[d]) return Promise.resolve(dayCache[d]); return api('events', { day: d }).then(function (a) { var ev = a.events || []; if (d < M.day) dayCache[d] = ev; return ev; }); }
+  function casualtiesOf(events) {
+    var c = { fight: 0, fire: 0, unfed: 0, sea: 0, surrendered: 0, pilots: 0, aircraft: 0, sunk: [], units: {} }, m;
+    function unit(e, n) { var u = (e.entities || []).filter(function (x) { return /^land_unit:/.test(x.handle); })[0]; if (!u) return; c.units[u.handle] = c.units[u.handle] || { name: u.name, lost: 0 }; c.units[u.handle].lost += n; }
+    events.forEach(function (e) {
+      var t = String(e.text), k = e.event_kind;
+      if (k === 'men_lost_in_fight' && (m = /lost (\d+) men in the fight/.exec(t))) { c.fight += +m[1]; unit(e, +m[1]); }
+      else if (k === 'men_lost_to_fire' && (m = /lost (\d+) men to fire/.exec(t))) { c.fire += +m[1]; unit(e, +m[1]); }
+      else if (k === 'men_lost_unfed' && (m = /lost (\d+) men unfed/.exec(t))) { c.unfed += +m[1]; unit(e, +m[1]); }
+      else if (k === 'men_lost_with_ship' && (m = /^(\d+) men of /.exec(t))) { c.sea += +m[1]; unit(e, +m[1]); }
+      else if (k === 'unit_surrendered' && (m = /surrendered at .*: (\d+) men lost/.exec(t))) { c.surrendered += +m[1]; unit(e, +m[1]); }
+      else if (k === 'pilots_lost' && (m = /lost (\d+) pilots?/.exec(t))) c.pilots += +m[1];
+      else if ((k === 'aircraft_lost' || k === 'aircraft_destroyed_on_ground') && (m = /lost (\d+) aircraft/.exec(t))) c.aircraft += +m[1];
+      else if (k === 'ship_sunk') { var sh = (e.entities || []).filter(function (x) { return /^ship:/.test(x.handle); })[0]; c.sunk.push(sh ? String(sh.name).replace(/^Placeholder /, '') : 'a ship'); }
+    });
+    c.men = c.fight + c.fire + c.unfed + c.sea + c.surrendered; return c;
+  }
+  function casualtyReturn(doc, d) {
+    var box = el('div', 'cret'); box.appendChild(el('h3', '', 'Casualty return')); doc.appendChild(box);
+    var days = []; for (var k = 1; k <= d; k++) days.push(k);
+    return Promise.all(days.map(dayEvents)).then(function (all) {
+      var today = casualtiesOf(all[all.length - 1]), total = casualtiesOf([].concat.apply([], all));
+      function row(label, a, b) { if (!a && !b) return; var r = el('div', 'crow'); r.appendChild(el('span', '', label)); r.appendChild(el('span', '', a ? commas(a) : '–')); r.appendChild(el('span', '', b ? commas(b) : '–')); box.appendChild(r); }
+      if (!total.men && !total.pilots && !total.aircraft && !total.sunk.length) { box.appendChild(el('p', '', 'No loss is returned.')); return; }
+      var hd = el('div', 'crow chead'); hd.appendChild(el('span', '', '')); hd.appendChild(el('span', '', dateOf(d - 1) || 'day ' + d)); hd.appendChild(el('span', '', 'Since ' + (dateOf(0) || 'day 1'))); box.appendChild(hd);
+      row('In the fighting ashore', today.fight, total.fight); row('To bombing and shellfire', today.fire, total.fire); row('For want of food', today.unfed, total.unfed); row('Lost at sea with their ships', today.sea, total.sea); row('Surrendered', today.surrendered, total.surrendered);
+      var tot = el('div', 'crow ctotal'); tot.appendChild(el('span', '', 'Men lost')); tot.appendChild(el('span', '', today.men ? commas(today.men) : '–')); tot.appendChild(el('span', '', total.men ? commas(total.men) : '–')); box.appendChild(tot);
+      row('Pilots', today.pilots, total.pilots); row('Aircraft', today.aircraft, total.aircraft);
+      if (total.sunk.length) { var sk = el('div', 'cnote', ''); sk.appendChild(document.createTextNode('Ships sunk' + (today.sunk.length ? ' this day: ' + today.sunk.join(', ') + '.' : ': none this day.') + ' Since the start: ' + total.sunk.length + '. Ships\' companies are not returned.')); box.appendChild(sk); }
+      var units = Object.keys(total.units).map(function (h) { return total.units[h]; }).sort(function (a, b) { return b.lost - a.lost; });
+      if (units.length) { var f = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'By unit, since the start (' + units.length + ')'; f.appendChild(sm); units.forEach(function (u) { var r = el('div', 'crow'); r.appendChild(el('span', '', u.name)); r.appendChild(el('span', '', '')); r.appendChild(el('span', '', commas(u.lost))); f.appendChild(r); }); box.appendChild(f); }
+    }).catch(function () { box.appendChild(el('p', '', 'The return could not be made up.')); });
   }
 
   // ---- the war diary ----
@@ -1211,7 +1264,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (e.event_kind === 'command_taken' && (m = /^the (commander|staff)'s command taken: (.*)$/.exec(t))) { var w = m[2], si = /^set intent:(\d+) to (.*)$/.exec(w), fo = /^form under intent:(\d+) an intent to (.*)$/.exec(w); t = m[1] === 'commander' ? (si ? 'Commander stated an intent: ' + (intentWords(parseInt(si[1], 10)) || si[2]) : 'Commander directed: ' + planWords(w)) : (fo ? 'Staff formed a task' + (intentWords(parseInt(fo[1], 10)) ? ' under "' + intentWords(parseInt(fo[1], 10)) + '"' : '') + ': ' + fo[2] : 'Staff: ' + planWords(w)); }
     else if (e.event_kind === 'staff_notice') { var met = /^staff's notice: intent:(\d+) is met$/.exec(t); t = met && intentWords(parseInt(met[1], 10)) ? 'Staff reported: "' + intentWords(parseInt(met[1], 10)) + '" is met' : planWords(t.replace(/^staff's notice: /, 'Staff reported: ')).replace(/cannot meet its intent/, 'cannot be met as it stands'); }
     else if (e.event_kind === 'order_accepted') t = t.replace(/^order:\d+ accepted for ([a-z_]+:\d+): /, 'Order to $1: ');
-    else return sayEvent(e);
+    else return sayEvent(e, true);
     return diaryWords(t);
   }
   // ---- a reason of the staff's, laid out ----
@@ -1285,8 +1338,8 @@ button:disabled { opacity: 0.45; cursor: default; }
         function entry(e) {
           if (e.event_kind) { var pl = /plan:(\d+)/.exec(e.text), pr = pl && (e.event_kind === 'staff_notice' || e.event_kind === 'command_taken') ? planOf(parseInt(pl[1], 10)).root : null; return { text: diaryLine(e), n: e.number, root: pr }; }
           if (e.plan != null) { var po = planOf(e.plan), st = { preparing: 'is being prepared', released: 'is released', complete: 'is complete', cancelled: 'is cancelled', failed: 'has failed', draft: 'is a draft again' }[e.state] || (e.drafted ? 'is drafted' : ''), am = e.amended ? (st ? ', and amended (amendment ' + e.amended + ')' : 'is amended (amendment ' + e.amended + ')') : ''; return { text: 'Plan ' + e.plan + (po.name ? ', ' + po.name + ',' : '') + ' ' + st + am + '.', n: e.n, root: po.root }; }
-          if (e.unit) return { text: sayEvent({ event_kind: '', text: e.unit + ' landed ' + commas(e.men) + ' men at ' + e.at, entities: [] }), n: e.n };
-          return { text: diaryWords((e.tf ? e.tf.handle : 'Ships') + ' landed ' + commas(Math.round(e.t)) + ' t of supply' + (e.base ? ' at ' + e.base.handle : '')), n: e.n };
+          if (e.unit) return { text: sayEvent({ event_kind: '', text: e.unit + ' landed ' + commas(e.men) + ' men at ' + e.at, entities: [] }, true), n: e.n };
+          return { text: sayEvent({ event_kind: '', text: (e.tf ? e.tf.handle : 'Ships') + ' landed ' + commas(Math.round(e.t)) + ' t of supply' + (e.base ? ' at ' + e.base.handle : ''), entities: [e.tf, e.base].filter(Boolean) }, true), n: e.n };
         }
         function rows(into, items) { var said = {}; items.forEach(function (e) { var x = entry(e); if (said[x.text]) { said[x.text].n += 1; said[x.text].tail.textContent = ' Entered ' + said[x.text].n + ' times. '; return; } var row = diaryRow(x.text, x.n, x.root), tail = el('span', '', ''); tail.style.color = 'var(--paper-dim)'; row.insertBefore(tail, row.children[1] || null); said[x.text] = { n: 1, tail: tail }; into.appendChild(row); }); }
         rows(body, order);
@@ -1294,6 +1347,7 @@ button:disabled { opacity: 0.45; cursor: default; }
         fold('Staff decisions and orders', staff); fold('Routine', routine);
       });
       if (!any) doc.appendChild(el('p', '', 'Nothing is entered for the day.'));
+      casualtyReturn(doc, d);
       sheetAs('WAR DIARY', (dateOf(d - 1, true) || 'DAY ' + d).toUpperCase()); doc.classList.add('diary'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The diary could not be read: ' + e.message); });
   }
@@ -1528,7 +1582,8 @@ button:disabled { opacity: 0.45; cursor: default; }
       var soon = []; (b.arrivals && b.arrivals.due || []).forEach(function (x) { if (x.day >= M.day && x.day <= M.day + 7) soon.push([x.day, dateOf(x.day - 1) + ': ' + x.air_group.handle + ', ' + x.aircraft + ' aircraft, to ' + x.at.handle + (x.can_be_delivered ? '.' : '. Cannot be delivered as things stand.')]); });
       M.forces.forEach(function (f) { if (f.available_from > M.day && f.available_from <= M.day + 7) soon.push([f.available_from, dateOf(f.available_from - 1) + ': ' + f.task_force.handle + ' may be used.']); });
       part('4. Coming this week', soon.sort(function (x, y) { return x[0] - y[0]; }).map(function (x) { return x[1]; }));
-      var row = el('div', 'row'), full = el('button', '', 'THE FULL RETURN'); full.type = 'button'; full.addEventListener('click', readBriefing); row.appendChild(full); doc.appendChild(row);
+      var row = el('div', 'row'), full = el('button', '', 'THE FULL SITUATION'); full.type = 'button'; full.addEventListener('click', readBriefing); row.appendChild(full); doc.appendChild(row);
+      if (M.day > 1) casualtyReturn(doc, M.day - 1);
       sheetAs('EVENING REPORT'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The staff reports at dusk. ' + e.message); });
   }
