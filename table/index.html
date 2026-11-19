@@ -80,6 +80,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .lrow:last-child { border-bottom: 0; }
 .card .lstem { color: var(--paper-dim); font-size: 12px; padding: 1px 0 3px; }
 .card .lrow .ref { text-align: left !important; }
+.card .bar { display: inline-block; width: 46px; height: 7px; margin-right: 8px; border: 1px solid var(--paper-dim); vertical-align: 1px; }
+.card .bar i { display: block; height: 100%; background: var(--own); }
+.card .bar.low i { background: var(--enemy); }
 .card .lrow .fig { flex: none; max-width: 55%; text-align: right; font-variant-numeric: tabular-nums; }
 .card .lmore summary { cursor: pointer; padding: 5px 0; color: var(--paper-dim); font-size: 12px; }
 .card .lmore[open] summary { border-bottom: 1px dotted rgba(90,85,72,0.35); }
@@ -611,7 +614,7 @@ button:disabled { opacity: 0.45; cursor: default; }
         kv(body, [['Aircraft', x.aircraft_type], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', x.fatigue], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
         body.appendChild(el('div', 'sub', 'BASED AT')); body.appendChild(rich('div', '', x.location.handle)); return; }
       if (e.entity_kind === 'ship') { var b2 = openCard(e.ship.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true), sys = e.systems || {}, out = Object.keys(sys).filter(function (k) { return sys[k] !== 'working'; }); turnTo(e.place);
-        kv(b2, [['Class', e.class], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Own fuel', commas(e.fuel_t) + ' t, ' + commas(e.range_nm) + ' miles'], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
+        kv(b2, [['Class', e.class], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Own fuel', commas(e.fuel_t) + (+e.fuel_capacity_t > 0 ? ' of ' + commas(e.fuel_capacity_t) : '') + ' t, ' + commas(e.range_nm) + ' miles'], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
         if (e.troops || e.troop_capacity_men) { b2.appendChild(el('div', 'sub', 'MEN ABOARD')); b2.appendChild(rich('div', '', (e.troops ? e.troops.land_unit.handle + ': ' + commas(e.troops.men) + ' men' : 'None') + (e.troop_capacity_men ? ' (room for ' + commas(e.troop_capacity_men) + ')' : ''))); }
         if (e.task_force) { b2.appendChild(el('div', 'sub', 'IN')); b2.appendChild(rich('div', '', e.task_force.handle)); }
         if ((e.air_groups || []).length) { b2.appendChild(el('div', 'sub', 'AIR GROUPS ABOARD')); b2.appendChild(rich('div', '', e.air_groups.map(function (g) { M.names[g.handle] = g.name; return g.handle; }).join(', '))); }
@@ -647,11 +650,11 @@ button:disabled { opacity: 0.45; cursor: default; }
   // A list on a card: a name on the left and its figure on the right, one row
   // each, with what the figure counts said once in the heading. A long list
   // shows its first rows and folds the rest.
-  function listOf(body, title, lines, unit) { if (!lines.length) return;
+  function listOf(body, title, lines, unit, levels) { if (!lines.length) return;
     var head = el('div', 'sub lhead'); head.appendChild(el('span', '', title + (lines.length > 3 ? ' · ' + lines.length : ''))); if (unit) head.appendChild(el('span', '', unit)); body.appendChild(head);
     var box = el('div', 'rows'), more = null; body.appendChild(box);
     lines.forEach(function (l, i) { var at = l.indexOf(': '), row = el('div', 'lrow');
-      row.appendChild(rich('span', '', at < 0 ? l : l.slice(0, at))); if (at >= 0) row.appendChild(el('span', 'fig', l.slice(at + 2)));
+      row.appendChild(rich('span', '', at < 0 ? l : l.slice(0, at))); if (at >= 0) { var fig = el('span', 'fig', l.slice(at + 2)), lv = levels ? levels[i] : null; if (lv != null) { var bar = el('span', 'bar' + (lv < 0.25 ? ' low' : '')), fill = el('i', ''); fill.style.width = Math.round(Math.max(0, Math.min(1, lv)) * 100) + '%'; bar.appendChild(fill); bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', Math.round(lv * 100) + ' in 100 of her tanks'); fig.insertBefore(bar, fig.firstChild); } row.appendChild(fig); }
       if (lines.length > 8 && i >= 6) { if (!more) { more = el('details', 'lmore'); more.appendChild(el('summary', '', 'and ' + (lines.length - 6) + ' more')); box.appendChild(more); } more.appendChild(row); } else box.appendChild(row); });
     // Where every row is one name that differs only in its number ("troop
     // transport, Guadalcanal 1" to "8"), the name is said once and the rows
@@ -745,7 +748,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       var list = (a.entity && a.entity.ships) || [], mine = {}; list.forEach(function (x) { mine[x.ship.handle] = true; if (x.ship.name) M.names[x.ship.handle] = x.ship.name.replace(/^Placeholder /, ''); });
       listOf(ships, 'MEN ABOARD', M.units.filter(function (u) { return (u.aboard || []).some(function (b) { return mine[b.ship.handle]; }); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_aboard); }), 'men');
       listOf(ships, 'AIR GROUPS ABOARD', M.air.filter(function (x) { return x.location && mine[x.location.handle]; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
-      listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; var cls = String(x.class || '').replace(/^Placeholder /, ''); return x.ship.handle + (cls && String(x.ship.name || '').toLowerCase().indexOf(cls.toLowerCase()) < 0 ? ', ' + cls : '') + ': ' + (x.sunk ? 'SUNK' : commas(x.fuel_t) + ' t' + hurt); }), 'own fuel');
+      listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; var cls = String(x.class || '').replace(/^Placeholder /, ''); return x.ship.handle + (cls && String(x.ship.name || '').toLowerCase().indexOf(cls.toLowerCase()) < 0 ? ', ' + cls : '') + ': ' + (x.sunk ? 'SUNK' : commas(x.fuel_t) + ' t' + hurt); }), (function () { var have = 0, room = 0; list.forEach(function (x) { if (x.sunk) return; have += +x.fuel_t || 0; room += +x.fuel_capacity_t || 0; }); return room > 0 ? 'own fuel, ' + commas(Math.round(have)) + ' of ' + commas(Math.round(room)) + ' t' : 'own fuel'; })(), list.map(function (x) { return x.sunk || !(+x.fuel_capacity_t > 0) ? null : +x.fuel_t / +x.fuel_capacity_t; }));
     }).catch(function (e) { ships.appendChild(el('div', '', 'The ships could not be listed: ' + e.message)); });
     if (!M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', held ? 'ORDER IT' : 'TAKE CHARGE OF IT'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
       if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
