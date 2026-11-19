@@ -111,9 +111,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .lrow:last-child { border-bottom: 0; }
 .card .lstem { color: var(--paper-dim); font-size: 12px; padding: 1px 0 3px; }
 .card .lrow .ref { text-align: left !important; }
-.card .bar { display: inline-block; width: 46px; height: 7px; margin-right: 8px; border: 1px solid var(--paper-dim); vertical-align: 1px; }
-.card .bar i { display: block; height: 100%; background: var(--own); }
-.card .bar.low i { background: var(--enemy); }
+.card .lvl { display: inline-block; width: 46px; height: 7px; margin-right: 8px; border: 1px solid var(--paper-dim); vertical-align: 1px; }
+.card .lvl i { display: block; height: 100%; background: var(--own); }
+.card .lvl.low i { background: var(--enemy); }
 .card .lrow .fig { flex: none; max-width: 55%; text-align: right; font-variant-numeric: tabular-nums; }
 .card .lmore summary { cursor: pointer; padding: 5px 0; color: var(--paper-dim); font-size: 12px; }
 .card .lmore[open] summary { border-bottom: 1px dotted rgba(90,85,72,0.35); }
@@ -764,7 +764,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var head = el('div', 'sub lhead'); head.appendChild(el('span', '', title + (lines.length > 3 ? ' · ' + lines.length : ''))); if (unit) head.appendChild(el('span', '', unit)); body.appendChild(head);
     var box = el('div', 'rows'), more = null; body.appendChild(box);
     lines.forEach(function (l, i) { var at = l.indexOf(': '), row = el('div', 'lrow');
-      row.appendChild(rich('span', '', at < 0 ? l : l.slice(0, at))); if (at >= 0) { var fig = el('span', 'fig', l.slice(at + 2)), lv = levels ? levels[i] : null; if (lv != null) { var bar = el('span', 'bar' + (lv < 0.25 ? ' low' : '')), fill = el('i', ''); fill.style.width = Math.round(Math.max(0, Math.min(1, lv)) * 100) + '%'; bar.appendChild(fill); bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', Math.round(lv * 100) + ' in 100 of her tanks'); fig.insertBefore(bar, fig.firstChild); } row.appendChild(fig); }
+      row.appendChild(rich('span', '', at < 0 ? l : l.slice(0, at))); if (at >= 0) { var fig = el('span', 'fig', l.slice(at + 2)), lv = levels ? levels[i] : null; if (lv != null) { var bar = el('span', 'lvl' + (lv < 0.25 ? ' low' : '')), fill = el('i', ''); fill.style.width = Math.round(Math.max(0, Math.min(1, lv)) * 100) + '%'; bar.appendChild(fill); bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', Math.round(lv * 100) + ' in 100 of her tanks'); fig.insertBefore(bar, fig.firstChild); } row.appendChild(fig); }
       if (lines.length > 8 && i >= 6) { if (!more) { more = el('details', 'lmore'); more.appendChild(el('summary', '', 'and ' + (lines.length - 6) + ' more')); box.appendChild(more); } more.appendChild(row); } else box.appendChild(row); });
     // Where every row is one name that differs only in its number ("troop
     // transport, Guadalcanal 1" to "8"), the name is said once and the rows
