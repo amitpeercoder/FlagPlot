@@ -3,7 +3,8 @@
 
 /// Code lines of every source file of the crate, comments left out, may not
 /// name the world, the umpire's view, the truth, beliefs or the full event
-/// log, read files or the clock, use the hash collections or floating point,
+/// log, take or join a side's half of a picture of a world (decision 0171),
+/// read files or the clock, use the hash collections or floating point,
 /// or `unsafe`. Its only dependency is `sim-core`.
 #[test]
 fn the_staff_takes_a_side_view_and_nothing_else() {
@@ -25,6 +26,11 @@ fn the_staff_takes_a_side_view_and_nothing_else() {
         "TruthState",
         "BeliefState",
         "IdAllocator",
+        // A side's own half of a picture, and the joining of two (decision
+        // 0171): the staff reads views, and a half is not for it.
+        "own_half",
+        "from_halves",
+        "PictureHalf",
         "Hasher",
         "std::fs",
         "std::net",

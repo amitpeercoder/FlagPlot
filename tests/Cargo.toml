@@ -503,3 +503,7 @@ path = "scenario_90_a_take_that_does_not_go_to_starve.rs"
 [[test]]
 name = "scenario_91_a_world_from_a_picture"
 path = "scenario_91_a_world_from_a_picture.rs"
+
+[[test]]
+name = "scenario_92_a_sides_own_half"
+path = "scenario_92_a_sides_own_half.rs"
