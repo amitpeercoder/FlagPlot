@@ -97,6 +97,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .status:empty { display: none; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 2px; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.acts button.cue { border-color: #e9c46a; color: #f4dc9a; box-shadow: 0 0 0 0 rgba(233,196,106,0.7); animation: cue 2.2s ease-out infinite; }
+@keyframes cue { 0% { box-shadow: 0 0 0 0 rgba(233,196,106,0.65); } 70% { box-shadow: 0 0 0 12px rgba(233,196,106,0); } 100% { box-shadow: 0 0 0 0 rgba(233,196,106,0); } }
+@media (prefers-reduced-motion: reduce) { .acts button.cue { animation: none; box-shadow: 0 0 0 3px rgba(233,196,106,0.5); } }
 .acts button.main { background: var(--ink); color: var(--room); border-color: var(--ink); font-weight: 700; padding: 0 24px; }
 .plot { position: fixed; left: 16px; top: 60px; width: min(330px, calc(100% - 32px)); max-height: calc(100% - 180px); overflow-y: auto; background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 13px; line-height: 1.36; padding: 10px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
 .plot .phase { display: flex; flex-direction: column; gap: 3px; }
@@ -533,7 +536,8 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (f.standing) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
     });
     var roots = s.intents.filter(function (i) { return i.in_force && !i.parent; });
-    if (!roots.length) slip('FROM STAFF', 'FOR DECISION', 'No intent is stated', 'The staff does nothing for your side until you state one. Press "State an intent" and touch the chart.', true);
+    // With no intent stated the staff does nothing: the button that states one is marked, and nothing is said.
+    $('btn-intent').classList.toggle('cue', !roots.length && !M.over);
     s.plans.forEach(function (p) {
       var waits = (p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare); if (!waits) return;
       var a = slip('FROM STAFF', 'FOR DECISION', 'Plan ' + p.number + ' for intent ' + p.intent + ' is ' + p.state, p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.', true);
