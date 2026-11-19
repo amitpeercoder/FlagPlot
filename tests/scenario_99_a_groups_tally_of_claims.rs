@@ -62,8 +62,9 @@
 //! sums are scenario 11's: 32, 29 and 27 for the Allied side at chances
 //! 1, and every claim's own numbers are as scenario 11 has them.
 //!
-//! The order of a list is the order of first firing, which the test
-//! reads from the events; the tables above give its contents.
+//! Each list is in the order given: the Japanese side's escorts fire
+//! before its bombs fall, and the Allied patrol fires before the base's
+//! guns.
 //!
 //! ## The tallies after the three days
 //!
@@ -84,20 +85,42 @@
 //! chances 0 and 18 at chances 1. Group 2's tally of hits is the same.
 //! The Japanese side has no claim.
 //!
-//! ## The sharing's own function
+//! ## A firing of two groups, parted shot by shot
 //!
-//! The false claims of a raid, shared among its groups by what each
-//! dropped that did not count:
+//! The rule's own function: the aircraft each group has in the firing,
+//! the whole shots of the firing, which shots hit (in the order drawn),
+//! and what the firing really shot down. It gives each group's shots,
+//! its real aircraft and its shots that missed; at false chance 1 a
+//! group claims its real aircraft and every shot of its own that missed.
 //!
-//! | Did not count, by group | False | Shared |
-//! | --- | --- | --- |
-//! | group 1: 10, group 2: 5 | 6 | 4 and 2 |
-//! | group 1: 10, group 2: 5 | 15 | 10 and 5 |
-//! | group 1: 3, group 2: 3 | 1 | 1 and 0 (a tie goes to the lower number) |
-//! | group 1: 9, group 2: 1 | 1 | 1 and 0 |
-//! | group 1: 0, group 2: 4 | 2 | 0 and 2 |
-//! | group 1: 2, group 2: 2, group 3: 2 | 4 | 2, 1 and 1 |
-//! | group 1: 7 | 0 | 0 |
+//! | In the firing | Shots | Shots that hit | Really shot down | Shots, by group | Real, by group | Claimed at chance 1 |
+//! | --- | --- | --- | --- | --- | --- | --- |
+//! | group 3: 8, group 7: 4 | 6 | the 1st, 5th and 6th | 3 | 4 and 2 | 1 and 2 | 4 and 2 |
+//! | group 3: 8, group 7: 4 | 12 | the 2nd and 9th | 2 | 8 and 4 | 1 and 1 | 8 and 4 |
+//! | group 3: 1, group 7: 1 | 1 | none | 0 | 1 and 0 (a tie goes to the lower number) | 0 and 0 | 1 and 0 |
+//! | group 3: 5, group 7: 5 | 3 | the 3rd | 1 | 2 and 1 (1.5 each: 1 and 1, the one left to group 3) | 0 and 1 | 2 and 1 |
+//! | group 3: 8, group 7: 4 | 6 | the 1st, 5th and 6th | 2 | 4 and 2 | 1 and 1 (the cut comes off the last shot) | 4 and 2 |
+//! | group 3: 12 | 6 | the 1st | 1 | 6 | 1 | 6 |
+//!
+//! Row 1: 6 x 8 / 12 = 4 and 6 x 4 / 12 = 2; group 3 has shots 1 to 4,
+//! of which the 1st hit, and 3 missed; group 7 has shots 5 and 6, both
+//! hits. In every row the shots, the real aircraft and the claims add to
+//! the firing's own.
+//!
+//! In a game: the base raid's first morning with a second Allied group
+//! on patrol over base 2 is not worked here by hand, the fight being
+//! another fight; the build reports its lists, and the test asserts for
+//! it only that the two patrol groups' lines add to the Allied claim
+//! less the guns', and that neither is credited with more shots than the
+//! aircraft it had on patrol.
+//!
+//! ## Bombs, group by group
+//!
+//! Two groups bomb one base in one raid: group 1 drops 10 bombs that
+//! destroy 2 aircraft, group 2 drops 5 that destroy none. At false
+//! chance 0 the lines are group 1: 2 on the ground, and group 2 is not
+//! in the list. At 1 they are group 1: 10 and group 2: 5. This is the
+//! rule's function, given the bombs and what they destroyed.
 //!
 //! # Properties
 //!

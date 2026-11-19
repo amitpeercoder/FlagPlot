@@ -44,6 +44,7 @@ The short form; `README.md` has it in plain words and the decision records have 
 - **Owed from decision 0177:** an air group that comes due makes no date of a window, since no take counts one (rulings, 2); and a window at the full size takes 67 s on the 39 days, which goes to the designer with step 8 (rulings, 8).
 - **To build, decision 0178 (a seat's trial):** the first record of step 8 of stage 4, reviewed and amended before its build; its hand calculation is in `tests/scenario_97_a_seats_trial.rs`. It waits for decision 0177's build, whose standing commands it uses. A game file kept by `play` plays every trial in it again, a few seconds each: logged with the performance items of decision 0172. The lift and the weight of supply a plan needs, and stopping a trial from a seat, go to the next record.
 - **To build, decision 0179 (the type of the aircraft claimed destroyed on the ground):** asked for by the designer at the table, reviewed and amended before its build; its hand calculation is in `tests/scenario_98_the_type_claimed_on_the_ground.rs`. Types of aircraft claimed shot down are left for later.
+- **To build, decision 0180 (who made a claim, and an air group's tally of its claims):** asked for by the designer at the table, reviewed and amended before its build, and to be built with decision 0179 in one build; its hand calculation is in `tests/scenario_99_a_groups_tally_of_claims.rs`. What a tally does for a group's experience waits for air groups to have one (decision 0064).
 
 ## The clean-up after stage 3's proof, before stage 4
 
