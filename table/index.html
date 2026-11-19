@@ -27,7 +27,7 @@ button { font-family: var(--f-ui); cursor: pointer; }
 button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
 button:disabled { opacity: 0.45; cursor: default; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 190px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 310px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
 .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .top p { margin: 0; font-size: 17px; letter-spacing: 0.05em; color: var(--ink-dim); }
 
@@ -54,6 +54,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order legend { font-size: 12px; color: var(--paper-dim); padding: 0 6px 0 0; }
 .order label { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; cursor: pointer; }
 .stops { border: 0; margin: 0; padding: 9px 12px; background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 13px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-wrap: wrap; gap: 2px 12px; }
+#stops { position: fixed; top: 52px; right: 16px; width: min(330px, calc(100% - 32px)); z-index: 5; }
+#stops[hidden] { display: none; }
 .stops legend { float: left; width: 100%; font-size: 12px; color: var(--paper-dim); padding: 0 0 4px; }
 .stops label { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; cursor: pointer; }
 .stops input { accent-color: var(--own); width: 16px; height: 16px; margin: 0; }
@@ -118,14 +120,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 <aside class="tray" aria-label="Signals">
   <h2>Signals</h2>
-  <fieldset class="stops" id="stops" hidden>
-    <legend>THE CLOCK STOPS WHEN I AM TOLD OF</legend>
-    <label><input type="checkbox" id="stop-contact" checked> a contact</label>
-    <label><input type="checkbox" id="stop-attack" checked> an attack on mine</label>
-    <label><input type="checkbox" id="stop-loss" checked> a ship lost</label>
-    <label><input type="checkbox" id="stop-strike"> my strike away</label>
-    <label><input type="checkbox" id="stop-landing"> men ashore</label>
-  </fieldset>
   <div id="signals"></div>
 </aside>
 
@@ -187,7 +181,16 @@ button:disabled { opacity: 0.45; cursor: default; }
 <div class="view" role="group" aria-label="Your view of the table">
   <button type="button" id="btn-back">Sit back</button>
   <button type="button" id="btn-lean">Lean in</button>
+  <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
 </div>
+<fieldset class="stops" id="stops" hidden>
+  <legend>THE CLOCK STOPS WHEN I AM TOLD OF</legend>
+  <label><input type="checkbox" id="stop-contact" checked> a contact</label>
+  <label><input type="checkbox" id="stop-attack" checked> an attack on mine</label>
+  <label><input type="checkbox" id="stop-loss" checked> a ship lost</label>
+  <label><input type="checkbox" id="stop-strike"> my strike away</label>
+  <label><input type="checkbox" id="stop-landing"> men ashore</label>
+</fieldset>
 
 <footer class="bar">
   <div class="clock" id="clock">DAY 1</div>
@@ -1063,6 +1066,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
     else goal.zoom += 0.2; clampGoal();
   });
+  $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
   function resize() { var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   window.addEventListener('resize', resize); resize();
@@ -1092,7 +1097,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   Promise.all([fetch('/config').then(function (r) { return r.json(); }), fetch('/map').then(function (r) { return r.json(); })]).then(function (a) {
     config = a[0]; hexes = a[1]; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return fetch('/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return fetch('/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
   }).then(function () { setStatus(clock.at === 'dusk' ? 'The clock is stopped. Your orders for day ' + M.day + ' go in at 1800. Drag to look along the table; scroll to lean in.' : 'The clock is stopped at ' + clock.at + ' of day ' + M.day + '. You may order a force, or carry on.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
 })();
