@@ -603,8 +603,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY' : null);
     var est = M.estimates.filter(function (e) { return sameHex(e.place, pl); })[0], here = M.contacts.filter(function (c) { return sameHex(c.place, pl); });
     kv(body, [['Where', '(' + pl.q + ', ' + pl.r + ')'], ['Held by', t.base ? 'the enemy' : null]]);
-    if (!t.sea || est) body.appendChild(el('div', 'sub', 'HIS MEN ASHORE'));
-    if (est) kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]);
+    if (!t.sea || est) body.appendChild(el('div', 'sub', 'INTELLIGENCE'));
+    if (est) kv(body, [['Men ashore', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]);
     else if (!t.sea) body.appendChild(el('div', '', 'No intelligence.'));
     links(body, 'CONTACTS HERE', contactsAt(pl));
     if (!here.length && !t.base) body.appendChild(el('div', '', 'No contact is held here.'));
@@ -639,7 +639,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     links(body, 'FORCES HERE', forcesAt(b.place, null));
     links(body, 'ENEMY CONTACTS HERE', contactsAt(b.place));
     var est = M.estimates.filter(function (e) { return sameHex(e.place, b.place); })[0];
-    if (est) { body.appendChild(el('div', 'sub', 'HIS MEN ASHORE HERE')); kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
+    if (est) { body.appendChild(el('div', 'sub', 'INTELLIGENCE')); kv(body, [['Enemy men ashore', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
    
   }
   function readSchedule() {
