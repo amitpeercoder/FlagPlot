@@ -174,6 +174,14 @@ button:disabled { opacity: 0.45; cursor: default; }
 .diary .dline { padding: 2px 0; cursor: pointer; }
 .diary .dline:hover, .diary .dline:focus-visible { text-decoration: underline dotted; outline: none; }
 .diary .dwhy { margin: 2px 0 7px 14px; padding-left: 10px; border-left: 2px solid #b9b199; color: var(--paper-dim); font-size: 13px; }
+.reason { color: var(--paper-ink); font-size: 13px; padding: 2px 0 4px; }
+.reason .rconcl { font-weight: 700; }
+.reason .rfor, .reason .rmeta { color: var(--paper-dim); margin-top: 3px; }
+.reason .rfor > span:first-child, .reason .rmeta > span:first-child { font-family: var(--f-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-right: 4px; }
+.reason .rlead { margin-top: 5px; }
+.reason .rpoints { margin: 3px 0 2px; padding-left: 18px; }
+.reason .rpoints li { margin: 2px 0; }
+.reason .rpoint { margin: 2px 0 0 12px; }
 .diary details { margin-top: 3px; }
 .diary details summary { cursor: pointer; color: var(--paper-dim); font-size: 13px; padding: 2px 0; }
 .diary details .dline { font-size: 13px; }
@@ -797,7 +805,11 @@ button:disabled { opacity: 0.45; cursor: default; }
       button(a, 'APPROVE', true, function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.'); });
     });
     if (roots.length) {
-      var l = slip('STANDING LEAVE', s.leaves.launch ? 'GIVEN' : null, s.leaves.launch ? 'The staff may launch a plan that is ready' : 'Every plan waits for your word before it launches', null, !s.leaves.launch);
+      // The leave is for every plan, now and to come: the slip says so, and
+      // names the plans it bears on today.
+      var l = slip('STANDING LEAVE \u00B7 ALL PLANS', s.leaves.launch ? 'GIVEN' : null, s.leaves.launch ? 'The staff launches any plan of yours as soon as it is ready, without asking' : 'Every plan waits for your word before it launches', null, !s.leaves.launch);
+      (function () { var coming = s.plans.filter(function (p) { return p.state === 'draft' || p.state === 'preparing'; }), d = el('div', '', coming.length ? (s.leaves.launch ? 'Getting ready now: ' : 'Getting ready, and will wait: ') : 'No plan is getting ready at present.');
+        coming.forEach(function (p, k) { var po = planOf(p.number), b = el('button', 'ref', 'plan ' + p.number + (po.name ? ', ' + po.name : '')); b.type = 'button'; if (po.root != null) b.addEventListener('click', function () { readPlan(po.root); }); if (k) d.appendChild(document.createTextNode('; ')); d.appendChild(b); }); if (coming.length) d.appendChild(document.createTextNode('.')); l.insertBefore(d, l.querySelector('.row')); })();
       button(l, s.leaves.launch ? 'WITHHOLD IT' : 'GIVE LEAVE TO LAUNCH', !s.leaves.launch, function () { act('set_leave', { leave: 'launch', given: !s.leaves.launch }); });
     }
     // Command: the directives, the commander's own intents and what he has
@@ -815,7 +827,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       var due = (M.arrivals || []).filter(function (a) { return a.day >= M.day && a.day <= M.day + 1; }).length + M.forces.filter(function (f) { return f.available_from === M.day + 1; }).length;
       mark(paper('Reinforcements', readSchedule, true), due, due + ' due by tomorrow');
     }
-    if (clock.at === 'dusk') paper('Report', readReport, true); else { paper('Return', readBriefing, true); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
+    if (clock.at === 'dusk') paper('Report', readReport, true); else { paper('Situation', readBriefing, true); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
     // What the staff decided is in the war diary, entry by entry.
     if (M.day > 1 || clock.at !== 'dusk') paper('War diary', function () { readDiary(); }, true);
   }
@@ -1180,12 +1192,45 @@ button:disabled { opacity: 0.45; cursor: default; }
     else return sayEvent(e);
     return diaryWords(t);
   }
+  // ---- a reason of the staff's, laid out ----
+  // The staff's reason as it is worked, set out for reading: what it came to
+  // first, what it serves, then the cause and its points one to a line, and
+  // what holds it and what would change it. Every word is the staff's own
+  // (the tool `why`); only the order and the names are the table's.
+  function reasonWords(t, own, cap) {
+    function said(x, n) { n = parseInt(n, 10); if (n === own) return 'this task'; var w = intentWords(n); return w ? '"' + w + '"' : 'intent ' + n; }
+    t = String(t).replace(/intent:(\d+)/g, said);
+    t = nameText(plainWords(t)).replace(/\bintent (\d+)\b/g, said);
+    t = t.replace(/([A-Z][\w .'’-]*?) \(\1\)/g, '$1').replace(/(\d) nm\b/g, '$1 miles').replace(/\bfrom day (\d+)\b/g, function (x, n) { var d = dateOf(parseInt(n, 10) - 1); return d ? 'from ' + d : x; });
+    // "a may be used from 20 AUG, b may be used from 20 AUG, c may be used from 30 AUG": gathered by the day.
+    t = t.replace(/\(((?:[^()]*? may be used from [^,()]+)(?:, [^()]*? may be used from [^,()]+)+)\)/g, function (x, inner) { var by = {}, order = []; inner.split(', ').forEach(function (it) { var m = /^(.*?) may be used from (.+)$/.exec(it); if (!m) return; if (!by[m[2]]) { by[m[2]] = []; order.push(m[2]); } by[m[2]].push(m[1]); }); return '(not yet to hand: ' + order.map(function (d) { return by[d].join(', ') + ' from ' + d; }).join('; ') + ')'; });
+    return cap ? t.charAt(0).toUpperCase() + t.slice(1) : t;
+  }
+  function reasonView(into, w) {
+    var r = w.reason || {}, worked = String(r.worked || ''), concl = '', body = worked, m;
+    if ((m = /^(.*), so (the staff .*)$/.exec(worked))) { body = m[1] + '.'; concl = m[2].charAt(0).toUpperCase() + m[2].slice(1); }
+    else if ((m = /^(.*[.;]) ([A-Z][^.;]*\.)$/.exec(worked))) { body = m[1]; concl = m[2]; }
+    else { concl = worked; body = ''; }
+    into.textContent = '';
+    into.appendChild(rich('div', 'rconcl', reasonWords(concl, null, true)));
+    var serves = r.serves || {}, top = (serves.chain || [])[0], f = el('div', 'rfor', ''); f.appendChild(el('span', '', 'For ')); f.appendChild(rich('span', '', reasonWords(serves.statement || '') + (top && top.statement !== serves.statement ? ', under your intent to ' + reasonWords(top.statement) : '') + '.')); if (serves.statement) into.appendChild(f);
+    if (body) {
+      var colon = body.indexOf(': '), lead = colon > 0 ? body.slice(0, colon) : '', rest = (colon > 0 ? body.slice(colon + 2) : body).replace(/[.]$/, ''), parts = [], depth = 0, cur = '';
+      // Points are parted at a semicolon that is not inside brackets.
+      rest.split('').forEach(function (ch, i) { if (ch === '(') depth += 1; if (ch === ')') depth -= 1; if (ch === ';' && depth === 0) { parts.push(cur.trim()); cur = ''; } else cur += ch; }); if (cur.trim()) parts.push(cur.trim());
+      var own = (r.serves || {}).intent; if (lead) into.appendChild(rich('div', 'rlead', reasonWords(lead, own, true) + (parts.length > 1 ? ':' : '.')));
+      if (parts.length > 1) { var ul = el('ul', 'rpoints', ''); parts.forEach(function (pt) { var li = document.createElement('li'); li.appendChild(rich('span', '', reasonWords(pt, own, true) + '.')); ul.appendChild(li); }); into.appendChild(ul); }
+      else if (parts.length) into.appendChild(rich('div', lead ? 'rpoint' : 'rlead', reasonWords(parts[0], own, true) + '.'));
+    }
+    if ((r.binding || []).length) { var b = el('div', 'rmeta', ''); b.appendChild(el('span', '', 'Held by ')); b.appendChild(rich('span', '', reasonWords(r.binding.join('; ')) + '.')); into.appendChild(b); }
+    if ((r.would_change || []).length) { var c = el('div', 'rmeta', ''); c.appendChild(el('span', '', 'Would change with ')); c.appendChild(rich('span', '', reasonWords(r.would_change.join('; ')) + '.')); into.appendChild(c); }
+  }
   function diaryRow(text, number, root) {
     var row = el('div', 'dline'); row.appendChild(rich('span', '', text)); if (root != null) { row.appendChild(document.createTextNode(' ')); var lk = el('button', 'ref', 'The plan'); lk.type = 'button'; lk.addEventListener('click', function (ev) { ev.stopPropagation(); readPlan(root); }); row.appendChild(lk); } row.tabIndex = 0; row.setAttribute('role', 'button'); var box = null;
     function open() {
       if (box) { box.hidden = !box.hidden; return; }
       box = el('div', 'dwhy', 'Asking.'); row.parentNode.insertBefore(box, row.nextSibling);
-      api('explain', { event: number }).then(function (x) { box.textContent = ''; var led = (x.nodes || []).filter(function (n) { return n.depth > 0; }).slice(0, 8); if (!led.length) box.textContent = 'Nothing further is recorded of it.'; led.forEach(function (n) { var l = rich('div', '', diaryLine(n)); l.style.marginLeft = (n.depth - 1) * 12 + 'px'; box.appendChild(l); }); }).catch(function (e) { box.textContent = e.message; });
+      api('explain', { event: number }).then(function (x) { box.textContent = ''; var led = (x.nodes || []).filter(function (n) { return n.depth > 0; }).slice(0, 8); if (!led.length) box.textContent = 'Nothing further is recorded of it.'; led.forEach(function (n) { var l; if (n.event_kind === 'staff_reason') { l = el('div', 'reason', ''); api('why', { number: n.id }).then(function (w) { reasonView(l, w); }).catch(function () { l.appendChild(rich('div', '', diaryLine(n))); }); } else l = rich('div', '', diaryLine(n)); l.style.marginLeft = (n.depth - 1) * 12 + 'px'; box.appendChild(l); }); }).catch(function (e) { box.textContent = e.message; });
     }
     row.addEventListener('click', function (ev) { if (ev.target.className !== 'ref') open(); }); row.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') open(); });
     return row;
@@ -1461,7 +1506,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       sheetAs('EVENING REPORT'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The staff reports at dusk. ' + e.message); });
   }
-  function readBriefing() { api('get_briefing', { text: true }).then(function (b) { sheetAs('THE STAFF\'S RETURN'); $('sheet-doc').hidden = true; $('sheet-text').hidden = false; $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
+  function readBriefing() { api('get_briefing', { text: true }).then(function (b) { sheetAs('THE SITUATION'); $('sheet-doc').hidden = true; $('sheet-text').hidden = false; $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
   $('planchip-off').addEventListener('click', clearPlan);
   $('planchip-read').addEventListener('click', function () { if (planShown != null) readPlan(planShown); });
